@@ -1,0 +1,112 @@
+{
+  "toolbar": {
+    "aria": "助手工具列",
+    "description": "本機情報與日程助手",
+    "stopSpeaking": "停止朗讀",
+    "clearChat": "清空對話"
+  },
+  "header": {
+    "aria": "助手對話標題列"
+  },
+  "stt": {
+    "unavailable": "此環境無法語音辨識，請改用文字輸入。",
+    "hint": "按住麥克風或空白鍵說話。",
+    "ttsHintSuffix": " 回答會朗讀。"
+  },
+  "empty": {
+    "title": "問本機情報或日程",
+    "description": "例如：最近有沒有提到某某？未來七天有什麼安排？",
+    "hint": "未聚焦輸入框時可按空白鍵說話（放開即送出識別文字）；聚焦時用麥克風。無識別不會送出草稿。",
+    "voiceSettingsLink": "語音設定"
+  },
+  "toolCallsLabel": "已呼叫工具",
+  "toolStepsLabel": "工具步驟",
+  "toolRunning": "執行中…",
+  "sending": "助手思考中…",
+  "draft": {
+    "label": "訊息",
+    "placeholderListening": "正在聆聽…",
+    "placeholderIdle": "點此輸入文字；未聚焦時按住空白鍵說話"
+  },
+  "targetTask": {
+    "label": "目標任務",
+    "aria": "助手寫入日程的目標任務"
+  },
+  "mic": {
+    "holdToTalk": "按住說話",
+    "releaseToStop": "放開即送出",
+    "releaseToStopAria": "放開結束錄音並送出",
+    "tapToTalk": "點一下說話",
+    "tapToStop": "再點一下送出",
+    "tapToStopAria": "點一下結束錄音並送出",
+    "tapIdleAria": "點一下開始說話",
+    "tapIdleTitle": "點一下開始，再點一下送出"
+  },
+  "ttsOnLabel": "朗讀已開",
+  "send": {
+    "label": "送出",
+    "sending": "送出中…"
+  },
+  "quick": {
+    "title": "助手",
+    "aria": "字幕助手",
+    "subtitle": "Esc 關閉",
+    "subtitleStt": " · 空白鍵說話",
+    "stopSpeaking": "停止朗讀",
+    "clearChat": "清空對話",
+    "openFull": "開啟完整助手頁",
+    "close": "關閉",
+    "closeAria": "關閉助手",
+    "emptyTitle": "提問",
+    "emptyDescription": "",
+    "sending": "助手思考中…",
+    "draftLabel": "助手訊息",
+    "placeholderListening": "正在聆聽…",
+    "placeholderIdle": "點此輸入文字；未聚焦時按住空白鍵說話",
+    "micListeningAria": "放開結束錄音並送出",
+    "micIdleAria": "按住說話（空白鍵）",
+    "micListeningTitle": "放開即送出",
+    "micIdleTitle": "按住說話，或按住空白鍵",
+    "release": "放開",
+    "voice": "語音",
+    "ttsLabel": "朗讀",
+    "send": "送出",
+    "sendingBtn": "送出中…",
+    "showHistory": "顯示對話",
+    "hideHistory": "隱藏對話",
+    "historyEmpty": "尚無對話紀錄",
+    "historyPanelAria": "助手對話紀錄",
+    "triggerLabel": "語音助手（{shortcut}）— 按住空白鍵說話",
+    "triggerActive": "語音助手已開啟（{shortcut}）— 再點或 Esc 關閉",
+    "triggerShort": "助手",
+    "openComposer": "文字輸入（Ctrl+J）— 未聚焦時仍可空白鍵說話",
+    "openComposerActive": "關閉文字輸入（Esc）",
+    "openComposerNoVoice": "文字輸入（Ctrl+J）— 此環境暫無語音辨識"
+  },
+  "direct": {
+    "aria": "字幕助手",
+    "listening": "正在聆聽…",
+    "readyHint": "按住空白鍵說話（放開送出）",
+    "desktopBrowserBlockedTitle": "桌面版不支援瀏覽器語音，請改用文字輸入",
+    "desktopBrowserBlocked": "桌面版不支援瀏覽器語音辨識，直接交互模式已停用。請改用文字輸入。"
+  },
+  "history": {
+    "aria": "助手對話紀錄",
+    "new": "新對話",
+    "empty": "尚無對話紀錄。送出訊息後會保存在本機。",
+    "deleteAria": "刪除「{title}」",
+    "delete": "刪除"
+  },
+  "parse": {
+    "notObject": "AI 回應格式錯誤：回應不是有效的物件",
+    "missingMessage": "AI 回應格式錯誤：缺少 message 欄位",
+    "messageNotString": "AI 回應格式錯誤：message 必須是字串",
+    "taskConfigNotObject": "AI 回應格式錯誤：taskConfig 必須是物件",
+    "nameNotString": "AI 回應格式錯誤：name 必須是非空字串",
+    "promptNotString": "AI 回應格式錯誤：promptTemplate 必須是非空字串",
+    "scheduleTypeInvalid": "AI 回應格式錯誤：scheduleType 必須是以下值之一: {values}",
+    "analysisModeInvalid": "AI 回應格式錯誤：analysisMode 必須是以下值之一: {values}",
+    "channelIdsNotArray": "AI 回應格式錯誤：channelIds 必須是陣列",
+    "includeInTimelineNotBoolean": "AI 回應格式錯誤：includeInTimeline 必須是布林值"
+  }
+}

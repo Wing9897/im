@@ -1,0 +1,176 @@
+"""Config routes: settings snapshot.
+
+``SystemSettingsSnapshot`` (web/src/types/settings.ts) is camelCase on the
+wire and maps 1:1 onto snake_case ``system_config`` keys. Numeric values
+travel as strings; ``analysisPaused`` / ``analysisTraceVerbose`` as booleans.
+
+Household API access keys live under ``/api/v1/access-keys`` (not here).
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from fastapi import APIRouter, Request
+
+from server.api.deps import API_DEPS, get_db
+from server.api.schemas.responses import SystemSettingsSnapshot
+from server.config import (
+    get_auto_pause_on_retries_exhausted,
+    get_config,
+    set_configs,
+)
+from server.prompts.locale import normalize_ui_locale
+from server.secrets import MASKED_SECRET, SECRET_CONFIG_KEYS
+from server.util import parse_bool
+
+router = APIRouter(prefix="/api/v1/config", tags=["config"], dependencies=API_DEPS)
+
+#: camelCase wire key -> system_config key.
+_SETTINGS_KEYS: dict[str, str] = {
+    "llmProvider": "llm_provider",
+    "analysisPaused": "analysis_paused",
+    "ollamaBaseUrl": "ollama_base_url",
+    "ollamaModel": "ollama_model",
+    "ollamaThinkingEnabled": "ollama_thinking_enabled",
+    "openaiBaseUrl": "openai_base_url",
+    "openaiModel": "openai_model",
+    "openaiApiKey": "openai_api_key",
+    "openaiJsonMode": "openai_json_mode",
+    "geminiBaseUrl": "gemini_base_url",
+    "geminiModel": "gemini_model",
+    "geminiApiKey": "gemini_api_key",
+    "openrouterBaseUrl": "openrouter_base_url",
+    "openrouterModel": "openrouter_model",
+    "openrouterApiKey": "openrouter_api_key",
+    "analysisBatchMessageLimit": "analysis_batch_message_limit",
+    "analysisMaxTotalChars": "analysis_max_total_chars",
+    "analysisMaxEstimatedInputTokens": "analysis_max_estimated_input_tokens",
+    "analysisTraceVerbose": "analysis_trace_verbose",
+    "llmGenerationTimeout": "llm_generation_timeout",
+    "maxBatchRetries": "max_batch_retries",
+    "maxConcurrentBatches": "max_concurrent_batches",
+    "intelligenceRulesVersion": "intelligence_rules_version",
+    "analysisStrategyMode": "analysis_strategy_mode",
+    "analysisTriggerThreshold": "analysis_trigger_threshold",
+    "retentionMessagesDays": "retention_messages_days",
+    "retentionAnalysisDays": "retention_analysis_days",
+    "retentionLeaderboardDays": "retention_leaderboard_days",
+    "retentionAppLogsDays": "retention_app_logs_days",
+    "retentionUserEventsDays": "retention_user_events_days",
+    "autoPauseOnRetriesExhausted": "auto_pause_on_retries_exhausted",
+    "weatherLocation": "weather_location",
+    "uiLocale": "ui_locale",
+    "assistantWebSearchEnabled": "assistant_web_search_enabled",
+    "webSearchProvider": "web_search_provider",
+    "braveSearchApiKey": "brave_search_api_key",
+    "assistantLlmProvider": "assistant_llm_provider",
+    "assistantLlmBaseUrl": "assistant_llm_base_url",
+    "assistantLlmModel": "assistant_llm_model",
+    "assistantLlmApiKey": "assistant_llm_api_key",
+    "agentHistoryMaxMessages": "agent_history_max_messages",
+    "agentHistoryMaxChars": "agent_history_max_chars",
+    "assistantDisplayName": "assistant_display_name",
+    "assistantAvatar": "assistant_avatar",
+    "userDisplayName": "user_display_name",
+    "userAvatar": "user_avatar",
+    "userBackground": "user_background",
+}
+
+#: Match web ``AVATAR_MAX_DATA_URL_CHARS`` / display-name field limits.
+_ASSISTANT_DISPLAY_NAME_MAX = 64
+_ASSISTANT_AVATAR_MAX_CHARS = 200 * 1024
+_USER_DISPLAY_NAME_MAX = 64
+_USER_AVATAR_MAX_CHARS = 200 * 1024
+_USER_BACKGROUND_MAX = 2000
+
+_BOOL_KEYS = {
+    "analysisPaused",
+    "analysisTraceVerbose",
+    "autoPauseOnRetriesExhausted",
+    "ollamaThinkingEnabled",
+    "assistantWebSearchEnabled",
+}
+
+_WEB_SEARCH_PROVIDERS = frozenset({"duckduckgo", "brave"})
+_SECRET_WIRE_KEYS = {wire_key for wire_key, config_key in _SETTINGS_KEYS.items() if config_key in SECRET_CONFIG_KEYS}
+
+# Read-only on PUT /settings — analysisPaused: POST /system/analysis/pause.
+_READ_ONLY_WRITE_KEYS = frozenset({"analysisPaused"})
+
+
+async def _settings_snapshot(db: Any) -> dict[str, Any]:
+    snapshot: dict[str, Any] = {}
+    for wire_key, config_key in _SETTINGS_KEYS.items():
+        if wire_key == "autoPauseOnRetriesExhausted":
+            snapshot[wire_key] = await get_auto_pause_on_retries_exhausted(db)
+            continue
+        raw = await get_config(db, config_key)
+        if wire_key in _SECRET_WIRE_KEYS:
+            snapshot[wire_key] = MASKED_SECRET if raw else ""
+        else:
+            snapshot[wire_key] = parse_bool(raw) if wire_key in _BOOL_KEYS else raw
+    return snapshot
+
+
+@router.get("/settings", response_model=SystemSettingsSnapshot)
+async def fetch_settings(request: Request) -> dict:
+    return await _settings_snapshot(get_db(request))
+
+
+@router.put("/settings", response_model=SystemSettingsSnapshot)
+async def save_settings(request: Request, body: dict[str, Any]) -> dict:
+    db = get_db(request)
+    updates: dict[str, str] = {}
+    for wire_key, config_key in _SETTINGS_KEYS.items():
+        if wire_key not in body or wire_key in _READ_ONLY_WRITE_KEYS:
+            continue
+        value = body[wire_key]
+        if wire_key in _SECRET_WIRE_KEYS and value == MASKED_SECRET:
+            continue
+        if wire_key in _BOOL_KEYS:
+            updates[config_key] = "true" if value else "false"
+        elif config_key == "ui_locale":
+            updates[config_key] = normalize_ui_locale("" if value is None else str(value))
+        elif config_key == "web_search_provider":
+            provider = ("" if value is None else str(value)).strip().lower()
+            updates[config_key] = provider if provider in _WEB_SEARCH_PROVIDERS else "duckduckgo"
+        elif config_key == "assistant_display_name":
+            name = ("" if value is None else str(value)).strip()
+            updates[config_key] = name[:_ASSISTANT_DISPLAY_NAME_MAX]
+        elif config_key == "assistant_avatar":
+            avatar = "" if value is None else str(value).strip()
+            if not avatar:
+                updates[config_key] = ""
+            elif not avatar.startswith("data:image/") or len(avatar) > _ASSISTANT_AVATAR_MAX_CHARS:
+                # Keep previous value by skipping invalid writes.
+                continue
+            else:
+                updates[config_key] = avatar
+        elif config_key == "user_display_name":
+            name = ("" if value is None else str(value)).strip()
+            updates[config_key] = name[:_USER_DISPLAY_NAME_MAX]
+        elif config_key == "user_avatar":
+            avatar = "" if value is None else str(value).strip()
+            if not avatar:
+                updates[config_key] = ""
+            elif not avatar.startswith("data:image/") or len(avatar) > _USER_AVATAR_MAX_CHARS:
+                continue
+            else:
+                updates[config_key] = avatar
+        elif config_key == "user_background":
+            text = "" if value is None else str(value)
+            updates[config_key] = text[:_USER_BACKGROUND_MAX]
+        else:
+            updates[config_key] = "" if value is None else str(value)
+    if updates:
+        await set_configs(db, updates)
+
+    # Apply hot-swappable runtime knobs immediately.
+    scheduler = getattr(request.app.state, "scheduler", None)
+    if scheduler is not None and "maxConcurrentBatches" in body:
+        try:
+            await scheduler.update_concurrency_limit(int(body["maxConcurrentBatches"]))
+        except (TypeError, ValueError):
+            pass
+    return await _settings_snapshot(db)

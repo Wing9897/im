@@ -1,0 +1,112 @@
+{
+  "toolbar": {
+    "aria": "助手工具栏",
+    "description": "本机情报与日程助手",
+    "stopSpeaking": "停止朗读",
+    "clearChat": "清空对话"
+  },
+  "header": {
+    "aria": "助手对话标题栏"
+  },
+  "stt": {
+    "unavailable": "此环境无法语音识别，请改用文字输入。",
+    "hint": "按住麦克风或空格键说话。",
+    "ttsHintSuffix": " 回答会朗读。"
+  },
+  "empty": {
+    "title": "问本机情报或日程",
+    "description": "例如：最近有没有提到某某？未来七天有什么安排？",
+    "hint": "未聚焦输入框时可按空格键说话（放开即发送识别文字）；聚焦时用麦克风。无识别不会送出草稿。",
+    "voiceSettingsLink": "语音设定"
+  },
+  "toolCallsLabel": "已调用工具",
+  "toolStepsLabel": "工具步骤",
+  "toolRunning": "执行中…",
+  "sending": "助手思考中…",
+  "draft": {
+    "label": "讯息",
+    "placeholderListening": "正在聆听…",
+    "placeholderIdle": "点此输入文字；未聚焦时按住空格键说话"
+  },
+  "targetTask": {
+    "label": "目标任务",
+    "aria": "助手写入日程的目标任务"
+  },
+  "mic": {
+    "holdToTalk": "按住说话",
+    "releaseToStop": "放开即发送",
+    "releaseToStopAria": "放开结束录音并发送",
+    "tapToTalk": "点一下说话",
+    "tapToStop": "再点一下发送",
+    "tapToStopAria": "点一下结束录音并发送",
+    "tapIdleAria": "点一下开始说话",
+    "tapIdleTitle": "点一下开始，再点一下发送"
+  },
+  "ttsOnLabel": "朗读已开",
+  "send": {
+    "label": "送出",
+    "sending": "送出中…"
+  },
+  "quick": {
+    "title": "助手",
+    "aria": "字幕助手",
+    "subtitle": "Esc 关闭",
+    "subtitleStt": " · 空格键说话",
+    "stopSpeaking": "停止朗读",
+    "clearChat": "清空对话",
+    "openFull": "打开完整助手页",
+    "close": "关闭",
+    "closeAria": "关闭助手",
+    "emptyTitle": "提问",
+    "emptyDescription": "",
+    "sending": "助手思考中…",
+    "draftLabel": "助手消息",
+    "placeholderListening": "正在聆听…",
+    "placeholderIdle": "点此输入文字；未聚焦时按住空格键说话",
+    "micListeningAria": "放开结束录音并发送",
+    "micIdleAria": "按住说话（空格键）",
+    "micListeningTitle": "放开即发送",
+    "micIdleTitle": "按住说话，或按住空格键",
+    "release": "放开",
+    "voice": "语音",
+    "ttsLabel": "朗读",
+    "send": "送出",
+    "sendingBtn": "送出中…",
+    "showHistory": "显示对话",
+    "hideHistory": "隐藏对话",
+    "historyEmpty": "尚无对话记录",
+    "historyPanelAria": "助手对话记录",
+    "triggerLabel": "语音助手（{shortcut}）— 按住空格键说话",
+    "triggerActive": "语音助手已开启（{shortcut}）— 再点或 Esc 关闭",
+    "triggerShort": "助手",
+    "openComposer": "文字输入（Ctrl+J）— 未聚焦时仍可空格键说话",
+    "openComposerActive": "关闭文字输入（Esc）",
+    "openComposerNoVoice": "文字输入（Ctrl+J）— 此环境暂无语音识别"
+  },
+  "direct": {
+    "aria": "字幕助手",
+    "listening": "正在聆听…",
+    "readyHint": "按住空格键说话（松开送出）",
+    "desktopBrowserBlockedTitle": "桌面版不支持浏览器语音，请改用文字输入",
+    "desktopBrowserBlocked": "桌面版不支持浏览器语音识别，直接交互模式已停用。请改用文字输入。"
+  },
+  "history": {
+    "aria": "助手对话记录",
+    "new": "新对话",
+    "empty": "尚无对话记录。送出消息后会保存在本机。",
+    "deleteAria": "删除「{title}」",
+    "delete": "删除"
+  },
+  "parse": {
+    "notObject": "AI 回应格式错误：回应不是有效的物件",
+    "missingMessage": "AI 回应格式错误：缺少 message 栏位",
+    "messageNotString": "AI 回应格式错误：message 必须是字串",
+    "taskConfigNotObject": "AI 回应格式错误：taskConfig 必须是物件",
+    "nameNotString": "AI 回应格式错误：name 必须是非空字串",
+    "promptNotString": "AI 回应格式错误：promptTemplate 必须是非空字串",
+    "scheduleTypeInvalid": "AI 回应格式错误：scheduleType 必须是以下值之一: {values}",
+    "analysisModeInvalid": "AI 回应格式错误：analysisMode 必须是以下值之一: {values}",
+    "channelIdsNotArray": "AI 回应格式错误：channelIds 必须是阵列",
+    "includeInTimelineNotBoolean": "AI 回应格式错误：includeInTimeline 必须是布尔值"
+  }
+}

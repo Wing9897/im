@@ -1,0 +1,465 @@
+{
+  "shell": {
+    "tabsAria": "設定分頁",
+    "unsavedChanges": "未儲存變更",
+    "loadingSettings": "正在載入設定…",
+    "savingSettings": "正在儲存設定…",
+    "systemSettingsSection": "系統設定子頁",
+    "aiSettingsSection": "AI 子頁"
+  },
+  "tabs": {
+    "general": "一般",
+    "theme": "外觀主題",
+    "data": "資料維護",
+    "api": "API",
+    "logs": "系統日誌",
+    "aiProvider": "AI 供應商",
+    "voice": "語音",
+    "analysisStrategy": "分析調度",
+    "aiStaff": "AI員工介紹"
+  },
+  "shared": {
+    "saving": "儲存中…",
+    "saveSuccess": "✓ 儲存成功！",
+    "restarting": "重啟中…",
+    "resetting": "重置中…",
+    "cleaning": "清理中…",
+    "enabled": "已啟用",
+    "disabled": "已關閉"
+  },
+  "concurrentBatchesConfirm": {
+    "title": "確認增加並行批次數",
+    "confirmLabel": "確認增加",
+    "bodyChange": "並行批次數將從 <strong>{from}</strong> 增加為 <strong>{to}</strong>（{from} → {to}）",
+    "bodyCostWarning": "增加並行批次數會同時發送更多 LLM API 請求，使用付費供應商時會直接提高成本。",
+    "bodyLocalWarning": "若使用本機模型，增加並行批次也可能造成 OOM 或極度緩慢。"
+  },
+  "general": {
+    "weatherLocationLabel": "地區",
+    "weatherLocationHelp": "月曆會依此地區顯示 Open-Meteo 天氣預報。",
+    "followSystem": "跟系統",
+    "simpleModeLabel": "簡化模式（AI 日曆）",
+    "simpleModeHelp": "只保留助手、時間規劃、任務、通知（含語音提醒）、設定／AI 設定與日誌；隱藏監控、來源、情報地圖與排行榜。適合只用人手／助手排程，不做多源採集與分析。",
+    "weatherLocationPlaceholder": "例如：臺北、Hong Kong、Tokyo",
+    "weatherLocationAria": "天氣地區",
+    "weatherLocationAutoHelp": "會使用作業系統時區推測所在城市；也可取消勾選後指定城市或地區。",
+    "weatherLocationRequired": "請輸入地區名稱，或選擇跟系統",
+    "weatherLocationSaved": "天氣地區已儲存",
+    "saveWeatherLocation": "儲存地區",
+    "collectorRestartDescription": "重啟訊息收集器並重新連線各來源適配器。不會刪除資料庫或帳號 session。",
+    "restartCollectorButton": "重啟收集器",
+    "collectorRestartConfirmTitle": "確定要重啟收集器？",
+    "collectorRestartConfirmBody": "將中斷並重新連線所有來源適配器（Telegram、Discord、Email、RSS 等）。不會刪除訊息或帳號資料。",
+    "confirmRestart": "確認重啟",
+    "collectorRestarted": "收集器已重啟",
+    "appVersionLabel": "應用版本",
+    "appVersionHelp": "前後端共用 semver，來源為專案根目錄 VERSION；dev 模式前綴 DEV。",
+    "databaseVersionLabel": "資料庫 Schema",
+    "databaseVersionHelp": "公開 schema SemVer（與應用版本同形）。內部 SQLite stamp 仍為整數，供遷移算術使用。",
+    "databaseVersionCurrent": "v{version}",
+    "databaseVersionMismatch": "v{current} → v{required}",
+    "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
+    "versionLoading": "載入中…",
+    "versionUnavailable": "無法取得"
+  },
+  "theme": {
+    "bgTooLarge": "圖片大小不可超過 2MB",
+    "bgQuotaExceeded": "localStorage 空間不足，無法儲存背景圖片",
+    "bgReadFailed": "讀取圖片失敗",
+    "deskSectionTitle": "工作台",
+    "classicSectionTitle": "經典／自然／風格",
+    "bgImageLabel": "背景圖片",
+    "bgImageHelp": "任選主題皆可上傳；有自訂圖時頁面紋理會暫停，移除圖片後恢復。",
+    "bgImageNone": "尚未上傳",
+    "chooseImage": "選擇圖片",
+    "removeImage": "移除圖片",
+    "bgPreviewAlt": "背景預覽",
+    "opacity": "透明度",
+    "customizeHeading": "自訂此主題",
+    "colorAccent": "強調色",
+    "colorSurfaceBase": "頁面底色",
+    "colorSurfaceCard": "卡片底色",
+    "colorSurfaceBorder": "邊框色",
+    "colorSurfaceOverlay": "疊層色",
+    "textureLabel": "紋理",
+    "textureDefaultWithName": "跟隨預設（{name}）",
+    "textureNone": "無紋理",
+    "textureEffective": "實際套用：{name}",
+    "texturePausedForBg": "（已上傳背景圖，紋理暫停顯示）",
+    "colorOpacityLabel": "不透明度",
+    "colorOpacityHelp": "每個色票可單獨調色與不透明度；調低卡片底色也會讓玻璃選單更通透。",
+    "resetPersonalization": "恢復主題預設",
+    "resetPersonalizationHelp": "清除此主題的顏色、不透明度與紋理覆寫；不會移除背景圖片。",
+    "textureMotif": {
+      "grain": "顆粒",
+      "washi": "和紙",
+      "moss": "苔蘚",
+      "leaf": "葉片",
+      "wood": "木紋",
+      "wave": "水波",
+      "frost": "霜紋",
+      "ember": "餘燼",
+      "petal": "花瓣",
+      "mist": "薄霧",
+      "linen": "亞麻",
+      "grid": "網格",
+      "dune": "沙丘",
+      "ink": "墨跡"
+    }
+  },
+  "data": {
+    "retention": {
+      "categories": {
+        "messages": "實時監控",
+        "analysis": "分析結果",
+        "leaderboard": "排行榜",
+        "appLogs": "應用日誌",
+        "userEvents": "用戶／助手事件"
+      },
+      "daysLabel": "{category}保留天數",
+      "days": "天",
+      "helpAnalysis": "含關鍵事件與時間規劃（同一 Event 資料）。",
+      "helpAppLogs": "預設較短；設 0 停用自動清理。",
+      "helpUserEvents": "預設較長；手動／助手一筆事件。",
+      "invalid": "保留天數必須為 0 或正整數（0 = 停用自動清理）",
+      "saveButton": "儲存保留天數",
+      "savedCheck": "✓ 已儲存",
+      "description": "各類資料獨立設定保留天數；設為 0 可停用該類清理。背景排程每日執行，也可下方「立即清理」。刪除舊訊息不會級聯刪除已完成的分析結果。"
+    },
+    "summary": {
+      "messages": "訊息",
+      "analysis": "分析",
+      "leaderboard": "排行榜",
+      "triggerHistory": "觸發紀錄",
+      "appLogs": "日誌",
+      "userEvents": "用戶事件",
+      "timelineDismissals": "時間軸隱藏",
+      "assistantStores": "助手工作區",
+      "deviceAccessTokens": "裝置存取權杖",
+      "deviceSessions": "裝置工作階段",
+      "separator": "、"
+    },
+    "restartApp": "重新啟動應用程式",
+    "retentionCleanupDescription": "依目前保留天數設定立即執行一次清理，並回傳各類刪除筆數。不會重啟服務。",
+    "runCleanupButton": "立即清理",
+    "retentionRunConfirmTitle": "確定要立即清理？",
+    "retentionRunConfirmBody": "將依目前保留天數設定刪除過期的訊息、分析結果、排行榜、日誌與用戶事件。此操作無法復原。",
+    "confirmCleanup": "確認清理",
+    "runtimeResetDescription": "刪除所有本機狀態（資料庫、管理員、secret.key、Desktop connection.json、裝置／Telegram session 與前端快取），自動重新啟動 Desktop／重新載入頁面，並進入首次設定。",
+    "fullResetButton": "完全重置",
+    "runtimeResetConfirmTitle": "確定要完全重置？",
+    "runtimeResetConfirmBody": "將刪除資料庫、secret.key、connection.json、管理員帳號、帳號 session 與前端快取，然後自動重新啟動並進入首次設定。此操作無法復原。",
+    "confirmFullReset": "確認完全重置",
+    "preparing": "準備中…"
+  },
+  "provider": {
+    "testingToast": "正在送出極短 AI 測試請求…",
+    "testSuccess": "AI 測試成功（{latency}ms，{tokens}{preview}）",
+    "testPreviewSuffix": "，回覆：{preview}",
+    "testFailedDefault": "AI 測試失敗",
+    "loading": "載入 AI 供應商設定中…",
+    "loadError": "無法載入 AI 供應商設定",
+    "testHint": "「AI 測試」用目前表單送極短請求，無需先儲存。",
+    "testHintUnsaved": "（含未儲存變更）",
+    "testing": "測試中…",
+    "testButton": "AI 測試",
+    "saveLabel": "儲存 AI 供應商設定"
+  },
+  "webSearch": {
+    "sectionTitle": "助手聯網",
+    "sectionHelp": "允許助手呼叫 web.search；關閉後不注入該工具。",
+    "enabledLabel": "允許助手聯網搜尋",
+    "enabledAria": "允許助手聯網搜尋",
+    "providerLabel": "搜尋供應商",
+    "providerHelp": "DuckDuckGo 免 key；Brave 較準但需 key。",
+    "providerDuckDuckGo": "DuckDuckGo（免 key）",
+    "providerBrave": "Brave Search",
+    "duckDuckGoNote": "免 key，品質可能弱於 Brave。",
+    "braveKeyLabel": "Brave Search API Key",
+    "braveKeyHelp": "於 Brave 後台申請；未填則搜尋失敗。",
+    "braveKeyPlaceholder": "輸入 Brave API key"
+  },
+  "llm": {
+    "apiKeyLabel": "API Key",
+    "geminiVersionAria": "選擇 Gemini API 版本",
+    "geminiPresetBeta": "Beta（預覽版，官方預設）",
+    "geminiPresetStable": "正式（穩定版）",
+    "geminiPresetCustom": "自訂 URL",
+    "baseUrlHelpGemini": "可手填，或點右側選 Beta／正式。",
+    "modelHelpGemini": "只填模型名（如 `gemini-3.1-flash-lite`），勿加 `:generateContent`。",
+    "jsonModeLabel": "JSON 輸出模式",
+    "jsonModeHelp": "嚴格＝完整 Schema；寬鬆＝json_object，並在 prompt 附 schema。",
+    "jsonModeSchemaOption": "JSON Schema（嚴格，適合 OpenAI）",
+    "jsonModeObjectOption": "JSON Object（寬鬆，適合 DeepSeek）",
+    "thinkingModeLabel": "Thinking 模式",
+    "thinkingModeHelp": "預設關閉（think=false）。若仍見推理文字，改用 instruct 模型。",
+    "thinkingModeAria": "啟用 Thinking 模式",
+    "providers": {
+      "ollama": {
+        "label": "Ollama",
+        "hint": "本地",
+        "baseUrlLabel": "Ollama URL",
+        "modelLabel": "Ollama 模型",
+        "emptyBaseUrlMessage": "Ollama URL 不能為空。",
+        "emptyModelMessage": "Ollama 模型 不能為空。",
+        "apiKeyPlaceholder": "通常可留空"
+      },
+      "openai_compatible": {
+        "label": "OpenAI",
+        "baseUrlLabel": "OpenAI 相容 API URL",
+        "modelLabel": "模型名稱",
+        "emptyBaseUrlMessage": "OpenAI 相容 API URL 不能為空。",
+        "emptyModelMessage": "模型名稱 不能為空。"
+      },
+      "gemini_compatible": {
+        "label": "Gemini",
+        "baseUrlLabel": "Gemini 相容 API URL",
+        "modelLabel": "Gemini 模型",
+        "emptyBaseUrlMessage": "Gemini 相容 API URL 不能為空。",
+        "emptyModelMessage": "Gemini 模型 不能為空。"
+      },
+      "openrouter": {
+        "label": "OpenRouter",
+        "baseUrlLabel": "OpenRouter API URL",
+        "modelLabel": "模型名稱",
+        "emptyBaseUrlMessage": "OpenRouter API URL 不能為空。",
+        "emptyModelMessage": "模型名稱 不能為空。"
+      }
+    }
+  },
+  "voice": {
+    "disclaimer": "語音只作輸入／朗讀；Agent 只處理文字。瀏覽器辨識多依賴雲端；桌面版不支援瀏覽器語音，請改用文字輸入。",
+    "sttLabel": "語音辨識（STT）",
+    "sttHelp": "不可用時隱藏麥克風，仍可打字。",
+    "sttHelpDesktopBlocked": "桌面版不支援瀏覽器語音辨識，請改用文字輸入。",
+    "ttsLabel": "語音合成（TTS）",
+    "ttsHelp": "可朗讀回答；助手頁可隨時停止。",
+    "languageLabel": "辨識／朗讀語言",
+    "autoSpeakLabel": "自動朗讀助手回答",
+    "autoSpeakHelp": "關閉後只顯示文字。",
+    "spacePttLabel": "空白鍵語音方式",
+    "spacePttHelp": "按住＝按住空白鍵說話；切換＝按一下開始／再按結束。麥克風同此設定。",
+    "spacePttHelpDesktopBlocked": "目前無法辨識，空白鍵聽寫暫不生效。",
+    "spacePttOptions": {
+      "hold": "按住說話",
+      "toggle": "點按切換"
+    },
+    "sttOptions": {
+      "browser": "瀏覽器（Web Speech）",
+      "whisper": "本機 Whisper（即將推出）",
+      "doubao": "豆包（即將推出）"
+    },
+    "ttsOptions": {
+      "browser": "瀏覽器（speechSynthesis）",
+      "doubao": "豆包（即將推出）"
+    },
+    "languageOptions": {
+      "zhHK": "粵語 / 香港（zh-HK）",
+      "zhTW": "繁體中文（zh-TW）",
+      "zhCN": "简体中文（zh-CN）",
+      "enUS": "English（en-US）"
+    },
+    "ttsVoiceLabel": "朗讀語音",
+    "ttsVoiceHelp": "本機可離線；線上需網路。只影響朗讀，不影響辨識。",
+    "ttsVoiceDefault": "系統預設（依語言）",
+    "ttsVoiceKindLocal": "本機",
+    "ttsVoiceKindRemote": "線上",
+    "ttsPreview": "試聽",
+    "ttsPreviewing": "播放中…",
+    "ttsPreviewSample": "這是語音試聽，你好。",
+    "defaultCalendarTaskLabel": "預設日程任務",
+    "defaultCalendarTaskHelp": "沒有輸入框時（純語音交辦），助手寫入日程的預設歸屬。預設為「用戶或助手」。"
+  },
+  "analysis": {
+    "loading": "載入分析調度設定中…",
+    "loadError": "無法載入分析調度設定",
+    "triggerThresholdLabel": "觸發門檻（訊息數）",
+    "triggerThresholdHelp": "未分析訊息達此數才開新批次。預設 50。事件／排行榜任務可在任務表單覆寫。",
+    "batchLimitLabel": "每批上限（訊息數）",
+    "batchLimitHelp": "單批最多處理幾條；觸發後盡量一批吃滿。預設 50。事件／排行榜任務可在任務表單覆寫。",
+    "evidenceStyleLabel": "證據風格",
+    "evidenceStyleHelpSuffix": "控制情報要不要輸出、證據嚴不嚴。任務可在表單覆寫。",
+    "evidenceStyleOptions": {
+      "conservative": {
+        "label": "保守",
+        "description": "證據門檻較嚴：不確定就不輸出"
+      },
+      "balanced": {
+        "label": "均衡",
+        "description": "兼顧證據與覆蓋面（預設）"
+      },
+      "aggressive": {
+        "label": "積極",
+        "description": "門檻較寬：多收線索，仍需訊息支持"
+      }
+    },
+    "autoPauseLabel": "重試用盡自動暫停",
+    "autoPauseHelp": "連續失敗達上限時暫停，避免無限重試。",
+    "autoPauseAria": "啟用重試用盡自動暫停",
+    "saveLabel": "儲存分析調度",
+    "advanced": {
+      "batchSectionTitle": "批次與重試",
+      "timeoutLabel": "AI 生成超時（秒）",
+      "timeoutHelp": "單次 LLM 等待上限；硬超時約 2 倍後重試。",
+      "maxRetriesLabel": "批次最大重試次數",
+      "maxRetriesHelp": "單批最多重試次數；用盡可觸發自動暫停。",
+      "maxConcurrentLabel": "最大並行分析批次數",
+      "maxConcurrentHelpOllama": "建議 1；本地模型通常不宜高並行。",
+      "maxConcurrentHelpCloud": "建議 3；雲端 API 可並行。",
+      "maxConcurrentWarning": "提高並行會增加負載。",
+      "maxConcurrentError": "本地模型可能撐不住高並行，建議調低。",
+      "limitsSectionTitle": "內容上限",
+      "maxCharsLabel": "單批分析最大字元數",
+      "maxCharsHelp": "單批原始內容字元上限；超出提早截斷。",
+      "maxTokensLabel": "全域輸入 Token 上限",
+      "maxTokensHelp": "全站共用的輸入 token 上限；過長易失敗時可調低。",
+      "debugSectionTitle": "除錯",
+      "rulesVersionLabel": "全局分析規則版本",
+      "rulesVersionHelp": "僅提示詞版本標記，不切換規則。",
+      "traceVerboseLabel": "分析 Trace 詳細日誌",
+      "traceVerboseHelp": "記錄完整 request/response。"
+    }
+  },
+  "apiDocs": {
+    "intro": "本機 HTTP API 說明與範例：存取金鑰、Webhook 推送、客戶經理（A2A）；另附 Desktop 日曆 deep link。完整契約見倉庫 docs/agent/a2a.md。",
+    "accessKeys": {
+      "title": "存取金鑰",
+      "body": "用 `Authorization: Bearer <key>` 呼叫自動化 API。完整金鑰（`*`）可用於 Webhook 與客戶經理；僅客戶經理金鑰只能打 `/api/v1/a2a/*`。不可用於 UI 登入。",
+      "linkKeys": "管理存取金鑰"
+    },
+    "webhook": {
+      "title": "Webhook",
+      "body": "`POST /api/v1/messages` 需要完整金鑰（`*`）。僅客戶經理金鑰無法推送。`metadata` 可選，只供 AI 理解來源背景。",
+      "exampleTitle": "推送範例",
+      "exampleContent": "某地交易所暫停提幣",
+      "exampleNotes": "只供 AI 理解來源背景",
+      "linkKeys": "管理存取金鑰",
+      "linkSources": "開啟 Webhook 來源"
+    },
+    "liaison": {
+      "title": "客戶經理（A2A）",
+      "body": "`POST /api/v1/a2a/agent`：用自然語言交辦即可（給 OpenClaw／Hermes 等）。與助手共用 LLM＋工具；伺服器內部自己 loop，回傳單次結果＋用過的工具摘要。不存對話歷史（可由第三方自行保存）。需 AI 供應商與客戶經理金鑰（或 `*`）。",
+      "capabilities": [
+        "自然語言輸入，單次回傳 message + toolCalls",
+        "查訊息／情報／日程；可建改刪事件",
+        "無需第三方對接專用 events schema"
+      ],
+      "exampleAgent": "呼叫示例",
+      "exampleInput": "查明天有什麼會議，並建立週五下午家庭會議",
+      "exampleMessage": "明天沒有會議。已建立週五家庭會議。",
+      "exampleResponseComment": "單次回應（示例）：",
+      "linkStaff": "查看客戶經理（AI 員工）",
+      "linkKeys": "管理存取金鑰",
+      "docsHint": "完整契約見倉庫 docs/agent/a2a.md。"
+    },
+    "deepLink": {
+      "title": "Desktop 日曆 deep link",
+      "body": "僅安裝版 Desktop（非 HTTP API）。系統已註冊 `intelligencemonitor://` 與 `.ics` 檔案關聯。開啟連結或檔案後，會彈出「加入日曆／選任務」對話框，確認後寫入 `POST /api/v1/user-events`。只處理第一個 VEVENT；不是 webcal／CalDAV 同步。",
+      "capabilities": [
+        "`intelligencemonitor://calendar/import?url=…` — 下載遠端 ICS（http／https）",
+        "`title` + `start` 必填（inline）；可選 `end`／`location`／`body`／`taskId`",
+        "也可直接用系統開啟 `.ics` 檔（同樣走確認對話框）"
+      ],
+      "exampleTitle": "團隊同步",
+      "exampleUrlComment": "遠端 ICS：",
+      "exampleInlineComment": "Inline 事件（無 ICS）：",
+      "exampleBlockTitle": "連結範例",
+      "docsHint": "細節見倉庫 docs/ARCHITECTURE.md（Desktop calendar import）與 docs/KNOWN-SIMPLIFICATIONS.md。"
+    }
+  },
+  "staff": {
+    "title": "AI 員工介紹",
+    "intro": "系統裡有四位 AI 員工：兩位前線對話，兩位後勤分析訊息。另有一位「客戶經理」負責接待外部系統（與助手同組，不跟你聊天）。",
+    "capabilitiesLabel": "能做什麼",
+    "backofficeNote": "後勤員工由分析任務自動召喚，不會出現在對話框。",
+    "openAssistant": "開啟助手對話",
+    "openTaskEditor": "開啟任務編輯對話",
+    "displayNameLabel": "顯示名稱",
+    "displayNameHelp": "留空則使用預設名稱。",
+    "editNameAria": "編輯助手顯示名稱",
+    "editLlmAria": "編輯助手 LLM 設定",
+    "llmDialogTitle": "助手 LLM",
+    "llmDialogCancel": "取消",
+    "llmDialogSave": "儲存",
+    "uploadAvatar": "上傳",
+    "uploadAvatarAria": "上傳助手頭像",
+    "resetAvatar": "重設頭像",
+    "resetAvatarAria": "將助手頭像重設為預設",
+    "avatarTooLarge": "壓縮後圖片仍過大，請換一張更小的圖。",
+    "avatarReadFailed": "無法讀取該圖片。",
+    "llmProviderLabel": "LLM 供應商",
+    "llmProviderFollow": "跟隨 AI 供應商",
+    "llmProviderHelp": "使用該供應商在「AI 供應商」頁已保存的位址、模型與 API 金鑰。",
+    "historyMaxMessagesLabel": "對話保留則數",
+    "historyMaxMessagesHelp": "送入模型時最多保留的近期訊息數（系統提示不計）。超出時省略較早輪次；介面紀錄仍完整保留。預設 40。",
+    "historyMaxCharsLabel": "對話字元上限",
+    "historyMaxCharsHelp": "送入模型的對話總字元約略上限（含系統提示）。超出時省略較早輪次。預設 48000。",
+    "saveLabel": "儲存",
+    "kind": {
+      "agent": "Agent 級",
+      "oneshot": "單次／專職 AI"
+    },
+    "surface": {
+      "frontline": "前線",
+      "backoffice": "後勤"
+    },
+    "assistant": {
+      "summary": "可多輪對話的 Agent：會依問題自己決定要不要查資料或建日程。",
+      "capabilities": [
+        "用自然語言回答本機情報與行程問題",
+        "搜尋已採集的訊息",
+        "查詢／建立／修改／刪除用戶事件（單次日程）",
+        "建立／修改／刪除循環行程（recurring 模式 RRULE 任務）",
+        "在設定允許時可上網搜尋補充資訊",
+        "支援助手彈窗與完整助手頁；可搭配語音輸入／朗讀"
+      ]
+    },
+    "taskEditor": {
+      "summary": "在新增或編輯分析任務時陪你對話，幫你填好左側表單（不是 Agent）。",
+      "capabilities": [
+        "聽你描述要監控什麼，建議任務名稱與說明",
+        "建議分析模式（排行榜／關鍵事件／循環任務／日曆任務）與 Prompt 方向",
+        "協助調整時間範圍與排程相關設定",
+        "只負責設定任務，不會直接去分析訊息或呼叫工具"
+      ]
+    },
+    "leaderboard": {
+      "summary": "後勤：依分析任務批次處理訊息，整理熱門話題排行。",
+      "capabilities": [
+        "從一批訊息抽出討論主題",
+        "為主題打相關度／熱度分數並摘要",
+        "更新排行榜結果供排行榜頁查看",
+        "不會跟你聊天；由排程或手動執行任務觸發"
+      ]
+    },
+    "eventIntel": {
+      "summary": "後勤：從訊息抽出可追蹤的情報與行程事件（含時間推理等模板）。",
+      "capabilities": [
+        "抽出關鍵情報、會議、活動、截止日期等事件",
+        "盡量填寫時間、地點、相關人員（可推理相對時間）",
+        "結果出現在情報／地圖／時間線等視圖",
+        "不會跟你聊天；由排程或手動執行任務觸發"
+      ]
+    },
+    "projectManager": {
+      "summary": "後勤閉環 Agent：按小時 tick 根據來源訊息調和專案日程。",
+      "capabilities": [
+        "讀取本專案單次事件與子循環任務",
+        "以工具建立／修改／軟刪所屬日程項目",
+        "有綁定頻道時注入增量來源訊息",
+        "不會跟你聊天；由專案任務排程驅動（建議 hourly）"
+      ]
+    },
+    "liaison": {
+      "name": "客戶經理",
+      "badgeChannel": "對外席",
+      "summary": "對外 Agent：第三方用自然語言交辦即可，不必對接專用 API schema；不跟你聊天。",
+      "capabilities": [
+        "與助手共用 LLM 與工具（不同 system prompt）",
+        "單次回傳結果；歷史由第三方自行保存",
+        "金鑰與範例見「系統設定 → API」"
+      ],
+      "openApiDocs": "查看 API 說明與範例"
+    }
+  }
+}

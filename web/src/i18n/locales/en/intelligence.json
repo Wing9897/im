@@ -1,0 +1,126 @@
+{
+  "toolbar": {
+    "aria": "Key Events toolbar",
+    "taskSelectAria": "Key Events tasks",
+    "searchPlaceholder": "Search Key Events…",
+    "searchAria": "Search Key Events",
+    "refreshing": "Refreshing Key Events",
+    "sortAria": "Key Events sort order",
+    "viewAria": "View mode"
+  },
+  "filter": {
+    "openAria": "Search and filter events",
+    "title": "Search and filter events",
+    "closeAria": "Close search and filter",
+    "clear": "Clear",
+    "clearAria": "Clear search",
+    "done": "Done",
+    "announceSearch": "Search: {value}",
+    "announceSearchCleared": "Search cleared"
+  },
+  "sort": {
+    "event_time": "Event time",
+    "analyzed_at": "Analyzed at"
+  },
+  "map": {
+    "loading": "Loading map…",
+    "syncCapHint": "Map auto-load limit reached — load the next batch or narrow the time window",
+    "loadNextBatch": "Load next batch",
+    "loadNextBatchLoading": "Loading…",
+    "loadNextBatchAria": "Load next batch of map events",
+    "overlay": {
+      "both": "Info+events",
+      "liveOnly": "Info only",
+      "eventOnly": "Events only"
+    },
+    "danmaku": {
+      "off": "💬 OFF",
+      "persistent": "💬 Sticky",
+      "transient": "💬 Flash"
+    },
+    "liveWindowAria": "LIVE time window",
+    "liveWindowOption": "LIVE ±{hours}h",
+    "fullscreenEnter": "Fullscreen",
+    "fullscreenExit": "Exit fullscreen",
+    "rangeStartAria": "Range start",
+    "rangeEndAria": "Range end",
+    "eventCount": "{count} events",
+    "calendarPickerAria": "Calendar picker",
+    "liveUnavailable": "Live mode unavailable",
+    "liveDisable": "Disable Live mode",
+    "liveEnable": "Enable Live mode",
+    "resetViewAria": "Reset map view",
+    "emptyTitle": "No items to show on the map right now",
+    "emptyHint": "Loaded intelligence has no specific location (e.g. online activity is stored as 0,0 and cannot be pinned)",
+    "close": "Close",
+    "backToList": "Back to list",
+    "sameLocationEvents": "Same-location events ({count})",
+    "clickToViewList": "Click to view list",
+    "panelHeightAria": "Resize panel height",
+    "panelHeightValue": "{height} px",
+    "panelEvent": "Events",
+    "panelLive": "Live Monitor",
+    "liveInfoDefaultTitle": "Live info",
+    "liveInfoEmpty": "No monitor messages to show yet"
+  },
+  "detail": {
+    "hitSource": "Matched source",
+    "hitSourceFallback": "Not fully preserved",
+    "sourceSummary": "Source summary",
+    "timeRange": "Time range",
+    "timeRangeUnset": "Not set",
+    "location": "Location",
+    "locationNone": "No specific location (not on map)",
+    "sourceTime": "Source time",
+    "analyzedTime": "Analyzed at",
+    "batchSources": "Full batch sources",
+    "close": "Close",
+    "ariaLabel": "Intelligence detail: {title}"
+  },
+  "toast": {
+    "itemNotFound": "Could not find the specified Key Event"
+  },
+  "list": {
+    "viewDetailAria": "View intelligence detail: {title}",
+    "unreadAria": "Unread"
+  },
+  "card": {
+    "sourcedFrom": "From {time}"
+  },
+  "sourceMeta": {
+    "batchGroups": "Batch source · {count} groups",
+    "incomplete": "Source data was not fully preserved",
+    "hitSourceLine": "Matched source: {source}",
+    "timeRangeLine": "Time range: {range}",
+    "batchFull": "Full batch sources:\n{list}",
+    "batchIncomplete": "Full batch sources: not fully preserved"
+  },
+  "loadMore": {
+    "loadingRemote": "Loading more from server…",
+    "loading": "Loading more…",
+    "scrollCached": "Scroll to show more",
+    "scrollRemote": "Load more from server",
+    "done": "All Key Events loaded",
+    "aria": "Load more Key Events"
+  },
+  "empty": {
+    "noTasksTitle": "No Key Events tasks yet",
+    "noTasksDescription": "Create at least one Key Events task. After analysis finishes, curated highlights will appear here.",
+    "noTasksHint": "If accounts and channels are ready, add a Key Events task under Tasks next.",
+    "filteredBothTitle": "No Key Events match",
+    "filteredBothDescription": "Your search text and time range do not match any results.",
+    "filteredSearchTitle": "No Key Events match your search",
+    "filteredSearchDescription": "Try adjusting the search text, or clear filters and browse again.",
+    "filteredTimeTitle": "No matching intelligence in this time range",
+    "filteredTimeDescription": "Try adjusting the time filter, or clear filters and browse again.",
+    "filteredHint": "Clear filters to see whether there is no data, or it is just filtered out.",
+    "noneTitle": "No Key Events yet",
+    "noneDescription": "Data loaded, but there are no Key Events results to show.",
+    "noneHint": "Key Events appear after a successful Key Events analysis batch."
+  },
+  "cta": {
+    "goToTasks": "Go to Tasks",
+    "clearFilters": "Clear search & filters",
+    "clearFiltersAria": "Clear search and time filters"
+  }
+}

@@ -1,0 +1,40 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [0.1.0-beta.1] - 2026-07-29
+
+### Notes
+
+- **Current baseline:** schema stamp **v1** / public `schemaSemver` **0.1.0-beta.1** (product SemVer restart; empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — **must reset**). Internal `PRAGMA user_version` stays int `1` (not a SemVer string). Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+- **Docs:** index [`docs/README.md`](docs/README.md); intentional deltas [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md); Agent／A2A／project [`docs/agent/assistant.md`](docs/agent/assistant.md)／[`docs/agent/a2a.md`](docs/agent/a2a.md)／[`docs/agent/project.md`](docs/agent/project.md).
+
+### Added
+
+- **Cross-platform Desktop packaging + GHCR:** `dist:mac`／`dist:linux`／`dist:current` alongside `dist:win`; electron-builder mac (DMG/zip) + linux (AppImage/deb). CI quality matrix on Windows／Ubuntu／macOS; package artifacts on `workflow_dispatch`／`v*` tags; `Dockerfile` + `docker-compose.yml` push server+SPA image to `ghcr.io/<owner>/<repo>` on `main`／tags／dispatch.
+- **Desktop calendar import (.ics + deep link):** Packaged app registers `.ics` file association and `intelligencemonitor://calendar/import` protocol. Opening a file or link queues a draft into the shared user-event dialog (pick task → `POST /user-events`). First VEVENT only; not webcal/CalDAV sync.
+- **Unified Desktop／CLI data root:** Default writable state (DB, `secret.key`, `sessions/`, `connection.json`) lives under the same product folder as packaged Electron userData (`%APPDATA%\Intelligence Monitor` on Windows). CLI no longer uses cwd DB or `~/.intelligence-monitor` as the default root.
+- **Full reset clears secret.key + connection.json:** Settings「完全重置」／`POST /system/reset/database` and `scripts/reset_local_databases.py --apply` now delete encryption `secret.key` (and drop the in-process Fernet cache) plus Desktop `connection.json`, in addition to the database and Telegram sessions — no local runtime exceptions.
+- **Product SemVer restart `0.1.0-beta.1` + schema wipe-baseline 1:** Repo `VERSION` / packages / OpenAPI / health `version` restart at `0.1.0-beta.1`. SQLite `CURRENT_SCHEMA_VERSION` collapses to integer stamp **1** with empty `SCHEMA_MIGRATIONS`. Health／schema status expose public `schemaSemver`; int `schemaVersion` remains for gate arithmetic. **Existing local databases must be reset** before reuse.
+- **Baseline product surface (folded into stamp-1 DDL):** per-task analysis scheduling overrides; `analysis_mode=project` + project detail UI; `user_events.task_id`／`origin` including `project`; recurring／calendar_task modes; A2A `POST /a2a/agent`; admin password auth + device sessions + access keys; Telegram QR login; typed OpenAPI gate; Desktop notification SSE.
+
+### Changed
+
+- **Wire vocab hard-cut:** Project ticks write `user_events.origin=project`. Calendar item wire `source` is `recurring` only. Writers reject `RRULE:` prefix. Monitor／agent message filters accept `7d`／`30d` only.
+- **Settings full reset:** Single **完全重置** control; `POST /system/reset/database` (also restarts collector); `POST /reset/runtime` removed.
+- **Local reset／sessions:** `reset_local_databases.py --apply` also deletes schema `*.bak*` and Telegram sessions under data-root and legacy `~/.intelligence-monitor/sessions`. No auto-copy of session tokens into Desktop `DATA_DIR`.
+- **Auth:** pairing codes and API-key→device-session login bridge removed; household uses admin username/password + device sessions／API keys for automation.
+- **Docs SoT:** thin `docs/api|schema|frontend` folded into [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md); index at [`docs/README.md`](docs/README.md).
+- **i18n:** product chrome in `zh-Hant`／`zh-Hans`／`en`.
+
+### Fixed
+
+- **REST hard task delete → dismissals:** also removes matching `timeline_dismissals` for recurring prefixes.
+- **Access key scopes:** Non-`*` keys gated to `/api/v1/a2a/`; `last_used_at` updated on use.
+- **Auth:** invalid Bearer after a device session exists returns **401** (not 503).
+- **Full／database reset on Windows:** in-place schema wipe instead of `os.remove` on a locked DB (WinError 32).
+- **Full／database reset:** also deletes on-disk Telegram session files under data-root and legacy home.
+
+### Performance
+
+- Events `include_total=false` defaults on board map／calendar／gantt paths; retention batched deletes; weather／assistant timeouts; board stretch／map scrub hot paths.

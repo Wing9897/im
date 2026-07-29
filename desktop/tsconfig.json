@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "main.ts",
+    "preload.ts",
+    "window-controls.ts",
+    "window-controls-channels.ts",
+    "connection.ts",
+    "connection-channels.ts",
+    "connection-ipc.ts",
+    "tray.ts",
+    "menu.ts",
+    "process-manager.ts",
+    "paths.ts",
+    "notifications.ts",
+    "chromium-cache.ts"
+  ],
+  "exclude": ["node_modules", "dist", "release"]
+}

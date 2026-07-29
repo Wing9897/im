@@ -1,0 +1,1363 @@
+{
+  "language": {
+    "label": "界面语言",
+    "help": "自动跟随系统；选语系则整站使用该语言。",
+    "auto": "自动",
+    "zhHant": "繁體中文",
+    "zhHans": "简体中文",
+    "en": "English"
+  },
+  "tasks": {
+    "pageLabel": "任务设定",
+    "pageDescription": "建立您的第一个任务，以监控频道、分析情报、设定循环任务或日历任务。",
+    "emptyTitle": "尚无任务",
+    "createLabel": "新增任务",
+    "editLabel": "编辑任务",
+    "showSystemTasks": "显示系统任务",
+    "hideSystemTasks": "隐藏系统任务",
+    "systemSectionTitle": "系统与虚拟任务（仅供检视）",
+    "systemSectionSubtitle": "这些不是可编辑的分析任务，仅帮助理解数据来源与背景机制。",
+    "card": {
+      "viewDetailAria": "查看任务详情：{name}",
+      "recurring": "周期性活动",
+      "channelsRange": "{count} 个频道 · 范围 {range}",
+      "unanalyzed": "待分析",
+      "queued": "排队中",
+      "queuedTitle": "已 claim、尚未完成分析的消息（含等待重试的批次）",
+      "analyzed": "已分析",
+      "running": "执行中",
+      "idle": "闲置",
+      "disabled": "已停用",
+      "enable": "启用",
+      "disable": "停用",
+      "edit": "编辑",
+      "delete": "删除",
+      "editAria": "编辑 {name}",
+      "deleteAria": "删除 {name}",
+      "openProjectAria": "打开项目：{name}",
+      "project": "项目管理",
+      "projectProgressHint": "进度按消息游标推进（非标记统计）",
+      "recurringProgressHint": "循环日程（无消息分析统计）",
+      "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
+      "retryCount": "重试 {count}",
+      "analysisPausedHint": "分析已自动或手动暂停"
+    },
+    "detail": {
+      "timeRange": "时间范围：{range}",
+      "location": "地点：{location}",
+      "rrule": "重复规则：{rrule}",
+      "calendarNoChannels": "（循环任务模式，不绑定频道）",
+      "channelCount": "共 {count} 个频道",
+      "channelsMore": "…及其他 {count} 个频道",
+      "noChannels": "尚未绑定频道",
+      "ariaLabel": "任务详情：{name}",
+      "relatedEventsTitle": "接下来的时间事件",
+      "relatedEventsEmpty": "近期暂无关联时间事件。",
+      "relatedEventsPreviewHint": "仅显示最近几项预览；完整日程请到时间轴查看。",
+      "relatedKindOccurrence": "循环",
+      "relatedKindEvent": "单次",
+      "openTimeline": "打开时间轴"
+    },
+    "projectDetail": {
+      "metaTitle": "概览",
+      "noDescription": "暂无描述",
+      "schedule": "排程：{schedule}",
+      "sourcesTitle": "绑定来源",
+      "childrenTitle": "子循环任务",
+      "childrenEmptyTitle": "暂无子循环任务",
+      "childrenEmptyDescription": "项目管理员会在每次 tick 视需要创建子循环任务。",
+      "eventsTitle": "所属单次事件",
+      "eventsEmptyTitle": "暂无所属事件",
+      "eventsEmptyDescription": "项目创建的单次时程事件会显示在这里。",
+      "tickTitle": "最近项目 tick",
+      "tickLastEnd": "上次完成",
+      "tickCompletedCount": "已完成次数",
+      "tickMessageCount": "本轮处理消息数",
+      "tickOutcome": "结果",
+      "tickOutcomeSuccess": "成功",
+      "tickOutcomeSkipped": "跳过",
+      "tickOutcomeError": "失败",
+      "tickOutcomeRunning": "进行中",
+      "tickPendingCursor": "游标后待处理",
+      "tickCursorAt": "消息游标",
+      "tickLogTitle": "最近 tick 记录",
+      "tickLogEmpty": "暂无已完成的 tick。每次排程抽干结束后才会写入一笔（波次不单独入账）。",
+      "tickLogEmptyInFlight": "本轮抽干仍在进行中；波次会推进游标，整轮结束后才会出现在此记录。",
+      "tickMessage": "代理消息",
+      "tickNoMessage": "最近一次 tick 没有消息。",
+      "tickTools": "工具步骤",
+      "tickNoTools": "最近一次 tick 未使用工具。",
+      "tickError": "错误",
+      "openTimeline": "时间轴",
+      "reload": "刷新",
+      "batchAttentionTitle": "批次需注意",
+      "batchRetry": "重试 {count}",
+      "analysisPausedHint": "分析已自动或手动暂停",
+      "sourcesViewAll": "查看全部 {count}",
+      "sourcesDialogTitle": "绑定来源",
+      "showMore": "显示更多",
+      "showLess": "收起",
+      "showTickExtras": "显示代理消息与工具",
+      "hideTickExtras": "隐藏代理消息与工具"
+    },
+    "toast": {
+      "loadFailedBlank": "无法载入任务资料，表单将为空白",
+      "updated": "任务已更新",
+      "created": "任务已建立",
+      "clearedBatches": "已清除 {count} 个未完成的分析批次"
+    },
+    "editor": {
+      "back": "返回",
+      "presets": "快速预设",
+      "updateTask": "更新任务",
+      "createTask": "建立任务",
+      "requiredAria": "必填栏位",
+      "settingsTitle": "任务设定",
+      "optionalAria": "选填设定",
+      "optionalTitle": "选填设定",
+      "channelsLoadError": "无法加载频道列表",
+      "timeRangeLabel": "分析时间范围",
+      "timeAll": "不限时间",
+      "time30d": "最近 30 天",
+      "time7d": "最近 7 天",
+      "time1d": "最近 1 天",
+      "includeInTimelineLabel": "显示于时间规划",
+      "includeInTimelineAria": "显示于时间规划",
+      "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在关键事件与地图，但不会进入日历／甘特／时间轴。",
+      "rruleHint": "RRULE 仅用于循环任务重复事件，不会触发 AI 分析。",
+      "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与专案波次间隔仅本任务有效。",
+      "followGlobal": "跟随全局",
+      "followGlobalPlaceholder": "空＝跟随全局",
+      "batchOverlapLabel": "批次重叠",
+      "batchOverlapAria": "批次重叠消息数量",
+      "batchOverlapHelp": "下一批带入上批末尾消息以接上下文；0＝不重叠。仅关键事件任务使用（排行榜改注入 Top 10）。",
+      "triggerThresholdHelp": "留空则跟随全局触发门槛。",
+      "batchLimitHelp": "留空则跟随全局批次上限。",
+      "evidenceStyleHelp": "留空则跟随全局证据风格。",
+      "nameLabel": "任务名称",
+      "namePlaceholder": "输入任务名称",
+      "modeLabel": "分析模式",
+      "descriptionLabel": "描述",
+      "descriptionPlaceholder": "任务描述（选填）",
+      "promptLabel": "Prompt 模板",
+      "promptPlaceholder": "输入分析 Prompt 模板",
+      "pickChannels": "点击选择频道",
+      "channelsSelected": "已选 {selected} / {total} 个频道",
+      "channelsLabel": "分析来源频道",
+      "channelsAria": "选择分析来源频道",
+      "channelsPreview": "已选频道预览",
+      "channelsMore": "还有 {count} 个频道…"
+    },
+    "modes": {
+      "leaderboard": {
+        "displayLabel": "排行榜",
+        "modeOptionLabel": "排行榜 - 比较排名",
+        "modeDescription": "💡 排行榜会显示最相关的前 N 条消息，适合追踪热门话题",
+        "promptLabel": "任务 Task Prompt（告诉 AI 要比较什么）",
+        "promptPlaceholder": "例：新产品发布、政策变化、合作进展、风险信号",
+        "promptHint": "💡 例如：只在内容明确提及官方公告、产品更新、合作进展或风险信号时命中"
+      },
+      "event": {
+        "displayLabel": "关键事件",
+        "modeOptionLabel": "关键事件 - 情报 / 行程",
+        "modeDescription": "💡 一条事件可同时带时间与地点；有坐标显示在地图，有时间显示在时间线，缺栏位则只出现在对应视图",
+        "promptLabel": "任务 Task Prompt（告诉 AI 要抽取哪些事件）",
+        "promptPlaceholder": "例：提取重要公告、会议、截止日；有明确时间填 start_time，有地点填 location",
+        "promptHint": "💡 时间与地点无法确定时请省略对应栏位，禁止猜测；可同时出现在情报页与时间规划页"
+      },
+      "recurring": {
+        "displayLabel": "循环任务",
+        "modeOptionLabel": "循环任务 - 周期性活动",
+        "modeDescription": "💡 循环任务用于管理周期性活动，使用 RRULE 定义重复规则，不涉及 AI 分析",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "calendar_task": {
+        "displayLabel": "日历任务",
+        "modeOptionLabel": "日历任务 - 分类归属",
+        "modeDescription": "日历任务仅作时间轴／语音／助手的筛选归属，方便分类；无 AI 分析、无循环规则",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "project": {
+        "displayLabel": "项目管理",
+        "modeOptionLabel": "项目管理 - 闭环日程助手",
+        "modeDescription": "按小时排程驱动多轮 Agent：读来源与现有日程，以工具建立／修改／软删本项目单次事件与子循环任务（非一次性 JSON 批次）",
+        "promptLabel": "项目目标／规则",
+        "promptPlaceholder": "例如：依 Telegram 更新站会与 demo 日期；偏好上午时段；已取消的系列请软删",
+        "promptHint": "请绑定来源频道，建议 hourly 排程；即使本小时无新消息也会跑 reconcile"
+      }
+    },
+    "recurrence": {
+      "sectionTitle": "重复规则",
+      "freqLabel": "重复频率",
+      "daily": "每日",
+      "weekly": "每周",
+      "monthly": "每月",
+      "yearly": "每年",
+      "intervalUnit": {
+        "daily": "天",
+        "weekly": "周",
+        "monthly": "个月",
+        "yearly": "年"
+      },
+      "intervalLabel": "间隔（每 N {unit}）",
+      "intervalAria": "重复间隔",
+      "weekdaysLabel": "重复的星期",
+      "weekdayAria": "星期{day}",
+      "weekday": {
+        "MO": "一",
+        "TU": "二",
+        "WE": "三",
+        "TH": "四",
+        "FR": "五",
+        "SA": "六",
+        "SU": "日"
+      },
+      "monthlyMode": "每月重复方式",
+      "byDate": "按日期",
+      "byWeekday": "按星期",
+      "monthDay": "每月的日期",
+      "dayAria": "{day} 日",
+      "lastDay": "最后一天",
+      "ordinalLabel": "第几个",
+      "ordinalAria": "序数",
+      "ordinalWeekday": "星期",
+      "ordinalWeekdayAria": "星期几",
+      "ordinals": {
+        "1": "第一个",
+        "2": "第二个",
+        "3": "第三个",
+        "4": "第四个",
+        "-1": "最后一个"
+      },
+      "endLabel": "结束条件",
+      "never": "永不结束",
+      "until": "指定日期结束",
+      "count": "指定次数后结束",
+      "untilDate": "结束日期",
+      "countLabel": "重复次数",
+      "rrulePreview": "RRULE：{value}",
+      "errors": {
+        "freq": "必须选择一种频率（每日、每周、或每月）",
+        "byDay": "每周模式须至少选择一天",
+        "byMonthDay": "每月模式须至少选择一个日期"
+      }
+    },
+    "calendarFields": {
+      "section": "活动详情",
+      "tooltip": "设定循环任务活动的标题、时间、地点与描述",
+      "title": "活动标题",
+      "titlePlaceholder": "例：周会、生日提醒",
+      "allDay": "整天活动",
+      "start": "开始时间",
+      "end": "结束时间",
+      "location": "地点（选填）",
+      "locationPlaceholder": "例：会议室 A、线上",
+      "description": "描述（选填）",
+      "descriptionPlaceholder": "补充这个活动的细节",
+      "allDayHint": "整天活动不需要设定开始与结束时间。"
+    },
+    "template": {
+      "title": "选择任务模板",
+      "all": "全部",
+      "searchPlaceholder": "搜索模板名称、说明或 badge",
+      "showing": "目前显示 {visible} / {total} 个模板",
+      "filteredMode": "，已优先筛选 {mode}",
+      "loading": "正在加载模板...",
+      "empty": "目前没有可用的模板",
+      "noMatch": "没有符合目前筛选条件的模板",
+      "noMatchHint": "可改用其他分析模式或清空搜索词",
+      "commonTitle": "常用模板",
+      "sortedWithMode": "依最近使用、使用次数与目前分析模式排序，优先显示 {mode}",
+      "pinnedMode": "已按目前分析模式优先置顶 {mode}",
+      "viewMode": "查看 {mode} 模式的模板",
+      "apply": "套用选定模板",
+      "suitable": "适合目前分析模式"
+    },
+    "schedule": {
+      "typeLabel": "排程类型",
+      "typeAria": "排程类型",
+      "projectWaveInterval": "项目波间间隔（秒）",
+      "projectWaveIntervalAria": "项目每波之间的冷却秒数",
+      "projectWaveIntervalHelp": "下一波开始前冷却；0 = 不等待。保存在本任务（非全局系统设置）。空白则使用默认（20）。",
+      "types": {
+        "seconds_10": "每 10 秒",
+        "hourly": "每小时",
+        "daily": "每日",
+        "weekly": "每周",
+        "custom_seconds": "自定义秒数"
+      },
+      "weekday": {
+        "0": "星期日",
+        "1": "星期一",
+        "2": "星期二",
+        "3": "星期三",
+        "4": "星期四",
+        "5": "星期五",
+        "6": "星期六"
+      },
+      "dailyTime": "执行时间",
+      "dailyTimeAria": "每天执行时间",
+      "weeklyDateTime": "执行日期与时间",
+      "weekdayAria": "星期几",
+      "weeklyTimeAria": "每周执行时间",
+      "customSeconds": "间隔秒数",
+      "customSecondsPlaceholder": "输入秒数",
+      "customSecondsAria": "自定义间隔秒数",
+      "errors": {
+        "dailyRequired": "请输入时间（HH:MM）",
+        "dailyFormat": "时间格式无效，请使用 HH:MM 格式",
+        "hourRange": "小时必须在 00-23 之间",
+        "minuteRange": "分钟必须在 00-59 之间",
+        "weeklyRequired": "请选择星期和时间",
+        "weeklyFormat": "格式无效，请使用 D:HH:MM 格式",
+        "weekdayRange": "星期必须在 0-6 之间（0=星期日）",
+        "secondsRequired": "请输入秒数",
+        "secondsPositive": "秒数必须为正整数"
+      }
+    },
+    "allModes": "全部",
+    "toolbarAria": "任务列表操作",
+    "searchPlaceholder": "搜索任务…",
+    "searchAria": "搜索任务",
+    "createNew": "创建新任务",
+    "createNewAria": "创建新{label}",
+    "noMatchTitle": "找不到符合的任务",
+    "noMatchDescription": "没有名称或描述包含「{query}」的任务。",
+    "emptyModeTitle": "此模式下没有任务",
+    "emptyModeDescription": "切换其他模式，或创建一个使用此模式的新任务。",
+    "showAllTasks": "显示全部任务",
+    "deleted": "任务已删除",
+    "addTask": "新增任务",
+    "presets": {
+      "trending-topics": {
+        "name": "趋势主题分析",
+        "description": "从消息中提取热门讨论话题和趋势，按相关度排名",
+        "promptTemplate": "分析以下消息，提取最热门的讨论主题。为每个主题提供：标题、摘要、相关度评分(0-1)。按相关度降序排列。"
+      },
+      "key-insights": {
+        "name": "关键情报摘要",
+        "description": "提取具有情报价值的关键事件与机会",
+        "promptTemplate": "从消息中提取具有情报价值的关键事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
+      },
+      "schedule-events": {
+        "name": "行程事件提取",
+        "description": "保守提取：只在内容有明确日期／时间（或写死的时段）时填入排程时间；相对说法（如下星期三）不推理、不换算。适合只要「命中即录、不猜时间」的场合。",
+        "promptTemplate": "从消息中提取会议、活动、截止日期、发布会等可排程事件。时间规则要保守：只有消息已写明可直接落地的日期／时钟时间（例如 3 月 5 日 14:00、2026-07-20）才填 start_time／end_time；「明天／下星期三／本周五」等相对说法一律不要换算、不要猜测时间（事件本身仍可输出，时间栏位省略）。优先填写明确地点与参与者。忽略验证流程、加群提醒与系统通知。"
+      },
+      "schedule-time-inference": {
+        "name": "时间行程推理",
+        "description": "积极推理：即使未写死年月日，也可从相对说法（如下星期三 6 点、本周五截止、专案／活动节点）换算可排程时间。适合要补齐行程时间线的场合。",
+        "promptTemplate": "从消息中推理可排程的行程、会议、活动、专案节点与截止日期。与「只录明确时间」不同：本模板鼓励把相对说法换算成具体时间，例如：下星期三六点开会、本周五截止、下个月交付、活动倒数、专案里程碑。相对时间优先以该则消息行首 [time=...] 为锚点；缺省时再用系统注入的当前时间。能合理换算则填 start_time／end_time；仅有弱线索时在 body 说明依据，勿无依据硬填。忽略验证流程、加群提醒与系统通知。"
+      },
+      "sentiment-monitor": {
+        "name": "舆情监控",
+        "description": "分析群组讨论的情绪走向和舆论态势",
+        "promptTemplate": "分析以下消息的整体舆情。识别：正面/负面话题、情绪激烈的讨论、潜在争议点。为每个话题评估情绪强度。"
+      },
+      "action-items": {
+        "name": "待办事项追踪",
+        "description": "提取需要跟进的行动项目和待办事项",
+        "promptTemplate": "提取待办事项、行动项目、承诺与需要跟进的事项。在 body 写清要做什么；相关人员放入 participants；若有明确截止时间再填 start_time。"
+      },
+      "crypto-major-intel": {
+        "name": "Crypto 重大情报",
+        "description": "提取加密货币重大事件、关键情报与时间节点规划",
+        "promptTemplate": "提取 Crypto/Web3 重大情报。在 body 中写明：情报类型（监管/协议/行情/安全/上线/解锁/空投/宏观等）、紧急程度（高/中/低）、建议关注或执行动作。专注于：重大公告、TGE/解锁/快照/Claim 截止、主网上线、监管判决、大额资金异动、安全漏洞、宏观政策转折。有明确时间节点再填 start_time/end_time；忽略闲聊、重复转贴与无来源谣言。"
+      },
+      "crypto-airdrop-deals": {
+        "name": "薅羊毛情报",
+        "description": "提取空投、积分任务、测试网、优惠码等可获利机会",
+        "promptTemplate": "提取 Crypto/Web3 可获利机会（空投、积分、测试网、早鸟、返佣、白名单、免费 Mint、任务奖励等）。在 body 中写明：项目或平台、机会类型、参与条件与操作步骤摘要、收益预估（如可判断）、风险提示（诈骗/高 Gas/规则不明）。有明确截止或快照时间再填 start_time；优先列出即将截止或可立即操作的机会。忽略纯喊单与无具体操作指引的闲聊；时间无法确定时省略时间栏位。"
+      },
+      "iot-device-alerts": {
+        "name": "IoT 设备告警",
+        "description": "从 MQTT／传感器／装置日志撷取故障、离线、门槛越界与安防告警",
+        "promptTemplate": "从 IoT／MQTT／传感器／装置消息中提取「需要关注或处置」的告警事件。优先：离线／断线、故障码、感测值越界（温湿度／电量／压力等）、安防触发、通讯失败、电池低电、紧急停机。在 body 写明：装置或 topic／位置识别、告警类型、严重度（高／中／低）、关键数值或错误码、建议处置。有明确事件时间再填 start_time；地点可填场站／楼层／区域。忽略：纯心跳／keepalive、周期正常读数、重复且无新信息的状态广播、调试杂讯。无告警时返回空 items。"
+      },
+      "iot-ops-events": {
+        "name": "IoT 维运事件",
+        "description": "撷取固件更新、维护视窗、设定变更与装置上线／布署节点",
+        "promptTemplate": "从 IoT／MQTT／装置维运消息中提取可排程或需追踪的维运事件。优先：固件／OTA 更新、维护视窗、设定／规则变更、装置首次上线或汰换、批次布署、校准、保养到期。在 body 写明：装置或系统范围、事件类型、影响摘要、操作人或来源（如可判断）、风险或回滚提示。有明确开始／结束再填 start_time／end_time；相对时间可依消息 [time=...] 或系统时钟合理换算。忽略：心跳、正常周期遥测、与维运无关的告警杂讯（告警请用其他任务）。无相关事件时返回空 items。"
+      },
+      "risk-crisis-alerts": {
+        "name": "风险危机预警",
+        "description": "撷取事故、中断、违规、公关危机与需立即处置的风险",
+        "promptTemplate": "从消息中提取需关注的风险／危机事件。优先：服务中断、资料外泄、安全事故、合规违规、重大客诉／公关危机、供应中断、财务或法律风险。在 body 写明：风险类型、严重度（高／中／低）、影响范围、已知状态与建议下一步。有明确时间再填 start_time；地点可填。忽略日常抱怨与无行动价值的情绪发泄；无风险时返回空 items。"
+      },
+      "people-org-watch": {
+        "name": "人物组织动态",
+        "description": "追踪人事异动、任命、离职、合作与组织重组",
+        "promptTemplate": "提取人物／组织动态事件。优先：任命、离职、升迁、董事会变动、并购／重组、战略合作、公开发言中的立场转折。在 body 写明：人物或组织、事件类型、背景摘要、影响判断。相关人名放入 participants；有明确时间再填 start_time。忽略纯八卦与无核实来源的传言。"
+      },
+      "competitive-intel": {
+        "name": "竞品对手情报",
+        "description": "撷取竞品定价、功能、营销活动与策略动向",
+        "promptTemplate": "提取竞品／对手情报。优先：产品发布、功能对比、定价／促销、通路变动、营销战役、市占或策略转向。在 body 写明：对手或产品、情报类型、具体内容、对己方的含义或建议关注点。有明确时间再填 start_time。忽略无依据的抹黑与纯情绪比较。"
+      },
+      "security-scam-watch": {
+        "name": "资安诈骗警示",
+        "description": "识别钓鱼、盗帐、恶意连结、漏洞与社交工程手法",
+        "promptTemplate": "提取资安／诈骗相关警示。优先：钓鱼连结、假冒客服、盗帐手法、恶意档案、已知 CVE／漏洞利用、社工话术。在 body 写明：威胁类型、手法摘要、辨识特征、建议防护动作；严重度（高／中／低）。有明确时间再填 start_time。忽略玩笑与无操作细节的恐慌转发；无警示时返回空 items。"
+      },
+      "geo-field-events": {
+        "name": "地理现场事件",
+        "description": "提取有地点的活动、事故、集会与现场动态（利于地图）",
+        "promptTemplate": "提取具地理意义的现场事件。优先：集会、事故、灾害、店点／据点异动、外勤行程、地方新闻中的明确地点。务必尽量填 location（可解析的地名／地址／场馆）；有时间再填 start_time／end_time。在 body 写明事件摘要与来源语气。无法定位地点时仍可输出但 location 留空；忽略无空间信息的纯线上讨论。"
+      },
+      "policy-regulation": {
+        "name": "政策法规动态",
+        "description": "追踪立法、监管公告、执法行动与合规期限",
+        "promptTemplate": "提取政策／法规／监管动态。优先：法案进度、监管公告、执法裁罚、牌照／许可变更、合规截止日期。在 body 写明：管辖区或机关、政策主题、状态（草案／通过／生效／执法）、对相关产业的影响。有明确生效或截止时间再填 start_time／end_time。忽略纯政治情绪与无规范含义的评论。"
+      },
+      "product-release": {
+        "name": "产品发布里程碑",
+        "description": "撷取上线、版本发布、公开测试与倒数节点",
+        "promptTemplate": "提取产品／专案发布与里程碑。优先：正式上线、版本号发布、beta／公开测试、功能开关、倒数／发布会。在 body 写明：产品名称、里程碑类型、版本或范围、重要变更摘要。有明确时间再填 start_time／end_time。忽略无版本信息的路线图空谈。"
+      },
+      "news-digest-board": {
+        "name": "要闻摘要排行",
+        "description": "把消息整理成当日最值得关注的要闻榜",
+        "promptTemplate": "将消息整理为要闻排行榜主题。每个主题提供：标题、一句摘要、相关度评分(0-1)。优先具新闻价值、影响面大、可核实的内容；合并重复转载。按相关度降序。"
+      },
+      "faq-knowledge": {
+        "name": "问答知识整理",
+        "description": "归纳常见问题、解答要点与知识条目",
+        "promptTemplate": "从消息中归纳 FAQ／知识主题。每个主题提供：问题或条目标题、精炼答案／要点摘要、相关度(0-1)。合并同义反复提问；标出仍未解答的缺口。按相关度或出现频率综合排序。"
+      },
+      "rumor-verify": {
+        "name": "谣言待核实线索",
+        "description": "标出传闻、未证实说法与需要查证的信息缺口",
+        "promptTemplate": "提取「待核实」线索而非当成事实。优先：传闻、匿名爆料、互相矛盾的说法、缺少来源的断言。在 body 写明：主张摘要、为何存疑、已知来源／缺口、建议查证方向。勿把谣言写成已证实事件；时间不明则省略 start_time。无此类内容时返回空 items。"
+      },
+      "finance-markets": {
+        "name": "金融市场要闻",
+        "description": "撷取利率、财报、大宗商品与宏观市场转折（非仅加密）",
+        "promptTemplate": "提取金融／宏观市场要闻事件。优先：利率／央行、财报与指引、并购、商品／外汇重大波动、监管对市场的影响。在 body 写明：市场或标的、事件类型、关键数据或结论、可能影响。有明确时间再填 start_time。忽略无依据喊单与纯情绪预测；加密专题可另用 Crypto 模板。"
+      },
+      "meeting-decisions": {
+        "name": "会议决议结论",
+        "description": "从讨论中提取决议、共识、反对意见与后续责任人",
+        "promptTemplate": "提取会议／讨论中的决议与结论。优先：已拍板事项、共识、明确反对、指派负责人、后续检查点。在 body 写明：决议内容、状态（通过／暂缓／反对）、负责人；participants 放相关人。有截止或会议时间再填 start_time。忽略无结论的闲聊。"
+      },
+      "project-date-crud": {
+        "name": "通用项目日期管理",
+        "description": "从来源消息为项目新增、修改、删除单次日期与期限，并在无新消息时对账既有日程",
+        "promptTemplate": "你是通用项目日期管理员。目标：从绑定来源消息中找出与本项目有关的日期／期限／会议／截止日期，并用工具完成增、改、删。规则：1) 有明确日期或可合理换算的相对日期才写入；2) 先查现有日程，能对上就更新，对不上才新建；3) 来源说取消／作废就删除或停用；4) 忽略无关闲聊；5) 即使没有新消息也要对账并修正明显错误。完成后用简短 JSON message 总结本回合改动。"
+      },
+      "project-work-shift": {
+        "name": "工作轮更表",
+        "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
+        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子循环或单次事件就更新，对不上才新建；2) 固定轮更用 recurring 子任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+      }
+    }
+  },
+  "leaderboard": {
+    "toolbarAria": "排行榜筛选",
+    "selectTaskAria": "选择排行榜任务",
+    "allBoards": "全部排行榜",
+    "refreshing": "正在更新排行榜",
+    "emptyNoTasksTitle": "尚未建立排行榜任务",
+    "emptyFilteredTitle": "这个排行榜任务还没有结果",
+    "emptyNoResultsTitle": "目前还没有排行榜结果",
+    "emptyNoTasksDescription": "先建立至少一个排行榜型任务，系统完成分析后，这里才会出现主题排行。",
+    "emptyFilteredDescription": "目前选取的任务尚未产生排行榜资料，或已被筛选到没有结果。",
+    "emptyNoResultsDescription": "等分析批次完成后，这里会整理出最热门的主题与分数。",
+    "emptyNoTasksHint": "如果你已经有账号和频道，下一步通常是到任务设定新增排行榜任务。",
+    "emptyFilteredHint": "你可以先切回全部排行榜，确认是否只有目前任务暂时没有资料。",
+    "emptyNoResultsHint": "排行榜需要先有成功完成的 leaderboard 分析批次。",
+    "goToTasks": "前往任务设定",
+    "viewAll": "查看全部排行榜",
+    "viewAllAria": "查看全部排行榜",
+    "boardAria": "{name} 排行榜",
+    "detailAria": "{name} 排行榜详细内容",
+    "rowAria": "#{rank} {topic}，分数 {score}",
+    "unnamed": "未命名排行榜",
+    "summary": "事件摘要",
+    "noSummary": "尚无摘要",
+    "loadingMessages": "载入相关讯息中…",
+    "relatedMessages": "相关讯息 ({count})",
+    "noMessagesTitle": "尚无相关讯息",
+    "noMessagesDescription": "这个排行项目目前没有可展开的来源讯息。",
+    "loadMessagesFailed": "载入讯息失败：{error}"
+  },
+  "aiStaff": {
+    "assistant": "助手",
+    "taskEditor": "任务顾问",
+    "leaderboard": "排行榜分析员",
+    "eventIntel": "关键事件分析员",
+    "projectManager": "项目管理助手"
+  },
+  "ui": {
+    "listSep": "、",
+    "loading": "载入中…",
+    "loadingContent": "载入内容中",
+    "viewMode": "检视模式",
+    "viewCard": "卡片",
+    "viewList": "清单",
+    "viewMap": "地图",
+    "infoTooltip": "说明",
+    "hidePassword": "隐藏密码",
+    "showPassword": "显示密码",
+    "collapse": "收起",
+    "expand": "展开",
+    "collapseTitle": "收起{title}",
+    "expandTitle": "展开{title}",
+    "workspaceTabs": "工作区分页",
+    "unknownSender": "未知发送者",
+    "viewMessageAria": "查看讯息详情：{sender}",
+    "unread": "未读",
+    "retryLoadAria": "重试载入",
+    "retry": "重试",
+    "retrying": "重试中…",
+    "refreshing": "更新中",
+    "pageError": {
+      "title": "此页面发生错误",
+      "body": "页面渲染时遇到问题，请尝试重新载入此区块。"
+    },
+    "lazyLoadError": "元件载入失败",
+    "errorBoundary": {
+      "title": "发生未预期的错误",
+      "body": "应用程序遇到问题并已停止运行。你可以尝试重新载入或回到首页。",
+      "hideStack": "隐藏元件堆叠",
+      "showStack": "显示元件堆叠",
+      "reload": "重新载入界面",
+      "logMessage": "未捕获的元件错误: {message}"
+    },
+    "pageLoading": "页面加载中…",
+    "expandSidebar": "展开侧栏",
+    "collapseSidebar": "收起侧栏",
+    "breadcrumb": "面包屑",
+    "tabs": "分页",
+    "previewPanel": "详情预览",
+    "itemsCount": "{count} 项",
+    "filterActiveCount": "{count} 项已选",
+    "unnamedAccount": "未命名账号",
+    "virtual": "虚拟",
+    "system": "系统",
+    "agent": "Agent 级",
+    "unknownMode": "未知",
+    "confirm": "确认"
+  },
+  "commandPalette": {
+    "groups": {
+      "navigation": "导航",
+      "settings": "设定",
+      "actions": "动作",
+      "tasks": "任务"
+    },
+    "unnamedTask": "未命名任务",
+    "monitorWall": "监控墙",
+    "keyEventsMap": "关键事件 · 地图",
+    "keyEventsList": "关键事件 · 列表",
+    "keyEventsCard": "关键事件 · 卡片",
+    "actionsVoice": "通知 · 语音提醒",
+    "actionsHistory": "通知 · 触发纪录",
+    "sourcesRss": "来源 · RSS",
+    "sourcesTelegram": "来源 · Telegram",
+    "sourcesDiscord": "来源 · Discord",
+    "sourcesHttp": "来源 · HTTP",
+    "sourcesHttpWebhook": "来源 · HTTP Webhook",
+    "sourcesMqtt": "来源 · MQTT",
+    "sourcesEmail": "来源 · Email",
+    "aiVoice": "语音设定",
+    "aiStrategy": "分析调度",
+    "aiStaff": "AI员工介绍",
+    "theme": "主题设定",
+    "settingsData": "资料维护",
+    "settingsApi": "API 说明",
+    "newTask": "新增任务",
+    "newAction": "新增通知",
+    "newActionHint": "开启通知页",
+    "openViewer": "开启 Viewer 视窗",
+    "openViewerHint": "新分页",
+    "shortcutHelp": "快捷键说明",
+    "quickAssistant": "助手",
+    "quickAssistantHint": "⌘/Ctrl+J",
+    "aria": "命令面板",
+    "searchPlaceholder": "搜索页面、任务或动作…",
+    "searchAria": "搜索命令与任务",
+    "empty": "没有符合的结果",
+    "hintSelect": "↑↓ 选择",
+    "hintOpen": "↵ 打开",
+    "triggerAria": "搜索与快速跳转 ({shortcut})",
+    "triggerLabel": "搜索…"
+  },
+  "widgets": {
+    "map": {
+      "title": "情报地图",
+      "description": "地理标记概览（大型）"
+    },
+    "wall": {
+      "title": "讯息墙",
+      "description": "多频道轮播（可大可小）"
+    },
+    "gantt": {
+      "title": "甘特／按任务",
+      "description": "任务活动跨度（长条）"
+    },
+    "ganttEvents": {
+      "title": "甘特／按事件",
+      "description": "事件时间跨度（长条）"
+    },
+    "events": {
+      "title": "关键事件",
+      "description": "最新关键事件"
+    },
+    "feed": {
+      "title": "实时监控",
+      "description": "实时监控讯息缩图"
+    },
+    "calendar": {
+      "title": "月历",
+      "description": "本月行程"
+    },
+    "calendarDay": {
+      "title": "日程",
+      "description": "今日行程"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "description": "热门主题排行"
+    },
+    "stats": {
+      "title": "分析统计",
+      "description": "七日分析量"
+    },
+    "queue": {
+      "title": "分析伫列",
+      "description": "伫列与处理中"
+    },
+    "system": {
+      "title": "系统状态",
+      "description": "收集器／AI"
+    },
+    "clock": {
+      "title": "时钟",
+      "description": "本地时间"
+    },
+    "weather": {
+      "title": "天气",
+      "description": "地区天气与七日预报"
+    },
+    "sources": {
+      "title": "来源状态",
+      "description": "帐号连线"
+    },
+    "logs": {
+      "title": "系统日志",
+      "description": "近期应用日志"
+    },
+    "tasks": {
+      "title": "任务",
+      "description": "分析任务状态"
+    },
+    "actions": {
+      "title": "通知动作",
+      "description": "自动化动作状态"
+    }
+  },
+  "systemTasks": {
+    "userOrAssistant": {
+      "title": "用户或助手",
+      "shortDescription": "手动或助手建立的定时事件（user_events）。在月历、甘特、关键事件等处以虚拟来源「用户或助手」显示，并非可编辑的分析任务。"
+    },
+    "clientManager": {
+      "title": "客户经理",
+      "shortDescription": "对外 Agent（A2A）：第三方用自然语言交办即可，与助手共用 LLM／工具但不跟你聊天、不存服务器对话历史。需访问密钥（`a2a:agent` 或 `*`）。",
+      "linkLabel": "前往 API 说明"
+    },
+    "collector": {
+      "title": "收集器",
+      "shortDescription": "各平台帐号的讯息收集与连线重试，将原始讯息写入数据库，供监控墙与后续分析使用。"
+    },
+    "analysisBatch": {
+      "title": "分析批次",
+      "shortDescription": "排程器对排行榜／关键事件等标记型任务分批呼叫 LLM，写入分析结果。项目管理任务不走此路径（由上方可编辑的项目任务排程驱动）。"
+    },
+    "outboundNotify": {
+      "title": "外发通知",
+      "shortDescription": "依通知规则在条件符合时，透过 Telegram、Discord、Webhook、MQTT 等管道外送讯息。"
+    },
+    "voiceReminder": {
+      "title": "语音提醒",
+      "shortDescription": "本机扫描即将发生的关键事件、循环任务（RRULE）展开，以及「用户或助手」事件，并以浏览器语音播报。",
+      "linkLabel": "前往语音提醒"
+    },
+    "retention": {
+      "title": "资料清理",
+      "shortDescription": "依设定的保留天数定期清理讯息、分析结果、排行榜、应用日志与用户事件等资料。"
+    },
+    "startupGeocode": {
+      "title": "启动坐标回填",
+      "shortDescription": "服务器启动时自动跑一次：把「有地点文字、但还没有经纬度」的情报事件补上坐标，让地图能标点。平时分析新事件缺坐标时也会 geocode；此项是补旧资料，失败不会卡住启动，也无法在此页修改。"
+    }
+  },
+  "errors": {
+    "weather_timeout": "天气来源回应过慢，请稍后再试",
+    "weather_unavailable": "天气来源皆暂时无法使用，请稍后再试",
+    "weather_location_not_found": "无法解析指定地区",
+    "weather_invalid_date_range": "天气预报日期范围无效",
+    "agent_timeout": "助手请求超时，请稍后再试或缩短问题。",
+    "ai_engine_unreachable": "AI 引擎无法连线（例如本机 Ollama 未启动或端口错误）。设置页「AI 测试」成功仍可能无法支持助手长对话。",
+    "Backend unreachable": "无法连线到后端服务",
+    "Request timed out": "请求超时，请稍后再试",
+    "Request cancelled": "请求已取消"
+  },
+  "timeFilter": {
+    "aria": "时间筛选",
+    "today": "本日",
+    "1d": "1天",
+    "7d": "7天",
+    "30d": "30天"
+  },
+  "messages": {
+    "speakWithTask": "任务「{task}」，{kindLabel}「{eventTitle}」，还有{lead}",
+    "speakWithoutTask": "{kindLabel}「{eventTitle}」，还有{lead}",
+    "retentionDeleted": "已删除：{parts}",
+    "retentionNone": "没有符合条件的旧资料可删",
+    "retentionPart": "{label} {count}",
+    "confirmChannelSelection": "确认选择 ({count})",
+    "channelsSelected": "已选 {selected} / {total} 个频道",
+    "loadMore": "加载更多",
+    "speakLead15": "约十五分钟",
+    "speakLead60": "约一小时",
+    "speakLead240": "约四小时",
+    "speakLead1440": "约一天",
+    "speakLeadMinutes": "约{minutes}分钟",
+    "speakKindEvent": "关键事件",
+    "speakKindRecurring": "循环任务",
+    "speakKindUser": "提醒",
+    "speakPreview": "测试进行中",
+    "voiceTriggerReason": "语音提醒 · {lead} · 「{title}」",
+    "speakTtsUnavailable": "本机语音合成不可用",
+    "speakFailed": "朗读失败"
+  },
+  "dialog": {
+    "cancel": "取消",
+    "close": "关闭",
+    "confirm": "确认",
+    "deleteConfirmTitle": "确认删除任务",
+    "deleteEntityTask": "任务",
+    "deleteConfirmPrefix": "确定要删除{entity}",
+    "deleteConfirmSuffix": "吗？此操作无法复原。",
+    "confirmDelete": "确认删除",
+    "deleting": "删除中…",
+    "closePreview": "关闭预览"
+  },
+  "platformScope": {
+    "source": "来源",
+    "channel": "频道",
+    "feed": "Feed",
+    "url": "网址",
+    "broker": "Broker",
+    "folder": "文件夹",
+    "endpoint": "端点"
+  },
+  "channelPicker": {
+    "all": "全部",
+    "platformFilterAria": "平台过滤",
+    "platformLabel": "平台",
+    "platformHelper": "先选平台缩小范围；大型列表可点 ▶ 展开。",
+    "searchPlaceholder": "搜索平台、账号或频道…",
+    "searchAria": "搜索频道",
+    "selectAll": "全选",
+    "clear": "清空",
+    "clearSelection": "清空选择",
+    "clearAllAria": "清空所有选择",
+    "selectedBadge": "{count} 已选",
+    "noMatch": "找不到符合的频道",
+    "emptyDefault": "尚无可用频道",
+    "emptyForPlatform": "此平台尚无可用频道",
+    "emptyNeedSources": "尚无可用频道，请先到来源管理新增账号",
+    "summaryMonitorScope": "监控范围",
+    "taskTitle": "选择分析来源频道",
+    "taskSummary": "分析来源",
+    "taskPlatformFilterAria": "分析来源平台过滤",
+    "wallTitle": "选择监控范围",
+    "wallTitleWithCount": "选择监控范围（已选 {count} 个）",
+    "wallSelectScope": "选择范围",
+    "wallPlatformFilterAria": "讯息墙平台过滤",
+    "wallConfirm": "完成"
+  },
+  "sectionError": {
+    "loadFailed": "{name} 加载失败",
+    "retry": "重试"
+  },
+  "board": {
+    "gantt": {
+      "defaultLabelHeader": "任务",
+      "defaultEmptyLabel": "尚无任务活动",
+      "emptyFiltered": "目前范围内尚无可显示活动",
+      "unnamedTask": "未命名任务",
+      "untitled": "(无标题)",
+      "axisDayAria": "日时间轴",
+      "axisMonthAria": "月时间轴",
+      "rowsAria": "甘特活动列表",
+      "activeAria": "活动中",
+      "trackAria": "{label} 活动跨度 {range}"
+    },
+    "calendar": {
+      "weekdays": [
+        "日",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六"
+      ],
+      "today": "今天",
+      "noSchedule": "无行程",
+      "dayCountAria": "{count} 件"
+    },
+    "map": {
+      "noCoordEvents": "尚无具体地理位置事件"
+    },
+    "wall": {
+      "sectionName": "讯息墙组件",
+      "noChannelsTitle": "尚未选择频道",
+      "noChannelsDescription": "点标头「选择范围」勾选要轮播的频道。",
+      "loadingAria": "载入讯息墙"
+    },
+    "system": {
+      "collector": "收集器",
+      "aiEngine": "AI 引擎",
+      "aiAvailable": "可用",
+      "aiUnavailable": "不可用",
+      "aiUnknown": "未知"
+    },
+    "common": {
+      "unnamed": "(未命名)",
+      "unnamedTask": "未命名任务",
+      "untitled": "(无标题)",
+      "untitledEvent": "（无标题事件）",
+      "unassignedTask": "未归属任务",
+      "enabled": "启用",
+      "disabled": "停用",
+      "noTaskSelected": "尚未选择任务",
+      "paused": "{name}已暂停（其他组件最大化）",
+      "pausedWall": "讯息墙已暂停（其他组件最大化中）",
+      "channelCount": "{count} 频道",
+      "dayView": "日检视",
+      "monthView": "月检视",
+      "viewModeAria": "{prefix}：{mode}",
+      "loadingCalendar": "载入日历…",
+      "loadingGantt": "载入甘特…",
+      "loadingMap": "载入地图…"
+    },
+    "stats": {
+      "empty": "尚无分析统计",
+      "analyzed": "已分析",
+      "unanalyzed": "未分析",
+      "queued": "队列中",
+      "rowMeta": "已析 {analyzed} · 未析 {unanalyzed}",
+      "rowQueued": " · 队列 {count}"
+    },
+    "logs": {
+      "empty": "尚无日志"
+    },
+    "actions": {
+      "empty": "尚未设定通知动作",
+      "neverTriggered": "尚未触发"
+    },
+    "tasks": {
+      "empty": "尚未设定任务"
+    },
+    "leaderboard": {
+      "empty": "尚无排行主题",
+      "score": "分数 {score}",
+      "messages": " · {count} 则"
+    },
+    "mapWidget": {
+      "resetView": "还原全世界视图",
+      "saveView": "储存地图位置",
+      "pausedName": "地图"
+    },
+    "weather": {
+      "refresh": "重新整理天气",
+      "errorPrefix": "天气：",
+      "pausedName": "天气",
+      "emptyForecast": "尚无天气预报",
+      "emptyLocation": "尚未设定天气地区",
+      "clear": "晴朗",
+      "cloudy": "多云",
+      "overcast": "阴天",
+      "fog": "雾",
+      "rain": "雨",
+      "snow": "雪",
+      "thunder": "雷雨",
+      "generic": "天气"
+    },
+    "queue": {
+      "pending": "待处理",
+      "processing": "处理中",
+      "status": "状态",
+      "paused": "已暂停",
+      "running": "运作中",
+      "noBatches": "目前无处理中批次",
+      "messages": "{count} 则讯息",
+      "retry": " · 重试 {count}",
+      "attention": "需注意",
+      "retryPending": "待重试",
+      "processingBadge": "处理中"
+    },
+    "feed": {
+      "empty": "尚无监控讯息"
+    },
+    "wallWidget": {
+      "empty": "尚无频道",
+      "pausedName": "讯息墙"
+    },
+    "sources": {
+      "empty": "尚未设定来源"
+    },
+    "events": {
+      "empty": "尚无关键事件",
+      "ariaPrefix": "关键事件"
+    },
+    "calendarWidget": {
+      "monthAria": "月历",
+      "dayAria": "日程",
+      "emptyMonth": "本月尚无符合任务的事件",
+      "emptyDay": "今天尚无符合任务的行程"
+    },
+    "ganttWidget": {
+      "byTaskAria": "甘特／按任务",
+      "byEventAria": "甘特／按事件",
+      "pausedName": "甘特",
+      "labelTask": "任务",
+      "labelEvent": "事件",
+      "emptyEvents": "尚无事件"
+    },
+    "shell": {
+      "loadFailed": "载入失败，请重试",
+      "retry": "重试",
+      "toolsAria": "沉浸画布工具",
+      "toolbarAria": "画布操作",
+      "addWidget": "新增组件",
+      "exportLayout": "汇出版面",
+      "importLayout": "汇入版面",
+      "importFileAria": "选择版面 JSON 档",
+      "resetLayout": "重置为预设版面",
+      "resetLayoutAria": "重置布局",
+      "doneEdit": "完成编辑",
+      "fullscreen": "全萤幕",
+      "exitFullscreen": "退出全萤幕",
+      "edit": "编辑",
+      "resetConfirmTitle": "重置为预设版面？",
+      "resetConfirmBody": "目前自订布局将被覆盖，此操作无法复原。",
+      "resetConfirm": "确认重置",
+      "resetConfirmBusy": "重置中…",
+      "selectSize": "选择尺寸",
+      "selectSizeAria": "{title}：选择尺寸",
+      "maximize": "最大化",
+      "restore": "还原",
+      "maximizeWidget": "最大化组件",
+      "restoreWidget": "还原组件",
+      "removeWidget": "移除组件",
+      "removeWidgetAria": "移除 {title}",
+      "emptyTitle": "尚未新增组件",
+      "emptyHint": "点画布右下角浮键进入编辑后新增组件。",
+      "exported": "版面已汇出",
+      "imported": "版面已汇入",
+      "importFailed": "无法汇入版面",
+      "importInvalidJson": "版面 JSON 格式无效",
+      "importMissingWidgets": "版面档缺少 widgets",
+      "importNeedOne": "版面至少需包含一个有效组件",
+      "importNoValid": "版面未包含有效组件",
+      "taskFilterPrefix": "筛选任务",
+      "taskFilterSelect": "选择任务",
+      "taskFilterSelectAria": "{prefix}：选择任务",
+      "taskFilterCheckAria": "勾选任务",
+      "taskFilterSelectAll": "全选",
+      "taskFilterClear": "清空",
+      "taskFilterEmpty": "尚无任务"
+    }
+  },
+  "validation": {
+    "webhookUrlRequired": "Webhook URL 为必填栏位",
+    "webhookUrlPrefix": "Webhook URL 必须以 {prefixes} 开头",
+    "webhookUrlMaxLength": "Webhook URL 长度不可超过 {max} 字元",
+    "urlRequired": "URL 为必填栏位",
+    "urlPrefix": "URL 必须以 http:// 或 https:// 开头",
+    "urlUnsafeProtocol": "URL 必须使用安全的 http:// 或 https:// 协定",
+    "urlMaxLength": "URL 长度不可超过 {max} 字元",
+    "httpMethodInvalid": "HTTP 方法仅支援 POST 或 PUT",
+    "brokerUrlRequired": "Broker URL 为必填栏位",
+    "brokerUrlPrefix": "Broker URL 必须以 mqtt:// 或 mqtts:// 开头",
+    "brokerUrlMaxLength": "Broker URL 长度不可超过 {max} 字元",
+    "topicRequired": "Topic 为必填栏位",
+    "topicMaxLength": "每个主题长度不可超过 {max} 字元",
+    "qosInvalid": "QoS 仅支援 0、1 或 2",
+    "credentialPairRequired": "使用者名称和密码必须同时提供或同时留空",
+    "botTokenRequired": "Bot Token 为必填栏位",
+    "chatIdRequired": "Chat ID 为必填栏位",
+    "imapHostRequired": "IMAP 主机为必填栏位",
+    "imapHostNoProtocol": "IMAP 主机请勿包含协定前缀（例如 imap://）",
+    "imapHostTooLong": "IMAP 主机名称过长",
+    "imapPortRange": "连接埠必须在 1–65535 之间",
+    "emailRequired": "电子邮件地址为必填栏位",
+    "appPasswordRequired": "App Password 为必填栏位",
+    "folderRequired": "至少需指定一个 IMAP 资料夹",
+    "pollIntervalNumber": "轮询间隔必须为数字",
+    "pollIntervalRange": "轮询间隔需在 {min}–{max} 秒之间",
+    "initialSyncDaysRange": "首次同步天数需在 {min}–{max} 之间",
+    "initialSyncMaxMessagesRange": "首次同步上限需在 {min}–{max} 之间",
+    "orSeparator": " 或 "
+  },
+  "topBar": {
+    "openViewer": "打开新 viewer",
+    "collector": {
+      "starting": "收集器启动中…",
+      "running": "收集器运行中",
+      "stopping": "收集器停止中…",
+      "stopped": "收集器已停止",
+      "restarting": "收集器重启中…",
+      "error": "收集器启动失败"
+    },
+    "collectorShort": {
+      "starting": "启动中…",
+      "running": "运行中",
+      "stopping": "停止中…",
+      "stopped": "已停止",
+      "restarting": "重启中…",
+      "error": "启动失败"
+    },
+    "unnamedTask": "未命名任务",
+    "analyzingLabel": "分析中 · {task}",
+    "analyzingTitle": "AI 分析中: {task} ({batch})",
+    "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暂停新批次",
+    "aiUnavailable": "AI 无法连线",
+    "aiUnavailableTitle": "收集器运行中，但 AI 引擎无法连线",
+    "analysisPaused": "分析已暂停",
+    "analysisPausedTitle": "收集器运行中 · AI 分析已暂停",
+    "systemOk": "系统正常",
+    "systemOkTitle": "收集器运行中 · AI 引擎正常",
+    "busy": "处理中",
+    "clickResume": "点击继续分析",
+    "clickPause": "点击暂停分析",
+    "analysisControl": "分析控制",
+    "analysisControlMenu": "分析控制菜单",
+    "emergencyAbort": "紧急中止",
+    "aborting": "中止中…",
+    "pillTitle": "{title}（{pauseHint}；悬停展开可紧急中止）",
+    "pillAria": "{label}。{pauseHint}",
+    "abortDialogTitle": "紧急中止分析",
+    "abortDialogBody": "确定要紧急中止所有分析吗？此操作无法复原。"
+  },
+  "window": {
+    "controlsAria": "窗口控制栏",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "还原",
+    "close": "关闭"
+  },
+  "monitorMode": {
+    "aria": "监控模式",
+    "pages": "分页",
+    "canvas": "画布",
+    "pagesTitle": "分页监控",
+    "canvasTitle": "沉浸画布监控"
+  },
+  "shortcuts": {
+    "title": "快捷键说明",
+    "commandPalette": "打开命令面板",
+    "quickAssistant": "打开／关闭助手",
+    "holdToTalk": "助手打开时按住说话",
+    "focusSearch": "聚焦页面搜索",
+    "listNav": "在列表中移动",
+    "openItem": "打开当前项目",
+    "closePanel": "关闭面板或预览"
+  },
+  "schema": {
+    "dialogAria": "数据库升级",
+    "title": "数据库升级",
+    "versionLine": "当前版本 v{current} → 目标 v{required}",
+    "restoredTitle": "已从半迁移状态恢复",
+    "restoredBody": "系统检测到上次升级未完成，已从基准备份还原。请确认后重新升级。",
+    "needsTitle": "需要数据库升级",
+    "needsBody": "必须先完成结构升级才能继续使用。升级期间会暂停收集与分析，请勿关闭程序。",
+    "failedBackupTitle": "升级失败（已保留备份）",
+    "failedBackupBody": "可点下方按钮重试。若仍失败，请关闭程序后用备份路径手动还原。",
+    "failedNoBackupTitle": "升级失败且没有可用备份",
+    "failedNoBackupBody": "无法安全自动重试。请关闭程序后手动还原数据库文件。",
+    "migratingTitle": "升级进行中",
+    "migratingBody": "请稍候，不要关闭程序或强制断电。",
+    "phaseMigrate": "升级结构",
+    "starting": "正在开始升级…",
+    "idlePhase": "待命",
+    "checking": "检查数据库版本…",
+    "upgrading": "升级中…",
+    "retry": "重新升级",
+    "start": "开始升级",
+    "backupPath": "备份路径：{path}",
+    "copied": "已复制",
+    "copy": "复制",
+    "techDetails": "技术错误详情（可展开）",
+    "retryBlocked": "没有可用备份，无法安全重试。请关闭程序后手动还原数据库文件。",
+    "phases": {
+      "idle": "待命",
+      "awaiting_confirmation": "等待确认",
+      "snapshot": "记录统计",
+      "backup": "备份",
+      "migrate": "升级结构",
+      "validate": "校验",
+      "restore": "还原",
+      "runtime": "启动服务",
+      "ready": "就绪",
+      "failed": "失败"
+    },
+    "messages": {
+      "needs_upgrade": "数据库需要从 v{current} 升级到 v{required}",
+      "up_to_date": "数据库结构已是最新",
+      "healed_half_migration": "已从半迁移状态恢复，请确认后重新升级",
+      "restoring": "正在从备份还原数据库…",
+      "restored_retry": "已从备份还原，请重新升级",
+      "failed_no_backup": "升级失败且没有可用备份，请关闭程序后手动还原数据库文件",
+      "cannot_restore": "无法还原备份",
+      "snapshotting": "正在记录升级前数据统计…",
+      "backing_up": "正在备份数据库…",
+      "migrating": "正在升级数据库结构（请勿关闭程序）…",
+      "validating": "正在验证升级后数据完整性…",
+      "starting_runtime": "正在启动收集与分析服务…",
+      "upgrade_complete": "升级完成",
+      "failed_auto_restore": "升级失败且自动还原失败",
+      "upgrade_failed": "升级失败（未产生可用备份，请勿继续使用）",
+      "starting": "正在开始升级…",
+      "marker_corrupt": "升级校验标记损坏",
+      "startup_validate_failed": "启动校验失败",
+      "integrity_failed": "数据完整性检查失败",
+      "half_migration_restore_failed": "半迁移自动还原失败"
+    }
+  },
+  "boot": {
+    "checking": "正在检查数据库版本…",
+    "unavailableTitle": "无法连线到本机服务",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 1／SemVer 0.1.0-beta.1；旧 stamp 数据库须重置。请执行 {script} 重置本机数据库后再重试。",
+    "retry": "重新检查",
+    "serviceUnavailable": "服务暂时无法回应"
+  },
+  "setup": {
+    "title": "连接此设备",
+    "intro": "选择在本机运行服务，或连接到其他设备上的服务。",
+    "titleRegister": "建立系统",
+    "introRegister": "创建管理员账号与密码。之后各设备使用同一组账密登录；API 密钥仅供自动化。",
+    "titleLogin": "登录",
+    "introLogin": "使用管理员账号与密码登录此设备。",
+    "titleForgot": "重置密码",
+    "introForgot": "仅可在本机重置管理员密码。重置后请用新密码登录。",
+    "chooseMode": "如何连接？",
+    "stepChoose": "选择",
+    "stepConnect": "账号",
+    "local": "这台电脑",
+    "localHint": "在本机运行服务并完成设置",
+    "remote": "其他设备",
+    "remoteHint": "连到其他设备上的服务并登录",
+    "registerHelp": "设置管理员用户名与密码。请妥善保存，其他设备也使用这组账密。",
+    "loginHelp": "输入管理员用户名与密码。",
+    "loginNoDevicesHelp": "所有设备会话已撤销。请用管理员密码重新登录，或在本机重置密码。",
+    "remoteLoginHelp": "填写服务器网址，以及管理员用户名与密码。",
+    "register": "创建管理员账号",
+    "login": "登录",
+    "username": "用户名",
+    "usernamePlaceholder": "例如 admin",
+    "usernameInvalid": "用户名仅可使用小写字母、数字以及 '.'、'_'、'-'",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "passwordInvalid": "请输入密码",
+    "passwordMismatch": "两次输入的密码不一致",
+    "forgotPassword": "忘记密码…",
+    "forgotHelp": "仅在已开启本机救援时可以重置管理员密码。成功后会自动关闭救援开关，仍需用新密码登录。",
+    "forgotArmHint": "忘记密码？请用具写入权限的系统账号，把数据目录中 connection.json 的 resetPasswordForLocal 设为 true，然后刷新此页。",
+    "resetPassword": "重置密码",
+    "resetPasswordOk": "密码已重置。请用新密码登录。",
+    "serverUrl": "服务器网址",
+    "serverUrlRequired": "请填写服务器网址",
+    "serverUrlPlaceholder": "例如 http://192.168.1.10:18820",
+    "deviceLabel": "设备名称",
+    "defaultHostLabel": "主机",
+    "defaultDeviceLabel": "浏览器",
+    "working": "处理中…",
+    "restartingShell": "正在重启桌面应用…",
+    "back": "返回"
+  },
+  "reauth": {
+    "title": "重新登录",
+    "intro": "此设备的登录已过期或已清除。请用管理员账号密码继续——这不是首次设置。",
+    "localHint": "将登录到本机服务（{origin}）。",
+    "login": "登录",
+    "useOtherServer": "使用其他服务器…",
+    "useThisHost": "使用本机"
+  },
+  "viewer": {
+    "navAria": "Viewer 导航",
+    "brand": "IM Viewer",
+    "navTasks": "任务",
+    "navResults": "结果",
+    "navStatus": "状态",
+    "authFailed": "认证失败：API Key 无效或已过期",
+    "noData": "无数据",
+    "reload": "重新载入",
+    "active": "启用",
+    "inactive": "停用",
+    "tasksLoadError": "无法加载任务列表，请检查连线状态",
+    "tasksEmpty": "尚无任务",
+    "tasksRefreshing": "正在更新任务列表",
+    "viewTaskAria": "查看任务：{name}",
+    "taskDetailAria": "任务详情：{name}",
+    "taskId": "任务 ID：{id}",
+    "lastAnalysis": "最后分析：",
+    "neverRun": "尚未执行",
+    "schedule": "排程：{cron}",
+    "resultsLoadError": "无法加载结果摘要，请检查连线状态",
+    "resultsRefreshing": "正在更新结果摘要",
+    "totalTasks": "总任务数",
+    "activeTasks": "启用任务",
+    "totalBatches": "总批次数",
+    "completedBatches": "已完成批次",
+    "totalResults": "总结果数",
+    "statusLoadError": "无法加载系统状态，请检查连线状态",
+    "statusRefreshing": "正在更新系统状态",
+    "queueDepth": "队列深度",
+    "queueDepthDesc": "目前等待处理的批次数量",
+    "collectorStatus": "收集器状态",
+    "collectorRunning": "运行中",
+    "collectorStopped": "已停止",
+    "collectorDesc": "消息收集器心跳状态",
+    "analysisStatus": "分析状态",
+    "analysisPaused": "分析已暂停",
+    "analysisRunning": "运行中",
+    "analysisDesc": "AI 分析排程是否暂停",
+    "uptime": "运行时间",
+    "uptimeDesc": "系统自启动以来的时间",
+    "uptimeHours": "{hours} 小时 {minutes} 分钟",
+    "uptimeMinutes": "{minutes} 分钟",
+    "statusOk": "正常",
+    "statusBad": "异常"
+  },
+  "yes": "是",
+  "no": "否",
+  "emDash": "—",
+  "never": "从未",
+  "edit": "编辑",
+  "delete": "删除",
+  "enabled": "已启用",
+  "disabled": "已停用",
+  "enable": "启用",
+  "disable": "停用",
+  "analysisControls": {
+    "pauseTimeout": "暂停/恢复操作逾时",
+    "pauseFailed": "暂停/恢复失败：{error}",
+    "abortFailed": "紧急中止失败：{error}"
+  },
+  "runtime": {
+    "aiConnected": "AI 引擎已连线",
+    "aiUnavailable": "AI 引擎无法连线",
+    "aiUnknown": "AI 引擎状态未知",
+    "aiCheckFailed": "AI 引擎状态检查失败",
+    "frontendError": "前端执行错误",
+    "unhandledRejection": "未处理的异步错误",
+    "analysisPaused": "AI 分析已暂停",
+    "analysisResumed": "AI 分析已恢复",
+    "collectorReadFailed": "无法读取收集器状态",
+    "adapterConnectFailed": "来源「{name}」连线失败：{summary}"
+  },
+  "errorToast": {
+    "regionAria": "错误通知区域",
+    "closeAria": "关闭错误通知",
+    "goProfileAccessKeys": "前往账户 → 访问密钥"
+  },
+  "account": {
+    "root": "账户",
+    "tabsAria": "账户分节",
+    "tabs": {
+      "identity": "身份",
+      "devices": "设备",
+      "keys": "访问密钥"
+    }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "桌面版不支持浏览器语音识别，请改用文字输入。",
+    "sttUnsupported": "此浏览器不支持语音识别，或不在安全上下文（HTTPS / localhost）。",
+    "sttStartFailed": "无法启动语音识别",
+    "sttNotAllowed": "麦克风权限被拒绝，请改用文字输入。",
+    "sttNoMic": "无法使用麦克风（找不到装置，或被其他应用占用）。可维持桌面版运行，请在浏览器标签页按住说话；若仍失败请检查系统麦克风权限。",
+    "sttNetwork": "浏览器云端语音识别失败（需可连上识别服务）。请改用文字输入，或改用一般 Chrome 网页开启本机服务再试。",
+    "sttErrorCode": "语音识别错误：{code}",
+    "ttsUnsupported": "此浏览器不支持语音合成。",
+    "ttsFailed": "语音合成失败"
+  },
+  "profile": {
+    "defaultName": "用户",
+    "intro": "设定显示名称、头像与背景简介。头像会用于直连字幕等界面。",
+    "avatarLabel": "头像",
+    "avatarHelp": "点击圆形图标上传；用于字幕与助手界面。",
+    "avatarHint": "尚未上传头像。",
+    "displayNameLabel": "显示名称",
+    "displayNameHelp": "留空则使用默认名称。",
+    "backgroundLabel": "背景简介",
+    "backgroundHelp": "可描述你的角色或偏好，供未来 AI 参考。",
+    "backgroundPlaceholder": "例如：值班监控、关注东南亚航线…",
+    "uploadAvatar": "上传",
+    "uploadAvatarAria": "上传个人头像",
+    "resetAvatar": "清除头像",
+    "resetAvatarAria": "清除个人头像",
+    "avatarTooLarge": "压缩后图片仍过大，请换一张更小的图。",
+    "avatarReadFailed": "无法读取该图片。",
+    "save": "保存",
+    "saving": "保存中…",
+    "saved": "个人资料已保存",
+    "password": {
+      "title": "管理员密码",
+      "help": "更改管理员密码。其他已登录设备在刷新或被撤销前仍可继续使用。",
+      "current": "当前密码",
+      "new": "新密码",
+      "confirm": "确认新密码",
+      "submit": "更改密码",
+      "saving": "保存中…",
+      "changed": "密码已更改"
+    },
+    "devices": {
+      "title": "设备",
+      "intro": "用管理员密码登录的浏览器与桌面客户端会话。撤销设备可远程登出。Webhook 请用 API 密钥，不要用设备会话。",
+      "listTitle": "已登录设备",
+      "empty": "目前没有活动中的设备。",
+      "current": "此设备",
+      "lastSeen": "最近活动 {time}",
+      "revoked": "已撤销设备",
+      "revokeAria": "撤销 {label}",
+      "logoutLabel": "登出",
+      "logoutHelp": "撤销此设备的会话并回到登录页。桌面版若为连接到其他服务器的模式，会重置为本机主机。",
+      "logout": "登出此设备",
+      "loggingOut": "登出中…",
+      "loggedOut": "已登出"
+    },
+    "accessKeys": {
+      "title": "API 密钥（Webhook／自动化）",
+      "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本与客户经理。完整密钥（`*`）可用于 Webhook 与客户经理；仅客户经理密钥不能打 Webhook。不可用于 UI 登录——日常请用管理员账号密码。",
+      "defaultLabel": "访问密钥",
+      "newLabel": "新密钥名称",
+      "newPlaceholder": "例如：Webhook、CI 脚本",
+      "a2aAgentOnly": "仅限客户经理（A2A）",
+      "a2aAgentOnlyHelp": "仅能调用 `POST /api/v1/a2a/agent`。不勾选则创建完整密钥（`*`），可用于 Webhook 与客户经理。",
+      "scopesFull": "权限：完整（*）",
+      "scopesA2aAgent": "权限：客户经理（a2a:agent）",
+      "create": "生成密钥",
+      "creating": "生成中…",
+      "created": "已生成新密钥（请立即复制）",
+      "revoked": "已撤销密钥",
+      "revokeAria": "撤销 {label}",
+      "listTitle": "已创建的密钥",
+      "empty": "尚未创建密钥。需要 Webhook、脚本或客户经理时再创建。",
+      "revealTitle": "新密钥（只显示一次）",
+      "revealHelp": "请复制并妥善保存；关闭后无法再次查看完整内容。",
+      "copy": "复制",
+      "copied": "已复制",
+      "copyFailed": "无法复制"
+    }
+  }
+}

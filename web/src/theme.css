@@ -1,0 +1,83 @@
+/* ===== Intelligence Monitor Theme System ===== */
+/* Shared layout tokens + import of generated palettes. */
+/* Palette SoT: styles/themeCatalog.ts → npm run gen:themes → theme.generated.css */
+
+@import "./theme.generated.css";
+
+/* === Shared layout & motion tokens (theme-independent defaults) === */
+
+:root {
+  --app-top-bar-height: 52px;
+  --desktop-title-bar-height: 36px;
+  --im-easing-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --im-easing-default: ease;
+  --im-duration-fast: 140ms;
+  --im-duration-normal: 220ms;
+  --im-stagger-step: 36ms;
+  --im-page-glow: color-mix(in srgb, var(--accent) 5%, transparent);
+  --wall-banner-1: linear-gradient(135deg, #0f766e 0%, #164e63 48%, #172554 100%);
+  --wall-banner-2: linear-gradient(135deg, #7c2d12 0%, #9f1239 46%, #4c1d95 100%);
+  --wall-banner-3: linear-gradient(135deg, #14532d 0%, #166534 42%, #134e4a 100%);
+  --wall-banner-4: linear-gradient(135deg, #1e3a8a 0%, #3730a3 48%, #581c87 100%);
+  --wall-banner-5: linear-gradient(135deg, #713f12 0%, #9a3412 45%, #7f1d1d 100%);
+  --wall-banner-6: linear-gradient(135deg, #3f3f46 0%, #334155 48%, #1e3a8a 100%);
+  --wall-banner-7: linear-gradient(135deg, #831843 0%, #701a75 48%, #312e81 100%);
+  --wall-banner-8: linear-gradient(135deg, #134e4a 0%, #155e75 48%, #1e3a8a 100%);
+  --wall-text: #fff;
+  --wall-text-muted: rgba(255, 255, 255, 0.68);
+  --wall-border: rgba(255, 255, 255, 0.1);
+  --wall-overlay: rgba(0, 0, 0, 0.22);
+  --wall-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  /* Platform badge defaults — themes may override */
+  --platform-telegram: #93c5fd;
+  --platform-rss: #fdba74;
+  --platform-http: #7dd3fc;
+  --platform-mqtt: #6ee7b7;
+  --platform-api: #86efac;
+  --platform-discord: #a5b4fc;
+  --platform-email: #67e8f9;
+  --platform-default: #19c37d;
+  --text-on-accent: #ffffff;
+  /* Panel / menu / glass fill strength (1 = opaque). Overridable per theme. */
+  --im-panel-opacity: 0.96;
+  /* Percentage twin for color-mix (avoids calc(unitless * %) quirks). */
+  --im-panel-opacity-pct: 96%;
+}
+
+/* Themes inherit accent-tinted defaults; named themes may override. */
+[data-theme] {
+  --platform-default: var(--accent);
+  --text-on-accent: #ffffff;
+  /*
+   * Month-calendar indicator dots (一般 / 進行中 / 完結).
+   * Defaults keep hue families apart: brand / blue / amber.
+   * Themes where accent≈warning (gold accents) override --calendar-dot-ending.
+   */
+  --calendar-dot-event: var(--accent);
+  --calendar-dot-ongoing: var(--info);
+  --calendar-dot-ending: var(--warning);
+}
+
+/* === Derived layout surfaces + native control color scheme === */
+/* Must stay after theme token blocks; never bind theme colors to bare :root. */
+
+html {
+  color-scheme: dark;
+  --surface-page: color-mix(in srgb, var(--surface-base) 97%, #fff);
+  --surface-sidebar: color-mix(in srgb, var(--surface-base) 94%, #000);
+  --surface-raised: color-mix(in srgb, var(--surface-card) 90%, #fff);
+}
+
+html[data-theme-mode="light"] {
+  color-scheme: light;
+  --surface-page: var(--surface-base);
+  --surface-sidebar: color-mix(in srgb, var(--surface-base) 90%, var(--surface-border));
+  --surface-raised: color-mix(in srgb, var(--surface-card) 82%, #fff);
+  --im-page-glow: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* Ensure app content sits above special-theme glow layer */
+#root {
+  position: relative;
+  z-index: 1;
+}

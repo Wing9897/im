@@ -1,0 +1,1363 @@
+{
+  "language": {
+    "label": "Interface language",
+    "help": "Auto follows the system; choosing a language applies it site-wide.",
+    "auto": "Auto",
+    "zhHant": "繁體中文",
+    "zhHans": "简体中文",
+    "en": "English"
+  },
+  "tasks": {
+    "pageLabel": "Tasks",
+    "pageDescription": "Create your first task to monitor channels, analyze intelligence, set up a recurring or calendar task.",
+    "emptyTitle": "No tasks yet",
+    "createLabel": "New task",
+    "editLabel": "Edit task",
+    "showSystemTasks": "Show system tasks",
+    "hideSystemTasks": "Hide system tasks",
+    "systemSectionTitle": "System & virtual tasks (view only)",
+    "systemSectionSubtitle": "These are not editable analysis tasks; they explain data sources and background mechanisms.",
+    "card": {
+      "viewDetailAria": "View task details: {name}",
+      "recurring": "Recurring activity",
+      "channelsRange": "{count} channels · range {range}",
+      "unanalyzed": "Pending",
+      "queued": "Queued",
+      "queuedTitle": "Claimed messages not yet analyzed (including batches waiting to retry)",
+      "analyzed": "Analyzed",
+      "running": "Running",
+      "idle": "Idle",
+      "disabled": "Disabled",
+      "enable": "Enable",
+      "disable": "Disable",
+      "edit": "Edit",
+      "delete": "Delete",
+      "editAria": "Edit {name}",
+      "deleteAria": "Delete {name}",
+      "openProjectAria": "Open project: {name}",
+      "project": "Project manager",
+      "projectProgressHint": "Progress uses a message cursor (not marker stats)",
+      "recurringProgressHint": "Recurring schedule (no message analysis stats)",
+      "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
+      "retryCount": "Retry {count}",
+      "analysisPausedHint": "Analysis paused (auto or manual)"
+    },
+    "detail": {
+      "timeRange": "Time range: {range}",
+      "location": "Location: {location}",
+      "rrule": "Recurrence: {rrule}",
+      "calendarNoChannels": "(Recurring-task mode — no channels bound)",
+      "channelCount": "{count} channels",
+      "channelsMore": "…and {count} more channels",
+      "noChannels": "No channels bound yet",
+      "ariaLabel": "Task details: {name}",
+      "relatedEventsTitle": "Upcoming timed events",
+      "relatedEventsEmpty": "No related timed events soon.",
+      "relatedEventsPreviewHint": "Showing a short preview only — open Timeline for the full schedule.",
+      "relatedKindOccurrence": "Recurring",
+      "relatedKindEvent": "One-off",
+      "openTimeline": "Open timeline"
+    },
+    "projectDetail": {
+      "metaTitle": "Overview",
+      "noDescription": "No description",
+      "schedule": "Schedule: {schedule}",
+      "sourcesTitle": "Bound sources",
+      "childrenTitle": "Child recurring tasks",
+      "childrenEmptyTitle": "No child recurring tasks yet",
+      "childrenEmptyDescription": "The project manager creates child recurring tasks on each tick when needed.",
+      "eventsTitle": "Owned timed events",
+      "eventsEmptyTitle": "No owned events yet",
+      "eventsEmptyDescription": "Single events created for this project appear here.",
+      "tickTitle": "Last project tick",
+      "tickLastEnd": "Last completed",
+      "tickCompletedCount": "Completed ticks",
+      "tickMessageCount": "Messages in last tick",
+      "tickOutcome": "Outcome",
+      "tickOutcomeSuccess": "Success",
+      "tickOutcomeSkipped": "Skipped",
+      "tickOutcomeError": "Failed",
+      "tickOutcomeRunning": "In progress",
+      "tickPendingCursor": "Pending after cursor",
+      "tickCursorAt": "Message cursor",
+      "tickLogTitle": "Recent tick log",
+      "tickLogEmpty": "No completed ticks yet. One log row is written when a schedule drain finishes (waves are not logged separately).",
+      "tickLogEmptyInFlight": "This drain is still running; waves advance the cursor, and a log row appears when the fire completes.",
+      "tickMessage": "Agent message",
+      "tickNoMessage": "No message from the last tick.",
+      "tickTools": "Tool steps",
+      "tickNoTools": "No tools used on the last tick.",
+      "tickError": "Error",
+      "openTimeline": "Timeline",
+      "reload": "Reload",
+      "batchAttentionTitle": "Batch needs attention",
+      "batchRetry": "Retry {count}",
+      "analysisPausedHint": "Analysis paused (auto or manual)",
+      "sourcesViewAll": "View all {count}",
+      "sourcesDialogTitle": "Bound sources",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "showTickExtras": "Show agent message and tools",
+      "hideTickExtras": "Hide agent message and tools"
+    },
+    "toast": {
+      "loadFailedBlank": "Could not load task data; the form will be blank",
+      "updated": "Task updated",
+      "created": "Task created",
+      "clearedBatches": "Cleared {count} unfinished analysis batches"
+    },
+    "editor": {
+      "back": "Back",
+      "presets": "Quick presets",
+      "updateTask": "Update task",
+      "createTask": "Create task",
+      "requiredAria": "Required fields",
+      "settingsTitle": "Task settings",
+      "optionalAria": "Optional settings",
+      "optionalTitle": "Optional settings",
+      "channelsLoadError": "Could not load channels",
+      "timeRangeLabel": "Analysis time range",
+      "timeAll": "No time limit",
+      "time30d": "Last 30 days",
+      "time7d": "Last 7 days",
+      "time1d": "Last 1 day",
+      "includeInTimelineLabel": "Show in time planning",
+      "includeInTimelineAria": "Show in time planning",
+      "includeInTimelineHint": "When off, this task’s analysis events still appear in Key Events and the map, but not in calendar / Gantt / timeline.",
+      "rruleHint": "RRULE is only for recurring-task recurrence and does not trigger AI analysis.",
+      "scheduleOverridesHint": "Threshold / batch limit / evidence style can override; leave empty to follow AI Settings → Analysis scheduling. Batch overlap and project wave interval are task-owned only.",
+      "followGlobal": "Follow global",
+      "followGlobalPlaceholder": "Empty = follow global",
+      "batchOverlapLabel": "Batch overlap",
+      "batchOverlapAria": "Number of overlapping messages per batch",
+      "batchOverlapHelp": "Next batch carries trailing messages for context; 0 = none. Event tasks only (leaderboard injects Top 10 instead).",
+      "triggerThresholdHelp": "Leave empty to follow the global trigger threshold.",
+      "batchLimitHelp": "Leave empty to follow the global batch limit.",
+      "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
+      "nameLabel": "Task name",
+      "namePlaceholder": "Enter task name",
+      "modeLabel": "Analysis mode",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Task description (optional)",
+      "promptLabel": "Prompt template",
+      "promptPlaceholder": "Enter analysis prompt template",
+      "pickChannels": "Click to select channels",
+      "channelsSelected": "{selected} / {total} channels selected",
+      "channelsLabel": "Source channels",
+      "channelsAria": "Select analysis source channels",
+      "channelsPreview": "Selected channel preview",
+      "channelsMore": "{count} more channels…"
+    },
+    "modes": {
+      "leaderboard": {
+        "displayLabel": "Leaderboard",
+        "modeOptionLabel": "Leaderboard - compare rankings",
+        "modeDescription": "Leaderboard shows the top N most relevant messages — good for tracking hot topics",
+        "promptLabel": "Task prompt (what should AI compare)",
+        "promptPlaceholder": "e.g. product launches, policy changes, partnerships, risk signals",
+        "promptHint": "e.g. only hit when content clearly mentions official announcements, product updates, partnerships, or risk signals"
+      },
+      "event": {
+        "displayLabel": "Key Events",
+        "modeOptionLabel": "Key Events - intelligence / schedule",
+        "modeDescription": "An event can carry time and place; coordinates show on the map, times on the timeline; missing fields only appear in matching views",
+        "promptLabel": "Task prompt (which events should AI extract)",
+        "promptPlaceholder": "e.g. extract announcements, meetings, deadlines; fill start_time when clear, location when known",
+        "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
+      },
+      "recurring": {
+        "displayLabel": "Recurring task",
+        "modeOptionLabel": "Recurring task - periodic activities",
+        "modeDescription": "Recurring tasks manage periodic activities with RRULE and do not involve AI analysis",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "calendar_task": {
+        "displayLabel": "Calendar task",
+        "modeOptionLabel": "Calendar task - classification bucket",
+        "modeDescription": "Calendar tasks are a filter-only bucket for timeline / voice / assistant ownership; no AI analysis and no RRULE",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "project": {
+        "displayLabel": "Project manager",
+        "modeOptionLabel": "Project manager - closed-loop calendar agent",
+        "modeDescription": "Hourly Agent ticks read sources and reconcile this project's one-off events and child recurring tasks via tools (not a one-shot JSON batch)",
+        "promptLabel": "Project goals / rules",
+        "promptPlaceholder": "e.g. keep standup + demo dates current from Telegram; prefer morning slots; soft-delete cancelled series",
+        "promptHint": "Bind source channels and prefer hourly schedule; the agent may run even with no new messages to reconcile the calendar"
+      }
+    },
+    "recurrence": {
+      "sectionTitle": "Recurrence",
+      "freqLabel": "Frequency",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "intervalUnit": {
+        "daily": "days",
+        "weekly": "weeks",
+        "monthly": "months",
+        "yearly": "years"
+      },
+      "intervalLabel": "Interval (every N {unit})",
+      "intervalAria": "Recurrence interval",
+      "weekdaysLabel": "Weekdays",
+      "weekdayAria": "{day}",
+      "weekday": {
+        "MO": "Mon",
+        "TU": "Tue",
+        "WE": "Wed",
+        "TH": "Thu",
+        "FR": "Fri",
+        "SA": "Sat",
+        "SU": "Sun"
+      },
+      "monthlyMode": "Monthly recurrence",
+      "byDate": "By date",
+      "byWeekday": "By weekday",
+      "monthDay": "Day of month",
+      "dayAria": "Day {day}",
+      "lastDay": "Last day",
+      "ordinalLabel": "Which",
+      "ordinalAria": "Ordinal",
+      "ordinalWeekday": "Weekday",
+      "ordinalWeekdayAria": "Which weekday",
+      "ordinals": {
+        "1": "First",
+        "2": "Second",
+        "3": "Third",
+        "4": "Fourth",
+        "-1": "Last"
+      },
+      "endLabel": "Ends",
+      "never": "Never",
+      "until": "On a date",
+      "count": "After N times",
+      "untilDate": "End date",
+      "countLabel": "Occurrences",
+      "rrulePreview": "RRULE: {value}",
+      "errors": {
+        "freq": "Choose a frequency (daily, weekly, or monthly)",
+        "byDay": "Weekly mode requires at least one weekday",
+        "byMonthDay": "Monthly mode requires at least one day"
+      }
+    },
+    "calendarFields": {
+      "section": "Event details",
+      "tooltip": "Set recurring-task event title, time, location, and description",
+      "title": "Title",
+      "titlePlaceholder": "e.g. weekly meeting, birthday",
+      "allDay": "All-day event",
+      "start": "Start",
+      "end": "End",
+      "location": "Location (optional)",
+      "locationPlaceholder": "e.g. Room A, online",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Extra details for this event",
+      "allDayHint": "All-day events do not need start and end times."
+    },
+    "template": {
+      "title": "Choose a task template",
+      "all": "All",
+      "searchPlaceholder": "Search name, description, or badge",
+      "showing": "Showing {visible} / {total} templates",
+      "filteredMode": ", prioritized for {mode}",
+      "loading": "Loading templates...",
+      "empty": "No templates available",
+      "noMatch": "No templates match the current filters",
+      "noMatchHint": "Try another analysis mode or clear the search",
+      "commonTitle": "Common templates",
+      "sortedWithMode": "Sorted by recent use, frequency, and current mode — prioritizing {mode}",
+      "pinnedMode": "Pinned for current analysis mode {mode}",
+      "viewMode": "View {mode} templates",
+      "apply": "Apply selected template",
+      "suitable": "Fits current analysis mode"
+    },
+    "schedule": {
+      "typeLabel": "Schedule type",
+      "typeAria": "Schedule type",
+      "projectWaveInterval": "Project wave interval (seconds)",
+      "projectWaveIntervalAria": "Cooldown seconds between project waves",
+      "projectWaveIntervalHelp": "Cool-down before the next wave; 0 = no wait. Saved on this task (not a global system setting). Empty uses the default (20).",
+      "types": {
+        "seconds_10": "Every 10 seconds",
+        "hourly": "Hourly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "custom_seconds": "Custom seconds"
+      },
+      "weekday": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "dailyTime": "Run time",
+      "dailyTimeAria": "Daily run time",
+      "weeklyDateTime": "Day and time",
+      "weekdayAria": "Day of week",
+      "weeklyTimeAria": "Weekly run time",
+      "customSeconds": "Interval (seconds)",
+      "customSecondsPlaceholder": "Enter seconds",
+      "customSecondsAria": "Custom interval in seconds",
+      "errors": {
+        "dailyRequired": "Enter a time (HH:MM)",
+        "dailyFormat": "Invalid time — use HH:MM",
+        "hourRange": "Hour must be between 00 and 23",
+        "minuteRange": "Minute must be between 00 and 59",
+        "weeklyRequired": "Select a weekday and time",
+        "weeklyFormat": "Invalid format — use D:HH:MM",
+        "weekdayRange": "Weekday must be 0–6 (0 = Sunday)",
+        "secondsRequired": "Enter seconds",
+        "secondsPositive": "Seconds must be a positive integer"
+      }
+    },
+    "allModes": "All",
+    "toolbarAria": "Task list actions",
+    "searchPlaceholder": "Search tasks…",
+    "searchAria": "Search tasks",
+    "createNew": "Create new task",
+    "createNewAria": "Create new {label}",
+    "noMatchTitle": "No matching tasks",
+    "noMatchDescription": "No task name or description contains “{query}”.",
+    "emptyModeTitle": "No tasks in this mode",
+    "emptyModeDescription": "Switch modes, or create a task that uses this mode.",
+    "showAllTasks": "Show all tasks",
+    "deleted": "Task deleted",
+    "addTask": "New task",
+    "presets": {
+      "trending-topics": {
+        "name": "Trending topics",
+        "description": "Extract hot discussion topics and trends from messages, ranked by relevance",
+        "promptTemplate": "Analyze the messages and extract the hottest discussion topics. For each topic provide: title, summary, relevance score (0-1). Sort by relevance descending."
+      },
+      "key-insights": {
+        "name": "Key intel summary",
+        "description": "Extract high-value intel events and opportunities",
+        "promptTemplate": "Extract high-value intelligence events and leads from the messages. Prioritize: major events, business opportunities, risk alerts, trend shifts. Fill time/location when clear; otherwise keep title and body only."
+      },
+      "schedule-events": {
+        "name": "Schedule event extraction",
+        "description": "Conservative: fill schedule times only when the message states an explicit date/clock time. Do not infer relative phrases like next Wednesday. Best when you want hit-and-record without guessing times.",
+        "promptTemplate": "Extract schedulable meetings, events, deadlines, and launches. Be conservative on time: fill start_time/end_time only when the message states an explicit date or clock time (e.g. Mar 5 14:00, 2026-07-20). Do not convert relative phrases such as tomorrow / next Wednesday / this Friday (you may still emit the event without time fields). Prefer clear location and participants. Ignore verification flows, join reminders, and system notices."
+      },
+      "schedule-time-inference": {
+        "name": "Schedule time inference",
+        "description": "Inferential: even without a hard-coded calendar date, convert relative phrases (e.g. next Wednesday 6pm, due this Friday, project/event milestones) into schedulable times. Best when you want a filled timeline.",
+        "promptTemplate": "Infer schedulable itineraries, meetings, activities, project milestones, and deadlines. Unlike explicit-only extraction, convert relative phrases into concrete times when reasonable (e.g. meeting next Wednesday at 6, due this Friday, deliver next month, countdown, milestones). Prefer the message [time=...] stamp as the anchor; otherwise use the injected system clock. Fill start_time/end_time when conversion is sound; if evidence is weak, explain in body and do not invent times. Ignore verification flows, join reminders, and system notices."
+      },
+      "sentiment-monitor": {
+        "name": "Sentiment monitor",
+        "description": "Analyze group discussion mood and opinion trends",
+        "promptTemplate": "Analyze overall sentiment in the messages. Identify: positive/negative topics, heated discussions, potential controversies. Score emotion intensity per topic."
+      },
+      "action-items": {
+        "name": "Action item tracker",
+        "description": "Extract follow-ups, commitments, and to-dos",
+        "promptTemplate": "Extract to-dos, action items, commitments, and follow-ups. State what to do in body; put people in participants; fill start_time only when a clear deadline exists."
+      },
+      "crypto-major-intel": {
+        "name": "Crypto major intel",
+        "description": "Extract major crypto events, key intel, and timed milestones",
+        "promptTemplate": "Extract major Crypto/Web3 intel. In body include: intel type (regulatory/protocol/market/security/launch/unlock/airdrop/macro, etc.), urgency (high/medium/low), and suggested watch or action. Focus on: major announcements, TGE/unlock/snapshot/claim deadlines, mainnet launches, regulatory rulings, large fund moves, security incidents, macro turns. Fill start_time/end_time only with clear time points; ignore chatter, reposts, and unsourced rumors."
+      },
+      "crypto-airdrop-deals": {
+        "name": "Airdrop and deal intel",
+        "description": "Extract airdrops, points quests, testnets, promo codes, and similar opportunities",
+        "promptTemplate": "Extract Crypto/Web3 monetizable opportunities (airdrops, points, testnets, early access, rebates, whitelist, free mint, quest rewards, etc.). In body include: project/platform, opportunity type, participation conditions and steps, estimated upside if knowable, and risk notes (scam/high gas/unclear rules). Fill start_time when a clear deadline or snapshot exists; prioritize soon-expiring or actionable items. Ignore pure shilling and chatter without concrete steps; omit time fields when unknown."
+      },
+      "iot-device-alerts": {
+        "name": "IoT device alerts",
+        "description": "Extract faults, offline, threshold breaches, and security alerts from MQTT/sensor/device logs",
+        "promptTemplate": "From IoT/MQTT/sensor/device messages, extract alerts that need attention or action. Prioritize: offline/disconnect, fault codes, threshold breaches (temp/humidity/battery/pressure, etc.), security triggers, comms failure, low battery, emergency stop. In body include: device or topic/site id, alert type, severity (high/medium/low), key values or error codes, suggested action. Fill start_time when the event time is clear; location may be site/floor/zone. Ignore: pure heartbeat/keepalive, routine normal readings, duplicate status with no new info, debug noise. Return empty items when there is no alert."
+      },
+      "iot-ops-events": {
+        "name": "IoT ops events",
+        "description": "Extract firmware updates, maintenance windows, config changes, and device rollout milestones",
+        "promptTemplate": "From IoT/MQTT/device ops messages, extract schedulable or trackable operations events. Prioritize: firmware/OTA updates, maintenance windows, config/rule changes, first online or replacement, batch rollout, calibration, maintenance due. In body include: device or system scope, event type, impact summary, operator/source if knowable, risk or rollback notes. Fill start_time/end_time when start/end are clear; relative times may be converted using message [time=...] or the system clock when sound. Ignore: heartbeats, routine telemetry, alert noise unrelated to ops (use an alerts task for those). Return empty items when none apply."
+      },
+      "risk-crisis-alerts": {
+        "name": "Risk and crisis alerts",
+        "description": "Capture incidents, outages, compliance issues, PR crises, and urgent risks",
+        "promptTemplate": "Extract risk/crisis events that need attention. Prioritize: outages, data breaches, security incidents, compliance violations, major complaints/PR crises, supply disruption, financial or legal risk. In body include: risk type, severity (high/medium/low), impact scope, known status, and suggested next step. Fill start_time when clear; location optional. Ignore routine venting with no action value; return empty items when none apply."
+      },
+      "people-org-watch": {
+        "name": "People and org watch",
+        "description": "Track hiring, appointments, departures, partnerships, and reorganizations",
+        "promptTemplate": "Extract people/organization events. Prioritize: appointments, departures, promotions, board changes, M&A/reorgs, strategic partnerships, notable stance shifts in public remarks. In body include: person or org, event type, context summary, impact notes. Put names in participants; fill start_time when clear. Ignore pure gossip and unsourced rumors."
+      },
+      "competitive-intel": {
+        "name": "Competitive intel",
+        "description": "Capture competitor pricing, features, campaigns, and strategy moves",
+        "promptTemplate": "Extract competitor/rival intel. Prioritize: product launches, feature comparisons, pricing/promos, channel changes, marketing campaigns, share or strategy shifts. In body include: rival or product, intel type, concrete details, implications or watchpoints. Fill start_time when clear. Ignore baseless smears and pure emotional comparisons."
+      },
+      "security-scam-watch": {
+        "name": "Security and scam watch",
+        "description": "Flag phishing, account theft, malware links, vulns, and social engineering",
+        "promptTemplate": "Extract security/scam alerts. Prioritize: phishing links, fake support, account-theft tactics, malware files, known CVE/exploits, social-engineering scripts. In body include: threat type, tactic summary, telltale signs, suggested defenses, severity (high/medium/low). Fill start_time when clear. Ignore jokes and panic forwards with no actionable detail; return empty items when none apply."
+      },
+      "geo-field-events": {
+        "name": "Geo and field events",
+        "description": "Extract place-linked activities, incidents, gatherings, and field updates (map-friendly)",
+        "promptTemplate": "Extract geographically meaningful field events. Prioritize: gatherings, incidents, disasters, site/store changes, field itineraries, local news with clear places. Prefer filling location (parseable place/address/venue); fill start_time/end_time when known. In body summarize the event and source tone. You may emit without location if unknown; ignore pure online chatter with no spatial cue."
+      },
+      "policy-regulation": {
+        "name": "Policy and regulation",
+        "description": "Track legislation, regulatory notices, enforcement, and compliance deadlines",
+        "promptTemplate": "Extract policy/regulatory events. Prioritize: bill progress, agency notices, enforcement/fines, license/permit changes, compliance deadlines. In body include: jurisdiction or agency, topic, status (draft/passed/effective/enforcement), and industry impact. Fill start_time/end_time for clear effective or due dates. Ignore pure political venting without normative content."
+      },
+      "product-release": {
+        "name": "Product release milestones",
+        "description": "Capture launches, version releases, public betas, and countdown checkpoints",
+        "promptTemplate": "Extract product/project release milestones. Prioritize: GA launches, versioned releases, beta/public tests, feature flags, countdowns/launch events. In body include: product name, milestone type, version or scope, key change summary. Fill start_time/end_time when clear. Ignore vague roadmap talk without version or date cues."
+      },
+      "news-digest-board": {
+        "name": "News digest board",
+        "description": "Rank the day's most noteworthy headlines from the feed",
+        "promptTemplate": "Turn messages into a ranked news-digest board. For each topic provide: title, one-line summary, relevance (0-1). Prefer newsworthy, high-impact, verifiable items; merge duplicate reposts. Sort by relevance descending."
+      },
+      "faq-knowledge": {
+        "name": "FAQ and knowledge digest",
+        "description": "Cluster recurring questions, answer points, and knowledge entries",
+        "promptTemplate": "Cluster FAQ/knowledge themes from messages. For each topic provide: question or entry title, concise answer/key points, relevance (0-1). Merge paraphrased repeats; note unanswered gaps. Rank by relevance and frequency."
+      },
+      "rumor-verify": {
+        "name": "Rumor and verify queue",
+        "description": "Flag hearsay, unconfirmed claims, and information gaps to check",
+        "promptTemplate": "Extract items that need verification rather than treating them as facts. Prioritize: rumors, anonymous leaks, contradictory claims, assertions without sources. In body include: claim summary, why it is doubtful, known sources/gaps, suggested verification steps. Do not present rumors as confirmed events; omit start_time when unclear. Return empty items when none apply."
+      },
+      "finance-markets": {
+        "name": "Finance and markets",
+        "description": "Capture rates, earnings, commodities, and macro market turns (not crypto-only)",
+        "promptTemplate": "Extract finance/macro market events. Prioritize: rates/central banks, earnings and guidance, M&A, major commodity/FX moves, regulatory impacts on markets. In body include: market or ticker, event type, key figures or conclusions, likely impact. Fill start_time when clear. Ignore baseless calls and pure sentiment forecasts; use a Crypto template for crypto-specific feeds."
+      },
+      "meeting-decisions": {
+        "name": "Meeting decisions",
+        "description": "Pull decisions, consensus, dissent, and owners from discussions",
+        "promptTemplate": "Extract decisions and conclusions from meetings/discussions. Prioritize: finalized items, consensus, clear dissent, assigned owners, follow-up checkpoints. In body include: decision text, status (approved/deferred/opposed), owner; put people in participants. Fill start_time for meeting or due times. Ignore chat with no conclusion."
+      },
+      "project-date-crud": {
+        "name": "General project date manager",
+        "description": "Add, edit, and delete project dates/deadlines from source messages, and reconcile existing schedule when idle",
+        "promptTemplate": "You are a general project date manager. Goal: find project-related dates, deadlines, and meetings in bound source messages, then add/update/delete them with tools. Rules: 1) write only when the date is explicit or reasonably convertible; 2) inspect existing schedule first, update matches, create only when unmatched; 3) cancel/void from source means delete or deactivate; 4) ignore unrelated chatter; 5) even with no new messages, reconcile and fix obvious errors. Finish with a short JSON message summarizing changes."
+      },
+      "project-work-shift": {
+        "name": "Work shift roster",
+        "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
+        "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
+      }
+    }
+  },
+  "leaderboard": {
+    "toolbarAria": "Leaderboard filters",
+    "selectTaskAria": "Select leaderboard task",
+    "allBoards": "All leaderboards",
+    "refreshing": "Updating leaderboard",
+    "emptyNoTasksTitle": "No leaderboard tasks yet",
+    "emptyFilteredTitle": "This leaderboard task has no results",
+    "emptyNoResultsTitle": "No leaderboard results yet",
+    "emptyNoTasksDescription": "Create at least one leaderboard task. After analysis finishes, topic rankings appear here.",
+    "emptyFilteredDescription": "The selected task has no leaderboard data yet, or filters removed every result.",
+    "emptyNoResultsDescription": "After analysis batches complete, the hottest topics and scores show up here.",
+    "emptyNoTasksHint": "If you already have accounts and channels, add a leaderboard task under Tasks next.",
+    "emptyFilteredHint": "Switch back to all leaderboards to check whether only this task is empty for now.",
+    "emptyNoResultsHint": "Leaderboards need a completed leaderboard analysis batch first.",
+    "goToTasks": "Go to Tasks",
+    "viewAll": "View all leaderboards",
+    "viewAllAria": "View all leaderboards",
+    "boardAria": "{name} leaderboard",
+    "detailAria": "{name} leaderboard details",
+    "rowAria": "#{rank} {topic}, score {score}",
+    "unnamed": "Untitled leaderboard",
+    "summary": "Event summary",
+    "noSummary": "No summary yet",
+    "loadingMessages": "Loading related messages…",
+    "relatedMessages": "Related messages ({count})",
+    "noMessagesTitle": "No related messages",
+    "noMessagesDescription": "This ranking item has no source messages to expand.",
+    "loadMessagesFailed": "Failed to load messages: {error}"
+  },
+  "aiStaff": {
+    "assistant": "Assistant",
+    "taskEditor": "Task advisor",
+    "leaderboard": "Leaderboard analyst",
+    "eventIntel": "Key-event analyst",
+    "projectManager": "Project manager"
+  },
+  "ui": {
+    "listSep": ", ",
+    "loading": "Loading…",
+    "loadingContent": "Loading content",
+    "viewMode": "View mode",
+    "viewCard": "Cards",
+    "viewList": "List",
+    "viewMap": "Map",
+    "infoTooltip": "Help",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "collapseTitle": "Collapse {title}",
+    "expandTitle": "Expand {title}",
+    "workspaceTabs": "Workspace tabs",
+    "unknownSender": "Unknown sender",
+    "viewMessageAria": "View message details: {sender}",
+    "unread": "Unread",
+    "retryLoadAria": "Retry load",
+    "retry": "Retry",
+    "retrying": "Retrying…",
+    "refreshing": "Updating",
+    "pageError": {
+      "title": "This page hit an error",
+      "body": "Something went wrong while rendering. Try reloading this section."
+    },
+    "lazyLoadError": "Failed to load component",
+    "errorBoundary": {
+      "title": "Unexpected error",
+      "body": "The app hit a problem and stopped. Try reloading or go home.",
+      "hideStack": "Hide component stack",
+      "showStack": "Show component stack",
+      "reload": "Reload UI",
+      "logMessage": "Uncaught component error: {message}"
+    },
+    "pageLoading": "Loading page…",
+    "expandSidebar": "Expand sidebar",
+    "collapseSidebar": "Collapse sidebar",
+    "breadcrumb": "Breadcrumb",
+    "tabs": "Tabs",
+    "previewPanel": "Detail preview",
+    "itemsCount": "{count} items",
+    "filterActiveCount": "{count} selected",
+    "unnamedAccount": "Unnamed account",
+    "virtual": "Virtual",
+    "system": "System",
+    "agent": "Agent",
+    "unknownMode": "Unknown",
+    "confirm": "Confirm"
+  },
+  "commandPalette": {
+    "groups": {
+      "navigation": "Navigation",
+      "settings": "Settings",
+      "actions": "Actions",
+      "tasks": "Tasks"
+    },
+    "unnamedTask": "Untitled task",
+    "monitorWall": "Monitor wall",
+    "keyEventsMap": "Key Events · Map",
+    "keyEventsList": "Key Events · List",
+    "keyEventsCard": "Key Events · Cards",
+    "actionsVoice": "Notifications · Voice reminders",
+    "actionsHistory": "Notifications · Trigger history",
+    "sourcesRss": "Sources · RSS",
+    "sourcesTelegram": "Sources · Telegram",
+    "sourcesDiscord": "Sources · Discord",
+    "sourcesHttp": "Sources · HTTP",
+    "sourcesHttpWebhook": "Sources · HTTP Webhook",
+    "sourcesMqtt": "Sources · MQTT",
+    "sourcesEmail": "Sources · Email",
+    "aiVoice": "Voice settings",
+    "aiStrategy": "Analysis scheduling",
+    "aiStaff": "AI staff",
+    "theme": "Theme",
+    "settingsData": "Data maintenance",
+    "settingsApi": "API docs",
+    "newTask": "New task",
+    "newAction": "New notification",
+    "newActionHint": "Open notifications",
+    "openViewer": "Open Viewer window",
+    "openViewerHint": "New tab",
+    "shortcutHelp": "Keyboard shortcuts",
+    "quickAssistant": "Assistant",
+    "quickAssistantHint": "⌘/Ctrl+J",
+    "aria": "Command palette",
+    "searchPlaceholder": "Search pages, tasks, or actions…",
+    "searchAria": "Search commands and tasks",
+    "empty": "No matching results",
+    "hintSelect": "↑↓ Select",
+    "hintOpen": "↵ Open",
+    "triggerAria": "Search and jump ({shortcut})",
+    "triggerLabel": "Search…"
+  },
+  "widgets": {
+    "map": {
+      "title": "Intelligence map",
+      "description": "Geographic markers overview (large)"
+    },
+    "wall": {
+      "title": "Message wall",
+      "description": "Multi-channel carousel"
+    },
+    "gantt": {
+      "title": "Gantt / by task",
+      "description": "Task activity spans"
+    },
+    "ganttEvents": {
+      "title": "Gantt / by event",
+      "description": "Event time spans"
+    },
+    "events": {
+      "title": "Key Events",
+      "description": "Latest key events"
+    },
+    "feed": {
+      "title": "Live Monitor",
+      "description": "Live monitor message thumbnails"
+    },
+    "calendar": {
+      "title": "Month calendar",
+      "description": "This month's schedule"
+    },
+    "calendarDay": {
+      "title": "Day schedule",
+      "description": "Today's schedule"
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "description": "Trending topics"
+    },
+    "stats": {
+      "title": "Analysis stats",
+      "description": "7-day analysis volume"
+    },
+    "queue": {
+      "title": "Analysis queue",
+      "description": "Queue and in progress"
+    },
+    "system": {
+      "title": "System status",
+      "description": "Collectors / AI"
+    },
+    "clock": {
+      "title": "Clock",
+      "description": "Local time"
+    },
+    "weather": {
+      "title": "Weather",
+      "description": "Local weather and 7-day forecast"
+    },
+    "sources": {
+      "title": "Source status",
+      "description": "Account connections"
+    },
+    "logs": {
+      "title": "System logs",
+      "description": "Recent application logs"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Analysis task status"
+    },
+    "actions": {
+      "title": "Notification actions",
+      "description": "Automation action status"
+    }
+  },
+  "systemTasks": {
+    "userOrAssistant": {
+      "title": "User or Assistant",
+      "shortDescription": "Timed events created manually or by the assistant (user_events). Shown as virtual source “User or Assistant” on calendar, Gantt, and Key Events — not an editable analysis task."
+    },
+    "clientManager": {
+      "title": "Account manager",
+      "shortDescription": "External Agent (A2A): third parties assign work in natural language. Shares the assistant’s LLM and tools, but does not chat with you and stores no server-side history. Needs an access key (`a2a:agent` or `*`).",
+      "linkLabel": "Open API docs"
+    },
+    "collector": {
+      "title": "Collector",
+      "shortDescription": "Collects messages and retries connections across platforms, writing raw messages to the database for the monitor wall and later analysis."
+    },
+    "analysisBatch": {
+      "title": "Analysis batch",
+      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, Key Events) in LLM batches and writes analysis results. Project-management tasks do not use this path — they are driven by editable project tasks above."
+    },
+    "outboundNotify": {
+      "title": "Outbound notifications",
+      "shortDescription": "Sends messages via Telegram, Discord, Webhook, MQTT, and similar channels when notification rules match."
+    },
+    "voiceReminder": {
+      "title": "Voice reminders",
+      "shortDescription": "Locally scans upcoming Key Events, recurring-task (RRULE) expansions, and “User or Assistant” events, then announces them with browser speech.",
+      "linkLabel": "Go to voice reminders"
+    },
+    "retention": {
+      "title": "Data cleanup",
+      "shortDescription": "Periodically deletes messages, analysis results, leaderboard rows, app logs, and user events based on retention days."
+    },
+    "startupGeocode": {
+      "title": "Startup geocode backfill",
+      "shortDescription": "On server start, geocodes intelligence events that have place text but no coordinates so the map can plot them. New events without coordinates are also geocoded during analysis; this pass backfills older data and will not block startup if it fails. Not editable here."
+    }
+  },
+  "errors": {
+    "weather_timeout": "Weather provider is too slow. Please try again later.",
+    "weather_unavailable": "All weather providers are temporarily unavailable. Please try again later.",
+    "weather_location_not_found": "Could not resolve the specified location",
+    "weather_invalid_date_range": "Invalid weather forecast date range",
+    "agent_timeout": "Assistant request timed out. Please try again or shorten your question.",
+    "ai_engine_unreachable": "AI engine unreachable (for example Ollama is not running or the port is wrong). A successful Settings AI test still may not support long assistant chats.",
+    "Backend unreachable": "Cannot reach the backend service",
+    "Request timed out": "Request timed out. Please try again later.",
+    "Request cancelled": "Request cancelled"
+  },
+  "timeFilter": {
+    "aria": "Time filter",
+    "today": "Today",
+    "1d": "1 day",
+    "7d": "7 days",
+    "30d": "30 days"
+  },
+  "messages": {
+    "speakWithTask": "Task “{task}”, {kindLabel} “{eventTitle}”, in {lead}",
+    "speakWithoutTask": "{kindLabel} “{eventTitle}”, in {lead}",
+    "retentionDeleted": "Deleted: {parts}",
+    "retentionNone": "No matching old data to delete",
+    "retentionPart": "{label} {count}",
+    "confirmChannelSelection": "Confirm selection ({count})",
+    "channelsSelected": "Selected {selected} / {total} channels",
+    "loadMore": "Load more",
+    "speakLead15": "about fifteen minutes",
+    "speakLead60": "about one hour",
+    "speakLead240": "about four hours",
+    "speakLead1440": "about one day",
+    "speakLeadMinutes": "about {minutes} minutes",
+    "speakKindEvent": "key event",
+    "speakKindRecurring": "recurring task",
+    "speakKindUser": "reminder",
+    "speakPreview": "Test in progress",
+    "voiceTriggerReason": "Voice reminder · {lead} · “{title}”",
+    "speakTtsUnavailable": "Local speech synthesis unavailable",
+    "speakFailed": "Speech failed"
+  },
+  "dialog": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "deleteConfirmTitle": "Delete task?",
+    "deleteEntityTask": "task",
+    "deleteConfirmPrefix": "Delete {entity}",
+    "deleteConfirmSuffix": "? This cannot be undone.",
+    "confirmDelete": "Delete",
+    "deleting": "Deleting…",
+    "closePreview": "Close preview"
+  },
+  "platformScope": {
+    "source": "Source",
+    "channel": "Channel",
+    "feed": "Feed",
+    "url": "URL",
+    "broker": "Broker",
+    "folder": "Folder",
+    "endpoint": "Endpoint"
+  },
+  "channelPicker": {
+    "all": "All",
+    "platformFilterAria": "Platform filter",
+    "platformLabel": "Platform",
+    "platformHelper": "Filter by platform first; expand large lists with ▶.",
+    "searchPlaceholder": "Search platforms, accounts, or channels…",
+    "searchAria": "Search channels",
+    "selectAll": "Select all",
+    "clear": "Clear",
+    "clearSelection": "Clear selection",
+    "clearAllAria": "Clear all selections",
+    "selectedBadge": "{count} selected",
+    "noMatch": "No matching channels",
+    "emptyDefault": "No channels available",
+    "emptyForPlatform": "No channels for this platform",
+    "emptyNeedSources": "No channels yet — add accounts in Sources first",
+    "summaryMonitorScope": "Monitor scope",
+    "taskTitle": "Select analysis source channels",
+    "taskSummary": "Analysis sources",
+    "taskPlatformFilterAria": "Analysis source platform filter",
+    "wallTitle": "Select monitor scope",
+    "wallTitleWithCount": "Select monitor scope ({count} selected)",
+    "wallSelectScope": "Select scope",
+    "wallPlatformFilterAria": "Message wall platform filter",
+    "wallConfirm": "Done"
+  },
+  "sectionError": {
+    "loadFailed": "Failed to load {name}",
+    "retry": "Retry"
+  },
+  "board": {
+    "gantt": {
+      "defaultLabelHeader": "Tasks",
+      "defaultEmptyLabel": "No task activity yet",
+      "emptyFiltered": "No activity to show in the current range",
+      "unnamedTask": "Unnamed task",
+      "untitled": "(Untitled)",
+      "axisDayAria": "Day timeline",
+      "axisMonthAria": "Month timeline",
+      "rowsAria": "Gantt activity list",
+      "activeAria": "Active",
+      "trackAria": "{label} activity span {range}"
+    },
+    "calendar": {
+      "weekdays": [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ],
+      "today": "Today",
+      "noSchedule": "No schedule",
+      "dayCountAria": "{count} items"
+    },
+    "map": {
+      "noCoordEvents": "No events with a specific location yet"
+    },
+    "wall": {
+      "sectionName": "Message wall widget",
+      "noChannelsTitle": "No channels selected",
+      "noChannelsDescription": "Click “Select channels” in the header to choose which channels rotate.",
+      "loadingAria": "Loading message wall"
+    },
+    "system": {
+      "collector": "Collector",
+      "aiEngine": "AI engine",
+      "aiAvailable": "Available",
+      "aiUnavailable": "Unavailable",
+      "aiUnknown": "Unknown"
+    },
+    "common": {
+      "unnamed": "(Unnamed)",
+      "unnamedTask": "Unnamed task",
+      "untitled": "(Untitled)",
+      "untitledEvent": "(Untitled event)",
+      "unassignedTask": "Unassigned task",
+      "enabled": "On",
+      "disabled": "Off",
+      "noTaskSelected": "No tasks selected",
+      "paused": "{name} paused (another widget maximized)",
+      "pausedWall": "Wall paused (another widget maximized)",
+      "channelCount": "{count} channels",
+      "dayView": "Day view",
+      "monthView": "Month view",
+      "viewModeAria": "{prefix}: {mode}",
+      "loadingCalendar": "Loading calendar…",
+      "loadingGantt": "Loading Gantt…",
+      "loadingMap": "Loading map…"
+    },
+    "stats": {
+      "empty": "No analysis stats yet",
+      "analyzed": "Analyzed",
+      "unanalyzed": "Pending",
+      "queued": "Queued",
+      "rowMeta": "Done {analyzed} · Pending {unanalyzed}",
+      "rowQueued": " · Queue {count}"
+    },
+    "logs": {
+      "empty": "No logs yet"
+    },
+    "actions": {
+      "empty": "No notification actions yet",
+      "neverTriggered": "Never triggered"
+    },
+    "tasks": {
+      "empty": "No tasks yet"
+    },
+    "leaderboard": {
+      "empty": "No ranked topics yet",
+      "score": "Score {score}",
+      "messages": " · {count} msgs"
+    },
+    "mapWidget": {
+      "resetView": "Reset world view",
+      "saveView": "Save map position",
+      "pausedName": "Map"
+    },
+    "weather": {
+      "refresh": "Refresh weather",
+      "errorPrefix": "Weather: ",
+      "pausedName": "Weather",
+      "emptyForecast": "No weather forecast",
+      "emptyLocation": "Weather location not set",
+      "clear": "Clear",
+      "cloudy": "Cloudy",
+      "overcast": "Overcast",
+      "fog": "Fog",
+      "rain": "Rain",
+      "snow": "Snow",
+      "thunder": "Thunderstorm",
+      "generic": "Weather"
+    },
+    "queue": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "status": "Status",
+      "paused": "Paused",
+      "running": "Running",
+      "noBatches": "No batches processing",
+      "messages": "{count} messages",
+      "retry": " · Retry {count}",
+      "attention": "Attention",
+      "retryPending": "Retry pending",
+      "processingBadge": "Processing"
+    },
+    "feed": {
+      "empty": "No monitor messages yet"
+    },
+    "wallWidget": {
+      "empty": "No channels yet",
+      "pausedName": "Wall"
+    },
+    "sources": {
+      "empty": "No sources yet"
+    },
+    "events": {
+      "empty": "No key events yet",
+      "ariaPrefix": "Key events"
+    },
+    "calendarWidget": {
+      "monthAria": "Month calendar",
+      "dayAria": "Day schedule",
+      "emptyMonth": "No events this month for selected tasks",
+      "emptyDay": "No schedule today for selected tasks"
+    },
+    "ganttWidget": {
+      "byTaskAria": "Gantt by task",
+      "byEventAria": "Gantt by event",
+      "pausedName": "Gantt",
+      "labelTask": "Tasks",
+      "labelEvent": "Events",
+      "emptyEvents": "No events yet"
+    },
+    "shell": {
+      "loadFailed": "Failed to load — retry",
+      "retry": "Retry",
+      "toolsAria": "Immersive canvas tools",
+      "toolbarAria": "Canvas actions",
+      "addWidget": "Add widget",
+      "exportLayout": "Export layout",
+      "importLayout": "Import layout",
+      "importFileAria": "Choose layout JSON file",
+      "resetLayout": "Reset to default layout",
+      "resetLayoutAria": "Reset layout",
+      "doneEdit": "Done editing",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit fullscreen",
+      "edit": "Edit",
+      "resetConfirmTitle": "Reset to default layout?",
+      "resetConfirmBody": "Your custom layout will be overwritten. This cannot be undone.",
+      "resetConfirm": "Reset",
+      "resetConfirmBusy": "Resetting…",
+      "selectSize": "Choose size",
+      "selectSizeAria": "{title}: choose size",
+      "maximize": "Maximize",
+      "restore": "Restore",
+      "maximizeWidget": "Maximize widget",
+      "restoreWidget": "Restore widget",
+      "removeWidget": "Remove widget",
+      "removeWidgetAria": "Remove {title}",
+      "emptyTitle": "No widgets yet",
+      "emptyHint": "Use the floating button at the bottom-right to enter edit mode and add widgets.",
+      "exported": "Layout exported",
+      "imported": "Layout imported",
+      "importFailed": "Could not import layout",
+      "importInvalidJson": "Invalid layout JSON",
+      "importMissingWidgets": "Layout file is missing widgets",
+      "importNeedOne": "Layout must include at least one valid widget",
+      "importNoValid": "Layout contains no valid widgets",
+      "taskFilterPrefix": "Filter tasks",
+      "taskFilterSelect": "Select tasks",
+      "taskFilterSelectAria": "{prefix}: select tasks",
+      "taskFilterCheckAria": "Check tasks",
+      "taskFilterSelectAll": "Select all",
+      "taskFilterClear": "Clear",
+      "taskFilterEmpty": "No tasks"
+    }
+  },
+  "validation": {
+    "webhookUrlRequired": "Webhook URL is required",
+    "webhookUrlPrefix": "Webhook URL must start with {prefixes}",
+    "webhookUrlMaxLength": "Webhook URL must not exceed {max} characters",
+    "urlRequired": "URL is required",
+    "urlPrefix": "URL must start with http:// or https://",
+    "urlUnsafeProtocol": "URL must use a safe http:// or https:// protocol",
+    "urlMaxLength": "URL must not exceed {max} characters",
+    "httpMethodInvalid": "HTTP method must be POST or PUT",
+    "brokerUrlRequired": "Broker URL is required",
+    "brokerUrlPrefix": "Broker URL must start with mqtt:// or mqtts://",
+    "brokerUrlMaxLength": "Broker URL must not exceed {max} characters",
+    "topicRequired": "Topic is required",
+    "topicMaxLength": "Each topic must not exceed {max} characters",
+    "qosInvalid": "QoS must be 0, 1, or 2",
+    "credentialPairRequired": "Username and password must be provided together or both left empty",
+    "botTokenRequired": "Bot Token is required",
+    "chatIdRequired": "Chat ID is required",
+    "imapHostRequired": "IMAP host is required",
+    "imapHostNoProtocol": "IMAP host must not include a protocol prefix (e.g. imap://)",
+    "imapHostTooLong": "IMAP host name is too long",
+    "imapPortRange": "Port must be between 1 and 65535",
+    "emailRequired": "Email address is required",
+    "appPasswordRequired": "App Password is required",
+    "folderRequired": "At least one IMAP folder is required",
+    "pollIntervalNumber": "Poll interval must be a number",
+    "pollIntervalRange": "Poll interval must be between {min} and {max} seconds",
+    "initialSyncDaysRange": "Initial sync days must be between {min} and {max}",
+    "initialSyncMaxMessagesRange": "Initial sync max messages must be between {min} and {max}",
+    "orSeparator": " or "
+  },
+  "topBar": {
+    "openViewer": "Open new viewer",
+    "collector": {
+      "starting": "Collector starting…",
+      "running": "Collector running",
+      "stopping": "Collector stopping…",
+      "stopped": "Collector stopped",
+      "restarting": "Collector restarting…",
+      "error": "Collector failed to start"
+    },
+    "collectorShort": {
+      "starting": "Starting…",
+      "running": "Running",
+      "stopping": "Stopping…",
+      "stopped": "Stopped",
+      "restarting": "Restarting…",
+      "error": "Start failed"
+    },
+    "unnamedTask": "Unnamed task",
+    "analyzingLabel": "Analyzing · {task}",
+    "analyzingTitle": "AI analyzing: {task} ({batch})",
+    "analyzingTitlePaused": "AI analyzing: {task} ({batch}); new batches paused",
+    "aiUnavailable": "AI unavailable",
+    "aiUnavailableTitle": "Collector running, but AI engine is unreachable",
+    "analysisPaused": "Analysis paused",
+    "analysisPausedTitle": "Collector running · AI analysis paused",
+    "systemOk": "System OK",
+    "systemOkTitle": "Collector running · AI engine healthy",
+    "busy": "Working…",
+    "clickResume": "Click to resume analysis",
+    "clickPause": "Click to pause analysis",
+    "analysisControl": "Analysis controls",
+    "analysisControlMenu": "Analysis control menu",
+    "emergencyAbort": "Emergency abort",
+    "aborting": "Aborting…",
+    "pillTitle": "{title} ({pauseHint}; hover to expand for emergency abort)",
+    "pillAria": "{label}. {pauseHint}",
+    "abortDialogTitle": "Emergency abort analysis",
+    "abortDialogBody": "Abort all analysis now? This cannot be undone."
+  },
+  "window": {
+    "controlsAria": "Window controls",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
+  "monitorMode": {
+    "aria": "Monitor mode",
+    "pages": "Pages",
+    "canvas": "Canvas",
+    "pagesTitle": "Paged monitor",
+    "canvasTitle": "Immersive canvas monitor"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "commandPalette": "Open command palette",
+    "quickAssistant": "Toggle assistant",
+    "holdToTalk": "Hold to talk while assistant is open",
+    "focusSearch": "Focus page search",
+    "listNav": "Move in lists",
+    "openItem": "Open current item",
+    "closePanel": "Close panel or preview"
+  },
+  "schema": {
+    "dialogAria": "Database upgrade",
+    "title": "Database upgrade",
+    "versionLine": "Current v{current} → required v{required}",
+    "restoredTitle": "Restored from a half-migrated state",
+    "restoredBody": "The last upgrade did not finish and was restored from the baseline backup. Confirm and upgrade again.",
+    "needsTitle": "Database upgrade required",
+    "needsBody": "Finish the schema upgrade before continuing. Collection and analysis pause during upgrade — do not quit the app.",
+    "failedBackupTitle": "Upgrade failed (backup kept)",
+    "failedBackupBody": "Retry with the button below. If it still fails, quit and restore manually from the backup path.",
+    "failedNoBackupTitle": "Upgrade failed with no backup",
+    "failedNoBackupBody": "Cannot safely auto-retry. Quit and restore the database file manually.",
+    "migratingTitle": "Upgrade in progress",
+    "migratingBody": "Please wait — do not quit or force power off.",
+    "phaseMigrate": "Migrating schema",
+    "starting": "Starting upgrade…",
+    "idlePhase": "Idle",
+    "checking": "Checking database version…",
+    "upgrading": "Upgrading…",
+    "retry": "Retry upgrade",
+    "start": "Start upgrade",
+    "backupPath": "Backup path: {path}",
+    "copied": "Copied",
+    "copy": "Copy",
+    "techDetails": "Technical error details (expand)",
+    "retryBlocked": "No backup available — cannot safely retry. Quit and restore the database file manually.",
+    "phases": {
+      "idle": "Idle",
+      "awaiting_confirmation": "Waiting for confirmation",
+      "snapshot": "Recording stats",
+      "backup": "Backup",
+      "migrate": "Migrating schema",
+      "validate": "Validating",
+      "restore": "Restoring",
+      "runtime": "Starting services",
+      "ready": "Ready",
+      "failed": "Failed"
+    },
+    "messages": {
+      "needs_upgrade": "Database needs upgrade from v{current} to v{required}",
+      "up_to_date": "Database schema is up to date",
+      "healed_half_migration": "Restored from a half-migrated state — confirm and upgrade again",
+      "restoring": "Restoring database from backup…",
+      "restored_retry": "Restored from backup — please upgrade again",
+      "failed_no_backup": "Upgrade failed with no backup — quit and restore the database file manually",
+      "cannot_restore": "Could not restore from backup",
+      "snapshotting": "Recording pre-upgrade stats…",
+      "backing_up": "Backing up database…",
+      "migrating": "Migrating database schema — do not quit…",
+      "validating": "Validating data integrity…",
+      "starting_runtime": "Starting collection and analysis…",
+      "upgrade_complete": "Upgrade complete",
+      "failed_auto_restore": "Upgrade failed and auto-restore failed",
+      "upgrade_failed": "Upgrade failed (no usable backup — do not continue)",
+      "starting": "Starting upgrade…",
+      "marker_corrupt": "Upgrade verify marker is corrupt",
+      "startup_validate_failed": "Startup validation failed",
+      "integrity_failed": "Data integrity check failed",
+      "half_migration_restore_failed": "Half-migration auto-restore failed"
+    }
+  },
+  "boot": {
+    "checking": "Checking database version…",
+    "unavailableTitle": "Cannot reach local service",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 1 / SemVer 0.1.0-beta.1 — older stamped databases must be reset. Run {script} to reset, then retry.",
+    "retry": "Check again",
+    "serviceUnavailable": "Service temporarily unavailable"
+  },
+  "setup": {
+    "title": "Connect this device",
+    "intro": "Run the server on this computer, or connect to a service on another device.",
+    "titleRegister": "Create your system",
+    "introRegister": "Create an admin username and password. Use the same credentials on every device. API keys are for automation only.",
+    "titleLogin": "Sign in",
+    "introLogin": "Sign in to this device with the admin username and password.",
+    "titleForgot": "Reset password",
+    "introForgot": "Reset the admin password on this machine only. Then sign in with the new password.",
+    "chooseMode": "How will you connect?",
+    "stepChoose": "Choose",
+    "stepConnect": "Account",
+    "local": "This computer",
+    "localHint": "Run the server here and finish setup",
+    "remote": "Another device",
+    "remoteHint": "Connect to a server elsewhere and sign in",
+    "registerHelp": "Choose an admin username and password. Keep them safe — other devices use the same credentials.",
+    "loginHelp": "Enter the admin username and password.",
+    "loginNoDevicesHelp": "All device sessions were revoked. Sign in again with the admin password, or reset it on this machine.",
+    "remoteLoginHelp": "Enter the server URL plus the admin username and password.",
+    "register": "Create admin account",
+    "login": "Sign in",
+    "username": "Username",
+    "usernamePlaceholder": "e.g. admin",
+    "usernameInvalid": "Username may only use lowercase letters, digits, '.', '_' and '-'",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "passwordInvalid": "Enter a password",
+    "passwordMismatch": "Passwords do not match",
+    "forgotPassword": "Forgot password…",
+    "forgotHelp": "Local password reset works only when rescue is armed. After a successful reset the arming flag turns off; sign in with the new password.",
+    "forgotArmHint": "Forgot your password? Using an OS account that can write the data directory, set resetPasswordForLocal to true in connection.json, then reload this page.",
+    "resetPassword": "Reset password",
+    "resetPasswordOk": "Password reset. Sign in with the new password.",
+    "serverUrl": "Server URL",
+    "serverUrlRequired": "Server URL is required",
+    "serverUrlPlaceholder": "e.g. http://192.168.1.10:18820",
+    "deviceLabel": "Device name",
+    "defaultHostLabel": "Host",
+    "defaultDeviceLabel": "Browser",
+    "working": "Working…",
+    "restartingShell": "Restarting the desktop app…",
+    "back": "Back"
+  },
+  "reauth": {
+    "title": "Sign in again",
+    "intro": "This device’s login expired or was cleared. Sign in with the admin username and password to continue — this is not first-time setup.",
+    "localHint": "Signing in to this host ({origin}).",
+    "login": "Sign in",
+    "useOtherServer": "Use another server…",
+    "useThisHost": "Use this host"
+  },
+  "viewer": {
+    "navAria": "Viewer navigation",
+    "brand": "IM Viewer",
+    "navTasks": "Tasks",
+    "navResults": "Results",
+    "navStatus": "Status",
+    "authFailed": "Auth failed: API key invalid or expired",
+    "noData": "No data",
+    "reload": "Reload",
+    "active": "On",
+    "inactive": "Off",
+    "tasksLoadError": "Could not load tasks — check connection",
+    "tasksEmpty": "No tasks yet",
+    "tasksRefreshing": "Refreshing tasks",
+    "viewTaskAria": "View task: {name}",
+    "taskDetailAria": "Task details: {name}",
+    "taskId": "Task ID: {id}",
+    "lastAnalysis": "Last analysis:",
+    "neverRun": "Never run",
+    "schedule": "Schedule: {cron}",
+    "resultsLoadError": "Could not load results summary — check connection",
+    "resultsRefreshing": "Refreshing results summary",
+    "totalTasks": "Total tasks",
+    "activeTasks": "Active tasks",
+    "totalBatches": "Total batches",
+    "completedBatches": "Completed batches",
+    "totalResults": "Total results",
+    "statusLoadError": "Could not load system status — check connection",
+    "statusRefreshing": "Refreshing system status",
+    "queueDepth": "Queue depth",
+    "queueDepthDesc": "Batches waiting to process",
+    "collectorStatus": "Collector status",
+    "collectorRunning": "Running",
+    "collectorStopped": "Stopped",
+    "collectorDesc": "Message collector heartbeat",
+    "analysisStatus": "Analysis status",
+    "analysisPaused": "Analysis paused",
+    "analysisRunning": "Running",
+    "analysisDesc": "Whether AI analysis scheduling is paused",
+    "uptime": "Uptime",
+    "uptimeDesc": "Time since system start",
+    "uptimeHours": "{hours}h {minutes}m",
+    "uptimeMinutes": "{minutes}m",
+    "statusOk": "OK",
+    "statusBad": "Issue"
+  },
+  "yes": "Yes",
+  "no": "No",
+  "emDash": "—",
+  "never": "Never",
+  "edit": "Edit",
+  "delete": "Delete",
+  "enabled": "Enabled",
+  "disabled": "Disabled",
+  "enable": "Enable",
+  "disable": "Disable",
+  "analysisControls": {
+    "pauseTimeout": "Pause/resume timed out",
+    "pauseFailed": "Pause/resume failed: {error}",
+    "abortFailed": "Emergency abort failed: {error}"
+  },
+  "runtime": {
+    "aiConnected": "AI engine connected",
+    "aiUnavailable": "AI engine unreachable",
+    "aiUnknown": "AI engine status unknown",
+    "aiCheckFailed": "AI engine status check failed",
+    "frontendError": "Frontend runtime error",
+    "unhandledRejection": "Unhandled async error",
+    "analysisPaused": "AI analysis paused",
+    "analysisResumed": "AI analysis resumed",
+    "collectorReadFailed": "Could not read collector status",
+    "adapterConnectFailed": "Source “{name}” connection failed: {summary}"
+  },
+  "errorToast": {
+    "regionAria": "Error notification area",
+    "closeAria": "Dismiss error notification",
+    "goProfileAccessKeys": "Go to Account → Access keys"
+  },
+  "account": {
+    "root": "Account",
+    "tabsAria": "Account sections",
+    "tabs": {
+      "identity": "Identity",
+      "devices": "Devices",
+      "keys": "Access keys"
+    }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "Desktop app does not support browser speech recognition. Please type instead.",
+    "sttUnsupported": "This browser does not support speech recognition, or is not in a secure context (HTTPS / localhost).",
+    "sttStartFailed": "Could not start speech recognition",
+    "sttNotAllowed": "Microphone permission denied. Please type instead.",
+    "sttNoMic": "Microphone unavailable (missing device or in use elsewhere). You can keep the desktop app running and hold-to-talk in a browser tab; check OS mic permissions if it still fails.",
+    "sttNetwork": "Browser cloud speech recognition failed (needs access to the recognition service). Type instead, or open the local service in Chrome.",
+    "sttErrorCode": "Speech recognition error: {code}",
+    "ttsUnsupported": "This browser does not support speech synthesis.",
+    "ttsFailed": "Speech synthesis failed"
+  },
+  "profile": {
+    "defaultName": "User",
+    "intro": "Set your display name, avatar, and background. The avatar is used in direct-mode captions and similar UI.",
+    "avatarLabel": "Avatar",
+    "avatarHelp": "Click the circle to upload; used in subtitles and assistant UI.",
+    "avatarHint": "No avatar uploaded yet.",
+    "displayNameLabel": "Display name",
+    "displayNameHelp": "Leave blank to use the default name.",
+    "backgroundLabel": "Background",
+    "backgroundHelp": "Describe your role or preferences for future AI context.",
+    "backgroundPlaceholder": "e.g. On-call monitoring, focus on SE Asia routes…",
+    "uploadAvatar": "Upload",
+    "uploadAvatarAria": "Upload profile avatar",
+    "resetAvatar": "Clear avatar",
+    "resetAvatarAria": "Clear profile avatar",
+    "avatarTooLarge": "Image is still too large after compression. Try a smaller file.",
+    "avatarReadFailed": "Could not read that image.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Profile saved",
+    "password": {
+      "title": "Admin password",
+      "help": "Change the admin password. Other signed-in devices keep working until they refresh or you revoke them.",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "saving": "Saving…",
+      "changed": "Password changed"
+    },
+    "devices": {
+      "title": "Devices",
+      "intro": "UI device sessions for browsers and desktop clients signed in with the admin password. Revoke a device to sign it out remotely. Webhooks should use API keys, not device sessions.",
+      "listTitle": "Signed-in devices",
+      "empty": "No active devices.",
+      "current": "This device",
+      "lastSeen": "Last seen {time}",
+      "revoked": "Device revoked",
+      "revokeAria": "Revoke {label}",
+      "logoutLabel": "Sign out",
+      "logoutHelp": "Revoke this device’s session and return to sign-in. On Desktop client mode, the app resets to host.",
+      "logout": "Sign out this device",
+      "loggingOut": "Signing out…",
+      "loggedOut": "Signed out"
+    },
+    "accessKeys": {
+      "title": "API keys (Webhook / automation)",
+      "intro": "Long-lived keys (`Authorization: Bearer`) for Webhooks, scripts, and Account manager. Full keys (`*`) work for Webhook and Account manager; Account-manager-only keys cannot call Webhook. Not for UI sign-in — use the admin username and password for that.",
+      "defaultLabel": "Access key",
+      "newLabel": "New key label",
+      "newPlaceholder": "e.g. Webhook, CI script",
+      "a2aAgentOnly": "Account manager only (A2A)",
+      "a2aAgentOnlyHelp": "Can only call `POST /api/v1/a2a/agent`. Leave unchecked for a full key (`*`), usable for Webhook and Account manager.",
+      "scopesFull": "Scopes: full (*)",
+      "scopesA2aAgent": "Scopes: Account manager (a2a:agent)",
+      "create": "Generate key",
+      "creating": "Generating…",
+      "created": "New key created — copy it now",
+      "revoked": "Key revoked",
+      "revokeAria": "Revoke {label}",
+      "listTitle": "Active keys",
+      "empty": "No keys yet. Create one for Webhook, scripts, or Account manager.",
+      "revealTitle": "New key (shown once)",
+      "revealHelp": "Copy and store it safely; the full secret cannot be shown again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Copy failed"
+    }
+  }
+}

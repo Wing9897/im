@@ -1,0 +1,244 @@
+/**
+ * Unit tests for TimelinePage task selection behavior.
+ *
+ * Validates:
+ * - Requirement 3.1: Selecting a task filters displayed events
+ * - Requirement 3.2: Default "all tasks" displays all events
+ * - Requirement 3.3: Selected task ID is passed to Gantt view for filtering
+ * - Requirement 3.4: If selected task no longer exists, selection resets
+ */
+import { act, createElement } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+
+// --- Hoisted mocks ---
+
+const {
+  mockFetchTimelineEvents,
+  mockFetchCalendarOccurrences,
+  mockFetchTaskActivitySpans,
+} = vi.hoisted(() => ({
+  mockFetchTimelineEvents: vi.fn().mockResolvedValue([]),
+  mockFetchCalendarOccurrences: vi.fn().mockResolvedValue([]),
+  mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../../api/results", () => ({
+  fetchTimelineEvents: (...args: unknown[]) => mockFetchTimelineEvents(...args),
+  fetchCalendarOccurrences: (...args: unknown[]) => mockFetchCalendarOccurrences(...args),
+}));
+
+vi.mock("../../api/tasks", () => ({
+  fetchTaskActivitySpans: (...args: unknown[]) => mockFetchTaskActivitySpans(...args),
+}));
+
+vi.mock("../../context/TaskCatalogContext", async () =>
+  (await import("../../test/context-mocks")).taskCatalogModuleMock());
+
+vi.mock("../../context/ToastContext", async () =>
+  (await import("../../test/context-mocks")).toastContextModuleMock());
+
+vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
+  useRefreshOnAnalysisEvent: vi.fn(),
+}));
+
+import {
+  makeAnalysisTask,
+  resetTaskCatalogState,
+  taskCatalogState,
+} from "../../test/context-mocks";
+import { useTimelinePageContainer } from "./useTimelinePageContainer";
+
+// --- Test harness component ---
+
+type HookResult = ReturnType<typeof useTimelinePageContainer>;
+
+/**
+ * A wrapper component that calls the hook and exposes its result via a ref.
+ * This allows tests to inspect and interact with the hook's return value.
+ */
+function HookHarness({ resultRef }: { resultRef: React.MutableRefObject<HookResult | null> }) {
+  const result = useTimelinePageContainer();
+  resultRef.current = result;
+  return null;
+}
+
+function makeTimelineTask(id: string, name: string) {
+  return makeAnalysisTask({ id, name, analysisMode: "event" });
+}
+
+describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
+  let container: HTMLDivElement;
+  let root: Root | null = null;
+  let resultRef: { current: HookResult | null };
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    window.localStorage.clear();
+    mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
+    mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
+    mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
+    resetTaskCatalogState([
+      makeTimelineTask("task-a", "任務 A"),
+      makeTimelineTask("task-b", "任務 B"),
+    ]);
+    resultRef = { current: null };
+  });
+
+  afterEach(() => {
+    if (root) {
+      act(() => {
+        root!.unmount();
+      });
+    }
+    root = null;
+    container.remove();
+  });
+
+  async function renderHookAsync() {
+    await act(async () => {
+      root = createRoot(container);
+      root.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  // --- Req 3.1, 3.3: Selecting a task in Gantt mode updates selectedTaskIds ---
+
+  describe("Gantt mode task selection updates selectedTaskIds", () => {
+    it("selecting a task updates selectedTaskIds state", async () => {
+      // Start in gantt mode with all-tasks default
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("gantt"),
+      );
+
+      await renderHookAsync();
+
+      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+
+      // Now select a concrete task
+      await act(async () => {
+        resultRef.current!.task.setSelectedTaskIds(["task-b"]);
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+    });
+
+    it("Gantt mode keeps all-tasks when none is selected", async () => {
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("gantt"),
+      );
+
+      await renderHookAsync();
+
+      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+    });
+  });
+
+  // --- Req 3.1, 3.3: selectedTaskIds change triggers schedule events fetch ---
+
+  describe("selectedTaskIds change triggers schedule events fetch", () => {
+    it("triggers fetchTimelineEvents with the selected task ID in Gantt mode", async () => {
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("gantt"),
+      );
+
+      await renderHookAsync();
+
+      // Clear call history after initial fetch
+      mockFetchTimelineEvents.mockClear();
+
+      // Select a different task
+      await act(async () => {
+        resultRef.current!.task.setSelectedTaskIds(["task-b"]);
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      // The schedule events fetch should be called with the new task ID
+      expect(mockFetchTimelineEvents).toHaveBeenCalledWith(
+        expect.objectContaining({ taskIds: ["task-b"] }),
+      );
+    });
+
+    it("initial Gantt mount fetches all schedule events when all-tasks is selected", async () => {
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("gantt"),
+      );
+
+      await renderHookAsync();
+
+      // All-tasks passes undefined taskId (same as calendar all-tasks).
+      expect(mockFetchTimelineEvents).toHaveBeenCalledWith(
+        expect.objectContaining({ taskIds: undefined }),
+      );
+    });
+  });
+
+  // --- Req 3.4: If a selected task no longer exists, selection resets ---
+
+  describe("selection resets when task no longer in catalog", () => {
+    it("resets selectedTaskIds when selected task disappears from task catalog", async () => {
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("gantt"),
+      );
+      window.localStorage.setItem(
+        "im:timeline:selected-task-ids",
+        JSON.stringify(["task-b"]),
+      );
+
+      await renderHookAsync();
+
+      // Initially "task-b" exists so it should remain selected
+      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+
+      // Now remove "task-b" from the catalog
+      await act(async () => {
+        taskCatalogState.tasks = [makeTimelineTask("task-a", "任務 A")];
+        // Re-render to trigger the effect
+        root!.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      // Unknown task resets to all-tasks (same in calendar and gantt)
+      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+    });
+
+    it("resets to empty string in calendar mode when task disappears", async () => {
+      window.localStorage.setItem(
+        "im:timeline:view-mode",
+        JSON.stringify("calendar"),
+      );
+      window.localStorage.setItem(
+        "im:timeline:selected-task-ids",
+        JSON.stringify(["task-b"]),
+      );
+
+      await renderHookAsync();
+
+      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+
+      // Remove "task-b"
+      await act(async () => {
+        taskCatalogState.tasks = [makeTimelineTask("task-a", "任務 A")];
+        root!.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      // In calendar mode, should reset to "" (show all tasks)
+      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+    });
+  });
+});

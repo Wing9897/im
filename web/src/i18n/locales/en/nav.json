@@ -1,0 +1,23 @@
+{
+  "monitor": "Live Monitor",
+  "tasks": "Tasks",
+  "leaderboard": "Leaderboard",
+  "keyEvents": "Key Events",
+  "timeline": "Timeline",
+  "actions": "Notifications",
+  "sources": "Sources",
+  "assistant": "Assistant",
+  "aiSettings": "AI Settings",
+  "systemSettings": "System Settings",
+  "logs": "Logs",
+  "account": "Account",
+  "settingsSection": "Settings",
+  "menu": "Menu",
+  "history": "History",
+  "mainNav": "Main navigation",
+  "railMode": "Sidebar mode",
+  "tasksPendingAria": "Tasks ({count} pending analysis)",
+  "tasksPendingTitle": "Tasks · {count} pending analysis",
+  "pendingAnalysisBadge": "{count} pending analysis",
+  "appVersionTitle": "App version (shared frontend/backend semver)"
+}

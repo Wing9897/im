@@ -1,0 +1,67 @@
+/* Intelligence page shell (card / list / map share the same chrome). */
+
+.im-intelligence-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: var(--spacing-md, 12px) var(--spacing-page-x, 20px) var(--spacing-md, 12px);
+}
+
+/* Ops bar — single-row flex (search/sort/time · task/view). */
+.im-intelligence-toolbar {
+  margin-bottom: 10px;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.im-intelligence-toolbar .im-intelligence-view-toggle [role="tablist"] {
+  height: 30px;
+  min-height: 30px;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+}
+
+.im-intelligence-toolbar .im-intelligence-view-toggle [role="tab"] {
+  min-height: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.im-intelligence-toolbar [data-testid="segmented-indicator"] {
+  top: 2px;
+  bottom: 2px;
+  border-radius: 5px;
+}
+
+/* Match search PillButton height in the dense row. */
+.im-intelligence-toolbar [data-testid="intelligence-search-filter-button"],
+.im-intelligence-toolbar [data-testid="board-task-filter"] {
+  height: 30px;
+  min-height: 30px;
+  box-sizing: border-box;
+}
+
+/* ── Intelligence card tag hover reveal ── */
+.im-intelligence-card .im-intelligence-card-tag {
+  transition: opacity 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.im-intelligence-card:hover .im-intelligence-card-tag {
+  opacity: 1;
+}
+
+.im-intelligence-card:hover .im-intelligence-card-task-tag {
+  border-color: color-mix(in srgb, var(--text-muted) 28%, transparent);
+}
+
+.im-intelligence-card:hover .im-intelligence-card-platform-tag {
+  border-color: color-mix(in srgb, var(--text-muted) 32%, transparent);
+}

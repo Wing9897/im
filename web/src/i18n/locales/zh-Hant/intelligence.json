@@ -1,0 +1,126 @@
+{
+  "toolbar": {
+    "aria": "關鍵事件工具列",
+    "taskSelectAria": "關鍵事件任務",
+    "searchPlaceholder": "搜尋關鍵事件…",
+    "searchAria": "搜尋關鍵事件",
+    "refreshing": "正在更新關鍵事件",
+    "sortAria": "關鍵事件排序方式",
+    "viewAria": "檢視模式"
+  },
+  "filter": {
+    "openAria": "搜索與篩選事件",
+    "title": "搜索與篩選事件",
+    "closeAria": "關閉搜索與篩選",
+    "clear": "清除",
+    "clearAria": "清除搜尋條件",
+    "done": "完成",
+    "announceSearch": "搜尋：{value}",
+    "announceSearchCleared": "已清除搜尋"
+  },
+  "sort": {
+    "event_time": "事件時間",
+    "analyzed_at": "分析時間"
+  },
+  "map": {
+    "loading": "地圖載入中…",
+    "syncCapHint": "已達地圖自動載入上限，可載入下一批或縮小時間窗",
+    "loadNextBatch": "載入下一批",
+    "loadNextBatchLoading": "載入中…",
+    "loadNextBatchAria": "載入下一批地圖事件",
+    "overlay": {
+      "both": "資訊+事件",
+      "liveOnly": "只看資訊",
+      "eventOnly": "只看事件"
+    },
+    "danmaku": {
+      "off": "💬 OFF",
+      "persistent": "💬 持久",
+      "transient": "💬 閃現"
+    },
+    "liveWindowAria": "LIVE 時間範圍",
+    "liveWindowOption": "LIVE ±{hours}h",
+    "fullscreenEnter": "全螢幕",
+    "fullscreenExit": "退出全螢幕",
+    "rangeStartAria": "時間範圍開始",
+    "rangeEndAria": "時間範圍結束",
+    "eventCount": "{count} 個事件",
+    "calendarPickerAria": "日曆選擇器",
+    "liveUnavailable": "即時模式不可用",
+    "liveDisable": "停用即時模式",
+    "liveEnable": "啟用即時模式",
+    "resetViewAria": "重置地圖視角",
+    "emptyTitle": "目前沒有可在地圖上顯示的項目",
+    "emptyHint": "已載入的情報沒有具體地理位置（例如線上活動會存成 0,0，不會釘在地圖上）",
+    "close": "關閉",
+    "backToList": "返回列表",
+    "sameLocationEvents": "同位置事件 ({count})",
+    "clickToViewList": "點擊查看列表",
+    "panelHeightAria": "調整面板高度",
+    "panelHeightValue": "{height} 像素",
+    "panelEvent": "事件",
+    "panelLive": "實時監控",
+    "liveInfoDefaultTitle": "實時信息",
+    "liveInfoEmpty": "暫無可顯示的監控訊息"
+  },
+  "detail": {
+    "hitSource": "命中來源",
+    "hitSourceFallback": "未完整保存",
+    "sourceSummary": "來源摘要",
+    "timeRange": "時間範圍",
+    "timeRangeUnset": "未設定",
+    "location": "位置",
+    "locationNone": "無具體地理位置（不上地圖）",
+    "sourceTime": "來源時間",
+    "analyzedTime": "分析時間",
+    "batchSources": "批次完整來源",
+    "close": "關閉",
+    "ariaLabel": "情報詳情：{title}"
+  },
+  "toast": {
+    "itemNotFound": "找不到指定的關鍵事件"
+  },
+  "list": {
+    "viewDetailAria": "查看情報詳情：{title}",
+    "unreadAria": "未讀"
+  },
+  "card": {
+    "sourcedFrom": "來源於 {time}"
+  },
+  "sourceMeta": {
+    "batchGroups": "批次來源 {count} 個群組",
+    "incomplete": "來源資料未完整保存",
+    "hitSourceLine": "命中來源: {source}",
+    "timeRangeLine": "時間範圍: {range}",
+    "batchFull": "批次完整來源:\n{list}",
+    "batchIncomplete": "批次完整來源: 未完整保存"
+  },
+  "loadMore": {
+    "loadingRemote": "向伺服器載入更多…",
+    "loading": "載入更多…",
+    "scrollCached": "向下捲動以顯示更多",
+    "scrollRemote": "向伺服器載入更多資料",
+    "done": "已載入全部關鍵事件",
+    "aria": "載入更多關鍵事件"
+  },
+  "empty": {
+    "noTasksTitle": "尚未建立關鍵事件任務",
+    "noTasksDescription": "先建立至少一個關鍵事件任務，分析完成後，這裡才會開始出現整理好的重點內容。",
+    "noTasksHint": "如果你已完成帳號與頻道設定，下一步通常是到任務設定新增「關鍵事件」類型任務。",
+    "filteredBothTitle": "找不到符合條件的關鍵事件",
+    "filteredBothDescription": "目前的搜尋文字與時間範圍沒有對應到任何結果。",
+    "filteredSearchTitle": "找不到符合搜尋條件的關鍵事件",
+    "filteredSearchDescription": "請嘗試調整搜尋文字，或清除條件後重新瀏覽。",
+    "filteredTimeTitle": "目前時間範圍內無符合條件的情報",
+    "filteredTimeDescription": "請嘗試調整時間篩選條件，或清除條件後重新瀏覽。",
+    "filteredHint": "清除條件後可以快速確認，是資料真的沒有，還是只是被篩選藏起來。",
+    "noneTitle": "目前還沒有關鍵事件",
+    "noneDescription": "資料已載入，但還沒有任何關鍵事件結果可顯示。",
+    "noneHint": "關鍵事件需要先有成功完成的關鍵事件分析批次。"
+  },
+  "cta": {
+    "goToTasks": "前往任務設定",
+    "clearFilters": "清除搜尋與篩選",
+    "clearFiltersAria": "清除搜尋與時間篩選條件"
+  }
+}

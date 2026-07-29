@@ -1,0 +1,488 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createElement, act } from "react";
+import { createRoot } from "react-dom/client";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../../../i18n";
+import { setAppLocale } from "../../../i18n/locale";
+import {
+  buildQuarterWeeks,
+  buildYearGanttColumns,
+  startOfQuarter,
+  startOfYear,
+  type GanttColumn,
+  type TimelineScale,
+} from "../../../domain/timeline/dateUtils";
+import { EVENT_STATUS_COLORS } from "../../../domain/timeline/status";
+import {
+  makeEvent,
+  makeDayColumns,
+  makeWeekColumns,
+  makeMonthColumns,
+} from "../../../test/timelineTestHelpers";
+import { computeEventBarPosition } from "./ganttEventPositioning";
+
+const { TimelineGanttView } = await import("./TimelineGanttView");
+
+function eventBar(container: ParentNode, eventId: string): HTMLElement | null {
+  return container.querySelector(`[data-testid="event-bar-${eventId}"]`);
+}
+
+function makeQuarterColumns(rangeStart: Date): GanttColumn[] {
+  return buildQuarterWeeks(rangeStart).map((weekStart) => ({
+    key: weekStart.toISOString(),
+    label: `${weekStart.getMonth() + 1}/${weekStart.getDate()}`,
+    day: weekStart,
+  }));
+}
+
+type Props = Parameters<typeof TimelineGanttView>[0];
+
+/** Expected CSS grid-column from the same positioning used by GanttEventRow. */
+function expectedGridColumn(
+  startTime: string,
+  endTime: string | null,
+  timeScale: TimelineScale,
+  rangeStart: Date,
+  columnCount: number,
+): string {
+  const pos = computeEventBarPosition(
+    new Date(startTime),
+    endTime ? new Date(endTime) : null,
+    timeScale,
+    rangeStart,
+    columnCount,
+  );
+  return `${pos.startColumn} / ${pos.endColumn + 1}`;
+}
+
+function makeProps(overrides: Partial<Props> = {}): Props {
+  return {
+    events: [makeEvent()],
+    initialLoading: false,
+    isRefreshing: false,
+    error: null,
+    timeScale: "day",
+    ganttColumns: makeDayColumns(),
+    rangeStart: new Date("2025-01-15T00:00:00Z"),
+    onRetry: vi.fn(),
+    ...overrides,
+  };
+}
+
+function render(props: Props) {
+  const container = document.createElement("div");
+  act(() => {
+    createRoot(container).render(
+      createElement(
+        I18nextProvider,
+        { i18n },
+        createElement(TimelineGanttView, props),
+      ),
+    );
+  });
+  return container;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tests                                                              */
+/* ------------------------------------------------------------------ */
+
+describe("TimelineGanttView", () => {
+  beforeEach(async () => {
+    setAppLocale("zh-Hant");
+    await i18n.changeLanguage("zh-Hant");
+  });
+
+  describe("empty state rendering", () => {
+    it("renders empty state message when there are no events (Requirement 2.1)", () => {
+      const container = render(makeProps({ events: [] }));
+      expect(container.textContent).toContain("目前沒有排程事件");
+    });
+
+    it("keeps gantt framework visible when task has no events", () => {
+      const container = render(makeProps({ events: [] }));
+      expect(container.textContent).toContain("事件");
+      expect(container.querySelector('[data-testid^="event-row-"]')).toBeNull();
+    });
+  });
+
+  describe("error state rendering", () => {
+    it("renders error message and retry button (Requirement 1.4)", () => {
+      const onRetry = vi.fn();
+      const container = render(
+        makeProps({ error: "載入失敗", events: [], onRetry }),
+      );
+      expect(container.textContent).toContain("載入失敗");
+      expect(container.textContent).toContain("重試");
+
+      // Click retry button
+      const button = container.querySelector("button") as HTMLButtonElement;
+      expect(button).not.toBeNull();
+      act(() => {
+        button.click();
+      });
+      expect(onRetry).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("loading state rendering", () => {
+    it("renders loading indicator while fetching", () => {
+      const container = render(makeProps({ initialLoading: true }));
+      expect(container.textContent).toContain("載入排程事件中");
+    });
+
+    it("keeps gantt content visible while refreshing", () => {
+      const container = render(
+        makeProps({ isRefreshing: true, events: [makeEvent({ title: "Refresh Event" })] }),
+      );
+      expect(container.textContent).toContain("Refresh Event");
+      expect(container.querySelector('[data-testid="gantt-refresh-indicator"]')).not.toBeNull();
+    });
+
+    it("provides a vertical scroll region for many event rows", () => {
+      const events = Array.from({ length: 12 }, (_, index) =>
+        makeEvent({
+          id: `evt-${index}`,
+          title: `Event ${index}`,
+          startTime: `2025-01-15T${String(index).padStart(2, "0")}:00:00Z`,
+          endTime: `2025-01-15T${String(index).padStart(2, "0")}:30:00Z`,
+        }),
+      );
+      const container = render(makeProps({ events }));
+      const scroll = container.querySelector('[data-testid="gantt-vertical-scroll"]');
+      expect(scroll).not.toBeNull();
+      expect((scroll as HTMLElement).className).toContain("overflow-y-auto");
+      expect(container.querySelectorAll('[data-testid^="event-row-"]')).toHaveLength(12);
+    });
+  });
+
+  describe("event row rendering", () => {
+    it("renders one Event_Row per visible non-recurring TimelineItem (Requirement 3.1)", () => {
+      const events = [
+        makeEvent({ id: "evt-1", title: "Event A" }),
+        makeEvent({ id: "evt-2", title: "Event B", startTime: "2025-01-15T12:00:00Z", endTime: "2025-01-15T14:00:00Z" }),
+        makeEvent({ id: "evt-3", title: "Event C", startTime: "2025-01-15T16:00:00Z", endTime: "2025-01-15T18:00:00Z" }),
+      ];
+      const container = render(makeProps({ events }));
+      expect(container.textContent).toContain("Event A");
+      expect(container.textContent).toContain("Event B");
+      expect(container.textContent).toContain("Event C");
+
+      const rows = container.querySelectorAll('[data-testid^="event-row-"]');
+      expect(rows.length).toBe(3);
+    });
+
+    it("merges recurring occurrences with the same taskId into one row with multiple bars", () => {
+      const events = [
+        makeEvent({
+          id: "meet:0900",
+          taskId: "meet",
+          title: "開會",
+          source: "recurring",
+          startTime: "2025-01-15T09:00:00Z",
+          endTime: "2025-01-15T10:00:00Z",
+        }),
+        makeEvent({
+          id: "meet:1500",
+          taskId: "meet",
+          title: "開會",
+          source: "recurring",
+          startTime: "2025-01-15T15:00:00Z",
+          endTime: "2025-01-15T16:00:00Z",
+        }),
+        makeEvent({
+          id: "analysis-1",
+          title: "Analysis",
+          startTime: "2025-01-15T12:00:00Z",
+          endTime: "2025-01-15T13:00:00Z",
+        }),
+      ];
+      const container = render(makeProps({ events }));
+      expect(container.querySelectorAll('[data-testid^="event-row-"]')).toHaveLength(2);
+      expect(container.querySelector('[data-testid="event-row-recurring:meet"]')).not.toBeNull();
+      expect(container.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(3);
+      expect(container.querySelector('[data-testid="event-bar-meet:0900"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="event-bar-meet:1500"]')).not.toBeNull();
+    });
+
+    it("renders exactly N Event_Row elements for N non-recurring events (one-to-one mapping)", () => {
+      for (const count of [1, 3, 5]) {
+        const events = Array.from({ length: count }, (_, i) =>
+          makeEvent({
+            id: `evt-count-${i}`,
+            title: `Event ${i}`,
+            startTime: `2025-01-15T${String(i % 24).padStart(2, "0")}:00:00Z`,
+            endTime: `2025-01-15T${String(i % 24).padStart(2, "0")}:30:00Z`,
+          }),
+        );
+        const container = render(makeProps({ events }));
+        const rows = container.querySelectorAll('[data-testid^="event-row-"]');
+        expect(rows.length).toBe(count);
+      }
+    });
+
+    it("each Event_Row has a unique data-testid matching event id", () => {
+      const events = [
+        makeEvent({ id: "evt-a", startTime: "2025-01-15T09:00:00Z", endTime: "2025-01-15T10:00:00Z" }),
+        makeEvent({ id: "evt-b", startTime: "2025-01-15T12:00:00Z", endTime: "2025-01-15T13:00:00Z" }),
+        makeEvent({ id: "evt-c", startTime: "2025-01-15T15:00:00Z", endTime: "2025-01-15T16:00:00Z" }),
+      ];
+      const container = render(makeProps({ events }));
+      const rows = container.querySelectorAll('[data-testid^="event-row-"]');
+      const testIds = Array.from(rows).map((row) => row.getAttribute("data-testid"));
+
+      expect(testIds).toEqual(["event-row-evt-a", "event-row-evt-b", "event-row-evt-c"]);
+      expect(new Set(testIds).size).toBe(testIds.length);
+    });
+
+    it("renders long event titles with CSS ellipsis overflow (Requirement 3.4)", () => {
+      const longTitle = "This is a very long event title that exceeds twenty characters";
+      const container = render(
+        makeProps({ events: [makeEvent({ title: longTitle })] }),
+      );
+      // Full title is available via title attribute for hover tooltip
+      const titleEl = container.querySelector(`[title="${longTitle}"]`);
+      expect(titleEl).not.toBeNull();
+      // Visible text is truncated by CSS ellipsis in the fixed-width label column
+      expect(titleEl!.textContent).toBe(longTitle);
+      const className = (titleEl as HTMLElement).className;
+      expect(className).toContain("truncate");
+    });
+
+    it("shows full title on hover via title attribute (Requirement 3.4)", () => {
+      const longTitle = "This is a very long event title that exceeds twenty characters";
+      const container = render(
+        makeProps({ events: [makeEvent({ title: longTitle })] }),
+      );
+      // The row label div should have a title attribute with the full title
+      const labelDiv = container.querySelector(`[title="${longTitle}"]`);
+      expect(labelDiv).not.toBeNull();
+    });
+  });
+
+  describe("time axis rendering", () => {
+    it("renders column headers from ganttColumns", () => {
+      const container = render(makeProps());
+      // Day scale: 24 hour columns (00, 01, ..., 23)
+      expect(container.textContent).toContain("00");
+      expect(container.textContent).toContain("12");
+      expect(container.textContent).toContain("23");
+    });
+
+    it("renders '事件' label in the first column header", () => {
+      const container = render(makeProps());
+      expect(container.textContent).toContain("事件");
+    });
+  });
+
+  describe("color legend rendering", () => {
+    it("renders Color Legend with all 4 statuses (Requirement 7.5)", () => {
+      const container = render(makeProps());
+      expect(container.textContent).toContain("待確認");
+      expect(container.textContent).toContain("已確認");
+      expect(container.textContent).toContain("已完成");
+      expect(container.textContent).toContain("已取消");
+    });
+  });
+
+  describe("event bar rendering", () => {
+    it("renders exactly one continuous bar per visible event", () => {
+      const container = render(
+        makeProps({
+          events: [
+            makeEvent({
+              id: "evt-span",
+              startTime: "2025-01-15T09:00:00Z",
+              endTime: "2025-01-15T12:00:00Z",
+            }),
+          ],
+        }),
+      );
+      const row = container.querySelector('[data-testid="event-row-evt-span"]');
+      expect(row).not.toBeNull();
+      expect(row!.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(1);
+
+      const bar = eventBar(container, "evt-span");
+      expect(bar).not.toBeNull();
+      expect(bar!.className).toContain("bg-accent");
+      expect(bar!.style.gridColumn).toBe(
+        expectedGridColumn(
+          "2025-01-15T09:00:00Z",
+          "2025-01-15T12:00:00Z",
+          "day",
+          new Date("2025-01-15T00:00:00Z"),
+          24,
+        ),
+      );
+    });
+
+    it("renders point event (null endTime) as one bar with point min-width", () => {
+      const container = render(
+        makeProps({
+          events: [makeEvent({ id: "evt-point", endTime: null })],
+        }),
+      );
+      const bar = eventBar(container, "evt-point");
+      expect(bar).not.toBeNull();
+      expect(bar!.className).toContain("min-w-1.5");
+      expect(bar!.style.gridColumn).toBe(
+        expectedGridColumn(
+          "2025-01-15T09:00:00Z",
+          null,
+          "day",
+          new Date("2025-01-15T00:00:00Z"),
+          24,
+        ),
+      );
+    });
+
+    it("renders one continuous bar for month / quarter / year scales", () => {
+      const monthStart = new Date("2025-01-01T00:00:00Z");
+      const monthColumns = makeMonthColumns(2025, 0);
+      const monthContainer = render(
+        makeProps({
+          timeScale: "month",
+          ganttColumns: monthColumns,
+          rangeStart: monthStart,
+          events: [
+            makeEvent({
+              id: "evt-month",
+              startTime: "2025-01-10T09:00:00Z",
+              endTime: "2025-01-12T09:00:00Z",
+            }),
+          ],
+        }),
+      );
+      const monthBar = eventBar(monthContainer, "evt-month");
+      expect(monthBar).not.toBeNull();
+      expect(monthContainer.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(1);
+      expect(monthBar!.style.gridColumn).toBe(
+        expectedGridColumn(
+          "2025-01-10T09:00:00Z",
+          "2025-01-12T09:00:00Z",
+          "month",
+          monthStart,
+          monthColumns.length,
+        ),
+      );
+
+      const quarterStart = startOfQuarter(new Date("2025-01-15T00:00:00Z"));
+      const quarterColumns = makeQuarterColumns(quarterStart);
+      const quarterContainer = render(
+        makeProps({
+          timeScale: "quarter",
+          ganttColumns: quarterColumns,
+          rangeStart: quarterStart,
+          events: [
+            makeEvent({
+              id: "evt-quarter",
+              startTime: "2025-01-15T09:00:00Z",
+              endTime: "2025-01-22T09:00:00Z",
+            }),
+          ],
+        }),
+      );
+      expect(quarterContainer.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(1);
+      expect(eventBar(quarterContainer, "evt-quarter")).not.toBeNull();
+
+      const yearStart = startOfYear(new Date("2025-01-15T00:00:00Z"));
+      const yearColumns = buildYearGanttColumns(yearStart);
+      const yearContainer = render(
+        makeProps({
+          timeScale: "year",
+          ganttColumns: yearColumns,
+          rangeStart: yearStart,
+          events: [
+            makeEvent({
+              id: "evt-year",
+              startTime: "2025-03-01T00:00:00Z",
+              endTime: "2025-05-01T00:00:00Z",
+            }),
+          ],
+        }),
+      );
+      const yearBar = eventBar(yearContainer, "evt-year");
+      expect(yearBar).not.toBeNull();
+      expect(yearContainer.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(1);
+      expect(yearBar!.style.gridColumn).toBe(
+        expectedGridColumn(
+          "2025-03-01T00:00:00Z",
+          "2025-05-01T00:00:00Z",
+          "year",
+          yearStart,
+          yearColumns.length,
+        ),
+      );
+    });
+
+    it("renders one continuous bar on week scale", () => {
+      const weekStart = new Date("2025-01-13T00:00:00Z");
+      const weekColumns = makeWeekColumns(weekStart);
+      const container = render(
+        makeProps({
+          timeScale: "week",
+          ganttColumns: weekColumns,
+          rangeStart: weekStart,
+          events: [
+            makeEvent({
+              id: "evt-week",
+              startTime: "2025-01-15T09:00:00Z",
+              endTime: "2025-01-16T09:00:00Z",
+            }),
+          ],
+        }),
+      );
+      const bar = eventBar(container, "evt-week");
+      expect(bar).not.toBeNull();
+      expect(container.querySelectorAll('[data-testid^="event-bar-"]')).toHaveLength(1);
+      expect(bar!.style.gridColumn).toBe(
+        expectedGridColumn(
+          "2025-01-15T09:00:00Z",
+          "2025-01-16T09:00:00Z",
+          "week",
+          weekStart,
+          weekColumns.length,
+        ),
+      );
+    });
+  });
+
+  describe("state priority", () => {
+    it("error state takes priority over loading", () => {
+      const container = render(
+        makeProps({ error: "Something went wrong", events: [], initialLoading: true }),
+      );
+      expect(container.textContent).toContain("Something went wrong");
+      expect(container.textContent).not.toContain("載入排程事件中");
+    });
+
+    it("empty state shows when events are empty and not loading or errored", () => {
+      const container = render(
+        makeProps({ events: [], initialLoading: false, error: null }),
+      );
+      expect(container.textContent).toContain("目前沒有排程事件");
+      expect(container.textContent).not.toContain("載入排程事件中");
+    });
+  });
+
+  describe("event bar styling", () => {
+    it("EVENT_STATUS_COLORS is defined for all status values (legend)", () => {
+      for (const status of ["pending", "confirmed", "completed", "cancelled"] as const) {
+        expect(EVENT_STATUS_COLORS[status]).toBeDefined();
+      }
+    });
+
+    it("rendered continuous bar uses accent color and default opacity", () => {
+      const event = makeEvent({
+        id: "evt-status",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      });
+      const container = render(makeProps({ events: [event] }));
+      const bar = eventBar(container, "evt-status");
+      expect(bar).not.toBeNull();
+      expect(bar!.className).toContain("bg-accent");
+      expect(bar!.className).toContain("opacity-80");
+    });
+  });
+});

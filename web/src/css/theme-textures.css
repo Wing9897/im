@@ -1,0 +1,214 @@
+/* AUTO hint: regenerate with `node scripts/generate-theme-textures.mjs` when editing motifs.
+   Selective textures — elevated cards, control bars, secondary buttons,
+   AND page/sidebar atmosphere when no custom photo background is set.
+   Driven by html[data-theme-texture] + html[data-theme-bg]. */
+
+:root {
+  --texture-opacity: 0;
+  --texture-image: none;
+  --texture-blend: soft-light;
+  --texture-size: 140px 140px;
+  --page-texture-blend: soft-light;
+}
+
+/* Fine film grain (desk / neutral) */
+[data-theme-texture="grain"] {
+  --texture-opacity: 0.07;
+  --texture-blend: soft-light;
+  --page-texture-blend: soft-light;
+  --texture-size: 160px 160px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22160%22%20viewBox%3D%220%200%20160%20160%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.9%22%20numOctaves%3D%223%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22saturate%22%20values%3D%220%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20filter%3D%22url(%23n)%22%20opacity%3D%220.55%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Paper fiber (和紙) */
+[data-theme-texture="washi"] {
+  --texture-opacity: 0.08;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 200px 200px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22180%22%20height%3D%22180%22%20viewBox%3D%220%200%20180%20180%22%3E%3Cfilter%20id%3D%22n%22%3E%3CfeTurbulence%20type%3D%22fractalNoise%22%20baseFrequency%3D%220.7%22%20numOctaves%3D%224%22%20stitchTiles%3D%22stitch%22%2F%3E%3CfeColorMatrix%20type%3D%22matrix%22%20values%3D%220%200%200%200%200.45%200%200%200%200%200.4%200%200%200%200%200.32%200%200%200%200.45%200%22%2F%3E%3C%2Ffilter%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20filter%3D%22url(%23n)%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Moss patches + tiny leaves */
+[data-theme-texture="moss"] {
+  --texture-opacity: 0.1;
+  --texture-blend: soft-light;
+  --page-texture-blend: soft-light;
+  --texture-size: 160px 160px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%22160%22%20viewBox%3D%220%200%20160%20160%22%3E%3Cg%20fill%3D%22%234a7048%22%20fill-opacity%3D%220.22%22%3E%3Cellipse%20cx%3D%2230%22%20cy%3D%2240%22%20rx%3D%2214%22%20ry%3D%229%22%20transform%3D%22rotate(-20%2030%2040)%22%2F%3E%3Cellipse%20cx%3D%2278%22%20cy%3D%2228%22%20rx%3D%2211%22%20ry%3D%227%22%20transform%3D%22rotate(15%2078%2028)%22%2F%3E%3Cellipse%20cx%3D%22120%22%20cy%3D%2252%22%20rx%3D%2213%22%20ry%3D%228%22%20transform%3D%22rotate(-8%20120%2052)%22%2F%3E%3Cellipse%20cx%3D%2248%22%20cy%3D%2290%22%20rx%3D%2212%22%20ry%3D%228%22%20transform%3D%22rotate(25%2048%2090)%22%2F%3E%3Cellipse%20cx%3D%22100%22%20cy%3D%22110%22%20rx%3D%2215%22%20ry%3D%229%22%20transform%3D%22rotate(-18%20100%20110)%22%2F%3E%3Cellipse%20cx%3D%22140%22%20cy%3D%22130%22%20rx%3D%2210%22%20ry%3D%226%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%233d5a32%22%20stroke-width%3D%221%22%20stroke-opacity%3D%220.3%22%3E%3Cpath%20d%3D%22M22%20120c6-12%2016-12%2020%200-8%2012-16%2012-20%200z%22%2F%3E%3Cpath%20d%3D%22M110%2078c5-10%2014-10%2018%200-7%2010-14%2010-18%200z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Scattered leaf outlines (orchard / nature) */
+[data-theme-texture="leaf"] {
+  --texture-opacity: 0.12;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 140px 140px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22140%22%20height%3D%22140%22%20viewBox%3D%220%200%20140%20140%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%233a5a32%22%20stroke-width%3D%221.15%22%20stroke-opacity%3D%220.3%22%3E%3Cpath%20d%3D%22M28%2052c10-22%2028-22%2036%200-12%2022-28%2022-36%200z%22%2F%3E%3Cpath%20d%3D%22M46%2052c-2%208-8%2014-14%2018%22%2F%3E%3Cpath%20d%3D%22M96%2034c8-16%2022-14%2028%202-10%2016-22%2014-28-2z%22%2F%3E%3Cpath%20d%3D%22M110%2035c-1%206-6%2012-12%2015%22%2F%3E%3Cpath%20d%3D%22M58%20108c12-18%2030-14%2034%204-14%2016-30%2012-34-4z%22%2F%3E%3Cpath%20d%3D%22M75%20109c0%207-5%2013-11%2016%22%2F%3E%3Cpath%20d%3D%22M18%2098c6-10%2016-8%2018%202-8%209-16%206-18-2z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Wood grain lines */
+[data-theme-texture="wood"] {
+  --texture-opacity: 0.11;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 200px 120px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22120%22%20viewBox%3D%220%200%20200%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23a07848%22%20stroke-width%3D%221.1%22%20stroke-opacity%3D%220.34%22%3E%3Cpath%20d%3D%22M0%2014c48%2010%2096-12%20200%206%22%2F%3E%3Cpath%20d%3D%22M0%2030c56-8%20110%2014%20200-4%22%2F%3E%3Cpath%20d%3D%22M0%2046c42%2012%20108-10%20200%208%22%2F%3E%3Cpath%20d%3D%22M0%2062c60-10%20100%2012%20200-2%22%2F%3E%3Cpath%20d%3D%22M0%2078c44%2010%20112-8%20200%206%22%2F%3E%3Cpath%20d%3D%22M0%2094c52-8%20104%2010%20200-4%22%2F%3E%3Cpath%20d%3D%22M0%20110c40%208%20116-6%20200%204%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Harbor water ripples */
+[data-theme-texture="wave"] {
+  --texture-opacity: 0.11;
+  --texture-blend: soft-light;
+  --page-texture-blend: soft-light;
+  --texture-size: 160px 80px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22160%22%20height%3D%2280%22%20viewBox%3D%220%200%20160%2080%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%2390c4d0%22%20stroke-width%3D%221.25%22%20stroke-opacity%3D%220.34%22%3E%3Cpath%20d%3D%22M0%2020c20-14%2040-14%2060%200s40%2014%2060%200%2040-14%2060%200%22%2F%3E%3Cpath%20d%3D%22M0%2040c20-14%2040-14%2060%200s40%2014%2060%200%2040-14%2060%200%22%2F%3E%3Cpath%20d%3D%22M0%2060c20-14%2040-14%2060%200s40%2014%2060%200%2040-14%2060%200%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Nordic frost crystals */
+[data-theme-texture="frost"] {
+  --texture-opacity: 0.1;
+  --texture-blend: soft-light;
+  --page-texture-blend: soft-light;
+  --texture-size: 96px 96px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2296%22%20height%3D%2296%22%20viewBox%3D%220%200%2096%2096%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23b8d0e8%22%20stroke-width%3D%221%22%20stroke-opacity%3D%220.3%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M48%2012v72M12%2048h72%22%2F%3E%3Cpath%20d%3D%22M24%2024l48%2048M72%2024L24%2072%22%2F%3E%3Cpath%20d%3D%22M48%2020l8%2014M48%2020l-8%2014M48%2076l8-14M48%2076l-8-14%22%2F%3E%3Cpath%20d%3D%22M20%2048l14%208M20%2048l14-8M76%2048l-14%208M76%2048l-14-8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Ash sparks / embers */
+[data-theme-texture="ember"] {
+  --texture-opacity: 0.12;
+  --texture-blend: screen;
+  --page-texture-blend: screen;
+  --texture-size: 120px 120px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22120%22%20height%3D%22120%22%20viewBox%3D%220%200%20120%20120%22%3E%3Cg%20fill%3D%22%23e09050%22%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2222%22%20r%3D%221.4%22%20opacity%3D%220.4%22%2F%3E%3Ccircle%20cx%3D%2252%22%20cy%3D%2216%22%20r%3D%221%22%20opacity%3D%220.32%22%2F%3E%3Ccircle%20cx%3D%2288%22%20cy%3D%2228%22%20r%3D%221.6%22%20opacity%3D%220.38%22%2F%3E%3Ccircle%20cx%3D%2234%22%20cy%3D%2258%22%20r%3D%221.2%22%20opacity%3D%220.34%22%2F%3E%3Ccircle%20cx%3D%2270%22%20cy%3D%2248%22%20r%3D%220.9%22%20opacity%3D%220.28%22%2F%3E%3Ccircle%20cx%3D%22102%22%20cy%3D%2262%22%20r%3D%221.3%22%20opacity%3D%220.36%22%2F%3E%3Ccircle%20cx%3D%2224%22%20cy%3D%2292%22%20r%3D%221.1%22%20opacity%3D%220.3%22%2F%3E%3Ccircle%20cx%3D%2258%22%20cy%3D%2284%22%20r%3D%221.5%22%20opacity%3D%220.38%22%2F%3E%3Ccircle%20cx%3D%2296%22%20cy%3D%2298%22%20r%3D%221%22%20opacity%3D%220.28%22%2F%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2236%22%20r%3D%220.8%22%20opacity%3D%220.24%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23d07040%22%20stroke-width%3D%221%22%20stroke-opacity%3D%220.28%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M30%2040l4-10M76%2070l-3-9M50%20100l2-8%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Sakura petal silhouettes */
+[data-theme-texture="petal"] {
+  --texture-opacity: 0.12;
+  --texture-blend: soft-light;
+  --page-texture-blend: soft-light;
+  --texture-size: 130px 130px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22130%22%20height%3D%22130%22%20viewBox%3D%220%200%20130%20130%22%3E%3Cg%20fill%3D%22%23f0a0b8%22%20fill-opacity%3D%220.26%22%3E%3Cellipse%20cx%3D%2228%22%20cy%3D%2236%22%20rx%3D%227%22%20ry%3D%2211%22%20transform%3D%22rotate(-28%2028%2036)%22%2F%3E%3Cellipse%20cx%3D%2278%22%20cy%3D%2224%22%20rx%3D%226%22%20ry%3D%2210%22%20transform%3D%22rotate(18%2078%2024)%22%2F%3E%3Cellipse%20cx%3D%22104%22%20cy%3D%2270%22%20rx%3D%227%22%20ry%3D%2211%22%20transform%3D%22rotate(-12%20104%2070)%22%2F%3E%3Cellipse%20cx%3D%2246%22%20cy%3D%2288%22%20rx%3D%226%22%20ry%3D%2210%22%20transform%3D%22rotate(32%2046%2088)%22%2F%3E%3Cellipse%20cx%3D%2290%22%20cy%3D%22104%22%20rx%3D%225%22%20ry%3D%229%22%20transform%3D%22rotate(-20%2090%20104)%22%2F%3E%3Cellipse%20cx%3D%2220%22%20cy%3D%22100%22%20rx%3D%225%22%20ry%3D%228%22%20transform%3D%22rotate(10%2020%20100)%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Soft fog bands */
+[data-theme-texture="mist"] {
+  --texture-opacity: 0.14;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 200px 120px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22120%22%20viewBox%3D%220%200%20200%20120%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23607080%22%20stroke-width%3D%226%22%20stroke-opacity%3D%220.12%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M-10%2024c40%2012%2070-10%20110%204s70-8%20110%206%22%2F%3E%3Cpath%20d%3D%22M-10%2052c36-10%2080%2012%20120%200s70%2010%20100-4%22%2F%3E%3Cpath%20d%3D%22M-10%2080c44%2010%2076-12%20118%202s72-6%20102%208%22%2F%3E%3Cpath%20d%3D%22M-10%20104c38-8%2084%208%20122-2s68%208%2098%202%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Woven linen crosshatch */
+[data-theme-texture="linen"] {
+  --texture-opacity: 0.09;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 48px 48px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cg%20stroke%3D%22%23888880%22%20stroke-width%3D%220.8%22%20stroke-opacity%3D%220.24%22%3E%3Cpath%20d%3D%22M0%2012h48M0%2024h48M0%2036h48%22%2F%3E%3Cpath%20d%3D%22M12%200v48M24%200v48M36%200v48%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Technical grid */
+[data-theme-texture="grid"] {
+  --texture-opacity: 0.08;
+  --texture-blend: overlay;
+  --page-texture-blend: overlay;
+  --texture-size: 48px 48px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cpath%20d%3D%22M48%200H0v48%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-opacity%3D%220.16%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/* Sand dune ridges */
+[data-theme-texture="dune"] {
+  --texture-opacity: 0.11;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 200px 100px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22100%22%20viewBox%3D%220%200%20200%20100%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23c49a6c%22%20stroke-width%3D%221.4%22%20stroke-opacity%3D%220.32%22%3E%3Cpath%20d%3D%22M0%2018c30%2014%2060-14%20100%200s70-12%20100%204%22%2F%3E%3Cpath%20d%3D%22M0%2038c34-12%2066%2014%20100%202s68%2012%20100-4%22%2F%3E%3Cpath%20d%3D%22M0%2058c28%2012%2070-10%20100%202s66-14%20100%204%22%2F%3E%3Cpath%20d%3D%22M0%2078c36-10%2064%2012%20100%200s70%2010%20100-2%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+/* Sumi brush strokes */
+[data-theme-texture="ink"] {
+  --texture-opacity: 0.1;
+  --texture-blend: multiply;
+  --page-texture-blend: multiply;
+  --texture-size: 200px 200px;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22200%22%20viewBox%3D%220%200%20200%20200%22%3E%3Cg%20fill%3D%22%231a1512%22%20fill-opacity%3D%220.2%22%3E%3Cellipse%20cx%3D%2240%22%20cy%3D%2250%22%20rx%3D%2228%22%20ry%3D%2210%22%20transform%3D%22rotate(-35%2040%2050)%22%2F%3E%3Cellipse%20cx%3D%22130%22%20cy%3D%2240%22%20rx%3D%2234%22%20ry%3D%228%22%20transform%3D%22rotate(20%20130%2040)%22%2F%3E%3Cellipse%20cx%3D%2280%22%20cy%3D%22120%22%20rx%3D%2240%22%20ry%3D%229%22%20transform%3D%22rotate(-12%2080%20120)%22%2F%3E%3Cellipse%20cx%3D%22160%22%20cy%3D%22150%22%20rx%3D%2226%22%20ry%3D%227%22%20transform%3D%22rotate(28%20160%20150)%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%22170%22%20r%3D%224%22%20opacity%3D%220.7%22%2F%3E%3Ccircle%20cx%3D%22150%22%20cy%3D%2290%22%20r%3D%223%22%20opacity%3D%220.6%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+[data-theme-texture="none"] {
+  --texture-opacity: 0;
+  --texture-image: none;
+}
+
+/* Light themes: soft-light motifs need multiply to read on paper */
+html[data-theme-mode="light"][data-theme-texture="grain"],
+html[data-theme-mode="light"][data-theme-texture="moss"],
+html[data-theme-mode="light"][data-theme-texture="frost"],
+html[data-theme-mode="light"][data-theme-texture="wave"],
+html[data-theme-mode="light"][data-theme-texture="petal"],
+html[data-theme-mode="light"][data-theme-texture="ember"] {
+  --page-texture-blend: multiply;
+  --texture-blend: multiply;
+}
+
+html[data-theme-mode="light"][data-theme-texture="grid"] {
+  --page-texture-blend: multiply;
+  --texture-blend: multiply;
+  --texture-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2048%2048%22%3E%3Cpath%20d%3D%22M48%200H0v48%22%20fill%3D%22none%22%20stroke%3D%22%23000000%22%20stroke-opacity%3D%220.12%22%20stroke-width%3D%221%22%2F%3E%3C%2Fsvg%3E");
+}
+
+/*
+ * Page/sidebar atmosphere painted INTO the surface background.
+ * body::after sat under opaque .im-page-canvas fills and was invisible.
+ */
+html:not([data-theme-bg="custom"]):not([data-theme-texture="none"]) .im-page-canvas {
+  background-image:
+    var(--texture-image),
+    radial-gradient(ellipse 90% 55% at 50% -18%, var(--im-page-glow), transparent 62%),
+    linear-gradient(
+      var(--surface-page, var(--surface-base)),
+      var(--surface-page, var(--surface-base))
+    );
+  background-size: var(--texture-size, 140px 140px), auto, auto;
+  background-repeat: repeat, no-repeat, no-repeat;
+  background-blend-mode: var(--page-texture-blend, soft-light), normal, normal;
+}
+
+html:not([data-theme-bg="custom"]):not([data-theme-texture="none"]) .im-shell-sidebar {
+  background-image:
+    var(--texture-image),
+    linear-gradient(
+      var(--surface-sidebar, var(--surface-base)),
+      var(--surface-sidebar, var(--surface-base))
+    );
+  background-size: var(--texture-size, 140px 140px), auto;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: var(--page-texture-blend, soft-light), normal;
+}
+
+.im-texture-target {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.im-texture-target::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: var(--texture-opacity, 0);
+  background-image: var(--texture-image, none);
+  background-size: var(--texture-size, 140px 140px);
+  background-repeat: repeat;
+  mix-blend-mode: var(--texture-blend, soft-light);
+  z-index: 1;
+}
+
+.im-texture-target > * {
+  position: relative;
+  z-index: 2;
+}

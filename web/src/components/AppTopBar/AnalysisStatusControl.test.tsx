@@ -1,0 +1,89 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createElement, act, type ComponentProps } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { I18nextProvider } from "react-i18next";
+import i18n from "../../i18n";
+import { setAppLocale } from "../../i18n/locale";
+import { AnalysisStatusControl } from "./AnalysisStatusControl";
+
+describe("AnalysisStatusControl", () => {
+  beforeEach(async () => {
+    setAppLocale("zh-Hant");
+    await i18n.changeLanguage("zh-Hant");
+  });
+  let container: HTMLDivElement;
+  let root: Root | null = null;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    if (root) {
+      act(() => {
+        root!.unmount();
+      });
+    }
+    root = null;
+    container.remove();
+    document.querySelectorAll("[data-testid='system-status-menu']").forEach((node) => {
+      node.remove();
+    });
+  });
+
+  function render(overrides: Partial<ComponentProps<typeof AnalysisStatusControl>> = {}) {
+    const props = {
+      color: "var(--warning)",
+      label: "分析已暫停",
+      title: "收集器運行中 · AI 分析已暫停",
+      analysisPaused: true,
+      busy: false,
+      abortingAnalysis: false,
+      onTogglePause: vi.fn(),
+      onEmergencyAbort: vi.fn(async () => {}),
+      ...overrides,
+    };
+    act(() => {
+      root = createRoot(container);
+      root.render(createElement(I18nextProvider, { i18n }, createElement(AnalysisStatusControl, props)));
+    });
+    return props;
+  }
+
+  it("clicking the status pill toggles pause/resume", () => {
+    const props = render();
+    const pill = container.querySelector("[data-testid='system-status-pill']") as HTMLButtonElement;
+    expect(pill).not.toBeNull();
+
+    act(() => {
+      pill.click();
+    });
+    expect(props.onTogglePause).toHaveBeenCalledTimes(1);
+  });
+
+  it("reveals emergency abort via the hover chevron menu", () => {
+    render();
+    const trigger = container.querySelector(
+      "[data-testid='system-status-menu-trigger']",
+    ) as HTMLButtonElement;
+    expect(trigger).not.toBeNull();
+    const slot = trigger.closest(".grid");
+    expect(slot?.className).toContain("grid-cols-[0fr]");
+    expect(slot?.className).toContain("group-hover:grid-cols-[1fr]");
+
+    act(() => {
+      trigger.click();
+    });
+    const menu = document.querySelector("[data-testid='system-status-menu']");
+    expect(menu).not.toBeNull();
+    expect(document.querySelector("[data-testid='emergency-abort-button']")).not.toBeNull();
+    expect(menu?.parentElement).toBe(document.body);
+  });
+
+  it("does not show a permanent pause or abort toolbar button", () => {
+    render();
+    expect(container.querySelector("[data-testid='pause-resume-button']")).toBeNull();
+    expect(container.querySelector("[data-testid='emergency-abort-button']")).toBeNull();
+  });
+});

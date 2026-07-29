@@ -1,0 +1,144 @@
+{
+  "toolbar": {
+    "aria": "Timeline toolbar",
+    "viewAria": "Timeline view mode",
+    "taskFilterAria": "Timeline tasks",
+    "allTasks": "All timeline tasks",
+    "userOrAssistant": "User or Assistant",
+    "viewCalendar": "Calendar",
+    "viewGantt": "Gantt",
+    "addEvent": "Add event",
+    "todayAria": "Today",
+    "todayTitle": "Jump to today",
+    "prevPeriodAria": "Previous period",
+    "nextPeriodAria": "Next period",
+    "jumpToCurrent": "Jump to current {scale}",
+    "switchToScale": "Switch to {scale} view",
+    "enterFullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen"
+  },
+  "scale": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter",
+    "year": "Year"
+  },
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "filter": {
+    "showOptions": "Show",
+    "showDismissed": "Show removed",
+    "showDismissedHelp": "Soft-removed events appear with strikethrough so you can restore them.",
+    "showOngoing": "Show ongoing",
+    "showOngoingHelp": "Show “+N ongoing” multi-day hints in month cells (dot color only).",
+    "showEnding": "Show ending",
+    "showEndingHelp": "Show “+N ending” multi-day hints in month cells (dot color only)."
+  },
+  "view": {
+    "loadTimeout": "Load timed out — please retry",
+    "refreshing": "Refreshing timeline"
+  },
+  "empty": {
+    "noUserEvents": "No user or assistant events yet. Use “Add event” in the top right, or ask the assistant to create a meeting.",
+    "noTasks": "No timeline tasks to show yet. Add a Key Events or Recurring task under Tasks first.",
+    "needData": "The timeline needs a completed analysis batch, a configured calendar schedule, or user/assistant events before it can show anything.",
+    "noEventsDescription": "No events in this filter or date range. You can still change dates or switch to All / User or Assistant.",
+    "filteredTitle": "No events match the current filters",
+    "filteredDescription": "Clear filters or switch tasks / date ranges — the calendar chrome stays available."
+  },
+  "calendar": {
+    "weekdays": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    "today": "Today",
+    "more": "+{count} more",
+    "ongoing": "+{count} ongoing",
+    "ending": "+{count} ending",
+    "weatherAria": "Weather {high} to {low} degrees",
+    "weatherTitle": "Weather: {high}°C / {low}°C",
+    "dayCellAria": "{date}, {count} events",
+    "dayCellAriaEmpty": "{date}, no events",
+    "noEventsToday": "No events today",
+    "itemCount": "{count}",
+    "noEvents": "No events"
+  },
+  "sidebar": {
+    "closeAria": "Close",
+    "backAria": "Back to list",
+    "start": "Start: {value}",
+    "end": "End: {value}",
+    "location": "Location: {value}",
+    "participants": "Participants: {value}",
+    "task": "Task: {value}",
+    "source": "Source: {value}",
+    "userEvent": "User event",
+    "edit": "Edit",
+    "dismiss": "Remove from timeline",
+    "restore": "Restore to timeline",
+    "manualTime": "Manual time adjust",
+    "applyTime": "Apply time",
+    "resetAiTime": "Restore AI time",
+    "overrideHint": "This is a manual correction layer. It overrides the displayed time but does not change the original AI result."
+  },
+  "eventList": {
+    "day": "This day ({count})",
+    "allRange": "Full range ({count})",
+    "rangeEvents": "Range events ({count})",
+    "empty": "No events"
+  },
+  "taskDetail": {
+    "closeAria": "Close detail panel",
+    "analysisRange": "Analysis range: {range}",
+    "active": "Active",
+    "inactive": "Disabled",
+    "completedBatches": "Completed batches: {count}"
+  },
+  "gantt": {
+    "loading": "Loading scheduled events…",
+    "empty": "No scheduled events",
+    "refreshing": "Updating scheduled events",
+    "eventColumn": "Events",
+    "untitled": "(Untitled)",
+    "location": "Location: {value}",
+    "participants": "Participants: {value}"
+  },
+  "messages": {
+    "saveFailed": "Save failed",
+    "dismissFailed": "Failed to remove from timeline",
+    "restoreFailed": "Failed to restore to timeline",
+    "dismissConfirm": "Remove “{title}” from the timeline? You can restore it later.",
+    "restoreConfirm": "Restore “{title}” to the timeline?",
+    "ganttLoadTimeout": "Timed out loading task activity — please retry"
+  },
+  "userEvent": {
+    "createTitle": "Add event",
+    "editTitle": "Edit event",
+    "importTitle": "Add event from calendar",
+    "importIntro": "Fields were filled from an .ics file or link. Adjust them, pick a task, then add.",
+    "importSaved": "Calendar event added",
+    "importFailed": "Could not import calendar event",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "create": "Add",
+    "save": "Save",
+    "intro": "One-off event (no recurrence). Optionally assign to a task for timeline filtering.",
+    "titleAria": "Title",
+    "titlePlaceholder": "Title",
+    "taskLabel": "Task",
+    "startAria": "Start time",
+    "endAria": "End time (optional)",
+    "locationAria": "Location (optional)",
+    "locationPlaceholder": "Location (optional)",
+    "bodyAria": "Notes (optional)",
+    "bodyPlaceholder": "Notes (optional)",
+    "errors": {
+      "titleRequired": "Please enter a title",
+      "startRequired": "Please enter a start time",
+      "startInvalid": "Invalid start time format",
+      "endInvalid": "Invalid end time format"
+    }
+  }
+}

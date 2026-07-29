@@ -1,0 +1,144 @@
+{
+  "toolbar": {
+    "aria": "時間規劃工具列",
+    "viewAria": "時間規劃檢視模式",
+    "taskFilterAria": "時間規劃任務",
+    "allTasks": "全部時間規劃任務",
+    "userOrAssistant": "用戶或助手",
+    "viewCalendar": "日曆",
+    "viewGantt": "甘特",
+    "addEvent": "新增事件",
+    "todayAria": "本日",
+    "todayTitle": "跳到今天",
+    "prevPeriodAria": "上一個時段",
+    "nextPeriodAria": "下一個時段",
+    "jumpToCurrent": "跳到當前{scale}",
+    "switchToScale": "切換到{scale}視圖",
+    "enterFullscreen": "全螢幕",
+    "exitFullscreen": "退出全螢幕"
+  },
+  "scale": {
+    "day": "日",
+    "week": "週",
+    "month": "月",
+    "quarter": "季",
+    "year": "年"
+  },
+  "status": {
+    "pending": "待確認",
+    "confirmed": "已確認",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  "filter": {
+    "showOptions": "顯示",
+    "showDismissed": "顯示已移除",
+    "showDismissedHelp": "軟移除的事件會以刪除線顯示，可從此還原。",
+    "showOngoing": "顯示進行中",
+    "showOngoingHelp": "月曆格子裡顯示跨日事件的「+N 進行中」提示（僅圓點顏色區分）。",
+    "showEnding": "顯示完結",
+    "showEndingHelp": "月曆格子裡顯示跨日事件的「+N 完結」提示（僅圓點顏色區分）。"
+  },
+  "view": {
+    "loadTimeout": "載入逾時，請重試",
+    "refreshing": "正在更新時間軸"
+  },
+  "empty": {
+    "noUserEvents": "目前沒有用戶或助手事件。可用右上角「新增事件」，或請助手建立會議。",
+    "noTasks": "目前還沒有可顯示在時間線的任務。你可以先到任務設定新增「關鍵事件」或「循環任務」類型任務。",
+    "needData": "需要先有成功完成的分析批次、已設定的循環任務排程，或用戶／助手事件，時間線才會顯示。",
+    "noEventsDescription": "目前這個篩選／日期範圍沒有事件；仍可切換日期或改選「全部」「用戶或助手」查看。",
+    "filteredTitle": "目前篩選條件沒有對應事件",
+    "filteredDescription": "可清除篩選或切換其他任務 / 日期範圍，日曆框架仍會保留。"
+  },
+  "calendar": {
+    "weekdays": ["日", "一", "二", "三", "四", "五", "六"],
+    "today": "今天",
+    "more": "+{count} 更多",
+    "ongoing": "+{count} 進行中",
+    "ending": "+{count} 完結",
+    "weatherAria": "天氣 {high} 至 {low} 度",
+    "weatherTitle": "天氣：{high}°C／{low}°C",
+    "dayCellAria": "{date}，{count} 則事件",
+    "dayCellAriaEmpty": "{date}，無事件",
+    "noEventsToday": "當天沒有事件",
+    "itemCount": "{count} 則",
+    "noEvents": "無事件"
+  },
+  "sidebar": {
+    "closeAria": "關閉",
+    "backAria": "返回列表",
+    "start": "開始：{value}",
+    "end": "結束：{value}",
+    "location": "地點：{value}",
+    "participants": "參與者：{value}",
+    "task": "任務：{value}",
+    "source": "來源：{value}",
+    "userEvent": "用戶事件",
+    "edit": "編輯",
+    "dismiss": "從時間規劃移除",
+    "restore": "還原到時間規劃",
+    "manualTime": "手動調整時間",
+    "applyTime": "套用時間",
+    "resetAiTime": "還原 AI 時間",
+    "overrideHint": "這是人工校正層，會覆蓋頁面顯示時間，但不會改動 AI 原始結果。"
+  },
+  "eventList": {
+    "day": "該日 ({count})",
+    "allRange": "全範圍 ({count})",
+    "rangeEvents": "範圍事件 ({count})",
+    "empty": "沒有事件"
+  },
+  "taskDetail": {
+    "closeAria": "關閉詳情面板",
+    "analysisRange": "分析範圍：{range}",
+    "active": "活動中",
+    "inactive": "已停用",
+    "completedBatches": "已完成批次：{count}"
+  },
+  "gantt": {
+    "loading": "載入排程事件中…",
+    "empty": "目前沒有排程事件",
+    "refreshing": "正在更新排程事件",
+    "eventColumn": "事件",
+    "untitled": "(無標題)",
+    "location": "地點：{value}",
+    "participants": "參與者：{value}"
+  },
+  "messages": {
+    "saveFailed": "儲存失敗",
+    "dismissFailed": "從時間規劃移除失敗",
+    "restoreFailed": "還原到時間規劃失敗",
+    "dismissConfirm": "將「{title}」從時間規劃移除？之後可以還原。",
+    "restoreConfirm": "將「{title}」還原到時間規劃？",
+    "ganttLoadTimeout": "載入任務活動資料逾時，請重試"
+  },
+  "userEvent": {
+    "createTitle": "新增事件",
+    "editTitle": "編輯事件",
+    "importTitle": "從日曆加入事件",
+    "importIntro": "已從 .ics 或連結帶入內容。可調整後選擇歸屬任務並新增。",
+    "importSaved": "已加入日曆事件",
+    "importFailed": "無法匯入日曆事件",
+    "cancel": "取消",
+    "saving": "儲存中…",
+    "create": "新增",
+    "save": "儲存",
+    "intro": "單次事件（無循環）。可選歸屬任務，以便時間軸篩選。",
+    "titleAria": "標題",
+    "titlePlaceholder": "標題",
+    "taskLabel": "任務",
+    "startAria": "開始時間",
+    "endAria": "結束時間（選填）",
+    "locationAria": "地點（選填）",
+    "locationPlaceholder": "地點（選填）",
+    "bodyAria": "說明（選填）",
+    "bodyPlaceholder": "說明（選填）",
+    "errors": {
+      "titleRequired": "請填寫標題",
+      "startRequired": "請填寫開始時間",
+      "startInvalid": "開始時間格式無效",
+      "endInvalid": "結束時間格式無效"
+    }
+  }
+}

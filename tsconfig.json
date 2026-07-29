@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "react": ["./web/node_modules/@types/react"],
+      "react/jsx-runtime": ["./web/node_modules/@types/react/jsx-runtime"],
+      "react-dom/client": ["./web/node_modules/@types/react-dom/client"]
+    }
+  },
+  "include": ["tests"]
+}

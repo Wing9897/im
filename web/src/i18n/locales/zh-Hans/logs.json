@@ -1,0 +1,94 @@
+{
+  "toolbar": {
+    "aria": "日志筛选工具栏",
+    "searchPlaceholder": "搜索日志…",
+    "searchAria": "搜索日志",
+    "levelAria": "层级筛选",
+    "categoryAria": "类别筛选",
+    "resetAria": "重设所有筛选条件",
+    "resetTitle": "重设",
+    "refreshAria": "重新载入日志",
+    "refreshingAria": "重新载入中",
+    "refreshTitle": "重新载入",
+    "clearAria": "清空所有日志记录",
+    "clearTitle": "清空"
+  },
+  "level": {
+    "all": "全部层级",
+    "info": "信息",
+    "success": "成功",
+    "warning": "警告",
+    "error": "错误"
+  },
+  "category": {
+    "all": "全部类别",
+    "analysis": "分析",
+    "collector": "收集器",
+    "account": "帐号",
+    "system": "系统",
+    "frontend": "前端"
+  },
+  "summary": {
+    "status": "处理状态",
+    "analyzing": "分析中: {task}",
+    "unnamedTask": "未命名任务",
+    "idle": "无进行中分析",
+    "totalEvents": "总事件数",
+    "analysisEvents": "分析事件",
+    "errorEvents": "错误事件"
+  },
+  "list": {
+    "loadingMore": "载入更多日志中…",
+    "loadedMore": "已载入 {summary}，向下滚动或按下方按钮继续载入",
+    "allLoaded": "已载入全部 {total} 笔日志",
+    "loadMoreAria": "载入更多日志",
+    "loadMoreLabel": "载入更多",
+    "summaryMore": "显示 {shown} 笔 · 已载入 {summary} 笔，向下滚动载入更多",
+    "summaryAll": "显示 {shown} 笔 · 共 {total} 笔"
+  },
+  "card": {
+    "detailAria": "查看事件详情：{message}"
+  },
+  "templates": {
+    "batchExhausted": "分析批次重试用尽（{maxRetries} 次），待恢复分析后再试：{taskName}（{shortBatch}）— {summary}",
+    "batchRetrying": "分析批次将重试（{currentRetry}/{maxRetries}）：{taskName}（{shortBatch}）— {summary}"
+  },
+  "section": {
+    "loadingTitle": "正在载入系统日志",
+    "loadingDescription": "系统正在整理目前可用的日志纪录。若数据量较大，可能需要短暂等待。",
+    "loadingHint": "如果停留太久，可以直接按重新载入再试一次。",
+    "refresh": "重新载入",
+    "refreshing": "重新载入中…",
+    "recoveryTitle": "系统日志目前无法完成载入",
+    "recoveryDescriptionWithError": "最近一次载入失败：{error}",
+    "recoveryDescriptionDefault": "系统日志载入时间过长，可能是后端仍在忙碌或先前请求没有顺利完成。",
+    "recoveryHint": "可以立即重试；若仍持续失败，代表后端命令或数据库状态需要进一步修复。",
+    "loadTimeout": "系统日志载入逾时，请稍后再试。"
+  },
+  "empty": {
+    "noneTitle": "目前还没有系统日志",
+    "filteredTitle": "没有符合条件的日志",
+    "noneDescription": "启动分析、帐号连线、收集器状态变化或前端错误发生后，这里就会开始累积纪录。",
+    "filteredDescriptionMore": "已载入 {summary} 笔日志，但目前搜索或筛选尚未命中这批资料。",
+    "filteredDescriptionAll": "已载入 {count} 笔日志，但目前搜索或筛选把它们全部隐藏了。",
+    "filteredDescriptionNone": "目前条件下没有可显示的日志纪录。",
+    "noneHint": "日志页现在会自动刷新；如果预期应该已有纪录，也可以手动重新载入确认。",
+    "filteredHintMore": "可以先载入更多旧日志，或重设筛选后先确认最新事件是否已存在。",
+    "filteredHintAll": "重设筛选后可快速确认最新事件是否其实已经存在。",
+    "loadMoreLoading": "载入更多中…",
+    "loadMoreLabel": "载入更多日志",
+    "resetFilters": "重设筛选",
+    "refresh": "重新载入",
+    "refreshing": "重新载入中…"
+  },
+  "detail": {
+    "messageLabel": "事件讯息",
+    "detailsLabel": "详细内容",
+    "close": "关闭",
+    "ariaLabel": "日志详情：{message}"
+  },
+  "page": {
+    "loadErrorPrefix": "日志载入失败：",
+    "clearFailed": "清空日志失败：{error}"
+  }
+}

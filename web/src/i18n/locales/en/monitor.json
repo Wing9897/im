@@ -1,0 +1,128 @@
+{
+  "toolbar": {
+    "aria": "Monitor toolbar",
+    "refreshing": "Refreshing messages",
+    "searchPlaceholder": "Search messages…",
+    "searchAria": "Search messages"
+  },
+  "view": {
+    "aria": "Monitor view mode",
+    "wall": "Message wall"
+  },
+  "stream": {
+    "loading": "Loading…",
+    "more": "Loaded {loaded} / {total} messages — scroll for more",
+    "done": "{total} messages total",
+    "wallPick": "Message wall · select channels",
+    "wallLoading": "Message wall · {selectedCount} channels · loading…",
+    "wallReady": "Message wall · {selectedCount} channels · {totalPart}{loadedPart}",
+    "wallTotal": "{total} messages",
+    "wallLoaded": " · {loaded} on wall"
+  },
+  "loadMore": {
+    "loading": "Loading more messages…",
+    "scroll": "Scroll to load more",
+    "done": "All messages loaded",
+    "aria": "Load more messages"
+  },
+  "empty": {
+    "filteredTitle": "No messages match your filters",
+    "noAccountsTitle": "Not receiving live messages yet",
+    "noneTitle": "No messages yet",
+    "filteredDescription": "Account, channel, time, or search filters excluded every message.",
+    "noAccountsDescription": "Add and connect an account under Accounts first — live messages will show up here.",
+    "noneDescription": "Monitor is ready, but the database has nothing to show yet. The list updates when new messages arrive.",
+    "filteredHint": "Clear filters to check whether conditions are too strict, not that nothing is being received.",
+    "noAccountsHint": "If you already have accounts but no messages, also check tasks and channel setup.",
+    "noneHint": "If nothing arrives for a long time, check account connection status and channel settings."
+  },
+  "cta": {
+    "clearFilters": "Clear filters",
+    "goToAccounts": "Go to Accounts",
+    "viewTasks": "View Tasks",
+    "viewAccountStatus": "View account status"
+  },
+  "sections": {
+    "wall": "Message wall",
+    "list": "Message list"
+  },
+  "wall": {
+    "exitFullscreen": "Exit fullscreen",
+    "enterFullscreen": "Fullscreen message wall",
+    "emptyTitle": "No channels selected",
+    "emptyDescription": "Use “Select scope” above to pick channels to monitor — Telegram, Discord, RSS, Email, and any connected source.",
+    "loadingAria": "Loading message wall"
+  },
+  "filter": {
+    "timeAll": "All time",
+    "timeToday": "Today",
+    "time7d": "Last 7 days",
+    "time30d": "Last 30 days",
+    "searchPlaceholder": "Search sender / channel / content",
+    "searchAria": "Search messages",
+    "accountAria": "Filter by account",
+    "accountAll": "All accounts",
+    "timeAria": "Filter by time",
+    "channelSummary": "Channels",
+    "channelEmpty": "No matching channels",
+    "dialogTitle": "Filters",
+    "dialogCloseAria": "Close filters",
+    "openAria": "Open filters",
+    "openAriaActive": "Filters ({count} active)",
+    "title": "Filters",
+    "clearAllAria": "Clear all filters",
+    "clear": "Clear filters",
+    "done": "Done",
+    "removeChipAria": "Remove filter: {label}"
+  },
+  "wallCard": {
+    "unknownChannel": "Unknown channel",
+    "carouselAria": "{channel} message carousel",
+    "empty": "No messages yet",
+    "dotsAria": "Carousel dots",
+    "dotAria": "Message {index}",
+    "newBadge": "+{count} new",
+    "expandMedia": "Expand media preview",
+    "mediaFailed": "Media failed to load",
+    "retry": "Retry",
+    "mediaLoading": "Loading media",
+    "lightboxAria": "Media preview",
+    "lightboxAriaTitled": "{title} media preview",
+    "closePreview": "Close preview",
+    "mediaAlt": "Message media",
+    "noText": "(No text content)",
+    "mediaPhoto": "[Photo]",
+    "mediaVideo": "[Video]",
+    "mediaGif": "[GIF]",
+    "mediaSticker": "[Sticker]",
+    "mediaAudio": "[Audio]",
+    "mediaFile": "[File]"
+  },
+  "message": {
+    "unknownSender": "Unknown sender",
+    "noContent": "(No content)",
+    "channel": "Channel: {name}",
+    "media": "Media: {label}",
+    "id": "ID: {id}",
+    "hideTech": "Hide technical info",
+    "showTech": "Technical info",
+    "platformMessageId": "Platform message ID: {id}",
+    "accountId": "Account ID: {id}",
+    "platformId": "Platform ID: {id}",
+    "createdAt": "Created at: {time}",
+    "rawDataLabel": "Raw Data: ",
+    "rawDataTruncated": "{preview}… ({count} characters total)",
+    "detailAria": "Message detail: {sender}",
+    "viewDetailAria": "View message detail: {sender}",
+    "unread": "Unread",
+    "notFound": "Could not find the specified message"
+  },
+  "metadata": {
+    "loadError": "Could not load account or channel filter data. Reload the page and try again."
+  },
+  "filterChip": {
+    "search": "Search: {query}",
+    "accounts": "Accounts ×{count}",
+    "channels": "Channels ×{count}"
+  }
+}

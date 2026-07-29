@@ -1,0 +1,465 @@
+{
+  "shell": {
+    "tabsAria": "Settings tabs",
+    "unsavedChanges": "Unsaved changes",
+    "loadingSettings": "Loading settings…",
+    "savingSettings": "Saving settings…",
+    "systemSettingsSection": "System settings",
+    "aiSettingsSection": "AI settings"
+  },
+  "tabs": {
+    "general": "General",
+    "theme": "Theme",
+    "data": "Data maintenance",
+    "api": "API",
+    "logs": "System logs",
+    "aiProvider": "AI provider",
+    "voice": "Voice",
+    "analysisStrategy": "Analysis scheduling",
+    "aiStaff": "AI staff"
+  },
+  "shared": {
+    "saving": "Saving…",
+    "saveSuccess": "✓ Saved!",
+    "restarting": "Restarting…",
+    "resetting": "Resetting…",
+    "cleaning": "Cleaning up…",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "concurrentBatchesConfirm": {
+    "title": "Confirm increasing concurrent batches",
+    "confirmLabel": "Confirm increase",
+    "bodyChange": "Concurrent batches will increase from <strong>{from}</strong> to <strong>{to}</strong> ({from} → {to})",
+    "bodyCostWarning": "Increasing concurrent batches sends more LLM API requests at once, which directly raises cost with paid providers.",
+    "bodyLocalWarning": "For local models, increasing concurrent batches can also cause OOM or severe slowdowns."
+  },
+  "general": {
+    "weatherLocationLabel": "Location",
+    "weatherLocationHelp": "The calendar shows Open-Meteo weather forecasts for this location.",
+    "followSystem": "Follow system",
+    "simpleModeLabel": "Simple mode (AI calendar)",
+    "simpleModeHelp": "Keep Assistant, Timeline, Tasks, Notifications (including voice reminders), Settings / AI Settings, and Logs. Hide Monitor, Sources, Intelligence map, and Leaderboard — for calendar scheduling without multi-source collect/analyze.",
+    "weatherLocationPlaceholder": "e.g. Taipei, Hong Kong, Tokyo",
+    "weatherLocationAria": "Weather location",
+    "weatherLocationAutoHelp": "Infers your city from the OS timezone; uncheck to specify a city or region.",
+    "weatherLocationRequired": "Enter a location name, or choose Follow system",
+    "weatherLocationSaved": "Weather location saved",
+    "saveWeatherLocation": "Save location",
+    "collectorRestartDescription": "Restarts the message collector and reconnects all source adapters. Does not delete the database or account sessions.",
+    "restartCollectorButton": "Restart collector",
+    "collectorRestartConfirmTitle": "Restart the collector?",
+    "collectorRestartConfirmBody": "This will disconnect and reconnect all source adapters (Telegram, Discord, Email, RSS, etc.). Messages and account data are not deleted.",
+    "confirmRestart": "Confirm restart",
+    "collectorRestarted": "Collector restarted",
+    "appVersionLabel": "App version",
+    "appVersionHelp": "Shared semver for frontend and backend (repo-root VERSION); DEV prefix in dev mode.",
+    "databaseVersionLabel": "Database schema",
+    "databaseVersionHelp": "Public schema SemVer (same shape as app version). Internal SQLite stamp stays an integer for migration math.",
+    "databaseVersionCurrent": "v{version}",
+    "databaseVersionMismatch": "v{current} → v{required}",
+    "databaseVersionMismatchSemver": "{semver} (stamp v{current} → v{required})",
+    "versionLoading": "Loading…",
+    "versionUnavailable": "Unavailable"
+  },
+  "theme": {
+    "bgTooLarge": "Image size must not exceed 2MB",
+    "bgQuotaExceeded": "Not enough localStorage space to save the background image",
+    "bgReadFailed": "Failed to read the image",
+    "deskSectionTitle": "Workspace",
+    "classicSectionTitle": "Classic / nature / style",
+    "bgImageLabel": "Background image",
+    "bgImageHelp": "Available on every theme. Custom photos pause page texture until removed.",
+    "bgImageNone": "No image yet",
+    "chooseImage": "Choose image",
+    "removeImage": "Remove image",
+    "bgPreviewAlt": "Background preview",
+    "opacity": "Opacity",
+    "customizeHeading": "Customize this theme",
+    "colorAccent": "Accent",
+    "colorSurfaceBase": "Surface base",
+    "colorSurfaceCard": "Surface card",
+    "colorSurfaceBorder": "Surface border",
+    "colorSurfaceOverlay": "Surface overlay",
+    "textureLabel": "Texture",
+    "textureDefaultWithName": "Theme default ({name})",
+    "textureNone": "No texture",
+    "textureEffective": "Applied: {name}",
+    "texturePausedForBg": "(custom background active — texture paused)",
+    "colorOpacityLabel": "Opacity",
+    "colorOpacityHelp": "Each swatch has its own color and opacity. Lowering card opacity also softens glass menus.",
+    "resetPersonalization": "Reset to theme defaults",
+    "resetPersonalizationHelp": "Clears color, opacity, and texture overrides for this theme. Does not remove a custom background image.",
+    "textureMotif": {
+      "grain": "Grain",
+      "washi": "Washi",
+      "moss": "Moss",
+      "leaf": "Leaf",
+      "wood": "Wood",
+      "wave": "Wave",
+      "frost": "Frost",
+      "ember": "Ember",
+      "petal": "Petal",
+      "mist": "Mist",
+      "linen": "Linen",
+      "grid": "Grid",
+      "dune": "Dune",
+      "ink": "Ink"
+    }
+  },
+  "data": {
+    "retention": {
+      "categories": {
+        "messages": "Live monitor",
+        "analysis": "Analysis results",
+        "leaderboard": "Leaderboard",
+        "appLogs": "App logs",
+        "userEvents": "User/assistant events"
+      },
+      "daysLabel": "{category} retention days",
+      "days": "days",
+      "helpAnalysis": "Includes Key Events and calendar (same Event data).",
+      "helpAppLogs": "Shorter by default; set to 0 to disable auto cleanup.",
+      "helpUserEvents": "Longer by default; manual/assistant-created events.",
+      "invalid": "Retention days must be 0 or a positive integer (0 = disable auto cleanup)",
+      "saveButton": "Save retention days",
+      "savedCheck": "✓ Saved",
+      "description": "Each data type has its own retention days; set to 0 to disable cleanup for that type. A background job runs daily, or use “Run now” below. Deleting old messages does not cascade-delete completed analysis results."
+    },
+    "summary": {
+      "messages": "messages",
+      "analysis": "analysis",
+      "leaderboard": "leaderboard",
+      "triggerHistory": "trigger history",
+      "appLogs": "logs",
+      "userEvents": "user events",
+      "timelineDismissals": "timeline dismissals",
+      "assistantStores": "assistant stores",
+      "deviceAccessTokens": "device access tokens",
+      "deviceSessions": "device sessions",
+      "separator": ", "
+    },
+    "restartApp": "Restart application",
+    "retentionCleanupDescription": "Runs a cleanup pass immediately using the current retention days, and returns the deleted counts per category. Does not restart the service.",
+    "runCleanupButton": "Run now",
+    "retentionRunConfirmTitle": "Run cleanup now?",
+    "retentionRunConfirmBody": "This deletes expired messages, analysis results, leaderboard rows, logs, and user events per the current retention days. This cannot be undone.",
+    "confirmCleanup": "Confirm cleanup",
+    "runtimeResetDescription": "Deletes all local state (database, admin account, secret.key, Desktop connection.json, device/Telegram sessions, and frontend cache), relaunches Desktop / reloads the page, and opens first-run setup.",
+    "fullResetButton": "Full reset",
+    "runtimeResetConfirmTitle": "Perform a full reset?",
+    "runtimeResetConfirmBody": "This deletes the database, secret.key, connection.json, admin account, account sessions, and frontend cache, then relaunches into first-run setup. This cannot be undone.",
+    "confirmFullReset": "Confirm full reset",
+    "preparing": "Preparing…"
+  },
+  "provider": {
+    "testingToast": "Sending a very short AI test request…",
+    "testSuccess": "AI test succeeded ({latency}ms, {tokens}{preview})",
+    "testPreviewSuffix": ", reply: {preview}",
+    "testFailedDefault": "AI test failed",
+    "loading": "Loading AI provider settings…",
+    "loadError": "Could not load AI provider settings",
+    "testHint": "“AI test” uses the current form for a tiny request—no need to save first.",
+    "testHintUnsaved": " (includes unsaved changes)",
+    "testing": "Testing…",
+    "testButton": "AI test",
+    "saveLabel": "Save AI provider settings"
+  },
+  "webSearch": {
+    "sectionTitle": "Assistant web search",
+    "sectionHelp": "Allow web.search for the assistant; when off, the tool is not injected.",
+    "enabledLabel": "Allow assistant web search",
+    "enabledAria": "Allow assistant web search",
+    "providerLabel": "Search provider",
+    "providerHelp": "DuckDuckGo needs no key; Brave is usually better but requires a key.",
+    "providerDuckDuckGo": "DuckDuckGo (no key)",
+    "providerBrave": "Brave Search",
+    "duckDuckGoNote": "No key needed; quality may be weaker than Brave.",
+    "braveKeyLabel": "Brave Search API key",
+    "braveKeyHelp": "From the Brave console; search fails if empty.",
+    "braveKeyPlaceholder": "Enter Brave API key"
+  },
+  "llm": {
+    "apiKeyLabel": "API Key",
+    "geminiVersionAria": "Choose Gemini API version",
+    "geminiPresetBeta": "Beta (preview, official default)",
+    "geminiPresetStable": "Stable (production)",
+    "geminiPresetCustom": "Custom URL",
+    "baseUrlHelpGemini": "Type a URL, or use the arrow to pick Beta / Stable.",
+    "modelHelpGemini": "Model name only (e.g. `gemini-3.1-flash-lite`); omit `:generateContent`.",
+    "jsonModeLabel": "JSON output mode",
+    "jsonModeHelp": "Strict = full schema; relaxed = json_object plus schema in the prompt.",
+    "jsonModeSchemaOption": "JSON Schema (strict, OpenAI)",
+    "jsonModeObjectOption": "JSON Object (relaxed, DeepSeek)",
+    "thinkingModeLabel": "Thinking mode",
+    "thinkingModeHelp": "Off by default (think=false). If you still see reasoning text, use an instruct model.",
+    "thinkingModeAria": "Enable thinking mode",
+    "providers": {
+      "ollama": {
+        "label": "Ollama",
+        "hint": "Local",
+        "baseUrlLabel": "Ollama URL",
+        "modelLabel": "Ollama model",
+        "emptyBaseUrlMessage": "Ollama URL cannot be empty.",
+        "emptyModelMessage": "Ollama model cannot be empty.",
+        "apiKeyPlaceholder": "Usually can be left blank"
+      },
+      "openai_compatible": {
+        "label": "OpenAI",
+        "baseUrlLabel": "OpenAI-compatible API URL",
+        "modelLabel": "Model name",
+        "emptyBaseUrlMessage": "OpenAI-compatible API URL cannot be empty.",
+        "emptyModelMessage": "Model name cannot be empty."
+      },
+      "gemini_compatible": {
+        "label": "Gemini",
+        "baseUrlLabel": "Gemini-compatible API URL",
+        "modelLabel": "Gemini model",
+        "emptyBaseUrlMessage": "Gemini-compatible API URL cannot be empty.",
+        "emptyModelMessage": "Gemini model cannot be empty."
+      },
+      "openrouter": {
+        "label": "OpenRouter",
+        "baseUrlLabel": "OpenRouter API URL",
+        "modelLabel": "Model name",
+        "emptyBaseUrlMessage": "OpenRouter API URL cannot be empty.",
+        "emptyModelMessage": "Model name cannot be empty."
+      }
+    }
+  },
+  "voice": {
+    "disclaimer": "Voice is input/read-aloud only; the agent handles text. Browser STT usually needs vendor cloud; the desktop app does not support it—type instead.",
+    "sttLabel": "Speech recognition (STT)",
+    "sttHelp": "Hides the mic when unavailable; typing still works.",
+    "sttHelpDesktopBlocked": "Desktop does not support browser speech recognition—please type instead.",
+    "ttsLabel": "Speech synthesis (TTS)",
+    "ttsHelp": "Can read replies aloud; stop anytime on the assistant page.",
+    "languageLabel": "Recognition / speech language",
+    "autoSpeakLabel": "Auto-read assistant replies",
+    "autoSpeakHelp": "When off, text only.",
+    "spacePttLabel": "Space talk mode",
+    "spacePttHelp": "Hold = hold Space to talk; toggle = press to start/stop. Mic follows this.",
+    "spacePttHelpDesktopBlocked": "STT unavailable here; Space talk won’t run yet.",
+    "spacePttOptions": {
+      "hold": "Hold to talk",
+      "toggle": "Press to toggle"
+    },
+    "sttOptions": {
+      "browser": "Browser (Web Speech)",
+      "whisper": "Local Whisper (coming soon)",
+      "doubao": "Doubao (coming soon)"
+    },
+    "ttsOptions": {
+      "browser": "Browser (speechSynthesis)",
+      "doubao": "Doubao (coming soon)"
+    },
+    "languageOptions": {
+      "zhHK": "Cantonese / Hong Kong (zh-HK)",
+      "zhTW": "Traditional Chinese (zh-TW)",
+      "zhCN": "Simplified Chinese (zh-CN)",
+      "enUS": "English (en-US)"
+    },
+    "ttsVoiceLabel": "Speech voice",
+    "ttsVoiceHelp": "Local = offline; online needs network. Affects read-aloud only, not STT.",
+    "ttsVoiceDefault": "System default (by language)",
+    "ttsVoiceKindLocal": "local",
+    "ttsVoiceKindRemote": "online",
+    "ttsPreview": "Preview",
+    "ttsPreviewing": "Playing…",
+    "ttsPreviewSample": "This is a voice preview. Hello.",
+    "defaultCalendarTaskLabel": "Default schedule task",
+    "defaultCalendarTaskHelp": "When there is no text box (pure voice), assistant-created events use this task. Default is User or assistant."
+  },
+  "analysis": {
+    "loading": "Loading analysis scheduling settings…",
+    "loadError": "Could not load analysis scheduling settings",
+    "triggerThresholdLabel": "Trigger threshold (messages)",
+    "triggerThresholdHelp": "Start a new batch once unanalyzed messages reach this count. Default 50. Event/leaderboard tasks may override on the task form.",
+    "batchLimitLabel": "Batch limit (messages)",
+    "batchLimitHelp": "Max messages per batch; once triggered, fill the batch up to this cap. Default 50. Event/leaderboard tasks may override on the task form.",
+    "evidenceStyleLabel": "Evidence style",
+    "evidenceStyleHelpSuffix": "How strict to be about emitting intel and evidence. Tasks may override on the task form.",
+    "evidenceStyleOptions": {
+      "conservative": {
+        "label": "Conservative",
+        "description": "Stricter bar: skip uncertain items"
+      },
+      "balanced": {
+        "label": "Balanced",
+        "description": "Balance evidence vs coverage (default)"
+      },
+      "aggressive": {
+        "label": "Aggressive",
+        "description": "Looser bar: more leads, still needs message support"
+      }
+    },
+    "autoPauseLabel": "Auto-pause when retries exhausted",
+    "autoPauseHelp": "Pause after repeated failures to avoid infinite retries.",
+    "autoPauseAria": "Enable auto-pause when retries exhausted",
+    "saveLabel": "Save analysis scheduling",
+    "advanced": {
+      "batchSectionTitle": "Batching & retries",
+      "timeoutLabel": "AI generation timeout (seconds)",
+      "timeoutHelp": "Max wait per LLM call; hard timeout ≈ 2× then retry.",
+      "maxRetriesLabel": "Max batch retries",
+      "maxRetriesHelp": "Retries per failed batch; exhaustion can auto-pause.",
+      "maxConcurrentLabel": "Max concurrent analysis batches",
+      "maxConcurrentHelpOllama": "Recommend 1; local models dislike high concurrency.",
+      "maxConcurrentHelpCloud": "Recommend 3; cloud APIs can run in parallel.",
+      "maxConcurrentWarning": "Higher concurrency increases load.",
+      "maxConcurrentError": "Local models may not handle this; lower it.",
+      "limitsSectionTitle": "Content limits",
+      "maxCharsLabel": "Max characters per analysis batch",
+      "maxCharsHelp": "Raw-content cap per batch; truncate early past this.",
+      "maxTokensLabel": "Global input token cap",
+      "maxTokensHelp": "Shared input-token ceiling; lower if long content fails often.",
+      "debugSectionTitle": "Debug",
+      "rulesVersionLabel": "Global analysis rules version",
+      "rulesVersionHelp": "Prompt version tag only; does not switch rules.",
+      "traceVerboseLabel": "Verbose analysis trace logging",
+      "traceVerboseHelp": "Log full request/response."
+    }
+  },
+  "apiDocs": {
+    "intro": "Local HTTP API docs and examples: access keys, Webhook ingest, and Account manager (A2A); plus Desktop calendar deep links. Full contract: docs/agent/a2a.md in the repo.",
+    "accessKeys": {
+      "title": "Access keys",
+      "body": "Call automation APIs with `Authorization: Bearer <key>`. Full keys (`*`) work for Webhook and Account manager; Account-manager-only keys can only call `/api/v1/a2a/*`. Not for UI sign-in.",
+      "linkKeys": "Manage access keys"
+    },
+    "webhook": {
+      "title": "Webhook",
+      "body": "`POST /api/v1/messages` requires a full key (`*`). Account-manager-only keys cannot ingest. `metadata` is optional and only helps the AI understand source context.",
+      "exampleTitle": "Push example",
+      "exampleContent": "Exchange XYZ suspended withdrawals",
+      "exampleNotes": "For AI source context only",
+      "linkKeys": "Manage access keys",
+      "linkSources": "Open Webhook sources"
+    },
+    "liaison": {
+      "title": "Account manager (A2A)",
+      "body": "`POST /api/v1/a2a/agent`: assign work in natural language (for OpenClaw / Hermes, etc.). Shares the assistant’s LLM + tools; the server loops tools internally and returns one shot — final message plus tool summary. No server-side chat history (callers may keep their own). Needs an AI provider and an Account-manager key (or `*`).",
+      "capabilities": [
+        "Natural-language in; single response with message + toolCalls",
+        "Messages / intel / calendar (create/update/delete events)",
+        "No custom events schema for third-party agents"
+      ],
+      "exampleAgent": "Call example",
+      "exampleInput": "What's on the calendar tomorrow, and create a family meeting Friday afternoon",
+      "exampleMessage": "No meetings tomorrow. Created Friday family meeting.",
+      "exampleResponseComment": "One-shot response (example):",
+      "linkStaff": "View Account manager (AI staff)",
+      "linkKeys": "Manage access keys",
+      "docsHint": "Full contract: docs/agent/a2a.md in the repo."
+    },
+    "deepLink": {
+      "title": "Desktop calendar deep link",
+      "body": "Packaged Desktop only (not an HTTP API). The app registers `intelligencemonitor://` and `.ics` file association. Opening a link or file shows the add-to-calendar / pick-task dialog; confirming writes via `POST /api/v1/user-events`. First VEVENT only — not webcal/CalDAV sync.",
+      "capabilities": [
+        "`intelligencemonitor://calendar/import?url=…` — fetch remote ICS (http/https)",
+        "`title` + `start` required for inline drafts; optional `end` / `location` / `body` / `taskId`",
+        "Or open a `.ics` file from the OS (same confirmation dialog)"
+      ],
+      "exampleTitle": "Team sync",
+      "exampleUrlComment": "Remote ICS:",
+      "exampleInlineComment": "Inline event (no ICS):",
+      "exampleBlockTitle": "Link examples",
+      "docsHint": "Details: docs/ARCHITECTURE.md (Desktop calendar import) and docs/KNOWN-SIMPLIFICATIONS.md in the repo."
+    }
+  },
+  "staff": {
+    "title": "AI staff",
+    "intro": "Four AI staff: two front-line chats, two back-office analysts. Plus an Account manager who greets external systems (same team as the assistant; no chat with you).",
+    "capabilitiesLabel": "What they can do",
+    "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
+    "openAssistant": "Open assistant chat",
+    "openTaskEditor": "Open task editor chat",
+    "displayNameLabel": "Display name",
+    "displayNameHelp": "Leave blank to use the default name.",
+    "editNameAria": "Edit assistant display name",
+    "editLlmAria": "Edit assistant LLM settings",
+    "llmDialogTitle": "Assistant LLM",
+    "llmDialogCancel": "Cancel",
+    "llmDialogSave": "Save",
+    "uploadAvatar": "Upload",
+    "uploadAvatarAria": "Upload assistant avatar",
+    "resetAvatar": "Reset avatar",
+    "resetAvatarAria": "Reset assistant avatar to default",
+    "avatarTooLarge": "Image is still too large after compression. Try a smaller file.",
+    "avatarReadFailed": "Could not read that image.",
+    "llmProviderLabel": "LLM provider",
+    "llmProviderFollow": "Follow AI provider",
+    "llmProviderHelp": "Uses that provider’s saved base URL, model, and API key from AI provider settings.",
+    "historyMaxMessagesLabel": "History message cap",
+    "historyMaxMessagesHelp": "Max recent dialogue messages sent to the model (system prompt excluded from the count). Older turns are omitted when exceeded; the UI transcript stays complete. Default 40.",
+    "historyMaxCharsLabel": "History character cap",
+    "historyMaxCharsHelp": "Approx. max characters for the model-facing history (including the system prompt). Older turns are omitted when exceeded. Default 48000.",
+    "saveLabel": "Save",
+    "kind": {
+      "agent": "Agent-grade",
+      "oneshot": "One-shot / specialist"
+    },
+    "surface": {
+      "frontline": "Front-line",
+      "backoffice": "Back-office"
+    },
+    "assistant": {
+      "summary": "A multi-turn Agent that can look up data or create schedule items when needed.",
+      "capabilities": [
+        "Answer questions about local intel and schedules in natural language",
+        "Search collected messages",
+        "List / create / update / delete user events (one-off calendar items)",
+        "Create / update / delete recurring-mode schedules (RRULE)",
+        "Optionally search the web when enabled in settings",
+        "Works in the assistant popup and full assistant page; voice in/out optional"
+      ]
+    },
+    "taskEditor": {
+      "summary": "Chats beside new/edit task forms to help fill settings (not an Agent).",
+      "capabilities": [
+        "Suggest task name and description from what you want to monitor",
+        "Suggest analysis mode (leaderboard / events / recurring) and prompt direction",
+        "Help with time range and schedule-related fields",
+        "Only configures tasks—does not analyze messages or call tools"
+      ]
+    },
+    "leaderboard": {
+      "summary": "Back-office: batch-processes messages into trending topics.",
+      "capabilities": [
+        "Extract discussion topics from a message batch",
+        "Score relevance/heat and summarize topics",
+        "Update the leaderboard for the leaderboard page",
+        "No chat UI; triggered by schedules or manual task runs"
+      ]
+    },
+    "eventIntel": {
+      "summary": "Back-office: extracts trackable intel and schedule events (including time-inference templates).",
+      "capabilities": [
+        "Extract intel, meetings, activities, deadlines, and similar events",
+        "Fill time, place, and people when possible (including relative times)",
+        "Results appear in intel / map / timeline views",
+        "No chat UI; triggered by schedules or manual task runs"
+      ]
+    },
+    "projectManager": {
+      "summary": "Back-office closed-loop agent: hourly ticks reconcile a project's calendar from sources.",
+      "capabilities": [
+        "Read this project's one-off events and child recurring tasks",
+        "Create / update / soft-delete owned calendar items via tools",
+        "Ingest incremental messages from bound channels when present",
+        "No chat UI; driven by the project task schedule (prefer hourly)"
+      ]
+    },
+    "liaison": {
+      "name": "Account manager",
+      "badgeChannel": "External desk",
+      "summary": "External agent: third parties assign work in natural language—no custom API schema. Doesn’t chat with you.",
+      "capabilities": [
+        "Shares the assistant’s LLM and tools (different system prompt)",
+        "Single-shot reply; history kept by the caller if needed",
+        "Keys and examples under Settings → API"
+      ],
+      "openApiDocs": "View API docs and examples"
+    }
+  }
+}

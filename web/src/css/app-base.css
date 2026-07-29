@@ -1,0 +1,185 @@
+/* Base layer: reset, typography, native control states, custom scrollbars. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: "Inter", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background: var(--surface-base);
+  color: var(--text-primary);
+  line-height: 1.45;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/*
+ * Dual monitor shells (pages ↔ canvas) stay mounted for warm routes/state.
+ * Author utilities like Tailwind `.flex` override UA `[hidden]{display:none}`,
+ * which previously stacked both shells vertically. Force exclusive layout.
+ *
+ * Keep `display: none !important` on the hidden pane (beats Tailwind `.flex`).
+ * Parent `pointer-events: none` is enough with display:none — the former
+ * `[hidden] * { pointer-events: none !important }` was removed after Board.smoke
+ * + AppShellNavigation stayed green (2026-07). Restore that descendant rule if
+ * nested `pointer-events: auto` starts stealing clicks from the visible pane.
+ */
+[data-shell-pane][hidden] {
+  display: none !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+[data-shell-pane]:not([hidden]) {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+:root {
+  --im-scrollbar-size: 8px;
+  --im-scrollbar-thumb-idle: transparent;
+  --im-scrollbar-thumb-visible: color-mix(in srgb, var(--surface-border) 70%, var(--text-muted));
+  --im-scrollbar-thumb-active: var(--surface-overlay);
+}
+
+button,
+select,
+input,
+textarea,
+a {
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease,
+    box-shadow 150ms ease, opacity 150ms ease, transform 100ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+  outline: none;
+}
+
+button:disabled,
+select:disabled,
+input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+[role="button"]:not([data-no-hover-lift]),
+[role="row"][style*="cursor: pointer"] {
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+[role="button"]:not([data-no-hover-lift]):hover,
+[role="row"][style*="cursor: pointer"]:hover {
+  transform: none;
+}
+
+[data-testid="timeline-skeleton"] div {
+  transition: opacity 300ms ease;
+}
+
+.im-auto-scrollbar,
+.im-picker-dialog-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--im-scrollbar-thumb-idle) transparent;
+}
+
+.im-auto-scrollbar:hover,
+.im-auto-scrollbar:focus-within,
+.im-auto-scrollbar.is-scrolling,
+.im-picker-dialog-body:hover,
+.im-picker-dialog-body:focus-within {
+  scrollbar-color: var(--im-scrollbar-thumb-visible) transparent;
+}
+
+.im-auto-scrollbar::-webkit-scrollbar,
+.im-picker-dialog-body::-webkit-scrollbar {
+  width: var(--im-scrollbar-size);
+  height: var(--im-scrollbar-size);
+}
+
+.im-auto-scrollbar::-webkit-scrollbar-button,
+.im-picker-dialog-body::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.im-auto-scrollbar::-webkit-scrollbar-track,
+.im-picker-dialog-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.im-auto-scrollbar::-webkit-scrollbar-thumb,
+.im-picker-dialog-body::-webkit-scrollbar-thumb {
+  background-color: var(--im-scrollbar-thumb-idle);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 180ms ease;
+}
+
+.im-auto-scrollbar:hover::-webkit-scrollbar-thumb,
+.im-auto-scrollbar:focus-within::-webkit-scrollbar-thumb,
+.im-auto-scrollbar.is-scrolling::-webkit-scrollbar-thumb,
+.im-picker-dialog-body:hover::-webkit-scrollbar-thumb,
+.im-picker-dialog-body:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--im-scrollbar-thumb-visible);
+}
+
+.im-auto-scrollbar::-webkit-scrollbar-thumb:hover,
+.im-picker-dialog-body::-webkit-scrollbar-thumb:hover {
+  background-color: var(--im-scrollbar-thumb-active);
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+  }
+
+  [data-allow-opacity-transition] {
+    transition-duration: 100ms !important;
+    transition-property: opacity !important;
+  }
+
+  .app-main-content > * {
+    animation: none !important;
+  }
+}

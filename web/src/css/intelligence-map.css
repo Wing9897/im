@@ -1,0 +1,146 @@
+/* Intelligence map: markers, clusters, danmaku, overlay panels. */
+
+@keyframes im-pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+@keyframes im-danmaku-fade {
+  0% { transform: translateX(-16px); opacity: 0; }
+  8% { transform: translateX(0); opacity: 1; }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-4px); }
+}
+
+.im-map-marker-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-pink);
+  border: 2px solid var(--info);
+  box-shadow: 0 0 6px var(--accent-pink);
+}
+
+.im-map-marker-pulse {
+  position: relative;
+  width: 14px;
+  height: 14px;
+}
+
+.im-map-marker-pulse .im-map-marker-dot {
+  position: relative;
+  z-index: 1;
+}
+
+.im-map-marker-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  margin-left: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-pink);
+  animation: im-pulse-ring 1.5s ease-out infinite;
+  pointer-events: none;
+}
+
+.im-map-cluster {
+  border-radius: 50%;
+  background: var(--surface-base);
+  border: 2px solid var(--accent-pink);
+  box-shadow: 0 0 8px var(--accent-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--accent-pink);
+}
+
+.im-map-cluster--sm { width: 26px; height: 26px; font-size: 11px; }
+.im-map-cluster--md { width: 32px; height: 32px; font-size: 11px; }
+.im-map-cluster--lg { width: 38px; height: 38px; font-size: 12px; }
+
+.danmaku-transient {
+  animation: im-danmaku-fade 8s ease-out forwards;
+}
+
+.im-map-overlay-panel {
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-base) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 12%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.im-map-danmaku-panel {
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-base) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 12%, transparent);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.danmaku-body-hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.danmaku-body-hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.im-map-panel-spine {
+  width: 18px;
+  flex-shrink: 0;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  user-select: none;
+  pointer-events: auto;
+  cursor: default;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  transition: background 150ms ease, opacity 150ms ease, color 150ms ease;
+}
+
+.im-map-panel-spine--event {
+  background: color-mix(in srgb, var(--accent-pink) 14%, transparent);
+  color: color-mix(in srgb, var(--accent-pink) 65%, var(--text-secondary));
+  opacity: 0.68;
+}
+
+.im-map-panel-spine--event.is-hovered {
+  background: color-mix(in srgb, var(--accent-pink) 44%, transparent);
+  color: color-mix(in srgb, var(--accent-pink) 92%, white);
+  opacity: 1;
+}
+
+.im-map-panel-spine--live {
+  background: color-mix(in srgb, rgb(245, 224, 220) 18%, transparent);
+  color: var(--text-secondary);
+  opacity: 0.68;
+}
+
+.im-map-panel-spine--live.is-hovered {
+  background: color-mix(in srgb, rgb(245, 224, 220) 46%, transparent);
+  color: var(--text-primary);
+  opacity: 1;
+}
+
+.im-map-cluster-item {
+  transition: background 120ms ease;
+  cursor: pointer;
+}
+
+.im-map-cluster-item:hover {
+  background: rgba(69, 71, 90, 0.3);
+}

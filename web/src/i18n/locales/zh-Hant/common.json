@@ -1,0 +1,1363 @@
+{
+  "language": {
+    "label": "介面語言",
+    "help": "自動跟隨系統；選語系則整站使用該語言。",
+    "auto": "自動",
+    "zhHant": "繁體中文",
+    "zhHans": "简体中文",
+    "en": "English"
+  },
+  "tasks": {
+    "pageLabel": "任務設定",
+    "pageDescription": "建立您的第一個任務，以監控頻道、分析情報、設定循環任務或日曆任務。",
+    "emptyTitle": "尚無任務",
+    "createLabel": "新增任務",
+    "editLabel": "編輯任務",
+    "showSystemTasks": "顯示系統任務",
+    "hideSystemTasks": "隱藏系統任務",
+    "systemSectionTitle": "系統與虛擬任務（僅供檢視）",
+    "systemSectionSubtitle": "這些不是可編輯的分析任務，僅幫助理解資料來源與背景機制。",
+    "card": {
+      "viewDetailAria": "查看任務詳情：{name}",
+      "recurring": "週期性活動",
+      "channelsRange": "{count} 個頻道 · 範圍 {range}",
+      "unanalyzed": "待分析",
+      "queued": "排隊中",
+      "queuedTitle": "已 claim、尚未完成分析的訊息（含等待重試的批次）",
+      "analyzed": "已分析",
+      "running": "執行中",
+      "idle": "閒置",
+      "disabled": "已停用",
+      "enable": "啟用",
+      "disable": "停用",
+      "edit": "編輯",
+      "delete": "刪除",
+      "editAria": "編輯 {name}",
+      "deleteAria": "刪除 {name}",
+      "openProjectAria": "開啟專案：{name}",
+      "project": "專案管理",
+      "projectProgressHint": "進度以訊息游標推進（非標記統計）",
+      "recurringProgressHint": "循環日程（無訊息分析統計）",
+      "calendarTaskProgressHint": "日曆任務桶（顯示關聯時間事件）",
+      "retryCount": "重試 {count}",
+      "analysisPausedHint": "分析已自動或手動暫停"
+    },
+    "detail": {
+      "timeRange": "時間範圍：{range}",
+      "location": "地點：{location}",
+      "rrule": "重複規則：{rrule}",
+      "calendarNoChannels": "（循環任務模式，不綁定頻道）",
+      "channelCount": "共 {count} 個頻道",
+      "channelsMore": "…及其他 {count} 個頻道",
+      "noChannels": "尚未綁定頻道",
+      "ariaLabel": "任務詳情：{name}",
+      "relatedEventsTitle": "接下來的時間事件",
+      "relatedEventsEmpty": "近期尚無關聯時間事件。",
+      "relatedEventsPreviewHint": "僅顯示最近幾項預覽；完整日程請到時間軸查看。",
+      "relatedKindOccurrence": "循環",
+      "relatedKindEvent": "單次",
+      "openTimeline": "開啟時間軸"
+    },
+    "projectDetail": {
+      "metaTitle": "概覽",
+      "noDescription": "尚無描述",
+      "schedule": "排程：{schedule}",
+      "sourcesTitle": "綁定來源",
+      "childrenTitle": "子循環任務",
+      "childrenEmptyTitle": "尚無子循環任務",
+      "childrenEmptyDescription": "專案管理員會在每次 tick 視需要建立子循環任務。",
+      "eventsTitle": "所屬單次事件",
+      "eventsEmptyTitle": "尚無所屬事件",
+      "eventsEmptyDescription": "專案建立的單次時程事件會顯示在這裡。",
+      "tickTitle": "最近專案 tick",
+      "tickLastEnd": "上次完成",
+      "tickCompletedCount": "已完成次數",
+      "tickMessageCount": "本輪處理訊息數",
+      "tickOutcome": "結果",
+      "tickOutcomeSuccess": "成功",
+      "tickOutcomeSkipped": "略過",
+      "tickOutcomeError": "失敗",
+      "tickOutcomeRunning": "進行中",
+      "tickPendingCursor": "游標後待處理",
+      "tickCursorAt": "訊息游標",
+      "tickLogTitle": "最近 tick 紀錄",
+      "tickLogEmpty": "尚無已完成的 tick。每次排程抽乾結束後才會寫入一筆（波次不單獨入帳）。",
+      "tickLogEmptyInFlight": "本輪抽乾仍在進行中；波次會推進游標，整輪結束後才會出現在此紀錄。",
+      "tickMessage": "代理訊息",
+      "tickNoMessage": "最近一次 tick 沒有訊息。",
+      "tickTools": "工具步驟",
+      "tickNoTools": "最近一次 tick 未使用工具。",
+      "tickError": "錯誤",
+      "openTimeline": "時間軸",
+      "reload": "重新整理",
+      "batchAttentionTitle": "批次需注意",
+      "batchRetry": "重試 {count}",
+      "analysisPausedHint": "分析已自動或手動暫停",
+      "sourcesViewAll": "查看全部 {count}",
+      "sourcesDialogTitle": "綁定來源",
+      "showMore": "顯示更多",
+      "showLess": "收合",
+      "showTickExtras": "顯示代理訊息與工具",
+      "hideTickExtras": "隱藏代理訊息與工具"
+    },
+    "toast": {
+      "loadFailedBlank": "無法載入任務資料，表單將為空白",
+      "updated": "任務已更新",
+      "created": "任務已建立",
+      "clearedBatches": "已清除 {count} 個未完成的分析批次"
+    },
+    "editor": {
+      "back": "返回",
+      "presets": "快速預設",
+      "updateTask": "更新任務",
+      "createTask": "建立任務",
+      "requiredAria": "必填欄位",
+      "settingsTitle": "任務設定",
+      "optionalAria": "選填設定",
+      "optionalTitle": "選填設定",
+      "channelsLoadError": "無法載入頻道列表",
+      "timeRangeLabel": "分析時間範圍",
+      "timeAll": "不限時間",
+      "time30d": "最近 30 天",
+      "time7d": "最近 7 天",
+      "time1d": "最近 1 天",
+      "includeInTimelineLabel": "顯示於時間規劃",
+      "includeInTimelineAria": "顯示於時間規劃",
+      "includeInTimelineHint": "關閉後，此任務的分析事件仍會出現在關鍵事件與地圖，但不會進入日曆／甘特／時間軸。",
+      "rruleHint": "RRULE 僅用於循環任務重複事件，不會觸發 AI 分析。",
+      "scheduleOverridesHint": "門檻／批上限／證據風格可覆寫；留空跟隨「AI 設定 → 分析調度」。批次重疊與專案波次間隔僅本任務有效。",
+      "followGlobal": "跟隨全域",
+      "followGlobalPlaceholder": "空＝跟隨全域",
+      "batchOverlapLabel": "批次重疊",
+      "batchOverlapAria": "批次重疊訊息數量",
+      "batchOverlapHelp": "下一批帶入上批末尾訊息以接上下文；0＝不重疊。僅關鍵事件任務使用（排行榜改注入 Top 10）。",
+      "triggerThresholdHelp": "留空則跟隨全域觸發門檻。",
+      "batchLimitHelp": "留空則跟隨全域批次上限。",
+      "evidenceStyleHelp": "留空則跟隨全域證據風格。",
+      "nameLabel": "任務名稱",
+      "namePlaceholder": "輸入任務名稱",
+      "modeLabel": "分析模式",
+      "descriptionLabel": "描述",
+      "descriptionPlaceholder": "任務描述（選填）",
+      "promptLabel": "Prompt 模板",
+      "promptPlaceholder": "輸入分析 Prompt 模板",
+      "pickChannels": "點擊選擇頻道",
+      "channelsSelected": "已選 {selected} / {total} 個頻道",
+      "channelsLabel": "分析來源頻道",
+      "channelsAria": "選擇分析來源頻道",
+      "channelsPreview": "已選頻道預覽",
+      "channelsMore": "還有 {count} 個頻道…"
+    },
+    "modes": {
+      "leaderboard": {
+        "displayLabel": "排行榜",
+        "modeOptionLabel": "排行榜 - 比較排名",
+        "modeDescription": "💡 排行榜會顯示最相關的前 N 條訊息，適合追蹤熱門話題",
+        "promptLabel": "任務 Task Prompt（告訴 AI 要比較什麼）",
+        "promptPlaceholder": "例：新產品發布、政策變化、合作進展、風險信號",
+        "promptHint": "💡 例如：只在內容明確提及官方公告、產品更新、合作進展或風險信號時命中"
+      },
+      "event": {
+        "displayLabel": "關鍵事件",
+        "modeOptionLabel": "關鍵事件 - 情報 / 行程",
+        "modeDescription": "💡 一條事件可同時帶時間與地點；有座標顯示在地圖，有時間顯示在時間線，缺欄位則只出現在對應視圖",
+        "promptLabel": "任務 Task Prompt（告訴 AI 要抽取哪些事件）",
+        "promptPlaceholder": "例：提取重要公告、會議、截止日；有明確時間填 start_time，有地點填 location",
+        "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
+      },
+      "recurring": {
+        "displayLabel": "循環任務",
+        "modeOptionLabel": "循環任務 - 週期性活動",
+        "modeDescription": "💡 循環任務用於管理週期性活動，使用 RRULE 定義重複規則，不涉及 AI 分析",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "calendar_task": {
+        "displayLabel": "日曆任務",
+        "modeOptionLabel": "日曆任務 - 分類歸屬",
+        "modeDescription": "日曆任務僅作時間軸／語音／助手的篩選歸屬，方便分類；無 AI 分析、無循環規則",
+        "promptLabel": "",
+        "promptPlaceholder": "",
+        "promptHint": ""
+      },
+      "project": {
+        "displayLabel": "專案管理",
+        "modeOptionLabel": "專案管理 - 閉環日程助手",
+        "modeDescription": "按小時排程驅動多輪 Agent：讀來源與現有日程，以工具建立／修改／軟刪本專案單次事件與子循環任務（非一次性 JSON 批次）",
+        "promptLabel": "專案目標／規則",
+        "promptPlaceholder": "例如：依 Telegram 更新站會與 demo 日期；偏好上午時段；已取消的系列請軟刪",
+        "promptHint": "請綁定來源頻道，建議 hourly 排程；即使本小時無新訊息也會跑 reconcile"
+      }
+    },
+    "recurrence": {
+      "sectionTitle": "重複規則",
+      "freqLabel": "重複頻率",
+      "daily": "每日",
+      "weekly": "每週",
+      "monthly": "每月",
+      "yearly": "每年",
+      "intervalUnit": {
+        "daily": "天",
+        "weekly": "週",
+        "monthly": "個月",
+        "yearly": "年"
+      },
+      "intervalLabel": "間隔（每 N {unit}）",
+      "intervalAria": "重複間隔",
+      "weekdaysLabel": "重複的星期",
+      "weekdayAria": "星期{day}",
+      "weekday": {
+        "MO": "一",
+        "TU": "二",
+        "WE": "三",
+        "TH": "四",
+        "FR": "五",
+        "SA": "六",
+        "SU": "日"
+      },
+      "monthlyMode": "每月重複方式",
+      "byDate": "依日期",
+      "byWeekday": "依星期",
+      "monthDay": "每月的日期",
+      "dayAria": "{day} 日",
+      "lastDay": "最後一天",
+      "ordinalLabel": "第幾個",
+      "ordinalAria": "序數",
+      "ordinalWeekday": "星期",
+      "ordinalWeekdayAria": "星期幾",
+      "ordinals": {
+        "1": "第一個",
+        "2": "第二個",
+        "3": "第三個",
+        "4": "第四個",
+        "-1": "最後一個"
+      },
+      "endLabel": "結束條件",
+      "never": "永不結束",
+      "until": "指定日期結束",
+      "count": "指定次數後結束",
+      "untilDate": "結束日期",
+      "countLabel": "重複次數",
+      "rrulePreview": "RRULE：{value}",
+      "errors": {
+        "freq": "必須選擇一種頻率（每日、每週、或每月）",
+        "byDay": "每週模式須至少選擇一天",
+        "byMonthDay": "每月模式須至少選擇一個日期"
+      }
+    },
+    "calendarFields": {
+      "section": "活動詳情",
+      "tooltip": "設定循環任務活動的標題、時間、地點與描述",
+      "title": "活動標題",
+      "titlePlaceholder": "例：週會、生日提醒",
+      "allDay": "整天活動",
+      "start": "開始時間",
+      "end": "結束時間",
+      "location": "地點（選填）",
+      "locationPlaceholder": "例：會議室 A、線上",
+      "description": "描述（選填）",
+      "descriptionPlaceholder": "補充這個活動的細節",
+      "allDayHint": "整天活動不需要設定開始與結束時間。"
+    },
+    "template": {
+      "title": "選擇任務模板",
+      "all": "全部",
+      "searchPlaceholder": "搜尋模板名稱、說明或 badge",
+      "showing": "目前顯示 {visible} / {total} 個模板",
+      "filteredMode": "，已優先篩選 {mode}",
+      "loading": "正在載入模板...",
+      "empty": "目前沒有可用的模板",
+      "noMatch": "沒有符合目前篩選條件的模板",
+      "noMatchHint": "可改用其他分析模式或清空搜尋字詞",
+      "commonTitle": "常用模板",
+      "sortedWithMode": "依最近使用、使用次數與目前分析模式排序，優先顯示 {mode}",
+      "pinnedMode": "已按目前分析模式優先置頂 {mode}",
+      "viewMode": "查看 {mode} 模式的模板",
+      "apply": "套用選定模板",
+      "suitable": "適合目前分析模式"
+    },
+    "schedule": {
+      "typeLabel": "排程類型",
+      "typeAria": "排程類型",
+      "projectWaveInterval": "專案波間間隔（秒）",
+      "projectWaveIntervalAria": "專案每波之間的冷卻秒數",
+      "projectWaveIntervalHelp": "下一波開始前冷卻；0 = 不等待。儲存在本任務（非全域系統設定）。空白則使用預設（20）。",
+      "types": {
+        "seconds_10": "每 10 秒",
+        "hourly": "每小時",
+        "daily": "每日",
+        "weekly": "每週",
+        "custom_seconds": "自訂秒數"
+      },
+      "weekday": {
+        "0": "星期日",
+        "1": "星期一",
+        "2": "星期二",
+        "3": "星期三",
+        "4": "星期四",
+        "5": "星期五",
+        "6": "星期六"
+      },
+      "dailyTime": "執行時間",
+      "dailyTimeAria": "每天執行時間",
+      "weeklyDateTime": "執行日期與時間",
+      "weekdayAria": "星期幾",
+      "weeklyTimeAria": "每週執行時間",
+      "customSeconds": "間隔秒數",
+      "customSecondsPlaceholder": "輸入秒數",
+      "customSecondsAria": "自訂間隔秒數",
+      "errors": {
+        "dailyRequired": "請輸入時間（HH:MM）",
+        "dailyFormat": "時間格式無效，請使用 HH:MM 格式",
+        "hourRange": "小時必須在 00-23 之間",
+        "minuteRange": "分鐘必須在 00-59 之間",
+        "weeklyRequired": "請選擇星期和時間",
+        "weeklyFormat": "格式無效，請使用 D:HH:MM 格式",
+        "weekdayRange": "星期必須在 0-6 之間（0=星期日）",
+        "secondsRequired": "請輸入秒數",
+        "secondsPositive": "秒數必須為正整數"
+      }
+    },
+    "allModes": "全部",
+    "toolbarAria": "任務列表操作",
+    "searchPlaceholder": "搜尋任務…",
+    "searchAria": "搜尋任務",
+    "createNew": "建立新任務",
+    "createNewAria": "建立新{label}",
+    "noMatchTitle": "找不到符合的任務",
+    "noMatchDescription": "沒有名稱或描述包含「{query}」的任務。",
+    "emptyModeTitle": "此模式下沒有任務",
+    "emptyModeDescription": "切換其他模式，或建立一個使用此模式的新任務。",
+    "showAllTasks": "顯示全部任務",
+    "deleted": "任務已刪除",
+    "addTask": "新增任務",
+    "presets": {
+      "trending-topics": {
+        "name": "趨勢主題分析",
+        "description": "從訊息中提取熱門討論話題和趨勢，按相關度排名",
+        "promptTemplate": "分析以下訊息，提取最熱門的討論主題。為每個主題提供：標題、摘要、相關度評分(0-1)。按相關度降序排列。"
+      },
+      "key-insights": {
+        "name": "關鍵情報摘要",
+        "description": "提取具有情報價值的關鍵事件與機會",
+        "promptTemplate": "從訊息中提取具有情報價值的關鍵事件與線索。優先關注：重要事件、商業機會、風險預警、趨勢變化。有明確時間或地點時一併填入；無法確定則只保留標題與內容。"
+      },
+      "schedule-events": {
+        "name": "行程事件提取",
+        "description": "保守提取：只在內容有明確日期／時間（或寫死的時段）時填入排程時間；相對說法（如下星期三）不推理、不換算。適合只要「命中即錄、不猜時間」的場合。",
+        "promptTemplate": "從訊息中提取會議、活動、截止日期、發布會等可排程事件。時間規則要保守：只有訊息已寫明可直接落地的日期／時鐘時間（例如 3 月 5 日 14:00、2026-07-20）才填 start_time／end_time；「明天／下星期三／本週五」等相對說法一律不要換算、不要猜測時間（事件本身仍可輸出，時間欄位省略）。優先填寫明確地點與參與者。忽略驗證流程、加群提醒與系統通知。"
+      },
+      "schedule-time-inference": {
+        "name": "時間行程推理",
+        "description": "積極推理：即使未寫死年月日，也可從相對說法（如下星期三 6 點、本週五截止、專案／活動節點）換算可排程時間。適合要補齊行程時間線的場合。",
+        "promptTemplate": "從訊息中推理可排程的行程、會議、活動、專案節點與截止日期。與「只錄明確時間」不同：本模板鼓勵把相對說法換算成具體時間，例如：下星期三六點開會、本週五截止、下個月交付、活動倒數、專案里程碑。相對時間優先以該則訊息行首 [time=...] 為錨點；缺省時再用系統注入的當前時間。能合理換算則填 start_time／end_time；僅有弱線索時在 body 說明依據，勿無依據硬填。忽略驗證流程、加群提醒與系統通知。"
+      },
+      "sentiment-monitor": {
+        "name": "輿情監控",
+        "description": "分析群組討論的情緒走向和輿論態勢",
+        "promptTemplate": "分析以下訊息的整體輿情。識別：正面/負面話題、情緒激烈的討論、潛在爭議點。為每個話題評估情緒強度。"
+      },
+      "action-items": {
+        "name": "待辦事項追蹤",
+        "description": "提取需要跟進的行動項目和待辦事項",
+        "promptTemplate": "提取待辦事項、行動項目、承諾與需要跟進的事項。在 body 寫清要做什麼；相關人員放入 participants；若有明確截止時間再填 start_time。"
+      },
+      "crypto-major-intel": {
+        "name": "Crypto 重大情報",
+        "description": "提取加密貨幣重大事件、關鍵情報與時間節點規劃",
+        "promptTemplate": "提取 Crypto/Web3 重大情報。在 body 中寫明：情報類型（監管/協議/行情/安全/上線/解鎖/空投/宏觀等）、緊急程度（高/中/低）、建議關注或執行動作。專注於：重大公告、TGE/解鎖/快照/Claim 截止、主網上線、監管判決、大額資金異動、安全漏洞、宏觀政策轉折。有明確時間節點再填 start_time/end_time；忽略閒聊、重複轉貼與無來源謠言。"
+      },
+      "crypto-airdrop-deals": {
+        "name": "薅羊毛情報",
+        "description": "提取空投、積分任務、測試網、優惠碼等可獲利機會",
+        "promptTemplate": "提取 Crypto/Web3 可獲利機會（空投、積分、測試網、早鳥、返佣、白名單、免費 Mint、任務獎勵等）。在 body 中寫明：項目或平台、機會類型、參與條件與操作步驟摘要、收益預估（如可判斷）、風險提示（詐騙/高 Gas/規則不明）。有明確截止或快照時間再填 start_time；優先列出即將截止或可立即操作的機會。忽略純喊單與無具體操作指引的閒聊；時間無法確定時省略時間欄位。"
+      },
+      "iot-device-alerts": {
+        "name": "IoT 設備告警",
+        "description": "從 MQTT／感測器／裝置日誌擷取故障、離線、門檻越界與安防告警",
+        "promptTemplate": "從 IoT／MQTT／感測器／裝置訊息中提取「需要關注或處置」的告警事件。優先：離線／斷線、故障碼、感測值越界（溫濕度／電量／壓力等）、安防觸發、通訊失敗、電池低電、緊急停機。在 body 寫明：裝置或 topic／位置識別、告警類型、嚴重度（高／中／低）、關鍵數值或錯誤碼、建議處置。有明確事件時間再填 start_time；地點可填場站／樓層／區域。忽略：純心跳／keepalive、週期正常讀數、重複且無新資訊的狀態廣播、除錯雜訊。無告警時回傳空 items。"
+      },
+      "iot-ops-events": {
+        "name": "IoT 維運事件",
+        "description": "擷取韌體更新、維護視窗、設定變更與裝置上線／佈署節點",
+        "promptTemplate": "從 IoT／MQTT／裝置維運訊息中提取可排程或需追蹤的維運事件。優先：韌體／OTA 更新、維護視窗、設定／規則變更、裝置首次上線或汰換、批次佈署、校準、保養到期。在 body 寫明：裝置或系統範圍、事件類型、影響摘要、操作人或來源（如可判斷）、風險或回滾提示。有明確開始／結束再填 start_time／end_time；相對時間可依訊息 [time=...] 或系統時鐘合理換算。忽略：心跳、正常週期遙測、與維運無關的告警雜訊（告警請用其他任務）。無相關事件時回傳空 items。"
+      },
+      "risk-crisis-alerts": {
+        "name": "風險危機預警",
+        "description": "擷取事故、中斷、違規、公關危機與需立即處置的風險",
+        "promptTemplate": "從訊息中提取需關注的風險／危機事件。優先：服務中斷、資料外洩、安全事故、合規違規、重大客訴／公關危機、供應中斷、財務或法律風險。在 body 寫明：風險類型、嚴重度（高／中／低）、影響範圍、已知狀態與建議下一步。有明確時間再填 start_time；地點可填。忽略日常抱怨與無行動價值的情緒發洩；無風險時回傳空 items。"
+      },
+      "people-org-watch": {
+        "name": "人物組織動態",
+        "description": "追蹤人事異動、任命、離職、合作與組織重組",
+        "promptTemplate": "提取人物／組織動態事件。優先：任命、離職、升遷、董事會變動、併購／重組、戰略合作、公開發言中的立場轉折。在 body 寫明：人物或組織、事件類型、背景摘要、影響判斷。相關人名放入 participants；有明確時間再填 start_time。忽略純八卦與無核實來源的傳言。"
+      },
+      "competitive-intel": {
+        "name": "競品對手情報",
+        "description": "擷取競品定價、功能、行銷活動與策略動向",
+        "promptTemplate": "提取競品／對手情報。優先：產品發布、功能對比、定價／促銷、通路變動、行銷戰役、市占或策略轉向。在 body 寫明：對手或產品、情報類型、具體內容、對己方的含義或建議關注點。有明確時間再填 start_time。忽略無依據的抹黑與純情緒比較。"
+      },
+      "security-scam-watch": {
+        "name": "資安詐騙警示",
+        "description": "識別釣魚、盜帳、惡意連結、漏洞與社交工程手法",
+        "promptTemplate": "提取資安／詐騙相關警示。優先：釣魚連結、假冒客服、盜帳手法、惡意檔案、已知 CVE／漏洞利用、社工話術。在 body 寫明：威脅類型、手法摘要、辨識特徵、建議防護動作；嚴重度（高／中／低）。有明確時間再填 start_time。忽略玩笑與無操作細節的恐慌轉發；無警示時回傳空 items。"
+      },
+      "geo-field-events": {
+        "name": "地理現場事件",
+        "description": "提取有地點的活動、事故、集會與現場動態（利於地圖）",
+        "promptTemplate": "提取具地理意義的現場事件。優先：集會、事故、災害、店點／據點異動、外勤行程、地方新聞中的明確地點。務必盡量填 location（可解析的地名／地址／場館）；有時間再填 start_time／end_time。在 body 寫明事件摘要與來源語氣。無法定位地點時仍可輸出但 location 留空；忽略無空間資訊的純線上討論。"
+      },
+      "policy-regulation": {
+        "name": "政策法規動態",
+        "description": "追蹤立法、監管公告、執法行動與合規期限",
+        "promptTemplate": "提取政策／法規／監管動態。優先：法案進度、監管公告、執法裁罰、牌照／許可變更、合規截止日期。在 body 寫明：管轄區或機關、政策主題、狀態（草案／通過／生效／執法）、對相關產業的影響。有明確生效或截止時間再填 start_time／end_time。忽略純政治情緒與無規範含義的評論。"
+      },
+      "product-release": {
+        "name": "產品發布里程碑",
+        "description": "擷取上線、版本發布、公開測試與倒數節點",
+        "promptTemplate": "提取產品／專案發布與里程碑。優先：正式上線、版本號發布、beta／公開測試、功能開關、倒數／發布會。在 body 寫明：產品名稱、里程碑類型、版本或範圍、重要變更摘要。有明確時間再填 start_time／end_time。忽略無版本資訊的路線圖空談。"
+      },
+      "news-digest-board": {
+        "name": "要聞摘要排行",
+        "description": "把訊息整理成當日最值得關注的要聞榜",
+        "promptTemplate": "將訊息整理為要聞排行榜主題。每個主題提供：標題、一句摘要、相關度評分(0-1)。優先具新聞價值、影響面大、可核實的內容；合併重複轉載。按相關度降序。"
+      },
+      "faq-knowledge": {
+        "name": "問答知識整理",
+        "description": "歸納常見問題、解答要點與知識條目",
+        "promptTemplate": "從訊息中歸納 FAQ／知識主題。每個主題提供：問題或條目標題、精煉答案／要點摘要、相關度(0-1)。合併同義反覆提問；標出仍未解答的缺口。按相關度或出現頻率綜合排序。"
+      },
+      "rumor-verify": {
+        "name": "謠言待核實線索",
+        "description": "標出傳聞、未證實說法與需要查證的資訊缺口",
+        "promptTemplate": "提取「待核實」線索而非當成事實。優先：傳聞、匿名爆料、互相矛盾的說法、缺少來源的斷言。在 body 寫明：主張摘要、為何存疑、已知來源／缺口、建議查證方向。勿把謠言寫成已證實事件；時間不明則省略 start_time。無此類內容時回傳空 items。"
+      },
+      "finance-markets": {
+        "name": "金融市場要聞",
+        "description": "擷取利率、財報、大宗商品與宏觀市場轉折（非僅加密）",
+        "promptTemplate": "提取金融／宏觀市場要聞事件。優先：利率／央行、財報與指引、併購、商品／外匯重大波動、監管對市場的影響。在 body 寫明：市場或標的、事件類型、關鍵數據或結論、可能影響。有明確時間再填 start_time。忽略無依據喊單與純情緒預測；加密專題可另用 Crypto 模板。"
+      },
+      "meeting-decisions": {
+        "name": "會議決議結論",
+        "description": "從討論中提取決議、共識、反對意見與後續責任人",
+        "promptTemplate": "提取會議／討論中的決議與結論。優先：已拍板事項、共識、明確反對、指派負責人、後續檢查點。在 body 寫明：決議內容、狀態（通過／暫緩／反對）、負責人；participants 放相關人。有截止或會議時間再填 start_time。忽略無結論的閒聊。"
+      },
+      "project-date-crud": {
+        "name": "通用專案日期管理",
+        "description": "依來源訊息為專案新增、修改、刪除單次日期與期限，並在無新訊時對帳既有日程",
+        "promptTemplate": "你是通用專案日期管理員。目標：從綁定來源訊息中找出與本專案有關的日期／期限／會議／截止日期，並用工具完成增、改、刪。規則：1) 有明確日期或可合理換算的相對日期才寫入；2) 先查現有日程，能對上就更新，對不上才新建；3) 來源說取消／作廢就刪除或停用；4) 忽略無關閒聊；5) 即使沒有新訊息也要對帳並修正明顯錯誤。完成後用簡短 JSON message 總結本回合改動。"
+      },
+      "project-work-shift": {
+        "name": "工作輪更表",
+        "description": "依來源訊息建立與維護工作輪更／更份表，含更份變更、對調與取消",
+        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子循環或單次事件就更新，對不上才新建；2) 固定輪更用 recurring 子任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
+      }
+    }
+  },
+  "leaderboard": {
+    "toolbarAria": "排行榜篩選",
+    "selectTaskAria": "選擇排行榜任務",
+    "allBoards": "全部排行榜",
+    "refreshing": "正在更新排行榜",
+    "emptyNoTasksTitle": "尚未建立排行榜任務",
+    "emptyFilteredTitle": "這個排行榜任務還沒有結果",
+    "emptyNoResultsTitle": "目前還沒有排行榜結果",
+    "emptyNoTasksDescription": "先建立至少一個排行榜型任務，系統完成分析後，這裡才會出現主題排行。",
+    "emptyFilteredDescription": "目前選取的任務尚未產生排行榜資料，或已被篩選到沒有結果。",
+    "emptyNoResultsDescription": "等分析批次完成後，這裡會整理出最熱門的主題與分數。",
+    "emptyNoTasksHint": "如果你已經有帳號和頻道，下一步通常是到任務設定新增排行榜任務。",
+    "emptyFilteredHint": "你可以先切回全部排行榜，確認是否只有目前任務暫時沒有資料。",
+    "emptyNoResultsHint": "排行榜需要先有成功完成的 leaderboard 分析批次。",
+    "goToTasks": "前往任務設定",
+    "viewAll": "查看全部排行榜",
+    "viewAllAria": "查看全部排行榜",
+    "boardAria": "{name} 排行榜",
+    "detailAria": "{name} 排行榜詳細內容",
+    "rowAria": "#{rank} {topic}，分數 {score}",
+    "unnamed": "未命名排行榜",
+    "summary": "事件摘要",
+    "noSummary": "尚無摘要",
+    "loadingMessages": "載入相關訊息中…",
+    "relatedMessages": "相關訊息 ({count})",
+    "noMessagesTitle": "尚無相關訊息",
+    "noMessagesDescription": "這個排行項目目前沒有可展開的來源訊息。",
+    "loadMessagesFailed": "載入訊息失敗：{error}"
+  },
+  "aiStaff": {
+    "assistant": "助手",
+    "taskEditor": "任務顧問",
+    "leaderboard": "排行榜分析員",
+    "eventIntel": "關鍵事件分析員",
+    "projectManager": "專案管理助手"
+  },
+  "ui": {
+    "listSep": "、",
+    "loading": "載入中…",
+    "loadingContent": "載入內容中",
+    "viewMode": "檢視模式",
+    "viewCard": "卡片",
+    "viewList": "清單",
+    "viewMap": "地圖",
+    "infoTooltip": "說明",
+    "hidePassword": "隱藏密碼",
+    "showPassword": "顯示密碼",
+    "collapse": "收起",
+    "expand": "展開",
+    "collapseTitle": "收起{title}",
+    "expandTitle": "展開{title}",
+    "workspaceTabs": "工作區分頁",
+    "unknownSender": "未知發送者",
+    "viewMessageAria": "查看訊息詳情：{sender}",
+    "unread": "未讀",
+    "retryLoadAria": "重試載入",
+    "retry": "重試",
+    "retrying": "重試中…",
+    "refreshing": "更新中",
+    "pageError": {
+      "title": "此頁面發生錯誤",
+      "body": "頁面渲染時遇到問題，請嘗試重新載入此區塊。"
+    },
+    "lazyLoadError": "元件載入失敗",
+    "errorBoundary": {
+      "title": "發生未預期的錯誤",
+      "body": "應用程式遇到問題並已停止運行。你可以嘗試重新載入或回到首頁。",
+      "hideStack": "隱藏元件堆疊",
+      "showStack": "顯示元件堆疊",
+      "reload": "重新載入介面",
+      "logMessage": "未捕獲的元件錯誤: {message}"
+    },
+    "pageLoading": "頁面載入中…",
+    "expandSidebar": "展開側欄",
+    "collapseSidebar": "收起側欄",
+    "breadcrumb": "麵包屑",
+    "tabs": "分頁",
+    "previewPanel": "詳情預覽",
+    "itemsCount": "{count} 項",
+    "filterActiveCount": "{count} 項已選",
+    "unnamedAccount": "未命名帳號",
+    "virtual": "虛擬",
+    "system": "系統",
+    "agent": "Agent 級",
+    "unknownMode": "未知",
+    "confirm": "確認"
+  },
+  "commandPalette": {
+    "groups": {
+      "navigation": "導航",
+      "settings": "設定",
+      "actions": "動作",
+      "tasks": "任務"
+    },
+    "unnamedTask": "未命名任務",
+    "monitorWall": "監控牆",
+    "keyEventsMap": "關鍵事件 · 地圖",
+    "keyEventsList": "關鍵事件 · 清單",
+    "keyEventsCard": "關鍵事件 · 卡片",
+    "actionsVoice": "通知 · 語音提醒",
+    "actionsHistory": "通知 · 觸發紀錄",
+    "sourcesRss": "來源 · RSS",
+    "sourcesTelegram": "來源 · Telegram",
+    "sourcesDiscord": "來源 · Discord",
+    "sourcesHttp": "來源 · HTTP",
+    "sourcesHttpWebhook": "來源 · HTTP Webhook",
+    "sourcesMqtt": "來源 · MQTT",
+    "sourcesEmail": "來源 · Email",
+    "aiVoice": "語音設定",
+    "aiStrategy": "分析調度",
+    "aiStaff": "AI員工介紹",
+    "theme": "主題設定",
+    "settingsData": "資料維護",
+    "settingsApi": "API 說明",
+    "newTask": "新增任務",
+    "newAction": "新增通知",
+    "newActionHint": "開啟通知頁",
+    "openViewer": "開啟 Viewer 視窗",
+    "openViewerHint": "新分頁",
+    "shortcutHelp": "快捷鍵說明",
+    "quickAssistant": "助手",
+    "quickAssistantHint": "⌘/Ctrl+J",
+    "aria": "命令面板",
+    "searchPlaceholder": "搜尋頁面、任務或動作…",
+    "searchAria": "搜尋命令與任務",
+    "empty": "沒有符合的結果",
+    "hintSelect": "↑↓ 選擇",
+    "hintOpen": "↵ 開啟",
+    "triggerAria": "搜尋與快速跳轉 ({shortcut})",
+    "triggerLabel": "搜尋…"
+  },
+  "widgets": {
+    "map": {
+      "title": "情報地圖",
+      "description": "地理標記概覽（大型）"
+    },
+    "wall": {
+      "title": "訊息牆",
+      "description": "多頻道輪播（可大可小）"
+    },
+    "gantt": {
+      "title": "甘特／按任務",
+      "description": "任務活動跨度（長條）"
+    },
+    "ganttEvents": {
+      "title": "甘特／按事件",
+      "description": "事件時間跨度（長條）"
+    },
+    "events": {
+      "title": "關鍵事件",
+      "description": "最新關鍵事件"
+    },
+    "feed": {
+      "title": "實時監控",
+      "description": "實時監控訊息縮圖"
+    },
+    "calendar": {
+      "title": "月曆",
+      "description": "本月行程"
+    },
+    "calendarDay": {
+      "title": "日程",
+      "description": "今日行程"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "description": "熱門主題排行"
+    },
+    "stats": {
+      "title": "分析統計",
+      "description": "七日分析量"
+    },
+    "queue": {
+      "title": "分析佇列",
+      "description": "佇列與處理中"
+    },
+    "system": {
+      "title": "系統狀態",
+      "description": "收集器／AI"
+    },
+    "clock": {
+      "title": "時鐘",
+      "description": "本地時間"
+    },
+    "weather": {
+      "title": "天氣",
+      "description": "地區天氣與七日預報"
+    },
+    "sources": {
+      "title": "來源狀態",
+      "description": "帳號連線"
+    },
+    "logs": {
+      "title": "系統日誌",
+      "description": "近期應用日誌"
+    },
+    "tasks": {
+      "title": "任務",
+      "description": "分析任務狀態"
+    },
+    "actions": {
+      "title": "通知動作",
+      "description": "自動化動作狀態"
+    }
+  },
+  "systemTasks": {
+    "userOrAssistant": {
+      "title": "用戶或助手",
+      "shortDescription": "手動或助手建立的定時事件（user_events）。在月曆、甘特、關鍵事件等處以虛擬來源「用戶或助手」顯示，並非可編輯的分析任務。"
+    },
+    "clientManager": {
+      "title": "客戶經理",
+      "shortDescription": "對外 Agent（A2A）：第三方用自然語言交辦即可，與助手共用 LLM／工具但不跟你聊天、不存伺服器對話歷史。需存取金鑰（`a2a:agent` 或 `*`）。",
+      "linkLabel": "前往 API 說明"
+    },
+    "collector": {
+      "title": "收集器",
+      "shortDescription": "各平台帳號的訊息收集與連線重試，將原始訊息寫入資料庫，供監控牆與後續分析使用。"
+    },
+    "analysisBatch": {
+      "title": "分析批次",
+      "shortDescription": "排程器對排行榜／關鍵事件等標記型任務分批呼叫 LLM，寫入分析結果。專案管理任務不走此路徑（由上方可編輯的專案任務排程驅動）。"
+    },
+    "outboundNotify": {
+      "title": "外發通知",
+      "shortDescription": "依通知規則在條件符合時，透過 Telegram、Discord、Webhook、MQTT 等管道外送訊息。"
+    },
+    "voiceReminder": {
+      "title": "語音提醒",
+      "shortDescription": "本機掃描即將發生的關鍵事件、循環任務（RRULE）展開，以及「用戶或助手」事件，並以瀏覽器語音播報。",
+      "linkLabel": "前往語音提醒"
+    },
+    "retention": {
+      "title": "資料清理",
+      "shortDescription": "依設定的保留天數定期清理訊息、分析結果、排行榜、應用日誌與用戶事件等資料。"
+    },
+    "startupGeocode": {
+      "title": "啟動座標回填",
+      "shortDescription": "伺服器啟動時自動跑一次：把「有地點文字、但還沒有經緯度」的情報事件補上座標，讓地圖能標點。平時分析新事件缺座標時也會 geocode；此項是補舊資料，失敗不會卡住啟動，也無法在此頁修改。"
+    }
+  },
+  "errors": {
+    "weather_timeout": "天氣來源回應過慢，請稍後再試",
+    "weather_unavailable": "天氣來源皆暫時無法使用，請稍後再試",
+    "weather_location_not_found": "無法解析指定地區",
+    "weather_invalid_date_range": "天氣預報日期範圍無效",
+    "agent_timeout": "助手請求逾時，請稍後再試或縮短問題。",
+    "ai_engine_unreachable": "AI 引擎無法連線（例如本機 Ollama 未啟動或埠號錯誤）。設定頁「AI 測試」成功仍可能無法支援助手長對話。",
+    "Backend unreachable": "無法連線到後端服務",
+    "Request timed out": "請求逾時，請稍後再試",
+    "Request cancelled": "請求已取消"
+  },
+  "timeFilter": {
+    "aria": "時間篩選",
+    "today": "本日",
+    "1d": "1天",
+    "7d": "7天",
+    "30d": "30天"
+  },
+  "messages": {
+    "speakWithTask": "任務「{task}」，{kindLabel}「{eventTitle}」，還有{lead}",
+    "speakWithoutTask": "{kindLabel}「{eventTitle}」，還有{lead}",
+    "retentionDeleted": "已刪除：{parts}",
+    "retentionNone": "沒有符合條件的舊資料可刪",
+    "retentionPart": "{label} {count}",
+    "confirmChannelSelection": "確認選擇 ({count})",
+    "channelsSelected": "已選 {selected} / {total} 個頻道",
+    "loadMore": "載入更多",
+    "speakLead15": "約十五分鐘",
+    "speakLead60": "約一小時",
+    "speakLead240": "約四小時",
+    "speakLead1440": "約一天",
+    "speakLeadMinutes": "約{minutes}分鐘",
+    "speakKindEvent": "關鍵事件",
+    "speakKindRecurring": "循環任務",
+    "speakKindUser": "提醒",
+    "speakPreview": "測試進行中",
+    "voiceTriggerReason": "語音提醒 · {lead} · 「{title}」",
+    "speakTtsUnavailable": "本機語音合成不可用",
+    "speakFailed": "朗讀失敗"
+  },
+  "dialog": {
+    "cancel": "取消",
+    "close": "關閉",
+    "confirm": "確認",
+    "deleteConfirmTitle": "確認刪除任務",
+    "deleteEntityTask": "任務",
+    "deleteConfirmPrefix": "確定要刪除{entity}",
+    "deleteConfirmSuffix": "嗎？此操作無法復原。",
+    "confirmDelete": "確認刪除",
+    "deleting": "刪除中…",
+    "closePreview": "關閉預覽"
+  },
+  "platformScope": {
+    "source": "來源",
+    "channel": "頻道",
+    "feed": "Feed",
+    "url": "網址",
+    "broker": "Broker",
+    "folder": "資料夾",
+    "endpoint": "端點"
+  },
+  "channelPicker": {
+    "all": "全部",
+    "platformFilterAria": "平台過濾",
+    "platformLabel": "平台",
+    "platformHelper": "先選平台縮小範圍；大型列表可點 ▶ 展開。",
+    "searchPlaceholder": "搜尋平台、帳號或頻道…",
+    "searchAria": "搜尋頻道",
+    "selectAll": "全選",
+    "clear": "清空",
+    "clearSelection": "清空選擇",
+    "clearAllAria": "清空所有選擇",
+    "selectedBadge": "{count} 已選",
+    "noMatch": "找不到符合的頻道",
+    "emptyDefault": "尚無可用頻道",
+    "emptyForPlatform": "此平台尚無可用頻道",
+    "emptyNeedSources": "尚無可用頻道，請先到來源管理新增帳號",
+    "summaryMonitorScope": "監控範圍",
+    "taskTitle": "選擇分析來源頻道",
+    "taskSummary": "分析來源",
+    "taskPlatformFilterAria": "分析來源平台過濾",
+    "wallTitle": "選擇監控範圍",
+    "wallTitleWithCount": "選擇監控範圍（已選 {count} 個）",
+    "wallSelectScope": "選擇範圍",
+    "wallPlatformFilterAria": "訊息牆平台過濾",
+    "wallConfirm": "完成"
+  },
+  "sectionError": {
+    "loadFailed": "{name} 載入失敗",
+    "retry": "重試"
+  },
+  "board": {
+    "gantt": {
+      "defaultLabelHeader": "任務",
+      "defaultEmptyLabel": "尚無任務活動",
+      "emptyFiltered": "目前範圍內尚無可顯示活動",
+      "unnamedTask": "未命名任務",
+      "untitled": "(無標題)",
+      "axisDayAria": "日時間軸",
+      "axisMonthAria": "月時間軸",
+      "rowsAria": "甘特活動列表",
+      "activeAria": "活動中",
+      "trackAria": "{label} 活動跨度 {range}"
+    },
+    "calendar": {
+      "weekdays": [
+        "日",
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六"
+      ],
+      "today": "今天",
+      "noSchedule": "無行程",
+      "dayCountAria": "{count} 件"
+    },
+    "map": {
+      "noCoordEvents": "尚無具體地理位置事件"
+    },
+    "wall": {
+      "sectionName": "訊息牆組件",
+      "noChannelsTitle": "尚未選擇頻道",
+      "noChannelsDescription": "點標頭「選擇範圍」勾選要輪播的頻道。",
+      "loadingAria": "載入訊息牆"
+    },
+    "system": {
+      "collector": "收集器",
+      "aiEngine": "AI 引擎",
+      "aiAvailable": "可用",
+      "aiUnavailable": "不可用",
+      "aiUnknown": "未知"
+    },
+    "common": {
+      "unnamed": "(未命名)",
+      "unnamedTask": "未命名任務",
+      "untitled": "(無標題)",
+      "untitledEvent": "（無標題事件）",
+      "unassignedTask": "未歸屬任務",
+      "enabled": "啟用",
+      "disabled": "停用",
+      "noTaskSelected": "尚未選擇任務",
+      "paused": "{name}已暫停（其他組件最大化）",
+      "pausedWall": "訊息牆已暫停（其他組件最大化中）",
+      "channelCount": "{count} 頻道",
+      "dayView": "日檢視",
+      "monthView": "月檢視",
+      "viewModeAria": "{prefix}：{mode}",
+      "loadingCalendar": "載入日曆…",
+      "loadingGantt": "載入甘特…",
+      "loadingMap": "載入地圖…"
+    },
+    "stats": {
+      "empty": "尚無分析統計",
+      "analyzed": "已分析",
+      "unanalyzed": "未分析",
+      "queued": "佇列中",
+      "rowMeta": "已析 {analyzed} · 未析 {unanalyzed}",
+      "rowQueued": " · 佇列 {count}"
+    },
+    "logs": {
+      "empty": "尚無日誌"
+    },
+    "actions": {
+      "empty": "尚未設定通知動作",
+      "neverTriggered": "尚未觸發"
+    },
+    "tasks": {
+      "empty": "尚未設定任務"
+    },
+    "leaderboard": {
+      "empty": "尚無排行主題",
+      "score": "分數 {score}",
+      "messages": " · {count} 則"
+    },
+    "mapWidget": {
+      "resetView": "還原全世界視圖",
+      "saveView": "儲存地圖位置",
+      "pausedName": "地圖"
+    },
+    "weather": {
+      "refresh": "重新整理天氣",
+      "errorPrefix": "天氣：",
+      "pausedName": "天氣",
+      "emptyForecast": "尚無天氣預報",
+      "emptyLocation": "尚未設定天氣地區",
+      "clear": "晴朗",
+      "cloudy": "多雲",
+      "overcast": "陰天",
+      "fog": "霧",
+      "rain": "雨",
+      "snow": "雪",
+      "thunder": "雷雨",
+      "generic": "天氣"
+    },
+    "queue": {
+      "pending": "待處理",
+      "processing": "處理中",
+      "status": "狀態",
+      "paused": "已暫停",
+      "running": "運作中",
+      "noBatches": "目前無處理中批次",
+      "messages": "{count} 則訊息",
+      "retry": " · 重試 {count}",
+      "attention": "需注意",
+      "retryPending": "待重試",
+      "processingBadge": "處理中"
+    },
+    "feed": {
+      "empty": "尚無監控訊息"
+    },
+    "wallWidget": {
+      "empty": "尚無頻道",
+      "pausedName": "訊息牆"
+    },
+    "sources": {
+      "empty": "尚未設定來源"
+    },
+    "events": {
+      "empty": "尚無關鍵事件",
+      "ariaPrefix": "關鍵事件"
+    },
+    "calendarWidget": {
+      "monthAria": "月曆",
+      "dayAria": "日程",
+      "emptyMonth": "本月尚無符合任務的事件",
+      "emptyDay": "今天尚無符合任務的行程"
+    },
+    "ganttWidget": {
+      "byTaskAria": "甘特／按任務",
+      "byEventAria": "甘特／按事件",
+      "pausedName": "甘特",
+      "labelTask": "任務",
+      "labelEvent": "事件",
+      "emptyEvents": "尚無事件"
+    },
+    "shell": {
+      "loadFailed": "載入失敗，請重試",
+      "retry": "重試",
+      "toolsAria": "沉浸畫布工具",
+      "toolbarAria": "畫布操作",
+      "addWidget": "新增組件",
+      "exportLayout": "匯出版面",
+      "importLayout": "匯入版面",
+      "importFileAria": "選擇版面 JSON 檔",
+      "resetLayout": "重置為預設版面",
+      "resetLayoutAria": "重置佈局",
+      "doneEdit": "完成編輯",
+      "fullscreen": "全螢幕",
+      "exitFullscreen": "退出全螢幕",
+      "edit": "編輯",
+      "resetConfirmTitle": "重置為預設版面？",
+      "resetConfirmBody": "目前自訂佈局將被覆蓋，此操作無法復原。",
+      "resetConfirm": "確認重置",
+      "resetConfirmBusy": "重置中…",
+      "selectSize": "選擇尺寸",
+      "selectSizeAria": "{title}：選擇尺寸",
+      "maximize": "最大化",
+      "restore": "還原",
+      "maximizeWidget": "最大化組件",
+      "restoreWidget": "還原組件",
+      "removeWidget": "移除組件",
+      "removeWidgetAria": "移除 {title}",
+      "emptyTitle": "尚未新增組件",
+      "emptyHint": "點畫布右下角浮鍵進入編輯後新增組件。",
+      "exported": "版面已匯出",
+      "imported": "版面已匯入",
+      "importFailed": "無法匯入版面",
+      "importInvalidJson": "版面 JSON 格式無效",
+      "importMissingWidgets": "版面檔缺少 widgets",
+      "importNeedOne": "版面至少需包含一個有效組件",
+      "importNoValid": "版面未包含有效組件",
+      "taskFilterPrefix": "篩選任務",
+      "taskFilterSelect": "選擇任務",
+      "taskFilterSelectAria": "{prefix}：選擇任務",
+      "taskFilterCheckAria": "勾選任務",
+      "taskFilterSelectAll": "全選",
+      "taskFilterClear": "清空",
+      "taskFilterEmpty": "尚無任務"
+    }
+  },
+  "validation": {
+    "webhookUrlRequired": "Webhook URL 為必填欄位",
+    "webhookUrlPrefix": "Webhook URL 必須以 {prefixes} 開頭",
+    "webhookUrlMaxLength": "Webhook URL 長度不可超過 {max} 字元",
+    "urlRequired": "URL 為必填欄位",
+    "urlPrefix": "URL 必須以 http:// 或 https:// 開頭",
+    "urlUnsafeProtocol": "URL 必須使用安全的 http:// 或 https:// 協定",
+    "urlMaxLength": "URL 長度不可超過 {max} 字元",
+    "httpMethodInvalid": "HTTP 方法僅支援 POST 或 PUT",
+    "brokerUrlRequired": "Broker URL 為必填欄位",
+    "brokerUrlPrefix": "Broker URL 必須以 mqtt:// 或 mqtts:// 開頭",
+    "brokerUrlMaxLength": "Broker URL 長度不可超過 {max} 字元",
+    "topicRequired": "Topic 為必填欄位",
+    "topicMaxLength": "每個主題長度不可超過 {max} 字元",
+    "qosInvalid": "QoS 僅支援 0、1 或 2",
+    "credentialPairRequired": "使用者名稱和密碼必須同時提供或同時留空",
+    "botTokenRequired": "Bot Token 為必填欄位",
+    "chatIdRequired": "Chat ID 為必填欄位",
+    "imapHostRequired": "IMAP 主機為必填欄位",
+    "imapHostNoProtocol": "IMAP 主機請勿包含協定前綴（例如 imap://）",
+    "imapHostTooLong": "IMAP 主機名稱過長",
+    "imapPortRange": "連接埠必須在 1–65535 之間",
+    "emailRequired": "電子郵件地址為必填欄位",
+    "appPasswordRequired": "App Password 為必填欄位",
+    "folderRequired": "至少需指定一個 IMAP 資料夾",
+    "pollIntervalNumber": "輪詢間隔必須為數字",
+    "pollIntervalRange": "輪詢間隔需在 {min}–{max} 秒之間",
+    "initialSyncDaysRange": "首次同步天數需在 {min}–{max} 之間",
+    "initialSyncMaxMessagesRange": "首次同步上限需在 {min}–{max} 之間",
+    "orSeparator": " 或 "
+  },
+  "topBar": {
+    "openViewer": "開啟新 viewer",
+    "collector": {
+      "starting": "收集器啟動中…",
+      "running": "收集器運行中",
+      "stopping": "收集器停止中…",
+      "stopped": "收集器已停止",
+      "restarting": "收集器重啟中…",
+      "error": "收集器啟動失敗"
+    },
+    "collectorShort": {
+      "starting": "啟動中…",
+      "running": "運行中",
+      "stopping": "停止中…",
+      "stopped": "已停止",
+      "restarting": "重啟中…",
+      "error": "啟動失敗"
+    },
+    "unnamedTask": "未命名任務",
+    "analyzingLabel": "分析中 · {task}",
+    "analyzingTitle": "AI 分析中: {task} ({batch})",
+    "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暫停新批次",
+    "aiUnavailable": "AI 無法連線",
+    "aiUnavailableTitle": "收集器運行中，但 AI 引擎無法連線",
+    "analysisPaused": "分析已暫停",
+    "analysisPausedTitle": "收集器運行中 · AI 分析已暫停",
+    "systemOk": "系統正常",
+    "systemOkTitle": "收集器運行中 · AI 引擎正常",
+    "busy": "處理中",
+    "clickResume": "點擊繼續分析",
+    "clickPause": "點擊暫停分析",
+    "analysisControl": "分析控制",
+    "analysisControlMenu": "分析控制選單",
+    "emergencyAbort": "緊急中止",
+    "aborting": "中止中…",
+    "pillTitle": "{title}（{pauseHint}；懸停展開可緊急中止）",
+    "pillAria": "{label}。{pauseHint}",
+    "abortDialogTitle": "緊急中止分析",
+    "abortDialogBody": "確定要緊急中止所有分析嗎？此操作無法復原。"
+  },
+  "window": {
+    "controlsAria": "視窗控制列",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "還原",
+    "close": "關閉"
+  },
+  "monitorMode": {
+    "aria": "監控模式",
+    "pages": "分頁",
+    "canvas": "畫布",
+    "pagesTitle": "分頁監控",
+    "canvasTitle": "沉浸畫布監控"
+  },
+  "shortcuts": {
+    "title": "快捷鍵說明",
+    "commandPalette": "開啟命令面板",
+    "quickAssistant": "開啟／關閉助手",
+    "holdToTalk": "助手開啟時按住說話",
+    "focusSearch": "聚焦頁面搜尋",
+    "listNav": "在列表中移動",
+    "openItem": "開啟目前項目",
+    "closePanel": "關閉面板或預覽"
+  },
+  "schema": {
+    "dialogAria": "資料庫升級",
+    "title": "資料庫升級",
+    "versionLine": "目前版本 v{current} → 目標 v{required}",
+    "restoredTitle": "已從半遷移狀態恢復",
+    "restoredBody": "系統偵測到上次升級未完成，已從基準備份還原。請確認後重新升級。",
+    "needsTitle": "需要資料庫升級",
+    "needsBody": "必須先完成結構升級才能繼續使用。升級期間會暫停收集與分析，請勿關閉程式。",
+    "failedBackupTitle": "升級失敗（已保留備份）",
+    "failedBackupBody": "可點下方按鈕重試。若仍失敗，請關閉程式後用備份路徑手動還原。",
+    "failedNoBackupTitle": "升級失敗且沒有可用備份",
+    "failedNoBackupBody": "無法安全自動重試。請關閉程式後手動還原資料庫檔案。",
+    "migratingTitle": "升級進行中",
+    "migratingBody": "請稍候，不要關閉程式或強制斷電。",
+    "phaseMigrate": "升級結構",
+    "starting": "正在開始升級…",
+    "idlePhase": "待命",
+    "checking": "檢查資料庫版本…",
+    "upgrading": "升級中…",
+    "retry": "重新升級",
+    "start": "開始升級",
+    "backupPath": "備份路徑：{path}",
+    "copied": "已複製",
+    "copy": "複製",
+    "techDetails": "技術錯誤詳情（可展開）",
+    "retryBlocked": "沒有可用備份，無法安全重試。請關閉程式後手動還原資料庫檔案。",
+    "phases": {
+      "idle": "待命",
+      "awaiting_confirmation": "等待確認",
+      "snapshot": "記錄統計",
+      "backup": "備份",
+      "migrate": "升級結構",
+      "validate": "校驗",
+      "restore": "還原",
+      "runtime": "啟動服務",
+      "ready": "就緒",
+      "failed": "失敗"
+    },
+    "messages": {
+      "needs_upgrade": "資料庫需要從 v{current} 升級到 v{required}",
+      "up_to_date": "資料庫結構已是最新",
+      "healed_half_migration": "已從半遷移狀態恢復，請確認後重新升級",
+      "restoring": "正在從備份還原資料庫…",
+      "restored_retry": "已從備份還原，請重新升級",
+      "failed_no_backup": "升級失敗且沒有可用備份，請關閉程式後手動還原資料庫檔案",
+      "cannot_restore": "無法還原備份",
+      "snapshotting": "正在記錄升級前數據統計…",
+      "backing_up": "正在備份資料庫…",
+      "migrating": "正在升級資料庫結構（請勿關閉程式）…",
+      "validating": "正在驗證升級後數據完整性…",
+      "starting_runtime": "正在啟動收集與分析服務…",
+      "upgrade_complete": "升級完成",
+      "failed_auto_restore": "升級失敗且自動還原失敗",
+      "upgrade_failed": "升級失敗（未產生可用備份，請勿繼續使用）",
+      "starting": "正在開始升級…",
+      "marker_corrupt": "升級校驗標記損壞",
+      "startup_validate_failed": "啟動校驗失敗",
+      "integrity_failed": "資料完整性檢查失敗",
+      "half_migration_restore_failed": "半遷移自動還原失敗"
+    }
+  },
+  "boot": {
+    "checking": "正在檢查資料庫版本…",
+    "unavailableTitle": "無法連線到本機服務",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 1／SemVer 0.1.0-beta.1；舊 stamp 資料庫須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "retry": "重新檢查",
+    "serviceUnavailable": "服務暫時無法回應"
+  },
+  "setup": {
+    "title": "連接此裝置",
+    "intro": "選擇在本機執行服務，或連接到其他裝置上的服務。",
+    "titleRegister": "建立系統",
+    "introRegister": "建立管理員帳號與密碼。之後各裝置使用同一組帳密登入；API 金鑰僅供自動化。",
+    "titleLogin": "登入",
+    "introLogin": "使用管理員帳號與密碼登入此裝置。",
+    "titleForgot": "重設密碼",
+    "introForgot": "僅可在本機重設管理員密碼。重設後請用新密碼登入。",
+    "chooseMode": "如何連線？",
+    "stepChoose": "選擇",
+    "stepConnect": "帳號",
+    "local": "這台電腦",
+    "localHint": "在本機執行服務並完成設定",
+    "remote": "其他裝置",
+    "remoteHint": "連到其他裝置上的服務並登入",
+    "registerHelp": "設定管理員使用者名稱與密碼。請妥善保存，其他裝置也使用這組帳密。",
+    "loginHelp": "輸入管理員使用者名稱與密碼。",
+    "loginNoDevicesHelp": "所有裝置工作階段已撤銷。請用管理員密碼重新登入，或在本機重設密碼。",
+    "remoteLoginHelp": "填寫伺服器網址，以及管理員使用者名稱與密碼。",
+    "register": "建立管理員帳號",
+    "login": "登入",
+    "username": "使用者名稱",
+    "usernamePlaceholder": "例如 admin",
+    "usernameInvalid": "使用者名稱僅可使用小寫字母、數字以及 '.'、'_'、'-'",
+    "password": "密碼",
+    "confirmPassword": "確認密碼",
+    "passwordInvalid": "請輸入密碼",
+    "passwordMismatch": "兩次輸入的密碼不一致",
+    "forgotPassword": "忘記密碼…",
+    "forgotHelp": "僅在已開啟本機救援時可重設管理員密碼。成功後會自動關閉救援開關，仍需用新密碼登入。",
+    "forgotArmHint": "忘記密碼？請用具寫入權限的系統帳號，把資料目錄中 connection.json 的 resetPasswordForLocal 設為 true，然後重新整理此頁。",
+    "resetPassword": "重設密碼",
+    "resetPasswordOk": "密碼已重設。請用新密碼登入。",
+    "serverUrl": "伺服器網址",
+    "serverUrlRequired": "請填寫伺服器網址",
+    "serverUrlPlaceholder": "例如 http://192.168.1.10:18820",
+    "deviceLabel": "裝置名稱",
+    "defaultHostLabel": "主機",
+    "defaultDeviceLabel": "瀏覽器",
+    "working": "處理中…",
+    "restartingShell": "正在重新啟動桌面應用…",
+    "back": "返回"
+  },
+  "reauth": {
+    "title": "重新登入",
+    "intro": "此裝置的登入已過期或已清除。請用管理員帳號密碼繼續——這不是首次設定。",
+    "localHint": "將登入到本機服務（{origin}）。",
+    "login": "登入",
+    "useOtherServer": "使用其他伺服器…",
+    "useThisHost": "使用本機"
+  },
+  "viewer": {
+    "navAria": "Viewer 導航",
+    "brand": "IM Viewer",
+    "navTasks": "任務",
+    "navResults": "結果",
+    "navStatus": "狀態",
+    "authFailed": "認證失敗：API Key 無效或已過期",
+    "noData": "無資料",
+    "reload": "重新載入",
+    "active": "啟用",
+    "inactive": "停用",
+    "tasksLoadError": "無法載入任務列表，請檢查連線狀態",
+    "tasksEmpty": "尚無任務",
+    "tasksRefreshing": "正在更新任務列表",
+    "viewTaskAria": "查看任務：{name}",
+    "taskDetailAria": "任務詳情：{name}",
+    "taskId": "任務 ID：{id}",
+    "lastAnalysis": "最後分析：",
+    "neverRun": "尚未執行",
+    "schedule": "排程：{cron}",
+    "resultsLoadError": "無法載入結果摘要，請檢查連線狀態",
+    "resultsRefreshing": "正在更新結果摘要",
+    "totalTasks": "總任務數",
+    "activeTasks": "啟用任務",
+    "totalBatches": "總批次數",
+    "completedBatches": "已完成批次",
+    "totalResults": "總結果數",
+    "statusLoadError": "無法載入系統狀態，請檢查連線狀態",
+    "statusRefreshing": "正在更新系統狀態",
+    "queueDepth": "佇列深度",
+    "queueDepthDesc": "目前等待處理的批次數量",
+    "collectorStatus": "收集器狀態",
+    "collectorRunning": "運行中",
+    "collectorStopped": "已停止",
+    "collectorDesc": "訊息收集器心跳狀態",
+    "analysisStatus": "分析狀態",
+    "analysisPaused": "分析已暫停",
+    "analysisRunning": "運行中",
+    "analysisDesc": "AI 分析排程是否暫停",
+    "uptime": "運行時間",
+    "uptimeDesc": "系統自啟動以來的時間",
+    "uptimeHours": "{hours} 小時 {minutes} 分鐘",
+    "uptimeMinutes": "{minutes} 分鐘",
+    "statusOk": "正常",
+    "statusBad": "異常"
+  },
+  "yes": "是",
+  "no": "否",
+  "emDash": "—",
+  "never": "從未",
+  "edit": "編輯",
+  "delete": "刪除",
+  "enabled": "已啟用",
+  "disabled": "已停用",
+  "enable": "啟用",
+  "disable": "停用",
+  "analysisControls": {
+    "pauseTimeout": "暫停/恢復操作逾時",
+    "pauseFailed": "暫停/恢復失敗：{error}",
+    "abortFailed": "緊急中止失敗：{error}"
+  },
+  "runtime": {
+    "aiConnected": "AI 引擎已連線",
+    "aiUnavailable": "AI 引擎無法連線",
+    "aiUnknown": "AI 引擎狀態未知",
+    "aiCheckFailed": "AI 引擎狀態檢查失敗",
+    "frontendError": "前端執行錯誤",
+    "unhandledRejection": "未處理的非同步錯誤",
+    "analysisPaused": "AI 分析已暫停",
+    "analysisResumed": "AI 分析已恢復",
+    "collectorReadFailed": "無法讀取收集器狀態",
+    "adapterConnectFailed": "來源「{name}」連線失敗：{summary}"
+  },
+  "errorToast": {
+    "regionAria": "錯誤通知區域",
+    "closeAria": "關閉錯誤通知",
+    "goProfileAccessKeys": "前往帳戶 → 存取金鑰"
+  },
+  "account": {
+    "root": "帳戶",
+    "tabsAria": "帳戶分頁",
+    "tabs": {
+      "identity": "身分",
+      "devices": "裝置",
+      "keys": "存取金鑰"
+    }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "桌面版不支援瀏覽器語音辨識，請改用文字輸入。",
+    "sttUnsupported": "此瀏覽器不支援語音辨識，或不在安全上下文（HTTPS / localhost）。",
+    "sttStartFailed": "無法啟動語音辨識",
+    "sttNotAllowed": "麥克風權限被拒絕，請改用文字輸入。",
+    "sttNoMic": "無法使用麥克風（找不到裝置，或被其他應用占用）。可維持桌面版運行，請在瀏覽器分頁按住說話；若仍失敗請檢查系統麥克風權限。",
+    "sttNetwork": "瀏覽器雲端語音辨識失敗（需可連上辨識服務）。請改用文字輸入，或改用一般 Chrome 網頁開啟本機服務再試。",
+    "sttErrorCode": "語音辨識錯誤：{code}",
+    "ttsUnsupported": "此瀏覽器不支援語音合成。",
+    "ttsFailed": "語音合成失敗"
+  },
+  "profile": {
+    "defaultName": "用戶",
+    "intro": "設定顯示名稱、頭像與背景簡介。頭像會用於直連字幕等介面。",
+    "avatarLabel": "頭像",
+    "avatarHelp": "點擊圓形圖示上傳；用於字幕與助手介面。",
+    "avatarHint": "尚未上傳頭像。",
+    "displayNameLabel": "顯示名稱",
+    "displayNameHelp": "留空則使用預設名稱。",
+    "backgroundLabel": "背景簡介",
+    "backgroundHelp": "可描述你的角色或偏好，供未來 AI 參考。",
+    "backgroundPlaceholder": "例如：值班監控、關注東南亞航線…",
+    "uploadAvatar": "上傳",
+    "uploadAvatarAria": "上傳個人頭像",
+    "resetAvatar": "清除頭像",
+    "resetAvatarAria": "清除個人頭像",
+    "avatarTooLarge": "壓縮後圖片仍過大，請換一張更小的圖。",
+    "avatarReadFailed": "無法讀取該圖片。",
+    "save": "儲存",
+    "saving": "儲存中…",
+    "saved": "個人資料已儲存",
+    "password": {
+      "title": "管理員密碼",
+      "help": "更改管理員密碼。其他已登入裝置在重新整理或被撤銷前仍可繼續使用。",
+      "current": "目前密碼",
+      "new": "新密碼",
+      "confirm": "確認新密碼",
+      "submit": "更改密碼",
+      "saving": "儲存中…",
+      "changed": "密碼已更改"
+    },
+    "devices": {
+      "title": "裝置",
+      "intro": "用管理員密碼登入的瀏覽器與桌面用戶端工作階段。撤銷裝置可遠端登出。Webhook 請用 API 金鑰，不要用裝置工作階段。",
+      "listTitle": "已登入裝置",
+      "empty": "目前沒有作用中的裝置。",
+      "current": "此裝置",
+      "lastSeen": "最近活動 {time}",
+      "revoked": "已撤銷裝置",
+      "revokeAria": "撤銷 {label}",
+      "logoutLabel": "登出",
+      "logoutHelp": "撤銷此裝置的工作階段並回到登入頁。桌面版若為連線到其他伺服器的模式，會重設為本機主機。",
+      "logout": "登出此裝置",
+      "loggingOut": "登出中…",
+      "loggedOut": "已登出"
+    },
+    "accessKeys": {
+      "title": "API 金鑰（Webhook／自動化）",
+      "intro": "長效金鑰（`Authorization: Bearer`），用於 Webhook、腳本與客戶經理。完整金鑰（`*`）可用於 Webhook 與客戶經理；僅客戶經理金鑰不能打 Webhook。不可用於 UI 登入——日常請用管理員帳號密碼。",
+      "defaultLabel": "存取金鑰",
+      "newLabel": "新金鑰名稱",
+      "newPlaceholder": "例如：Webhook、CI 腳本",
+      "a2aAgentOnly": "僅限客戶經理（A2A）",
+      "a2aAgentOnlyHelp": "僅能呼叫 `POST /api/v1/a2a/agent`。不勾選則建立完整金鑰（`*`），可用於 Webhook 與客戶經理。",
+      "scopesFull": "權限：完整（*）",
+      "scopesA2aAgent": "權限：客戶經理（a2a:agent）",
+      "create": "產生金鑰",
+      "creating": "產生中…",
+      "created": "已產生新金鑰（請立即複製）",
+      "revoked": "已撤銷金鑰",
+      "revokeAria": "撤銷 {label}",
+      "listTitle": "已建立的金鑰",
+      "empty": "尚未建立金鑰。需要 Webhook、腳本或客戶經理時再建立。",
+      "revealTitle": "新金鑰（只顯示一次）",
+      "revealHelp": "請複製並妥善保存；關閉後無法再次檢視完整內容。",
+      "copy": "複製",
+      "copied": "已複製",
+      "copyFailed": "無法複製"
+    }
+  }
+}
