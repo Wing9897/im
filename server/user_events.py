@@ -11,15 +11,13 @@ from typing import Any
 
 from server.db.database import Database
 from server.timeline_dismissals import attach_dismissed_flag, dismiss_timeline_event
-from server.util import new_id, utc_now_iso
-from server.wire.serializers import serialize_user_event
 from server.user_events_normalize import (
+    _UNSET,
     ALLOWED_ORIGINS,
     USER_EVENT_TASK_MODES,
     UserEventTaskIdError,
     UserEventValidationError,
     UserEventWorksetIdError,
-    _UNSET,
     _normalize_optional_end,
     _normalize_origin,
     _require_nonempty_title,
@@ -30,6 +28,8 @@ from server.user_events_normalize import (
     resolve_user_event_task_id,
     resolve_user_event_workset_id,
 )
+from server.util import new_id, utc_now_iso
+from server.wire.serializers import serialize_user_event
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 __all__ = [
@@ -207,11 +207,7 @@ async def update_user_event(
 
     if workset_id is _UNSET:
         raw_wid = existing.get("workset_id")
-        next_workset_id = (
-            str(raw_wid).strip()
-            if isinstance(raw_wid, str) and raw_wid.strip()
-            else SYSTEM_WORKSET_ID
-        )
+        next_workset_id = str(raw_wid).strip() if isinstance(raw_wid, str) and raw_wid.strip() else SYSTEM_WORKSET_ID
         # Ensure FK still resolves (deleted workset → system).
         try:
             next_workset_id = await resolve_user_event_workset_id(db, next_workset_id)

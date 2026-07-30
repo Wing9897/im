@@ -4,14 +4,17 @@
 
 ## 功能特色
 
+> 🏗️ Input→Process→Output · 🎯 任務中心 · ✍️ Prompt 規則化 · 🏠 本地隱私 · 📡 文字與 IoT 同源
+
+完整封面式介紹（含擴展來源、AI 員工、助手、儀表板、資訊過濾、事件提醒等）：  
+**[`docs/功能特色.md`](docs/功能特色.md)**
+
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
-- **排程 AI 分析** — 使用 interval/cron 計時器（10 秒、每小時、每日、每週、自訂秒數）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
-- **循環任務** — Recurring task（`analysis_mode=recurring`）的 RRULE 僅於查詢時展開，不會觸發 AI 分析
-- **專案管理** — Project manager（`analysis_mode=project`）按排程閉環抽乾綁定來源增量：無新訊息不喚醒 LLM；有積壓則同輪多波連續 session（預設波數無上限，可選安全帽），上下文壓縮後仍置頂 project system + 任務目標；僅此模式，不影響 `leaderboard`／`event` 等
-- **情報視圖** — Monitor 監控牆、Timeline 甘特圖、Leaderboard、Intelligence 精選
-- **自動化動作** — 分析完成後可回推 Telegram / Discord、Webhook、MQTT
-- **本地優先** — SQLite 單檔資料庫、憑證加密、預設本機綁定
-- **桌面開箱即用** — Electron 封裝內建 Python sidecar，一般使用者無需自行安裝 Python
+- **排程 AI 分析** — interval/cron、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
+- **循環／專案** — `recurring` 查詢展開 RRULE；`project` 閉環多波消化來源積壓
+- **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的 Ops Board
+- **助手與提醒** — Agent 自然語言交互；語音提醒掃描關鍵事件與日程
+- **本地優先** — SQLite、憑證加密、本機綁定；Electron 開箱即用
 
 ## 核心設計理念
 

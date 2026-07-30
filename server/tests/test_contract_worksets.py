@@ -98,7 +98,6 @@ async def test_worksets_crud_and_task_workset_id(client):
     assert deleted.status_code == 200
     assert deleted.json() == {"ok": True}
 
-    after = await client.get(f"/api/v1/tasks/{task_body['id']}")
     # GET single task may 405 — list instead
     tasks = await client.get("/api/v1/tasks")
     owned = next(t for t in tasks.json() if t["id"] == task_body["id"])
