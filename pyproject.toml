@@ -54,6 +54,8 @@ markers = [
 
 [tool.pyright]
 include = ["server", "scripts"]
+venvPath = "."
+venv = ".venv"
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
 reportMissingImports = true

@@ -7,6 +7,7 @@ ownership gates (``_parent_task_id`` / ``_require_parent_task_id``).
 
 from __future__ import annotations
 
+from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
@@ -38,7 +39,7 @@ async def create_recurring_task(
     event_description: str | None = None,
     parent_task_id: str | None = None,
     description: str | None = None,
-    workset_id: str | None = ...,
+    workset_id: str | None | EllipsisType = ...,
 ) -> dict[str, Any]:
     """Insert a recurring-mode task; return the fresh row dict."""
     cleaned_name = (name or "").strip()
@@ -115,7 +116,7 @@ async def patch_recurring_task(
     event_description: Any = ...,
     is_active: bool | None = None,
     require_parent_task_id: str | None = None,
-    workset_id: str | None = ...,
+    workset_id: str | None | EllipsisType = ...,
 ) -> dict[str, Any]:
     """Patch an existing recurring-mode task; return the updated row dict."""
     tid = (task_id or "").strip()

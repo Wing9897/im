@@ -41,7 +41,7 @@
     "typecheck:desktop": "npm run typecheck --workspace desktop",
     "typecheck:tests": "tsc --noEmit -p tsconfig.json",
     "typecheck:desktop-tests": "npm run typecheck:tests --workspace desktop",
-    "typecheck:server": "pyright",
+    "typecheck:server": "node scripts/run-pyright.mjs",
     "check": "npm run lint && npm run sync:presets:check && npm run i18n:check && npm run openapi:check && npm run typecheck && npm run test:all",
     "smoke": "uv run python scripts/smoke.py",
     "sync:presets": "uv run python scripts/sync_task_presets.py",
