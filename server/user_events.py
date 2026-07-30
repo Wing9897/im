@@ -1,105 +1,55 @@
-"""Shared CRUD for user-authored timed events (manual UI + assistant tools)."""
+"""Shared CRUD for user-authored timed events (manual UI + assistant tools).
+
+Field normalization / FK-resolution helpers live in ``user_events_normalize``
+and are re-exported below so existing ``from server.user_events import ...``
+call sites keep working unchanged.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
 from server.db.database import Database
-from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
-from server.time_iso import parse_iso, to_iso_z
 from server.timeline_dismissals import attach_dismissed_flag, dismiss_timeline_event
 from server.util import new_id, utc_now_iso
 from server.wire.serializers import serialize_user_event
+from server.user_events_normalize import (
+    ALLOWED_ORIGINS,
+    USER_EVENT_TASK_MODES,
+    UserEventTaskIdError,
+    UserEventValidationError,
+    UserEventWorksetIdError,
+    _UNSET,
+    _normalize_optional_end,
+    _normalize_origin,
+    _require_nonempty_title,
+    _require_start_time,
+    build_user_event_list_filters,
+    normalize_user_event_task_id_wire,
+    normalize_user_event_workset_id_wire,
+    resolve_user_event_task_id,
+    resolve_user_event_workset_id,
+)
+from server.worksets_const import SYSTEM_WORKSET_ID
 
-ALLOWED_ORIGINS = frozenset({"manual", "assistant", "a2a", "project"})
-#: Tasks that may own a user_event (filter / timeline attribution).
-USER_EVENT_TASK_MODES = TIMELINE_OWNING_ANALYSIS_MODES
-#: Wire sentinel for "用戶或助手" (stored as NULL task_id).
-USER_EVENT_UNASSIGNED_TASK_ID = "__user__"
-
-# Sentinel: field not provided in a partial update.
-_UNSET = object()
-
-
-class UserEventValidationError(ValueError):
-    """Invalid user-event fields."""
-
-
-class UserEventTaskIdError(UserEventValidationError):
-    """Invalid or disallowed ``taskId`` (HTTP 400 at the route boundary)."""
-
-
-def _require_nonempty_title(title: str) -> str:
-    cleaned = (title or "").strip()
-    if not cleaned:
-        raise UserEventValidationError("title is required")
-    return cleaned
-
-
-def _require_start_time(start_time: str) -> str:
-    raw = (start_time or "").strip()
-    if not raw:
-        raise UserEventValidationError("startTime is required")
-    parsed = parse_iso(raw)
-    if parsed is None:
-        raise UserEventValidationError("startTime must be a valid ISO-8601 datetime")
-    # Store canonical UTC Z so list windows and UI calendars compare reliably.
-    return to_iso_z(parsed)
-
-
-def _normalize_optional_end(end_time: str | None, start_time: str) -> str | None:
-    if end_time is None:
-        return None
-    raw = str(end_time).strip()
-    if not raw:
-        return None
-    parsed_end = parse_iso(raw)
-    if parsed_end is None:
-        raise UserEventValidationError("endTime must be a valid ISO-8601 datetime")
-    parsed_start = parse_iso(start_time)
-    if parsed_start is not None and parsed_end < parsed_start:
-        raise UserEventValidationError("endTime must be >= startTime")
-    return to_iso_z(parsed_end)
-
-
-def _normalize_origin(origin: str) -> str:
-    value = (origin or "").strip()
-    if value not in ALLOWED_ORIGINS:
-        raise UserEventValidationError("origin must be 'manual', 'assistant', 'a2a', or 'project'")
-    return value
-
-
-def normalize_user_event_task_id_wire(task_id: Any) -> str | None | object:
-    """Map wire ``taskId`` to DB value or ``_UNSET`` when omitted.
-
-    ``None`` / ``""`` / ``__user__`` → store NULL. Other strings → validate later.
-    """
-    if task_id is _UNSET:
-        return _UNSET
-    if task_id is None:
-        return None
-    cleaned = str(task_id).strip()
-    if not cleaned or cleaned == USER_EVENT_UNASSIGNED_TASK_ID:
-        return None
-    return cleaned
-
-
-async def resolve_user_event_task_id(db: Database, task_id: Any) -> str | None:
-    """Resolve wire taskId to a stored FK value (NULL = 用戶或助手)."""
-    normalized = normalize_user_event_task_id_wire(task_id)
-    if normalized is None:
-        return None
-    assert isinstance(normalized, str)
-    row = await db.fetch_one(
-        "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",
-        (normalized,),
-    )
-    if row is None:
-        raise UserEventTaskIdError("taskId does not refer to an existing task")
-    mode = str(row.get("analysis_mode") or "")
-    if mode not in USER_EVENT_TASK_MODES:
-        raise UserEventTaskIdError("taskId must refer to an event, recurring, calendar_task, or project task")
-    return normalized
+__all__ = [
+    "ALLOWED_ORIGINS",
+    "USER_EVENT_TASK_MODES",
+    "UserEventValidationError",
+    "UserEventTaskIdError",
+    "UserEventWorksetIdError",
+    "normalize_user_event_task_id_wire",
+    "normalize_user_event_workset_id_wire",
+    "resolve_user_event_task_id",
+    "resolve_user_event_workset_id",
+    "build_user_event_list_filters",
+    "get_user_event_row",
+    "get_user_event",
+    "list_user_events",
+    "create_user_event",
+    "update_user_event",
+    "delete_user_event",
+]
 
 
 async def get_user_event_row(db: Database, event_id: str) -> dict[str, Any] | None:
@@ -128,29 +78,26 @@ async def list_user_events(
     start: str | None = None,
     end: str | None = None,
     task_id: str | None = None,
+    workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """List events that overlap the optional inclusive time window.
 
     ``task_id`` filter:
-    - omitted / ``None``: all user events
-    - ``""`` / ``__user__``: only unassigned (``task_id IS NULL``)
-    - real id: only events tagged with that task
+    - omitted / ``None``: no provenance filter
+    - ``""``: only rows with ``task_id IS NULL``
+    - ``__user__``: rejected (``UserEventTaskIdError``) — use ``workset_id``
+    - real id: only events tagged with that task provenance
+
+    ``workset_id`` filter:
+    - omitted / ``None``: no workset filter
+    - real id (incl. ``__user__``): events with that ``workset_id``
     """
-    clauses: list[str] = []
-    params: list[Any] = []
-    if start and start.strip():
-        clauses.append("julianday(COALESCE(NULLIF(end_time, ''), start_time)) >= julianday(?)")
-        params.append(start.strip())
-    if end and end.strip():
-        clauses.append("julianday(start_time) <= julianday(?)")
-        params.append(end.strip())
-    if task_id is not None:
-        tid = str(task_id).strip()
-        if not tid or tid == USER_EVENT_UNASSIGNED_TASK_ID:
-            clauses.append("task_id IS NULL")
-        else:
-            clauses.append("task_id = ?")
-            params.append(tid)
+    clauses, params = build_user_event_list_filters(
+        start=start,
+        end=end,
+        task_id=task_id,
+        workset_id=workset_id,
+    )
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = await db.fetch_all(
         f"SELECT * FROM user_events {where} ORDER BY start_time ASC, id ASC",
@@ -169,18 +116,38 @@ async def create_user_event(
     location: str = "",
     origin: str = "manual",
     task_id: Any = None,
+    workset_id: Any = _UNSET,
 ) -> dict[str, Any]:
     clean_title = _require_nonempty_title(title)
     clean_start = _require_start_time(start_time)
     clean_end = _normalize_optional_end(end_time, clean_start)
     clean_origin = _normalize_origin(origin)
     clean_task_id = await resolve_user_event_task_id(db, task_id)
+
+    if workset_id is _UNSET:
+        # Empty / omitted taskId → system workset; real task → copy task workset if any.
+        if clean_task_id is None:
+            clean_workset_id = SYSTEM_WORKSET_ID
+        else:
+            task_row = await db.fetch_one(
+                "SELECT workset_id FROM analysis_tasks WHERE id = ?",
+                (clean_task_id,),
+            )
+            raw_ws = task_row.get("workset_id") if task_row else None
+            if isinstance(raw_ws, str) and raw_ws.strip():
+                clean_workset_id = await resolve_user_event_workset_id(db, raw_ws.strip())
+            else:
+                clean_workset_id = SYSTEM_WORKSET_ID
+    else:
+        clean_workset_id = await resolve_user_event_workset_id(db, workset_id)
+
     event_id = new_id()
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO user_events "
-        "(id, title, body, start_time, end_time, location, origin, task_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "(id, title, body, start_time, end_time, location, origin, task_id, workset_id, "
+        "created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -190,6 +157,7 @@ async def create_user_event(
             (location or "").strip(),
             clean_origin,
             clean_task_id,
+            clean_workset_id,
             now,
             now,
         ),
@@ -209,6 +177,7 @@ async def update_user_event(
     body: Any = _UNSET,
     location: Any = _UNSET,
     task_id: Any = _UNSET,
+    workset_id: Any = _UNSET,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
     existing = await get_user_event_row(db, event_id)
@@ -236,9 +205,24 @@ async def update_user_event(
     else:
         next_task_id = await resolve_user_event_task_id(db, task_id)
 
+    if workset_id is _UNSET:
+        raw_wid = existing.get("workset_id")
+        next_workset_id = (
+            str(raw_wid).strip()
+            if isinstance(raw_wid, str) and raw_wid.strip()
+            else SYSTEM_WORKSET_ID
+        )
+        # Ensure FK still resolves (deleted workset → system).
+        try:
+            next_workset_id = await resolve_user_event_workset_id(db, next_workset_id)
+        except UserEventWorksetIdError:
+            next_workset_id = SYSTEM_WORKSET_ID
+    else:
+        next_workset_id = await resolve_user_event_workset_id(db, workset_id)
+
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
-        "location = ?, task_id = ?, updated_at = ? WHERE id = ?",
+        "location = ?, task_id = ?, workset_id = ?, updated_at = ? WHERE id = ?",
         (
             next_title,
             next_body,
@@ -246,6 +230,7 @@ async def update_user_event(
             next_end,
             next_location,
             next_task_id,
+            next_workset_id,
             utc_now_iso(),
             event_id,
         ),

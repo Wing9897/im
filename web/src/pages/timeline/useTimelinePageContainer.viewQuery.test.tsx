@@ -93,25 +93,25 @@ describe("useTimelinePageContainer URL view query", () => {
   it("selects gantt when ?view=gantt", async () => {
     window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("calendar"));
     await renderAt("/timeline?view=gantt");
-    expect(resultRef.current!.task.viewMode).toBe("gantt");
+    expect(resultRef.current!.sources.viewMode).toBe("gantt");
   });
 
   it("selects calendar when ?view=calendar", async () => {
     window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("gantt"));
     await renderAt("/timeline?view=calendar");
-    expect(resultRef.current!.task.viewMode).toBe("calendar");
+    expect(resultRef.current!.sources.viewMode).toBe("calendar");
   });
 
   it("clears sticky ?view= so UI calendar toggle is not forced back to gantt", async () => {
     window.localStorage.setItem("im:timeline:view-mode", JSON.stringify("calendar"));
     await renderAt("/timeline?view=gantt");
-    expect(resultRef.current!.task.viewMode).toBe("gantt");
+    expect(resultRef.current!.sources.viewMode).toBe("gantt");
 
     await act(async () => {
-      resultRef.current!.task.setViewMode("calendar");
+      resultRef.current!.sources.setViewMode("calendar");
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(resultRef.current!.task.viewMode).toBe("calendar");
+    expect(resultRef.current!.sources.viewMode).toBe("calendar");
   });
 });

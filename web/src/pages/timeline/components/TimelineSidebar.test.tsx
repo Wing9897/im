@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
-import { USER_EVENTS_FILTER_ID } from "../../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { TimelineItem } from "../../../types";
 import {
   TimelinePageProvider,
@@ -18,7 +18,7 @@ import { TimelineSidebar } from "./TimelineSidebar";
 function makeUserEvent(overrides: Partial<TimelineItem> = {}): TimelineItem {
   return {
     id: "ue-1",
-    taskId: USER_EVENTS_FILTER_ID,
+    taskId: SYSTEM_WORKSET_ID,
     version: 1,
     batchId: "",
     title: "會議",
@@ -35,7 +35,7 @@ function makeUserEvent(overrides: Partial<TimelineItem> = {}): TimelineItem {
     sourceMessageTime: null,
     analysisTimeRange: null,
     batchSourceChannelNames: [],
-    taskName: "用戶或助手",
+    taskName: "一般",
     createdAt: "2026-07-21T00:00:00Z",
     updatedAt: "2026-07-21T00:00:00Z",
     source: "user",
@@ -115,9 +115,9 @@ describe("TimelineSidebar ownership label", () => {
     });
   }
 
-  it("labels unassigned user events as 用戶或助手 source", () => {
+  it("labels unassigned user events as 一般 source", () => {
     renderSidebar(makeUserEvent());
-    expect(container.textContent).toContain("來源：用戶或助手");
+    expect(container.textContent).toContain("工作集：一般");
     expect(container.textContent).not.toContain("任務：");
   });
 
@@ -130,6 +130,6 @@ describe("TimelineSidebar ownership label", () => {
       }),
     );
     expect(container.textContent).toContain("任務：專案 Alpha");
-    expect(container.textContent).not.toContain("來源：用戶或助手");
+    expect(container.textContent).not.toContain("工作集：一般");
   });
 });

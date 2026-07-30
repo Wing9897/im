@@ -663,7 +663,7 @@
   "systemTasks": {
     "userOrAssistant": {
       "title": "User or Assistant",
-      "shortDescription": "Timed events created manually or by the assistant (user_events). Shown as virtual source “User or Assistant” on calendar, Gantt, and Key Events — not an editable analysis task."
+      "shortDescription": "System feature: create calendar events manually or via the assistant. Ownership is chosen by workset (default builtin General); not an editable analysis task."
     },
     "clientManager": {
       "title": "Account manager",
@@ -684,7 +684,7 @@
     },
     "voiceReminder": {
       "title": "Voice reminders",
-      "shortDescription": "Locally scans upcoming Key Events, recurring-task (RRULE) expansions, and “User or Assistant” events, then announces them with browser speech.",
+      "shortDescription": "Locally scans upcoming Key Events, recurring-task (RRULE) expansions, and General-workset events, then announces them with browser speech.",
       "linkLabel": "Go to voice reminders"
     },
     "retention": {
@@ -716,6 +716,7 @@
   },
   "messages": {
     "speakWithTask": "Task “{task}”, {kindLabel} “{eventTitle}”, in {lead}",
+    "speakWithWorkset": "Workset “{workset}”, {kindLabel} “{eventTitle}”, in {lead}",
     "speakWithoutTask": "{kindLabel} “{eventTitle}”, in {lead}",
     "retentionDeleted": "Deleted: {parts}",
     "retentionNone": "No matching old data to delete",
@@ -969,13 +970,16 @@
       "importMissingWidgets": "Layout file is missing widgets",
       "importNeedOne": "Layout must include at least one valid widget",
       "importNoValid": "Layout contains no valid widgets",
-      "taskFilterPrefix": "Filter tasks",
-      "taskFilterSelect": "Select tasks",
-      "taskFilterSelectAria": "{prefix}: select tasks",
-      "taskFilterCheckAria": "Check tasks",
-      "taskFilterSelectAll": "Select all",
-      "taskFilterClear": "Clear",
-      "taskFilterEmpty": "No tasks"
+      "sourceFilterPrefix": "Filter sources",
+      "sourceFilterSelect": "Select sources",
+      "sourceFilterSelectAria": "{prefix}: select sources",
+      "sourceFilterCheckAria": "Check sources",
+      "sourceFilterSelectAll": "Select all",
+      "sourceFilterClear": "Clear",
+      "sourceFilterEmpty": "No sources",
+      "sourceFilterSearchPlaceholder": "Search sources…",
+      "sourceFilterSearchAria": "Search sources by name",
+      "sourceFilterNoMatches": "No matching sources"
     }
   },
   "validation": {
@@ -1137,9 +1141,20 @@
   "boot": {
     "checking": "Checking database version…",
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 1 / SemVer 0.1.0-beta.1 — older stamped databases must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 3 / SemVer 0.1.0-beta.3 — older stamped databases must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable"
+  },
+  "secretsBroken": {
+    "dialogAria": "Encryption key mismatch",
+    "title": "Encryption key mismatch",
+    "body": "The local encryption key cannot decrypt stored API keys and account credentials. Enter the admin password to rotate the key and continue; tasks and messages are kept.",
+    "infoTitle": "What recovery does",
+    "infoBody": "Tasks, messages, and the admin account are kept. Undecryptable secrets (LLM API keys, source credentials, action secrets) are cleared and must be re-entered. Telegram session files are removed; accounts need to sign in again.",
+    "fullResetHint": "To wipe all data instead: after recovery and sign-in, use Settings → Data → full reset.",
+    "techDetails": "Technical details (expand)",
+    "recover": "Recover and continue",
+    "recovering": "Recovering…"
   },
   "setup": {
     "title": "Connect this device",
@@ -1359,5 +1374,58 @@
       "copied": "Copied",
       "copyFailed": "Copy failed"
     }
+  },
+  "workset": {
+    "label": "Workset",
+    "ownershipLabel": "Workset",
+    "unassigned": "No workset",
+    "unassignedGroup": "Unassigned",
+    "unknownGroup": "Unknown workset",
+    "systemBadge": "Built-in",
+    "create": "New workset",
+    "createTitle": "New workset",
+    "createHint": "A workset can exist without tasks — assistants and handwritten events can own it too.",
+    "createSubmit": "Create",
+    "createNew": "New workset",
+    "createNewAria": "Create a new workset",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. Ops, Project Alpha",
+    "nameAria": "Workset name",
+    "rename": "Rename",
+    "renameTitle": "Rename workset",
+    "renameSubmit": "Save",
+    "delete": "Delete",
+    "deleteTitle": "Delete workset",
+    "deleteConfirm": "Delete workset \"{name}\"? Tasks keep their data and become unassigned.",
+    "createdToast": "Created workset {name}",
+    "renamedToast": "Renamed workset to {name}",
+    "deletedToast": "Deleted workset {name}",
+    "cardLabel": "Workset · {name}",
+    "viewByTask": "Tasks",
+    "viewByWorkset": "Worksets",
+    "groupingAria": "Task list grouping",
+    "filterTitle": "Filter sources",
+    "filterHint": "Worksets first — click ▶ to expand member tasks.",
+    "filterSearchPlaceholder": "Search…",
+    "filterBrowseAria": "Browse sources by workset",
+    "filterChildCount": "{count}",
+    "expandWorksetAria": "Expand or collapse workset {name}",
+    "selectAll": "Select all",
+    "clearAll": "Clear",
+    "apply": "Apply",
+    "emptyList": "No worksets yet",
+    "emptyGroupHint": "No tasks yet — this workset can still own assistant / handwritten events",
+    "emptyTitle": "Organize by workset",
+    "emptyDescription": "Worksets do not require tasks first. Create ownership now for the assistant, handwritten events, or tasks you add later.",
+    "catalogTitle": "Worksets",
+    "catalogSubtitle": "Ownership dimensions. Use the eye control to show or hide built-in General.",
+    "memberTasksTitle": "{name} · tasks",
+    "unassignedHint": "Analysis tasks with no workset assigned.",
+    "systemDescription": "Built-in ownership workset. Assistant and handwritten events default here.",
+    "taskCount": "{count} tasks",
+    "showSystemWorksets": "Show system worksets",
+    "hideSystemWorksets": "Hide system worksets",
+    "targetOwnershipLabel": "Ownership workset",
+    "generalName": "General"
   }
 }

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import {
   DEFAULT_VOICE_REMINDER_SETTINGS,
   VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
@@ -37,7 +38,7 @@ describe("voiceReminder settings", () => {
     const next = {
       enabled: true,
       leadOffsetsMinutes: [15, 1440] as const,
-      taskIds: ["task-a"],
+      sourceFilter: { taskIds: ["task-a"], worksetIds: [] },
       preambleChimeId: "station" as const,
       quietHours: { enabled: false, start: "23:00", end: "06:30" },
     };
@@ -51,14 +52,14 @@ describe("voiceReminder settings", () => {
     expect(mockPutSettings).toHaveBeenCalledWith({
       enabled: true,
       leadOffsetsMinutes: [15, 1440],
-      taskIds: ["task-a"],
+      sourceFilter: { taskIds: ["task-a"], worksetIds: [] },
       preambleChimeId: "station",
       quietHours: { enabled: false, start: "23:00", end: "06:30" },
     });
     expect(loadVoiceReminderSettings()).toEqual({
       enabled: true,
       leadOffsetsMinutes: [15, 1440],
-      taskIds: ["task-a"],
+      sourceFilter: { taskIds: ["task-a"], worksetIds: [] },
       preambleChimeId: "station",
       quietHours: { enabled: false, start: "23:00", end: "06:30" },
     });
@@ -66,17 +67,17 @@ describe("voiceReminder settings", () => {
     window.removeEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, listener);
   });
 
-  it("sanitizes taskIds and drops invalid leads", () => {
+  it("sanitizes sourceFilter (drops blank ids) and invalid leads", () => {
     expect(
       normalizeVoiceReminderSettings({
         enabled: true,
         leadOffsetsMinutes: [1440, 99, 15, 15],
-        taskIds: ["x", "", 3],
+        sourceFilter: { taskIds: ["x", ""], worksetIds: [] },
       } as never),
     ).toEqual({
       enabled: true,
       leadOffsetsMinutes: [15, 1440],
-      taskIds: ["x"],
+      sourceFilter: { taskIds: ["x"], worksetIds: [] },
       preambleChimeId: "broadcast",
       quietHours: { enabled: true, start: "22:00", end: "07:00" },
     });
@@ -87,7 +88,7 @@ describe("voiceReminder settings", () => {
       normalizeVoiceReminderSettings({
         enabled: true,
         leadOffsetsMinutes: [60],
-        taskIds: [],
+        sourceFilter: null,
         quietHours: { start: "23:00", end: "06:00" },
       } as never).quietHours,
     ).toEqual({
@@ -97,16 +98,45 @@ describe("voiceReminder settings", () => {
     });
   });
 
-  it("defaults missing taskIds to __user__ but keeps an explicit empty list", () => {
-    expect(DEFAULT_VOICE_REMINDER_SETTINGS.taskIds).toEqual(["__user__"]);
-    expect(normalizeVoiceReminderSettings({} as never).taskIds).toEqual(["__user__"]);
+  it("defaults missing sourceFilter to __user__ but keeps an explicit null (all)", () => {
+    expect(DEFAULT_VOICE_REMINDER_SETTINGS.sourceFilter).toEqual({
+      taskIds: [],
+      worksetIds: [SYSTEM_WORKSET_ID],
+    });
+    expect(normalizeVoiceReminderSettings({} as never).sourceFilter).toEqual({
+      taskIds: [],
+      worksetIds: [SYSTEM_WORKSET_ID],
+    });
+    expect(
+      normalizeVoiceReminderSettings({
+        enabled: false,
+        leadOffsetsMinutes: [60],
+        sourceFilter: null,
+      } as never).sourceFilter,
+    ).toBeNull();
+  });
+
+  it("ignores legacy flat taskIds (hard-cut; missing sourceFilter → default __user__)", () => {
     expect(
       normalizeVoiceReminderSettings({
         enabled: false,
         leadOffsetsMinutes: [60],
         taskIds: [],
-      } as never).taskIds,
-    ).toEqual([]);
+      } as never).sourceFilter,
+    ).toEqual({
+      taskIds: [],
+      worksetIds: [SYSTEM_WORKSET_ID],
+    });
+    expect(
+      normalizeVoiceReminderSettings({
+        enabled: false,
+        leadOffsetsMinutes: [60],
+        taskIds: [SYSTEM_WORKSET_ID, "task-a"],
+      } as never).sourceFilter,
+    ).toEqual({
+      taskIds: [],
+      worksetIds: [SYSTEM_WORKSET_ID],
+    });
   });
 
   it("falls back to default chime for unknown / retired ids", () => {
@@ -114,7 +144,7 @@ describe("voiceReminder settings", () => {
       normalizeVoiceReminderSettings({
         enabled: false,
         leadOffsetsMinutes: [60],
-        taskIds: [],
+        sourceFilter: null,
         preambleChimeId: "not-a-real-chime",
       } as never).preambleChimeId,
     ).toBe("broadcast");
@@ -122,7 +152,7 @@ describe("voiceReminder settings", () => {
       normalizeVoiceReminderSettings({
         enabled: false,
         leadOffsetsMinutes: [60],
-        taskIds: [],
+        sourceFilter: null,
         preambleChimeId: "soft-bell",
       } as never).preambleChimeId,
     ).toBe("broadcast");
@@ -134,7 +164,7 @@ describe("voiceReminder settings", () => {
       settings: {
         enabled: true,
         leadOffsetsMinutes: [15],
-        taskIds: ["t1"],
+        sourceFilter: { taskIds: ["t1"], worksetIds: [] },
         preambleChimeId: "airport",
         quietHours: { enabled: false, start: "21:00", end: "06:00" },
       },

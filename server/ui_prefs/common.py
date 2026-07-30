@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any, Mapping, Optional
 
 from server.db.database import Database
 from server.util import utc_now_iso
+
+#: Sentinel: value is not ``null | {taskIds, worksetIds}`` (flat lists discarded).
+SOURCE_FILTER_INVALID: object = object()
 
 #: ``ui_prefs.key`` values (formerly ``system_config``; retired from CONFIG_DEFAULTS in v15).
 KEY_OPS_BOARD_LAYOUT = "ops_board_layout"
@@ -83,3 +86,34 @@ async def _write_json(db: Database, key: str, value: Any, *, max_chars: int = MA
 
 async def _delete_json(db: Database, key: str) -> None:
     await db.execute("DELETE FROM ui_prefs WHERE key = ?", (key,))
+
+
+def _clean_pref_id_list(raw: Any) -> list[str]:
+    if not isinstance(raw, list):
+        return []
+    clean: list[str] = []
+    seen: set[str] = set()
+    for item in raw:
+        if isinstance(item, str) and item.strip() and item not in seen:
+            seen.add(item)
+            clean.append(item)
+    return clean
+
+
+def _sanitize_source_filter_shape(raw: Any) -> dict[str, list[str]] | None | object:
+    """Hard-cut: only ``null | {taskIds, worksetIds}``.
+
+    Returns ``SOURCE_FILTER_INVALID`` for flat ``string[]`` and other shapes.
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, Mapping):
+        return SOURCE_FILTER_INVALID
+    task_ids_raw = raw.get("taskIds")
+    workset_ids_raw = raw.get("worksetIds")
+    if not isinstance(task_ids_raw, list) or not isinstance(workset_ids_raw, list):
+        return SOURCE_FILTER_INVALID
+    return {
+        "taskIds": _clean_pref_id_list(task_ids_raw),
+        "worksetIds": _clean_pref_id_list(workset_ids_raw),
+    }

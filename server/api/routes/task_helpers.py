@@ -11,6 +11,7 @@ from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES, AnalysisMode
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows
+from server.queries.worksets_queries import workset_exists
 from server.scheduler.task_schedule_overrides import (
     ALLOWED_STRATEGY_MODES,
     ANALYSIS_BATCH_LIMIT_MAX,
@@ -67,6 +68,7 @@ class TaskConfigBody(BaseModel):
         default=None, ge=ANALYSIS_BATCH_LIMIT_MIN, le=ANALYSIS_BATCH_LIMIT_MAX
     )
     analysisStrategyMode: Optional[str] = None
+    worksetId: Optional[str] = None
 
 
 def _validate_optional_int_in_range(
@@ -158,6 +160,41 @@ def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
         "analysis_batch_message_limit": body.analysisBatchMessageLimit,
         "analysis_strategy_mode": body.analysisStrategyMode,
     }
+
+
+async def resolve_workset_id(
+    db: Any,
+    *,
+    supplied: str | None,
+    existing: str | None = None,
+    inherit_from_parent_id: str | None = None,
+    fields_set: set[str] | None = None,
+) -> str | None:
+    """Normalize optional workset ownership.
+
+    - Explicit ``worksetId`` (including null/empty → clear) when in ``fields_set`` or
+      when ``fields_set`` is None (create path treats body.worksetId as authoritative).
+    - Else inherit from parent project when creating a child without an explicit value.
+    - Else keep ``existing`` on update.
+    """
+    explicit = fields_set is None or "worksetId" in fields_set
+    if explicit:
+        if supplied is None or not str(supplied).strip():
+            return None
+        workset_id = str(supplied).strip()
+        if not await workset_exists(db, workset_id):
+            raise http_error(422, f"Unknown worksetId: {workset_id}", error_code=VALIDATION_ERROR)
+        return workset_id
+
+    if inherit_from_parent_id:
+        parent = await db.fetch_one(
+            "SELECT workset_id FROM analysis_tasks WHERE id = ?",
+            (inherit_from_parent_id,),
+        )
+        if parent and parent.get("workset_id"):
+            return str(parent["workset_id"])
+
+    return existing or None
 
 
 async def get_task_row(db: Any, task_id: str) -> dict[str, Any]:

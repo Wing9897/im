@@ -1,5 +1,5 @@
 /**
- * Unit tests for IntelligenceToolbar — task multi-select + search modal.
+ * Unit tests for IntelligenceToolbar — source filter + search modal.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
@@ -10,7 +10,7 @@ import { setAppLocale } from "../../i18n/locale";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import type { ViewMode } from "../../types";
 import type { TimeFilterPreset } from "../../components/TimeFilter";
-import type { IntelligenceSelectedTaskIds } from "../../domain/intelligence/intelligenceTaskFilter";
+import type { IntelligenceSelectedSources } from "../../domain/intelligence/intelligenceSourceFilter";
 
 vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
@@ -25,8 +25,8 @@ interface ToolbarOpts {
   onTimeFilterChange?: (preset: TimeFilterPreset) => void;
   sortMode?: "event_time" | "analyzed_at";
   onSortModeChange?: (mode: "event_time" | "analyzed_at") => void;
-  selectedTaskIds?: IntelligenceSelectedTaskIds;
-  setSelectedTaskIds?: (ids: IntelligenceSelectedTaskIds) => void;
+  selectedSources?: IntelligenceSelectedSources;
+  setSelectedSources?: (ids: IntelligenceSelectedSources) => void;
   intelligenceTasks?: { id: string; name: string }[];
   isBusy?: boolean;
 }
@@ -42,8 +42,8 @@ function renderToolbar(opts: ToolbarOpts = {}) {
     onTimeFilterChange: opts.onTimeFilterChange ?? (() => {}),
     sortMode: opts.sortMode ?? "event_time",
     onSortModeChange: opts.onSortModeChange ?? (() => {}),
-    selectedTaskIds: opts.selectedTaskIds ?? null,
-    setSelectedTaskIds: opts.setSelectedTaskIds ?? (() => {}),
+    selectedSources: opts.selectedSources ?? null,
+    setSelectedSources: opts.setSelectedSources ?? (() => {}),
     intelligenceTasks: opts.intelligenceTasks ?? [
       { id: "task-1", name: "行程事件提取" },
     ],
@@ -89,15 +89,15 @@ describe("IntelligenceToolbar", () => {
 
   it("always shows task multi-select, including empty catalog", () => {
     const withTasks = track(renderToolbar());
-    expect(withTasks.querySelector('[data-testid="intelligence-task-filter"]')).not.toBeNull();
-    expect(withTasks.querySelector('[data-testid="board-task-filter"]')).not.toBeNull();
+    expect(withTasks.querySelector('[data-testid="intelligence-source-filter"]')).not.toBeNull();
+    expect(withTasks.querySelector('[data-testid="board-source-filter"]')).not.toBeNull();
 
     const empty = track(renderToolbar({ intelligenceTasks: [] }));
-    expect(empty.querySelector('[data-testid="intelligence-task-filter"]')).not.toBeNull();
-    expect(empty.querySelector('[data-testid="board-task-filter"]')).not.toBeNull();
+    expect(empty.querySelector('[data-testid="intelligence-source-filter"]')).not.toBeNull();
+    expect(empty.querySelector('[data-testid="board-source-filter"]')).not.toBeNull();
   });
 
-  it("uses sticky single-row chrome with task filter on the right", () => {
+  it("uses sticky single-row chrome with source filter on the left", () => {
     const container = track(renderToolbar());
     const toolbar = container.querySelector<HTMLDivElement>("[role='toolbar']")!;
     expect(toolbar.className).toContain("im-intelligence-toolbar");
@@ -106,28 +106,28 @@ describe("IntelligenceToolbar", () => {
     expect(toolbar.className).toContain("flex-nowrap");
     expect(toolbar.className).toContain("top-0");
     const search = toolbar.querySelector('[data-testid="intelligence-search-filter-button"]');
-    const task = toolbar.querySelector('[data-testid="intelligence-task-filter"]');
+    const task = toolbar.querySelector('[data-testid="intelligence-source-filter"]');
     const view = toolbar.querySelector('[aria-label="檢視模式"]');
     expect(search).not.toBeNull();
     expect(task).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="intelligence-sort-select"]')).not.toBeNull();
     expect(view).not.toBeNull();
-    // Task multi-select sits with view mode on the right (after search in DOM order).
+    // Source filter leftmost (same as timeline); search sits with view on the right.
     expect(
       Boolean(
         search &&
           task &&
-          search.compareDocumentPosition(task) & Node.DOCUMENT_POSITION_FOLLOWING,
+          task.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true);
     expect(
       Boolean(
-        task && view && task.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING,
+        search && view && search.compareDocumentPosition(view) & Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true);
   });
 
-  it("opens 搜索與篩選事件 modal from the search icon", () => {
+  it("opens search modal from the search icon", () => {
     const container = track(renderToolbar());
     expect(container.querySelector('[data-testid="intelligence-search-filter-input"]')).toBeNull();
     const openBtn = container.querySelector<HTMLButtonElement>(
@@ -141,7 +141,7 @@ describe("IntelligenceToolbar", () => {
     );
     expect(input).not.toBeNull();
     expect(input!.maxLength).toBe(200);
-    expect(document.body.textContent).toContain("搜索與篩選事件");
+    expect(document.body.textContent).toContain("搜尋關鍵事件");
   });
 
   it("clears search from the modal footer", () => {
@@ -213,6 +213,6 @@ describe("IntelligenceToolbar", () => {
     expect(
       container.querySelector('[aria-label="Key Events toolbar"]'),
     ).not.toBeNull();
-    expect(container.querySelector('[data-testid="intelligence-task-filter"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="intelligence-source-filter"]')).not.toBeNull();
   });
 });

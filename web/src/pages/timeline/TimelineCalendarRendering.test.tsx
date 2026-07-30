@@ -8,7 +8,7 @@
  * - Requirement 9.4: Navigation re-requests occurrences
  * - Requirement 9.5: All-day calendar occurrences appear in the all-day section
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
@@ -326,6 +326,12 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     await i18n.changeLanguage("zh-Hant");
   });
 
+  afterEach(() => {
+    document
+      .querySelectorAll('[data-testid="source-filter-dialog"]')
+      .forEach((node) => node.remove());
+  });
+
   it("calendar tasks appear in the multi-select filter alongside timeline tasks", () => {
     const tasks = [
       { id: "timeline-task-1", name: "Timeline Analysis" },
@@ -333,8 +339,8 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     ];
     const container = render(
       createElement(TimelineControlBar, {
-        selectedTaskIds: null,
-        setSelectedTaskIds: vi.fn(),
+        selectedSources: null,
+        setSelectedSources: vi.fn(),
         timelineTasks: tasks,
         viewMode: "calendar" as const,
         setViewMode: vi.fn(),
@@ -346,16 +352,21 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     );
 
     const filterBtn = container.querySelector<HTMLButtonElement>(
-      '[data-testid="board-task-filter"]',
+      '[data-testid="board-source-filter"]',
     )!;
     act(() => {
       filterBtn.click();
     });
+    act(() => {
+      document
+        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__unassigned__"]')
+        ?.click();
+    });
     expect(
-      document.querySelector('[data-testid="board-task-filter-timeline-task-1"]'),
+      document.querySelector('[data-testid="board-source-filter-timeline-task-1"]'),
     ).not.toBeNull();
     expect(
-      document.querySelector('[data-testid="board-task-filter-cal-task-1"]'),
+      document.querySelector('[data-testid="board-source-filter-cal-task-1"]'),
     ).not.toBeNull();
   });
 
@@ -366,8 +377,8 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     ];
     const container = render(
       createElement(TimelineControlBar, {
-        selectedTaskIds: null,
-        setSelectedTaskIds: vi.fn(),
+        selectedSources: null,
+        setSelectedSources: vi.fn(),
         timelineTasks: tasks,
         viewMode: "calendar" as const,
         setViewMode: vi.fn(),
@@ -379,13 +390,18 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     );
 
     const filterBtn = container.querySelector<HTMLButtonElement>(
-      '[data-testid="board-task-filter"]',
+      '[data-testid="board-source-filter"]',
     )!;
     act(() => {
       filterBtn.click();
     });
+    act(() => {
+      document
+        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__unassigned__"]')
+        ?.click();
+    });
     const checkbox = document.querySelector<HTMLInputElement>(
-      '[data-testid="board-task-filter-cal-task-1"]',
+      '[data-testid="board-source-filter-cal-task-1"]',
     )!;
     expect(checkbox).not.toBeNull();
     expect(checkbox.checked).toBe(true);

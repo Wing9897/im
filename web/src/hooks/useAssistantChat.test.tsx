@@ -19,6 +19,10 @@ import {
   clearTaskEditorDraftBridge,
   registerTaskEditorDraftBridge,
 } from "../domain/tasks/taskEditorDraftBridge";
+import {
+  loadVoiceSettings,
+  resetVoiceSettingsCacheForTests,
+} from "../speech/voiceSettings";
 
 const { mockStreamAgentChat, mockCreateSpeechPorts } = vi.hoisted(() => ({
   mockStreamAgentChat: vi.fn(),
@@ -48,6 +52,10 @@ vi.mock("../api/uiPrefs", async () => {
       activeSessionId: null,
     })),
     putAssistantSessions: vi.fn(async (body: { sessions: unknown[]; activeSessionId: string | null }) => body),
+    putAssistantVoiceIo: vi.fn(async (settings: unknown) => ({
+      configured: true,
+      settings,
+    })),
   };
 });
 
@@ -103,6 +111,7 @@ describe("useAssistantChat", () => {
     window.localStorage.clear();
     window.sessionStorage.clear();
     resetAssistantSessionsCacheForTests();
+    resetVoiceSettingsCacheForTests();
     clearTaskEditorDraftBridge();
     mockStreamAgentChat.mockReset();
     mockCreateSpeechPorts.mockReset();
@@ -202,13 +211,13 @@ describe("useAssistantChat", () => {
     expect(mockStreamAgentChat).toHaveBeenCalledTimes(1);
     expect(mockStreamAgentChat).toHaveBeenCalledWith(
       expect.objectContaining({
-        calendarTaskId: "__user__",
+        worksetId: "__user__",
       }),
       expect.any(Object),
     );
   });
 
-  it("forwards an overridden calendarTaskId on send", async () => {
+  it("forwards an overridden worksetId on send", async () => {
     mockStreamAgentChat.mockResolvedValue({
       sessionId: "srv-task",
       message: "ok",
@@ -217,7 +226,7 @@ describe("useAssistantChat", () => {
 
     const chat = await mount();
     await act(async () => {
-      chat().setCalendarTaskId("memo-task");
+      chat().setWorksetId("memo-task");
       chat().setDraft("記到日曆任務");
     });
     await act(async () => {
@@ -226,13 +235,14 @@ describe("useAssistantChat", () => {
 
     expect(mockStreamAgentChat).toHaveBeenCalledWith(
       expect.objectContaining({
-        calendarTaskId: "memo-task",
+        worksetId: "memo-task",
         messages: expect.arrayContaining([
           expect.objectContaining({ content: "記到日曆任務" }),
         ]),
       }),
       expect.any(Object),
     );
+    expect(loadVoiceSettings().defaultWorksetId).toBe("memo-task");
   });
 
   it("clearChat starts a fresh local session", async () => {

@@ -38,7 +38,7 @@ describe("uiPrefs board API", () => {
   it("putBoardPrefs PUTs body to /api/v1/ui-prefs/board", async () => {
     const body = {
       layout: { version: 14, widgets: [] },
-      widgetState: { mapViews: {}, taskFilters: {} },
+      widgetState: { mapViews: {}, sourceFilters: {} },
     };
     const response = { configured: true, ...body };
     vi.mocked(apiClient.put).mockResolvedValue(response);

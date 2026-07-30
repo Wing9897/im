@@ -32,6 +32,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
 };
 
 interface UseEditorFieldsReturn {

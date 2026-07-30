@@ -1,7 +1,8 @@
 /**
  * Global host for Desktop .ics / deep-link calendar import.
  *
- * Opens the shared UserEventDialog so the user can confirm fields and pick a task.
+ * Opens the shared UserEventDialog so the user can confirm fields and pick a workset.
+ * Electron drafts carry `worksetId` as the ownership hint (empty → 一般).
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -10,11 +11,7 @@ import { useTranslation } from "react-i18next";
 import { createUserEvent } from "../../api/userEvents";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
-import {
-  filterAssignableTimelineTasks,
-  toUserEventFormTaskId,
-  toUserEventWriteTaskId,
-} from "../../domain/timeline/userEvents";
+import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import {
   getElectronCalendarImport,
   type CalendarImportDraft,
@@ -33,7 +30,7 @@ function draftToInitial(draft: CalendarImportDraft): Partial<UserEventFormValues
     endTime: draft.endTime,
     location: draft.location,
     body: draft.body,
-    taskId: toUserEventFormTaskId(draft.taskId || null),
+    worksetId: toUserEventFormWorksetId(draft.worksetId || null),
   };
 }
 
@@ -46,19 +43,15 @@ export function CalendarImportHost() {
 function CalendarImportHostInner() {
   const { t } = useTranslation("timeline");
   const { showToast } = useToast();
-  const { tasks } = useTaskCatalog();
+  const { worksets } = useTaskCatalog();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initial, setInitial] = useState<Partial<UserEventFormValues> | null>(null);
 
-  const taskOptions = useMemo(
-    () =>
-      filterAssignableTimelineTasks(tasks, { activeOnly: true }).map((task) => ({
-        id: task.id,
-        name: task.name,
-      })),
-    [tasks],
+  const worksetOptions = useMemo(
+    () => worksets.map((ws) => ({ id: ws.id, name: ws.name })),
+    [worksets],
   );
 
   const applyMessage = useCallback(
@@ -109,7 +102,7 @@ function CalendarImportHostInner() {
           endTime: values.endTime || null,
           body: values.body,
           location: values.location,
-          taskId: toUserEventWriteTaskId(values.taskId),
+          worksetId: toUserEventFormWorksetId(values.worksetId),
         });
         setOpen(false);
         setInitial(null);
@@ -129,7 +122,7 @@ function CalendarImportHostInner() {
       mode="create"
       titleOverride={t("userEvent.importTitle")}
       introOverride={t("userEvent.importIntro")}
-      taskOptions={taskOptions}
+      worksetOptions={worksetOptions}
       initial={initial}
       busy={busy}
       error={error}

@@ -121,11 +121,11 @@ async def execute_tool(
         origin = context.get("user_event_origin")
         if origin:
             args["_origin"] = origin
-        # Default target task from chat request when the tool omits taskId.
-        if "taskId" not in args and "task_id" not in args:
-            default_tid = context.get("default_calendar_task_id")
-            if default_tid is not None:
-                args["_default_task_id"] = default_tid
+        # Default target workset from chat request when the tool omits worksetId.
+        if "worksetId" not in args and "workset_id" not in args:
+            default_wid = context.get("default_workset_id")
+            if default_wid is not None:
+                args["_default_workset_id"] = default_wid
     if name in WEB_TOOL_NAMES:
         return await execute_web_search_tool(db, name, args, context=ctx)
     if name in TASKS_TOOL_NAMES:

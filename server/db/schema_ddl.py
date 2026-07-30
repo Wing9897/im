@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 1 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 3 (single schema source).
 
 ``server.db.migrations`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -107,6 +107,20 @@ CREATE INDEX IF NOT EXISTS idx_messages_channel_timestamp_desc
 CREATE INDEX IF NOT EXISTS idx_messages_account_id
     ON messages(account_id);
 
+-- Optional ownership dimension for analysis tasks (orthogonal to analysis_mode / parent_task_id).
+-- Builtin system row id ``__user__`` (is_system=1) is the handwritten / assistant ownership bucket.
+CREATE TABLE IF NOT EXISTS worksets (
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    is_system  INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_worksets_updated_at_asc
+    ON worksets(updated_at ASC);
+INSERT OR IGNORE INTO worksets (id, name, is_system, created_at, updated_at)
+VALUES ('__user__', '一般', 1, '1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z');
+
 CREATE TABLE IF NOT EXISTS analysis_tasks (
     id                   TEXT PRIMARY KEY,
     name                 TEXT NOT NULL,
@@ -130,6 +144,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
     parent_task_id       TEXT DEFAULT NULL
                          REFERENCES analysis_tasks(id) ON DELETE CASCADE,
+    workset_id           TEXT DEFAULT NULL
+                         REFERENCES worksets(id) ON DELETE SET NULL,
     -- Per-task analysis-scheduling overrides (NULL = use system_config defaults).
     project_wave_interval_seconds INTEGER DEFAULT NULL,
     batch_overlap_count           INTEGER DEFAULT NULL,
@@ -141,6 +157,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
 );
 CREATE INDEX IF NOT EXISTS idx_analysis_tasks_parent
     ON analysis_tasks(parent_task_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_tasks_workset
+    ON analysis_tasks(workset_id);
 
 -- Project-manager incremental message cursor (not system_config).
 CREATE TABLE IF NOT EXISTS project_message_cursors (
@@ -335,6 +353,8 @@ CREATE TABLE IF NOT EXISTS user_events (
     location    TEXT NOT NULL DEFAULT '',
     origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'project')),
     task_id     TEXT DEFAULT NULL REFERENCES analysis_tasks(id) ON DELETE SET NULL,
+    -- Ownership is always a workset; delete_workset reassigns to __user__ first.
+    workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );
@@ -344,6 +364,8 @@ CREATE INDEX IF NOT EXISTS idx_user_events_created_at_asc
     ON user_events(created_at ASC);
 CREATE INDEX IF NOT EXISTS idx_user_events_task_id
     ON user_events(task_id);
+CREATE INDEX IF NOT EXISTS idx_user_events_workset_id
+    ON user_events(workset_id);
 -- Same effective-time expression as analysis_events, for the user-event TTL.
 CREATE INDEX IF NOT EXISTS idx_user_events_effective_time
     ON user_events(datetime(COALESCE(NULLIF(TRIM(start_time), ''), created_at)) ASC);

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Wipe-floor stamp 3 + ownership hard-cut:** empty `SCHEMA_MIGRATIONS` (DDL sole truth; prior stamps hard-reject → reset). `user_events.workset_id` is `NOT NULL DEFAULT '__user__'`; deleting a custom workset reassigns events to `__user__`. Agent / voice prefs wire only `worksetId` / `defaultWorksetId` (removed `calendarTaskId` / `defaultCalendarTaskId`). FE filter UI unified on `SourceFilterDialog` + `{ taskIds, worksetIds }`. Activity-spans add `worksetId` (`sourceKind=workset` → same as row `taskId`; task rows → `null`). Board `widgetState.sourceFilters` hard-renames former `taskFilters`; CSS/testid `board-source-filter` replaces `board-task-filter`.
+- **Compat-layer cleanup (no VERSION bump):** drop Legacy task-id filter adapters / flat board filter APIs; rename FE `selectedTaskIds`→`selectedSources` where it means hierarchical selection; project user events with provenance-only `taskId` + ownership `worksetId`; reject list filter `task_id=__user__` (use `workset_id`); OpenAPI types voice `sourceFilter` + assistant `defaultWorksetId`.
+- **Docs / deeplink examples:** ownership and Desktop calendar import copy use `worksetId` (not `taskId=__user__` /「選任務」); apiDocs inline deep-link sample matches `desktop/calendar-import.ts`.
+
+### Added
+
+- **Builtin system workset + event ownership:** schema stamp **v3** / `schemaSemver` **0.1.0-beta.3** — `worksets.is_system` + seeded `__user__`; `user_events.workset_id`; WorksetResponse `isSystem`; user-events / agent create by `worksetId`; prefs `defaultWorksetId`. Tree filter persists `{ taskIds, worksetIds }`.
+- **Worksets (工作集) ownership:** schema stamp **v2** / `schemaSemver` **0.1.0-beta.2** — `worksets` table + optional `analysis_tasks.workset_id`; CRUD `GET/POST/PUT/DELETE /api/v1/worksets`; task wire `worksetId`. (Historical note: 1→2／2→3 MigrationSteps were folded into wipe-floor stamp 3.)
+
 ## [0.1.0-beta.1] - 2026-07-29
 
 ### Notes
@@ -12,7 +25,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Cross-platform Desktop packaging + GHCR:** `dist:mac`／`dist:linux`／`dist:current` alongside `dist:win`; electron-builder mac (DMG/zip) + linux (AppImage/deb). CI quality matrix on Windows／Ubuntu／macOS; package artifacts on `workflow_dispatch`／`v*` tags; `Dockerfile` + `docker-compose.yml` push server+SPA image to `ghcr.io/<owner>/<repo>` on `main`／tags／dispatch.
-- **Desktop calendar import (.ics + deep link):** Packaged app registers `.ics` file association and `intelligencemonitor://calendar/import` protocol. Opening a file or link queues a draft into the shared user-event dialog (pick task → `POST /user-events`). First VEVENT only; not webcal/CalDAV sync.
+- **Desktop calendar import (.ics + deep link):** Packaged app registers `.ics` file association and `intelligencemonitor://calendar/import` protocol. Opening a file or link queues a draft into the shared user-event dialog (pick workset / optional `worksetId` → `POST /user-events`). First VEVENT only; not webcal/CalDAV sync.
 - **Unified Desktop／CLI data root:** Default writable state (DB, `secret.key`, `sessions/`, `connection.json`) lives under the same product folder as packaged Electron userData (`%APPDATA%\Intelligence Monitor` on Windows). CLI no longer uses cwd DB or `~/.intelligence-monitor` as the default root.
 - **Full reset clears secret.key + connection.json:** Settings「完全重置」／`POST /system/reset/database` and `scripts/reset_local_databases.py --apply` now delete encryption `secret.key` (and drop the in-process Fernet cache) plus Desktop `connection.json`, in addition to the database and Telegram sessions — no local runtime exceptions.
 - **Product SemVer restart `0.1.0-beta.1` + schema wipe-baseline 1:** Repo `VERSION` / packages / OpenAPI / health `version` restart at `0.1.0-beta.1`. SQLite `CURRENT_SCHEMA_VERSION` collapses to integer stamp **1** with empty `SCHEMA_MIGRATIONS`. Health／schema status expose public `schemaSemver`; int `schemaVersion` remains for gate arithmetic. **Existing local databases must be reset** before reuse.

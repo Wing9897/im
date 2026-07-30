@@ -21,6 +21,8 @@ export interface BaseTaskFormFields {
   eventLocation: string;
   eventDescription: string;
   includeInTimeline: boolean;
+  /** Optional ownership dimension; `null` = unassigned. */
+  worksetId?: string | null;
 }
 
 /**
@@ -50,4 +52,6 @@ export interface TaskFormState
   analysisBatchMessageLimit: number | null;
   /** Evidence style; null = follow global AI Settings. */
   analysisStrategyMode: "conservative" | "balanced" | "aggressive" | null;
+  /** Optional workset ownership; null = unassigned. */
+  worksetId: string | null;
 }

@@ -10,6 +10,12 @@ import { setAppLocale } from "../../../i18n/locale";
 import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskForm";
 import { ChatEditorForm } from "./ChatEditorForm";
 
+vi.mock("../../../context/TaskCatalogContext", async () =>
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
+
+vi.mock("../../../context/ToastContext", async () =>
+  (await import("../../../test/context-mocks")).toastContextModuleMock());
+
 let container: HTMLDivElement;
 let root: Root;
 

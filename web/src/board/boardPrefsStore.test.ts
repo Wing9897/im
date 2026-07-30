@@ -9,13 +9,13 @@ import {
   hydrateBoardPrefs,
   loadBoardConfigFromCache,
   loadBoardMapViewFromCache,
-  loadTaskFilterIdsFromCache,
+  loadSourceFilterFromCache,
   loadBoardGanttViewModeFromCache,
   resetBoardPrefsCacheForTests,
   saveBoardLayoutToApi,
   saveBoardMapViewToApi,
   saveBoardGanttViewModeToApi,
-  saveTaskFilterIdsToApi,
+  saveSourceFilterToApi,
 } from "./boardPrefsStore";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 
@@ -39,7 +39,7 @@ describe("boardPrefsStore hydrate / save", () => {
       layout,
       widgetState: {
         mapViews: { "w-map": { center: [25, 121], zoom: 7 } },
-        taskFilters: { "w-gantt": ["t1"] },
+        sourceFilters: { "w-gantt": ["t1"] },
         ganttViewModes: {},
       },
     });
@@ -47,8 +47,14 @@ describe("boardPrefsStore hydrate / save", () => {
     const loaded = await hydrateBoardPrefs();
     expect(loaded.widgets).toHaveLength(8);
     expect(loadBoardMapViewFromCache("w-map")).toEqual({ center: [25, 121], zoom: 7 });
-    expect(loadTaskFilterIdsFromCache("w-gantt")).toEqual(["t1"]);
-    expect(putBoardPrefs).not.toHaveBeenCalled();
+    expect(loadSourceFilterFromCache("w-gantt")).toEqual(null);
+    await vi.waitFor(() => {
+      expect(putBoardPrefs).toHaveBeenCalledWith({
+        widgetState: expect.objectContaining({
+          sourceFilters: { "w-gantt": null },
+        }),
+      });
+    });
     expect(window.localStorage.getItem(LEGACY_BOARD_STORAGE_KEY)).toBeNull();
   });
 
@@ -64,7 +70,7 @@ describe("boardPrefsStore hydrate / save", () => {
     vi.mocked(putBoardPrefs).mockImplementation(async (body) => ({
       configured: true,
       layout: body.layout ?? null,
-      widgetState: body.widgetState ?? { mapViews: {}, taskFilters: {}, ganttViewModes: {} },
+      widgetState: body.widgetState ?? { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
     }));
 
     const loaded = await hydrateBoardPrefs();
@@ -72,7 +78,7 @@ describe("boardPrefsStore hydrate / save", () => {
     expect(loaded.widgets.length).toBe(createDefaultBoardConfig().widgets.length);
     expect(putBoardPrefs).toHaveBeenCalledWith({
       layout: expect.objectContaining({ version: BOARD_LAYOUT_VERSION }),
-      widgetState: { mapViews: {}, taskFilters: {}, ganttViewModes: {} },
+      widgetState: { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
     });
     // Hard-cut: leftover LS is not cleared and not used as SoT.
     expect(window.localStorage.getItem(LEGACY_BOARD_STORAGE_KEY)).toBeTruthy();
@@ -103,22 +109,53 @@ describe("boardPrefsStore hydrate / save", () => {
     expect(putBoardPrefs).toHaveBeenLastCalledWith({
       widgetState: {
         mapViews: { "w-map": { center: [25, 121], zoom: 6 } },
-        taskFilters: {},
+        sourceFilters: {},
         ganttViewModes: {},
       },
     });
 
-    saveTaskFilterIdsToApi("w-gantt", ["t1"]);
+    saveSourceFilterToApi("w-gantt", { taskIds: ["t1"], worksetIds: ["ws-1"] });
     await vi.waitFor(() => {
       expect(putBoardPrefs).toHaveBeenLastCalledWith({
         widgetState: {
           mapViews: { "w-map": { center: [25, 121], zoom: 6 } },
-          taskFilters: { "w-gantt": ["t1"] },
+          sourceFilters: { "w-gantt": { taskIds: ["t1"], worksetIds: ["ws-1"] } },
           ganttViewModes: {},
         },
       });
     });
     expect(window.localStorage.getItem(LEGACY_BOARD_STORAGE_KEY)).toBeNull();
+  });
+
+  it("hydrates hierarchical sourceFilters from API widgetState", async () => {
+    vi.mocked(fetchBoardPrefs).mockResolvedValue({
+      configured: true,
+      layout: createDefaultBoardConfig(),
+      widgetState: {
+        mapViews: {},
+        sourceFilters: {
+          "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
+          "w-legacy": ["old-a", "old-b"],
+        },
+        ganttViewModes: {},
+      },
+    });
+    await hydrateBoardPrefs();
+    expect(loadSourceFilterFromCache("w-events")).toEqual({
+      taskIds: ["t1"],
+      worksetIds: ["__user__"],
+    });
+    expect(loadSourceFilterFromCache("w-legacy")).toBeNull();
+    await vi.waitFor(() => {
+      expect(putBoardPrefs).toHaveBeenCalledWith({
+        widgetState: expect.objectContaining({
+          sourceFilters: {
+            "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
+            "w-legacy": null,
+          },
+        }),
+      });
+    });
   });
 
   it("persists gantt view mode per widget in widgetState", async () => {
@@ -132,7 +169,7 @@ describe("boardPrefsStore hydrate / save", () => {
     expect(putBoardPrefs).toHaveBeenLastCalledWith({
       widgetState: {
         mapViews: {},
-        taskFilters: {},
+        sourceFilters: {},
         ganttViewModes: { "w-gantt": "day" },
       },
     });
@@ -145,7 +182,7 @@ describe("boardPrefsStore hydrate / save", () => {
       layout: createDefaultBoardConfig(),
       widgetState: {
         mapViews: {},
-        taskFilters: {},
+        sourceFilters: {},
         ganttViewModes: { "g1": "month", "g2": "invalid", "g3": "day" },
       },
     });

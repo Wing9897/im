@@ -21,20 +21,25 @@ interface UserEventWriteParams {
   endTime?: string | null;
   body?: string;
   location?: string;
-  /** `""` / `"__user__"` / omit → unassigned; real id → event|recurring|calendar_task task. */
+  /** Analysis-task provenance; `""` / omit → null. `"__user__"` rejected by API. */
   taskId?: string | null;
+  /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset. */
+  worksetId?: string | null;
 }
 
 export function listUserEvents(params?: {
   start?: string;
   end?: string;
-  /** Owning analysis task id, or `""` / `"__user__"` for unassigned only. */
+  /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__user__`. */
   taskId?: string;
+  /** Ownership workset id (incl. builtin `__user__`). */
+  worksetId?: string;
 }): Promise<UserEvent[]> {
   const query: Record<string, string> = {};
   if (params?.start) query.start = params.start;
   if (params?.end) query.end = params.end;
   if (params?.taskId !== undefined) query.task_id = params.taskId;
+  if (params?.worksetId !== undefined) query.workset_id = params.worksetId;
   return apiClient.get<UserEvent[]>("/api/v1/user-events", query);
 }
 
@@ -47,6 +52,7 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
     location: params.location ?? "",
   };
   if (params.taskId !== undefined) body.taskId = params.taskId;
+  if (params.worksetId !== undefined) body.worksetId = params.worksetId;
   return apiClient.post<UserEvent>("/api/v1/user-events", body);
 }
 
@@ -61,6 +67,7 @@ export function updateUserEvent(
   if (params.body !== undefined) body.body = params.body;
   if (params.location !== undefined) body.location = params.location;
   if (params.taskId !== undefined) body.taskId = params.taskId;
+  if (params.worksetId !== undefined) body.worksetId = params.worksetId;
   return apiClient.patch<UserEvent>(`/api/v1/user-events/${id}`, body);
 }
 

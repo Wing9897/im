@@ -62,7 +62,7 @@ describe("voiceSettings", () => {
       speechLanguage: "zh-CN",
       spacePttMode: "toggle",
       ttsVoiceUri: "tracy-uri",
-      defaultCalendarTaskId: "task-ct-1",
+      defaultWorksetId: "task-ct-1",
     });
     expect(loadVoiceSettings()).toMatchObject({
       sttProvider: "browser",
@@ -71,17 +71,17 @@ describe("voiceSettings", () => {
       speechLanguage: "zh-CN",
       spacePttMode: "toggle",
       ttsVoiceUri: "tracy-uri",
-      defaultCalendarTaskId: "task-ct-1",
+      defaultWorksetId: "task-ct-1",
     });
   });
 
-  it("normalizes empty defaultCalendarTaskId to __user__", () => {
+  it("normalizes empty defaultWorksetId to __user__", () => {
     expect(
       normalizeVoiceSettings({
-        defaultCalendarTaskId: "",
-      } as never).defaultCalendarTaskId,
+        defaultWorksetId: "",
+      } as never).defaultWorksetId,
     ).toBe("__user__");
-    expect(DEFAULT_VOICE_SETTINGS.defaultCalendarTaskId).toBe("__user__");
+    expect(DEFAULT_VOICE_SETTINGS.defaultWorksetId).toBe("__user__");
   });
 
   it("falls back to defaults for unknown provider ids", () => {

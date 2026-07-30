@@ -17,6 +17,7 @@ from server.ui_prefs.common import (
     _write_json,
 )
 from server.util import utc_now_iso
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 _STT_PROVIDERS = frozenset({"browser", "whisper", "doubao"})
 _TTS_PROVIDERS = frozenset({"browser", "doubao"})
@@ -28,8 +29,8 @@ _DEFAULT_VOICE_IO: dict[str, Any] = {
     "speechLanguage": "zh-HK",
     "spacePttMode": "hold",
     "ttsVoiceUri": "",
-    # Default create target for assistant chat / pure-voice (``__user__`` = 用戶或助手).
-    "defaultCalendarTaskId": "__user__",
+    # Default create target for assistant chat / pure-voice (system workset).
+    "defaultWorksetId": SYSTEM_WORKSET_ID,
 }
 
 
@@ -190,13 +191,13 @@ def _sanitize_tts_voice_uri(value: Any) -> str:
     return trimmed[:512]
 
 
-def _sanitize_default_calendar_task_id(value: Any) -> str:
-    """Empty / missing → ``__user__``; otherwise trimmed task id (max 128)."""
+def _sanitize_default_workset_id(value: Any) -> str:
+    """Empty / missing → system workset; otherwise trimmed workset id (max 128)."""
     if not isinstance(value, str):
-        return str(_DEFAULT_VOICE_IO["defaultCalendarTaskId"])
+        return str(_DEFAULT_VOICE_IO["defaultWorksetId"])
     trimmed = value.strip()
-    if not trimmed or trimmed == "__user__":
-        return "__user__"
+    if not trimmed or trimmed == SYSTEM_WORKSET_ID:
+        return SYSTEM_WORKSET_ID
     return trimmed[:128]
 
 
@@ -217,7 +218,7 @@ def sanitize_assistant_voice_io(raw: Any) -> dict[str, Any]:
         ),
         "spacePttMode": ptt if ptt in _SPACE_PTT_MODES else _DEFAULT_VOICE_IO["spacePttMode"],
         "ttsVoiceUri": _sanitize_tts_voice_uri(data.get("ttsVoiceUri")),
-        "defaultCalendarTaskId": _sanitize_default_calendar_task_id(data.get("defaultCalendarTaskId")),
+        "defaultWorksetId": _sanitize_default_workset_id(data.get("defaultWorksetId")),
     }
 
 

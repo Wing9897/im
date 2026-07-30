@@ -51,7 +51,7 @@ vi.mock("../api/uiPrefs", () => ({
   }) => ({
     configured: true,
     layout: body.layout ?? null,
-    widgetState: body.widgetState ?? { mapViews: {}, taskFilters: {} },
+    widgetState: body.widgetState ?? { mapViews: {}, sourceFilters: {} },
   })),
 }));
 

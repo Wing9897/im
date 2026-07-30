@@ -37,21 +37,40 @@ def test_sanitize_voice_settings_defaults_and_leads() -> None:
         {
             "enabled": True,
             "leadOffsetsMinutes": [60, 15, 99, 15],
-            "taskIds": ["a", "", "a", "b"],
+            "sourceFilter": {
+                "taskIds": ["a", "", "a", "b"],
+                "worksetIds": ["__user__", "ws-1", "ws-1"],
+            },
             "preambleChimeId": "soft-bell",
             "quietHours": {"enabled": False, "start": "bad", "end": "08:30"},
         }
     )
     assert clean["enabled"] is True
     assert clean["leadOffsetsMinutes"] == [15, 60]
-    assert clean["taskIds"] == ["a", "b"]
+    assert clean["sourceFilter"] == {
+        "taskIds": ["a", "b"],
+        "worksetIds": ["__user__", "ws-1"],
+    }
     assert clean["preambleChimeId"] == "broadcast"
     assert clean["quietHours"] == {"enabled": False, "start": "22:00", "end": "08:30"}
+    assert "taskIds" not in clean
 
-    missing_tasks = sanitize_voice_settings({"enabled": False})
-    assert missing_tasks["taskIds"] == ["__user__"]
-    assert sanitize_voice_settings({"taskIds": []})["taskIds"] == []
-
+    missing = sanitize_voice_settings({"enabled": False})
+    assert missing["sourceFilter"] == {"taskIds": [], "worksetIds": ["__user__"]}
+    assert sanitize_voice_settings({"sourceFilter": None})["sourceFilter"] is None
+    # Flat legacy taskIds discarded → default (no silent upgrade).
+    assert sanitize_voice_settings({"taskIds": []})["sourceFilter"] == {
+        "taskIds": [],
+        "worksetIds": ["__user__"],
+    }
+    assert sanitize_voice_settings({"taskIds": ["__user__", "t1"]})["sourceFilter"] == {
+        "taskIds": [],
+        "worksetIds": ["__user__"],
+    }
+    assert sanitize_voice_settings({"sourceFilter": ["t1"]})["sourceFilter"] == {
+        "taskIds": [],
+        "worksetIds": ["__user__"],
+    }
 
 def test_sanitize_voice_history_caps_at_100() -> None:
     rows = [
@@ -114,7 +133,10 @@ async def test_board_roundtrip(client, app) -> None:
     }
     widget_state = {
         "mapViews": {"map-1": {"center": [20.0, 0.0], "zoom": 2}},
-        "taskFilters": {"gantt-1": ["task-a", "task-b"], "gantt-2": None},
+        "sourceFilters": {
+            "gantt-1": {"taskIds": ["task-a", "task-b"], "worksetIds": []},
+            "gantt-2": None,
+        },
         "ganttViewModes": {"gantt-1": "day", "gantt-2": "month", "bad": "week"},
     }
     put = await client.put(
@@ -127,8 +149,11 @@ async def test_board_roundtrip(client, app) -> None:
     assert body["layout"]["version"] == 14
     assert body["layout"]["widgets"][0]["i"] == "map-1"
     assert body["widgetState"]["mapViews"]["map-1"]["zoom"] == 2.0
-    assert body["widgetState"]["taskFilters"]["gantt-1"] == ["task-a", "task-b"]
-    assert body["widgetState"]["taskFilters"]["gantt-2"] is None
+    assert body["widgetState"]["sourceFilters"]["gantt-1"] == {
+        "taskIds": ["task-a", "task-b"],
+        "worksetIds": [],
+    }
+    assert body["widgetState"]["sourceFilters"]["gantt-2"] is None
     assert body["widgetState"]["ganttViewModes"] == {"gantt-1": "day", "gantt-2": "month"}
 
     again = await client.get("/api/v1/ui-prefs/board")
@@ -142,6 +167,37 @@ async def test_board_roundtrip(client, app) -> None:
     assert await get_config(app.state.db, KEY_OPS_BOARD_LAYOUT) == ""
 
 
+async def test_board_source_filters_hierarchical_shape(client) -> None:
+    """Ownership v3 tree filter persists as {taskIds, worksetIds}; flat discarded."""
+    put = await client.put(
+        "/api/v1/ui-prefs/board",
+        json={
+            "widgetState": {
+                "mapViews": {},
+                "sourceFilters": {
+                    "events-1": {
+                        "taskIds": ["t1", "t1", ""],
+                        "worksetIds": ["__user__", "ws-a"],
+                    },
+                    "legacy-flat": ["old-a", "old-b"],
+                    "bad-shape": {"taskIds": "nope"},
+                    "all-sources": None,
+                },
+                "ganttViewModes": {},
+            }
+        },
+    )
+    assert put.status_code == 200
+    filters = put.json()["widgetState"]["sourceFilters"]
+    assert filters["events-1"] == {
+        "taskIds": ["t1"],
+        "worksetIds": ["__user__", "ws-a"],
+    }
+    assert "legacy-flat" not in filters
+    assert "bad-shape" not in filters
+    assert filters["all-sources"] is None
+
+
 async def test_board_partial_put_and_clear(client) -> None:
     await client.put(
         "/api/v1/ui-prefs/board",
@@ -150,7 +206,7 @@ async def test_board_partial_put_and_clear(client) -> None:
                 "version": 14,
                 "widgets": [{"i": "a", "type": "feed", "col": 1, "row": 1, "sizeId": "2x2"}],
             },
-            "widgetState": {"mapViews": {}, "taskFilters": {}, "ganttViewModes": {}},
+            "widgetState": {"mapViews": {}, "sourceFilters": {}, "ganttViewModes": {}},
         },
     )
     only_layout = await client.put(
@@ -166,7 +222,7 @@ async def test_board_partial_put_and_clear(client) -> None:
     assert only_layout.json()["layout"]["widgets"][0]["i"] == "b"
     assert only_layout.json()["widgetState"] == {
         "mapViews": {},
-        "taskFilters": {},
+        "sourceFilters": {},
         "ganttViewModes": {},
     }
 
@@ -215,7 +271,7 @@ async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
             "settings": {
                 "enabled": True,
                 "leadOffsetsMinutes": [240, 15],
-                "taskIds": ["__user__"],
+                "sourceFilter": {"taskIds": [], "worksetIds": ["__user__"]},
                 "preambleChimeId": "airport",
                 "quietHours": {"enabled": True, "start": "23:00", "end": "06:00"},
             }
@@ -225,6 +281,7 @@ async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
     settings = put.json()["settings"]
     assert settings["enabled"] is True
     assert settings["leadOffsetsMinutes"] == [15, 240]
+    assert settings["sourceFilter"] == {"taskIds": [], "worksetIds": ["__user__"]}
     assert settings["preambleChimeId"] == "airport"
     stored = await _ui_pref_payload(app.state.db, KEY_VOICE_REMINDER_SETTINGS)
     assert stored is not None
@@ -513,7 +570,7 @@ async def test_assistant_voice_io_roundtrip(client, app) -> None:
     assert body["settings"]["ttsEnabled"] is False
     assert body["settings"]["speechLanguage"] == "en-US"
     assert body["settings"]["spacePttMode"] == "hold"
-    assert body["settings"]["defaultCalendarTaskId"] == "__user__"
+    assert body["settings"]["defaultWorksetId"] == "__user__"
     assert "Tracy" in body["settings"]["ttsVoiceUri"]
     stored_voice = await _ui_pref_payload(app.state.db, "assistant_voice_io_settings")
     assert stored_voice is not None and "ttsEnabled" in stored_voice
@@ -528,13 +585,13 @@ async def test_assistant_voice_io_roundtrip(client, app) -> None:
                 "ttsEnabled": False,
                 "speechLanguage": "en-US",
                 "spacePttMode": "toggle",
-                "defaultCalendarTaskId": "memo-task-1",
+                "defaultWorksetId": "memo-task-1",
             }
         },
     )
     assert put_toggle.status_code == 200
     assert put_toggle.json()["settings"]["spacePttMode"] == "toggle"
-    assert put_toggle.json()["settings"]["defaultCalendarTaskId"] == "memo-task-1"
+    assert put_toggle.json()["settings"]["defaultWorksetId"] == "memo-task-1"
 
 
 async def test_timeline_annotations_roundtrip_and_sanitize(client, app) -> None:

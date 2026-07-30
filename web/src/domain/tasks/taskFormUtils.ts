@@ -63,9 +63,10 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     analysisMode: formState.analysisMode,
     scheduleType: formState.scheduleType,
     scheduleValue: formState.scheduleValue,
+    worksetId: formState.worksetId,
   } satisfies Pick<
     TaskConfig,
-    "name" | "description" | "analysisMode" | "scheduleType" | "scheduleValue"
+    "name" | "description" | "analysisMode" | "scheduleType" | "scheduleValue" | "worksetId"
   >;
 
   if (formState.analysisMode === "calendar_task") {
@@ -147,6 +148,7 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
       task.analysisStrategyMode === "aggressive"
         ? task.analysisStrategyMode
         : null,
+    worksetId: task.worksetId ?? null,
   };
 }
 
@@ -187,6 +189,7 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
       config.analysisStrategyMode === "aggressive"
         ? config.analysisStrategyMode
         : null,
+    worksetId: config.worksetId ?? null,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   };

@@ -36,6 +36,8 @@ describe("apiDocs examples", () => {
     expect(body).toContain("intelligencemonitor://calendar/import?url=");
     expect(body).toContain("intelligencemonitor://calendar/import?title=Team%20sync");
     expect(body).toContain("start=2026-07-29T10%3A00%3A00Z");
+    expect(body).toContain("worksetId=ws-1");
+    expect(body).not.toContain("taskId=");
     expect(body).toContain("Fetch remote ICS:");
     expect(body).toContain("Inline event (no ICS):");
   });

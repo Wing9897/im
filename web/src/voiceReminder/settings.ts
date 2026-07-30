@@ -2,6 +2,8 @@ import {
   fetchVoiceReminderSettings,
   putVoiceReminderSettings,
 } from "../api/uiPrefs";
+import type { SourceFilterSelection } from "../domain/tasks/sourceFilterSelection";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { logWarn } from "../utils/logger";
 import {
   DEFAULT_PREAMBLE_CHIME_ID,
@@ -27,10 +29,11 @@ export interface VoiceReminderSettings {
   /** Minutes before start to speak; multi-select from LEAD_OFFSET_OPTIONS. */
   leadOffsetsMinutes: LeadOffsetMinutes[];
   /**
-   * Task ids (event / recurring / calendar_task) and `__user__` whose timed items to watch.
-   * Empty = all reminder sources. Default is `["__user__"]` (用戶或助手 only).
+   * Hierarchical source selection (task ids for event / recurring /
+   * calendar_task) plus workset ids (incl. builtin `__user__` for 一般).
+   * `null` = all sources. Default is `__user__` workset only.
    */
-  taskIds: string[];
+  sourceFilter: SourceFilterSelection;
   /** Attention chime played before TTS. */
   preambleChimeId: PreambleChimeId;
   /** Local quiet period; reminders remain pending until its next eligible scan. */
@@ -40,7 +43,7 @@ export interface VoiceReminderSettings {
 export const DEFAULT_VOICE_REMINDER_SETTINGS: VoiceReminderSettings = {
   enabled: false,
   leadOffsetsMinutes: [60],
-  taskIds: ["__user__"],
+  sourceFilter: { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
   preambleChimeId: DEFAULT_PREAMBLE_CHIME_ID,
   quietHours: { enabled: true, start: "22:00", end: "07:00" },
 };
@@ -67,10 +70,8 @@ function sanitizeLeadOffsets(value: unknown): LeadOffsetMinutes[] {
   return LEAD_OFFSET_OPTIONS.filter((offset) => seen.has(offset));
 }
 
-function sanitizeTaskIds(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [...DEFAULT_VOICE_REMINDER_SETTINGS.taskIds];
-  }
+function sanitizeIdList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
   const ids: string[] = [];
   const seen = new Set<string>();
   for (const item of value) {
@@ -80,6 +81,25 @@ function sanitizeTaskIds(value: unknown): string[] {
     }
   }
   return ids;
+}
+
+function sanitizeSourceFilter(raw: unknown, data: Record<string, unknown>): SourceFilterSelection {
+  // Explicit null = all sources.
+  if ("sourceFilter" in data && data.sourceFilter === null) {
+    return null;
+  }
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const obj = raw as { taskIds?: unknown; worksetIds?: unknown };
+    return {
+      taskIds: sanitizeIdList(obj.taskIds),
+      worksetIds: sanitizeIdList(obj.worksetIds),
+    };
+  }
+  // Hard-cut: ignore legacy flat `taskIds`; missing sourceFilter → default.
+  return {
+    taskIds: [...(DEFAULT_VOICE_REMINDER_SETTINGS.sourceFilter?.taskIds ?? [])],
+    worksetIds: [...(DEFAULT_VOICE_REMINDER_SETTINGS.sourceFilter?.worksetIds ?? [])],
+  };
 }
 
 function sanitizeTime(value: unknown, fallback: string): string {
@@ -100,10 +120,13 @@ function sanitizeQuietHours(value: unknown): VoiceReminderSettings["quietHours"]
 }
 
 function cloneDefaults(): VoiceReminderSettings {
+  const filter = DEFAULT_VOICE_REMINDER_SETTINGS.sourceFilter;
   return {
     ...DEFAULT_VOICE_REMINDER_SETTINGS,
     leadOffsetsMinutes: [...DEFAULT_VOICE_REMINDER_SETTINGS.leadOffsetsMinutes],
-    taskIds: [...DEFAULT_VOICE_REMINDER_SETTINGS.taskIds],
+    sourceFilter: filter
+      ? { taskIds: [...filter.taskIds], worksetIds: [...filter.worksetIds] }
+      : null,
     quietHours: { ...DEFAULT_VOICE_REMINDER_SETTINGS.quietHours },
   };
 }
@@ -112,24 +135,28 @@ function cloneDefaults(): VoiceReminderSettings {
 export function normalizeVoiceReminderSettings(
   raw: Partial<VoiceReminderSettings> | Record<string, unknown> | null | undefined,
 ): VoiceReminderSettings {
-  const parsed = (raw ?? {}) as Partial<VoiceReminderSettings>;
+  const data = (raw ?? {}) as Record<string, unknown>;
+  const parsed = data as Partial<VoiceReminderSettings>;
   return {
     enabled:
       typeof parsed.enabled === "boolean"
         ? parsed.enabled
         : DEFAULT_VOICE_REMINDER_SETTINGS.enabled,
     leadOffsetsMinutes: sanitizeLeadOffsets(parsed.leadOffsetsMinutes),
-    taskIds: sanitizeTaskIds(parsed.taskIds),
+    sourceFilter: sanitizeSourceFilter(parsed.sourceFilter, data),
     preambleChimeId: sanitizePreambleChimeId(parsed.preambleChimeId),
     quietHours: sanitizeQuietHours(parsed.quietHours),
   };
 }
 
 function setCache(settings: VoiceReminderSettings, notify: boolean): void {
+  const filter = settings.sourceFilter;
   cachedSettings = {
     enabled: settings.enabled,
     leadOffsetsMinutes: [...settings.leadOffsetsMinutes],
-    taskIds: [...settings.taskIds],
+    sourceFilter: filter
+      ? { taskIds: [...filter.taskIds], worksetIds: [...filter.worksetIds] }
+      : null,
     preambleChimeId: settings.preambleChimeId,
     quietHours: { ...settings.quietHours },
   };
@@ -141,10 +168,13 @@ function setCache(settings: VoiceReminderSettings, notify: boolean): void {
 /** Sync read from memory cache (defaults before hydrate). */
 export function loadVoiceReminderSettings(): VoiceReminderSettings {
   if (cachedSettings) {
+    const filter = cachedSettings.sourceFilter;
     return {
       enabled: cachedSettings.enabled,
       leadOffsetsMinutes: [...cachedSettings.leadOffsetsMinutes],
-      taskIds: [...cachedSettings.taskIds],
+      sourceFilter: filter
+        ? { taskIds: [...filter.taskIds], worksetIds: [...filter.worksetIds] }
+        : null,
       preambleChimeId: cachedSettings.preambleChimeId,
       quietHours: { ...cachedSettings.quietHours },
     };

@@ -29,12 +29,12 @@ describe('calendar-import argv / protocol', () => {
 
   it('parses inline deep link draft', async () => {
     const message = await messageFromProtocolUrl(
-      'intelligencemonitor://calendar/import?title=Meet&start=2026-07-29T10:00:00Z&end=2026-07-29T11:00:00Z&location=A&body=Hi&taskId=task-1',
+      'intelligencemonitor://calendar/import?title=Meet&start=2026-07-29T10:00:00Z&end=2026-07-29T11:00:00Z&location=A&body=Hi&worksetId=ws-1',
     );
     expect(message.ok).toBe(true);
     if (!message.ok) return;
     expect(message.draft.title).toBe('Meet');
-    expect(message.draft.taskId).toBe('task-1');
+    expect(message.draft.worksetId).toBe('ws-1');
     expect(message.draft.source).toBe('deeplink');
   });
 

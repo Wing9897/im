@@ -1,8 +1,4 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import {
-  loadTaskFilterIds,
-  saveTaskFilterIds,
-} from "./useBoardTaskFilter";
 import { resolveBoardMapBootView } from "./embeds/MapBoardEmbed";
 import {
   loadBoardMapViewFromCache,
@@ -14,7 +10,6 @@ import { createDefaultBoardConfig } from "./boardLayoutParse";
 import { LEGACY_BOARD_STORAGE_KEY } from "./boardLegacyPersistedKeys";
 import { putBoardPrefs } from "../api/uiPrefs";
 
-
 vi.mock("../api/uiPrefs", () => ({
   fetchBoardPrefs: vi.fn(),
   putBoardPrefs: vi.fn(async (body) => ({
@@ -24,22 +19,7 @@ vi.mock("../api/uiPrefs", () => ({
   })),
 }));
 
-describe("useBoardTaskFilter persistence", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-    resetBoardPrefsCacheForTests();
-    seedBoardPrefsCacheForTests(createDefaultBoardConfig());
-    vi.clearAllMocks();
-  });
-
-  it("persists selected task ids per widget id in widgetState cache", () => {
-    saveTaskFilterIds("w-gantt", ["a", "b"]);
-    expect(loadTaskFilterIds("w-gantt")).toEqual(["a", "b"]);
-    saveTaskFilterIds("w-gantt", null);
-    expect(loadTaskFilterIds("w-gantt")).toBeNull();
-    expect(window.localStorage.getItem(LEGACY_BOARD_STORAGE_KEY)).toBeNull();
-  });
-});
+/** sourceFilters persist coverage lives in boardPrefsStore.test.ts */
 
 describe("board map view persistence", () => {
   beforeEach(() => {

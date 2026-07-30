@@ -1,36 +1,37 @@
+/**
+ * User-event helpers: provenance task ids vs ownership workset ids.
+ *
+ * - `taskId` on user_events = analysis-task provenance only (never `__user__`).
+ * - `worksetId` = ownership (builtin `__user__` displayed as「一般」).
+ */
+
 import i18n from "../../i18n";
 import {
   isTimelineAssignableAnalysisMode,
 } from "../tasks/analysisModeCapabilities";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 export { isTimelineAssignableAnalysisMode } from "../tasks/analysisModeCapabilities";
 
-/** Sentinel for the toolbar filter: only user-authored events (manual + assistant). */
-export const USER_EVENTS_FILTER_ID = "__user__";
-
-/** Shared UI label for manual + assistant user events (follows active UI locale). */
-export function getUserEventsFilterLabel(): string {
-  return String(i18n.t("timeline:toolbar.userOrAssistant"));
-}
-
-/** True when a user_event has no owning analysis task (toolbar「用戶或助手」). */
-export function isUnassignedUserEventTaskId(taskId: string | null | undefined): boolean {
-  return taskId == null || taskId === "" || taskId === USER_EVENTS_FILTER_ID;
+/** Localized display name for builtin workset `__user__`. */
+export function getGeneralWorksetLabel(): string {
+  return String(i18n.t("common:workset.generalName"));
 }
 
 /**
- * Normalize a wire/form/filter task id:
- * unassigned → `__user__`; otherwise the real task id.
+ * True when analysis-task provenance is absent.
+ * Legacy wire may still carry `__user__` as a fake task id — treat as null provenance.
  */
-export function toUserEventWriteTaskId(taskId: string | null | undefined): string {
-  return isUnassignedUserEventTaskId(taskId) ? USER_EVENTS_FILTER_ID : String(taskId);
+export function isNullProvenanceTaskId(taskId: string | null | undefined): boolean {
+  return taskId == null || taskId === "" || taskId === SYSTEM_WORKSET_ID;
 }
 
-/** Form/select value for an event's task ownership (defaults to `__user__`). */
-export const toUserEventFormTaskId = toUserEventWriteTaskId;
-
-/** Board / timeline / voice filter id (same sentinel normalization as write). */
-export const toFilterTaskId = toUserEventWriteTaskId;
+/** Normalize ownership workset id for forms / prefs (empty → builtin `__user__`). */
+export function toUserEventFormWorksetId(worksetId: string | null | undefined): string {
+  if (typeof worksetId !== "string") return SYSTEM_WORKSET_ID;
+  const trimmed = worksetId.trim();
+  return trimmed || SYSTEM_WORKSET_ID;
+}
 
 type AssignableTaskLike = {
   id: string;
@@ -66,29 +67,36 @@ export type TaskNameLookup =
   | ReadonlyMap<string, string>
   | Readonly<Record<string, string>>;
 
+export type WorksetNameLookup =
+  | ReadonlyMap<string, string>
+  | Readonly<Record<string, string>>;
+
+function lookupName(id: string, names?: TaskNameLookup | WorksetNameLookup): string | undefined {
+  if (!names) return undefined;
+  return names instanceof Map
+    ? (names as ReadonlyMap<string, string>).get(id)
+    : (names as Readonly<Record<string, string>>)[id];
+}
+
 /**
- * Resolve display name for a user_event task id (unassigned → locale label).
- *
- * React callers pass `unassignedLabel` from `useUserEventsFilterLabel` so the
- * memo that wraps this call re-runs on a language switch.
+ * Display label for a user_event row's "source" column:
+ * 1. Real analysis-task provenance name when `taskId` is set
+ * 2. Else ownership workset name (`__user__` →「一般」)
  */
 export function resolveUserEventTaskName(
   taskId: string | null | undefined,
   taskNameById?: TaskNameLookup,
-  unassignedLabel?: string,
+  generalWorksetLabel?: string,
+  worksetId?: string | null,
+  worksetNameById?: WorksetNameLookup,
 ): string {
-  if (isUnassignedUserEventTaskId(taskId)) {
-    return unassignedLabel ?? getUserEventsFilterLabel();
+  if (!isNullProvenanceTaskId(taskId)) {
+    const id = String(taskId);
+    return lookupName(id, taskNameById) ?? id;
   }
-  const id = String(taskId);
-  if (!taskNameById) {
-    return id;
+  const wid = toUserEventFormWorksetId(worksetId);
+  if (wid === SYSTEM_WORKSET_ID) {
+    return generalWorksetLabel ?? getGeneralWorksetLabel();
   }
-  // `instanceof Map` widens to `Map<any, any>` rather than narrowing the union,
-  // so both arms need an explicit cast.
-  const name =
-    taskNameById instanceof Map
-      ? (taskNameById as ReadonlyMap<string, string>).get(id)
-      : (taskNameById as Readonly<Record<string, string>>)[id];
-  return name ?? id;
+  return lookupName(wid, worksetNameById) ?? wid;
 }

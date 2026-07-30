@@ -2,9 +2,13 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("../context/TaskCatalogContext", async () =>
+  (await import("../test/context-mocks")).taskCatalogModuleMock());
+
 import { TaskCard } from "./TaskCard";
 import type { TaskCardProps, TaskCardStats } from "./TaskCard";
 import type { AnalysisTask } from "../types/tasks";
+import { resetTaskCatalogState, taskCatalogState } from "../test/context-mocks";
 
 function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
   return {
@@ -38,6 +42,7 @@ describe("TaskCard", () => {
   let root: Root | null = null;
 
   beforeEach(() => {
+    resetTaskCatalogState();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -147,6 +152,24 @@ describe("TaskCard", () => {
   it("omits AI staff avatar for calendar tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "recurring" }) });
     expect(container.querySelector('[data-testid^="ai-staff-avatar-"]')).toBeNull();
+  });
+
+  it("shows the workset name when the task has a worksetId", () => {
+    taskCatalogState.worksets = [
+      { id: "ws-1", name: "Ops", createdAt: null, updatedAt: null },
+    ];
+    renderCard({ task: createMockTask({ worksetId: "ws-1" }) });
+
+    expect(container.textContent).toContain("Ops");
+  });
+
+  it("omits the workset label when the task has no worksetId", () => {
+    taskCatalogState.worksets = [
+      { id: "ws-1", name: "Ops", createdAt: null, updatedAt: null },
+    ];
+    renderCard({ task: createMockTask({ worksetId: null }) });
+
+    expect(container.textContent).not.toContain("Ops");
   });
 
   it("calls onEdit when edit button is clicked", () => {

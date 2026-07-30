@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  USER_EVENTS_FILTER_ID,
-  getUserEventsFilterLabel,
-} from "../domain/timeline/userEvents";
+import { getGeneralWorksetLabel } from "../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import i18n from "../i18n";
 import { setAppLocale } from "../i18n/locale";
 import {
@@ -10,7 +8,7 @@ import {
   buildSpeakText,
   collectDueReminders,
   computeFetchRange,
-  filterEventsByTaskIds,
+  filterEventsBySourceFilter,
   formatLeadSpeakPhrase,
   getMaxLeadMinutes,
   hydrateFiredKeys,
@@ -88,8 +86,8 @@ describe("voiceReminder scanner", () => {
       expect(buildSpeakText("", "會議", 60)).toBe(
         "關鍵事件「會議」，還有約一小時",
       );
-      expect(buildSpeakText(getUserEventsFilterLabel(), "用戶提醒", 15, "user")).toBe(
-        `任務「${getUserEventsFilterLabel()}」，提醒「用戶提醒」，還有約十五分鐘`,
+      expect(buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user")).toBe(
+        `工作集「${getGeneralWorksetLabel()}」，提醒「用戶提醒」，還有約十五分鐘`,
       );
       expect(buildSpeakText("週會", "站立會議", 15, "recurring")).toBe(
         "任務「週會」，循環任務「站立會議」，還有約十五分鐘",
@@ -101,13 +99,13 @@ describe("voiceReminder scanner", () => {
         {
           id: "ue-1",
           taskId: null,
-          taskName: getUserEventsFilterLabel(),
+          taskName: getGeneralWorksetLabel(),
           title: "用戶提醒",
           startTime: "2026-07-20T10:00:00.000Z",
         },
       ]);
       expect(timed).toHaveLength(1);
-      expect(timed[0]?.taskName).toBe(getUserEventsFilterLabel());
+      expect(timed[0]?.taskName).toBe(getGeneralWorksetLabel());
     });
 
     it("computes remindAt as start minus lead for due window", () => {
@@ -135,16 +133,50 @@ describe("voiceReminder scanner", () => {
     });
   });
 
-  describe("filter by taskIds", () => {
-    it("empty ids keeps all; non-empty filters", () => {
+  describe("filter by source selection", () => {
+    it("null selection keeps all; explicit taskIds filters", () => {
       const items = [
         makeEvent({ id: "a", taskId: "t1" }),
         makeEvent({ id: "b", taskId: "t2" }),
       ];
-      expect(filterEventsByTaskIds(items, [])).toHaveLength(2);
-      expect(filterEventsByTaskIds(items, ["t2"]).map((o) => o.id)).toEqual([
-        "b",
-      ]);
+      expect(filterEventsBySourceFilter(items, null)).toHaveLength(2);
+      expect(
+        filterEventsBySourceFilter(items, { taskIds: ["t2"], worksetIds: [] }).map(
+          (o) => o.id,
+        ),
+      ).toEqual(["b"]);
+    });
+
+    it("expands selected worksets to member task ids via the catalog", () => {
+      const items = [
+        makeEvent({ id: "a", taskId: "t1" }),
+        makeEvent({ id: "b", taskId: "t2" }),
+      ];
+      const catalogTasks = [{ id: "t1", worksetId: "ws-1" }, { id: "t2", worksetId: null }];
+      expect(
+        filterEventsBySourceFilter(
+          items,
+          { taskIds: [], worksetIds: ["ws-1"] },
+          catalogTasks,
+        ).map((o) => o.id),
+      ).toEqual(["a"]);
+    });
+
+    it("matches event.worksetId directly without requiring a taskId", () => {
+      const items = [
+        makeEvent({ id: "owned", taskId: null, worksetId: "ws-1" }),
+        makeEvent({ id: "other", taskId: "t2", worksetId: "ws-2" }),
+      ];
+      expect(
+        filterEventsBySourceFilter(items, { taskIds: [], worksetIds: ["ws-1"] }).map(
+          (o) => o.id,
+        ),
+      ).toEqual(["owned"]);
+    });
+
+    it("empty selection (no tasks, no worksets) excludes everything", () => {
+      const items = [makeEvent({ id: "a", taskId: "t1" })];
+      expect(filterEventsBySourceFilter(items, { taskIds: [], worksetIds: [] })).toEqual([]);
     });
   });
 
@@ -160,7 +192,7 @@ describe("voiceReminder scanner", () => {
   });
 
   describe("userEventsToTimedKeyEvents", () => {
-    it("maps unassigned rows to __user__ and tagged rows to their task id", () => {
+    it("keeps taskId as provenance and ownership on worksetId", () => {
       const timed = userEventsToTimedKeyEvents(
         [
           {
@@ -168,12 +200,14 @@ describe("voiceReminder scanner", () => {
             title: "Unassigned",
             startTime: "2026-07-20T10:00:00.000Z",
             taskId: "",
+            worksetId: SYSTEM_WORKSET_ID,
           },
           {
             id: "ue-tagged",
             title: "Tagged",
             startTime: "2026-07-20T11:00:00.000Z",
             taskId: "ct-1",
+            worksetId: "ws-1",
           },
         ],
         new Map([["ct-1", "日曆任務"]]),
@@ -181,21 +215,35 @@ describe("voiceReminder scanner", () => {
       expect(timed).toEqual([
         expect.objectContaining({
           id: "ue-unassigned",
-          taskId: USER_EVENTS_FILTER_ID,
-          taskName: getUserEventsFilterLabel(),
+          taskId: null,
+          worksetId: SYSTEM_WORKSET_ID,
+          taskName: getGeneralWorksetLabel(),
           kind: "user",
         }),
         expect.objectContaining({
           id: "ue-tagged",
           taskId: "ct-1",
+          worksetId: "ws-1",
           taskName: "日曆任務",
           kind: "user",
         }),
       ]);
-      expect(filterEventsByTaskIds(timed, [USER_EVENTS_FILTER_ID]).map((e) => e.id)).toEqual([
-        "ue-unassigned",
-      ]);
-      expect(filterEventsByTaskIds(timed, ["ct-1"]).map((e) => e.id)).toEqual(["ue-tagged"]);
+      expect(
+        filterEventsBySourceFilter(timed, {
+          taskIds: [],
+          worksetIds: [SYSTEM_WORKSET_ID],
+        }).map((e) => e.id),
+      ).toEqual(["ue-unassigned"]);
+      expect(
+        filterEventsBySourceFilter(timed, { taskIds: [], worksetIds: ["ws-1"] }).map(
+          (e) => e.id,
+        ),
+      ).toEqual(["ue-tagged"]);
+      expect(
+        filterEventsBySourceFilter(timed, { taskIds: ["ct-1"], worksetIds: [] }).map(
+          (e) => e.id,
+        ),
+      ).toEqual(["ue-tagged"]);
     });
   });
 

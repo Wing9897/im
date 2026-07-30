@@ -43,6 +43,7 @@ from server.http_limits import (
 from server.paths import default_db_path, ensure_data_dir
 from server.runtime_ready import RuntimeReadyMiddleware
 from server.schema_lifecycle import SchemaLifecycle
+from server.secrets_probe import probe_stored_secrets
 from server.sse import SseBroadcaster
 from server.static_files import mount_static_files
 
@@ -138,14 +139,31 @@ async def _lifespan_impl(
     app.state.analysis_engine = None
     app.state.scheduler = None
     app.state.collector = None
+    # Default ready until a probe runs; only a failed decrypt flips this False.
+    app.state.secrets_ready = True
+    app.state.secrets_error = None
 
     fingerprint = await inspect_schema(db.conn)
     needs_upgrade = migration_pending(fingerprint.version)
     backfill_task: asyncio.Task[None] | None = None
 
+    async def apply_secrets_probe() -> bool:
+        ready, err = await probe_stored_secrets(db)
+        app.state.secrets_ready = ready
+        app.state.secrets_error = err
+        if not ready:
+            logger.error(
+                "Stored secrets cannot be decrypted — business APIs paused until rotate-secrets "
+                "(or full reset): %s",
+                err,
+            )
+        return ready
+
     async def finish_runtime() -> None:
         nonlocal backfill_task
         if backfill_task is not None:
+            return
+        if not await apply_secrets_probe():
             return
         backfill_task = await _start_runtime_services(
             app,
@@ -155,6 +173,7 @@ async def _lifespan_impl(
         )
 
     lifecycle.bind_finish_runtime(finish_runtime)
+    app.state.ensure_runtime_started = finish_runtime
 
     try:
         if needs_upgrade:
@@ -174,12 +193,7 @@ async def _lifespan_impl(
             # before starting collector/scheduler.
             await lifecycle.verify_after_stamp_or_ready()
             if lifecycle.runtime_ready:
-                backfill_task = await _start_runtime_services(
-                    app,
-                    db,
-                    start_collector=start_collector,
-                    start_scheduler=start_scheduler,
-                )
+                await finish_runtime()
             else:
                 logger.warning(
                     "Startup data verification blocked runtime (state=%s): %s",

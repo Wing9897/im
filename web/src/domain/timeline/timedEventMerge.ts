@@ -1,25 +1,29 @@
 import type { UserEvent } from "../../api/userEvents";
 import { listUserEvents } from "../../api/userEvents";
 import { fetchCalendarOccurrences, fetchEvents } from "../../api/results";
-import {
-  toFilterTaskId,
-  resolveUserEventTaskName,
-} from "./userEvents";
+import { resolveUserEventTaskName } from "./userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
 
 /**
  * Projects manual / assistant events into the shared timed-event contract
- * (board widgets + timeline). Unassigned → `__user__` filter sentinel.
+ * (board widgets + timeline).
+ *
+ * - `taskId`: analysis-task provenance only (empty → null); never ownership.
+ * - `worksetId`: ownership (DDL NOT NULL; defaults to builtin system workset).
  */
 export function userEventToBoardEvent(
   event: UserEvent,
   taskNameById?: ReadonlyMap<string, string>,
-  unassignedLabel?: string,
+  generalWorksetLabel?: string,
+  worksetNameById?: ReadonlyMap<string, string>,
 ): AnalysisEvent {
+  const provenance = typeof event.taskId === "string" ? event.taskId.trim() : "";
+  const worksetId = event.worksetId?.trim() || SYSTEM_WORKSET_ID;
   return {
     id: event.id,
-    taskId: toFilterTaskId(event.taskId),
+    taskId: provenance || null,
     version: 1,
     batchId: "",
     title: event.title,
@@ -36,12 +40,19 @@ export function userEventToBoardEvent(
     sourceMessageTime: null,
     analysisTimeRange: null,
     batchSourceChannelNames: [],
-    taskName: resolveUserEventTaskName(event.taskId, taskNameById, unassignedLabel),
+    taskName: resolveUserEventTaskName(
+      event.taskId,
+      taskNameById,
+      generalWorksetLabel,
+      worksetId,
+      worksetNameById,
+    ),
     createdAt: event.createdAt,
     updatedAt: event.updatedAt,
     source: "user",
     origin: event.origin,
     dismissed: Boolean(event.dismissed),
+    worksetId,
   };
 }
 
@@ -49,10 +60,11 @@ export function userEventToBoardEvent(
 export function userEventToTimelineItem(
   event: UserEvent,
   taskNameById?: ReadonlyMap<string, string>,
-  unassignedLabel?: string,
+  generalWorksetLabel?: string,
+  worksetNameById?: ReadonlyMap<string, string>,
 ): TimelineItem | null {
   return asTimedAnalysisEvent(
-    userEventToBoardEvent(event, taskNameById, unassignedLabel),
+    userEventToBoardEvent(event, taskNameById, generalWorksetLabel, worksetNameById),
   );
 }
 
@@ -64,13 +76,20 @@ export function userEventToTimelineItem(
 export function withResolvedUserEventTaskNames(
   events: readonly AnalysisEvent[],
   taskNameById: ReadonlyMap<string, string>,
-  unassignedLabel?: string,
+  generalWorksetLabel?: string,
+  worksetNameById?: ReadonlyMap<string, string>,
 ): AnalysisEvent[] {
   return events.map((event) =>
     event.source === "user"
       ? {
           ...event,
-          taskName: resolveUserEventTaskName(event.taskId, taskNameById, unassignedLabel),
+          taskName: resolveUserEventTaskName(
+            event.taskId,
+            taskNameById,
+            generalWorksetLabel,
+            event.worksetId,
+            worksetNameById,
+          ),
         }
       : event,
   );

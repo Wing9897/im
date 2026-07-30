@@ -11,7 +11,7 @@
   padding: var(--spacing-md, 12px) var(--spacing-page-x, 20px) var(--spacing-md, 12px);
 }
 
-/* Ops bar — single-row flex (search/sort/time · task/view). */
+/* Ops bar — single-row flex (source filter · sort/time · search/view). */
 .im-intelligence-toolbar {
   margin-bottom: 10px;
   min-height: 40px;
@@ -43,7 +43,7 @@
 
 /* Match search PillButton height in the dense row. */
 .im-intelligence-toolbar [data-testid="intelligence-search-filter-button"],
-.im-intelligence-toolbar [data-testid="board-task-filter"] {
+.im-intelligence-toolbar [data-testid="board-source-filter"] {
   height: 30px;
   min-height: 30px;
   box-sizing: border-box;

@@ -9,9 +9,9 @@
     "viewAria": "檢視模式"
   },
   "filter": {
-    "openAria": "搜索與篩選事件",
-    "title": "搜索與篩選事件",
-    "closeAria": "關閉搜索與篩選",
+    "openAria": "搜尋關鍵事件",
+    "title": "搜尋關鍵事件",
+    "closeAria": "關閉搜尋",
     "clear": "清除",
     "clearAria": "清除搜尋條件",
     "done": "完成",

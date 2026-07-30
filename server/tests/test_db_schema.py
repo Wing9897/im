@@ -22,7 +22,7 @@ from server.db.migrations import (
 from server.db.schema import DDL
 from server.tests.schema_fixtures import make_existing_db, make_lookalike_db
 
-_REQUIRED_TABLE_COUNT = 25
+_REQUIRED_TABLE_COUNT = 26
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 
@@ -204,7 +204,7 @@ async def test_incomplete_lookalike_is_rejected_without_mutation(tmp_path, versi
 
 
 def test_migration_registry_ends_at_current_and_validates_fake_chains():
-    """Empty wipe-only registry is valid; validator still rejects malformed chains."""
+    """Live registry ends at current; validator still rejects malformed chains."""
 
     async def no_op(_conn: aiosqlite.Connection) -> None:
         return None
@@ -214,8 +214,7 @@ def test_migration_registry_ends_at_current_and_validates_fake_chains():
         MigrationStep(2, 3, no_op),
         MigrationStep(3, 4, no_op),
     )
-    # Wipe-only stamp-1 baseline: empty MigrationStep registry.
-    assert len(SCHEMA_MIGRATIONS) == 0
+    # Stamp-3 wipe-floor: empty SCHEMA_MIGRATIONS (DDL is sole truth).
     assert SCHEMA_MIGRATIONS == ()
     assert validate_migration_registry(SCHEMA_MIGRATIONS) == SCHEMA_MIGRATIONS
     assert validate_migration_registry((), current_version=CURRENT_SCHEMA_VERSION) == ()
@@ -239,11 +238,11 @@ def test_migration_registry_ends_at_current_and_validates_fake_chains():
 
 
 def test_upgrade_gate_opens_only_for_registered_prior_versions():
-    """Empty registry: no prior stamp opens the upgrade gate; only 0/1 are supported."""
+    """Wipe-floor stamp 3: no registered priors; upgrade gate stays closed."""
     from server.db.migrations import migration_pending
 
-    assert CURRENT_SCHEMA_VERSION == 1
-    assert len(SCHEMA_MIGRATIONS) == 0
+    assert CURRENT_SCHEMA_VERSION == 3
+    assert SCHEMA_MIGRATIONS == ()
     assert not any(migration_pending(version) for version in range(0, 25))
 
 
@@ -316,8 +315,10 @@ _HARD_REJECT_VERSIONS = [
     for version in range(1, CURRENT_SCHEMA_VERSION)
     if not any(step.source_version == version for step in SCHEMA_MIGRATIONS)
 ]
-# Pre-restart product stamps (2–24) are numerically "newer" than stamp 1 and hard-reject.
-_LEGACY_HARD_REJECT_VERSIONS = (2, 16, 23, 24)
+# Pre-restart product stamps above CURRENT hard-reject as "newer than supported".
+_LEGACY_HARD_REJECT_VERSIONS = tuple(
+    version for version in (3, 16, 23, 24) if version > CURRENT_SCHEMA_VERSION
+)
 
 
 @pytest.mark.parametrize(

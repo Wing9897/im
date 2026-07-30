@@ -5,6 +5,7 @@
 
 export const MSG_SPEAK_WITH_TASK = "messages.speakWithTask";
 export const MSG_SPEAK_WITHOUT_TASK = "messages.speakWithoutTask";
+export const MSG_SPEAK_WITH_WORKSET = "messages.speakWithWorkset";
 
 /** Monitor stream / wall status — `monitor` namespace (`monitor:stream.*`). */
 export const MSG_MONITOR_LOADING = "monitor:stream.loading";

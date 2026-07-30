@@ -42,9 +42,9 @@ class AgentChatBody(BaseModel):
     sessionId: Optional[str] = None
     #: Optional UI locale (`zh-Hant` | `zh-Hans` | `en`); falls back to server ``ui_locale``.
     locale: Optional[str] = None
-    #: Default target task for calendar.create_event when the tool omits taskId.
-    #: ``__user__`` / empty / omit → 用戶或助手 (NULL).
-    calendarTaskId: Optional[str] = None
+    #: Default target workset for calendar.create_event when the tool omits worksetId.
+    #: ``__user__`` / empty / omit → builtin system workset.
+    worksetId: Optional[str] = None
     #: Page gate: only ``task_editor`` enables ``tasks.consult_advisor``.
     surface: Optional[Literal["task_editor"]] = None
     #: Live task form draft for the advisor (same shape as chat-assistant).
@@ -83,7 +83,7 @@ async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse
                 body.messages,
                 session_id=body.sessionId,
                 locale=body.locale,
-                calendar_task_id=body.calendarTaskId,
+                workset_id=body.worksetId,
                 surface=body.surface,
                 current_task=body.currentTask.model_dump(exclude_none=True) if body.currentTask is not None else None,
             ),
@@ -130,7 +130,7 @@ async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingR
                         body.messages,
                         session_id=body.sessionId,
                         locale=body.locale,
-                        calendar_task_id=body.calendarTaskId,
+                        workset_id=body.worksetId,
                         surface=body.surface,
                         current_task=(
                             body.currentTask.model_dump(exclude_none=True) if body.currentTask is not None else None

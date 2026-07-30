@@ -87,7 +87,7 @@ export function useAssistantChatStream({
     setError,
     persistMessages,
   } = session;
-  const { calendarTaskIdRef, heardTextRef, speakIfEnabled, stopSpeaking } = voice;
+  const { worksetIdRef, heardTextRef, speakIfEnabled, stopSpeaking } = voice;
 
   const sendContent = useCallback(
     async (raw: string) => {
@@ -153,7 +153,7 @@ export function useAssistantChatStream({
             messages: history,
             sessionId: priorSessionId,
             locale: getAppLocale(),
-            calendarTaskId: calendarTaskIdRef.current,
+            worksetId: worksetIdRef.current,
             ...taskEditorAgentExtras(),
           },
           {
@@ -199,7 +199,7 @@ export function useAssistantChatStream({
       }
     },
     [
-      calendarTaskIdRef,
+      worksetIdRef,
       draftRef,
       heardTextRef,
       messagesRef,

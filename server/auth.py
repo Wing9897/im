@@ -12,8 +12,10 @@ Semantics:
   presented Bearer matches any active access key or device access token
   (same check as ``verify_auth``, including scope path limits). Otherwise
   403 FORBIDDEN except paths under ``/api/v1/viewer/``.
-- ``/api/v1/health``, schema gate, and public setup endpoints are mounted
-  without auth dependencies.
+- ``/api/v1/health``, schema gate, public setup status,
+  ``POST /api/v1/system/rotate-secrets`` (admin password when secrets broken),
+  and ``POST /api/v1/system/reset/database`` (when secrets are broken) are
+  mounted without / with conditional auth dependencies.
 """
 
 from __future__ import annotations

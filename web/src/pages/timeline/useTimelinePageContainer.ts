@@ -2,20 +2,21 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import {
-  loadTimelineSelectedTaskIds,
-  pruneTimelineSelectedTaskIds,
-  saveTimelineSelectedTaskIds,
+  loadTimelineSelectedSources,
+  pruneTimelineSelectedSources,
+  saveTimelineSelectedSources,
   timelineFilterCatalogIds,
-  type TimelineSelectedTaskIds,
-} from "../../domain/timeline/timelineTaskFilter";
+  type TimelineSelectedSources,
+} from "../../domain/timeline/timelineSourceFilter";
 import { startOfDay } from "../../domain/timeline/dateUtils";
 import type {
   TimelineEventStatus,
   TimelineEventStatusMap,
   TimelineEventTimeOverrideMap,
 } from "../../domain/timeline/status";
-import { USER_EVENTS_FILTER_ID } from "../../domain/timeline/userEvents";
 import { useDeepLinkFingerprint } from "../../hooks/useDeepLinkFingerprint";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import {
@@ -51,7 +52,7 @@ function isTimelineViewMode(value: string | null): value is "calendar" | "gantt"
 }
 
 /**
- * Timeline composed state (task / data / navigation / filters / selection / gantt).
+ * Timeline composed state (sources / data / navigation / filters / selection / gantt).
  *
  * INVARIANTS:
  * - Navigation cursors (`timeCursor` / `rangeStart` / `monthCursor` / `focusedDay`)
@@ -71,12 +72,12 @@ export function useTimelinePageContainer() {
   const urlView = new URLSearchParams(location.search).get("view");
 
   // ─── Persisted UI state ────────────────────────────────────────────────────
-  const [selectedTaskIds, setSelectedTaskIdsState] = useState<TimelineSelectedTaskIds>(
-    () => loadTimelineSelectedTaskIds(),
+  const [selectedSources, setSelectedSourcesState] = useState<TimelineSelectedSources>(
+    () => loadTimelineSelectedSources(),
   );
-  const setSelectedTaskIds = useCallback((ids: TimelineSelectedTaskIds) => {
-    setSelectedTaskIdsState(ids);
-    saveTimelineSelectedTaskIds(ids);
+  const setSelectedSources = useCallback((ids: TimelineSelectedSources) => {
+    setSelectedSourcesState(ids);
+    saveTimelineSelectedSources(ids);
   }, []);
   const [rawViewMode, setViewMode] = usePersistedState<"calendar" | "gantt">(
     TIMELINE_VIEW_MODE_STORAGE_KEY,
@@ -144,7 +145,7 @@ export function useTimelinePageContainer() {
   // ─── Composed hooks ────────────────────────────────────────────────────────
   const navigation = useTimelineNavigation();
   const data = useTimelineData({
-    selectedTaskIds,
+    selectedSources,
     viewMode,
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
@@ -173,13 +174,21 @@ export function useTimelinePageContainer() {
   useEffect(() => {
     if (data.tasksLoading) return;
     const catalogIds = timelineFilterCatalogIds(data.timelineTasks.map((t) => t.id));
-    const pruned = pruneTimelineSelectedTaskIds(selectedTaskIds, catalogIds);
-    if (pruned !== selectedTaskIds) {
-      setSelectedTaskIds(pruned);
+    const worksetIds = [
+      SYSTEM_WORKSET_ID,
+      ...new Set(
+        data.timelineTasks
+          .map((t) => t.worksetId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
+    ];
+    const pruned = pruneTimelineSelectedSources(selectedSources, catalogIds, worksetIds);
+    if (pruned !== selectedSources) {
+      setSelectedSources(pruned);
     }
   }, [
-    selectedTaskIds,
-    setSelectedTaskIds,
+    selectedSources,
+    setSelectedSources,
     data.tasksLoading,
     data.timelineTasks,
   ]);
@@ -262,20 +271,21 @@ export function useTimelinePageContainer() {
   );
 
   const emptyState =
-    selectedTaskIds !== null &&
-    selectedTaskIds.length === 1 &&
-    selectedTaskIds[0] === USER_EVENTS_FILTER_ID
+    selectedSources !== null &&
+    selectedSources.taskIds.length === 0 &&
+    selectedSources.worksetIds.length === 1 &&
+    selectedSources.worksetIds[0] === SYSTEM_WORKSET_ID
       ? t("empty.noUserEvents")
-      : selectedTaskIds !== null && selectedTaskIds.length === 0
+      : selectedSources !== null && isEmptySourceFilter(selectedSources)
         ? t("empty.needData")
         : data.timelineTasks.length === 0
           ? t("empty.noTasks")
           : t("empty.needData");
 
   return {
-    task: {
-      selectedTaskIds,
-      setSelectedTaskIds,
+    sources: {
+      selectedSources,
+      setSelectedSources,
       timelineTasks: data.timelineTasks,
       viewMode,
       setViewMode: handleSetViewMode,

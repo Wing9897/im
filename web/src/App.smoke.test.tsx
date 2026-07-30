@@ -6,17 +6,22 @@ import i18n from "./i18n";
 import {
   _resetConnectionStoreForTests,
   clearConnection,
+  hasDeviceSession,
   saveDeviceSession,
 } from "./domain/connection/connectionStore";
 
-const fetchSchemaStatus = vi.fn();
+const fetchHealth = vi.fn();
 const resolveAuthGate = vi.fn();
 const syncDesktopConnectionOnBoot = vi.fn();
 const isElectronDesktop = vi.fn(() => false);
 
-vi.mock("./api/schema", () => ({
-  fetchSchemaStatus: (...args: unknown[]) => fetchSchemaStatus(...args),
-}));
+vi.mock("./api/system", async () => {
+  const actual = await vi.importActual<typeof import("./api/system")>("./api/system");
+  return {
+    ...actual,
+    fetchHealth: (...args: unknown[]) => fetchHealth(...args),
+  };
+});
 
 vi.mock("./domain/connection/authGate", () => ({
   resolveAuthGate: (...args: unknown[]) => resolveAuthGate(...args),
@@ -105,7 +110,7 @@ describe("App smoke", () => {
     sessionStorage.clear();
     window.history.replaceState({}, "", "/");
     _resetConnectionStoreForTests();
-    fetchSchemaStatus.mockReset();
+    fetchHealth.mockReset();
     resolveAuthGate.mockReset();
     syncDesktopConnectionOnBoot.mockReset().mockResolvedValue(undefined);
     isElectronDesktop.mockReset().mockReturnValue(false);
@@ -126,12 +131,11 @@ describe("App smoke", () => {
       deviceId: "d1",
       deviceLabel: "Host",
     });
-    fetchSchemaStatus.mockResolvedValue({
+    fetchHealth.mockResolvedValue({
+      status: "ok",
+      version: "0.1.0-beta.1",
       runtimeReady: true,
-      userVersion: 10,
-      expectedVersion: 10,
-      needsUpgrade: false,
-      hardReject: false,
+      secretsReady: true,
     });
     resolveAuthGate.mockResolvedValue({ kind: "ready" });
 
@@ -159,14 +163,13 @@ describe("App smoke", () => {
       order.push("sync");
       await syncGate;
     });
-    fetchSchemaStatus.mockImplementation(async () => {
-      order.push("schema");
+    fetchHealth.mockImplementation(async () => {
+      order.push("health");
       return {
+        status: "ok",
+        version: "0.1.0-beta.1",
         runtimeReady: true,
-        userVersion: 10,
-        expectedVersion: 10,
-        needsUpgrade: false,
-        hardReject: false,
+        secretsReady: true,
       };
     });
     resolveAuthGate.mockResolvedValue({
@@ -190,7 +193,7 @@ describe("App smoke", () => {
     });
 
     expect(order).toEqual(["sync"]);
-    expect(fetchSchemaStatus).not.toHaveBeenCalled();
+    expect(fetchHealth).not.toHaveBeenCalled();
 
     await act(async () => {
       releaseSync();
@@ -198,19 +201,18 @@ describe("App smoke", () => {
       await Promise.resolve();
     });
 
-    expect(order).toEqual(["sync", "schema"]);
+    expect(order).toEqual(["sync", "health"]);
     expect(container.querySelector('[data-testid="first-run-wizard"]')).toBeTruthy();
   });
 
   it("Desktop host query with existing admin and no session opens login", async () => {
     window.history.replaceState({}, "", "/?desktop=1");
     isElectronDesktop.mockReturnValue(true);
-    fetchSchemaStatus.mockResolvedValue({
+    fetchHealth.mockResolvedValue({
+      status: "ok",
+      version: "0.1.0-beta.1",
       runtimeReady: true,
-      userVersion: 23,
-      expectedVersion: 23,
-      needsUpgrade: false,
-      hardReject: false,
+      secretsReady: true,
     });
     resolveAuthGate.mockResolvedValue({
       kind: "setup",
@@ -246,12 +248,11 @@ describe("App smoke", () => {
       deviceId: "d1",
       deviceLabel: "Host",
     });
-    fetchSchemaStatus.mockResolvedValue({
+    fetchHealth.mockResolvedValue({
+      status: "ok",
+      version: "0.1.0-beta.1",
       runtimeReady: true,
-      userVersion: 10,
-      expectedVersion: 10,
-      needsUpgrade: false,
-      hardReject: false,
+      secretsReady: true,
     });
     resolveAuthGate
       .mockResolvedValueOnce({ kind: "ready" })
@@ -299,12 +300,11 @@ describe("App smoke", () => {
       deviceId: "d1",
       deviceLabel: "Host",
     });
-    fetchSchemaStatus.mockResolvedValue({
+    fetchHealth.mockResolvedValue({
+      status: "ok",
+      version: "0.1.0-beta.1",
       runtimeReady: true,
-      userVersion: 10,
-      expectedVersion: 10,
-      needsUpgrade: false,
-      hardReject: false,
+      secretsReady: true,
     });
     resolveAuthGate
       .mockResolvedValueOnce({ kind: "ready" })
@@ -341,6 +341,40 @@ describe("App smoke", () => {
     expect(container.querySelector('[data-testid="setup-mode-local"]')).toBeNull();
   });
 
+  it("secretsReady false clears session and shows SecretsBrokenGate", async () => {
+    saveDeviceSession({
+      accessToken: "access",
+      refreshToken: "refresh",
+      deviceId: "d1",
+      deviceLabel: "Host",
+    });
+    fetchHealth.mockResolvedValue({
+      status: "ok",
+      version: "0.1.0-beta.1",
+      runtimeReady: true,
+      secretsReady: false,
+      secretsError: "Stored secret cannot be decrypted",
+    });
+
+    await act(async () => {
+      root.render(
+        createElement(I18nextProvider, { i18n }, createElement(App)),
+      );
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(resolveAuthGate).not.toHaveBeenCalled();
+    expect(hasDeviceSession()).toBe(false);
+    expect(container.textContent).toMatch(/加密|Encryption|金鑰|密钥/i);
+    expect(container.querySelector('[data-testid="secrets-broken-gate"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="secrets-rotate-username"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="secrets-rotate-password"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="secrets-rotate-submit"]')).toBeTruthy();
+    expect(container.textContent).not.toMatch(/完全重置本机数据库|Fully reset local database|完全重設本機資料庫/);
+    expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
+  });
+
   it("surfaces Desktop connection sync failure as unavailable", async () => {
     isElectronDesktop.mockReturnValue(true);
     syncDesktopConnectionOnBoot.mockRejectedValue(new Error("IPC unavailable"));
@@ -353,7 +387,7 @@ describe("App smoke", () => {
       await Promise.resolve();
     });
 
-    expect(fetchSchemaStatus).not.toHaveBeenCalled();
+    expect(fetchHealth).not.toHaveBeenCalled();
     expect(container.textContent).toMatch(/IPC unavailable/);
     expect(container.querySelector('[data-testid="app-shell-pages"]')).toBeNull();
   });

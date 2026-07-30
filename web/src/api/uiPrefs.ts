@@ -39,11 +39,23 @@ export type BoardMapViewPref = {
 /** Per-widget gantt day/month zoom (board gantt widgets). */
 export type BoardGanttViewMode = "day" | "month";
 
+/**
+ * Per-widget source filter: hierarchical `{taskIds, worksetIds}`, or `null`
+ * (all sources). Flat `string[]` is rejected on read (server sanitize may still
+ * normalize older SQLite payloads before they reach the client).
+ */
+export type BoardSourceFilterPref =
+  | { taskIds: string[]; worksetIds: string[] }
+  | null;
+
 export type BoardWidgetStatePref = {
   mapViews: Record<string, BoardMapViewPref>;
-  taskFilters: Record<string, string[] | null>;
+  sourceFilters: Record<string, BoardSourceFilterPref>;
   ganttViewModes: Record<string, BoardGanttViewMode>;
 };
+
+/** GET payload after server sanitize (hierarchical only). */
+export type BoardWidgetStatePrefWire = BoardWidgetStatePref;
 
 /** Layout blob stored under `ops_board_layout` (v14 widgets mosaic). */
 export type BoardLayoutPref = {
@@ -61,7 +73,7 @@ export type BoardLayoutPref = {
 export type BoardPrefsResponse = {
   configured: boolean;
   layout: BoardLayoutPref | null;
-  widgetState: BoardWidgetStatePref | null;
+  widgetState: BoardWidgetStatePrefWire | null;
 };
 
 export type BoardPrefsPutBody = {
@@ -88,7 +100,8 @@ export function putBoardPrefs(body: BoardPrefsPutBody): Promise<BoardPrefsRespon
 export type VoiceReminderSettingsPayload = {
   enabled: boolean;
   leadOffsetsMinutes: number[];
-  taskIds: string[];
+  /** Hierarchical source selection (same model as board/timeline); `null` = all. */
+  sourceFilter: { taskIds: string[]; worksetIds: string[] } | null;
   preambleChimeId: string;
   quietHours: { enabled: boolean; start: string; end: string };
 };
@@ -209,8 +222,8 @@ export type AssistantVoiceIoSettingsPayload = {
   speechLanguage: string;
   spacePttMode?: "hold" | "toggle";
   ttsVoiceUri?: string;
-  /** Default assistant create target; ``__user__`` = 用戶或助手. */
-  defaultCalendarTaskId?: string;
+  /** Default assistant create target; ``__user__`` = 一般. */
+  defaultWorksetId?: string;
 };
 
 export type AssistantVoiceIoResponse = {

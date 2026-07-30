@@ -47,12 +47,14 @@ describe("systemTaskCatalog", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
-  it("includes 用戶或助手 as virtual and voice reminder notes calendar RRULE", () => {
+  it("includes user-or-assistant virtual card; ownership workset is separate", () => {
     const catalog = getSystemTaskCatalog();
     const userOrAssistant = catalog.find((item) => item.id === "user-or-assistant");
     expect(userOrAssistant?.kind).toBe("virtual");
     expect(userOrAssistant?.title).toBe("用戶或助手");
     expect(userOrAssistant?.staffId).toBe("assistant");
+    expect(userOrAssistant?.shortDescription).toContain("一般");
+    expect(userOrAssistant?.shortDescription).toContain("工作集");
 
     const clientManager = catalog.find((item) => item.id === "client-manager");
     expect(clientManager?.kind).toBe("agent");

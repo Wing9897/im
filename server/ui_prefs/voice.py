@@ -13,10 +13,13 @@ from server.ui_prefs.common import (
     KEY_VOICE_REMINDER_SETTINGS,
     KEY_VOICE_REMINDER_TRIGGER_HISTORY,
     MAX_VOICE_HISTORY_ENTRIES,
+    SOURCE_FILTER_INVALID,
     UiPrefsValidationError,
     _read_json,
+    _sanitize_source_filter_shape,
     _write_json,
 )
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 _LEAD_OFFSET_OPTIONS = frozenset({15, 60, 240, 1440})
 _PREAMBLE_CHIME_IDS = frozenset(
@@ -33,11 +36,16 @@ _PREAMBLE_CHIME_IDS = frozenset(
 )
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
 
+_DEFAULT_SOURCE_FILTER: dict[str, list[str]] = {
+    "taskIds": [],
+    "worksetIds": [SYSTEM_WORKSET_ID],
+}
+
 _DEFAULT_VOICE_SETTINGS: dict[str, Any] = {
     "enabled": False,
     "leadOffsetsMinutes": [60],
-    # Explicit default: 用戶或助手. Empty list still means “all” when the user clears.
-    "taskIds": ["__user__"],
+    # Explicit default: builtin「一般」workset only (`null` = all sources).
+    "sourceFilter": dict(_DEFAULT_SOURCE_FILTER),
     "preambleChimeId": "broadcast",
     "quietHours": {"enabled": True, "start": "22:00", "end": "07:00"},
 }
@@ -47,6 +55,27 @@ def _sanitize_preamble_chime_id(value: Any) -> str:
     if isinstance(value, str) and value in _PREAMBLE_CHIME_IDS:
         return value
     return str(_DEFAULT_VOICE_SETTINGS["preambleChimeId"])
+
+
+def _default_source_filter() -> dict[str, list[str]]:
+    return {
+        "taskIds": list(_DEFAULT_SOURCE_FILTER["taskIds"]),
+        "worksetIds": list(_DEFAULT_SOURCE_FILTER["worksetIds"]),
+    }
+
+
+def _sanitize_source_filter(data: Mapping[str, Any]) -> dict[str, list[str]] | None:
+    """Hard-cut: only ``sourceFilter: null | {taskIds, worksetIds}``.
+
+    Missing / invalid → default ``__user__`` workset. Flat legacy ignored.
+    """
+    if "sourceFilter" not in data:
+        return _default_source_filter()
+    cleaned = _sanitize_source_filter_shape(data.get("sourceFilter"))
+    if cleaned is SOURCE_FILTER_INVALID:
+        return _default_source_filter()
+    assert cleaned is None or isinstance(cleaned, dict)
+    return cleaned
 
 
 def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
@@ -67,17 +96,6 @@ def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
     if not leads:
         leads = list(_DEFAULT_VOICE_SETTINGS["leadOffsetsMinutes"])
 
-    task_raw = data.get("taskIds")
-    if isinstance(task_raw, list):
-        task_ids: list[str] = []
-        seen_ids: set[str] = set()
-        for item in task_raw:
-            if isinstance(item, str) and item.strip() and item not in seen_ids:
-                seen_ids.add(item)
-                task_ids.append(item)
-    else:
-        task_ids = list(_DEFAULT_VOICE_SETTINGS["taskIds"])
-
     quiet_raw = data.get("quietHours")
     quiet = quiet_raw if isinstance(quiet_raw, Mapping) else {}
     start = quiet.get("start")
@@ -95,7 +113,7 @@ def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
     return {
         "enabled": (data["enabled"] if isinstance(data.get("enabled"), bool) else _DEFAULT_VOICE_SETTINGS["enabled"]),
         "leadOffsetsMinutes": leads,
-        "taskIds": task_ids,
+        "sourceFilter": _sanitize_source_filter(data),
         "preambleChimeId": _sanitize_preamble_chime_id(data.get("preambleChimeId")),
         "quietHours": quiet_hours,
     }
@@ -105,7 +123,8 @@ async def get_voice_settings(db: Database) -> dict[str, Any]:
     raw = await _read_json(db, KEY_VOICE_REMINDER_SETTINGS)
     if raw is None:
         return {"configured": False, "settings": None}
-    return {"configured": True, "settings": sanitize_voice_settings(raw)}
+    clean = sanitize_voice_settings(raw)
+    return {"configured": True, "settings": clean}
 
 
 async def put_voice_settings(db: Database, settings: Any) -> dict[str, Any]:

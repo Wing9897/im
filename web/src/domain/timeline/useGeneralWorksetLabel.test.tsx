@@ -1,9 +1,9 @@
 /**
- * Regression test for the stale localized "user or assistant" filter label.
+ * Regression test for the stale localized「一般」workset label.
  *
- * `getUserEventsFilterLabel()` reads `i18n.t` imperatively, so a `useMemo` that
+ * `getGeneralWorksetLabel()` reads `i18n.t` imperatively, so a `useMemo` that
  * only lists `[tasks]` kept the label from the previously active language.
- * Consumers depend on `useUserEventsFilterLabel()` so the memo re-runs.
+ * Consumers depend on `useGeneralWorksetLabel()` so the memo re-runs.
  */
 import { act, createElement, useMemo } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -11,16 +11,16 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
-import { getUserEventsFilterLabel } from "./userEvents";
-import { useUserEventsFilterLabel } from "./useUserEventsFilterLabel";
+import { getGeneralWorksetLabel } from "./userEvents";
+import { useGeneralWorksetLabel } from "./useGeneralWorksetLabel";
 
-describe("useUserEventsFilterLabel", () => {
+describe("useGeneralWorksetLabel", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
   /** Mirrors the real consumers: a memo keyed on the task list plus the label. */
   function MemoConsumer({ tasks }: { tasks: readonly string[] }) {
-    const label = useUserEventsFilterLabel();
+    const label = useGeneralWorksetLabel();
     const options = useMemo(() => [...tasks, label], [tasks, label]);
     return createElement("span", { "data-testid": "options" }, options.join("|"));
   }
@@ -51,7 +51,7 @@ describe("useUserEventsFilterLabel", () => {
       root.render(createElement(MemoConsumer, { tasks }));
     });
 
-    const zhHant = getUserEventsFilterLabel();
+    const zhHant = getGeneralWorksetLabel();
     expect(container.querySelector('[data-testid="options"]')?.textContent).toBe(
       `情報任務|${zhHant}`,
     );
@@ -60,7 +60,7 @@ describe("useUserEventsFilterLabel", () => {
       await i18n.changeLanguage("en");
     });
 
-    const en = getUserEventsFilterLabel();
+    const en = getGeneralWorksetLabel();
     expect(en).not.toBe(zhHant);
     expect(container.querySelector('[data-testid="options"]')?.textContent).toBe(
       `情報任務|${en}`,

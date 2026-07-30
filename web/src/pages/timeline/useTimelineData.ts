@@ -6,17 +6,18 @@ import {
   calendarOccurrenceToBoardEvent,
   userEventToTimelineItem,
 } from "../../domain/timeline/timedEventMerge";
-import { useTaskCatalog, useTaskNameById } from "../../context/TaskCatalogContext";
-import type { TimelineSelectedTaskIds } from "../../domain/timeline/timelineTaskFilter";
+import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
+import type { TimelineSelectedSources } from "../../domain/timeline/timelineSourceFilter";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import {
   filterAssignableTimelineTasks,
-  isUnassignedUserEventTaskId,
+  isNullProvenanceTaskId,
 } from "../../domain/timeline/userEvents";
-import { useUserEventsFilterLabel } from "../../domain/timeline/useUserEventsFilterLabel";
+import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import type { TimelineItem, TaskActivitySpan } from "../../types";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { logWarn } from "../../utils/logger";
 import { useGanttData } from "./useGanttData";
 import { resolveTimelineFilterPlan, type TimelineFilterPlan } from "./shared";
@@ -53,7 +54,7 @@ function firstSourceError(
 
 interface UseTimelineDataOptions {
   /** `null` = all, `[]` = none, otherwise multi-select (may include `__user__`). */
-  selectedTaskIds: TimelineSelectedTaskIds;
+  selectedSources: TimelineSelectedSources;
   /** Current view mode — span fetching only triggers in "gantt" mode. */
   viewMode: "calendar" | "gantt";
   /** Start of the visible date range (calendar occurrences are fetched around it). */
@@ -108,7 +109,7 @@ type AnalysisFetchKey = {
  * Gantt activity spans live in useGanttData; Gantt events reuse the primary list.
  */
 export function useTimelineData({
-  selectedTaskIds,
+  selectedSources,
   viewMode,
   rangeStart,
   rangeEnd,
@@ -123,15 +124,18 @@ export function useTimelineData({
   );
 
   const taskNameById = useTaskNameById();
-  const userEventsLabel = useUserEventsFilterLabel();
+  const worksetNameById = useWorksetNameById();
+  const generalWorksetLabel = useGeneralWorksetLabel();
 
   const filterPlan = useMemo(
-    () => resolveTimelineFilterPlan(selectedTaskIds, tasks),
-    [selectedTaskIds, tasks],
+    () => resolveTimelineFilterPlan(selectedSources, tasks),
+    [selectedSources, tasks],
   );
 
-  const selectedTaskIdsKey =
-    selectedTaskIds === null ? "*" : selectedTaskIds.join("|");
+  const selectedSourcesKey =
+    selectedSources === null
+      ? "*"
+      : `t:${selectedSources.taskIds.join("|")}|w:${selectedSources.worksetIds.join("|")}`;
 
   const calendarWindow = useMemo(() => {
     const start = new Date(rangeStart);
@@ -188,7 +192,7 @@ export function useTimelineData({
     execute: executeUserEventsFetch,
   } = useAsyncResource(userEventsFetcher, { toastOnError: false });
 
-  const calendarTaskFingerprint = useMemo(
+  const recurringTaskFingerprint = useMemo(
     () =>
       tasks
         .filter((task) => task.analysisMode === "recurring")
@@ -204,20 +208,20 @@ export function useTimelineData({
       endIso: calendarWindow.endIso,
       taskIds: filterPlan.analysisTaskIds,
     });
-  }, [fetchEvents, calendarWindow, filterPlan.fetchAnalysis, filterPlan.analysisTaskIds, selectedTaskIdsKey]);
+  }, [fetchEvents, calendarWindow, filterPlan.fetchAnalysis, filterPlan.analysisTaskIds, selectedSourcesKey]);
 
   useEffect(() => {
     if (!filterPlan.fetchCalendar) return;
     void executeCalendarFetch({
       ...calendarWindow,
-      taskIds: filterPlan.calendarTaskIds,
+      taskIds: filterPlan.recurringTaskIds,
     });
   }, [
     executeCalendarFetch,
     calendarWindow,
-    calendarTaskFingerprint,
+    recurringTaskFingerprint,
     filterPlan.fetchCalendar,
-    filterPlan.calendarTaskIds,
+    filterPlan.recurringTaskIds,
   ]);
 
   useEffect(() => {
@@ -240,7 +244,7 @@ export function useTimelineData({
       jobs.push(
         executeCalendarFetch({
           ...calendarWindow,
-          taskIds: filterPlan.calendarTaskIds,
+          taskIds: filterPlan.recurringTaskIds,
         }),
       );
     }
@@ -280,19 +284,22 @@ export function useTimelineData({
   const userEvents = useMemo(
     () =>
       (userEventsData ?? [])
-        .map((event) => userEventToTimelineItem(event, taskNameById, userEventsLabel))
+        .map((event) =>
+          userEventToTimelineItem(event, taskNameById, generalWorksetLabel, worksetNameById),
+        )
         .filter((event): event is TimelineItem => event !== null),
-    [userEventsData, taskNameById, userEventsLabel],
+    [userEventsData, taskNameById, generalWorksetLabel, worksetNameById],
   );
 
   const events = useMemo(() => {
-    if (selectedTaskIds !== null && selectedTaskIds.length === 0) {
+    if (selectedSources !== null && selectedSources.taskIds.length === 0 && selectedSources.worksetIds.length === 0) {
       return EMPTY_EVENTS;
     }
 
     const analysis = filterPlan.fetchAnalysis ? (data ?? EMPTY_EVENTS) : EMPTY_EVENTS;
     const allow = new Set(filterPlan.selectedRealTaskIds);
-    const isAll = selectedTaskIds === null;
+    const allowWorksets = new Set(filterPlan.selectedWorksetIds);
+    const isAll = selectedSources === null;
 
     const calendar = filterPlan.fetchCalendar
       ? isAll
@@ -304,15 +311,19 @@ export function useTimelineData({
       ? isAll
         ? userEvents
         : userEvents.filter((event) => {
-            if (isUnassignedUserEventTaskId(event.taskId)) {
-              return filterPlan.includeUnassignedUserEvents;
-            }
-            return event.taskId != null && allow.has(event.taskId);
+            const worksetId = event.worksetId ?? SYSTEM_WORKSET_ID;
+            if (allowWorksets.has(worksetId)) return true;
+            // Task selection: include events whose provenance task is selected.
+            return (
+              event.taskId != null &&
+              !isNullProvenanceTaskId(event.taskId) &&
+              allow.has(event.taskId)
+            );
           })
       : EMPTY_EVENTS;
 
     return [...analysis, ...calendar, ...users];
-  }, [data, selectedTaskIds, filterPlan, calendarEvents, userEvents]);
+  }, [data, selectedSources, filterPlan, calendarEvents, userEvents]);
 
   const sourceError = firstSourceError(
     filterPlan,

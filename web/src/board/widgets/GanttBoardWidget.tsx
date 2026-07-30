@@ -1,15 +1,15 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchTaskActivitySpans } from "../../api/tasks";
-import { USER_EVENTS_FILTER_ID } from "../../domain/timeline/userEvents";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import type { TaskActivitySpan } from "../../types";
-import { TaskFilterControl } from "../../components/TaskFilterControl";
-import { withUserEventsFilterOption } from "../../domain/timeline/taskFilterOptions";
-import { useUserEventsFilterLabel } from "../../domain/timeline/useUserEventsFilterLabel";
+import { isWorksetActivitySpan } from "../../types/analysis";
+import { SourceFilterDialog } from "../../components/SourceFilterDialog";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardTaskFilter } from "../useBoardTaskFilter";
+import { resolveSpanWorksetId, useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 import { useBoardGanttViewMode } from "../useBoardGanttViewMode";
@@ -23,24 +23,24 @@ const LazyGanttBoardEmbed = lazy(() =>
 const GANTT_EMBED_LIMIT = 40;
 
 /**
- * Cap task rows but always keep the API's virtual「用戶或助手」span
- * (`taskId === __user__`) so the checklist filter is not empty.
+ * Cap task rows but always keep every ownership span (`sourceKind=workset`)
+ * so multi-workset rows are not squeezed out of the embed limit.
  */
 function takeGanttSpans(rows: TaskActivitySpan[]): TaskActivitySpan[] {
-  const userSpan = rows.find((row) => row.taskId === USER_EVENTS_FILTER_ID);
-  const taskRows = rows.filter((row) => row.taskId !== USER_EVENTS_FILTER_ID);
-  const capped = taskRows.slice(0, userSpan ? GANTT_EMBED_LIMIT - 1 : GANTT_EMBED_LIMIT);
-  return userSpan ? [...capped, userSpan] : capped;
+  const worksetSpans = rows.filter((row) => isWorksetActivitySpan(row));
+  const taskRows = rows.filter((row) => !isWorksetActivitySpan(row));
+  const room = Math.max(0, GANTT_EMBED_LIMIT - worksetSpans.length);
+  return [...taskRows.slice(0, room), ...worksetSpans];
 }
 
 /** Compact lazy gantt (activity spans by task); mounts only while `active`. */
 export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useBoardGanttViewMode(widgetId);
-  const { selectedTaskIds, setSelectedTaskIds, filterByTaskId } = useBoardTaskFilter(widgetId);
+  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const ariaPrefix = t("board.ganttWidget.byTaskAria");
 
-  // Backend `/activity-spans` already appends a virtual __user__ row when user_events exist.
+  // Backend `/activity-spans` emits one ownership row per workset with user_events.
   const spansFetcher = useCallback(
     () => fetchTaskActivitySpans().then(takeGanttSpans),
     [],
@@ -51,39 +51,68 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
     BOARD_POLL_MS.standard,
     { active },
   );
-  const { tasks } = useTaskCatalog();
-  const userEventsLabel = useUserEventsFilterLabel();
+  const { tasks, worksets } = useTaskCatalog();
+  const userEventsLabel = useGeneralWorksetLabel();
 
+  // Builtin workset covers「一般」— do not inject a fake __user__ task row.
   const filterOptions = useMemo(() => {
     if (tasks.length > 0) {
-      return withUserEventsFilterOption(
-        tasks.map((task) => ({ id: task.id, name: task.name.trim() || unnamedTaskLabel() })),
-        userEventsLabel,
-      );
+      return tasks.map((task) => ({
+        id: task.id,
+        name: task.name.trim() || unnamedTaskLabel(),
+      }));
     }
-    const spanOptions = (spans ?? []).map((s) => ({
-      id: s.taskId,
-      name:
-        s.taskId === USER_EVENTS_FILTER_ID
-          ? userEventsLabel
-          : s.taskName.trim() || unnamedTaskLabel(),
-    }));
-    return withUserEventsFilterOption(spanOptions, userEventsLabel);
-  }, [tasks, spans, userEventsLabel]);
+    return (spans ?? [])
+      .filter((s) => !isWorksetActivitySpan(s))
+      .map((s) => ({
+        id: s.taskId,
+        name: s.taskName.trim() || unnamedTaskLabel(),
+      }));
+  }, [tasks, spans]);
 
   const filteredSpans = useMemo(
-    () => filterByTaskId(spans ?? []),
-    [spans, filterByTaskId],
+    () => filterBySource(spans ?? []),
+    [spans, filterBySource],
   );
+
+  const labeledSpans = useMemo(() => {
+    const nameByWorkset = new Map(
+      worksets.map((ws) => [
+        ws.id,
+        ws.id === SYSTEM_WORKSET_ID ? userEventsLabel : ws.name,
+      ]),
+    );
+    return filteredSpans.map((span) => {
+      if (!isWorksetActivitySpan(span)) return span;
+      const worksetId = resolveSpanWorksetId(span);
+      const fromCatalog = worksetId ? nameByWorkset.get(worksetId) : undefined;
+      const label =
+        worksetId === SYSTEM_WORKSET_ID
+          ? userEventsLabel
+          : fromCatalog || span.taskName.trim() || worksetId || span.taskId;
+      return span.taskName === label ? span : { ...span, taskName: label };
+    });
+  }, [filteredSpans, worksets, userEventsLabel]);
 
   const headerActions = useMemo(
     () => (
       <>
-        <TaskFilterControl
+        <SourceFilterDialog
           tasks={filterOptions}
-          selectedTaskIds={selectedTaskIds}
-          onChange={setSelectedTaskIds}
+          worksets={worksets.map((ws) => ({
+            id: ws.id,
+            name: ws.id === SYSTEM_WORKSET_ID ? userEventsLabel : ws.name,
+            isSystem: ws.isSystem,
+          }))}
+          expandTasks={tasks.map((task) => ({
+            id: task.id,
+            name: task.name,
+            worksetId: task.worksetId ?? null,
+          }))}
+          selection={selection}
+          onChange={setSelection}
           ariaLabelPrefix={ariaPrefix}
+          variant="board"
         />
         <GanttViewModeControls
           viewMode={viewMode}
@@ -93,7 +122,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
         />
       </>
     ),
-    [ariaPrefix, filterOptions, selectedTaskIds, setSelectedTaskIds, setViewMode, viewMode],
+    [ariaPrefix, filterOptions, selection, setSelection, setViewMode, tasks, userEventsLabel, viewMode, worksets],
   );
   useBoardWidgetHeaderActions(headerActions);
 
@@ -109,7 +138,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
       >
         <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingGantt")}</p>}>
           <LazyGanttBoardEmbed
-            spans={filteredSpans}
+            spans={labeledSpans}
             viewMode={viewMode}
             labelHeader={t("board.ganttWidget.labelTask")}
             emptyLabel={t("board.gantt.defaultEmptyLabel")}

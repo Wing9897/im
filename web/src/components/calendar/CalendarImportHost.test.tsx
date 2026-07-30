@@ -31,6 +31,9 @@ vi.mock("../../context/TaskCatalogContext", () => ({
     tasksLoading: false,
     taskLoadError: null,
     refreshTasks: vi.fn(),
+    worksets: [{ id: "__user__", name: "一般", isSystem: true }],
+    worksetsLoading: false,
+    refreshWorksets: vi.fn(),
   }),
 }));
 
@@ -92,7 +95,7 @@ describe("CalendarImportHost", () => {
         endTime: "2026-07-29T11:00:00Z",
         location: "Room",
         body: "Notes",
-        taskId: "",
+        worksetId: "",
         source: "file",
         sourceLabel: "a.ics",
       },

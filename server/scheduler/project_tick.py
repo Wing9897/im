@@ -360,7 +360,6 @@ async def execute_project_tick(
                         [*carry_messages, wave_user],
                         session_id=session_id,
                         channel="project",
-                        calendar_task_id=task_id,
                         project_scope_task_id=task_id,
                         base_prompt=pinned_base_prompt,
                     ),

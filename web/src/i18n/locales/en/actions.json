@@ -163,7 +163,7 @@
     "applySourcesAria": "Apply reminder sources",
     "cancelDraftAria": "Cancel task selection changes",
     "tooltipContent": [
-      "Scans timed Key Events, recurring-task (RRULE) expansions, and “User or Assistant” events, then announces them ahead of time.",
+      "Scans timed Key Events, recurring-task (RRULE) expansions, and General-workset events, then announces them ahead of time.",
       "Plays a preamble chime before speaking; settings are stored on this device only, and the app must stay open to scan and announce.",
       "Trigger outcomes are written to “Trigger history.”",
       "Voice engine and language come from AI → Voice; not limited by the “auto-read assistant replies” toggle."
@@ -173,7 +173,7 @@
     "quietEnableHelp": "When enabled, reminders are muted during the configured window; when disabled, reminders play all day.",
     "quietHelp": "Supports spanning midnight, e.g. 22:00 to 07:00. Turning the toggle off does not clear the configured times.",
     "preambleHelp": "Plays a few seconds of chime before speaking; you can preview the current setting.",
-    "sourcesHelp": "Tap task tiles to multi-select or deselect; “All” means no filter. Changes take effect only after clicking “Apply.”"
+    "sourcesHelp": "Open the filter to select worksets and member tasks. “All” means no filter; Apply inside the dialog saves immediately."
   },
   "detailFields": {
     "type": "Type",

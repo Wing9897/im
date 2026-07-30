@@ -2,7 +2,7 @@
  * Timeline page container.
  *
  * State management lives in {@link useTimelinePageContainer} (grouped return:
- * task / data / navigation / filters / selection / gantt). Deeply-nested props
+ * sources / data / navigation / filters / selection / gantt). Deeply-nested props
  * are also provided via {@link TimelinePageProvider}.
  *
  * INVARIANTS:
@@ -27,8 +27,10 @@ import {
   restoreTimelineEvent,
   timelineItemDismissalSource,
 } from "../../api/timelineDismissals";
+import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
-import { toUserEventFormTaskId, toUserEventWriteTaskId } from "../../domain/timeline/userEvents";
+import { useTaskCatalog } from "../../context/TaskCatalogContext";
+import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import type { TimelineItem } from "../../types";
 import { TimelineControlBar } from "./components/TimelineControlBar";
@@ -51,9 +53,15 @@ const timelineFullscreenShellClass =
 
 const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
+type PendingTimelineConfirm =
+  | { kind: "dismiss"; event: TimelineItem }
+  | { kind: "restore"; event: TimelineItem };
+
 export function TimelinePage() {
   const { t } = useTranslation("timeline");
-  const { task, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
+  const { t: tc } = useTranslation("common");
+  const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
+  const { worksets, tasks } = useTaskCatalog();
   const { showToast } = useToast();
   useErrorToast(data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
@@ -64,6 +72,7 @@ export function TimelinePage() {
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [userEventActionBusy, setUserEventActionBusy] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
 
   const openCreateDialog = useCallback(() => {
     setDialogMode("create");
@@ -91,7 +100,7 @@ export function TimelinePage() {
       setDialogBusy(true);
       setDialogError(null);
       try {
-        const taskId = toUserEventWriteTaskId(values.taskId);
+        const worksetId = toUserEventFormWorksetId(values.worksetId);
         if (dialogMode === "create") {
           await createUserEvent({
             title: values.title,
@@ -99,7 +108,7 @@ export function TimelinePage() {
             endTime: values.endTime || null,
             body: values.body,
             location: values.location,
-            taskId,
+            worksetId,
           });
         } else if (editingEvent) {
           await updateUserEvent(editingEvent.id, {
@@ -108,7 +117,7 @@ export function TimelinePage() {
             endTime: values.endTime || null,
             body: values.body,
             location: values.location,
-            taskId,
+            worksetId,
           });
         }
         setDialogOpen(false);
@@ -123,40 +132,37 @@ export function TimelinePage() {
     [dialogMode, editingEvent, data, t],
   );
 
-  const handleDismissTimelineEvent = useCallback(
-    async (event: TimelineItem) => {
-      if (!window.confirm(t("messages.dismissConfirm", { title: event.title }))) return;
-      setUserEventActionBusy(true);
-      try {
+  const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {
+    setPendingConfirm({ kind: "dismiss", event });
+  }, []);
+
+  const handleRestoreTimelineEvent = useCallback((event: TimelineItem) => {
+    setPendingConfirm({ kind: "restore", event });
+  }, []);
+
+  const confirmPendingAction = useCallback(async () => {
+    if (!pendingConfirm) return;
+    const { kind, event } = pendingConfirm;
+    setUserEventActionBusy(true);
+    try {
+      if (kind === "dismiss") {
         await dismissTimelineEvent(timelineItemDismissalSource(event.source), event.id);
         if (selection.selectedEvent?.id === event.id) {
           selection.setSelectedEvent(null);
         }
-        await data.refreshEvents();
-      } catch (error) {
-        showToast(error instanceof Error ? error.message : t("messages.dismissFailed"), "error");
-      } finally {
-        setUserEventActionBusy(false);
-      }
-    },
-    [data, selection, showToast, t],
-  );
-
-  const handleRestoreTimelineEvent = useCallback(
-    async (event: TimelineItem) => {
-      if (!window.confirm(t("messages.restoreConfirm", { title: event.title }))) return;
-      setUserEventActionBusy(true);
-      try {
+      } else {
         await restoreTimelineEvent(timelineItemDismissalSource(event.source), event.id);
-        await data.refreshEvents();
-      } catch (error) {
-        showToast(error instanceof Error ? error.message : t("messages.restoreFailed"), "error");
-      } finally {
-        setUserEventActionBusy(false);
       }
-    },
-    [data, showToast, t],
-  );
+      setPendingConfirm(null);
+      await data.refreshEvents();
+    } catch (error) {
+      const fallback =
+        kind === "dismiss" ? t("messages.dismissFailed") : t("messages.restoreFailed");
+      showToast(error instanceof Error ? error.message : fallback, "error");
+    } finally {
+      setUserEventActionBusy(false);
+    }
+  }, [pendingConfirm, data, selection, showToast, t]);
 
   const contextValue: TimelinePageContextValue = useMemo(
     () => ({
@@ -168,8 +174,8 @@ export function TimelinePage() {
       setEditEndTime: selection.setEditEndTime,
       onSaveTimeOverride: selection.saveTimeOverride,
       onResetTimeOverride: selection.resetTimeOverride,
-      onSetEventStatus: task.setEventStatus,
-      eventStatuses: task.eventStatuses,
+      onSetEventStatus: sources.setEventStatus,
+      eventStatuses: sources.eventStatuses,
       onEditUserEvent: openEditDialog,
       onDismissTimelineEvent: handleDismissTimelineEvent,
       onRestoreTimelineEvent: handleRestoreTimelineEvent,
@@ -196,7 +202,7 @@ export function TimelinePage() {
       onRetryTimelineEvents: data.retryTimelineEvents,
     }),
     [
-      task,
+      sources,
       data,
       navigation.ganttColumns,
       gantt,
@@ -224,11 +230,16 @@ export function TimelinePage() {
         >
           <div className="shrink-0">
             <TimelineControlBar
-              selectedTaskIds={task.selectedTaskIds}
-              setSelectedTaskIds={task.setSelectedTaskIds}
-              timelineTasks={task.timelineTasks}
-              viewMode={task.viewMode}
-              setViewMode={task.setViewMode}
+              selectedSources={sources.selectedSources}
+              setSelectedSources={sources.setSelectedSources}
+              timelineTasks={sources.timelineTasks}
+              worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
+              expandTasks={tasks.map((row) => ({
+                id: row.id,
+                worksetId: row.worksetId ?? null,
+              }))}
+              viewMode={sources.viewMode}
+              setViewMode={sources.setViewMode}
               timeScale={navigation.timeScale}
               onJumpTo={navigation.jumpTo}
               onMoveCursor={navigation.moveCursor}
@@ -256,8 +267,8 @@ export function TimelinePage() {
               isRefreshing={data.isRefreshing}
               events={data.events}
               filteredEvents={filters.filteredEvents}
-              emptyState={task.emptyState}
-              viewMode={task.viewMode}
+              emptyState={sources.emptyState}
+              viewMode={sources.viewMode}
               timeScale={navigation.timeScale}
               rangeStart={navigation.rangeStart}
               rangeEvents={navigation.rangeEvents}
@@ -268,7 +279,7 @@ export function TimelinePage() {
               monthDays={navigation.monthDays}
               monthEvents={navigation.monthEvents}
               focusedDay={navigation.focusedDay}
-              onFocusDay={task.focusDay}
+              onFocusDay={sources.focusDay}
             />
           </div>
         </AppPageShell>
@@ -277,9 +288,9 @@ export function TimelinePage() {
       <UserEventDialog
         open={dialogOpen}
         mode={dialogMode}
-        taskOptions={task.timelineTasks.map((item) => ({
-          id: item.id,
-          name: item.name,
+        worksetOptions={worksets.map((ws) => ({
+          id: ws.id,
+          name: ws.name,
         }))}
         initial={
           editingEvent
@@ -289,9 +300,9 @@ export function TimelinePage() {
                 endTime: editingEvent.endTime ?? "",
                 location: editingEvent.location ?? "",
                 body: editingEvent.body ?? "",
-                taskId: toUserEventFormTaskId(editingEvent.taskId),
+                worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
               }
-            : { taskId: toUserEventFormTaskId(null) }
+            : { worksetId: toUserEventFormWorksetId(null) }
         }
         busy={dialogBusy}
         error={dialogError}
@@ -300,6 +311,28 @@ export function TimelinePage() {
           void handleDialogSubmit(values);
         }}
       />
+
+      {pendingConfirm ? (
+        <ConfirmDialog
+          title={
+            pendingConfirm.kind === "dismiss"
+              ? t("detail.dismiss")
+              : t("detail.restore")
+          }
+          body={
+            pendingConfirm.kind === "dismiss"
+              ? t("messages.dismissConfirm", { title: pendingConfirm.event.title })
+              : t("messages.restoreConfirm", { title: pendingConfirm.event.title })
+          }
+          confirmLabel={tc("dialog.confirm")}
+          confirmBusyLabel={tc("dialog.confirm")}
+          busy={userEventActionBusy}
+          onCancel={() => {
+            if (!userEventActionBusy) setPendingConfirm(null);
+          }}
+          onConfirm={confirmPendingAction}
+        />
+      ) : null}
     </TimelinePageProvider>
   );
 }

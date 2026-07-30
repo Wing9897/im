@@ -260,7 +260,7 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v1**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.1`）；新安裝直接建 stamp-1 庫。**舊 stamp（含 legacy 2–24）一律 hard-reject**、拒絕啟動，無 in-place 升級路徑。需明確 reset 後重新收集：
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema stamp 3**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.3`）；新安裝直接建 stamp-3 庫（wipe-floor，`SCHEMA_MIGRATIONS` 為空）。**更舊 stamp（含 1–2 與 legacy 4–24）一律 hard-reject**、拒絕啟動，無 in-place 升級路徑。需明確 reset 後重新收集：
 
 ```bash
 python scripts/reset_local_databases.py --apply

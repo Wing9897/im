@@ -106,10 +106,10 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
     });
   }
 
-  // --- Req 3.1, 3.3: Selecting a task in Gantt mode updates selectedTaskIds ---
+  // --- Req 3.1, 3.3: Selecting a task in Gantt mode updates selectedSources ---
 
-  describe("Gantt mode task selection updates selectedTaskIds", () => {
-    it("selecting a task updates selectedTaskIds state", async () => {
+  describe("Gantt mode task selection updates selectedSources", () => {
+    it("selecting a task updates selectedSources state", async () => {
       // Start in gantt mode with all-tasks default
       window.localStorage.setItem(
         "im:timeline:view-mode",
@@ -118,16 +118,19 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
 
       await renderHookAsync();
 
-      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+      expect(resultRef.current!.sources.selectedSources).toBeNull();
 
       // Now select a concrete task
       await act(async () => {
-        resultRef.current!.task.setSelectedTaskIds(["task-b"]);
+        resultRef.current!.sources.setSelectedSources({ taskIds: ["task-b"], worksetIds: [] });
         await Promise.resolve();
         await Promise.resolve();
       });
 
-      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+      expect(resultRef.current!.sources.selectedSources).toEqual({
+        taskIds: ["task-b"],
+        worksetIds: [],
+      });
     });
 
     it("Gantt mode keeps all-tasks when none is selected", async () => {
@@ -138,13 +141,13 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
 
       await renderHookAsync();
 
-      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+      expect(resultRef.current!.sources.selectedSources).toBeNull();
     });
   });
 
-  // --- Req 3.1, 3.3: selectedTaskIds change triggers schedule events fetch ---
+  // --- Req 3.1, 3.3: selectedSources change triggers schedule events fetch ---
 
-  describe("selectedTaskIds change triggers schedule events fetch", () => {
+  describe("selectedSources change triggers schedule events fetch", () => {
     it("triggers fetchTimelineEvents with the selected task ID in Gantt mode", async () => {
       window.localStorage.setItem(
         "im:timeline:view-mode",
@@ -158,7 +161,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
 
       // Select a different task
       await act(async () => {
-        resultRef.current!.task.setSelectedTaskIds(["task-b"]);
+        resultRef.current!.sources.setSelectedSources({ taskIds: ["task-b"], worksetIds: [] });
         await Promise.resolve();
         await Promise.resolve();
       });
@@ -187,20 +190,23 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
   // --- Req 3.4: If a selected task no longer exists, selection resets ---
 
   describe("selection resets when task no longer in catalog", () => {
-    it("resets selectedTaskIds when selected task disappears from task catalog", async () => {
+    it("resets selectedSources when selected task disappears from task catalog", async () => {
       window.localStorage.setItem(
         "im:timeline:view-mode",
         JSON.stringify("gantt"),
       );
       window.localStorage.setItem(
-        "im:timeline:selected-task-ids",
-        JSON.stringify(["task-b"]),
+        "im:timeline:selected-sources",
+        JSON.stringify({ taskIds: ["task-b"], worksetIds: [] }),
       );
 
       await renderHookAsync();
 
       // Initially "task-b" exists so it should remain selected
-      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+      expect(resultRef.current!.sources.selectedSources).toEqual({
+        taskIds: ["task-b"],
+        worksetIds: [],
+      });
 
       // Now remove "task-b" from the catalog
       await act(async () => {
@@ -212,7 +218,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       });
 
       // Unknown task resets to all-tasks (same in calendar and gantt)
-      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+      expect(resultRef.current!.sources.selectedSources).toBeNull();
     });
 
     it("resets to empty string in calendar mode when task disappears", async () => {
@@ -221,13 +227,16 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
         JSON.stringify("calendar"),
       );
       window.localStorage.setItem(
-        "im:timeline:selected-task-ids",
-        JSON.stringify(["task-b"]),
+        "im:timeline:selected-sources",
+        JSON.stringify({ taskIds: ["task-b"], worksetIds: [] }),
       );
 
       await renderHookAsync();
 
-      expect(resultRef.current!.task.selectedTaskIds).toEqual(["task-b"]);
+      expect(resultRef.current!.sources.selectedSources).toEqual({
+        taskIds: ["task-b"],
+        worksetIds: [],
+      });
 
       // Remove "task-b"
       await act(async () => {
@@ -238,7 +247,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       });
 
       // In calendar mode, should reset to "" (show all tasks)
-      expect(resultRef.current!.task.selectedTaskIds).toBeNull();
+      expect(resultRef.current!.sources.selectedSources).toBeNull();
     });
   });
 });

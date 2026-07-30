@@ -341,6 +341,43 @@ export interface paths {
         patch: operations["toggle_task_active_api_v1_tasks__task_id__active_patch"];
         trace?: never;
     };
+    "/api/v1/worksets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Worksets */
+        get: operations["list_worksets_api_v1_worksets_get"];
+        put?: never;
+        /** Create Workset */
+        post: operations["create_workset_api_v1_worksets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/worksets/{workset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Workset */
+        get: operations["get_workset_api_v1_worksets__workset_id__get"];
+        /** Put Workset */
+        put: operations["put_workset_api_v1_worksets__workset_id__put"];
+        post?: never;
+        /** Remove Workset */
+        delete: operations["remove_workset_api_v1_worksets__workset_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/accounts": {
         parameters: {
             query?: never;
@@ -996,6 +1033,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/rotate-secrets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate Secrets
+         * @description Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.
+         *
+         *     Only allowed while ``secrets_ready`` is False. Requires admin username +
+         *     password. Does not wipe the database, connection.json, or admin accounts.
+         */
+        post: operations["rotate_secrets_api_v1_system_rotate_secrets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/reset/database": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Database
+         * @description Full wipe: rebuild schema and clear every local runtime artifact.
+         *
+         *     Removes SQLite data, Telegram sessions, ``secret.key``, and
+         *     ``connection.json``. Clients clear local auth/cache and relaunch into
+         *     FirstRunWizard after this.
+         *
+         *     When ``secrets_ready`` is already False (key mismatch), auth is skipped so
+         *     CLI / Settings recovery can wipe without a usable session. Otherwise normal
+         *     API_DEPS semantics apply. The secrets gate UI prefers rotate-secrets instead.
+         */
+        post: operations["reset_database_api_v1_system_reset_database_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/collector/status": {
         parameters: {
             query?: never;
@@ -1121,30 +1209,6 @@ export interface paths {
          * @description Run one retention cleanup pass immediately; returns per-category delete counts.
          */
         post: operations["retention_run_api_v1_system_retention_run_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/reset/database": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reset Database
-         * @description Full wipe: rebuild schema and clear every local runtime artifact.
-         *
-         *     Removes SQLite data, Telegram sessions, ``secret.key``, and
-         *     ``connection.json``. Clients clear local auth/cache and relaunch into
-         *     FirstRunWizard after this.
-         */
-        post: operations["reset_database_api_v1_system_reset_database_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1927,8 +1991,8 @@ export interface components {
             sessionId?: string | null;
             /** Locale */
             locale?: string | null;
-            /** Calendartaskid */
-            calendarTaskId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
             /** Surface */
             surface?: "task_editor" | null;
             currentTask?: components["schemas"]["TaskDraftPayload"] | null;
@@ -2086,19 +2150,56 @@ export interface components {
         };
         /** AssistantVoiceIoBody */
         AssistantVoiceIoBody: {
-            /** Settings */
-            settings: {
-                [key: string]: unknown;
-            };
+            settings: components["schemas"]["AssistantVoiceIoSettingsSchema"];
         };
         /** AssistantVoiceIoResponse */
         AssistantVoiceIoResponse: {
             /** Configured */
             configured: boolean;
-            /** Settings */
-            settings?: {
-                [key: string]: unknown;
-            } | null;
+            settings?: components["schemas"]["AssistantVoiceIoSettingsSchema"] | null;
+        };
+        /**
+         * AssistantVoiceIoSettingsSchema
+         * @description Assistant STT/TTS IO defaults (incl. calendar create target workset).
+         */
+        AssistantVoiceIoSettingsSchema: {
+            /**
+             * Sttprovider
+             * @default browser
+             */
+            sttProvider: string;
+            /**
+             * Ttsprovider
+             * @default browser
+             */
+            ttsProvider: string;
+            /**
+             * Ttsenabled
+             * @default true
+             */
+            ttsEnabled: boolean;
+            /**
+             * Speechlanguage
+             * @default zh-HK
+             */
+            speechLanguage: string;
+            /**
+             * Spacepttmode
+             * @default hold
+             */
+            spacePttMode: string;
+            /**
+             * Ttsvoiceuri
+             * @default
+             */
+            ttsVoiceUri: string;
+            /**
+             * Defaultworksetid
+             * @default __user__
+             */
+            defaultWorksetId: string;
+        } & {
+            [key: string]: unknown;
         };
         /** BoardPrefsResponse */
         BoardPrefsResponse: {
@@ -2820,6 +2921,13 @@ export interface components {
             message: string;
             deleted: components["schemas"]["RetentionDeletedCounts"];
         };
+        /** RotateSecretsBody */
+        RotateSecretsBody: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+        };
         /** RssFeedBody */
         RssFeedBody: {
             /** Feedurl */
@@ -2900,6 +3008,16 @@ export interface components {
             localhostAuthExempt: boolean;
             /** Resetpasswordforlocal */
             resetPasswordForLocal: boolean;
+        };
+        /**
+         * SourceFilterSelectionSchema
+         * @description Hierarchical source multi-select (``null`` at parent = all sources).
+         */
+        SourceFilterSelectionSchema: {
+            /** Taskids */
+            taskIds?: string[];
+            /** Worksetids */
+            worksetIds?: string[];
         };
         /**
          * SystemSettingsSnapshot
@@ -3030,6 +3148,14 @@ export interface components {
             lastErrorMessage?: string | null;
             /** Lastmessagecount */
             lastMessageCount?: number | null;
+            /**
+             * Sourcekind
+             * @default task
+             * @enum {string}
+             */
+            sourceKind: "task" | "workset";
+            /** Worksetid */
+            worksetId?: string | null;
         };
         /** TaskAnalysisStatsResponse */
         TaskAnalysisStatsResponse: {
@@ -3100,6 +3226,8 @@ export interface components {
             analysisBatchMessageLimit?: number | null;
             /** Analysisstrategymode */
             analysisStrategyMode?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -3187,6 +3315,8 @@ export interface components {
             includeInTimeline: boolean;
             /** Parenttaskid */
             parentTaskId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
             /** Projectwaveintervalseconds */
             projectWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
@@ -3350,6 +3480,8 @@ export interface components {
             location: string;
             /** Taskid */
             taskId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
         };
         /** UserEventPatchBody */
         UserEventPatchBody: {
@@ -3365,6 +3497,8 @@ export interface components {
             location?: string | null;
             /** Taskid */
             taskId?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
         };
         /** UserEventResponse */
         UserEventResponse: {
@@ -3390,6 +3524,8 @@ export interface components {
              * @default
              */
             taskId: string;
+            /** Worksetid */
+            worksetId: string;
             /**
              * Source
              * @constant
@@ -3458,6 +3594,24 @@ export interface components {
             /** Entries */
             entries: unknown[];
         };
+        /** VoiceQuietHoursSchema */
+        VoiceQuietHoursSchema: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Start
+             * @default 22:00
+             */
+            start: string;
+            /**
+             * End
+             * @default 07:00
+             */
+            end: string;
+        };
         /** VoiceReminderFiredClaimResponse */
         VoiceReminderFiredClaimResponse: {
             /** Configured */
@@ -3485,17 +3639,33 @@ export interface components {
         VoiceReminderSettingsResponse: {
             /** Configured */
             configured: boolean;
-            /** Settings */
-            settings?: {
-                [key: string]: unknown;
-            } | null;
+            settings?: components["schemas"]["VoiceReminderSettingsSchema"] | null;
+        };
+        /**
+         * VoiceReminderSettingsSchema
+         * @description Voice reminder settings blob under ``voice_reminder_settings``.
+         */
+        VoiceReminderSettingsSchema: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /** Leadoffsetsminutes */
+            leadOffsetsMinutes?: number[];
+            sourceFilter?: components["schemas"]["SourceFilterSelectionSchema"] | null;
+            /**
+             * Preamblechimeid
+             * @default broadcast
+             */
+            preambleChimeId: string;
+            quietHours?: components["schemas"]["VoiceQuietHoursSchema"] | null;
+        } & {
+            [key: string]: unknown;
         };
         /** VoiceSettingsBody */
         VoiceSettingsBody: {
-            /** Settings */
-            settings: {
-                [key: string]: unknown;
-            };
+            settings: components["schemas"]["VoiceReminderSettingsSchema"];
         };
         /** WeatherDailyResponse */
         WeatherDailyResponse: {
@@ -3511,6 +3681,40 @@ export interface components {
         /** WeatherForecastResponse */
         WeatherForecastResponse: {
             daily: components["schemas"]["WeatherDailyResponse"];
+        };
+        /** WorksetCreateBody */
+        WorksetCreateBody: {
+            /** Name */
+            name: string;
+        };
+        /** WorksetDeleteResponse */
+        WorksetDeleteResponse: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
+        /** WorksetResponse */
+        WorksetResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Issystem
+             * @default false
+             */
+            isSystem: boolean;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** WorksetUpdateBody */
+        WorksetUpdateBody: {
+            /** Name */
+            name: string;
         };
     };
     responses: never;
@@ -3962,6 +4166,7 @@ export interface operations {
             query?: {
                 top_level_only?: boolean;
                 analysis_mode?: string | null;
+                workset_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -4106,6 +4311,156 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_worksets_api_v1_worksets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorksetResponse"][];
+                };
+            };
+        };
+    };
+    create_workset_api_v1_worksets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorksetCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorksetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_workset_api_v1_worksets__workset_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorksetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_workset_api_v1_worksets__workset_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorksetUpdateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorksetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_workset_api_v1_worksets__workset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorksetDeleteResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5472,6 +5827,63 @@ export interface operations {
             };
         };
     };
+    rotate_secrets_api_v1_system_rotate_secrets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RotateSecretsBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_database_api_v1_system_reset_database_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     collector_status_api_v1_system_collector_status_get: {
         parameters: {
             query?: never;
@@ -5646,28 +6058,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RetentionRunResponse"];
-                };
-            };
-        };
-    };
-    reset_database_api_v1_system_reset_database_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
                 };
             };
         };
@@ -5912,6 +6302,7 @@ export interface operations {
                 start?: string | null;
                 end?: string | null;
                 task_id?: string | null;
+                workset_id?: string | null;
             };
             header?: never;
             path?: never;

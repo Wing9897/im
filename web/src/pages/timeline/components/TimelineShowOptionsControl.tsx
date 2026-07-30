@@ -1,4 +1,4 @@
-import { ListFilter } from "lucide-react";
+import { Eye } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
@@ -16,7 +16,8 @@ type TimelineShowOptionsControlProps = {
 
 /**
  * Toolbar 「显示」checklist (removed / ongoing / ending).
- * Portaled like TaskFilterControl so toolbar overflow cannot clip the menu.
+ * Eye icon distinguishes visibility toggles from SourceFilterDialog (ListFilter).
+ * Portaled like SourceFilterDialog so toolbar overflow cannot clip the menu.
  */
 export function TimelineShowOptionsControl({
   showDismissed,
@@ -77,7 +78,7 @@ export function TimelineShowOptionsControl({
           <div
             ref={menuRef}
             id={menuId}
-            className="board-task-filter__menu board-task-filter__menu--portal"
+            className="board-source-filter__menu board-source-filter__menu--portal"
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
@@ -86,15 +87,15 @@ export function TimelineShowOptionsControl({
             data-testid="timeline-show-options-menu"
             style={menuPosition}
           >
-            <div className="board-task-filter__menu-head">
+            <div className="board-source-filter__menu-head">
               <span id={titleId}>{menuTitle}</span>
             </div>
-            <ul className="board-task-filter__list">
+            <ul className="board-source-filter__list">
               {options.map((option, index) => {
                 const helpId = `${menuId}-${option.id}-help`;
                 return (
                   <li key={option.id}>
-                    <label className="board-task-filter__item" title={option.help}>
+                    <label className="board-source-filter__item" title={option.help}>
                       <input
                         type="checkbox"
                         checked={option.checked}
@@ -118,7 +119,7 @@ export function TimelineShowOptionsControl({
       : null;
 
   return (
-    <div className="board-task-filter">
+    <div className="board-source-filter">
       <PillButton
         ref={triggerRef}
         id={triggerId}
@@ -134,7 +135,7 @@ export function TimelineShowOptionsControl({
         onClick={toggle}
         className="relative"
       >
-        <ListFilter size={16} strokeWidth={2.5} aria-hidden="true" />
+        <Eye size={16} strokeWidth={2.5} aria-hidden="true" />
       </PillButton>
       {menu}
     </div>

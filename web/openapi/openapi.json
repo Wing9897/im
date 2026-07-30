@@ -581,6 +581,22 @@
               ],
               "title": "Analysis Mode"
             }
+          },
+          {
+            "name": "workset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workset Id"
+            }
           }
         ],
         "responses": {
@@ -767,6 +783,202 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worksets": {
+      "get": {
+        "tags": [
+          "worksets"
+        ],
+        "summary": "List Worksets",
+        "operationId": "list_worksets_api_v1_worksets_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorksetResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Worksets Api V1 Worksets Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "worksets"
+        ],
+        "summary": "Create Workset",
+        "operationId": "create_workset_api_v1_worksets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorksetCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worksets/{workset_id}": {
+      "get": {
+        "tags": [
+          "worksets"
+        ],
+        "summary": "Get Workset",
+        "operationId": "get_workset_api_v1_worksets__workset_id__get",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "worksets"
+        ],
+        "summary": "Put Workset",
+        "operationId": "put_workset_api_v1_worksets__workset_id__put",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorksetUpdateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "worksets"
+        ],
+        "summary": "Remove Workset",
+        "operationId": "remove_workset_api_v1_worksets__workset_id__delete",
+        "parameters": [
+          {
+            "name": "workset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorksetDeleteResponse"
                 }
               }
             }
@@ -2909,6 +3121,74 @@
         }
       }
     },
+    "/api/v1/system/rotate-secrets": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Rotate Secrets",
+        "description": "Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.\n\nOnly allowed while ``secrets_ready`` is False. Requires admin username +\npassword. Does not wipe the database, connection.json, or admin accounts.",
+        "operationId": "rotate_secrets_api_v1_system_rotate_secrets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateSecretsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Rotate Secrets Api V1 System Rotate Secrets Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/system/reset/database": {
+      "post": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Reset Database",
+        "description": "Full wipe: rebuild schema and clear every local runtime artifact.\n\nRemoves SQLite data, Telegram sessions, ``secret.key``, and\n``connection.json``. Clients clear local auth/cache and relaunch into\nFirstRunWizard after this.\n\nWhen ``secrets_ready`` is already False (key mismatch), auth is skipped so\nCLI / Settings recovery can wipe without a usable session. Otherwise normal\nAPI_DEPS semantics apply. The secrets gate UI prefers rotate-secrets instead.",
+        "operationId": "reset_database_api_v1_system_reset_database_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Reset Database Api V1 System Reset Database Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/collector/status": {
       "get": {
         "tags": [
@@ -3112,30 +3392,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RetentionRunResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/system/reset/database": {
-      "post": {
-        "tags": [
-          "system"
-        ],
-        "summary": "Reset Database",
-        "description": "Full wipe: rebuild schema and clear every local runtime artifact.\n\nRemoves SQLite data, Telegram sessions, ``secret.key``, and\n``connection.json``. Clients clear local auth/cache and relaunch into\nFirstRunWizard after this.",
-        "operationId": "reset_database_api_v1_system_reset_database_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Reset Database Api V1 System Reset Database Post"
                 }
               }
             }
@@ -3523,6 +3779,22 @@
                 }
               ],
               "title": "Task Id"
+            }
+          },
+          {
+            "name": "workset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workset Id"
             }
           }
         ],
@@ -5600,7 +5872,7 @@
             ],
             "title": "Locale"
           },
-          "calendarTaskId": {
+          "worksetId": {
             "anyOf": [
               {
                 "type": "string"
@@ -5609,7 +5881,7 @@
                 "type": "null"
               }
             ],
-            "title": "Calendartaskid"
+            "title": "Worksetid"
           },
           "surface": {
             "anyOf": [
@@ -6153,9 +6425,7 @@
       "AssistantVoiceIoBody": {
         "properties": {
           "settings": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Settings"
+            "$ref": "#/components/schemas/AssistantVoiceIoSettingsSchema"
           }
         },
         "additionalProperties": false,
@@ -6174,14 +6444,12 @@
           "settings": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/AssistantVoiceIoSettingsSchema"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Settings"
+            ]
           }
         },
         "type": "object",
@@ -6189,6 +6457,49 @@
           "configured"
         ],
         "title": "AssistantVoiceIoResponse"
+      },
+      "AssistantVoiceIoSettingsSchema": {
+        "properties": {
+          "sttProvider": {
+            "type": "string",
+            "title": "Sttprovider",
+            "default": "browser"
+          },
+          "ttsProvider": {
+            "type": "string",
+            "title": "Ttsprovider",
+            "default": "browser"
+          },
+          "ttsEnabled": {
+            "type": "boolean",
+            "title": "Ttsenabled",
+            "default": true
+          },
+          "speechLanguage": {
+            "type": "string",
+            "title": "Speechlanguage",
+            "default": "zh-HK"
+          },
+          "spacePttMode": {
+            "type": "string",
+            "title": "Spacepttmode",
+            "default": "hold"
+          },
+          "ttsVoiceUri": {
+            "type": "string",
+            "title": "Ttsvoiceuri",
+            "default": ""
+          },
+          "defaultWorksetId": {
+            "type": "string",
+            "title": "Defaultworksetid",
+            "default": "__user__"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "AssistantVoiceIoSettingsSchema",
+        "description": "Assistant STT/TTS IO defaults (incl. calendar create target workset)."
       },
       "BoardPrefsResponse": {
         "properties": {
@@ -8546,6 +8857,27 @@
         ],
         "title": "RetentionRunResponse"
       },
+      "RotateSecretsBody": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "RotateSecretsBody"
+      },
       "RssFeedBody": {
         "properties": {
           "feedUrl": {
@@ -8798,6 +9130,28 @@
           "resetPasswordForLocal"
         ],
         "title": "SetupStatusResponse"
+      },
+      "SourceFilterSelectionSchema": {
+        "properties": {
+          "taskIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Taskids"
+          },
+          "worksetIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Worksetids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SourceFilterSelectionSchema",
+        "description": "Hierarchical source multi-select (``null`` at parent = all sources)."
       },
       "SystemSettingsSnapshot": {
         "properties": {
@@ -9144,6 +9498,26 @@
               }
             ],
             "title": "Lastmessagecount"
+          },
+          "sourceKind": {
+            "type": "string",
+            "enum": [
+              "task",
+              "workset"
+            ],
+            "title": "Sourcekind",
+            "default": "task"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
           }
         },
         "type": "object",
@@ -9432,6 +9806,17 @@
               }
             ],
             "title": "Analysisstrategymode"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
           }
         },
         "type": "object",
@@ -9728,6 +10113,17 @@
               }
             ],
             "title": "Parenttaskid"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
           },
           "projectWaveIntervalSeconds": {
             "anyOf": [
@@ -10253,6 +10649,17 @@
               }
             ],
             "title": "Taskid"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
           }
         },
         "additionalProperties": false,
@@ -10330,6 +10737,17 @@
               }
             ],
             "title": "Taskid"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
           }
         },
         "additionalProperties": false,
@@ -10391,6 +10809,10 @@
             "title": "Taskid",
             "default": ""
           },
+          "worksetId": {
+            "type": "string",
+            "title": "Worksetid"
+          },
           "source": {
             "type": "string",
             "const": "user",
@@ -10418,6 +10840,7 @@
           "endTime",
           "location",
           "origin",
+          "worksetId",
           "source",
           "dismissed",
           "createdAt",
@@ -10594,6 +11017,28 @@
         ],
         "title": "VoiceHistoryBody"
       },
+      "VoiceQuietHoursSchema": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "default": "22:00"
+          },
+          "end": {
+            "type": "string",
+            "title": "End",
+            "default": "07:00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "VoiceQuietHoursSchema"
+      },
       "VoiceReminderFiredClaimResponse": {
         "properties": {
           "configured": {
@@ -10676,14 +11121,12 @@
           "settings": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/VoiceReminderSettingsSchema"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Settings"
+            ]
           }
         },
         "type": "object",
@@ -10692,12 +11135,55 @@
         ],
         "title": "VoiceReminderSettingsResponse"
       },
+      "VoiceReminderSettingsSchema": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "leadOffsetsMinutes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Leadoffsetsminutes"
+          },
+          "sourceFilter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceFilterSelectionSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preambleChimeId": {
+            "type": "string",
+            "title": "Preamblechimeid",
+            "default": "broadcast"
+          },
+          "quietHours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VoiceQuietHoursSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "title": "VoiceReminderSettingsSchema",
+        "description": "Voice reminder settings blob under ``voice_reminder_settings``."
+      },
       "VoiceSettingsBody": {
         "properties": {
           "settings": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Settings"
+            "$ref": "#/components/schemas/VoiceReminderSettingsSchema"
           }
         },
         "additionalProperties": false,
@@ -10752,6 +11238,94 @@
           "daily"
         ],
         "title": "WeatherForecastResponse"
+      },
+      "WorksetCreateBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorksetCreateBody"
+      },
+      "WorksetDeleteResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "WorksetDeleteResponse"
+      },
+      "WorksetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "isSystem": {
+            "type": "boolean",
+            "title": "Issystem",
+            "default": false
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "WorksetResponse"
+      },
+      "WorksetUpdateBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorksetUpdateBody"
       }
     }
   }

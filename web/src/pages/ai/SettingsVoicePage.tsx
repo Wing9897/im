@@ -7,7 +7,7 @@ import {
   SettingsRow,
   formHelpClass,
 } from "../../components/ui";
-import { CalendarTaskTargetSelect } from "../../components/assistant/CalendarTaskTargetSelect";
+import { WorksetTargetSelect } from "../../components/assistant/WorksetTargetSelect";
 import { isAssistantDirectModeSupported } from "../../domain/assistant/directModeSupport";
 import {
   createSpeechPorts,
@@ -18,6 +18,7 @@ import {
   loadVoiceSettings,
   saveVoiceSettingsAsync,
   ttsSpeakOptionsFromVoiceSettings,
+  VOICE_SETTINGS_CHANGED_EVENT,
   type SpacePttMode,
   type SttProviderId,
   type TtsProviderId,
@@ -40,6 +41,12 @@ export function SettingsVoicePage() {
     void hydrateVoiceSettings().then((loaded) => {
       setSettings(loaded);
     });
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setSettings(loadVoiceSettings());
+    window.addEventListener(VOICE_SETTINGS_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(VOICE_SETTINGS_CHANGED_EVENT, sync);
   }, []);
 
   const sttOptions = getSttProviderOptions(t);
@@ -205,15 +212,15 @@ export function SettingsVoicePage() {
           </SettingsRow>
 
           <SettingsRow
-            label={t("voice.defaultCalendarTaskLabel")}
-            htmlFor="voice-default-calendar-task"
-            help={t("voice.defaultCalendarTaskHelp")}
+            label={t("voice.defaultWorksetLabel")}
+            htmlFor="voice-default-calendar-workset"
+            help={t("voice.defaultWorksetHelp")}
           >
-            <CalendarTaskTargetSelect
-              id="voice-default-calendar-task"
-              value={settings.defaultCalendarTaskId}
-              onChange={(taskId) => update({ defaultCalendarTaskId: taskId })}
-              data-testid="voice-default-calendar-task"
+            <WorksetTargetSelect
+              id="voice-default-calendar-workset"
+              value={settings.defaultWorksetId}
+              onChange={(taskId) => update({ defaultWorksetId: taskId })}
+              data-testid="voice-default-calendar-workset"
             />
           </SettingsRow>
 

@@ -17,7 +17,7 @@
 import { createContext, type ReactNode } from "react";
 import { vi } from "vitest";
 import { buildTaskNameById } from "../domain/timeline/userEvents";
-import type { AnalysisTask } from "../types";
+import type { AnalysisTask, Workset } from "../types";
 
 // ── ToastContext ────────────────────────────────────────────────────────
 
@@ -47,6 +47,7 @@ export function makeAnalysisTask(overrides: Partial<AnalysisTask> = {}): Analysi
     version: 1,
     isActive: true,
     channelIds: [],
+    worksetId: null,
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
@@ -62,6 +63,9 @@ export const taskCatalogState = {
   tasksLoading: false,
   taskLoadError: null as string | null,
   refreshTasks: vi.fn(() => Promise.resolve([] as AnalysisTask[])),
+  worksets: [] as Array<{ id: string; name: string; createdAt: string | null; updatedAt: string | null }>,
+  worksetsLoading: false,
+  refreshWorksets: vi.fn(() => Promise.resolve([] as Array<{ id: string; name: string; createdAt: string | null; updatedAt: string | null }>)),
 };
 
 export function resetTaskCatalogState(tasks: AnalysisTask[] = []) {
@@ -70,6 +74,10 @@ export function resetTaskCatalogState(tasks: AnalysisTask[] = []) {
   taskCatalogState.taskLoadError = null;
   taskCatalogState.refreshTasks.mockReset();
   taskCatalogState.refreshTasks.mockResolvedValue([]);
+  taskCatalogState.worksets = [];
+  taskCatalogState.worksetsLoading = false;
+  taskCatalogState.refreshWorksets.mockReset();
+  taskCatalogState.refreshWorksets.mockResolvedValue([]);
 }
 
 /** Module-shape mock for `vi.mock("<path>/context/TaskCatalogContext", ...)`. */
@@ -77,6 +85,11 @@ export function taskCatalogModuleMock() {
   return {
     useTaskCatalog: () => taskCatalogState,
     useTaskNameById: () => buildTaskNameById(taskCatalogState.tasks),
+    useWorksetNameById: () => {
+      const map = new Map<string, string>();
+      for (const ws of taskCatalogState.worksets) map.set(ws.id, ws.name);
+      return map;
+    },
     TaskCatalogProvider: ({ children }: { children: ReactNode }) => children,
   };
 }

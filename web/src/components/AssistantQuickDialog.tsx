@@ -10,7 +10,7 @@ import { isTaskEditorPath } from "../domain/tasks/taskEditorDraftBridge";
 import { AssistantDirectBubbles } from "./assistant/AssistantDirectBubbles";
 import { AssistantMicButton } from "./assistant/AssistantMicButton";
 import { AssistantToolSummary } from "./assistant/AssistantToolSteps";
-import { CalendarTaskTargetSelect } from "./assistant/CalendarTaskTargetSelect";
+import { WorksetTargetSelect } from "./assistant/WorksetTargetSelect";
 import { staffIdForAgentTool } from "./assistant/assistantToolStaff";
 
 /**
@@ -48,8 +48,8 @@ export function AssistantQuickDialog() {
     error,
     sttAvailable,
     spacePttMode,
-    calendarTaskId,
-    setCalendarTaskId,
+    worksetId,
+    setWorksetId,
     sendDraft,
     startListening,
     stopListening,
@@ -204,12 +204,12 @@ export function AssistantQuickDialog() {
           className={`${captionClass} im-assistant-direct__composer-target-label`}
           htmlFor="assistant-caption-calendar-task"
         >
-          {t("targetTask.label")}
+          {t("targetWorkset.label")}
         </label>
-        <CalendarTaskTargetSelect
+        <WorksetTargetSelect
           id="assistant-caption-calendar-task"
-          value={calendarTaskId}
-          onChange={setCalendarTaskId}
+          value={worksetId}
+          onChange={setWorksetId}
           disabled={sending}
           className="im-assistant-direct__composer-target-select"
           data-testid="assistant-caption-calendar-task"

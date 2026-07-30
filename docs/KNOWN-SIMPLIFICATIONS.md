@@ -8,7 +8,7 @@ Contract／schema／API SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)（[API contr
 
 `GET /api/v1/results/stats` is dashboard-only (`TaskAnalysisStats`: `taskId` / `analyzedCount` / `unanalyzedCount` / `queuedMessageCount`). Per-task `failedBatches`／`completedBatches` are **not** on that route; viewer `GET /api/v1/viewer/stats` exposes global batch totals only (no `failedBatches`).
 
-**Batch failure model:** LLM errors keep batches `pending` and retry until `max_batch_retries`; optional `autoPauseOnRetriesExhausted` (default **true**) pauses analysis. Operational invalidation **deletes** incomplete batches (no terminal `failed` rows). Queue diagnostics (`errorMessage`／tokens) come from `GET /api/v1/results/queue`. Field meanings: [Batch stats semantics](#batch-stats-semantics-version-aware). Schema／gate SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
+**Batch failure model:** see [Batch retries and auto-pause](#batch-retries-and-auto-pause). Schema／gate SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
 
 ## Frontend usage deltas
 
@@ -26,7 +26,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. The `_data_migrations` ledger stub in `server/db/data_migrations.py` remains for startup safety; active content runners are empty on the stamp-1 wipe-only baseline (schema registry empty).
+Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. The `_data_migrations` ledger stub in `server/db/data_migrations.py` remains for startup safety; active content runners are empty on the stamp-3 wipe-floor baseline (schema registry empty).
 
 ## Sources / accounts
 
@@ -39,14 +39,14 @@ Still update accounts routes／OpenAPI／pipeline／UI when adding — registry 
 
 ## Schema baseline
 
-**Current:** stamp **v1** / `schemaSemver` **0.1.0-beta.1** (empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — must reset). Int stamp ≠ product SemVer ≠ task analysis `version`. SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
+Pointer only — stamp / semver / wipe-floor SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
 
 ## Calendar / RRULE expansion
 
 One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRULE:` prefix (`server/services/task_writes.py`). Validation／expansion live in `server/calendar/rrule.py` (not under `analyzer/`).
 
 - **Sub-day frequencies are rejected on write:** `validate_rrule` only allows `FREQ ∈ {DAILY, WEEKLY, MONTHLY, YEARLY}` (`unsupported_freq`). `SECONDLY`／`MINUTELY`／`HOURLY` (and any other FREQ) fail task create／update. Query-time expansion still snaps wall clocks and budgets dense windows for legacy／synthetic rows used in budget tests — writers never emit those freqs.
-- **Desktop ICS／deep-link import (v1):** first `VEVENT` only; RRULE in the file is ignored (user confirms one occurrence). No webcal subscribe, CalDAV, or Google sync. Deep link: `intelligencemonitor://calendar/import?url=…` or `title`+`start` (+ optional `end`／`location`／`body`／`taskId`).
+- **Desktop ICS／deep-link import (v1):** intentional limit only — first `VEVENT`, no webcal／CalDAV／Google sync; ownership hint `worksetId`. Shape + flow: [`ARCHITECTURE.md` Desktop Shell](./ARCHITECTURE.md#components).
 
 ## Batch stats semantics (version-aware)
 
@@ -80,7 +80,7 @@ Ops: `python scripts/pending_batch_report.py`［`--json`］; `operational_verify
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v1 | Current baseline; public `schemaSemver` 0.1.0-beta.1; empty `SCHEMA_MIGRATIONS`; legacy stamps hard-reject; per-task analysis-scheduling fields (`batch_overlap_count` / `project_wave_interval_seconds` are task-owned, not global settings); `user_events.origin` CHECK includes `project` |
+| Schema stamp v3 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) (wipe-floor, `__user__`, `user_events.workset_id`) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

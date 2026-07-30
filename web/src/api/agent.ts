@@ -32,10 +32,10 @@ interface AgentChatRequest {
   /** UI locale for AI output language; server falls back to ``ui_locale``. */
   locale?: AppLocale;
   /**
-   * Default create target when calendar tools omit taskId.
-   * ``__user__`` / empty → unassigned (用戶或助手).
+   * Default create target workset when calendar tools omit worksetId.
+   * ``__user__`` / empty → builtin system workset.
    */
-  calendarTaskId?: string | null;
+  worksetId?: string | null;
   /** Page gate: only task create/edit sends ``task_editor``. */
   surface?: OpenApiAgentChatBody["surface"];
   /** Live Chat Editor draft for ``tasks.consult_advisor`` context. */
@@ -58,9 +58,7 @@ function agentChatRequestBody(body: AgentChatRequest): Record<string, unknown> {
     messages: body.messages,
     ...(body.sessionId ? { sessionId: body.sessionId } : {}),
     ...(body.locale ? { locale: body.locale } : {}),
-    ...(body.calendarTaskId != null && body.calendarTaskId !== ""
-      ? { calendarTaskId: body.calendarTaskId }
-      : {}),
+    ...(body.worksetId != null && body.worksetId !== "" ? { worksetId: body.worksetId } : {}),
     ...(body.surface ? { surface: body.surface } : {}),
     ...(body.currentTask != null ? { currentTask: body.currentTask } : {}),
   };

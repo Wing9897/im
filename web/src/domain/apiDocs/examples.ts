@@ -70,5 +70,5 @@ export function calendarDeepLinkExamples(t: Translate): string {
 intelligencemonitor://calendar/import?url=https%3A%2F%2Fexample.com%2Fmeet.ics
 
 # ${inlineComment}
-intelligencemonitor://calendar/import?title=${title}&start=2026-07-29T10%3A00%3A00Z&end=2026-07-29T11%3A00%3A00Z&location=A&body=Hi&taskId=task-1`;
+intelligencemonitor://calendar/import?title=${title}&start=2026-07-29T10%3A00%3A00Z&end=2026-07-29T11%3A00%3A00Z&location=A&body=Hi&worksetId=ws-1`;
 }

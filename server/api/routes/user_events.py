@@ -13,6 +13,7 @@ from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.user_events import (
     UserEventTaskIdError,
     UserEventValidationError,
+    UserEventWorksetIdError,
     create_user_event,
     delete_user_event,
     get_user_event,
@@ -29,8 +30,10 @@ class UserEventCreateBody(BaseModel):
     endTime: str | None = None
     body: str = ""
     location: str = ""
-    #: Optional owning task; omit / null / "" / "__user__" → 用戶或助手 (NULL).
+    #: Optional analysis-task provenance; omit / null / "" → NULL. ``__user__`` rejected.
     taskId: str | None = None
+    #: Ownership workset; omit / null / "" / "__user__" → builtin system workset.
+    worksetId: str | None = None
     model_config = {"extra": "forbid"}
 
 
@@ -41,13 +44,18 @@ class UserEventPatchBody(BaseModel):
     body: str | None = None
     location: str | None = None
     taskId: str | None = None
+    worksetId: str | None = None
     # Optional clearable fields use exclude_unset on model_dump below.
     model_config = {"extra": "forbid"}
 
 
 def _http_from_validation(exc: UserEventValidationError) -> HTTPException:
-    """A bad ``taskId`` is a 400; every other field problem is a 422."""
-    status = 400 if isinstance(exc, UserEventTaskIdError) else 422
+    """A bad ``taskId`` / ``worksetId`` is a 400; every other field problem is a 422."""
+    status = (
+        400
+        if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError))
+        else 422
+    )
     return http_error(status, str(exc), error_code=VALIDATION_ERROR)
 
 
@@ -65,26 +73,35 @@ async def list_events(
     start: str | None = None,
     end: str | None = None,
     task_id: str | None = None,
+    workset_id: str | None = None,
 ) -> list[UserEventResponse]:
     db = get_db(request)
-    rows = await list_user_events(db, start=start, end=end, task_id=task_id)
+    try:
+        rows = await list_user_events(
+            db, start=start, end=end, task_id=task_id, workset_id=workset_id
+        )
+    except UserEventValidationError as exc:
+        raise _http_from_validation(exc) from exc
     return [UserEventResponse.model_validate(row) for row in rows]
 
 
 @router.post("", status_code=201, response_model=UserEventResponse)
 async def create_event(request: Request, body: UserEventCreateBody) -> UserEventResponse:
     db = get_db(request)
+    fields_set = body.model_fields_set
     try:
-        item = await create_user_event(
-            db,
-            title=body.title,
-            start_time=body.startTime,
-            end_time=body.endTime,
-            body=body.body,
-            location=body.location,
-            origin="manual",
-            task_id=body.taskId,
-        )
+        kwargs: dict[str, Any] = {
+            "title": body.title,
+            "start_time": body.startTime,
+            "end_time": body.endTime,
+            "body": body.body,
+            "location": body.location,
+            "origin": "manual",
+            "task_id": body.taskId,
+        }
+        if "worksetId" in fields_set:
+            kwargs["workset_id"] = body.worksetId
+        item = await create_user_event(db, **kwargs)
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
     _notify(request, item["id"], "created")
@@ -112,6 +129,7 @@ async def patch_event(
         "body": "body",
         "location": "location",
         "taskId": "task_id",
+        "worksetId": "workset_id",
     }
     kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}
 

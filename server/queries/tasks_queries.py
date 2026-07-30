@@ -9,6 +9,7 @@ import aiosqlite
 from server.db.database import TransactionDb
 from server.ingestion import upsert_channel
 from server.queries.version_sql import version_matched_batch_on
+from server.worksets_const import SYSTEM_WORKSET_DEFAULT_NAME, SYSTEM_WORKSET_ID
 
 
 async def fetch_task_channel_rows(db: Any, task_id: str) -> list[dict[str, Any]]:
@@ -65,6 +66,9 @@ async def fetch_activity_span_rows(db: Any) -> list[dict[str, Any]]:
 
     Also surfaces the latest completed batch's project-tick summary
     (``agent_message`` / ``tool_calls_json``) for project detail UI.
+
+    Appends one ``source_kind=workset`` row per ``user_events.workset_id``
+    that has events (wire ``taskId`` = ``worksetId`` = that workset id).
     """
     batch_on = version_matched_batch_on("b", "t")
     latest_where = (
@@ -88,26 +92,40 @@ async def fetch_activity_span_rows(db: Any) -> list[dict[str, Any]]:
         f"FROM analysis_tasks t LEFT JOIN analysis_batches b ON {batch_on} "
         "GROUP BY t.id ORDER BY t.created_at ASC"
     )
-    user_events_row = await db.fetch_one(
-        "SELECT MIN(start_time) AS earliest_start, "
-        "MAX(COALESCE(NULLIF(end_time, ''), start_time)) AS latest_end, "
-        "COUNT(*) AS event_count FROM user_events"
+    # One Gantt row per workset that owns user_events (row key = workset_id;
+    # wire ``taskId`` = ``worksetId`` with sourceKind=workset).
+    workset_span_rows = await db.fetch_all(
+        "SELECT ue.workset_id AS id, "
+        "COALESCE(NULLIF(w.name, ''), ?) AS name, "
+        "MIN(ue.start_time) AS earliest_start, "
+        "MAX(COALESCE(NULLIF(ue.end_time, ''), ue.start_time)) AS latest_end, "
+        "COUNT(*) AS event_count "
+        "FROM user_events ue "
+        "LEFT JOIN worksets w ON w.id = ue.workset_id "
+        "GROUP BY ue.workset_id "
+        "ORDER BY MIN(ue.start_time) ASC, ue.workset_id ASC",
+        (SYSTEM_WORKSET_DEFAULT_NAME,),
     )
-    if user_events_row and int(user_events_row.get("event_count") or 0) > 0:
+    for ws_row in workset_span_rows:
+        if int(ws_row.get("event_count") or 0) <= 0:
+            continue
+        workset_id = str(ws_row.get("id") or "").strip() or SYSTEM_WORKSET_ID
         task_rows.append(
             {
-                "id": "__user__",
-                "name": "用戶或助手",
+                "id": workset_id,
+                "workset_id": workset_id,
+                "name": str(ws_row.get("name") or SYSTEM_WORKSET_DEFAULT_NAME),
                 "description": "手動或由助手建立的定時事件",
                 "analysis_time_range": "all",
                 "is_active": False,
-                "earliest_start": user_events_row["earliest_start"],
-                "latest_end": user_events_row["latest_end"],
-                "completed_count": user_events_row["event_count"],
+                "earliest_start": ws_row["earliest_start"],
+                "latest_end": ws_row["latest_end"],
+                "completed_count": ws_row["event_count"],
                 "last_agent_message": None,
                 "last_tool_calls_json": None,
                 "last_error_message": None,
                 "last_message_count": None,
+                "source_kind": "workset",
             }
         )
     return task_rows
@@ -132,6 +150,7 @@ async def insert_analysis_task(
     event_description: str | None,
     include_in_timeline: int = 1,
     parent_task_id: str | None = None,
+    workset_id: str | None = None,
     project_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -144,10 +163,10 @@ async def insert_analysis_task(
         "analysis_mode, analysis_time_range, version, is_active, schedule_type, "
         "schedule_value, rrule, event_start_time, event_end_time, event_is_all_day, "
         "event_location, event_description, include_in_timeline, parent_task_id, "
-        "project_wave_interval_seconds, batch_overlap_count, "
+        "workset_id, project_wave_interval_seconds, batch_overlap_count, "
         "analysis_trigger_threshold, analysis_batch_message_limit, "
         "analysis_strategy_mode, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -165,6 +184,7 @@ async def insert_analysis_task(
             event_description,
             include_in_timeline,
             parent_task_id,
+            workset_id,
             project_wave_interval_seconds,
             batch_overlap_count,
             analysis_trigger_threshold,
@@ -196,6 +216,7 @@ async def update_analysis_task(
     event_description: str | None,
     include_in_timeline: int = 1,
     parent_task_id: str | None = None,
+    workset_id: str | None = None,
     project_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -208,7 +229,7 @@ async def update_analysis_task(
         "analysis_mode = ?, analysis_time_range = ?, version = ?, schedule_type = ?, "
         "schedule_value = ?, rrule = ?, event_start_time = ?, event_end_time = ?, "
         "event_is_all_day = ?, event_location = ?, event_description = ?, "
-        "include_in_timeline = ?, parent_task_id = ?, "
+        "include_in_timeline = ?, parent_task_id = ?, workset_id = ?, "
         "project_wave_interval_seconds = ?, batch_overlap_count = ?, "
         "analysis_trigger_threshold = ?, analysis_batch_message_limit = ?, "
         "analysis_strategy_mode = ?, updated_at = ? WHERE id = ?",
@@ -229,6 +250,7 @@ async def update_analysis_task(
             event_description,
             include_in_timeline,
             parent_task_id,
+            workset_id,
             project_wave_interval_seconds,
             batch_overlap_count,
             analysis_trigger_threshold,

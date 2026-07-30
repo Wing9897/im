@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useToast } from "../../context/ToastContext";
+import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import type { AnalysisEvent } from "../../types";
@@ -28,6 +29,7 @@ const intelligencePageClass = "im-intelligence-page";
 export function IntelligencePage() {
   const { t } = useTranslation("intelligence");
   const feed = useIntelligenceFeed();
+  const { worksets, tasks } = useTaskCatalog();
   const { showToast } = useToast();
   useErrorToast(feed.pageError);
   useSlashFocusSearch(!feed.loading);
@@ -104,9 +106,14 @@ export function IntelligencePage() {
         onTimeFilterChange={feed.setPreset}
         sortMode={feed.sortMode}
         onSortModeChange={feed.setSortMode}
-        selectedTaskIds={feed.selectedTaskIds}
-        setSelectedTaskIds={feed.setSelectedTaskIds}
+        selectedSources={feed.selectedSources}
+        setSelectedSources={feed.setSelectedSources}
         intelligenceTasks={feed.intelligenceTasks}
+        worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
+        expandTasks={tasks.map((task) => ({
+          id: task.id,
+          worksetId: task.worksetId ?? null,
+        }))}
       />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">

@@ -9,6 +9,7 @@ import { getTaskFormAnalysisModeMeta } from "./task/taskFormAnalysisModeMeta";
 import { MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
 import { AiStaffAvatar } from "./aiStaff/AiStaffAvatar";
 import { staffIdForAnalysisMode } from "../domain/aiStaff/aiStaff";
+import { useWorksetNameById } from "../context/TaskCatalogContext";
 import {
   SelectableSurface,
   stopSelectableActivation,
@@ -51,6 +52,7 @@ export const TaskCard = React.memo(function TaskCard({
   isSelected = false,
 }: TaskCardProps) {
   const { t } = useTranslation("common");
+  const worksetNameById = useWorksetNameById();
   const [toggling, setToggling] = useState(false);
   const isRecurringMode = task.analysisMode === "recurring";
   const isCalendarTaskMode = task.analysisMode === "calendar_task";
@@ -59,6 +61,8 @@ export const TaskCard = React.memo(function TaskCard({
   const modeMeta = getTaskFormAnalysisModeMeta(task.analysisMode);
   const staffId = staffIdForAnalysisMode(task.analysisMode);
   const queuedMessageCount = stats.queuedMessageCount;
+  const worksetName =
+    task.worksetId != null ? worksetNameById.get(task.worksetId) ?? null : null;
 
   const handleToggle = useCallback(() => {
     setToggling(true);
@@ -126,6 +130,11 @@ export const TaskCard = React.memo(function TaskCard({
         </div>
 
         <div className="text-[11px] text-text-muted">
+          {worksetName ? (
+            <span className="mb-0.5 block truncate" title={worksetName}>
+              {t("workset.cardLabel", { name: worksetName })}
+            </span>
+          ) : null}
           {isRecurringMode
             ? t("tasks.card.recurring")
             : isCalendarTaskMode

@@ -1,0 +1,185 @@
+"""Field normalization / FK-resolution helpers for user_events (split from ``user_events.py``).
+
+Kept separate from CRUD so the wire-shape validation rules (title/time/origin,
+``taskId``/``worksetId`` sentinels) can be read and tested independently of the
+database read/write paths.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from server.db.database import Database
+from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
+from server.time_iso import parse_iso, to_iso_z
+from server.worksets_const import SYSTEM_WORKSET_ID
+
+ALLOWED_ORIGINS = frozenset({"manual", "assistant", "a2a", "project"})
+#: Tasks that may own a user_event (filter / timeline attribution).
+USER_EVENT_TASK_MODES = TIMELINE_OWNING_ANALYSIS_MODES
+
+# Sentinel: field not provided in a partial update.
+_UNSET = object()
+
+
+class UserEventValidationError(ValueError):
+    """Invalid user-event fields."""
+
+
+class UserEventTaskIdError(UserEventValidationError):
+    """Invalid or disallowed ``taskId`` (HTTP 400 at the route boundary)."""
+
+
+class UserEventWorksetIdError(UserEventValidationError):
+    """Invalid or unknown ``worksetId`` (HTTP 400 at the route boundary)."""
+
+
+def _require_nonempty_title(title: str) -> str:
+    cleaned = (title or "").strip()
+    if not cleaned:
+        raise UserEventValidationError("title is required")
+    return cleaned
+
+
+def _require_start_time(start_time: str) -> str:
+    raw = (start_time or "").strip()
+    if not raw:
+        raise UserEventValidationError("startTime is required")
+    parsed = parse_iso(raw)
+    if parsed is None:
+        raise UserEventValidationError("startTime must be a valid ISO-8601 datetime")
+    # Store canonical UTC Z so list windows and UI calendars compare reliably.
+    return to_iso_z(parsed)
+
+
+def _normalize_optional_end(end_time: str | None, start_time: str) -> str | None:
+    if end_time is None:
+        return None
+    raw = str(end_time).strip()
+    if not raw:
+        return None
+    parsed_end = parse_iso(raw)
+    if parsed_end is None:
+        raise UserEventValidationError("endTime must be a valid ISO-8601 datetime")
+    parsed_start = parse_iso(start_time)
+    if parsed_start is not None and parsed_end < parsed_start:
+        raise UserEventValidationError("endTime must be >= startTime")
+    return to_iso_z(parsed_end)
+
+
+def _normalize_origin(origin: str) -> str:
+    value = (origin or "").strip()
+    if value not in ALLOWED_ORIGINS:
+        raise UserEventValidationError("origin must be 'manual', 'assistant', 'a2a', or 'project'")
+    return value
+
+
+def normalize_user_event_task_id_wire(task_id: Any) -> str | None | object:
+    """Map wire ``taskId`` to DB value or ``_UNSET`` when omitted.
+
+    ``None`` / ``""`` → store NULL (optional provenance only).
+    ``__user__`` is rejected — ownership uses ``worksetId``, not taskId.
+    """
+    if task_id is _UNSET:
+        return _UNSET
+    if task_id is None:
+        return None
+    cleaned = str(task_id).strip()
+    if not cleaned:
+        return None
+    if cleaned == SYSTEM_WORKSET_ID:
+        raise UserEventTaskIdError(
+            "taskId must not be '__user__'; use worksetId for ownership"
+        )
+    return cleaned
+
+
+def normalize_user_event_workset_id_wire(workset_id: Any) -> str | None | object:
+    """Map wire ``worksetId`` to a stored FK or ``_UNSET`` when omitted.
+
+    ``None`` / ``""`` / ``__user__`` → builtin system workset id.
+    """
+    if workset_id is _UNSET:
+        return _UNSET
+    if workset_id is None:
+        return SYSTEM_WORKSET_ID
+    cleaned = str(workset_id).strip()
+    if not cleaned or cleaned == SYSTEM_WORKSET_ID:
+        return SYSTEM_WORKSET_ID
+    return cleaned
+
+
+async def resolve_user_event_task_id(db: Database, task_id: Any) -> str | None:
+    """Resolve wire taskId to a stored FK value (NULL = no analysis-task provenance)."""
+    normalized = normalize_user_event_task_id_wire(task_id)
+    if normalized is None:
+        return None
+    assert isinstance(normalized, str)
+    row = await db.fetch_one(
+        "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",
+        (normalized,),
+    )
+    if row is None:
+        raise UserEventTaskIdError("taskId does not refer to an existing task")
+    mode = str(row.get("analysis_mode") or "")
+    if mode not in USER_EVENT_TASK_MODES:
+        raise UserEventTaskIdError("taskId must refer to an event, recurring, calendar_task, or project task")
+    return normalized
+
+
+async def resolve_user_event_workset_id(db: Database, workset_id: Any) -> str:
+    """Resolve wire worksetId to a stored FK (defaults to builtin ``__user__``)."""
+    normalized = normalize_user_event_workset_id_wire(workset_id)
+    assert isinstance(normalized, str)
+    row = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (normalized,))
+    if row is None:
+        raise UserEventWorksetIdError("worksetId does not refer to an existing workset")
+    return normalized
+
+
+def build_user_event_list_filters(
+    *,
+    start: str | None = None,
+    end: str | None = None,
+    task_id: str | None = None,
+    workset_id: str | None = None,
+) -> tuple[list[str], list[Any]]:
+    """Build SQL WHERE clauses for ``list_user_events``.
+
+    ``task_id``:
+    - omitted / ``None``: no provenance filter
+    - ``""``: only rows with ``task_id IS NULL``
+    - ``__user__``: rejected (ownership filter is ``workset_id``)
+    - real id: ``task_id = ?``
+
+    ``workset_id``:
+    - omitted / ``None`` / empty: no ownership filter
+    - real id (incl. ``__user__``): ``workset_id = ?``
+    """
+    clauses: list[str] = []
+    params: list[Any] = []
+    if start and start.strip():
+        clauses.append(
+            "julianday(COALESCE(NULLIF(end_time, ''), start_time)) >= julianday(?)"
+        )
+        params.append(start.strip())
+    if end and end.strip():
+        clauses.append("julianday(start_time) <= julianday(?)")
+        params.append(end.strip())
+    if task_id is not None:
+        tid = str(task_id).strip()
+        if tid == SYSTEM_WORKSET_ID:
+            raise UserEventTaskIdError(
+                "task_id must not be '__user__'; use workset_id for ownership filter"
+            )
+        if not tid:
+            clauses.append("task_id IS NULL")
+        else:
+            clauses.append("task_id = ?")
+            params.append(tid)
+    if workset_id is not None:
+        wid = str(workset_id).strip()
+        if wid:
+            clauses.append("workset_id = ?")
+            params.append(wid)
+    return clauses, params

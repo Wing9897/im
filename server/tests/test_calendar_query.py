@@ -62,7 +62,7 @@ async def test_query_window_merges_analysis_events_and_rrule(app) -> None:
 
 
 async def test_query_window_merges_user_events(app) -> None:
-    from server.user_events import create_user_event
+    from server.user_events import create_user_event, list_user_events
 
     db = app.state.db
     created = await create_user_event(
@@ -110,17 +110,24 @@ async def test_query_window_merges_user_events(app) -> None:
     )
     assert any(i["id"] == tagged["id"] and i["taskId"] == seed.TASK_CALENDAR for i in filtered_tagged["items"])
 
-    # Unassigned-only filter returns only NULL task_id user events (no analysis/RRULE).
-    unassigned_only = await query_window(
+    # System-workset filter: ownership ``__user__`` only (no analysis/RRULE).
+    # Events with task provenance still appear when their workset is builtin.
+    system_ws = await query_window(
         db,
         start="2026-07-13T00:00:00Z",
         end="2026-07-21T23:59:59Z",
-        task_id="__user__",
+        workset_id="__user__",
         limit=100,
     )
-    assert all(i["source"] == "user" for i in unassigned_only["items"])
-    assert any(i["id"] == created["id"] for i in unassigned_only["items"])
-    assert all(i["id"] != tagged["id"] for i in unassigned_only["items"])
+    assert all(i["source"] == "user" for i in system_ws["items"])
+    assert any(i["id"] == created["id"] for i in system_ws["items"])
+    assert any(i["id"] == tagged["id"] for i in system_ws["items"])
+
+    # Empty task_id = NULL provenance only (not ownership).
+    null_provenance = await list_user_events(db, task_id="")
+    null_ids = {item["id"] for item in null_provenance}
+    assert created["id"] in null_ids
+    assert tagged["id"] not in null_ids
 
 
 async def test_query_window_cursor_pages(app) -> None:
@@ -254,6 +261,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
     assert detail == {
         "id": created["id"],
         "taskId": "",
+        "worksetId": "__user__",
         "title": "用戶事件詳情",
         "startTime": "2026-07-23T09:00:00Z",
         "endTime": "2026-07-23T10:00:00Z",
@@ -265,3 +273,38 @@ async def test_get_event_returns_user_event_detail(app) -> None:
         "updatedAt": created["updatedAt"],
         "dismissed": False,
     }
+
+
+async def test_query_window_filters_by_workset_id(app) -> None:
+    from server.user_events import create_user_event
+    from server.queries.worksets_queries import insert_workset
+    from server.db.database import TransactionDb
+    from server.util import utc_now_iso
+
+    db = app.state.db
+    now = utc_now_iso()
+    async with db.transaction() as conn:
+        await insert_workset(TransactionDb(conn), workset_id="ws-cal", name="Cal WS", now=now)
+    await create_user_event(
+        db,
+        title="In workset",
+        start_time="2026-07-16T14:00:00Z",
+        workset_id="ws-cal",
+    )
+    await create_user_event(
+        db,
+        title="System owned",
+        start_time="2026-07-16T15:00:00Z",
+        workset_id="__user__",
+    )
+    filtered = await query_window(
+        db,
+        start="2026-07-13T00:00:00Z",
+        end="2026-07-21T23:59:59Z",
+        workset_id="ws-cal",
+        limit=100,
+    )
+    user_items = [i for i in filtered["items"] if i["source"] == "user"]
+    assert len(user_items) == 1
+    assert user_items[0]["title"] == "In workset"
+    assert user_items[0]["worksetId"] == "ws-cal"

@@ -30,16 +30,10 @@ export function VoiceReminderPanel() {
     previewing,
     handlePreview,
     tasksLoading,
-    sourceTasks,
-    draftTaskIds,
-    draftListenAll,
-    draftSelectedCount,
-    taskSelectionDirty,
-    toggleDraftTask,
-    selectAllDraftTasks,
-    clearDraftTaskFilter,
-    confirmTaskSelection,
-    resetDraftTaskSelection,
+    filterTasks,
+    filterWorksets,
+    expandTasks,
+    setSourceFilter,
   } = useVoiceReminderPanelState();
 
   return (
@@ -185,16 +179,11 @@ export function VoiceReminderPanel() {
 
       <VoiceReminderSourcesSection
         tasksLoading={tasksLoading}
-        sourceTasks={sourceTasks}
-        draftTaskIds={draftTaskIds}
-        draftListenAll={draftListenAll}
-        draftSelectedCount={draftSelectedCount}
-        taskSelectionDirty={taskSelectionDirty}
-        onToggleDraftTask={toggleDraftTask}
-        onSelectAll={selectAllDraftTasks}
-        onClearAll={clearDraftTaskFilter}
-        onConfirm={confirmTaskSelection}
-        onResetDraft={resetDraftTaskSelection}
+        filterTasks={filterTasks}
+        worksets={filterWorksets}
+        expandTasks={expandTasks}
+        selection={settings.sourceFilter}
+        onChange={setSourceFilter}
       />
     </div>
   );

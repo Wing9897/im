@@ -9,9 +9,9 @@
     "viewAria": "View mode"
   },
   "filter": {
-    "openAria": "Search and filter events",
-    "title": "Search and filter events",
-    "closeAria": "Close search and filter",
+    "openAria": "Search Key Events",
+    "title": "Search Key Events",
+    "closeAria": "Close search",
     "clear": "Clear",
     "clearAria": "Clear search",
     "done": "Done",

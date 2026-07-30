@@ -52,7 +52,23 @@
 }
 
 .browser-monitor-bar__brand {
+  margin-right: 0.5rem;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.browser-monitor-bar__mode {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.browser-monitor-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  min-width: 0;
 }

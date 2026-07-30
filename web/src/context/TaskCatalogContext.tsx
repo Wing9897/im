@@ -1,5 +1,6 @@
 import { createContext, useMemo } from "react";
 import type { ReactNode } from "react";
+import type { Workset } from "../api/worksets";
 import type { AnalysisTask } from "../types";
 import { buildTaskNameById } from "../domain/timeline/userEvents";
 import { useContextWithFallback } from "./useContextWithFallback";
@@ -10,6 +11,9 @@ interface TaskCatalogContextValue {
   tasksLoading: boolean;
   taskLoadError: string | null;
   refreshTasks: () => Promise<AnalysisTask[]>;
+  worksets: Workset[];
+  worksetsLoading: boolean;
+  refreshWorksets: () => Promise<Workset[]>;
 }
 
 const TaskCatalogContext = createContext<TaskCatalogContextValue | null>(null);
@@ -43,4 +47,16 @@ export function useTaskCatalog(): TaskCatalogContextValue {
 export function useTaskNameById(): ReadonlyMap<string, string> {
   const { tasks } = useTaskCatalog();
   return useMemo(() => buildTaskNameById(tasks), [tasks]);
+}
+
+/** Workset display names from the shared catalog. */
+export function useWorksetNameById(): ReadonlyMap<string, string> {
+  const { worksets } = useTaskCatalog();
+  return useMemo(() => {
+    const map = new Map<string, string>();
+    for (const ws of worksets) {
+      map.set(ws.id, ws.name);
+    }
+    return map;
+  }, [worksets]);
 }

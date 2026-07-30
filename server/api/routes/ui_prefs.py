@@ -16,12 +16,14 @@ from server.api.deps import API_DEPS, get_db
 from server.api.schemas.responses import (
     AssistantSessionsResponse,
     AssistantVoiceIoResponse,
+    AssistantVoiceIoSettingsSchema,
     BoardPrefsResponse,
     TimelineAnnotationsResponse,
     VoiceReminderFiredClaimResponse,
     VoiceReminderFiredResponse,
     VoiceReminderHistoryResponse,
     VoiceReminderSettingsResponse,
+    VoiceReminderSettingsSchema,
 )
 from server.errors import VALIDATION_ERROR, http_error
 from server.ui_prefs import (
@@ -49,7 +51,7 @@ router = APIRouter(prefix="/api/v1/ui-prefs", tags=["ui-prefs"], dependencies=AP
 class VoiceSettingsBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    settings: dict[str, Any]
+    settings: VoiceReminderSettingsSchema
 
 
 class VoiceFiredBody(BaseModel):
@@ -67,7 +69,7 @@ class VoiceHistoryBody(BaseModel):
 class AssistantVoiceIoBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    settings: dict[str, Any]
+    settings: AssistantVoiceIoSettingsSchema
 
 
 def _http_from_validation(exc: UiPrefsValidationError):
@@ -121,7 +123,7 @@ async def fetch_voice_settings(request: Request) -> dict:
 @router.put("/voice-reminder/settings", response_model=VoiceReminderSettingsResponse)
 async def save_voice_settings(request: Request, body: VoiceSettingsBody) -> dict:
     try:
-        return await put_voice_settings(get_db(request), body.settings)
+        return await put_voice_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
 
@@ -197,7 +199,9 @@ async def fetch_assistant_voice_io(request: Request) -> dict:
 @router.put("/assistant/voice-io", response_model=AssistantVoiceIoResponse)
 async def save_assistant_voice_io(request: Request, body: AssistantVoiceIoBody) -> dict:
     try:
-        return await put_assistant_voice_io(get_db(request), body.settings)
+        return await put_assistant_voice_io(
+            get_db(request), body.settings.model_dump(exclude_unset=True)
+        )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
 

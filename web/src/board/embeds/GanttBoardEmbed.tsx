@@ -7,8 +7,11 @@ import {
 } from "../../domain/gantt/ganttTimeGeometry";
 import i18n from "../../i18n";
 import { getDateTimeLocale } from "../../i18n/locale";
-import { getUserEventsFilterLabel, USER_EVENTS_FILTER_ID } from "../../domain/timeline/userEvents";
+import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { asTimedAnalysisEvent, type AnalysisEvent, type TaskActivitySpan, type TimelineItem } from "../../types";
+import { isWorksetActivitySpan } from "../../types/analysis";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { resolveSpanWorksetId } from "../useBoardSourceFilter";
 import { groupRecurringGanttRows } from "../../domain/gantt/groupRecurringGanttRows";
 
 interface GanttActivity {
@@ -94,12 +97,16 @@ export function normalizeGanttActivities(spans: TaskActivitySpan[], now = Date.n
       return [];
     }
     const end = parseMs(span.latestBatchEnd) ?? (span.isActive ? now : start);
+    const worksetId = resolveSpanWorksetId(span);
+    const worksetLabel =
+      worksetId === SYSTEM_WORKSET_ID
+        ? getGeneralWorksetLabel()
+        : span.taskName.trim() || worksetId || span.taskId;
     return [{
       id: span.taskId,
-      label:
-        span.taskId === USER_EVENTS_FILTER_ID
-          ? getUserEventsFilterLabel()
-          : span.taskName.trim() || i18n.t("common:board.gantt.unnamedTask"),
+      label: isWorksetActivitySpan(span)
+        ? worksetLabel
+        : span.taskName.trim() || i18n.t("common:board.gantt.unnamedTask"),
       start,
       end: Math.max(start, end),
       status: span.isActive ? "active" : "complete",

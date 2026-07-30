@@ -21,8 +21,20 @@ export interface SystemTaskInfo {
   linkLabel?: string;
 }
 
+/** localStorage key for /tasks grouping view (by task | by workset). */
+export const TASKS_GROUPING_VIEW_STORAGE_KEY = "im:tasks:grouping-view";
+
+export type TasksGroupingView = "by_task" | "by_workset";
+
+export function isTasksGroupingView(value: string | null): value is TasksGroupingView {
+  return value === "by_task" || value === "by_workset";
+}
+
 /** localStorage key for DashboardViewer「顯示系統任務」toggle (default false). */
 export const SHOW_SYSTEM_TASKS_STORAGE_KEY = "im:tasks:show-system-tasks";
+
+/** localStorage key for DashboardViewer「顯示系統工作集」toggle (default true). */
+export const SHOW_SYSTEM_WORKSETS_STORAGE_KEY = "im:tasks:show-system-worksets";
 
 /** localStorage key for /tasks analysis mode filter chip (default `"all"`). */
 export const TASKS_MODE_FILTER_STORAGE_KEY = "im:tasks:mode-filter";

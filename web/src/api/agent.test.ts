@@ -72,7 +72,7 @@ describe("postAgentChat", () => {
     });
   });
 
-  it("forwards calendarTaskId when provided", async () => {
+  it("forwards worksetId", async () => {
     vi.mocked(apiClient.post).mockResolvedValue({
       message: "ok",
       sessionId: "new",
@@ -81,12 +81,12 @@ describe("postAgentChat", () => {
 
     await postAgentChat({
       messages: [{ role: "user", content: "加日程" }],
-      calendarTaskId: "__user__",
+      worksetId: "__user__",
     });
 
     expect(apiClient.post).toHaveBeenCalledWith("/api/v1/agent/chat", {
       messages: [{ role: "user", content: "加日程" }],
-      calendarTaskId: "__user__",
+      worksetId: "__user__",
     });
   });
 
@@ -171,7 +171,7 @@ describe("streamAgentChat", () => {
     expect(result.toolCalls).toHaveLength(1);
   });
 
-  it("forwards calendarTaskId on the stream body", async () => {
+  it("forwards worksetId on the stream body", async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response('{"type":"final","message":"ok","sessionId":"s3","toolCalls":[]}\n', {
         status: 200,
@@ -181,7 +181,7 @@ describe("streamAgentChat", () => {
 
     await streamAgentChat({
       messages: [{ role: "user", content: "記一下" }],
-      calendarTaskId: "ct-1",
+      worksetId: "ct-1",
     });
 
     expect(fetch).toHaveBeenCalledWith(
@@ -189,7 +189,7 @@ describe("streamAgentChat", () => {
       expect.objectContaining({
         body: JSON.stringify({
           messages: [{ role: "user", content: "記一下" }],
-          calendarTaskId: "ct-1",
+          worksetId: "ct-1",
         }),
       }),
     );

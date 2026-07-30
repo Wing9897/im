@@ -56,12 +56,28 @@ vi.mock("../../context/ToastContext", async () => {
   };
 });
 
+vi.mock("../../context/TaskCatalogContext", async () =>
+  (await import("../../test/context-mocks")).taskCatalogModuleMock());
+
 vi.mock("./useTimelinePageContainer", () => ({
   useTimelinePageContainer: () => mockUseTimelinePageContainer(),
 }));
 
 vi.mock("../../components/ui", () => ({
   AppPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Button: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock("./components/TimelineControlBar", () => ({
@@ -120,7 +136,7 @@ const formValues: UserEventFormValues = {
   endTime: "",
   location: "Office",
   body: "Notes",
-  taskId: "__user__",
+  worksetId: "__user__",
 };
 
 function makeUserEvent(): TimelineItem {
@@ -136,9 +152,9 @@ function makeUserEvent(): TimelineItem {
 
 function makeContainer(selectedEvent: TimelineItem | null = null) {
   return {
-    task: {
-      selectedTaskIds: null,
-      setSelectedTaskIds: vi.fn(),
+    sources: {
+      selectedSources: null,
+      setSelectedSources: vi.fn(),
       timelineTasks: [],
       viewMode: "calendar",
       setViewMode: vi.fn(),
@@ -226,7 +242,6 @@ describe("TimelinePage user-event CRUD", () => {
     mockSetSelectedEvent.mockReset();
     mockShowToast.mockReset();
     mockUseTimelinePageContainer.mockReturnValue(makeContainer());
-    vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -254,6 +269,16 @@ describe("TimelinePage user-event CRUD", () => {
     });
   }
 
+  async function confirmPendingDialog() {
+    const dialog = document.body.querySelector('[role="alertdialog"]');
+    expect(dialog).not.toBeNull();
+    const buttons = dialog!.querySelectorAll("button");
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
+    await flushAction(() => {
+      (buttons[1] as HTMLButtonElement).click();
+    });
+  }
+
   it("creates an event and refreshes the visible data", async () => {
     await renderPage();
     await flushAction(() => captures.addEvent!());
@@ -269,7 +294,7 @@ describe("TimelinePage user-event CRUD", () => {
       endTime: null,
       body: "Notes",
       location: "Office",
-      taskId: "__user__",
+      worksetId: "__user__",
     });
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
   });
@@ -300,6 +325,7 @@ describe("TimelinePage user-event CRUD", () => {
       const context = captures.context as TimelinePageContextValue;
       context.onDismissTimelineEvent!(event);
     });
+    await confirmPendingDialog();
 
     expect(mockDismissTimelineEvent).toHaveBeenCalledWith("user", "user-1");
     expect(mockSetSelectedEvent).toHaveBeenCalledWith(null);
@@ -315,6 +341,7 @@ describe("TimelinePage user-event CRUD", () => {
       const context = captures.context as TimelinePageContextValue;
       context.onDismissTimelineEvent!(event);
     });
+    await confirmPendingDialog();
 
     expect(mockShowToast).toHaveBeenCalledWith("Dismiss denied", "error");
     expect(mockRefreshEvents).not.toHaveBeenCalled();
@@ -329,6 +356,7 @@ describe("TimelinePage user-event CRUD", () => {
       const context = captures.context as TimelinePageContextValue;
       context.onRestoreTimelineEvent!(event);
     });
+    await confirmPendingDialog();
 
     expect(mockRestoreTimelineEvent).toHaveBeenCalledWith("user", "user-1");
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);

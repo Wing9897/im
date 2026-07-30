@@ -13,6 +13,7 @@ USER_EVENT_KEYS = {
     "location",
     "origin",
     "taskId",
+    "worksetId",
     "source",
     "dismissed",
     "createdAt",
@@ -181,11 +182,20 @@ async def test_list_user_events_filters_by_task_id(client, app) -> None:
     ids = {item["id"] for item in listed.json()}
     assert ids == {owned.json()["id"]}
 
-    unassigned = await client.get("/api/v1/user-events", params={"task_id": "__user__"})
-    assert unassigned.status_code == 200
-    unassigned_ids = {item["id"] for item in unassigned.json()}
-    assert other.json()["id"] in unassigned_ids
-    assert owned.json()["id"] not in unassigned_ids
+    # task_id=__user__ is rejected; ownership filter uses workset_id.
+    rejected = await client.get("/api/v1/user-events", params={"task_id": "__user__"})
+    assert rejected.status_code == 400
+
+    system_ws = await client.get("/api/v1/user-events", params={"workset_id": "__user__"})
+    assert system_ws.status_code == 200
+    system_ids = {item["id"] for item in system_ws.json()}
+    assert other.json()["id"] in system_ids
+    # Owned event may still be on __user__ workset if task had no workset — check provenance filter.
+    null_provenance = await client.get("/api/v1/user-events", params={"task_id": ""})
+    assert null_provenance.status_code == 200
+    null_ids = {item["id"] for item in null_provenance.json()}
+    assert other.json()["id"] in null_ids
+    assert owned.json()["id"] not in null_ids
 
 
 async def test_user_events_task_id_bind_and_reject(client, app) -> None:
@@ -212,13 +222,20 @@ async def test_user_events_task_id_bind_and_reject(client, app) -> None:
     assert created.status_code == 201
     assert created.json()["taskId"] == calendar_task_id
 
-    # __user__ / empty clears to unassigned.
+    # Empty string clears task provenance (optional); ownership is via worksetId.
     cleared = await client.patch(
         f"/api/v1/user-events/{created.json()['id']}",
-        json={"taskId": "__user__"},
+        json={"taskId": ""},
     )
     assert cleared.status_code == 200
     assert cleared.json()["taskId"] == ""
+
+    # Reject sentinel as taskId — ownership is worksetId only.
+    rejected = await client.patch(
+        f"/api/v1/user-events/{created.json()['id']}",
+        json={"taskId": "__user__"},
+    )
+    assert rejected.status_code == 400
 
     # Can attach to event/calendar tasks too.
     attached = await client.patch(

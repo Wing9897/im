@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { CalendarTaskTargetSelectField } from "../assistant/CalendarTaskTargetSelect";
+import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
 import { Button, TextField } from "../ui";
-import {
-  USER_EVENTS_FILTER_ID,
-  toUserEventFormTaskId,
-} from "../../domain/timeline/userEvents";
+import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import {
   fromDateTimeLocalInput,
   toDateTimeLocalInput,
 } from "../../domain/timeline/dateUtils";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 export type UserEventFormValues = {
   title: string;
@@ -19,8 +17,8 @@ export type UserEventFormValues = {
   endTime: string;
   location: string;
   body: string;
-  /** `__user__` or a real event/recurring/calendar_task task id. */
-  taskId: string;
+  /** Ownership workset id (``__user__`` = builtin system workset). */
+  worksetId: string;
 };
 
 export type UserEventTaskOption = {
@@ -32,8 +30,8 @@ type UserEventDialogProps = {
   open: boolean;
   mode: "create" | "edit";
   initial?: Partial<UserEventFormValues> | null;
-  /** Assignable event/recurring/calendar_task tasks (excludes the virtual __user__ row). */
-  taskOptions?: readonly UserEventTaskOption[];
+  /** Available worksets (incl. builtin ``__user__``). */
+  worksetOptions?: readonly UserEventTaskOption[];
   busy?: boolean;
   error?: string | null;
   /** Optional dialog title (e.g. Desktop ICS import). */
@@ -50,7 +48,7 @@ const emptyValues: UserEventFormValues = {
   endTime: "",
   location: "",
   body: "",
-  taskId: USER_EVENTS_FILTER_ID,
+  worksetId: SYSTEM_WORKSET_ID,
 };
 
 const fieldsClass = "flex flex-col gap-md";
@@ -60,7 +58,7 @@ export function UserEventDialog({
   open,
   mode,
   initial,
-  taskOptions = [],
+  worksetOptions = [],
   busy = false,
   error = null,
   titleOverride,
@@ -77,51 +75,37 @@ export function UserEventDialog({
     setLocalError(null);
     setValues({
       title: initial?.title ?? "",
-      startTime: initial?.startTime
-        ? toDateTimeLocalInput(initial.startTime)
-        : toDateTimeLocalInput(new Date().toISOString()),
-      endTime: initial?.endTime ? toDateTimeLocalInput(initial.endTime) : "",
+      startTime: toDateTimeLocalInput(initial?.startTime ?? ""),
+      endTime: toDateTimeLocalInput(initial?.endTime ?? ""),
       location: initial?.location ?? "",
       body: initial?.body ?? "",
-      taskId: toUserEventFormTaskId(initial?.taskId),
+      worksetId: toUserEventFormWorksetId(initial?.worksetId),
     });
   }, [open, initial]);
+
+  const displayError = error ?? localError;
 
   const handleSubmit = () => {
     const title = values.title.trim();
     if (!title) {
-      setLocalError(t("userEvent.errors.titleRequired"));
+      setLocalError(t("userEvent.titleRequired"));
       return;
     }
-    if (!values.startTime) {
-      setLocalError(t("userEvent.errors.startRequired"));
+    const startTime = fromDateTimeLocalInput(values.startTime);
+    if (!startTime) {
+      setLocalError(t("userEvent.startRequired"));
       return;
     }
-    const startIso = fromDateTimeLocalInput(values.startTime);
-    if (!startIso) {
-      setLocalError(t("userEvent.errors.startInvalid"));
-      return;
-    }
-    let endIso: string | null = null;
-    if (values.endTime) {
-      endIso = fromDateTimeLocalInput(values.endTime);
-      if (!endIso) {
-        setLocalError(t("userEvent.errors.endInvalid"));
-        return;
-      }
-    }
-    setLocalError(null);
+    const endTime = values.endTime ? fromDateTimeLocalInput(values.endTime) : "";
     onSubmit({
       title,
-      startTime: startIso,
-      endTime: endIso ?? "",
+      startTime,
+      endTime: endTime || "",
       location: values.location.trim(),
       body: values.body.trim(),
-      taskId: toUserEventFormTaskId(values.taskId),
+      worksetId: toUserEventFormWorksetId(values.worksetId),
     });
   };
-
-  const displayError = localError || error;
 
   return (
     <ModalDialog
@@ -130,19 +114,16 @@ export function UserEventDialog({
         titleOverride ??
         (mode === "create" ? t("userEvent.createTitle") : t("userEvent.editTitle"))
       }
+      closeAriaLabel={t("userEvent.closeAria")}
       onClose={onClose}
       testId="user-event-dialog"
       footer={
         <>
-          <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>
+          <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
             {t("userEvent.cancel")}
           </Button>
           <Button type="button" variant="primary" onClick={handleSubmit} disabled={busy}>
-            {busy
-              ? t("userEvent.saving")
-              : mode === "create"
-                ? t("userEvent.create")
-                : t("userEvent.save")}
+            {mode === "create" ? t("userEvent.create") : t("userEvent.save")}
           </Button>
         </>
       }
@@ -159,14 +140,14 @@ export function UserEventDialog({
           className="w-full"
           required
         />
-        <CalendarTaskTargetSelectField
+        <WorksetTargetSelectField
           aria-label={t("userEvent.taskLabel")}
-          value={values.taskId}
-          onChange={(taskId) => setValues((prev) => ({ ...prev, taskId }))}
-          options={taskOptions}
+          value={values.worksetId}
+          onChange={(worksetId) => setValues((prev) => ({ ...prev, worksetId }))}
+          options={worksetOptions}
           keepStaleOption
           className="w-full"
-          data-testid="user-event-task-select"
+          data-testid="user-event-workset-select"
         />
         <TextField
           aria-label={t("userEvent.startAria")}

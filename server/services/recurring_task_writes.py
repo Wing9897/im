@@ -38,6 +38,7 @@ async def create_recurring_task(
     event_description: str | None = None,
     parent_task_id: str | None = None,
     description: str | None = None,
+    workset_id: str | None = ...,
 ) -> dict[str, Any]:
     """Insert a recurring-mode task; return the fresh row dict."""
     cleaned_name = (name or "").strip()
@@ -52,6 +53,7 @@ async def create_recurring_task(
         raise TaskWriteError("eventStartTime is required unless eventIsAllDay is true (HH:MM or ISO)")
 
     parent: str | None = None
+    parent_row: dict[str, Any] | None = None
     if parent_task_id:
         parent = await assert_parent_project_row(db, str(parent_task_id).strip())
         parent = resolve_parent_task_id(
@@ -60,6 +62,13 @@ async def create_recurring_task(
             supplied_parent_task_id=parent,
             parent_mode="project",
         )
+        parent_row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (parent,))
+
+    resolved_workset: str | None
+    if workset_id is ...:
+        resolved_workset = str(parent_row["workset_id"]) if parent_row and parent_row.get("workset_id") else None
+    else:
+        resolved_workset = str(workset_id).strip() if workset_id else None
 
     task_id = new_id()
     now = utc_now_iso()
@@ -82,6 +91,7 @@ async def create_recurring_task(
             event_location=str(event_location).strip() if event_location else None,
             event_description=str(event_description).strip() if event_description else None,
             parent_task_id=parent,
+            workset_id=resolved_workset,
             now=now,
         )
 
@@ -105,6 +115,7 @@ async def patch_recurring_task(
     event_description: Any = ...,
     is_active: bool | None = None,
     require_parent_task_id: str | None = None,
+    workset_id: str | None = ...,
 ) -> dict[str, Any]:
     """Patch an existing recurring-mode task; return the updated row dict."""
     tid = (task_id or "").strip()
@@ -205,6 +216,11 @@ async def patch_recurring_task(
             event_description=str(new_event_description).strip() if new_event_description else None,
             include_in_timeline=1,
             parent_task_id=parent,
+            workset_id=(
+                (str(workset_id).strip() if workset_id else None)
+                if workset_id is not ...
+                else (row.get("workset_id") or None)
+            ),
             # Recurring children never own project/event scheduling knobs.
             project_wave_interval_seconds=None,
             batch_overlap_count=None,

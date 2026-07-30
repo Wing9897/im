@@ -111,8 +111,9 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "Create a one-off user event (no RRULE). For recurring schedules "
             "(每週三／daily／monthly), use calendar.create_recurring_task instead. "
-            "Optional taskId attaches it to an event/recurring/calendar_task/project task for timeline "
-            "filtering; omit for 用戶或助手. Confirm title and startTime with the user "
+            "Optional worksetId attaches ownership to a workset (builtin __user__ = 一般). "
+            "Optional taskId keeps analysis-task provenance only. "
+            "Confirm title and startTime with the user "
             "in natural language before calling. Never invent times the user did not confirm."
         ),
         "parameters": {
@@ -132,10 +133,17 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "body": {"type": "string"},
                 "location": {"type": "string"},
+                "worksetId": {
+                    "type": "string",
+                    "description": (
+                        "Optional ownership workset id, or __user__ for builtin 一般 workset"
+                    ),
+                },
                 "taskId": {
                     "type": "string",
                     "description": (
-                        "Optional owning task id (event/recurring/calendar_task/project), or __user__ for unassigned"
+                        "Optional analysis-task provenance "
+                        "(event/recurring/calendar_task/project); omit when unassigned"
                     ),
                 },
             },
@@ -278,7 +286,15 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "taskId": {
                     "type": "string",
                     "description": (
-                        "Optional owning task id (event/recurring/calendar_task/project), or __user__ to clear"
+                        "Optional analysis-task provenance "
+                        "(event/recurring/calendar_task/project); empty string clears provenance. "
+                        "Never pass __user__ (that is a workset id)."
+                    ),
+                },
+                "worksetId": {
+                    "type": "string",
+                    "description": (
+                        "Optional ownership workset id, or __user__ for builtin 一般 workset"
                     ),
                 },
             },

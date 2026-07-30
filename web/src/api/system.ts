@@ -5,12 +5,16 @@
  */
 
 import { apiClient } from "./client";
+import { publicFetchJson } from "./publicFetch";
 import type { AiEngineHealthStatus, AiEngineTestDraft, AiEngineTestResult } from "../types";
 
 export interface HealthStatus {
   status: string;
   version: string;
   runtimeReady: boolean;
+  /** False when secret.key cannot decrypt stored enc:v1: ciphertext. */
+  secretsReady?: boolean;
+  secretsError?: string;
 }
 
 /** Public health probe (backend version + runtime readiness). */
@@ -54,6 +58,33 @@ export function setAnalysisPaused(paused: boolean): Promise<{ analysisPaused: bo
 /** Full reset: wipe DB (admin/sessions), clear Telegram tokens, restart collector. */
 export function requestDatabaseReset(): Promise<{ message: string }> {
   return apiClient.post<{ message: string }>("/api/v1/system/reset/database");
+}
+
+export interface RotateSecretsBody {
+  username: string;
+  password: string;
+}
+
+export interface RotateSecretsResult {
+  message: string;
+  secretsReady: boolean;
+  scrubbed: {
+    system_config: number;
+    accounts: number;
+    stale_connected?: number;
+    actions: number;
+  };
+}
+
+/**
+ * Admin-password rotate: new secret.key + scrub enc:v1 fields; keep business data.
+ * Public (no Bearer) — only succeeds while secretsReady is false.
+ */
+export function rotateSecretsPublic(body: RotateSecretsBody): Promise<RotateSecretsResult> {
+  return publicFetchJson<RotateSecretsResult>("/api/v1/system/rotate-secrets", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 type RetentionRunResult = {

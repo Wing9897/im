@@ -29,8 +29,8 @@ OCCURRENCE_ID_RE = re.compile(r"^([^:]+):(\d{8}T\d{6}Z)$")
 
 #: Fields every compact list row carries.
 _COMPACT_FIELDS = ("id", "taskId", "title", "startTime", "endTime", "location", "source")
-#: Compact ``user`` rows additionally carry toolbar ownership and dismissal.
-_COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("origin", "dismissed")
+#: Compact ``user`` rows additionally carry ownership workset and dismissal.
+_COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed")
 
 
 def _text_or_none(value: Any) -> str | None:

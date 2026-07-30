@@ -3,7 +3,7 @@ import { Eraser, Volume2, VolumeX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
 import { EmptyState } from "../../../components/common/EmptyState";
-import { CalendarTaskTargetSelect } from "../../../components/assistant/CalendarTaskTargetSelect";
+import { WorksetTargetSelect } from "../../../components/assistant/WorksetTargetSelect";
 import { AssistantMicButton } from "../../../components/assistant/AssistantMicButton";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { useAssistantSpacePtt } from "../../../hooks/useAssistantSpacePtt";
@@ -52,8 +52,8 @@ export function AssistantPage() {
     ttsAvailable,
     ttsEnabled,
     spacePttMode,
-    calendarTaskId,
-    setCalendarTaskId,
+    worksetId,
+    setWorksetId,
     sendDraft,
     startListening,
     stopListening,
@@ -228,17 +228,17 @@ export function AssistantPage() {
           <div className="mb-sm flex flex-wrap items-center gap-sm">
             <label
               className={`${captionClass} shrink-0 text-text-muted`}
-              htmlFor="assistant-calendar-task"
+              htmlFor="assistant-calendar-workset"
             >
-              {t("targetTask.label")}
+              {t("targetWorkset.label")}
             </label>
-            <CalendarTaskTargetSelect
-              id="assistant-calendar-task"
-              value={calendarTaskId}
-              onChange={setCalendarTaskId}
+            <WorksetTargetSelect
+              id="assistant-calendar-workset"
+              value={worksetId}
+              onChange={setWorksetId}
               disabled={sending}
               className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs"
-              data-testid="assistant-calendar-task"
+              data-testid="assistant-calendar-workset"
             />
           </div>
           <label className="sr-only" htmlFor="assistant-draft">

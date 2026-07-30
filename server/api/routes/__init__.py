@@ -36,6 +36,7 @@ def all_routers() -> list[APIRouter]:
         user_events,
         viewer,
         weather,
+        worksets,
     )
 
     routers.extend(
@@ -46,6 +47,7 @@ def all_routers() -> list[APIRouter]:
             # tasks' /{task_id} routes.
             task_assistant.router,
             tasks.router,
+            worksets.router,
             accounts.router,
             results.router,
             messages.router,
@@ -53,6 +55,8 @@ def all_routers() -> list[APIRouter]:
             config.router,
             access_keys.router,
             a2a_agent.router,
+            # Public reset (conditional auth) before the authenticated system router.
+            system.public_reset_router,
             system.router,
             actions.router,
             user_events.router,

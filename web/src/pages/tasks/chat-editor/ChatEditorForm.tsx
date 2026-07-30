@@ -58,6 +58,7 @@ export function ChatEditorForm({
           <ChatNameModeFields
             name={formState.name}
             analysisMode={formState.analysisMode}
+            worksetId={formState.worksetId}
             onNameChange={(v) => updateField("name", v)}
             onAnalysisModeChange={(v) => {
               updateField("analysisMode", v);
@@ -68,6 +69,7 @@ export function ChatEditorForm({
                 updateField("projectWaveIntervalSeconds", DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS);
               }
             }}
+            onWorksetIdChange={(v) => updateField("worksetId", v)}
           />
 
           {isRecurringMode ? (

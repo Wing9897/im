@@ -23,8 +23,8 @@ export type CalendarImportDraft = {
   endTime: string;
   location: string;
   body: string;
-  /** Optional owning task id from deep link; empty → UI default `__user__`. */
-  taskId: string;
+  /** Optional owning workset id from deep link; empty → UI default `__user__`. */
+  worksetId: string;
   source: 'file' | 'url' | 'deeplink';
   sourceLabel: string;
 };
@@ -133,7 +133,7 @@ function draftFromParsed(
   parsed: NonNullable<ReturnType<typeof parseIcsText>>,
   source: CalendarImportDraft['source'],
   sourceLabel: string,
-  taskId = '',
+  worksetId = '',
 ): CalendarImportDraft {
   return {
     title: parsed.title,
@@ -141,7 +141,7 @@ function draftFromParsed(
     endTime: parsed.endTime,
     location: parsed.location,
     body: parsed.body,
-    taskId,
+    worksetId,
     source,
     sourceLabel,
   };
@@ -151,14 +151,14 @@ export function messageFromIcsText(
   text: string,
   source: CalendarImportDraft['source'],
   sourceLabel: string,
-  taskId = '',
+  worksetId = '',
 ): CalendarImportMessage {
   try {
     const parsed = parseIcsText(text);
     if (!parsed) {
       return { ok: false, error: 'No usable VEVENT found in ICS', sourceLabel };
     }
-    return { ok: true, draft: draftFromParsed(parsed, source, sourceLabel, taskId) };
+    return { ok: true, draft: draftFromParsed(parsed, source, sourceLabel, worksetId) };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { ok: false, error: message, sourceLabel };
@@ -250,7 +250,7 @@ function fetchText(url: string): Promise<string> {
  *
  * Supported query keys:
  * - url — remote ICS (http/https); app fetches
- * - title, start, end, location, body, taskId — inline draft (no ICS)
+ * - title, start, end, location, body, worksetId — inline draft (no ICS)
  */
 export async function messageFromProtocolUrl(rawUrl: string): Promise<CalendarImportMessage> {
   let url: URL;
@@ -303,7 +303,7 @@ export async function messageFromProtocolUrl(rawUrl: string): Promise<CalendarIm
       endTime: (params.get('end') || '').trim(),
       location: (params.get('location') || '').trim(),
       body: (params.get('body') || '').trim(),
-      taskId: (params.get('taskId') || '').trim(),
+      worksetId: (params.get('worksetId') || '').trim(),
       source: 'deeplink',
       sourceLabel: rawUrl,
     },

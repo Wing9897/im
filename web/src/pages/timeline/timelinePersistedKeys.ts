@@ -1,7 +1,7 @@
 /** localStorage / sessionStorage keys for timeline browse state. */
 
 export const TIMELINE_VIEW_MODE_STORAGE_KEY = "im:timeline:view-mode";
-export { TIMELINE_SELECTED_TASK_IDS_STORAGE_KEY } from "../../domain/timeline/timelineTaskFilter";
+export { TIMELINE_SELECTED_SOURCES_STORAGE_KEY } from "../../domain/timeline/timelineSourceFilter";
 export const TIMELINE_SHOW_DISMISSED_STORAGE_KEY = "im:timeline:show-dismissed";
 export const TIMELINE_SHOW_ONGOING_STORAGE_KEY = "im:timeline:show-ongoing";
 export const TIMELINE_SHOW_ENDING_STORAGE_KEY = "im:timeline:show-ending";

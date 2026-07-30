@@ -1,11 +1,11 @@
 import { ArrowUpDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { TaskFilterControl } from "../../components/TaskFilterControl";
+import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { TimeFilter, type TimeFilterPreset } from "../../components/TimeFilter";
 import { OpsControlBar, SegmentedControl, SelectField } from "../../components/ui";
 import { pageOpsControlClass } from "../../components/ui/controlStyles";
-import type { IntelligenceSelectedTaskIds } from "../../domain/intelligence/intelligenceTaskFilter";
+import type { IntelligenceSelectedSources } from "../../domain/intelligence/intelligenceSourceFilter";
 import type { ViewMode } from "../../types";
 import {
   getIntelligenceSortLabel,
@@ -21,6 +21,16 @@ type IntelligenceTaskOption = {
   name: string;
 };
 
+type WorksetOption = {
+  id: string;
+  name: string;
+};
+
+type ExpandTaskOption = {
+  id: string;
+  worksetId?: string | null;
+};
+
 interface IntelligenceToolbarProps {
   isBusy?: boolean;
   search: string;
@@ -31,14 +41,17 @@ interface IntelligenceToolbarProps {
   onTimeFilterChange: (preset: TimeFilterPreset) => void;
   sortMode: IntelligenceSortMode;
   onSortModeChange: (mode: IntelligenceSortMode) => void;
-  selectedTaskIds: IntelligenceSelectedTaskIds;
-  setSelectedTaskIds: (ids: IntelligenceSelectedTaskIds) => void;
+  selectedSources: IntelligenceSelectedSources;
+  setSelectedSources: (ids: IntelligenceSelectedSources) => void;
   intelligenceTasks: IntelligenceTaskOption[];
+  worksets?: WorksetOption[];
+  expandTasks?: ExpandTaskOption[];
 }
 
 /**
- * Single-row ops bar: search/sort/time · spacer · task + view.
- * Search lives in「搜索與篩選事件」modal; map hides sort/time (own LIVE window).
+ * Single-row ops bar: source filter · sort/time · spacer · search + view.
+ * Source filter sits leftmost (same as timeline); search opens a modal.
+ * Map hides sort/time (own LIVE window).
  */
 export function IntelligenceToolbar({
   isBusy = false,
@@ -50,9 +63,11 @@ export function IntelligenceToolbar({
   onTimeFilterChange,
   sortMode,
   onSortModeChange,
-  selectedTaskIds,
-  setSelectedTaskIds,
+  selectedSources,
+  setSelectedSources,
   intelligenceTasks,
+  worksets = [],
+  expandTasks,
 }: IntelligenceToolbarProps) {
   const { t } = useTranslation("intelligence");
   const { t: tc } = useTranslation("common");
@@ -66,7 +81,17 @@ export function IntelligenceToolbar({
 
   return (
     <OpsControlBar sticky ariaLabel={t("toolbar.aria")} className="im-intelligence-toolbar">
-      <IntelligenceSearchFilterControl search={search} setSearch={setSearch} />
+      <div className="shrink-0" data-testid="intelligence-source-filter">
+        <SourceFilterDialog
+          tasks={intelligenceTasks}
+          worksets={worksets}
+          expandTasks={expandTasks}
+          selection={selectedSources}
+          onChange={setSelectedSources}
+          ariaLabelPrefix={t("toolbar.taskSelectAria")}
+          variant="toolbar"
+        />
+      </div>
 
       {!isMap ? (
         <>
@@ -106,15 +131,7 @@ export function IntelligenceToolbar({
       ) : null}
 
       <div className="ml-auto flex min-w-0 shrink-0 flex-nowrap items-center gap-1.5">
-        <div className="shrink-0" data-testid="intelligence-task-filter">
-          <TaskFilterControl
-            tasks={intelligenceTasks}
-            selectedTaskIds={selectedTaskIds}
-            onChange={setSelectedTaskIds}
-            ariaLabelPrefix={t("toolbar.taskSelectAria")}
-            variant="toolbar"
-          />
-        </div>
+        <IntelligenceSearchFilterControl search={search} setSearch={setSearch} />
         <SegmentedControl
           layout="inline"
           items={[...viewModeItems]}

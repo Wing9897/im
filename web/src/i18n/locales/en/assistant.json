@@ -28,9 +28,9 @@
     "placeholderListening": "Listening…",
     "placeholderIdle": "Click to type; hold Space to talk when unfocused"
   },
-  "targetTask": {
-    "label": "Target task",
-    "aria": "Target task for schedule creates"
+  "targetWorkset": {
+    "label": "Ownership workset",
+    "aria": "Ownership workset for schedule creates"
   },
   "mic": {
     "holdToTalk": "Hold to talk",

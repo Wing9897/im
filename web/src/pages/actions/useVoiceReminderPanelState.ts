@@ -2,11 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import {
-  USER_EVENTS_FILTER_ID,
-  filterAssignableTimelineTasks,
-} from "../../domain/timeline/userEvents";
-import { useUserEventsFilterLabel } from "../../domain/timeline/useUserEventsFilterLabel";
+import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
+import { type SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { createSpeechPorts, loadVoiceSettings, ttsSpeakOptionsFromVoiceSettings } from "../../speech";
 import { logWarn } from "../../utils/logger";
 import { buildPreviewSpeakText } from "../../voiceReminder/scanner";
@@ -20,18 +19,6 @@ import {
   type VoiceReminderSettings,
 } from "../../voiceReminder/settings";
 
-function sameTaskIds(a: string[], b: string[]): boolean {
-  if (a.length !== b.length) return false;
-  const set = new Set(a);
-  return b.every((id) => set.has(id));
-}
-
-export interface ReminderSourceTask {
-  id: string;
-  name: string;
-  source: "event" | "recurring" | "calendar_task" | "user";
-}
-
 /** State + handlers for the Actions → Voice reminder panel. */
 export function useVoiceReminderPanelState() {
   const { t } = useTranslation("actions");
@@ -39,11 +26,8 @@ export function useVoiceReminderPanelState() {
   const [settings, setSettings] = useState<VoiceReminderSettings>(() =>
     loadVoiceReminderSettings(),
   );
-  const [draftTaskIds, setDraftTaskIds] = useState<string[]>(() => [
-    ...loadVoiceReminderSettings().taskIds,
-  ]);
-  const { tasks, tasksLoading, taskLoadError } = useTaskCatalog();
-  const userEventsLabel = useUserEventsFilterLabel();
+  const { tasks, tasksLoading, taskLoadError, worksets } = useTaskCatalog();
+  const generalWorksetLabel = useGeneralWorksetLabel();
   const [previewing, setPreviewing] = useState(false);
 
   useEffect(() => {
@@ -57,7 +41,6 @@ export function useVoiceReminderPanelState() {
     void hydrateVoiceReminderSettings().then((loaded) => {
       if (!cancelled) {
         setSettings(loaded);
-        setDraftTaskIds([...loaded.taskIds]);
       }
     });
     return () => {
@@ -65,39 +48,34 @@ export function useVoiceReminderPanelState() {
     };
   }, []);
 
-  useEffect(() => {
-    setDraftTaskIds([...settings.taskIds]);
-  }, [settings.taskIds]);
-
-  /** Timed sources: active event / recurring / calendar_task tasks, plus manual / assistant. */
-  const sourceTasks = useMemo((): ReminderSourceTask[] => {
-    const fromTasks = filterAssignableTimelineTasks(tasks, { activeOnly: true }).map(
-      (task): ReminderSourceTask => ({
+  const filterTasks = useMemo(
+    () =>
+      filterAssignableTimelineTasks(tasks, { activeOnly: true }).map((task) => ({
         id: task.id,
         name: task.name,
-        source:
-          task.analysisMode === "recurring"
-            ? "recurring"
-            : task.analysisMode === "calendar_task"
-              ? "calendar_task"
-              : "event",
-      }),
-    );
-    return [
-      ...fromTasks,
-      {
-        id: USER_EVENTS_FILTER_ID,
-        name: userEventsLabel,
-        source: "user",
-      },
-    ];
-  }, [tasks, userEventsLabel]);
+      })),
+    [tasks],
+  );
 
-  const draftListenAll = draftTaskIds.length === 0;
-  const draftSelectedCount = draftTaskIds.filter((id) =>
-    sourceTasks.some((task) => task.id === id),
-  ).length;
-  const taskSelectionDirty = !sameTaskIds(draftTaskIds, settings.taskIds);
+  const filterWorksets = useMemo(
+    () =>
+      worksets.map((ws) => ({
+        id: ws.id,
+        name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
+        isSystem: ws.isSystem,
+      })),
+    [worksets, generalWorksetLabel],
+  );
+
+  const expandTasks = useMemo(
+    () =>
+      tasks.map((task) => ({
+        id: task.id,
+        name: task.name,
+        worksetId: task.worksetId ?? null,
+      })),
+    [tasks],
+  );
 
   const update = (patch: Partial<VoiceReminderSettings>) => {
     setSettings((prev) => {
@@ -124,28 +102,8 @@ export function useVoiceReminderPanelState() {
     update({ leadOffsetsMinutes: next });
   };
 
-  const toggleDraftTask = (taskId: string) => {
-    setDraftTaskIds((prev) => {
-      const has = prev.includes(taskId);
-      return has ? prev.filter((id) => id !== taskId) : [...prev, taskId];
-    });
-  };
-
-  const selectAllDraftTasks = () => {
-    setDraftTaskIds(sourceTasks.map((task) => task.id));
-  };
-
-  const clearDraftTaskFilter = () => {
-    setDraftTaskIds([]);
-  };
-
-  const confirmTaskSelection = () => {
-    if (!taskSelectionDirty) return;
-    update({ taskIds: draftTaskIds });
-  };
-
-  const resetDraftTaskSelection = () => {
-    setDraftTaskIds([...settings.taskIds]);
+  const setSourceFilter = (next: SourceFilterSelection) => {
+    update({ sourceFilter: next });
   };
 
   const handlePreview = () => {
@@ -170,15 +128,9 @@ export function useVoiceReminderPanelState() {
     previewing,
     handlePreview,
     tasksLoading,
-    sourceTasks,
-    draftTaskIds,
-    draftListenAll,
-    draftSelectedCount,
-    taskSelectionDirty,
-    toggleDraftTask,
-    selectAllDraftTasks,
-    clearDraftTaskFilter,
-    confirmTaskSelection,
-    resetDraftTaskSelection,
+    filterTasks,
+    filterWorksets,
+    expandTasks,
+    setSourceFilter,
   };
 }

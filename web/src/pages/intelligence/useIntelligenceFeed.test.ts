@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeAnalysisEvent } from "../../test/analysisEventFixtures";
 import { INTELLIGENCE_API_PAGE_SIZE, MAP_SYNC_MAX_ITEMS } from "./intelligenceFeedConfig";
 
-const { mockFetchEvents } = vi.hoisted(() => ({
+const { mockFetchEvents, mockUseRefreshOnAnalysisEvent } = vi.hoisted(() => ({
   mockFetchEvents: vi.fn(),
+  mockUseRefreshOnAnalysisEvent: vi.fn(),
 }));
 
 vi.mock("../../api/results", () => ({
@@ -29,8 +30,14 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
 }));
 
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
-  useRefreshOnAnalysisEvent: () => {},
+  useRefreshOnAnalysisEvent: (...args: unknown[]) => mockUseRefreshOnAnalysisEvent(...args),
 }));
+
+import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../../domain/intelligence/intelligencePersistedKeys";
+import {
+  makeAnalysisTask,
+  resetTaskCatalogState,
+} from "../../test/context-mocks";
 
 const { useIntelligenceFeed } = await import("./useIntelligenceFeed");
 
@@ -49,6 +56,8 @@ describe("useIntelligenceFeed", () => {
     latest = null;
     localStorage.clear();
     mockFetchEvents.mockReset();
+    mockUseRefreshOnAnalysisEvent.mockReset();
+    resetTaskCatalogState();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -294,5 +303,32 @@ describe("useIntelligenceFeed", () => {
       .filter((offset) => offset > 0);
     expect(remoteOffsets.length).toBeGreaterThanOrEqual(1);
     expect(latest!.allItems).toHaveLength(4);
+  });
+
+  it("passes flat resolvedApiTaskIds (string[]|null) to useRefreshOnAnalysisEvent", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "t-a", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-b", analysisMode: "event", worksetId: "ws-1" }),
+    ]);
+    localStorage.setItem(
+      INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY,
+      JSON.stringify({ taskIds: ["t-a"], worksetIds: [] }),
+    );
+    mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+
+    await act(async () => {
+      root.render(createElement(Harness));
+      await flushPromises();
+    });
+
+    const options = mockUseRefreshOnAnalysisEvent.mock.calls.at(-1)?.[1] as {
+      taskIds?: unknown;
+    };
+    expect(Array.isArray(options.taskIds)).toBe(true);
+    expect(options.taskIds).toEqual(["t-a"]);
+    // Must not be SourceFilterSelection `{ taskIds, worksetIds }`
+    expect(options.taskIds).not.toEqual(
+      expect.objectContaining({ taskIds: expect.any(Array), worksetIds: expect.any(Array) }),
+    );
   });
 });

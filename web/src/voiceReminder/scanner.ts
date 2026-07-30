@@ -10,7 +10,7 @@ export {
   buildSpeakText,
   collectDueReminders,
   computeFetchRange,
-  filterEventsByTaskIds,
+  filterEventsBySourceFilter,
   formatLeadSpeakPhrase,
   getMaxLeadMinutes,
   isRemindAtDue,

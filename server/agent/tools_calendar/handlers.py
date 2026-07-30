@@ -155,6 +155,14 @@ def _tool_task_id(args: dict[str, Any]) -> Any:
     return args.get("_default_task_id")
 
 
+def _tool_workset_id(args: dict[str, Any]) -> Any:
+    if "worksetId" in args or "workset_id" in args:
+        return arg(args, "worksetId", "workset_id")
+    if "_default_workset_id" in args:
+        return args.get("_default_workset_id")
+    return None
+
+
 async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, Any]:
     title = args.get("title")
     start = arg(args, "startTime", "start", "start_time")
@@ -165,16 +173,19 @@ async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, An
         origin = str(args.get("_origin") or "assistant").strip() or "assistant"
         if origin not in {"assistant", "a2a", "manual", "project"}:
             origin = "assistant"
-        item = await create_user_event(
-            db,
-            title=str(title),
-            start_time=str(start),
-            end_time=str(end) if end else None,
-            body=str(arg(args, "body", "description") or ""),
-            location=str(args.get("location") or ""),
-            origin=origin,
-            task_id=_tool_task_id(args),
-        )
+        workset_id = _tool_workset_id(args)
+        create_kwargs: dict[str, Any] = {
+            "title": str(title),
+            "start_time": str(start),
+            "end_time": str(end) if end else None,
+            "body": str(arg(args, "body", "description") or ""),
+            "location": str(args.get("location") or ""),
+            "origin": origin,
+            "task_id": _tool_task_id(args),
+        }
+        if workset_id is not None:
+            create_kwargs["workset_id"] = workset_id
+        item = await create_user_event(db, **create_kwargs)
     except UserEventValidationError as exc:
         return {"error": str(exc)}
     return {"item": item}
@@ -288,6 +299,8 @@ async def _tool_update_event(db: Database, args: dict[str, Any]) -> dict[str, An
         kwargs["location"] = str(args.get("location") or "")
     if "taskId" in args or "task_id" in args:
         kwargs["task_id"] = arg(args, "taskId", "task_id")
+    if "worksetId" in args or "workset_id" in args:
+        kwargs["workset_id"] = arg(args, "worksetId", "workset_id")
     if not kwargs:
         return {"error": "at least one field to update is required"}
     try:

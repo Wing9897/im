@@ -27,8 +27,35 @@ describe("bootMachine", () => {
   it("starts in loading", () => {
     expect(initialBootState.phase).toBe("loading");
     expect(initialBootState.error).toBeNull();
+    expect(initialBootState.secretsError).toBeNull();
     expect(initialBootState.setupStatus).toBeNull();
     expect(initialBootState.setupReason).toBeNull();
+  });
+
+  it("secrets blocked → secrets_blocked → rotate complete → auth ready", () => {
+    const blocked = bootReduce(initialBootState, {
+      type: "secrets_blocked",
+      error: "Stored secret cannot be decrypted",
+    });
+    expect(blocked.phase).toBe("secrets_blocked");
+    expect(blocked.secretsError).toBe("Stored secret cannot be decrypted");
+
+    const state = reduceMany(
+      [{ type: "secrets_gate_complete" }, { type: "schema_ok" }, { type: "auth_ready" }],
+      blocked,
+    );
+    expect(state.phase).toBe("ready");
+    expect(state.secretsError).toBeNull();
+    expect(state.setupStatus).toBeNull();
+  });
+
+  it("secrets_gate_complete ignored unless phase is secrets_blocked", () => {
+    const setup = bootReduce(initialBootState, {
+      type: "auth_setup",
+      status: setupStatus,
+      reason: "needs_login",
+    });
+    expect(bootReduce(setup, { type: "secrets_gate_complete" })).toEqual(setup);
   });
 
   it("schema blocked → gate → auth ready", () => {
@@ -120,6 +147,7 @@ describe("bootMachine", () => {
     const ready: BootMachineState = {
       phase: "ready",
       error: null,
+      secretsError: null,
       setupStatus: null,
       setupReason: null,
     };
@@ -157,6 +185,7 @@ describe("bootMachine", () => {
     const dirty: BootMachineState = {
       phase: "unavailable",
       error: "stale remote baseUrl",
+      secretsError: null,
       setupStatus,
       setupReason: "first_run",
     };

@@ -115,7 +115,8 @@
 | mode `leaderboard` | 排行榜 | Leaderboard | 排行榜 |
 | mode `recurring` | 循環任務 | Recurring task | 循环任务 |
 | mode `calendar_task` | 日曆任務 | Calendar task | 日历任务 |
-| `__user__` 虛擬來源 | 用戶或助手 | User or Assistant | 用户或助手 |
+| `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
+| 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
 | 收集子系統 | **收集器**（勿用「採集器」） | Collector | 收集器 |
@@ -132,11 +133,16 @@
 | folder | 資料夾 | Folder | 文件夹 |
 | endpoint | 端點 | Endpoint | 端点 |
 
-## 系統任務卡標題
+## 系統任務卡標題與工作集顯示名
+
+- **「一般」**（`workset.generalName`）是內建工作集 `SYSTEM_WORKSET_ID`（wire id `__user__`）的 canonical 顯示名。篩選樹、by_workset 分組、語音／助手預設歸屬都用此名；**不要**把工作集顯示成「用戶或助手」。
+- **「用戶或助手」**僅指 Dashboard 系統虛擬任務卡（id=`user-or-assistant`，功能層：手寫／助手建日程入口）。它**不是**工作集，也不進來源篩選樹當假 `taskId`。
+- 舊表述「unassigned = `__user__`」已廢棄：`__user__` 是 builtin 歸屬工作集，不是「未歸屬任務」哨兵。
 
 | id | zh-Hant | en | zh-Hans |
 |----|---------|----|---------|
-| `user-or-assistant` | 用戶或助手 | User or Assistant | 用户或助手 |
+| `user-or-assistant`（virtual card） | 用戶或助手 | User or Assistant | 用户或助手 |
+| `__user__` / `SYSTEM_WORKSET_ID`（workset） | 一般 | General | 一般 |
 | `collector` | 收集器 | Collector | 收集器 |
 | `analysis-batch` | 分析批次 | Analysis batch | 分析批次 |
 | `outbound-notify` | 外發通知 | Outbound notify | 外发通知 |

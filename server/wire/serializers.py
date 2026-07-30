@@ -10,6 +10,7 @@ from typing import Any, Mapping
 
 from server.action_config import masked_action_configuration
 from server.util import parse_json_dict, parse_json_list
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 
 def _message_media_from_raw(raw_data: Any) -> dict[str, Any] | None:
@@ -96,6 +97,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "eventDescription": row.get("event_description"),
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
         "parentTaskId": row.get("parent_task_id") or None,
+        "worksetId": row.get("workset_id") or None,
         "projectWaveIntervalSeconds": (
             int(row["project_wave_interval_seconds"]) if row.get("project_wave_interval_seconds") is not None else None
         ),
@@ -113,6 +115,17 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
     if channel_refs is not None:
         task["channelIds"] = channel_refs
     return task
+
+
+def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Workset ownership entity."""
+    return {
+        "id": row["id"],
+        "name": row.get("name") or "",
+        "isSystem": bool(row.get("is_system")),
+        "createdAt": row.get("created_at"),
+        "updatedAt": row.get("updated_at"),
+    }
 
 
 def serialize_channel_ref(row: Mapping[str, Any]) -> dict[str, Any]:
@@ -204,6 +217,12 @@ def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> 
     location = row.get("location")
     raw_task_id = row.get("task_id")
     task_id = str(raw_task_id).strip() if isinstance(raw_task_id, str) and raw_task_id.strip() else ""
+    raw_workset_id = row.get("workset_id")
+    workset_id = (
+        str(raw_workset_id).strip()
+        if isinstance(raw_workset_id, str) and raw_workset_id.strip()
+        else SYSTEM_WORKSET_ID
+    )
     return {
         "id": str(row["id"]),
         "title": str(row.get("title") or ""),
@@ -213,6 +232,7 @@ def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> 
         "location": location if isinstance(location, str) and location.strip() else None,
         "origin": str(row.get("origin") or ""),
         "taskId": task_id,
+        "worksetId": workset_id,
         "source": "user",
         "dismissed": bool(dismissed),
         "createdAt": row.get("created_at"),
@@ -289,6 +309,20 @@ def serialize_activity_span(row: Mapping[str, Any]) -> dict[str, Any]:
         error = str(error)
     raw_count = row.get("last_message_count")
     last_message_count = int(raw_count) if raw_count is not None else None
+    source_kind = row.get("source_kind") or "task"
+    if source_kind not in ("task", "workset"):
+        source_kind = "task"
+    # Workset ownership rows: taskId == worksetId (compat); task rows: null.
+    workset_id: str | None = None
+    if source_kind == "workset":
+        raw_ws = row.get("workset_id")
+        if isinstance(raw_ws, str) and raw_ws.strip():
+            workset_id = raw_ws.strip()
+        else:
+            row_id = row.get("id")
+            workset_id = str(row_id).strip() if row_id is not None else None
+            if not workset_id:
+                workset_id = None
     return {
         "taskId": row["id"],
         "taskName": row["name"],
@@ -302,6 +336,8 @@ def serialize_activity_span(row: Mapping[str, Any]) -> dict[str, Any]:
         "lastToolCalls": serialize_batch_tool_calls(row.get("last_tool_calls_json")),
         "lastErrorMessage": error if isinstance(error, str) and error.strip() else None,
         "lastMessageCount": last_message_count,
+        "sourceKind": source_kind,
+        "worksetId": workset_id,
     }
 
 

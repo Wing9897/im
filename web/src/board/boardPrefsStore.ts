@@ -1,5 +1,5 @@
 /**
- * In-memory board prefs (layout + mapViews + taskFilters) backed by
+ * In-memory board prefs (layout + mapViews + sourceFilters) backed by
  * `/api/v1/ui-prefs/board`. Server is SoT; empty server seeds defaults (no LS bridge).
  *
  * INVARIANTS:
@@ -16,14 +16,16 @@ import {
   putBoardPrefs,
   type BoardGanttViewMode,
   type BoardMapViewPref,
+  type BoardSourceFilterPref,
   type BoardWidgetStatePref,
 } from "../api/uiPrefs";
+import { parseSourceFilterValue } from "../domain/tasks/sourceFilterSelection";
 import type { BoardConfig } from "./types";
 import { createDefaultBoardConfig, parseBoardConfig } from "./boardLayoutParse";
 
 const EMPTY_WIDGET_STATE: BoardWidgetStatePref = {
   mapViews: {},
-  taskFilters: {},
+  sourceFilters: {},
   ganttViewModes: {},
 };
 
@@ -34,13 +36,13 @@ let widgetStateCache: BoardWidgetStatePref = emptyWidgetState();
 let hydratePromise: Promise<BoardConfig> | null = null;
 
 function emptyWidgetState(): BoardWidgetStatePref {
-  return { mapViews: {}, taskFilters: {}, ganttViewModes: {} };
+  return { mapViews: {}, sourceFilters: {}, ganttViewModes: {} };
 }
 
 function cloneWidgetState(state: BoardWidgetStatePref): BoardWidgetStatePref {
   return {
     mapViews: { ...state.mapViews },
-    taskFilters: { ...state.taskFilters },
+    sourceFilters: { ...state.sourceFilters },
     ganttViewModes: { ...state.ganttViewModes },
   };
 }
@@ -60,13 +62,21 @@ export function getCachedWidgetState(): BoardWidgetStatePref {
   return cloneWidgetState(widgetStateCache);
 }
 
-function normalizeWidgetState(raw: BoardWidgetStatePref | null | undefined): BoardWidgetStatePref {
+function normalizeWidgetState(raw: {
+  mapViews?: BoardWidgetStatePref["mapViews"];
+  sourceFilters?: Record<string, unknown>;
+  ganttViewModes?: BoardWidgetStatePref["ganttViewModes"];
+} | null | undefined): {
+  state: BoardWidgetStatePref;
+  didMigrateLegacyFilters: boolean;
+} {
   if (!raw || typeof raw !== "object") {
-    return emptyWidgetState();
+    return { state: emptyWidgetState(), didMigrateLegacyFilters: false };
   }
   const mapViews: Record<string, BoardMapViewPref> = {};
-  const taskFilters: Record<string, string[] | null> = {};
+  const sourceFilters: Record<string, BoardSourceFilterPref> = {};
   const ganttViewModes: Record<string, BoardGanttViewMode> = {};
+  let didMigrateLegacyFilters = false;
   const viewsIn = raw.mapViews ?? {};
   for (const [id, view] of Object.entries(viewsIn)) {
     if (!id || !view) continue;
@@ -83,15 +93,22 @@ function normalizeWidgetState(raw: BoardWidgetStatePref | null | undefined): Boa
     }
     mapViews[id] = { center: [center[0], center[1]], zoom: view.zoom };
   }
-  const filtersIn = raw.taskFilters ?? {};
+  const filtersIn = raw.sourceFilters ?? {};
   for (const [id, ids] of Object.entries(filtersIn)) {
     if (!id) continue;
     if (ids === null) {
-      taskFilters[id] = null;
+      sourceFilters[id] = null;
       continue;
     }
-    if (!Array.isArray(ids)) continue;
-    taskFilters[id] = ids.filter((x): x is string => typeof x === "string" && x.length > 0);
+    // Legacy flat string[] is no longer accepted — drop to "all" (null) and write back.
+    if (Array.isArray(ids)) {
+      sourceFilters[id] = null;
+      didMigrateLegacyFilters = true;
+      continue;
+    }
+    const parsed = parseSourceFilterValue(ids);
+    if (parsed === null) continue;
+    sourceFilters[id] = parsed;
   }
   const modesIn = raw.ganttViewModes ?? {};
   for (const [id, mode] of Object.entries(modesIn)) {
@@ -100,7 +117,10 @@ function normalizeWidgetState(raw: BoardWidgetStatePref | null | undefined): Boa
       ganttViewModes[id] = mode;
     }
   }
-  return { mapViews, taskFilters, ganttViewModes };
+  return {
+    state: { mapViews, sourceFilters, ganttViewModes },
+    didMigrateLegacyFilters,
+  };
 }
 
 function applyCaches(layout: BoardConfig, widgetState: BoardWidgetStatePref): BoardConfig {
@@ -146,8 +166,14 @@ export async function hydrateBoardPrefs(): Promise<BoardConfig> {
         const layout = remote.layout
           ? parseBoardConfig(remote.layout)
           : createDefaultBoardConfig();
-        const widgetState = normalizeWidgetState(remote.widgetState);
-        return applyCaches(layout, widgetState);
+        const { state: widgetState, didMigrateLegacyFilters } = normalizeWidgetState(
+          remote.widgetState,
+        );
+        const applied = applyCaches(layout, widgetState);
+        if (didMigrateLegacyFilters) {
+          schedulePersist({ widgetState: cloneWidgetState(widgetState) });
+        }
+        return applied;
       }
 
       const layout = createDefaultBoardConfig();
@@ -201,17 +227,22 @@ export function clearBoardMapViewInApi(widgetId: string): void {
   schedulePersist({ widgetState: cloneWidgetState(widgetStateCache) });
 }
 
-export function loadTaskFilterIdsFromCache(widgetId: string | undefined): string[] | null {
+export function loadSourceFilterFromCache(
+  widgetId: string | undefined,
+): BoardSourceFilterPref {
   if (!widgetId) return null;
-  if (!(widgetId in widgetStateCache.taskFilters)) return null;
-  return widgetStateCache.taskFilters[widgetId] ?? null;
+  if (!(widgetId in widgetStateCache.sourceFilters)) return null;
+  return widgetStateCache.sourceFilters[widgetId] ?? null;
 }
 
-export function saveTaskFilterIdsToApi(widgetId: string | undefined, ids: string[] | null): void {
+export function saveSourceFilterToApi(
+  widgetId: string | undefined,
+  ids: BoardSourceFilterPref,
+): void {
   if (!widgetId) return;
   widgetStateCache = {
     ...widgetStateCache,
-    taskFilters: { ...widgetStateCache.taskFilters, [widgetId]: ids },
+    sourceFilters: { ...widgetStateCache.sourceFilters, [widgetId]: ids },
   };
   schedulePersist({ widgetState: cloneWidgetState(widgetStateCache) });
 }

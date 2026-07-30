@@ -21,7 +21,10 @@ export type TimedKeyEventKind = "event" | "recurring" | "user";
 /** Timed items used by the reminder scanner (analysis / calendar / user events). */
 export interface TimedKeyEvent {
   id: string;
+  /** Analysis-task provenance only; never a stand-in for workset ownership. */
   taskId: string | null;
+  /** Ownership workset when known (user events); analysis rows may omit. */
+  worksetId?: string | null;
   taskName: string;
   title: string;
   startTime: string;

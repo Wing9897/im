@@ -28,9 +28,9 @@
     "placeholderListening": "正在聆聽…",
     "placeholderIdle": "點此輸入文字；未聚焦時按住空白鍵說話"
   },
-  "targetTask": {
-    "label": "目標任務",
-    "aria": "助手寫入日程的目標任務"
+  "targetWorkset": {
+    "label": "目標歸屬工作集",
+    "aria": "助手寫入日程的目標歸屬工作集"
   },
   "mic": {
     "holdToTalk": "按住說話",

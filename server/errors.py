@@ -29,6 +29,7 @@ VALIDATION_ERROR = "VALIDATION_ERROR"
 INTERNAL_ERROR = "INTERNAL_ERROR"
 COLLECTOR_UNAVAILABLE = "COLLECTOR_UNAVAILABLE"
 SCHEMA_UPGRADE_REQUIRED = "SCHEMA_UPGRADE_REQUIRED"
+SECRETS_UNAVAILABLE = "SECRETS_UNAVAILABLE"
 SSE_CAPACITY = "SSE_CAPACITY"
 ADMIN_EXISTS = "ADMIN_EXISTS"
 NOT_BOOTSTRAPPED = "NOT_BOOTSTRAPPED"
@@ -98,6 +99,8 @@ def _body_from_http_exception(exc: HTTPException) -> dict[str, Any]:
 
 
 def register_error_handlers(app: FastAPI) -> None:
+    from server.secrets import SecretProtectionError
+
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         return JSONResponse(
@@ -114,6 +117,23 @@ def register_error_handlers(app: FastAPI) -> None:
                 422,
                 "Request validation failed",
                 details={"errors": jsonable_encoder(exc.errors())},
+            ),
+        )
+
+    @app.exception_handler(SecretProtectionError)
+    async def secret_protection_handler(request: Request, exc: SecretProtectionError) -> JSONResponse:
+        logger.error(
+            "Secret protection failure on %s %s: %s",
+            request.method,
+            request.url.path,
+            exc,
+        )
+        return JSONResponse(
+            status_code=503,
+            content=error_body(
+                503,
+                "Local encryption key cannot decrypt stored secrets",
+                error_code=SECRETS_UNAVAILABLE,
             ),
         )
 

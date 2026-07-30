@@ -10,7 +10,7 @@ import {
 import type { TimelineItem } from "../../../types";
 import { joinList } from "../../../i18n/formatMessage";
 import { formatOsDateTime } from "../../../utils/time";
-import { isUnassignedUserEventTaskId } from "../../../domain/timeline/userEvents";
+import { isNullProvenanceTaskId } from "../../../domain/timeline/userEvents";
 import { EventListPanel } from "./EventListPanel";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { dismissedTitleClass } from "../timelineDismissUtils";
@@ -112,9 +112,9 @@ export function TimelineSidebar({
               </div>
             ) : null}
             {selectedEvent.taskName ? (
-              isUserEvent && isUnassignedUserEventTaskId(selectedEvent.taskId) ? (
+              isUserEvent && isNullProvenanceTaskId(selectedEvent.taskId) ? (
                 <div>
-                  {t("sidebar.source", { value: selectedEvent.taskName })}
+                  {t("sidebar.workset", { value: selectedEvent.taskName })}
                 </div>
               ) : (
                 <div>{t("sidebar.task", { value: selectedEvent.taskName })}</div>

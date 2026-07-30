@@ -276,6 +276,7 @@ describe("formStateToTaskConfig calendar contract", () => {
       eventLocation: "Conference Room A",
       eventDescription: "Weekly planning",
       includeInTimeline: true,
+      worksetId: null,
     });
   });
 

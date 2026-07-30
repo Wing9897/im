@@ -47,7 +47,7 @@ export function WallChannelPicker({
         >
           <LayoutGrid size={12} strokeWidth={2} aria-hidden="true" />
           {selectedCount > 0 ? (
-            <span className="board-task-filter__badge" aria-hidden="true">
+            <span className="board-source-filter__badge" aria-hidden="true">
               {selectedCount}
             </span>
           ) : null}

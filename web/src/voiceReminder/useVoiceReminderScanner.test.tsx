@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { USER_EVENTS_FILTER_ID } from "../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
 const {
   mockAnnounce,
@@ -98,7 +98,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockLoadSettings.mockReturnValue({
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: ["task-1"],
+      sourceFilter: { taskIds: ["task-1"], worksetIds: [] },
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
@@ -175,7 +175,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockLoadSettings.mockReturnValue({
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: [],
+      sourceFilter: null,
       preambleChimeId: "none",
       quietHours: { enabled: true, start, end },
     });
@@ -195,7 +195,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockLoadSettings.mockReturnValue({
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: ["cal-task"],
+      sourceFilter: { taskIds: ["cal-task"], worksetIds: [] },
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
@@ -240,7 +240,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockLoadSettings.mockReturnValue({
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: [USER_EVENTS_FILTER_ID],
+      sourceFilter: { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });
@@ -251,18 +251,21 @@ describe("useVoiceReminderScanner pagination consumer", () => {
         title: "Manual event must be included",
         startTime: "2026-07-20T10:00:00.000Z",
         taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
       },
       {
         id: "assistant-1",
         title: "Assistant event must be included",
         startTime: "2026-07-20T10:00:00.000Z",
         taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
       },
       {
         id: "tagged-1",
         title: "Tagged event must be excluded from __user__",
         startTime: "2026-07-20T10:00:00.000Z",
         taskId: "ct-1",
+        worksetId: "ws-other",
       },
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([]);
@@ -301,7 +304,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockLoadSettings.mockReturnValue({
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: ["ct-1"],
+      sourceFilter: { taskIds: ["ct-1"], worksetIds: [] },
       preambleChimeId: "none",
       quietHours: { enabled: false, start: "00:00", end: "23:59" },
     });

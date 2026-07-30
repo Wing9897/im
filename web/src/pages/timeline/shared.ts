@@ -1,4 +1,9 @@
-import { USER_EVENTS_FILTER_ID } from "../../domain/timeline/userEvents";
+import {
+  expandWorksetIdsToTaskIds,
+  isEmptySourceFilter,
+  type SourceFilterSelection,
+} from "../../domain/tasks/sourceFilterSelection";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 /** Multi-select plan: which sources to fetch and how to client-filter. */
 export type TimelineFilterPlan = {
@@ -8,77 +13,92 @@ export type TimelineFilterPlan = {
   /** `null` = no task_id filter (all); otherwise IN list for event-mode tasks. */
   analysisTaskIds: string[] | null;
   /** `null` = all recurring; otherwise IN list for recurring tasks. */
-  calendarTaskIds: string[] | null;
-  /** Real task ids selected (excludes `__user__`). Empty when only sentinel. */
+  recurringTaskIds: string[] | null;
+  /** Explicitly selected real task ids (not expanded from worksets). */
   selectedRealTaskIds: string[];
-  includeUnassignedUserEvents: boolean;
+  /** Selected workset ids (incl. builtin `__user__`). */
+  selectedWorksetIds: string[];
+  /** True when builtin「一般」workset is in the selection (fetch/filter its user_events). */
+  includeGeneralWorksetUserEvents: boolean;
 };
 
 /**
- * Resolve multi-select (`null`/`[]`/ids) into fetch + merge flags.
- * `null` = all sources; `[]` = show none (skip fetches).
+ * Resolve hierarchical filter (`null` / `{ taskIds, worksetIds }`) into fetch + merge flags.
+ * Selecting a workset includes member-task analysis/calendar + that workset's user_events.
+ * Selecting a task alone includes only that task's rows (not the parent workset's user_events).
  */
 export function resolveTimelineFilterPlan(
-  selectedTaskIds: string[] | null,
-  tasks: ReadonlyArray<{ id: string; analysisMode: string }>,
+  selection: SourceFilterSelection,
+  tasks: ReadonlyArray<{ id: string; analysisMode: string; worksetId?: string | null }>,
 ): TimelineFilterPlan {
-  if (selectedTaskIds === null) {
+  if (selection === null) {
     return {
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
       analysisTaskIds: null,
-      calendarTaskIds: null,
+      recurringTaskIds: null,
       selectedRealTaskIds: [],
-      includeUnassignedUserEvents: true,
+      selectedWorksetIds: [],
+      includeGeneralWorksetUserEvents: true,
     };
   }
 
-  if (selectedTaskIds.length === 0) {
+  if (isEmptySourceFilter(selection)) {
     return {
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: false,
       analysisTaskIds: [],
-      calendarTaskIds: [],
+      recurringTaskIds: [],
       selectedRealTaskIds: [],
-      includeUnassignedUserEvents: false,
+      selectedWorksetIds: [],
+      includeGeneralWorksetUserEvents: false,
     };
   }
 
   const byId = new Map(tasks.map((task) => [task.id, task]));
-  const includeUnassignedUserEvents = selectedTaskIds.includes(USER_EVENTS_FILTER_ID);
-  const selectedRealTaskIds = selectedTaskIds.filter((id) => id !== USER_EVENTS_FILTER_ID);
+  const selectedWorksetIds = [...selection.worksetIds];
+  const includeGeneralWorksetUserEvents = selectedWorksetIds.includes(SYSTEM_WORKSET_ID);
+  const fromWorksets = expandWorksetIdsToTaskIds(selectedWorksetIds, tasks);
+  const selectedRealTaskIds = [
+    ...new Set([...selection.taskIds, ...fromWorksets]),
+  ];
 
   const analysisTaskIds: string[] = [];
-  const calendarTaskIds: string[] = [];
+  const recurringTaskIds: string[] = [];
   let fetchUserForTagged = false;
 
   for (const id of selectedRealTaskIds) {
     const mode = byId.get(id)?.analysisMode;
     if (mode === "recurring") {
-      calendarTaskIds.push(id);
+      recurringTaskIds.push(id);
       fetchUserForTagged = true;
     } else if (mode === "calendar_task") {
       fetchUserForTagged = true;
     } else if (mode === "project") {
-      // Project owns child recurrings; fetch calendar by project id (server expands children).
-      calendarTaskIds.push(id);
+      recurringTaskIds.push(id);
       fetchUserForTagged = true;
     } else {
-      // event / unknown → analysis + tagged user events
       analysisTaskIds.push(id);
       fetchUserForTagged = true;
     }
   }
 
+  // Workset-only selection (e.g. only __user__) still needs user events.
+  const fetchUserEvents =
+    includeGeneralWorksetUserEvents ||
+    fetchUserForTagged ||
+    selectedWorksetIds.some((id) => id !== SYSTEM_WORKSET_ID);
+
   return {
     fetchAnalysis: analysisTaskIds.length > 0,
-    fetchCalendar: calendarTaskIds.length > 0,
-    fetchUserEvents: includeUnassignedUserEvents || fetchUserForTagged,
+    fetchCalendar: recurringTaskIds.length > 0,
+    fetchUserEvents,
     analysisTaskIds: analysisTaskIds.length > 0 ? analysisTaskIds : [],
-    calendarTaskIds: calendarTaskIds.length > 0 ? calendarTaskIds : [],
+    recurringTaskIds: recurringTaskIds.length > 0 ? recurringTaskIds : [],
     selectedRealTaskIds,
-    includeUnassignedUserEvents,
+    selectedWorksetIds,
+    includeGeneralWorksetUserEvents,
   };
 }

@@ -137,7 +137,6 @@ async def test_user_event_may_own_project_task(app) -> None:
         context={
             "project_scope_task_id": "proj-1",
             "user_event_origin": "project",
-            "default_calendar_task_id": "proj-1",
         },
     )
     assert "error" not in result

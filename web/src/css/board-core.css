@@ -189,7 +189,7 @@
 }
 
 .board-canvas--edit {
-  /* Soft free-canvas guide — cell grid for size presets. */
+  /* Soft free-canvas guide ï¿½ cell grid for size presets. */
   background-image: radial-gradient(
     color-mix(in srgb, var(--surface-border) 45%, transparent) 1px,
     transparent 1px
@@ -350,7 +350,7 @@
 
 /*
  * Board system-fullscreen (data-board-immersive on .board-root):
- * keep frame chrome hidden — hover/focus must not reveal headers.
+ * keep frame chrome hidden ï¿½ hover/focus must not reveal headers.
  * Edit mode still forces headers visible via .board-canvas--edit below.
  * Widget maximize is separate and keeps hover-reveal.
  */
@@ -360,7 +360,7 @@
   pointer-events: none;
 }
 
-/* Message wall needs channel scope in the header even in immersive — allow hover reveal. */
+/* Message wall needs channel scope in the header even in immersive ï¿½ allow hover reveal. */
 .board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame[data-testid="board-widget-wall"]:hover .board-widget-frame__header,
 .board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame[data-testid="board-widget-wall"]:focus-within .board-widget-frame__header {
   opacity: 1;
@@ -455,11 +455,11 @@
   color: #ef4444;
 }
 
-.board-task-filter {
+.board-source-filter {
   position: relative;
 }
 
-.board-task-filter__badge {
+.board-source-filter__badge {
   position: absolute;
   top: -2px;
   right: -2px;
@@ -476,7 +476,7 @@
   pointer-events: none;
 }
 
-.board-task-filter__menu {
+.board-source-filter__menu {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
@@ -495,14 +495,14 @@
   box-shadow: 0 8px 20px color-mix(in srgb, #000 28%, transparent);
 }
 
-.board-task-filter__menu--portal {
+.board-source-filter__menu--portal {
   position: fixed;
   right: auto;
   z-index: 10050;
   max-height: min(280px, calc(100vh - 16px));
 }
 
-.board-task-filter__menu-head {
+.board-source-filter__menu-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -513,13 +513,35 @@
   color: var(--text-secondary);
 }
 
-.board-task-filter__menu-actions {
+.board-source-filter__menu-actions {
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.board-task-filter__link {
+.board-source-filter__search {
+  margin: 0 0 6px;
+}
+
+.board-source-filter__search-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--surface-border, #d0d5dd);
+  border-radius: 6px;
+  background: var(--surface-base, #fff);
+  color: var(--text-primary, #101828);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.board-source-filter__search-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--accent, var(--info)) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.board-source-filter__link {
   border: none;
   background: transparent;
   color: var(--accent, var(--info));
@@ -528,14 +550,14 @@
   padding: 0;
 }
 
-.board-task-filter__empty {
+.board-source-filter__empty {
   margin: 0;
   padding: 6px 4px;
   font-size: 10px;
   color: var(--text-muted);
 }
 
-.board-task-filter__list {
+.board-source-filter__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -545,7 +567,7 @@
   gap: 2px;
 }
 
-.board-task-filter__item {
+.board-source-filter__item {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -556,17 +578,17 @@
   cursor: pointer;
 }
 
-.board-task-filter__item:hover {
+.board-source-filter__item:hover {
   background: color-mix(in srgb, var(--text-primary) 6%, transparent);
 }
 
-.board-task-filter__item span {
+.board-source-filter__item span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.board-task-filter__item input {
+.board-source-filter__item input {
   flex-shrink: 0;
 }
 

@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 
-import {
-  USER_EVENTS_FILTER_ID,
-  toUserEventFormTaskId,
-} from "../../domain/timeline/userEvents";
+import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isElectronDesktop } from "../../electron/electronWindow";
 import {
   createSpeechPorts,
   loadVoiceSettings,
+  saveVoiceSettings,
   ttsSpeakOptionsFromVoiceSettings,
   VOICE_SETTINGS_CHANGED_EVENT,
   type SpacePttMode,
@@ -28,10 +27,11 @@ export interface AssistantChatVoice {
   ttsAvailable: boolean;
   ttsEnabled: boolean;
   spacePttMode: SpacePttMode;
-  /** Default owning task for assistant-created calendar entries. */
-  calendarTaskId: string;
-  setCalendarTaskId: (taskId: string) => void;
-  calendarTaskIdRef: MutableRefObject<string>;
+  /** Shared target workset for assistant-created calendar entries (persisted). */
+  worksetId: string;
+  /** Update session + persist ``defaultWorksetId`` (voice settings). */
+  setWorksetId: (worksetId: string) => void;
+  worksetIdRef: MutableRefObject<string>;
   /** Last finalized STT text; cleared when a send starts. */
   heardTextRef: MutableRefObject<string>;
   /**
@@ -67,8 +67,8 @@ export function useAssistantChatVoice({
   const [ttsAvailable, setTtsAvailable] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(() => loadVoiceSettings().ttsEnabled);
   const [spacePttMode, setSpacePttMode] = useState(() => loadVoiceSettings().spacePttMode);
-  const [calendarTaskId, setCalendarTaskIdState] = useState(() =>
-    toUserEventFormTaskId(loadVoiceSettings().defaultCalendarTaskId),
+  const [worksetId, setWorksetIdState] = useState(() =>
+    toUserEventFormWorksetId(loadVoiceSettings().defaultWorksetId),
   );
 
   const sttRef = useRef<SttPort | null>(null);
@@ -78,16 +78,20 @@ export function useAssistantChatVoice({
   const listenEpochRef = useRef(0);
   const heardTextRef = useRef("");
   const hadSttTranscriptRef = useRef(false);
-  const calendarTaskIdRef = useRef(calendarTaskId);
-  calendarTaskIdRef.current = calendarTaskId;
+  const worksetIdRef = useRef(worksetId);
+  worksetIdRef.current = worksetId;
 
   const onTranscriptRef = useRef(onTranscript);
   const onErrorRef = useRef(onError);
   onTranscriptRef.current = onTranscript;
   onErrorRef.current = onError;
 
-  const setCalendarTaskId = useCallback((taskId: string) => {
-    setCalendarTaskIdState(toUserEventFormTaskId(taskId || USER_EVENTS_FILTER_ID));
+  const setWorksetId = useCallback((worksetId: string) => {
+    const next = toUserEventFormWorksetId(worksetId || SYSTEM_WORKSET_ID);
+    setWorksetIdState(next);
+    const current = loadVoiceSettings();
+    if (current.defaultWorksetId === next) return;
+    saveVoiceSettings({ ...current, defaultWorksetId: next });
   }, []);
 
   const refreshPorts = useCallback(() => {
@@ -112,7 +116,7 @@ export function useAssistantChatVoice({
       const settings = loadVoiceSettings();
       setTtsEnabled(settings.ttsEnabled);
       setSpacePttMode(settings.spacePttMode);
-      setCalendarTaskIdState(toUserEventFormTaskId(settings.defaultCalendarTaskId));
+      setWorksetIdState(toUserEventFormWorksetId(settings.defaultWorksetId));
     };
     window.addEventListener(VOICE_SETTINGS_CHANGED_EVENT, onVoiceSettings);
     return () => window.removeEventListener(VOICE_SETTINGS_CHANGED_EVENT, onVoiceSettings);
@@ -217,9 +221,9 @@ export function useAssistantChatVoice({
     ttsAvailable,
     ttsEnabled,
     spacePttMode,
-    calendarTaskId,
-    setCalendarTaskId,
-    calendarTaskIdRef,
+    worksetId,
+    setWorksetId,
+    worksetIdRef,
     heardTextRef,
     hadSttTranscriptRef,
     startListening,

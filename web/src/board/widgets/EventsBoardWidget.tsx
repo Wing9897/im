@@ -3,20 +3,20 @@ import { useTranslation } from "react-i18next";
 import { fetchEvents } from "../../api/results";
 import { listUserEvents } from "../../api/userEvents";
 import { Badge } from "../../components/ui";
-import { useTaskCatalog, useTaskNameById } from "../../context/TaskCatalogContext";
+import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { formatIntelligenceEventTime } from "../../domain/intelligence/intelligenceSourceMeta";
-import { useUserEventsFilterLabel } from "../../domain/timeline/useUserEventsFilterLabel";
+import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import type { AnalysisEvent } from "../../types";
 import { getEventTimestamp, isMappableCoordinate } from "../../domain/intelligence/mapFilters";
-import { TaskFilterControl } from "../../components/TaskFilterControl";
-import { catalogOrEventFilterOptions } from "../../domain/timeline/taskFilterOptions";
+import { SourceFilterDialog } from "../../components/SourceFilterDialog";
+import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
 import {
   userEventToBoardEvent,
   withResolvedUserEventTaskNames,
 } from "../../domain/timeline/timedEventMerge";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardTaskFilter } from "../useBoardTaskFilter";
+import { useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import {
   focusBoardEvent,
@@ -25,6 +25,8 @@ import {
 } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { untitledLabel } from "../boardLabels";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 
 const EVENTS_LIMIT = 15;
 
@@ -48,7 +50,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
     getBoardFocusTarget,
   );
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
-  const { selectedTaskIds, setSelectedTaskIds, filterByTaskId } = useBoardTaskFilter(widgetId);
+  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const fetcher = useCallback(
     () =>
       Promise.all([
@@ -58,7 +60,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
           sort: "analyzed_at",
           includeTotal: false,
         }).then((page) => page.items),
-        // Unbounded list stays small under retention; merge so「用戶或助手」filter works.
+        // Unbounded list stays small under retention; merge so「一般」filter works.
         listUserEvents(),
       ]).then(([analysisEvents, userEvents]) =>
         sortEventsByTimeDesc([
@@ -73,36 +75,53 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
     BOARD_POLL_MS.standard,
     { active },
   );
-  const { tasks } = useTaskCatalog();
+  const { tasks, worksets } = useTaskCatalog();
   const taskNameById = useTaskNameById();
-  const userEventsLabel = useUserEventsFilterLabel();
+  const worksetNameById = useWorksetNameById();
+  const generalWorksetLabel = useGeneralWorksetLabel();
   // Without this the badge on a tagged user_event renders its raw task id.
   const items = useMemo(
     () =>
       fetchedItems
-        ? withResolvedUserEventTaskNames(fetchedItems, taskNameById, userEventsLabel)
+        ? withResolvedUserEventTaskNames(
+            fetchedItems,
+            taskNameById,
+            generalWorksetLabel,
+            worksetNameById,
+          )
         : null,
-    [fetchedItems, taskNameById, userEventsLabel],
+    [fetchedItems, taskNameById, generalWorksetLabel, worksetNameById],
   );
   const filterOptions = useMemo(
-    () => catalogOrEventFilterOptions(tasks, items, userEventsLabel),
-    [items, tasks, userEventsLabel],
+    () => catalogOrEventSourceOptions(tasks, items),
+    [items, tasks],
   );
-  // Filter first so「用戶或助手」is not squeezed out of the recent-15 cap.
+  // Filter first so「一般」is not squeezed out of the recent-15 cap.
   const filteredItems = useMemo(
-    () => sortEventsByTimeDesc(filterByTaskId(items ?? [])).slice(0, EVENTS_LIMIT),
-    [filterByTaskId, items],
+    () => sortEventsByTimeDesc(filterBySource(items ?? [])).slice(0, EVENTS_LIMIT),
+    [filterBySource, items],
   );
   const headerActions = useMemo(
     () => (
-      <TaskFilterControl
+      <SourceFilterDialog
         tasks={filterOptions}
-        selectedTaskIds={selectedTaskIds}
-        onChange={setSelectedTaskIds}
+        worksets={worksets.map((ws) => ({
+          id: ws.id,
+          name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
+          isSystem: ws.isSystem,
+        }))}
+        expandTasks={tasks.map((task) => ({
+          id: task.id,
+          name: task.name,
+          worksetId: task.worksetId ?? null,
+        }))}
+        selection={selection}
+        onChange={setSelection}
         ariaLabelPrefix={t("board.events.ariaPrefix")}
+        variant="board"
       />
     ),
-    [filterOptions, selectedTaskIds, setSelectedTaskIds, t],
+    [filterOptions, selection, setSelection, t, tasks, generalWorksetLabel, worksets],
   );
   useBoardWidgetHeaderActions(headerActions);
 
@@ -123,7 +142,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
         onRetry={refresh}
         empty={Array.isArray(items) && filteredItems.length === 0}
         emptyLabel={
-          selectedTaskIds !== null && selectedTaskIds.length === 0
+          isEmptySourceFilter(selection)
             ? t("board.common.noTaskSelected")
             : t("board.events.empty")
         }

@@ -1,22 +1,32 @@
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { TaskFilterControl } from "../../../components/TaskFilterControl";
+import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
-import { withUserEventsFilterOption } from "../../../domain/timeline/taskFilterOptions";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
-import type { TimelineSelectedTaskIds } from "../../../domain/timeline/timelineTaskFilter";
-import { useUserEventsFilterLabel } from "../../../domain/timeline/useUserEventsFilterLabel";
+import type { TimelineSelectedSources } from "../../../domain/timeline/timelineSourceFilter";
 
 type TimelineTaskOption = {
   id: string;
   name: string;
 };
 
+type WorksetOption = {
+  id: string;
+  name: string;
+};
+
+type ExpandTaskOption = {
+  id: string;
+  worksetId?: string | null;
+};
+
 type TimelineControlBarProps = {
-  selectedTaskIds: TimelineSelectedTaskIds;
-  setSelectedTaskIds: (ids: TimelineSelectedTaskIds) => void;
+  selectedSources: TimelineSelectedSources;
+  setSelectedSources: (ids: TimelineSelectedSources) => void;
   timelineTasks: TimelineTaskOption[];
+  worksets?: WorksetOption[];
+  expandTasks?: ExpandTaskOption[];
   viewMode: "calendar" | "gantt";
   setViewMode: (mode: "calendar" | "gantt") => void;
   timeScale: TimelineScale;
@@ -31,9 +41,11 @@ type TimelineControlBarProps = {
 
 /** Single-row ops bar (task/view · scale · nav). */
 export function TimelineControlBar({
-  selectedTaskIds,
-  setSelectedTaskIds,
+  selectedSources,
+  setSelectedSources,
   timelineTasks,
+  worksets = [],
+  expandTasks,
   viewMode,
   setViewMode,
   timeScale,
@@ -46,14 +58,9 @@ export function TimelineControlBar({
   children,
 }: TimelineControlBarProps) {
   const { t } = useTranslation("timeline");
-  const userEventsLabel = useUserEventsFilterLabel();
   const filterOptions = useMemo(
-    () =>
-      withUserEventsFilterOption(
-        timelineTasks.map((task) => ({ id: task.id, name: task.name })),
-        userEventsLabel,
-      ),
-    [timelineTasks, userEventsLabel],
+    () => timelineTasks.map((task) => ({ id: task.id, name: task.name })),
+    [timelineTasks],
   );
 
   const handleScaleClick = (scale: TimelineScale) => {
@@ -74,12 +81,14 @@ export function TimelineControlBar({
       data-testid="timeline-control-bar"
       className="im-timeline-toolbar !mb-lg overflow-x-auto"
     >
-      <div className="shrink-0" data-testid="timeline-task-filter">
-        <TaskFilterControl
+      <div className="shrink-0" data-testid="timeline-source-filter">
+        <SourceFilterDialog
           tasks={filterOptions}
-          selectedTaskIds={selectedTaskIds}
-          onChange={setSelectedTaskIds}
-          ariaLabelPrefix={t("toolbar.taskFilterAria")}
+          worksets={worksets}
+          expandTasks={expandTasks}
+          selection={selectedSources}
+          onChange={setSelectedSources}
+          ariaLabelPrefix={t("toolbar.sourceFilterAria")}
           variant="toolbar"
         />
       </div>

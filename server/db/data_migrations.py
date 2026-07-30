@@ -1,9 +1,10 @@
 """One-shot data migrations applied after schema baseline.
 
 The ``_data_migrations`` ledger table is permanent so applied ids stay
-recorded. The active registry is empty on the stamp-1 wipe-only baseline —
-there is no live content migration to run against a freshly created database.
-(Schema stamp／MigrationStep registry lives in ``server/db/migrations.py``.)
+recorded. Schema stamp／MigrationStep registry lives in ``server/db/migrations.py``.
+
+Wipe-floor stamp 3: no registered content heals (``user_events.workset_id`` is
+``NOT NULL DEFAULT '__user__'`` in DDL; delete_workset reassigns before delete).
 """
 
 from __future__ import annotations

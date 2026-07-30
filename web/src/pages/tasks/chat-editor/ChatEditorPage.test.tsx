@@ -17,6 +17,12 @@ vi.mock("./useChatEditor", () => ({
   useChatEditor: mockUseChatEditor,
 }));
 
+vi.mock("../../../context/TaskCatalogContext", async () =>
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
+
+vi.mock("../../../context/ToastContext", async () =>
+  (await import("../../../test/context-mocks")).toastContextModuleMock());
+
 vi.mock("../../../components/task/TaskTemplatePresetDialog", () => ({
   TaskTemplatePresetDialog: (props: {
     onApply: () => void;
@@ -70,6 +76,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
 };
 
 function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): UseChatEditorReturn {

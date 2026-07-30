@@ -29,31 +29,18 @@ export type QueueStatus = components["schemas"]["ResultsQueueResponse"];
 /** Processing or attention-worthy batch row inside the queue payload. */
 export type ProcessingBatchInfo = components["schemas"]["QueueBatchResponse"];
 
-/** Activity span for a task in the Gantt chart view */
-export interface TaskActivitySpan {
-  taskId: string;
-  taskName: string;
-  description: string | null;
-  analysisTimeRange: string;
-  isActive: boolean;
-  /** Earliest completed batch created_at (ISO 8601), null if no completed batches */
-  earliestBatchStart: string | null;
-  /** Latest completed batch completed_at (ISO 8601), null if no completed batches */
-  latestBatchEnd: string | null;
-  /** Number of completed batches */
-  completedBatchCount: number;
-  /** Latest completed batch agent message (project tick); null when unset */
-  lastAgentMessage?: string | null;
-  /** Latest completed batch tool-call summaries (empty when none) */
-  lastToolCalls?: Array<{
-    name: string;
-    arguments?: Record<string, unknown>;
-    resultSummary?: string;
-  }>;
-  /** Latest completed batch error (failed project tick) */
-  lastErrorMessage?: string | null;
-  /** Messages drained in the latest completed tick */
-  lastMessageCount?: number | null;
+/** Activity span for Gantt / project detail — OpenAPI `TaskActivitySpanResponse`. */
+export type TaskActivitySpan = components["schemas"]["TaskActivitySpanResponse"];
+
+/**
+ * Virtual ownership span vs real analysis task row.
+ * Trust wire ``sourceKind``; prefer ``worksetId`` for ownership (``taskId``
+ * still equals the workset id on workset rows for gantt key compat).
+ */
+export function isWorksetActivitySpan(
+  span: Pick<TaskActivitySpan, "sourceKind">,
+): boolean {
+  return span.sourceKind === "workset";
 }
 
 /** One completed project-tick batch for the detail log. */

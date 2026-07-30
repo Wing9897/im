@@ -28,7 +28,7 @@ type CalendarImportDraft = {
   endTime: string;
   location: string;
   body: string;
-  taskId: string;
+  worksetId: string;
   source: 'file' | 'url' | 'deeplink';
   sourceLabel: string;
 };

@@ -1,18 +1,20 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent, CalendarOccurrence } from "../../types";
-import { useTaskCatalog, useTaskNameById } from "../../context/TaskCatalogContext";
+import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { addDays, addMonths, startOfDay, startOfMonth } from "../../domain/timeline/dateUtils";
-import { useUserEventsFilterLabel } from "../../domain/timeline/useUserEventsFilterLabel";
-import { TaskFilterControl } from "../../components/TaskFilterControl";
+import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
+import { SourceFilterDialog } from "../../components/SourceFilterDialog";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import {
   fetchMergedTimedBoardEvents,
   withResolvedUserEventTaskNames,
 } from "../../domain/timeline/timedEventMerge";
-import { catalogOrEventFilterOptions } from "../../domain/timeline/taskFilterOptions";
+import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardTaskFilter } from "../useBoardTaskFilter";
+import { useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import { focusBoardEvent } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
@@ -67,7 +69,7 @@ function CalendarBoardWidgetContent({
   mode,
 }: BoardWidgetProps & { mode: CalendarMode }) {
   const { t } = useTranslation();
-  const { selectedTaskIds, setSelectedTaskIds, filterByTaskId } = useBoardTaskFilter(widgetId);
+  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const fetcher = useCallback(() => {
     const { startDate, endDate } = mode === "day" ? dayWindowIso() : monthWindowIso();
     return fetchMergedTimedBoardEvents({
@@ -81,15 +83,21 @@ function CalendarBoardWidgetContent({
     BOARD_POLL_MS.standard,
     { active },
   );
-  const { tasks } = useTaskCatalog();
+  const { tasks, worksets } = useTaskCatalog();
   const taskNameById = useTaskNameById();
-  const userEventsLabel = useUserEventsFilterLabel();
+  const worksetNameById = useWorksetNameById();
+  const generalWorksetLabel = useGeneralWorksetLabel();
   const events = useMemo(
     () =>
       fetchedEvents
-        ? withResolvedUserEventTaskNames(fetchedEvents, taskNameById, userEventsLabel)
+        ? withResolvedUserEventTaskNames(
+            fetchedEvents,
+            taskNameById,
+            generalWorksetLabel,
+            worksetNameById,
+          )
         : null,
-    [fetchedEvents, taskNameById, userEventsLabel],
+    [fetchedEvents, taskNameById, generalWorksetLabel, worksetNameById],
   );
 
   const handleSelectOccurrence = useCallback(
@@ -109,29 +117,40 @@ function CalendarBoardWidgetContent({
   );
 
   const filterOptions = useMemo(
-    () => catalogOrEventFilterOptions(tasks, events, userEventsLabel),
-    [events, tasks, userEventsLabel],
+    () => catalogOrEventSourceOptions(tasks, events),
+    [events, tasks],
   );
   const occurrences = useMemo(
-    () => filterByTaskId(events ?? []).map(eventToCalendarOccurrence).filter(
+    () => filterBySource(events ?? []).map(eventToCalendarOccurrence).filter(
       (event): event is CalendarOccurrence => event !== null,
     ),
-    [events, filterByTaskId],
+    [events, filterBySource],
   );
   const modeAria =
     mode === "month" ? t("board.calendarWidget.monthAria") : t("board.calendarWidget.dayAria");
   const headerActions = useMemo(
     () => (
       <>
-        <TaskFilterControl
+        <SourceFilterDialog
           tasks={filterOptions}
-          selectedTaskIds={selectedTaskIds}
-          onChange={setSelectedTaskIds}
+          worksets={worksets.map((ws) => ({
+            id: ws.id,
+            name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
+            isSystem: ws.isSystem,
+          }))}
+          expandTasks={tasks.map((task) => ({
+            id: task.id,
+            name: task.name,
+            worksetId: task.worksetId ?? null,
+          }))}
+          selection={selection}
+          onChange={setSelection}
           ariaLabelPrefix={modeAria}
+          variant="board"
         />
       </>
     ),
-    [filterOptions, modeAria, selectedTaskIds, setSelectedTaskIds],
+    [filterOptions, modeAria, selection, setSelection, tasks, generalWorksetLabel, worksets],
   );
   useBoardWidgetHeaderActions(headerActions);
 
@@ -146,7 +165,7 @@ function CalendarBoardWidgetContent({
         onRetry={refresh}
         empty={Array.isArray(events) && occurrences.length === 0}
         emptyLabel={
-          selectedTaskIds !== null && selectedTaskIds.length === 0
+          isEmptySourceFilter(selection)
             ? t("board.common.noTaskSelected")
             : mode === "month"
               ? t("board.calendarWidget.emptyMonth")

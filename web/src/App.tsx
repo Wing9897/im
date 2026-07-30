@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { AppSidebar, MAIN_SIDEBAR_PREFETCH_PATHS } from "./components/AppSidebar";
 import { AppTopBar } from "./components/AppTopBar";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
-import { MonitorModeSwitch } from "./components/MonitorModeSwitch";
+import { ShellChromeCore } from "./components/ShellChromeCore";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 import { SchemaUpgradeGate } from "./components/SchemaUpgradeGate";
+import { SecretsBrokenGate } from "./components/SecretsBrokenGate";
 import { AppRuntimeProvider } from "./context/AppRuntimeContext";
 import { MonitorModeProvider, useMonitorMode } from "./context/MonitorModeContext";
 import { SimpleModeProvider } from "./context/SimpleModeContext";
@@ -21,7 +22,7 @@ import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
 import { CommandPaletteProvider } from "./hooks/useCommandPalette";
 import { AssistantQuickProvider } from "./hooks/useAssistantQuick";
 import { AssistantChatProvider } from "./hooks/useAssistantChat";
-import { fetchSchemaStatus } from "./api/schema";
+import { fetchHealth } from "./api/system";
 import { FirstRunWizard } from "./components/FirstRunWizard";
 import { SessionReauthWizard } from "./components/SessionReauthWizard";
 import { resolveAuthGate } from "./domain/connection/authGate";
@@ -30,7 +31,11 @@ import {
   initialBootState,
   shouldReenterAuthOnSessionChange,
 } from "./domain/connection/bootMachine";
-import { hasDeviceSession, subscribeConnection } from "./domain/connection/connectionStore";
+import {
+  clearDeviceSession,
+  hasDeviceSession,
+  subscribeConnection,
+} from "./domain/connection/connectionStore";
 import { syncDesktopConnectionOnBoot } from "./electron/electronConnection";
 import { isElectronDesktop } from "./electron/electronWindow";
 import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
@@ -79,12 +84,18 @@ function shellVisibilityProps(
 applyTheme(getStoredThemeId());
 loadBgForTheme(getStoredThemeId());
 
+/** Browser canvas top bar — same chrome as pages (assistant + search + status). */
 function BrowserCanvasBar() {
   return (
-    <div className="browser-monitor-bar" data-testid="browser-monitor-bar">
-      <span className="browser-monitor-bar__brand">Intelligence Monitor</span>
-      <MonitorModeSwitch compact />
-    </div>
+    <header className="browser-monitor-bar" data-testid="browser-monitor-bar">
+      <ShellChromeCore
+        layout="web"
+        showCollapse={false}
+        brandClassName="browser-monitor-bar__brand"
+        modeClassName="browser-monitor-bar__mode"
+        actionsClassName="browser-monitor-bar__actions"
+      />
+    </header>
   );
 }
 
@@ -254,8 +265,13 @@ function App() {
   const checkBoot = useCallback(async () => {
     dispatchBoot({ type: "check_started" });
     try {
-      const status = await fetchSchemaStatus();
-      if (!status.runtimeReady) {
+      const health = await fetchHealth();
+      if (health.secretsReady === false) {
+        clearDeviceSession();
+        dispatchBoot({ type: "secrets_blocked", error: health.secretsError ?? null });
+        return;
+      }
+      if (!health.runtimeReady) {
         dispatchBoot({ type: "schema_blocked" });
         return;
       }
@@ -268,6 +284,11 @@ function App() {
       });
     }
   }, [runAuthGate]);
+
+  const markSecretsRecovered = useCallback(() => {
+    dispatchBoot({ type: "secrets_gate_complete" });
+    void checkBoot();
+  }, [checkBoot]);
 
   // Desktop host: await connection sync before schema/auth so a stale remote
   // baseUrl cannot poison the first checkBoot (false "unavailable").
@@ -320,6 +341,11 @@ function App() {
           onRetry={() => {
             void checkBoot();
           }}
+        />
+      ) : boot.phase === "secrets_blocked" ? (
+        <SecretsBrokenGate
+          onRecoverComplete={markSecretsRecovered}
+          secretsError={boot.secretsError}
         />
       ) : boot.phase === "gate" ? (
         <SchemaUpgradeGate onReady={markSchemaReady} />

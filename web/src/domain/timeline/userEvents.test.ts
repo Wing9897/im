@@ -1,28 +1,25 @@
 import { describe, expect, it } from "vitest";
 
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
-  USER_EVENTS_FILTER_ID,
   filterAssignableTimelineTasks,
+  getGeneralWorksetLabel,
+  isNullProvenanceTaskId,
   isTimelineAssignableAnalysisMode,
-  isUnassignedUserEventTaskId,
   resolveUserEventTaskName,
-  toFilterTaskId,
-  toUserEventFormTaskId,
-  toUserEventWriteTaskId,
+  toUserEventFormWorksetId,
 } from "./userEvents";
 
 describe("userEvents helpers", () => {
-  it("treats null/empty/__user__ as unassigned and normalizes to the sentinel", () => {
-    expect(isUnassignedUserEventTaskId(null)).toBe(true);
-    expect(isUnassignedUserEventTaskId("")).toBe(true);
-    expect(isUnassignedUserEventTaskId(USER_EVENTS_FILTER_ID)).toBe(true);
-    expect(isUnassignedUserEventTaskId("ct-1")).toBe(false);
+  it("treats null/empty/__user__ as missing provenance; normalizes workset ids", () => {
+    expect(isNullProvenanceTaskId(null)).toBe(true);
+    expect(isNullProvenanceTaskId("")).toBe(true);
+    expect(isNullProvenanceTaskId(SYSTEM_WORKSET_ID)).toBe(true);
+    expect(isNullProvenanceTaskId("ct-1")).toBe(false);
 
-    expect(toUserEventWriteTaskId(null)).toBe(USER_EVENTS_FILTER_ID);
-    expect(toUserEventFormTaskId("")).toBe(USER_EVENTS_FILTER_ID);
-    expect(toFilterTaskId("ct-1")).toBe("ct-1");
-    expect(toUserEventFormTaskId).toBe(toUserEventWriteTaskId);
-    expect(toFilterTaskId).toBe(toUserEventWriteTaskId);
+    expect(toUserEventFormWorksetId(null)).toBe(SYSTEM_WORKSET_ID);
+    expect(toUserEventFormWorksetId("")).toBe(SYSTEM_WORKSET_ID);
+    expect(toUserEventFormWorksetId("ws-1")).toBe("ws-1");
   });
 
   it("filters assignable analysis modes and optional active-only", () => {
@@ -50,11 +47,17 @@ describe("userEvents helpers", () => {
     ]);
   });
 
-  it("resolves task display names with unassigned label fallback", () => {
-    const map = new Map([["ct-1", "日曆任務"]]);
-    expect(resolveUserEventTaskName(null)).toBeTruthy();
-    expect(resolveUserEventTaskName("ct-1", map)).toBe("日曆任務");
-    expect(resolveUserEventTaskName("missing", map)).toBe("missing");
-    expect(resolveUserEventTaskName("ct-1", { "ct-1": "日曆任務" })).toBe("日曆任務");
+  it("resolves provenance task names, else ownership workset names", () => {
+    const tasks = new Map([["ct-1", "日曆任務"]]);
+    const worksets = new Map([["ws-ops", "Ops"]]);
+    expect(resolveUserEventTaskName(null)).toBe(getGeneralWorksetLabel());
+    expect(resolveUserEventTaskName("ct-1", tasks)).toBe("日曆任務");
+    expect(resolveUserEventTaskName("missing", tasks)).toBe("missing");
+    expect(
+      resolveUserEventTaskName(null, tasks, getGeneralWorksetLabel(), "ws-ops", worksets),
+    ).toBe("Ops");
+    expect(
+      resolveUserEventTaskName(null, tasks, getGeneralWorksetLabel(), SYSTEM_WORKSET_ID, worksets),
+    ).toBe(getGeneralWorksetLabel());
   });
 });

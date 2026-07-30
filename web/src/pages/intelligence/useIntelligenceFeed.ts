@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import {
-  loadIntelligenceSelectedTaskIds,
-  pruneIntelligenceSelectedTaskIds,
-  saveIntelligenceSelectedTaskIds,
-  type IntelligenceSelectedTaskIds,
-} from "../../domain/intelligence/intelligenceTaskFilter";
+  loadIntelligenceSelectedSources,
+  pruneIntelligenceSelectedSources,
+  saveIntelligenceSelectedSources,
+  type IntelligenceSelectedSources,
+} from "../../domain/intelligence/intelligenceSourceFilter";
+import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { usePersistedViewMode } from "../../hooks/usePersistedViewMode";
@@ -56,11 +58,11 @@ export function useIntelligenceFeed() {
     persistDebounceMs: 400,
     storage: "session",
   });
-  const [selectedTaskIds, setSelectedTaskIdsState] =
-    useState<IntelligenceSelectedTaskIds>(() => loadIntelligenceSelectedTaskIds());
-  const setSelectedTaskIds = useCallback((ids: IntelligenceSelectedTaskIds) => {
-    setSelectedTaskIdsState(ids);
-    saveIntelligenceSelectedTaskIds(ids);
+  const [selectedSources, setSelectedSourcesState] =
+    useState<IntelligenceSelectedSources>(() => loadIntelligenceSelectedSources());
+  const setSelectedSources = useCallback((ids: IntelligenceSelectedSources) => {
+    setSelectedSourcesState(ids);
+    saveIntelligenceSelectedSources(ids);
   }, []);
   const [sortMode, setSortMode] = usePersistedState<IntelligenceSortMode>(
     INTELLIGENCE_SORT_STORAGE_KEY,
@@ -82,11 +84,24 @@ export function useIntelligenceFeed() {
   useEffect(() => {
     if (tasksLoading) return;
     const catalogIds = intelligenceTasks.map((task) => task.id);
-    const pruned = pruneIntelligenceSelectedTaskIds(selectedTaskIds, catalogIds);
-    if (pruned !== selectedTaskIds) {
-      setSelectedTaskIds(pruned);
+    const worksetIds = [
+      SYSTEM_WORKSET_ID,
+      ...new Set(
+        intelligenceTasks
+          .map((task) => task.worksetId)
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      ),
+    ];
+    const pruned = pruneIntelligenceSelectedSources(selectedSources, catalogIds, worksetIds);
+    if (pruned !== selectedSources) {
+      setSelectedSources(pruned);
     }
-  }, [intelligenceTasks, selectedTaskIds, setSelectedTaskIds, tasksLoading]);
+  }, [intelligenceTasks, selectedSources, setSelectedSources, tasksLoading]);
+
+  const resolvedApiTaskIds = useMemo(
+    () => resolveAnalysisTaskIdsFromFilter(selectedSources, intelligenceTasks),
+    [selectedSources, intelligenceTasks],
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -117,7 +132,7 @@ export function useIntelligenceFeed() {
     isMapMode,
     apiDateRange,
     sortMode,
-    selectedTaskIds,
+    resolvedApiTaskIds,
   );
 
   useEffect(() => {
@@ -144,7 +159,7 @@ export function useIntelligenceFeed() {
     viewMode,
     apiDateRange,
     sortMode,
-    selectedTaskIds,
+    selectedSources,
   ]);
 
   const items = useMemo(
@@ -203,7 +218,7 @@ export function useIntelligenceFeed() {
   ]);
 
   useRefreshOnAnalysisEvent(refreshItems, {
-    taskIds: selectedTaskIds,
+    taskIds: resolvedApiTaskIds,
     analysisMode: "event",
   });
 
@@ -221,13 +236,13 @@ export function useIntelligenceFeed() {
   const pageError = fetchError ?? loadMoreError ?? syncError ?? taskLoadError;
   const hasSearchFilter = search.trim().length > 0;
   const hasTimeFilter = selectedPreset !== "today";
-  const hasTaskFilter = selectedTaskIds !== null;
-  const hasActiveFilters = hasSearchFilter || hasTimeFilter || hasTaskFilter;
+  const hasSourceFilter = selectedSources !== null;
+  const hasActiveFilters = hasSearchFilter || hasTimeFilter || hasSourceFilter;
   const resetFilters = useCallback(() => {
     setSearch("");
     setPreset("today");
-    setSelectedTaskIds(null);
-  }, [setSearch, setPreset, setSelectedTaskIds]);
+    setSelectedSources(null);
+  }, [setSearch, setPreset, setSelectedSources]);
 
   const handleMapFetchWindowChange = useCallback((window: TimeWindow) => {
     setMapApiWindow(window);
@@ -251,8 +266,8 @@ export function useIntelligenceFeed() {
     search,
     setSearch,
     debouncedSearch,
-    selectedTaskIds,
-    setSelectedTaskIds,
+    selectedSources,
+    setSelectedSources,
     intelligenceTasks,
     loadMoreItems,
     loadMoreMapBatch,
@@ -261,7 +276,7 @@ export function useIntelligenceFeed() {
     hasActiveFilters,
     hasSearchFilter,
     hasTimeFilter,
-    hasTaskFilter,
+    hasSourceFilter,
     resetFilters,
     refreshItems,
     isMapMode,

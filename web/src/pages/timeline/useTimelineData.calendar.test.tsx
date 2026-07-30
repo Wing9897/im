@@ -9,17 +9,17 @@
  * - filtering by a recurring task shows only that task's occurrences
  * - filtering by an event task does not mix in calendar occurrences
  * - timelineTasks includes event, recurring, and calendar_task modes
- * - __user__ shows only unassigned user_events; task filters include tagged ones
+ * - __user__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
+ * - task filters include tagged user_events for that task
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CalendarOccurrence } from "../../types";
-import {
-  USER_EVENTS_FILTER_ID,
-  getUserEventsFilterLabel,
-} from "../../domain/timeline/userEvents";
+import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 
 const {
   mockFetchTimelineEvents,
@@ -102,14 +102,14 @@ describe("useTimelineData calendar occurrence wiring", () => {
   const rangeEnd = new Date("2025-02-01T00:00:00Z");
 
   function HookHarness({
-    selectedTaskIds,
+    selectedSources,
     refOut,
   }: {
-    selectedTaskIds: string[] | null;
+    selectedSources: SourceFilterSelection;
     refOut: { current: HookResult | null };
   }) {
     const result = useTimelineData({
-      selectedTaskIds,
+      selectedSources,
       viewMode: "calendar",
       rangeStart,
       rangeEnd,
@@ -118,10 +118,10 @@ describe("useTimelineData calendar occurrence wiring", () => {
     return null;
   }
 
-  async function renderHook(selectedTaskIds: string[] | null = null) {
+  async function renderHook(selectedSources: SourceFilterSelection = null) {
     await act(async () => {
       root = createRoot(container);
-      root.render(createElement(HookHarness, { selectedTaskIds, refOut: resultRef }));
+      root.render(createElement(HookHarness, { selectedSources, refOut: resultRef }));
     });
   }
 
@@ -194,11 +194,11 @@ describe("useTimelineData calendar occurrence wiring", () => {
     });
     const events = resultRef.current!.events;
     expect(events.some((e) => e.id === "ue-1" && e.source === "user")).toBe(true);
-    expect(events.find((e) => e.id === "ue-1")?.taskName).toBe(getUserEventsFilterLabel());
+    expect(events.find((e) => e.id === "ue-1")?.taskName).toBe(getGeneralWorksetLabel());
     expect(mockListUserEvents).toHaveBeenCalled();
   });
 
-  it("shows only unassigned user events when the user-events filter is selected", async () => {
+  it("shows all user events owned by the general workset when __user__ is selected", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
     mockListUserEvents.mockResolvedValue([
       {
@@ -211,12 +211,13 @@ describe("useTimelineData calendar occurrence wiring", () => {
         origin: "assistant",
         source: "user",
         taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
         createdAt: "2025-01-12T08:00:00Z",
         updatedAt: "2025-01-12T08:00:00Z",
       },
       {
-        id: "ue-tagged",
-        title: "掛到任務",
+        id: "ue-tagged-same-ws",
+        title: "同工作集但有 provenance",
         body: "",
         startTime: "2025-01-12T09:00:00Z",
         endTime: null,
@@ -224,25 +225,36 @@ describe("useTimelineData calendar occurrence wiring", () => {
         origin: "manual",
         source: "user",
         taskId: "ct-1",
+        worksetId: SYSTEM_WORKSET_ID,
         createdAt: "2025-01-12T09:00:00Z",
         updatedAt: "2025-01-12T09:00:00Z",
       },
+      {
+        id: "ue-other-ws",
+        title: "其他工作集",
+        body: "",
+        startTime: "2025-01-12T10:00:00Z",
+        endTime: null,
+        location: null,
+        origin: "manual",
+        source: "user",
+        taskId: "",
+        worksetId: "ws-ops",
+        createdAt: "2025-01-12T10:00:00Z",
+        updatedAt: "2025-01-12T10:00:00Z",
+      },
     ]);
-    await renderHook([USER_EVENTS_FILTER_ID]);
+    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
     await act(async () => {
       await Promise.resolve();
     });
     const events = resultRef.current!.events;
-    expect(events).toHaveLength(1);
-    expect(events[0].id).toBe("ue-only");
-    expect(events[0].source).toBe("user");
-    expect(events[0].taskName).toBe(getUserEventsFilterLabel());
+    expect(events.map((e) => e.id).sort()).toEqual(["ue-only", "ue-tagged-same-ws"]);
+    expect(events.every((e) => e.source === "user")).toBe(true);
+    expect(events.find((e) => e.id === "ue-only")?.taskName).toBe(getGeneralWorksetLabel());
     expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
     expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
-    // Gantt treats __user__ as the virtual manual / assistant source.
-    expect(resultRef.current!.timelineEvents).toHaveLength(1);
-    expect(resultRef.current!.timelineEvents[0]?.id).toBe("ue-only");
-    expect(resultRef.current!.timelineEvents[0]?.taskName).toBe(getUserEventsFilterLabel());
+    expect(resultRef.current!.timelineEvents).toHaveLength(2);
     expect(resultRef.current!.timelineEventsInitialLoading).toBe(false);
   });
 
@@ -252,7 +264,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({ id: "cal-1", name: "Weekly Standup", analysisMode: "recurring" }),
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
-    await renderHook(["timeline-task-1"]);
+    await renderHook({ taskIds: ["timeline-task-1"], worksetIds: [] });
     expect(resultRef.current!.events).toHaveLength(0);
     expect(mockListUserEvents).toHaveBeenCalled();
   });
@@ -314,7 +326,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         updatedAt: "2025-01-12T09:00:00Z",
       },
     ]);
-    await renderHook(["timeline-task-1"]);
+    await renderHook({ taskIds: ["timeline-task-1"], worksetIds: [] });
     await act(async () => {
       await Promise.resolve();
     });
@@ -331,7 +343,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeOccurrence({ id: "cal-1:a", taskId: "cal-1", title: "Standup" }),
       makeOccurrence({ id: "cal-2:b", taskId: "cal-2", title: "Other", taskName: "Other Cal" }),
     ]);
-    await renderHook(["cal-1"]);
+    await renderHook({ taskIds: ["cal-1"], worksetIds: [] });
     const events = resultRef.current!.events;
     expect(events).toHaveLength(1);
     expect(events[0].taskId).toBe("cal-1");
@@ -371,7 +383,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         updatedAt: "2025-01-12T09:00:00Z",
       },
     ]);
-    await renderHook(["ct-1"]);
+    await renderHook({ taskIds: ["ct-1"], worksetIds: [] });
     await act(async () => {
       await Promise.resolve();
     });
@@ -435,7 +447,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({ id: "ct-1", name: "日曆任務", analysisMode: "calendar_task" }),
     ]);
     mockFetchCalendarOccurrences.mockRejectedValue(new Error("calendar boom"));
-    await renderHook(["ct-1"]);
+    await renderHook({ taskIds: ["ct-1"], worksetIds: [] });
     await act(async () => {
       await Promise.resolve();
     });

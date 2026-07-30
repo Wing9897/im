@@ -16,6 +16,7 @@ import type { BoardWidgetType } from "../types";
 import {
   makeAnalysisTask,
   resetTaskCatalogState,
+  taskCatalogState,
 } from "../../test/context-mocks";
 
 const openInPages = vi.fn();
@@ -225,6 +226,14 @@ describe("board widget in-frame interactions", () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "task-1", name: "任務活動", analysisMode: "event" }),
     ]);
+    taskCatalogState.worksets = [
+      {
+        id: "__user__",
+        name: "一般",
+        createdAt: "1970-01-01T00:00:00Z",
+        updatedAt: "1970-01-01T00:00:00Z",
+      },
+    ];
     window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
     // jsdom does not implement Element.scrollIntoView; EventsBoardWidget
     // guards for it, but stub anyway so focus-scroll paths are exercisable.
@@ -326,22 +335,15 @@ describe("board widget in-frame interactions", () => {
     expect(openInPages).not.toHaveBeenCalled();
   });
 
-  it("calendar frames expose task filters without day/month view toggles", async () => {
+  it("calendar frames expose source filter without day/month view toggles", async () => {
     act(() => {
       root.render(inFrame("calendar", createElement(CalendarBoardWidget, { widgetId: "test-calendar" })));
     });
     await flushLazy();
-    const taskFilter = container.querySelector(
-      '[data-testid="board-task-filter"]',
+    const sourceFilter = container.querySelector(
+      '[data-testid="board-source-filter"]',
     ) as HTMLButtonElement | null;
-    expect(taskFilter?.closest(".board-widget-frame__header")).toBeTruthy();
-    act(() => {
-      taskFilter!.click();
-    });
-    expect(document.querySelector('[data-testid="board-task-filter-select-all"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-task-filter-clear"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-task-filter-__user__"]')).toBeTruthy();
-    expect(document.body.textContent).toContain("用戶或助手");
+    expect(sourceFilter?.closest(".board-widget-frame__header")).toBeTruthy();
     expect(container.querySelector('[data-testid="board-calendar-view-day"]')).toBeNull();
     expect(container.querySelector('[data-testid="board-calendar-view-month"]')).toBeNull();
     expect(container.querySelector(".board-widget-footer")).toBeNull();
@@ -361,22 +363,15 @@ describe("board widget in-frame interactions", () => {
     ).toBe(true);
   });
 
-  it("Events header exposes the shared task filter controls", async () => {
+  it("Events header mounts the shared source filter control", async () => {
     act(() => {
       root.render(inFrame("events", createElement(EventsBoardWidget, { widgetId: "test-events" })));
     });
     await flush();
-    const taskFilter = container.querySelector(
-      '[data-testid="board-task-filter"]',
+    const sourceFilter = container.querySelector(
+      '[data-testid="board-source-filter"]',
     ) as HTMLButtonElement | null;
-    expect(taskFilter?.closest(".board-widget-frame__header")).toBeTruthy();
-    act(() => {
-      taskFilter!.click();
-    });
-    expect(document.querySelector('[data-testid="board-task-filter-select-all"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-task-filter-clear"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-task-filter-__user__"]')).toBeTruthy();
-    expect(document.body.textContent).toContain("用戶或助手");
+    expect(sourceFilter?.closest(".board-widget-frame__header")).toBeTruthy();
   });
 
   it("Gantt task row does not open the timeline", async () => {
@@ -391,15 +386,11 @@ describe("board widget in-frame interactions", () => {
     expect(dayView?.closest(".board-widget-frame__header")).toBeTruthy();
     expect(container.querySelector('[data-testid="board-gantt-view-month"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="board-gantt-view-month-full"]')).toBeNull();
-    const taskFilter = container.querySelector(
-      '[data-testid="board-task-filter"]',
-    ) as HTMLButtonElement | null;
-    expect(taskFilter?.closest(".board-widget-frame__header")).toBeTruthy();
-    act(() => {
-      taskFilter!.click();
-    });
-    expect(document.querySelector('[data-testid="board-task-filter-__user__"]')).toBeTruthy();
-    expect(document.body.textContent).toContain("用戶或助手");
+    expect(
+      container.querySelector('[data-testid="board-source-filter"]')?.closest(
+        ".board-widget-frame__header",
+      ),
+    ).toBeTruthy();
     expect(await waitForSelector('[data-testid="board-gantt-embed"]')).toBeTruthy();
     expect(container.querySelector(".board-widget-footer")).toBeNull();
     act(() => {

@@ -267,8 +267,8 @@
     "ttsPreview": "Preview",
     "ttsPreviewing": "Playing…",
     "ttsPreviewSample": "This is a voice preview. Hello.",
-    "defaultCalendarTaskLabel": "Default schedule task",
-    "defaultCalendarTaskHelp": "When there is no text box (pure voice), assistant-created events use this task. Default is User or assistant."
+    "defaultWorksetLabel": "Default ownership workset",
+    "defaultWorksetHelp": "Default workset for assistant-created events (full page, quick dialog, and Space PTT share this). Default is the builtin General workset."
   },
   "analysis": {
     "loading": "Loading analysis scheduling settings…",
@@ -354,10 +354,10 @@
     },
     "deepLink": {
       "title": "Desktop calendar deep link",
-      "body": "Packaged Desktop only (not an HTTP API). The app registers `intelligencemonitor://` and `.ics` file association. Opening a link or file shows the add-to-calendar / pick-task dialog; confirming writes via `POST /api/v1/user-events`. First VEVENT only — not webcal/CalDAV sync.",
+      "body": "Packaged Desktop only (not an HTTP API). The app registers `intelligencemonitor://` and `.ics` file association. Opening a link or file shows the add-to-calendar / pick-workset dialog; confirming writes via `POST /api/v1/user-events`. First VEVENT only — not webcal/CalDAV sync.",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — fetch remote ICS (http/https)",
-        "`title` + `start` required for inline drafts; optional `end` / `location` / `body` / `taskId`",
+        "`title` + `start` required for inline drafts; optional `end` / `location` / `body` / `worksetId`",
         "Or open a `.ics` file from the OS (same confirmation dialog)"
       ],
       "exampleTitle": "Team sync",

@@ -1,6 +1,6 @@
 # 内置助手（Agent + 浏览器语音）
 
-IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（`web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`，可选归属 event／recurring／**calendar_task**），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／calendar_task／AI 分析任务。
+IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（`web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring／**calendar_task** 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／calendar_task／AI 分析任务。
 
 ## 怎么用
 
@@ -9,7 +9,7 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 3. 可选：按住麦克风或空白键（浏览器 Web Speech；手势随语音设定 hold／toggle）→ **松开／再按即送出识别文字**（无识别则不送出草稿）；也可用文字输入后点送出。识别稿会同步进输入框，但 PTT 释放不会用草稿兜底。
 4. 回答结束后若设置里开启朗读，会用浏览器 TTS 读出；可随时停止。
 5. 侧栏顶部切到 **紀錄**：会话列表经 `GET/PUT /api/v1/ui-prefs/assistant/sessions` 存 SQLite（新建／切换／删除）。清空对话或「新對話」会开新会话；有内容的旧会话仍留在纪录里。服务端未配置时为空列表（不再从 localStorage 迁移）。
-6. 语音设置在 **AI → 語音**（`/ai/voice`）：`sttProvider` / `ttsProvider`（v1 仅 `browser`）、`ttsEnabled`、识别语言、以及 **`defaultCalendarTaskId`**（纯语音／无输入框时助手写入日程的默认归属；默认 `__user__`「用戶或助手」）。助手主页／快捷对话输入区也可临时覆盖目标任务（随 chat 请求 `calendarTaskId`）。联网搜索开关／供应商在 **AI → AI 供應商**「助手联网」小节。
+6. 语音设置在 **AI → 語音**（`/ai/voice`）：`sttProvider` / `ttsProvider`（v1 仅 `browser`）、`ttsEnabled`、识别语言、以及 **`defaultWorksetId`**（纯语音／无输入框时助手写入日程的默认归属工作集；默认 `__user__`「一般」）。助手主页／快捷对话输入区也可临时覆盖目标工作集（随 chat 请求 `worksetId`）。联网搜索开关／供应商在 **AI → AI 供應商**「助手联网」小节。
 7. **AI 员工介绍**（`/ai/staff`）：只读花名册页，说明助手／任务编辑／排行榜／事件情报／**项目管理**／**客户经理**各自职责；客户经理是对外接待席（非独立 runtime）。项目管理为排程闭环节拍，见 [`project.md`](project.md)。见 [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)「AI Staff」与 `web/src/domain/aiStaff/`。
 8. **外部 agent（A2A / 客户经理）**：`POST /api/v1/a2a/agent` 与本页共用 `AgentRuntime`＋工具（不同 system prompt；不存 session；单次返回结果）。见 [`a2a.md`](a2a.md)。站内说明：系统设定 → API（`/settings/api`）。
 
@@ -42,14 +42,14 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 {
   "messages": [{ "role": "user", "content": "最近一星期有没有家庭事务？" }],
   "sessionId": "optional",
-  "calendarTaskId": "__user__"
+  "worksetId": "__user__"
 }
 ```
 
 - `messages`：`role` 为 `user` | `assistant`（客户端传入的 `system` 会被忽略；服务端注入系统提示）。
 - **对话时钟**：客户端**未带** `sessionId`（新对话／点「清空對話」／侧栏「新對話」）时，按本机系统时区采样一次当前时间并写入系统提示；同 `sessionId` 的后续轮次**沿用该时刻**，不每句重取。不写死固定时区。
 - 写入 `user_events` 的 `startTime`/`endTime` 会规范为 UTC `...Z`。
-- `calendarTaskId`：可选；作为本轮 `calendar.create_event`／`update_event` 未显式传 `task_id` 时的默认归属。`__user__`／空／省略 → 存 `NULL`（用戶或助手）；真实 id 须为存在的 `event`／`recurring`／`calendar_task` 任务。
+- `worksetId`：可选；作为本轮 `calendar.create_event` 未显式传 `worksetId` 时的默认归属工作集。`__user__`／空／省略 → builtin 系统工作集「一般」；真实 id 须为已存在的 workset。可选 `taskId` 仅作溯源，不得传 `__user__`。
 - `sessionId`：可选；省略时服务端生成新 id，后续多轮可回传以延续会话标识（历史仍由客户端在 `messages` 中带上；本机纪录另存 SQLite `ui-prefs`／`GET/PUT /api/v1/ui-prefs/assistant/sessions`）。
 - `surface`／`currentTask`：仅任务创建／编辑页的全局助手请求可带 `surface: "task_editor"` 与当前表单草稿 `currentTask`（见下节）。其他路由与 A2A **不**传。
 - **送入模型的上下文压缩（仅 Agent）**：服务端在调用 LLM 前按 `agent_history_max_messages`（默认 40）与 `agent_history_max_chars`（默认 48000）省略较旧对话轮次，并插入一行省略提示。UI／SQLite 会话纪录**不裁剪**。可在 **AI 员工介绍 → 助手 LLM** 调整。与「分析调度」无关，也不作用于任务编辑／排行榜／事件情报。
@@ -144,18 +144,18 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 | `calendar.recent` | 过去事件摘要 | 默认 20，硬顶 100 |
 | `calendar.window` | 绝对日期窗 `start`+`end`；**勿**用它拼「未來 N 天」（易漏时区） | 默认 50，硬顶 100 |
 | `calendar.get` | 按事件 id 取详情（含用户事件） | 1 条 |
-| `calendar.create_event` | 创建单次用户事件（服务端固定 `origin=assistant`）；必填 `title`+`startTime`；可选 `task_id`（否则用请求 `calendarTaskId`） | 1 条 |
+| `calendar.create_event` | 创建单次用户事件（服务端固定 `origin=assistant`）；必填 `title`+`startTime`；可选 `worksetId`（否则用请求体默认 `worksetId`）；可选 `taskId` 溯源（禁止 `__user__`） | 1 条 |
 | `calendar.create_recurring_task` | **新建** `analysisMode=recurring` 任务＋RRULE（循环行程）；必填 `rrule`＋`name`/`title`；非全日需 `eventStartTime`（系统本地 `HH:MM`）；展开后 wire 为 UTC；不碰其他模式 | 1 条 |
 | `calendar.update_recurring_task` | **更新**既有 recurring 任务（name／rrule／时钟／地点／描述／`isActive`）；`isActive` 主要用于再启用；停用优先 `delete_recurring_task`；拒绝非 recurring 模式 | 1 条 |
 | `calendar.delete_recurring_task` | **软删除／停用**既有 recurring 任务（优先入口；`isActive=false`，系列行保留，可再 `update_recurring_task` 设 `isActive=true` 重啟）；拒绝非 recurring 模式 | 1 条 |
-| `calendar.update_event` | 更新用户事件（勿用于 analysis / RRULE）；可选改 `task_id` | 1 条 |
+| `calendar.update_event` | 更新用户事件（勿用于 analysis / RRULE）；可选改 `worksetId`（归属）／`taskId`（溯源，禁止 `__user__`） | 1 条 |
 | `calendar.delete_event` | 时间规划 soft-dismiss（用户／分析／RRULE 单次）；源行保留，仅时间规划隐藏；情报页分析事件仍可见；**恢复仅 UI**（「顯示已移除」），助手无 restore tool | 1 条 |
 
-列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user`）；用户事件另带 `origin`（以及可选归属 `taskId`：空＝用戶或助手）。
+列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user`）；用户事件另带 `origin`、`worksetId`（归属；builtin `__user__`＝「一般」）以及可选溯源 `taskId`（空＝无任务溯源，**不是**「一般」工作集）。
 
 来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=project`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`project.md`](project.md)。
 
-可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`（按任务过滤时：analysis／RRULE 该任务 **加上** `user_events.task_id` 匹配行；`__user__` 仅未归属用户事件）。语义过滤由模型选 tool + 传 `search` / 任务名完成。
+可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`（按分析任务过滤：analysis／RRULE 该任务 **加上** `user_events.task_id` 溯源匹配行；**勿**传 `__user__`——那是工作集 id，列表过滤会拒绝）。归属筛选用写入／UI 的 `worksetId`／`sourceFilter.worksetIds`，不是 `taskId=__user__`。语义过滤由模型选 tool + 传 `search` / 任务名完成。
 
 ### 联网搜索（可选）
 

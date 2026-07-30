@@ -1,43 +1,52 @@
 import { describe, expect, it } from "vitest";
 
-import { USER_EVENTS_FILTER_ID } from "../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { resolveTimelineFilterPlan } from "./shared";
 
 describe("resolveTimelineFilterPlan", () => {
   const tasks = [
-    { id: "evt-1", analysisMode: "event" },
-    { id: "cal-1", analysisMode: "recurring" },
-    { id: "ct-1", analysisMode: "calendar_task" },
+    { id: "evt-1", analysisMode: "event", worksetId: "ws-a" },
+    { id: "cal-1", analysisMode: "recurring", worksetId: null },
+    { id: "ct-1", analysisMode: "calendar_task", worksetId: null },
   ];
 
-  it("resolves multi-select plans", () => {
+  it("resolves hierarchical multi-select plans", () => {
     expect(resolveTimelineFilterPlan(null, tasks)).toMatchObject({
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
       analysisTaskIds: null,
     });
-    expect(resolveTimelineFilterPlan([], tasks)).toMatchObject({
+    expect(resolveTimelineFilterPlan({ taskIds: [], worksetIds: [] }, tasks)).toMatchObject({
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: false,
     });
-    expect(resolveTimelineFilterPlan(["evt-1", "cal-1"], tasks)).toMatchObject({
+    expect(
+      resolveTimelineFilterPlan({ taskIds: ["evt-1", "cal-1"], worksetIds: [] }, tasks),
+    ).toMatchObject({
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
       analysisTaskIds: ["evt-1"],
-      calendarTaskIds: ["cal-1"],
+      recurringTaskIds: ["cal-1"],
       selectedRealTaskIds: ["evt-1", "cal-1"],
     });
-    expect(resolveTimelineFilterPlan(null, tasks)).toMatchObject({
-      calendarTaskIds: null,
-    });
-    expect(resolveTimelineFilterPlan([USER_EVENTS_FILTER_ID], tasks)).toMatchObject({
+    expect(
+      resolveTimelineFilterPlan({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] }, tasks),
+    ).toMatchObject({
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: true,
-      includeUnassignedUserEvents: true,
+      includeGeneralWorksetUserEvents: true,
+    });
+    expect(
+      resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks),
+    ).toMatchObject({
+      fetchAnalysis: true,
+      analysisTaskIds: ["evt-1"],
+      selectedRealTaskIds: ["evt-1"],
+      selectedWorksetIds: ["ws-a"],
     });
   });
 });

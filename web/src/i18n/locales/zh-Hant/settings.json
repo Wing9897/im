@@ -267,8 +267,8 @@
     "ttsPreview": "試聽",
     "ttsPreviewing": "播放中…",
     "ttsPreviewSample": "這是語音試聽，你好。",
-    "defaultCalendarTaskLabel": "預設日程任務",
-    "defaultCalendarTaskHelp": "沒有輸入框時（純語音交辦），助手寫入日程的預設歸屬。預設為「用戶或助手」。"
+    "defaultWorksetLabel": "預設歸屬工作集",
+    "defaultWorksetHelp": "助手寫入日程的預設工作集（完整頁、系統欄對話、空格鍵語音共用）。預設為內建「一般」。"
   },
   "analysis": {
     "loading": "載入分析調度設定中…",
@@ -354,10 +354,10 @@
     },
     "deepLink": {
       "title": "Desktop 日曆 deep link",
-      "body": "僅安裝版 Desktop（非 HTTP API）。系統已註冊 `intelligencemonitor://` 與 `.ics` 檔案關聯。開啟連結或檔案後，會彈出「加入日曆／選任務」對話框，確認後寫入 `POST /api/v1/user-events`。只處理第一個 VEVENT；不是 webcal／CalDAV 同步。",
+      "body": "僅安裝版 Desktop（非 HTTP API）。系統已註冊 `intelligencemonitor://` 與 `.ics` 檔案關聯。開啟連結或檔案後，會彈出「加入日曆／選工作集」對話框，確認後寫入 `POST /api/v1/user-events`。只處理第一個 VEVENT；不是 webcal／CalDAV 同步。",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — 下載遠端 ICS（http／https）",
-        "`title` + `start` 必填（inline）；可選 `end`／`location`／`body`／`taskId`",
+        "`title` + `start` 必填（inline）；可選 `end`／`location`／`body`／`worksetId`",
         "也可直接用系統開啟 `.ics` 檔（同樣走確認對話框）"
       ],
       "exampleTitle": "團隊同步",

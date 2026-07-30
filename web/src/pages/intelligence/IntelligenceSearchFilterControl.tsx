@@ -13,8 +13,8 @@ type IntelligenceSearchFilterControlProps = {
 };
 
 /**
- * Toolbar trigger + modal that owns the intelligence search field
- * (「搜索與篩選事件」). Task multi-select stays on the toolbar.
+ * Toolbar trigger + modal for the intelligence text search field.
+ * Source multi-select stays on the toolbar (SourceFilterDialog).
  */
 export function IntelligenceSearchFilterControl({
   search,

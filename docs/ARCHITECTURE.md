@@ -38,7 +38,7 @@ graph TB
 
 ## Core design: Task as universal interface
 
-**Analysis tasks (`analysis_tasks`) are the universal product interface.** Multi-source signals are selected via `task_channels` → configured as a task (mode / prompt / RRULE / schedule) → consumed as results, reminders, and actions. Downstream UIs (intelligence, timeline, board widgets, actions, voice reminders) scope work by `taskId` or a task whitelist.
+**Analysis tasks (`analysis_tasks`) are the universal product interface.** Multi-source signals are selected via `task_channels` → configured as a task (mode / prompt / RRULE / schedule) → consumed as results, reminders, and actions. Downstream UIs (intelligence, timeline, board widgets, actions, voice reminders) scope work via hierarchical source filters `{ taskIds, worksetIds }` (or a task whitelist) — ownership of handwritten／assistant calendar items is by `worksetId`, not a lone `taskId` / `taskId=__user__` sentinel.
 
 ```mermaid
 flowchart LR
@@ -70,15 +70,16 @@ Do **not** rename timeline `viewMode:"calendar"` or board widget `"calendar"` to
 
 1. **In:** Collectors write `messages` for accounts/channels (signal plane).
 2. **Task:** Scheduler runs AI for `leaderboard` / `event` via `execute_batch`, and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time; `calendar_task` is never scheduled.
-3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` may bind via optional `task_id`; `project` writes owned `user_events` + child `recurring` only (no analysis_events).
+3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; `project` writes owned `user_events` + child `recurring` only (no analysis_events).
 
 **Task-scoped UI vs exceptions**
 
 | Surface | Scoped by |
 |---------|-----------|
-| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions, voice filter | `taskId` / task whitelist (`event` / `recurring` / `calendar_task` / `project` + `__user__`) |
+| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`event` / `recurring` / `calendar_task` / `project`); builtin workset `__user__` for「一般」 |
+| Voice reminder filter | ui-prefs `sourceFilter: { taskIds, worksetIds } \| null` (not a lone `taskId` / `__user__` sentinel) |
 | Monitor / Sources | Signal plane (accounts/channels), not analysis tasks |
-| Manual / assistant / A2A calendar items | `user_events`: `task_id` NULL → toolbar「用戶或助手」(`__user__`); else → owning event/recurring/calendar_task/project task |
+| Manual / assistant / A2A calendar items | `user_events`: ownership via `workset_id` (builtin `__user__`); optional `task_id` provenance only |
 | Shell prefs (board layout, assistant sessions, voice reminder state, voice IO defaults) | SQLite via `/api/v1/ui-prefs/*` — not task rows |
 
 ## Components
@@ -89,13 +90,13 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, accounts, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, user_events, timeline_dismissals, schema_gate, setup, task_assistant, events SSE) |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, accounts, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, user_events, worksets, timeline_dismissals, schema_gate, setup, task_assistant, events SSE) |
 | `wire/serializers.py` | Neutral snake_case → camelCase wire builders matching the frontend contract (tasks, analysis events, user events, queue, …); shared by HTTP and non-HTTP callers |
 | `api/routes/weather.py` | Open-Meteo／fallback weather proxy (`GET /api/v1/weather/*`) — avoids renderer CORS |
 | `api/routes/task_preset_data.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — generated from [`shared/task_presets.json`](../shared/task_presets.json) via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v1** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), evolution entries in `db/migrations.py`（empty `SCHEMA_MIGRATIONS`; stamped ≠0/1 hard-rejected）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v3** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), evolution entries in `db/migrations.py`（wipe-floor：empty `SCHEMA_MIGRATIONS`；prior stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories (re-exported from `migrations` for callers/tests) |
 | `schema_progress.py` | Upgrade-gate progress DTO (`phase` / `percent` / `message` keys); pair with top-level `schema_lifecycle.py` (boot gate — stays outside `db/` so lifespan／UI progress stay co-located with the gate owner) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -164,9 +165,9 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **Scrolling**: `body` / `#root` use `overflow: hidden`; page scroll happens on `.app-shell-main`. Infinite-scroll hooks and the monitor list virtualizer must use `getVerticalScrollParent` / `useScrollContainerState` (`web/src/utils/scrollParent.ts`) — not `window.scrollY`.
 - **Notifications workspace** (`/actions`): UI label **通知**; tabs `types` / `voice` / `history` (外發通知 / 語音提醒 / 觸發紀錄). Backend automation APIs remain under `/api/v1/actions*` — UI name ≠ API resource name.
 - **Naming:** `pages/actions/ActionTypeSelector.tsx` is the **ActionType** tile picker (Telegram Bot / Discord / HTTP / MQTT). Per-type field sections render via `ActionTypeFields`; form helpers use `validateActionTypeFields` / `applyActionTypeSwitch`. The default notifications tab component is `ActionTypesTab` — wire tab id is `"types"` (URL `?tab=` / i18n `tabs.types` / `types.*` keys). Real account↔channel picking lives under `components/channels/` (`AccountChannelPickerContent`, `ChannelPickerDialogShell`) and dialogs like `ChannelSelectorDialog` (not the retired dead `pages/actions/ChannelSelector`).
-- **Voice reminders**: frontend-local scanner (`web/src/voiceReminder/`); route `/actions?tab=voice`. It page-loads timed key events + RRULE occurrences inside the reminder window and overlapping **user events**. Ownership matches timeline: unassigned `user_events` → `__user__`「用戶或助手」; tagged rows use their real `task_id` (event/recurring/calendar_task). Default reminder `taskIds` is `["__user__"]`; empty list = all sources. Browser TTS/scanning stays in the frontend; reminder settings/history/fired dedupe are SQLite-backed and unrelated to Agent STT/TTS on `/ai/voice`.
-- **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session list persists in SQLite `assistant_device_stores` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `calendarTaskId` so `calendar.create_event` defaults to that ownership; UI default comes from voice IO `defaultCalendarTaskId` (default `__user__`). Recurring schedules use `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` (recurring-mode only; delete is soft `isActive=false`).
-- **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultCalendarTaskId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
+- **Voice reminders**: frontend-local scanner (`web/src/voiceReminder/`); route `/actions?tab=voice`. It page-loads timed key events + RRULE occurrences inside the reminder window and overlapping **user events**. Ownership matches timeline: filter via hierarchical `sourceFilter` (`{ taskIds, worksetIds } | null`) through the shared `SourceFilterDialog` tree; builtin `__user__` (`SYSTEM_WORKSET_ID`) workset covers「一般」events. Default is `{ taskIds: [], worksetIds: ["__user__"] }`; `null` = all sources. Flat legacy `taskIds` arrays are hard-rejected (missing → default). Browser TTS/scanning stays in the frontend; reminder settings/history/fired dedupe are SQLite-backed and unrelated to Agent STT/TTS on `/ai/voice`.
+- **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session list persists in SQLite `assistant_device_stores` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring schedules use `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` (recurring-mode only; delete is soft `isActive=false`).
+- **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect shim).
 - **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Their retired localStorage migration/cleanup bridges are gone after the v23 floor. User profile likewise (server settings SoT; active LS cache only).
 - **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" (assistant, task editor, leaderboard, event intel, **project manager**) plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel of the assistant, not a sixth `AiStaffId` / runtime) — `web/src/assets/ai-staff/` (avatars) + `web/src/domain/aiStaff/` (roster data) + `web/src/components/aiStaff/` (avatar/chat-row chrome). Page implementation lives at `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a backend concept; does not own prompts or task presets. Lightweight API how-to: `/settings/api`. A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Project closed-loop ticks: [`docs/agent/project.md`](agent/project.md). UI detail lives under Tasks at `/tasks/:taskId/project` (not a top-level nav peer of Sources / Assistant).
@@ -222,7 +223,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Month weather hook | `hooks/useMonthWeather` | Weather board widget + Timeline month grid |
 | Map markers UI | `components/map/` | Map board embed + MapView |
 | Timed event merge | `domain/timeline/timedEventMerge` | Board calendar/gantt/events + timeline RRULE projectors |
-| Task filter control | `components/TaskFilterControl` | Board widgets + timeline/intelligence toolbars |
+| Source filter dialog | `components/SourceFilterDialog` | Board widgets + timeline/intelligence/voice toolbars |
 
 **Forbidden**: `hooks/` and `components/` must not import from `pages/` (enforced by `tests/smoke/architecture-invariants.test.ts`). Shared helpers that hooks or components need belong in `domain/` (or lower), not under a page folder. `board/` must not deep-import `pages/*` (also ESLint).
 
@@ -232,11 +233,11 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 - **CSS:** `web/src/css/board-*.css`; shell chrome: `css/monitor-chrome.css`
 - **Persistence:** SQLite `ui_prefs` table via `GET/PUT /api/v1/ui-prefs/board`
   - `layout` — board mosaic (`version` + `widgets`; mosaic layout schema **v14** / `BOARD_LAYOUT_VERSION`)
-  - `widgetState` — `{ mapViews, taskFilters }` (per-widget map camera + gantt/calendar task filters)
+  - `widgetState` — `{ mapViews, sourceFilters, ganttViewModes }` (FE type `BoardSourceFilterPref`; hard-cut wire key, former `taskFilters` dropped)
   - Empty server (`configured: false`) → seed default mosaic + empty widgetState (no localStorage migrate bridge)
   - **Layout version policy:** any version `< BOARD_LAYOUT_VERSION` and sparse caches are **reset** to the current default mosaic — no incremental mid-version upgrades. The parser accepts only the current grid/preset widget shape.
   - Still local (device chrome): `im:monitor-mode`, `im:pages-last-path`
-- Shared timed-event projectors live in `domain/timeline/timedEventMerge` (board widgets + timeline). Task filter UI: `components/TaskFilterControl`.
+- Shared timed-event projectors live in `domain/timeline/timedEventMerge` (board widgets + timeline). Source filter UI: `components/SourceFilterDialog` + `SourceFilterTree` (hierarchical `{ taskIds, worksetIds } | null`).
 
 ### Desktop Shell (`desktop/`)
 
@@ -247,7 +248,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 3. Opens a `BrowserWindow` pointing at the server's URL
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
-6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → parse first VEVENT (or inline query) → shared「加入日曆／選任務」dialog → `POST /api/v1/user-events`. Not a calendar sync client (no webcal subscribe / CalDAV).
+6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → parse first VEVENT (or inline query; optional `worksetId` ownership hint) → shared「加入日曆／選工作集」dialog → `POST /api/v1/user-events`. Not a calendar sync client (no webcal subscribe / CalDAV).
 7. **Packaging:** `electron-builder` targets Windows (NSIS), macOS (DMG/zip), Linux (AppImage/deb). The PyInstaller sidecar must be built on each OS. CI matrix packages all three; unsigned by default.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`.
@@ -331,7 +332,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `trending_topics` | Extracted trending topics from analysis |
 | `topic_messages` | Topic ↔ message associations |
 | `analysis_events` | Unified event findings (optional `start_time` + optional map coordinates) |
-| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `project` project ticks, `a2a` A2A agent channel; optional `task_id` → event/recurring/calendar_task/project, NULL = 用戶或助手) |
+| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `project` project ticks, `a2a` A2A agent channel; `workset_id` NOT NULL ownership; optional `task_id` provenance → event/recurring/calendar_task/project) |
 | `timeline_dismissals` | Soft-dismiss markers for timeline (`source` + `event_id`; does not delete source rows) |
 | `admin_accounts` | Singleton household admin (normalized username + argon2 password hash) |
 | `device_sessions` | Device sessions (refresh token hash, expiry, revoke) |
@@ -345,30 +346,31 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `actions` | Automation action definitions |
 | `action_trigger_history` | Action execution audit trail; read via `GET /api/v1/actions/trigger-history` |
 | `project_message_cursors` | Per-project last-seen message cursor for `project_tick` (replaces `system_config` keys `project_last_message_at:*`) |
+| `worksets` | Ownership dimension (`id` / `name` / `is_system`); builtin `__user__` (`is_system=1`); `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
 
 ### Schema upgrade (stop-the-world)
 
 Authority: `server/db/schema_ddl.py`. Fingerprint: `server/db/schema_fingerprint.py`. Evolution: `server/db/migrations.py`. Content-only migrations remain in `server/db/data_migrations.py`.
 
-When `migration_pending(user_version)` for a **registered** prior version, startup pauses collector/scheduler and shows the upgrade-gate UI until `POST /api/v1/system/schema/upgrade` succeeds (backup → apply → stamp → validate; failure restores baseline). **Current wipe floor is stamp 1** with empty `SCHEMA_MIGRATIONS`: stamped versions other than `0`／`1` (including legacy 2–24) hard-reject — there is **no** in-place path from pre-restart databases. Public identity is `schemaSemver` (`SCHEMA_SEMVER`, same SemVer shape as product `VERSION`); `PRAGMA user_version` stays the integer stamp.
+When `migration_pending(user_version)` for a **registered** prior version, startup pauses collector/scheduler and shows the upgrade-gate UI until `POST /api/v1/system/schema/upgrade` succeeds (backup → apply → stamp → validate; failure restores baseline). **Current stamp is 3** with an **empty** `SCHEMA_MIGRATIONS` (wipe-floor: DDL including builtin `__user__` is sole truth). Stamped versions other than `0`／`3`（current） hard-reject — including prior 1–2 and legacy 4–24 with no in-place path. Public identity is `schemaSemver` (`SCHEMA_SEMVER`, same SemVer shape as product `VERSION`); `PRAGMA user_version` stays the integer stamp.
 
 #### Version support
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **1** (current) | Full runtime (`schemaSemver` = product SemVer for this baseline) |
+| **3** (current) | Full runtime (`schemaSemver` = `0.1.0-beta.3`) |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
-| **Any other** (incl. legacy 2–24) | Hard reject — explicit DB reset (no in-place path) |
+| **Any other** (incl. prior 1–2 and legacy 4–24) | Hard reject — explicit DB reset (no in-place path) |
 
 #### Migration steps
 
 | From → To | Changes |
 |-----------|---------|
-| _(none)_ | Empty registry at stamp 1; future one-version `MigrationStep` chains end at the new `CURRENT_SCHEMA_VERSION` |
+| *(none)* | Wipe-floor stamp 3: empty live `SCHEMA_MIGRATIONS` |
 
-**Stamp 1 is the wipe-only floor** after the SemVer product restart (`0.1.0-beta.1`). DDL structure (including per-task analysis-scheduling override columns on `analysis_tasks`) is the former v24 landing, re-stamped as baseline 1 — this is a version-stamp／registry restart, not another business migration. Gate UX (`SchemaLifecycle`, baseline backup, `SchemaUpgradeGate.tsx`, `/api/v1/system/schema/*`) remains live for future evidenced steps.
+**Stamp 3 is the wipe-only floor** for this beta ownership baseline: there is no in-place path from prior stamps (1–2 or legacy 4–24). Gate UX (`SchemaLifecycle`, baseline backup, `SchemaUpgradeGate.tsx`, `/api/v1/system/schema/*`) remains live for future evidenced `MigrationStep` chains.
 
-Structure baked into the current baseline: platform `CHECK` on `accounts` / `channels` / `messages`, `analysis_time_range` / `app_logs.level` CHECKs, `action_trigger_history` FKs, retention ASC / `updated_at` indexes, the effective-time retention indexes `idx_events_effective_time` / `idx_user_events_effective_time`, `idx_events_task_version_has_coords`, `timeline_dismissals`, `admin_accounts`, device-session tables, `access_api_keys` (with scopes), `a2a_audit_log` (with a `key_id` FK → `access_api_keys` and a retention TTL), `assistant_device_stores`, `ui_prefs`, `user_events.task_id`, `user_events.origin` including `project`, `recurring`／`calendar_task`／`project` analysis modes, `analysis_tasks.parent_task_id`, nullable per-task scheduling overrides on `analysis_tasks` (`project_wave_interval_seconds`／`batch_overlap_count`／`analysis_trigger_threshold`／`analysis_batch_message_limit`／`analysis_strategy_mode`), `analysis_batches.agent_message`／`tool_calls_json`, and the claim-path index `idx_batches_task_version_status_created`. Pairing-code table and the redundant `idx_batches_status` removed. `analysis_time_range` and message filters accept only canonical offsets (`7d`／`30d`; no `7days`／`30days`).
+Structure baked into the current baseline: platform `CHECK` on `accounts` / `channels` / `messages`, `analysis_time_range` / `app_logs.level` CHECKs, `action_trigger_history` FKs, retention ASC / `updated_at` indexes, the effective-time retention indexes `idx_events_effective_time` / `idx_user_events_effective_time`, `idx_events_task_version_has_coords`, `timeline_dismissals`, `admin_accounts`, device-session tables, `access_api_keys` (with scopes), `a2a_audit_log` (with a `key_id` FK → `access_api_keys` and a retention TTL), `assistant_device_stores`, `ui_prefs`, `user_events.task_id`, `user_events.workset_id`, `user_events.origin` including `project`, `recurring`／`calendar_task`／`project` analysis modes, `analysis_tasks.parent_task_id`, `worksets` (with `is_system` + builtin `__user__`) + `analysis_tasks.workset_id`, nullable per-task scheduling overrides on `analysis_tasks` (`project_wave_interval_seconds`／`batch_overlap_count`／`analysis_trigger_threshold`／`analysis_batch_message_limit`／`analysis_strategy_mode`), `analysis_batches.agent_message`／`tool_calls_json`, and the claim-path index `idx_batches_task_version_status_created`. Pairing-code table and the redundant `idx_batches_status` removed. `analysis_time_range` and message filters accept only canonical offsets (`7d`／`30d`; no `7days`／`30days`).
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, assistant device stores, `ui_prefs`).
 
@@ -382,19 +384,20 @@ Structure baked into the current baseline: platform `CHECK` on `accounts` / `cha
 - Persistence: timed rows UPSERT on `(task_id, version, event_key)`; untimed rows `INSERT OR IGNORE` on `(task_id, version, content_hash)` with `semantic_hash` near-dedup.
 - Geocode runs when an item has a usable `location` and missing coordinates (not gated by legacy task mode).
 - Primary API: `GET /api/v1/results/events` (`has_time`, `has_coords`, sort, date window, offset pagination).
-- UI keeps **/intelligence** and **/timeline** as separate pages sharing the Event API (map needs coords; timeline needs `startTime`). Timeline page-loads timed analysis events for its visible date window, then merges RRULE recurring occurrences and overlapping `user_events`. Toolbar: **全部** = all sources; **用戶或助手** (`__user__`) = only unassigned `user_events`; a concrete **event / recurring / calendar_task** task = that task’s analysis/RRULE rows **plus** `user_events` with matching `task_id`. Gantt requires a real event/recurring task id (not calendar_task-only).
+- UI keeps **/intelligence** and **/timeline** as separate pages sharing the Event API (map needs coords; timeline needs `startTime`). Timeline page-loads timed analysis events for its visible date window, then merges RRULE recurring occurrences and overlapping `user_events`. Toolbar source filter: **全部** (`null`) = all sources; selecting workset **一般** (`SYSTEM_WORKSET_ID` / `__user__`) = events owned by the builtin workset; selecting a concrete **event / recurring / calendar_task** task = that task’s analysis/RRULE rows **plus** `user_events` with matching provenance `task_id`. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId` still equals that workset id for row-key compat) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__user__` as「一般」.
 
 ### Schema support matrix
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v1 DDL, validate its full fingerprint, then stamp v1 | Schema creation and v1 stamp |
-| Unstamped current, version 0 | Require the exact v1 fingerprint and preserve all domain data | v1 stamp only |
-| Current, version 1 | Validate the exact v1 fingerprint on every startup | None |
-| Prior / legacy stamps (2–24, …) | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
-| Incomplete/lookalike version 0 or 1 | Reject with table/column/index/foreign-key mismatch categories | None |
+| Empty, version 0 | Create v3 DDL, validate its full fingerprint, then stamp v3 | Schema creation and v3 stamp |
+| Unstamped current, version 0 | Require the exact v3 fingerprint and preserve all domain data | v3 stamp only |
+| Current, version 3 | Validate the exact v3 fingerprint on every startup | None |
+| Prior, version 1–2 | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
+| Prior / legacy stamps (4–24, …) | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
+| Incomplete/lookalike version 0 or 3 | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
-| Future evidenced migration | Add an ordered, contiguous one-version `MigrationStep` chain that **ends at** the new `CURRENT_SCHEMA_VERSION`, then stamp only after successful work | Registry currently empty (ends at v1) |
+| Future evidenced migration | Add an ordered, contiguous one-version `MigrationStep` chain that **ends at** the new `CURRENT_SCHEMA_VERSION`, then stamp only after successful work | Registry ends at v3 |
 
 #### Adding a MigrationStep (checklist)
 
@@ -547,7 +550,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_contract_schema.py` | schema gate status |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Per-step migration suites for prior wipe floors were removed with each baseline restart. Registry structure is covered generically by `test_migration_registry_property.py` against synthetic chains; the stamp-1 restart has an empty live registry (legacy 23→24 step deleted).
+Per-step migration suites for prior wipe floors were removed with each baseline restart. Registry structure is covered generically by `test_migration_registry_property.py` against synthetic chains; the stamp-3 wipe-floor has an empty live registry.
 
 **Removed endpoints** (404/405 guard): `server/tests/test_dead_endpoints.py` — see [Removed endpoints](#removed-endpoints).
 

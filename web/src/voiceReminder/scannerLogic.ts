@@ -1,14 +1,22 @@
 import {
-  USER_EVENTS_FILTER_ID,
-  isUnassignedUserEventTaskId,
+  isNullProvenanceTaskId,
   resolveUserEventTaskName,
   type TaskNameLookup,
+  type WorksetNameLookup,
 } from "../domain/timeline/userEvents";
+import {
+  expandWorksetIdsToTaskIds,
+  isEmptySourceFilter,
+  type SourceFilterSelection,
+  type WorksetMemberTask,
+} from "../domain/tasks/sourceFilterSelection";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { formatMessage } from "../i18n/formatMessage";
 import i18n from "../i18n";
 import {
   MSG_SPEAK_WITHOUT_TASK,
   MSG_SPEAK_WITH_TASK,
+  MSG_SPEAK_WITH_WORKSET,
 } from "../i18n/messageKeys";
 import type { LeadOffsetMinutes } from "./settings";
 import {
@@ -72,23 +80,43 @@ export function buildSpeakText(
   const task = taskName.trim();
   const lead = formatLeadSpeakPhrase(leadOffsetMinutes);
   if (task) {
+    if (kind === "user") {
+      return formatMessage(MSG_SPEAK_WITH_WORKSET, { workset: task, kindLabel, eventTitle, lead });
+    }
     return formatMessage(MSG_SPEAK_WITH_TASK, { task, kindLabel, eventTitle, lead });
   }
   return formatMessage(MSG_SPEAK_WITHOUT_TASK, { kindLabel, eventTitle, lead });
 }
 
-/** Empty taskIds means all timed key events. */
-export function filterEventsByTaskIds(
+/**
+ * Filter timed events by hierarchical source selection (same model as
+ * board/timeline). `null` selection means all sources. Workset selection
+ * matches `event.worksetId` directly and also expands to member task ids
+ * from `catalogTasks` (for analysis/calendar rows without ownership fields).
+ */
+export function filterEventsBySourceFilter(
   events: readonly TimedKeyEvent[],
-  taskIds: readonly string[],
+  selection: SourceFilterSelection,
+  catalogTasks: readonly WorksetMemberTask[] = [],
 ): TimedKeyEvent[] {
-  if (taskIds.length === 0) {
+  if (selection === null) {
     return [...events];
   }
-  const allowed = new Set(taskIds);
-  return events.filter(
-    (event) => event.taskId != null && allowed.has(event.taskId),
-  );
+  if (isEmptySourceFilter(selection)) {
+    return [];
+  }
+  const allowTasks = new Set<string>([
+    ...selection.taskIds,
+    ...expandWorksetIdsToTaskIds(selection.worksetIds, catalogTasks),
+  ]);
+  const allowWorksets = new Set(selection.worksetIds);
+  return events.filter((event) => {
+    if (event.worksetId && allowWorksets.has(event.worksetId)) return true;
+    if (event.taskId != null && event.taskId !== "" && allowTasks.has(event.taskId)) {
+      return true;
+    }
+    return false;
+  });
 }
 
 export function getMaxLeadMinutes(leadOffsetsMinutes: readonly number[]): number {
@@ -263,6 +291,7 @@ export function toTimedKeyEvents(
   rows: ReadonlyArray<{
     id: string;
     taskId?: string | null;
+    worksetId?: string | null;
     taskName?: string | null;
     title: string;
     startTime?: string | null;
@@ -277,6 +306,7 @@ export function toTimedKeyEvents(
     out.push({
       id: row.id,
       taskId: row.taskId ?? null,
+      worksetId: row.worksetId ?? null,
       taskName: row.taskName?.trim() || "",
       title: row.title,
       startTime: row.startTime,
@@ -306,7 +336,7 @@ export function mergeTimedKeyEventsById(
 
 /**
  * Adapt user_events rows for reminder filtering (same ownership as timeline):
- * tagged → real task id; unassigned → `__user__`.
+ * `taskId` = provenance only; `worksetId` = ownership (defaults to `__user__`).
  */
 export function userEventsToTimedKeyEvents(
   rows: ReadonlyArray<{
@@ -314,17 +344,26 @@ export function userEventsToTimedKeyEvents(
     title: string;
     startTime: string;
     taskId?: string | null;
+    worksetId?: string | null;
   }>,
   taskNameById?: TaskNameLookup,
+  worksetNameById?: WorksetNameLookup,
 ): TimedKeyEvent[] {
   return toTimedKeyEvents(
     rows.map((row) => {
-      const unassigned = isUnassignedUserEventTaskId(row.taskId);
-      const taskId = unassigned ? USER_EVENTS_FILTER_ID : String(row.taskId);
+      const provenance = typeof row.taskId === "string" ? row.taskId.trim() : "";
+      const worksetId = row.worksetId?.trim() || SYSTEM_WORKSET_ID;
       return {
         id: row.id,
-        taskId,
-        taskName: resolveUserEventTaskName(row.taskId, taskNameById),
+        taskId: provenance && !isNullProvenanceTaskId(provenance) ? provenance : null,
+        worksetId,
+        taskName: resolveUserEventTaskName(
+          row.taskId,
+          taskNameById,
+          undefined,
+          worksetId,
+          worksetNameById,
+        ),
         title: row.title,
         startTime: row.startTime,
       };

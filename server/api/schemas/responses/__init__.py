@@ -88,12 +88,15 @@ from server.api.schemas.responses.tasks import (
 from server.api.schemas.responses.ui_prefs import (
     AssistantSessionsResponse,
     AssistantVoiceIoResponse,
+    AssistantVoiceIoSettingsSchema,
     BoardPrefsResponse,
+    SourceFilterSelectionSchema,
     TimelineAnnotationsResponse,
     VoiceReminderFiredClaimResponse,
     VoiceReminderFiredResponse,
     VoiceReminderHistoryResponse,
     VoiceReminderSettingsResponse,
+    VoiceReminderSettingsSchema,
 )
 from server.api.schemas.responses.viewer import (
     ViewerStatsResponse,
@@ -104,6 +107,7 @@ from server.api.schemas.responses.weather import (
     WeatherDailyResponse,
     WeatherForecastResponse,
 )
+from server.api.schemas.responses.worksets import WorksetDeleteResponse, WorksetResponse
 
 __all__ = [
     "AccessKeyCreatedResponse",
@@ -131,6 +135,7 @@ __all__ = [
     "AppLogPageResponse",
     "AssistantSessionsResponse",
     "AssistantVoiceIoResponse",
+    "AssistantVoiceIoSettingsSchema",
     "BoardPrefsResponse",
     "CalendarOccurrenceResponse",
     "ChannelRefResponse",
@@ -162,6 +167,7 @@ __all__ = [
     "SchemaUpgradeProgress",
     "SchemaUpgradeStatusResponse",
     "SetupStatusResponse",
+    "SourceFilterSelectionSchema",
     "SystemSettingsSnapshot",
     "TaskActivitySpanResponse",
     "TaskAnalysisStatsResponse",
@@ -180,6 +186,9 @@ __all__ = [
     "VoiceReminderFiredResponse",
     "VoiceReminderHistoryResponse",
     "VoiceReminderSettingsResponse",
+    "VoiceReminderSettingsSchema",
     "WeatherDailyResponse",
     "WeatherForecastResponse",
+    "WorksetDeleteResponse",
+    "WorksetResponse",
 ]

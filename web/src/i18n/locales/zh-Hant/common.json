@@ -663,7 +663,7 @@
   "systemTasks": {
     "userOrAssistant": {
       "title": "用戶或助手",
-      "shortDescription": "手動或助手建立的定時事件（user_events）。在月曆、甘特、關鍵事件等處以虛擬來源「用戶或助手」顯示，並非可編輯的分析任務。"
+      "shortDescription": "系統功能：手動或助手建立日程事件。歸屬由工作集決定，預設為內建「一般」；不是可編輯的分析任務。"
     },
     "clientManager": {
       "title": "客戶經理",
@@ -684,7 +684,7 @@
     },
     "voiceReminder": {
       "title": "語音提醒",
-      "shortDescription": "本機掃描即將發生的關鍵事件、循環任務（RRULE）展開，以及「用戶或助手」事件，並以瀏覽器語音播報。",
+      "shortDescription": "本機掃描即將發生的關鍵事件、循環任務（RRULE）展開，以及「一般」工作集事件，並以瀏覽器語音播報。",
       "linkLabel": "前往語音提醒"
     },
     "retention": {
@@ -716,6 +716,7 @@
   },
   "messages": {
     "speakWithTask": "任務「{task}」，{kindLabel}「{eventTitle}」，還有{lead}",
+    "speakWithWorkset": "工作集「{workset}」，{kindLabel}「{eventTitle}」，還有{lead}",
     "speakWithoutTask": "{kindLabel}「{eventTitle}」，還有{lead}",
     "retentionDeleted": "已刪除：{parts}",
     "retentionNone": "沒有符合條件的舊資料可刪",
@@ -969,13 +970,16 @@
       "importMissingWidgets": "版面檔缺少 widgets",
       "importNeedOne": "版面至少需包含一個有效組件",
       "importNoValid": "版面未包含有效組件",
-      "taskFilterPrefix": "篩選任務",
-      "taskFilterSelect": "選擇任務",
-      "taskFilterSelectAria": "{prefix}：選擇任務",
-      "taskFilterCheckAria": "勾選任務",
-      "taskFilterSelectAll": "全選",
-      "taskFilterClear": "清空",
-      "taskFilterEmpty": "尚無任務"
+      "sourceFilterPrefix": "篩選來源",
+      "sourceFilterSelect": "選擇來源",
+      "sourceFilterSelectAria": "{prefix}：選擇來源",
+      "sourceFilterCheckAria": "勾選來源",
+      "sourceFilterSelectAll": "全選",
+      "sourceFilterClear": "清空",
+      "sourceFilterEmpty": "尚無來源",
+      "sourceFilterSearchPlaceholder": "搜尋來源…",
+      "sourceFilterSearchAria": "依名稱搜尋來源",
+      "sourceFilterNoMatches": "沒有符合的來源"
     }
   },
   "validation": {
@@ -1137,9 +1141,20 @@
   "boot": {
     "checking": "正在檢查資料庫版本…",
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 1／SemVer 0.1.0-beta.1；舊 stamp 資料庫須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 3／SemVer 0.1.0-beta.3；更舊 stamp 須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應"
+  },
+  "secretsBroken": {
+    "dialogAria": "加密金鑰不相符",
+    "title": "加密金鑰不相符",
+    "body": "本機加密金鑰無法解密已儲存的 API 金鑰與帳號憑證。請輸入管理員密碼以輪換金鑰並繼續；任務與訊息將保留。",
+    "infoTitle": "將如何恢復",
+    "infoBody": "任務、訊息與管理員帳號會保留。無法解密的機密（LLM API 金鑰、訊源憑證、動作金鑰）會被清空，需重新填寫。Telegram 工作階段檔案會一併清除，帳號需重新登入。",
+    "fullResetHint": "若需要徹底清空全部資料：恢復並登入後，請到「設定 → 資料」執行完全重設。",
+    "techDetails": "技術錯誤詳情（展開）",
+    "recover": "恢復並進入",
+    "recovering": "正在恢復…"
   },
   "setup": {
     "title": "連接此裝置",
@@ -1359,5 +1374,58 @@
       "copied": "已複製",
       "copyFailed": "無法複製"
     }
+  },
+  "workset": {
+    "label": "工作集",
+    "ownershipLabel": "歸屬工作集",
+    "unassigned": "無歸屬",
+    "unassignedGroup": "未歸屬",
+    "unknownGroup": "未知工作集",
+    "systemBadge": "內建",
+    "create": "新建工作集",
+    "createTitle": "新建工作集",
+    "createHint": "工作集可先建立，不必有任務；助手與手動日程也可歸屬到此。",
+    "createSubmit": "建立",
+    "createNew": "新建工作集",
+    "createNewAria": "新建工作集",
+    "nameLabel": "名稱",
+    "namePlaceholder": "例如：營運、專案 Alpha",
+    "nameAria": "工作集名稱",
+    "rename": "重新命名",
+    "renameTitle": "重新命名工作集",
+    "renameSubmit": "儲存",
+    "delete": "刪除",
+    "deleteTitle": "確認刪除工作集",
+    "deleteConfirm": "刪除工作集「{name}」？任務資料保留並變為未歸屬。",
+    "createdToast": "已建立工作集 {name}",
+    "renamedToast": "已重新命名為 {name}",
+    "deletedToast": "已刪除工作集 {name}",
+    "cardLabel": "工作集 · {name}",
+    "viewByTask": "任務",
+    "viewByWorkset": "工作集",
+    "groupingAria": "任務列表分組",
+    "filterTitle": "篩選來源",
+    "filterHint": "以工作集為主；點 ▶ 展開其下任務。",
+    "filterSearchPlaceholder": "搜尋…",
+    "filterBrowseAria": "按工作集瀏覽來源",
+    "filterChildCount": "{count}",
+    "expandWorksetAria": "展開或收起工作集 {name}",
+    "selectAll": "全選",
+    "clearAll": "清空",
+    "apply": "確定",
+    "emptyList": "尚無工作集",
+    "emptyGroupHint": "尚無任務 — 工作集可先作為助手／日程歸屬",
+    "emptyTitle": "以工作集管理歸屬",
+    "emptyDescription": "工作集不必先有任務。可先建立歸屬，再給助手、手動日程或之後的任務使用。",
+    "catalogTitle": "工作集",
+    "catalogSubtitle": "歸屬維度。內建「一般」可用右上角眼睛圖示顯示或隱藏。",
+    "memberTasksTitle": "{name} · 任務",
+    "unassignedHint": "尚未指定工作集的分析任務。",
+    "systemDescription": "內建歸屬工作集；助手與手動日程預設歸此。",
+    "taskCount": "{count} 個任務",
+    "showSystemWorksets": "顯示系統工作集",
+    "hideSystemWorksets": "隱藏系統工作集",
+    "targetOwnershipLabel": "目標歸屬工作集",
+    "generalName": "一般"
   }
 }

@@ -24,6 +24,7 @@ from server.api.routes.task_helpers import (
     TaskConfigBody,
     channel_refs_for,
     get_task_row,
+    resolve_workset_id,
     schedule_override_write_fields,
     task_response,
     validate_task_body,
@@ -142,6 +143,7 @@ async def list_tasks(
     request: Request,
     top_level_only: bool = Query(False),
     analysis_mode: Optional[str] = Query(None),
+    workset_id: Optional[str] = Query(None),
 ) -> list[dict]:
     db = get_db(request)
     rows = await fetch_all_task_rows(db)
@@ -156,6 +158,12 @@ async def list_tasks(
                 error_code=VALIDATION_ERROR,
             )
         rows = [row for row in rows if str(row.get("analysis_mode") or "") == mode]
+    if workset_id is not None:
+        wid = workset_id.strip()
+        if not wid:
+            rows = [row for row in rows if not row.get("workset_id")]
+        else:
+            rows = [row for row in rows if str(row.get("workset_id") or "") == wid]
     links = await fetch_all_task_channel_rows(db)
     by_task: dict[str, list[dict[str, Any]]] = {}
     for link in links:
@@ -182,6 +190,7 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
                 event_location=body.eventLocation,
                 event_description=body.eventDescription,
                 description=body.description,
+                workset_id=await resolve_workset_id(db, supplied=body.worksetId),
             )
         except TaskWriteError as exc:
             raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
@@ -223,6 +232,7 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
         )
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    workset_id = await resolve_workset_id(db, supplied=body.worksetId)
     # Row + channel links commit together: a task without its channels would be
     # scheduled but analyse nothing.
     async with db.transaction() as conn:
@@ -238,6 +248,7 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
             schedule_value=body.scheduleValue,
             include_in_timeline=include_in_timeline,
             parent_task_id=parent_task_id,
+            workset_id=workset_id,
             now=now,
             **write_fields,
             **schedule_override_write_fields(body),
@@ -267,6 +278,12 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
     if effective_mode == CHILD_RECURRING_MODE and existing_mode == CHILD_RECURRING_MODE:
         fields_set = body.model_fields_set
         try:
+            workset_id = await resolve_workset_id(
+                db,
+                supplied=body.worksetId,
+                existing=existing.get("workset_id"),
+                fields_set=fields_set,
+            )
             await patch_recurring_task(
                 db,
                 task_id=task_id,
@@ -279,6 +296,7 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
                 event_location=(body.eventLocation if "eventLocation" in fields_set else ...),
                 event_description=(body.eventDescription if "eventDescription" in fields_set else ...),
                 is_active=body.isActive if "isActive" in fields_set else None,
+                workset_id=workset_id,
             )
         except TaskWriteError as exc:
             raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
@@ -325,6 +343,12 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
         )
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    workset_id = await resolve_workset_id(
+        db,
+        supplied=body.worksetId,
+        existing=existing.get("workset_id"),
+        fields_set=body.model_fields_set,
+    )
 
     leaving_project = existing_mode == PARENT_PROJECT_MODE and effective_mode != PARENT_PROJECT_MODE
 
@@ -361,6 +385,7 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
             schedule_value=body.scheduleValue,
             include_in_timeline=include_in_timeline,
             parent_task_id=parent_task_id,
+            workset_id=workset_id,
             now=now,
             **write_fields,
             **schedule_override_write_fields(body),

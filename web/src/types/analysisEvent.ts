@@ -20,6 +20,8 @@ export type AnalysisEvent = Omit<
   isAllDay?: boolean;
   /** Present when source === "user": wire origin from user_events */
   origin?: "manual" | "assistant" | "a2a" | "project";
+  /** Ownership workset (user_events / board projections); builtin `__user__` when system. */
+  worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */
   dismissed?: boolean;
 };

@@ -31,11 +31,9 @@ from server.queries.calendar_queries import (
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import parse_iso, to_iso_z
 from server.timeline_dismissals import attach_dismissed_flag, is_timeline_event_dismissed
-from server.user_events import (
-    USER_EVENT_UNASSIGNED_TASK_ID,
-    list_user_events,
-)
+from server.user_events import list_user_events
 from server.wire.serializers import serialize_user_event
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 # Look-ahead / look-back cap for upcoming/recent (also calendar.upcoming days max).
 HORIZON_DAYS = 365
@@ -54,12 +52,11 @@ __all__ = [
 ]
 
 
-def _is_unassigned_only_filter(task_id: str | None) -> bool:
-    """True when the caller asked only for unassigned user events (no analysis/RRULE)."""
-    if task_id is None:
+def _is_system_workset_only_filter(workset_id: str | None) -> bool:
+    """True when the caller asked only for system-workset user events (no analysis/RRULE)."""
+    if workset_id is None:
         return False
-    tid = str(task_id).strip()
-    return not tid or tid == USER_EVENT_UNASSIGNED_TASK_ID
+    return str(workset_id).strip() == SYSTEM_WORKSET_ID
 
 
 async def _fetch_user_in_range(
@@ -68,18 +65,22 @@ async def _fetch_user_in_range(
     range_start: datetime,
     range_end: datetime,
     task_id: str | None,
+    workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """User events for the window; optional task filter includes tagged rows.
+    """User events for the window; optional task / workset filters.
 
-    - no ``task_id``: all user events in range
-    - ``__user__`` / empty: only unassigned (``task_id IS NULL``)
-    - real task id: only events tagged with that task
+    - no ``task_id`` / ``workset_id``: all user events in range
+    - ``workset_id`` set: events with that ownership workset
+    - ``task_id`` empty: only rows with ``task_id IS NULL``
+    - real ``task_id``: only events tagged with that task provenance
+    - ``task_id=__user__``: rejected by ``list_user_events``
     """
     items = await list_user_events(
         db,
         start=to_iso_z(range_start),
         end=to_iso_z(range_end),
         task_id=task_id,
+        workset_id=workset_id,
     )
     return [build_user_item(item) for item in items]
 
@@ -213,6 +214,7 @@ async def query_window(
     cursor: str | None = None,
     search: str | None = None,
     task_id: str | None = None,
+    workset_id: str | None = None,
     hard_cap: int = 100,
 ) -> dict[str, Any]:
     """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources."""
@@ -225,8 +227,8 @@ async def query_window(
 
     capped = clamp_limit(limit, default=50, hard_cap=hard_cap)
     offset = parse_cursor(cursor)
-    # Unassigned-only filter never matches analysis/RRULE rows — skip those fetches.
-    if _is_unassigned_only_filter(task_id):
+    # System-workset-only filter never matches analysis/RRULE.
+    if _is_system_workset_only_filter(workset_id):
         analysis: list[dict[str, Any]] = []
         rrule_items: list[dict[str, Any]] = []
     else:
@@ -250,6 +252,7 @@ async def query_window(
         range_start=range_start,
         range_end=range_end,
         task_id=task_id,
+        workset_id=workset_id,
     )
     items, next_cursor = _merge_sort_slice(
         analysis + rrule_items + user_items,
@@ -273,6 +276,7 @@ async def query_upcoming(
     days: int | None = None,
     search: str | None = None,
     task_id: str | None = None,
+    workset_id: str | None = None,
     now: datetime | None = None,
     hard_cap: int = 100,
 ) -> dict[str, Any]:
@@ -295,6 +299,7 @@ async def query_upcoming(
         cursor=None,
         search=search,
         task_id=task_id,
+        workset_id=workset_id,
         hard_cap=hard_cap,
     )
     return {"items": result["items"], "limit": capped, "days": days_used}
@@ -306,6 +311,7 @@ async def query_recent(
     limit: int = 20,
     search: str | None = None,
     task_id: str | None = None,
+    workset_id: str | None = None,
     now: datetime | None = None,
     hard_cap: int = 100,
 ) -> dict[str, Any]:
@@ -316,7 +322,7 @@ async def query_recent(
     capped = clamp_limit(limit, default=20, hard_cap=hard_cap)
     range_start = moment - timedelta(days=HORIZON_DAYS)
     range_end = moment - timedelta(seconds=1)
-    if _is_unassigned_only_filter(task_id):
+    if _is_system_workset_only_filter(workset_id):
         analysis: list[dict[str, Any]] = []
         rrule_items: list[dict[str, Any]] = []
     else:
@@ -341,6 +347,7 @@ async def query_recent(
         range_start=range_start,
         range_end=range_end,
         task_id=task_id,
+        workset_id=workset_id,
     )
     items, _ = _merge_sort_slice(
         analysis + rrule_items + user_items,

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchEvents } from "../../api/results";
-import type { IntelligenceSelectedTaskIds } from "../../domain/intelligence/intelligenceTaskFilter";
 import {
   usePagedAsyncResource,
   type PagedResourcePage,
@@ -29,8 +28,8 @@ type IntelligenceFetchKey = {
   dateRange: IntelligenceApiDateRange | null;
   sort: IntelligenceSortMode;
   hasCoords: boolean;
-  /** `null` = all tasks; `[]` = none; otherwise IN filter. */
-  selectedTaskIds: IntelligenceSelectedTaskIds;
+  /** `null` = all tasks; `[]` = none; otherwise IN filter (already expanded). */
+  resolvedTaskIds: string[] | null;
 };
 
 function buildIntelligenceEventsQuery(
@@ -53,7 +52,7 @@ function buildIntelligenceEventsQuery(
     sort: key.sort,
   };
   if (key.searchText.trim()) params.search = key.searchText.trim();
-  if (key.selectedTaskIds !== null) params.taskIds = key.selectedTaskIds;
+  if (key.resolvedTaskIds !== null) params.taskIds = key.resolvedTaskIds;
   if (key.dateRange) {
     params.startDate = key.dateRange.startDate;
     params.endDate = key.dateRange.endDate;
@@ -79,7 +78,8 @@ export function useIntelligenceSource(
   isMapMode: boolean,
   apiDateRange: IntelligenceApiDateRange | null,
   sortMode: IntelligenceSortMode,
-  selectedTaskIds: IntelligenceSelectedTaskIds,
+  /** Resolved analysis task ids for the API (`null` = all). */
+  resolvedTaskIds: string[] | null,
 ) {
   const [mapSyncing, setMapSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
@@ -171,8 +171,8 @@ export function useIntelligenceSource(
     };
   }, [apiHasMore, append, initialLoading, isMapMode, isRefreshing]);
 
-  const selectedTaskIdsKey =
-    selectedTaskIds === null ? "*" : selectedTaskIds.join("|");
+  const resolvedTaskIdsKey =
+    resolvedTaskIds === null ? "*" : resolvedTaskIds.join("|");
 
   useEffect(() => {
     setSyncError(null);
@@ -181,10 +181,10 @@ export function useIntelligenceSource(
       dateRange: apiDateRange,
       sort: sortMode,
       hasCoords: isMapMode,
-      selectedTaskIds,
+      resolvedTaskIds,
     });
-    // Depend on selectedTaskIdsKey (content) rather than array identity.
-  }, [loadFirst, debouncedSearch, apiDateRange, sortMode, isMapMode, selectedTaskIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps -- selectedTaskIds mirrored by key
+    // Depend on resolvedTaskIdsKey (content) rather than array identity.
+  }, [loadFirst, debouncedSearch, apiDateRange, sortMode, isMapMode, resolvedTaskIdsKey]); // eslint-disable-line react-hooks/exhaustive-deps -- resolvedTaskIds mirrored by key
 
   const refreshItems = useCallback(async () => {
     setSyncError(null);
@@ -193,9 +193,9 @@ export function useIntelligenceSource(
       dateRange: apiDateRange,
       sort: sortMode,
       hasCoords: isMapMode,
-      selectedTaskIds,
+      resolvedTaskIds,
     });
-  }, [apiDateRange, debouncedSearch, isMapMode, loadFirst, selectedTaskIds, sortMode]);
+  }, [apiDateRange, debouncedSearch, isMapMode, loadFirst, resolvedTaskIds, sortMode]);
 
   /** Explicit map batch beyond the soft auto-cap (one click ≈ one API page). */
   const loadMoreMapBatch = useCallback(async () => {

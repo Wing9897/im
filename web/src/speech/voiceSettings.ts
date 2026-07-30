@@ -3,12 +3,10 @@ import {
   fetchAssistantVoiceIo,
   putAssistantVoiceIo,
 } from "../api/uiPrefs";
-import {
-  USER_EVENTS_FILTER_ID,
-  toUserEventFormTaskId,
-} from "../domain/timeline/userEvents";
+import { toUserEventFormWorksetId } from "../domain/timeline/userEvents";
 import { isElectronDesktop } from "../electron/electronWindow";
 import i18n from "../i18n";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { logWarn } from "../utils/logger";
 import { hydrateServerBackedPref } from "../utils/createServerBackedPrefStore";
 import { normalizeTtsVoiceUri } from "./browserTtsVoices";
@@ -36,10 +34,10 @@ export interface VoiceSettings {
   /** Browser TTS voice URI; empty = system default for ``speechLanguage``. */
   ttsVoiceUri: string;
   /**
-   * Default ``calendarTaskId`` for assistant chat / pure-voice creates
-   * when the composer has no override. ``__user__`` = 用戶或助手.
+   * Default ``worksetId`` for assistant chat / pure-voice creates
+   * when the composer has no override. ``__user__`` = builtin system workset (一般).
    */
-  defaultCalendarTaskId: string;
+  defaultWorksetId: string;
 }
 
 export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
@@ -49,7 +47,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
   speechLanguage: "zh-HK",
   spacePttMode: "hold",
   ttsVoiceUri: "",
-  defaultCalendarTaskId: USER_EVENTS_FILTER_ID,
+  defaultWorksetId: SYSTEM_WORKSET_ID,
 };
 
 const SPACE_PTT_MODES: readonly SpacePttMode[] = ["hold", "toggle"];
@@ -100,10 +98,10 @@ export function normalizeVoiceSettings(
       ? parsed.spacePttMode
       : DEFAULT_VOICE_SETTINGS.spacePttMode,
     ttsVoiceUri: normalizeTtsVoiceUri(parsed.ttsVoiceUri),
-    defaultCalendarTaskId: toUserEventFormTaskId(
-      typeof parsed.defaultCalendarTaskId === "string"
-        ? parsed.defaultCalendarTaskId
-        : DEFAULT_VOICE_SETTINGS.defaultCalendarTaskId,
+    defaultWorksetId: toUserEventFormWorksetId(
+      typeof parsed.defaultWorksetId === "string"
+        ? parsed.defaultWorksetId
+        : DEFAULT_VOICE_SETTINGS.defaultWorksetId,
     ),
   };
 }

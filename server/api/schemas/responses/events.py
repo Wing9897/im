@@ -15,8 +15,10 @@ class UserEventResponse(BaseModel):
     endTime: str | None
     location: str | None
     origin: Literal["manual", "assistant", "a2a", "project"]
-    #: Owning analysis task id, or empty string for 用戶或助手 (NULL in DB).
+    #: Analysis-task provenance id, or empty string when unset (NULL in DB).
     taskId: str = ""
+    #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
+    worksetId: str
     source: Literal["user"]
     dismissed: bool
     createdAt: str

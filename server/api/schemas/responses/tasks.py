@@ -80,6 +80,7 @@ class TaskResponse(BaseModel):
     eventDescription: str | None = None
     includeInTimeline: bool = True
     parentTaskId: str | None = None
+    worksetId: str | None = None
     projectWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
     analysisTriggerThreshold: int | None = None
@@ -113,6 +114,13 @@ class TaskActivitySpanResponse(BaseModel):
     lastErrorMessage: str | None = None
     #: Messages drained in the latest completed tick (0 when skipped).
     lastMessageCount: int | None = None
+    #: ``task`` = analysis_tasks row; ``workset`` = user_events ownership span
+    #: (one row per workset_id; wire ``taskId`` still equals that workset id
+    #: for gantt row-key compat — prefer ``worksetId`` + ``sourceKind``).
+    sourceKind: Literal["task", "workset"] = "task"
+    #: Ownership workset id when ``sourceKind=workset`` (same value as ``taskId``);
+    #: ``null`` on analysis-task rows.
+    worksetId: str | None = None
 
 
 class ProjectTickLogEntryResponse(BaseModel):

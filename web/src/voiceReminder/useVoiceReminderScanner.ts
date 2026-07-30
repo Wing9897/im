@@ -2,8 +2,12 @@ import { useContext, useEffect, useRef } from "react";
 import { fetchCalendarOccurrences, fetchTimelineEvents } from "../api/results";
 import { listUserEvents } from "../api/userEvents";
 import { ToastContext } from "../context/ToastContext";
-import { useTaskNameById } from "../context/TaskCatalogContext";
-import { USER_EVENTS_FILTER_ID } from "../domain/timeline/userEvents";
+import { useTaskCatalog, useTaskNameById } from "../context/TaskCatalogContext";
+import {
+  resolveAnalysisTaskIdsFromFilter,
+  type SourceFilterSelection,
+  type WorksetMemberTask,
+} from "../domain/tasks/sourceFilterSelection";
 import i18n from "../i18n";
 import { createSpeechPorts, loadVoiceSettings, ttsSpeakOptionsFromVoiceSettings } from "../speech";
 import { logWarn } from "../utils/logger";
@@ -12,7 +16,7 @@ import {
   SCAN_INTERVAL_MS,
   collectDueReminders,
   computeFetchRange,
-  filterEventsByTaskIds,
+  filterEventsBySourceFilter,
   formatLeadSpeakPhrase,
   getMaxLeadMinutes,
   hydrateFiredKeys,
@@ -37,13 +41,12 @@ import {
   hydrateVoiceReminderHistory,
 } from "./triggerHistory";
 
-/** Concrete task ids for server-side calendar/events filters (drops `__user__`). */
-function serverTaskIdsForFetch(taskIds: readonly string[]): string[] | undefined {
-  if (taskIds.length === 0) {
-    // Empty whitelist = all sources; omit server filter.
-    return undefined;
-  }
-  return taskIds.filter((id) => id !== USER_EVENTS_FILTER_ID);
+/** Concrete task ids for server-side calendar/events filters (`null` selection = all sources). */
+function serverTaskIdsForFetch(
+  selection: SourceFilterSelection,
+  catalogTasks: readonly WorksetMemberTask[],
+): string[] | undefined {
+  return resolveAnalysisTaskIdsFromFilter(selection, catalogTasks) ?? undefined;
 }
 
 async function recordDueTrigger(
@@ -81,6 +84,12 @@ export function useVoiceReminderScanner(): void {
   useEffect(() => {
     catalogTaskNamesRef.current = catalogTaskNames;
   }, [catalogTaskNames]);
+
+  const { tasks: catalogTasks } = useTaskCatalog();
+  const catalogTasksRef = useRef<readonly WorksetMemberTask[]>(catalogTasks);
+  useEffect(() => {
+    catalogTasksRef.current = catalogTasks;
+  }, [catalogTasks]);
 
   useEffect(() => {
     let cancelled = false;
@@ -120,10 +129,11 @@ export function useVoiceReminderScanner(): void {
         }
         const maxLead = getMaxLeadMinutes(settings.leadOffsetsMinutes);
         const { rangeStart, rangeEnd } = computeFetchRange(nowMs, maxLead);
-        // When the whitelist names concrete tasks, push task_ids to calendar／events
-        // (same server filter timeline already uses). `__user__`-only → empty list
-        // so analysis/RRULE fetches short-circuit; user_events stay client-filtered.
-        const serverTaskIds = serverTaskIdsForFetch(settings.taskIds);
+        // When the selection names concrete tasks/worksets, push task_ids to
+        // calendar／events (same server filter timeline already uses). `__user__`-only
+        // → empty list so analysis/RRULE fetches short-circuit; user_events stay
+        // client-filtered.
+        const serverTaskIds = serverTaskIdsForFetch(settings.sourceFilter, catalogTasksRef.current);
 
         let analysisRows;
         let userRows;
@@ -157,13 +167,14 @@ export function useVoiceReminderScanner(): void {
           }
         }
 
-        const events = filterEventsByTaskIds(
+        const events = filterEventsBySourceFilter(
           mergeTimedKeyEventsById(
             toTimedKeyEvents(analysisRows, "event"),
             userEventsToTimedKeyEvents(userRows, taskNameById),
             toTimedKeyEvents(calendarRows, "recurring"),
           ),
-          settings.taskIds,
+          settings.sourceFilter,
+          catalogTasksRef.current,
         );
 
         let firedKeys = pruneFiredKeys(loadFiredKeys(), nowMs);

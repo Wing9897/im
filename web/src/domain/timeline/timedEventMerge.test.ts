@@ -7,7 +7,8 @@ import {
   userEventToBoardEvent,
   userEventToTimelineItem,
 } from "./timedEventMerge";
-import { USER_EVENTS_FILTER_ID, getUserEventsFilterLabel } from "./userEvents";
+import { getGeneralWorksetLabel } from "./userEvents";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 /** Local AnalysisEvent fixture for merge tests (not timelineTestHelpers.makeEvent). */
 function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
@@ -90,7 +91,7 @@ describe("mergeWithCalendarOccurrences", () => {
 });
 
 describe("userEventToBoardEvent", () => {
-  it("assigns untagged manual and assistant events to the selectable virtual source", () => {
+  it("keeps provenance empty and ownership on worksetId for untagged events", () => {
     const event = userEventToBoardEvent({
       id: "user-event-1",
       title: "使用者建立的會議",
@@ -101,18 +102,20 @@ describe("userEventToBoardEvent", () => {
       origin: "assistant",
       source: "user",
       taskId: "",
+      worksetId: SYSTEM_WORKSET_ID,
       createdAt: "2026-07-21T00:00:00Z",
       updatedAt: "2026-07-21T00:00:00Z",
     });
 
-    expect(event.taskId).toBe(USER_EVENTS_FILTER_ID);
-    expect(event.taskName).toBe(getUserEventsFilterLabel());
+    expect(event.taskId).toBeNull();
+    expect(event.worksetId).toBe(SYSTEM_WORKSET_ID);
+    expect(event.taskName).toBe(getGeneralWorksetLabel());
     expect(event.origin).toBe("assistant");
     expect(event.startTime).toBe("2026-07-22T09:00:00Z");
     expect(event.endTime).toBe("2026-07-22T10:00:00Z");
   });
 
-  it("keeps task-tagged user events on their owning task id and resolves taskName", () => {
+  it("keeps task-tagged user events on their provenance task id and resolves taskName", () => {
     const event = userEventToBoardEvent(
       {
         id: "user-event-2",
@@ -124,6 +127,7 @@ describe("userEventToBoardEvent", () => {
         origin: "manual",
         source: "user",
         taskId: "ct-1",
+        worksetId: "ws-1",
         createdAt: "2026-07-21T00:00:00Z",
         updatedAt: "2026-07-21T00:00:00Z",
       },
@@ -131,6 +135,7 @@ describe("userEventToBoardEvent", () => {
     );
 
     expect(event.taskId).toBe("ct-1");
+    expect(event.worksetId).toBe("ws-1");
     expect(event.taskName).toBe("日曆任務");
   });
 
@@ -146,14 +151,16 @@ describe("userEventToBoardEvent", () => {
         origin: "project",
         source: "user",
         taskId: "proj-1",
+        worksetId: SYSTEM_WORKSET_ID,
         createdAt: "2026-07-21T00:00:00Z",
         updatedAt: "2026-07-21T00:00:00Z",
       },
       new Map([["proj-1", "專案 Alpha"]]),
-      "用戶或助手",
+      "一般",
     );
 
     expect(event.taskId).toBe("proj-1");
+    expect(event.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(event.taskName).toBe("專案 Alpha");
     expect(event.origin).toBe("project");
   });
@@ -177,7 +184,7 @@ describe("userEventToTimelineItem", () => {
     expect(item).toBeNull();
   });
 
-  it("reuses board projection fields including __user__ and origin", () => {
+  it("reuses board projection fields including worksetId and origin", () => {
     const item = userEventToTimelineItem(
       {
         id: "ue-1",
@@ -189,17 +196,19 @@ describe("userEventToTimelineItem", () => {
         origin: "manual",
         source: "user",
         taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
         createdAt: "2026-07-21T00:00:00Z",
         updatedAt: "2026-07-21T00:00:00Z",
       },
       undefined,
-      "用戶或助手",
+      "一般",
     );
     expect(item).not.toBeNull();
-    expect(item!.taskId).toBe(USER_EVENTS_FILTER_ID);
+    expect(item!.taskId).toBeNull();
+    expect(item!.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(item!.startTime).toBe("2026-07-22T08:00:00Z");
     expect(item!.origin).toBe("manual");
-    expect(item!.taskName).toBe("用戶或助手");
+    expect(item!.taskName).toBe("一般");
     expect(item!.source).toBe("user");
   });
 });

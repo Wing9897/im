@@ -8,9 +8,11 @@ from server.db.database import Database
 from server.ui_prefs.common import (
     KEY_OPS_BOARD_LAYOUT,
     KEY_OPS_BOARD_WIDGET_STATE,
+    SOURCE_FILTER_INVALID,
     UiPrefsValidationError,
     _delete_json,
     _read_json,
+    _sanitize_source_filter_shape,
     _write_json,
 )
 
@@ -63,16 +65,16 @@ def sanitize_board_layout(raw: Any) -> dict[str, Any]:
 
 
 def sanitize_board_widget_state(raw: Any) -> dict[str, Any]:
-    """Sanitize ``{ mapViews, taskFilters, ganttViewModes }`` per plan shape."""
+    """Sanitize ``{ mapViews, sourceFilters, ganttViewModes }`` per plan shape."""
     if not isinstance(raw, Mapping):
         raise UiPrefsValidationError("widgetState must be an object")
     map_views_raw = raw.get("mapViews", {})
-    task_filters_raw = raw.get("taskFilters", {})
+    source_filters_raw = raw.get("sourceFilters", {})
     gantt_modes_raw = raw.get("ganttViewModes", {})
     if not isinstance(map_views_raw, Mapping):
         raise UiPrefsValidationError("widgetState.mapViews must be an object")
-    if not isinstance(task_filters_raw, Mapping):
-        raise UiPrefsValidationError("widgetState.taskFilters must be an object")
+    if not isinstance(source_filters_raw, Mapping):
+        raise UiPrefsValidationError("widgetState.sourceFilters must be an object")
     if not isinstance(gantt_modes_raw, Mapping):
         raise UiPrefsValidationError("widgetState.ganttViewModes must be an object")
 
@@ -97,23 +99,16 @@ def sanitize_board_widget_state(raw: Any) -> dict[str, Any]:
             "zoom": float(zoom),
         }
 
-    task_filters: dict[str, Any] = {}
-    for widget_id, ids in task_filters_raw.items():
+    source_filters: dict[str, Any] = {}
+    for widget_id, ids in source_filters_raw.items():
         if not isinstance(widget_id, str) or not widget_id.strip():
             continue
         key = widget_id.strip()
-        if ids is None:
-            task_filters[key] = None
+        cleaned = _sanitize_source_filter_shape(ids)
+        if cleaned is SOURCE_FILTER_INVALID:
+            # Flat string[] / bad shape → drop (hard-cut; no silent upgrade).
             continue
-        if not isinstance(ids, list):
-            continue
-        clean_ids: list[str] = []
-        seen: set[str] = set()
-        for item in ids:
-            if isinstance(item, str) and item and item not in seen:
-                seen.add(item)
-                clean_ids.append(item)
-        task_filters[key] = clean_ids
+        source_filters[key] = cleaned
 
     gantt_view_modes: dict[str, str] = {}
     for widget_id, mode in gantt_modes_raw.items():
@@ -124,7 +119,7 @@ def sanitize_board_widget_state(raw: Any) -> dict[str, Any]:
 
     return {
         "mapViews": map_views,
-        "taskFilters": task_filters,
+        "sourceFilters": source_filters,
         "ganttViewModes": gantt_view_modes,
     }
 
@@ -132,6 +127,10 @@ def sanitize_board_widget_state(raw: Any) -> dict[str, Any]:
 async def get_board_prefs(db: Database) -> dict[str, Any]:
     layout = await _read_json(db, KEY_OPS_BOARD_LAYOUT)
     widget_state = await _read_json(db, KEY_OPS_BOARD_WIDGET_STATE)
+    if isinstance(widget_state, Mapping):
+        widget_state = sanitize_board_widget_state(widget_state)
+    elif widget_state is not None:
+        widget_state = None
     configured = layout is not None or widget_state is not None
     return {
         "configured": configured,

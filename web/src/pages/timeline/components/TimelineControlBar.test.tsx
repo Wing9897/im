@@ -6,7 +6,7 @@
  * interaction handlers (task selector, view mode buttons, scale buttons,
  * cursor navigation).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
@@ -14,12 +14,15 @@ import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
 import { TimelineControlBar } from "./TimelineControlBar";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
-import { USER_EVENTS_FILTER_ID } from "../../../domain/timeline/userEvents";
+import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
+import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 
 interface RenderOpts {
-  selectedTaskIds?: string[] | null;
-  setSelectedTaskIds?: (v: string[] | null) => void;
+  selectedSources?: SourceFilterSelection;
+  setSelectedSources?: (v: SourceFilterSelection) => void;
   timelineTasks?: { id: string; name: string }[];
+  worksets?: { id: string; name: string }[];
+  expandTasks?: { id: string; worksetId?: string | null }[];
   viewMode?: "calendar" | "gantt";
   setViewMode?: (m: "calendar" | "gantt") => void;
   timeScale?: TimelineScale;
@@ -32,9 +35,11 @@ interface RenderOpts {
 
 function renderControlBar(opts: RenderOpts = {}) {
   const props = {
-    selectedTaskIds: opts.selectedTaskIds ?? null,
-    setSelectedTaskIds: opts.setSelectedTaskIds ?? (() => {}),
+    selectedSources: opts.selectedSources ?? null,
+    setSelectedSources: opts.setSelectedSources ?? (() => {}),
     timelineTasks: opts.timelineTasks ?? [],
+    worksets: opts.worksets,
+    expandTasks: opts.expandTasks,
     viewMode: opts.viewMode ?? ("calendar" as const),
     setViewMode: opts.setViewMode ?? (() => {}),
     timeScale: opts.timeScale ?? ("month" as TimelineScale),
@@ -67,41 +72,54 @@ describe("TimelineControlBar", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
+  afterEach(() => {
+    document
+      .querySelectorAll('[data-testid="source-filter-dialog"]')
+      .forEach((node) => node.remove());
+  });
+
   it("renders multi-select filter with tasks and user/assistant in calendar mode", () => {
     const container = renderControlBar({
       timelineTasks: [
         { id: "t1", name: "Task 1" },
         { id: "t2", name: "Task 2" },
       ],
+      worksets: [{ id: SYSTEM_WORKSET_ID, name: "General" }],
+      expandTasks: [
+        { id: "t1", worksetId: SYSTEM_WORKSET_ID },
+        { id: "t2", worksetId: SYSTEM_WORKSET_ID },
+      ],
       viewMode: "calendar",
     });
+    expect(container.querySelector('[data-testid="timeline-source-filter"]')).not.toBeNull();
     const filterBtn = container.querySelector<HTMLButtonElement>(
-      '[data-testid="board-task-filter"]',
+      '[data-testid="board-source-filter"]',
     )!;
     act(() => {
       filterBtn.click();
     });
-    expect(document.querySelector('[data-testid="board-task-filter-t1"]')).not.toBeNull();
-    expect(document.querySelector('[data-testid="board-task-filter-t2"]')).not.toBeNull();
+    // Dialog tree interaction covered by SourceFilterDialog.test; toolbar only mounts control.
+    expect(document.querySelector('[data-testid="source-filter-dialog"]')).not.toBeNull();
     expect(
-      document.querySelector(`[data-testid="board-task-filter-${USER_EVENTS_FILTER_ID}"]`),
+      document.querySelector(`[data-testid="board-workset-filter-${SYSTEM_WORKSET_ID}"]`),
     ).not.toBeNull();
   });
 
   it("keeps user/assistant option in the multi-select filter in gantt mode", () => {
     const container = renderControlBar({
       timelineTasks: [{ id: "t1", name: "Task 1" }],
+      worksets: [{ id: SYSTEM_WORKSET_ID, name: "General" }],
+      expandTasks: [{ id: "t1", worksetId: SYSTEM_WORKSET_ID }],
       viewMode: "gantt",
     });
     const filterBtn = container.querySelector<HTMLButtonElement>(
-      '[data-testid="board-task-filter"]',
+      '[data-testid="board-source-filter"]',
     )!;
     act(() => {
       filterBtn.click();
     });
-    expect(document.querySelector('[data-testid="board-task-filter-t1"]')).not.toBeNull();
     expect(
-      document.querySelector(`[data-testid="board-task-filter-${USER_EVENTS_FILTER_ID}"]`),
+      document.querySelector(`[data-testid="board-workset-filter-${SYSTEM_WORKSET_ID}"]`),
     ).not.toBeNull();
   });
 
@@ -188,8 +206,8 @@ describe("TimelineControlBar", () => {
     const container = renderControlBar({
       timelineTasks: [{ id: "t1", name: "Task 1" }],
     });
-    expect(container.querySelector('[data-testid="timeline-task-filter"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="board-task-filter"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-source-filter"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="board-source-filter"]')).not.toBeNull();
   });
 
   it("uses single-row control-bar chrome with toolbar-sized task filter", () => {

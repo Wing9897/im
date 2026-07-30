@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { listTasks } from "../api/tasks";
+import { listWorksets, type Workset } from "../api/worksets";
 import { subscribeResourceModified } from "../domain/sse/resourceModified";
 import type { AnalysisTask } from "../types";
 import { toError } from "../utils/errors";
@@ -31,34 +32,38 @@ async function retryTaskLoad(
   });
 }
 
-interface TaskCatalogLoaderState {
+export interface TaskCatalogLoaderState {
   tasks: AnalysisTask[];
   tasksLoading: boolean;
   taskLoadError: string | null;
   refreshTasks: () => Promise<AnalysisTask[]>;
+  worksets: Workset[];
+  worksetsLoading: boolean;
+  refreshWorksets: () => Promise<Workset[]>;
 }
 
 /**
  * Encapsulates the task catalog loading, retry, and refresh logic.
- * Extracted from TaskCatalogProvider to separate derived/async computations
- * from the context provider shell.
- *
- * IMPORTANT: always call `listTasks()` with **no** `topLevelOnly` /
- * `top_level_only`. Project detail needs child recurring rows (`parentTaskId`)
- * from this shared catalog; top-level filtering belongs on the dashboard via
- * `selectTopLevelTasks`, not here.
+ * Also loads worksets (ownership dimension) and refreshes on SSE.
  */
 export function useTaskCatalogLoader(): TaskCatalogLoaderState {
   const [tasks, setTasks] = useState<AnalysisTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [taskLoadError, setTaskLoadError] = useState<string | null>(null);
+  const [worksets, setWorksets] = useState<Workset[]>([]);
+  const [worksetsLoading, setWorksetsLoading] = useState(true);
 
   const loadTasks = useCallback(async () => {
-    // Do NOT pass topLevelOnly — see module comment above.
     const nextTasks = safeArray(await listTasks());
     setTasks(nextTasks);
     setTaskLoadError(null);
     return nextTasks;
+  }, []);
+
+  const loadWorksets = useCallback(async () => {
+    const next = safeArray(await listWorksets());
+    setWorksets(next);
+    return next;
   }, []);
 
   const refreshTasks = useCallback(async () => {
@@ -78,19 +83,35 @@ export function useTaskCatalogLoader(): TaskCatalogLoaderState {
     }
   }, [loadTasks]);
 
+  const refreshWorksets = useCallback(async () => {
+    setWorksetsLoading(true);
+    try {
+      return await loadWorksets();
+    } finally {
+      setWorksetsLoading(false);
+    }
+  }, [loadWorksets]);
+
   useEffect(() => {
     return subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "task") return;
-      void refreshTasks().catch((error) => {
-        logWarn("[TaskCatalog] refresh after resource_modified failed", error);
-      });
+      if (detail.resourceType === "task") {
+        void refreshTasks().catch((error) => {
+          logWarn("[TaskCatalog] refresh after resource_modified failed", error);
+        });
+      }
+      if (detail.resourceType === "workset") {
+        void refreshWorksets().catch((error) => {
+          logWarn("[TaskCatalog] workset refresh after resource_modified failed", error);
+        });
+      }
     });
-  }, [refreshTasks]);
+  }, [refreshTasks, refreshWorksets]);
 
   useEffect(() => {
     let cancelled = false;
 
     setTasksLoading(true);
+    setWorksetsLoading(true);
     void (async () => {
       try {
         await retryTaskLoad(
@@ -111,11 +132,24 @@ export function useTaskCatalogLoader(): TaskCatalogLoaderState {
         }
       }
     })();
+    void (async () => {
+      try {
+        await loadWorksets();
+      } catch (error) {
+        if (!cancelled) {
+          logWarn("[TaskCatalog] initial workset load failed", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setWorksetsLoading(false);
+        }
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [loadTasks]);
+  }, [loadTasks, loadWorksets]);
 
   return useMemo(
     () => ({
@@ -123,7 +157,18 @@ export function useTaskCatalogLoader(): TaskCatalogLoaderState {
       tasksLoading,
       taskLoadError,
       refreshTasks,
+      worksets,
+      worksetsLoading,
+      refreshWorksets,
     }),
-    [refreshTasks, taskLoadError, tasks, tasksLoading],
+    [
+      refreshTasks,
+      refreshWorksets,
+      taskLoadError,
+      tasks,
+      tasksLoading,
+      worksets,
+      worksetsLoading,
+    ],
   );
 }
