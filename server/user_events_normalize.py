@@ -88,9 +88,7 @@ def normalize_user_event_task_id_wire(task_id: Any) -> str | None | object:
     if not cleaned:
         return None
     if cleaned == SYSTEM_WORKSET_ID:
-        raise UserEventTaskIdError(
-            "taskId must not be '__user__'; use worksetId for ownership"
-        )
+        raise UserEventTaskIdError("taskId must not be '__user__'; use worksetId for ownership")
     return cleaned
 
 
@@ -159,9 +157,7 @@ def build_user_event_list_filters(
     clauses: list[str] = []
     params: list[Any] = []
     if start and start.strip():
-        clauses.append(
-            "julianday(COALESCE(NULLIF(end_time, ''), start_time)) >= julianday(?)"
-        )
+        clauses.append("julianday(COALESCE(NULLIF(end_time, ''), start_time)) >= julianday(?)")
         params.append(start.strip())
     if end and end.strip():
         clauses.append("julianday(start_time) <= julianday(?)")
@@ -169,9 +165,7 @@ def build_user_event_list_filters(
     if task_id is not None:
         tid = str(task_id).strip()
         if tid == SYSTEM_WORKSET_ID:
-            raise UserEventTaskIdError(
-                "task_id must not be '__user__'; use workset_id for ownership filter"
-            )
+            raise UserEventTaskIdError("task_id must not be '__user__'; use workset_id for ownership filter")
         if not tid:
             clauses.append("task_id IS NULL")
         else:

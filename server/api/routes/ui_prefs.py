@@ -199,9 +199,7 @@ async def fetch_assistant_voice_io(request: Request) -> dict:
 @router.put("/assistant/voice-io", response_model=AssistantVoiceIoResponse)
 async def save_assistant_voice_io(request: Request, body: AssistantVoiceIoBody) -> dict:
     try:
-        return await put_assistant_voice_io(
-            get_db(request), body.settings.model_dump(exclude_unset=True)
-        )
+        return await put_assistant_voice_io(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
 

@@ -51,11 +51,7 @@ class UserEventPatchBody(BaseModel):
 
 def _http_from_validation(exc: UserEventValidationError) -> HTTPException:
     """A bad ``taskId`` / ``worksetId`` is a 400; every other field problem is a 422."""
-    status = (
-        400
-        if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError))
-        else 422
-    )
+    status = 400 if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError)) else 422
     return http_error(status, str(exc), error_code=VALIDATION_ERROR)
 
 
@@ -77,9 +73,7 @@ async def list_events(
 ) -> list[UserEventResponse]:
     db = get_db(request)
     try:
-        rows = await list_user_events(
-            db, start=start, end=end, task_id=task_id, workset_id=workset_id
-        )
+        rows = await list_user_events(db, start=start, end=end, task_id=task_id, workset_id=workset_id)
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
     return [UserEventResponse.model_validate(row) for row in rows]

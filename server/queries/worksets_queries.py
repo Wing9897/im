@@ -10,9 +10,7 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 
 async def fetch_all_workset_rows(db: Any) -> list[dict[str, Any]]:
     # System workset first, then creation order.
-    return await db.fetch_all(
-        "SELECT * FROM worksets ORDER BY is_system DESC, created_at ASC"
-    )
+    return await db.fetch_all("SELECT * FROM worksets ORDER BY is_system DESC, created_at ASC")
 
 
 async def fetch_workset_row(db: Any, workset_id: str) -> dict[str, Any] | None:
@@ -28,8 +26,7 @@ async def insert_workset(
     is_system: bool = False,
 ) -> None:
     await tx.execute(
-        "INSERT INTO worksets (id, name, is_system, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO worksets (id, name, is_system, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
         (workset_id, name, 1 if is_system else 0, now, now),
     )
 
@@ -63,9 +60,7 @@ async def workset_exists(db: Any, workset_id: str) -> bool:
 
 
 async def workset_is_system(db: Any, workset_id: str) -> bool:
-    row = await db.fetch_one(
-        "SELECT is_system FROM worksets WHERE id = ?", (workset_id,)
-    )
+    row = await db.fetch_one("SELECT is_system FROM worksets WHERE id = ?", (workset_id,))
     if row is None:
         return workset_id == SYSTEM_WORKSET_ID
     return bool(row.get("is_system"))

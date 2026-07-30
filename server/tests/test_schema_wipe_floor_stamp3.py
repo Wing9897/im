@@ -29,9 +29,7 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         fingerprint = await inspect_schema(db.conn)
         assert fingerprint.version == CURRENT_SCHEMA_VERSION
         assert fingerprint == CURRENT_SCHEMA_FINGERPRINT
-        assert await db.fetch_value(
-            "SELECT is_system FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)
-        ) == 1
+        assert await db.fetch_value("SELECT is_system FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)) == 1
         # user_events.workset_id is NOT NULL with default __user__.
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
             cols = {str(row[1]): row for row in await cursor.fetchall()}

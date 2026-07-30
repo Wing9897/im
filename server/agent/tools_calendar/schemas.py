@@ -135,9 +135,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "location": {"type": "string"},
                 "worksetId": {
                     "type": "string",
-                    "description": (
-                        "Optional ownership workset id, or __user__ for builtin 一般 workset"
-                    ),
+                    "description": ("Optional ownership workset id, or __user__ for builtin 一般 workset"),
                 },
                 "taskId": {
                     "type": "string",
@@ -293,9 +291,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "worksetId": {
                     "type": "string",
-                    "description": (
-                        "Optional ownership workset id, or __user__ for builtin 一般 workset"
-                    ),
+                    "description": ("Optional ownership workset id, or __user__ for builtin 一般 workset"),
                 },
             },
             "required": ["id"],

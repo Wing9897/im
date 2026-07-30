@@ -291,6 +291,7 @@ async def reset_database(request: Request) -> dict:
             logger.exception("Collector restart after database reset failed")
     return {"message": "Database reset complete"}
 
+
 @router.post("/restart")
 async def restart_application() -> dict:
     """Exit the process; the Electron shell's process manager respawns it."""

@@ -72,6 +72,7 @@ def test_sanitize_voice_settings_defaults_and_leads() -> None:
         "worksetIds": ["__user__"],
     }
 
+
 def test_sanitize_voice_history_caps_at_100() -> None:
     rows = [
         {

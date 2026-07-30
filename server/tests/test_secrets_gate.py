@@ -110,9 +110,7 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
         assert counts["stale_connected"] == 1
         assert counts["actions"] == 1
 
-        assert await db.fetch_value(
-            "SELECT value FROM system_config WHERE key = 'openai_api_key'"
-        ) is None
+        assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'") is None
         assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'ui_locale'") == "zh-Hans"
         assert await db.fetch_value("SELECT credentials FROM accounts WHERE id = 'a1'") is None
         assert await db.fetch_value("SELECT status FROM accounts WHERE id = 'a1'") == "disconnected"
@@ -188,17 +186,11 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
             events = await client.get("/api/v1/results/events")
             assert events.status_code == 200
 
-            task_name = await app2.state.db.fetch_value(
-                "SELECT name FROM analysis_tasks WHERE id = 't-keep'"
-            )
+            task_name = await app2.state.db.fetch_value("SELECT name FROM analysis_tasks WHERE id = 't-keep'")
             assert task_name == "Keep Task"
-            admin = await app2.state.db.fetch_value(
-                "SELECT username FROM admin_accounts WHERE username = 'admin'"
-            )
+            admin = await app2.state.db.fetch_value("SELECT username FROM admin_accounts WHERE username = 'admin'")
             assert admin == "admin"
-            cipher = await app2.state.db.fetch_value(
-                "SELECT value FROM system_config WHERE key = 'openai_api_key'"
-            )
+            cipher = await app2.state.db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'")
             assert cipher is None
 
             # Already ready → reject further rotate.

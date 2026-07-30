@@ -35,14 +35,12 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
     if SECRET_CONFIG_KEYS:
         placeholders = ",".join("?" for _ in SECRET_CONFIG_KEYS)
         config_count = await db.execute(
-            f"DELETE FROM system_config WHERE key IN ({placeholders}) "
-            f"AND value LIKE ?",
+            f"DELETE FROM system_config WHERE key IN ({placeholders}) AND value LIKE ?",
             (*SECRET_CONFIG_KEYS, _CIPHER_LIKE),
         )
 
     accounts_count = await db.execute(
-        "UPDATE accounts SET credentials = NULL, status = 'disconnected', "
-        "updated_at = ? WHERE credentials LIKE ?",
+        "UPDATE accounts SET credentials = NULL, status = 'disconnected', updated_at = ? WHERE credentials LIKE ?",
         (now, _CIPHER_LIKE),
     )
     # Heal rows already scrubbed earlier (or empty) but still labeled connected.
@@ -56,8 +54,7 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
         (_CIPHER_LIKE,),
     )
     logger.info(
-        "Scrubbed undecryptable secrets: system_config=%d accounts=%d "
-        "stale_connected=%d actions=%d",
+        "Scrubbed undecryptable secrets: system_config=%d accounts=%d stale_connected=%d actions=%d",
         config_count,
         accounts_count,
         stale_connected,
@@ -92,8 +89,7 @@ async def probe_stored_secrets(db: Any) -> tuple[bool, str | None]:
                 samples.append(cipher)
 
     account_rows = await db.fetch_all(
-        "SELECT credentials FROM accounts "
-        "WHERE credentials IS NOT NULL AND credentials LIKE ? LIMIT 8",
+        "SELECT credentials FROM accounts WHERE credentials IS NOT NULL AND credentials LIKE ? LIMIT 8",
         (_CIPHER_LIKE,),
     )
     for row in account_rows:

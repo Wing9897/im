@@ -153,8 +153,7 @@ async def _lifespan_impl(
         app.state.secrets_error = err
         if not ready:
             logger.error(
-                "Stored secrets cannot be decrypted — business APIs paused until rotate-secrets "
-                "(or full reset): %s",
+                "Stored secrets cannot be decrypted — business APIs paused until rotate-secrets (or full reset): %s",
                 err,
             )
         return ready

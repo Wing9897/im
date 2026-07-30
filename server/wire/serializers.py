@@ -219,9 +219,7 @@ def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> 
     task_id = str(raw_task_id).strip() if isinstance(raw_task_id, str) and raw_task_id.strip() else ""
     raw_workset_id = row.get("workset_id")
     workset_id = (
-        str(raw_workset_id).strip()
-        if isinstance(raw_workset_id, str) and raw_workset_id.strip()
-        else SYSTEM_WORKSET_ID
+        str(raw_workset_id).strip() if isinstance(raw_workset_id, str) and raw_workset_id.strip() else SYSTEM_WORKSET_ID
     )
     return {
         "id": str(row["id"]),
