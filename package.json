@@ -48,7 +48,7 @@
     "sync:presets:check": "uv run python scripts/sync_task_presets.py --check",
     "i18n:check": "node scripts/check-i18n-parity.mjs",
     "sync:version": "node scripts/sync-version.mjs",
-    "gen:themes": "node --experimental-strip-types scripts/generate-theme-css.mjs",
+    "gen:themes": "tsx scripts/generate-theme-css.mjs",
     "gen:textures": "node scripts/generate-theme-textures.mjs",
     "openapi:export": "uv run python scripts/export_openapi.py",
     "openapi:generate": "npm run openapi:export && npm run openapi:types --workspace web",
@@ -69,6 +69,7 @@
     "@vitest/coverage-v8": "3.2.7",
     "concurrently": "^9.1.0",
     "pyright": "1.1.411",
+    "tsx": "^4.20.3",
     "typescript": "5.6.3",
     "vite": "6.4.3",
     "vitest": "3.2.7"

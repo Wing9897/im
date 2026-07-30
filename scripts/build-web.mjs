@@ -14,10 +14,14 @@ const require = createRequire(path.join(webDir, "package.json"));
 const vitePackageJson = require.resolve("vite/package.json");
 const viteBin = path.join(path.dirname(vitePackageJson), "bin", "vite.js");
 
+const rootRequire = createRequire(path.join(projectRoot, "package.json"));
+const tsxPackageJson = rootRequire.resolve("tsx/package.json");
+const tsxCli = path.join(path.dirname(tsxPackageJson), "dist", "cli.mjs");
+
 console.log("[build:web] Generating theme CSS...");
 const genThemes = spawnSync(
   process.execPath,
-  ["--experimental-strip-types", path.join(projectRoot, "scripts", "generate-theme-css.mjs")],
+  [tsxCli, path.join(projectRoot, "scripts", "generate-theme-css.mjs")],
   { cwd: projectRoot, stdio: "inherit" },
 );
 if (genThemes.status !== 0) {

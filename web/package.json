@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "gen:themes": "node --experimental-strip-types ../scripts/generate-theme-css.mjs",
+    "gen:themes": "tsx ../scripts/generate-theme-css.mjs",
     "build": "npm run gen:themes && tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b && npm run typecheck:test",

@@ -1,7 +1,7 @@
 /**
  * Generate web/src/theme.generated.css from themeCatalog.ts.
- * Usage: node scripts/generate-theme-css.mjs
- * Requires Node ≥22 (--experimental-strip-types).
+ * Usage: tsx scripts/generate-theme-css.mjs  (or: npm run gen:themes)
+ * Runs via tsx so Node 20.19+ can import the TypeScript catalog.
  */
 import { writeFileSync } from "node:fs";
 import path from "node:path";
