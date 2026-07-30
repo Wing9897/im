@@ -9,6 +9,9 @@ function newClientInstanceId(): string {
 
 /** Stable per-browser / per-Electron-profile id for assistant prefs device slot. */
 export function getClientInstanceId(): string {
+  if (typeof window === "undefined") {
+    return newClientInstanceId();
+  }
   try {
     const existing = window.localStorage.getItem(CLIENT_INSTANCE_STORAGE_KEY);
     if (existing?.trim()) {
@@ -24,6 +27,7 @@ export function getClientInstanceId(): string {
 
 /** Test helper — clears stored id so the next read generates a fresh one. */
 export function resetClientInstanceIdForTests(): void {
+  if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(CLIENT_INSTANCE_STORAGE_KEY);
   } catch {

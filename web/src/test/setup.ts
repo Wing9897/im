@@ -32,8 +32,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.useRealTimers();
+  // Clear while fake timers are still installed; useRealTimers first would drop them.
   vi.clearAllTimers();
+  vi.useRealTimers();
 });
 
 void act;

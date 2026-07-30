@@ -18,12 +18,15 @@ vi.mock("../../../context/ToastContext", async () =>
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function render(viewMode: "calendar" | "gantt") {
-  const container = document.createElement("div");
-  act(() => {
-    createRoot(container).render(createElement(TimelineSkeleton, { viewMode }));
-  });
-  return container;
+type Mount = { container: HTMLDivElement; root: Root };
+
+function unmountAll(mounts: Mount[]) {
+  for (const { container, root } of mounts.splice(0)) {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  }
 }
 
 function withI18n(children: React.ReactNode) {
@@ -82,6 +85,7 @@ function makeViewSwitchProps(overrides: Partial<Parameters<typeof TimelineViewSw
     monthCursor: now,
     monthDays: buildCalendarDays(now),
     monthEvents: [],
+    focusedDay: null,
     onFocusDay: () => {},
     error: null,
     onRetry: () => {},
@@ -89,43 +93,29 @@ function makeViewSwitchProps(overrides: Partial<Parameters<typeof TimelineViewSw
   };
 }
 
-function renderViewSwitch(overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {}) {
-  const container = document.createElement("div");
-  document.body.appendChild(container);
-  const props = makeViewSwitchProps(overrides);
-  const ctx = makeContextValue();
-  let root: Root;
-  act(() => {
-    root = createRoot(container);
-    root.render(
-      withI18n(
-        createElement(TimelinePageProvider, {
-          value: ctx,
-          children: createElement(TimelineViewSwitch, props),
-        }),
-      ),
-    );
-  });
-  return { container, root: root!, rerender: (newOverrides: Partial<Parameters<typeof TimelineViewSwitch>[0]>) => {
-    const newProps = makeViewSwitchProps(newOverrides);
-    act(() => {
-      root.render(
-        withI18n(
-          createElement(TimelinePageProvider, {
-            value: ctx,
-            children: createElement(TimelineViewSwitch, newProps),
-          }),
-        ),
-      );
-    });
-  }};
-}
-
 /* ------------------------------------------------------------------ */
 /*  TimelineSkeleton (isolated component tests)                        */
 /* ------------------------------------------------------------------ */
 
 describe("TimelineSkeleton", () => {
+  const mounts: Mount[] = [];
+
+  afterEach(() => {
+    unmountAll(mounts);
+  });
+
+  function render(viewMode: "calendar" | "gantt") {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    let root!: Root;
+    act(() => {
+      root = createRoot(container);
+      root.render(createElement(TimelineSkeleton, { viewMode }));
+    });
+    mounts.push({ container, root });
+    return container;
+  }
+
   it("renders with data-testid for calendar mode", () => {
     const container = render("calendar");
     const skeleton = container.querySelector('[data-testid="timeline-skeleton"]');
@@ -183,6 +173,45 @@ describe("TimelineSkeleton", () => {
 /* ------------------------------------------------------------------ */
 
 describe("TimelineViewSwitch skeleton loading integration", () => {
+  const mounts: Mount[] = [];
+
+  function renderViewSwitch(overrides: Partial<Parameters<typeof TimelineViewSwitch>[0]> = {}) {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const props = makeViewSwitchProps(overrides);
+    const ctx = makeContextValue();
+    let root!: Root;
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        withI18n(
+          createElement(TimelinePageProvider, {
+            value: ctx,
+            children: createElement(TimelineViewSwitch, props),
+          }),
+        ),
+      );
+    });
+    mounts.push({ container, root });
+    return {
+      container,
+      root,
+      rerender: (newOverrides: Partial<Parameters<typeof TimelineViewSwitch>[0]>) => {
+        const newProps = makeViewSwitchProps(newOverrides);
+        act(() => {
+          root.render(
+            withI18n(
+              createElement(TimelinePageProvider, {
+                value: ctx,
+                children: createElement(TimelineViewSwitch, newProps),
+              }),
+            ),
+          );
+        });
+      },
+    };
+  }
+
   beforeEach(async () => {
     setAppLocale("zh-Hant");
     await i18n.changeLanguage("zh-Hant");
@@ -191,8 +220,10 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
   });
 
   afterEach(() => {
+    // Unmount first so useTimelineLoadTimeout clears its pending setTimeout.
+    unmountAll(mounts);
+    vi.clearAllTimers();
     vi.useRealTimers();
-    document.body.innerHTML = "";
   });
 
   it("renders TimelineSkeleton when initialLoading is true and events are empty", () => {
