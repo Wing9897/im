@@ -304,7 +304,7 @@ async def _insert_domain_fixture(conn: aiosqlite.Connection, fixture: _DomainFix
         )
         await conn.execute(
             "INSERT INTO analysis_tasks VALUES ("
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
             ")",
             (
                 task_id,
@@ -325,6 +325,7 @@ async def _insert_domain_fixture(conn: aiosqlite.Connection, fixture: _DomainFix
                 payload.optional_text,
                 1,  # include_in_timeline
                 None,  # parent_task_id
+                None,  # workset_id
                 None,  # project_wave_interval_seconds
                 None,  # batch_overlap_count
                 None,  # analysis_trigger_threshold

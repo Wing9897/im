@@ -251,7 +251,7 @@ async def test_complete_ollama_timeout_propagates() -> None:
     class _SlowResponse:
         async def __aenter__(self) -> _SlowResponse:
             await asyncio.sleep(0.2)
-            return self
+            raise asyncio.TimeoutError()
 
         async def __aexit__(self, *_args: object) -> bool:
             return False
@@ -265,14 +265,12 @@ async def test_complete_ollama_timeout_propagates() -> None:
         def post(self, *_args: Any, **_kwargs: Any) -> _SlowResponse:
             return _SlowResponse()
 
-    timeout = aiohttp.ClientTimeout(total=0.05)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        with pytest.raises(asyncio.TimeoutError):
-            await complete_ollama(
-                session,
-                base_url="http://127.0.0.1:11434",
-                model="llama3",
-                messages=[{"role": "user", "content": "hi"}],
-                temperature=0.1,
-                json_mode=False,
-            )
+    with pytest.raises(asyncio.TimeoutError):
+        await complete_ollama(
+            _SlowSession(),  # type: ignore[arg-type]
+            base_url="http://127.0.0.1:11434",
+            model="llama3",
+            messages=[{"role": "user", "content": "hi"}],
+            temperature=0.1,
+            json_mode=False,
+        )

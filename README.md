@@ -10,8 +10,9 @@
 **[`docs/功能特色.md`](docs/功能特色.md)**
 
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
-- **排程 AI 分析** — interval/cron、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
-- **循環／專案** — `recurring` 查詢展開 RRULE；`project` 閉環多波消化來源積壓
+- **排程 AI 分析** — interval/cron 計時器（10 秒、每小時、每日、每週、自訂秒數）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
+- **循環任務** — Recurring task（`analysis_mode=recurring`）；RRULE 僅於查詢時展開，不會觸發 AI 分析
+- **專案** — `project` 閉環多波消化來源積壓
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的 Ops Board
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描關鍵事件與日程
 - **本地優先** — SQLite、憑證加密、本機綁定；Electron 開箱即用
@@ -263,7 +264,7 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema stamp 3**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.3`）；新安裝直接建 stamp-3 庫（wipe-floor，`SCHEMA_MIGRATIONS` 為空）。**更舊 stamp（含 1–2 與 legacy 4–24）一律 hard-reject**、拒絕啟動，無 in-place 升級路徑。需明確 reset 後重新收集：
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v3**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.3`）；新安裝直接建 stamp-3 庫（wipe-floor，`SCHEMA_MIGRATIONS` 為空）。**更舊 stamp（含 v1–v2 與 legacy 4–24）一律 hard-reject**、拒絕啟動，無 in-place 升級路徑。需明確 reset 後重新收集：
 
 ```bash
 python scripts/reset_local_databases.py --apply

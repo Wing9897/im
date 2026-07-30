@@ -65,12 +65,24 @@ vi.mock("../../hooks/useAssistantChat", () => ({
     ttsAvailable: false,
     ttsEnabled: false,
     spacePttMode: "hold" as const,
+    worksetId: "__user__",
+    setWorksetId: vi.fn(),
     sendDraft: vi.fn(),
     startListening: vi.fn(),
     stopListening: vi.fn(),
     stopSpeaking: vi.fn(),
     clearChat: vi.fn(),
   }),
+}));
+
+vi.mock("../../domain/aiStaff/assistantIdentity", () => ({
+  useAssistantIdentity: () => ({
+    identity: { avatarDataUrl: null, displayName: null },
+    setDisplayName: vi.fn(),
+    setAvatarDataUrl: vi.fn(),
+    resetAvatar: vi.fn(),
+  }),
+  resolveAssistantDisplayName: (_identity: unknown, fallback: string) => fallback,
 }));
 
 vi.mock("../../context/runtimeLogs/RuntimeLogsContext", () => ({
