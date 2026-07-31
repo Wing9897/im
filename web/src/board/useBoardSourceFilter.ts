@@ -9,6 +9,7 @@ import {
   parseSourceFilterValue,
   resolveAnalysisTaskIdsFromFilter,
   sourceFilterSelectedCount,
+  userEventMatchesSourceSelection,
   type SourceFilterSelection,
 } from "../domain/tasks/sourceFilterSelection";
 import {
@@ -25,6 +26,8 @@ export type BoardSourceFilterItem = {
   taskId?: string | null;
   worksetId?: string | null;
   sourceKind?: string | null;
+  /** Timed-event discriminator; `"user"` uses ownership / provenance rules. */
+  source?: string | null;
 };
 
 /**
@@ -52,12 +55,17 @@ export function filterItemsBySourceSelection<T extends BoardSourceFilterItem>(
     return [];
   }
   const allowTasks = memberTaskIds ?? new Set(selection.taskIds);
+  const allowExplicitTasks = new Set(selection.taskIds);
   const allowWorksets = new Set(selection.worksetIds);
   return items.filter((item) => {
     // Activity-span ownership rows: wire worksetId only (sourceKind=workset).
     if (item.sourceKind === "workset") {
       const id = resolveSpanWorksetId(item);
       return Boolean(id && allowWorksets.has(id));
+    }
+    // user_events: ownership workset only; provenance via explicit taskIds.
+    if (item.source === "user") {
+      return userEventMatchesSourceSelection(item, allowWorksets, allowExplicitTasks);
     }
     const worksetId = item.worksetId?.trim();
     if (worksetId && allowWorksets.has(worksetId)) return true;

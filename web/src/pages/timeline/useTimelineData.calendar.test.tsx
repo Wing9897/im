@@ -198,6 +198,52 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockListUserEvents).toHaveBeenCalled();
   });
 
+  it("excludes B-owned user_events when only workset A is selected (no provenance leak)", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({
+        id: "memberOfA",
+        name: "A member",
+        analysisMode: "event",
+        worksetId: "ws-A",
+      }),
+    ]);
+    mockListUserEvents.mockResolvedValue([
+      {
+        id: "ue-cross",
+        title: "归属 B，provenance 指向 A 成员",
+        body: "",
+        startTime: "2025-01-12T08:00:00Z",
+        endTime: null,
+        location: null,
+        origin: "manual",
+        source: "user",
+        taskId: "memberOfA",
+        worksetId: "ws-B",
+        createdAt: "2025-01-12T08:00:00Z",
+        updatedAt: "2025-01-12T08:00:00Z",
+      },
+      {
+        id: "ue-owned-a",
+        title: "归属 A",
+        body: "",
+        startTime: "2025-01-12T09:00:00Z",
+        endTime: null,
+        location: null,
+        origin: "manual",
+        source: "user",
+        taskId: "",
+        worksetId: "ws-A",
+        createdAt: "2025-01-12T09:00:00Z",
+        updatedAt: "2025-01-12T09:00:00Z",
+      },
+    ]);
+    await renderHook({ taskIds: [], worksetIds: ["ws-A"] });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(resultRef.current!.events.map((e) => e.id)).toEqual(["ue-owned-a"]);
+  });
+
   it("shows all user events owned by the general workset when __user__ is selected", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
     mockListUserEvents.mockResolvedValue([

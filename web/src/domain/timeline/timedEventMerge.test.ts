@@ -88,6 +88,27 @@ describe("mergeWithCalendarOccurrences", () => {
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe("other-id");
   });
+
+  it("keeps a single bar when user_event provenance matches an RRULE occurrence", () => {
+    const userTimed = userEventToBoardEvent({
+      id: "ue-provenance",
+      title: "已落地的循环实例",
+      body: "",
+      startTime: "2026-07-22T09:00:00.000Z",
+      endTime: "2026-07-22T09:30:00.000Z",
+      location: null,
+      origin: "manual",
+      source: "user",
+      taskId: "cal-task",
+      worksetId: "ws-1",
+      createdAt: "2026-07-21T00:00:00Z",
+      updatedAt: "2026-07-21T00:00:00Z",
+    });
+    const merged = mergeWithCalendarOccurrences([userTimed], [makeOccurrence()]);
+    expect(merged).toHaveLength(1);
+    expect(merged[0].id).toBe("ue-provenance");
+    expect(merged[0].source).toBe("user");
+  });
 });
 
 describe("userEventToBoardEvent", () => {

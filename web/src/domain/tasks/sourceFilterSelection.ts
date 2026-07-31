@@ -4,6 +4,7 @@
  */
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { isNullProvenanceTaskId } from "../timeline/userEvents";
 
 export type SourceFilterSelection = {
   taskIds: string[];
@@ -110,6 +111,27 @@ export function resolveAnalysisTaskIdsFromFilter(
   const fromWorksets = expandWorksetIdsToTaskIds(selection.worksetIds, tasks);
   const ids = new Set([...selection.taskIds, ...fromWorksets]);
   return [...ids].sort();
+}
+
+/**
+ * Client filter for user_events against hierarchical source selection.
+ *
+ * - Selected `worksetIds` match **ownership** `event.worksetId` only.
+ * - Explicit `taskIds` (not `expandWorksetIdsToTaskIds` members) may match
+ *   provenance `taskId`. Workset expansion stays for analysis / RRULE fetch.
+ */
+export function userEventMatchesSourceSelection(
+  event: { worksetId?: string | null; taskId?: string | null },
+  allowWorksets: ReadonlySet<string>,
+  allowExplicitTaskIds: ReadonlySet<string>,
+): boolean {
+  const rawWorkset =
+    typeof event.worksetId === "string" ? event.worksetId.trim() : "";
+  const worksetId = rawWorkset || SYSTEM_WORKSET_ID;
+  if (allowWorksets.has(worksetId)) return true;
+  const provenance = typeof event.taskId === "string" ? event.taskId.trim() : "";
+  if (!provenance || isNullProvenanceTaskId(provenance)) return false;
+  return allowExplicitTaskIds.has(provenance);
 }
 
 export type FilterTreeRow = {

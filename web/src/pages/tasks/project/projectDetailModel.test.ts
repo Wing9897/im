@@ -118,10 +118,34 @@ describe("projectDetailModel", () => {
         completedBatchCount: 3,
         lastAgentMessage: "ok",
         lastToolCalls: [],
+        sourceKind: "task",
+        worksetId: null,
       },
     ];
     expect(findActivitySpan(spans, "proj-1")?.completedBatchCount).toBe(3);
     expect(findActivitySpan(spans, "proj-1")?.lastAgentMessage).toBe("ok");
     expect(findActivitySpan(spans, "missing")).toBeNull();
+  });
+
+  it("finds workset activity spans by worksetId when taskId is null", () => {
+    const spans: TaskActivitySpan[] = [
+      {
+        taskId: null,
+        taskName: "一般",
+        description: "手動或由助手建立的定時事件",
+        analysisTimeRange: "all",
+        isActive: false,
+        earliestBatchStart: "2026-07-01T00:00:00Z",
+        latestBatchEnd: "2026-07-27T08:00:00Z",
+        completedBatchCount: 2,
+        lastAgentMessage: null,
+        lastToolCalls: [],
+        sourceKind: "workset",
+        worksetId: "__user__",
+      },
+    ];
+    expect(findActivitySpan(spans, "__user__")?.sourceKind).toBe("workset");
+    expect(findActivitySpan(spans, "__user__")?.worksetId).toBe("__user__");
+    expect(findActivitySpan(spans, "proj-1")).toBeNull();
   });
 });

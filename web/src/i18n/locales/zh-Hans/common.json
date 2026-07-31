@@ -597,7 +597,7 @@
     },
     "gantt": {
       "title": "甘特／按任务",
-      "description": "任务活动跨度（长条）"
+      "description": "任务活动跨度；工作集条为手动/助手事件包络（与任务条并排）"
     },
     "ganttEvents": {
       "title": "甘特／按事件",
@@ -932,7 +932,8 @@
       "pausedName": "甘特",
       "labelTask": "任务",
       "labelEvent": "事件",
-      "emptyEvents": "尚无事件"
+      "emptyEvents": "尚无事件",
+      "worksetSpanLegend": "工作集条 = 手动/助手事件包络（与任务分析条并排，非重复）"
     },
     "shell": {
       "loadFailed": "载入失败，请重试",

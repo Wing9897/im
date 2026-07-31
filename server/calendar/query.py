@@ -114,7 +114,8 @@ async def fetch_active_calendar_tasks(
 ) -> list[dict[str, Any]]:
     """Active ``recurring``-mode tasks (shared by Agent + ``GET /results/calendar``).
 
-    When ``task_ids`` is set, include those recurring rows (exact id match).
+    When ``task_ids`` is set, include those recurring rows **or** active children
+    whose ``parent_task_id`` is in the list.
     When ``task_id`` is set (and ``task_ids`` is not), include that recurring row
     **or** any active child recurring tasks whose ``parent_task_id`` matches
     (project scope).

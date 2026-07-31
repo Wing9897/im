@@ -14,8 +14,16 @@ export type TimelineFilterPlan = {
   analysisTaskIds: string[] | null;
   /** `null` = all recurring; otherwise IN list for recurring tasks. */
   recurringTaskIds: string[] | null;
-  /** Explicitly selected real task ids (not expanded from worksets). */
+  /**
+   * Task ids used for analysis / RRULE fetch + calendar client filter:
+   * explicit selection ∪ members of selected worksets.
+   */
   selectedRealTaskIds: string[];
+  /**
+   * Explicitly checked task ids only (not workset expansion).
+   * Used for user_event provenance matching.
+   */
+  explicitTaskIds: string[];
   /** Selected workset ids (incl. builtin `__user__`). */
   selectedWorksetIds: string[];
   /** True when builtin「一般」workset is in the selection (fetch/filter its user_events). */
@@ -39,6 +47,7 @@ export function resolveTimelineFilterPlan(
       analysisTaskIds: null,
       recurringTaskIds: null,
       selectedRealTaskIds: [],
+      explicitTaskIds: [],
       selectedWorksetIds: [],
       includeGeneralWorksetUserEvents: true,
     };
@@ -52,6 +61,7 @@ export function resolveTimelineFilterPlan(
       analysisTaskIds: [],
       recurringTaskIds: [],
       selectedRealTaskIds: [],
+      explicitTaskIds: [],
       selectedWorksetIds: [],
       includeGeneralWorksetUserEvents: false,
     };
@@ -61,8 +71,9 @@ export function resolveTimelineFilterPlan(
   const selectedWorksetIds = [...selection.worksetIds];
   const includeGeneralWorksetUserEvents = selectedWorksetIds.includes(SYSTEM_WORKSET_ID);
   const fromWorksets = expandWorksetIdsToTaskIds(selectedWorksetIds, tasks);
+  const explicitTaskIds = [...selection.taskIds];
   const selectedRealTaskIds = [
-    ...new Set([...selection.taskIds, ...fromWorksets]),
+    ...new Set([...explicitTaskIds, ...fromWorksets]),
   ];
 
   const analysisTaskIds: string[] = [];
@@ -98,6 +109,7 @@ export function resolveTimelineFilterPlan(
     analysisTaskIds: analysisTaskIds.length > 0 ? analysisTaskIds : [],
     recurringTaskIds: recurringTaskIds.length > 0 ? recurringTaskIds : [],
     selectedRealTaskIds,
+    explicitTaskIds,
     selectedWorksetIds,
     includeGeneralWorksetUserEvents,
   };

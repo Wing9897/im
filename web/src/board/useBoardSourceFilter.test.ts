@@ -92,4 +92,52 @@ describe("filterItemsBySourceSelection", () => {
     );
     expect(filtered).toHaveLength(0);
   });
+
+  it("does not match user_event provenance via expanded workset member tasks", () => {
+    const items = [
+      {
+        id: "ue-cross",
+        source: "user",
+        taskId: "memberOfA",
+        worksetId: "ws-B",
+      },
+      {
+        id: "ue-owned-a",
+        source: "user",
+        taskId: null as string | null,
+        worksetId: "ws-A",
+      },
+      {
+        id: "analysis-a",
+        source: "analysis" as const,
+        taskId: "memberOfA",
+        worksetId: null as string | null,
+      },
+    ];
+    // Selecting workset A expands memberOfA for analysis, but must not pull
+    // a B-owned user_event that only shares provenance taskId.
+    const filtered = filterItemsBySourceSelection(
+      items,
+      { taskIds: [], worksetIds: ["ws-A"] },
+      new Set(["memberOfA"]),
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["ue-owned-a", "analysis-a"]);
+  });
+
+  it("matches user_event provenance only for explicitly selected taskIds", () => {
+    const items = [
+      {
+        id: "ue-tagged",
+        source: "user",
+        taskId: "memberOfA",
+        worksetId: "ws-B",
+      },
+    ];
+    const filtered = filterItemsBySourceSelection(
+      items,
+      { taskIds: ["memberOfA"], worksetIds: [] },
+      new Set(["memberOfA"]),
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["ue-tagged"]);
+  });
 });

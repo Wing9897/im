@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
+import { findActivitySpan } from "../tasks/project/projectDetailModel";
 import {
   loadTimelineSelectedSources,
   pruneTimelineSelectedSources,
@@ -235,9 +236,10 @@ export function useTimelinePageContainer() {
     (taskId: string) => setSelectedGanttTaskId((prev) => (prev === taskId ? null : taskId)),
     [setSelectedGanttTaskId],
   );
-  const selectedGanttSpan = selectedGanttTaskId !== null
-    ? data.taskSpans.find((s) => s.taskId === selectedGanttTaskId) ?? null
-    : null;
+  const selectedGanttSpan =
+    selectedGanttTaskId !== null
+      ? findActivitySpan(data.taskSpans, selectedGanttTaskId)
+      : null;
 
   const focusDay = useCallback((day: Date) => {
     selection.setSelectedEvent(null);

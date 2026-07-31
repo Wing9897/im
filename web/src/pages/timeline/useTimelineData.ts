@@ -2,22 +2,19 @@ import { useCallback, useEffect, useMemo } from "react";
 
 import { fetchCalendarOccurrences, fetchTimelineEvents } from "../../api/results";
 import { listUserEvents } from "../../api/userEvents";
+import { userEventMatchesSourceSelection } from "../../domain/tasks/sourceFilterSelection";
 import {
-  calendarOccurrenceToBoardEvent,
+  mergeWithCalendarOccurrences,
   userEventToTimelineItem,
 } from "../../domain/timeline/timedEventMerge";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import type { TimelineSelectedSources } from "../../domain/timeline/timelineSourceFilter";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
-import {
-  filterAssignableTimelineTasks,
-  isNullProvenanceTaskId,
-} from "../../domain/timeline/userEvents";
+import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import type { TimelineItem, TaskActivitySpan } from "../../types";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { logWarn } from "../../utils/logger";
 import { useGanttData } from "./useGanttData";
 import { resolveTimelineFilterPlan, type TimelineFilterPlan } from "./shared";
@@ -276,11 +273,6 @@ export function useTimelineData({
     });
   }, [refreshEvents]);
 
-  const calendarEvents = useMemo(
-    () => (calendarData ?? []).map(calendarOccurrenceToBoardEvent) as TimelineItem[],
-    [calendarData],
-  );
-
   const userEvents = useMemo(
     () =>
       (userEventsData ?? [])
@@ -299,31 +291,31 @@ export function useTimelineData({
     const analysis = filterPlan.fetchAnalysis ? (data ?? EMPTY_EVENTS) : EMPTY_EVENTS;
     const allow = new Set(filterPlan.selectedRealTaskIds);
     const allowWorksets = new Set(filterPlan.selectedWorksetIds);
+    const allowExplicitTasks = new Set(filterPlan.explicitTaskIds);
     const isAll = selectedSources === null;
 
-    const calendar = filterPlan.fetchCalendar
+    const calendarOccurrences = filterPlan.fetchCalendar
       ? isAll
-        ? calendarEvents
-        : calendarEvents.filter((event) => event.taskId != null && allow.has(event.taskId))
-      : EMPTY_EVENTS;
+        ? (calendarData ?? [])
+        : (calendarData ?? []).filter(
+            (occurrence) => occurrence.taskId != null && allow.has(occurrence.taskId),
+          )
+      : [];
 
     const users = filterPlan.fetchUserEvents
       ? isAll
         ? userEvents
-        : userEvents.filter((event) => {
-            const worksetId = event.worksetId ?? SYSTEM_WORKSET_ID;
-            if (allowWorksets.has(worksetId)) return true;
-            // Task selection: include events whose provenance task is selected.
-            return (
-              event.taskId != null &&
-              !isNullProvenanceTaskId(event.taskId) &&
-              allow.has(event.taskId)
-            );
-          })
+        : userEvents.filter((event) =>
+            userEventMatchesSourceSelection(event, allowWorksets, allowExplicitTasks),
+          )
       : EMPTY_EVENTS;
 
-    return [...analysis, ...calendar, ...users];
-  }, [data, selectedSources, filterPlan, calendarEvents, userEvents]);
+    // Same id / taskId|startTime dedupe as Board (skip RRULE bars already covered).
+    return mergeWithCalendarOccurrences(
+      [...analysis, ...users],
+      calendarOccurrences,
+    ) as TimelineItem[];
+  }, [data, selectedSources, filterPlan, calendarData, userEvents]);
 
   const sourceError = firstSourceError(
     filterPlan,

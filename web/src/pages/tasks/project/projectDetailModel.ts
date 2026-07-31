@@ -32,9 +32,17 @@ export function selectOwnedUserEvents(
   return events.filter((event) => event.taskId === projectId);
 }
 
+/**
+ * Locate a Gantt activity span by row id.
+ * Task rows match `taskId`; workset rows (`sourceKind=workset`) match `worksetId`.
+ */
 export function findActivitySpan(
   spans: readonly TaskActivitySpan[],
-  taskId: string,
+  id: string,
 ): TaskActivitySpan | null {
-  return spans.find((span) => span.taskId === taskId) ?? null;
+  return (
+    spans.find((span) =>
+      span.sourceKind === "workset" ? span.worksetId === id : span.taskId === id,
+    ) ?? null
+  );
 }

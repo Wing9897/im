@@ -126,6 +126,8 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
   );
   useBoardWidgetHeaderActions(headerActions);
 
+  const showWorksetLegend = labeledSpans.some((span) => isWorksetActivitySpan(span));
+
   return (
     <div className="board-widget-body board-widget-gantt" data-testid="board-gantt-widget">
       <BoardWidgetShell
@@ -136,6 +138,11 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
         error={!spans ? error : null}
         onRetry={refresh}
       >
+        {showWorksetLegend ? (
+          <p className="board-widget-muted" data-testid="board-gantt-workset-legend">
+            {t("board.ganttWidget.worksetSpanLegend")}
+          </p>
+        ) : null}
         <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingGantt")}</p>}>
           <LazyGanttBoardEmbed
             spans={labeledSpans}

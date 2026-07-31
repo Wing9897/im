@@ -597,7 +597,7 @@
     },
     "gantt": {
       "title": "Gantt / by task",
-      "description": "Task activity spans"
+      "description": "Task activity spans; workset bars are the manual/assistant event envelope (shown alongside task bars)"
     },
     "ganttEvents": {
       "title": "Gantt / by event",
@@ -932,7 +932,8 @@
       "pausedName": "Gantt",
       "labelTask": "Tasks",
       "labelEvent": "Events",
-      "emptyEvents": "No events yet"
+      "emptyEvents": "No events yet",
+      "worksetSpanLegend": "Workset bar = manual/assistant event envelope (alongside task analysis bars, not a duplicate)"
     },
     "shell": {
       "loadFailed": "Failed to load — retry",

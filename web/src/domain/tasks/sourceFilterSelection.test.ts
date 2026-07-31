@@ -9,6 +9,7 @@ import {
   parseSourceFilterValue,
   pruneSourceFilter,
   resolveAnalysisTaskIdsFromFilter,
+  userEventMatchesSourceSelection,
 } from "./sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
@@ -80,5 +81,32 @@ describe("sourceFilterSelection", () => {
     expect(
       resolveAnalysisTaskIdsFromFilter({ taskIds: ["t2"], worksetIds: ["ws-a"] }, tasks),
     ).toEqual(["t1", "t2", "t3"]);
+  });
+
+  it("matches user_events by ownership workset; provenance only via explicit tasks", () => {
+    const allowWorksets = new Set(["ws-A"]);
+    // Workset-only selection: expanded members must NOT leak via provenance.
+    expect(
+      userEventMatchesSourceSelection(
+        { worksetId: "ws-B", taskId: "memberOfA" },
+        allowWorksets,
+        new Set(),
+      ),
+    ).toBe(false);
+    expect(
+      userEventMatchesSourceSelection(
+        { worksetId: "ws-A", taskId: "memberOfA" },
+        allowWorksets,
+        new Set(),
+      ),
+    ).toBe(true);
+    // Explicit taskIds may match provenance even across ownership worksets.
+    expect(
+      userEventMatchesSourceSelection(
+        { worksetId: "ws-B", taskId: "memberOfA" },
+        new Set(),
+        new Set(["memberOfA"]),
+      ),
+    ).toBe(true);
   });
 });
