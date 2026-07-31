@@ -15,7 +15,7 @@ export function dismissTimelineEvent(
   source: TimelineDismissalSource,
   eventId: string,
 ): Promise<TimelineDismissal> {
-  return apiClient.put<TimelineDismissal>("/api/v1/timeline/dismissals", {
+  return apiClient.put<TimelineDismissal>("/api/v1/calendar/dismissals", {
     source,
     eventId,
   });
@@ -26,7 +26,7 @@ export function restoreTimelineEvent(
   eventId: string,
 ): Promise<void> {
   const params = new URLSearchParams({ source, eventId });
-  return apiClient.delete<void>(`/api/v1/timeline/dismissals?${params.toString()}`);
+  return apiClient.delete<void>(`/api/v1/calendar/dismissals?${params.toString()}`);
 }
 
 export function listTimelineDismissals(
@@ -34,7 +34,7 @@ export function listTimelineDismissals(
 ): Promise<TimelineDismissal[]> {
   const query: Record<string, string> = {};
   if (source) query.source = source;
-  return apiClient.get<TimelineDismissal[]>("/api/v1/timeline/dismissals", query);
+  return apiClient.get<TimelineDismissal[]>("/api/v1/calendar/dismissals", query);
 }
 
 /** Map TimelineItem.source to the dismissals table source. */

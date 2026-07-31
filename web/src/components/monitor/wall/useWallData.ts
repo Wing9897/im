@@ -17,7 +17,7 @@ import {
   type WallSlotState,
   WALL_QUEUE_LIMIT,
 } from "../../../domain/monitor/wall/wallModel";
-import { MONITOR_WALL_CHANNELS_STORAGE_KEY } from "../../../domain/monitor/monitorPersistedKeys";
+import { MONITOR_WALL_CHANNELS_STORAGE_KEY } from "../../../domain/prefs";
 import { pruneWallSelectedChannelIds } from "../../../domain/monitor/wall/pruneWallSelectedChannelIds";
 
 const SYNC_INTERVAL_MS = 30_000;

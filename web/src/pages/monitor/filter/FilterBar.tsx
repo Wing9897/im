@@ -12,7 +12,7 @@ import {
   describeActiveMessageFilters,
   type ActiveMessageFilterChipKey,
 } from "../monitorPageModel";
-import { MONITOR_FILTER_BAR_OPEN_STORAGE_KEY } from "../monitorPersistedKeys";
+import { MONITOR_FILTER_BAR_OPEN_STORAGE_KEY } from "../../../domain/prefs";
 import { FilterPanel } from "./FilterPanel";
 
 interface FilterBarProps {

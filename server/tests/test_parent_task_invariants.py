@@ -82,11 +82,17 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
     assert update.json()["analysisMode"] == "event"
 
     db_row = await app.state.db.fetch_one(
-        "SELECT parent_task_id, analysis_mode FROM analysis_tasks WHERE id = ?",
+        "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
         (child_id,),
     )
-    assert db_row["parent_task_id"] is None
     assert db_row["analysis_mode"] == "event"
+    assert (
+        await app.state.db.fetch_one(
+            "SELECT task_id FROM recurring_schedules WHERE task_id = ?",
+            (child_id,),
+        )
+        is None
+    )
 
 
 async def test_put_project_mode_change_clears_children_parent(client, app) -> None:
@@ -132,44 +138,48 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
     assert update.json()["parentTaskId"] is None
 
     child_row = await app.state.db.fetch_one(
-        "SELECT parent_task_id, analysis_mode FROM analysis_tasks WHERE id = ?",
+        "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
         (child_id,),
     )
-    assert child_row["parent_task_id"] is None
     assert child_row["analysis_mode"] == "recurring"
+    schedule = await app.state.db.fetch_one(
+        "SELECT parent_task_id FROM recurring_schedules WHERE task_id = ?",
+        (child_id,),
+    )
+    assert schedule is not None
+    assert schedule["parent_task_id"] is None
 
 
 async def test_rest_create_recurring_requires_start_clock(client) -> None:
-    """REST recurring create uses shared writes (start clock required unless all-day)."""
-    missing = await client.post(
+    """Shell create succeeds; schedule PUT requires start clock unless all-day."""
+    created = await client.post(
         "/api/v1/tasks",
         json={
             "name": "No Clock",
             "promptTemplate": "",
             "analysisMode": "recurring",
             "channelIds": [],
-            "rrule": "FREQ=DAILY",
         },
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+
+    missing = await client.put(
+        f"/api/v1/tasks/{task_id}/schedule",
+        json={"rrule": "FREQ=DAILY"},
     )
     assert missing.status_code == 422
     assert "eventStartTime" in missing.json()["message"]
 
-    ok = await client.post(
-        "/api/v1/tasks",
-        json={
-            "name": "Daily Standup",
-            "promptTemplate": "",
-            "analysisMode": "recurring",
-            "channelIds": [],
-            "rrule": "FREQ=DAILY",
-            "eventStartTime": "09:30",
-        },
+    ok = await client.put(
+        f"/api/v1/tasks/{task_id}/schedule",
+        json={"rrule": "FREQ=DAILY", "eventStartTime": "09:30"},
     )
-    assert ok.status_code == 201
+    assert ok.status_code == 200
     body = ok.json()
-    assert body["analysisMode"] == "recurring"
     assert body["rrule"] == "FREQ=DAILY"
     assert body["eventStartTime"] == "09:30"
+    assert body["taskId"] == task_id
 
 
 async def test_list_tasks_top_level_only_hides_children(client, app) -> None:

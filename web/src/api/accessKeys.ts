@@ -19,8 +19,8 @@ export type AccessKeyCreated = AccessKeyPublic & {
 };
 
 export type CreateAccessKeyOptions = {
-  /** When true, create an A2A-only key (`["a2a:agent"]`). Default full `["*"]`. */
-  allowA2aAgent?: boolean;
+  /** When true, create a read-only key (`["read"]`). Default full `["*"]`. */
+  readOnly?: boolean;
 };
 
 export function fetchAccessKeys(): Promise<{ keys: AccessKeyPublic[] }> {
@@ -33,7 +33,7 @@ export function createAccessKey(
 ): Promise<AccessKeyCreated> {
   return apiClient.post<AccessKeyCreated>("/api/v1/access-keys", {
     label,
-    allowA2aAgent: Boolean(options.allowA2aAgent),
+    readOnly: Boolean(options.readOnly),
   });
 }
 

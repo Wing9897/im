@@ -1,5 +1,8 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
+import type { MonitorViewMode } from "../domain/monitor/monitorViewMode";
+import { isMonitorViewMode } from "../domain/monitor/monitorViewMode";
+import type { ViewMode } from "../types/common";
 import { logWarn } from "../utils/logger";
 
 type PersistStorage = "local" | "session";
@@ -91,4 +94,35 @@ export function usePersistedState<T>(
   }, [persistDebounceMs, storageKey, storageKind, value]);
 
   return [value, setValue] as const;
+}
+
+/** Persists a string enum, falling back when storage contains an invalid member. */
+export function usePersistedEnum<T extends string>(
+  storageKey: string,
+  fallback: T,
+  isValid: (value: string | null) => value is T,
+) {
+  const [storedValue, setStoredValue] = usePersistedState<T>(storageKey, fallback);
+  return [isValid(storedValue) ? storedValue : fallback, setStoredValue] as const;
+}
+
+function isViewMode(value: string | null): value is ViewMode {
+  return value === "card" || value === "list" || value === "map";
+}
+
+/** Persists a ViewMode ("card" | "list" | "map") to localStorage. */
+export function usePersistedViewMode(storageKey: string, fallback: ViewMode = "card") {
+  return usePersistedEnum(storageKey, fallback, isViewMode);
+}
+
+/** Persists monitor view mode (card | list | wall) to localStorage. */
+export function usePersistedMonitorViewMode(
+  storageKey: string,
+  fallback: MonitorViewMode = "card",
+) {
+  return usePersistedEnum(
+    storageKey,
+    fallback,
+    (value): value is MonitorViewMode => isMonitorViewMode(value),
+  );
 }

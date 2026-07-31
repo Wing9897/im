@@ -5,6 +5,12 @@ import {
   GANTT_DAY_MS,
   GANTT_HOUR_MS,
 } from "../../domain/gantt/ganttTimeGeometry";
+import {
+  boardGanttBarClass,
+  ganttActivityStatusFromRange,
+  type GanttActivityStatus,
+} from "../../domain/gantt/ganttStatusTokens";
+import { groupRecurringGanttRows } from "../../domain/gantt/groupRecurringGanttRows";
 import i18n from "../../i18n";
 import { getDateTimeLocale } from "../../i18n/locale";
 import { timelineEventDateRange } from "../../domain/timeline/dateUtils";
@@ -13,14 +19,13 @@ import { asTimedAnalysisEvent, type AnalysisEvent, type TaskActivitySpan, type T
 import { isWorksetActivitySpan } from "../../types/analysis";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { resolveSpanWorksetId } from "../useBoardSourceFilter";
-import { groupRecurringGanttRows } from "../../domain/gantt/groupRecurringGanttRows";
 
 interface GanttActivity {
   id: string;
   label: string;
   start: number;
   end: number;
-  status: "active" | "complete";
+  status: GanttActivityStatus;
   /** Optional task association for filtering / navigation. */
   taskId?: string | null;
   latitude?: number | null;
@@ -138,7 +143,7 @@ function eventToSegment(event: TimelineItem, now: number): GanttActivity | null 
     label: (event.title || "").trim() || i18n.t("common:board.gantt.untitled"),
     start,
     end: Math.max(start, end),
-    status: end >= now ? "active" : "complete",
+    status: ganttActivityStatusFromRange(end, now),
     taskId: event.taskId,
     latitude: event.latitude,
     longitude: event.longitude,
@@ -347,11 +352,7 @@ export function GanttBoardEmbed({
                   <button
                     key={activity.id}
                     type="button"
-                    className={
-                      activity.status === "active"
-                        ? "board-gantt-embed__bar board-gantt-embed__bar--active"
-                        : "board-gantt-embed__bar"
-                    }
+                    className={boardGanttBarClass(activity.status)}
                     data-testid={`board-gantt-bar-${activity.id}`}
                     data-start-cell={bar.startCell}
                     data-end-cell={bar.endCell}

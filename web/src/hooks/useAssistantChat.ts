@@ -6,7 +6,7 @@ import {
   createElement,
   type ReactNode,
 } from "react";
-import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../domain/assistant/assistantPersistedKeys";
+import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../domain/prefs";
 import { resolveVoiceReleaseText } from "./assistantPtt/voiceReleaseSend";
 import { useAssistantChatSession } from "./assistantChat/useAssistantChatSession";
 import { useAssistantChatStream } from "./assistantChat/useAssistantChatStream";

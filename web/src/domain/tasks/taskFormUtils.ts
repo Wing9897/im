@@ -1,3 +1,4 @@
+import type { TaskSchedule, TaskScheduleConfig } from "../../api/taskSchedule";
 import type {
   AnalysisMode,
   AnalysisTask,
@@ -69,25 +70,11 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     "name" | "description" | "analysisMode" | "scheduleType" | "scheduleValue" | "worksetId"
   >;
 
-  if (formState.analysisMode === "calendar_task") {
-    return {
-      ...commonConfig,
-      promptTemplate: "",
-      channelIds: [],
-    };
-  }
-
   if (formState.analysisMode === "recurring") {
     return {
       ...commonConfig,
       promptTemplate: "",
       channelIds: [],
-      rrule: formState.rrule.trim() || null,
-      eventStartTime: formState.eventStartTime.trim() || null,
-      eventEndTime: formState.eventEndTime.trim() || null,
-      eventIsAllDay: formState.eventIsAllDay,
-      eventLocation: formState.eventLocation.trim() || null,
-      eventDescription: formState.eventDescription.trim() || null,
       // Server also forces calendar → 1; keep client honest for round-trips.
       includeInTimeline: true,
     };
@@ -118,6 +105,34 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
   };
 }
 
+/** Builds the schedule subresource payload for recurring tasks. */
+export function formStateToTaskSchedule(formState: TaskFormState): TaskScheduleConfig {
+  return {
+    rrule: formState.rrule.trim(),
+    eventStartTime: formState.eventStartTime.trim() || null,
+    eventEndTime: formState.eventEndTime.trim() || null,
+    eventIsAllDay: formState.eventIsAllDay,
+    eventLocation: formState.eventLocation.trim() || null,
+    eventDescription: formState.eventDescription.trim() || null,
+  };
+}
+
+/** Merge schedule fields into form state after GET /tasks/{id}/schedule. */
+export function applyScheduleToFormState(
+  formState: TaskFormState,
+  schedule: TaskSchedule,
+): TaskFormState {
+  return {
+    ...formState,
+    rrule: schedule.rrule ?? "",
+    eventStartTime: schedule.eventStartTime ?? "",
+    eventEndTime: schedule.eventEndTime ?? "",
+    eventIsAllDay: schedule.eventIsAllDay ?? false,
+    eventLocation: schedule.eventLocation ?? "",
+    eventDescription: schedule.eventDescription ?? "",
+  };
+}
+
 /** Maps a persisted AnalysisTask into ChatEditor form state. */
 export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
   return {
@@ -131,12 +146,12 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
     channelIds: safeArray(task.channelIds).map((ch) =>
       typeof ch === "string" ? ch : (ch.id ?? `${ch.platform}:${ch.platformId}`),
     ),
-    rrule: task.rrule ?? "",
-    eventStartTime: task.eventStartTime ?? "",
-    eventEndTime: task.eventEndTime ?? "",
-    eventIsAllDay: task.eventIsAllDay ?? false,
-    eventLocation: task.eventLocation ?? "",
-    eventDescription: task.eventDescription ?? "",
+    rrule: "",
+    eventStartTime: "",
+    eventEndTime: "",
+    eventIsAllDay: false,
+    eventLocation: "",
+    eventDescription: "",
     includeInTimeline: task.includeInTimeline ?? true,
     projectWaveIntervalSeconds: task.projectWaveIntervalSeconds ?? null,
     batchOverlapCount: task.batchOverlapCount ?? null,
@@ -172,12 +187,6 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     scheduleType: config.scheduleType ?? "seconds_10",
     scheduleValue: config.scheduleValue ?? null,
     channelIds,
-    rrule: config.rrule ?? null,
-    eventStartTime: config.eventStartTime ?? null,
-    eventEndTime: config.eventEndTime ?? null,
-    eventIsAllDay: config.eventIsAllDay ?? false,
-    eventLocation: config.eventLocation ?? null,
-    eventDescription: config.eventDescription ?? null,
     includeInTimeline: config.includeInTimeline ?? true,
     projectWaveIntervalSeconds: config.projectWaveIntervalSeconds ?? null,
     batchOverlapCount: config.batchOverlapCount ?? null,

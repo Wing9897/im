@@ -33,6 +33,10 @@ vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
 }));
 
 import {
+  MONITOR_MODE_KEY,
+  MonitorModeProvider,
+} from "../../context/MonitorModeContext";
+import {
   makeAnalysisTask,
   resetTaskCatalogState,
 } from "../../test/context-mocks";
@@ -55,6 +59,7 @@ describe("useTimelinePageContainer URL view query", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();
+    window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
@@ -82,7 +87,11 @@ describe("useTimelinePageContainer URL view query", () => {
         createElement(
           MemoryRouter,
           { initialEntries: [path] },
-          createElement(HookHarness, { resultRef }),
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(HookHarness, { resultRef }),
+          ),
         ),
       );
       await Promise.resolve();

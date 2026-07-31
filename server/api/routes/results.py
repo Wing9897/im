@@ -1,7 +1,9 @@
-"""Results routes: trending / events / calendar / queue / stats.
+"""Results routes: trending / events / queue / stats.
 
 Result queries always join ``analysis_tasks`` on the task's *current* version,
 so results invalidated by a version bump silently disappear from every list.
+
+Calendar occurrences live under ``/api/v1/calendar/items``.
 """
 
 from __future__ import annotations
@@ -13,13 +15,11 @@ from fastapi import APIRouter, Query, Request
 from server.api.deps import API_DEPS, get_db
 from server.api.schemas.responses import (
     AnalysisEventsPageResponse,
-    CalendarOccurrenceResponse,
     MessageResponse,
     ResultsQueueResponse,
     TaskAnalysisStatsResponse,
     TrendingTopicResponse,
 )
-from server.calendar.query import expand_active_calendar_occurrences
 from server.config import get_config_bool
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.batch_stats import count_pending_current_batches
@@ -32,7 +32,6 @@ from server.queries.results_queries import (
     fetch_trending_topics,
     query_analysis_events,
 )
-from server.time_iso import parse_iso
 from server.timeline_dismissals import attach_dismissed_flag
 from server.util import parse_bool
 from server.wire.serializers import (
@@ -132,37 +131,6 @@ async def fetch_events(
         ),
         "sort": sort_key,
     }
-
-
-def _parse_range_param(value: str, name: str, *, end_of_day: bool = False):
-    parsed = parse_iso(value, end_of_day=end_of_day)
-    if parsed is None:
-        raise http_error(422, f"Invalid {name}: {value}", error_code=VALIDATION_ERROR)
-    return parsed
-
-
-@router.get("/calendar", response_model=list[CalendarOccurrenceResponse])
-async def fetch_calendar(
-    request: Request,
-    range_start: str,
-    range_end: str,
-    task_id: Optional[str] = Query(default=None),
-    task_ids: Optional[list[str]] = Query(default=None),
-) -> list[dict]:
-    start = _parse_range_param(range_start, "range_start")
-    end = _parse_range_param(range_end, "range_end", end_of_day=True)
-    # Repeated ``task_ids`` wins over single ``task_id`` when the param is present.
-    effective_ids = task_ids if task_ids is not None else None
-    items = await expand_active_calendar_occurrences(
-        get_db(request),
-        start,
-        end,
-        task_id=None if effective_ids is not None else task_id,
-        task_ids=effective_ids,
-    )
-    # Timeline dismissals use source=recurring for RRULE occurrence ids.
-    await attach_dismissed_flag(get_db(request), source="recurring", items=items)
-    return items
 
 
 @router.get("/queue", response_model=ResultsQueueResponse)

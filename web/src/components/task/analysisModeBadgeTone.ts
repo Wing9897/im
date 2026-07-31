@@ -6,6 +6,5 @@ export const MODE_BADGE_TONE: Record<AnalysisMode, BadgeTone> = {
   leaderboard: "accent",
   event: "info",
   recurring: "success",
-  calendar_task: "neutral",
   project: "warning",
 };

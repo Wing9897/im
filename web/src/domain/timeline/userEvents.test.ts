@@ -23,13 +23,13 @@ describe("userEvents helpers", () => {
   });
 
   it("filters assignable analysis modes and optional active-only", () => {
-    expect(isTimelineAssignableAnalysisMode("calendar_task")).toBe(true);
+    expect(isTimelineAssignableAnalysisMode("recurring")).toBe(true);
     expect(isTimelineAssignableAnalysisMode("project")).toBe(true);
     expect(isTimelineAssignableAnalysisMode("summary")).toBe(false);
 
     const tasks = [
       { id: "a", name: "A", analysisMode: "event", isActive: true },
-      { id: "b", name: "B", analysisMode: "calendar_task", isActive: false },
+      { id: "b", name: "B", analysisMode: "recurring", isActive: false },
       { id: "c", name: "C", analysisMode: "summary", isActive: true },
       {
         id: "d",

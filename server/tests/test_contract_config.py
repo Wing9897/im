@@ -30,7 +30,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         # Schema v9: household keys live in access_api_keys table (hash-only).
         "ingestion_api_key",
         "access_api_keys",
-        # Schema v10: per-device rows in assistant_device_stores.
+        # Stamp 5: device-scoped assistant sessions live in ui_prefs.
         "assistant_sessions",
         # Schema v15: board / voice / timeline / assistant voice-io → ui_prefs table.
         "ops_board_layout",

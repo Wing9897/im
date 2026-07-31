@@ -33,7 +33,7 @@ vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
   useRefreshOnAnalysisEvent: (...args: unknown[]) => mockUseRefreshOnAnalysisEvent(...args),
 }));
 
-import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../../domain/intelligence/intelligencePersistedKeys";
+import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../../domain/prefs";
 import {
   makeAnalysisTask,
   resetTaskCatalogState,
@@ -187,6 +187,51 @@ describe("useIntelligenceFeed", () => {
     expect(mockFetchEvents.mock.calls.length).toBeGreaterThanOrEqual(2);
     expect(latest!.allItems.length).toBe(201);
     expect(latest!.mapSyncing).toBe(false);
+  });
+
+  it("keeps the map fetch window separate from the list time filter", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-31T12:00:00.000Z"));
+    localStorage.setItem("im:view-mode:intelligence", JSON.stringify("map"));
+    mockFetchEvents.mockResolvedValue({
+      items: [],
+      totalCount: 0,
+      hasMore: false,
+    });
+
+    await act(async () => {
+      root.render(createElement(Harness));
+      await flushPromises();
+    });
+
+    const mapWindow = {
+      start: new Date("2026-07-20T03:00:00.000Z"),
+      end: new Date("2026-07-21T09:00:00.000Z"),
+    };
+    await act(async () => {
+      latest!.handleMapFetchWindowChange(mapWindow);
+      await flushPromises();
+    });
+
+    expect(mockFetchEvents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hasCoords: true,
+        startDate: mapWindow.start.toISOString(),
+        endDate: mapWindow.end.toISOString(),
+      }),
+    );
+
+    await act(async () => {
+      latest!.setViewMode("card");
+      await flushPromises();
+    });
+
+    const listCall = mockFetchEvents.mock.calls.at(-1)?.[0];
+    expect(listCall?.hasCoords).toBeUndefined();
+    expect(listCall?.startDate).toBeTruthy();
+    expect(listCall?.endDate).toBeTruthy();
+    expect(listCall?.startDate).not.toBe(mapWindow.start.toISOString());
+    expect(listCall?.endDate).not.toBe(mapWindow.end.toISOString());
   });
 
   it("map soft-cap stops auto-fill; loadMoreMapBatch appends one more page", async () => {

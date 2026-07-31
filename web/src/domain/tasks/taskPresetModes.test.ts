@@ -9,8 +9,7 @@ describe("analysisModeSupportsTaskPresets", () => {
     expect(analysisModeSupportsTaskPresets("project")).toBe(true);
   });
 
-  it("hides recurring and calendar_task", () => {
+  it("hides recurring", () => {
     expect(analysisModeSupportsTaskPresets("recurring")).toBe(false);
-    expect(analysisModeSupportsTaskPresets("calendar_task")).toBe(false);
   });
 });

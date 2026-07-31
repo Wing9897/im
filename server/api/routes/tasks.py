@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Optional
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response
+from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.channel_refs import parse_channel_refs
 from server.api.deps import (
@@ -28,7 +29,6 @@ from server.api.routes.task_helpers import (
     schedule_override_write_fields,
     task_response,
     validate_task_body,
-    validate_task_rrule,
 )
 from server.api.routes.task_preset_data import BUILTIN_PRESETS
 from server.api.schemas.responses import (
@@ -36,10 +36,10 @@ from server.api.schemas.responses import (
     TaskActivitySpanResponse,
     TaskDeleteResponse,
     TaskResponse,
+    TaskScheduleResponse,
 )
 from server.db.database import TransactionDb
 from server.domain.analysis_modes import (
-    CALENDAR_TASK_MODE,
     CHILD_RECURRING_MODE,
     LEADERBOARD_MODE,
     PARENT_PROJECT_MODE,
@@ -65,15 +65,15 @@ from server.queries.tasks_queries import (
     update_analysis_task,
 )
 from server.services.recurring_task_writes import (
-    create_recurring_task,
+    create_recurring_task_shell,
+    delete_task_schedule,
     patch_recurring_task,
+    upsert_task_schedule,
 )
 from server.services.task_writes import (
     TaskWriteError,
-    calendar_task_write_fields,
     clear_children_parent_links,
     resolve_include_in_timeline,
-    resolve_parent_task_id,
     should_reset_project_message_cursor,
 )
 from server.util import new_id, utc_now_iso
@@ -83,6 +83,7 @@ from server.wire.serializers import (
     serialize_project_tick_in_flight,
     serialize_project_tick_log_entry,
     serialize_task,
+    serialize_task_schedule,
 )
 
 logger = logging.getLogger(__name__)
@@ -107,6 +108,72 @@ async def activity_spans(request: Request) -> list[dict]:
     db = get_db(request)
     rows = await fetch_activity_span_rows(db)
     return [serialize_activity_span(row) for row in rows]
+
+
+class TaskScheduleBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    rrule: str
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool = False
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    parentTaskId: str | None = Field(
+        default=None,
+        description="Optional project parent for nested recurring children",
+    )
+
+
+@router.get("/{task_id}/schedule", response_model=TaskScheduleResponse)
+async def get_task_schedule(request: Request, task_id: str) -> dict:
+    row = await get_task_row(get_db(request), task_id)
+    payload = serialize_task_schedule(row)
+    if payload is None:
+        raise http_error(404, "Task schedule not found")
+    return payload
+
+
+@router.put("/{task_id}/schedule", response_model=TaskScheduleResponse)
+async def put_task_schedule(request: Request, task_id: str, body: TaskScheduleBody) -> dict:
+    db = get_db(request)
+    await get_task_row(db, task_id)
+    try:
+        row = await upsert_task_schedule(
+            db,
+            task_id=task_id,
+            rrule=body.rrule,
+            event_start_time=body.eventStartTime,
+            event_end_time=body.eventEndTime,
+            event_is_all_day=bool(body.eventIsAllDay),
+            event_location=body.eventLocation,
+            event_description=body.eventDescription,
+            parent_task_id=body.parentTaskId if "parentTaskId" in body.model_fields_set else ...,
+        )
+    except TaskWriteError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    scheduler = get_scheduler(request)
+    if scheduler is not None:
+        await scheduler.register_task(task_id)
+    _notify(request, task_id, "updated")
+    payload = serialize_task_schedule(row)
+    if payload is None:
+        raise http_error(500, "Task schedule missing after upsert")
+    return payload
+
+
+@router.delete("/{task_id}/schedule", status_code=204)
+async def remove_task_schedule(request: Request, task_id: str) -> Response:
+    db = get_db(request)
+    await get_task_row(db, task_id)
+    try:
+        removed = await delete_task_schedule(db, task_id=task_id)
+    except TaskWriteError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    if not removed:
+        raise http_error(404, "Task schedule not found")
+    _notify(request, task_id, "updated")
+    return Response(status_code=204)
 
 
 @router.get("/{task_id}/project-ticks", response_model=ProjectTickStatusResponse)
@@ -177,18 +244,12 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
     effective_mode = body.analysisMode or LEADERBOARD_MODE
     db = get_db(request)
 
-    # Recurring creates share RRULE / clock rules with the agent tools.
+    # Recurring shell only — calendar RRULE lives on PUT /tasks/{id}/schedule.
     if effective_mode == CHILD_RECURRING_MODE:
         try:
-            row = await create_recurring_task(
+            row = await create_recurring_task_shell(
                 db,
                 name=body.name.strip(),
-                rrule=body.rrule if body.rrule is not None else "",
-                event_start_time=body.eventStartTime,
-                event_end_time=body.eventEndTime,
-                event_is_all_day=bool(body.eventIsAllDay),
-                event_location=body.eventLocation,
-                event_description=body.eventDescription,
                 description=body.description,
                 workset_id=await resolve_workset_id(db, supplied=body.worksetId),
             )
@@ -204,34 +265,13 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
         row = await get_task_row(db, task_id)
         return task_response(row, await channel_refs_for(db, task_id), deleted=0)
 
-    rrule = validate_task_rrule(effective_mode=effective_mode, supplied_rrule=body.rrule)
-
     task_id = new_id()
     now = utc_now_iso()
-    # calendar_task is a filter bucket: ignore channels (same as recurring UX).
-    refs = [] if effective_mode == CALENDAR_TASK_MODE else parse_channel_refs(body.channelIds)
-    write_fields = calendar_task_write_fields(
-        effective_mode=effective_mode,
-        prompt_template=body.promptTemplate,
-        rrule=rrule,
-        event_start_time=body.eventStartTime,
-        event_end_time=body.eventEndTime,
-        event_is_all_day=body.eventIsAllDay,
-        event_location=body.eventLocation,
-        event_description=body.eventDescription,
-    )
+    refs = parse_channel_refs(body.channelIds)
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,
         supplied=body.includeInTimeline,
     )
-    try:
-        parent_task_id = resolve_parent_task_id(
-            task_id=None,
-            effective_mode=effective_mode,
-            supplied_parent_task_id=None,
-        )
-    except TaskWriteError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     workset_id = await resolve_workset_id(db, supplied=body.worksetId)
     # Row + channel links commit together: a task without its channels would be
     # scheduled but analyse nothing.
@@ -242,15 +282,14 @@ async def create_task(request: Request, body: TaskConfigBody) -> dict:
             task_id=task_id,
             name=body.name.strip(),
             description=body.description,
+            prompt_template=body.promptTemplate,
             analysis_mode=effective_mode,
             analysis_time_range=body.analysisTimeRange or "all",
             schedule_type=body.scheduleType or ("hourly" if effective_mode == "project" else "seconds_10"),
             schedule_value=body.scheduleValue,
             include_in_timeline=include_in_timeline,
-            parent_task_id=parent_task_id,
             workset_id=workset_id,
             now=now,
-            **write_fields,
             **schedule_override_write_fields(body),
         )
         await replace_task_channels(tx, task_id, refs)
@@ -273,8 +312,14 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
     existing = await get_task_row(db, task_id)
     existing_mode = str(existing.get("analysis_mode") or "")
     effective_mode = body.analysisMode or existing_mode or LEADERBOARD_MODE
+    if effective_mode == CHILD_RECURRING_MODE and existing_mode != CHILD_RECURRING_MODE:
+        raise http_error(
+            422,
+            "Changing an existing task to recurring is not supported; create a recurring task instead",
+            error_code=VALIDATION_ERROR,
+        )
 
-    # Recurring patches share RRULE / clock rules with the agent tools.
+    # Recurring metadata only — calendar RRULE lives on PUT /tasks/{id}/schedule.
     if effective_mode == CHILD_RECURRING_MODE and existing_mode == CHILD_RECURRING_MODE:
         fields_set = body.model_fields_set
         try:
@@ -289,12 +334,6 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
                 task_id=task_id,
                 name=body.name.strip(),
                 description=(body.description if "description" in fields_set else ...),
-                rrule=body.rrule if "rrule" in fields_set else None,
-                event_start_time=(body.eventStartTime if "eventStartTime" in fields_set else ...),
-                event_end_time=(body.eventEndTime if "eventEndTime" in fields_set else ...),
-                event_is_all_day=(body.eventIsAllDay if "eventIsAllDay" in fields_set else None),
-                event_location=(body.eventLocation if "eventLocation" in fields_set else ...),
-                event_description=(body.eventDescription if "eventDescription" in fields_set else ...),
                 is_active=body.isActive if "isActive" in fields_set else None,
                 workset_id=workset_id,
             )
@@ -307,42 +346,16 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
         row = await get_task_row(db, task_id)
         return task_response(row, await channel_refs_for(db, task_id), deleted=0)
 
-    rrule = validate_task_rrule(effective_mode=effective_mode, supplied_rrule=body.rrule)
-
     # Every update bumps version: old markers become inert and incomplete
     # batches of the previous version are operationally superseded.
     new_version = int(existing.get("version") or 1) + 1
     now = utc_now_iso()
-    if effective_mode == CALENDAR_TASK_MODE:
-        # Filter-only: always clear channel links on write.
-        refs = []
-    else:
-        refs = parse_channel_refs(body.channelIds) if body.channelIds is not None else None
-    write_fields = calendar_task_write_fields(
-        effective_mode=effective_mode,
-        prompt_template=body.promptTemplate,
-        rrule=rrule,
-        event_start_time=body.eventStartTime,
-        event_end_time=body.eventEndTime,
-        event_is_all_day=body.eventIsAllDay,
-        event_location=body.eventLocation,
-        event_description=body.eventDescription,
-    )
+    refs = parse_channel_refs(body.channelIds) if body.channelIds is not None else None
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,
         supplied=body.includeInTimeline,
         existing=existing.get("include_in_timeline"),
     )
-    # Non-recurring modes always clear parent_task_id; recurring keeps existing.
-    try:
-        parent_task_id = resolve_parent_task_id(
-            task_id=task_id,
-            effective_mode=effective_mode,
-            supplied_parent_task_id=None,
-            existing_parent_task_id=existing.get("parent_task_id"),
-        )
-    except TaskWriteError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     workset_id = await resolve_workset_id(
         db,
         supplied=body.worksetId,
@@ -363,7 +376,7 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
         existing_mode=existing_mode,
         effective_mode=effective_mode,
         existing_prompt=str(existing.get("prompt_template") or ""),
-        new_prompt=str(write_fields.get("prompt_template") or ""),
+        new_prompt=body.promptTemplate,
         channels_changed=channels_changed,
     )
 
@@ -378,16 +391,15 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
             task_id=task_id,
             name=body.name.strip(),
             description=body.description,
+            prompt_template=body.promptTemplate,
             analysis_mode=effective_mode,
             analysis_time_range=body.analysisTimeRange or existing.get("analysis_time_range") or "all",
             version=new_version,
             schedule_type=body.scheduleType or existing.get("schedule_type") or "seconds_10",
             schedule_value=body.scheduleValue,
             include_in_timeline=include_in_timeline,
-            parent_task_id=parent_task_id,
             workset_id=workset_id,
             now=now,
-            **write_fields,
             **schedule_override_write_fields(body),
         )
         # Version bumped: purge result rows / batches of superseded versions so
@@ -409,6 +421,8 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
         # a non-project row (clear links; do not 400-reject the mode change).
         if leaving_project:
             await clear_children_parent_links(tx, task_id, now=now)
+        if existing_mode == CHILD_RECURRING_MODE:
+            await tx.execute("DELETE FROM recurring_schedules WHERE task_id = ?", (task_id,))
 
     # External side effects stay outside the transaction, after the commit.
     scheduler = get_scheduler(request)

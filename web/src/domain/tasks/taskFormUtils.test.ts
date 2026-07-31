@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { TaskFormState } from "../../types";
-import { DEFAULT_FORM_STATE } from "../../hooks/useTaskForm";
+import { DEFAULT_FORM_STATE } from "../../hooks/useTaskEditorState";
 import {
   applyConfigToFormState,
   buildCurrentTaskPayload,
@@ -236,7 +236,7 @@ describe("formStateToTaskConfig calendar contract", () => {
     },
   );
 
-  it("round-trips calendar recurrence and event fields with the existing camelCase payload shape", () => {
+  it("keeps recurring task body free of schedule fields; schedule is a subresource", () => {
     const calendarState: TaskFormState = {
       ...sampleBase,
       analysisMode: "recurring",
@@ -260,24 +260,19 @@ describe("formStateToTaskConfig calendar contract", () => {
       scheduleValue: sampleBase.scheduleValue,
       promptTemplate: "",
       channelIds: [],
-      rrule: "FREQ=WEEKLY;BYDAY=MO,WE",
-      eventStartTime: "2025-06-01T09:00:00Z",
-      eventEndTime: "2025-06-01T10:30:00Z",
-      eventIsAllDay: false,
-      eventLocation: "Conference Room A",
-      eventDescription: "Weekly planning",
       includeInTimeline: true,
+      worksetId: undefined,
     });
-    expect(roundTripFormState(calendarState)).toEqual({
-      ...calendarState,
-      promptTemplate: "",
-      channelIds: [],
-      rrule: "FREQ=WEEKLY;BYDAY=MO,WE",
-      eventLocation: "Conference Room A",
-      eventDescription: "Weekly planning",
-      includeInTimeline: true,
-      worksetId: null,
-    });
+    for (const calendarOnlyKey of [
+      "rrule",
+      "eventStartTime",
+      "eventEndTime",
+      "eventIsAllDay",
+      "eventLocation",
+      "eventDescription",
+    ]) {
+      expect(payload).not.toHaveProperty(calendarOnlyKey);
+    }
   });
 
   it("includes includeInTimeline for event mode payloads", () => {

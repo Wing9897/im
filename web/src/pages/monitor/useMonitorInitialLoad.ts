@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { listAccounts } from "../../api/accounts";
 import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
-import { usePersistedState } from "../../hooks/usePersistedState";
-import { usePersistedMonitorViewMode } from "../../hooks/usePersistedMonitorViewMode";
+import { usePersistedMonitorViewMode, usePersistedState } from "../../hooks/usePersistedState";
 import type { Account, MessageFilters } from "../../types";
 import i18n from "../../i18n";
 import { captureError } from "../../utils/errorReporter";
 import { MONITOR_VIEW_MODE_STORAGE_KEY } from "../../domain/monitor/monitorViewMode";
-import { MONITOR_FILTERS_STORAGE_KEY } from "../../domain/monitor/monitorPersistedKeys";
+import { MONITOR_FILTERS_STORAGE_KEY } from "../../domain/prefs";
 import { normalizeMonitorFilters } from "./monitorPageModel";
 
 /**

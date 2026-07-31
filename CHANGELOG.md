@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 
-- **Current baseline:** schema stamp **v3** / public `schemaSemver` **0.1.0-beta.6** (empty `SCHEMA_MIGRATIONS`; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.6`.
+- **Current baseline:** schema stamp **v5** / public `schemaSemver` **0.1.0-beta.6** (wipe-only; **no** migration registry; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.6`. Auth access-key scopes: `*` (full)／`read` (GET-only). Calendar HTTP under `/api/v1/calendar/*` (`items`／`imports`／`dismissals`／`user-events`); legacy `/results/calendar`、`/user-events`、`/timeline/dismissals`、`/calendar-imports/*`、`/system/schema/*` stay 404.
 
 ### Fixed
 

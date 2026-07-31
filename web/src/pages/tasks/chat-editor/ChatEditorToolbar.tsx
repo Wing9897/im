@@ -10,7 +10,7 @@ interface ChatEditorToolbarProps {
   isEditMode: boolean;
   canSaveForm: boolean;
   isSaving: boolean;
-  /** When false, hide quick presets (recurring / calendar_task). */
+  /** When false, hide quick presets (recurring). */
   showPresets?: boolean;
   onBack: () => void;
   onSave: () => void;

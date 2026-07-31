@@ -3,7 +3,7 @@
 Instead of maintaining a hand-written manifest beside the DDL, the required
 structure is derived once at import time by executing ``schema_ddl.DDL`` in an
 in-memory ``sqlite3`` database and introspecting it. The introspection mirrors
-``server.db.migrations.inspect_schema`` (same PRAGMA sources and normalization)
+    ``server.db.schema_inspect.inspect_schema`` (same PRAGMA sources and normalization)
 so "DDL-derived fingerprint" and "live-connection fingerprint" are directly
 comparable.
 """
@@ -14,7 +14,7 @@ import sqlite3
 
 from server.db.schema_ddl import DDL
 
-# Spec tuple shapes consumed by ``server.db.migrations`` signature dataclasses.
+# Spec tuple shapes consumed by ``server.db.schema_inspect`` signature dataclasses.
 ColumnSpec = tuple[str, str, bool, bool, str | None, int]
 IndexKeySpec = tuple[str, bool]
 IndexSpec = tuple[str, bool, bool, str | None, tuple[IndexKeySpec, ...]]
@@ -114,9 +114,7 @@ def _derive_required_structure() -> tuple[
     try:
         conn.executescript(DDL)
         table_rows = conn.execute(
-            "SELECT name FROM sqlite_master "
-            "WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
-            "AND name != '_data_migrations'"
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
         ).fetchall()
         tables = frozenset(str(row[0]) for row in table_rows)
         columns = {table: _table_columns(conn, table) for table in tables}

@@ -23,7 +23,7 @@ from server.calendar.rrule import expand_calendar_occurrences
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
 from server.queries.calendar_queries import (
-    fetch_active_calendar_task_rows,
+    fetch_active_recurring_task_rows,
     fetch_analysis_event_detail,
     fetch_calendar_rows,
     fetch_user_event,
@@ -43,7 +43,7 @@ __all__ = [
     "HORIZON_DAYS",
     "Source",
     "expand_active_calendar_occurrences",
-    "fetch_active_calendar_tasks",
+    "fetch_active_recurring_tasks",
     "get_event",
     "list_calendars",
     "query_recent",
@@ -107,13 +107,13 @@ async def list_calendars(db: Database) -> list[dict[str, Any]]:
     ]
 
 
-async def fetch_active_calendar_tasks(
+async def fetch_active_recurring_tasks(
     db: Database,
     *,
     task_id: str | None = None,
     task_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Active ``recurring``-mode tasks (shared by Agent + ``GET /results/calendar``).
+    """Active ``recurring``-mode tasks (shared by Agent + ``GET /api/v1/calendar/items``).
 
     When ``task_ids`` is set, include those recurring rows **or** active children
     whose ``parent_task_id`` is in the list.
@@ -121,7 +121,7 @@ async def fetch_active_calendar_tasks(
     **or** any active child recurring tasks whose ``parent_task_id`` matches
     (project scope).
     """
-    return await fetch_active_calendar_task_rows(db, task_id=task_id, task_ids=task_ids)
+    return await fetch_active_recurring_task_rows(db, task_id=task_id, task_ids=task_ids)
 
 
 async def expand_active_calendar_occurrences(
@@ -132,8 +132,8 @@ async def expand_active_calendar_occurrences(
     task_id: str | None = None,
     task_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """RRULE occurrences in camelCase CalendarOccurrence shape (Results API)."""
-    tasks = await fetch_active_calendar_tasks(db, task_id=task_id, task_ids=task_ids)
+    """RRULE occurrences in camelCase CalendarOccurrence shape (Calendar items API)."""
+    tasks = await fetch_active_recurring_tasks(db, task_id=task_id, task_ids=task_ids)
     return expand_calendar_occurrences(tasks, range_start, range_end)
 
 

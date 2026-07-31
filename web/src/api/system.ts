@@ -12,6 +12,8 @@ export interface HealthStatus {
   status: string;
   version: string;
   runtimeReady: boolean;
+  schemaVersion: number;
+  schemaSemver: string;
   /** False when secret.key cannot decrypt stored enc:v1: ciphertext. */
   secretsReady?: boolean;
   secretsError?: string;
@@ -97,7 +99,6 @@ type RetentionRunResult = {
     app_logs: number;
     user_events: number;
     timeline_dismissals: number;
-    assistant_device_stores: number;
     device_access_tokens: number;
     device_sessions: number;
   };

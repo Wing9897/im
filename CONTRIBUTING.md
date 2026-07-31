@@ -2,7 +2,7 @@
 
 Thanks for taking a look. This is a local-first, self-hosted app maintained in spare
 time, so the process is deliberately light. The one hard requirement is that
-`npm run check` passes — it is the same gate CI runs on Windows, Ubuntu, and macOS.
+`npm run check` passes — it is the same Ubuntu core gate CI runs on every push／PR.
 
 ## Prerequisites
 
@@ -51,9 +51,10 @@ failure:
 Individual suites are also available: `npm test` (root smoke/audit), `npm run test:server`,
 `npm run test:web`, `npm run test:desktop`.
 
-The live verification scripts (`npm run verify:fast` / `verify:full` / `verify:operational`)
-are **not** part of the gate — they need a running server on `127.0.0.1:18820` and, on a
-database that already has an admin, a bearer token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
+The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
+a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
+token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Windows Desktop packaging
+(`npm run dist:win` + `verify:desktop:full`) and GHCR publish run on tag／manual CI only.
 
 ## Generated files are committed — regenerate, never hand-edit
 

@@ -38,7 +38,7 @@ from server.user_events import (
     create_user_event,
     update_user_event,
 )
-from server.wire.serializers import serialize_task
+from server.wire.serializers import serialize_task_for_agent
 
 
 async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, Any]:
@@ -51,7 +51,7 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
         child_ids = {
             str(r["id"])
             for r in await db.fetch_all(
-                "SELECT id FROM analysis_tasks WHERE parent_task_id = ?",
+                "SELECT task_id AS id FROM recurring_schedules WHERE parent_task_id = ?",
                 (pid,),
             )
         }
@@ -62,9 +62,9 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
         # Ensure the project itself appears even if list_calendars omitted it.
         if not any(str(i.get("id")) == pid for i in scoped):
             row = await db.fetch_one(
-                "SELECT id, name, analysis_mode, is_active, rrule, event_location, "
-                "event_description, event_is_all_day, event_start_time, event_end_time, event_timezone "
-                "FROM analysis_tasks WHERE id = ?",
+                "SELECT id, name, analysis_mode, is_active, NULL AS rrule, NULL AS event_location, "
+                "NULL AS event_description, 0 AS event_is_all_day, NULL AS event_start_time, "
+                "NULL AS event_end_time, NULL AS event_timezone FROM analysis_tasks WHERE id = ?",
                 (pid,),
             )
             if row is not None:
@@ -211,7 +211,7 @@ async def _tool_create_recurring_task(db: Database, args: dict[str, Any]) -> dic
         )
     except TaskWriteError as exc:
         return {"error": str(exc)}
-    return {"task": serialize_task(row, [])}
+    return {"task": serialize_task_for_agent(row, [])}
 
 
 async def _tool_update_recurring_task(db: Database, args: dict[str, Any]) -> dict[str, Any]:
@@ -257,7 +257,7 @@ async def _tool_update_recurring_task(db: Database, args: dict[str, Any]) -> dic
         updated = await patch_recurring_task(db, **kwargs)
     except TaskWriteError as exc:
         return {"error": str(exc)}
-    return {"task": serialize_task(updated, [])}
+    return {"task": serialize_task_for_agent(updated, [])}
 
 
 async def _tool_delete_recurring_task(db: Database, args: dict[str, Any]) -> dict[str, Any]:
@@ -278,7 +278,7 @@ async def _tool_delete_recurring_task(db: Database, args: dict[str, Any]) -> dic
         "soft": True,
         "id": tid,
         "taskId": tid,
-        "task": serialize_task(updated, []),
+        "task": serialize_task_for_agent(updated, []),
     }
 
 

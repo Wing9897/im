@@ -1,11 +1,15 @@
 import ReactDOM from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import { App } from "./App";
+import { clearLegacyPrefsIfNeeded } from "./domain/prefs";
 import i18n, { applyDocumentLang } from "./i18n";
 import { logError } from "./utils/logger";
 import "./theme.css";
 import "./tailwind.css";
 
+// First launch of prefs schema v5: wipe prior-generation `im:*` local keys.
+// Board layout SoT remains server ui_prefs (unaffected).
+clearLegacyPrefsIfNeeded();
 applyDocumentLang();
 
 // Global listener for unhandled promise rejections.

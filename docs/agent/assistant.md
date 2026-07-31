@@ -1,6 +1,6 @@
 # 内置助手（Agent + 浏览器语音）
 
-IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（`web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring／**calendar_task** 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／calendar_task／AI 分析任务。
+IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（`web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／AI 分析任务。
 
 ## 怎么用
 
@@ -135,7 +135,7 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 
 ### 日历
 
-统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /results/calendar` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/user_events.py`（与 `GET/POST/PATCH/DELETE /api/v1/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；写入规则与 REST 共用 `server/services/task_writes.py`。
+统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/user_events.py`（与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；写入规则与 REST 共用 `server/services/task_writes.py`。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -192,7 +192,7 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 - FTS5 / RAG / 向量库  
 - 每条消息「验证」按钮 / 请求级 `allowWebSearch`（总开关即可）  
 - Tavily / Serper / Bing（供应商枚举可日后扩展）  
-- 创建／修改／删除非 recurring 模式的分析任务（leaderboard／event／calendar_task／AI）；写入 `analysis_events`；改动 actions（recurring 模式 RRULE 系列可用 `create`／`update`／`delete_recurring_task`）  
+- 创建／修改／删除非 recurring 模式的分析任务（leaderboard／event／AI）；写入 `analysis_events`；改动 actions（recurring 模式 RRULE 系列可用 `create`／`update`／`delete_recurring_task`）
 - 助手无 timeline dismiss 恢复 tool（恢复仅 UI「顯示已移除」）  
 - 本机 Whisper、豆包、云 STT/TTS（仅预留接口与设置枚举）  
 - 全双工连续对话 / barge-in（v1 为按住说话）  

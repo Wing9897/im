@@ -60,7 +60,12 @@
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
     "versionLoading": "加载中…",
-    "versionUnavailable": "无法取得"
+    "versionUnavailable": "无法取得",
+    "lanAccessLabel": "允许局域网访问",
+    "lanAccessHelp": "将本机服务绑定到所有网卡（0.0.0.0），以便局域网其他设备以远程客户端连接。默认仅本机环回（127.0.0.1）。更改后会重启应用。若经 port-forward 暴露到公网，须在前面加 Caddy/Nginx 等 TLS 反代——应用本身不处理 HTTPS。",
+    "lanAccessEnabled": "已开启局域网访问（即将重启）",
+    "lanAccessDisabled": "已关闭局域网访问（即将重启）",
+    "lanAccessRestarting": "正在重启以应用绑定地址…"
   },
   "theme": {
     "bgTooLarge": "图片大小不可超过 2MB",
@@ -354,7 +359,7 @@
     },
     "deepLink": {
       "title": "Desktop 日历 deep link",
-      "body": "仅安装版 Desktop（非 HTTP API）。系统已注册 `intelligencemonitor://` 与 `.ics` 文件关联。打开链接或文件后，会弹出「加入日历／选工作集」对话框，确认后写入 `POST /api/v1/user-events`。只处理第一个 VEVENT；不是 webcal／CalDAV 同步。",
+      "body": "仅安装版 Desktop（非 HTTP API）。系统已注册 `intelligencemonitor://` 与 `.ics` 文件关联。打开链接或文件后，会弹出「加入日历／选工作集」对话框，确认后经批量 preview/commit（`/api/v1/calendar/imports/*`）写入。不是 webcal／CalDAV 同步。",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — 下载远端 ICS（http／https）",
         "`title` + `start` 必填（inline）；可选 `end`／`location`／`body`／`worksetId`",

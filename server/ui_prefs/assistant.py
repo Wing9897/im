@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any, Mapping
 
 from server.db.database import Database
@@ -12,11 +11,9 @@ from server.ui_prefs.common import (
     MAX_ASSISTANT_SESSIONS,
     MAX_ASSISTANT_SESSIONS_JSON_CHARS,
     UiPrefsValidationError,
-    _encode_json,
     _read_json,
     _write_json,
 )
-from server.util import utc_now_iso
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 _STT_PROVIDERS = frozenset({"browser", "whisper", "doubao"})
@@ -32,6 +29,7 @@ _DEFAULT_VOICE_IO: dict[str, Any] = {
     # Default create target for assistant chat / pure-voice (system workset).
     "defaultWorksetId": SYSTEM_WORKSET_ID,
 }
+_ASSISTANT_SESSIONS_KEY_PREFIX = "assistant_sessions:"
 
 
 def _sanitize_tool_calls(raw: Any) -> list[dict[str, Any]] | None:
@@ -146,15 +144,8 @@ def _empty_device_response() -> dict[str, Any]:
 
 async def get_assistant_sessions(db: Database, device_id: str) -> dict[str, Any]:
     did = _normalize_device_id(device_id)
-    row = await db.fetch_one(
-        "SELECT payload_json FROM assistant_device_stores WHERE device_id = ?",
-        (did,),
-    )
-    if row is None:
-        return _empty_device_response()
-    try:
-        raw = json.loads(str(row["payload_json"]))
-    except json.JSONDecodeError:
+    raw = await _read_json(db, f"{_ASSISTANT_SESSIONS_KEY_PREFIX}{did}")
+    if raw is None:
         return _empty_device_response()
     if not isinstance(raw, dict):
         return _empty_device_response()
@@ -168,16 +159,11 @@ async def get_assistant_sessions(db: Database, device_id: str) -> dict[str, Any]
 async def put_assistant_sessions(db: Database, device_id: str, payload: Any) -> dict[str, Any]:
     did = _normalize_device_id(device_id)
     clean = sanitize_assistant_sessions_payload(payload)
-    encoded = _encode_json(clean, max_chars=MAX_ASSISTANT_SESSIONS_JSON_CHARS)
-    await db.execute(
-        """
-        INSERT INTO assistant_device_stores (device_id, payload_json, updated_at)
-        VALUES (?, ?, ?)
-        ON CONFLICT(device_id) DO UPDATE SET
-            payload_json = excluded.payload_json,
-            updated_at = excluded.updated_at
-        """,
-        (did, encoded, utc_now_iso()),
+    await _write_json(
+        db,
+        f"{_ASSISTANT_SESSIONS_KEY_PREFIX}{did}",
+        clean,
+        max_chars=MAX_ASSISTANT_SESSIONS_JSON_CHARS,
     )
     return {"configured": True, **clean}
 

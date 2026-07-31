@@ -10,7 +10,6 @@ export const ANALYSIS_MODE_ORDER = [
   "leaderboard",
   "event",
   "recurring",
-  "calendar_task",
   "project",
 ] as const;
 
@@ -19,8 +18,7 @@ export type AnalysisMode = (typeof ANALYSIS_MODE_ORDER)[number];
 export type AnalysisPipeline =
   | "message_batch"
   | "project_tick"
-  | "rrule_expand"
-  | "filter_bucket";
+  | "rrule_expand";
 
 export type AnalysisModeCapabilities = {
   ai: boolean;
@@ -51,13 +49,6 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     messageBatch: false,
     timelineOwning: true,
     pipeline: "rrule_expand",
-  },
-  calendar_task: {
-    ai: false,
-    schedulable: false,
-    messageBatch: false,
-    timelineOwning: true,
-    pipeline: "filter_bucket",
   },
   project: {
     ai: true,

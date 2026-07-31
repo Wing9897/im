@@ -38,7 +38,7 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 建立／修改／刪除「用戶事件」（單次、無循環）用 calendar.create_event / update_event / delete_event。
 循環行程（每週三／每天／每月等）：新建用 calendar.create_recurring_task；改用 calendar.update_recurring_task；
 刪／停用優先用 calendar.delete_recurring_task（軟刪＝isActive=false，系列列保留）。
-三者都硬鎖 analysisMode=recurring，禁止動 leaderboard／event／calendar_task／AI 分析任務。
+三者都硬鎖 analysisMode=recurring，禁止動 leaderboard／event／AI 分析任務。
 update_recurring_task 的 isActive 主要用於再啟用（isActive=true）；不要用 isActive=false 代替 delete。
 建立／修改前用自然語言向用戶確認標題、循環規則與時鐘時間；停用前先確認。成功後可提醒用戶到「時間規劃」查看。
 「今天／明天／下週」等相對日期必須依下方「當前時間」推算，禁止使用訓練資料中的過期年份或日期。

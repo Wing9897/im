@@ -1,7 +1,7 @@
 /**
  * Explicit app boot state machine.
  *
- * Phases: loading → secrets_blocked | gate | setup | ready | unavailable.
+ * Phases: loading → secrets_blocked | setup | ready | unavailable.
  * App.tsx only consumes phase + payloads; transitions live here so revoke-all /
  * refresh-failure / retry paths stay unit-testable without mounting the shell.
  */
@@ -12,7 +12,6 @@ import type { SetupFlowReason } from "./authGate";
 export type BootPhase =
   | "loading"
   | "secrets_blocked"
-  | "gate"
   | "setup"
   | "ready"
   | "unavailable";
@@ -32,8 +31,6 @@ export type BootEvent =
   | { type: "check_started" }
   /** Encryption key cannot decrypt stored secrets — password rotate required. */
   | { type: "secrets_blocked"; error?: string | null }
-  /** Schema upgrade required before auth. */
-  | { type: "schema_blocked" }
   /** Schema ready; auth gate in flight (stay loading). */
   | { type: "schema_ok" }
   /** Auth gate: device session present. */
@@ -49,8 +46,6 @@ export type BootEvent =
   | { type: "session_lost" }
   /** SecretsBrokenGate finished rotate; caller re-runs checkBoot. */
   | { type: "secrets_gate_complete" }
-  /** SchemaUpgradeGate finished; caller re-runs auth gate. */
-  | { type: "gate_complete" }
   /** Wizard finished; caller re-runs auth gate. */
   | { type: "setup_complete" };
 
@@ -81,14 +76,6 @@ export function bootReduce(state: BootMachineState, event: BootEvent): BootMachi
         phase: "secrets_blocked",
         error: null,
         secretsError: event.error ?? null,
-        setupStatus: null,
-        setupReason: null,
-      };
-    case "schema_blocked":
-      return {
-        phase: "gate",
-        error: null,
-        secretsError: null,
         setupStatus: null,
         setupReason: null,
       };
@@ -124,9 +111,6 @@ export function bootReduce(state: BootMachineState, event: BootEvent): BootMachi
       return loadingClear();
     case "secrets_gate_complete":
       if (state.phase !== "secrets_blocked") return state;
-      return loadingClear();
-    case "gate_complete":
-      if (state.phase !== "gate") return state;
       return loadingClear();
     case "setup_complete":
       if (state.phase !== "setup") return state;

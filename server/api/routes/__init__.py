@@ -20,21 +20,18 @@ def all_routers() -> list[APIRouter]:
         accounts,
         actions,
         agent,
-        calendar_imports,
+        calendar,
         channels,
         config,
         events,
         logs,
         messages,
         results,
-        schema_gate,
         setup,
         system,
         task_assistant,
         tasks,
-        timeline_dismissals,
         ui_prefs,
-        user_events,
         viewer,
         weather,
         worksets,
@@ -42,7 +39,6 @@ def all_routers() -> list[APIRouter]:
 
     routers.extend(
         [
-            schema_gate.router,
             setup.router,
             # task_assistant's fixed /chat-assistant path must mount before
             # tasks' /{task_id} routes.
@@ -60,9 +56,7 @@ def all_routers() -> list[APIRouter]:
             system.public_reset_router,
             system.router,
             actions.router,
-            calendar_imports.router,
-            user_events.router,
-            timeline_dismissals.router,
+            calendar.router,
             ui_prefs.router,
             logs.router,
             viewer.router,

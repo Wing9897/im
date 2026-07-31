@@ -1,11 +1,14 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchTaskActivitySpans } from "../../api/tasks";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import type { TaskActivitySpan } from "../../types";
 import { isWorksetActivitySpan } from "../../types/analysis";
 import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import {
+  GANTT_EMBED_SPAN_LIMIT,
+  loadGanttActivitySpans,
+} from "../../domain/gantt/activitySpans";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
@@ -24,19 +27,6 @@ const LazyGanttBoardEmbed = lazy(() =>
   import("../embeds/GanttBoardEmbed").then((m) => ({ default: m.GanttBoardEmbed })),
 );
 
-const GANTT_EMBED_LIMIT = 40;
-
-/**
- * Cap task rows but always keep every ownership span (`sourceKind=workset`)
- * so multi-workset rows are not squeezed out of the embed limit.
- */
-function takeGanttSpans(rows: TaskActivitySpan[]): TaskActivitySpan[] {
-  const worksetSpans = rows.filter((row) => isWorksetActivitySpan(row));
-  const taskRows = rows.filter((row) => !isWorksetActivitySpan(row));
-  const room = Math.max(0, GANTT_EMBED_LIMIT - worksetSpans.length);
-  return [...taskRows.slice(0, room), ...worksetSpans];
-}
-
 /** Compact lazy gantt (activity spans by task); mounts only while `active`. */
 export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();
@@ -46,7 +36,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
 
   // Backend `/activity-spans` emits one ownership row per workset with user_events.
   const spansFetcher = useCallback(
-    () => fetchTaskActivitySpans().then(takeGanttSpans),
+    () => loadGanttActivitySpans({ limit: GANTT_EMBED_SPAN_LIMIT }),
     [],
   );
 

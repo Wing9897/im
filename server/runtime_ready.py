@@ -1,4 +1,4 @@
-"""Block business APIs until schema upgrade completes and secrets decrypt."""
+"""Block business APIs while stored secrets cannot be decrypted."""
 
 from __future__ import annotations
 
@@ -8,11 +8,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from server.errors import SCHEMA_UPGRADE_REQUIRED, SECRETS_UNAVAILABLE, error_body
+from server.errors import SECRETS_UNAVAILABLE, error_body
 
 _ALLOWED_PREFIXES = (
     "/api/v1/health",
-    "/api/v1/system/schema",
     "/api/v1/setup/status",
 )
 
@@ -27,7 +26,7 @@ _RECOVERY_POST_PATHS = frozenset(
 
 def _is_allowed(path: str, method: str) -> bool:
     if path == "/" or not path.startswith("/api/"):
-        # SPA assets and index HTML must load so the upgrade / secrets gate UI can render.
+        # SPA assets and index HTML must load so the secrets recovery UI can render.
         return True
     if method.upper() == "POST" and path in _RECOVERY_POST_PATHS:
         return True
@@ -39,20 +38,6 @@ class RuntimeReadyMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         method = request.method
         allowed = _is_allowed(path, method)
-
-        lifecycle = getattr(request.app.state, "schema_lifecycle", None)
-        if lifecycle is not None and not lifecycle.runtime_ready:
-            if allowed:
-                return await call_next(request)
-            return JSONResponse(
-                status_code=503,
-                content=error_body(
-                    503,
-                    "Database schema upgrade required before the application can continue",
-                    error_code=SCHEMA_UPGRADE_REQUIRED,
-                    details=lifecycle.snapshot(),
-                ),
-            )
 
         secrets_ready = getattr(request.app.state, "secrets_ready", True)
         if not secrets_ready:

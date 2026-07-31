@@ -12,7 +12,7 @@ import { logWarn } from "../../utils/logger";
 import {
   LEADERBOARD_EXPANDED_TOPIC_ID_STORAGE_KEY,
   LEADERBOARD_SELECTED_TASK_ID_STORAGE_KEY,
-} from "./leaderboardPersistedKeys";
+} from "../../domain/prefs";
 
 const EMPTY_TOPICS: TrendingTopic[] = [];
 

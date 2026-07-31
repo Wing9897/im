@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ModalDialog } from "../../components/ModalDialog";
 import { Button, PillButton, TextField } from "../../components/ui";
 import { usePersistedState } from "../../hooks/usePersistedState";
-import { INTELLIGENCE_SEARCH_FILTER_OPEN_STORAGE_KEY } from "../../domain/intelligence/intelligencePersistedKeys";
+import { INTELLIGENCE_SEARCH_FILTER_OPEN_STORAGE_KEY } from "../../domain/prefs";
 
 type IntelligenceSearchFilterControlProps = {
   search: string;

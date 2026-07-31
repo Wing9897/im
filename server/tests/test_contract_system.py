@@ -155,7 +155,6 @@ async def test_retention_run_returns_delete_summary(client, app):
             "app_logs",
             "user_events",
             "timeline_dismissals",
-            "assistant_device_stores",
             "device_access_tokens",
             "device_sessions",
         ],

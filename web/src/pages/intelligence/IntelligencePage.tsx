@@ -9,7 +9,8 @@ import type { AnalysisEvent } from "../../types";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import { useIntelligenceFeed } from "./useIntelligenceFeed";
 import { useIntelligenceUrlState } from "./useIntelligenceUrlState";
-import { useReadTracking } from "./useReadTracking";
+import { INTELLIGENCE_READ_ITEM_IDS_STORAGE_KEY } from "../../domain/prefs";
+import { useIdReadTracking } from "../../hooks/useIdReadTracking";
 import { IntelligenceContentArea } from "./views/IntelligenceContentArea";
 
 /**
@@ -33,7 +34,11 @@ export function IntelligencePage() {
   const { showToast } = useToast();
   useErrorToast(feed.pageError);
   useSlashFocusSearch(!feed.loading);
-  const { readIntelligenceIdSet, isConsumed, handleAutoRead } = useReadTracking();
+  const {
+    readIdSet: readIntelligenceIdSet,
+    isConsumed,
+    markRead: handleAutoRead,
+  } = useIdReadTracking(INTELLIGENCE_READ_ITEM_IDS_STORAGE_KEY);
 
   const [selectedItem, setSelectedItem] = useState<AnalysisEvent | null>(null);
   const [pendingSelectedId, setPendingSelectedId] = useState<string | null>(null);

@@ -4,7 +4,7 @@ import {
   storageBgOpacityKey,
   storageThemeColorsKey,
   storageThemeTextureKey,
-} from "./themePersistedKeys";
+} from "../domain/prefs";
 import {
   LIGHT_THEME_IDS,
   THEME_CATALOG,

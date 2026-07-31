@@ -1,0 +1,25 @@
+/**
+ * REST client for SQLite-backed UI prefs (ops board, voice reminder, assistant…).
+ *
+ * INVARIANTS:
+ * - After successful hydrate/PUT, server (SQLite) is SoT. Empty / unconfigured
+ *   server → client defaults. Retired localStorage migration/cleanup bridges
+ *   are not part of this boundary.
+ * - Device chrome stays local forever: `im:monitor-mode`, `im:pages-last-path`
+ *   (see `MonitorModeContext` / `boardPrefsStore`) — never put those in ui-prefs.
+ * - Browse-position UI (F5 restore) stays on local `im:*` keys via
+ *   `usePersistedState` — constants live in `domain/prefs`.
+ *   Board gantt day/month zoom is server-side only:
+ *   `widgetState.ganttViewModes` on `/ui-prefs/board` (not localStorage).
+ * - Unsaved drafts use sessionStorage (`storage: "session"`).
+ * - Timeline client statuses / time overrides: `/ui-prefs/timeline/annotations`
+ *   (not soft-dismiss; that stays on `/api/v1/calendar/dismissals`).
+ * - UI locale remains LS-first (`i18n/locale.ts`); do not make server authoritative
+ *   for `auto` locale the same way as board layout.
+ * Hand-written. OpenAPI paths live under `/api/v1/ui-prefs/*`.
+ */
+
+export * from "./board";
+export * from "./voiceReminder";
+export * from "./assistant";
+export * from "./timelineAnnotations";

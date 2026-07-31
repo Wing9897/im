@@ -4,7 +4,6 @@ import {
   ANALYSIS_MODE_ORDER,
   analysisModeHidesPromptAndChannel,
   analysisModeShowsRruleFields,
-  getAnalysisModeCapabilities,
 } from "../../domain/tasks/analysisModeCapabilities";
 
 type TaskFormAnalysisModeMeta = {
@@ -16,9 +15,7 @@ type TaskFormAnalysisModeMeta = {
   promptHint: string;
   /** When true, the mode uses recurring-task fields instead of analysis fields */
   isRecurringMode?: boolean;
-  /** Filter-only bucket (no AI, no RRULE); still hides prompt/channel fields. */
-  isCalendarTaskMode?: boolean;
-  /** Whether this mode hides prompt/channel fields (e.g., recurring / calendar_task) */
+  /** Whether this mode hides prompt/channel fields (recurring). */
   hidesPromptAndChannel?: boolean;
 };
 
@@ -28,7 +25,6 @@ export function getTaskFormAnalysisModeMeta(
   analysisMode: AnalysisMode,
 ): TaskFormAnalysisModeMeta {
   const prefix = `tasks.modes.${analysisMode}`;
-  const caps = getAnalysisModeCapabilities(analysisMode)!;
   return {
     displayLabel: String(i18n.t(`${prefix}.displayLabel`)),
     modeOptionLabel: String(i18n.t(`${prefix}.modeOptionLabel`)),
@@ -37,7 +33,6 @@ export function getTaskFormAnalysisModeMeta(
     promptPlaceholder: String(i18n.t(`${prefix}.promptPlaceholder`)),
     promptHint: String(i18n.t(`${prefix}.promptHint`)),
     isRecurringMode: analysisModeShowsRruleFields(analysisMode) || undefined,
-    isCalendarTaskMode: caps.pipeline === "filter_bucket" || undefined,
     hidesPromptAndChannel: analysisModeHidesPromptAndChannel(analysisMode) || undefined,
   };
 }

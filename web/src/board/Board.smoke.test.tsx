@@ -128,7 +128,7 @@ function shellVisibilityProps(isHidden: boolean) {
     hidden: isHidden,
     "aria-hidden": isHidden,
     className: isHidden
-      ? "pointer-events-none absolute inset-0 z-0 hidden min-h-0 min-w-0 overflow-hidden"
+      ? "pointer-events-none absolute inset-0 z-0 hidden min-h-0 min-w-0 overflow-hidden [content-visibility:hidden]"
       : "absolute inset-0 z-[2] flex min-h-0 min-w-0 overflow-hidden",
     ...(isHidden ? ({ inert: "" } as Record<string, string>) : {}),
   };

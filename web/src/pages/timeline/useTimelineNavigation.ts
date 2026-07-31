@@ -21,12 +21,12 @@ import { buildGanttColumns } from "./timelineGanttColumns";
 import {
   TIMELINE_TIME_CURSOR_STORAGE_KEY,
   TIMELINE_TIME_SCALE_STORAGE_KEY,
-} from "./timelinePersistedKeys";
+} from "../../domain/prefs";
 
 export {
   TIMELINE_TIME_CURSOR_STORAGE_KEY,
   TIMELINE_TIME_SCALE_STORAGE_KEY,
-} from "./timelinePersistedKeys";
+} from "../../domain/prefs";
 
 /** Parse persisted ISO day; invalid values return null. */
 export function parsePersistedTimelineDay(iso: string): Date | null {

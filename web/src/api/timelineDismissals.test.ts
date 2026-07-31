@@ -36,7 +36,7 @@ describe("timeline dismissals API", () => {
       dismissedAt: "2026-07-23T00:00:00Z",
     });
     await dismissTimelineEvent("recurring", "t1:20260723T100000Z");
-    expect(apiClient.put).toHaveBeenCalledWith("/api/v1/timeline/dismissals", {
+    expect(apiClient.put).toHaveBeenCalledWith("/api/v1/calendar/dismissals", {
       source: "recurring",
       eventId: "t1:20260723T100000Z",
     });
@@ -46,14 +46,14 @@ describe("timeline dismissals API", () => {
     vi.mocked(apiClient.delete).mockResolvedValue(undefined);
     await restoreTimelineEvent("user", "evt-1");
     expect(apiClient.delete).toHaveBeenCalledWith(
-      "/api/v1/timeline/dismissals?source=user&eventId=evt-1",
+      "/api/v1/calendar/dismissals?source=user&eventId=evt-1",
     );
   });
 
   it("lists dismissals with optional source filter", async () => {
     vi.mocked(apiClient.get).mockResolvedValue([]);
     await listTimelineDismissals("analysis");
-    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/timeline/dismissals", {
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/dismissals", {
       source: "analysis",
     });
   });

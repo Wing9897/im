@@ -48,6 +48,14 @@ vi.mock("../../api/results", () => ({
   ]),
 }));
 
+vi.mock("../../api/taskSchedule", () => ({
+  fetchTaskSchedule: vi.fn().mockResolvedValue({
+    taskId: "rec-1",
+    rrule: "FREQ=DAILY",
+    eventLocation: null,
+  }),
+}));
+
 let container: HTMLDivElement;
 let root: Root | null = null;
 
@@ -121,7 +129,6 @@ describe("TaskDetailDialog", () => {
             id: "rec-1",
             name: "Standup",
             analysisMode: "recurring",
-            rrule: "FREQ=DAILY",
             channelIds: [],
           }),
           stats: { unanalyzedCount: 9, queuedMessageCount: 0, analyzedCount: 0 },
@@ -148,33 +155,6 @@ describe("TaskDetailDialog", () => {
     expect(container.querySelector("[data-testid='task-detail-open-timeline']")).toBeTruthy();
   });
 
-  it("shows owned user events for calendar_task without channel metrics", async () => {
-    await act(async () => {
-      renderDialog(
-        createElement(TaskDetailDialog, {
-          task: makeTask({
-            id: "cal-1",
-            name: "Bucket",
-            analysisMode: "calendar_task",
-            channelIds: [],
-          }),
-          stats: { unanalyzedCount: 4, queuedMessageCount: 0, analyzedCount: 0 },
-          onClose: vi.fn(),
-          onEdit: vi.fn(),
-        }),
-      );
-    });
-
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).not.toContain("待分析");
-    expect(container.querySelector("[data-testid='task-detail-related-list']")?.textContent).toContain(
-      "Kickoff",
-    );
-  });
 });
 
 describe("MessageDetailDialog", () => {

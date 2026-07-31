@@ -26,6 +26,14 @@ vi.mock("../../../api/userEvents", () => ({
   listUserEvents: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("../../../api/taskSchedule", () => ({
+  fetchTaskSchedule: vi.fn().mockResolvedValue({
+    taskId: "child-1",
+    rrule: "FREQ=DAILY",
+    eventLocation: null,
+  }),
+}));
+
 vi.mock("../../../api/tasks", () => ({
   fetchTaskActivitySpans: vi.fn().mockResolvedValue([
     {
@@ -106,7 +114,6 @@ describe("ProjectDetailPage", () => {
         name: "Daily standup",
         analysisMode: "recurring",
         parentTaskId: "proj-1",
-        rrule: "FREQ=DAILY",
       }),
     ]);
   });

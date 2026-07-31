@@ -35,7 +35,6 @@ const MODE_BAR_CLASS: Record<AnalysisMode, string> = {
   leaderboard: "bg-accent",
   event: "bg-info",
   recurring: "bg-success",
-  calendar_task: "bg-text-muted",
   project: "bg-warning",
 };
 
@@ -55,9 +54,8 @@ export const TaskCard = React.memo(function TaskCard({
   const worksetNameById = useWorksetNameById();
   const [toggling, setToggling] = useState(false);
   const isRecurringMode = task.analysisMode === "recurring";
-  const isCalendarTaskMode = task.analysisMode === "calendar_task";
   const isProjectMode = task.analysisMode === "project";
-  const hideAnalysisStats = isProjectMode || isRecurringMode || isCalendarTaskMode;
+  const hideAnalysisStats = isProjectMode || isRecurringMode;
   const modeMeta = getTaskFormAnalysisModeMeta(task.analysisMode);
   const staffId = staffIdForAnalysisMode(task.analysisMode);
   const queuedMessageCount = stats.queuedMessageCount;
@@ -137,14 +135,12 @@ export const TaskCard = React.memo(function TaskCard({
           ) : null}
           {isRecurringMode
             ? t("tasks.card.recurring")
-            : isCalendarTaskMode
-              ? modeMeta.modeDescription
-              : isProjectMode
-                ? t("tasks.card.project")
-                : t("tasks.card.channelsRange", {
-                    count: String(task.channelIds.length),
-                    range: task.analysisTimeRange,
-                  })}
+            : isProjectMode
+              ? t("tasks.card.project")
+              : t("tasks.card.channelsRange", {
+                  count: String(task.channelIds.length),
+                  range: task.analysisTimeRange,
+                })}
         </div>
 
         {hideAnalysisStats ? (

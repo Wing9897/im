@@ -1,4 +1,4 @@
-"""Household access keys (LAN, webhook, multi-device)."""
+"""Household access keys (LAN, webhook, multi-device, A2A)."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.access_keys import A2A_LIAISON_SCOPES, create_access_key, list_access_keys_public, revoke_access_key
+from server.access_keys import READ_SCOPE, create_access_key, list_access_keys_public, revoke_access_key
 from server.api.deps import API_DEPS, get_db
 from server.api.schemas.responses import (
     AccessKeyCreatedResponse,
@@ -23,20 +23,19 @@ class AccessKeyCreateBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     label: str = Field(default="Access key", max_length=80)
-    allowA2aAgent: bool = Field(
+    readOnly: bool = Field(
         default=False,
         description=(
-            'When true, create an A2A-only key (`["a2a:agent"]`) for '
-            "`POST /api/v1/a2a/agent` only. Leave false for a full household key "
-            '(`["*"]`) usable for Webhook, agent/chat, and A2A.'
+            'When true, create a read-only key (`["read"]`) for GET-only remote access. '
+            'Leave false for a full household key (`["*"]`) usable for writes, Webhook, '
+            "agent/chat, and A2A."
         ),
     )
     scopes: list[str] | None = Field(
         default=None,
         description=(
-            "Optional explicit scopes. When set, overrides `allowA2aAgent`. "
-            'Use `["*"]` for full access or `["a2a:agent"]` for A2A-only. '
-            "Non-`*` keys are limited to `/api/v1/a2a/`."
+            "Optional explicit scopes. When set, overrides `readOnly`. "
+            'Use `["*"]` for full access or `["read"]` for read-only.'
         ),
     )
 
@@ -51,8 +50,8 @@ async def fetch_access_keys(request: Request) -> dict[str, Any]:
 async def add_access_key(request: Request, body: AccessKeyCreateBody) -> dict[str, Any]:
     if body.scopes is not None:
         scopes = body.scopes
-    elif body.allowA2aAgent:
-        scopes = list(A2A_LIAISON_SCOPES)
+    elif body.readOnly:
+        scopes = [READ_SCOPE]
     else:
         scopes = None
     try:

@@ -3,7 +3,7 @@ import i18n from "../../i18n";
 import type { AppLogCursorPayload, AppLogPagePayload } from "../../types";
 import { withRetry } from "../../utils/retry";
 import type { AppLogEntry } from "../appRuntimeShared";
-import { RUNTIME_LOG_CACHE_STORAGE_KEY } from "./runtimeLogsPersistedKeys";
+import { RUNTIME_LOG_CACHE_STORAGE_KEY } from "../../domain/prefs";
 
 const LOG_PAGE_SIZE = 80;
 const LOG_LOAD_TIMEOUT_MS = 8_000;

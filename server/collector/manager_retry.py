@@ -59,8 +59,16 @@ class CollectorRetryOrchestrator:
         self._shutting_down = False
 
     async def start_background(self, accounts: Sequence[AccountRecord]) -> None:
-        """Start delayed auto-connect without blocking application startup."""
+        """Start delayed auto-connect without blocking application startup.
+
+        Empty-account installs skip the settle sleep and background task so
+        first-run Desktop reaches ready sooner; adding an account later uses
+        ``start()`` / interactive connect paths.
+        """
         self.resume()
+        if not accounts:
+            logger.info("No connected accounts; deferring collector auto-connect")
+            return
 
         async def _connect_in_background() -> None:
             await asyncio.sleep(STARTUP_DB_SETTLE_SECONDS)

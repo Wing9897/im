@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { LEADERBOARD_EXPANDED_TOPIC_ID_STORAGE_KEY } from "./leaderboardPersistedKeys";
+import { LEADERBOARD_EXPANDED_TOPIC_ID_STORAGE_KEY } from "../../domain/prefs";
 
 vi.mock("../../api/results", () => ({
   fetchTrendingTopics: vi.fn(async () => []),

@@ -121,7 +121,7 @@ async def resolve_user_event_task_id(db: Database, task_id: Any) -> str | None:
         raise UserEventTaskIdError("taskId does not refer to an existing task")
     mode = str(row.get("analysis_mode") or "")
     if mode not in USER_EVENT_TASK_MODES:
-        raise UserEventTaskIdError("taskId must refer to an event, recurring, calendar_task, or project task")
+        raise UserEventTaskIdError("taskId must refer to an event, recurring, or project task")
     return normalized
 
 

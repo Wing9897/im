@@ -14,7 +14,7 @@ from server.calendar.query import (
 from server.tests import seed
 
 
-async def test_list_calendars_includes_event_and_calendar_tasks(app) -> None:
+async def test_list_calendars_includes_event_and_recurring_tasks(app) -> None:
     calendars = await list_calendars(app.state.db)
     modes = {c["analysisMode"] for c in calendars}
     ids = {c["id"] for c in calendars}
@@ -24,18 +24,6 @@ async def test_list_calendars_includes_event_and_calendar_tasks(app) -> None:
     assert seed.TASK_EVENT in ids
     # Metadata only — no event body payload.
     assert all("body" not in c for c in calendars)
-
-
-async def test_list_calendars_includes_calendar_task_mode(client, app) -> None:
-    created = await client.post(
-        "/api/v1/tasks",
-        json={"name": "Calendar Task List", "analysisMode": "calendar_task", "channelIds": []},
-    )
-    assert created.status_code == 201
-    calendar_task_id = created.json()["id"]
-    calendars = await list_calendars(app.state.db)
-    match = next(c for c in calendars if c["id"] == calendar_task_id)
-    assert match["analysisMode"] == "calendar_task"
 
 
 async def test_query_window_merges_analysis_events_and_rrule(app) -> None:

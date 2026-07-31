@@ -7,7 +7,6 @@ describe("resolveTimelineFilterPlan", () => {
   const tasks = [
     { id: "evt-1", analysisMode: "event", worksetId: "ws-a" },
     { id: "cal-1", analysisMode: "recurring", worksetId: null },
-    { id: "ct-1", analysisMode: "calendar_task", worksetId: null },
   ];
 
   it("resolves hierarchical multi-select plans", () => {

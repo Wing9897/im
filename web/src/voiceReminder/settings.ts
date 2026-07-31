@@ -11,7 +11,7 @@ import {
   type PreambleChimeId,
 } from "./preambleChime";
 
-import { VOICE_REMINDER_SETTINGS_CHANGED_EVENT } from "./voiceReminderPersistedKeys";
+import { VOICE_REMINDER_SETTINGS_CHANGED_EVENT } from "../domain/prefs";
 
 /** Same-tab signal so the App-level scanner can re-run immediately after save. */
 export { VOICE_REMINDER_SETTINGS_CHANGED_EVENT };
@@ -30,7 +30,7 @@ export interface VoiceReminderSettings {
   leadOffsetsMinutes: LeadOffsetMinutes[];
   /**
    * Hierarchical source selection (task ids for event / recurring /
-   * calendar_task) plus workset ids (incl. builtin `__user__` for 一般).
+   * project) plus workset ids (incl. builtin `__user__` for 一般).
    * `null` = all sources. Default is `__user__` workset only.
    */
   sourceFilter: SourceFilterSelection;

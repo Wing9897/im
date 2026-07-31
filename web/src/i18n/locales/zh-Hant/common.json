@@ -116,6 +116,9 @@
       "optionalAria": "選填設定",
       "optionalTitle": "選填設定",
       "channelsLoadError": "無法載入頻道列表",
+      "scheduleHydrating": "正在載入循環排程…",
+      "scheduleHydrateFailed": "無法載入循環排程：{{message}}",
+      "scheduleHydrateRetry": "重試",
       "timeRangeLabel": "分析時間範圍",
       "timeAll": "不限時間",
       "time30d": "最近 30 天",
@@ -169,14 +172,6 @@
         "displayLabel": "循環任務",
         "modeOptionLabel": "循環任務 - 週期性活動",
         "modeDescription": "💡 循環任務用於管理週期性活動，使用 RRULE 定義重複規則，不涉及 AI 分析",
-        "promptLabel": "",
-        "promptPlaceholder": "",
-        "promptHint": ""
-      },
-      "calendar_task": {
-        "displayLabel": "日曆任務",
-        "modeOptionLabel": "日曆任務 - 分類歸屬",
-        "modeDescription": "日曆任務僅作時間軸／語音／助手的篩選歸屬，方便分類；無 AI 分析、無循環規則",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
@@ -667,7 +662,7 @@
     },
     "clientManager": {
       "title": "客戶經理",
-      "shortDescription": "對外 Agent（A2A）：第三方用自然語言交辦即可，與助手共用 LLM／工具但不跟你聊天、不存伺服器對話歷史。需存取金鑰（`a2a:agent` 或 `*`）。",
+      "shortDescription": "對外 Agent（A2A）：第三方用自然語言交辦即可，與助手共用 LLM／工具但不跟你聊天、不存伺服器對話歷史。需完整存取金鑰（`*`）。",
       "linkLabel": "前往 API 說明"
     },
     "collector": {
@@ -1078,73 +1073,12 @@
     "openItem": "開啟目前項目",
     "closePanel": "關閉面板或預覽"
   },
-  "schema": {
-    "dialogAria": "資料庫升級",
-    "title": "資料庫升級",
-    "versionLine": "目前版本 v{current} → 目標 v{required}",
-    "restoredTitle": "已從半遷移狀態恢復",
-    "restoredBody": "系統偵測到上次升級未完成，已從基準備份還原。請確認後重新升級。",
-    "needsTitle": "需要資料庫升級",
-    "needsBody": "必須先完成結構升級才能繼續使用。升級期間會暫停收集與分析，請勿關閉程式。",
-    "failedBackupTitle": "升級失敗（已保留備份）",
-    "failedBackupBody": "可點下方按鈕重試。若仍失敗，請關閉程式後用備份路徑手動還原。",
-    "failedNoBackupTitle": "升級失敗且沒有可用備份",
-    "failedNoBackupBody": "無法安全自動重試。請關閉程式後手動還原資料庫檔案。",
-    "migratingTitle": "升級進行中",
-    "migratingBody": "請稍候，不要關閉程式或強制斷電。",
-    "phaseMigrate": "升級結構",
-    "starting": "正在開始升級…",
-    "idlePhase": "待命",
-    "checking": "檢查資料庫版本…",
-    "upgrading": "升級中…",
-    "retry": "重新升級",
-    "start": "開始升級",
-    "backupPath": "備份路徑：{path}",
-    "copied": "已複製",
-    "copy": "複製",
-    "techDetails": "技術錯誤詳情（可展開）",
-    "retryBlocked": "沒有可用備份，無法安全重試。請關閉程式後手動還原資料庫檔案。",
-    "phases": {
-      "idle": "待命",
-      "awaiting_confirmation": "等待確認",
-      "snapshot": "記錄統計",
-      "backup": "備份",
-      "migrate": "升級結構",
-      "validate": "校驗",
-      "restore": "還原",
-      "runtime": "啟動服務",
-      "ready": "就緒",
-      "failed": "失敗"
-    },
-    "messages": {
-      "needs_upgrade": "資料庫需要從 v{current} 升級到 v{required}",
-      "up_to_date": "資料庫結構已是最新",
-      "healed_half_migration": "已從半遷移狀態恢復，請確認後重新升級",
-      "restoring": "正在從備份還原資料庫…",
-      "restored_retry": "已從備份還原，請重新升級",
-      "failed_no_backup": "升級失敗且沒有可用備份，請關閉程式後手動還原資料庫檔案",
-      "cannot_restore": "無法還原備份",
-      "snapshotting": "正在記錄升級前數據統計…",
-      "backing_up": "正在備份資料庫…",
-      "migrating": "正在升級資料庫結構（請勿關閉程式）…",
-      "validating": "正在驗證升級後數據完整性…",
-      "starting_runtime": "正在啟動收集與分析服務…",
-      "upgrade_complete": "升級完成",
-      "failed_auto_restore": "升級失敗且自動還原失敗",
-      "upgrade_failed": "升級失敗（未產生可用備份，請勿繼續使用）",
-      "starting": "正在開始升級…",
-      "marker_corrupt": "升級校驗標記損壞",
-      "startup_validate_failed": "啟動校驗失敗",
-      "integrity_failed": "資料完整性檢查失敗",
-      "half_migration_restore_failed": "半遷移自動還原失敗"
-    }
-  },
   "boot": {
-    "checking": "正在檢查資料庫版本…",
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 3／SemVer 0.1.0-beta.6；更舊 stamp 須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 5／SemVer 0.1.0-beta.6；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
-    "serviceUnavailable": "服務暫時無法回應"
+    "serviceUnavailable": "服務暫時無法回應",
+    "starting": "正在啟動…"
   },
   "secretsBroken": {
     "dialogAria": "加密金鑰不相符",
@@ -1285,7 +1219,7 @@
   "errorToast": {
     "regionAria": "錯誤通知區域",
     "closeAria": "關閉錯誤通知",
-    "goProfileAccessKeys": "前往帳戶 → 存取金鑰"
+    "goAccountAccessKeys": "前往帳戶 → 存取金鑰"
   },
   "account": {
     "root": "帳戶",
@@ -1294,20 +1228,7 @@
       "identity": "身分",
       "devices": "裝置",
       "keys": "存取金鑰"
-    }
-  },
-  "speech": {
-    "sttDesktopUnavailable": "桌面版不支援瀏覽器語音辨識，請改用文字輸入。",
-    "sttUnsupported": "此瀏覽器不支援語音辨識，或不在安全上下文（HTTPS / localhost）。",
-    "sttStartFailed": "無法啟動語音辨識",
-    "sttNotAllowed": "麥克風權限被拒絕，請改用文字輸入。",
-    "sttNoMic": "無法使用麥克風（找不到裝置，或被其他應用占用）。可維持桌面版運行，請在瀏覽器分頁按住說話；若仍失敗請檢查系統麥克風權限。",
-    "sttNetwork": "瀏覽器雲端語音辨識失敗（需可連上辨識服務）。請改用文字輸入，或改用一般 Chrome 網頁開啟本機服務再試。",
-    "sttErrorCode": "語音辨識錯誤：{code}",
-    "ttsUnsupported": "此瀏覽器不支援語音合成。",
-    "ttsFailed": "語音合成失敗"
-  },
-  "profile": {
+    },
     "defaultName": "用戶",
     "intro": "設定顯示名稱、頭像與背景簡介。頭像會用於直連字幕等介面。",
     "avatarLabel": "頭像",
@@ -1354,14 +1275,11 @@
     },
     "accessKeys": {
       "title": "API 金鑰（Webhook／自動化）",
-      "intro": "長效金鑰（`Authorization: Bearer`），用於 Webhook、腳本與客戶經理。完整金鑰（`*`）可用於 Webhook 與客戶經理；僅客戶經理金鑰不能打 Webhook。不可用於 UI 登入——日常請用管理員帳號密碼。",
+      "intro": "長效金鑰（`Authorization: Bearer`），用於 Webhook、腳本與客戶經理。完整金鑰（`*`）可寫入並呼叫 A2A；唯讀金鑰（`read`）僅限安全 GET/HEAD。不可用於 UI 登入——日常請用管理員帳號密碼。",
       "defaultLabel": "存取金鑰",
       "newLabel": "新金鑰名稱",
       "newPlaceholder": "例如：Webhook、CI 腳本",
-      "a2aAgentOnly": "僅限客戶經理（A2A）",
-      "a2aAgentOnlyHelp": "僅能呼叫 `POST /api/v1/a2a/agent`。不勾選則建立完整金鑰（`*`），可用於 Webhook 與客戶經理。",
       "scopesFull": "權限：完整（*）",
-      "scopesA2aAgent": "權限：客戶經理（a2a:agent）",
       "create": "產生金鑰",
       "creating": "產生中…",
       "created": "已產生新金鑰（請立即複製）",
@@ -1373,8 +1291,22 @@
       "revealHelp": "請複製並妥善保存；關閉後無法再次檢視完整內容。",
       "copy": "複製",
       "copied": "已複製",
-      "copyFailed": "無法複製"
+      "copyFailed": "無法複製",
+      "readOnly": "唯讀（僅 GET）",
+      "readOnlyHelp": "只能呼叫安全的 GET/HEAD。不勾選則為完整金鑰（*），可用於 Webhook、寫入與 A2A。",
+      "scopesReadOnly": "權限：唯讀（read）"
     }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "桌面版不支援瀏覽器語音辨識，請改用文字輸入。",
+    "sttUnsupported": "此瀏覽器不支援語音辨識，或不在安全上下文（HTTPS / localhost）。",
+    "sttStartFailed": "無法啟動語音辨識",
+    "sttNotAllowed": "麥克風權限被拒絕，請改用文字輸入。",
+    "sttNoMic": "無法使用麥克風（找不到裝置，或被其他應用占用）。可維持桌面版運行，請在瀏覽器分頁按住說話；若仍失敗請檢查系統麥克風權限。",
+    "sttNetwork": "瀏覽器雲端語音辨識失敗（需可連上辨識服務）。請改用文字輸入，或改用一般 Chrome 網頁開啟本機服務再試。",
+    "sttErrorCode": "語音辨識錯誤：{code}",
+    "ttsUnsupported": "此瀏覽器不支援語音合成。",
+    "ttsFailed": "語音合成失敗"
   },
   "workset": {
     "label": "工作集",

@@ -1,4 +1,4 @@
-import { DESKTOP_SHELL_KEY } from "./electronPersistedKeys";
+import { DESKTOP_SHELL_KEY } from "../domain/prefs";
 
 interface ElectronWindowApi {
   isDesktopShell: true;

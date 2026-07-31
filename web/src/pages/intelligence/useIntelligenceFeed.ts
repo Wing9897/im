@@ -6,8 +6,7 @@ import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelec
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
-import { usePersistedState } from "../../hooks/usePersistedState";
-import { usePersistedViewMode } from "../../hooks/usePersistedViewMode";
+import { usePersistedState, usePersistedViewMode } from "../../hooks/usePersistedState";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import { useTimeFilter } from "../../hooks/useTimeFilter";
 import type { TimeWindow } from "../../types";
@@ -23,7 +22,7 @@ import {
   INTELLIGENCE_SORT_STORAGE_KEY,
   INTELLIGENCE_TIME_PRESET_STORAGE_KEY,
   INTELLIGENCE_VIEW_MODE_STORAGE_KEY,
-} from "../../domain/intelligence/intelligencePersistedKeys";
+} from "../../domain/prefs";
 import { useIntelligenceSource } from "./useIntelligenceSource";
 
 /**

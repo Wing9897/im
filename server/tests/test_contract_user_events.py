@@ -27,7 +27,7 @@ USER_EVENT_KEYS = [
 
 async def test_user_events_list_contract(client):
     created = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "Contract event",
             "startTime": "2026-07-21T09:00:00Z",
@@ -40,7 +40,7 @@ async def test_user_events_list_contract(client):
     assert_keys(created.json(), USER_EVENT_KEYS, "UserEventResponse (create)")
 
     listed = await client.get(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         params={"start": "2026-07-21T00:00:00Z", "end": "2026-07-22T00:00:00Z"},
     )
     assert listed.status_code == 200
@@ -58,7 +58,7 @@ async def test_user_events_list_preserves_a2a_origin(client, app):
         origin="a2a",
     )
 
-    response = await client.get("/api/v1/user-events")
+    response = await client.get("/api/v1/calendar/user-events")
     listed = next(item for item in response.json() if item["id"] == event["id"])
 
     assert response.status_code == 200

@@ -250,7 +250,7 @@ describe("TaskCard", () => {
     expect(container.textContent).not.toContain("待分析");
   });
 
-  it("hides marker stats for recurring and calendar_task modes", () => {
+  it("hides marker stats for recurring mode", () => {
     renderCard({
       task: createMockTask({
         analysisMode: "recurring",
@@ -263,19 +263,6 @@ describe("TaskCard", () => {
     expect(container.textContent).not.toContain("FREQ=DAILY");
     expect(container.textContent).not.toContain("待分析");
 
-    act(() => {
-      root!.render(
-        <TaskCard
-          task={createMockTask({ analysisMode: "calendar_task", name: "Bucket" })}
-          stats={createMockStats()}
-          onToggleActive={vi.fn()}
-          onEdit={vi.fn()}
-          onDelete={vi.fn()}
-        />,
-      );
-    });
-    expect(container.textContent).toContain("日曆任務桶");
-    expect(container.textContent).not.toContain("待分析");
   });
 
   it("shows queued message count", () => {

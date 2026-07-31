@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
+import { acquireRuntimeInterest } from "../../context/runtimeMonitoring/consumerInterest";
 import { useRuntimeLogs } from "../../context/runtimeLogs/RuntimeLogsContext";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { usePersistedState } from "../../hooks/usePersistedState";
@@ -8,7 +9,7 @@ import {
   LOGS_LEVEL_FILTER_STORAGE_KEY,
   LOGS_SEARCH_STORAGE_KEY,
   LOGS_SELECTED_ID_STORAGE_KEY,
-} from "./logsPersistedKeys";
+} from "../../domain/prefs";
 
 const validLogLevels = new Set(["all", "info", "success", "warning", "error"]);
 const validLogCategories = new Set([
@@ -33,6 +34,13 @@ export function useLogPage() {
     loadMoreLogs,
   } = useRuntimeLogs();
   const { activeAnalysis } = useAnalysisStatus();
+
+  // Gate global stored-log polling / event sync to the Logs page consumer.
+  useEffect(() => {
+    const release = acquireRuntimeInterest("logs");
+    void refreshLogs().catch(() => {});
+    return release;
+  }, [refreshLogs]);
   const [selectedLogId, setSelectedLogId] = usePersistedState<string | null>(
     LOGS_SELECTED_ID_STORAGE_KEY,
     null,

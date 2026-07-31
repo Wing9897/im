@@ -27,7 +27,7 @@ export function AccountAvatarControl({
   };
 
   return (
-    <SettingsRow label={t("profile.avatarLabel")} help={t("profile.avatarHelp")}>
+    <SettingsRow label={t("account.avatarLabel")} help={t("account.avatarHelp")}>
       <div className="flex flex-wrap items-center gap-md">
         <button
           type="button"
@@ -36,7 +36,7 @@ export function AccountAvatarControl({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
           ].join(" ")}
           onClick={() => fileInputRef.current?.click()}
-          aria-label={t("profile.uploadAvatarAria")}
+          aria-label={t("account.uploadAvatarAria")}
           data-testid="user-avatar-upload"
         >
           {avatarDataUrl ? (
@@ -63,7 +63,7 @@ export function AccountAvatarControl({
             ].join(" ")}
             aria-hidden
           >
-            {t("profile.uploadAvatar")}
+            {t("account.uploadAvatar")}
           </span>
         </button>
         <input
@@ -84,10 +84,10 @@ export function AccountAvatarControl({
               onClick={onClear}
               data-testid="user-avatar-reset"
             >
-              {t("profile.resetAvatar")}
+              {t("account.resetAvatar")}
             </Button>
           ) : (
-            <p className={`mb-0 ${formHelpClass} max-w-[28rem]`}>{t("profile.avatarHint")}</p>
+            <p className={`mb-0 ${formHelpClass} max-w-[28rem]`}>{t("account.avatarHint")}</p>
           )}
         </div>
       </div>

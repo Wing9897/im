@@ -46,6 +46,23 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("POST", "/api/v1/setup/login-with-api-key", {"apiKey": "dead", "label": "x"}),
         # Merged into POST /api/v1/system/reset/database (single full-reset path).
         ("POST", "/api/v1/system/reset/runtime", {}),
+        # Calendar surface unified under /api/v1/calendar/*.
+        ("GET", "/api/v1/results/calendar", None),
+        ("POST", "/api/v1/calendar-imports/preview", {}),
+        ("POST", "/api/v1/calendar-imports/commit", {}),
+        ("GET", "/api/v1/timeline/dismissals", None),
+        ("POST", "/api/v1/timeline/dismissals", {}),
+        ("PATCH", "/api/v1/timeline/dismissals", {}),
+        ("PUT", "/api/v1/timeline/dismissals", {}),
+        ("DELETE", "/api/v1/timeline/dismissals", None),
+        ("GET", "/api/v1/user-events", None),
+        ("POST", "/api/v1/user-events", {}),
+        ("PATCH", "/api/v1/user-events", {}),
+        ("PUT", "/api/v1/user-events", {}),
+        ("DELETE", "/api/v1/user-events", None),
+        # Schema upgrade gate retired (wipe-only stamp 5).
+        ("GET", "/api/v1/system/schema/status", None),
+        ("POST", "/api/v1/system/schema/upgrade", {}),
     ]
 
 
@@ -60,6 +77,8 @@ async def test_dead_endpoint_returns_not_found(client, method: str, path: str, b
         resp = await client.delete(path)
     elif method == "PUT":
         resp = await client.put(path, json=body)
+    elif method == "PATCH":
+        resp = await client.patch(path, json=body)
     else:
         resp = await client.post(path, json=body)
     assert resp.status_code in (404, 405), f"{method} {path} expected 404/405, got {resp.status_code}"

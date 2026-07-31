@@ -38,13 +38,11 @@ def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any
             "title": str(row.get("name") or ""),
             "description": str(row.get("event_description") or ""),
             "location": str(row.get("event_location") or ""),
-            "startTime": row.get("event_start_time"),
-            "endTime": row.get("event_end_time"),
+            "dtstart": row.get("event_start_local"),
+            "dtend": row.get("event_end_local"),
             "isAllDay": bool(row.get("event_is_all_day")),
             "timezone": row.get("event_timezone"),
             "timezoneIcal": row.get("event_timezone_ical"),
-            "startLocal": row.get("event_start_local"),
-            "endLocal": row.get("event_end_local"),
             "rrule": row.get("rrule"),
             "exdates": _json_list(row.get("event_exdates_json")),
             "rdates": _json_list(row.get("event_rdates_json")),
@@ -63,7 +61,21 @@ def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any
 def _changes(row: dict[str, Any], event: ParsedIcsEvent) -> list[dict[str, Any]]:
     before = _existing_comparable(row, event.target_type)
     after = event.comparable()
-    if event.target_type == "user_event":
+    if event.target_type == "recurring_task":
+        after = {
+            "title": event.title,
+            "description": event.description,
+            "location": event.location,
+            "dtstart": event.start_local or event.start_time,
+            "dtend": event.end_local or event.end_time,
+            "isAllDay": event.is_all_day,
+            "timezone": event.timezone_id,
+            "timezoneIcal": event.timezone_ical,
+            "rrule": event.rrule,
+            "exdates": list(event.exdates),
+            "rdates": list(event.rdates),
+        }
+    else:
         after = {key: after[key] for key in before}
     return [
         {"field": key, "before": before.get(key), "after": value}
@@ -78,7 +90,14 @@ async def _find_existing(db: Database, source: str, uid: str) -> tuple[str, dict
         (source, uid),
     )
     task = await db.fetch_one(
-        "SELECT * FROM analysis_tasks WHERE ics_source = ? AND ics_uid = ?",
+        "SELECT t.*, rs.rrule, rs.dtstart AS event_start_time, rs.dtend AS event_end_time, "
+        "rs.is_all_day AS event_is_all_day, rs.location AS event_location, "
+        "rs.description AS event_description, rs.timezone AS event_timezone, "
+        "rs.timezone_ical AS event_timezone_ical, rs.dtstart AS event_start_local, "
+        "rs.dtend AS event_end_local, rs.exdates_json AS event_exdates_json, "
+        "rs.rdates_json AS event_rdates_json, rs.ics_import_fingerprint "
+        "FROM recurring_schedules rs JOIN analysis_tasks t ON t.id = rs.task_id "
+        "WHERE rs.ics_source = ? AND rs.ics_uid = ?",
         (source, uid),
     )
     if event is not None and task is not None:
@@ -219,27 +238,31 @@ async def _upsert_recurring_task(
         await conn.execute(
             "INSERT INTO analysis_tasks "
             "(id, name, description, prompt_template, analysis_mode, analysis_time_range, version, "
-            "is_active, schedule_type, schedule_value, rrule, event_start_time, event_end_time, "
-            "event_is_all_day, event_location, event_description, event_timezone, event_timezone_ical, "
-            "event_start_local, "
-            "event_end_local, event_exdates_json, event_rdates_json, ics_uid, ics_source, "
-            "ics_import_fingerprint, include_in_timeline, parent_task_id, workset_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, '', 'recurring', 'all', 1, 1, 'seconds_10', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
-            "?, ?, ?, ?, ?, ?, 1, NULL, NULL, ?, ?)",
+            "is_active, schedule_type, schedule_value, include_in_timeline, workset_id, created_at, updated_at) "
+            "VALUES (?, ?, ?, '', 'recurring', 'all', 1, 1, 'seconds_10', NULL, 1, NULL, ?, ?)",
             (
                 task_id,
                 event.title,
                 event.description or None,
+                now,
+                now,
+            ),
+        )
+        await conn.execute(
+            "INSERT INTO recurring_schedules "
+            "(task_id, rrule, dtstart, dtend, is_all_day, location, description, timezone, timezone_ical, "
+            "exdates_json, rdates_json, ics_uid, ics_source, ics_import_fingerprint, parent_task_id, "
+            "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)",
+            (
+                task_id,
                 event.rrule,
-                event.start_time,
-                event.end_time,
+                event.start_local or event.start_time,
+                event.end_local or event.end_time,
                 1 if event.is_all_day else 0,
                 event.location or None,
                 event.description or None,
                 event.timezone_id,
                 event.timezone_ical,
-                event.start_local,
-                event.end_local,
                 exdates_json,
                 rdates_json,
                 event.uid,
@@ -251,25 +274,28 @@ async def _upsert_recurring_task(
         )
         return task_id, "created"
     await conn.execute(
-        "UPDATE analysis_tasks SET name = ?, description = ?, rrule = ?, event_start_time = ?, "
-        "event_end_time = ?, event_is_all_day = ?, event_location = ?, event_description = ?, "
-        "event_timezone = ?, event_timezone_ical = ?, event_start_local = ?, event_end_local = ?, "
-        "event_exdates_json = ?, "
-        "event_rdates_json = ?, ics_import_fingerprint = ?, is_active = 1, version = version + 1, "
+        "UPDATE analysis_tasks SET name = ?, description = ?, is_active = 1, version = version + 1, "
         "updated_at = ? WHERE id = ?",
         (
             event.title,
             event.description or None,
+            now,
+            existing_id,
+        ),
+    )
+    await conn.execute(
+        "UPDATE recurring_schedules SET rrule = ?, dtstart = ?, dtend = ?, is_all_day = ?, "
+        "location = ?, description = ?, timezone = ?, timezone_ical = ?, exdates_json = ?, "
+        "rdates_json = ?, ics_import_fingerprint = ?, updated_at = ? WHERE task_id = ?",
+        (
             event.rrule,
-            event.start_time,
-            event.end_time,
+            event.start_local or event.start_time,
+            event.end_local or event.end_time,
             1 if event.is_all_day else 0,
             event.location or None,
             event.description or None,
             event.timezone_id,
             event.timezone_ical,
-            event.start_local,
-            event.end_local,
             exdates_json,
             rdates_json,
             event.fingerprint,

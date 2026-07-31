@@ -92,28 +92,28 @@ describe("AccountAccessKeysSection", () => {
     await act(async () => {
       createBtn.click();
     });
-    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { allowA2aAgent: false });
+    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { readOnly: false });
     expect(container.querySelector('[data-testid="access-key-reveal"]')?.textContent).toContain(
       "full-secret-token",
     );
   });
 
-  it("create with A2A-only checkbox passes allowA2aAgent", async () => {
+  it("create with read-only checkbox passes readOnly", async () => {
     createAccessKey.mockResolvedValue({
       id: "k3",
-      label: "A2A",
+      label: "Viewer",
       preview: "aaaa…bbbb",
       createdAt: "2026-03-01T00:00:00Z",
-      scopes: ["a2a:agent"],
+      scopes: ["read"],
       lastUsedAt: null,
-      key: "a2a-secret",
+      key: "read-secret",
     });
     renderSection();
     await act(async () => {
       await Promise.resolve();
     });
     const checkbox = container.querySelector(
-      '[data-testid="access-key-a2a-only"]',
+      '[data-testid="access-key-read-only"]',
     ) as HTMLInputElement;
     await act(async () => {
       checkbox.click();
@@ -122,6 +122,6 @@ describe("AccountAccessKeysSection", () => {
     await act(async () => {
       createBtn.click();
     });
-    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { allowA2aAgent: true });
+    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { readOnly: true });
   });
 });

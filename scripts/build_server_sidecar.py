@@ -3,6 +3,13 @@
 Must run on the **target OS** (PyInstaller does not cross-compile): Windows
 produces ``intelligence-monitor-server.exe``; macOS／Linux produce
 ``intelligence-monitor-server``. Output: ``desktop/server-runtime/``.
+
+Hidden-import / collect audit (step-6 performance):
+- ``server.*`` via ``collect_submodules`` (tests excluded).
+- ``collect-all`` kept only where dynamic imports or package data are known
+  brittle: uvicorn, telethon, feedparser, imap_tools, icalendar.
+- ``sse_starlette`` → ``collect-submodules`` (small, no data files).
+- ``tzdata`` → ``collect-data`` (zoneinfo needs IANA tables, not all code).
 """
 
 from __future__ import annotations
@@ -29,6 +36,7 @@ def main() -> None:
         "server",
         filter=lambda name: not name.startswith("server.tests"),
     )
+    sse_modules = collect_submodules("sse_starlette")
     # Windows uses ';' as --add-data separator; POSIX uses ':'.
     data_sep = ";" if sys.platform == "win32" else ":"
     version_data = f"{VERSION_FILE}{data_sep}."
@@ -45,14 +53,15 @@ def main() -> None:
             f"--specpath={WORK_DIR}",
             f"--add-data={version_data}",
             "--exclude-module=server.tests",
+            "--exclude-module=icalendar.tests",
             *(f"--hidden-import={name}" for name in server_modules),
+            *(f"--hidden-import={name}" for name in sse_modules),
             "--collect-all=uvicorn",
-            "--collect-all=sse_starlette",
             "--collect-all=telethon",
             "--collect-all=feedparser",
             "--collect-all=imap_tools",
             "--collect-all=icalendar",
-            "--collect-all=tzdata",
+            "--collect-data=tzdata",
         ]
     )
     bundled = DIST_DIR / "intelligence-monitor-server" / "_internal" / "VERSION"

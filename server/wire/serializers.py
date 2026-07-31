@@ -76,8 +76,26 @@ def serialize_message(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _recurring_wire_clock(row: Mapping[str, Any], key: str) -> Any:
+    value = row.get(key)
+    if not value:
+        return value
+    # All-day rows store date anchors in dtstart/dtend; wire clocks stay null.
+    if row.get("event_is_all_day"):
+        return None
+    if row.get("ics_source") or str(row.get("event_timezone") or "") != "floating":
+        return value
+    text = str(value)
+    if "T" in text and len(text) >= 16:
+        return text.split("T", 1)[1][:5]
+    return value
+
+
 def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-    """AnalysisTask; pass channel_refs=None to omit channelIds (toggle route)."""
+    """AnalysisTask; pass channel_refs=None to omit channelIds (toggle route).
+
+    Recurring calendar fields live on ``GET/PUT /api/v1/tasks/{id}/schedule``.
+    """
     task = {
         "id": row["id"],
         "name": row.get("name") or "",
@@ -89,19 +107,6 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "isActive": bool(row.get("is_active")),
         "scheduleType": row.get("schedule_type"),
         "scheduleValue": row.get("schedule_value"),
-        "rrule": row.get("rrule"),
-        "eventStartTime": row.get("event_start_time"),
-        "eventEndTime": row.get("event_end_time"),
-        "eventIsAllDay": bool(row.get("event_is_all_day")),
-        "eventLocation": row.get("event_location"),
-        "eventDescription": row.get("event_description"),
-        "eventTimezone": row.get("event_timezone"),
-        "eventStartLocal": row.get("event_start_local"),
-        "eventEndLocal": row.get("event_end_local"),
-        "eventExdates": parse_json_list(row.get("event_exdates_json")),
-        "eventRdates": parse_json_list(row.get("event_rdates_json")),
-        "icsUid": row.get("ics_uid"),
-        "icsSource": row.get("ics_source"),
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
         "parentTaskId": row.get("parent_task_id") or None,
         "worksetId": row.get("workset_id") or None,
@@ -121,6 +126,43 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
     }
     if channel_refs is not None:
         task["channelIds"] = channel_refs
+    return task
+
+
+def serialize_task_schedule(row: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Recurring schedule subresource; ``None`` when the task has no schedule row."""
+    if not row.get("rrule"):
+        return None
+    return {
+        "taskId": row["id"],
+        "rrule": row.get("rrule"),
+        "eventStartTime": _recurring_wire_clock(row, "event_start_time"),
+        "eventEndTime": _recurring_wire_clock(row, "event_end_time"),
+        "eventIsAllDay": bool(row.get("event_is_all_day")),
+        "eventLocation": row.get("event_location"),
+        "eventDescription": row.get("event_description"),
+        "eventTimezone": row.get("event_timezone"),
+        "eventStartLocal": row.get("event_start_local"),
+        "eventEndLocal": row.get("event_end_local"),
+        "eventExdates": parse_json_list(row.get("event_exdates_json")),
+        "eventRdates": parse_json_list(row.get("event_rdates_json")),
+        "icsUid": row.get("ics_uid"),
+        "icsSource": row.get("ics_source"),
+        "parentTaskId": row.get("parent_task_id") or None,
+    }
+
+
+def serialize_task_for_agent(
+    row: Mapping[str, Any],
+    channel_refs: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Task wire shape plus inlined schedule fields for agent tool results."""
+    task = serialize_task(row, channel_refs)
+    schedule = serialize_task_schedule(row)
+    if schedule is not None:
+        for key, value in schedule.items():
+            if key != "taskId":
+                task[key] = value
     return task
 
 

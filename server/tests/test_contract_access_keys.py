@@ -37,19 +37,19 @@ async def test_access_keys_crud_contract(client):
     assert keys[0]["id"] == body["id"]
     assert keys[0]["scopes"] == ["*"]
 
-    a2a_only = await client.post(
+    read_only = await client.post(
         "/api/v1/access-keys",
         headers=headers,
-        json={"label": "A2A", "allowA2aAgent": True},
+        json={"label": "Viewer", "readOnly": True},
     )
-    assert a2a_only.status_code == 200
-    assert a2a_only.json()["scopes"] == ["a2a:agent"]
+    assert read_only.status_code == 200
+    assert read_only.json()["scopes"] == ["read"]
 
     # Obsolete create flag is rejected (extra=forbid).
     legacy_flag = await client.post(
         "/api/v1/access-keys",
         headers=headers,
-        json={"label": "A2A legacy flag", "allowA2aEvents": True},
+        json={"label": "A2A legacy flag", "allowA2aAgent": True},
     )
     assert legacy_flag.status_code == 422
 

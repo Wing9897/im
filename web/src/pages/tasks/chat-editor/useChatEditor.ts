@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ChannelWithAccount, TaskTemplatePreset } from "../../../types";
 import { useChannelsWithAccounts } from "../../../hooks/useChannelsWithAccounts";
-import { useTaskForm, type TaskFormState } from "../../../hooks/useTaskForm";
+import {
+  useTaskEditorState,
+  type TaskFormState,
+} from "../../../hooks/useTaskEditorState";
 import { useTaskPersistence } from "../../../hooks/useTaskPersistence";
 import {
   applyConfigToFormState,
@@ -10,7 +13,7 @@ import {
 import { registerTaskEditorDraftBridge } from "../../../domain/tasks/taskEditorDraftBridge";
 import i18n from "../../../i18n";
 
-export type { TaskFormState, ScheduleType } from "../../../hooks/useTaskForm";
+export type { TaskFormState, ScheduleType } from "../../../hooks/useTaskEditorState";
 
 export interface UseChatEditorReturn {
   formState: TaskFormState;
@@ -19,6 +22,9 @@ export interface UseChatEditorReturn {
   save: () => Promise<void>;
   canSave: boolean;
   isSaving: boolean;
+  scheduleHydrating: boolean;
+  scheduleHydrateError: string | null;
+  retryScheduleHydrate: () => void;
   applyPreset: (preset: TaskTemplatePreset) => void;
   channels: ChannelWithAccount[];
 }
@@ -42,7 +48,7 @@ export function useChatEditor(): UseChatEditorReturn {
   }, []);
 
   const [isSavingState, setIsSavingState] = useState(false);
-  const { formState, setFormState, updateField, applyPreset, canSave } = useTaskForm({
+  const { formState, setFormState, updateField, applyPreset, canSave } = useTaskEditorState({
     isSaving: isSavingState,
   });
   const formStateRef = useRef(formState);
@@ -69,7 +75,13 @@ export function useChatEditor(): UseChatEditorReturn {
     setError(message);
   }, []);
 
-  const { save, isSaving } = useTaskPersistence({
+  const {
+    save,
+    isSaving,
+    scheduleHydrating,
+    scheduleHydrateError,
+    retryScheduleHydrate,
+  } = useTaskPersistence({
     formState,
     setFormState,
     isMountedRef,
@@ -77,8 +89,8 @@ export function useChatEditor(): UseChatEditorReturn {
   });
 
   useEffect(() => {
-    setIsSavingState(isSaving);
-  }, [isSaving]);
+    setIsSavingState(isSaving || scheduleHydrating);
+  }, [isSaving, scheduleHydrating]);
 
   useEffect(() => {
     if (channelsError) {
@@ -91,8 +103,11 @@ export function useChatEditor(): UseChatEditorReturn {
     updateField,
     error,
     save,
-    canSave,
+    canSave: canSave && !scheduleHydrating,
     isSaving,
+    scheduleHydrating,
+    scheduleHydrateError,
+    retryScheduleHydrate,
     applyPreset,
     channels,
   };

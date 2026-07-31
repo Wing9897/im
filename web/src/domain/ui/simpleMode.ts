@@ -1,6 +1,8 @@
 /** UI "simple calendar" product mode — hide collect / analyze surfaces. */
 
-export const SIMPLE_MODE_STORAGE_KEY = "im:ui:simple-mode";
+import { SIMPLE_MODE_STORAGE_KEY } from "../prefs";
+
+export { SIMPLE_MODE_STORAGE_KEY };
 
 /** Landing path when simple mode is on (and for redirects off hidden routes). */
 export const SIMPLE_MODE_HOME = "/timeline";

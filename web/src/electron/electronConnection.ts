@@ -33,6 +33,11 @@ export interface DesktopConnectionConfig {
   mode: DesktopConnectionMode;
   /** Remote origin when mode is `client` (e.g. http://192.168.1.10:18820). */
   serverUrl?: string;
+  /**
+   * Host mode only: bind sidecar to ``0.0.0.0`` so LAN clients can connect.
+   * Default false (``127.0.0.1``). Changing this requires ``restartShell``.
+   */
+  allowLanAccess?: boolean;
 }
 
 export interface ElectronConnectionApi {
@@ -226,6 +231,30 @@ export function subscribeDesktopNotificationLocale(): () => void {
  * After Profile logout on a Desktop client: reset to host so first-run can
  * choose Local again (or Remote after the host shell is back).
  */
+/**
+ * Toggle LAN bind for Desktop host mode. Restarts the shell when the flag changes.
+ * @returns true if ``restartShell`` was invoked.
+ */
+export async function setDesktopAllowLanAccess(allow: boolean): Promise<boolean> {
+  const api = getElectronConnection();
+  if (!api) return false;
+  const current = await api.getConnection();
+  const next = Boolean(allow);
+  if (current.mode !== "host") {
+    throw new Error("LAN access can only be changed in Desktop host (local) mode");
+  }
+  if (Boolean(current.allowLanAccess) === next) {
+    return false;
+  }
+  await api.setConnection({
+    mode: "host",
+    allowLanAccess: next,
+    ...(current.serverUrl ? { serverUrl: current.serverUrl } : {}),
+  });
+  await api.restartShell();
+  return true;
+}
+
 export async function resetDesktopConnectionAfterLogout(): Promise<void> {
   const api = getElectronConnection();
   if (!api) {

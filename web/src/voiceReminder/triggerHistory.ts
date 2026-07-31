@@ -7,7 +7,7 @@ import {
 import i18n from "../i18n";
 import { logWarn } from "../utils/logger";
 
-import { VOICE_REMINDER_HISTORY_CHANGED_EVENT } from "./voiceReminderPersistedKeys";
+import { VOICE_REMINDER_HISTORY_CHANGED_EVENT } from "../domain/prefs";
 
 const MAX_ENTRIES = 100;
 

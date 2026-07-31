@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
-import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskForm";
+import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskEditorState";
 import { ChatEditorForm } from "./ChatEditorForm";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>

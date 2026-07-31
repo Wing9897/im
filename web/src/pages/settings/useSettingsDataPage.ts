@@ -40,7 +40,6 @@ function formatRetentionSummary(deleted: Record<string, number>): string {
     [i18n.t("settings:data.summary.appLogs"), deleted.app_logs],
     [i18n.t("settings:data.summary.userEvents"), deleted.user_events],
     [i18n.t("settings:data.summary.timelineDismissals"), deleted.timeline_dismissals],
-    [i18n.t("settings:data.summary.assistantStores"), deleted.assistant_device_stores],
     [i18n.t("settings:data.summary.deviceAccessTokens"), deleted.device_access_tokens],
     [i18n.t("settings:data.summary.deviceSessions"), deleted.device_sessions],
   ]

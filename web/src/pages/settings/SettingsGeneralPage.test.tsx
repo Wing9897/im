@@ -10,18 +10,6 @@ const applyPersistedSnapshot = vi.fn();
 
 vi.mock("../../api/config", () => ({ saveSystemSettings }));
 vi.mock("../../api/system", () => ({ restartCollector }));
-vi.mock("../../api/schema", () => ({
-  fetchSchemaStatus: vi.fn().mockResolvedValue({
-    state: "ready",
-    runtimeReady: true,
-    schemaVersion: 6,
-    requiredSchemaVersion: 6,
-    backupPath: null,
-    error: null,
-    restoredFromBackup: false,
-    progress: { phase: "idle", percent: 100, message: "ready" },
-  }),
-}));
 vi.mock("../../components/settings/SystemVersionPanel", () => ({
   SystemVersionPanel: () => createElement("div", { "data-testid": "system-version-panel" }, "version"),
 }));

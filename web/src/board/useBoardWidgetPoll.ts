@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMonitorMode } from "../context/MonitorModeContext";
+import { subscribeBoardPoll } from "./boardPollBus";
 
 /**
  * Board widget poll intervals.
@@ -33,6 +34,7 @@ interface UseBoardWidgetPollOptions {
  * INVARIANTS:
  * - Poll only while `monitorMode === "canvas"` (+ optional `active`). BoardRoot
  *   is keep-mounted under pages — unconditional polling hammers APIs.
+ * - Interval ticks share a per-`intervalMs` poll bus (one timer, N subscribers).
  * - Do not import `pages/` hooks into board widgets (architecture boundary).
  * Regression fences: `useBoardWidgetPoll.test.tsx`.
  */
@@ -86,10 +88,10 @@ export function useBoardWidgetPoll<T>(
     };
 
     load();
-    const timer = window.setInterval(load, intervalMs);
+    const unsubscribe = subscribeBoardPoll(intervalMs, load);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      unsubscribe();
     };
   }, [enabled, intervalMs, tick]);
 

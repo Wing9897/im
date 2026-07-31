@@ -202,6 +202,10 @@ async function startHostSidecar(): Promise<boolean> {
       : 'intelligence-monitor-server'
   );
   const userData = app.getPath('userData');
+  const connection = loadConnection(userData);
+  // host + allowLanAccess → bind all interfaces; default remains loopback-only.
+  const bindHost =
+    connection.mode === 'host' && connection.allowLanAccess === true ? '0.0.0.0' : '127.0.0.1';
   processManager = new ProcessManager({
     command: serverExecutable,
     args: [],
@@ -212,6 +216,7 @@ async function startHostSidecar(): Promise<boolean> {
       INTELLIGENCE_MONITOR_DATA_DIR: userData,
       INTELLIGENCE_MONITOR_DB: path.join(userData, 'intelligence_monitor.db'),
       INTELLIGENCE_MONITOR_SECRET_KEY_FILE: path.join(userData, 'secret.key'),
+      INTELLIGENCE_MONITOR_HOST: bindHost,
     },
     healthUrl: `http://localhost:${APP_CONFIG.serverPort}/api/v1/health`,
     healthTimeout: 30000,

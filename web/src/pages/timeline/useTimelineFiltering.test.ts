@@ -67,4 +67,26 @@ describe("useTimelineFiltering", () => {
     });
     expect(getOff().filteredEvents.map((e) => e.id)).toEqual(["a"]);
   });
+
+  it("keeps annotation time overrides independent from soft-dismiss visibility", () => {
+    const rawStart = "2026-07-15T10:00:00.000Z";
+    const overriddenStart = "2026-07-20T08:00:00.000Z";
+    const getResult = renderHook({
+      events: [makeEvent({ id: "d", dismissed: true, startTime: rawStart })],
+      eventTimeOverrides: {
+        d: { startTime: overriddenStart, endTime: null },
+      },
+      rangeStart,
+      rangeEnd,
+      monthCursor,
+      showDismissed: false,
+      focusedDay: null,
+    });
+
+    const result = getResult();
+    expect(result.rawEventLookup.get("d")?.startTime).toBe(rawStart);
+    expect(result.eventLookup.get("d")?.startTime).toBe(overriddenStart);
+    expect(result.eventLookup.get("d")?.dismissed).toBe(true);
+    expect(result.filteredEvents).toEqual([]);
+  });
 });

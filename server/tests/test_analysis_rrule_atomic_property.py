@@ -16,7 +16,6 @@ from server.tests.property_strategies import (
     valid_rrules,
 )
 
-_ERROR_MESSAGE = "RRULE is recurring-only and cannot schedule analysis tasks"
 _TASK_BY_MODE = {
     "leaderboard": seed.TASK_LEADERBOARD,
     "event": seed.TASK_EVENT,
@@ -27,12 +26,13 @@ _SUPPLIED_RRULES = st.one_of(valid_rrules, st.text(max_size=80))
 
 
 def _assert_calendar_only_rejection(response: Any) -> None:
+    """Legacy ``rrule`` on TaskConfigBody is forbidden (schedule is a subresource)."""
     assert response.status_code == 422
     body = response.json()
     assert_keys(body, ["error_code", "message", "details", "correlation_id"], "ValidationError")
     assert body["error_code"] == "VALIDATION_ERROR"
-    assert body["message"] == _ERROR_MESSAGE
-    assert body["details"] is None
+    blob = f"{body.get('message')} {body.get('details')}".lower()
+    assert "rrule" in blob or "extra" in blob or "forbidden" in blob
     assert isinstance(body["correlation_id"], str) and body["correlation_id"]
 
 

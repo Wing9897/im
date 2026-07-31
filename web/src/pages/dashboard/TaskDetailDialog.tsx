@@ -76,6 +76,7 @@ export function TaskDetailView({
   const scheduleOnly = isScheduleOnlyAnalysisMode(task.analysisMode);
   const {
     items: relatedEvents,
+    eventLocation,
     loading: relatedLoading,
     error: relatedError,
   } = useTaskScheduleRelatedEvents(task.id, task.analysisMode);
@@ -149,9 +150,9 @@ export function TaskDetailView({
           </div>
         ) : null}
 
-        {task.analysisMode === "recurring" && task.eventLocation?.trim() ? (
+        {task.analysisMode === "recurring" && eventLocation ? (
           <div className={taskDetailMetaLineClass}>
-            {t("tasks.detail.location", { location: task.eventLocation.trim() })}
+            {t("tasks.detail.location", { location: eventLocation })}
           </div>
         ) : null}
 

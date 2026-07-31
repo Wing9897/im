@@ -140,7 +140,7 @@ export function fetchCalendarOccurrences(
   } else if (opts?.taskId !== undefined) {
     query.task_id = opts.taskId;
   }
-  return apiClient.get<CalendarOccurrence[]>("/api/v1/results/calendar", query);
+  return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/items", query);
 }
 
 /** Fetches the current analysis queue status (pending count, processing batches, pause state). */

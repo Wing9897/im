@@ -122,25 +122,6 @@ async def cleanup_orphan_timeline_dismissals_batch(db: Database) -> int:
     return len(rows)
 
 
-async def cleanup_assistant_stores_batch(db: Database, cutoff_modifier: str) -> int:
-    rows = await db.fetch_all(
-        "SELECT device_id FROM assistant_device_stores "
-        "WHERE datetime(updated_at) < datetime('now', ?) "
-        "ORDER BY updated_at ASC LIMIT ?",
-        (cutoff_modifier, BATCH_SIZE),
-    )
-    if not rows:
-        return 0
-    ids = [str(row["device_id"]) for row in rows]
-    placeholders = ",".join("?" for _ in ids)
-    async with db.transaction() as conn:
-        await conn.execute(
-            f"DELETE FROM assistant_device_stores WHERE device_id IN ({placeholders})",
-            ids,
-        )
-    return len(ids)
-
-
 async def cleanup_device_access_tokens_batch(db: Database) -> int:
     rows = await db.fetch_all(
         "SELECT id FROM device_access_tokens "
@@ -157,11 +138,3 @@ async def cleanup_device_sessions_batch(db: Database) -> int:
         (BATCH_SIZE,),
     )
     return await _delete_ids(db, "device_sessions", [str(row["id"]) for row in rows])
-
-
-async def cleanup_a2a_audit_log_batch(db: Database, cutoff_modifier: str) -> int:
-    rows = await db.fetch_all(
-        "SELECT id FROM a2a_audit_log WHERE datetime(created_at) < datetime('now', ?) ORDER BY created_at ASC LIMIT ?",
-        (cutoff_modifier, BATCH_SIZE),
-    )
-    return await _delete_ids(db, "a2a_audit_log", [str(row["id"]) for row in rows])

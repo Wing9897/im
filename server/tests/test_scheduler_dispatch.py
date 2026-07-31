@@ -99,10 +99,10 @@ async def test_re_registration_replaces_the_existing_task_job(app):
 
 @pytest.mark.parametrize(
     ("analysis_mode", "is_active"),
-    [("recurring", 1), ("calendar_task", 1), ("leaderboard", 0)],
+    [("recurring", 1), ("leaderboard", 0)],
 )
-async def test_re_registration_removes_jobs_for_recurring_calendar_task_or_inactive(app, analysis_mode, is_active):
-    """Recurring, calendar_task, and inactive tasks retain no scheduler job, including stale jobs.
+async def test_re_registration_removes_jobs_for_recurring_or_inactive(app, analysis_mode, is_active):
+    """Recurring and inactive tasks retain no scheduler job, including stale jobs.
 
     **Validates: Requirements 1.6**
     """
@@ -117,21 +117,6 @@ async def test_re_registration_removes_jobs_for_recurring_calendar_task_or_inact
     await manager.register_task(seed.TASK_LEADERBOARD)
 
     assert manager._scheduler.get_job(seed.TASK_LEADERBOARD) is None
-
-
-async def test_calendar_task_create_is_not_scheduled(client, app):
-    created = await client.post(
-        "/api/v1/tasks",
-        json={"name": "日曆任務", "analysisMode": "calendar_task", "promptTemplate": "ignored", "channelIds": []},
-    )
-    assert created.status_code == 201
-    task_id = created.json()["id"]
-    assert created.json()["analysisMode"] == "calendar_task"
-    assert created.json()["promptTemplate"] == ""
-
-    manager = SchedulerManager(app.state.db, analysis_engine=None, broadcaster=SseBroadcaster())
-    await manager.register_task(task_id)
-    assert manager._scheduler.get_job(task_id) is None
 
 
 async def test_repeated_timer_fires_queue_task_once(app):

@@ -5,7 +5,6 @@ import * as path from "node:path";
 
 /**
  * Smoke tests for live architecture invariants:
- * - No @tauri-apps in deps / product imports
  * - hooks/components/board must not import pages/
  * - Generated artifacts gitignored and untracked
  * - No deep i18n/i18n imports (use barrel)
@@ -41,48 +40,6 @@ function collectFiles(
   }
   return results;
 }
-
-describe("Dead code removal: @tauri-apps dependencies", () => {
-  it("package.json contains zero @tauri-apps/* in dependencies", () => {
-    const pkgPath = path.resolve(ROOT_DIR, "package.json");
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-    const deps = Object.keys(pkg.dependencies || {});
-    const tauriDeps = deps.filter((d) => d.startsWith("@tauri-apps/"));
-
-    expect(tauriDeps).toEqual([]);
-  });
-
-  it("package.json contains zero @tauri-apps/* in devDependencies", () => {
-    const pkgPath = path.resolve(ROOT_DIR, "package.json");
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-    const devDeps = Object.keys(pkg.devDependencies || {});
-    const tauriDevDeps = devDeps.filter((d) => d.startsWith("@tauri-apps/"));
-
-    expect(tauriDevDeps).toEqual([]);
-  });
-});
-
-describe("Dead code removal: @tauri-apps imports in frontend source", () => {
-  it("no .ts or .tsx file in src/ imports from @tauri-apps", () => {
-    const files = collectFiles(SRC_DIR, [".ts", ".tsx"], [".test.ts", ".test.tsx"]);
-    const tauriImportPattern =
-      /(?:from\s+['"]@tauri-apps\/|import\s*\(\s*['"]@tauri-apps\/|require\s*\(\s*['"]@tauri-apps\/)/;
-
-    const offenders: string[] = [];
-    for (const file of files) {
-      const rel = path.relative(SRC_DIR, file).replace(/\\/g, "/");
-      const content = fs.readFileSync(file, "utf-8");
-      if (tauriImportPattern.test(content)) {
-        offenders.push(rel);
-      }
-    }
-
-    if (offenders.length > 0) {
-      const report = offenders.map((f) => `  - ${f}`).join("\n");
-      expect(offenders, `Found files importing @tauri-apps:\n${report}`).toEqual([]);
-    }
-  });
-});
 
 describe("Dead code removal: standalone viewer project removed", () => {
   it("viewer/ standalone directory does not exist", () => {
@@ -136,30 +93,9 @@ function git(args: string[]): string {
 }
 
 describe("Dead references: migrated legacy directories removed", () => {
-  it("src-tauri/ directory does not exist", () => {
-    expect(fs.existsSync(path.resolve(ROOT_DIR, "src-tauri"))).toBe(false);
-  });
-
   it("old root src/ directory does not exist (migrated to web/src)", () => {
     expect(fs.existsSync(path.resolve(ROOT_DIR, "src"))).toBe(false);
     expect(fs.existsSync(path.resolve(ROOT_DIR, "web", "src"))).toBe(true);
-  });
-});
-
-describe("Dead references: no src-tauri references in product code", () => {
-  it("no server/web/desktop product file references src-tauri", () => {
-    const offenders: string[] = [];
-    for (const file of allProductFiles()) {
-      const content = fs.readFileSync(file, "utf-8");
-      if (/src-tauri/.test(content)) {
-        offenders.push(relFromRoot(file));
-      }
-    }
-
-    if (offenders.length > 0) {
-      const report = offenders.map((f) => `  - ${f}`).join("\n");
-      expect(offenders, `Found product files referencing src-tauri:\n${report}`).toEqual([]);
-    }
   });
 });
 

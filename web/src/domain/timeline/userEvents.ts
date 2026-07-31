@@ -41,7 +41,7 @@ type AssignableTaskLike = {
   parentTaskId?: string | null;
 };
 
-/** Filter to event/recurring/calendar_task/project tasks; exclude project children. */
+/** Filter to event/recurring/project tasks; exclude project children. */
 export function filterAssignableTimelineTasks<T extends AssignableTaskLike>(
   tasks: readonly T[],
   opts?: { activeOnly?: boolean },

@@ -13,7 +13,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   MONITOR_MODE_KEY,
   PAGES_LAST_PATH_KEY,
-} from "../domain/ui/chromePersistedKeys";
+} from "../domain/prefs";
 
 export type MonitorMode = "pages" | "canvas";
 

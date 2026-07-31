@@ -24,7 +24,7 @@ import {
   MAP_LIVE_MODE_STORAGE_KEY,
   MAP_TIME_WINDOW_STORAGE_KEY,
   SHARED_DANMAKU_MODE_KEY,
-} from "./mapPersistedKeys";
+} from "../../../domain/prefs";
 
 export {
   MAP_LIVE_MODE_STORAGE_KEY,

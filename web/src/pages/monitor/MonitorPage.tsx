@@ -30,7 +30,7 @@ import { useListKeyboardNavigation } from "../../hooks/useListKeyboardNavigation
 import { useIdReadTracking } from "../../hooks/useIdReadTracking";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import { MONITOR_READ_IDS_STORAGE_KEY } from "../../domain/monitor/monitorPersistedKeys";
+import { MONITOR_READ_IDS_STORAGE_KEY } from "../../domain/prefs";
 
 /**
  * Monitor workspace (stream / cards / wall).

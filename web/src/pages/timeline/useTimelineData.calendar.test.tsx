@@ -1,14 +1,14 @@
 /**
  * Regression tests for recurring-task occurrence wiring.
  *
- * Recurring tasks are expanded server-side (GET /api/v1/results/calendar).
+ * Recurring tasks are expanded server-side (GET /api/v1/calendar/items).
  * These tests pin:
  * - occurrences are fetched for the visible range (padded for the month grid)
  * - occurrences are adapted to TimelineItem with source: "recurring"
  * - "all tasks" merges analysis + calendar occurrences
  * - filtering by a recurring task shows only that task's occurrences
  * - filtering by an event task does not mix in calendar occurrences
- * - timelineTasks includes event, recurring, and calendar_task modes
+ * - timelineTasks includes event, recurring, and project modes
  * - __user__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
  * - task filters include tagged user_events for that task
  */
@@ -56,6 +56,11 @@ vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
   useRefreshOnAnalysisEvent: vi.fn(),
 }));
 
+import { MemoryRouter } from "react-router-dom";
+import {
+  MONITOR_MODE_KEY,
+  MonitorModeProvider,
+} from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetTaskCatalogState } from "../../test/context-mocks";
 import { calendarOccurrenceToBoardEvent } from "../../domain/timeline/timedEventMerge";
 import { useTimelineData } from "./useTimelineData";
@@ -121,11 +126,22 @@ describe("useTimelineData calendar occurrence wiring", () => {
   async function renderHook(selectedSources: SourceFilterSelection = null) {
     await act(async () => {
       root = createRoot(container);
-      root.render(createElement(HookHarness, { selectedSources, refOut: resultRef }));
+      root.render(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(HookHarness, { selectedSources, refOut: resultRef }),
+          ),
+        ),
+      );
     });
   }
 
   beforeEach(() => {
+    window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     container = document.createElement("div");
     document.body.appendChild(container);
     mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
@@ -157,7 +173,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
   it("fetches all timed analysis pages within the same padded visible window", async () => {
     await renderHook();
     expect(mockFetchTimelineEvents).toHaveBeenCalledWith({
-      taskId: undefined,
+      taskIds: undefined,
       startDate: "2024-12-25T00:00:00.000Z",
       endDate: "2025-02-08T00:00:00.000Z",
     });
@@ -397,60 +413,16 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
   });
 
-  it("shows only tagged user events when a calendar_task is selected", async () => {
-    resetTaskCatalogState([
-      makeAnalysisTask({ id: "ct-1", name: "日曆任務", analysisMode: "calendar_task" }),
-    ]);
-    mockListUserEvents.mockResolvedValue([
-      {
-        id: "ue-calendar-task",
-        title: "日曆任務事件",
-        body: "",
-        startTime: "2025-01-12T08:00:00Z",
-        endTime: null,
-        location: null,
-        origin: "manual",
-        source: "user",
-        taskId: "ct-1",
-        createdAt: "2025-01-12T08:00:00Z",
-        updatedAt: "2025-01-12T08:00:00Z",
-      },
-      {
-        id: "ue-free",
-        title: "未歸屬",
-        body: "",
-        startTime: "2025-01-12T09:00:00Z",
-        endTime: null,
-        location: null,
-        origin: "manual",
-        source: "user",
-        taskId: "",
-        createdAt: "2025-01-12T09:00:00Z",
-        updatedAt: "2025-01-12T09:00:00Z",
-      },
-    ]);
-    await renderHook({ taskIds: ["ct-1"], worksetIds: [] });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(resultRef.current!.events).toHaveLength(1);
-    expect(resultRef.current!.events[0].id).toBe("ue-calendar-task");
-    expect(resultRef.current!.events[0].taskId).toBe("ct-1");
-    expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
-    expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
-  });
-
-  it("includes event, recurring, calendar_task, and project modes in timelineTasks", async () => {
+  it("includes event, recurring, and project modes in timelineTasks", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),
       makeAnalysisTask({ id: "cal-1", name: "Calendar Task", analysisMode: "recurring" }),
-      makeAnalysisTask({ id: "ct-1", name: "Calendar Task Bucket", analysisMode: "calendar_task" }),
       makeAnalysisTask({ id: "proj-1", name: "Project Alpha", analysisMode: "project" }),
       makeAnalysisTask({ id: "lb-1", name: "Leaderboard", analysisMode: "leaderboard" }),
     ]);
     await renderHook(null);
     const ids = resultRef.current!.timelineTasks.map((t) => t.id);
-    expect(ids).toEqual(["evt-1", "cal-1", "ct-1", "proj-1"]);
+    expect(ids).toEqual(["evt-1", "cal-1", "proj-1"]);
   });
 
   it("drops soft-deleted calendar tasks from the assignable timeline task list", async () => {
@@ -486,18 +458,6 @@ describe("useTimelineData calendar occurrence wiring", () => {
     });
     expect(resultRef.current!.pageError).toBe("user events boom");
     expect(resultRef.current!.timelineEventsError).toBe("user events boom");
-  });
-
-  it("ignores a calendar failure in a mode that does not fetch calendar occurrences", async () => {
-    resetTaskCatalogState([
-      makeAnalysisTask({ id: "ct-1", name: "日曆任務", analysisMode: "calendar_task" }),
-    ]);
-    mockFetchCalendarOccurrences.mockRejectedValue(new Error("calendar boom"));
-    await renderHook({ taskIds: ["ct-1"], worksetIds: [] });
-    await act(async () => {
-      await Promise.resolve();
-    });
-    expect(resultRef.current!.pageError).toBeNull();
   });
 
   it("leaves schedule events untouched when there are no occurrences", async () => {

@@ -10,7 +10,7 @@ ERROR_KEYS = ["error_code", "message", "details", "correlation_id"]
 
 async def test_timeline_dismissal_roundtrip_contract(client) -> None:
     created = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "recurring", "eventId": "task-1:20260731T090000Z"},
     )
     assert created.status_code == 200
@@ -20,7 +20,7 @@ async def test_timeline_dismissal_roundtrip_contract(client) -> None:
     assert created_body["eventId"] == "task-1:20260731T090000Z"
 
     listed = await client.get(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "recurring"},
     )
     assert listed.status_code == 200
@@ -28,7 +28,7 @@ async def test_timeline_dismissal_roundtrip_contract(client) -> None:
     assert_keys(listed.json()[0], DISMISSAL_KEYS, "dismissal GET item")
 
     restored = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "recurring", "eventId": "task-1:20260731T090000Z"},
     )
     assert restored.status_code == 204
@@ -37,7 +37,7 @@ async def test_timeline_dismissal_roundtrip_contract(client) -> None:
 
 async def test_timeline_dismissal_validation_errors_are_structured(client) -> None:
     invalid_source = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "unknown", "eventId": "event-1"},
     )
     assert invalid_source.status_code == 422
@@ -46,7 +46,7 @@ async def test_timeline_dismissal_validation_errors_are_structured(client) -> No
     assert invalid_source_body["error_code"] == "VALIDATION_ERROR"
 
     empty_event_id = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "eventId": " "},
     )
     assert empty_event_id.status_code == 422
@@ -57,7 +57,7 @@ async def test_timeline_dismissal_validation_errors_are_structured(client) -> No
 
 async def test_timeline_dismissal_missing_restore_is_structured(client) -> None:
     missing = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "eventId": "missing-event"},
     )
 

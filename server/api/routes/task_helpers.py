@@ -4,13 +4,12 @@ from __future__ import annotations
 
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from server.api.deps import require_row
 from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES, AnalysisMode
 from server.errors import VALIDATION_ERROR, http_error
-from server.queries.tasks_queries import fetch_task_channel_rows
+from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row
 from server.queries.worksets_queries import workset_exists
 from server.scheduler.task_schedule_overrides import (
     ALLOWED_STRATEGY_MODES,
@@ -29,8 +28,13 @@ from server.wire.serializers import serialize_channel_ref, serialize_task
 ALLOWED_MODES = ALL_ANALYSIS_MODES
 ALLOWED_SCHEDULE_TYPES = ("seconds_10", "hourly", "daily", "weekly", "custom_seconds")
 
+# Recurring calendar RRULE lives on PUT /tasks/{id}/schedule (not TaskConfigBody).
+# Recurring-only recurrence expanded at query time — never an AI analysis trigger.
+
 
 class TaskConfigBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     description: Optional[str] = None
     promptTemplate: str = ""
@@ -45,15 +49,6 @@ class TaskConfigBody(BaseModel):
         default=None,
         description="Value interpreted only with the non-recurring AI analysis scheduleType",
     )
-    rrule: Optional[str] = Field(
-        default=None,
-        description="Recurring-only recurrence expanded at query time; never an AI analysis trigger",
-    )
-    eventStartTime: Optional[str] = None
-    eventEndTime: Optional[str] = None
-    eventIsAllDay: Optional[bool] = None
-    eventLocation: Optional[str] = None
-    eventDescription: Optional[str] = None
     includeInTimeline: Optional[bool] = None
     isActive: Optional[bool] = None
     #: Task-owned (project): null/omit → resolve to 20; not a global config fallback.
@@ -198,7 +193,10 @@ async def resolve_workset_id(
 
 
 async def get_task_row(db: Any, task_id: str) -> dict[str, Any]:
-    return await require_row(db, "analysis_tasks", "Task", task_id)
+    row = await fetch_task_row(db, task_id)
+    if row is None:
+        raise http_error(404, "Task not found")
+    return row
 
 
 async def channel_refs_for(db: Any, task_id: str) -> list[dict[str, Any]]:

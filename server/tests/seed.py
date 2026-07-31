@@ -193,9 +193,8 @@ async def seed_database(db: Any) -> None:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
             "analysis_mode, analysis_time_range, version, is_active, schedule_type, "
-            "schedule_value, rrule, event_start_time, event_end_time, "
-            "event_is_all_day, event_location, event_description, created_at, "
-            "updated_at) VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "schedule_value, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?)",
             (
                 task_id,
                 name,
@@ -205,16 +204,17 @@ async def seed_database(db: Any) -> None:
                 time_range,
                 schedule_type,
                 schedule_value,
-                rrule,
-                event_start,
-                event_end,
-                all_day,
-                location,
-                description,
                 now,
                 now,
             ),
         )
+        if rrule:
+            await db.execute(
+                "INSERT INTO recurring_schedules "
+                "(task_id, rrule, dtstart, dtend, is_all_day, location, description, "
+                "timezone, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'UTC', ?, ?)",
+                (task_id, rrule, event_start, event_end, all_day, location, description, now, now),
+            )
     for task_id in (TASK_LEADERBOARD, TASK_EVENT, TASK_EVENT_TIMED):
         await db.execute(
             "INSERT INTO task_channels (task_id, platform, platform_id) VALUES (?, ?, ?)",

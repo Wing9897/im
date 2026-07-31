@@ -85,7 +85,8 @@ describe("LogPage", () => {
     expect(selects[0]?.value).toBe("all");
     expect(selects[1]?.value).toBe("all");
     expect(container.textContent).toContain("Persisted log entry");
-    expect(runtimeLogPageState.refreshLogs).not.toHaveBeenCalled();
+    // Mount refreshes once when Logs acquires runtime interest; no interval poll.
+    expect(runtimeLogPageState.refreshLogs).toHaveBeenCalledTimes(1);
   });
 
   it("does not poll shared logs on an interval", async () => {
@@ -93,7 +94,8 @@ describe("LogPage", () => {
 
     await renderPage();
 
-    expect(runtimeLogPageState.refreshLogs).not.toHaveBeenCalled();
+    expect(runtimeLogPageState.refreshLogs).toHaveBeenCalledTimes(1);
+    runtimeLogPageState.refreshLogs.mockClear();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_000);

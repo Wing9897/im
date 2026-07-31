@@ -74,7 +74,7 @@ export function AccountDeviceSessionSection({
     try {
       await revokeSetupDevice(id);
       await reload();
-      showToast(t("profile.devices.revoked"), "success");
+      showToast(t("account.devices.revoked"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
     }
@@ -96,7 +96,7 @@ export function AccountDeviceSessionSection({
         showToast(toErrorMessage(error), "error");
       }
       clearConnection();
-      showToast(t("profile.devices.loggedOut"), "success");
+      showToast(t("account.devices.loggedOut"), "success");
       onLoggedOut?.();
     } finally {
       setLoggingOut(false);
@@ -107,19 +107,19 @@ export function AccountDeviceSessionSection({
     <section id="device-session" data-testid="profile-device-session">
       <FormStack gap="lg">
         <div>
-          <h2 className={`${sectionTitleClass} m-0`}>{t("profile.devices.title")}</h2>
+          <h2 className={`${sectionTitleClass} m-0`}>{t("account.devices.title")}</h2>
           <p className={`mb-0 mt-xs max-w-[56ch] ${formHelpClass}`}>
-            {t("profile.devices.intro")}
+            {t("account.devices.intro")}
           </p>
         </div>
 
         <div>
-          <p className={`${sectionTitleClass} m-0 mb-sm`}>{t("profile.devices.listTitle")}</p>
+          <p className={`${sectionTitleClass} m-0 mb-sm`}>{t("account.devices.listTitle")}</p>
           {loading ? (
             <p className={`${formHelpClass} mb-0`}>{t("ui.loading")}</p>
           ) : devices.length === 0 ? (
             <p className={`${formHelpClass} mb-0`} data-testid="devices-empty">
-              {t("profile.devices.empty")}
+              {t("account.devices.empty")}
             </p>
           ) : (
             <ul className="m-0 max-w-[480px] list-none space-y-xs p-0">
@@ -133,12 +133,12 @@ export function AccountDeviceSessionSection({
                     <span className="font-medium">{device.label}</span>
                     {device.current ? (
                       <span className="ml-sm text-caption text-accent">
-                        {t("profile.devices.current")}
+                        {t("account.devices.current")}
                       </span>
                     ) : null}
                     {device.lastSeenAt ? (
                       <span className="mt-0.5 block text-caption text-text-muted">
-                        {t("profile.devices.lastSeen", {
+                        {t("account.devices.lastSeen", {
                           time: formatExpires(device.lastSeenAt),
                         })}
                       </span>
@@ -150,7 +150,7 @@ export function AccountDeviceSessionSection({
                       variant="ghost"
                       size="icon"
                       className="shrink-0"
-                      aria-label={t("profile.devices.revokeAria", { label: device.label })}
+                      aria-label={t("account.devices.revokeAria", { label: device.label })}
                       onClick={() => void onRevoke(device.id)}
                     >
                       <Trash2 size={14} aria-hidden />
@@ -162,7 +162,7 @@ export function AccountDeviceSessionSection({
           )}
         </div>
 
-        <SettingsRow label={t("profile.devices.logoutLabel")} help={t("profile.devices.logoutHelp")}>
+        <SettingsRow label={t("account.devices.logoutLabel")} help={t("account.devices.logoutHelp")}>
           <Button
             type="button"
             variant="secondary"
@@ -171,7 +171,7 @@ export function AccountDeviceSessionSection({
             onClick={() => void onLogout()}
             data-testid="device-logout"
           >
-            {loggingOut ? t("profile.devices.loggingOut") : t("profile.devices.logout")}
+            {loggingOut ? t("account.devices.loggingOut") : t("account.devices.logout")}
           </Button>
         </SettingsRow>
       </FormStack>

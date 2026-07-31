@@ -1,12 +1,11 @@
 /**
- * Load related timed items for recurring / calendar_task detail panels.
- * Recurring: RRULE occurrences in a forward window + owned user_events.
- * calendar_task: owned user_events only (filter bucket, no RRULE).
+ * Load RRULE occurrences and owned user events for recurring detail panels.
  */
 
 import { useEffect, useState } from "react";
 
 import { fetchCalendarOccurrences } from "../../api/results";
+import { fetchTaskSchedule } from "../../api/taskSchedule";
 import { listUserEvents, type UserEvent } from "../../api/userEvents";
 import type { CalendarOccurrence } from "../../types/analysis";
 import type { AnalysisMode } from "../../types/common";
@@ -73,12 +72,14 @@ export function useTaskScheduleRelatedEvents(
     taskId && analysisMode && isScheduleOnlyAnalysisMode(analysisMode),
   );
   const [items, setItems] = useState<TaskScheduleRelatedItem[]>([]);
+  const [eventLocation, setEventLocation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled || !taskId || !analysisMode) {
       setItems([]);
+      setEventLocation(null);
       setLoading(false);
       setError(null);
       return;
@@ -93,10 +94,17 @@ export function useTaskScheduleRelatedEvents(
       try {
         const ownedEvents = await listUserEvents({ taskId, start, end });
         let occurrences: CalendarOccurrence[] = [];
+        let location: string | null = null;
         if (analysisMode === "recurring") {
-          occurrences = await fetchCalendarOccurrences(start, end, { taskId });
+          const [occRows, schedule] = await Promise.all([
+            fetchCalendarOccurrences(start, end, { taskId }),
+            fetchTaskSchedule(taskId).catch(() => null),
+          ]);
+          occurrences = occRows;
+          location = schedule?.eventLocation?.trim() || null;
         }
         if (cancelled) return;
+        setEventLocation(location);
         setItems(
           sortByStart([
             ...occurrences.map(fromOccurrence),
@@ -106,6 +114,7 @@ export function useTaskScheduleRelatedEvents(
       } catch (err) {
         if (cancelled) return;
         setItems([]);
+        setEventLocation(null);
         setError(toErrorMessage(err));
       } finally {
         if (!cancelled) setLoading(false);
@@ -118,5 +127,5 @@ export function useTaskScheduleRelatedEvents(
     };
   }, [enabled, taskId, analysisMode]);
 
-  return { items, loading, error, enabled };
+  return { items, eventLocation, loading, error, enabled };
 }

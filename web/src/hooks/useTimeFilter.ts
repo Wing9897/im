@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TimeWindow } from "../types";
 import type { TimeFilterPreset } from "../components/TimeFilter";
-import { INTELLIGENCE_TIME_PRESET_STORAGE_KEY } from "../domain/intelligence/intelligencePersistedKeys";
+import { INTELLIGENCE_TIME_PRESET_STORAGE_KEY } from "../domain/prefs";
 
 /** List/card toolbar time preset (Intelligence feed). */
 export { INTELLIGENCE_TIME_PRESET_STORAGE_KEY };

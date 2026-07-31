@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { fetchTaskSchedule } from "../../../api/taskSchedule";
 import { listUserEvents, type UserEvent } from "../../../api/userEvents";
 import { fetchProjectTickStatus, fetchTaskActivitySpans } from "../../../api/tasks";
 import { buildChannelNameById, resolveChannelLabel } from "../../../components/detail";
@@ -59,35 +60,55 @@ export function useProjectDetail() {
   const [activitySpan, setActivitySpan] = useState<TaskActivitySpan | null>(null);
   const [tickStatus, setTickStatus] = useState<ProjectTickStatus | null>(null);
   const [spanLoading, setSpanLoading] = useState(false);
+  const [childRrules, setChildRrules] = useState<ReadonlyMap<string, string>>(
+    () => new Map(),
+  );
 
-  const loadSideData = useCallback(async (id: string) => {
+  const loadSideData = useCallback(async (id: string, childIds: readonly string[] = []) => {
     setEventsLoading(true);
     setSpanLoading(true);
     setEventsError(null);
     try {
-      const [ownedEvents, spans, status] = await Promise.all([
+      const [ownedEvents, spans, status, scheduleRows] = await Promise.all([
         listUserEvents({ taskId: id }),
         fetchTaskActivitySpans(),
         fetchProjectTickStatus(id, { limit: 20 }),
+        Promise.all(
+          childIds.map(async (childId) => {
+            try {
+              const schedule = await fetchTaskSchedule(childId);
+              return [childId, schedule.rrule?.trim() || ""] as const;
+            } catch {
+              return [childId, ""] as const;
+            }
+          }),
+        ),
       ]);
       setEvents(ownedEvents);
       setActivitySpan(findActivitySpan(spans, id));
       setTickStatus(status);
+      setChildRrules(new Map(scheduleRows.filter(([, rrule]) => Boolean(rrule))));
     } catch (err) {
       setEventsError(toErrorMessage(err));
       setEvents([]);
       setActivitySpan(null);
       setTickStatus(null);
+      setChildRrules(new Map());
     } finally {
       setEventsLoading(false);
       setSpanLoading(false);
     }
   }, []);
 
+  const childIdsKey = children.map((child) => child.id).join(",");
+
   useEffect(() => {
     if (!taskId) return;
-    void loadSideData(taskId);
-  }, [taskId, loadSideData]);
+    void loadSideData(
+      taskId,
+      childIdsKey ? childIdsKey.split(",") : [],
+    );
+  }, [taskId, childIdsKey, loadSideData]);
 
   // Refresh catalog + side data when tasks / owned user_events change via SSE.
   useEffect(() => {
@@ -99,20 +120,22 @@ export function useProjectDetail() {
       void refreshTasks().catch((error) => {
         logWarn("[projectDetail] catalog refresh after resource_modified failed", error);
       });
-      void loadSideData(taskId).catch((error) => {
+      const ids = childIdsKey ? childIdsKey.split(",") : [];
+      void loadSideData(taskId, ids).catch((error) => {
         logWarn("[projectDetail] side-data refresh after resource_modified failed", error);
       });
     });
-  }, [taskId, refreshTasks, loadSideData]);
+  }, [taskId, childIdsKey, refreshTasks, loadSideData]);
 
   const reload = useCallback(async () => {
+    const ids = childIdsKey ? childIdsKey.split(",") : [];
     await Promise.all([
       refreshTasks().catch((error) => {
         logWarn("[projectDetail] manual catalog reload failed", error);
       }),
-      taskId ? loadSideData(taskId) : Promise.resolve(),
+      taskId ? loadSideData(taskId, ids) : Promise.resolve(),
     ]);
-  }, [refreshTasks, loadSideData, taskId]);
+  }, [refreshTasks, loadSideData, taskId, childIdsKey]);
 
   const isRunning = useMemo(() => {
     if (!taskId) return false;
@@ -160,6 +183,7 @@ export function useProjectDetail() {
     taskId,
     project,
     children,
+    childRrules,
     channelLabels,
     events,
     eventsLoading,
@@ -176,7 +200,10 @@ export function useProjectDetail() {
     notFound,
     refreshTasks,
     reload,
-    reloadSideData: () => (taskId ? loadSideData(taskId) : Promise.resolve()),
+    reloadSideData: () =>
+      taskId
+        ? loadSideData(taskId, childIdsKey ? childIdsKey.split(",") : [])
+        : Promise.resolve(),
     goBack,
     goEdit,
     goEditChild,

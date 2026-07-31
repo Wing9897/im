@@ -116,6 +116,9 @@
       "optionalAria": "选填设定",
       "optionalTitle": "选填设定",
       "channelsLoadError": "无法加载频道列表",
+      "scheduleHydrating": "正在加载循环排程…",
+      "scheduleHydrateFailed": "无法加载循环排程：{{message}}",
+      "scheduleHydrateRetry": "重试",
       "timeRangeLabel": "分析时间范围",
       "timeAll": "不限时间",
       "time30d": "最近 30 天",
@@ -169,14 +172,6 @@
         "displayLabel": "循环任务",
         "modeOptionLabel": "循环任务 - 周期性活动",
         "modeDescription": "💡 循环任务用于管理周期性活动，使用 RRULE 定义重复规则，不涉及 AI 分析",
-        "promptLabel": "",
-        "promptPlaceholder": "",
-        "promptHint": ""
-      },
-      "calendar_task": {
-        "displayLabel": "日历任务",
-        "modeOptionLabel": "日历任务 - 分类归属",
-        "modeDescription": "日历任务仅作时间轴／语音／助手的筛选归属，方便分类；无 AI 分析、无循环规则",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
@@ -667,7 +662,7 @@
     },
     "clientManager": {
       "title": "客户经理",
-      "shortDescription": "对外 Agent（A2A）：第三方用自然语言交办即可，与助手共用 LLM／工具但不跟你聊天、不存服务器对话历史。需访问密钥（`a2a:agent` 或 `*`）。",
+      "shortDescription": "对外 Agent（A2A）：第三方用自然语言交办即可，与助手共用 LLM／工具但不跟你聊天、不存服务器对话历史。需完整访问密钥（`*`）。",
       "linkLabel": "前往 API 说明"
     },
     "collector": {
@@ -1078,73 +1073,12 @@
     "openItem": "打开当前项目",
     "closePanel": "关闭面板或预览"
   },
-  "schema": {
-    "dialogAria": "数据库升级",
-    "title": "数据库升级",
-    "versionLine": "当前版本 v{current} → 目标 v{required}",
-    "restoredTitle": "已从半迁移状态恢复",
-    "restoredBody": "系统检测到上次升级未完成，已从基准备份还原。请确认后重新升级。",
-    "needsTitle": "需要数据库升级",
-    "needsBody": "必须先完成结构升级才能继续使用。升级期间会暂停收集与分析，请勿关闭程序。",
-    "failedBackupTitle": "升级失败（已保留备份）",
-    "failedBackupBody": "可点下方按钮重试。若仍失败，请关闭程序后用备份路径手动还原。",
-    "failedNoBackupTitle": "升级失败且没有可用备份",
-    "failedNoBackupBody": "无法安全自动重试。请关闭程序后手动还原数据库文件。",
-    "migratingTitle": "升级进行中",
-    "migratingBody": "请稍候，不要关闭程序或强制断电。",
-    "phaseMigrate": "升级结构",
-    "starting": "正在开始升级…",
-    "idlePhase": "待命",
-    "checking": "检查数据库版本…",
-    "upgrading": "升级中…",
-    "retry": "重新升级",
-    "start": "开始升级",
-    "backupPath": "备份路径：{path}",
-    "copied": "已复制",
-    "copy": "复制",
-    "techDetails": "技术错误详情（可展开）",
-    "retryBlocked": "没有可用备份，无法安全重试。请关闭程序后手动还原数据库文件。",
-    "phases": {
-      "idle": "待命",
-      "awaiting_confirmation": "等待确认",
-      "snapshot": "记录统计",
-      "backup": "备份",
-      "migrate": "升级结构",
-      "validate": "校验",
-      "restore": "还原",
-      "runtime": "启动服务",
-      "ready": "就绪",
-      "failed": "失败"
-    },
-    "messages": {
-      "needs_upgrade": "数据库需要从 v{current} 升级到 v{required}",
-      "up_to_date": "数据库结构已是最新",
-      "healed_half_migration": "已从半迁移状态恢复，请确认后重新升级",
-      "restoring": "正在从备份还原数据库…",
-      "restored_retry": "已从备份还原，请重新升级",
-      "failed_no_backup": "升级失败且没有可用备份，请关闭程序后手动还原数据库文件",
-      "cannot_restore": "无法还原备份",
-      "snapshotting": "正在记录升级前数据统计…",
-      "backing_up": "正在备份数据库…",
-      "migrating": "正在升级数据库结构（请勿关闭程序）…",
-      "validating": "正在验证升级后数据完整性…",
-      "starting_runtime": "正在启动收集与分析服务…",
-      "upgrade_complete": "升级完成",
-      "failed_auto_restore": "升级失败且自动还原失败",
-      "upgrade_failed": "升级失败（未产生可用备份，请勿继续使用）",
-      "starting": "正在开始升级…",
-      "marker_corrupt": "升级校验标记损坏",
-      "startup_validate_failed": "启动校验失败",
-      "integrity_failed": "数据完整性检查失败",
-      "half_migration_restore_failed": "半迁移自动还原失败"
-    }
-  },
   "boot": {
-    "checking": "正在检查数据库版本…",
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 3／SemVer 0.1.0-beta.6；更旧 stamp 须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 5／SemVer 0.1.0-beta.6；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
-    "serviceUnavailable": "服务暂时无法回应"
+    "serviceUnavailable": "服务暂时无法回应",
+    "starting": "正在启动…"
   },
   "secretsBroken": {
     "dialogAria": "加密密钥不匹配",
@@ -1285,7 +1219,7 @@
   "errorToast": {
     "regionAria": "错误通知区域",
     "closeAria": "关闭错误通知",
-    "goProfileAccessKeys": "前往账户 → 访问密钥"
+    "goAccountAccessKeys": "前往账户 → 访问密钥"
   },
   "account": {
     "root": "账户",
@@ -1294,20 +1228,7 @@
       "identity": "身份",
       "devices": "设备",
       "keys": "访问密钥"
-    }
-  },
-  "speech": {
-    "sttDesktopUnavailable": "桌面版不支持浏览器语音识别，请改用文字输入。",
-    "sttUnsupported": "此浏览器不支持语音识别，或不在安全上下文（HTTPS / localhost）。",
-    "sttStartFailed": "无法启动语音识别",
-    "sttNotAllowed": "麦克风权限被拒绝，请改用文字输入。",
-    "sttNoMic": "无法使用麦克风（找不到装置，或被其他应用占用）。可维持桌面版运行，请在浏览器标签页按住说话；若仍失败请检查系统麦克风权限。",
-    "sttNetwork": "浏览器云端语音识别失败（需可连上识别服务）。请改用文字输入，或改用一般 Chrome 网页开启本机服务再试。",
-    "sttErrorCode": "语音识别错误：{code}",
-    "ttsUnsupported": "此浏览器不支持语音合成。",
-    "ttsFailed": "语音合成失败"
-  },
-  "profile": {
+    },
     "defaultName": "用户",
     "intro": "设定显示名称、头像与背景简介。头像会用于直连字幕等界面。",
     "avatarLabel": "头像",
@@ -1354,14 +1275,11 @@
     },
     "accessKeys": {
       "title": "API 密钥（Webhook／自动化）",
-      "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本与客户经理。完整密钥（`*`）可用于 Webhook 与客户经理；仅客户经理密钥不能打 Webhook。不可用于 UI 登录——日常请用管理员账号密码。",
+      "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本与客户经理。完整密钥（`*`）可写入并调用 A2A；只读密钥（`read`）仅限安全 GET/HEAD。不可用于 UI 登录——日常请用管理员账号密码。",
       "defaultLabel": "访问密钥",
       "newLabel": "新密钥名称",
       "newPlaceholder": "例如：Webhook、CI 脚本",
-      "a2aAgentOnly": "仅限客户经理（A2A）",
-      "a2aAgentOnlyHelp": "仅能调用 `POST /api/v1/a2a/agent`。不勾选则创建完整密钥（`*`），可用于 Webhook 与客户经理。",
       "scopesFull": "权限：完整（*）",
-      "scopesA2aAgent": "权限：客户经理（a2a:agent）",
       "create": "生成密钥",
       "creating": "生成中…",
       "created": "已生成新密钥（请立即复制）",
@@ -1373,8 +1291,22 @@
       "revealHelp": "请复制并妥善保存；关闭后无法再次查看完整内容。",
       "copy": "复制",
       "copied": "已复制",
-      "copyFailed": "无法复制"
+      "copyFailed": "无法复制",
+      "readOnly": "只读（仅 GET）",
+      "readOnlyHelp": "只能调用安全的 GET/HEAD。不勾选则为完整密钥（*），可用于 Webhook、写入与 A2A。",
+      "scopesReadOnly": "权限：只读（read）"
     }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "桌面版不支持浏览器语音识别，请改用文字输入。",
+    "sttUnsupported": "此浏览器不支持语音识别，或不在安全上下文（HTTPS / localhost）。",
+    "sttStartFailed": "无法启动语音识别",
+    "sttNotAllowed": "麦克风权限被拒绝，请改用文字输入。",
+    "sttNoMic": "无法使用麦克风（找不到装置，或被其他应用占用）。可维持桌面版运行，请在浏览器标签页按住说话；若仍失败请检查系统麦克风权限。",
+    "sttNetwork": "浏览器云端语音识别失败（需可连上识别服务）。请改用文字输入，或改用一般 Chrome 网页开启本机服务再试。",
+    "sttErrorCode": "语音识别错误：{code}",
+    "ttsUnsupported": "此浏览器不支持语音合成。",
+    "ttsFailed": "语音合成失败"
   },
   "workset": {
     "label": "工作集",

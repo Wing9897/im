@@ -31,7 +31,7 @@ describe("user events API contract", () => {
       end: "2026-08-01T00:00:00Z",
     });
 
-    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/user-events", {
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
       start: "2026-07-01T00:00:00Z",
       end: "2026-08-01T00:00:00Z",
     });
@@ -62,7 +62,7 @@ describe("user events API contract", () => {
 
     await listUserEvents({ taskId: "proj-1" });
 
-    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/user-events", {
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
       task_id: "proj-1",
     });
   });
@@ -76,7 +76,7 @@ describe("user events API contract", () => {
       endTime: null,
     });
 
-    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/user-events", {
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
       title: "Manual event",
       startTime: "2026-07-20T10:00:00Z",
       endTime: null,
@@ -94,7 +94,7 @@ describe("user events API contract", () => {
       taskId: "__user__",
     });
 
-    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/user-events", {
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
       title: "Tagged",
       startTime: "2026-07-20T10:00:00Z",
       endTime: null,
@@ -109,7 +109,7 @@ describe("user events API contract", () => {
 
     await updateUserEvent("event-1", { title: "Renamed", endTime: null });
 
-    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/user-events/event-1", {
+    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
       title: "Renamed",
       endTime: null,
     });
@@ -120,7 +120,7 @@ describe("user events API contract", () => {
 
     await updateUserEvent("event-1", { taskId: "ct-1" });
 
-    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/user-events/event-1", {
+    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
       taskId: "ct-1",
     });
   });
@@ -130,6 +130,6 @@ describe("user events API contract", () => {
 
     await deleteUserEvent("event-1");
 
-    expect(apiClient.delete).toHaveBeenCalledWith("/api/v1/user-events/event-1");
+    expect(apiClient.delete).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1");
   });
 });

@@ -35,7 +35,6 @@ const VALID_ANALYSIS_MODES: readonly string[] = [
   "leaderboard",
   "event",
   "recurring",
-  "calendar_task",
   "project",
 ];
 

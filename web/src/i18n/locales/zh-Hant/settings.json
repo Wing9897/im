@@ -60,7 +60,12 @@
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
     "versionLoading": "載入中…",
-    "versionUnavailable": "無法取得"
+    "versionUnavailable": "無法取得",
+    "lanAccessLabel": "允許區域網路存取",
+    "lanAccessHelp": "將本機服務綁定到所有網卡（0.0.0.0），以便區網其他裝置以遠端用戶端連線。預設僅本機迴環（127.0.0.1）。變更後會重啟應用。若經 port-forward 暴露到公網，須在前面加 Caddy/Nginx 等 TLS 反向代理——應用本身不處理 HTTPS。",
+    "lanAccessEnabled": "已開啟區域網路存取（即將重啟）",
+    "lanAccessDisabled": "已關閉區域網路存取（即將重啟）",
+    "lanAccessRestarting": "正在重啟以套用綁定位址…"
   },
   "theme": {
     "bgTooLarge": "圖片大小不可超過 2MB",
@@ -354,7 +359,7 @@
     },
     "deepLink": {
       "title": "Desktop 日曆 deep link",
-      "body": "僅安裝版 Desktop（非 HTTP API）。系統已註冊 `intelligencemonitor://` 與 `.ics` 檔案關聯。開啟連結或檔案後，會彈出「加入日曆／選工作集」對話框，確認後寫入 `POST /api/v1/user-events`。只處理第一個 VEVENT；不是 webcal／CalDAV 同步。",
+      "body": "僅安裝版 Desktop（非 HTTP API）。系統已註冊 `intelligencemonitor://` 與 `.ics` 檔案關聯。開啟連結或檔案後，會彈出「加入日曆／選工作集」對話框，確認後經批量 preview/commit（`/api/v1/calendar/imports/*`）寫入。不是 webcal／CalDAV 同步。",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — 下載遠端 ICS（http／https）",
         "`title` + `start` 必填（inline）；可選 `end`／`location`／`body`／`worksetId`",

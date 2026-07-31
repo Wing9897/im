@@ -44,6 +44,10 @@ vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
 }));
 
 import {
+  MONITOR_MODE_KEY,
+  MonitorModeProvider,
+} from "../../context/MonitorModeContext";
+import {
   makeAnalysisTask,
   resetTaskCatalogState,
   taskCatalogState,
@@ -77,6 +81,7 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();
+    window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
@@ -100,7 +105,17 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
   async function renderHookAsync() {
     await act(async () => {
       root = createRoot(container);
-      root.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+      root.render(
+        createElement(
+          MemoryRouter,
+          null,
+          createElement(
+            MonitorModeProvider,
+            null,
+            createElement(HookHarness, { resultRef }),
+          ),
+        ),
+      );
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -212,7 +227,17 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       await act(async () => {
         taskCatalogState.tasks = [makeTimelineTask("task-a", "任務 A")];
         // Re-render to trigger the effect
-        root!.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+        root!.render(
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(
+              MonitorModeProvider,
+              null,
+              createElement(HookHarness, { resultRef }),
+            ),
+          ),
+        );
         await Promise.resolve();
         await Promise.resolve();
       });
@@ -241,7 +266,17 @@ describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {
       // Remove "task-b"
       await act(async () => {
         taskCatalogState.tasks = [makeTimelineTask("task-a", "任務 A")];
-        root!.render(createElement(MemoryRouter, null, createElement(HookHarness, { resultRef })));
+        root!.render(
+          createElement(
+            MemoryRouter,
+            null,
+            createElement(
+              MonitorModeProvider,
+              null,
+              createElement(HookHarness, { resultRef }),
+            ),
+          ),
+        );
         await Promise.resolve();
         await Promise.resolve();
       });

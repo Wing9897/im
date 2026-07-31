@@ -1,7 +1,12 @@
 import type { UserEvent } from "../../api/userEvents";
 import { listUserEvents } from "../../api/userEvents";
-import { fetchCalendarOccurrences, fetchEvents } from "../../api/results";
+import { fetchEvents } from "../../api/results";
 import { getEventTimestamp } from "../intelligence/mapFilters";
+import {
+  fetchSharedCalendarItems,
+  fetchSharedTimedAnalysisPage,
+  fetchSharedUserEvents,
+} from "./sharedCalendarFetch";
 import { resolveUserEventTaskName } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
@@ -197,19 +202,12 @@ export async function fetchMergedTimedBoardEvents(opts: {
   limit: number;
 }): Promise<AnalysisEvent[]> {
   const { startDate, endDate, limit } = opts;
+  // Shared coalesced fetchers — CalendarBoard + GanttEvents widgets on the same
+  // window share one /calendar/items + user-events + timed-analysis round-trip.
   const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
-    fetchEvents({
-      startDate,
-      endDate,
-      hasTime: true,
-      requireIncludeInTimeline: true,
-      limit,
-      offset: 0,
-      sort: "event_time",
-      includeTotal: false,
-    }).then((page) => page.items),
-    listUserEvents({ start: startDate, end: endDate }),
-    fetchCalendarOccurrences(startDate, endDate),
+    fetchSharedTimedAnalysisPage({ startDate, endDate, limit }),
+    fetchSharedUserEvents({ start: startDate, end: endDate }),
+    fetchSharedCalendarItems(startDate, endDate),
   ]);
   return mergeWithCalendarOccurrences(
     [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))],
@@ -239,7 +237,7 @@ export async function fetchBoardEventsList(opts: {
     // Unbounded list stays small under retention; merge so「一般」filter works.
     listUserEvents(),
     includeCalendar && startDate && endDate
-      ? fetchCalendarOccurrences(startDate, endDate)
+      ? fetchSharedCalendarItems(startDate, endDate)
       : Promise.resolve([] as CalendarOccurrence[]),
   ]);
   const merged = includeCalendar

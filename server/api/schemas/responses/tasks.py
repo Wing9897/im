@@ -72,19 +72,6 @@ class TaskResponse(BaseModel):
     isActive: bool
     scheduleType: str | None = None
     scheduleValue: str | None = None
-    rrule: str | None = None
-    eventStartTime: str | None = None
-    eventEndTime: str | None = None
-    eventIsAllDay: bool = False
-    eventLocation: str | None = None
-    eventDescription: str | None = None
-    eventTimezone: str | None = None
-    eventStartLocal: str | None = None
-    eventEndLocal: str | None = None
-    eventExdates: list[str] = Field(default_factory=list)
-    eventRdates: list[str] = Field(default_factory=list)
-    icsUid: str | None = None
-    icsSource: str | None = None
     includeInTimeline: bool = True
     parentTaskId: str | None = None
     worksetId: str | None = None
@@ -97,6 +84,26 @@ class TaskResponse(BaseModel):
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None
     deletedBatchCount: int | None = None
+
+
+class TaskScheduleResponse(BaseModel):
+    """Recurring calendar plan for ``analysisMode=recurring`` tasks."""
+
+    taskId: str
+    rrule: str
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool = False
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    eventTimezone: str | None = None
+    eventStartLocal: str | None = None
+    eventEndLocal: str | None = None
+    eventExdates: list[str] = Field(default_factory=list)
+    eventRdates: list[str] = Field(default_factory=list)
+    icsUid: str | None = None
+    icsSource: str | None = None
+    parentTaskId: str | None = None
 
 
 class TaskDeleteResponse(BaseModel):

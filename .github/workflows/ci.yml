@@ -4,8 +4,8 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-  # Tag builds also publish Desktop artifacts + GitHub Release + GHCR image
-  # (see package / release / container jobs).
+  # Tag builds also publish Windows Desktop artifacts + GitHub Release + GHCR image
+  # (see windows-desktop / package / release / container jobs).
   # Example: git tag v0.1.0-beta.3 && git push origin v0.1.0-beta.3
 
 env:
@@ -13,12 +13,9 @@ env:
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
 jobs:
+  # PR / push core gate: Ubuntu only (lint, typecheck, i18n, OpenAPI, full tests).
   quality:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
@@ -47,36 +44,109 @@ jobs:
       - name: Build web and desktop
         run: npm run build
 
-      - name: Build bundled server sidecar
-        run: uv run python scripts/build_server_sidecar.py
+  # Windows Desktop sidecar when Desktop/web packaging paths change, on v* tags,
+  # or via manual dispatch. Not part of the Ubuntu PR gate. Full NSIS is the
+  # separate `package` job (tag / workflow_dispatch only).
+  windows-desktop:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-      - name: Verify bundled server exists
+      - name: Detect Desktop-related path changes
+        id: paths
         shell: bash
         run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
-          else
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          else
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          fi
+          if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$base" "$head" | grep -E '^(desktop/|scripts/build_server_sidecar\.py|package\.json|package-lock\.json|web/)' >/dev/null; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip when paths are unrelated
+        if: steps.paths.outputs.relevant != 'true'
+        run: echo "No Desktop-related path changes; skipping Windows Desktop job."
+
+      - uses: actions/setup-node@v7
+        if: steps.paths.outputs.relevant == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: astral-sh/setup-uv@v7
+        if: steps.paths.outputs.relevant == 'true'
+        with:
+          enable-cache: true
+          activate-environment: true
+
+      - name: Install Python 3.11
+        if: steps.paths.outputs.relevant == 'true'
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        if: steps.paths.outputs.relevant == 'true'
+        run: |
+          uv sync --extra dev --locked
+          npm ci
+
+      - name: Build web, desktop, and server sidecar
+        if: steps.paths.outputs.relevant == 'true'
+        run: |
+          npm run build
+          uv run python scripts/build_server_sidecar.py
+
+      - name: Verify bundled server exists
+        if: steps.paths.outputs.relevant == 'true'
+        shell: bash
+        run: |
+          server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
           test -f "$server" || { echo "Missing bundled server: $server"; exit 1; }
 
+      - name: Sidecar startup smoke (tzdata / sse_starlette)
+        if: steps.paths.outputs.relevant == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
+          export INTELLIGENCE_MONITOR_DATA_DIR="${RUNNER_TEMP}/im-sidecar-smoke"
+          export INTELLIGENCE_MONITOR_HOST=127.0.0.1
+          mkdir -p "$INTELLIGENCE_MONITOR_DATA_DIR"
+          "$server" &
+          pid=$!
+          cleanup() { kill "$pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS "http://127.0.0.1:18820/api/v1/health" >/tmp/im-health.json; then
+              grep -q '"status"[[:space:]]*:[[:space:]]*"ok"' /tmp/im-health.json
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Sidecar failed to become healthy within 120s" >&2
+          exit 1
+
+  # Windows NSIS package + desktop verify on tag or manual dispatch only.
   package:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs: quality
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            dist: dist:win
-            artifact: windows-desktop
-          - os: macos-latest
-            dist: dist:mac
-            artifact: macos-desktop
-          - os: ubuntu-latest
-            dist: dist:linux
-            artifact: linux-desktop
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
@@ -105,34 +175,24 @@ jobs:
       - name: Install Python 3.11
         run: uv python install 3.11
 
-      - name: Install Linux packaging deps
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y fakeroot rpm
-
       - name: Install dependencies
         run: |
           uv sync --extra dev --locked
           npm ci
 
-      - name: Build and verify Desktop package
+      - name: Build and verify Windows Desktop package
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
-          npm run ${{ matrix.dist }}
+          npm run dist:win
           npm run verify:desktop:full
 
       - name: Upload Desktop artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}-${{ github.sha }}
+          name: windows-desktop-${{ github.sha }}
           path: |
             desktop/release/*.exe
-            desktop/release/*.dmg
-            desktop/release/*.zip
-            desktop/release/*.AppImage
-            desktop/release/*.deb
             desktop/release/*.yml
             desktop/release/*.yaml
             desktop/release/*.blockmap
@@ -171,22 +231,21 @@ jobs:
           name: ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
           body: |
-            Desktop installers for **${{ github.ref_name }}**.
+            Windows Desktop installer for **${{ github.ref_name }}**.
+
+            Docker/Web image is published to GHCR on the same tag (or via manual workflow_dispatch).
 
             See [`CHANGELOG.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for release notes.
           files: |
             release-assets/**/*.exe
-            release-assets/**/*.dmg
-            release-assets/**/*.zip
-            release-assets/**/*.AppImage
-            release-assets/**/*.deb
             release-assets/**/*.yml
             release-assets/**/*.yaml
             release-assets/**/*.blockmap
           fail_on_unmatched_files: false
 
+  # Docker image: tag or manual only (not every main push). Healthcheck lives in Dockerfile.
   container:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -204,7 +263,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -217,7 +275,7 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=sha,prefix=sha-
             type=ref,event=tag
             type=raw,value=buildcache,enable=false
@@ -226,8 +284,28 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Deploy smoke (healthcheck)
+        run: |
+          set -euo pipefail
+          image="${{ steps.image.outputs.name }}"
+          # Prefer the just-built sha tag for a deterministic smoke.
+          tag="sha-${GITHUB_SHA}"
+          docker pull "${image}:${tag}"
+          cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
+          cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "http://127.0.0.1:18820/api/v1/health" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Container failed health smoke" >&2
+          docker logs "$cid" || true
+          exit 1

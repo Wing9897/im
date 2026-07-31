@@ -21,43 +21,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/system/schema/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Schema Status */
-        get: operations["schema_status_api_v1_system_schema_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/system/schema/upgrade": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Schema Upgrade
-         * @description Run stop-the-world backup + migration + runtime start.
-         */
-        post: operations["schema_upgrade_api_v1_system_schema_upgrade_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/setup/status": {
         parameters: {
             query?: never;
@@ -263,6 +226,25 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tasks/{task_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Task Schedule */
+        get: operations["get_task_schedule_api_v1_tasks__task_id__schedule_get"];
+        /** Put Task Schedule */
+        put: operations["put_task_schedule_api_v1_tasks__task_id__schedule_put"];
+        post?: never;
+        /** Remove Task Schedule */
+        delete: operations["remove_task_schedule_api_v1_tasks__task_id__schedule_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -798,23 +780,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/results/calendar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Fetch Calendar */
-        get: operations["fetch_calendar_api_v1_results_calendar_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/results/queue": {
         parameters: {
             query?: never;
@@ -1024,7 +989,7 @@ export interface paths {
         put?: never;
         /**
          * A2A Agent
-         * @description A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires access key with `a2a:agent` or `*`.
+         * @description A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`["*"]`).
          */
         post: operations["a2a_agent_api_v1_a2a_agent_post"];
         delete?: never;
@@ -1322,7 +1287,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calendar-imports/preview": {
+    "/api/v1/calendar/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Calendar Items */
+        get: operations["list_calendar_items_api_v1_calendar_items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/imports/preview": {
         parameters: {
             query?: never;
             header?: never;
@@ -1339,7 +1321,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calendar-imports/commit": {
+    "/api/v1/calendar/imports/commit": {
         parameters: {
             query?: never;
             header?: never;
@@ -1356,43 +1338,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/user-events": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Events */
-        get: operations["list_events_api_v1_user_events_get"];
-        put?: never;
-        /** Create Event */
-        post: operations["create_event_api_v1_user_events_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/user-events/{event_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove Event */
-        delete: operations["remove_event_api_v1_user_events__event_id__delete"];
-        options?: never;
-        head?: never;
-        /** Patch Event */
-        patch: operations["patch_event_api_v1_user_events__event_id__patch"];
-        trace?: never;
-    };
-    "/api/v1/timeline/dismissals": {
+    "/api/v1/calendar/dismissals": {
         parameters: {
             query?: never;
             header?: never;
@@ -1400,15 +1346,52 @@ export interface paths {
             cookie?: never;
         };
         /** List Dismissals */
-        get: operations["list_dismissals_api_v1_timeline_dismissals_get"];
+        get: operations["list_dismissals_api_v1_calendar_dismissals_get"];
         /** Put Dismissal */
-        put: operations["put_dismissal_api_v1_timeline_dismissals_put"];
+        put: operations["put_dismissal_api_v1_calendar_dismissals_put"];
         post?: never;
         /** Delete Dismissal */
-        delete: operations["delete_dismissal_api_v1_timeline_dismissals_delete"];
+        delete: operations["delete_dismissal_api_v1_calendar_dismissals_delete"];
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/user-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Events */
+        get: operations["list_events_api_v1_calendar_user_events_get"];
+        put?: never;
+        /** Create Event */
+        post: operations["create_event_api_v1_calendar_user_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/user-events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Event */
+        get: operations["get_event_api_v1_calendar_user_events__event_id__get"];
+        put?: never;
+        post?: never;
+        /** Remove Event */
+        delete: operations["remove_event_api_v1_calendar_user_events__event_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Event */
+        patch: operations["patch_event_api_v1_calendar_user_events__event_id__patch"];
         trace?: never;
     };
     "/api/v1/ui-prefs/board": {
@@ -1750,14 +1733,14 @@ export interface components {
              */
             label: string;
             /**
-             * Allowa2Aagent
-             * @description When true, create an A2A-only key (`["a2a:agent"]`) for `POST /api/v1/a2a/agent` only. Leave false for a full household key (`["*"]`) usable for Webhook, agent/chat, and A2A.
+             * Readonly
+             * @description When true, create a read-only key (`["read"]`) for GET-only remote access. Leave false for a full household key (`["*"]`) usable for writes, Webhook, agent/chat, and A2A.
              * @default false
              */
-            allowA2aAgent: boolean;
+            readOnly: boolean;
             /**
              * Scopes
-             * @description Optional explicit scopes. When set, overrides `allowA2aAgent`. Use `["*"]` for full access or `["a2a:agent"]` for A2A-only. Non-`*` keys are limited to `/api/v1/a2a/`.
+             * @description Optional explicit scopes. When set, overrides `readOnly`. Use `["*"]` for full access or `["read"]` for read-only.
              */
             scopes?: string[] | null;
         };
@@ -1773,7 +1756,7 @@ export interface components {
             createdAt: string;
             /**
              * Scopes
-             * @description Capability scopes; `["*"]` = full household, `["a2a:agent"]` = A2A-only.
+             * @description Capability scopes; `["*"]` = full household, `["read"]` = GET-only.
              * @default [
              *       "*"
              *     ]
@@ -1806,7 +1789,7 @@ export interface components {
             createdAt: string;
             /**
              * Scopes
-             * @description Capability scopes; `["*"]` = full household, `["a2a:agent"]` = A2A-only.
+             * @description Capability scopes; `["*"]` = full household, `["read"]` = GET-only.
              * @default [
              *       "*"
              *     ]
@@ -2654,6 +2637,27 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HealthResponse */
+        HealthResponse: {
+            /** Status */
+            status: string;
+            /** Version */
+            version: string;
+            /** Runtimeready */
+            runtimeReady: boolean;
+            /** Secretsready */
+            secretsReady: boolean;
+            /** Secretserror */
+            secretsError?: string | null;
+            /** Schemaversion */
+            schemaVersion: number;
+            /** Schemasemver */
+            schemaSemver: string;
+            /** Bindhost */
+            bindHost: string;
+            /** Lanaccessenabled */
+            lanAccessEnabled: boolean;
+        };
         /** HttpSourceBody */
         HttpSourceBody: {
             /** Url */
@@ -3056,9 +3060,8 @@ export interface components {
          * RetentionDeletedCounts
          * @description Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.
          *
-         *     Device-auth, orphan timeline dismissals, assistant-store and A2A-audit TTL
-         *     categories always run, independent of the configured ``retention_*_days``
-         *     windows.
+         *     Device-auth and orphan timeline dismissals always run, independent of the
+         *     configured ``retention_*_days`` windows.
          */
         RetentionDeletedCounts: {
             /** Messages */
@@ -3075,14 +3078,10 @@ export interface components {
             user_events: number;
             /** Timeline Dismissals */
             timeline_dismissals: number;
-            /** Assistant Device Stores */
-            assistant_device_stores: number;
             /** Device Access Tokens */
             device_access_tokens: number;
             /** Device Sessions */
             device_sessions: number;
-            /** A2A Audit Log */
-            a2a_audit_log: number;
         };
         /** RetentionRunResponse */
         RetentionRunResponse: {
@@ -3130,38 +3129,6 @@ export interface components {
             pollIntervalSeconds?: number | null;
             /** Name */
             name?: string | null;
-        };
-        /**
-         * SchemaUpgradeProgress
-         * @description Progress uses stable ``phase`` / ``message`` keys; UI localizes them.
-         */
-        SchemaUpgradeProgress: {
-            /** Phase */
-            phase: string;
-            /** Percent */
-            percent: number;
-            /** Message */
-            message: string;
-        };
-        /** SchemaUpgradeStatusResponse */
-        SchemaUpgradeStatusResponse: {
-            /** State */
-            state: string;
-            /** Runtimeready */
-            runtimeReady: boolean;
-            /** Schemaversion */
-            schemaVersion: number;
-            /** Requiredschemaversion */
-            requiredSchemaVersion: number;
-            /** Schemasemver */
-            schemaSemver: string;
-            /** Backuppath */
-            backupPath: string | null;
-            /** Error */
-            error: string | null;
-            /** Restoredfrombackup */
-            restoredFromBackup: boolean;
-            progress: components["schemas"]["SchemaUpgradeProgress"];
         };
         /** SetupStatusResponse */
         SetupStatusResponse: {
@@ -3349,7 +3316,7 @@ export interface components {
              */
             promptTemplate: string;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "recurring" | "calendar_task" | "project") | null;
+            analysisMode?: ("leaderboard" | "event" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3366,21 +3333,6 @@ export interface components {
              * @description Value interpreted only with the non-recurring AI analysis scheduleType
              */
             scheduleValue?: string | null;
-            /**
-             * Rrule
-             * @description Recurring-only recurrence expanded at query time; never an AI analysis trigger
-             */
-            rrule?: string | null;
-            /** Eventstarttime */
-            eventStartTime?: string | null;
-            /** Eventendtime */
-            eventEndTime?: string | null;
-            /** Eventisallday */
-            eventIsAllDay?: boolean | null;
-            /** Eventlocation */
-            eventLocation?: string | null;
-            /** Eventdescription */
-            eventDescription?: string | null;
             /** Includeintimeline */
             includeInTimeline?: boolean | null;
             /** Isactive */
@@ -3424,7 +3376,7 @@ export interface components {
             /** Schedulevalue */
             scheduleValue?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "recurring" | "calendar_task" | "project") | null;
+            analysisMode?: ("leaderboard" | "event" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3451,7 +3403,7 @@ export interface components {
              * Analysismode
              * @enum {string}
              */
-            analysisMode: "leaderboard" | "event" | "recurring" | "calendar_task" | "project";
+            analysisMode: "leaderboard" | "event" | "recurring" | "project";
             /** Analysistimerange */
             analysisTimeRange: string;
             /** Version */
@@ -3462,35 +3414,6 @@ export interface components {
             scheduleType?: string | null;
             /** Schedulevalue */
             scheduleValue?: string | null;
-            /** Rrule */
-            rrule?: string | null;
-            /** Eventstarttime */
-            eventStartTime?: string | null;
-            /** Eventendtime */
-            eventEndTime?: string | null;
-            /**
-             * Eventisallday
-             * @default false
-             */
-            eventIsAllDay: boolean;
-            /** Eventlocation */
-            eventLocation?: string | null;
-            /** Eventdescription */
-            eventDescription?: string | null;
-            /** Eventtimezone */
-            eventTimezone?: string | null;
-            /** Eventstartlocal */
-            eventStartLocal?: string | null;
-            /** Eventendlocal */
-            eventEndLocal?: string | null;
-            /** Eventexdates */
-            eventExdates?: string[];
-            /** Eventrdates */
-            eventRdates?: string[];
-            /** Icsuid */
-            icsUid?: string | null;
-            /** Icssource */
-            icsSource?: string | null;
             /**
              * Includeintimeline
              * @default true
@@ -3518,6 +3441,68 @@ export interface components {
             channelIds?: components["schemas"]["ChannelRefResponse"][] | null;
             /** Deletedbatchcount */
             deletedBatchCount?: number | null;
+        };
+        /** TaskScheduleBody */
+        TaskScheduleBody: {
+            /** Rrule */
+            rrule: string;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /**
+             * Eventisallday
+             * @default false
+             */
+            eventIsAllDay: boolean;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /**
+             * Parenttaskid
+             * @description Optional project parent for nested recurring children
+             */
+            parentTaskId?: string | null;
+        };
+        /**
+         * TaskScheduleResponse
+         * @description Recurring calendar plan for ``analysisMode=recurring`` tasks.
+         */
+        TaskScheduleResponse: {
+            /** Taskid */
+            taskId: string;
+            /** Rrule */
+            rrule: string;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /**
+             * Eventisallday
+             * @default false
+             */
+            eventIsAllDay: boolean;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /** Eventtimezone */
+            eventTimezone?: string | null;
+            /** Eventstartlocal */
+            eventStartLocal?: string | null;
+            /** Eventendlocal */
+            eventEndLocal?: string | null;
+            /** Eventexdates */
+            eventExdates?: string[];
+            /** Eventrdates */
+            eventRdates?: string[];
+            /** Icsuid */
+            icsUid?: string | null;
+            /** Icssource */
+            icsSource?: string | null;
+            /** Parenttaskid */
+            parentTaskId?: string | null;
         };
         /** Telegram2faBody */
         Telegram2faBody: {
@@ -3934,49 +3919,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
-                };
-            };
-        };
-    };
-    schema_status_api_v1_system_schema_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SchemaUpgradeStatusResponse"];
-                };
-            };
-        };
-    };
-    schema_upgrade_api_v1_system_schema_upgrade_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SchemaUpgradeStatusResponse"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
         };
@@ -4318,6 +4261,101 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TaskActivitySpanResponse"][];
+                };
+            };
+        };
+    };
+    get_task_schedule_api_v1_tasks__task_id__schedule_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_task_schedule_api_v1_tasks__task_id__schedule_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskScheduleBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_task_schedule_api_v1_tasks__task_id__schedule_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -5574,40 +5612,6 @@ export interface operations {
             };
         };
     };
-    fetch_calendar_api_v1_results_calendar_get: {
-        parameters: {
-            query: {
-                range_start: string;
-                range_end: string;
-                task_id?: string | null;
-                task_ids?: string[] | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CalendarOccurrenceResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     fetch_queue_api_v1_results_queue_get: {
         parameters: {
             query?: never;
@@ -6490,6 +6494,40 @@ export interface operations {
             };
         };
     };
+    list_calendar_items_api_v1_calendar_items_get: {
+        parameters: {
+            query: {
+                range_start: string;
+                range_end: string;
+                task_id?: string | null;
+                task_ids?: string[] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOccurrenceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     preview_import_api_v1_calendar_imports_preview_post: {
         parameters: {
             query?: never;
@@ -6556,7 +6594,101 @@ export interface operations {
             };
         };
     };
-    list_events_api_v1_user_events_get: {
+    list_dismissals_api_v1_calendar_dismissals_get: {
+        parameters: {
+            query?: {
+                source?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineDismissalResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_dismissal_api_v1_calendar_dismissals_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimelineDismissalBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineDismissalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_dismissal_api_v1_calendar_dismissals_delete: {
+        parameters: {
+            query: {
+                source: string;
+                eventId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_events_api_v1_calendar_user_events_get: {
         parameters: {
             query?: {
                 start?: string | null;
@@ -6590,7 +6722,7 @@ export interface operations {
             };
         };
     };
-    create_event_api_v1_user_events_post: {
+    create_event_api_v1_calendar_user_events_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -6623,7 +6755,38 @@ export interface operations {
             };
         };
     };
-    remove_event_api_v1_user_events__event_id__delete: {
+    get_event_api_v1_calendar_user_events__event_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserEventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_event_api_v1_calendar_user_events__event_id__delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -6652,7 +6815,7 @@ export interface operations {
             };
         };
     };
-    patch_event_api_v1_user_events__event_id__patch: {
+    patch_event_api_v1_calendar_user_events__event_id__patch: {
         parameters: {
             query?: never;
             header?: never;
@@ -6675,100 +6838,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserEventResponse"];
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_dismissals_api_v1_timeline_dismissals_get: {
-        parameters: {
-            query?: {
-                source?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimelineDismissalResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_dismissal_api_v1_timeline_dismissals_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TimelineDismissalBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimelineDismissalResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_dismissal_api_v1_timeline_dismissals_delete: {
-        parameters: {
-            query: {
-                source: string;
-                eventId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {

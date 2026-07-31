@@ -64,7 +64,8 @@ async def test_project_create_recurring_task_sets_parent(app) -> None:
     assert task["parentTaskId"] == "proj-1"
 
     row = await db.fetch_one(
-        "SELECT parent_task_id, analysis_mode FROM analysis_tasks WHERE id = ?",
+        "SELECT rs.parent_task_id, t.analysis_mode FROM analysis_tasks t "
+        "JOIN recurring_schedules rs ON rs.task_id = t.id WHERE t.id = ?",
         (task["id"],),
     )
     assert row is not None

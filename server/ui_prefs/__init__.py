@@ -1,7 +1,7 @@
 """SQLite-backed UI prefs (ops board + voice reminder + assistant + timeline).
 
-Global prefs are JSON TEXT rows in ``ui_prefs`` (schema v15+; keys in
-``UI_PREF_KEYS``). Assistant sessions live in ``assistant_device_stores``.
+Global and per-device prefs are JSON TEXT rows in ``ui_prefs``. Static keys are
+listed in ``UI_PREF_KEYS``; assistant sessions use ``assistant_sessions:<device>``.
 Empty / missing means "no server data" (clients seed defaults or empty lists;
 no localStorage migrate into server). Not exposed on the Settings wire map —
 use ``/api/v1/ui-prefs/*``.

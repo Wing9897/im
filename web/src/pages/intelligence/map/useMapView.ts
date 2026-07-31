@@ -25,7 +25,7 @@ import {
   MAP_LIVE_INFO_PANEL_HEIGHT_STORAGE_KEY,
   MAP_LIVE_WINDOW_HOURS_STORAGE_KEY,
   MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY,
-} from "./mapPersistedKeys";
+} from "../../../domain/prefs";
 import { groupByCoordinate } from "../../../domain/intelligence/groupByCoordinate";
 import { useMapLiveMessages } from "./useMapLiveMessages";
 

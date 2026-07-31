@@ -1,7 +1,7 @@
 import {
   SIDEBAR_RAIL_MODE_EVENT,
   SIDEBAR_RAIL_MODE_KEY,
-} from "../domain/ui/chromePersistedKeys";
+} from "../domain/prefs";
 import { useSyncedLocalStorage } from "./useSyncedLocalStorage";
 
 export type SidebarRailMode = "nav" | "history";

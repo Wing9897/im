@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchSchemaStatus } from "../../api/schema";
+import { fetchHealth } from "../../api/system";
 import { formatAppVersionLabel } from "../../utils/appVersion";
 import { SettingsRow } from "../ui";
 
@@ -38,12 +38,12 @@ export function SystemVersionPanel() {
 
     void (async () => {
       try {
-        const schema = await fetchSchemaStatus();
+        const health = await fetchHealth();
         if (cancelled) return;
-        setSchemaVersion(schema.schemaVersion);
-        setRequiredSchemaVersion(schema.requiredSchemaVersion);
+        setSchemaVersion(health.schemaVersion);
+        setRequiredSchemaVersion(health.schemaVersion);
         setSchemaSemver(
-          typeof schema.schemaSemver === "string" ? schema.schemaSemver : null,
+          typeof health.schemaSemver === "string" ? health.schemaSemver : null,
         );
       } catch {
         if (!cancelled) setError(true);

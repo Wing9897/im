@@ -1,7 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { VIEWER_TASKS_SELECTED_ID_STORAGE_KEY } from "./viewerPersistedKeys";
+import { VIEWER_TASKS_SELECTED_ID_STORAGE_KEY } from "../../domain/prefs";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

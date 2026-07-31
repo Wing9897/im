@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo } from "react";
 
-import { fetchCalendarOccurrences, fetchTimelineEvents } from "../../api/results";
-import { listUserEvents } from "../../api/userEvents";
+import { useMonitorMode } from "../../context/MonitorModeContext";
 import { userEventMatchesSourceSelection } from "../../domain/tasks/sourceFilterSelection";
+import {
+  fetchSharedCalendarItems,
+  fetchSharedTimelineEvents,
+  fetchSharedUserEvents,
+} from "../../domain/timeline/sharedCalendarFetch";
 import {
   mergeWithCalendarOccurrences,
   userEventToTimelineItem,
@@ -111,6 +115,10 @@ export function useTimelineData({
   rangeStart,
   rangeEnd,
 }: UseTimelineDataOptions): UseTimelineDataReturn {
+  const { monitorMode } = useMonitorMode();
+  // Pages shell stays keep-mounted under canvas — pause expensive Timeline
+  // fetches/subscriptions while the board is the visible shell.
+  const pageActive = monitorMode === "pages";
   const { tasks, taskLoadError, tasksLoading } = useTaskCatalog();
 
   // `activeOnly` matches the assistant / voice pickers: a soft-deleted calendar
@@ -144,8 +152,8 @@ export function useTimelineData({
 
   const fetcher = useCallback(
     (key: AnalysisFetchKey) =>
-      fetchTimelineEvents({
-        taskIds: key.taskIds === null ? undefined : key.taskIds,
+      fetchSharedTimelineEvents({
+        taskIds: key.taskIds,
         startDate: key.startIso,
         endDate: key.endIso,
       }),
@@ -161,7 +169,7 @@ export function useTimelineData({
 
   const calendarFetcher = useCallback(
     (window: { startIso: string; endIso: string; taskIds: string[] | null }) =>
-      fetchCalendarOccurrences(
+      fetchSharedCalendarItems(
         window.startIso,
         window.endIso,
         window.taskIds === null ? undefined : { taskIds: window.taskIds },
@@ -178,7 +186,7 @@ export function useTimelineData({
 
   const userEventsFetcher = useCallback(
     (window: { startIso: string; endIso: string }) =>
-      listUserEvents({ start: window.startIso, end: window.endIso }),
+      fetchSharedUserEvents({ start: window.startIso, end: window.endIso }),
     [],
   );
   const {
@@ -199,21 +207,29 @@ export function useTimelineData({
   );
 
   useEffect(() => {
-    if (!filterPlan.fetchAnalysis) return;
+    if (!pageActive || !filterPlan.fetchAnalysis) return;
     void fetchEvents({
       startIso: calendarWindow.startIso,
       endIso: calendarWindow.endIso,
       taskIds: filterPlan.analysisTaskIds,
     });
-  }, [fetchEvents, calendarWindow, filterPlan.fetchAnalysis, filterPlan.analysisTaskIds, selectedSourcesKey]);
+  }, [
+    pageActive,
+    fetchEvents,
+    calendarWindow,
+    filterPlan.fetchAnalysis,
+    filterPlan.analysisTaskIds,
+    selectedSourcesKey,
+  ]);
 
   useEffect(() => {
-    if (!filterPlan.fetchCalendar) return;
+    if (!pageActive || !filterPlan.fetchCalendar) return;
     void executeCalendarFetch({
       ...calendarWindow,
       taskIds: filterPlan.recurringTaskIds,
     });
   }, [
+    pageActive,
     executeCalendarFetch,
     calendarWindow,
     recurringTaskFingerprint,
@@ -222,9 +238,9 @@ export function useTimelineData({
   ]);
 
   useEffect(() => {
-    if (!filterPlan.fetchUserEvents) return;
+    if (!pageActive || !filterPlan.fetchUserEvents) return;
     void executeUserEventsFetch(calendarWindow);
-  }, [executeUserEventsFetch, calendarWindow, filterPlan.fetchUserEvents]);
+  }, [pageActive, executeUserEventsFetch, calendarWindow, filterPlan.fetchUserEvents]);
 
   const refreshEvents = useCallback(async () => {
     const jobs: Promise<unknown>[] = [];
@@ -257,12 +273,16 @@ export function useTimelineData({
     calendarWindow,
   ]);
 
-  useRefreshOnAnalysisEvent(refreshEvents, {
-    taskIds: filterPlan.fetchAnalysis ? filterPlan.analysisTaskIds : [],
-    analysisMode: "event",
-  });
+  useRefreshOnAnalysisEvent(
+    refreshEvents,
+    {
+      taskIds: pageActive && filterPlan.fetchAnalysis ? filterPlan.analysisTaskIds : [],
+      analysisMode: "event",
+    },
+  );
 
   useEffect(() => {
+    if (!pageActive) return;
     return subscribeResourceModified((detail) => {
       if (detail.resourceType !== "task" && detail.resourceType !== "user_event") {
         return;
@@ -271,7 +291,7 @@ export function useTimelineData({
         logWarn("[timeline] refresh after resource_modified failed", error);
       });
     });
-  }, [refreshEvents]);
+  }, [pageActive, refreshEvents]);
 
   const userEvents = useMemo(
     () =>

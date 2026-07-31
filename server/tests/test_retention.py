@@ -110,7 +110,6 @@ async def test_cleanup_disabled_when_all_retention_days_zero(db: Database) -> No
     assert counts["app_logs"] == 0
     assert counts["user_events"] == 0
     assert counts["timeline_dismissals"] == 0
-    assert counts["assistant_device_stores"] == 0
     assert await db.fetch_value("SELECT COUNT(*) FROM messages") == 1
 
 
@@ -510,32 +509,3 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
         )
         == 0
     )
-
-
-async def test_cleanup_stale_assistant_device_stores(db: Database) -> None:
-    await set_configs(
-        db,
-        {
-            "retention_messages_days": "0",
-            "retention_analysis_days": "0",
-            "retention_leaderboard_days": "0",
-            "retention_app_logs_days": "0",
-            "retention_user_events_days": "0",
-        },
-    )
-    now = utc_now_iso()
-    old = "2020-01-01T00:00:00+00:00"
-    await db.execute(
-        "INSERT INTO assistant_device_stores (device_id, payload_json, updated_at) VALUES (?, ?, ?)",
-        ("dev-old", "{}", old),
-    )
-    await db.execute(
-        "INSERT INTO assistant_device_stores (device_id, payload_json, updated_at) VALUES (?, ?, ?)",
-        ("dev-new", "{}", now),
-    )
-
-    counts = await cleanup_expired_data(db)
-
-    assert counts["assistant_device_stores"] == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM assistant_device_stores WHERE device_id = 'dev-old'") == 0
-    assert await db.fetch_value("SELECT COUNT(*) FROM assistant_device_stores WHERE device_id = 'dev-new'") == 1

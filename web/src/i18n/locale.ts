@@ -1,4 +1,4 @@
-import { UI_LOCALE_STORAGE_KEY } from "./localePersistedKeys";
+import { UI_LOCALE_STORAGE_KEY } from "../domain/prefs";
 
 /** UI locale token (resolved / concrete). */
 export type AppLocale = "zh-Hant" | "zh-Hans" | "en";

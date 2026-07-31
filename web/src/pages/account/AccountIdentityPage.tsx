@@ -47,7 +47,7 @@ export function AccountIdentityPage() {
     });
   }, [profile, setDraft]);
 
-  const fallbackName = t("profile.defaultName");
+  const fallbackName = t("account.defaultName");
   const displayName = resolveUserDisplayName(draft, fallbackName);
 
   const onAvatarFile = async (file: File) => {
@@ -58,7 +58,7 @@ export function AccountIdentityPage() {
     } catch (err) {
       const code = err instanceof Error ? err.message : "";
       setAvatarError(
-        code === "too_large" ? t("profile.avatarTooLarge") : t("profile.avatarReadFailed"),
+        code === "too_large" ? t("account.avatarTooLarge") : t("account.avatarReadFailed"),
       );
     }
   };
@@ -75,7 +75,7 @@ export function AccountIdentityPage() {
       setProfile(next);
       baselineRef.current = next;
       setDraft(next);
-      showToast(t("profile.saved"), "success");
+      showToast(t("account.saved"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
     } finally {
@@ -87,7 +87,7 @@ export function AccountIdentityPage() {
     <div data-testid="account-identity-page">
       <SettingsContentCard>
         <SettingsFieldGroup>
-          <p className={`mb-0 max-w-[56ch] ${formHelpClass}`}>{t("profile.intro")}</p>
+          <p className={`mb-0 max-w-[56ch] ${formHelpClass}`}>{t("account.intro")}</p>
 
           <AccountAvatarControl
             avatarDataUrl={draft.avatarDataUrl}
@@ -100,9 +100,9 @@ export function AccountIdentityPage() {
           />
 
           <SettingsRow
-            label={t("profile.displayNameLabel")}
+            label={t("account.displayNameLabel")}
             htmlFor="user-display-name"
-            help={t("profile.displayNameHelp")}
+            help={t("account.displayNameHelp")}
           >
             <TextField
               id="user-display-name"
@@ -114,14 +114,14 @@ export function AccountIdentityPage() {
               onChange={(e) =>
                 setDraft((prev) => ({ ...prev, displayName: e.target.value }))
               }
-              aria-label={t("profile.displayNameLabel")}
+              aria-label={t("account.displayNameLabel")}
             />
           </SettingsRow>
 
           <SettingsRow
-            label={t("profile.backgroundLabel")}
+            label={t("account.backgroundLabel")}
             htmlFor="user-background"
-            help={t("profile.backgroundHelp")}
+            help={t("account.backgroundHelp")}
           >
             <TextArea
               id="user-background"
@@ -130,11 +130,11 @@ export function AccountIdentityPage() {
               value={draft.background}
               maxLength={BACKGROUND_MAX_CHARS}
               rows={4}
-              placeholder={t("profile.backgroundPlaceholder")}
+              placeholder={t("account.backgroundPlaceholder")}
               onChange={(e) =>
                 setDraft((prev) => ({ ...prev, background: e.target.value }))
               }
-              aria-label={t("profile.backgroundLabel")}
+              aria-label={t("account.backgroundLabel")}
             />
           </SettingsRow>
 
@@ -153,7 +153,7 @@ export function AccountIdentityPage() {
               onClick={() => void onSave()}
               data-testid="user-profile-save"
             >
-              {saving ? t("profile.saving") : t("profile.save")}
+              {saving ? t("account.saving") : t("account.save")}
             </Button>
           </div>
         </SettingsFieldGroup>

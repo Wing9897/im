@@ -14,16 +14,16 @@ type ChannelRef = components["schemas"]["ChannelRefResponse"];
 type TaskResponse = components["schemas"]["TaskResponse"];
 
 /**
- * Persisted task returned by list/create/update. The generated response allows
- * route-specific omissions (toggle omits channelIds); this list-domain shape
- * records the fields the task catalog guarantees.
+ * Persisted task returned by list/create/update. Recurring calendar fields live
+ * on ``GET/PUT /api/v1/tasks/{id}/schedule``, not on the task body.
+ *
+ * Recurring-only recurrence expanded at query time — never an AI analysis trigger.
  */
 export type AnalysisTask = Omit<
   TaskResponse,
   | "description"
   | "analysisTimeRange"
   | "channelIds"
-  | "eventIsAllDay"
   | "includeInTimeline"
   | "createdAt"
   | "updatedAt"
@@ -31,7 +31,6 @@ export type AnalysisTask = Omit<
   description: string | null;
   analysisTimeRange: AnalysisTimeRange;
   channelIds: ChannelRef[];
-  eventIsAllDay?: boolean | null;
   includeInTimeline?: boolean | null;
   createdAt: string;
   updatedAt: string;
@@ -39,9 +38,6 @@ export type AnalysisTask = Omit<
 
 /** Configuration payload for creating/updating an analysis task.
  * channelIds accepts synthetic "platform:platformId" strings from the form.
- *
- * Recurring-only recurrence expanded at query time — never an AI analysis trigger.
- * ``rrule`` / calendar wall-clock fields belong on recurring tasks only.
  */
 export type TaskConfig = Omit<
   components["schemas"]["TaskConfigBody"],
@@ -72,5 +68,3 @@ export interface TaskAssistantReply {
   message: string;
   taskConfig: TaskDraftPayload | null;
 }
-
-

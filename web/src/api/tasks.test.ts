@@ -57,9 +57,9 @@ describe("tasks API", () => {
       });
     });
 
-    it("preserves the existing task response shape including inert legacy RRULE", async () => {
+    it("preserves the stamp-5 task response shape (schedule fields are a subresource)", async () => {
       const task: AnalysisTask = {
-        id: "t-legacy",
+        id: "t-1",
         name: "Existing analysis task",
         description: null,
         promptTemplate: "Analyze",
@@ -70,12 +70,9 @@ describe("tasks API", () => {
         channelIds: [{ platform: "telegram", platformId: "42", id: "telegram:42" }],
         scheduleType: "daily",
         scheduleValue: "09:30",
-        rrule: "FREQ=DAILY",
-        eventStartTime: null,
-        eventEndTime: null,
-        eventIsAllDay: null,
-        eventLocation: null,
-        eventDescription: null,
+        includeInTimeline: true,
+        parentTaskId: null,
+        worksetId: null,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-02T00:00:00Z",
       };
@@ -90,29 +87,27 @@ describe("tasks API", () => {
         "channelIds",
         "createdAt",
         "description",
-        "eventDescription",
-        "eventEndTime",
-        "eventIsAllDay",
-        "eventLocation",
-        "eventStartTime",
         "id",
+        "includeInTimeline",
         "isActive",
         "name",
+        "parentTaskId",
         "promptTemplate",
-        "rrule",
         "scheduleType",
         "scheduleValue",
         "updatedAt",
         "version",
+        "worksetId",
       ].sort());
       expect(result[0]).toMatchObject({
-        id: "t-legacy",
+        id: "t-1",
         analysisMode: "leaderboard",
         scheduleType: "daily",
         scheduleValue: "09:30",
-        rrule: "FREQ=DAILY",
         version: 3,
       });
+      expect(result[0]).not.toHaveProperty("rrule");
+      expect(result[0]).not.toHaveProperty("eventLocation");
     });
 
     it("propagates errors", async () => {

@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../intelligence/intelligencePersistedKeys";
+import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../prefs";
 import {
   intelligenceSelectedSourcesFilter,
   TIMELINE_SELECTED_SOURCES_STORAGE_KEY,

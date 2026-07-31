@@ -16,11 +16,8 @@ from server.db.database import Database, SchemaBaselineError
 from server.db.migrations import (
     CURRENT_SCHEMA_FINGERPRINT,
     CURRENT_SCHEMA_VERSION,
-    SCHEMA_MIGRATIONS,
-    MigrationStep,
     SchemaFingerprint,
     inspect_schema,
-    validate_migration_registry,
 )
 from server.db.schema import DDL
 from server.tests.schema_fixtures import (
@@ -30,7 +27,7 @@ from server.tests.schema_fixtures import (
     make_lookalike_db,
 )
 
-_REQUIRED_TABLE_COUNT = 26
+_REQUIRED_TABLE_COUNT = 25
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 
@@ -182,41 +179,6 @@ async def test_incomplete_lookalike_is_rejected_without_mutation(tmp_path, versi
     assert "delete" not in str(caught).lower()
 
 
-def test_migration_registry_ends_at_current_and_validates_fake_chains():
-    """Live registry validates; validator still rejects malformed chains.
-
-    Empty live registry is the wipe-floor SoT in ``test_schema_wipe_floor``.
-    """
-
-    async def no_op(_conn: aiosqlite.Connection) -> None:
-        return None
-
-    valid = (
-        MigrationStep(1, 2, no_op),
-        MigrationStep(2, 3, no_op),
-        MigrationStep(3, 4, no_op),
-    )
-    assert validate_migration_registry(SCHEMA_MIGRATIONS) == SCHEMA_MIGRATIONS
-    assert validate_migration_registry((), current_version=CURRENT_SCHEMA_VERSION) == ()
-    assert validate_migration_registry(valid, current_version=4) == valid
-    assert validate_migration_registry((), current_version=4) == ()
-
-    with pytest.raises(ValueError, match="ordered"):
-        validate_migration_registry(tuple(reversed(valid)), current_version=4)
-    with pytest.raises(ValueError, match="contiguous"):
-        validate_migration_registry(
-            (MigrationStep(1, 2, no_op), MigrationStep(3, 4, no_op)),
-            current_version=4,
-        )
-    with pytest.raises(ValueError, match="one-version"):
-        validate_migration_registry((MigrationStep(1, 3, no_op),), current_version=3)
-    with pytest.raises(ValueError, match="must end at the current schema version"):
-        validate_migration_registry(
-            (MigrationStep(1, 2, no_op), MigrationStep(2, 3, no_op)),
-            current_version=4,
-        )
-
-
 def test_analysis_time_range_values_are_canonical_offset_keys() -> None:
     """Task and message windows share the same resolvable offset keys.
 
@@ -331,8 +293,6 @@ async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog)
     from server.main import create_app
 
     wipe_only_version = 16  # any legacy stamp (e.g. 16/23/24); empty registry rejects all non-current
-    assert not any(step.source_version == wipe_only_version for step in SCHEMA_MIGRATIONS)
-
     path = tmp_path / "startup-reject.db"
     await make_existing_db(str(path), log_rows=[("log-startup-reject", "2026-01-01T00:00:00Z", "info", "schema-test")])
     conn = await aiosqlite.connect(path)
@@ -349,7 +309,7 @@ async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog)
 
     message = "\n".join(record.getMessage() for record in caplog.records)
     assert "scripts/reset_local_databases.py --apply" in message
-    assert f"v{wipe_only_version}" in message
+    assert str(wipe_only_version) in message
     assert str(path) in message
 
 

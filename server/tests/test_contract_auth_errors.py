@@ -4,8 +4,7 @@
   (503 AUTH_SETUP_REQUIRED if neither is available / household unset).
 - Remote writes without a Bearer hit `verify_auth` first → 401 AUTH_REQUIRED
   (not 403). With a valid household (`*`) key, remote clients may write like
-  loopback. Non-`*` keys (e.g. `a2a:agent`) are path-limited: outside their
-  allowed routes they get 403 FORBIDDEN.
+  loopback. Non-`*` keys (``read``) may GET but not write — writes get 403.
 - Non-2xx bodies carry {error_code, message, details, correlation_id}
   (snake_case) — parseApiError.ts prefers this structured shape, and 401 must
   map to AUTH_REQUIRED for the ErrorToast Sources API shortcut.
@@ -13,7 +12,7 @@
 
 from __future__ import annotations
 
-from server.access_keys import A2A_AGENT_SCOPE, seed_access_key
+from server.access_keys import READ_SCOPE, seed_access_key
 
 API_KEY = "contract-test-key-123"
 A2A_ONLY_KEY = "contract-a2a-only-key"
@@ -106,27 +105,23 @@ async def test_viewer_401_without_token(app, remote_client):
     assert resp.status_code == 401
 
 
-async def test_remote_a2a_only_key_forbidden_outside_a2a(app, remote_client, client):
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
+async def test_remote_read_only_key_allows_get_but_not_a2a_write(app, remote_client, client):
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
     headers = {"Authorization": f"Bearer {A2A_ONLY_KEY}"}
 
-    denied = await remote_client.get("/api/v1/tasks", headers=headers)
+    allowed = await remote_client.get("/api/v1/tasks", headers=headers)
+    assert allowed.status_code == 200
+
+    denied = await client.post("/api/v1/a2a/agent", json={"input": "ping"}, headers=headers)
     assert denied.status_code == 403
     body = denied.json()
     assert_structured_error(body)
     assert body["error_code"] == "FORBIDDEN"
-    assert "*" in body["message"]
-    assert "/api/v1/tasks" in body["message"]
-
-    # Path gate allows /api/v1/a2a/*; agent may return 200 with error body if LLM unset.
-    allowed = await client.post("/api/v1/a2a/agent", json={"input": "ping"}, headers=headers)
-    assert allowed.status_code == 200
-    assert allowed.json().get("error_code") != "FORBIDDEN"
 
 
-async def test_remote_a2a_only_key_forbidden_on_messages_and_agent_chat(app, remote_client):
-    """Webhook ingest and human agent chat require full `*` — a2a-only must 403."""
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
+async def test_remote_read_only_key_forbidden_on_messages_and_agent_chat(app, remote_client):
+    """Webhook ingest and human agent chat require full `*` — read-only must 403."""
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
     headers = {"Authorization": f"Bearer {A2A_ONLY_KEY}"}
 
     messages = await remote_client.post(
@@ -142,7 +137,6 @@ async def test_remote_a2a_only_key_forbidden_on_messages_and_agent_chat(app, rem
     messages_body = messages.json()
     assert_structured_error(messages_body)
     assert messages_body["error_code"] == "FORBIDDEN"
-    assert "/api/v1/messages" in messages_body["message"]
 
     agent = await remote_client.post(
         "/api/v1/agent/chat",
@@ -153,7 +147,7 @@ async def test_remote_a2a_only_key_forbidden_on_messages_and_agent_chat(app, rem
     agent_body = agent.json()
     assert_structured_error(agent_body)
     assert agent_body["error_code"] == "FORBIDDEN"
-    assert "/api/v1/agent/chat" in agent_body["message"]
+    assert "read-only" in agent_body["message"]
 
 
 async def test_sse_capacity_error_code(client, app):

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 
-import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../../domain/assistant/assistantPersistedKeys";
+import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../../domain/prefs";
 import {
   ASSISTANT_SESSIONS_CHANGED_EVENT,
   createEmptySession,

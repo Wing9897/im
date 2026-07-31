@@ -14,10 +14,10 @@ import { toErrorMessage } from "../../utils/errors";
 
 function formatScopes(scopes: string[] | undefined, t: (key: string) => string): string {
   if (!scopes || scopes.length === 0 || scopes.includes("*")) {
-    return t("profile.accessKeys.scopesFull");
+    return t("account.accessKeys.scopesFull");
   }
-  if (scopes.includes("a2a:agent")) {
-    return t("profile.accessKeys.scopesA2aAgent");
+  if (scopes.includes("read")) {
+    return t("account.accessKeys.scopesReadOnly");
   }
   return scopes.join(", ");
 }
@@ -29,7 +29,7 @@ export function AccountAccessKeysSection() {
   const [keys, setKeys] = useState<AccessKeyPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLabel, setNewLabel] = useState("");
-  const [a2aAgentOnly, setA2aAgentOnly] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
   const [creating, setCreating] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
 
@@ -53,13 +53,13 @@ export function AccountAccessKeysSection() {
     setCreating(true);
     setRevealedSecret(null);
     try {
-      const label = newLabel.trim() || t("profile.accessKeys.defaultLabel");
-      const created = await createAccessKey(label, { allowA2aAgent: a2aAgentOnly });
+      const label = newLabel.trim() || t("account.accessKeys.defaultLabel");
+      const created = await createAccessKey(label, { readOnly });
       setRevealedSecret(created.key);
       setNewLabel("");
-      setA2aAgentOnly(false);
+      setReadOnly(false);
       await reload();
-      showToast(t("profile.accessKeys.created"), "success");
+      showToast(t("account.accessKeys.created"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
     } finally {
@@ -71,7 +71,7 @@ export function AccountAccessKeysSection() {
     try {
       await revokeAccessKey(id);
       await reload();
-      showToast(t("profile.accessKeys.revoked"), "success");
+      showToast(t("account.accessKeys.revoked"), "success");
     } catch (error) {
       showToast(toErrorMessage(error), "error");
     }
@@ -81,9 +81,9 @@ export function AccountAccessKeysSection() {
     if (!revealedSecret) return;
     try {
       await navigator.clipboard.writeText(revealedSecret);
-      showToast(t("profile.accessKeys.copied"), "success");
+      showToast(t("account.accessKeys.copied"), "success");
     } catch {
-      showToast(t("profile.accessKeys.copyFailed"), "error");
+      showToast(t("account.accessKeys.copyFailed"), "error");
     }
   };
 
@@ -91,19 +91,19 @@ export function AccountAccessKeysSection() {
     <section id="access-keys" data-testid="profile-access-keys">
       <FormStack gap="lg">
         <div>
-          <h2 className={`${sectionTitleClass} m-0`}>{t("profile.accessKeys.title")}</h2>
+          <h2 className={`${sectionTitleClass} m-0`}>{t("account.accessKeys.title")}</h2>
           <p className={`mb-0 mt-xs max-w-[56ch] ${formHelpClass}`}>
-            {t("profile.accessKeys.intro")}
+            {t("account.accessKeys.intro")}
           </p>
         </div>
 
-        <SettingsRow label={t("profile.accessKeys.newLabel")} htmlFor="access-key-label">
+        <SettingsRow label={t("account.accessKeys.newLabel")} htmlFor="access-key-label">
           <TextField
             id="access-key-label"
             className="max-w-[320px]"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
-            placeholder={t("profile.accessKeys.newPlaceholder")}
+            placeholder={t("account.accessKeys.newPlaceholder")}
             data-testid="access-key-label-input"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !creating) {
@@ -115,12 +115,12 @@ export function AccountAccessKeysSection() {
         </SettingsRow>
 
         <CheckboxField
-          id="access-key-a2a-only"
-          data-testid="access-key-a2a-only"
-          label={t("profile.accessKeys.a2aAgentOnly")}
-          help={t("profile.accessKeys.a2aAgentOnlyHelp")}
-          checked={a2aAgentOnly}
-          onChange={(e) => setA2aAgentOnly(e.target.checked)}
+          id="access-key-read-only"
+          data-testid="access-key-read-only"
+          label={t("account.accessKeys.readOnly")}
+          help={t("account.accessKeys.readOnlyHelp")}
+          checked={readOnly}
+          onChange={(e) => setReadOnly(e.target.checked)}
         />
 
         <div>
@@ -133,7 +133,7 @@ export function AccountAccessKeysSection() {
             data-testid="access-key-create"
           >
             <Plus size={14} strokeWidth={2} aria-hidden />
-            {creating ? t("profile.accessKeys.creating") : t("profile.accessKeys.create")}
+            {creating ? t("account.accessKeys.creating") : t("account.accessKeys.create")}
           </Button>
         </div>
 
@@ -142,23 +142,23 @@ export function AccountAccessKeysSection() {
             className="max-w-[480px] rounded-md border border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] p-md"
             data-testid="access-key-reveal"
           >
-            <p className={`${sectionTitleClass} m-0`}>{t("profile.accessKeys.revealTitle")}</p>
-            <p className={`mb-sm mt-xs ${formHelpClass}`}>{t("profile.accessKeys.revealHelp")}</p>
+            <p className={`${sectionTitleClass} m-0`}>{t("account.accessKeys.revealTitle")}</p>
+            <p className={`mb-sm mt-xs ${formHelpClass}`}>{t("account.accessKeys.revealHelp")}</p>
             <p className="mb-sm break-all font-mono text-caption text-text-primary">{revealedSecret}</p>
             <Button type="button" variant="secondary" size="sm" onClick={() => void onCopySecret()}>
               <Copy size={14} aria-hidden />
-              {t("profile.accessKeys.copy")}
+              {t("account.accessKeys.copy")}
             </Button>
           </div>
         ) : null}
 
         <div>
-          <p className={`${sectionTitleClass} m-0 mb-sm`}>{t("profile.accessKeys.listTitle")}</p>
+          <p className={`${sectionTitleClass} m-0 mb-sm`}>{t("account.accessKeys.listTitle")}</p>
           {loading ? (
             <p className={`${formHelpClass} mb-0`}>{t("ui.loading")}</p>
           ) : keys.length === 0 ? (
             <p className={`${formHelpClass} mb-0`} data-testid="access-keys-empty">
-              {t("profile.accessKeys.empty")}
+              {t("account.accessKeys.empty")}
             </p>
           ) : (
             <ul className="m-0 max-w-[480px] list-none space-y-xs p-0">
@@ -182,7 +182,7 @@ export function AccountAccessKeysSection() {
                     variant="ghost"
                     size="icon"
                     className="shrink-0"
-                    aria-label={t("profile.accessKeys.revokeAria", { label: entry.label })}
+                    aria-label={t("account.accessKeys.revokeAria", { label: entry.label })}
                     onClick={() => void onRevoke(entry.id)}
                   >
                     <Trash2 size={14} aria-hidden />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { fetchTaskActivitySpans } from "../../api/tasks";
+import { loadGanttActivitySpans } from "../../domain/gantt/activitySpans";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import i18n from "../../i18n";
 import type { TaskActivitySpan } from "../../types";
@@ -18,12 +18,10 @@ interface UseGanttDataOptions {
 /**
  * Gantt-view data: task activity spans (with a fetch timeout).
  * Timed schedule events reuse the primary timeline fetch in useTimelineData.
+ * Shares `loadGanttActivitySpans` with Board Gantt widgets.
  */
 export function useGanttData({ viewMode }: UseGanttDataOptions) {
-  const spansFetcher = useCallback(
-    () => fetchTaskActivitySpans(),
-    [],
-  );
+  const spansFetcher = useCallback(() => loadGanttActivitySpans(), []);
   const {
     data: taskSpansData,
     initialLoading: spansInitialLoadingRaw,

@@ -40,7 +40,7 @@ CALENDAR_OCCURRENCE_KEYS = frozenset(
 )
 
 
-def _calendar_task(
+def _recurring_task(
     task_id: str,
     rule: str | None,
     hour: int = 0,
@@ -62,7 +62,7 @@ def _calendar_task(
         start_value = local_dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "id": task_id,
-        "name": f"Calendar {task_id}",
+        "name": f"Recurring {task_id}",
         "analysis_mode": "recurring",
         "is_active": is_active,
         "rrule": rule,
@@ -197,7 +197,7 @@ def _calendar_expansion_cases(draw: st.DrawFn):
         )
     )
     tasks = [
-        _calendar_task(f"task-{count - index:02d}", rule, hour, minute, all_day=all_day)
+        _recurring_task(f"task-{count - index:02d}", rule, hour, minute, all_day=all_day)
         for index, (rule, (hour, minute, all_day)) in enumerate(zip(rules, times, strict=True))
     ]
     return tasks, draw(utc_windows)
@@ -239,18 +239,41 @@ def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     first = first_local.astimezone(timezone.utc)
     last = last_local.astimezone(timezone.utc)
     boundary_occurrences = expand_calendar_occurrences(
-        [_calendar_task("boundary", boundary_rule, hour, minute)], first_local, last_local
+        [_recurring_task("boundary", boundary_rule, hour, minute)], first_local, last_local
     )
     assert boundary_occurrences[0]["startTime"] == first.strftime("%Y-%m-%dT%H:%M:%SZ")
     assert boundary_occurrences[-1]["startTime"] == last.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    cap_tasks = [_calendar_task(task_id, "FREQ=DAILY;INTERVAL=1") for task_id in ("cap-c", "cap-a", "cap-b")]
+    cap_tasks = [_recurring_task(task_id, "FREQ=DAILY;INTERVAL=1") for task_id in ("cap-c", "cap-a", "cap-b")]
     local_tz = calendar_module._system_tzinfo()
     cap_start = datetime(2000, 1, 1, tzinfo=local_tz)
     capped = expand_calendar_occurrences(cap_tasks, cap_start, cap_start + timedelta(days=366))
     assert len(capped) == MAX_OCCURRENCES
     assert {item["taskId"] for item in capped} == {"cap-a", "cap-b", "cap-c"}
     assert capped == sorted(capped, key=lambda item: (item["startTime"], item["taskId"]))
+
+
+def test_occurrence_id_is_stable_across_overlapping_query_windows():
+    local_tz = calendar_module._system_tzinfo()
+    task = _recurring_task("stable-series", "FREQ=DAILY", 9, 30)
+    shared_start = datetime(2026, 7, 15, 9, 30, tzinfo=local_tz).astimezone(timezone.utc)
+
+    wider = expand_task_occurrences(
+        task,
+        datetime(2026, 7, 1, tzinfo=local_tz),
+        datetime(2026, 7, 31, 23, 59, tzinfo=local_tz),
+        MAX_OCCURRENCES,
+    )
+    narrower = expand_task_occurrences(
+        task,
+        datetime(2026, 7, 10, tzinfo=local_tz),
+        datetime(2026, 7, 20, 23, 59, tzinfo=local_tz),
+        MAX_OCCURRENCES,
+    )
+
+    expected_id = f"stable-series:{shared_start.strftime('%Y%m%dT%H%M%SZ')}"
+    assert next(item["id"] for item in wider if item["startTime"] == _reference_iso_z(shared_start)) == expected_id
+    assert next(item["id"] for item in narrower if item["startTime"] == _reference_iso_z(shared_start)) == expected_id
 
 
 @st.composite
@@ -278,7 +301,7 @@ def _legacy_preservation_cases(draw: st.DrawFn):
     if until_form != "none":
         until = last.strftime("%Y%m%dT%H%M%S")
         rule_body += f";UNTIL={until}{'Z' if until_form == 'utc' else ''}"
-    task = _calendar_task(
+    task = _recurring_task(
         "valid-boundary",
         rule_body,
         hour,
@@ -294,10 +317,10 @@ def _legacy_preservation_cases(draw: st.DrawFn):
     budget = draw(st.integers(min_value=complete_count, max_value=MAX_OCCURRENCES))
 
     skipped = [
-        _calendar_task("invalid", "FREQ=NOTREAL", hour, minute),
-        _calendar_task("inactive", "FREQ=DAILY;COUNT=1000", hour, minute, is_active=0),
-        _calendar_task("missing-rule", None, hour, minute),
-        _calendar_task("no-result", "FREQ=DAILY;UNTIL=19991231T000000Z", hour, minute),
+        _recurring_task("invalid", "FREQ=NOTREAL", hour, minute),
+        _recurring_task("inactive", "FREQ=DAILY;COUNT=1000", hour, minute, is_active=0),
+        _recurring_task("missing-rule", None, hour, minute),
+        _recurring_task("no-result", "FREQ=DAILY;UNTIL=19991231T000000Z", hour, minute),
     ]
     mixed_tasks = list(draw(st.permutations((*skipped, task))))
     return task, mixed_tasks, first, last, budget, interval, complete_count
@@ -340,7 +363,7 @@ def _shared_allocation_cases(draw: st.DrawFn):
     minutes = draw(st.lists(st.integers(min_value=0, max_value=59), min_size=3, max_size=3))
     counts = (first_count, second_count, MAX_OCCURRENCES)
     tasks = [
-        _calendar_task(
+        _recurring_task(
             task_id,
             f"FREQ=DAILY;COUNT={count}",
             hour,
@@ -438,13 +461,13 @@ def _calendar_bug_condition_cases(draw: st.DrawFn):
         interval = draw(st.integers(min_value=1, max_value=3))
         range_start = datetime(2000, 1, 1, tzinfo=local_tz)
         range_end = range_start + timedelta(seconds=interval * (budget + excess - 1))
-        task = _calendar_task("generated-dense", f"FREQ=SECONDLY;INTERVAL={interval}")
+        task = _recurring_task("generated-dense", f"FREQ=SECONDLY;INTERVAL={interval}")
     else:
         budget = draw(st.integers(min_value=1, max_value=40))
         base = datetime(2000, 1, 1, tzinfo=local_tz)
         range_start = base + timedelta(microseconds=500_000)
         range_end = base + timedelta(days=budget + 1)
-        task = _calendar_task("generated-widened", "FREQ=DAILY")
+        task = _recurring_task("generated-widened", "FREQ=DAILY")
     return task, range_start, range_end, budget
 
 
@@ -509,7 +532,7 @@ def test_property_2_budget_and_widened_boundary_examples(
         start = datetime(2000, 1, 1, 0, 0, 0, 500_000, tzinfo=local_tz)
         end = datetime(2000, 1, 3, 0, 0, tzinfo=local_tz)
 
-    task = _calendar_task("boundary-budget", "FREQ=DAILY")
+    task = _recurring_task("boundary-budget", "FREQ=DAILY")
     reference = _full_reference_task_sequence(task, start, end)
     assert len(reference) == expected_reference_count > budget
 
@@ -529,7 +552,7 @@ def test_property_2_secondly_365_day_regression_is_exact_and_bounded():
     local_tz = calendar_module._system_tzinfo()
     range_start = datetime(2000, 1, 1, tzinfo=local_tz)
     range_end = range_start + timedelta(days=365)
-    task = _calendar_task("secondly-365", "FREQ=SECONDLY")
+    task = _recurring_task("secondly-365", "FREQ=SECONDLY")
     # The first 1000 members are independent of the later end of this dense window.
     expected_prefix = _full_reference_task_sequence(task, range_start, range_start + timedelta(seconds=budget - 1))
     assert len(expected_prefix) == budget

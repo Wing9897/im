@@ -197,12 +197,12 @@ async def test_log_queries_and_write_service_preserve_route_shape(app) -> None:
 
 async def test_empty_user_event_patch_uses_canonical_dismissal_serialization(client) -> None:
     created = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={"title": "canonical", "startTime": "2026-07-28T09:00:00Z"},
     )
     event_id = created.json()["id"]
-    assert (await client.delete(f"/api/v1/user-events/{event_id}")).status_code == 204
+    assert (await client.delete(f"/api/v1/calendar/user-events/{event_id}")).status_code == 204
 
-    response = await client.patch(f"/api/v1/user-events/{event_id}", json={})
+    response = await client.patch(f"/api/v1/calendar/user-events/{event_id}", json={})
     assert response.status_code == 200
     assert response.json()["dismissed"] is True

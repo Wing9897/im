@@ -150,15 +150,15 @@ async def test_user_event_crud_publishes_resource_modified(client, app):
     queue = broadcaster.subscribe()
     try:
         created = await client.post(
-            "/api/v1/user-events",
+            "/api/v1/calendar/user-events",
             json={"title": "SSE 測試", "startTime": "2026-07-21T09:00:00Z"},
         )
         event_id = created.json()["id"]
         patched = await client.patch(
-            f"/api/v1/user-events/{event_id}",
+            f"/api/v1/calendar/user-events/{event_id}",
             json={"title": "SSE 測試（改）"},
         )
-        deleted = await client.delete(f"/api/v1/user-events/{event_id}")
+        deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
         events = [queue.get_nowait() for _ in range(3)]
     finally:
         broadcaster.unsubscribe(queue)

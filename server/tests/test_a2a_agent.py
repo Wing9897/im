@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from server.access_keys import A2A_AGENT_SCOPE, A2A_LIAISON_SCOPES, seed_access_key
+from server.access_keys import DEFAULT_SCOPES, FULL_SCOPE, READ_SCOPE, seed_access_key
 from server.agent.runtime import AgentRuntime
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.device_auth import create_device_session
@@ -32,8 +32,19 @@ async def test_a2a_agent_rejects_missing_and_device_session(client, app) -> None
 
 
 @pytest.mark.asyncio
-async def test_a2a_agent_accepts_agent_scope_and_returns_single_shot(client, app) -> None:
-    key = await seed_access_key(app.state.db, "a2a-agent-secret", scopes=[A2A_AGENT_SCOPE])
+async def test_a2a_agent_rejects_read_only_key(client, app) -> None:
+    key = await seed_access_key(app.state.db, "a2a-read-secret", scopes=[READ_SCOPE])
+    resp = await client.post(
+        "/api/v1/a2a/agent",
+        json={"input": "hi"},
+        headers=await _auth_headers(key["key"]),
+    )
+    assert resp.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_a2a_agent_accepts_full_scope_and_returns_single_shot(client, app) -> None:
+    key = await seed_access_key(app.state.db, "a2a-agent-secret", scopes=[FULL_SCOPE])
     headers = await _auth_headers(key["key"])
 
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
@@ -73,12 +84,6 @@ async def test_a2a_agent_accepts_agent_scope_and_returns_single_shot(client, app
     system = mock_llm.complete.await_args_list[0].args[0][0]["content"]
     assert "客戶經理" in system or "对外" in system
 
-    audit = await app.state.db.fetch_value(
-        "SELECT COUNT(*) FROM a2a_audit_log WHERE key_id = ? AND capability = ?",
-        (key["id"], A2A_AGENT_SCOPE),
-    )
-    assert int(audit or 0) >= 1
-
 
 @pytest.mark.asyncio
 async def test_a2a_agent_accepts_caller_held_history_for_request(app) -> None:
@@ -105,5 +110,5 @@ async def test_a2a_agent_accepts_caller_held_history_for_request(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_a2a_liaison_scopes_constant() -> None:
-    assert A2A_LIAISON_SCOPES == [A2A_AGENT_SCOPE]
+async def test_default_scopes_are_full() -> None:
+    assert DEFAULT_SCOPES == [FULL_SCOPE]

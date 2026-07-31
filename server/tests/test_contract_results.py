@@ -319,7 +319,7 @@ async def test_events_has_time_filter(client):
 
 async def test_calendar_occurrences(client):
     resp = await client.get(
-        "/api/v1/results/calendar",
+        "/api/v1/calendar/items",
         params={
             "range_start": "2026-07-01T00:00:00Z",
             "range_end": "2026-07-31T23:59:59Z",
@@ -360,13 +360,19 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
     for task_id, is_active, rrule in fixtures:
         await app.state.db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, rrule, event_start_time, event_end_time, created_at, updated_at) "
-            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, '10:00', '11:00', ?, ?)",
-            (task_id, task_id, is_active, rrule, now, now),
+            "version, is_active, schedule_type, created_at, updated_at) "
+            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, ?)",
+            (task_id, task_id, is_active, now, now),
+        )
+        await app.state.db.execute(
+            "INSERT INTO recurring_schedules "
+            "(task_id, rrule, dtstart, dtend, timezone, created_at, updated_at) "
+            "VALUES (?, ?, '2000-01-01T10:00:00', '2000-01-01T11:00:00', 'floating', ?, ?)",
+            (task_id, rrule, now, now),
         )
 
     response = await client.get(
-        "/api/v1/results/calendar",
+        "/api/v1/calendar/items",
         params={
             "range_start": "2026-07-06T10:00:00Z",
             "range_end": "2026-07-13T10:00:00Z",
@@ -379,7 +385,7 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
         (seed.TASK_CALENDAR, "2026-07-06T10:00:00Z"),
         (seed.TASK_CALENDAR, "2026-07-13T10:00:00Z"),
     ]
-    assert "Skipping calendar task calendar-invalid-persisted" in caplog.text
+    assert "Skipping recurring task calendar-invalid-persisted" in caplog.text
     assert all(item["taskId"] != "calendar-inactive" for item in body)
 
 
@@ -429,25 +435,35 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
     for task_id, name, is_active, rrule, start_time, end_time, location, description in fixtures:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, rrule, event_start_time, event_end_time, event_location, "
-            "event_description, created_at, updated_at) "
-            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, ?, ?, ?, ?, ?, ?)",
+            "version, is_active, schedule_type, created_at, updated_at) "
+            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, ?)",
             (
                 task_id,
                 name,
                 is_active,
-                rrule,
-                start_time,
-                end_time,
-                location,
-                description,
                 now,
                 now,
             ),
         )
+        if rrule is not None:
+            await db.execute(
+                "INSERT INTO recurring_schedules "
+                "(task_id, rrule, dtstart, dtend, location, description, timezone, created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, 'floating', ?, ?)",
+                (
+                    task_id,
+                    rrule,
+                    f"2000-01-01T{start_time}:00",
+                    f"2000-01-01T{end_time}:00" if end_time else None,
+                    location,
+                    description,
+                    now,
+                    now,
+                ),
+            )
 
     response = await client.get(
-        "/api/v1/results/calendar",
+        "/api/v1/calendar/items",
         params={
             "range_start": wire(day1_start),
             "range_end": wire(day2_start),
@@ -521,7 +537,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "startTime": wire(day2_start),
         "endTime": wire(day2_end),
     }
-    assert "Skipping calendar task calendar-invalid" in caplog.text
+    assert "Skipping recurring task calendar-invalid" in caplog.text
 
 
 async def test_queue(client):

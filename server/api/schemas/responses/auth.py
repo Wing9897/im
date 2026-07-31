@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-_SCOPES_DESCRIPTION = 'Capability scopes; `["*"]` = full household, `["a2a:agent"]` = A2A-only.'
+_SCOPES_DESCRIPTION = 'Capability scopes; `["*"]` = full household, `["read"]` = GET-only.'
 
 
 class SetupStatusResponse(BaseModel):

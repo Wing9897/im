@@ -140,8 +140,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "taskId": {
                     "type": "string",
                     "description": (
-                        "Optional analysis-task provenance "
-                        "(event/recurring/calendar_task/project); omit when unassigned"
+                        "Optional analysis-task provenance (event/recurring/project); omit when unassigned"
                     ),
                 },
             },
@@ -155,7 +154,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Create a NEW recurring task with RRULE so recurring occurrences appear "
             "on the timeline (e.g. 每週三 10:00 → rrule=FREQ=WEEKLY;BYDAY=WE, "
             "eventStartTime=10:00). Hard-locked to analysisMode=recurring: never creates "
-            "leaderboard/event/calendar_task/AI analysis tasks. To change or remove an existing "
+            "leaderboard/event/AI analysis tasks. To change or remove an existing "
             "recurring task use calendar.update_recurring_task / delete_recurring_task. "
             "Confirm name, recurrence, and clock time with the user before calling."
         ),
@@ -204,7 +203,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "name": "calendar.update_recurring_task",
         "description": (
             "Update an EXISTING analysisMode=recurring task (name, rrule, clock times, "
-            "location, description, isActive). Refuses leaderboard/event/calendar_task/AI tasks. "
+            "location, description, isActive). Refuses leaderboard/event/AI tasks. "
             "For deactivate/soft-delete prefer calendar.delete_recurring_task; use isActive "
             "mainly to re-activate (true). Confirm changes with the user. Prefer "
             "calendar.list_calendars to resolve id."
@@ -285,7 +284,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": (
                         "Optional analysis-task provenance "
-                        "(event/recurring/calendar_task/project); empty string clears provenance. "
+                        "(event/recurring/project); empty string clears provenance. "
                         "Never pass __user__ (that is a workset id)."
                     ),
                 },

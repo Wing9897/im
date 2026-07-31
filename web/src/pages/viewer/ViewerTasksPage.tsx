@@ -15,7 +15,7 @@ import { useViewerResource } from "./useViewerResource";
 import { ViewerShell } from "../../components/ui/ViewerShell";
 import { ViewerTaskDetailView } from "./ViewerTaskDetailView";
 import { formatOsDateTime } from "../../utils/time";
-import { VIEWER_TASKS_SELECTED_ID_STORAGE_KEY } from "./viewerPersistedKeys";
+import { VIEWER_TASKS_SELECTED_ID_STORAGE_KEY } from "../../domain/prefs";
 
 export function ViewerTasksPage() {
   const { t } = useTranslation("common");

@@ -8,7 +8,7 @@ import {
   AssistantChatProvider,
   useAssistantChat,
 } from "./useAssistantChat";
-import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../domain/assistant/assistantPersistedKeys";
+import { ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY } from "../domain/prefs";
 import {
   createEmptySession,
   resetAssistantSessionsCacheForTests,

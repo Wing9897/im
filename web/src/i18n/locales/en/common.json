@@ -116,6 +116,9 @@
       "optionalAria": "Optional settings",
       "optionalTitle": "Optional settings",
       "channelsLoadError": "Could not load channels",
+      "scheduleHydrating": "Loading recurrence schedule…",
+      "scheduleHydrateFailed": "Could not load recurrence schedule: {{message}}",
+      "scheduleHydrateRetry": "Retry",
       "timeRangeLabel": "Analysis time range",
       "timeAll": "No time limit",
       "time30d": "Last 30 days",
@@ -169,14 +172,6 @@
         "displayLabel": "Recurring task",
         "modeOptionLabel": "Recurring task - periodic activities",
         "modeDescription": "Recurring tasks manage periodic activities with RRULE and do not involve AI analysis",
-        "promptLabel": "",
-        "promptPlaceholder": "",
-        "promptHint": ""
-      },
-      "calendar_task": {
-        "displayLabel": "Calendar task",
-        "modeOptionLabel": "Calendar task - classification bucket",
-        "modeDescription": "Calendar tasks are a filter-only bucket for timeline / voice / assistant ownership; no AI analysis and no RRULE",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
@@ -667,7 +662,7 @@
     },
     "clientManager": {
       "title": "Account manager",
-      "shortDescription": "External Agent (A2A): third parties assign work in natural language. Shares the assistant’s LLM and tools, but does not chat with you and stores no server-side history. Needs an access key (`a2a:agent` or `*`).",
+      "shortDescription": "External Agent (A2A): third parties assign work in natural language. Shares the assistant’s LLM and tools, but does not chat with you and stores no server-side history. Needs a full access key (`*`).",
       "linkLabel": "Open API docs"
     },
     "collector": {
@@ -1078,73 +1073,12 @@
     "openItem": "Open current item",
     "closePanel": "Close panel or preview"
   },
-  "schema": {
-    "dialogAria": "Database upgrade",
-    "title": "Database upgrade",
-    "versionLine": "Current v{current} → required v{required}",
-    "restoredTitle": "Restored from a half-migrated state",
-    "restoredBody": "The last upgrade did not finish and was restored from the baseline backup. Confirm and upgrade again.",
-    "needsTitle": "Database upgrade required",
-    "needsBody": "Finish the schema upgrade before continuing. Collection and analysis pause during upgrade — do not quit the app.",
-    "failedBackupTitle": "Upgrade failed (backup kept)",
-    "failedBackupBody": "Retry with the button below. If it still fails, quit and restore manually from the backup path.",
-    "failedNoBackupTitle": "Upgrade failed with no backup",
-    "failedNoBackupBody": "Cannot safely auto-retry. Quit and restore the database file manually.",
-    "migratingTitle": "Upgrade in progress",
-    "migratingBody": "Please wait — do not quit or force power off.",
-    "phaseMigrate": "Migrating schema",
-    "starting": "Starting upgrade…",
-    "idlePhase": "Idle",
-    "checking": "Checking database version…",
-    "upgrading": "Upgrading…",
-    "retry": "Retry upgrade",
-    "start": "Start upgrade",
-    "backupPath": "Backup path: {path}",
-    "copied": "Copied",
-    "copy": "Copy",
-    "techDetails": "Technical error details (expand)",
-    "retryBlocked": "No backup available — cannot safely retry. Quit and restore the database file manually.",
-    "phases": {
-      "idle": "Idle",
-      "awaiting_confirmation": "Waiting for confirmation",
-      "snapshot": "Recording stats",
-      "backup": "Backup",
-      "migrate": "Migrating schema",
-      "validate": "Validating",
-      "restore": "Restoring",
-      "runtime": "Starting services",
-      "ready": "Ready",
-      "failed": "Failed"
-    },
-    "messages": {
-      "needs_upgrade": "Database needs upgrade from v{current} to v{required}",
-      "up_to_date": "Database schema is up to date",
-      "healed_half_migration": "Restored from a half-migrated state — confirm and upgrade again",
-      "restoring": "Restoring database from backup…",
-      "restored_retry": "Restored from backup — please upgrade again",
-      "failed_no_backup": "Upgrade failed with no backup — quit and restore the database file manually",
-      "cannot_restore": "Could not restore from backup",
-      "snapshotting": "Recording pre-upgrade stats…",
-      "backing_up": "Backing up database…",
-      "migrating": "Migrating database schema — do not quit…",
-      "validating": "Validating data integrity…",
-      "starting_runtime": "Starting collection and analysis…",
-      "upgrade_complete": "Upgrade complete",
-      "failed_auto_restore": "Upgrade failed and auto-restore failed",
-      "upgrade_failed": "Upgrade failed (no usable backup — do not continue)",
-      "starting": "Starting upgrade…",
-      "marker_corrupt": "Upgrade verify marker is corrupt",
-      "startup_validate_failed": "Startup validation failed",
-      "integrity_failed": "Data integrity check failed",
-      "half_migration_restore_failed": "Half-migration auto-restore failed"
-    }
-  },
   "boot": {
-    "checking": "Checking database version…",
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 3 / SemVer 0.1.0-beta.6 — older stamped databases must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 5 / SemVer 0.1.0-beta.6 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
-    "serviceUnavailable": "Service temporarily unavailable"
+    "serviceUnavailable": "Service temporarily unavailable",
+    "starting": "Starting…"
   },
   "secretsBroken": {
     "dialogAria": "Encryption key mismatch",
@@ -1285,7 +1219,7 @@
   "errorToast": {
     "regionAria": "Error notification area",
     "closeAria": "Dismiss error notification",
-    "goProfileAccessKeys": "Go to Account → Access keys"
+    "goAccountAccessKeys": "Go to Account → Access keys"
   },
   "account": {
     "root": "Account",
@@ -1294,20 +1228,7 @@
       "identity": "Identity",
       "devices": "Devices",
       "keys": "Access keys"
-    }
-  },
-  "speech": {
-    "sttDesktopUnavailable": "Desktop app does not support browser speech recognition. Please type instead.",
-    "sttUnsupported": "This browser does not support speech recognition, or is not in a secure context (HTTPS / localhost).",
-    "sttStartFailed": "Could not start speech recognition",
-    "sttNotAllowed": "Microphone permission denied. Please type instead.",
-    "sttNoMic": "Microphone unavailable (missing device or in use elsewhere). You can keep the desktop app running and hold-to-talk in a browser tab; check OS mic permissions if it still fails.",
-    "sttNetwork": "Browser cloud speech recognition failed (needs access to the recognition service). Type instead, or open the local service in Chrome.",
-    "sttErrorCode": "Speech recognition error: {code}",
-    "ttsUnsupported": "This browser does not support speech synthesis.",
-    "ttsFailed": "Speech synthesis failed"
-  },
-  "profile": {
+    },
     "defaultName": "User",
     "intro": "Set your display name, avatar, and background. The avatar is used in direct-mode captions and similar UI.",
     "avatarLabel": "Avatar",
@@ -1354,14 +1275,11 @@
     },
     "accessKeys": {
       "title": "API keys (Webhook / automation)",
-      "intro": "Long-lived keys (`Authorization: Bearer`) for Webhooks, scripts, and Account manager. Full keys (`*`) work for Webhook and Account manager; Account-manager-only keys cannot call Webhook. Not for UI sign-in — use the admin username and password for that.",
+      "intro": "Long-lived keys (`Authorization: Bearer`) for Webhooks, scripts, and Account manager. Full keys (`*`) can write and call A2A; read-only keys (`read`) are limited to safe GET/HEAD. Not for UI sign-in — use the admin username and password for that.",
       "defaultLabel": "Access key",
       "newLabel": "New key label",
       "newPlaceholder": "e.g. Webhook, CI script",
-      "a2aAgentOnly": "Account manager only (A2A)",
-      "a2aAgentOnlyHelp": "Can only call `POST /api/v1/a2a/agent`. Leave unchecked for a full key (`*`), usable for Webhook and Account manager.",
       "scopesFull": "Scopes: full (*)",
-      "scopesA2aAgent": "Scopes: Account manager (a2a:agent)",
       "create": "Generate key",
       "creating": "Generating…",
       "created": "New key created — copy it now",
@@ -1373,8 +1291,22 @@
       "revealHelp": "Copy and store it safely; the full secret cannot be shown again.",
       "copy": "Copy",
       "copied": "Copied",
-      "copyFailed": "Copy failed"
+      "copyFailed": "Copy failed",
+      "readOnly": "Read-only (GET only)",
+      "readOnlyHelp": "Can only call safe GET/HEAD endpoints. Leave unchecked for a full key (*), usable for Webhook, writes, and A2A.",
+      "scopesReadOnly": "Scopes: read-only (read)"
     }
+  },
+  "speech": {
+    "sttDesktopUnavailable": "Desktop app does not support browser speech recognition. Please type instead.",
+    "sttUnsupported": "This browser does not support speech recognition, or is not in a secure context (HTTPS / localhost).",
+    "sttStartFailed": "Could not start speech recognition",
+    "sttNotAllowed": "Microphone permission denied. Please type instead.",
+    "sttNoMic": "Microphone unavailable (missing device or in use elsewhere). You can keep the desktop app running and hold-to-talk in a browser tab; check OS mic permissions if it still fails.",
+    "sttNetwork": "Browser cloud speech recognition failed (needs access to the recognition service). Type instead, or open the local service in Chrome.",
+    "sttErrorCode": "Speech recognition error: {code}",
+    "ttsUnsupported": "This browser does not support speech synthesis.",
+    "ttsFailed": "Speech synthesis failed"
   },
   "workset": {
     "label": "Workset",

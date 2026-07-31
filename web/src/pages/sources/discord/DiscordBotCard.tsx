@@ -11,7 +11,7 @@ import { formatAccountLabel } from "../../../utils/accountDisplay";
 import { useToast } from "../../../context/ToastContext";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import { useReconnectCard } from "../useReconnectCard";
-import { DISCORD_CHANNELS_EXPANDED_STORAGE_KEY } from "./discordPersistedKeys";
+import { DISCORD_CHANNELS_EXPANDED_STORAGE_KEY } from "../../../domain/prefs";
 
 interface DiscordBotCardProps {
   bot: DiscordBotInfo;

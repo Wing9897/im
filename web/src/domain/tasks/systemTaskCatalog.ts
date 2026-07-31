@@ -3,6 +3,14 @@ import i18n from "../../i18n";
 import type { AnalysisMode } from "../../types";
 import type { AiStaffId } from "../aiStaff/aiStaff";
 import liaisonAvatarSrc from "../../assets/ai-staff/liaison.png";
+export {
+  TASKS_GROUPING_VIEW_STORAGE_KEY,
+  SHOW_SYSTEM_TASKS_STORAGE_KEY,
+  SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
+  TASKS_MODE_FILTER_STORAGE_KEY,
+  TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY,
+  TASKS_SEARCH_STORAGE_KEY,
+} from "../prefs";
 
 /** Kind of read-only system / virtual / agent info card on /tasks. */
 export type SystemTaskKind = "virtual" | "system" | "agent";
@@ -21,30 +29,11 @@ export interface SystemTaskInfo {
   linkLabel?: string;
 }
 
-/** localStorage key for /tasks grouping view (by task | by workset). */
-export const TASKS_GROUPING_VIEW_STORAGE_KEY = "im:tasks:grouping-view";
-
 export type TasksGroupingView = "by_task" | "by_workset";
 
 export function isTasksGroupingView(value: string | null): value is TasksGroupingView {
   return value === "by_task" || value === "by_workset";
 }
-
-/** localStorage key for DashboardViewer「顯示系統任務」toggle (default false). */
-export const SHOW_SYSTEM_TASKS_STORAGE_KEY = "im:tasks:show-system-tasks";
-
-/** localStorage key for DashboardViewer「顯示系統工作集」toggle (default true). */
-export const SHOW_SYSTEM_WORKSETS_STORAGE_KEY = "im:tasks:show-system-worksets";
-
-/** localStorage key for /tasks analysis mode filter chip (default `"all"`). */
-export const TASKS_MODE_FILTER_STORAGE_KEY = "im:tasks:mode-filter";
-
-/** localStorage: task detail dialog keeps channel list expanded. */
-export const TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY =
-  "im:tasks:detail:channels-expanded";
-
-/** sessionStorage key for /tasks toolbar search draft (debounced writes). */
-export const TASKS_SEARCH_STORAGE_KEY = "im:tasks:search";
 
 export type TasksModeFilter = AnalysisMode | "all";
 
@@ -53,7 +42,6 @@ const TASKS_MODE_FILTER_VALUES = new Set<string>([
   "leaderboard",
   "event",
   "recurring",
-  "calendar_task",
 ]);
 
 export function isTasksModeFilter(value: string | null): value is TasksModeFilter {

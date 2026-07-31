@@ -80,8 +80,7 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "user_avatar": "",
     # Free-text background / bio for future AI context; empty = unset.
     "user_background": "",
-    # UI prefs JSON blobs retired from system_config (schema v15 → ui_prefs table).
-    # assistant_sessions retired earlier (schema v10 → assistant_device_stores).
+    # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }
 
 #: Value clamping ranges for integer keys (min, max). None = unbounded side.

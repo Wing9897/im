@@ -1,9 +1,8 @@
-"""Shared HTTP helpers for live verification scripts (smoke, eval, operational).
+"""Shared HTTP helpers for live verification scripts (smoke / desktop_verify).
 
 Environment:
   VERIFY_BASE / DESKTOP_VERIFY_BASE — API base (default http://127.0.0.1:18820)
   VERIFY_BEARER / IM_ACCESS_TOKEN — Bearer after admin register (loopback not exempt)
-  OPERATIONAL_STRICT — used by operational_verify for optional checks
 """
 
 from __future__ import annotations
@@ -18,8 +17,6 @@ from typing import Any
 FAILURES: list[str] = []
 
 BASE = os.environ.get("VERIFY_BASE") or os.environ.get("DESKTOP_VERIFY_BASE") or "http://127.0.0.1:18820"
-
-STRICT = os.environ.get("OPERATIONAL_STRICT", "").strip().lower() in {"1", "true", "yes"}
 
 # After admin register, localhost_auth_exempt is false — pass a device access
 # token or full-scope API key so live verify scripts can authenticate.

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "../i18n";
 import {
-  PROFILE_ACCESS_KEYS_PATH,
+  ACCOUNT_ACCESS_KEYS_PATH,
   ErrorToast,
   formatCorrelationRef,
   getActionsForErrorCode,
@@ -69,8 +69,8 @@ describe("ErrorToast", () => {
     expect(actionButtons.length).toBe(0);
   });
 
-  it("does not show action buttons for FORBIDDEN / SCHEMA_UPGRADE_REQUIRED / SSE_CAPACITY", () => {
-    for (const errorCode of ["FORBIDDEN", "SCHEMA_UPGRADE_REQUIRED", "SSE_CAPACITY"]) {
+  it("does not show action buttons for FORBIDDEN / SSE_CAPACITY", () => {
+    for (const errorCode of ["FORBIDDEN", "SSE_CAPACITY"]) {
       renderToast(<ErrorToast
             message="blocked"
             errorCode={errorCode}
@@ -82,7 +82,7 @@ describe("ErrorToast", () => {
     }
   });
 
-  it("shows Profile API keys button for AUTH_REQUIRED error", () => {
+  it("shows Account access keys button for AUTH_REQUIRED error", () => {
     renderToast(<ErrorToast
           message="Authentication required"
           errorCode="AUTH_REQUIRED"
@@ -97,7 +97,7 @@ describe("ErrorToast", () => {
     expect(actionButton!.textContent).toBe("前往帳戶 → 存取金鑰");
   });
 
-  it("shows Profile API keys button for AUTH_SETUP_REQUIRED error", () => {
+  it("shows Account access keys button for AUTH_SETUP_REQUIRED error", () => {
     renderToast(<ErrorToast
           message="API key not configured"
           errorCode="AUTH_SETUP_REQUIRED"
@@ -112,7 +112,7 @@ describe("ErrorToast", () => {
     expect(actionButton!.textContent).toBe("前往帳戶 → 存取金鑰");
   });
 
-  it("navigates to Profile access-keys when auth action is clicked", () => {
+  it("navigates to Account access-keys when auth action is clicked", () => {
     const onDismiss = vi.fn();
     const onNavigate = vi.fn();
 
@@ -132,7 +132,7 @@ describe("ErrorToast", () => {
       actionButton.click();
     });
 
-    expect(onNavigate).toHaveBeenCalledWith(PROFILE_ACCESS_KEYS_PATH);
+    expect(onNavigate).toHaveBeenCalledWith(ACCOUNT_ACCESS_KEYS_PATH);
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
@@ -198,16 +198,15 @@ describe("formatCorrelationRef", () => {
 
 describe("getActionsForErrorCode", () => {
   const mockHandlers = {
-    navigateToProfileAccessKeys: vi.fn(),
+    navigateToAccountAccessKeys: vi.fn(),
   };
 
   it("returns empty array for COLLECTOR_UNAVAILABLE", () => {
     expect(getActionsForErrorCode("COLLECTOR_UNAVAILABLE", mockHandlers)).toHaveLength(0);
   });
 
-  it("returns empty array for FORBIDDEN / SCHEMA_UPGRADE_REQUIRED / SSE_CAPACITY", () => {
+  it("returns empty array for FORBIDDEN / SSE_CAPACITY", () => {
     expect(getActionsForErrorCode("FORBIDDEN", mockHandlers)).toHaveLength(0);
-    expect(getActionsForErrorCode("SCHEMA_UPGRADE_REQUIRED", mockHandlers)).toHaveLength(0);
     expect(getActionsForErrorCode("SSE_CAPACITY", mockHandlers)).toHaveLength(0);
   });
 

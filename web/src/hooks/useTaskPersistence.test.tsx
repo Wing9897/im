@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTaskPersistence } from "./useTaskPersistence";
-import type { TaskFormState } from "./useTaskForm";
+import type { TaskFormState } from "./useTaskEditorState";
 
 // ---------------------------------------------------------------------------
 // Mocks

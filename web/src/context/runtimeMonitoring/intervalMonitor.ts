@@ -1,3 +1,4 @@
+import { hasRuntimeInterest } from "./consumerInterest";
 import {
   createAiEngineStatusPoller,
   createCollectorStatusPoller,
@@ -14,7 +15,7 @@ import {
 import type { RuntimeMonitoringOptions } from "./types";
 
 // ---------------------------------------------------------------------------
-// Interval-based monitoring orchestration (pollers in statusPollers.ts)
+// Visibility-aware single-tick scheduler (replaces 4× setInterval)
 // ---------------------------------------------------------------------------
 
 interface IntervalMonitorDeps {
@@ -30,11 +31,22 @@ interface IntervalMonitorResult {
   bootstrap: () => Promise<void>;
 }
 
+type ScheduledJob = {
+  id: string;
+  intervalMs: number;
+  /** When true, skip ticks while the document is hidden (tab backgrounded). */
+  pauseWhenHidden: boolean;
+  lastRunAt: number;
+  run: () => void;
+};
+
 /**
- * Sets up the serialized async runners for AI status and queue status polling,
- * the bootstrap sequence, and periodic interval timers.
+ * Sets up pollers, bootstrap, and one visibility-aware scheduler tick.
  *
- * Returns control functions and a cleanup function.
+ * Non-visible tabs pause log / queue / collector / AI status polls to cut
+ * background traffic; SSE remains the live path while a device session exists.
+ * Interval jobs also skip when no consumer has acquired interest for that kind
+ * (e.g. stored-log polling only while the Logs page is mounted).
  */
 export function setupIntervalMonitor({
   state,
@@ -50,12 +62,15 @@ export function setupIntervalMonitor({
     createCollectorStatusPoller(state, options, isMounted);
 
   const refreshLogsForBackendEvent = () => {
+    // Event-driven + interval log sync only while a Logs consumer is mounted.
+    if (!hasRuntimeInterest("logs")) return;
     void refreshStoredLogs();
     if (state.eventLogRefreshTimerRef.current !== null) {
       window.clearTimeout(state.eventLogRefreshTimerRef.current);
     }
     state.eventLogRefreshTimerRef.current = window.setTimeout(() => {
       state.eventLogRefreshTimerRef.current = null;
+      if (!hasRuntimeInterest("logs")) return;
       void refreshStoredLogs();
     }, EVENT_LOG_REFRESH_DELAY_MS);
   };
@@ -68,7 +83,6 @@ export function setupIntervalMonitor({
     void refreshAiStatusAsync(logOnChange);
   };
 
-  // Assign to refs so external callers (useCallback wrappers) can invoke them
   state.refreshQueueStatusRef.current = (logPauseChanges = false) => {
     refreshQueueStatus(logPauseChanges);
   };
@@ -77,31 +91,68 @@ export function setupIntervalMonitor({
   };
 
   const bootstrap = async () => {
-    void refreshStoredLogs();
+    // Chrome always needs queue/AI/collector; stored logs wait for a Logs consumer.
+    if (hasRuntimeInterest("logs")) {
+      void refreshStoredLogs();
+    }
     await bootstrapCollectorStatus();
     await refreshQueueStatusAsync(false);
     void refreshAiStatusAsync(false);
   };
 
-  // Periodic timers
-  const aiTimer = window.setInterval(() => {
-    void refreshAiStatusAsync(true);
-  }, AI_STATUS_REFRESH_INTERVAL_MS);
-  const logTimer = window.setInterval(() => {
-    if (!document.hidden) {
-      void refreshStoredLogs();
+  const now = Date.now();
+  const jobs: ScheduledJob[] = [
+    {
+      id: "ai",
+      intervalMs: AI_STATUS_REFRESH_INTERVAL_MS,
+      pauseWhenHidden: true,
+      lastRunAt: now,
+      run: () => {
+        void refreshAiStatusAsync(true);
+      },
+    },
+    {
+      id: "logs",
+      intervalMs: STORED_LOG_REFRESH_INTERVAL_MS,
+      pauseWhenHidden: true,
+      lastRunAt: now,
+      run: () => {
+        if (!hasRuntimeInterest("logs")) return;
+        void refreshStoredLogs();
+      },
+    },
+    {
+      id: "queue",
+      intervalMs: QUEUE_STATUS_REFRESH_INTERVAL_MS,
+      pauseWhenHidden: true,
+      lastRunAt: now,
+      run: () => {
+        void refreshQueueStatusAsync(false);
+      },
+    },
+    {
+      id: "collector",
+      intervalMs: COLLECTOR_STATUS_REFRESH_INTERVAL_MS,
+      pauseWhenHidden: true,
+      lastRunAt: now,
+      run: () => {
+        void refreshCollectorStatus();
+      },
+    },
+  ];
+
+  // Shared tick: gcd-friendly 5s cadence; each job enforces its own interval.
+  const SCHEDULER_TICK_MS = 5_000;
+  const schedulerTimer = window.setInterval(() => {
+    if (document.hidden) return;
+    const tickNow = Date.now();
+    for (const job of jobs) {
+      if (job.pauseWhenHidden && document.hidden) continue;
+      if (tickNow - job.lastRunAt < job.intervalMs) continue;
+      job.lastRunAt = tickNow;
+      job.run();
     }
-  }, STORED_LOG_REFRESH_INTERVAL_MS);
-  const queueTimer = window.setInterval(() => {
-    if (!document.hidden) {
-      void refreshQueueStatusAsync(false);
-    }
-  }, QUEUE_STATUS_REFRESH_INTERVAL_MS);
-  const collectorTimer = window.setInterval(() => {
-    if (!document.hidden) {
-      void refreshCollectorStatus();
-    }
-  }, COLLECTOR_STATUS_REFRESH_INTERVAL_MS);
+  }, SCHEDULER_TICK_MS);
 
   const cleanup = () => {
     mounted = false;
@@ -111,10 +162,7 @@ export function setupIntervalMonitor({
       window.clearTimeout(state.eventLogRefreshTimerRef.current);
       state.eventLogRefreshTimerRef.current = null;
     }
-    window.clearInterval(aiTimer);
-    window.clearInterval(logTimer);
-    window.clearInterval(queueTimer);
-    window.clearInterval(collectorTimer);
+    window.clearInterval(schedulerTimer);
   };
 
   return {

@@ -34,6 +34,7 @@ export function ProjectDetailPage() {
   const {
     project,
     children,
+    childRrules,
     channelLabels,
     events,
     eventsLoading,
@@ -233,8 +234,10 @@ export function ProjectDetailPage() {
                         </Badge>
                       ) : null}
                     </div>
-                    {child.rrule?.trim() ? (
-                      <p className={`${captionClass} mt-0.5 truncate`}>{child.rrule.trim()}</p>
+                    {childRrules.get(child.id) ? (
+                      <p className={`${captionClass} mt-0.5 truncate`}>
+                        {childRrules.get(child.id)}
+                      </p>
                     ) : null}
                   </div>
                   <Button

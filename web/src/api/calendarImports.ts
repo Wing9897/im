@@ -18,7 +18,7 @@ export function previewCalendarImport(
   input: CalendarImportInput,
 ): Promise<CalendarImportPreview> {
   return apiClient.post<CalendarImportPreview>(
-    "/api/v1/calendar-imports/preview",
+    "/api/v1/calendar/imports/preview",
     input,
   );
 }
@@ -27,7 +27,7 @@ export function commitCalendarImport(
   input: CalendarImportInput & { selections: CalendarImportSelection[] },
 ): Promise<CalendarImportCommit> {
   return apiClient.post<CalendarImportCommit>(
-    "/api/v1/calendar-imports/commit",
+    "/api/v1/calendar/imports/commit",
     input,
   );
 }

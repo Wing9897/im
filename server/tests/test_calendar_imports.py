@@ -168,7 +168,7 @@ def test_parser_accepts_google_outlook_samples_and_marks_floating_time() -> None
 
 async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> None:
     preview = await client.post(
-        "/api/v1/calendar-imports/preview",
+        "/api/v1/calendar/imports/preview",
         json={"content": ICS, "sourceId": "fixture"},
     )
     assert preview.status_code == 200
@@ -187,7 +187,7 @@ async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> No
         for uid in ("single-1@example.test", "series-1@example.test", "all-day@example.test")
     ]
     committed = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={"content": ICS, "sourceId": "fixture", "selections": selected},
     )
     assert committed.status_code == 200
@@ -196,14 +196,14 @@ async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> No
     ids = {item["uid"]: item["targetId"] for item in first["results"]}
 
     unchanged_preview = await client.post(
-        "/api/v1/calendar-imports/preview",
+        "/api/v1/calendar/imports/preview",
         json={"content": ICS, "sourceId": "fixture"},
     )
     assert {item["action"] for item in unchanged_preview.json()["items"] if item["supported"]} == {"unchanged"}
 
     modified = ICS.replace("SUMMARY:One\\, escaped event", "SUMMARY:Renamed event")
     changed_preview = await client.post(
-        "/api/v1/calendar-imports/preview",
+        "/api/v1/calendar/imports/preview",
         json={"content": modified, "sourceId": "fixture"},
     )
     changed = next(item for item in changed_preview.json()["items"] if item["uid"] == "single-1@example.test")
@@ -212,7 +212,7 @@ async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> No
     assert {diff["field"] for diff in changed["changes"]} == {"title"}
 
     updated = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={
             "content": modified,
             "sourceId": "fixture",
@@ -232,7 +232,7 @@ async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> No
 
 async def test_commit_revalidates_fingerprint_before_transaction(client, app) -> None:
     response = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={
             "content": ICS,
             "sourceId": "stale",
@@ -243,7 +243,7 @@ async def test_commit_revalidates_fingerprint_before_transaction(client, app) ->
     )
     assert response.status_code == 422
     assert await app.state.db.fetch_value("SELECT COUNT(*) FROM user_events WHERE ics_source = 'stale'") == 0
-    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks WHERE ics_source = 'stale'") == 0
+    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM recurring_schedules WHERE ics_source = 'stale'") == 0
 
 
 async def test_commit_rolls_back_every_selected_item_on_write_failure(app, monkeypatch) -> None:
@@ -267,13 +267,13 @@ async def test_commit_rolls_back_every_selected_item_on_write_failure(app, monke
 async def test_imported_rrule_uses_real_anchor_timezone_exdate_and_rdate(client, app) -> None:
     preview = (
         await client.post(
-            "/api/v1/calendar-imports/preview",
+            "/api/v1/calendar/imports/preview",
             json={"content": ICS, "sourceId": "expand"},
         )
     ).json()
     series = next(item for item in preview["items"] if item["uid"] == "series-1@example.test")
     committed = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={
             "content": ICS,
             "sourceId": "expand",
@@ -301,7 +301,7 @@ async def test_imported_rrule_uses_real_anchor_timezone_exdate_and_rdate(client,
 async def test_all_day_until_exdate_and_rdate_keep_calendar_dates(client, app) -> None:
     preview = (
         await client.post(
-            "/api/v1/calendar-imports/preview",
+            "/api/v1/calendar/imports/preview",
             json={"content": ALL_DAY_SERIES_ICS, "sourceId": "all-day-series"},
         )
     ).json()
@@ -309,7 +309,7 @@ async def test_all_day_until_exdate_and_rdate_keep_calendar_dates(client, app) -
     assert item["supported"] is True
     assert item["isAllDay"] is True
     committed = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={
             "content": ALL_DAY_SERIES_ICS,
             "sourceId": "all-day-series",
@@ -337,13 +337,13 @@ async def test_all_day_until_exdate_and_rdate_keep_calendar_dates(client, app) -
 async def test_custom_vtimezone_survives_commit_and_expansion(client, app) -> None:
     preview = (
         await client.post(
-            "/api/v1/calendar-imports/preview",
+            "/api/v1/calendar/imports/preview",
             json={"content": CUSTOM_TIMEZONE_ICS, "sourceId": "custom-zone"},
         )
     ).json()
     item = preview["items"][0]
     committed = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={
             "content": CUSTOM_TIMEZONE_ICS,
             "sourceId": "custom-zone",
@@ -351,8 +351,8 @@ async def test_custom_vtimezone_survives_commit_and_expansion(client, app) -> No
         },
     )
     task_id = committed.json()["results"][0]["targetId"]
-    row = await app.state.db.fetch_one("SELECT event_timezone_ical FROM analysis_tasks WHERE id = ?", (task_id,))
-    assert row is not None and "BEGIN:VTIMEZONE" in row["event_timezone_ical"]
+    row = await app.state.db.fetch_one("SELECT timezone_ical FROM recurring_schedules WHERE task_id = ?", (task_id,))
+    assert row is not None and "BEGIN:VTIMEZONE" in row["timezone_ical"]
 
     window = await query_window(
         app.state.db,
@@ -370,7 +370,7 @@ async def test_custom_vtimezone_survives_commit_and_expansion(client, app) -> No
 async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(client, app) -> None:
     preview = (
         await client.post(
-            "/api/v1/calendar-imports/preview",
+            "/api/v1/calendar/imports/preview",
             json={"content": ICS, "sourceId": "consumer-chain"},
         )
     ).json()
@@ -380,14 +380,14 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
         if item["supported"] and item["uid"] in {"single-1@example.test", "series-1@example.test"}
     ]
     committed = await client.post(
-        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar/imports/commit",
         json={"content": ICS, "sourceId": "consumer-chain", "selections": selected},
     )
     assert committed.status_code == 200
     ids = {item["uid"]: item["targetId"] for item in committed.json()["results"]}
 
     user_events = await client.get(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         params={"start": "2026-08-01T00:00:00Z", "end": "2026-08-31T23:59:59Z"},
     )
     assert user_events.status_code == 200
@@ -396,7 +396,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
     assert imported_user["icsUid"] == "single-1@example.test"
 
     occurrences = await client.get(
-        "/api/v1/results/calendar",
+        "/api/v1/calendar/items",
         params={
             "range_start": "2026-08-01T00:00:00Z",
             "range_end": "2026-08-31T23:59:59Z",
@@ -427,7 +427,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
 
 def test_openapi_exposes_concrete_import_contract(app) -> None:
     schema = app.openapi()
-    assert "/api/v1/calendar-imports/preview" in schema["paths"]
-    assert "/api/v1/calendar-imports/commit" in schema["paths"]
-    preview_response = schema["paths"]["/api/v1/calendar-imports/preview"]["post"]["responses"]["200"]
+    assert "/api/v1/calendar/imports/preview" in schema["paths"]
+    assert "/api/v1/calendar/imports/commit" in schema["paths"]
+    preview_response = schema["paths"]["/api/v1/calendar/imports/preview"]["post"]["responses"]["200"]
     assert "CalendarImportPreviewResponse" in str(preview_response)

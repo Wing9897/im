@@ -1,7 +1,7 @@
 import {
   storageThemeColorsKey,
   storageThemeTextureKey,
-} from "./themePersistedKeys";
+} from "../domain/prefs";
 import {
   THEME_MOTIFS,
   getThemeDefinition,

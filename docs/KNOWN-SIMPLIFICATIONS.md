@@ -26,11 +26,11 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. The `_data_migrations` ledger stub in `server/db/data_migrations.py` remains for startup safety; active content runners are empty on the stamp-4 wipe-floor baseline (schema registry empty).
+Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 5 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
 
 ## Sources / accounts
 
-Platform-first `PATCH /api/v1/accounts/{email|rss|mqtt|telegram|discord}/{account_id}`. List: unfiltered `GET /accounts` or typed `GET /accounts/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/results/calendar`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
+Platform-first `PATCH /api/v1/accounts/{email|rss|mqtt|telegram|discord}/{account_id}`. List: unfiltered `GET /accounts` or typed `GET /accounts/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/calendar/items`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
 
 **Input／Process registries (in-repo, not a plugin SDK):**
 - Platforms: leaf `server/domain/collector_platforms.py` → DDL CHECK + `ADAPTER_BUILDERS` + FE `domain/sources/collectorPlatforms.ts` (drift-tested).
@@ -64,7 +64,7 @@ One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRU
 
 LLM batch errors: stay `pending`, increment `retry_count`, log to `app_logs`. When `retry_count >= max_batch_retries`, `retry_count` resets to 0 and optional `autoPauseOnRetriesExhausted` pauses analysis. Operational invalidation: incomplete batches are **deleted** (markers cascade).
 
-Ops: `python scripts/pending_batch_report.py`［`--json`］; `operational_verify` prints per-task queued breakdown when paused with `queue.pendingCount > 10` (WARN only).
+Ops: prefer contract tests + `npm run verify:deploy`（live smoke）for day-to-day checks; heavy historical eval／ops scripts are not part of the supported workflow.
 
 ## Cross-layer contract quirks (do not "fix" without updating the client)
 
@@ -80,11 +80,11 @@ Ops: `python scripts/pending_batch_report.py`［`--json`］; `operational_verify
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v4 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [backup/reset procedure](./ARCHITECTURE.md#schema-v4-backup-and-explicit-reset) (wipe-floor, calendar-import metadata, `__user__`, `user_events.workset_id`) |
+| Schema stamp v5 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v5-explicit-reset) (wipe-only, `recurring_schedules`, `__user__`, `user_events.workset_id`) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
-| Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"calendar_task"` / `"recurring"`. Docs 對照 only; do not rename wire ids |
+| Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
 | Device-local browser state | UI-only state that must remain per browser／Electron profile stays in localStorage or sessionStorage: locale/theme/background, shell chrome and last path, drafts, view/filter/read state, runtime-log cache, and the stable assistant client-instance id. These are active stores, not migration bridges |
 | Desktop STT / no Whisper | Electron hides mic and disables browser STT direct mode; use text input. Local Whisper / Doubao cloud STT-TTS remain unimplemented adapters only — see [`agent/assistant.md`](./agent/assistant.md) |
 
@@ -116,10 +116,10 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 
 - API field shapes: `server/tests/test_contract_*.py`
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
-- Live regression (local): `npm run verify:fast` / `verify:full`
+- Post-deploy live smoke: `npm run verify:deploy`
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions runs `npm run check`, normal builds, and the server-sidecar build; manual dispatch / `v*` tags also validate three-platform Desktop packages.
+- GitHub Actions: Ubuntu `npm run check` + build on every push／PR; Windows sidecar on Desktop-related paths／tag／manual; Windows NSIS + GHCR on tag／manual only.
 
 ## Security (outbound requests)
 
@@ -130,10 +130,10 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 ## Release checklist (Desktop + container)
 
 1. `npm run check`
-2. On each target OS (or CI package job): `npm run dist:win`／`dist:mac`／`dist:linux` then `npm run verify:desktop:full`
-3. Sign／notarize installers for public distribution (unsigned CI builds are for QA only)
-4. Container: `npm run docker:build` or rely on CI → `ghcr.io/<owner>/<repo>`
-5. Optional CI: `workflow_dispatch` or push a `v*` tag (three-platform packages + GHCR); on `v*` tags CI also creates a **GitHub Release** with Desktop artifacts (tag name without `v` must equal root `VERSION`); `main` push also refreshes GHCR `latest`
+2. Windows: `npm run dist:win` then `npm run verify:desktop:full` (or CI `package` on tag／manual)
+3. Sign Windows installers for public distribution (unsigned CI builds are for QA only)
+4. Container: `npm run docker:build` + `npm run verify:deploy`, or CI tag／manual → `ghcr.io/<owner>/<repo>` (healthcheck + deploy smoke)
+5. CI: `workflow_dispatch` or push a `v*` tag (Windows NSIS + GHCR); on `v*` tags CI also creates a **GitHub Release** with Windows Desktop artifacts (tag name without `v` must equal root `VERSION`). macOS／Linux Desktop are not daily release targets.
 
 ## Email IMAP outbound policy
 
@@ -148,18 +148,10 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 | **Long-lived session** | Telegram, Discord, MQTT | Account → `error` / disconnected; SSE `account_status_changed` | Connect/disconnect and reconnect failures update status and broadcast SSE |
 | **Poll loop** | RSS, Email (IMAP) | Validation/login failure → account `error` | **RSS:** consecutive failures (default 3) escalate to `error` + SSE. **Email:** transient poll errors retry; repeated IMAP auth failures escalate to `error` + SSE |
 
-## Operational verify
+## Deploy verify
 
-`npm run verify:full` runs `scripts/operational_verify.py` against a live server at `http://127.0.0.1:18820`.
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `OPERATIONAL_BATCH_START_WAIT` | 90 (seconds) | Max wait for a batch to enter processing |
-| `OPERATIONAL_BATCH_COMPLETE_WAIT` | 120 (seconds) | Max wait for a batch to finish |
-| `OPERATIONAL_POLL_INTERVAL` | 3 (seconds) | Poll interval while waiting on batches |
-| `OPERATIONAL_STRICT` | off | When `1`, treat skipped optional checks as failures |
-| `OPERATIONAL_LEADERBOARD_TASK` | empty | Task id for leaderboard smoke (optional) |
+`npm run verify:deploy` / `npm run smoke` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
 
 ## Removed / not restored
 
-Tauri IPC, sidecar JSON-RPC, and related desktop-era integrations were removed with the Python server rewrite. Do not revive without a product need.
+Legacy Tauri migration guards and macOS／Linux Desktop daily CI／release targets were retired with the delivery slim-down. Windows Desktop + Docker/Web remain first-class. Do not revive Tauri IPC or three-platform Desktop CI without a product need.

@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 4 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 5 (single schema source).
 
 ``server.db.migrations`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -135,24 +135,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     schedule_type        TEXT NOT NULL DEFAULT 'seconds_10'
                          CHECK (schedule_type IN ('seconds_10','hourly','daily','weekly','custom_seconds')),
     schedule_value       TEXT DEFAULT NULL,
-    rrule                TEXT DEFAULT NULL,
-    event_start_time     TEXT DEFAULT NULL,
-    event_end_time       TEXT DEFAULT NULL,
-    event_is_all_day     INTEGER NOT NULL DEFAULT 0,
-    event_location       TEXT DEFAULT NULL,
-    event_description    TEXT DEFAULT NULL,
-    event_timezone       TEXT DEFAULT NULL,
-    event_timezone_ical  TEXT DEFAULT NULL,
-    event_start_local    TEXT DEFAULT NULL,
-    event_end_local      TEXT DEFAULT NULL,
-    event_exdates_json   TEXT NOT NULL DEFAULT '[]',
-    event_rdates_json    TEXT NOT NULL DEFAULT '[]',
-    ics_uid              TEXT DEFAULT NULL,
-    ics_source           TEXT DEFAULT NULL,
-    ics_import_fingerprint TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
-    parent_task_id       TEXT DEFAULT NULL
-                         REFERENCES analysis_tasks(id) ON DELETE CASCADE,
     workset_id           TEXT DEFAULT NULL
                          REFERENCES worksets(id) ON DELETE SET NULL,
     -- Per-task analysis-scheduling overrides (NULL = use system_config defaults).
@@ -164,12 +147,37 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_analysis_tasks_parent
-    ON analysis_tasks(parent_task_id);
 CREATE INDEX IF NOT EXISTS idx_analysis_tasks_workset
     ON analysis_tasks(workset_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_analysis_tasks_ics_source_uid
-    ON analysis_tasks(ics_source, ics_uid)
+
+-- Recurrence is a schedule resource, not an analysis-task concern. ``dtstart``
+-- is the real persisted RFC 5545 series anchor (local DATE/DATE-TIME plus TZID),
+-- never a synthetic expansion date.
+CREATE TABLE IF NOT EXISTS recurring_schedules (
+    task_id                 TEXT PRIMARY KEY
+                            REFERENCES analysis_tasks(id) ON DELETE CASCADE,
+    rrule                   TEXT NOT NULL,
+    dtstart                 TEXT NOT NULL,
+    dtend                   TEXT DEFAULT NULL,
+    is_all_day              INTEGER NOT NULL DEFAULT 0,
+    location                TEXT DEFAULT NULL,
+    description             TEXT DEFAULT NULL,
+    timezone                TEXT DEFAULT NULL,
+    timezone_ical           TEXT DEFAULT NULL,
+    exdates_json            TEXT NOT NULL DEFAULT '[]',
+    rdates_json             TEXT NOT NULL DEFAULT '[]',
+    ics_uid                 TEXT DEFAULT NULL,
+    ics_source              TEXT DEFAULT NULL,
+    ics_import_fingerprint  TEXT DEFAULT NULL,
+    parent_task_id          TEXT DEFAULT NULL
+                            REFERENCES analysis_tasks(id) ON DELETE CASCADE,
+    created_at              TEXT NOT NULL,
+    updated_at              TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_recurring_schedules_parent
+    ON recurring_schedules(parent_task_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_recurring_schedules_ics_source_uid
+    ON recurring_schedules(ics_source, ics_uid)
     WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 
 -- Project-manager incremental message cursor (not system_config).
@@ -456,34 +464,7 @@ CREATE TABLE IF NOT EXISTS access_api_keys (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_access_api_keys_secret_hash
     ON access_api_keys(secret_hash);
 
--- A2A capability call audit (key_id + capability + status; never stores secrets).
--- Every A2A route resolves a real access key before writing, so key_id is a hard
--- reference. Keys are revoked rather than deleted, so CASCADE is a guard against
--- dangling rows, not a routine path. Rows age out on a fixed TTL
--- (server/scheduler/retention.py) — the table is append-only per call.
-CREATE TABLE IF NOT EXISTS a2a_audit_log (
-    id          TEXT PRIMARY KEY,
-    key_id      TEXT NOT NULL REFERENCES access_api_keys(id) ON DELETE CASCADE,
-    capability  TEXT NOT NULL,
-    status      TEXT NOT NULL,
-    detail      TEXT NOT NULL DEFAULT '',
-    created_at  TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_a2a_audit_log_created_at
-    ON a2a_audit_log(created_at ASC);
-CREATE INDEX IF NOT EXISTS idx_a2a_audit_log_key_id
-    ON a2a_audit_log(key_id);
-
--- Per-device assistant session store. One JSON payload row per device.
-CREATE TABLE IF NOT EXISTS assistant_device_stores (
-    device_id     TEXT PRIMARY KEY,
-    payload_json  TEXT NOT NULL,
-    updated_at    TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_assistant_stores_updated_at_asc
-    ON assistant_device_stores(updated_at ASC);
-
--- Global UI prefs JSON (board / voice / timeline / assistant voice-io).
+-- Global UI prefs JSON (board / voice / timeline / assistant sessions + voice-io).
 -- Keys match former system_config ids; served only via /api/v1/ui-prefs/*.
 CREATE TABLE IF NOT EXISTS ui_prefs (
     key           TEXT PRIMARY KEY,

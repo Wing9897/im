@@ -58,18 +58,6 @@ describe("bootMachine", () => {
     expect(bootReduce(setup, { type: "secrets_gate_complete" })).toEqual(setup);
   });
 
-  it("schema blocked → gate → auth ready", () => {
-    const state = reduceMany([
-      { type: "check_started" },
-      { type: "schema_blocked" },
-      { type: "gate_complete" },
-      { type: "auth_ready" },
-    ]);
-    expect(state.phase).toBe("ready");
-    expect(state.setupStatus).toBeNull();
-    expect(state.setupReason).toBeNull();
-  });
-
   it("schema ok → setup when no session", () => {
     const state = reduceMany([
       { type: "check_started" },

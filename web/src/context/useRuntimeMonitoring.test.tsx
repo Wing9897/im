@@ -31,6 +31,10 @@ vi.mock("../api/system", () => ({
 
 import type { Message, QueueStatus, CollectorStatusChangedPayload } from "../types";
 import { useRuntimeMonitoring } from "./runtimeMonitoring";
+import {
+  acquireRuntimeInterest,
+  resetRuntimeInterestForTests,
+} from "./runtimeMonitoring/consumerInterest";
 import { EVENT_LOG_REFRESH_DELAY_MS, type RuntimeMonitoringState } from "./runtimeMonitoring/types";
 
 let latestState: RuntimeMonitoringState | null = null;
@@ -123,10 +127,12 @@ describe("useRuntimeMonitoring", () => {
     addLogMock.mockReset();
     refreshStoredLogsMock.mockClear();
     warnNonFatalMock.mockReset();
+    resetRuntimeInterestForTests();
   });
 
   afterEach(() => {
     latestState = null;
+    resetRuntimeInterestForTests();
     vi.useRealTimers();
   });
 
@@ -181,6 +187,7 @@ describe("useRuntimeMonitoring", () => {
   });
 
   it("does not block collector status bootstrap on slow log loading", async () => {
+    const releaseLogs = acquireRuntimeInterest("logs");
     const logRefreshDeferred = createDeferred<void>();
     refreshStoredLogsMock.mockImplementation(() => logRefreshDeferred.promise);
 
@@ -204,6 +211,34 @@ describe("useRuntimeMonitoring", () => {
       await Promise.resolve();
     });
 
+    releaseLogs();
+    cleanupHarness(root, container);
+  });
+
+  it("skips stored-log bootstrap and event sync without a logs consumer", async () => {
+    mockFetchCollectorStatus.mockResolvedValue("running");
+    mockFetchQueueStatus.mockResolvedValue(emptyQueue());
+    mockCheckAiEngineStatus.mockResolvedValue({
+      status: "available",
+      reason: null,
+      provider: "test",
+    });
+
+    const { container, root } = renderHarness();
+    await flushAsyncWork();
+    refreshStoredLogsMock.mockClear();
+
+    act(() => {
+      fireSseEvent("analysis_completed", {
+        taskId: "task-1",
+        batchId: "batch-1",
+        analysisMode: "event",
+        findingsCount: 2,
+        hasFindings: true,
+      });
+    });
+
+    expect(refreshStoredLogsMock).not.toHaveBeenCalled();
     cleanupHarness(root, container);
   });
 
@@ -230,6 +265,7 @@ describe("useRuntimeMonitoring", () => {
 
   it("refreshes stored logs when analysis events arrive", async () => {
     vi.useFakeTimers();
+    const releaseLogs = acquireRuntimeInterest("logs");
 
     mockFetchCollectorStatus.mockResolvedValue("running");
     mockFetchQueueStatus.mockResolvedValue(emptyQueue());
@@ -261,11 +297,13 @@ describe("useRuntimeMonitoring", () => {
     });
 
     expect(refreshStoredLogsMock).toHaveBeenCalledTimes(2);
+    releaseLogs();
     cleanupHarness(root, container);
   });
 
   it("syncs persisted collector logs after status events without appending a duplicate local log", async () => {
     vi.useFakeTimers();
+    const releaseLogs = acquireRuntimeInterest("logs");
 
     mockFetchCollectorStatus.mockResolvedValue("stopped");
     mockFetchQueueStatus.mockResolvedValue(emptyQueue());
@@ -294,6 +332,7 @@ describe("useRuntimeMonitoring", () => {
     });
 
     expect(refreshStoredLogsMock).toHaveBeenCalledTimes(2);
+    releaseLogs();
     cleanupHarness(root, container);
   });
 
@@ -408,6 +447,7 @@ describe("useRuntimeMonitoring", () => {
 
   it("captures the latest messages update from the shared runtime listener", async () => {
     vi.useFakeTimers();
+    const releaseLogs = acquireRuntimeInterest("logs");
 
     mockFetchCollectorStatus.mockResolvedValue("running");
     mockFetchQueueStatus.mockResolvedValue(emptyQueue());
@@ -454,6 +494,7 @@ describe("useRuntimeMonitoring", () => {
     });
 
     expect(refreshStoredLogsMock).toHaveBeenCalledTimes(2);
+    releaseLogs();
     cleanupHarness(root, container);
   });
 

@@ -65,8 +65,6 @@ from server.api.schemas.responses.messages import (
 from server.api.schemas.responses.system import (
     RetentionDeletedCounts,
     RetentionRunResponse,
-    SchemaUpgradeProgress,
-    SchemaUpgradeStatusResponse,
     SystemSettingsSnapshot,
 )
 from server.api.schemas.responses.tasks import (
@@ -84,6 +82,7 @@ from server.api.schemas.responses.tasks import (
     TaskDeleteResponse,
     TaskDraftPayload,
     TaskResponse,
+    TaskScheduleResponse,
 )
 from server.api.schemas.responses.ui_prefs import (
     AssistantSessionsResponse,
@@ -164,8 +163,6 @@ __all__ = [
     "RetentionRunResponse",
     "RefreshAllAccountsResponse",
     "RssFeedInfoResponse",
-    "SchemaUpgradeProgress",
-    "SchemaUpgradeStatusResponse",
     "SetupStatusResponse",
     "SourceFilterSelectionSchema",
     "SystemSettingsSnapshot",
@@ -174,6 +171,7 @@ __all__ = [
     "TaskDeleteResponse",
     "TaskDraftPayload",
     "TaskResponse",
+    "TaskScheduleResponse",
     "TimelineAnnotationsResponse",
     "TimelineDismissalResponse",
     "TrendingTopicResponse",

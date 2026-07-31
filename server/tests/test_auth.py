@@ -8,7 +8,7 @@ import pytest
 from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 
-from server.access_keys import A2A_AGENT_SCOPE, seed_access_key
+from server.access_keys import READ_SCOPE, seed_access_key
 from server.auth import is_loopback, presented_token, verify_auth, verify_write_access
 from server.config import set_configs
 from server.device_auth import create_device_session
@@ -166,10 +166,25 @@ async def test_verify_write_access_remote_allows_get(app) -> None:
     await verify_write_access(request)
 
 
-async def test_verify_auth_a2a_only_key_forbidden_outside_a2a(app) -> None:
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
+async def test_verify_auth_read_only_key_allows_get(app) -> None:
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
     request = _make_request(
         host="203.0.113.9",
+        method="GET",
+        path="/api/v1/tasks",
+        headers={"Authorization": f"Bearer {A2A_ONLY_KEY}"},
+        app=app,
+    )
+
+    await verify_auth(request)
+    assert request.state.access_key_scopes == [READ_SCOPE]
+
+
+async def test_verify_auth_read_only_key_forbidden_on_post(app) -> None:
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
+    request = _make_request(
+        host="203.0.113.9",
+        method="POST",
         path="/api/v1/tasks",
         headers={"Authorization": f"Bearer {A2A_ONLY_KEY}"},
         app=app,
@@ -180,21 +195,7 @@ async def test_verify_auth_a2a_only_key_forbidden_outside_a2a(app) -> None:
     assert exc.value.status_code == 403
     detail = cast(dict[str, Any], exc.value.detail)
     assert detail["error_code"] == "FORBIDDEN"
-    assert "*" in detail["message"]
-    assert "/api/v1/tasks" in detail["message"]
-
-
-async def test_verify_auth_a2a_only_key_allowed_under_a2a(app) -> None:
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
-    request = _make_request(
-        host="203.0.113.9",
-        path="/api/v1/a2a/agent",
-        headers={"Authorization": f"Bearer {A2A_ONLY_KEY}"},
-        app=app,
-    )
-
-    await verify_auth(request)
-    assert request.state.access_key_scopes == [A2A_AGENT_SCOPE]
+    assert "read-only" in detail["message"]
 
 
 async def test_verify_auth_star_key_allows_tasks(app) -> None:
@@ -211,9 +212,10 @@ async def test_verify_auth_star_key_allows_tasks(app) -> None:
 
 async def test_verify_auth_loopback_exempt_still_scopes_presented_key(app) -> None:
     await set_configs(app.state.db, {"localhost_auth_exempt": "true"})
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
     request = _make_request(
         host="127.0.0.1",
+        method="POST",
         path="/api/v1/access-keys",
         headers={"Authorization": f"Bearer {A2A_ONLY_KEY}"},
         app=app,
@@ -224,8 +226,8 @@ async def test_verify_auth_loopback_exempt_still_scopes_presented_key(app) -> No
     assert exc.value.status_code == 403
 
 
-async def test_verify_write_access_remote_a2a_only_key_forbidden(app) -> None:
-    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="A2A", scopes=[A2A_AGENT_SCOPE])
+async def test_verify_write_access_remote_read_only_key_forbidden(app) -> None:
+    await seed_access_key(app.state.db, A2A_ONLY_KEY, label="Read", scopes=[READ_SCOPE])
     request = _make_request(
         host="203.0.113.9",
         method="POST",

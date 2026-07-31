@@ -11,9 +11,7 @@ Independent category TTLs (0 disables that category):
 
 Always-on (not gated by retention_*_days):
   - orphan ``timeline_dismissals`` (source event row gone)
-  - stale ``assistant_device_stores`` by ``updated_at`` (fixed TTL)
   - device session / access-token rows by their own ``expires_at``
-  - ``a2a_audit_log`` by ``created_at`` (fixed TTL)
 """
 
 from __future__ import annotations
@@ -25,11 +23,9 @@ from typing import TypedDict
 from server.config import get_config_int
 from server.db.database import Database
 from server.queries.retention_queries import (
-    cleanup_a2a_audit_log_batch,
     cleanup_action_trigger_history_batch,
     cleanup_analysis_batch,
     cleanup_app_logs_batch,
-    cleanup_assistant_stores_batch,
     cleanup_completed_batches_batch,
     cleanup_device_access_tokens_batch,
     cleanup_device_sessions_batch,
@@ -42,11 +38,6 @@ from server.queries.retention_queries import (
 logger = logging.getLogger(__name__)
 
 CLEANUP_INTERVAL_SECONDS = 24 * 3600
-# Fixed TTL for per-device assistant session blobs (no settings key).
-ASSISTANT_STORE_TTL_DAYS = 90
-# Fixed TTL for the A2A call audit trail (no settings key). One row per external
-# agent call, so without a TTL the table is the only unbounded table left.
-A2A_AUDIT_TTL_DAYS = 180
 
 
 class RetentionCounts(TypedDict):
@@ -57,10 +48,8 @@ class RetentionCounts(TypedDict):
     app_logs: int
     user_events: int
     timeline_dismissals: int
-    assistant_device_stores: int
     device_access_tokens: int
     device_sessions: int
-    a2a_audit_log: int
 
 
 def _cutoff(days: int) -> str:
@@ -77,10 +66,8 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
         "app_logs": 0,
         "user_events": 0,
         "timeline_dismissals": 0,
-        "assistant_device_stores": 0,
         "device_access_tokens": 0,
         "device_sessions": 0,
-        "a2a_audit_log": 0,
     }
 
     messages_days = await get_config_int(db, "retention_messages_days")
@@ -145,18 +132,9 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
                 break
             await asyncio.sleep(0)
 
-    # Always on: orphan dismissals after source rows age out / are deleted.
     while True:
         deleted = await cleanup_orphan_timeline_dismissals_batch(db)
         counts["timeline_dismissals"] += deleted
-        if deleted == 0:
-            break
-        await asyncio.sleep(0)
-
-    # Always on: assistant device stores past the fixed TTL.
-    while True:
-        deleted = await cleanup_assistant_stores_batch(db, _cutoff(ASSISTANT_STORE_TTL_DAYS))
-        counts["assistant_device_stores"] += deleted
         if deleted == 0:
             break
         await asyncio.sleep(0)
@@ -178,20 +156,12 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             break
         await asyncio.sleep(0)
 
-    # Always on: the A2A audit trail past its fixed TTL.
-    while True:
-        deleted = await cleanup_a2a_audit_log_batch(db, _cutoff(A2A_AUDIT_TTL_DAYS))
-        counts["a2a_audit_log"] += deleted
-        if deleted == 0:
-            break
-        await asyncio.sleep(0)
-
     if any(counts.values()):
         logger.info(
             "Retention cleanup removed messages=%d analysis=%d leaderboard=%d "
             "action_trigger_history=%d app_logs=%d user_events=%d "
-            "timeline_dismissals=%d assistant_device_stores=%d "
-            "device_access_tokens=%d device_sessions=%d a2a_audit_log=%d",
+            "timeline_dismissals=%d "
+            "device_access_tokens=%d device_sessions=%d",
             counts["messages"],
             counts["analysis"],
             counts["leaderboard"],
@@ -199,10 +169,8 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             counts["app_logs"],
             counts["user_events"],
             counts["timeline_dismissals"],
-            counts["assistant_device_stores"],
             counts["device_access_tokens"],
             counts["device_sessions"],
-            counts["a2a_audit_log"],
         )
     return counts
 

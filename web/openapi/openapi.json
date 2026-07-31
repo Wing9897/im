@@ -18,52 +18,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Health V1 Api V1 Health Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/system/schema/status": {
-      "get": {
-        "tags": [
-          "schema"
-        ],
-        "summary": "Schema Status",
-        "operationId": "schema_status_api_v1_system_schema_status_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchemaUpgradeStatusResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/system/schema/upgrade": {
-      "post": {
-        "tags": [
-          "schema"
-        ],
-        "summary": "Schema Upgrade",
-        "description": "Run stop-the-world backup + migration + runtime start.",
-        "operationId": "schema_upgrade_api_v1_system_schema_upgrade_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchemaUpgradeStatusResponse"
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -486,6 +441,131 @@
                   },
                   "type": "array",
                   "title": "Response Activity Spans Api V1 Tasks Activity Spans Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{task_id}/schedule": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Get Task Schedule",
+        "operationId": "get_task_schedule_api_v1_tasks__task_id__schedule_get",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Put Task Schedule",
+        "operationId": "put_task_schedule_api_v1_tasks__task_id__schedule_put",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskScheduleBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskScheduleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Remove Task Schedule",
+        "operationId": "remove_task_schedule_api_v1_tasks__task_id__schedule_delete",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2377,96 +2457,6 @@
         }
       }
     },
-    "/api/v1/results/calendar": {
-      "get": {
-        "tags": [
-          "results"
-        ],
-        "summary": "Fetch Calendar",
-        "operationId": "fetch_calendar_api_v1_results_calendar_get",
-        "parameters": [
-          {
-            "name": "range_start",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Range Start"
-            }
-          },
-          {
-            "name": "range_end",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Range End"
-            }
-          },
-          {
-            "name": "task_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Task Id"
-            }
-          },
-          {
-            "name": "task_ids",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Task Ids"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CalendarOccurrenceResponse"
-                  },
-                  "title": "Response Fetch Calendar Api V1 Results Calendar Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/results/queue": {
       "get": {
         "tags": [
@@ -3085,7 +3075,7 @@
           "a2a"
         ],
         "summary": "A2A Agent",
-        "description": "A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires access key with `a2a:agent` or `*`.",
+        "description": "A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`[\"*\"]`).",
         "operationId": "a2a_agent_api_v1_a2a_agent_post",
         "requestBody": {
           "content": {
@@ -3725,10 +3715,102 @@
         }
       }
     },
-    "/api/v1/calendar-imports/preview": {
+    "/api/v1/calendar/items": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Calendar Items",
+        "operationId": "list_calendar_items_api_v1_calendar_items_get",
+        "parameters": [
+          {
+            "name": "range_start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Range Start"
+            }
+          },
+          {
+            "name": "range_end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Range End"
+            }
+          },
+          {
+            "name": "task_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "task_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Ids"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CalendarOccurrenceResponse"
+                  },
+                  "title": "Response List Calendar Items Api V1 Calendar Items Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/imports/preview": {
       "post": {
         "tags": [
-          "calendar-imports"
+          "calendar",
+          "calendar"
         ],
         "summary": "Preview Import",
         "operationId": "preview_import_api_v1_calendar_imports_preview_post",
@@ -3766,10 +3848,11 @@
         }
       }
     },
-    "/api/v1/calendar-imports/commit": {
+    "/api/v1/calendar/imports/commit": {
       "post": {
         "tags": [
-          "calendar-imports"
+          "calendar",
+          "calendar"
         ],
         "summary": "Commit Import",
         "operationId": "commit_import_api_v1_calendar_imports_commit_post",
@@ -3807,13 +3890,151 @@
         }
       }
     },
-    "/api/v1/user-events": {
+    "/api/v1/calendar/dismissals": {
       "get": {
         "tags": [
-          "user-events"
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Dismissals",
+        "operationId": "list_dismissals_api_v1_calendar_dismissals_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimelineDismissalResponse"
+                  },
+                  "title": "Response List Dismissals Api V1 Calendar Dismissals Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Put Dismissal",
+        "operationId": "put_dismissal_api_v1_calendar_dismissals_put",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimelineDismissalBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineDismissalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Delete Dismissal",
+        "operationId": "delete_dismissal_api_v1_calendar_dismissals_delete",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eventid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/user-events": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
         ],
         "summary": "List Events",
-        "operationId": "list_events_api_v1_user_events_get",
+        "operationId": "list_events_api_v1_calendar_user_events_get",
         "parameters": [
           {
             "name": "start",
@@ -3890,7 +4111,7 @@
                   "items": {
                     "$ref": "#/components/schemas/UserEventResponse"
                   },
-                  "title": "Response List Events Api V1 User Events Get"
+                  "title": "Response List Events Api V1 Calendar User Events Get"
                 }
               }
             }
@@ -3909,10 +4130,11 @@
       },
       "post": {
         "tags": [
-          "user-events"
+          "calendar",
+          "calendar"
         ],
         "summary": "Create Event",
-        "operationId": "create_event_api_v1_user_events_post",
+        "operationId": "create_event_api_v1_calendar_user_events_post",
         "requestBody": {
           "required": true,
           "content": {
@@ -3947,13 +4169,55 @@
         }
       }
     },
-    "/api/v1/user-events/{event_id}": {
+    "/api/v1/calendar/user-events/{event_id}": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Get Event",
+        "operationId": "get_event_api_v1_calendar_user_events__event_id__get",
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEventResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch": {
         "tags": [
-          "user-events"
+          "calendar",
+          "calendar"
         ],
         "summary": "Patch Event",
-        "operationId": "patch_event_api_v1_user_events__event_id__patch",
+        "operationId": "patch_event_api_v1_calendar_user_events__event_id__patch",
         "parameters": [
           {
             "name": "event_id",
@@ -4000,10 +4264,11 @@
       },
       "delete": {
         "tags": [
-          "user-events"
+          "calendar",
+          "calendar"
         ],
         "summary": "Remove Event",
-        "operationId": "remove_event_api_v1_user_events__event_id__delete",
+        "operationId": "remove_event_api_v1_calendar_user_events__event_id__delete",
         "parameters": [
           {
             "name": "event_id",
@@ -4012,140 +4277,6 @@
             "schema": {
               "type": "string",
               "title": "Event Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/timeline/dismissals": {
-      "get": {
-        "tags": [
-          "timeline-dismissals"
-        ],
-        "summary": "List Dismissals",
-        "operationId": "list_dismissals_api_v1_timeline_dismissals_get",
-        "parameters": [
-          {
-            "name": "source",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Source"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TimelineDismissalResponse"
-                  },
-                  "title": "Response List Dismissals Api V1 Timeline Dismissals Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "timeline-dismissals"
-        ],
-        "summary": "Put Dismissal",
-        "operationId": "put_dismissal_api_v1_timeline_dismissals_put",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TimelineDismissalBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TimelineDismissalResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "timeline-dismissals"
-        ],
-        "summary": "Delete Dismissal",
-        "operationId": "delete_dismissal_api_v1_timeline_dismissals_delete",
-        "parameters": [
-          {
-            "name": "source",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Source"
-            }
-          },
-          {
-            "name": "eventId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Eventid"
             }
           }
         ],
@@ -5063,10 +5194,10 @@
             "title": "Label",
             "default": "Access key"
           },
-          "allowA2aAgent": {
+          "readOnly": {
             "type": "boolean",
-            "title": "Allowa2Aagent",
-            "description": "When true, create an A2A-only key (`[\"a2a:agent\"]`) for `POST /api/v1/a2a/agent` only. Leave false for a full household key (`[\"*\"]`) usable for Webhook, agent/chat, and A2A.",
+            "title": "Readonly",
+            "description": "When true, create a read-only key (`[\"read\"]`) for GET-only remote access. Leave false for a full household key (`[\"*\"]`) usable for writes, Webhook, agent/chat, and A2A.",
             "default": false
           },
           "scopes": {
@@ -5082,7 +5213,7 @@
               }
             ],
             "title": "Scopes",
-            "description": "Optional explicit scopes. When set, overrides `allowA2aAgent`. Use `[\"*\"]` for full access or `[\"a2a:agent\"]` for A2A-only. Non-`*` keys are limited to `/api/v1/a2a/`."
+            "description": "Optional explicit scopes. When set, overrides `readOnly`. Use `[\"*\"]` for full access or `[\"read\"]` for read-only."
           }
         },
         "additionalProperties": false,
@@ -5113,7 +5244,7 @@
             },
             "type": "array",
             "title": "Scopes",
-            "description": "Capability scopes; `[\"*\"]` = full household, `[\"a2a:agent\"]` = A2A-only.",
+            "description": "Capability scopes; `[\"*\"]` = full household, `[\"read\"]` = GET-only.",
             "default": [
               "*"
             ]
@@ -5197,7 +5328,7 @@
             },
             "type": "array",
             "title": "Scopes",
-            "description": "Capability scopes; `[\"*\"]` = full household, `[\"a2a:agent\"]` = A2A-only.",
+            "description": "Capability scopes; `[\"*\"]` = full household, `[\"read\"]` = GET-only.",
             "default": [
               "*"
             ]
@@ -7825,6 +7956,65 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "runtimeReady": {
+            "type": "boolean",
+            "title": "Runtimeready"
+          },
+          "secretsReady": {
+            "type": "boolean",
+            "title": "Secretsready"
+          },
+          "secretsError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secretserror"
+          },
+          "schemaVersion": {
+            "type": "integer",
+            "title": "Schemaversion"
+          },
+          "schemaSemver": {
+            "type": "string",
+            "title": "Schemasemver"
+          },
+          "bindHost": {
+            "type": "string",
+            "title": "Bindhost"
+          },
+          "lanAccessEnabled": {
+            "type": "boolean",
+            "title": "Lanaccessenabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "runtimeReady",
+          "secretsReady",
+          "schemaVersion",
+          "schemaSemver",
+          "bindHost",
+          "lanAccessEnabled"
+        ],
+        "title": "HealthResponse"
+      },
       "HttpSourceBody": {
         "properties": {
           "url": {
@@ -9270,10 +9460,6 @@
             "type": "integer",
             "title": "Timeline Dismissals"
           },
-          "assistant_device_stores": {
-            "type": "integer",
-            "title": "Assistant Device Stores"
-          },
           "device_access_tokens": {
             "type": "integer",
             "title": "Device Access Tokens"
@@ -9281,10 +9467,6 @@
           "device_sessions": {
             "type": "integer",
             "title": "Device Sessions"
-          },
-          "a2a_audit_log": {
-            "type": "integer",
-            "title": "A2A Audit Log"
           }
         },
         "type": "object",
@@ -9296,13 +9478,11 @@
           "app_logs",
           "user_events",
           "timeline_dismissals",
-          "assistant_device_stores",
           "device_access_tokens",
-          "device_sessions",
-          "a2a_audit_log"
+          "device_sessions"
         ],
         "title": "RetentionDeletedCounts",
-        "description": "Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.\n\nDevice-auth, orphan timeline dismissals, assistant-store and A2A-audit TTL\ncategories always run, independent of the configured ``retention_*_days``\nwindows."
+        "description": "Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.\n\nDevice-auth and orphan timeline dismissals always run, independent of the\nconfigured ``retention_*_days`` windows."
       },
       "RetentionRunResponse": {
         "properties": {
@@ -9466,96 +9646,6 @@
         },
         "type": "object",
         "title": "RssFeedPatchBody"
-      },
-      "SchemaUpgradeProgress": {
-        "properties": {
-          "phase": {
-            "type": "string",
-            "title": "Phase"
-          },
-          "percent": {
-            "type": "integer",
-            "title": "Percent"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "phase",
-          "percent",
-          "message"
-        ],
-        "title": "SchemaUpgradeProgress",
-        "description": "Progress uses stable ``phase`` / ``message`` keys; UI localizes them."
-      },
-      "SchemaUpgradeStatusResponse": {
-        "properties": {
-          "state": {
-            "type": "string",
-            "title": "State"
-          },
-          "runtimeReady": {
-            "type": "boolean",
-            "title": "Runtimeready"
-          },
-          "schemaVersion": {
-            "type": "integer",
-            "title": "Schemaversion"
-          },
-          "requiredSchemaVersion": {
-            "type": "integer",
-            "title": "Requiredschemaversion"
-          },
-          "schemaSemver": {
-            "type": "string",
-            "title": "Schemasemver"
-          },
-          "backupPath": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Backuppath"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
-          "restoredFromBackup": {
-            "type": "boolean",
-            "title": "Restoredfrombackup"
-          },
-          "progress": {
-            "$ref": "#/components/schemas/SchemaUpgradeProgress"
-          }
-        },
-        "type": "object",
-        "required": [
-          "state",
-          "runtimeReady",
-          "schemaVersion",
-          "requiredSchemaVersion",
-          "schemaSemver",
-          "backupPath",
-          "error",
-          "restoredFromBackup",
-          "progress"
-        ],
-        "title": "SchemaUpgradeStatusResponse"
       },
       "SetupStatusResponse": {
         "properties": {
@@ -10058,7 +10148,6 @@
                   "leaderboard",
                   "event",
                   "recurring",
-                  "calendar_task",
                   "project"
                 ]
               },
@@ -10124,73 +10213,6 @@
             ],
             "title": "Schedulevalue",
             "description": "Value interpreted only with the non-recurring AI analysis scheduleType"
-          },
-          "rrule": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rrule",
-            "description": "Recurring-only recurrence expanded at query time; never an AI analysis trigger"
-          },
-          "eventStartTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstarttime"
-          },
-          "eventEndTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendtime"
-          },
-          "eventIsAllDay": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventisallday"
-          },
-          "eventLocation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventlocation"
-          },
-          "eventDescription": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventdescription"
           },
           "includeInTimeline": {
             "anyOf": [
@@ -10289,6 +10311,7 @@
             "title": "Worksetid"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "name"
@@ -10378,7 +10401,6 @@
                   "leaderboard",
                   "event",
                   "recurring",
-                  "calendar_task",
                   "project"
                 ]
               },
@@ -10469,7 +10491,6 @@
               "leaderboard",
               "event",
               "recurring",
-              "calendar_task",
               "project"
             ],
             "title": "Analysismode"
@@ -10507,135 +10528,6 @@
               }
             ],
             "title": "Schedulevalue"
-          },
-          "rrule": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rrule"
-          },
-          "eventStartTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstarttime"
-          },
-          "eventEndTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendtime"
-          },
-          "eventIsAllDay": {
-            "type": "boolean",
-            "title": "Eventisallday",
-            "default": false
-          },
-          "eventLocation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventlocation"
-          },
-          "eventDescription": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventdescription"
-          },
-          "eventTimezone": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventtimezone"
-          },
-          "eventStartLocal": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstartlocal"
-          },
-          "eventEndLocal": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendlocal"
-          },
-          "eventExdates": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Eventexdates"
-          },
-          "eventRdates": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Eventrdates"
-          },
-          "icsUid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Icsuid"
-          },
-          "icsSource": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Icssource"
           },
           "includeInTimeline": {
             "type": "boolean",
@@ -10777,6 +10669,229 @@
           "isActive"
         ],
         "title": "TaskResponse"
+      },
+      "TaskScheduleBody": {
+        "properties": {
+          "rrule": {
+            "type": "string",
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "type": "boolean",
+            "title": "Eventisallday",
+            "default": false
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "parentTaskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parenttaskid",
+            "description": "Optional project parent for nested recurring children"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "rrule"
+        ],
+        "title": "TaskScheduleBody"
+      },
+      "TaskScheduleResponse": {
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "title": "Taskid"
+          },
+          "rrule": {
+            "type": "string",
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "type": "boolean",
+            "title": "Eventisallday",
+            "default": false
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "eventTimezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventtimezone"
+          },
+          "eventStartLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstartlocal"
+          },
+          "eventEndLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendlocal"
+          },
+          "eventExdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventexdates"
+          },
+          "eventRdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventrdates"
+          },
+          "icsUid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icsuid"
+          },
+          "icsSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icssource"
+          },
+          "parentTaskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parenttaskid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "taskId",
+          "rrule"
+        ],
+        "title": "TaskScheduleResponse",
+        "description": "Recurring calendar plan for ``analysisMode=recurring`` tasks."
       },
       "Telegram2faBody": {
         "properties": {

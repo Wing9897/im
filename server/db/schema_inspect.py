@@ -1,7 +1,7 @@
 """SQLite schema fingerprint types and live introspection.
 
-Version classification / stamping / MigrationStep chains live in
-:mod:`server.db.migrations`. DDL-derived expected signatures come from
+Version classification and wipe-only stamping live in :mod:`server.db.migrations`.
+DDL-derived expected signatures come from
 :mod:`server.db.schema`.
 """
 
@@ -21,7 +21,7 @@ from server.db.schema import (
 )
 from server.db.schema_fingerprint import _quoted_identifier
 
-CURRENT_SCHEMA_VERSION = 4
+CURRENT_SCHEMA_VERSION = 5
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
 SCHEMA_SEMVER = "0.1.0-beta.6"
@@ -170,16 +170,13 @@ async def inspect_schema(conn: aiosqlite.Connection) -> SchemaFingerprint:
 
     SQLite-owned tables and indexes (including primary-key/unique-constraint
     auto-indexes) are deliberately absent from the fingerprint. The private
-    ``_data_migrations`` ledger is also excluded so content migration tracking
-    remains separate from schema-version transitions.
+    Every application-owned table participates in the fingerprint.
     """
     version_rows = await _fetchall(conn, "PRAGMA user_version")
     version = int(version_rows[0][0]) if version_rows else 0
     table_rows = await _fetchall(
         conn,
-        "SELECT name FROM sqlite_master "
-        "WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
-        "AND name != '_data_migrations'",
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
     )
     tables = frozenset(str(row[0]) for row in table_rows)
 

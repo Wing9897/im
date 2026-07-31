@@ -8,7 +8,7 @@ from server.user_events import create_user_event, get_user_event_row, list_user_
 
 async def test_dismiss_restore_roundtrip(client) -> None:
     created = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "analysis", "eventId": "evt-analysis-1"},
     )
     assert created.status_code == 200
@@ -17,24 +17,24 @@ async def test_dismiss_restore_roundtrip(client) -> None:
     assert body["eventId"] == "evt-analysis-1"
     assert isinstance(body["dismissedAt"], str) and body["dismissedAt"]
 
-    listed = await client.get("/api/v1/timeline/dismissals", params={"source": "analysis"})
+    listed = await client.get("/api/v1/calendar/dismissals", params={"source": "analysis"})
     assert listed.status_code == 200
     assert any(item["eventId"] == "evt-analysis-1" for item in listed.json())
 
     again = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "analysis", "eventId": "evt-analysis-1"},
     )
     assert again.status_code == 200
 
     restored = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "eventId": "evt-analysis-1"},
     )
     assert restored.status_code == 204
 
     missing = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "eventId": "evt-analysis-1"},
     )
     assert missing.status_code == 404
@@ -42,19 +42,19 @@ async def test_dismiss_restore_roundtrip(client) -> None:
 
 async def test_restore_rejects_snake_case_query_alias(client) -> None:
     created = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "analysis", "eventId": "evt-alias-1"},
     )
     assert created.status_code == 200
 
     restored = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "event_id": "evt-alias-1"},
     )
     assert restored.status_code == 422
 
     restored = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "analysis", "eventId": "evt-alias-1"},
     )
     assert restored.status_code == 204
@@ -62,7 +62,7 @@ async def test_restore_rejects_snake_case_query_alias(client) -> None:
 
 async def test_dismiss_rejects_invalid_source(client) -> None:
     response = await client.put(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         json={"source": "rrule", "eventId": "x"},
     )
     assert response.status_code == 422
@@ -70,7 +70,7 @@ async def test_dismiss_rejects_invalid_source(client) -> None:
 
 async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     created = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "Soft delete me",
             "startTime": "2026-07-23T09:00:00Z",
@@ -80,22 +80,22 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     event_id = created.json()["id"]
     assert created.json()["dismissed"] is False
 
-    deleted = await client.delete(f"/api/v1/user-events/{event_id}")
+    deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
     assert deleted.status_code == 204
 
     row = await get_user_event_row(app.state.db, event_id)
     assert row is not None
 
-    listed = await client.get("/api/v1/user-events")
+    listed = await client.get("/api/v1/calendar/user-events")
     match = next(item for item in listed.json() if item["id"] == event_id)
     assert match["dismissed"] is True
 
     restored = await client.delete(
-        "/api/v1/timeline/dismissals",
+        "/api/v1/calendar/dismissals",
         params={"source": "user", "eventId": event_id},
     )
     assert restored.status_code == 204
-    listed_again = await client.get("/api/v1/user-events")
+    listed_again = await client.get("/api/v1/calendar/user-events")
     match_again = next(item for item in listed_again.json() if item["id"] == event_id)
     assert match_again["dismissed"] is False
 

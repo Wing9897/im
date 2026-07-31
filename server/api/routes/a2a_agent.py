@@ -9,8 +9,6 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.a2a_audit import write_a2a_audit
-from server.access_keys import A2A_AGENT_SCOPE
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
@@ -39,10 +37,6 @@ class A2aAgentBody(BaseModel):
     locale: Optional[str] = None
 
 
-def _key_id(request: Request) -> str:
-    return str(getattr(request.state, "access_key_id", None) or "")
-
-
 def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:
     text = (body.input or "").strip()
     prior = list(body.messages or [])
@@ -58,13 +52,12 @@ def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:
         "A2A natural-language agent (客户经理). Same LLM + tools as the assistant; "
         "different system prompt. Server runs an internal tool loop; response is a "
         "single shot: final `message` + `toolCalls` summary. No session storage. "
-        "Requires access key with `a2a:agent` or `*`."
+        'Requires a full household access key (`["*"]`).'
     ),
 )
 async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
     db = get_db(request)
     messages = _messages_from_body(body)
-    capability = A2A_AGENT_SCOPE
     llm: ConfigurableLlmClient | None = None
     try:
         llm = await ConfigurableLlmClient.from_db_for_agent(db)
@@ -75,13 +68,6 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
             runtime.chat(messages, locale=body.locale, channel="a2a"),
             timeout=wall,
         )
-        await write_a2a_audit(
-            db,
-            key_id=_key_id(request),
-            capability=capability,
-            status="ok" if not result.get("error") else "error",
-            detail=str(result.get("error") or "")[:200],
-        )
         payload = {
             "message": result.get("message") or "",
             "sessionId": None,
@@ -91,13 +77,6 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
         return AgentChatResponse.model_validate(payload)
     except asyncio.TimeoutError:
         logger.warning("A2A agent wall-clock timeout")
-        await write_a2a_audit(
-            db,
-            key_id=_key_id(request),
-            capability=capability,
-            status="error",
-            detail="agent_timeout",
-        )
         return AgentChatResponse(
             message="Agent request timed out",
             sessionId=None,
@@ -107,13 +86,6 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
     except Exception as exc:  # noqa: BLE001 — agent must degrade gracefully
         logger.warning("A2A agent failed: %s", exc)
         detail = str(exc).strip() or exc.__class__.__name__
-        await write_a2a_audit(
-            db,
-            key_id=_key_id(request),
-            capability=capability,
-            status="error",
-            detail=detail[:200],
-        )
         return AgentChatResponse(
             message=f"A2A agent failed: {detail}",
             sessionId=None,

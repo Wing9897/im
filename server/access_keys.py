@@ -11,12 +11,11 @@ from server.db.database import Database
 from server.util import new_id, utc_now_iso
 
 DEFAULT_SCOPES: list[str] = ["*"]
-A2A_AGENT_SCOPE = "a2a:agent"
-#: Customer-manager (liaison) keys: natural-language A2A agent only.
-A2A_LIAISON_SCOPES: list[str] = [A2A_AGENT_SCOPE]
-A2A_PATH_PREFIX = "/api/v1/a2a/"
-#: Retired scope — rejected on create/normalize; dropped (not rewritten) on row read.
-_RETIRED_A2A_EVENTS_SCOPE = "a2a:events"
+FULL_SCOPE = "*"
+READ_SCOPE = "read"
+#: Retired A2A-only scopes — rejected on create; dropped on row read.
+_RETIRED_SCOPES = frozenset({"a2a:agent", "a2a:events"})
+_ALLOWED_SCOPES = frozenset({FULL_SCOPE, READ_SCOPE})
 
 
 def _hash_secret(value: str) -> str:
@@ -40,7 +39,11 @@ def _normalize_scopes(
     seen: set[str] = set()
     for raw in scopes:
         value = str(raw or "").strip()
-        if value == _RETIRED_A2A_EVENTS_SCOPE:
+        if value in _RETIRED_SCOPES:
+            if reject_retired:
+                raise ValueError(f"unsupported access-key scope: {value}")
+            continue
+        if value not in _ALLOWED_SCOPES:
             if reject_retired:
                 raise ValueError(f"unsupported access-key scope: {value}")
             continue
@@ -48,6 +51,8 @@ def _normalize_scopes(
             continue
         seen.add(value)
         cleaned.append(value)
+    if FULL_SCOPE in cleaned:
+        return [FULL_SCOPE]
     return cleaned or list(DEFAULT_SCOPES)
 
 
@@ -67,21 +72,33 @@ def _scopes_from_row(raw: Any) -> list[str]:
 
 
 def scopes_allow(scopes: list[str], capability: str) -> bool:
-    if "*" in scopes:
+    if FULL_SCOPE in scopes:
         return True
     return capability in scopes
 
 
-def scopes_allow_a2a_agent(scopes: list[str]) -> bool:
-    """LLM A2A agent: explicit ``a2a:agent`` or ``*``."""
-    return scopes_allow(scopes, A2A_AGENT_SCOPE)
+def scopes_allow_full(scopes: list[str]) -> bool:
+    """Full household key (writes + A2A)."""
+    return FULL_SCOPE in scopes
+
+
+def access_key_allows_method(method: str, scopes: list[str]) -> bool:
+    """``*`` allows any method; ``read`` allows safe methods only."""
+    if FULL_SCOPE in scopes:
+        return True
+    if READ_SCOPE in scopes:
+        return (method or "").upper() in {"GET", "HEAD", "OPTIONS"}
+    return False
 
 
 def access_key_path_allowed(path: str, scopes: list[str]) -> bool:
-    """Non-``*`` keys may only call paths under ``/api/v1/a2a/``."""
-    if "*" in scopes:
-        return True
-    return (path or "").startswith(A2A_PATH_PREFIX)
+    """Backward-compatible name: method-agnostic check used by older tests.
+
+    Path limits for A2A-only keys are retired; non-``*`` keys are read-only
+    via :func:`access_key_allows_method`.
+    """
+    del path  # path no longer scopes access
+    return FULL_SCOPE in scopes or READ_SCOPE in scopes
 
 
 def _public_key_dto(row: Any) -> dict[str, Any]:

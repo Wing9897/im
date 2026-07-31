@@ -450,8 +450,8 @@ async def test_assistant_sessions_roundtrip_and_delete_via_put(client, app) -> N
     assert deleted.json()["sessions"][0]["id"] == "asst-2"
     assert deleted.json()["activeSessionId"] is None
     row = await app.state.db.fetch_one(
-        "SELECT payload_json FROM assistant_device_stores WHERE device_id = ?",
-        (DEVICE_A,),
+        "SELECT payload_json FROM ui_prefs WHERE key = ?",
+        (f"assistant_sessions:{DEVICE_A}",),
     )
     assert row is not None
     stored = str(row["payload_json"])

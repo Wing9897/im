@@ -122,9 +122,11 @@ async def fetch_project_calendar_children(
     child_mode: str,
 ) -> list[dict[str, Any]]:
     return await db.fetch_all(
-        "SELECT id, name, rrule, is_active, event_start_time, event_is_all_day "
-        "FROM analysis_tasks WHERE parent_task_id = ? AND analysis_mode = ? "
-        "ORDER BY created_at ASC",
+        "SELECT t.id, t.name, rs.rrule, t.is_active, rs.dtstart AS event_start_time, "
+        "rs.is_all_day AS event_is_all_day "
+        "FROM recurring_schedules rs JOIN analysis_tasks t ON t.id = rs.task_id "
+        "WHERE rs.parent_task_id = ? AND t.analysis_mode = ? "
+        "ORDER BY t.created_at ASC",
         (task_id, child_mode),
     )
 

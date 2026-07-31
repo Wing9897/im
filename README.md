@@ -24,7 +24,7 @@
 | 層 | 角色 | 本專案對應 |
 |----|------|------------|
 | **Input** | 多源訊號進統一訊息平面 | Collectors（Telegram、Discord、RSS…）→ `messages` |
-| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`event`／`recurring`／`calendar_task`／`project`） |
+| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`event`／`recurring`／`project`） |
 | **Output** | 結果消費與外發 | Intelligence、Timeline、Board、提醒、Actions |
 
 **任務（`analysis_tasks`）是通用接口：** 下游多半以 `taskId` 訂閱，因此來源與顯示方式可持續加，不必各搞一套管線。完整圖表、模式表與例外見 [`docs/ARCHITECTURE.md` Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
@@ -35,7 +35,7 @@
 |------|------|--------|
 | `leaderboard`／`event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
 | `project` | `execute_project_tick`（多波 Agent 工具閉環） | 共用 project system + **置頂**該任務目標（`promptTemplate`）；同輪多波連續 session，跨輪排程開新對話 |
-| `recurring`／`calendar_task` | 不跑 AI 分析 | — |
+| `recurring` | 不跑 AI 分析 | — |
 
 專案 tick 契約細節：[`docs/agent/project.md`](docs/agent/project.md)。
 
@@ -104,13 +104,13 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 | `npm run build:web` | 建置前端靜態檔（`web/dist/`） |
 | `npm run build:desktop` | 編譯 Desktop TypeScript |
 | `npm run build:server-sidecar` | 以 PyInstaller 打包內建 Python server（**須在目標 OS 上執行**；輸出 `desktop/server-runtime/`） |
-| `npm run dist:win` | 封裝 Windows 安裝程式（NSIS .exe） |
-| `npm run dist:mac` | 封裝 macOS（DMG／zip；CI 預設未簽章） |
-| `npm run dist:linux` | 封裝 Linux（AppImage／deb） |
+| `npm run dist:win` | 封裝 Windows 安裝程式（NSIS .exe；**第一等 Desktop 交付**） |
+| `npm run dist:mac` | 可選手動封裝 macOS（DMG／zip；**非日常發佈目標**） |
+| `npm run dist:linux` | 可選手動封裝 Linux（AppImage／deb；**非日常發佈目標**） |
 | `npm run dist:current` | 依本機 OS 封裝（`electron-builder --publish never`） |
-| `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`） |
+| `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`；與 Windows Desktop 同為第一等交付） |
 
-公開商店／企業發佈的 Desktop 建置需各平台簽章（Windows Authenticode、Apple notarization 等）；未簽章建置僅供開發／測試。容器映像推送到 **GHCR**（見下方 CI）。
+公開商店／企業發佈的 Windows Desktop 建置需 Authenticode 簽章；未簽章建置僅供開發／測試。容器映像在 `v*` tag 或手動 workflow 時推送到 **GHCR**（見下方 CI）。
 
 ### 容器（GHCR）
 
@@ -123,7 +123,7 @@ docker run --rm -p 18820:18820 -v im-data:/data intelligence-monitor:local
 docker compose up --build
 ```
 
-CI 在 `main` push、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write；映像預設跟隨 repo 可見性）。
+CI 僅在 `v*` tag 或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write；映像預設跟隨 repo 可見性）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
 
 ### 測試
 
@@ -135,30 +135,26 @@ CI 在 `main` push、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr
 | `npm run test:desktop` | Desktop 測試（vitest） |
 | `npm run test:all` | 平行執行所有測試套件 |
 
-### 驗證腳本對照（日常 CI／本機 live／發行）
+### 驗證腳本對照（日常 CI／部署後／發行）
 
 | 場景 | 指令 | 說明 |
 |------|------|------|
-| **日常 CI**（push／PR） | `npm run check` | lint + 漂移檢查（presets／i18n／OpenAPI）+ 型別檢查 + `test:all`；矩陣：Windows／Ubuntu／macOS；另建置 web／desktop／各 OS sidecar |
-| **本機 live**（需運行中 server） | `npm run verify:fast`／`verify:full`／`verify:operational` | 對 `127.0.0.1:18820` 的 API／營運檢查；多數不進 CI |
-| **發行／打包後** | `npm run dist:win`／`dist:mac`／`dist:linux` + `npm run verify:desktop:full` | 當前 OS 的 sidecar、unpacked、安裝產物；CI 在手動 dispatch／`v*` tag 跑三平台 package，`v*` tag 另建 GitHub Release 並推 GHCR |
+| **日常 CI**（push／PR） | `npm run check` + `npm run build` | Ubuntu 核心門禁：lint、漂移檢查（presets／i18n／OpenAPI）、型別檢查、`test:all`、web／desktop 建置 |
+| **Windows Desktop 路徑變更** | CI `windows-desktop` job | 相關路徑／tag／手動時建 sidecar 並做啟動 smoke（tzdata／sse_starlette） |
+| **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 smoke（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
+| **發行／打包後** | `npm run dist:win` + `npm run verify:desktop:full` | Windows sidecar、unpacked、NSIS；CI 在手動 dispatch／`v*` tag 跑 package；`v*` tag 另建 GitHub Release 並推 GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
-| `npm run verify:fast` | Smoke + API 回歸評估（不含即時 Gemini batch） | ~3s |
-| `npm run verify:full` | `verify:fast` + 對運行中 server 的營運 API 檢查 | ~30s–3min |
-| `npm run verify:operational` | 僅營運 API 檢查（需 server 在 `127.0.0.1:18820`） | ~30s–3min |
-| `npm run verify:desktop:fast` | 日常 Desktop vitest + Web/Desktop 建置路徑檢查；先執行 `npm run build` | ~5–15s |
-| `npm run verify:desktop:full` | 發佈檢查：fast + 當前 OS 的 sidecar／unpacked／安裝產物；先執行對應 `dist:win`／`dist:mac`／`dist:linux` | ~5–15s（不含打包） |
+| `npm run verify:deploy`（=`smoke`） | 對 `127.0.0.1:18820` 的短部署後驗證 | ~3s |
+| `npm run verify:desktop:fast` | Desktop vitest + 建置路徑檢查；先執行 `npm run build` | ~5–15s |
+| `npm run verify:desktop:full` | 發佈檢查：fast + Windows sidecar／unpacked／NSIS；先執行 `npm run dist:win` | ~5–15s（不含打包） |
 
 ### 營運與報表
 
 | 指令 | 說明 |
 |------|------|
-| `npm run report:pending-batches` | 列出仍為 `pending` 的分析批次（需運行中 server） |
 | `npm run stats` | 專案統計（路由數、模組行數等；`uv run python scripts/project_stats.py`） |
-
-`verify:full` 預期 server 在 `http://127.0.0.1:18820`。Batch 輪詢上限與嚴格模式等環境變數說明見 [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md#operational-verify)。
 
 ### 程式碼品質
 
@@ -181,12 +177,12 @@ CI 在 `main` push、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr
 
 ## 版本控制
 
-GitHub Actions 會在 push 與 pull request 時於 **Windows／Ubuntu／macOS** 執行品質關卡與一般建置。手動 `workflow_dispatch` 或推送 `v*` tag 時另建置三平台 Desktop 產物並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件含 exe／dmg／zip／AppImage／deb；tag 去掉 `v` 後須等於根目錄 `VERSION`）；`main`／tag／dispatch 另建置並推送 **GHCR** 容器映像。本機請維持相同關卡：
+GitHub Actions 在 push／PR 時於 **Ubuntu** 執行核心品質關卡與 web／desktop 建置。Desktop／web 相關路徑變更、`v*` tag、或手動 `workflow_dispatch` 時另在 **Windows** 建 sidecar 並做啟動 smoke；手動 dispatch／`v*` tag 另封裝 Windows NSIS 並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件為 Windows exe；tag 去掉 `v` 後須等於根目錄 `VERSION`）並推送 **GHCR**（Docker 不再於每次 `main` push 自動推送）。本機請維持相同關卡：
 
 | 時機 | 指令 |
 |------|------|
-| 日常開發 | `npm run verify:fast`；Desktop 改動另跑 `npm run build && npm run verify:desktop:fast` |
-| 發佈前 | `npm run check`、對應平台 `npm run dist:*`、`npm run verify:desktop:full`；容器可 `npm run docker:build`（live operational 可另跑 `verify:full`，server 需在 `127.0.0.1:18820`） |
+| 日常開發 | `npm run check`；部署後可 `npm run verify:deploy`；Desktop 改動另跑 `npm run build && npm run verify:desktop:fast` |
+| 發佈前 | `npm run check`、`npm run dist:win`、`npm run verify:desktop:full`；容器可 `npm run docker:build` 後再 `npm run verify:deploy` |
 
 ## 設定
 
@@ -210,16 +206,16 @@ GitHub Actions 會在 push 與 pull request 時於 **Windows／Ubuntu／macOS** 
 | 用途 | 憑證 | 何處取得 |
 |------|------|----------|
 | 日常 UI／SSE | 裝置 session（access + refresh） | 人帳密註冊／登入後由服務簽發 |
-| Webhook／腳本／自動化／A2A | 長效 API 金鑰（`*` 或 `a2a:agent`） | **帳戶 → API 金鑰**（非 UI 登入憑證） |
+| Webhook／腳本／自動化／A2A | 長效 API 金鑰（`*` 完整，或 `read` 只讀） | **帳戶 → API 金鑰**（非 UI 登入憑證） |
 
 - **新安裝**：`localhost_auth_exempt` 預設為 true，僅便於本機首次 `POST /api/v1/setup/register`。
 - **註冊／登入之後**：設為 `false`；**本機 loopback 也不再豁免**——與遠端一樣須帶有效 Bearer（裝置 access 或 API 金鑰）。
-- **LAN**：預設只綁 `127.0.0.1`。要讓區網其他裝置連入，設定 `INTELLIGENCE_MONITOR_HOST=0.0.0.0`（或具體網卡 IP）並開防火牆放行 `18820`；瀏覽器／桌面用同一組 admin 帳密登入取得裝置 session；Webhook／腳本／A2A 另用 API 金鑰（`*` 或 `a2a:agent`）。
+- **LAN**：預設只綁 `127.0.0.1`。Desktop **設定 → 一般** 可開「允許區域網路存取」（寫入 `connection.json` 的 `allowLanAccess`，sidecar 以 `INTELLIGENCE_MONITOR_HOST=0.0.0.0` 重啟）；純 Web／Docker 則設環境變數 `INTELLIGENCE_MONITOR_HOST=0.0.0.0`（或具體網卡 IP）並開防火牆放行 `18820`。瀏覽器／桌面用同一組 admin 帳密登入取得裝置 session；Webhook／腳本／A2A 另用可撤銷 API 金鑰（`*` 完整，或 `read` 只讀）。**經 port-forward 暴露到公網時，必須在前面加 Caddy／Nginx 等 TLS 反代**——應用本身不終止 HTTPS。
 - **忘碼**：僅 loopback 可 `POST /api/v1/setup/reset-password`（不需舊密碼）。
 
 #### Live verify 必設：`VERIFY_BEARER`／`IM_ACCESS_TOKEN`
 
-`npm run verify:fast`／`verify:full`／`verify:operational`、以及 `scripts/smoke.py`／`api_regression_eval.py`／`operational_verify.py`，在**已註冊 admin** 的庫上必須帶 Bearer，否則受保護 API 會 401（腳本會 fail-fast 並提示）：
+`npm run verify:deploy`（`scripts/smoke.py`）在**已註冊 admin** 的庫上必須帶 Bearer，否則受保護 API 會 401（腳本會 fail-fast 並提示）：
 
 ```bash
 # PowerShell 範例（擇一；值為裝置 access token 或 scope=* 的 API 金鑰）
@@ -227,7 +223,7 @@ $env:VERIFY_BEARER = "<token>"
 # 或
 $env:IM_ACCESS_TOKEN = "<token>"
 
-npm run verify:fast
+npm run verify:deploy
 ```
 
 權威細節與完整手動清單見 [`docs/ARCHITECTURE.md` Authentication](docs/ARCHITECTURE.md#authentication)／[Manual verification checklist](docs/ARCHITECTURE.md#manual-verification-checklist)（SoT）。
@@ -242,7 +238,7 @@ npm run verify:fast
 
 - [ ] Desktop host：首次 Local 註冊後，未帶 token 的本機 API 回 401；持 access 可進 App
 - [ ] 登出 → 密碼再登；改密碼；loopback 忘碼重置；LAN 第二裝置同帳密登入
-- [ ] Webhook／腳本：用完整 scope（`*`）**API 金鑰** 以 `Authorization: Bearer` 打業務 API；A2A 用 `a2a:agent` 金鑰打 `POST /api/v1/a2a/agent`
+- [ ] Webhook／腳本／A2A：用完整 scope（`*`）**API 金鑰** 以 `Authorization: Bearer` 打業務 API（含 `POST /api/v1/a2a/agent`）；只讀金鑰（`read`）不可寫入或呼叫 A2A
 - [ ] Profile 登出 → 回到登入；Desktop client 登出後外殼回到 host
 - [ ] 已登入狀態下本地 STT／語音提醒行為與既有一致
 - [ ] `python -m server` 啟動時**不**印 Pairing code
@@ -264,13 +260,13 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v4**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.6`）；新安裝直接建 stamp-4 庫（wipe-floor，`SCHEMA_MIGRATIONS` 為空）。**舊 stamp v1–v3 hard-reject**；legacy v5–v24 及其他非目前 stamp 也拒絕啟動，無 in-place 升級路徑。請先依 [`ARCHITECTURE.md` 的外部備份流程](docs/ARCHITECTURE.md#schema-v4-backup-and-explicit-reset)保留資料，再明確 reset：
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v5**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.6`）；新安裝直接建 stamp-5 庫。這是 wipe-only baseline：v1–v4 與任何其他非空 stamp／fingerprint 都 hard-reject，沒有 in-place migration 或自動刪庫。依 [`ARCHITECTURE.md` 的外部備份與 reset 流程](docs/ARCHITECTURE.md#schema-v5-explicit-reset)保留需要的資料後，再明確 reset：
 
 ```bash
 python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與升級門檻的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 
@@ -292,7 +288,7 @@ python scripts/reset_local_databases.py --apply
 | [`docs/diagrams/README.md`](docs/diagrams/README.md) | Mermaid 結構圖：Input → Process → Output、排程、專案閉環 |
 | [`desktop/resources/README.md`](desktop/resources/README.md) | 封裝用圖示說明 |
 
-漂移檢查：`npm run check`、`npm run verify:fast`、`server/tests/test_contract_*.py`、`server/tests/test_dead_endpoints.py`。
+漂移檢查：`npm run check`、`npm run verify:deploy`、`server/tests/test_contract_*.py`、`server/tests/test_dead_endpoints.py`。
 
 ## 授權
 

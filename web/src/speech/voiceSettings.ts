@@ -14,7 +14,7 @@ import type { TtsSpeakOptions } from "./TtsPort";
 import type { SttProviderId } from "./SttPort";
 import type { TtsProviderId } from "./TtsPort";
 
-import { VOICE_SETTINGS_CHANGED_EVENT } from "./voicePersistedKeys";
+import { VOICE_SETTINGS_CHANGED_EVENT } from "../domain/prefs";
 
 /** Dispatched on ``window`` after voice settings are saved (sync or async). */
 export { VOICE_SETTINGS_CHANGED_EVENT };

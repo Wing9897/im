@@ -14,7 +14,6 @@ from typing import Any
 
 from server.calendar.rrule import RruleValidationError, validate_rrule
 from server.domain.analysis_modes import (
-    CALENDAR_TASK_MODE,
     CHILD_RECURRING_MODE,
     PARENT_PROJECT_MODE,
 )
@@ -127,39 +126,6 @@ def should_reset_project_message_cursor(
     return channels_changed
 
 
-def calendar_task_write_fields(
-    *,
-    effective_mode: str,
-    prompt_template: str,
-    rrule: str | None,
-    event_start_time: str | None,
-    event_end_time: str | None,
-    event_is_all_day: bool | None,
-    event_location: str | None,
-    event_description: str | None,
-) -> dict[str, Any]:
-    """Column values for recurring/AI fields, cleared for calendar_task (filter-only)."""
-    if effective_mode == CALENDAR_TASK_MODE:
-        return {
-            "prompt_template": "",
-            "rrule": None,
-            "event_start_time": None,
-            "event_end_time": None,
-            "event_is_all_day": 0,
-            "event_location": None,
-            "event_description": None,
-        }
-    return {
-        "prompt_template": prompt_template,
-        "rrule": rrule,
-        "event_start_time": event_start_time,
-        "event_end_time": event_end_time,
-        "event_is_all_day": 1 if event_is_all_day else 0,
-        "event_location": event_location,
-        "event_description": event_description,
-    }
-
-
 def resolve_parent_task_id(
     *,
     task_id: str | None,
@@ -214,7 +180,7 @@ async def clear_children_parent_links(db: Any, parent_task_id: str, *, now: str)
     """
     return int(
         await db.execute(
-            "UPDATE analysis_tasks SET parent_task_id = NULL, updated_at = ? WHERE parent_task_id = ?",
+            "UPDATE recurring_schedules SET parent_task_id = NULL, updated_at = ? WHERE parent_task_id = ?",
             (now, parent_task_id),
         )
         or 0

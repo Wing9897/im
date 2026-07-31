@@ -2,7 +2,7 @@ import { useCallback, useEffect } from "react";
 import {
   SIDEBAR_COLLAPSED_EVENT,
   SIDEBAR_COLLAPSED_KEY,
-} from "../domain/ui/chromePersistedKeys";
+} from "../domain/prefs";
 import { useSyncedLocalStorage } from "./useSyncedLocalStorage";
 
 export { SIDEBAR_COLLAPSED_KEY };

@@ -108,7 +108,7 @@ describe("parseTaskAssistantResponse", () => {
     });
 
     it("accepts all valid analysis modes", () => {
-      const modes = ["leaderboard", "event", "recurring", "calendar_task", "project"];
+      const modes = ["leaderboard", "event", "recurring", "project"];
       for (const analysisMode of modes) {
         const result = parseTaskAssistantResponse(validResponse({ analysisMode }));
         expect(result.ok).toBe(true);

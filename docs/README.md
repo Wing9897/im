@@ -17,4 +17,4 @@
 
 **Do not** create `docs/api/`, `docs/schema/`, or `docs/frontend/` trees — keep those topics as sections inside ARCHITECTURE.
 
-Drift checks: `npm run check`, `npm run verify:fast`, `server/tests/test_contract_*.py`, `server/tests/test_dead_endpoints.py`.
+Drift checks: `npm run check`, `npm run verify:deploy`, `server/tests/test_contract_*.py`, `server/tests/test_dead_endpoints.py`.

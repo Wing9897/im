@@ -1,4 +1,4 @@
-"""Schema-gate, retention, and settings-snapshot response models."""
+"""Retention and settings-snapshot response models."""
 
 from __future__ import annotations
 
@@ -7,32 +7,11 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 
-class SchemaUpgradeProgress(BaseModel):
-    """Progress uses stable ``phase`` / ``message`` keys; UI localizes them."""
-
-    phase: str
-    percent: int
-    message: str  # message key, not localized prose
-
-
-class SchemaUpgradeStatusResponse(BaseModel):
-    state: str
-    runtimeReady: bool
-    schemaVersion: int
-    requiredSchemaVersion: int
-    schemaSemver: str
-    backupPath: str | None
-    error: str | None
-    restoredFromBackup: bool
-    progress: SchemaUpgradeProgress
-
-
 class RetentionDeletedCounts(BaseModel):
     """Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.
 
-    Device-auth, orphan timeline dismissals, assistant-store and A2A-audit TTL
-    categories always run, independent of the configured ``retention_*_days``
-    windows.
+    Device-auth and orphan timeline dismissals always run, independent of the
+    configured ``retention_*_days`` windows.
     """
 
     messages: int
@@ -42,10 +21,8 @@ class RetentionDeletedCounts(BaseModel):
     app_logs: int
     user_events: int
     timeline_dismissals: int
-    assistant_device_stores: int
     device_access_tokens: int
     device_sessions: int
-    a2a_audit_log: int
 
 
 class RetentionRunResponse(BaseModel):

@@ -40,7 +40,7 @@ export function listUserEvents(params?: {
   if (params?.end) query.end = params.end;
   if (params?.taskId !== undefined) query.task_id = params.taskId;
   if (params?.worksetId !== undefined) query.workset_id = params.worksetId;
-  return apiClient.get<UserEvent[]>("/api/v1/user-events", query);
+  return apiClient.get<UserEvent[]>("/api/v1/calendar/user-events", query);
 }
 
 export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent> {
@@ -53,7 +53,7 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
   };
   if (params.taskId !== undefined) body.taskId = params.taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
-  return apiClient.post<UserEvent>("/api/v1/user-events", body);
+  return apiClient.post<UserEvent>("/api/v1/calendar/user-events", body);
 }
 
 export function updateUserEvent(
@@ -68,9 +68,9 @@ export function updateUserEvent(
   if (params.location !== undefined) body.location = params.location;
   if (params.taskId !== undefined) body.taskId = params.taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
-  return apiClient.patch<UserEvent>(`/api/v1/user-events/${id}`, body);
+  return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
 }
 
 export function deleteUserEvent(id: string): Promise<void> {
-  return apiClient.delete<void>(`/api/v1/user-events/${id}`);
+  return apiClient.delete<void>(`/api/v1/calendar/user-events/${id}`);
 }

@@ -33,12 +33,12 @@ import {
   TIMELINE_SHOW_ENDING_STORAGE_KEY,
   TIMELINE_SHOW_ONGOING_STORAGE_KEY,
   TIMELINE_VIEW_MODE_STORAGE_KEY,
-} from "./timelinePersistedKeys";
+} from "../../domain/prefs";
 
 export {
   TIMELINE_FOCUSED_DAY_STORAGE_KEY,
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
-} from "./timelinePersistedKeys";
+} from "../../domain/prefs";
 
 const VALID_VIEW_MODES = ["calendar", "gantt"] as const;
 const ANNOTATIONS_SAVE_DEBOUNCE_MS = 400;

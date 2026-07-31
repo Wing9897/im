@@ -20,12 +20,12 @@ describe("isFullAccessKey / countFullAccessKeys", () => {
 
   it("counts only keys with * for webhook configured state", () => {
     const keys = [
-      key({ id: "a2a", scopes: ["a2a:agent"] }),
+      key({ id: "read", scopes: ["read"] }),
       key({ id: "full", scopes: ["*"] }),
       key({ id: "legacy", scopes: [] }),
     ];
     expect(countFullAccessKeys(keys)).toBe(2);
-    expect(countFullAccessKeys([key({ id: "only-a2a", scopes: ["a2a:agent"] })])).toBe(0);
+    expect(countFullAccessKeys([key({ id: "only-read", scopes: ["read"] })])).toBe(0);
     expect(countFullAccessKeys([])).toBe(0);
     expect(countFullAccessKeys(null)).toBe(0);
   });

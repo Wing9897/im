@@ -21,7 +21,7 @@ interface ToastAction {
 }
 
 /** Account → Access keys (Webhook / automation). */
-export const PROFILE_ACCESS_KEYS_PATH = "/account/keys";
+export const ACCOUNT_ACCESS_KEYS_PATH = "/account/keys";
 
 // --- Helpers ---
 
@@ -33,20 +33,19 @@ export function formatCorrelationRef(correlationId: string): string {
 /** Determines the action buttons to display based on error code. */
 export function getActionsForErrorCode(
   errorCode: string,
-  handlers: { navigateToProfileAccessKeys: () => void },
+  handlers: { navigateToAccountAccessKeys: () => void },
 ): ToastAction[] {
   switch (errorCode) {
     case "AUTH_REQUIRED":
     case "AUTH_SETUP_REQUIRED":
       return [
         {
-          label: String(i18n.t("common:errorToast.goProfileAccessKeys")),
-          action: handlers.navigateToProfileAccessKeys,
+          label: String(i18n.t("common:errorToast.goAccountAccessKeys")),
+          action: handlers.navigateToAccountAccessKeys,
         },
       ];
     case "FORBIDDEN":
     case "COLLECTOR_UNAVAILABLE":
-    case "SCHEMA_UPGRADE_REQUIRED":
     case "SSE_CAPACITY":
     default:
       return [];
@@ -63,15 +62,15 @@ export function ErrorToast({
   onNavigate,
 }: ErrorToastProps) {
   const { t } = useTranslation("common");
-  const handleNavigateToProfileAccessKeys = useCallback(() => {
+  const handleNavigateToAccountAccessKeys = useCallback(() => {
     if (onNavigate) {
-      onNavigate(PROFILE_ACCESS_KEYS_PATH);
+      onNavigate(ACCOUNT_ACCESS_KEYS_PATH);
     }
     onDismiss();
   }, [onDismiss, onNavigate]);
 
   const actions = getActionsForErrorCode(errorCode, {
-    navigateToProfileAccessKeys: handleNavigateToProfileAccessKeys,
+    navigateToAccountAccessKeys: handleNavigateToAccountAccessKeys,
   });
 
   const correlationRef = formatCorrelationRef(correlationId);

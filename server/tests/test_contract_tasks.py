@@ -18,15 +18,19 @@ TASK_KEYS = [
     "channelIds",
     "scheduleType",
     "scheduleValue",
+    "includeInTimeline",
+    "parentTaskId",
+    "worksetId",
+]
+
+SCHEDULE_KEYS = [
+    "taskId",
     "rrule",
     "eventStartTime",
     "eventEndTime",
     "eventIsAllDay",
     "eventLocation",
     "eventDescription",
-    "includeInTimeline",
-    "parentTaskId",
-    "worksetId",
 ]
 
 
@@ -286,37 +290,44 @@ def _assert_validation_error(response, expected_message: str) -> None:
     assert isinstance(body["correlation_id"], str) and body["correlation_id"]
 
 
-async def test_non_calendar_create_rejects_supplied_rrule_including_empty(client, app):
+async def test_non_calendar_create_rejects_legacy_rrule_fields(client, app):
+    """Recurring fields are forbidden on TaskConfigBody (use /tasks/{id}/schedule)."""
     db = app.state.db
-    queue = app.state.broadcaster.subscribe()
     before_count = await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
 
-    try:
-        for name, extra_fields in (
-            ("analysis rrule", {"analysisMode": "event", "rrule": "FREQ=DAILY"}),
-            ("empty default-mode rrule", {"rrule": ""}),
-        ):
-            resp = await client.post(
-                "/api/v1/tasks",
-                json={
-                    "name": name,
-                    "promptTemplate": "analyse",
-                    "channelIds": [],
-                    "scheduleType": "hourly",
-                    **extra_fields,
-                },
-            )
-            _assert_validation_error(resp, "RRULE is recurring-only and cannot schedule analysis tasks")
-    finally:
-        app.state.broadcaster.unsubscribe(queue)
+    for name, extra_fields in (
+        ("analysis rrule", {"analysisMode": "event", "rrule": "FREQ=DAILY"}),
+        ("empty default-mode rrule", {"rrule": ""}),
+    ):
+        resp = await client.post(
+            "/api/v1/tasks",
+            json={
+                "name": name,
+                "promptTemplate": "analyse",
+                "channelIds": [],
+                "scheduleType": "hourly",
+                **extra_fields,
+            },
+        )
+        assert resp.status_code == 422, name
 
     assert await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_count
-    assert queue.empty()
 
 
 async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(client, app):
     db = app.state.db
-    before_count = await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
+    created = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "schedule-validation-shell",
+            "promptTemplate": "",
+            "analysisMode": "recurring",
+            "channelIds": [],
+        },
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+    before_schedules = await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
 
     for name, rrule, expected_detail in (
         ("empty calendar rrule", "", "Invalid RRULE (empty): RRULE is empty"),
@@ -336,47 +347,28 @@ async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(c
             "RRULE must not include an 'RRULE:' prefix",
         ),
     ):
-        resp = await client.post(
-            "/api/v1/tasks",
-            json={
-                "name": name,
-                "promptTemplate": "",
-                "analysisMode": "recurring",
-                "channelIds": [],
-                "scheduleType": "seconds_10",
-                "rrule": rrule,
-            },
+        resp = await client.put(
+            f"/api/v1/tasks/{task_id}/schedule",
+            json={"rrule": rrule, "eventStartTime": "09:00"},
         )
         _assert_validation_error(resp, expected_detail)
 
-    assert await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_count
+    assert await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules") == before_schedules
 
 
-async def test_calendar_update_validates_against_persisted_mode(client, app):
+async def test_calendar_schedule_update_validates_rrule(client, app):
     db = app.state.db
     task_id = seed.TASK_CALENDAR
-    before = await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
-    queue = app.state.broadcaster.subscribe()
-    try:
-        resp = await client.put(
-            f"/api/v1/tasks/{task_id}",
-            json={
-                "name": "must not persist",
-                "promptTemplate": "",
-                # Omission must resolve to the persisted recurring mode rather than
-                # treating this as a default leaderboard update.
-                "rrule": "FREQ=BOGUS",
-            },
-        )
-    finally:
-        app.state.broadcaster.unsubscribe(queue)
-
+    before = await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,))
+    resp = await client.put(
+        f"/api/v1/tasks/{task_id}/schedule",
+        json={"rrule": "FREQ=BOGUS", "eventStartTime": "09:00"},
+    )
     _assert_validation_error(
         resp,
         "Invalid RRULE (unsupported_freq): Unsupported FREQ: BOGUS (allowed: DAILY, WEEKLY, MONTHLY, YEARLY)",
     )
-    assert await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,)) == before
-    assert queue.empty()
+    assert await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,)) == before
 
 
 async def test_rejected_update_uses_persisted_mode_and_preserves_all_state(client, app):
@@ -486,13 +478,14 @@ async def test_rejected_update_uses_persisted_mode_and_preserves_all_state(clien
                 "channelIds": [f"{seed.DISCORD_CHANNEL[0]}:{seed.DISCORD_CHANNEL[1]}"],
                 "scheduleType": "daily",
                 "scheduleValue": "08:00",
+                # Legacy recurring field — rejected by TaskConfigBody(extra=forbid).
                 "rrule": "FREQ=DAILY",
             },
         )
     finally:
         app.state.broadcaster.unsubscribe(queue)
 
-    _assert_validation_error(resp, "RRULE is recurring-only and cannot schedule analysis tasks")
+    assert resp.status_code == 422
     assert await snapshot() == before
     assert before["row"]["version"] == 1
     assert scheduler._scheduler.get_job(task_id) is job_before
@@ -570,7 +563,7 @@ async def test_activity_spans(client):
 
 async def test_activity_spans_include_virtual_user_events_source(client):
     created = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "手動排程",
             "startTime": "2026-07-21T09:00:00Z",
@@ -597,7 +590,7 @@ async def test_activity_spans_group_user_events_by_workset(client):
     workset_id = ws.json()["id"]
 
     sys_evt = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "System WS event",
             "startTime": "2026-07-21T09:00:00Z",
@@ -607,7 +600,7 @@ async def test_activity_spans_group_user_events_by_workset(client):
     assert sys_evt.status_code == 201
 
     custom_a = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "Custom A",
             "startTime": "2026-07-22T09:00:00Z",
@@ -617,7 +610,7 @@ async def test_activity_spans_group_user_events_by_workset(client):
     )
     assert custom_a.status_code == 201
     custom_b = await client.post(
-        "/api/v1/user-events",
+        "/api/v1/calendar/user-events",
         json={
             "title": "Custom B",
             "startTime": "2026-07-23T12:00:00Z",

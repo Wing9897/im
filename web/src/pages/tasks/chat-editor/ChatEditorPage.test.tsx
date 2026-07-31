@@ -87,6 +87,9 @@ function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): Use
     save: vi.fn().mockResolvedValue(undefined),
     canSave: false,
     isSaving: false,
+    scheduleHydrating: false,
+    scheduleHydrateError: null,
+    retryScheduleHydrate: vi.fn(),
     applyPreset: vi.fn(),
     channels: [],
     ...overrides,
@@ -300,24 +303,22 @@ describe("ChatEditorPage integration tests", () => {
       cleanup();
     });
 
-    it("hides preset button for recurring and calendar_task modes", async () => {
-      for (const analysisMode of ["recurring", "calendar_task"] as const) {
-        mockUseChatEditor.mockReturnValue(
-          createMockHookReturn({
-            formState: { ...createMockHookReturn().formState, analysisMode },
-          }),
-        );
+    it("hides preset button for recurring mode", async () => {
+      mockUseChatEditor.mockReturnValue(
+        createMockHookReturn({
+          formState: { ...createMockHookReturn().formState, analysisMode: "recurring" },
+        }),
+      );
 
-        let result: ReturnType<typeof renderPage>;
-        await act(async () => {
-          result = renderPage();
-          await Promise.resolve();
-        });
-        const { container, cleanup } = result!;
+      let result: ReturnType<typeof renderPage>;
+      await act(async () => {
+        result = renderPage();
+        await Promise.resolve();
+      });
+      const { container, cleanup } = result!;
 
-        expect(container.querySelector('[data-testid="preset-button"]')).toBeNull();
-        cleanup();
-      }
+      expect(container.querySelector('[data-testid="preset-button"]')).toBeNull();
+      cleanup();
     });
 
     it("shows preset button for project mode", async () => {

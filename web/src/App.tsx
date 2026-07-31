@@ -6,7 +6,6 @@ import { AppTopBar } from "./components/AppTopBar";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
 import { ShellChromeCore } from "./components/ShellChromeCore";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
-import { SchemaUpgradeGate } from "./components/SchemaUpgradeGate";
 import { SecretsBrokenGate } from "./components/SecretsBrokenGate";
 import { AppRuntimeProvider } from "./context/AppRuntimeContext";
 import { MonitorModeProvider, useMonitorMode } from "./context/MonitorModeContext";
@@ -64,6 +63,8 @@ import { useVoiceReminderScanner } from "./voiceReminder/useVoiceReminderScanner
  * so a failed hide can never leave the board stealing sidebar clicks.
  * Must use Tailwind `hidden` (display:none): author `.flex` otherwise overrides
  * the UA `[hidden]{display:none}` rule.
+ * Hidden shells also set `content-visibility: hidden` so the browser can skip
+ * expensive layout/paint while keep-mount preserves React state.
  */
 function shellVisibilityProps(
   isHidden: boolean,
@@ -72,7 +73,7 @@ function shellVisibilityProps(
     hidden: isHidden,
     "aria-hidden": isHidden,
     className: isHidden
-      ? "pointer-events-none absolute inset-0 z-0 hidden min-h-0 min-w-0 overflow-hidden"
+      ? "pointer-events-none absolute inset-0 z-0 hidden min-h-0 min-w-0 overflow-hidden [content-visibility:hidden]"
       : "absolute inset-0 z-[2] flex min-h-0 min-w-0 overflow-hidden",
     // React 18 types omit `inert`; empty string is the valid HTML boolean form.
     // Only set when hidden — omit when visible so React removes a stuck inert attr.
@@ -257,11 +258,6 @@ function App() {
     }
   }, []);
 
-  const markSchemaReady = useCallback(() => {
-    dispatchBoot({ type: "gate_complete" });
-    void runAuthGate();
-  }, [runAuthGate]);
-
   const checkBoot = useCallback(async () => {
     dispatchBoot({ type: "check_started" });
     try {
@@ -269,10 +265,6 @@ function App() {
       if (health.secretsReady === false) {
         clearDeviceSession();
         dispatchBoot({ type: "secrets_blocked", error: health.secretsError ?? null });
-        return;
-      }
-      if (!health.runtimeReady) {
-        dispatchBoot({ type: "schema_blocked" });
         return;
       }
       dispatchBoot({ type: "schema_ok" });
@@ -334,7 +326,7 @@ function App() {
   return (
     <ErrorBoundary>
       {boot.phase === "loading" ? (
-        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.checking")}</div>
+        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.starting")}</div>
       ) : boot.phase === "unavailable" ? (
         <BootUnavailable
           message={boot.error || t("boot.serviceUnavailable")}
@@ -347,8 +339,6 @@ function App() {
           onRecoverComplete={markSecretsRecovered}
           secretsError={boot.secretsError}
         />
-      ) : boot.phase === "gate" ? (
-        <SchemaUpgradeGate onReady={markSchemaReady} />
       ) : boot.phase === "setup" && boot.setupStatus ? (
         boot.setupStatus.bootstrapped ? (
           // Admin exists: one login card (expired vs cold login only changes copy).
@@ -366,7 +356,7 @@ function App() {
         <AppShell />
       ) : (
         // setup without status, or unexpected phase — never mount shell (avoids SSE 401 storms)
-        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.checking")}</div>
+        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.starting")}</div>
       )}
     </ErrorBoundary>
   );

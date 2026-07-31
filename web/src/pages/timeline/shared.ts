@@ -85,8 +85,6 @@ export function resolveTimelineFilterPlan(
     if (mode === "recurring") {
       recurringTaskIds.push(id);
       fetchUserForTagged = true;
-    } else if (mode === "calendar_task") {
-      fetchUserForTagged = true;
     } else if (mode === "project") {
       recurringTaskIds.push(id);
       fetchUserForTagged = true;

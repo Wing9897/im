@@ -114,7 +114,6 @@
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
 | mode `leaderboard` | 排行榜 | Leaderboard | 排行榜 |
 | mode `recurring` | 循環任務 | Recurring task | 循环任务 |
-| mode `calendar_task` | 日曆任務 | Calendar task | 日历任务 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |

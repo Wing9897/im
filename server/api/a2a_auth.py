@@ -1,4 +1,4 @@
-"""A2A route auth: household access key + capability scope (no device session)."""
+"""A2A route auth: full household access key required (no device session)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from fastapi import Request
 
 from server.access_keys import (
     resolve_access_token,
-    scopes_allow_a2a_agent,
+    scopes_allow_full,
     touch_access_key_last_used,
 )
 from server.api.deps import get_db
@@ -25,7 +25,7 @@ async def require_household_access_key(request: Request) -> dict[str, object]:
     if resolved is None:
         raise http_error(
             403,
-            "A2A routes require a household access key with the required scope",
+            "A2A routes require a household access key with full scope (*)",
             error_code=FORBIDDEN,
         )
     request.state.access_key_id = resolved["id"]
@@ -35,12 +35,12 @@ async def require_household_access_key(request: Request) -> dict[str, object]:
 
 
 async def require_a2a_agent(request: Request) -> None:
-    """Access key may call the LLM A2A agent (`a2a:agent` or `*`)."""
+    """Access key must be full-scope ``*`` (read-only keys cannot call A2A)."""
     await require_household_access_key(request)
     scopes = list(getattr(request.state, "access_key_scopes", None) or [])
-    if not scopes_allow_a2a_agent(scopes):
+    if not scopes_allow_full(scopes):
         raise http_error(
             403,
-            "Access key missing required scope: a2a:agent",
+            "Access key missing required scope: *",
             error_code=FORBIDDEN,
         )

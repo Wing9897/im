@@ -17,7 +17,7 @@ describe("calendar import API", () => {
     await previewCalendarImport({ content: "BEGIN:VCALENDAR", sourceId: "ics" });
 
     expect(mockPost).toHaveBeenCalledWith(
-      "/api/v1/calendar-imports/preview",
+      "/api/v1/calendar/imports/preview",
       { content: "BEGIN:VCALENDAR", sourceId: "ics" },
     );
   });
@@ -30,7 +30,7 @@ describe("calendar import API", () => {
     });
 
     expect(mockPost).toHaveBeenCalledWith(
-      "/api/v1/calendar-imports/commit",
+      "/api/v1/calendar/imports/commit",
       {
         content: "BEGIN:VCALENDAR",
         sourceId: "ics",

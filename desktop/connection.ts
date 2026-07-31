@@ -9,6 +9,11 @@ export interface ConnectionConfig {
   /** Remote server origin/base URL when mode is `client` (e.g. http://192.168.1.10:18820) */
   serverUrl?: string;
   /**
+   * When true (host mode), bind the sidecar to ``0.0.0.0`` so LAN devices can
+   * reach the API. Default false → ``127.0.0.1`` only. Requires sidecar restart.
+   */
+  allowLanAccess?: boolean;
+  /**
    * When true, loopback may call POST /setup/reset-password (forgot-password rescue).
    * Default false. Arming requires write access to this file (OS account / ACLs).
    * The server clears the flag back to false after a successful reset.
@@ -55,6 +60,7 @@ export function normalizeConnection(raw: unknown): ConnectionConfig {
     typeof obj.serverUrl === 'string' && obj.serverUrl.trim()
       ? normalizeServerUrl(obj.serverUrl)
       : undefined;
+  const allowLanAccess = obj.allowLanAccess === true;
   const resetPasswordForLocal = obj.resetPasswordForLocal === true;
 
   if (mode === 'client') {
@@ -64,12 +70,15 @@ export function normalizeConnection(raw: unknown): ConnectionConfig {
       );
       return {
         ...DEFAULT_CONNECTION,
+        ...(allowLanAccess ? { allowLanAccess: true } : {}),
         ...(resetPasswordForLocal ? { resetPasswordForLocal: true } : {}),
       };
     }
     return {
       mode: 'client',
       serverUrl,
+      // LAN bind only applies to host mode; keep flag for round-trip if user switches back.
+      ...(allowLanAccess ? { allowLanAccess: true } : {}),
       ...(resetPasswordForLocal ? { resetPasswordForLocal: true } : {}),
     };
   }
@@ -77,6 +86,7 @@ export function normalizeConnection(raw: unknown): ConnectionConfig {
   return {
     mode: 'host',
     ...(serverUrl ? { serverUrl } : {}),
+    ...(allowLanAccess ? { allowLanAccess: true } : {}),
     ...(resetPasswordForLocal ? { resetPasswordForLocal: true } : {}),
   };
 }
@@ -102,19 +112,23 @@ export function saveConnection(
   userDataPath: string,
   config: ConnectionConfig,
 ): ConnectionConfig {
-  // Preserve resetPasswordForLocal from disk unless the caller sets it explicitly
-  // (mode switches must not wipe a manually armed rescue flag; server disarm
-  // writes false to disk and must not be resurrected from a stale in-memory copy).
+  // Preserve flags from disk unless the caller sets them explicitly
+  // (mode switches must not wipe LAN bind or a manually armed rescue flag).
   const onDisk = loadConnection(userDataPath);
   const hasExplicitResetFlag = Object.prototype.hasOwnProperty.call(
     config,
     'resetPasswordForLocal',
   );
+  const hasExplicitLanFlag = Object.prototype.hasOwnProperty.call(config, 'allowLanAccess');
   const resetPasswordForLocal = hasExplicitResetFlag
     ? config.resetPasswordForLocal === true
     : onDisk.resetPasswordForLocal === true;
+  const allowLanAccess = hasExplicitLanFlag
+    ? config.allowLanAccess === true
+    : onDisk.allowLanAccess === true;
   const normalized = normalizeConnection({
     ...config,
+    allowLanAccess,
     resetPasswordForLocal,
   });
   const filePath = connectionFilePath(userDataPath);

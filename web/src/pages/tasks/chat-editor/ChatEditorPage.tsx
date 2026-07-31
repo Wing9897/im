@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { validateScheduleValue } from "../ScheduleInput";
 import { ChatEditorForm } from "./ChatEditorForm";
@@ -7,13 +8,15 @@ import { useChatEditor } from "./useChatEditor";
 import { listTaskTemplatePresets } from "../../../api/tasks";
 import { TaskTemplatePresetDialog } from "../../../components/task/TaskTemplatePresetDialog";
 import { ChannelSelectorDialog } from "../../../components/dialogs/ChannelSelectorDialog";
+import { Button } from "../../../components/ui";
 import type { TaskTemplatePreset } from "../../../types";
 import type { TemplateUsageMap } from "../../../components/task/taskTemplateTypes";
 import { usePersistedState } from "../../../hooks/usePersistedState";
-import { CHAT_EDITOR_TEMPLATE_USAGE_KEY } from "../../../domain/tasks/chatEditorPersistedKeys";
+import { CHAT_EDITOR_TEMPLATE_USAGE_KEY } from "../../../domain/prefs";
 import { analysisModeSupportsTaskPresets } from "../../../domain/tasks/taskPresetModes";
 
 export function ChatEditorPage() {
+  const { t } = useTranslation("common");
   const navigate = useNavigate();
   const { taskId } = useParams<{ taskId: string }>();
   const isEditMode = Boolean(taskId);
@@ -25,6 +28,9 @@ export function ChatEditorPage() {
     save,
     canSave,
     isSaving,
+    scheduleHydrating,
+    scheduleHydrateError,
+    retryScheduleHydrate,
     applyPreset,
     channels,
   } = useChatEditor();
@@ -113,6 +119,31 @@ export function ChatEditorPage() {
             <p className="mb-sm text-caption text-danger" role="alert">
               {error}
             </p>
+          ) : null}
+          {scheduleHydrating ? (
+            <p className="mb-sm text-caption text-text-secondary" role="status" data-testid="schedule-hydrate-loading">
+              {t("tasks.editor.scheduleHydrating")}
+            </p>
+          ) : null}
+          {scheduleHydrateError ? (
+            <div
+              className="mb-sm flex flex-wrap items-center gap-sm text-caption text-danger"
+              role="alert"
+              data-testid="schedule-hydrate-error"
+            >
+              <span>
+                {t("tasks.editor.scheduleHydrateFailed", { message: scheduleHydrateError })}
+              </span>
+              <Button
+                variant="secondary"
+                size="sm"
+                type="button"
+                onClick={retryScheduleHydrate}
+                data-testid="schedule-hydrate-retry"
+              >
+                {t("tasks.editor.scheduleHydrateRetry")}
+              </Button>
+            </div>
           ) : null}
           <ChatEditorForm
             formState={formState}

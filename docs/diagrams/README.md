@@ -31,13 +31,12 @@ flowchart TB
     AP -->|"leaderboard / event / project<br/>(if active & not paused)"| DISPATCH
   end
 
-  subgraph PROCESS["Process — analysis_tasks × 5"]
+  subgraph PROCESS["Process — analysis_tasks × 4"]
     DISPATCH{Task mode?}
     DISPATCH -->|leaderboard| LB[execute_batch<br/>oneshot JSON]
     DISPATCH -->|event| EV[execute_batch<br/>oneshot JSON]
     DISPATCH -->|project| PM[execute_project_tick<br/>closed-loop Agent]
     DISPATCH -.->|recurring| RC[No LLM<br/>RRULE expand at read]
-    DISPATCH -.->|calendar_task| CT[No LLM<br/>filter bucket only]
     MSG --> TC[task_channels bind]
     TC --> LB & EV & PM
   end
@@ -48,17 +47,15 @@ flowchart TB
     PM --> UE
     PM --> CHILD[child recurring rows]
     RC --> OCC[RRULE occurrences]
-    CT --> FILTER[Timeline / board filter]
     TOP & AE --> UI[Intelligence / Timeline / Board]
     UE & OCC & CHILD --> UI
     AE & TOP --> ACT[Actions / webhooks / voice]
   end
 
-  SIDE -.->|"optional task_id bind"| FILTER
   SIDE -.-> UI
 ```
 
-## 2. Five task modes (who schedules, who reads messages)
+## 2. Four task modes (who schedules, who reads messages)
 
 ```mermaid
 flowchart LR
@@ -70,12 +67,10 @@ flowchart LR
 
   subgraph NOAI["No LLM — not AI-scheduled"]
     R[recurring<br/>RRULE only]
-    C[calendar_task<br/>bucket only]
   end
 
   MSG[(messages via task_channels)] --> L & E & P
   R -.->|"query-time expand"| CAL[Timeline calendar / gantt]
-  C -.->|"owns optional user_events"| CAL
   L --> OUT1[topics]
   E --> OUT2[analysis_events]
   P --> OUT3[user_events + child recurring]
@@ -87,7 +82,6 @@ flowchart LR
 | `event` | Yes (`execute_batch`) | Yes | `analysis_events` |
 | `project` | Yes (`execute_project_tick`) | Yes (cursor + drain) | Owned `user_events` + child `recurring` |
 | `recurring` | No | No | RRULE occurrences at read |
-| `calendar_task` | No | No | Filter bucket for tagged `user_events` |
 
 ## 3. Schedule timer (the big scanner loop)
 

@@ -11,9 +11,8 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 - **僅** household access key（`Authorization: Bearer <key>`）。
 - **拒絕** device session；loopback 豁免**不**適用。
-- 金鑰需 `a2a:agent` 或 `*`（舊 scope `a2a:events` 已硬切拒絕，不再改寫）。
-- 非 `*` 金鑰全站僅允許 `/api/v1/a2a/`。
-- 建立：勾選「僅限客戶經理」→ `scopes: ["a2a:agent"]`（API 欄位 `allowA2aAgent`）。
+- 金鑰需完整 scope `["*"]`（`read` 只讀金鑰不可呼叫 A2A；舊 `a2a:agent` / `a2a:events` 已硬切拒絕）。
+- 建立：預設完整金鑰；勾選「只讀」→ `scopes: ["read"]`（API 欄位 `readOnly`）。
 
 ## API
 
@@ -52,18 +51,10 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 需要本機已設定可用的 **AI 供應商**。
 
-經工具建立的用戶事件 `origin=a2a`。每次呼叫寫入 `a2a_audit_log`（永不記 secret）。
+經工具建立的用戶事件 `origin=a2a`。呼叫結果寫入應用日誌（不再使用獨立 `a2a_audit_log` 表）。
 
 ## 非目標
 
 - 專用 events CRUD 門面（已移除）
 - 伺服器端多輪 session／歷史庫
-- 要求第三方為本 API 設計特殊工具 schema
-- device session 呼叫 A2A
-
-## 相關程式
-
-- Route: `server/api/routes/a2a_agent.py`
-- Channel: `server/agent/channels.py` + `AgentRuntime`
-- Auth: `server/api/a2a_auth.py`
-- 人類助手: [`assistant.md`](assistant.md)
+- 應用內 TLS／憑證管理（port-forward 須在 Caddy／Nginx 終止 TLS）

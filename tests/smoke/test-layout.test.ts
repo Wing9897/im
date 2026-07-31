@@ -42,6 +42,10 @@ const SKIP_DIRS = new Set([
   ".mypy_cache",
   "__test_tmp_scanners__",
   "target",
+  // Packaged / PyInstaller outputs (may vendor third-party test trees).
+  "server-runtime",
+  "release",
+  "archive",
 ]);
 
 /** Recursively collect files under `dir` whose relative path satisfies `match`. */

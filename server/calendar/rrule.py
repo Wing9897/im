@@ -295,7 +295,11 @@ def _expand_imported_occurrences(
                     "startTime": _iso_z(start_dt),
                     "endTime": _iso_z(end_dt),
                     "isAllDay": is_all_day,
-                    "timezone": task_value(task, "event_timezone"),
+                    "timezone": (
+                        None
+                        if task_value(task, "event_timezone") in (None, "", "floating")
+                        else task_value(task, "event_timezone")
+                    ),
                     "location": task_value(task, "event_location") or None,
                     "description": task_value(task, "event_description") or None,
                     "rrule": rule,
@@ -305,7 +309,7 @@ def _expand_imported_occurrences(
                 break
         return results
     except (ValueError, TypeError, OverflowError) as exc:
-        logger.warning("Skipping imported calendar task %s: RRULE expansion failed (%s)", task_value(task, "id"), exc)
+        logger.warning("Skipping recurring task %s: RRULE expansion failed (%s)", task_value(task, "id"), exc)
         return []
 
 

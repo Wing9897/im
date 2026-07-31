@@ -1,13 +1,9 @@
 """FastAPI application factory + lifespan startup sequence.
 
 Startup order:
-    1. Database connect + classify schema (upgrade gate if pending).
-    2. If schema current: ensure_schema + data migrations + orphan recovery +
-       scheduler + collector.
-    3. If schema needs upgrade: HTTP comes up in gate mode (no collector /
-       scheduler) until ``POST /api/v1/system/schema/upgrade`` succeeds.
-
-Schema support matrix and upgrade-gate policy: ``docs/ARCHITECTURE.md``.
+    1. Database connect + create/validate the wipe-only current schema.
+    2. Probe stored secrets.
+    3. Start orphan recovery, scheduler and collector when secrets are usable.
 
 Unlike the previous rebuild, CORS and production static-file serving are wired
 here from day one — their absence was a root cause of the packaged app
@@ -34,7 +30,6 @@ from server.constants import (
     STARTUP_DB_SETTLE_SECONDS,
 )
 from server.db.database import Database, SchemaBaselineError
-from server.db.migrations import inspect_schema, migration_pending
 from server.http_limits import (
     MAX_REQUEST_BODY_BYTES,
     RateLimitMiddleware,
@@ -42,7 +37,6 @@ from server.http_limits import (
 )
 from server.paths import default_db_path, ensure_data_dir
 from server.runtime_ready import RuntimeReadyMiddleware
-from server.schema_lifecycle import SchemaLifecycle
 from server.secrets_probe import probe_stored_secrets
 from server.sse import SseBroadcaster
 from server.static_files import mount_static_files
@@ -68,10 +62,6 @@ async def _start_runtime_services(
     start_scheduler: bool,
 ) -> asyncio.Task[None]:
     """Start scheduler/collector and return the geocode backfill task."""
-    from server.db.data_migrations import apply_data_migrations
-
-    await apply_data_migrations(db)
-
     broadcaster: SseBroadcaster = app.state.broadcaster
 
     from server.actions import ActionExecutor
@@ -133,8 +123,6 @@ async def _lifespan_impl(
     broadcaster = SseBroadcaster()
     app.state.broadcaster = broadcaster
 
-    lifecycle = SchemaLifecycle(db=db)
-    app.state.schema_lifecycle = lifecycle
     app.state.action_executor = None
     app.state.analysis_engine = None
     app.state.scheduler = None
@@ -143,8 +131,6 @@ async def _lifespan_impl(
     app.state.secrets_ready = True
     app.state.secrets_error = None
 
-    fingerprint = await inspect_schema(db.conn)
-    needs_upgrade = migration_pending(fingerprint.version)
     backfill_task: asyncio.Task[None] | None = None
 
     async def apply_secrets_probe() -> bool:
@@ -171,34 +157,11 @@ async def _lifespan_impl(
             start_scheduler=start_scheduler,
         )
 
-    lifecycle.bind_finish_runtime(finish_runtime)
     app.state.ensure_runtime_started = finish_runtime
 
     try:
-        if needs_upgrade:
-            await lifecycle.classify()
-            # Crash mid-migrate leaves marker + baseline while still needs_upgrade:
-            # restore to a consistent pre-upgrade file before showing the gate.
-            await lifecycle.heal_half_migrated_if_needed()
-            logger.warning(
-                "Database schema v%s requires upgrade to v%s — runtime paused until upgrade",
-                fingerprint.version,
-                lifecycle.required_version,
-            )
-        else:
-            await db.ensure_schema()
-            await lifecycle.classify()
-            # Catch stamp-before-validate crashes and cheap live integrity issues
-            # before starting collector/scheduler.
-            await lifecycle.verify_after_stamp_or_ready()
-            if lifecycle.runtime_ready:
-                await finish_runtime()
-            else:
-                logger.warning(
-                    "Startup data verification blocked runtime (state=%s): %s",
-                    lifecycle.state,
-                    lifecycle.error,
-                )
+        await db.ensure_schema()
+        await finish_runtime()
     except BaseException as exc:
         # A rejected schema aborts startup before the shutdown block below can
         # run. aiosqlite's connection thread is not a daemon, so an unclosed
@@ -206,14 +169,11 @@ async def _lifespan_impl(
         # process and the SQLite file lock alive — which in turn blocks the
         # explicit-reset recovery path.
         if isinstance(exc, SchemaBaselineError):
-            # Wipe-only prior stamps (v1–v16) hard-reject here. Say what to do
-            # instead of leaving only a traceback. See docs/ARCHITECTURE.md.
             logger.error(
-                "%s — schema v%s is not supported and cannot be upgraded in place. "
+                "%s — this database cannot be upgraded in place. "
                 "Reset the local database, then re-collect: python scripts/reset_local_databases.py --apply "
                 "(database: %s)",
                 exc,
-                fingerprint.version,
                 db_path,
             )
         if injected_db is None:
