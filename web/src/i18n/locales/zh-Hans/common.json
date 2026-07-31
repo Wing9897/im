@@ -1142,7 +1142,7 @@
   "boot": {
     "checking": "正在检查数据库版本…",
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 3／SemVer 0.1.0-beta.3；更旧 stamp 须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 stamp 3／SemVer 0.1.0-beta.4；更旧 stamp 须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应"
   },
