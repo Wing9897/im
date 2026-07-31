@@ -143,6 +143,7 @@ export class ProcessManager {
       child: null,
       cancelled: false,
       cancel: null,
+      rejectReason: null,
     };
     this.activeStartup = attempt;
 
@@ -201,7 +202,13 @@ export class ProcessManager {
 
         // Invalidate timeout/request callbacks before asking the restart driver to run.
         this.generation++;
-        if (this.activeStartup === attempt) this.cancelActiveStartup();
+        if (this.activeStartup === attempt) {
+          const stderr = this.recentStderr.trim().slice(-2_000);
+          const detail = stderr
+            ? `Server process exited during startup (code ${code}).\n\n${stderr}`
+            : `Server process exited during startup (code ${code})`;
+          this.failActiveStartup(new Error(detail));
+        }
         if (this.stopping) return;
 
         for (const callback of this.exitCallbacks) callback(code);
@@ -271,6 +278,16 @@ export class ProcessManager {
   private cancelActiveStartup(): void {
     const attempt = this.activeStartup;
     if (!attempt || attempt.cancelled) return;
+    attempt.cancelled = true;
+    const cancel = attempt.cancel;
+    attempt.cancel = null;
+    cancel?.();
+  }
+
+  private failActiveStartup(error: Error): void {
+    const attempt = this.activeStartup;
+    if (!attempt || attempt.cancelled) return;
+    attempt.rejectReason = error;
     attempt.cancelled = true;
     const cancel = attempt.cancel;
     attempt.cancel = null;

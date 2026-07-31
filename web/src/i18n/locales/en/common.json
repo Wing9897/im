@@ -1142,7 +1142,7 @@
   "boot": {
     "checking": "Checking database version…",
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 3 / SemVer 0.1.0-beta.5 — older stamped databases must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is stamp 3 / SemVer 0.1.0-beta.6 — older stamped databases must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable"
   },

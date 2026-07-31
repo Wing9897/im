@@ -21,7 +21,7 @@ describe("SystemVersionPanel", () => {
       runtimeReady: true,
       schemaVersion: 1,
       requiredSchemaVersion: 1,
-      schemaSemver: "0.1.0-beta.5",
+      schemaSemver: "0.1.0-beta.6",
       backupPath: null,
       error: null,
       restoredFromBackup: false,
@@ -39,9 +39,9 @@ describe("SystemVersionPanel", () => {
 
     const panel = harness.container.querySelector('[data-testid="system-version-panel"]');
     expect(panel?.textContent).toContain("應用版本");
-    expect(panel?.textContent).toContain("DEV · v0.1.0-beta.5");
+    expect(panel?.textContent).toContain("DEV · v0.1.0-beta.6");
     expect(panel?.textContent).toContain("資料庫 Schema");
-    expect(panel?.textContent).toContain("v0.1.0-beta.5");
+    expect(panel?.textContent).toContain("v0.1.0-beta.6");
   });
 
   it("shows upgrade hint with SemVer and int stamps when schema is behind", async () => {
@@ -50,7 +50,7 @@ describe("SystemVersionPanel", () => {
       runtimeReady: false,
       schemaVersion: 1,
       requiredSchemaVersion: 2,
-      schemaSemver: "0.1.0-beta.5",
+      schemaSemver: "0.1.0-beta.6",
       backupPath: null,
       error: null,
       restoredFromBackup: false,
@@ -62,7 +62,7 @@ describe("SystemVersionPanel", () => {
       await Promise.resolve();
     });
 
-    expect(harness.container.textContent).toContain("0.1.0-beta.5");
+    expect(harness.container.textContent).toContain("0.1.0-beta.6");
     expect(harness.container.textContent).toContain("v1");
     expect(harness.container.textContent).toContain("v2");
   });
@@ -76,6 +76,6 @@ describe("SystemVersionPanel", () => {
     });
 
     expect(harness.container.textContent).toContain("無法取得");
-    expect(harness.container.textContent).toContain("DEV · v0.1.0-beta.5");
+    expect(harness.container.textContent).toContain("DEV · v0.1.0-beta.6");
   });
 });

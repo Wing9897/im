@@ -38,7 +38,7 @@ export function spawnServerProcess(deps: SpawnProcessDeps): Promise<void> {
       if (attempt.cancel === cancel) attempt.cancel = null;
       reject(error);
     };
-    const cancel = (): void => finishReject(new StartupCancelledError());
+    const cancel = (): void => finishReject(attempt.rejectReason ?? new StartupCancelledError());
     attempt.cancel = cancel;
 
     const child = spawn(command, args, {

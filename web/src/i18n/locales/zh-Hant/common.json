@@ -1142,7 +1142,7 @@
   "boot": {
     "checking": "正在檢查資料庫版本…",
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 3／SemVer 0.1.0-beta.5；更舊 stamp 須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 stamp 3／SemVer 0.1.0-beta.6；更舊 stamp 須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應"
   },

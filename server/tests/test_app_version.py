@@ -4,8 +4,8 @@ import server.version as version_mod
 
 
 def test_read_app_version_matches_version_file() -> None:
-    assert version_mod.read_app_version() == "0.1.0-beta.5"
-    assert version_mod.__version__ == "0.1.0-beta.5"
+    assert version_mod.read_app_version() == "0.1.0-beta.6"
+    assert version_mod.__version__ == "0.1.0-beta.6"
 
 
 def test_version_file_uses_meipass_when_frozen(tmp_path: Path, monkeypatch) -> None:

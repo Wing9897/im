@@ -16,6 +16,8 @@ export interface HealthStartupAttempt {
   child: ChildProcess | null;
   cancelled: boolean;
   cancel: (() => void) | null;
+  /** When set, ``cancel()`` rejects with this instead of StartupCancelledError. */
+  rejectReason: Error | null;
 }
 
 export interface HealthPollOptions {
@@ -70,7 +72,7 @@ export function pollServerHealth(options: HealthPollOptions): Promise<void> {
       reject(error);
     };
 
-    const cancel = (): void => fail(new StartupCancelledError());
+    const cancel = (): void => fail(attempt.rejectReason ?? new StartupCancelledError());
     attempt.cancel = cancel;
 
     const scheduleNext = (): void => {

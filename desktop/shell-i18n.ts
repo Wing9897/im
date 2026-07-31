@@ -47,7 +47,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedBody: (message) => `無法啟動內建伺服器：\n\n${message}`,
     incompatibleDatabaseTitle: '資料庫不相容',
     schemaHardRejectHint:
-      '本機資料庫結構不相容（schema baseline 3／schemaSemver 0.1.0-beta.5；v1–v2 hard-rejected，舊庫須重置）。\n\n請到設定 → 資料 重置，或執行：\nscripts/reset_local_databases.py --apply\n\n然後重新啟動應用程式。',
+      '本機資料庫結構不相容（schema baseline 3／schemaSemver 0.1.0-beta.6；v1–v2 hard-rejected，舊庫須重置）。\n\n請到設定 → 資料 重置，或執行：\nscripts/reset_local_databases.py --apply\n\n然後重新啟動應用程式。',
     serverStartupTimeoutTitle: '伺服器啟動逾時',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `伺服器未能在 ${seconds} 秒內啟動。請檢查日誌以取得詳細資訊。\n\n${schemaHint}`,
@@ -70,7 +70,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedBody: (message) => `无法启动内置服务器：\n\n${message}`,
     incompatibleDatabaseTitle: '数据库不兼容',
     schemaHardRejectHint:
-      '本地数据库结构不兼容（schema baseline 3／schemaSemver 0.1.0-beta.5；v1–v2 hard-rejected，旧库须重置）。\n\n请到设置 → 数据 重置，或运行：\nscripts/reset_local_databases.py --apply\n\n然后重新启动应用程序。',
+      '本地数据库结构不兼容（schema baseline 3／schemaSemver 0.1.0-beta.6；v1–v2 hard-rejected，旧库须重置）。\n\n请到设置 → 数据 重置，或运行：\nscripts/reset_local_databases.py --apply\n\n然后重新启动应用程序。',
     serverStartupTimeoutTitle: '服务器启动超时',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `服务器未能在 ${seconds} 秒内启动。请检查日志以获取详细信息。\n\n${schemaHint}`,
@@ -94,7 +94,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
       `Failed to start the bundled server:\n\n${message}`,
     incompatibleDatabaseTitle: 'Incompatible Database',
     schemaHardRejectHint:
-      'The local database schema is incompatible (schema baseline 3 / schemaSemver 0.1.0-beta.5; v1–v2 hard-rejected; older databases must be reset).\n\nReset with Settings → Data, or run:\nscripts/reset_local_databases.py --apply\n\nThen restart the app.',
+      'The local database schema is incompatible (schema baseline 3 / schemaSemver 0.1.0-beta.6; v1–v2 hard-rejected; older databases must be reset).\n\nReset with Settings → Data, or run:\nscripts/reset_local_databases.py --apply\n\nThen restart the app.',
     serverStartupTimeoutTitle: 'Server Startup Timeout',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `Server failed to start within ${seconds} seconds. Check logs for details.\n\n${schemaHint}`,
