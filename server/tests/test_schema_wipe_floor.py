@@ -66,9 +66,7 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
     ids=[f"stamped-v{version}" for version in _HARD_REJECT_PRIOR_VERSIONS],
 )
 @pytest.mark.asyncio
-async def test_stamped_prior_schema_versions_are_hard_rejected_without_changes(
-    tmp_path, version: int
-) -> None:
+async def test_stamped_prior_schema_versions_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
     """Stamped versions without a MigrationStep hard-reject at ensure_schema."""
     assert not any(step.source_version == version for step in SCHEMA_MIGRATIONS)
     path = str(tmp_path / f"stamped-v{version}.db")
