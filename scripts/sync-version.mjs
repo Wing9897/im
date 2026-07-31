@@ -63,3 +63,25 @@ for (const key of ["web", "desktop"]) {
 }
 writeFileSync(lockPath, `${JSON.stringify(lock, null, 2)}\n`, "utf8");
 console.log(`[sync-version] package-lock.json workspace versions → ${version}`);
+
+// uv.lock records the virtual root package in PEP 440 form (0.1.0-beta.7 → 0.1.0b7).
+const pep440 = version
+  .replace(/-alpha\./gi, "a")
+  .replace(/-beta\./gi, "b")
+  .replace(/-rc\./gi, "rc")
+  .replace(/-preview\./gi, "rc");
+const uvLockPath = path.join(root, "uv.lock");
+const uvLock = readFileSync(uvLockPath, "utf8");
+const uvPackageRe =
+  /(\[\[package\]\]\r?\nname = "intelligence-monitor-server"\r?\nversion = ")([^"]+)(")/;
+if (!uvPackageRe.test(uvLock)) {
+  console.error("[sync-version] Could not find intelligence-monitor-server in uv.lock");
+  process.exit(1);
+}
+const nextUvLock = uvLock.replace(uvPackageRe, `$1${pep440}$3`);
+if (nextUvLock !== uvLock) {
+  writeFileSync(uvLockPath, nextUvLock, "utf8");
+  console.log(`[sync-version] uv.lock intelligence-monitor-server → ${pep440}`);
+} else {
+  console.log(`[sync-version] uv.lock already ${pep440}`);
+}
