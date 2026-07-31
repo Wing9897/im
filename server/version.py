@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_VERSION_FILE = _REPO_ROOT / "VERSION"
+
+def _version_file() -> Path:
+    # PyInstaller onedir: datas land under sys._MEIPASS (…/_internal).
+    meipass = getattr(sys, "_MEIPASS", None)
+    if getattr(sys, "frozen", False) and meipass:
+        return Path(meipass) / "VERSION"
+    return Path(__file__).resolve().parents[1] / "VERSION"
 
 
 def read_app_version() -> str:
-    if not _VERSION_FILE.is_file():
-        raise RuntimeError(f"Missing VERSION file at {_VERSION_FILE}")
-    text = _VERSION_FILE.read_text(encoding="utf-8").strip()
+    version_file = _version_file()
+    if not version_file.is_file():
+        raise RuntimeError(f"Missing VERSION file at {version_file}")
+    text = version_file.read_text(encoding="utf-8").strip()
     if not text:
-        raise RuntimeError(f"Empty VERSION file at {_VERSION_FILE}")
+        raise RuntimeError(f"Empty VERSION file at {version_file}")
     return text
 
 

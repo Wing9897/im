@@ -358,7 +358,7 @@ When `migration_pending(user_version)` for a **registered** prior version, start
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **3** (current) | Full runtime (`schemaSemver` = `0.1.0-beta.4`) |
+| **3** (current) | Full runtime (`schemaSemver` = `0.1.0-beta.5`) |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other** (incl. prior 1–2 and legacy 4–24) | Hard reject — explicit DB reset (no in-place path) |
 

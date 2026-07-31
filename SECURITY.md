@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release is supported. The project is in beta (`0.1.0-beta.4`) and
+Only the latest release is supported. The project is in beta (`0.1.0-beta.5`) and
 there are no backports to earlier tags.
 
 | Version | Supported |

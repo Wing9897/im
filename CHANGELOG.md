@@ -2,11 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0-beta.5] - 2026-07-31
+
+### Notes
+
+- **Current baseline:** schema stamp **v3** / public `schemaSemver` **0.1.0-beta.5** (empty `SCHEMA_MIGRATIONS`; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.5`. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+
+### Fixed
+
+- **Desktop sidecar Missing VERSION:** PyInstaller now bundles root `VERSION` into `_internal/`; `server.version` reads `sys._MEIPASS` when frozen. Fixes packaged host startup (`RuntimeError: Missing VERSION` → shell 「伺服器啟動失敗」). `desktop_verify` full mode asserts the bundled VERSION file exists.
+
 ## [0.1.0-beta.4] - 2026-07-31
 
 ### Notes
 
-- **Current baseline:** schema stamp **v3** / public `schemaSemver` **0.1.0-beta.4** (empty `SCHEMA_MIGRATIONS`; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.4`. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+- **Baseline at release (historical):** schema stamp **v3** / public `schemaSemver` **0.1.0-beta.4** (empty `SCHEMA_MIGRATIONS`; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.4`. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
 - **Docs:** index [`docs/README.md`](docs/README.md); intentional deltas [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md); Agent／A2A／project [`docs/agent/assistant.md`](docs/agent/assistant.md)／[`docs/agent/a2a.md`](docs/agent/a2a.md)／[`docs/agent/project.md`](docs/agent/project.md).
 
 ### Fixed
@@ -40,7 +50,7 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 
-- **Baseline at release (historical):** schema stamp **v1** / public `schemaSemver` **0.1.0-beta.1** (product SemVer restart; empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — **must reset**). Internal `PRAGMA user_version` stays int `1` (not a SemVer string). **Current** stamp／`schemaSemver`／product version: see **[0.1.0-beta.4]** above. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+- **Baseline at release (historical):** schema stamp **v1** / public `schemaSemver` **0.1.0-beta.1** (product SemVer restart; empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — **must reset**). Internal `PRAGMA user_version` stays int `1` (not a SemVer string). **Current** stamp／`schemaSemver`／product version: see **[0.1.0-beta.5]** above. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
 - **Docs:** index [`docs/README.md`](docs/README.md); intentional deltas [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md); Agent／A2A／project [`docs/agent/assistant.md`](docs/agent/assistant.md)／[`docs/agent/a2a.md`](docs/agent/a2a.md)／[`docs/agent/project.md`](docs/agent/project.md).
 
 ### Added

@@ -120,6 +120,11 @@ def check_release_paths() -> list[tuple[str, bool, str]]:
     return [
         ("bundled server runtime", sidecar.is_file(), str(sidecar)),
         (
+            "bundled server VERSION",
+            (SERVER_RUNTIME_DIR / "_internal" / "VERSION").is_file(),
+            str(SERVER_RUNTIME_DIR / "_internal" / "VERSION"),
+        ),
+        (
             "packaged server runtime",
             packaged is not None,
             str(packaged or RELEASE_DIR),

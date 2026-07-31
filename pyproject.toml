@@ -1,6 +1,6 @@
 [project]
 name = "intelligence-monitor-server"
-version = "0.1.0-beta.4"
+version = "0.1.0-beta.5"
 description = "Intelligence Monitor - Python FastAPI Server"
 license = "MIT"
 requires-python = ">=3.11"
