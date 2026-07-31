@@ -28,7 +28,17 @@ Detail = Literal["compact", "full"]
 OCCURRENCE_ID_RE = re.compile(r"^([^:]+):(\d{8}T\d{6}Z)$")
 
 #: Fields every compact list row carries.
-_COMPACT_FIELDS = ("id", "taskId", "title", "startTime", "endTime", "location", "source")
+_COMPACT_FIELDS = (
+    "id",
+    "taskId",
+    "title",
+    "startTime",
+    "endTime",
+    "location",
+    "source",
+    "isAllDay",
+    "timezone",
+)
 #: Compact ``user`` rows additionally carry ownership workset and dismissal.
 _COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed")
 
@@ -71,6 +81,8 @@ def build_analysis_item(
         "endTime": _text_or_none(row.get("end_time")),
         "location": _text_or_none(row.get("location")),
         "source": "analysis",
+        "isAllDay": False,
+        "timezone": None,
         "body": row.get("body") or "",
         "taskName": row.get("task_name"),
         "participants": parse_json_list(row.get("participants_json")),
@@ -98,6 +110,7 @@ def build_occurrence_item(
         "endTime": occ.get("endTime"),
         "location": _text_or_none(occ.get("location")),
         "source": "recurring",
+        "timezone": occ.get("timezone"),
         "body": occ.get("description") or "",
         "taskName": occ.get("taskName"),
         "isAllDay": bool(occ.get("isAllDay")),

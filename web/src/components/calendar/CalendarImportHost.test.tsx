@@ -1,40 +1,25 @@
-/**
- * Smoke tests for Desktop calendar-import host (shared UserEventDialog).
- */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
-const mockCreateUserEvent = vi.fn();
+const mockPreview = vi.fn();
+const mockCommit = vi.fn();
 const mockShowToast = vi.fn();
 const mockGetPending = vi.fn();
+const mockEmitResourceModified = vi.fn();
 let importListener: ((message: unknown) => void) | null = null;
 
-vi.mock("../../api/userEvents", () => ({
-  createUserEvent: (...args: unknown[]) => mockCreateUserEvent(...args),
+vi.mock("../../api/calendarImports", () => ({
+  previewCalendarImport: (...args: unknown[]) => mockPreview(...args),
+  commitCalendarImport: (...args: unknown[]) => mockCommit(...args),
 }));
 
 vi.mock("../../context/ToastContext", () => ({
   useToast: () => ({ showToast: mockShowToast }),
 }));
 
-vi.mock("../../context/TaskCatalogContext", () => ({
-  useTaskCatalog: () => ({
-    tasks: [
-      {
-        id: "task-1",
-        name: "Calendar task",
-        analysisMode: "calendar_task",
-        isActive: true,
-      },
-    ],
-    tasksLoading: false,
-    taskLoadError: null,
-    refreshTasks: vi.fn(),
-    worksets: [{ id: "__user__", name: "一般", isSystem: true }],
-    worksetsLoading: false,
-    refreshWorksets: vi.fn(),
-  }),
+vi.mock("../../domain/sse/resourceModified", () => ({
+  emitResourceModified: (...args: unknown[]) => mockEmitResourceModified(...args),
 }));
 
 vi.mock("../../electron/electronWindow", () => ({
@@ -68,8 +53,68 @@ describe("CalendarImportHost", () => {
   let container: HTMLDivElement | null = null;
 
   beforeEach(() => {
-    mockCreateUserEvent.mockReset().mockResolvedValue({});
+    mockPreview.mockReset().mockResolvedValue({
+      sourceId: "ics",
+      calendarName: "Team calendar",
+      eventCount: 2,
+      importableCount: 1,
+      warnings: [{ code: "calendar-warning", message: "Calendar warning" }],
+      items: [
+        {
+          uid: "series-1",
+          title: "Weekly sync",
+          targetType: "recurring_task",
+          action: "update",
+          supported: true,
+          existingId: "task-1",
+          fingerprint: "fp-1",
+          startTime: "2026-07-29T10:00:00Z",
+          endTime: "2026-07-29T11:00:00Z",
+          isAllDay: false,
+          timezone: "Asia/Taipei",
+          rrule: "FREQ=WEEKLY",
+          exdates: ["2026-08-05T10:00:00Z"],
+          rdates: [],
+          changes: [{ field: "title", before: "Old", after: "Weekly sync" }],
+          warnings: [],
+        },
+        {
+          uid: "override-1",
+          title: "Unsupported override",
+          targetType: "user_event",
+          action: "unsupported",
+          supported: false,
+          existingId: null,
+          fingerprint: "fp-2",
+          startTime: "2026-07-30T10:00:00Z",
+          endTime: null,
+          isAllDay: false,
+          timezone: "UTC",
+          rrule: null,
+          exdates: [],
+          rdates: [],
+          changes: [],
+          warnings: [{ code: "unsupported_recurrence_id", message: "Not imported" }],
+        },
+      ],
+    });
+    mockCommit.mockReset().mockResolvedValue({
+      sourceId: "ics",
+      committedCount: 1,
+      createdCount: 0,
+      updatedCount: 1,
+      unchangedCount: 0,
+      results: [
+        {
+          uid: "series-1",
+          targetType: "recurring_task",
+          targetId: "task-1",
+          action: "updated",
+        },
+      ],
+    });
     mockShowToast.mockReset();
+    mockEmitResourceModified.mockReset();
     mockGetPending.mockReset().mockResolvedValue(null);
     importListener = null;
     container = document.createElement("div");
@@ -86,16 +131,13 @@ describe("CalendarImportHost", () => {
     container = null;
   });
 
-  it("opens dialog from pending import and saves", async () => {
+  it("previews all items, commits supported selections, and shows results", async () => {
+    const content = "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n";
     mockGetPending.mockResolvedValue({
       ok: true,
-      draft: {
-        title: "Imported",
-        startTime: "2026-07-29T10:00:00Z",
-        endTime: "2026-07-29T11:00:00Z",
-        location: "Room",
-        body: "Notes",
-        worksetId: "",
+      payload: {
+        content,
+        sourceId: "ics",
         source: "file",
         sourceLabel: "a.ics",
       },
@@ -106,15 +148,19 @@ describe("CalendarImportHost", () => {
     });
     await flush();
 
-    const dialog = document.querySelector('[data-testid="user-event-dialog"]');
+    const dialog = document.querySelector('[data-testid="calendar-import-dialog"]');
     expect(dialog).not.toBeNull();
-    const titleInput = Array.from(document.querySelectorAll("input")).find(
-      (el) => (el as HTMLInputElement).value === "Imported",
-    ) as HTMLInputElement | undefined;
-    expect(titleInput).toBeTruthy();
+    expect(mockPreview).toHaveBeenCalledWith({ content, sourceId: "ics" });
+    expect(document.body.textContent).toContain("Weekly sync");
+    expect(document.body.textContent).toContain("Unsupported override");
+    expect(document.body.textContent).toContain("Asia/Taipei");
+    expect(document.body.textContent).toContain("Old");
+    const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+    expect((checkboxes[0] as HTMLInputElement).checked).toBe(true);
+    expect((checkboxes[1] as HTMLInputElement).disabled).toBe(true);
 
     const primary = Array.from(document.querySelectorAll("button")).find((btn) =>
-      /新增|Add/i.test(btn.textContent || ""),
+      /导入所选项|匯入所選項|Import selected/i.test(btn.textContent || ""),
     );
     expect(primary).toBeTruthy();
     await act(async () => {
@@ -122,12 +168,18 @@ describe("CalendarImportHost", () => {
     });
     await flush();
 
-    expect(mockCreateUserEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: "Imported",
-        location: "Room",
-      }),
-    );
+    expect(mockCommit).toHaveBeenCalledWith({
+      content,
+      sourceId: "ics",
+      selections: [{ uid: "series-1", fingerprint: "fp-1" }],
+    });
+    expect(document.querySelector('[data-testid="calendar-import-results"]')).not.toBeNull();
+    expect(document.body.textContent).toMatch(/Weekly sync/);
+    expect(mockEmitResourceModified).toHaveBeenCalledWith({
+      resourceType: "task",
+      resourceId: "task-1",
+      action: "updated",
+    });
   });
 
   it("toasts on import error push", async () => {

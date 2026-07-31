@@ -8,7 +8,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/actions": () => import("../pages/actions/ActionsPage"),
   "/accounts": () => import("../pages/sources/SourceManagementPage"),
   "/assistant": () => import("../pages/ai/assistant/AssistantPage"),
-  "/account": () => import("../pages/profile/AccountShell"),
+  "/account": () => import("../pages/account/AccountShell"),
   "/ai": () => import("../pages/ai/AiWorkspacePage"),
   "/ai/provider": () => import("../pages/ai/SettingsAiProviderPage"),
   "/ai/voice": () => import("../pages/ai/SettingsVoicePage"),

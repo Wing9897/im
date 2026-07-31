@@ -5,9 +5,9 @@ re-exported here so existing ``from server.db.migrations import …`` call sites
 stay stable. Content migrations remain in ``data_migrations.py``. See
 ``docs/ARCHITECTURE.md#schema-support-matrix`` for the support matrix.
 
-Schema stamp ``3`` wipe-floor: ``SCHEMA_MIGRATIONS`` is empty; DDL (including
+Schema stamp ``4`` wipe-floor: ``SCHEMA_MIGRATIONS`` is empty; DDL (including
 the builtin ``__user__`` workset seed) is the sole structural truth. Stamped
-versions other than ``0`` / current hard-reject (including legacy 1–2 and 4–24).
+versions other than ``0`` / current hard-reject.
 Public SemVer identity is ``SCHEMA_SEMVER`` (not PRAGMA user_version).
 """
 
@@ -109,7 +109,7 @@ def validate_migration_registry(
 
 
 # Checklist: docs/ARCHITECTURE.md#adding-a-migrationstep-checklist
-# Wipe-floor stamp 3: no in-place upgrades from prior stamps.
+# Wipe-floor stamp 4: no in-place upgrades from prior stamps.
 SCHEMA_MIGRATIONS = validate_migration_registry(())
 
 

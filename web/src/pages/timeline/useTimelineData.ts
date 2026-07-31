@@ -8,7 +8,7 @@ import {
   userEventToTimelineItem,
 } from "../../domain/timeline/timedEventMerge";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
-import type { TimelineSelectedSources } from "../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
@@ -51,7 +51,7 @@ function firstSourceError(
 
 interface UseTimelineDataOptions {
   /** `null` = all, `[]` = none, otherwise multi-select (may include `__user__`). */
-  selectedSources: TimelineSelectedSources;
+  selectedSources: SourceFilterSelection;
   /** Current view mode — span fetching only triggers in "gantt" mode. */
   viewMode: "calendar" | "gantt";
   /** Start of the visible date range (calendar occurrences are fetched around it). */

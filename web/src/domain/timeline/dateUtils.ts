@@ -99,9 +99,21 @@ export function formatRangeLabel(scale: TimelineScale, cursor: Date): string {
   return formatMonthLabel(cursor);
 }
 
-function eventRange(event: TimelineItem) {
-  const start = new Date(event.startTime);
-  const end = event.endTime ? new Date(event.endTime) : start;
+function parseAllDayWallDate(value: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return new Date(value);
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+}
+
+/**
+ * Convert a timeline event to browser display dates.
+ * Timed instants use normal UTC→system-zone conversion. All-day values retain
+ * their RFC calendar date instead of shifting into the previous/next local day.
+ */
+export function timelineEventDateRange(event: TimelineItem) {
+  const parse = event.isAllDay ? parseAllDayWallDate : (value: string) => new Date(value);
+  const start = parse(event.startTime);
+  const end = event.endTime ? parse(event.endTime) : start;
   return { start, end };
 }
 
@@ -110,12 +122,12 @@ export function eventOverlapsRange(
   rangeStart: Date,
   rangeEnd: Date,
 ) {
-  const { start, end } = eventRange(event);
+  const { start, end } = timelineEventDateRange(event);
   return start < rangeEnd && end >= rangeStart;
 }
 
 export function eventStartsOnDay(event: TimelineItem, day: Date): boolean {
-  const { start } = eventRange(event);
+  const { start } = timelineEventDateRange(event);
   return start >= day && start < addDays(day, 1);
 }
 

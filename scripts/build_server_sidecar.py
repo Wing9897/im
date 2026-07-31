@@ -51,6 +51,8 @@ def main() -> None:
             "--collect-all=telethon",
             "--collect-all=feedparser",
             "--collect-all=imap_tools",
+            "--collect-all=icalendar",
+            "--collect-all=tzdata",
         ]
     )
     bundled = DIST_DIR / "intelligence-monitor-server" / "_internal" / "VERSION"

@@ -1,7 +1,10 @@
 import { useState, type CSSProperties } from "react";
 
 import { FloatingTooltip } from "../../../components/common/FloatingTooltip";
-import type { TimelineScale } from "../../../domain/timeline/dateUtils";
+import {
+  timelineEventDateRange,
+  type TimelineScale,
+} from "../../../domain/timeline/dateUtils";
 import type { TimelineItem } from "../../../types";
 import {
   buildTooltipContent,
@@ -74,9 +77,16 @@ export function GanttEventRow({
       ))}
 
       {row.occurrences.map((event) => {
+        const { start, end } = timelineEventDateRange(event);
+        const displayEnd =
+          event.isAllDay && event.endTime && end > start
+            ? new Date(end.getTime() - 1)
+            : event.endTime
+              ? end
+              : null;
         const position = computeEventBarPosition(
-          new Date(event.startTime),
-          event.endTime ? new Date(event.endTime) : null,
+          start,
+          displayEnd,
           timeScale,
           rangeStart,
           columnCount,

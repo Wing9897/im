@@ -96,7 +96,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `api/routes/task_preset_data.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — generated from [`shared/task_presets.json`](../shared/task_presets.json) via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v3** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), evolution entries in `db/migrations.py`（wipe-floor：empty `SCHEMA_MIGRATIONS`；prior stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v4** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), evolution entries in `db/migrations.py`（wipe-floor：empty `SCHEMA_MIGRATIONS`；prior stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories (re-exported from `migrations` for callers/tests) |
 | `schema_progress.py` | Upgrade-gate progress DTO (`phase` / `percent` / `message` keys); pair with top-level `schema_lifecycle.py` (boot gate — stays outside `db/` so lifespan／UI progress stay co-located with the gate owner) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -120,7 +120,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `agent/tool_args.py` | Coercion for LLM-supplied tool arguments (int / bool / optional / camelCase-or-snake_case key aliases) — the one implementation every `tools_*` module uses |
 | `web_search/` | Multi-provider web search clients (DuckDuckGo default, Brave optional) for Agent tools |
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
-| `calendar/` | Shared calendar package: `query` (read／merge), `rrule` (validate／expand), `normalize` (wire-shape builder). **Write／dismiss stay at top level:** `user_events.py` + `timeline_dismissals.py` (multi-consumer; not folded into `calendar/` to keep read-path package focused). |
+| `calendar/` | Shared calendar package: `query` (read／merge), `rrule` (validate／expand), `normalize` (wire-shape builder), `ics` (RFC 5545 parse／normalize), and `imports` (preview／atomic UID upsert). **Manual write／dismiss stay at top level:** `user_events.py` + `timeline_dismissals.py`. |
 | `services/task_writes.py` | Task-write rules shared by `POST/PUT /api/v1/tasks` and the calendar agent tools: RRULE validation + canonical storage (no `RRULE:` prefix), recurring-only recurrence gate, `HH:MM` clock normalize, calendar_task field clearing |
 | `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
 | `user_events.py` | Shared CRUD for manual UI + assistant calendar tools (wire shape via `wire/serializers.serialize_user_event`) |
@@ -248,12 +248,32 @@ A thin **Electron** wrapper that provides the native desktop experience:
 3. Opens a `BrowserWindow` pointing at the server's URL
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
-6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → parse first VEVENT (or inline query; optional `worksetId` ownership hint) → shared「加入日曆／選工作集」dialog → `POST /api/v1/user-events`. Not a calendar sync client (no webcal subscribe / CalDAV).
+6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar-imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
 7. **Packaging:** `electron-builder` targets Windows (NSIS), macOS (DMG/zip), Linux (AppImage/deb). The PyInstaller sidecar must be built on each OS. CI matrix packages all three; unsigned by default.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`.
 
-The desktop shell still contains no analysis business logic — import parsing is a thin OS bridge into the existing user-event UI.
+The desktop shell still contains no calendar business parser. RFC 5545 interpretation, preview diffs, UID idempotency, and the transaction live in the Python server.
+
+#### ICS import support and limits
+
+| Topic | Behavior |
+|-------|----------|
+| Input bounds | UTF-8 only; maximum **2 MiB** and **2,000 VEVENTs**. Desktop checks bytes before IPC and while downloading; server rechecks both limits. |
+| Supported input | Multi-event VCALENDAR; escaped／folded text; UTC, floating DATE-TIME, IANA `TZID`, embedded `VTIMEZONE`, `VALUE=DATE` all-day and multi-day events, `DTEND`／`DURATION`; RRULE `DAILY`／`WEEKLY`／`MONTHLY`／`YEARLY` with `INTERVAL`／`BYDAY`／`BYMONTHDAY`／`BYMONTH`／`COUNT` or `UNTIL`; `EXDATE` and `RDATE` date/date-time values. |
+| Persistence | No RRULE → `user_events(origin='ics')`; RRULE → `analysis_tasks(analysis_mode='recurring')`. UTC instants are persisted for timed values; original local anchor, TZID／VTIMEZONE, all-day dates, exceptions, UID, source, and fingerprint are retained where recurrence expansion needs them. |
+| Idempotency | `(ics_source, ics_uid)` is unique per target table. Preview reports create/update/unchanged and field diffs; commit reparses and verifies each preview fingerprint. Updates preserve the existing event/task id; all selected writes share one SQLite transaction. |
+| Explicitly unsupported | `RECURRENCE-ID` override instances, duplicate supported UIDs in one file, missing UID, PERIOD-valued RDATE/EXDATE, mixed DATE/DATE-TIME boundaries, unsupported RRULE components/frequencies. They remain visible with warnings and cannot be selected; they are never silently imported. |
+| Floating time | Interpreted in the **server host system timezone** and shown with a warning. Desktop-host mode normally matches the user's machine; remote-server mode may not. |
+| External sync | One-shot import only. No subscription refresh, webcal, CalDAV, provider OAuth, attendee updates, alarm import, or bidirectional synchronization. |
+
+Remote `url=` deep links accept only public HTTP(S) targets. Electron resolves the hostname, rejects credentials and any private／loopback／link-local／reserved address (including IPv4-mapped IPv6), pins the validated address for the connection, and repeats validation after every redirect. Downloads allow at most 3 redirects, have a 20-second total/idle timeout, and enforce the 2 MiB limit from both `Content-Length` and streamed bytes. This deliberately prevents calendar links from probing localhost, LAN services, or cloud metadata endpoints.
+
+#### Weather best-effort behavior
+
+Month weather is optional decoration, never a calendar availability dependency. `useMonthWeather` intersects the visible month with today through the 16-day forecast window; a historical or far-future month makes no forecast request. Requests are abortable, deduplicated, successful results are cached for 30 minutes, and failures for 30 seconds. Failures may remain in hook diagnostics but do not produce a Timeline toast or block Calendar／Board rendering.
+
+The server clips requests to the same available window, returns `200` with empty parallel `daily` arrays when there is no intersection, reuses one `aiohttp` session, and caches successes for 15 minutes. Provider/network failures are logged and returned as structured `weather_*` errors; the frontend consumes them silently.
 
 ## Scripts (`scripts/`)
 
@@ -332,7 +352,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `trending_topics` | Extracted trending topics from analysis |
 | `topic_messages` | Topic ↔ message associations |
 | `analysis_events` | Unified event findings (optional `start_time` + optional map coordinates) |
-| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `project` project ticks, `a2a` A2A agent channel; `workset_id` NOT NULL ownership; optional `task_id` provenance → event/recurring/calendar_task/project) |
+| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `project` project ticks, `a2a` A2A agent channel, `ics` one-shot imports; `workset_id` NOT NULL ownership; optional `task_id` provenance; imported UID/source/fingerprint + all-day/TZID metadata) |
 | `timeline_dismissals` | Soft-dismiss markers for timeline (`source` + `event_id`; does not delete source rows) |
 | `admin_accounts` | Singleton household admin (normalized username + argon2 password hash) |
 | `device_sessions` | Device sessions (refresh token hash, expiry, revoke) |
@@ -352,23 +372,46 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 Authority: `server/db/schema_ddl.py`. Fingerprint: `server/db/schema_fingerprint.py`. Evolution: `server/db/migrations.py`. Content-only migrations remain in `server/db/data_migrations.py`.
 
-When `migration_pending(user_version)` for a **registered** prior version, startup pauses collector/scheduler and shows the upgrade-gate UI until `POST /api/v1/system/schema/upgrade` succeeds (backup → apply → stamp → validate; failure restores baseline). **Current stamp is 3** with an **empty** `SCHEMA_MIGRATIONS` (wipe-floor: DDL including builtin `__user__` is sole truth). Stamped versions other than `0`／`3`（current） hard-reject — including prior 1–2 and legacy 4–24 with no in-place path. Public identity is `schemaSemver` (`SCHEMA_SEMVER`, same SemVer shape as product `VERSION`); `PRAGMA user_version` stays the integer stamp.
+When `migration_pending(user_version)` for a **registered** prior version, startup pauses collector/scheduler and shows the upgrade-gate UI until `POST /api/v1/system/schema/upgrade` succeeds (backup → apply → stamp → validate; failure restores baseline). **Current stamp is 4** with an **empty** `SCHEMA_MIGRATIONS` (wipe-floor: DDL including builtin `__user__` is sole truth). Stamped versions other than `0`／`4`（current） hard-reject — including prior 1–3 and legacy 5–24 with no in-place path. Public identity is `schemaSemver` (`SCHEMA_SEMVER`, same SemVer shape as product `VERSION`); `PRAGMA user_version` stays the integer stamp.
 
 #### Version support
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **3** (current) | Full runtime (`schemaSemver` = `0.1.0-beta.6`) |
+| **4** (current) | Full runtime (`schemaSemver` = `0.1.0-beta.6`) |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
-| **Any other** (incl. prior 1–2 and legacy 4–24) | Hard reject — explicit DB reset (no in-place path) |
+| **Any other** (incl. prior 1–3 and legacy 5–24) | Hard reject — explicit DB reset (no in-place path) |
 
 #### Migration steps
 
 | From → To | Changes |
 |-----------|---------|
-| *(none)* | Wipe-floor stamp 3: empty live `SCHEMA_MIGRATIONS` |
+| *(none)* | Wipe-floor stamp 4: empty live `SCHEMA_MIGRATIONS` |
 
-**Stamp 3 is the wipe-only floor** for this beta ownership baseline: there is no in-place path from prior stamps (1–2 or legacy 4–24). Gate UX (`SchemaLifecycle`, baseline backup, `SchemaUpgradeGate.tsx`, `/api/v1/system/schema/*`) remains live for future evidenced `MigrationStep` chains.
+**Stamp 4 is the wipe-only floor** for the calendar-import baseline: there is no in-place path from prior stamps (1–3 or legacy 5–24). Gate UX (`SchemaLifecycle`, baseline backup, `SchemaUpgradeGate.tsx`, `/api/v1/system/schema/*`) remains live for future evidenced `MigrationStep` chains.
+
+#### Schema v4 backup and explicit reset
+
+There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed, then copy the data directory **outside every Intelligence Monitor data directory**. Do not put the safety copy beside the database with a `.bak` name: the reset helper intentionally includes local schema-backup artifacts in its deletion inventory.
+
+Windows packaged-host example:
+
+```powershell
+$source = Join-Path $env:APPDATA "Intelligence Monitor"
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-v3-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+Copy-Item $source $backup -Recurse
+```
+
+For an overridden deployment, back up `INTELLIGENCE_MONITOR_DATA_DIR` (and any separate `INTELLIGENCE_MONITOR_DB`／`INTELLIGENCE_MONITOR_SESSIONS_DIR`) instead. Verify the external copy contains `intelligence_monitor.db` and any required `sessions`／configuration files.
+
+Reset is always two explicit steps from the repository root:
+
+```powershell
+uv run python scripts/reset_local_databases.py          # dry-run: inspect every target
+uv run python scripts/reset_local_databases.py --apply  # destructive only after review
+```
+
+The helper clears known databases, WAL/SHM files, local backup artifacts, Telegram sessions, `secret.key`, and `connection.json`; restart creates a fresh v4 database and requires admin registration／provider login again. Restoring an old stamped database does not upgrade it—it restores the original unsupported state. Keep the external backup only for manual data recovery/audit, never point the v4 runtime at it directly.
 
 Structure baked into the current baseline: platform `CHECK` on `accounts` / `channels` / `messages`, `analysis_time_range` / `app_logs.level` CHECKs, `action_trigger_history` FKs, retention ASC / `updated_at` indexes, the effective-time retention indexes `idx_events_effective_time` / `idx_user_events_effective_time`, `idx_events_task_version_has_coords`, `timeline_dismissals`, `admin_accounts`, device-session tables, `access_api_keys` (with scopes), `a2a_audit_log` (with a `key_id` FK → `access_api_keys` and a retention TTL), `assistant_device_stores`, `ui_prefs`, `user_events.task_id`, `user_events.workset_id`, `user_events.origin` including `project`, `recurring`／`calendar_task`／`project` analysis modes, `analysis_tasks.parent_task_id`, `worksets` (with `is_system` + builtin `__user__`) + `analysis_tasks.workset_id`, nullable per-task scheduling overrides on `analysis_tasks` (`project_wave_interval_seconds`／`batch_overlap_count`／`analysis_trigger_threshold`／`analysis_batch_message_limit`／`analysis_strategy_mode`), `analysis_batches.agent_message`／`tool_calls_json`, and the claim-path index `idx_batches_task_version_status_created`. Pairing-code table and the redundant `idx_batches_status` removed. `analysis_time_range` and message filters accept only canonical offsets (`7d`／`30d`; no `7days`／`30days`).
 
@@ -390,14 +433,13 @@ Structure baked into the current baseline: platform `CHECK` on `accounts` / `cha
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v3 DDL, validate its full fingerprint, then stamp v3 | Schema creation and v3 stamp |
-| Unstamped current, version 0 | Require the exact v3 fingerprint and preserve all domain data | v3 stamp only |
-| Current, version 3 | Validate the exact v3 fingerprint on every startup | None |
-| Prior, version 1–2 | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
-| Prior / legacy stamps (4–24, …) | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
-| Incomplete/lookalike version 0 or 3 | Reject with table/column/index/foreign-key mismatch categories | None |
+| Empty, version 0 | Create v4 DDL, validate its full fingerprint, then stamp v4 | Schema creation and v4 stamp |
+| Unstamped current, version 0 | Require the exact v4 fingerprint and preserve all domain data | v4 stamp only |
+| Current, version 4 | Validate the exact v4 fingerprint on every startup | None |
+| Prior, version 1–3 | Hard-reject via `ensure_schema` / `SchemaBaselineError`; use explicit reset | None |
+| Incomplete/lookalike version 0 or 4 | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
-| Future evidenced migration | Add an ordered, contiguous one-version `MigrationStep` chain that **ends at** the new `CURRENT_SCHEMA_VERSION`, then stamp only after successful work | Registry ends at v3 |
+| Future evidenced migration | Add an ordered, contiguous one-version `MigrationStep` chain that **ends at** the new `CURRENT_SCHEMA_VERSION`, then stamp only after successful work | Registry ends at v4 |
 
 #### Adding a MigrationStep (checklist)
 

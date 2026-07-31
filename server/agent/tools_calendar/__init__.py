@@ -3,19 +3,15 @@
 Handlers live in :mod:`.handlers`, the LLM-facing JSON schemas in :mod:`.schemas`.
 Importers keep using ``server.agent.tools_calendar`` for both.
 
-Limit aliases (``DEFAULT_LIST_LIMIT`` / ``DEFAULT_WINDOW_LIMIT`` / ``HARD_CAP``)
-re-export the calendar policy constants from :mod:`server.agent.tool_limits`.
+``HARD_CAP`` re-exports ``CALENDAR_RESULT_HARD_CAP`` for tests／callers that
+still import the short alias from this package.
 """
 
 from __future__ import annotations
 
 from typing import Any, Awaitable, Callable
 
-from server.agent.tool_limits import (
-    CALENDAR_DEFAULT_LIST_LIMIT,
-    CALENDAR_DEFAULT_WINDOW_LIMIT,
-    CALENDAR_RESULT_HARD_CAP,
-)
+from server.agent.tool_limits import CALENDAR_RESULT_HARD_CAP as HARD_CAP
 from server.agent.tools_calendar.handlers import (
     _tool_create_event,
     _tool_create_recurring_task,
@@ -31,10 +27,6 @@ from server.agent.tools_calendar.handlers import (
 )
 from server.agent.tools_calendar.schemas import TOOL_SCHEMAS
 from server.db.database import Database
-
-DEFAULT_LIST_LIMIT = CALENDAR_DEFAULT_LIST_LIMIT
-DEFAULT_WINDOW_LIMIT = CALENDAR_DEFAULT_WINDOW_LIMIT
-HARD_CAP = CALENDAR_RESULT_HARD_CAP
 
 ToolHandler = Callable[[Database, dict[str, Any]], Awaitable[dict[str, Any]]]
 
@@ -55,8 +47,6 @@ TOOL_HANDLERS: dict[str, ToolHandler] = {
 TOOL_NAMES = frozenset(TOOL_HANDLERS)
 
 __all__ = [
-    "DEFAULT_LIST_LIMIT",
-    "DEFAULT_WINDOW_LIMIT",
     "HARD_CAP",
     "TOOL_HANDLERS",
     "TOOL_NAMES",

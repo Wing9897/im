@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import {
-  intelligenceSelectedSourcesFilter,
-  type IntelligenceSelectedSources,
-} from "../../domain/ui/namedSourceFilters";
+import { intelligenceSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
@@ -57,8 +55,8 @@ export function useIntelligenceFeed() {
     storage: "session",
   });
   const [selectedSources, setSelectedSourcesState] =
-    useState<IntelligenceSelectedSources>(() => intelligenceSelectedSourcesFilter.load());
-  const setSelectedSources = useCallback((ids: IntelligenceSelectedSources) => {
+    useState<SourceFilterSelection>(() => intelligenceSelectedSourcesFilter.load());
+  const setSelectedSources = useCallback((ids: SourceFilterSelection) => {
     setSelectedSourcesState(ids);
     intelligenceSelectedSourcesFilter.save(ids);
   }, []);

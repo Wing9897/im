@@ -1,24 +1,15 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent, CalendarOccurrence } from "../../types";
-import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import {
   dayWindowIso,
   paddedMonthWindowIso,
 } from "../../domain/timeline/boardFetchWindows";
-import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
-import { SourceFilterDialog } from "../../components/SourceFilterDialog";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
-import {
-  fetchMergedTimedBoardEvents,
-  withResolvedUserEventTaskNames,
-} from "../../domain/timeline/timedEventMerge";
-import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
-import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
+import { fetchMergedTimedBoardEvents } from "../../domain/timeline/timedEventMerge";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardSourceFilter } from "../useBoardSourceFilter";
-import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
+import { useBoardTimedEventsWidget } from "../useBoardTimedEventsWidget";
+import { BOARD_POLL_MS } from "../useBoardWidgetPoll";
 import { focusBoardEvent } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
@@ -41,6 +32,7 @@ function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | n
     startTime: event.startTime,
     endTime: event.endTime ?? event.startTime,
     isAllDay: event.isAllDay ?? false,
+    timezone: event.timezone ?? null,
     location: event.location,
     description: event.body || null,
     rrule: "",
@@ -54,7 +46,8 @@ function CalendarBoardWidgetContent({
   mode,
 }: BoardWidgetProps & { mode: CalendarMode }) {
   const { t } = useTranslation();
-  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
+  const modeAria =
+    mode === "month" ? t("board.calendarWidget.monthAria") : t("board.calendarWidget.dayAria");
   const fetcher = useCallback(() => {
     const { startDate, endDate } = mode === "day" ? dayWindowIso() : paddedMonthWindowIso();
     return fetchMergedTimedBoardEvents({
@@ -63,27 +56,14 @@ function CalendarBoardWidgetContent({
       limit: mode === "day" ? 100 : 200,
     });
   }, [mode]);
-  const { data: fetchedEvents, error, loading, refresh } = useBoardWidgetPoll<AnalysisEvent[]>(
-    fetcher,
-    BOARD_POLL_MS.standard,
-    { active },
-  );
-  const { tasks, worksets } = useTaskCatalog();
-  const taskNameById = useTaskNameById();
-  const worksetNameById = useWorksetNameById();
-  const generalWorksetLabel = useGeneralWorksetLabel();
-  const events = useMemo(
-    () =>
-      fetchedEvents
-        ? withResolvedUserEventTaskNames(
-            fetchedEvents,
-            taskNameById,
-            generalWorksetLabel,
-            worksetNameById,
-          )
-        : null,
-    [fetchedEvents, taskNameById, generalWorksetLabel, worksetNameById],
-  );
+  const { selection, events, filteredEvents, loading, error, refresh } =
+    useBoardTimedEventsWidget({
+      widgetId: widgetId ?? "calendar",
+      active,
+      fetcher,
+      pollMs: BOARD_POLL_MS.standard,
+      ariaLabelPrefix: modeAria,
+    });
 
   const handleSelectOccurrence = useCallback(
     (occurrence: CalendarOccurrence) => {
@@ -101,43 +81,13 @@ function CalendarBoardWidgetContent({
     [events],
   );
 
-  const filterOptions = useMemo(
-    () => catalogOrEventSourceOptions(tasks, events),
-    [events, tasks],
-  );
   const occurrences = useMemo(
-    () => filterBySource(events ?? []).map(eventToCalendarOccurrence).filter(
-      (event): event is CalendarOccurrence => event !== null,
-    ),
-    [events, filterBySource],
+    () =>
+      filteredEvents
+        .map(eventToCalendarOccurrence)
+        .filter((event): event is CalendarOccurrence => event !== null),
+    [filteredEvents],
   );
-  const modeAria =
-    mode === "month" ? t("board.calendarWidget.monthAria") : t("board.calendarWidget.dayAria");
-  const headerActions = useMemo(
-    () => (
-      <>
-        <SourceFilterDialog
-          tasks={filterOptions}
-          worksets={worksets.map((ws) => ({
-            id: ws.id,
-            name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
-            isSystem: ws.isSystem,
-          }))}
-          expandTasks={tasks.map((task) => ({
-            id: task.id,
-            name: task.name,
-            worksetId: task.worksetId ?? null,
-          }))}
-          selection={selection}
-          onChange={setSelection}
-          ariaLabelPrefix={modeAria}
-          variant="board"
-        />
-      </>
-    ),
-    [filterOptions, modeAria, selection, setSelection, tasks, generalWorksetLabel, worksets],
-  );
-  useBoardWidgetHeaderActions(headerActions);
 
   return (
     <div className="board-widget-body board-widget-calendar" data-testid="board-calendar-widget">

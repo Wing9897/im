@@ -7,7 +7,7 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
 
-function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
+export function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
   return [...events].sort(
     (a, b) =>
       new Date(getEventTimestamp(b)).getTime() - new Date(getEventTimestamp(a)).getTime(),
@@ -59,6 +59,8 @@ export function userEventToBoardEvent(
     updatedAt: event.updatedAt,
     source: "user",
     origin: event.origin,
+    isAllDay: event.isAllDay,
+    timezone: event.timezone ?? null,
     dismissed: Boolean(event.dismissed),
     worksetId,
   };
@@ -131,6 +133,7 @@ export function calendarOccurrenceToBoardEvent(
     updatedAt: occurrence.startTime,
     source: "recurring",
     isAllDay: occurrence.isAllDay,
+    timezone: occurrence.timezone ?? null,
     dismissed: Boolean(occurrence.dismissed),
   };
 }
@@ -142,7 +145,8 @@ function timedKey(
   if (!taskId || !startTime) {
     return null;
   }
-  return `${taskId}|${startTime}`;
+  const timestamp = new Date(startTime).getTime();
+  return `${taskId}|${Number.isNaN(timestamp) ? startTime : timestamp}`;
 }
 
 /**

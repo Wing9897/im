@@ -3,7 +3,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../i18n";
-import { ProfileAccessKeysSection } from "./ProfileAccessKeysSection";
+import { AccountAccessKeysSection } from "./AccountAccessKeysSection";
 import { _resetConnectionStoreForTests } from "../../domain/connection/connectionStore";
 
 const fetchAccessKeys = vi.fn();
@@ -20,7 +20,7 @@ vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock(),
 );
 
-describe("ProfileAccessKeysSection", () => {
+describe("AccountAccessKeysSection", () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -55,7 +55,7 @@ describe("ProfileAccessKeysSection", () => {
   function renderSection() {
     act(() => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(ProfileAccessKeysSection)),
+        createElement(I18nextProvider, { i18n }, createElement(AccountAccessKeysSection)),
       );
     });
   }

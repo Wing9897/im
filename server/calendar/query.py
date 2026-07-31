@@ -101,6 +101,7 @@ async def list_calendars(db: Database) -> list[dict[str, Any]]:
             "isAllDay": bool(row.get("event_is_all_day")),
             "eventStartTime": row.get("event_start_time"),
             "eventEndTime": row.get("event_end_time"),
+            "timezone": row.get("event_timezone"),
         }
         for row in rows
     ]

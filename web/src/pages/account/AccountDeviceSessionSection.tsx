@@ -18,13 +18,13 @@ import { resetDesktopConnectionAfterLogout } from "../../electron/electronConnec
 import { useToast } from "../../context/ToastContext";
 import { toErrorMessage } from "../../utils/errors";
 
-interface ProfileDeviceSessionSectionProps {
+interface AccountDeviceSessionSectionProps {
   onLoggedOut?: () => void;
 }
 
-export function ProfileDeviceSessionSection({
+export function AccountDeviceSessionSection({
   onLoggedOut,
-}: ProfileDeviceSessionSectionProps) {
+}: AccountDeviceSessionSectionProps) {
   const { t } = useTranslation("common");
   const { showToast } = useToast();
   const [devices, setDevices] = useState<SetupDevice[]>([]);

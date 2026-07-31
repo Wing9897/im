@@ -10,7 +10,7 @@ import { setAppLocale } from "../../i18n/locale";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import type { ViewMode } from "../../types";
 import type { TimeFilterPreset } from "../../components/TimeFilter";
-import type { IntelligenceSelectedSources } from "../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 
 vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
@@ -25,8 +25,8 @@ interface ToolbarOpts {
   onTimeFilterChange?: (preset: TimeFilterPreset) => void;
   sortMode?: "event_time" | "analyzed_at";
   onSortModeChange?: (mode: "event_time" | "analyzed_at") => void;
-  selectedSources?: IntelligenceSelectedSources;
-  setSelectedSources?: (ids: IntelligenceSelectedSources) => void;
+  selectedSources?: SourceFilterSelection;
+  setSelectedSources?: (ids: SourceFilterSelection) => void;
   intelligenceTasks?: { id: string; name: string }[];
   isBusy?: boolean;
 }

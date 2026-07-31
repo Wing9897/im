@@ -7,14 +7,22 @@ import { setAppLocale } from "../../../i18n/locale";
 import { buildCalendarDays, buildWeekDays } from "../../../domain/timeline/dateUtils";
 import { makeEvent } from "../../../test/timelineTestHelpers";
 
+const { mockUseErrorToast } = vi.hoisted(() => ({
+  mockUseErrorToast: vi.fn(),
+}));
+
 vi.mock("../../../hooks/useMonthWeather", () => ({
   useMonthWeather: () => ({
     weatherByDate: {
       "2025-01-15": { code: 0, high: 25, low: 18 },
     },
-    error: null,
+    error: "weather offline",
   }),
   weatherIcon: () => "☀️",
+}));
+
+vi.mock("../../../hooks/useErrorToast", () => ({
+  useErrorToast: mockUseErrorToast,
 }));
 
 const { TimelineCalendarView } = await import("./TimelineCalendarView");
@@ -64,6 +72,7 @@ function render(props: Props) {
 
 describe("TimelineCalendarView", () => {
   beforeEach(async () => {
+    mockUseErrorToast.mockClear();
     setAppLocale("zh-Hant");
     await i18n.changeLanguage("zh-Hant");
   });
@@ -215,6 +224,12 @@ describe("TimelineCalendarView", () => {
       const container = render(makeProps());
 
       expect(container.querySelector('[aria-label="天氣 25 至 18 度"]')?.textContent).toContain("25°");
+    });
+
+    it("does not turn a best-effort weather failure into an error toast", () => {
+      render(makeProps());
+
+      expect(mockUseErrorToast).not.toHaveBeenCalled();
     });
 
     it("renders events in the correct day cell in month view", () => {

@@ -21,6 +21,7 @@ dependencies = [
     "geopy==2.4.1",
     "cryptography==49.0.0",
     "argon2-cffi==25.1.0",
+    "icalendar==7.2.2",
 ]
 
 [project.optional-dependencies]

@@ -63,7 +63,7 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
         if not any(str(i.get("id")) == pid for i in scoped):
             row = await db.fetch_one(
                 "SELECT id, name, analysis_mode, is_active, rrule, event_location, "
-                "event_description, event_is_all_day, event_start_time, event_end_time "
+                "event_description, event_is_all_day, event_start_time, event_end_time, event_timezone "
                 "FROM analysis_tasks WHERE id = ?",
                 (pid,),
             )
@@ -81,6 +81,7 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
                         "isAllDay": bool(row.get("event_is_all_day")),
                         "eventStartTime": row.get("event_start_time"),
                         "eventEndTime": row.get("event_end_time"),
+                        "timezone": row.get("event_timezone"),
                     },
                 )
         items = scoped

@@ -148,5 +148,52 @@
       "startInvalid": "開始時間格式無效",
       "endInvalid": "結束時間格式無效"
     }
+  },
+  "calendarImport": {
+    "title": "匯入日曆",
+    "closeAria": "關閉日曆匯入",
+    "cancel": "取消",
+    "done": "完成",
+    "previewing": "正在檢查日曆檔案…",
+    "committing": "正在匯入…",
+    "commit": "匯入所選項（{count}）",
+    "importFailed": "無法讀取日曆匯入",
+    "previewFailed": "無法預覽日曆匯入",
+    "commitFailed": "無法提交日曆匯入",
+    "selectAtLeastOne": "請至少選擇一個受支援的項目",
+    "importSaved": "已匯入 {count} 個日曆項目",
+    "unnamedCalendar": "日曆檔案",
+    "sourceSummary": "{source} · {size} 位元組",
+    "previewSummary": "共 {count} 個事件 · {importable} 個可匯入",
+    "start": "開始",
+    "end": "結束",
+    "time": "時間",
+    "allDay": "全日",
+    "systemTimezone": "系統時區",
+    "rrule": "循環規則",
+    "recurrenceExceptions": "排除日期 {excluded} 個 · 追加日期 {added} 個",
+    "changes": "差異",
+    "resultTitle": "匯入結果",
+    "resultSummary": "已提交 {count} 個 · 新增 {created} 個 · 更新 {updated} 個 · 無變化 {unchanged} 個",
+    "source": {
+      "file": "本機檔案",
+      "url": "日曆連結",
+      "deeplink": "應用程式連結"
+    },
+    "target": {
+      "user_event": "單次事件",
+      "recurring_task": "循環任務"
+    },
+    "action": {
+      "create": "新增",
+      "update": "更新",
+      "unchanged": "無變化",
+      "unsupported": "不支援"
+    },
+    "resultAction": {
+      "created": "已新增",
+      "updated": "已更新",
+      "unchanged": "無變化"
+    }
   }
 }

@@ -1,64 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { icsDateToIso, parseIcsText, unfoldIcsLines } from '../ics-parse';
+import { decodeIcsBytes, MAX_ICS_BYTES, validateIcsContent } from '../ics-parse';
 
 describe('ics-parse', () => {
-  it('unfolds folded lines', () => {
-    const lines = unfoldIcsLines('SUMMARY:Hello\r\n  World\r\nLOCATION:Room');
-    expect(lines).toEqual(['SUMMARY:Hello World', 'LOCATION:Room']);
+  it('returns original UTF-8 content without parsing or normalizing it', () => {
+    const content = 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:你好\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+    expect(decodeIcsBytes(Buffer.from(content, 'utf8'))).toBe(content);
   });
 
-  it('parses UTC DATE-TIME', () => {
-    expect(icsDateToIso('20260729T100000Z', '')).toBe('2026-07-29T10:00:00Z');
+  it('rejects invalid UTF-8', () => {
+    expect(() => decodeIcsBytes(Uint8Array.from([0xc3, 0x28]))).toThrow('valid UTF-8');
   });
 
-  it('parses floating DATE-TIME and DATE', () => {
-    expect(icsDateToIso('20260729T100000', '')).toBe('2026-07-29T10:00:00');
-    expect(icsDateToIso('20260729', 'VALUE=DATE')).toBe('2026-07-29T00:00:00');
+  it('rejects empty and NUL-bearing payloads', () => {
+    expect(() => validateIcsContent(' \r\n')).toThrow('empty');
+    expect(() => validateIcsContent('BEGIN:VCALENDAR\0END:VCALENDAR')).toThrow('NUL');
   });
 
-  it('parses a minimal VEVENT', () => {
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'BEGIN:VEVENT',
-      'SUMMARY:Standup',
-      'DTSTART:20260729T090000Z',
-      'DTEND:20260729T093000Z',
-      'LOCATION:Zoom',
-      'DESCRIPTION:Daily sync\\nBring notes',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\r\n');
-    const parsed = parseIcsText(ics);
-    expect(parsed).toEqual({
-      title: 'Standup',
-      startTime: '2026-07-29T09:00:00Z',
-      endTime: '2026-07-29T09:30:00Z',
-      location: 'Zoom',
-      body: 'Daily sync\nBring notes',
-      eventCount: 1,
-    });
-  });
-
-  it('keeps first VEVENT and notes extras', () => {
-    const ics = [
-      'BEGIN:VCALENDAR',
-      'BEGIN:VEVENT',
-      'SUMMARY:First',
-      'DTSTART:20260729T090000Z',
-      'END:VEVENT',
-      'BEGIN:VEVENT',
-      'SUMMARY:Second',
-      'DTSTART:20260730T090000Z',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ].join('\n');
-    const parsed = parseIcsText(ics);
-    expect(parsed?.title).toBe('First');
-    expect(parsed?.eventCount).toBe(2);
-    expect(parsed?.body).toContain('more event');
-  });
-
-  it('returns null without VEVENT', () => {
-    expect(parseIcsText('BEGIN:VCALENDAR\nEND:VCALENDAR')).toBeNull();
+  it('enforces the server-aligned byte limit', () => {
+    expect(() => decodeIcsBytes(new Uint8Array(MAX_ICS_BYTES + 1))).toThrow('byte limit');
   });
 });

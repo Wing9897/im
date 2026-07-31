@@ -7,6 +7,7 @@ import {
 } from "../../domain/gantt/ganttTimeGeometry";
 import i18n from "../../i18n";
 import { getDateTimeLocale } from "../../i18n/locale";
+import { timelineEventDateRange } from "../../domain/timeline/dateUtils";
 import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { asTimedAnalysisEvent, type AnalysisEvent, type TaskActivitySpan, type TimelineItem } from "../../types";
 import { isWorksetActivitySpan } from "../../types/analysis";
@@ -121,11 +122,17 @@ export function normalizeGanttActivities(spans: TaskActivitySpan[], now = Date.n
 }
 
 function eventToSegment(event: TimelineItem, now: number): GanttActivity | null {
-  const start = parseMs(event.startTime);
-  if (start === null) {
+  const range = timelineEventDateRange(event);
+  const start = range.start.getTime();
+  if (Number.isNaN(start)) {
     return null;
   }
-  const end = parseMs(event.endTime) ?? start;
+  const rawEnd = range.end.getTime();
+  const end = Number.isNaN(rawEnd)
+    ? start
+    : event.isAllDay && event.endTime && rawEnd > start
+      ? rawEnd - 1
+      : rawEnd;
   return {
     id: event.id,
     label: (event.title || "").trim() || i18n.t("common:board.gantt.untitled"),

@@ -2,19 +2,15 @@
  * Desktop calendar import bridge (preload `window.electronCalendarImport`).
  */
 
-export type CalendarImportDraft = {
-  title: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  body: string;
-  worksetId: string;
+export type CalendarImportPayload = {
+  content: string;
+  sourceId: string;
   source: "file" | "url" | "deeplink";
   sourceLabel: string;
 };
 
 export type CalendarImportMessage =
-  | { ok: true; draft: CalendarImportDraft }
+  | { ok: true; payload: CalendarImportPayload }
   | { ok: false; error: string; sourceLabel?: string };
 
 export interface ElectronCalendarImportApi {

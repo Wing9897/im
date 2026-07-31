@@ -8,17 +8,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import date
+import time
+from contextlib import asynccontextmanager
+from datetime import date, timedelta
 from typing import Any
 
 import aiohttp
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, FastAPI, Query
 
 from server.api.deps import API_DEPS
 from server.api.schemas.responses import WeatherForecastResponse
 from server.errors import http_error
-
-router = APIRouter(prefix="/api/v1/weather", tags=["weather"], dependencies=API_DEPS)
 
 _GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 _FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
@@ -28,8 +28,12 @@ _REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10, connect=4, sock_read=7)
 # Cap the whole multi-provider chain so a slow cascade cannot pin the event loop.
 _FORECAST_WALL_TIMEOUT_SECONDS = 25.0
 _MAX_FORECAST_DAYS = 62
+_FORECAST_WINDOW_DAYS = 16
+_FORECAST_CACHE_TTL_SECONDS = 15 * 60
 _MET_NO_USER_AGENT = "IntelligenceMonitor/1.0 (local desktop weather client)"
 _LOGGER = logging.getLogger(__name__)
+_HTTP_SESSION: aiohttp.ClientSession | None = None
+_FORECAST_CACHE: dict[tuple[str, date, date], tuple[float, dict[str, Any]]] = {}
 _LOCATION_ALIASES = {
     "臺北": "Taipei",
     "台北": "Taipei",
@@ -45,6 +49,85 @@ class WeatherProviderError(Exception):
     """A third-party provider failed; callers may still try a fallback."""
 
 
+@asynccontextmanager
+async def _weather_lifespan(_app: FastAPI):
+    """Keep one connection pool for all weather providers during app lifetime."""
+    global _HTTP_SESSION
+    previous_session = _HTTP_SESSION
+    session = aiohttp.ClientSession(timeout=_REQUEST_TIMEOUT)
+    _HTTP_SESSION = session
+    try:
+        yield
+    finally:
+        if _HTTP_SESSION is session:
+            _HTTP_SESSION = previous_session if previous_session and not previous_session.closed else None
+        await session.close()
+
+
+router = APIRouter(
+    prefix="/api/v1/weather",
+    tags=["weather"],
+    dependencies=API_DEPS,
+    lifespan=_weather_lifespan,
+)
+
+
+def _today() -> date:
+    return date.today()
+
+
+def _empty_forecast() -> WeatherForecastResponse:
+    return WeatherForecastResponse.model_validate(
+        {
+            "daily": {
+                "time": [],
+                "weather_code": [],
+                "temperature_2m_max": [],
+                "temperature_2m_min": [],
+            }
+        }
+    )
+
+
+def _forecast_intersection(start_date: date, end_date: date) -> tuple[date, date] | None:
+    window_start = _today()
+    window_end = window_start + timedelta(days=_FORECAST_WINDOW_DAYS - 1)
+    clipped_start = max(start_date, window_start)
+    clipped_end = min(end_date, window_end)
+    if clipped_start > clipped_end:
+        return None
+    return clipped_start, clipped_end
+
+
+def _clip_daily(daily: dict[str, Any], start_date: date, end_date: date) -> dict[str, list[Any]]:
+    """Keep parallel daily arrays aligned while trimming provider over-delivery."""
+    keys = ("time", "weather_code", "temperature_2m_max", "temperature_2m_min")
+    values = [daily.get(key) for key in keys]
+    if not all(isinstance(value, list) for value in values):
+        raise WeatherProviderError("每日預報格式無效")
+
+    arrays = [value for value in values if isinstance(value, list)]
+    clipped = {key: [] for key in keys}
+    row_count = min(len(value) for value in arrays)
+    for index in range(row_count):
+        day = str(arrays[0][index])
+        if start_date.isoformat() <= day <= end_date.isoformat():
+            for key, value in zip(keys, arrays, strict=True):
+                clipped[key].append(value[index])
+    return clipped
+
+
+def _cached_forecast(cache_key: tuple[str, date, date]) -> WeatherForecastResponse | None:
+    cached = _FORECAST_CACHE.get(cache_key)
+    if cached is None:
+        return None
+    expires_at, payload = cached
+    if expires_at <= time.monotonic():
+        _FORECAST_CACHE.pop(cache_key, None)
+        return None
+    return WeatherForecastResponse.model_validate(payload)
+
+
 async def _get_json(
     provider: str,
     url: str,
@@ -53,22 +136,32 @@ async def _get_json(
     headers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Fetch one provider, retrying transient failures once."""
+    global _HTTP_SESSION
+    if _HTTP_SESSION is None or _HTTP_SESSION.closed:
+        # Normal route calls initialize this in router lifespan. The fallback
+        # keeps direct helper use functional in focused unit tests.
+        _HTTP_SESSION = aiohttp.ClientSession(timeout=_REQUEST_TIMEOUT)
+    session = _HTTP_SESSION
     last_error: Exception | None = None
     for attempt in range(2):
         try:
-            async with aiohttp.ClientSession(timeout=_REQUEST_TIMEOUT, headers=headers) as session:
-                async with session.get(url, params=params, allow_redirects=False) as response:
-                    if response.status >= 400:
-                        body = (await response.text())[:200]
-                        error = WeatherProviderError(f"HTTP {response.status}: {body!r}")
-                        if response.status not in {408, 429} and response.status < 500:
-                            raise error
-                        last_error = error
-                    else:
-                        payload = await response.json(content_type=None)
-                        if isinstance(payload, dict):
-                            return payload
-                        raise WeatherProviderError("回應不是 JSON 物件")
+            async with session.get(
+                url,
+                params=params,
+                headers=headers,
+                allow_redirects=False,
+            ) as response:
+                if response.status >= 400:
+                    body = (await response.text())[:200]
+                    error = WeatherProviderError(f"HTTP {response.status}: {body!r}")
+                    if response.status not in {408, 429} and response.status < 500:
+                        raise error
+                    last_error = error
+                else:
+                    payload = await response.json(content_type=None)
+                    if isinstance(payload, dict):
+                        return payload
+                    raise WeatherProviderError("回應不是 JSON 物件")
         except WeatherProviderError:
             raise
         except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as exc:
@@ -231,7 +324,7 @@ async def forecast(
     start_date: date = Query(),
     end_date: date = Query(),
 ) -> WeatherForecastResponse:
-    """Resolve a city then return compact daily Open-Meteo forecasts."""
+    """Return the available intersection; valid out-of-window ranges are empty."""
     if end_date < start_date or (end_date - start_date).days + 1 > _MAX_FORECAST_DAYS:
         raise http_error(
             422,
@@ -239,18 +332,49 @@ async def forecast(
             error_code="weather_invalid_date_range",
         )
 
+    intersection = _forecast_intersection(start_date, end_date)
+    if intersection is None:
+        _LOGGER.debug(
+            "略過超出可預報窗口的天氣請求（地區=%r，範圍=%s..%s）",
+            location.strip(),
+            start_date,
+            end_date,
+        )
+        return _empty_forecast()
+
+    clipped_start, clipped_end = intersection
+    normalized_location = location.strip()
+    cache_key = (normalized_location.casefold(), clipped_start, clipped_end)
+    cached = _cached_forecast(cache_key)
+    if cached is not None:
+        _LOGGER.debug("使用天氣預報快取（地區=%r，範圍=%s..%s）", normalized_location, clipped_start, clipped_end)
+        return cached
+
     try:
         payload = await asyncio.wait_for(
-            _forecast_with_fallbacks(location.strip(), start_date, end_date),
+            _forecast_with_fallbacks(normalized_location, clipped_start, clipped_end),
             timeout=_FORECAST_WALL_TIMEOUT_SECONDS,
         )
-        return WeatherForecastResponse.model_validate(payload)
+        response_payload = {"daily": _clip_daily(payload["daily"], clipped_start, clipped_end)}
+        response = WeatherForecastResponse.model_validate(response_payload)
+        _FORECAST_CACHE[cache_key] = (
+            time.monotonic() + _FORECAST_CACHE_TTL_SECONDS,
+            response.model_dump(),
+        )
+        return response
     except asyncio.TimeoutError as exc:
-        _LOGGER.warning("天氣預報總逾時（地區=%r）", location.strip())
+        _LOGGER.warning("天氣預報總逾時（地區=%r）", normalized_location)
         raise http_error(
             502,
             "Weather provider timed out",
             error_code="weather_timeout",
+        ) from exc
+    except (KeyError, TypeError, ValueError, WeatherProviderError) as exc:
+        _LOGGER.warning("天氣供應商回傳無效資料（地區=%r）：%s", normalized_location, exc)
+        raise http_error(
+            502,
+            "Weather provider returned invalid data",
+            error_code="weather_unavailable",
         ) from exc
 
 

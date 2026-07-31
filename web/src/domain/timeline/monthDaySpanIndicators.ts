@@ -1,5 +1,10 @@
 import type { TimelineItem } from "../../types";
-import { addDays, isSameDay, startOfDay } from "./dateUtils";
+import {
+  addDays,
+  isSameDay,
+  startOfDay,
+  timelineEventDateRange,
+} from "./dateUtils";
 
 export type MonthDaySpanCounts = {
   /** Started before this day and continues after it (middle of a multi-day span). */
@@ -9,8 +14,7 @@ export type MonthDaySpanCounts = {
 };
 
 function eventBounds(event: TimelineItem): { start: Date; end: Date } {
-  const start = new Date(event.startTime);
-  const end = event.endTime ? new Date(event.endTime) : start;
+  const { start, end } = timelineEventDateRange(event);
   return { start, end: end < start ? start : end };
 }
 

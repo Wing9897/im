@@ -7,7 +7,7 @@ import { useToast } from "../../context/ToastContext";
 import { toErrorMessage } from "../../utils/errors";
 
 /** Account → Identity: change admin password (requires current password). */
-export function ProfileChangePasswordSection() {
+export function AccountChangePasswordSection() {
   const { t } = useTranslation("common");
   const { showToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState("");

@@ -3725,6 +3725,88 @@
         }
       }
     },
+    "/api/v1/calendar-imports/preview": {
+      "post": {
+        "tags": [
+          "calendar-imports"
+        ],
+        "summary": "Preview Import",
+        "operationId": "preview_import_api_v1_calendar_imports_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarImportInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarImportPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar-imports/commit": {
+      "post": {
+        "tags": [
+          "calendar-imports"
+        ],
+        "summary": "Commit Import",
+        "operationId": "commit_import_api_v1_calendar_imports_commit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarImportCommitBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarImportCommitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/user-events": {
       "get": {
         "tags": [
@@ -4879,7 +4961,7 @@
           "weather"
         ],
         "summary": "Forecast",
-        "description": "Resolve a city then return compact daily Open-Meteo forecasts.",
+        "description": "Return the available intersection; valid out-of-window ranges are empty.",
         "operationId": "forecast_api_v1_weather_forecast_get",
         "parameters": [
           {
@@ -6538,6 +6620,377 @@
         ],
         "title": "BoardPrefsResponse"
       },
+      "CalendarImportChangeResponse": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "before": {
+            "title": "Before"
+          },
+          "after": {
+            "title": "After"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field"
+        ],
+        "title": "CalendarImportChangeResponse"
+      },
+      "CalendarImportCommitBody": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "sourceId": {
+            "type": "string",
+            "title": "Sourceid",
+            "default": "ics"
+          },
+          "selections": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportSelectionBody"
+            },
+            "type": "array",
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Selections"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "content",
+          "selections"
+        ],
+        "title": "CalendarImportCommitBody"
+      },
+      "CalendarImportCommitItemResponse": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "user_event",
+              "recurring_task"
+            ],
+            "title": "Targettype"
+          },
+          "targetId": {
+            "type": "string",
+            "title": "Targetid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "created",
+              "updated",
+              "unchanged"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "targetType",
+          "targetId",
+          "action"
+        ],
+        "title": "CalendarImportCommitItemResponse"
+      },
+      "CalendarImportCommitResponse": {
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "title": "Sourceid"
+          },
+          "committedCount": {
+            "type": "integer",
+            "title": "Committedcount"
+          },
+          "createdCount": {
+            "type": "integer",
+            "title": "Createdcount"
+          },
+          "updatedCount": {
+            "type": "integer",
+            "title": "Updatedcount"
+          },
+          "unchangedCount": {
+            "type": "integer",
+            "title": "Unchangedcount"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportCommitItemResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sourceId",
+          "committedCount",
+          "createdCount",
+          "updatedCount",
+          "unchangedCount",
+          "results"
+        ],
+        "title": "CalendarImportCommitResponse"
+      },
+      "CalendarImportInput": {
+        "properties": {
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "sourceId": {
+            "type": "string",
+            "title": "Sourceid",
+            "default": "ics"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "content"
+        ],
+        "title": "CalendarImportInput"
+      },
+      "CalendarImportPreviewItemResponse": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "targetType": {
+            "type": "string",
+            "enum": [
+              "user_event",
+              "recurring_task"
+            ],
+            "title": "Targettype"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "unchanged",
+              "unsupported"
+            ],
+            "title": "Action"
+          },
+          "supported": {
+            "type": "boolean",
+            "title": "Supported"
+          },
+          "existingId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Existingid"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "startTime": {
+            "type": "string",
+            "title": "Starttime"
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endtime"
+          },
+          "isAllDay": {
+            "type": "boolean",
+            "title": "Isallday"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "exdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exdates"
+          },
+          "rdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rdates"
+          },
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportChangeResponse"
+            },
+            "type": "array",
+            "title": "Changes"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportWarningResponse"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid",
+          "title",
+          "targetType",
+          "action",
+          "supported",
+          "existingId",
+          "fingerprint",
+          "startTime",
+          "endTime",
+          "isAllDay",
+          "timezone",
+          "rrule",
+          "exdates",
+          "rdates",
+          "changes",
+          "warnings"
+        ],
+        "title": "CalendarImportPreviewItemResponse"
+      },
+      "CalendarImportPreviewResponse": {
+        "properties": {
+          "sourceId": {
+            "type": "string",
+            "title": "Sourceid"
+          },
+          "calendarName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendarname"
+          },
+          "eventCount": {
+            "type": "integer",
+            "title": "Eventcount"
+          },
+          "importableCount": {
+            "type": "integer",
+            "title": "Importablecount"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportPreviewItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarImportWarningResponse"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sourceId",
+          "calendarName",
+          "eventCount",
+          "importableCount",
+          "items",
+          "warnings"
+        ],
+        "title": "CalendarImportPreviewResponse"
+      },
+      "CalendarImportSelectionBody": {
+        "properties": {
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "uid",
+          "fingerprint"
+        ],
+        "title": "CalendarImportSelectionBody"
+      },
+      "CalendarImportWarningResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "CalendarImportWarningResponse"
+      },
       "CalendarOccurrenceResponse": {
         "properties": {
           "id": {
@@ -6567,6 +7020,17 @@
           "isAllDay": {
             "type": "boolean",
             "title": "Isallday"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
           },
           "location": {
             "anyOf": [
@@ -10104,6 +10568,75 @@
             ],
             "title": "Eventdescription"
           },
+          "eventTimezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventtimezone"
+          },
+          "eventStartLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstartlocal"
+          },
+          "eventEndLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendlocal"
+          },
+          "eventExdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventexdates"
+          },
+          "eventRdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventrdates"
+          },
+          "icsUid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icsuid"
+          },
+          "icsSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icssource"
+          },
           "includeInTimeline": {
             "type": "boolean",
             "title": "Includeintimeline",
@@ -10806,9 +11339,48 @@
               "manual",
               "assistant",
               "a2a",
-              "project"
+              "project",
+              "ics"
             ],
             "title": "Origin"
+          },
+          "isAllDay": {
+            "type": "boolean",
+            "title": "Isallday",
+            "default": false
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "icsUid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icsuid"
+          },
+          "icsSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icssource"
           },
           "taskId": {
             "type": "string",

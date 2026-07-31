@@ -5,10 +5,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import { findActivitySpan } from "../tasks/project/projectDetailModel";
-import {
-  timelineSelectedSourcesFilter,
-  type TimelineSelectedSources,
-} from "../../domain/ui/namedSourceFilters";
+import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { startOfDay } from "../../domain/timeline/dateUtils";
 import type {
   TimelineEventStatus,
@@ -70,10 +68,10 @@ export function useTimelinePageContainer() {
   const urlView = new URLSearchParams(location.search).get("view");
 
   // ─── Persisted UI state ────────────────────────────────────────────────────
-  const [selectedSources, setSelectedSourcesState] = useState<TimelineSelectedSources>(
+  const [selectedSources, setSelectedSourcesState] = useState<SourceFilterSelection>(
     () => timelineSelectedSourcesFilter.load(),
   );
-  const setSelectedSources = useCallback((ids: TimelineSelectedSources) => {
+  const setSelectedSources = useCallback((ids: SourceFilterSelection) => {
     setSelectedSourcesState(ids);
     timelineSelectedSourcesFilter.save(ids);
   }, []);

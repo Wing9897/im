@@ -14,7 +14,11 @@ class UserEventResponse(BaseModel):
     startTime: str
     endTime: str | None
     location: str | None
-    origin: Literal["manual", "assistant", "a2a", "project"]
+    origin: Literal["manual", "assistant", "a2a", "project", "ics"]
+    isAllDay: bool = False
+    timezone: str | None = None
+    icsUid: str | None = None
+    icsSource: str | None = None
     #: Analysis-task provenance id, or empty string when unset (NULL in DB).
     taskId: str = ""
     #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
@@ -84,6 +88,7 @@ class CalendarOccurrenceResponse(BaseModel):
     startTime: str
     endTime: str
     isAllDay: bool
+    timezone: str | None = None
     location: str | None
     description: str | None
     rrule: str

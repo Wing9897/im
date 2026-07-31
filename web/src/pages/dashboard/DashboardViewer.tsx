@@ -1,31 +1,16 @@
 /**
- * Dashboard task grid — TaskCard collection with live stats and management actions.
+ * Dashboard task catalog page orchestration.
  */
 
 import { EmptyState } from "../../components/common/EmptyState";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
-import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
-import { DeleteConfirmDialog } from "../../components/dialogs/DeleteConfirmDialog";
-import { WorksetNameDialog } from "../../components/dialogs/WorksetNameDialog";
 import { DashboardByTaskList, DashboardByWorksetList } from "./DashboardGroupedLists";
 import { DashboardSystemTasksSection } from "./DashboardSystemTasksSection";
-import {
-  Button,
-  TextField,
-  AppPageShell,
-  FilterChip,
-  OpsControlBar,
-  SegmentedControl,
-} from "../../components/ui";
-import { pageOpsControlClass } from "../../components/ui/controlStyles";
+import { AppPageShell, Button } from "../../components/ui";
 import { useListKeyboardNavigation } from "../../hooks/useListKeyboardNavigation";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import { usePersistedEnum } from "../../hooks/usePersistedEnum";
 import { usePersistedState } from "../../hooks/usePersistedState";
-import {
-  getTaskFormAnalysisModeMeta,
-  taskFormAnalysisModeOrder,
-} from "../../components/task/taskFormAnalysisModeMeta";
 import type { AnalysisTask } from "../../types/tasks";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useTranslation } from "react-i18next";
@@ -47,45 +32,14 @@ import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { createWorkset, deleteWorkset, renameWorkset } from "../../api/worksets";
 import { useToast } from "../../context/ToastContext";
 import { toError } from "../../utils/errors";
-import { useMemo, useState, useCallback, startTransition } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { buildChannelNameById } from "../../components/detail";
+import { useMemo, useState, useCallback } from "react";
+import { buildChannelNameById, useDetailSelection } from "../../components/detail";
 import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
-import { useDetailSelection } from "../../components/detail";
-import { TaskDetailView } from "./TaskDetailDialog";
-
-type WorksetNameDialogState =
-  | { mode: "create" }
-  | { mode: "rename"; id: string; name: string };
-
-function VisibilityEyeButton({
-  visible,
-  showLabel,
-  hideLabel,
-  testId,
-  onToggle,
-}: {
-  visible: boolean;
-  showLabel: string;
-  hideLabel: string;
-  testId: string;
-  onToggle: () => void;
-}) {
-  const label = visible ? hideLabel : showLabel;
-  return (
-    <Button
-      variant="secondary"
-      size="icon"
-      onClick={onToggle}
-      aria-pressed={visible}
-      aria-label={label}
-      title={label}
-      data-testid={testId}
-    >
-      {visible ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
-    </Button>
-  );
-}
+import {
+  DashboardViewerDialogs,
+  type DashboardWorksetNameDialogState,
+} from "./DashboardViewerDialogs";
+import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
 
 export function DashboardViewer() {
   const { t } = useTranslation();
@@ -135,7 +89,7 @@ export function DashboardViewer() {
   );
   const { worksets, refreshWorksets } = useTaskCatalog();
   const { showToast } = useToast();
-  const [worksetNameDialog, setWorksetNameDialog] = useState<WorksetNameDialogState | null>(
+  const [worksetNameDialog, setWorksetNameDialog] = useState<DashboardWorksetNameDialogState | null>(
     null,
   );
   const [worksetNameBusy, setWorksetNameBusy] = useState(false);
@@ -292,108 +246,29 @@ export function DashboardViewer() {
   const isTaskView = groupingView === "by_task";
   const isWorksetView = groupingView === "by_workset";
 
-  const tasksToolbar =
-    !loading && !error ? (
-      <OpsControlBar
-        sticky
-        ariaLabel={t("tasks.toolbarAria")}
-        data-testid="tasks-toolbar"
-        className="flex-wrap"
-      >
-        <div className="flex flex-wrap items-center gap-1.5">
-          <SegmentedControl
-            layout="inline"
-            value={groupingView}
-            onChange={(id) => {
-              if (id === "by_task" || id === "by_workset") {
-                startTransition(() => setGroupingView(id));
-              }
-            }}
-            ariaLabel={t("workset.groupingAria")}
-            items={[
-              { id: "by_task", label: t("workset.viewByTask") },
-              { id: "by_workset", label: t("workset.viewByWorkset") },
-            ]}
-          />
-          {isTaskView && tasks.length > 0 ? (
-            <>
-              <FilterChip
-                size="md"
-                active={modeFilter === "all"}
-                onClick={() => startTransition(() => setModeFilter("all"))}
-              >
-                {t("tasks.allModes")}
-              </FilterChip>
-              {taskFormAnalysisModeOrder.map((mode) => (
-                <FilterChip
-                  key={mode}
-                  size="md"
-                  active={modeFilter === mode}
-                  onClick={() => startTransition(() => setModeFilter(mode))}
-                >
-                  {getTaskFormAnalysisModeMeta(mode).displayLabel}
-                </FilterChip>
-              ))}
-            </>
-          ) : null}
-        </div>
-        {isTaskView && tasks.length > 0 ? (
-          <TextField
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("tasks.searchPlaceholder")}
-            aria-label={t("tasks.searchAria")}
-            data-im-search
-            className={`${pageOpsControlClass} min-w-[160px] max-w-[260px] flex-1 basis-40`}
-          />
-        ) : null}
-        <div className="ml-auto flex flex-wrap items-center gap-sm">
-          {isTaskView ? (
-            <>
-              <VisibilityEyeButton
-                visible={showSystemTasks}
-                showLabel={copy.showSystemTasks}
-                hideLabel={copy.hideSystemTasks}
-                testId="toggle-system-tasks"
-                onToggle={() => setShowSystemTasks((prev) => !prev)}
-              />
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => navigate("/tasks/new")}
-                aria-label={copy.createLabel}
-              >
-                {copy.createLabel}
-              </Button>
-            </>
-          ) : null}
-          {isWorksetView ? (
-            <>
-              <VisibilityEyeButton
-                visible={showSystemWorksets}
-                showLabel={t("workset.showSystemWorksets")}
-                hideLabel={t("workset.hideSystemWorksets")}
-                testId="toggle-system-worksets"
-                onToggle={() => setShowSystemWorksets((prev) => !prev)}
-              />
-              <Button
-                variant="primary"
-                size="md"
-                onClick={openCreateWorkset}
-                data-testid="dashboard-create-workset"
-              >
-                {t("workset.create")}
-              </Button>
-            </>
-          ) : null}
-        </div>
-      </OpsControlBar>
-    ) : null;
-
   return (
     <AppPageShell>
-      {tasksToolbar}
+      {!loading && !error ? (
+        <DashboardViewerToolbar
+          t={t}
+          groupingView={groupingView}
+          modeFilter={modeFilter}
+          taskCount={tasks.length}
+          searchQuery={searchQuery}
+          showSystemTasks={showSystemTasks}
+          showSystemWorksets={showSystemWorksets}
+          createTaskLabel={copy.createLabel}
+          showSystemTasksLabel={copy.showSystemTasks}
+          hideSystemTasksLabel={copy.hideSystemTasks}
+          onGroupingViewChange={setGroupingView}
+          onModeFilterChange={setModeFilter}
+          onSearchQueryChange={setSearchQuery}
+          onToggleSystemTasks={() => setShowSystemTasks((prev) => !prev)}
+          onToggleSystemWorksets={() => setShowSystemWorksets((prev) => !prev)}
+          onCreateTask={() => navigate("/tasks/new")}
+          onCreateWorkset={openCreateWorkset}
+        />
+      ) : null}
 
       {loading ? <SkeletonScreen variant="card-grid" count={6} columns={3} /> : null}
 
@@ -468,55 +343,36 @@ export function DashboardViewer() {
 
       {systemTasksSection}
 
-      <DeleteConfirmDialog
-        open={deleteTarget !== null}
-        targetName={deleteTarget?.name ?? ""}
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
-        deleting={deleting}
-      />
-
-      <WorksetNameDialog
-        open={worksetNameDialog !== null}
-        mode={worksetNameDialog?.mode ?? "create"}
-        initialName={
-          worksetNameDialog?.mode === "rename" ? worksetNameDialog.name : ""
-        }
-        busy={worksetNameBusy}
-        onClose={() => {
+      <DashboardViewerDialogs
+        t={t}
+        taskDeleteTarget={deleteTarget}
+        taskDeleting={deleting}
+        worksetNameDialog={worksetNameDialog}
+        worksetNameBusy={worksetNameBusy}
+        worksetDeleteTarget={worksetDeleteTarget}
+        worksetDeleting={worksetDeleting}
+        detailTask={detailTask}
+        detailStats={detailTask ? (statsMap.get(detailTask.id) ?? defaultStats) : defaultStats}
+        channelNameById={channelNameById}
+        onConfirmTaskDelete={confirmDelete}
+        onCancelTaskDelete={() => setDeleteTarget(null)}
+        onCloseWorksetNameDialog={() => {
           if (!worksetNameBusy) setWorksetNameDialog(null);
         }}
-        onSubmit={handleWorksetNameSubmit}
-      />
-
-      {worksetDeleteTarget ? (
-        <ConfirmDialog
-          title={t("workset.deleteTitle")}
-          body={t("workset.deleteConfirm", { name: worksetDeleteTarget.name })}
-          confirmLabel={t("dialog.confirmDelete")}
-          confirmBusyLabel={t("dialog.deleting")}
-          busy={worksetDeleting}
-          onCancel={() => {
-            if (!worksetDeleting) setWorksetDeleteTarget(null);
-          }}
-          onConfirm={confirmDeleteWorkset}
-        />
-      ) : null}
-
-      {detailTask ? (
-        <TaskDetailView
-          task={detailTask}
-          stats={statsMap.get(detailTask.id) ?? defaultStats}
-          channelNameById={channelNameById}
-          onClose={clearTask}
-          onEdit={() => {
+        onSubmitWorksetName={handleWorksetNameSubmit}
+        onConfirmWorksetDelete={confirmDeleteWorkset}
+        onCancelWorksetDelete={() => {
+          if (!worksetDeleting) setWorksetDeleteTarget(null);
+        }}
+        onCloseTaskDetail={clearTask}
+        onEditDetailTask={() => {
+          if (detailTask) {
             const taskId = detailTask.id;
             clearTask();
             handleEdit(taskId);
-          }}
-          presentation="modal"
-        />
-      ) : null}
+          }
+        }}
+      />
     </AppPageShell>
   );
 }

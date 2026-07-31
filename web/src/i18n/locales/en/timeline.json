@@ -148,5 +148,52 @@
       "startInvalid": "Invalid start time format",
       "endInvalid": "Invalid end time format"
     }
+  },
+  "calendarImport": {
+    "title": "Import calendar",
+    "closeAria": "Close calendar import",
+    "cancel": "Cancel",
+    "done": "Done",
+    "previewing": "Checking calendar file…",
+    "committing": "Importing…",
+    "commit": "Import selected ({count})",
+    "importFailed": "Could not read calendar import",
+    "previewFailed": "Could not preview calendar import",
+    "commitFailed": "Could not commit calendar import",
+    "selectAtLeastOne": "Select at least one supported item",
+    "importSaved": "Imported {count} calendar items",
+    "unnamedCalendar": "Calendar file",
+    "sourceSummary": "{source} · {size} bytes",
+    "previewSummary": "{count} events · {importable} importable",
+    "start": "Start",
+    "end": "End",
+    "time": "Time",
+    "allDay": "All day",
+    "systemTimezone": "System timezone",
+    "rrule": "Recurrence",
+    "recurrenceExceptions": "{excluded} excluded dates · {added} additional dates",
+    "changes": "Changes",
+    "resultTitle": "Import results",
+    "resultSummary": "{count} committed · {created} created · {updated} updated · {unchanged} unchanged",
+    "source": {
+      "file": "Local file",
+      "url": "Calendar URL",
+      "deeplink": "App link"
+    },
+    "target": {
+      "user_event": "One-time event",
+      "recurring_task": "Recurring task"
+    },
+    "action": {
+      "create": "New",
+      "update": "Update",
+      "unchanged": "Unchanged",
+      "unsupported": "Unsupported"
+    },
+    "resultAction": {
+      "created": "Created",
+      "updated": "Updated",
+      "unchanged": "Unchanged"
+    }
   }
 }

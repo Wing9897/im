@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
-import type { TimelineSelectedSources } from "../../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
 
 type TimelineTaskOption = {
   id: string;
@@ -22,8 +22,8 @@ type ExpandTaskOption = {
 };
 
 type TimelineControlBarProps = {
-  selectedSources: TimelineSelectedSources;
-  setSelectedSources: (ids: TimelineSelectedSources) => void;
+  selectedSources: SourceFilterSelection;
+  setSelectedSources: (ids: SourceFilterSelection) => void;
   timelineTasks: TimelineTaskOption[];
   worksets?: WorksetOption[];
   expandTasks?: ExpandTaskOption[];

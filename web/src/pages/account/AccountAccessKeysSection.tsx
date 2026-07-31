@@ -22,7 +22,7 @@ function formatScopes(scopes: string[] | undefined, t: (key: string) => string):
   return scopes.join(", ");
 }
 
-export function ProfileAccessKeysSection() {
+export function AccountAccessKeysSection() {
   const { t } = useTranslation("common");
   const { showToast } = useToast();
 

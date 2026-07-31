@@ -44,6 +44,9 @@ _EXTERNAL_ONLY_PATHS = frozenset(
     {
         # Third-party agents (OpenClaw / Hermes) post here with an access key.
         "/api/v1/a2a/agent",
+        # Backend contract is landed before the separately owned calendar-import UI.
+        "/api/v1/calendar-imports/commit",
+        "/api/v1/calendar-imports/preview",
     }
 )
 
@@ -52,6 +55,7 @@ _REQUIRED_OPENAPI_PREFIXES = (
     "/api/v1/setup/",
     "/api/v1/access-keys",
     "/api/v1/a2a/",
+    "/api/v1/calendar-imports/",
     "/api/v1/ui-prefs/",
 )
 

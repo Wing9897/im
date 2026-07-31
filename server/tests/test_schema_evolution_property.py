@@ -303,8 +303,17 @@ async def _insert_domain_fixture(conn: aiosqlite.Connection, fixture: _DomainFix
             ),
         )
         await conn.execute(
-            "INSERT INTO analysis_tasks VALUES ("
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            "INSERT INTO analysis_tasks ("
+            "id, name, description, prompt_template, analysis_mode, analysis_time_range, version, is_active, "
+            "schedule_type, schedule_value, rrule, event_start_time, event_end_time, event_is_all_day, "
+            "event_location, event_description, event_timezone, event_timezone_ical, event_start_local, "
+            "event_end_local, event_exdates_json, event_rdates_json, ics_uid, ics_source, "
+            "ics_import_fingerprint, include_in_timeline, parent_task_id, workset_id, "
+            "project_wave_interval_seconds, batch_overlap_count, analysis_trigger_threshold, "
+            "analysis_batch_message_limit, analysis_strategy_mode, created_at, updated_at"
+            ") VALUES ("
+            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+            "?, ?, ?, ?, ?"
             ")",
             (
                 task_id,
@@ -323,6 +332,15 @@ async def _insert_domain_fixture(conn: aiosqlite.Connection, fixture: _DomainFix
                 int(payload.enabled),
                 payload.optional_text,
                 payload.optional_text,
+                payload.optional_text,  # event_timezone
+                payload.optional_text,  # event_timezone_ical
+                payload.optional_text,  # event_start_local
+                payload.optional_text,  # event_end_local
+                "[]",  # event_exdates_json
+                "[]",  # event_rdates_json
+                f"uid-{suffix}",
+                "property-test",
+                f"fingerprint-{suffix}",
                 1,  # include_in_timeline
                 None,  # parent_task_id
                 None,  # workset_id

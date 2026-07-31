@@ -19,8 +19,8 @@ import {
   SettingsContentCard,
   SettingsFieldGroup,
 } from "../settings/SettingsShared";
-import { ProfileAvatarControl } from "./ProfileAvatarControl";
-import { ProfileChangePasswordSection } from "./ProfileChangePasswordSection";
+import { AccountAvatarControl } from "./AccountAvatarControl";
+import { AccountChangePasswordSection } from "./AccountChangePasswordSection";
 
 /** Account → Identity: display name, avatar, background, change password. */
 export function AccountIdentityPage() {
@@ -89,7 +89,7 @@ export function AccountIdentityPage() {
         <SettingsFieldGroup>
           <p className={`mb-0 max-w-[56ch] ${formHelpClass}`}>{t("profile.intro")}</p>
 
-          <ProfileAvatarControl
+          <AccountAvatarControl
             avatarDataUrl={draft.avatarDataUrl}
             displayName={displayName}
             onPickFile={(file) => void onAvatarFile(file)}
@@ -162,7 +162,7 @@ export function AccountIdentityPage() {
       <div className="mt-lg">
         <SettingsContentCard>
           <SettingsFieldGroup>
-            <ProfileChangePasswordSection />
+            <AccountChangePasswordSection />
           </SettingsFieldGroup>
         </SettingsContentCard>
       </div>

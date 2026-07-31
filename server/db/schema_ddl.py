@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 3 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 4 (single schema source).
 
 ``server.db.migrations`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -141,6 +141,15 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     event_is_all_day     INTEGER NOT NULL DEFAULT 0,
     event_location       TEXT DEFAULT NULL,
     event_description    TEXT DEFAULT NULL,
+    event_timezone       TEXT DEFAULT NULL,
+    event_timezone_ical  TEXT DEFAULT NULL,
+    event_start_local    TEXT DEFAULT NULL,
+    event_end_local      TEXT DEFAULT NULL,
+    event_exdates_json   TEXT NOT NULL DEFAULT '[]',
+    event_rdates_json    TEXT NOT NULL DEFAULT '[]',
+    ics_uid              TEXT DEFAULT NULL,
+    ics_source           TEXT DEFAULT NULL,
+    ics_import_fingerprint TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
     parent_task_id       TEXT DEFAULT NULL
                          REFERENCES analysis_tasks(id) ON DELETE CASCADE,
@@ -159,6 +168,9 @@ CREATE INDEX IF NOT EXISTS idx_analysis_tasks_parent
     ON analysis_tasks(parent_task_id);
 CREATE INDEX IF NOT EXISTS idx_analysis_tasks_workset
     ON analysis_tasks(workset_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_analysis_tasks_ics_source_uid
+    ON analysis_tasks(ics_source, ics_uid)
+    WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 
 -- Project-manager incremental message cursor (not system_config).
 CREATE TABLE IF NOT EXISTS project_message_cursors (
@@ -351,7 +363,12 @@ CREATE TABLE IF NOT EXISTS user_events (
     start_time  TEXT NOT NULL,
     end_time    TEXT,
     location    TEXT NOT NULL DEFAULT '',
-    origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'project')),
+    origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'project', 'ics')),
+    event_is_all_day INTEGER NOT NULL DEFAULT 0,
+    event_timezone TEXT DEFAULT NULL,
+    ics_uid     TEXT DEFAULT NULL,
+    ics_source  TEXT DEFAULT NULL,
+    ics_import_fingerprint TEXT DEFAULT NULL,
     task_id     TEXT DEFAULT NULL REFERENCES analysis_tasks(id) ON DELETE SET NULL,
     -- Ownership is always a workset; delete_workset reassigns to __user__ first.
     workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
@@ -366,6 +383,9 @@ CREATE INDEX IF NOT EXISTS idx_user_events_task_id
     ON user_events(task_id);
 CREATE INDEX IF NOT EXISTS idx_user_events_workset_id
     ON user_events(workset_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_events_ics_source_uid
+    ON user_events(ics_source, ics_uid)
+    WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 -- Same effective-time expression as analysis_events, for the user-event TTL.
 CREATE INDEX IF NOT EXISTS idx_user_events_effective_time
     ON user_events(datetime(COALESCE(NULLIF(TRIM(start_time), ''), created_at)) ASC);

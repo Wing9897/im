@@ -1322,6 +1322,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar-imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Import */
+        post: operations["preview_import_api_v1_calendar_imports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-imports/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit Import */
+        post: operations["commit_import_api_v1_calendar_imports_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/user-events": {
         parameters: {
             query?: never;
@@ -1679,7 +1713,7 @@ export interface paths {
         };
         /**
          * Forecast
-         * @description Resolve a city then return compact daily Open-Meteo forecasts.
+         * @description Return the available intersection; valid out-of-window ranges are empty.
          */
         get: operations["forecast_api_v1_weather_forecast_get"];
         put?: never;
@@ -2214,6 +2248,139 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** CalendarImportChangeResponse */
+        CalendarImportChangeResponse: {
+            /** Field */
+            field: string;
+            /** Before */
+            before?: unknown;
+            /** After */
+            after?: unknown;
+        };
+        /** CalendarImportCommitBody */
+        CalendarImportCommitBody: {
+            /** Content */
+            content: string;
+            /**
+             * Sourceid
+             * @default ics
+             */
+            sourceId: string;
+            /** Selections */
+            selections: components["schemas"]["CalendarImportSelectionBody"][];
+        };
+        /** CalendarImportCommitItemResponse */
+        CalendarImportCommitItemResponse: {
+            /** Uid */
+            uid: string;
+            /**
+             * Targettype
+             * @enum {string}
+             */
+            targetType: "user_event" | "recurring_task";
+            /** Targetid */
+            targetId: string;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "created" | "updated" | "unchanged";
+        };
+        /** CalendarImportCommitResponse */
+        CalendarImportCommitResponse: {
+            /** Sourceid */
+            sourceId: string;
+            /** Committedcount */
+            committedCount: number;
+            /** Createdcount */
+            createdCount: number;
+            /** Updatedcount */
+            updatedCount: number;
+            /** Unchangedcount */
+            unchangedCount: number;
+            /** Results */
+            results: components["schemas"]["CalendarImportCommitItemResponse"][];
+        };
+        /** CalendarImportInput */
+        CalendarImportInput: {
+            /** Content */
+            content: string;
+            /**
+             * Sourceid
+             * @default ics
+             */
+            sourceId: string;
+        };
+        /** CalendarImportPreviewItemResponse */
+        CalendarImportPreviewItemResponse: {
+            /** Uid */
+            uid: string;
+            /** Title */
+            title: string;
+            /**
+             * Targettype
+             * @enum {string}
+             */
+            targetType: "user_event" | "recurring_task";
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "create" | "update" | "unchanged" | "unsupported";
+            /** Supported */
+            supported: boolean;
+            /** Existingid */
+            existingId: string | null;
+            /** Fingerprint */
+            fingerprint: string;
+            /** Starttime */
+            startTime: string;
+            /** Endtime */
+            endTime: string | null;
+            /** Isallday */
+            isAllDay: boolean;
+            /** Timezone */
+            timezone: string | null;
+            /** Rrule */
+            rrule: string | null;
+            /** Exdates */
+            exdates: string[];
+            /** Rdates */
+            rdates: string[];
+            /** Changes */
+            changes: components["schemas"]["CalendarImportChangeResponse"][];
+            /** Warnings */
+            warnings: components["schemas"]["CalendarImportWarningResponse"][];
+        };
+        /** CalendarImportPreviewResponse */
+        CalendarImportPreviewResponse: {
+            /** Sourceid */
+            sourceId: string;
+            /** Calendarname */
+            calendarName: string | null;
+            /** Eventcount */
+            eventCount: number;
+            /** Importablecount */
+            importableCount: number;
+            /** Items */
+            items: components["schemas"]["CalendarImportPreviewItemResponse"][];
+            /** Warnings */
+            warnings: components["schemas"]["CalendarImportWarningResponse"][];
+        };
+        /** CalendarImportSelectionBody */
+        CalendarImportSelectionBody: {
+            /** Uid */
+            uid: string;
+            /** Fingerprint */
+            fingerprint: string;
+        };
+        /** CalendarImportWarningResponse */
+        CalendarImportWarningResponse: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
         /** CalendarOccurrenceResponse */
         CalendarOccurrenceResponse: {
             /** Id */
@@ -2230,6 +2397,8 @@ export interface components {
             endTime: string;
             /** Isallday */
             isAllDay: boolean;
+            /** Timezone */
+            timezone?: string | null;
             /** Location */
             location: string | null;
             /** Description */
@@ -3308,6 +3477,20 @@ export interface components {
             eventLocation?: string | null;
             /** Eventdescription */
             eventDescription?: string | null;
+            /** Eventtimezone */
+            eventTimezone?: string | null;
+            /** Eventstartlocal */
+            eventStartLocal?: string | null;
+            /** Eventendlocal */
+            eventEndLocal?: string | null;
+            /** Eventexdates */
+            eventExdates?: string[];
+            /** Eventrdates */
+            eventRdates?: string[];
+            /** Icsuid */
+            icsUid?: string | null;
+            /** Icssource */
+            icsSource?: string | null;
             /**
              * Includeintimeline
              * @default true
@@ -3518,7 +3701,18 @@ export interface components {
              * Origin
              * @enum {string}
              */
-            origin: "manual" | "assistant" | "a2a" | "project";
+            origin: "manual" | "assistant" | "a2a" | "project" | "ics";
+            /**
+             * Isallday
+             * @default false
+             */
+            isAllDay: boolean;
+            /** Timezone */
+            timezone?: string | null;
+            /** Icsuid */
+            icsUid?: string | null;
+            /** Icssource */
+            icsSource?: string | null;
             /**
              * Taskid
              * @default
@@ -6283,6 +6477,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActionTestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_import_api_v1_calendar_imports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarImportInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarImportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_import_api_v1_calendar_imports_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarImportCommitBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarImportCommitResponse"];
                 };
             };
             /** @description Validation Error */

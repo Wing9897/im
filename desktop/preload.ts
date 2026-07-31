@@ -22,19 +22,15 @@ const CALENDAR_IMPORT_CHANNELS = {
   onImport: 'calendar-import:event',
 } as const;
 
-type CalendarImportDraft = {
-  title: string;
-  startTime: string;
-  endTime: string;
-  location: string;
-  body: string;
-  worksetId: string;
+type CalendarImportPayload = {
+  content: string;
+  sourceId: string;
   source: 'file' | 'url' | 'deeplink';
   sourceLabel: string;
 };
 
 type CalendarImportMessage =
-  | { ok: true; draft: CalendarImportDraft }
+  | { ok: true; payload: CalendarImportPayload }
   | { ok: false; error: string; sourceLabel?: string };
 
 contextBridge.exposeInMainWorld('electronWindow', {
@@ -75,7 +71,7 @@ contextBridge.exposeInMainWorld('electronConnection', {
     ipcRenderer.send(CONNECTION_CHANNELS.setNotificationLocale, locale),
 });
 
-/** .ics / intelligencemonitor://calendar/import → add-event dialog. */
+/** .ics / intelligencemonitor://calendar/import → calendar import wizard. */
 contextBridge.exposeInMainWorld('electronCalendarImport', {
   getPending: () =>
     ipcRenderer.invoke(CALENDAR_IMPORT_CHANNELS.getPending) as Promise<CalendarImportMessage | null>,

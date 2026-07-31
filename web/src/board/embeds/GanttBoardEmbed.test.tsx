@@ -232,6 +232,22 @@ describe("normalizeGanttEventActivities", () => {
     expect(normalizeGanttEventActivities([makeEvent({ startTime: null })])).toHaveLength(0);
   });
 
+  it("projects an exclusive-end all-day event to one local calendar cell", () => {
+    const now = new Date(2026, 6, 22, 18, 0, 0).getTime();
+    const [row] = normalizeGanttEventActivities([
+      makeEvent({
+        startTime: "2026-07-15T00:00:00Z",
+        endTime: "2026-07-16T00:00:00Z",
+        isAllDay: true,
+        timezone: null,
+      }),
+    ], now);
+    const bar = calculateBar(row!.segments[0]!, buildGanttAxis("month", now))!;
+    expect(bar.startCell).toBe(14);
+    expect(bar.endCell).toBe(15);
+    expect(bar.width).toBeCloseTo((1 / 31) * 100, 5);
+  });
+
   it("merges recurring occurrences with the same taskId into one row with multiple segments", () => {
     const now = new Date(2026, 6, 22, 18, 0, 0).getTime();
     const rows = normalizeGanttEventActivities([

@@ -148,5 +148,52 @@
       "startInvalid": "开始时间格式无效",
       "endInvalid": "结束时间格式无效"
     }
+  },
+  "calendarImport": {
+    "title": "导入日历",
+    "closeAria": "关闭日历导入",
+    "cancel": "取消",
+    "done": "完成",
+    "previewing": "正在检查日历文件…",
+    "committing": "正在导入…",
+    "commit": "导入所选项（{count}）",
+    "importFailed": "无法读取日历导入",
+    "previewFailed": "无法预览日历导入",
+    "commitFailed": "无法提交日历导入",
+    "selectAtLeastOne": "请至少选择一个受支持的项目",
+    "importSaved": "已导入 {count} 个日历项目",
+    "unnamedCalendar": "日历文件",
+    "sourceSummary": "{source} · {size} 字节",
+    "previewSummary": "共 {count} 个事件 · {importable} 个可导入",
+    "start": "开始",
+    "end": "结束",
+    "time": "时间",
+    "allDay": "全天",
+    "systemTimezone": "系统时区",
+    "rrule": "循环规则",
+    "recurrenceExceptions": "排除日期 {excluded} 个 · 追加日期 {added} 个",
+    "changes": "差异",
+    "resultTitle": "导入结果",
+    "resultSummary": "已提交 {count} 个 · 新建 {created} 个 · 更新 {updated} 个 · 无变化 {unchanged} 个",
+    "source": {
+      "file": "本地文件",
+      "url": "日历链接",
+      "deeplink": "应用链接"
+    },
+    "target": {
+      "user_event": "单次事件",
+      "recurring_task": "循环任务"
+    },
+    "action": {
+      "create": "新建",
+      "update": "更新",
+      "unchanged": "无变化",
+      "unsupported": "不支持"
+    },
+    "resultAction": {
+      "created": "已新建",
+      "updated": "已更新",
+      "unchanged": "无变化"
+    }
   }
 }

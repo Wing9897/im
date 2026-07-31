@@ -18,8 +18,10 @@ export type AnalysisEvent = Omit<
   source?: "analysis" | "recurring" | "user";
   /** Frontend-only: indicates an all-day event */
   isAllDay?: boolean;
+  /** Original calendar timezone identity when supplied by the wire contract. */
+  timezone?: string | null;
   /** Present when source === "user": wire origin from user_events */
-  origin?: "manual" | "assistant" | "a2a" | "project";
+  origin?: "manual" | "assistant" | "a2a" | "project" | "ics";
   /** Ownership workset (user_events / board projections); builtin `__user__` when system. */
   worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */

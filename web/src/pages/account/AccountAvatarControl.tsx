@@ -4,19 +4,19 @@ import { useTranslation } from "react-i18next";
 import { Button, SettingsRow } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 
-type ProfileAvatarControlProps = {
+type AccountAvatarControlProps = {
   avatarDataUrl: string | null;
   displayName: string;
   onPickFile: (file: File) => void;
   onClear: () => void;
 };
 
-export function ProfileAvatarControl({
+export function AccountAvatarControl({
   avatarDataUrl,
   displayName,
   onPickFile,
   onClear,
-}: ProfileAvatarControlProps) {
+}: AccountAvatarControlProps) {
   const { t } = useTranslation("common");
   const fileInputRef = useRef<HTMLInputElement>(null);
 

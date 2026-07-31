@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Union
 
-from fastapi import HTTPException
+from server.errors import VALIDATION_ERROR, http_error
 
 MAX_CHANNEL_KEY_LIST = 100
 
@@ -22,18 +22,19 @@ def parse_channel_key_csv(
         if not token:
             continue
         if ":" not in token:
-            raise HTTPException(status_code=422, detail=f"Invalid channel key: {token}")
+            raise http_error(422, f"Invalid channel key: {token}", error_code=VALIDATION_ERROR)
         platform, platform_id = token.split(":", 1)
         if not platform or not platform_id:
-            raise HTTPException(status_code=422, detail=f"Invalid channel key: {token}")
+            raise http_error(422, f"Invalid channel key: {token}", error_code=VALIDATION_ERROR)
         key = (platform, platform_id)
         if key not in seen:
             keys.append(key)
             seen.add(key)
         if len(keys) > max_keys:
-            raise HTTPException(
-                status_code=422,
-                detail=f"A maximum of {max_keys} channels may be requested",
+            raise http_error(
+                422,
+                f"A maximum of {max_keys} channels may be requested",
+                error_code=VALIDATION_ERROR,
             )
     return keys
 

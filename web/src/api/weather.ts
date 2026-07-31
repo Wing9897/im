@@ -13,11 +13,15 @@ export function fetchWeatherForecast(
   location: string,
   startDate: string,
   endDate: string,
+  signal?: AbortSignal,
 ): Promise<WeatherForecastResponse> {
-  const params = new URLSearchParams({
-    location,
-    start_date: startDate,
-    end_date: endDate,
-  });
-  return apiClient.get<WeatherForecastResponse>(`/api/v1/weather/forecast?${params}`);
+  return apiClient.get<WeatherForecastResponse>(
+    "/api/v1/weather/forecast",
+    {
+      location,
+      start_date: startDate,
+      end_date: endDate,
+    },
+    { signal },
+  );
 }

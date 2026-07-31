@@ -78,6 +78,13 @@ class TaskResponse(BaseModel):
     eventIsAllDay: bool = False
     eventLocation: str | None = None
     eventDescription: str | None = None
+    eventTimezone: str | None = None
+    eventStartLocal: str | None = None
+    eventEndLocal: str | None = None
+    eventExdates: list[str] = Field(default_factory=list)
+    eventRdates: list[str] = Field(default_factory=list)
+    icsUid: str | None = None
+    icsSource: str | None = None
     includeInTimeline: bool = True
     parentTaskId: str | None = None
     worksetId: str | None = None

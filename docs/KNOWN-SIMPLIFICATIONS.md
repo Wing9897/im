@@ -26,7 +26,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. The `_data_migrations` ledger stub in `server/db/data_migrations.py` remains for startup safety; active content runners are empty on the stamp-3 wipe-floor baseline (schema registry empty).
+Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. The `_data_migrations` ledger stub in `server/db/data_migrations.py` remains for startup safety; active content runners are empty on the stamp-4 wipe-floor baseline (schema registry empty).
 
 ## Sources / accounts
 
@@ -46,7 +46,7 @@ Pointer only — stamp / semver / wipe-floor SoT: [`ARCHITECTURE.md` Schema supp
 One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRULE:` prefix (`server/services/task_writes.py`). Validation／expansion live in `server/calendar/rrule.py` (not under `analyzer/`).
 
 - **Sub-day frequencies are rejected on write:** `validate_rrule` only allows `FREQ ∈ {DAILY, WEEKLY, MONTHLY, YEARLY}` (`unsupported_freq`). `SECONDLY`／`MINUTELY`／`HOURLY` (and any other FREQ) fail task create／update. Query-time expansion still snaps wall clocks and budgets dense windows for legacy／synthetic rows used in budget tests — writers never emit those freqs.
-- **Desktop ICS／deep-link import (v1):** intentional limit only — first `VEVENT`, no webcal／CalDAV／Google sync; ownership hint `worksetId`. Shape + flow: [`ARCHITECTURE.md` Desktop Shell](./ARCHITECTURE.md#components).
+- **Desktop ICS／deep-link import:** one-shot multi-VEVENT preview and atomic commit; no webcal／CalDAV／provider OAuth or bidirectional sync. RRULE series become recurring tasks, one-time items become user events; unsupported overrides stay visible but unselectable. Public-HTTP(S)-only remote URL policy, supported RFC 5545 subset, size/event limits, and floating-time behavior: [`ARCHITECTURE.md` ICS import support](./ARCHITECTURE.md#ics-import-support-and-limits).
 
 ## Batch stats semantics (version-aware)
 
@@ -80,7 +80,7 @@ Ops: `python scripts/pending_batch_report.py`［`--json`］; `operational_verify
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v3 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) (wipe-floor, `__user__`, `user_events.workset_id`) |
+| Schema stamp v4 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [backup/reset procedure](./ARCHITECTURE.md#schema-v4-backup-and-explicit-reset) (wipe-floor, calendar-import metadata, `__user__`, `user_events.workset_id`) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

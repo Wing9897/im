@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 
 from server.auth import verify_auth, verify_write_access
 from server.db.database import Database
+from server.errors import NOT_FOUND, http_error
 from server.sse import publish_resource_modified as sse_publish_resource_modified
 
 #: Standard dependency stack: auth + remote write protection.
@@ -19,7 +20,7 @@ async def require_row(db: Database, table: str, kind: str, row_id: str) -> dict[
     """Fetch a row by primary key or raise 404 with a "<Kind> <id> not found" detail."""
     row = await db.fetch_one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
     if row is None:
-        raise HTTPException(status_code=404, detail=f"{kind} {row_id} not found")
+        raise http_error(404, f"{kind} {row_id} not found", error_code=NOT_FOUND)
     return row
 
 

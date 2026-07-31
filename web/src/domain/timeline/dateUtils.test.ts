@@ -14,6 +14,7 @@ import {
   startOfDay,
   startOfMonth,
   startOfWeek,
+  timelineEventDateRange,
   toDateTimeLocalInput,
 } from "./dateUtils";
 import { makeAnalysisEvent } from "../../test/analysisEventFixtures";
@@ -79,6 +80,18 @@ describe("dateUtils", () => {
     expect(
       eventOverlapsRange(event, addDays(day, 2), addDays(day, 3)),
     ).toBe(false);
+  });
+
+  it("keeps all-day calendar dates as local wall dates", () => {
+    const event = makeAnalysisEvent({
+      startTime: "2026-01-15T00:00:00Z",
+      endTime: "2026-01-16T00:00:00Z",
+      isAllDay: true,
+      timezone: null,
+    });
+    const { start, end } = timelineEventDateRange(event);
+    expect([start.getFullYear(), start.getMonth(), start.getDate()]).toEqual([2026, 0, 15]);
+    expect([end.getFullYear(), end.getMonth(), end.getDate()]).toEqual([2026, 0, 16]);
   });
 
   it("round-trips datetime-local inputs", () => {

@@ -9,6 +9,10 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
+import {
+  boardSourceFilterExpandTasks,
+  boardSourceFilterWorksets,
+} from "../boardSourceFilterOptions";
 import { resolveSpanWorksetId, useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
@@ -99,16 +103,8 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
       <>
         <SourceFilterDialog
           tasks={filterOptions}
-          worksets={worksets.map((ws) => ({
-            id: ws.id,
-            name: ws.id === SYSTEM_WORKSET_ID ? userEventsLabel : ws.name,
-            isSystem: ws.isSystem,
-          }))}
-          expandTasks={tasks.map((task) => ({
-            id: task.id,
-            name: task.name,
-            worksetId: task.worksetId ?? null,
-          }))}
+          worksets={boardSourceFilterWorksets(worksets, userEventsLabel)}
+          expandTasks={boardSourceFilterExpandTasks(tasks)}
           selection={selection}
           onChange={setSelection}
           ariaLabelPrefix={ariaPrefix}

@@ -57,6 +57,7 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
     startTime: "2026-07-22T09:00:00.000Z",
     endTime: "2026-07-22T09:30:00.000Z",
     isAllDay: false,
+    timezone: "Asia/Taipei",
     location: null,
     description: "RRULE 展開",
     rrule: "FREQ=WEEKLY",
@@ -71,6 +72,7 @@ describe("calendarOccurrenceToBoardEvent", () => {
     expect(event.taskId).toBe("cal-task");
     expect(event.body).toBe("RRULE 展開");
     expect(event.isAllDay).toBe(false);
+    expect(event.timezone).toBe("Asia/Taipei");
   });
 });
 
@@ -99,6 +101,14 @@ describe("mergeWithCalendarOccurrences", () => {
     expect(merged[0].id).toBe("other-id");
   });
 
+  it("deduplicates equivalent occurrence timestamps with different ISO precision", () => {
+    const merged = mergeWithCalendarOccurrences(
+      [makeEvent({ id: "other-id", taskId: "cal-task", startTime: "2026-07-22T09:00:00Z" })],
+      [makeOccurrence({ startTime: "2026-07-22T09:00:00.000Z" })],
+    );
+    expect(merged).toHaveLength(1);
+  });
+
   it("keeps a single bar when user_event provenance matches an RRULE occurrence", () => {
     const userTimed = userEventToBoardEvent({
       id: "ue-provenance",
@@ -113,6 +123,8 @@ describe("mergeWithCalendarOccurrences", () => {
       worksetId: "ws-1",
       createdAt: "2026-07-21T00:00:00Z",
       updatedAt: "2026-07-21T00:00:00Z",
+      isAllDay: true,
+      timezone: "Asia/Taipei",
     });
     const merged = mergeWithCalendarOccurrences([userTimed], [makeOccurrence()]);
     expect(merged).toHaveLength(1);
@@ -136,6 +148,8 @@ describe("userEventToBoardEvent", () => {
       worksetId: SYSTEM_WORKSET_ID,
       createdAt: "2026-07-21T00:00:00Z",
       updatedAt: "2026-07-21T00:00:00Z",
+      isAllDay: true,
+      timezone: "Asia/Taipei",
     });
 
     expect(event.taskId).toBeNull();
@@ -144,6 +158,8 @@ describe("userEventToBoardEvent", () => {
     expect(event.origin).toBe("assistant");
     expect(event.startTime).toBe("2026-07-22T09:00:00Z");
     expect(event.endTime).toBe("2026-07-22T10:00:00Z");
+    expect(event.isAllDay).toBe(true);
+    expect(event.timezone).toBe("Asia/Taipei");
   });
 
   it("keeps task-tagged user events on their provenance task id and resolves taskName", () => {

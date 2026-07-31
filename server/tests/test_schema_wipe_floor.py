@@ -31,8 +31,8 @@ _HARD_REJECT_PRIOR_VERSIONS = [
 
 
 def test_wipe_floor_registry_and_upgrade_gate_closed() -> None:
-    """DDL is sole truth: empty registry, stamp 3, no pending upgrades."""
-    assert CURRENT_SCHEMA_VERSION == 3
+    """DDL is sole truth: empty registry, stamp 4, no pending upgrades."""
+    assert CURRENT_SCHEMA_VERSION == 4
     assert SCHEMA_MIGRATIONS == ()
     assert not any(migration_pending(version) for version in range(0, 25))
 

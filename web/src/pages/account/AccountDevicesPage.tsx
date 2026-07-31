@@ -2,7 +2,7 @@ import {
   SettingsContentCard,
   SettingsFieldGroup,
 } from "../settings/SettingsShared";
-import { ProfileDeviceSessionSection } from "./ProfileDeviceSessionSection";
+import { AccountDeviceSessionSection } from "./AccountDeviceSessionSection";
 
 /** Account → Devices: session list, revoke, logout. */
 export function AccountDevicesPage() {
@@ -10,7 +10,7 @@ export function AccountDevicesPage() {
     <div data-testid="account-devices-page">
       <SettingsContentCard>
         <SettingsFieldGroup>
-          <ProfileDeviceSessionSection
+          <AccountDeviceSessionSection
             onLoggedOut={() => {
               window.location.reload();
             }}

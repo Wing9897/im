@@ -15,7 +15,7 @@ async def fetch_calendar_rows(
     placeholders = ",".join("?" for _ in analysis_modes)
     return await db.fetch_all(
         "SELECT id, name, analysis_mode, is_active, rrule, event_location, "
-        "event_description, event_is_all_day, event_start_time, event_end_time, "
+        "event_description, event_is_all_day, event_start_time, event_end_time, event_timezone, "
         "created_at, updated_at "
         "FROM analysis_tasks "
         f"WHERE analysis_mode IN ({placeholders}) "

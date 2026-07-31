@@ -1,21 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "../../components/ui";
-import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { formatIntelligenceEventTime } from "../../domain/intelligence/intelligenceSourceMeta";
-import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
-import type { AnalysisEvent } from "../../types";
-import { getEventTimestamp, isMappableCoordinate } from "../../domain/intelligence/mapFilters";
-import { SourceFilterDialog } from "../../components/SourceFilterDialog";
-import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
+import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
 import {
   fetchBoardEventsList,
-  withResolvedUserEventTaskNames,
+  sortEventsByTimeDesc,
 } from "../../domain/timeline/timedEventMerge";
-import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardSourceFilter } from "../useBoardSourceFilter";
-import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
+import { useBoardTimedEventsWidget } from "../useBoardTimedEventsWidget";
+import { BOARD_POLL_MS } from "../useBoardWidgetPoll";
 import {
   focusBoardEvent,
   getBoardFocusTarget,
@@ -23,20 +17,12 @@ import {
 } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { untitledLabel } from "../boardLabels";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 
 const EVENTS_LIMIT = 15;
 
 function eventBodyPreview(body: string | null | undefined): string {
   return (body ?? "").replace(/\s+/g, " ").trim();
-}
-
-function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
-  return [...events].sort(
-    (a, b) =>
-      new Date(getEventTimestamp(b)).getTime() - new Date(getEventTimestamp(a)).getTime(),
-  );
 }
 
 /** Events list: title + body + time (no channel/source line). */
@@ -48,68 +34,24 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
     getBoardFocusTarget,
   );
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
-  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const fetcher = useCallback(
     () => fetchBoardEventsList({ includeCalendar: false, limit: EVENTS_LIMIT }),
     [],
   );
-  const { data: fetchedItems, error, loading, refresh } = useBoardWidgetPoll<AnalysisEvent[]>(
-    fetcher,
-    BOARD_POLL_MS.standard,
-    { active },
-  );
-  const { tasks, worksets } = useTaskCatalog();
-  const taskNameById = useTaskNameById();
-  const worksetNameById = useWorksetNameById();
-  const generalWorksetLabel = useGeneralWorksetLabel();
-  // Without this the badge on a tagged user_event renders its raw task id.
-  const items = useMemo(
-    () =>
-      fetchedItems
-        ? withResolvedUserEventTaskNames(
-            fetchedItems,
-            taskNameById,
-            generalWorksetLabel,
-            worksetNameById,
-          )
-        : null,
-    [fetchedItems, taskNameById, generalWorksetLabel, worksetNameById],
-  );
-  const filterOptions = useMemo(
-    () => catalogOrEventSourceOptions(tasks, items),
-    [items, tasks],
-  );
+  const { selection, events: items, filteredEvents, loading, error, refresh } =
+    useBoardTimedEventsWidget({
+      widgetId: widgetId ?? "events",
+      active,
+      fetcher,
+      pollMs: BOARD_POLL_MS.standard,
+      ariaLabelPrefix: t("board.events.ariaPrefix"),
+    });
   // Filter first so「一般」is not squeezed out of the recent-15 cap.
-  const filteredItems = useMemo(
-    () => sortEventsByTimeDesc(filterBySource(items ?? [])).slice(0, EVENTS_LIMIT),
-    [filterBySource, items],
+  const cappedItems = useMemo(
+    () => sortEventsByTimeDesc(filteredEvents).slice(0, EVENTS_LIMIT),
+    [filteredEvents],
   );
-  const headerActions = useMemo(
-    () => (
-      <SourceFilterDialog
-        tasks={filterOptions}
-        worksets={worksets.map((ws) => ({
-          id: ws.id,
-          name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
-          isSystem: ws.isSystem,
-        }))}
-        expandTasks={tasks.map((task) => ({
-          id: task.id,
-          name: task.name,
-          worksetId: task.worksetId ?? null,
-        }))}
-        selection={selection}
-        onChange={setSelection}
-        ariaLabelPrefix={t("board.events.ariaPrefix")}
-        variant="board"
-      />
-    ),
-    [filterOptions, selection, setSelection, t, tasks, generalWorksetLabel, worksets],
-  );
-  useBoardWidgetHeaderActions(headerActions);
 
-  // A map marker or another event-oriented frame selects the matching row
-  // locally; no route change is needed to reveal the event context.
   useEffect(() => {
     const row = selectedRowRef.current;
     if (row && typeof row.scrollIntoView === "function") {
@@ -123,16 +65,16 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
         loading={loading && !items}
         error={!items ? error : null}
         onRetry={refresh}
-        empty={Array.isArray(items) && filteredItems.length === 0}
+        empty={Array.isArray(items) && cappedItems.length === 0}
         emptyLabel={
           isEmptySourceFilter(selection)
             ? t("board.common.noTaskSelected")
             : t("board.events.empty")
         }
       >
-        {filteredItems.length > 0 ? (
+        {cappedItems.length > 0 ? (
           <ul className="board-widget-list">
-            {filteredItems.map((item) => {
+            {cappedItems.map((item) => {
               const body = eventBodyPreview(item.body);
               return (
                 <li key={item.id} className="board-widget-list__item">

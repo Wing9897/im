@@ -19,7 +19,6 @@ import { TimelineEventCard } from "../components/TimelineEventCard";
 import { preferActiveEvents, sortActiveThenDismissed, dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
 import { TimelineMonthGrid } from "./TimelineMonthGrid";
 import { useMonthWeather } from "../../../hooks/useMonthWeather";
-import { useErrorToast } from "../../../hooks/useErrorToast";
 import {
   calendarScrollableClass,
   monthCalendarFillClass,
@@ -85,8 +84,7 @@ export function TimelineCalendarView({
   onFocusDay,
 }: TimelineCalendarViewProps) {
   const { t } = useTranslation("timeline");
-  const { weatherByDate, error: weatherError } = useMonthWeather(timeScale === "month", monthDays);
-  useErrorToast(weatherError);
+  const { weatherByDate } = useMonthWeather(timeScale === "month", monthDays);
 
   if (timeScale === "day") {
     return (

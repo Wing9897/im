@@ -70,16 +70,16 @@ const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThem
 const SettingsDataPage = lazyNamed(() => import("../pages/settings/SettingsDataPage"), "SettingsDataPage");
 const SettingsApiPage = lazyNamed(() => import("../pages/settings/SettingsApiPage"), "SettingsApiPage");
 const LogPage = lazyNamed(() => import("../pages/logs/LogPage"), "LogPage");
-const AccountShell = lazyNamed(() => import("../pages/profile/AccountShell"), "AccountShell");
+const AccountShell = lazyNamed(() => import("../pages/account/AccountShell"), "AccountShell");
 const AccountIdentityPage = lazyNamed(
-  () => import("../pages/profile/AccountIdentityPage"),
+  () => import("../pages/account/AccountIdentityPage"),
   "AccountIdentityPage",
 );
 const AccountDevicesPage = lazyNamed(
-  () => import("../pages/profile/AccountDevicesPage"),
+  () => import("../pages/account/AccountDevicesPage"),
   "AccountDevicesPage",
 );
-const AccountKeysPage = lazyNamed(() => import("../pages/profile/AccountKeysPage"), "AccountKeysPage");
+const AccountKeysPage = lazyNamed(() => import("../pages/account/AccountKeysPage"), "AccountKeysPage");
 const ViewerLayout = lazyNamed(() => import("../pages/viewer/ViewerLayout"), "ViewerLayout");
 const ViewerTasksPage = lazyNamed(() => import("../pages/viewer/ViewerTasksPage"), "ViewerTasksPage");
 const ViewerResultsPage = lazyNamed(() => import("../pages/viewer/ViewerResultsPage"), "ViewerResultsPage");

@@ -1,21 +1,11 @@
 import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
-import type { AnalysisEvent } from "../../types";
-import { SourceFilterDialog } from "../../components/SourceFilterDialog";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
-import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
 import { currentMonthWindowIso } from "../../domain/timeline/boardFetchWindows";
-import {
-  fetchMergedTimedBoardEvents,
-  withResolvedUserEventTaskNames,
-} from "../../domain/timeline/timedEventMerge";
-import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
-import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
+import { fetchMergedTimedBoardEvents } from "../../domain/timeline/timedEventMerge";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
-import { useBoardSourceFilter } from "../useBoardSourceFilter";
-import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
+import { useBoardTimedEventsWidget } from "../useBoardTimedEventsWidget";
+import { BOARD_POLL_MS } from "../useBoardWidgetPoll";
 import { focusBoardEvent } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { useBoardGanttViewMode } from "../useBoardGanttViewMode";
@@ -31,7 +21,6 @@ const EVENTS_LIMIT = 80;
 export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useBoardGanttViewMode(widgetId);
-  const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const ariaPrefix = t("board.ganttWidget.byEventAria");
 
   const eventsFetcher = useCallback(() => {
@@ -39,27 +28,26 @@ export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetP
     return fetchMergedTimedBoardEvents({ startDate, endDate, limit: EVENTS_LIMIT });
   }, []);
 
-  const { data: fetchedEvents, error, loading, refresh } = useBoardWidgetPoll<AnalysisEvent[]>(
-    eventsFetcher,
-    BOARD_POLL_MS.standard,
-    { active },
+  const headerExtra = useMemo(
+    () => (
+      <GanttViewModeControls
+        viewMode={viewMode}
+        onChange={setViewMode}
+        ariaLabelPrefix={ariaPrefix}
+        testIdPrefix="board-gantt-events"
+      />
+    ),
+    [ariaPrefix, setViewMode, viewMode],
   );
-  const { tasks, worksets } = useTaskCatalog();
-  const taskNameById = useTaskNameById();
-  const worksetNameById = useWorksetNameById();
-  const generalWorksetLabel = useGeneralWorksetLabel();
-  const events = useMemo(
-    () =>
-      fetchedEvents
-        ? withResolvedUserEventTaskNames(
-            fetchedEvents,
-            taskNameById,
-            generalWorksetLabel,
-            worksetNameById,
-          )
-        : null,
-    [fetchedEvents, taskNameById, generalWorksetLabel, worksetNameById],
-  );
+
+  const { events, filteredEvents, loading, error, refresh } = useBoardTimedEventsWidget({
+    widgetId: widgetId ?? "gantt-events",
+    active,
+    fetcher: eventsFetcher,
+    pollMs: BOARD_POLL_MS.standard,
+    ariaLabelPrefix: ariaPrefix,
+    headerExtra,
+  });
 
   const selectEvent = useCallback(
     (event: { id: string; latitude?: number | null; longitude?: number | null }) => {
@@ -72,48 +60,6 @@ export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetP
     },
     [],
   );
-
-  const filterOptions = useMemo(
-    () => catalogOrEventSourceOptions(tasks, events),
-    [tasks, events],
-  );
-
-  const filteredEvents = useMemo(
-    () => filterBySource(events ?? []),
-    [events, filterBySource],
-  );
-
-  const headerActions = useMemo(
-    () => (
-      <>
-        <SourceFilterDialog
-          tasks={filterOptions}
-          worksets={worksets.map((ws) => ({
-            id: ws.id,
-            name: ws.id === SYSTEM_WORKSET_ID ? generalWorksetLabel : ws.name,
-            isSystem: ws.isSystem,
-          }))}
-          expandTasks={tasks.map((task) => ({
-            id: task.id,
-            name: task.name,
-            worksetId: task.worksetId ?? null,
-          }))}
-          selection={selection}
-          onChange={setSelection}
-          ariaLabelPrefix={ariaPrefix}
-          variant="board"
-        />
-        <GanttViewModeControls
-          viewMode={viewMode}
-          onChange={setViewMode}
-          ariaLabelPrefix={ariaPrefix}
-          testIdPrefix="board-gantt-events"
-        />
-      </>
-    ),
-    [ariaPrefix, filterOptions, selection, setSelection, setViewMode, tasks, generalWorksetLabel, viewMode, worksets],
-  );
-  useBoardWidgetHeaderActions(headerActions);
 
   return (
     <div

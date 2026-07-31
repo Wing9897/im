@@ -5,7 +5,7 @@ import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { TimeFilter, type TimeFilterPreset } from "../../components/TimeFilter";
 import { OpsControlBar, SegmentedControl, SelectField } from "../../components/ui";
 import { pageOpsControlClass } from "../../components/ui/controlStyles";
-import type { IntelligenceSelectedSources } from "../../domain/ui/namedSourceFilters";
+import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import type { ViewMode } from "../../types";
 import {
   getIntelligenceSortLabel,
@@ -41,8 +41,8 @@ interface IntelligenceToolbarProps {
   onTimeFilterChange: (preset: TimeFilterPreset) => void;
   sortMode: IntelligenceSortMode;
   onSortModeChange: (mode: IntelligenceSortMode) => void;
-  selectedSources: IntelligenceSelectedSources;
-  setSelectedSources: (ids: IntelligenceSelectedSources) => void;
+  selectedSources: SourceFilterSelection;
+  setSelectedSources: (ids: SourceFilterSelection) => void;
   intelligenceTasks: IntelligenceTaskOption[];
   worksets?: WorksetOption[];
   expandTasks?: ExpandTaskOption[];
