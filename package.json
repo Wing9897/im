@@ -22,6 +22,7 @@
     "build:web": "node scripts/build-web.mjs",
     "build:desktop": "npm run build --workspace desktop",
     "build:server-sidecar": "npm run build:server-sidecar --workspace desktop",
+    "package:cli": "uv run python scripts/package_cli.py",
     "dist:win": "npm run build:web && npm run dist:win --workspace desktop",
     "dist:mac": "npm run build:web && npm run dist:mac --workspace desktop",
     "dist:linux": "npm run build:web && npm run dist:linux --workspace desktop",

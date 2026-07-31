@@ -53,10 +53,21 @@ Individual suites are also available: `npm test` (root smoke/audit), `npm run te
 
 The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
 a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
-token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Desktop packaging for Windows／macOS／Linux
-(`npm run dist:win`／`dist:mac`／`dist:linux` + `verify:desktop:full` on each target OS) and
-GHCR publish run on tag／manual CI only. Pushing a `v*` tag (name without `v` must equal
-root `VERSION`) also creates a **GitHub Release** with the Desktop artifacts.
+token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday push／PR CI always runs **`quality`**
+(Ubuntu). When Desktop／web paths change (or on `v*` tag／`workflow_dispatch`), the **`desktop`**
+matrix also runs the same lightweight checks on Windows／macOS／Linux (`verify:desktop:fast` +
+native sidecar build／startup smoke); unrelated paths skip the whole matrix.
+
+**Release packaging** (`package` matrix on all three OS): `dist:win`／`dist:mac`／`dist:linux` +
+`verify:desktop:full` + `package:cli` (CLI zip = PyInstaller onedir for the same entry as
+`python -m server`／`intelligence-monitor`). Runs on **`v*` tag** or manual
+**`workflow_dispatch`** only — same trigger for every OS. Pushing a `v*` tag (name without `v`
+must equal root `VERSION`) creates a **GitHub Release** with **Desktop + CLI** attachments for
+Windows／macOS／Linux; incomplete asset sets fail the `release` job. `workflow_dispatch` builds
+artifacts but does **not** create a Release. GHCR publish also runs on tag／dispatch.
+
+Release steps: bump root `VERSION` → `npm run sync:version` → commit／push →
+`git tag vX.Y.Z` → `git push origin vX.Y.Z` → wait for Actions.
 
 ## Generated files are committed — regenerate, never hand-edit
 

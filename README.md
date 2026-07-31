@@ -103,14 +103,17 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 | `npm run build` | 建置 Web + Desktop |
 | `npm run build:web` | 建置前端靜態檔（`web/dist/`） |
 | `npm run build:desktop` | 編譯 Desktop TypeScript |
-| `npm run build:server-sidecar` | 以 PyInstaller 打包內建 Python server（**須在目標 OS 上執行**；輸出 `desktop/server-runtime/`） |
+| `npm run build:server-sidecar` | 以 PyInstaller 打包內建 Python server（**須在目標 OS 上執行**；輸出 `desktop/server-runtime/`；亦為 headless CLI） |
+| `npm run package:cli` | 將已建置的 sidecar onedir 打成 `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`（須先 `build:server-sidecar` 或 `dist:*`） |
 | `npm run dist:win` | 封裝 Windows 安裝程式（NSIS .exe；**第一等 Desktop 交付**） |
 | `npm run dist:mac` | 封裝 macOS（DMG／zip；**第一等 Desktop 交付**；須在 macOS 上執行） |
 | `npm run dist:linux` | 封裝 Linux（AppImage／deb；**第一等 Desktop 交付**；須在 Linux 上執行） |
 | `npm run dist:current` | 依本機 OS 封裝（`electron-builder --publish never`） |
 | `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`；與三平台 Desktop 同為第一等交付） |
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。推送 `v*` tag 時 CI 會封裝三平台並建立 **GitHub Release**（附件為安裝包）；容器映像在 `v*` tag 或手動 workflow 時推送到 **GHCR**（見下方 CI）。
+**CLI** = 無 Electron 的 headless server，與 `python -m server`／`intelligence-monitor`（`pyproject.toml` console script）同一入口；發佈物為各平台 PyInstaller zip（內含 `intelligence-monitor-server`）。
+
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。推送匹配 `VERSION` 的 `v*` tag 時，CI 會封裝 **三平台 Desktop + 三平台 CLI** 並建立 **GitHub Release**（附件齊全才會發佈）；容器映像在 `v*` tag 或手動 workflow 時推送到 **GHCR**（見下方 CI）。`workflow_dispatch` 會打包產物但**不**建立 Release。
 
 ### 容器（GHCR）
 
@@ -139,10 +142,10 @@ CI 僅在 `v*` tag 或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<
 
 | 場景 | 指令 | 說明 |
 |------|------|------|
-| **日常 CI**（push／PR） | `npm run check` + `npm run build` | Ubuntu 核心門禁：lint、漂移檢查（presets／i18n／OpenAPI）、型別檢查、`test:all`、web／desktop 建置 |
-| **Windows Desktop 路徑變更** | CI `windows-desktop` job | 相關路徑／tag／手動時建 sidecar 並做啟動 smoke（tzdata／sse_starlette） |
+| **日常 CI**（push／PR） | `npm run check` + `npm run build` | GitHub 上通常只見 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置。**不會**跑三平台完整安裝包 |
+| **Desktop 路徑變更** | CI `desktop` 矩陣（win／mac／linux） | 僅當變更触及 `desktop/`／`web/`／根 `package.json` 等、或 `v*` tag／手動 dispatch 時，**同一 job** 在三平台跑對稱輕量檢查（`verify:desktop:fast` + 原生 sidecar 建置／啟動 smoke）；無關路徑時整個矩陣 **Skipped**（見 `desktop-paths`） |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 smoke（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包後** | `npm run dist:win`／`dist:mac`／`dist:linux` + `npm run verify:desktop:full` | 各 OS 的 sidecar、unpacked、安裝包；CI 在手動 dispatch／`v*` tag 跑三平台 `package`；`v*` tag 另建 GitHub Release 並推 GHCR |
+| **發行／打包後** | `dist:*` + `verify:desktop:full` + `package:cli` | 三平台 Desktop 安裝包 + CLI zip 在 **`v*` tag** 或 **`workflow_dispatch`** 的 `package` 矩陣（觸發條件三平台相同）；僅 **`v*` tag** 建立 GitHub Release（Desktop+CLI 附件）並推 GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -177,12 +180,40 @@ CI 僅在 `v*` tag 或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<
 
 ## 版本控制
 
-GitHub Actions 在 push／PR 時於 **Ubuntu** 執行核心品質關卡與 web／desktop 建置。Desktop／web 相關路徑變更、`v*` tag、或手動 `workflow_dispatch` 時另在 **Windows** 建 sidecar 並做啟動 smoke；手動 dispatch／`v*` tag 另以矩陣封裝 **Windows／macOS／Linux** Desktop 並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件為 NSIS／DMG／zip／AppImage／deb 等；tag 去掉 `v` 後須等於根目錄 `VERSION`）並推送 **GHCR**（Docker 不替代 Release 附件，且不再於每次 `main` push 自動推送）。本機請維持相同關卡：
+### CI 何時跑什麼（`.github/workflows/ci.yml`）
+
+| 觸發 | `quality` | `desktop`（win／mac／linux 對稱 smoke） | `package`（Desktop+CLI 三平台） | `release`（GitHub Release） | `container`（GHCR） |
+|------|-----------|------------------------------------------|----------------------------------|-----------------------------|---------------------|
+| 普通 **push／PR** | ✅ 必跑 | Desktop／web 等路徑變更時 **三平台同啟**；否則整個矩陣 **Skipped** | ❌ 不跑 | ❌ | ❌ |
+| **`v*` tag** push | ✅ | ✅ 三平台 | ✅ 三平台 Desktop 安裝包 + CLI zip（tag 名去掉 `v` 須 = `VERSION`） | ✅ 上傳 **Desktop(win/mac/linux) + CLI(win/mac/linux)**；缺件則失敗 | ✅ |
+| **`workflow_dispatch`** | ✅ | ✅ 三平台 | ✅ 三平台（產物進 Actions artifacts） | ❌ **不**建 Release（僅 tag） | ✅ |
+
+#### 正確發版步驟（GitHub Release）
+
+```bash
+# 1) bump 根目錄 VERSION，並同步套件版本
+# 編輯 VERSION 後：
+npm run sync:version
+npm run check
+git add -A && git commit -m "release: ship X.Y.Z"
+git push origin HEAD
+
+# 2) tag 必須為 v + VERSION 全文（例 VERSION=0.1.0-beta.6 → v0.1.0-beta.6）
+git tag "v$(tr -d '[:space:]' < VERSION)"
+git push origin "v$(tr -d '[:space:]' < VERSION)"
+
+# 3) 等待 Actions：quality → package(win/mac/linux) → release
+# Release 附件應含 Desktop 安裝包 + intelligence-monitor-cli-*.zip（三平台）
+```
+
+普通 `git push`（無 `v*` tag）**不會**建立 Release——這是預期行為。mac／linux 完整打包只能在 GitHub Actions（或對應本機 OS）驗證；本機 Windows 可跑 `npm run dist:win && npm run package:cli`。
+
+本機請維持相同關卡：
 
 | 時機 | 指令 |
 |------|------|
 | 日常開發 | `npm run check`；部署後可 `npm run verify:deploy`；Desktop 改動另跑 `npm run build && npm run verify:desktop:fast` |
-| 發佈前 | `npm run check`、在目標 OS 上 `npm run dist:win`／`dist:mac`／`dist:linux`、`npm run verify:desktop:full`；或推送匹配 `VERSION` 的 `v*` tag 讓 CI 三平台打包並建 Release；容器可 `npm run docker:build` 後再 `npm run verify:deploy` |
+| 發佈前 | `npm run check` → bump `VERSION` + `sync:version` → commit／push → `git tag vX.Y.Z` → `git push origin vX.Y.Z`；CI 產出 Desktop+CLI 到 Release；容器另見 GHCR |
 
 ## 設定
 

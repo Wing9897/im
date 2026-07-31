@@ -9,6 +9,7 @@ const generatedDirectories = [
   "desktop/dist",
   "desktop/release",
   "desktop/server-runtime",
+  "dist",
   "build",
   ".hypothesis",
   ".pytest_cache",

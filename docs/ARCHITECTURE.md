@@ -248,7 +248,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
 6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
-7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). The PyInstaller sidecar must be built on the **target OS** (no cross-compile). CI packages all three on `v*` tags or manual `workflow_dispatch` (unsigned by default); `v*` tags also create a GitHub Release with those artifacts.
+7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). CI `desktop` smoke matrix (Windows／macOS／Linux) runs on Desktop／web path changes, `v*` tags, or `workflow_dispatch` — same job, same trigger for all three OS. Full `package` matrix (Desktop installers + CLI zip, all three OS) runs on `v*` tags or manual `workflow_dispatch` only — not every push (unsigned by default). **`v*` tags** create a GitHub Release with Desktop **and** CLI attachments (job fails if any required platform asset is missing); `workflow_dispatch` packages without creating a Release. Plain push／PR always keep Ubuntu `quality`.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push is **tag / manual only** (not every `main` push). Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
 
@@ -282,7 +282,8 @@ Operational and packaging helpers invoked from npm scripts or CI:
 |--------|-----------|---------|
 | `dev.mjs` | `npm run dev` / `dev:web` | Local web + server (or web-only) orchestrator |
 | `build-web.mjs` | `npm run build:web` | Vite production build for `web/` (root orchestration; CI also runs `web` package `typecheck`) |
-| `build_server_sidecar.py` | `npm run build:server-sidecar` | PyInstaller one-dir bundle for the Electron sidecar (`desktop/server-runtime/`); keeps `tzdata` data + `sse_starlette` submodules |
+| `build_server_sidecar.py` | `npm run build:server-sidecar` | PyInstaller one-dir bundle for the Electron sidecar／headless CLI (`desktop/server-runtime/`); keeps `tzdata` data + `sse_starlette` submodules |
+| `package_cli.py` | `npm run package:cli` | Zip the sidecar onedir into `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip` for GitHub Release |
 | `clean.mjs` | `npm run clean` | Remove reproducible build outputs and Node/Python caches across workspaces |
 | `smoke.py` | `npm run smoke` / `verify:deploy` | Short post-deploy live smoke against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |

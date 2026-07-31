@@ -4,9 +4,9 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-  # Tag builds also publish Desktop artifacts + GitHub Release + GHCR image
-  # (see windows-desktop / package / release / container jobs).
-  # Example: git tag v0.1.0-beta.3 && git push origin v0.1.0-beta.3
+  # Tag builds publish Desktop + CLI artifacts to GitHub Release + GHCR image
+  # (see desktop / package / release / container jobs).
+  # Example: git tag v0.1.0-beta.6 && git push origin v0.1.0-beta.6
 
 env:
   # Unsigned Desktop builds in CI unless repo secrets provide signing material.
@@ -44,12 +44,13 @@ jobs:
       - name: Build web and desktop
         run: npm run build
 
-  # Windows Desktop sidecar when Desktop/web packaging paths change, on v* tags,
-  # or via manual dispatch. Not part of the Ubuntu PR gate. Full installers are
-  # the separate `package` job (tag / workflow_dispatch only).
-  windows-desktop:
-    runs-on: windows-latest
-    timeout-minutes: 90
+  # Path gate for Desktop smoke. Unrelated push/PR → relevant=false so the whole
+  # `desktop` matrix is Skipped (not a green empty run). Tag / workflow_dispatch always relevant.
+  desktop-paths:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      relevant: ${{ steps.paths.outputs.relevant }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -74,57 +75,80 @@ jobs:
             echo "relevant=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if git diff --name-only "$base" "$head" | grep -E '^(desktop/|scripts/build_server_sidecar\.py|package\.json|package-lock\.json|web/)' >/dev/null; then
+          if git diff --name-only "$base" "$head" | grep -E '^(desktop/|scripts/build_server_sidecar\.py|scripts/package_cli\.py|package\.json|package-lock\.json|web/)' >/dev/null; then
             echo "relevant=true" >> "$GITHUB_OUTPUT"
           else
             echo "relevant=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Skip when paths are unrelated
-        if: steps.paths.outputs.relevant != 'true'
-        run: echo "No Desktop-related path changes; skipping Windows Desktop job."
+  # Symmetric Desktop smoke on Windows / macOS / Linux when Desktop/web paths change,
+  # on v* tags, or via manual dispatch. Same job name + matrix — no Windows-only green light.
+  # Full installers + CLI zips remain the separate `package` job (tag / workflow_dispatch only).
+  desktop:
+    needs: desktop-paths
+    if: needs.desktop-paths.outputs.relevant == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    name: desktop (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7
-        if: steps.paths.outputs.relevant == 'true'
         with:
           node-version-file: .nvmrc
           cache: npm
 
       - uses: astral-sh/setup-uv@v7
-        if: steps.paths.outputs.relevant == 'true'
         with:
           enable-cache: true
           activate-environment: true
 
       - name: Install Python 3.11
-        if: steps.paths.outputs.relevant == 'true'
         run: uv python install 3.11
 
       - name: Install dependencies
-        if: steps.paths.outputs.relevant == 'true'
         run: |
           uv sync --extra dev --locked
           npm ci
 
-      - name: Build web, desktop, and server sidecar
-        if: steps.paths.outputs.relevant == 'true'
-        run: |
-          npm run build
-          uv run python scripts/build_server_sidecar.py
+      - name: Build web and desktop
+        run: npm run build
+
+      - name: Desktop fast verify (paths + vitest)
+        run: npm run verify:desktop:fast
+
+      - name: Build server sidecar (PyInstaller, native OS)
+        run: uv run python scripts/build_server_sidecar.py
 
       - name: Verify bundled server exists
-        if: steps.paths.outputs.relevant == 'true'
-        shell: bash
-        run: |
-          server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
-          test -f "$server" || { echo "Missing bundled server: $server"; exit 1; }
-
-      - name: Sidecar startup smoke (tzdata / sse_starlette)
-        if: steps.paths.outputs.relevant == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
+          else
+            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server"
+          fi
+          test -f "$server" || { echo "Missing bundled server: $server"; exit 1; }
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            chmod +x "$server"
+          fi
+          echo "Found sidecar: $server"
+
+      - name: Sidecar startup smoke (tzdata / sse_starlette)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
+          else
+            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server"
+            chmod +x "$server"
+          fi
           export INTELLIGENCE_MONITOR_DATA_DIR="${RUNNER_TEMP}/im-sidecar-smoke"
           export INTELLIGENCE_MONITOR_HOST=127.0.0.1
           mkdir -p "$INTELLIGENCE_MONITOR_DATA_DIR"
@@ -142,7 +166,8 @@ jobs:
           echo "Sidecar failed to become healthy within 120s" >&2
           exit 1
 
-  # Desktop packages (win/mac/linux) + desktop verify on tag or manual dispatch only.
+  # Desktop installers + CLI zip (win/mac/linux) on tag or manual dispatch only.
+  # Same trigger for all three OS — no platform-specific gate.
   package:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     needs: quality
@@ -152,13 +177,20 @@ jobs:
         include:
           - os: windows-latest
             dist: dist:win
-            artifact: windows-desktop
+            artifact: windows-release
+            expect_desktop: "*.exe"
+            expect_cli: "intelligence-monitor-cli-windows-*.zip"
           - os: macos-latest
             dist: dist:mac
-            artifact: macos-desktop
+            artifact: macos-release
+            expect_desktop: "*.dmg"
+            expect_cli: "intelligence-monitor-cli-macos-*.zip"
           - os: ubuntu-latest
             dist: dist:linux
-            artifact: linux-desktop
+            artifact: linux-release
+            expect_desktop: "*.AppImage"
+            expect_cli: "intelligence-monitor-cli-linux-*.zip"
+    name: package (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
@@ -199,14 +231,38 @@ jobs:
           uv sync --extra dev --locked
           npm ci
 
-      - name: Build and verify Desktop package
+      - name: Build Desktop package
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: |
-          npm run ${{ matrix.dist }}
-          npm run verify:desktop:full
+        run: npm run ${{ matrix.dist }}
 
-      - name: Upload Desktop artifacts
+      - name: Verify Desktop package
+        run: npm run verify:desktop:full
+
+      - name: Package CLI zip (same PyInstaller onedir as sidecar)
+        run: npm run package:cli
+
+      - name: Assert Desktop + CLI artifacts exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          desktop=(desktop/release/${{ matrix.expect_desktop }})
+          cli=(dist/cli/${{ matrix.expect_cli }})
+          echo "Desktop matches: ${desktop[*]:-none}"
+          echo "CLI matches: ${cli[*]:-none}"
+          if [[ ${#desktop[@]} -lt 1 ]]; then
+            echo "Missing Desktop artifact matching desktop/release/${{ matrix.expect_desktop }}" >&2
+            ls -la desktop/release || true
+            exit 1
+          fi
+          if [[ ${#cli[@]} -lt 1 ]]; then
+            echo "Missing CLI zip matching dist/cli/${{ matrix.expect_cli }}" >&2
+            ls -la dist/cli || true
+            exit 1
+          fi
+
+      - name: Upload Desktop + CLI artifacts
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ github.sha }}
@@ -219,12 +275,14 @@ jobs:
             desktop/release/*.yml
             desktop/release/*.yaml
             desktop/release/*.blockmap
+            dist/cli/intelligence-monitor-cli-*.zip
           if-no-files-found: error
 
-  # On v* tags: create GitHub Release with all Desktop artifacts from package matrix.
+  # On v* tags only: create GitHub Release with Desktop + CLI from all three package legs.
+  # workflow_dispatch builds artifacts but does NOT create a Release.
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: package
+    needs: [package]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -242,34 +300,79 @@ jobs:
             exit 1
           fi
 
-      - name: Download Desktop artifacts
+      - name: Download Desktop + CLI artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-${{ github.sha }}"
+          pattern: "*-release-${{ github.sha }}"
           path: release-assets
           merge-multiple: true
+
+      - name: Stage and assert Release attachments
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staged
+          # Flatten whatever layout download-artifact used so softprops globs cannot miss.
+          while IFS= read -r -d '' f; do
+            base="$(basename "$f")"
+            # Avoid collisions across platforms (mac zip vs cli zip share .zip).
+            if [[ -e "staged/$base" ]]; then
+              parent="$(basename "$(dirname "$f")")"
+              base="${parent}-${base}"
+            fi
+            cp "$f" "staged/$base"
+          done < <(find release-assets -type f \
+            \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' \
+               -o -name '*.deb' -o -name '*.yml' -o -name '*.yaml' -o -name '*.blockmap' \) \
+            -print0)
+
+          echo "Staged files:"
+          ls -la staged
+
+          need_fail=0
+          require_name() {
+            local pattern="$1"
+            local hit
+            hit="$(find staged -maxdepth 1 -type f -name "$pattern" | head -n 1 || true)"
+            if [[ -z "$hit" ]]; then
+              echo "MISSING required Release attachment: $pattern" >&2
+              need_fail=1
+            else
+              echo "OK: $pattern → $hit"
+            fi
+          }
+          require_name 'Intelligence Monitor Setup *.exe'
+          require_name '*.dmg'
+          require_name '*.AppImage'
+          require_name 'intelligence-monitor-cli-windows-*.zip'
+          require_name 'intelligence-monitor-cli-macos-*.zip'
+          require_name 'intelligence-monitor-cli-linux-*.zip'
+          if [[ "$need_fail" -ne 0 ]]; then
+            echo "Refusing to publish an empty or incomplete GitHub Release." >&2
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'rc') }}
+          fail_on_unmatched_files: true
           body: |
-            Desktop installers for **${{ github.ref_name }}** (Windows NSIS, macOS DMG/zip, Linux AppImage/deb).
+            Desktop installers + headless CLI for **${{ github.ref_name }}**.
+
+            **Desktop (first-class):** Windows NSIS (`.exe`), macOS DMG/zip, Linux AppImage/deb.
+
+            **CLI:** `intelligence-monitor-cli-<os>-<arch>.zip` — PyInstaller onedir for the same
+            entry as `python -m server` / `intelligence-monitor` (no Electron). Unpack and run
+            `intelligence-monitor-server` (`.exe` on Windows).
 
             Docker/Web image is published to GHCR on the same tag (or via manual workflow_dispatch).
 
             See [`CHANGELOG.md`](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for release notes.
           files: |
-            release-assets/**/*.exe
-            release-assets/**/*.dmg
-            release-assets/**/*.zip
-            release-assets/**/*.AppImage
-            release-assets/**/*.deb
-            release-assets/**/*.yml
-            release-assets/**/*.yaml
-            release-assets/**/*.blockmap
-          fail_on_unmatched_files: false
+            staged/*
 
   # Docker image: tag or manual only (not every main push). Healthcheck lives in Dockerfile.
   container:

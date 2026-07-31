@@ -119,7 +119,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live smoke: `npm run verify:deploy`
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions: Ubuntu `npm run check` + build on every push／PR; Windows sidecar smoke on Desktop-related paths／tag／manual; win／mac／linux Desktop packages + GHCR on tag／manual; `v*` tags also create a GitHub Release with Desktop artifacts.
+- GitHub Actions: Ubuntu `quality` (`npm run check` + build) on every push／PR; symmetric `desktop` matrix (Windows／macOS／Linux: `verify:desktop:fast` + native sidecar smoke) when Desktop／web paths change (otherwise whole matrix Skipped via `desktop-paths`); win／mac／linux `package` (Desktop installers + CLI zip) + GHCR on tag／manual only (same trigger for all three OS; not plain push); `v*` tags create a GitHub Release with Desktop **and** CLI attachments (asserted complete); `workflow_dispatch` packages without Release.
 
 ## Security (outbound requests)
 
@@ -127,13 +127,15 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 **Accepted limitation:** DNS rebinding between validate and TCP connect is not mitigated with IP pinning (local single-user deployments).
 
-## Release checklist (Desktop + container)
+## Release checklist (Desktop + CLI + container)
 
-1. `npm run check`
-2. Desktop (on each target OS, or via CI): `npm run dist:win`／`dist:mac`／`dist:linux` then `npm run verify:desktop:full` (CI `package` matrix on tag／manual)
-3. Sign installers for public／store distribution (unsigned CI builds are for QA only; macOS needs Apple identity／notarization for Gatekeeper)
-4. Container: `npm run docker:build` + `npm run verify:deploy`, or CI tag／manual → `ghcr.io/<owner>/<repo>` (healthcheck + deploy smoke)
-5. CI: `workflow_dispatch` or push a `v*` tag (win／mac／linux Desktop + GHCR); on `v*` tags CI also creates a **GitHub Release** with Desktop artifacts (tag name without `v` must equal root `VERSION`). GHCR does not replace Release attachments.
+1. Bump root `VERSION`, run `npm run sync:version`, then `npm run check`
+2. Commit and push the release prep commit
+3. Tag and push: `git tag vX.Y.Z && git push origin vX.Y.Z` where `X.Y.Z` equals root `VERSION` (including any `-beta.N` suffix)
+4. CI `package` matrix (tag／manual): each OS runs `dist:*` + `verify:desktop:full` + `package:cli`
+5. On **`v*` tags only**, CI `release` uploads Desktop (NSIS／DMG／AppImage／deb／…) **and** `intelligence-monitor-cli-*.zip` for all three OS; missing required assets fail the job. `workflow_dispatch` builds artifacts but does **not** create a Release
+6. Sign installers for public／store distribution (unsigned CI builds are for QA only; macOS needs Apple identity／notarization for Gatekeeper)
+7. Container: `npm run docker:build` + `npm run verify:deploy`, or CI tag／manual → `ghcr.io/<owner>/<repo>` (healthcheck + deploy smoke). GHCR does not replace Release attachments.
 
 ## Email IMAP outbound policy
 
