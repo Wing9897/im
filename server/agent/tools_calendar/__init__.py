@@ -12,9 +12,9 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable
 
 from server.agent.tool_limits import (
-    CALENDAR_DEFAULT_LIST_LIMIT as DEFAULT_LIST_LIMIT,
-    CALENDAR_DEFAULT_WINDOW_LIMIT as DEFAULT_WINDOW_LIMIT,
-    CALENDAR_RESULT_HARD_CAP as HARD_CAP,
+    CALENDAR_DEFAULT_LIST_LIMIT,
+    CALENDAR_DEFAULT_WINDOW_LIMIT,
+    CALENDAR_RESULT_HARD_CAP,
 )
 from server.agent.tools_calendar.handlers import (
     _tool_create_event,
@@ -31,6 +31,10 @@ from server.agent.tools_calendar.handlers import (
 )
 from server.agent.tools_calendar.schemas import TOOL_SCHEMAS
 from server.db.database import Database
+
+DEFAULT_LIST_LIMIT = CALENDAR_DEFAULT_LIST_LIMIT
+DEFAULT_WINDOW_LIMIT = CALENDAR_DEFAULT_WINDOW_LIMIT
+HARD_CAP = CALENDAR_RESULT_HARD_CAP
 
 ToolHandler = Callable[[Database, dict[str, Any]], Awaitable[dict[str, Any]]]
 
