@@ -71,17 +71,20 @@ def check_fast_paths() -> list[tuple[str, bool, str]]:
 
 def _packaged_server_candidates() -> list[Path]:
     name = _sidecar_binary_name()
-    rel = Path("resources") / "server-runtime" / "intelligence-monitor-server" / name
+    # Win/Linux unpacked: extraResources land under resources/
+    rel_unpacked = Path("resources") / "server-runtime" / "intelligence-monitor-server" / name
+    # macOS .app: Contents/Resources/ is already the resources root (no nested resources/)
+    rel_mac = Path("server-runtime") / "intelligence-monitor-server" / name
     candidates: list[Path] = [
-        RELEASE_DIR / "win-unpacked" / rel,
-        RELEASE_DIR / "linux-unpacked" / rel,
-        RELEASE_DIR / "mac" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel,
-        RELEASE_DIR / "mac-arm64" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel,
-        RELEASE_DIR / "mac-x64" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel,
+        RELEASE_DIR / "win-unpacked" / rel_unpacked,
+        RELEASE_DIR / "linux-unpacked" / rel_unpacked,
+        RELEASE_DIR / "mac" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel_mac,
+        RELEASE_DIR / "mac-arm64" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel_mac,
+        RELEASE_DIR / "mac-x64" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel_mac,
     ]
     # electron-builder may nest under arch folders on some versions
     for unpacked in RELEASE_DIR.glob("*-unpacked"):
-        candidates.append(unpacked / rel)
+        candidates.append(unpacked / rel_unpacked)
     return candidates
 
 
