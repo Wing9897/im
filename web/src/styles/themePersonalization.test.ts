@@ -23,10 +23,6 @@ import {
 } from "./themeData";
 import { getThemeDefinition } from "./themeCatalog";
 
-function legacyPanelOpacityKey(themeId: string): string {
-  return `im:theme-panel-opacity:${themeId}`;
-}
-
 function clearPersonalizationDom(): void {
   const root = document.documentElement;
   root.removeAttribute("data-theme");
@@ -256,28 +252,6 @@ describe("applyTheme personalization overlay", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBe("moss");
     expect(document.documentElement.getAttribute("data-theme-texture")).toBe("moss");
     expect(document.documentElement.style.getPropertyValue("--accent")).toBe("");
-  });
-
-  it("migrates legacy panel opacity into surfaceCard then deletes legacy key", () => {
-    localStorage.setItem(legacyPanelOpacityKey("moss"), "0.55");
-    applyTheme("moss");
-
-    expect(localStorage.getItem(legacyPanelOpacityKey("moss"))).toBeNull();
-    expect(loadThemeColorOpacities("moss").surfaceCard).toBe(0.55);
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity")).toBe("0.55");
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity-pct")).toBe("55%");
-    expect(getEffectivePanelOpacity("moss")).toBe(0.55);
-    expect(getEffectivePanelOpacity("nord")).toBe(DEFAULT_PANEL_OPACITY);
-  });
-
-  it("does not overwrite existing surfaceCard opacity when migrating legacy", () => {
-    localStorage.setItem(legacyPanelOpacityKey("moss"), "0.55");
-    setThemeColorOpacity("moss", "surfaceCard", 0.4);
-    applyTheme("moss");
-
-    expect(localStorage.getItem(legacyPanelOpacityKey("moss"))).toBeNull();
-    expect(getEffectivePanelOpacity("moss")).toBe(0.4);
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity")).toBe("0.4");
   });
 
   it("panel opacity follows only surfaceCard after hard-cut", () => {

@@ -162,29 +162,28 @@ describe("Typography overflow classification consistency", () => {
 });
 
 /**
- * Migration deviation bound (Validates: Requirements 8.6)
+ * Token scale geometry (Validates: Requirements 8.6)
  *
- * Spacing and radius migrations preserve layout geometry within 4 pixels.
- * Typography is intentionally excluded because the compact-density redesign
- * changed font sizes by more than a spacing-step tolerance.
+ * Spacing and radius tokens stay within 4px of their reference pixel values.
+ * Typography is intentionally excluded (compact-density sizes exceed that bound).
  */
-describe("Migration deviation bound", () => {
-  const MIGRATION_PAIRS = [
-    // Spacing migrations
+describe("Token scale geometry", () => {
+  const TOKEN_PAIRS = [
+    // Spacing
     { original: 10, token: spacing.md, category: "spacing" },
     { original: 14, token: spacing.lg, category: "spacing" },
     { original: 18, token: spacing.xl, category: "spacing" },
     { original: 6, token: spacing.sm, category: "spacing" },
     { original: 22, token: spacing["2xl"], category: "spacing" },
     { original: 28, token: spacing["3xl"], category: "spacing" },
-    // Border radius migrations
+    // Border radius
     { original: 6, token: parseInt(borderRadius.sm), category: "borderRadius" },
     { original: 10, token: parseInt(borderRadius.lg), category: "borderRadius" },
     { original: 16, token: parseInt(borderRadius.xl), category: "borderRadius" },
   ];
 
-  it("absolute difference between original and token value is ≤ 4px for all migration pairs", () => {
-    for (const pair of MIGRATION_PAIRS) {
+  it("absolute difference between reference and token value is ≤ 4px for all pairs", () => {
+    for (const pair of TOKEN_PAIRS) {
       const deviation = Math.abs(pair.original - pair.token);
       expect(deviation).toBeLessThanOrEqual(4);
     }

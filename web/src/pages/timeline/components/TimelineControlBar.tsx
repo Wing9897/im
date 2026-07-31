@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
-import type { TimelineSelectedSources } from "../../../domain/timeline/timelineSourceFilter";
+import type { TimelineSelectedSources } from "../../../domain/ui/namedSourceFilters";
 
 type TimelineTaskOption = {
   id: string;

@@ -1,14 +1,24 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AnalysisEvent, CalendarOccurrence } from "../../types";
 import {
   calendarOccurrenceToBoardEvent,
+  fetchBoardEventsList,
   mergeWithCalendarOccurrences,
   userEventToBoardEvent,
   userEventToTimelineItem,
 } from "./timedEventMerge";
 import { getGeneralWorksetLabel } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+
+vi.mock("../../api/results", () => ({
+  fetchEvents: vi.fn(),
+  fetchCalendarOccurrences: vi.fn(),
+}));
+
+vi.mock("../../api/userEvents", () => ({
+  listUserEvents: vi.fn(),
+}));
 
 /** Local AnalysisEvent fixture for merge tests (not timelineTestHelpers.makeEvent). */
 function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
@@ -231,5 +241,58 @@ describe("userEventToTimelineItem", () => {
     expect(item!.origin).toBe("manual");
     expect(item!.taskName).toBe("一般");
     expect(item!.source).toBe("user");
+  });
+});
+
+describe("fetchBoardEventsList", () => {
+  beforeEach(async () => {
+    const { fetchEvents, fetchCalendarOccurrences } = await import("../../api/results");
+    const { listUserEvents } = await import("../../api/userEvents");
+    vi.mocked(fetchEvents).mockReset();
+    vi.mocked(fetchCalendarOccurrences).mockReset();
+    vi.mocked(listUserEvents).mockReset();
+    vi.mocked(fetchEvents).mockResolvedValue({
+      items: [
+        makeEvent({
+          id: "a1",
+          createdAt: "2026-07-22T12:00:00.000Z",
+          startTime: null,
+        }),
+      ],
+      total: 1,
+    } as never);
+    vi.mocked(listUserEvents).mockResolvedValue([
+      {
+        id: "ue-1",
+        title: "手動",
+        body: "",
+        startTime: "2026-07-22T13:00:00Z",
+        endTime: null,
+        location: null,
+        origin: "manual",
+        source: "user",
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        createdAt: "2026-07-22T13:00:00Z",
+        updatedAt: "2026-07-22T13:00:00Z",
+      },
+    ]);
+    vi.mocked(fetchCalendarOccurrences).mockResolvedValue([makeOccurrence()]);
+  });
+
+  it("merges analysis + user events, sorts by time desc, skips calendar by default", async () => {
+    const { fetchCalendarOccurrences } = await import("../../api/results");
+    const items = await fetchBoardEventsList({ includeCalendar: false, limit: 15 });
+    expect(fetchCalendarOccurrences).not.toHaveBeenCalled();
+    expect(items.map((e) => e.id)).toEqual(["ue-1", "a1"]);
+    expect(items[0].source).toBe("user");
+  });
+
+  it("requests analyzed_at sort from fetchEvents", async () => {
+    const { fetchEvents } = await import("../../api/results");
+    await fetchBoardEventsList({ limit: 15 });
+    expect(fetchEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ sort: "analyzed_at", limit: 15 }),
+    );
   });
 });

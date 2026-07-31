@@ -6,7 +6,7 @@ import { usePersistedState } from "../../../hooks/usePersistedState";
 import type { TimelineItem } from "../../../types";
 import { formatOsDateTime } from "../../../utils/time";
 import { dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
-import { TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY } from "../timelinePanelKeys";
+import { TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY } from "../timelinePersistedKeys";
 
 /** Collapse newlines/spaces for single-line list previews (line-clamp breaks on multi-line body). */
 export function previewEventBody(body: string): string {

@@ -1,10 +1,18 @@
 import type { UserEvent } from "../../api/userEvents";
 import { listUserEvents } from "../../api/userEvents";
 import { fetchCalendarOccurrences, fetchEvents } from "../../api/results";
+import { getEventTimestamp } from "../intelligence/mapFilters";
 import { resolveUserEventTaskName } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
+
+function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
+  return [...events].sort(
+    (a, b) =>
+      new Date(getEventTimestamp(b)).getTime() - new Date(getEventTimestamp(a)).getTime(),
+  );
+}
 
 /**
  * Projects manual / assistant events into the shared timed-event contract
@@ -203,4 +211,38 @@ export async function fetchMergedTimedBoardEvents(opts: {
     [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))],
     calendarOccurrences,
   );
+}
+
+/**
+ * Events-list board widget fetch: recent analysis events (analyzed_at) + all
+ * user_events. Does not include RRULE calendar unless `includeCalendar` is set
+ * with a date window (not used by the events list today).
+ */
+export async function fetchBoardEventsList(opts: {
+  includeCalendar?: boolean;
+  limit?: number;
+  startDate?: string;
+  endDate?: string;
+} = {}): Promise<AnalysisEvent[]> {
+  const { includeCalendar = false, limit = 15, startDate, endDate } = opts;
+  const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
+    fetchEvents({
+      limit,
+      offset: 0,
+      sort: "analyzed_at",
+      includeTotal: false,
+    }).then((page) => page.items),
+    // Unbounded list stays small under retention; merge so「一般」filter works.
+    listUserEvents(),
+    includeCalendar && startDate && endDate
+      ? fetchCalendarOccurrences(startDate, endDate)
+      : Promise.resolve([] as CalendarOccurrence[]),
+  ]);
+  const merged = includeCalendar
+    ? mergeWithCalendarOccurrences(
+        [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))],
+        calendarOccurrences,
+      )
+    : [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))];
+  return sortEventsByTimeDesc(merged);
 }

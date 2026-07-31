@@ -1,22 +1,16 @@
 /**
  * Shared persistence core for hierarchical source filters.
- * Timeline / intelligence wrappers only bind a storage key — covered here once.
+ * Named timeline / intelligence bindings covered via makePersistedSourceFilter keys.
  */
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY } from "../intelligence/intelligencePersistedKeys";
 import {
-  loadIntelligenceSelectedSources,
-  pruneIntelligenceSelectedSources,
-  saveIntelligenceSelectedSources,
-} from "../intelligence/intelligenceSourceFilter";
-import {
-  loadTimelineSelectedSources,
-  pruneTimelineSelectedSources,
-  saveTimelineSelectedSources,
+  intelligenceSelectedSourcesFilter,
   TIMELINE_SELECTED_SOURCES_STORAGE_KEY,
-} from "../timeline/timelineSourceFilter";
+  timelineSelectedSourcesFilter,
+} from "./namedSourceFilters";
 import { makePersistedSourceFilter } from "./persistedSourceFilter";
 
 const CORE_KEY = "test:persisted-source-filter";
@@ -67,14 +61,14 @@ describe("timeline / intelligence key bindings", () => {
   });
 
   it("timeline uses im:timeline:selected-sources", () => {
-    saveTimelineSelectedSources({ taskIds: ["t1"], worksetIds: [] });
+    timelineSelectedSourcesFilter.save({ taskIds: ["t1"], worksetIds: [] });
     expect(JSON.parse(localStorage.getItem(TIMELINE_SELECTED_SOURCES_STORAGE_KEY)!)).toEqual({
       taskIds: ["t1"],
       worksetIds: [],
     });
-    expect(loadTimelineSelectedSources()).toEqual({ taskIds: ["t1"], worksetIds: [] });
+    expect(timelineSelectedSourcesFilter.load()).toEqual({ taskIds: ["t1"], worksetIds: [] });
     expect(
-      pruneTimelineSelectedSources(
+      timelineSelectedSourcesFilter.prune(
         { taskIds: ["t1", "gone"], worksetIds: [SYSTEM_WORKSET_ID] },
         ["t1"],
         [SYSTEM_WORKSET_ID],
@@ -84,14 +78,14 @@ describe("timeline / intelligence key bindings", () => {
 
   it("intelligence uses im:intelligence:selected-sources", () => {
     localStorage.setItem(INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY, JSON.stringify(["legacy"]));
-    expect(loadIntelligenceSelectedSources()).toBeNull();
-    saveIntelligenceSelectedSources({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
-    expect(loadIntelligenceSelectedSources()).toEqual({
+    expect(intelligenceSelectedSourcesFilter.load()).toBeNull();
+    intelligenceSelectedSourcesFilter.save({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
+    expect(intelligenceSelectedSourcesFilter.load()).toEqual({
       taskIds: [],
       worksetIds: [SYSTEM_WORKSET_ID],
     });
     expect(
-      pruneIntelligenceSelectedSources({ taskIds: ["gone"], worksetIds: [] }, ["a"]),
+      intelligenceSelectedSourcesFilter.prune({ taskIds: ["gone"], worksetIds: [] }, ["a"]),
     ).toBeNull();
   });
 });

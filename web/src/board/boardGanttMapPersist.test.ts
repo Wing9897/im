@@ -7,8 +7,10 @@ import {
   seedBoardPrefsCacheForTests,
 } from "./boardPrefsStore";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
-import { LEGACY_BOARD_STORAGE_KEY } from "./boardLegacyPersistedKeys";
 import { putBoardPrefs } from "../api/uiPrefs";
+
+/** Legacy board layout LS key — server ui-prefs is SoT; assert leftover LS is ignored. */
+const LEGACY_BOARD_STORAGE_KEY = "im:ops-board:v14";
 
 vi.mock("../api/uiPrefs", () => ({
   fetchBoardPrefs: vi.fn(),

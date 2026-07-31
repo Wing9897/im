@@ -4,7 +4,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { fetchBoardPrefs, putBoardPrefs } from "../api/uiPrefs";
 import { BOARD_LAYOUT_VERSION } from "./types";
-import { LEGACY_BOARD_STORAGE_KEY } from "./boardLegacyPersistedKeys";
 import {
   hydrateBoardPrefs,
   loadBoardConfigFromCache,
@@ -18,6 +17,9 @@ import {
   saveSourceFilterToApi,
 } from "./boardPrefsStore";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
+
+/** Legacy board layout LS key — server ui-prefs is SoT; assert leftover LS is ignored. */
+const LEGACY_BOARD_STORAGE_KEY = "im:ops-board:v14";
 
 vi.mock("../api/uiPrefs", () => ({
   fetchBoardPrefs: vi.fn(),

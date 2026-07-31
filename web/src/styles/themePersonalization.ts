@@ -1,11 +1,8 @@
 import {
-  STORAGE_KEY_THEME_PANEL_OPACITY_MIGRATED,
   storageThemeColorsKey,
-  storageThemePanelOpacityKey,
   storageThemeTextureKey,
 } from "./themePersistedKeys";
 import {
-  THEME_CATALOG,
   THEME_MOTIFS,
   getThemeDefinition,
   resolveThemeId,
@@ -162,37 +159,6 @@ function writeStoredBundle(
     return;
   }
   localStorage.setItem(key, JSON.stringify(cleaned));
-}
-
-/**
- * One-shot: copy legacy panel opacity into surfaceCard opacity map for every
- * catalog theme, then set a migrated flag so apply paths skip the scan.
- */
-function migrateLegacyPanelOpacityOnce(): void {
-  if (localStorage.getItem(STORAGE_KEY_THEME_PANEL_OPACITY_MIGRATED) === "1") {
-    return;
-  }
-  for (const theme of THEME_CATALOG) {
-    const legacyKey = storageThemePanelOpacityKey(theme.id);
-    const raw = localStorage.getItem(legacyKey);
-    if (raw == null || raw === "") continue;
-
-    const bundle = parseStoredBundle(localStorage.getItem(storageThemeColorsKey(theme.id)));
-    if (bundle.opacity.surfaceCard == null) {
-      const n = Number.parseFloat(raw);
-      if (Number.isFinite(n)) {
-        const clamped = clampColorOpacity(n);
-        if (Math.abs(clamped - DEFAULT_COLOR_OPACITY) >= 0.001) {
-          writeStoredBundle(theme.id, bundle.colors, {
-            ...bundle.opacity,
-            surfaceCard: clamped,
-          });
-        }
-      }
-    }
-    localStorage.removeItem(legacyKey);
-  }
-  localStorage.setItem(STORAGE_KEY_THEME_PANEL_OPACITY_MIGRATED, "1");
 }
 
 /** Catalog defaults for the personalization color pickers. */
@@ -392,11 +358,9 @@ function applyPanelOpacityVars(root: HTMLElement, themeId: string): void {
 /**
  * Apply per-theme color + opacity + texture personalization onto `html`.
  * Call after catalog attrs are set (from `applyTheme`).
- * Migrates legacy panel-opacity LS once into surfaceCard opacity.
  */
 export function applyThemePersonalization(themeId: string): void {
   const id = resolveThemeId(themeId);
-  migrateLegacyPanelOpacityOnce();
   const root = document.documentElement;
   const colors = loadThemeColorOverrides(id);
   const opacity = loadThemeColorOpacities(id);
@@ -411,7 +375,6 @@ export function resetThemePersonalization(themeId: string): void {
   const id = resolveThemeId(themeId);
   localStorage.removeItem(storageThemeColorsKey(id));
   localStorage.removeItem(storageThemeTextureKey(id));
-  localStorage.removeItem(storageThemePanelOpacityKey(id));
   applyThemePersonalization(id);
 }
 

@@ -139,7 +139,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 Email collectors validate `imap_host` with the same public-IP DNS policy as HTTP/MQTT outbound via `server.outbound.validate_imap_host` (default ports 993/143). Poll uses synchronous `imap-tools` inside `asyncio.to_thread`; UID cursors live in encrypted `accounts.credentials.folder_cursors`, with matching per-folder UIDVALIDITY in `folder_uidvalidities`. A missing or changed UIDVALIDITY resets only that folder's cursor.
 
-Email channel IDs use the host-qualified shape `host:port/username/folder` (`email_channel_platform_id`). The one-shot data migration that remapped legacy `username/folder` keys was retired with the v17 baseline; fresh installs write host-qualified keys from the start.
+Email channel IDs use the host-qualified shape `host:port/username/folder` (`email_channel_platform_id`). The one-shot data migration that remapped legacy `username/folder` keys was retired with a pre-wipe-floor / prior stamp; fresh installs write host-qualified keys from the start.
 
 ## Collector status: polling vs long-lived adapters
 

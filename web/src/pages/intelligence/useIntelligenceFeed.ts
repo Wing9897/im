@@ -2,11 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import {
-  loadIntelligenceSelectedSources,
-  pruneIntelligenceSelectedSources,
-  saveIntelligenceSelectedSources,
+  intelligenceSelectedSourcesFilter,
   type IntelligenceSelectedSources,
-} from "../../domain/intelligence/intelligenceSourceFilter";
+} from "../../domain/ui/namedSourceFilters";
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
@@ -59,10 +57,10 @@ export function useIntelligenceFeed() {
     storage: "session",
   });
   const [selectedSources, setSelectedSourcesState] =
-    useState<IntelligenceSelectedSources>(() => loadIntelligenceSelectedSources());
+    useState<IntelligenceSelectedSources>(() => intelligenceSelectedSourcesFilter.load());
   const setSelectedSources = useCallback((ids: IntelligenceSelectedSources) => {
     setSelectedSourcesState(ids);
-    saveIntelligenceSelectedSources(ids);
+    intelligenceSelectedSourcesFilter.save(ids);
   }, []);
   const [sortMode, setSortMode] = usePersistedState<IntelligenceSortMode>(
     INTELLIGENCE_SORT_STORAGE_KEY,
@@ -92,7 +90,7 @@ export function useIntelligenceFeed() {
           .filter((id): id is string => typeof id === "string" && id.length > 0),
       ),
     ];
-    const pruned = pruneIntelligenceSelectedSources(selectedSources, catalogIds, worksetIds);
+    const pruned = intelligenceSelectedSourcesFilter.prune(selectedSources, catalogIds, worksetIds);
     if (pruned !== selectedSources) {
       setSelectedSources(pruned);
     }

@@ -367,5 +367,3 @@ export function GanttBoardEmbed({
     </div>
   );
 }
-
-export default GanttBoardEmbed;

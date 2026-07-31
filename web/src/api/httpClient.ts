@@ -1,7 +1,7 @@
 /**
  * Lean HTTP client for the IntelligenceMonitor REST API.
  * Auth refresh lives in `./authRefresh`; SSE transport in `./sseClient`.
- * Public façade: `./client` (and thin re-exports in `./httpCore`).
+ * Public façade: `./client`.
  */
 
 import {

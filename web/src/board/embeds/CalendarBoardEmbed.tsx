@@ -137,5 +137,3 @@ export function CalendarBoardEmbed({
     </div>
   );
 }
-
-export default CalendarBoardEmbed;

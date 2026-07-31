@@ -1,24 +1,22 @@
 /**
  * Public façade for the IntelligenceMonitor HTTP/SSE client.
  *
- * Implementation lives in `httpCore` + `authRefresh`; SSE transport in `sseClient`.
- * Keep importing `apiClient` / `ApiClient` from this module.
+ * Implementation: `httpClient` + `parseApiError`; auth in `authRefresh`;
+ * SSE transport in `sseClient`. Prefer importing from this module.
  */
 
-export {
-  ApiClient,
-  ApiRequestError,
-  NetworkError,
-  apiClient,
-  resolveBaseUrl,
-  isSetupAuthPath,
-  isStoredAccessExpired,
-  refreshAccessTokenOnce,
-} from "./httpCore";
+export { ApiClient, NetworkError, apiClient } from "./httpClient";
+export { ApiRequestError } from "./parseApiError";
+export type { ApiError } from "./parseApiError";
 export type {
-  ApiError,
   KnownSseEvent,
   SseConnection,
   SseEvent,
   SseEventPayloadMap,
-} from "./httpCore";
+} from "./sseClient";
+export { resolveBaseUrl } from "./baseUrl";
+export {
+  isSetupAuthPath,
+  isStoredAccessExpired,
+  refreshAccessTokenOnce,
+} from "./authRefresh";

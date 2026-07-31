@@ -169,7 +169,7 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session list persists in SQLite `assistant_device_stores` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring schedules use `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` (recurring-mode only; delete is soft `isActive=false`).
 - **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect shim).
-- **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Their retired localStorage migration/cleanup bridges are gone after the v23 floor. User profile likewise (server settings SoT; active LS cache only).
+- **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Their retired localStorage migration/cleanup bridges are gone after the pre-wipe-floor / prior stamps. User profile likewise (server settings SoT; active LS cache only).
 - **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" (assistant, task editor, leaderboard, event intel, **project manager**) plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel of the assistant, not a sixth `AiStaffId` / runtime) — `web/src/assets/ai-staff/` (avatars) + `web/src/domain/aiStaff/` (roster data) + `web/src/components/aiStaff/` (avatar/chat-row chrome). Page implementation lives at `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a backend concept; does not own prompts or task presets. Lightweight API how-to: `/settings/api`. A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Project closed-loop ticks: [`docs/agent/project.md`](agent/project.md). UI detail lives under Tasks at `/tasks/:taskId/project` (not a top-level nav peer of Sources / Assistant).
 - **Ops board** — see [Ops board](#ops-board) below.
 
@@ -658,7 +658,7 @@ intelligence-monitor/
 │   ├── process-manager.ts     #   Python subprocess façade: start/stop/restart state machine
 │   ├── process-manager-spawn.ts       #   spawn() + stdout/stderr capture
 │   ├── process-manager-lifecycle.ts   #   graceful taskkill /T + crash-restart loop
-│   ├── process-manager-health.ts      #   /health polling until ok/upgrade states
+│   ├── process-manager-health.ts      #   /api/v1/health polling until ok/upgrade states
 │   ├── process-manager-schema.ts      #   Schema hard-reject detection + localized hint
 │   ├── window-controls.ts     #   Title-bar IPC
 │   ├── window-controls-channels.ts

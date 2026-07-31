@@ -3,8 +3,8 @@
 These tests inject fake ``MigrationStep``s to exercise the gate framework itself
 (classification, baseline backup, verify marker, auto-heal, and restore).
 
-Live baseline is stamp **v1** with an empty registry, so the fixture invents a
-temporary **v1→v2** step (and bumps ``CURRENT_SCHEMA_VERSION`` to 2 for the
+Live baseline is stamp **3** with an empty registry, so the fixture invents a
+temporary **3→4** step (and bumps ``CURRENT_SCHEMA_VERSION`` to 4 for the
 duration of each test). That avoids the v0 "exact fingerprint → stamp only"
 shortcut, which never invokes ``MigrationStep.apply``／``validate``.
 """

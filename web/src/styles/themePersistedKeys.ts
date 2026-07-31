@@ -20,15 +20,3 @@ export function storageThemeTextureKey(themeId: string): string {
   return `im:theme-texture:${themeId}`;
 }
 
-/**
- * Legacy per-theme panel opacity (pre per-color opacity).
- * Kept only for one-shot migrate → `surfaceCard` opacity; do not write.
- */
-export function storageThemePanelOpacityKey(themeId: string): string {
-  return `im:theme-panel-opacity:${themeId}`;
-}
-
-/** Set after one-shot panel-opacity migrate across catalog themes. */
-export const STORAGE_KEY_THEME_PANEL_OPACITY_MIGRATED =
-  "im:theme-panel-opacity-migrated";
-

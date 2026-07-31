@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { SettingsRow, TextField } from "../../../components/ui";
 import { SourceAddFormCard } from "../SourceAddFormCard";
 import type { RssAddFormProps } from "./providers/types";
+import { RssFeedFields } from "./RssFeedFields";
 
 export function RssFeedForm({
   fields,
@@ -20,51 +20,13 @@ export function RssFeedForm({
       submitDisabled={!fields.feedUrl.trim()}
       onSubmit={onSubmit}
     >
-      <div className="flex flex-col gap-xl">
-        <SettingsRow label={t("rssFields.feedUrl")} htmlFor="rss-feed-url">
-          <TextField
-            id="rss-feed-url"
-            type="url"
-            placeholder="https://example.com/feed.xml"
-            value={fields.feedUrl}
-            onChange={(e) => setFields((s) => ({ ...s, feedUrl: e.target.value }))}
-            disabled={submitting}
-          />
-        </SettingsRow>
-
-        <SettingsRow label={t("rssFields.displayName")} htmlFor="rss-feed-name">
-          <TextField
-            id="rss-feed-name"
-            type="text"
-            placeholder={t("rssFields.displayNamePlaceholder")}
-            value={fields.name}
-            onChange={(e) => setFields((s) => ({ ...s, name: e.target.value }))}
-            disabled={submitting}
-          />
-        </SettingsRow>
-
-        <SettingsRow
-          label={t("rssFields.pollInterval")}
-          htmlFor="rss-poll-interval"
-          help={t("rssFields.pollIntervalHelp")}
-        >
-          <TextField
-            id="rss-poll-interval"
-            type="number"
-            min={1}
-            max={1440}
-            className="max-w-[200px]"
-            value={fields.pollIntervalMinutes}
-            onChange={(e) =>
-              setFields((s) => ({
-                ...s,
-                pollIntervalMinutes: Math.max(1, Number(e.target.value) || 5),
-              }))
-            }
-            disabled={submitting}
-          />
-        </SettingsRow>
-      </div>
+      <RssFeedFields
+        form={fields}
+        setForm={setFields}
+        submitting={submitting}
+        idPrefix="rss"
+        pollClassName="max-w-[200px]"
+      />
     </SourceAddFormCard>
   );
 }

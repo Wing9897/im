@@ -8,7 +8,7 @@ import {
   userEventToTimelineItem,
 } from "../../domain/timeline/timedEventMerge";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
-import type { TimelineSelectedSources } from "../../domain/timeline/timelineSourceFilter";
+import type { TimelineSelectedSources } from "../../domain/ui/namedSourceFilters";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";

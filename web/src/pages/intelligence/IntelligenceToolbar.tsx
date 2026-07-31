@@ -5,7 +5,7 @@ import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { TimeFilter, type TimeFilterPreset } from "../../components/TimeFilter";
 import { OpsControlBar, SegmentedControl, SelectField } from "../../components/ui";
 import { pageOpsControlClass } from "../../components/ui/controlStyles";
-import type { IntelligenceSelectedSources } from "../../domain/intelligence/intelligenceSourceFilter";
+import type { IntelligenceSelectedSources } from "../../domain/ui/namedSourceFilters";
 import type { ViewMode } from "../../types";
 import {
   getIntelligenceSortLabel,

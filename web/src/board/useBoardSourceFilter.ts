@@ -1,10 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
 import {
-  catalogOrEventSourceOptions,
-  type SourceFilterOption,
-} from "../domain/timeline/sourceFilterOptions";
-import {
   isEmptySourceFilter,
   parseSourceFilterValue,
   resolveAnalysisTaskIdsFromFilter,
@@ -16,10 +12,6 @@ import {
   loadSourceFilterFromCache,
   saveSourceFilterToApi,
 } from "./boardPrefsStore";
-
-export type { SourceFilterOption };
-
-export { catalogOrEventSourceOptions };
 
 /** Items filterable by board hierarchical source selection. */
 export type BoardSourceFilterItem = {
@@ -80,19 +72,11 @@ function loadBoardSourceFilter(widgetId: string | undefined): SourceFilterSelect
   return parseSourceFilterValue(loadSourceFilterFromCache(widgetId));
 }
 
-/** Persist hierarchical source filter into widgetState via `/api/v1/ui-prefs/board`. */
-export function saveSourceFilterIds(
+function saveSourceFilterIds(
   widgetId: string | undefined,
   selection: SourceFilterSelection,
 ): void {
   saveSourceFilterToApi(widgetId, selection);
-}
-
-/** Load hierarchical source filter from board prefs cache. */
-export function loadBoardSourceFilterSelection(
-  widgetId: string | undefined,
-): SourceFilterSelection {
-  return loadBoardSourceFilter(widgetId);
 }
 
 /** Per-widget hierarchical source multi-select. `null` means all; empty means none. */

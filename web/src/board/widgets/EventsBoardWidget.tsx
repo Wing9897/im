@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchEvents } from "../../api/results";
-import { listUserEvents } from "../../api/userEvents";
 import { Badge } from "../../components/ui";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { formatIntelligenceEventTime } from "../../domain/intelligence/intelligenceSourceMeta";
@@ -11,7 +9,7 @@ import { getEventTimestamp, isMappableCoordinate } from "../../domain/intelligen
 import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
 import {
-  userEventToBoardEvent,
+  fetchBoardEventsList,
   withResolvedUserEventTaskNames,
 } from "../../domain/timeline/timedEventMerge";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
@@ -52,22 +50,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const fetcher = useCallback(
-    () =>
-      Promise.all([
-        fetchEvents({
-          limit: EVENTS_LIMIT,
-          offset: 0,
-          sort: "analyzed_at",
-          includeTotal: false,
-        }).then((page) => page.items),
-        // Unbounded list stays small under retention; merge so「一般」filter works.
-        listUserEvents(),
-      ]).then(([analysisEvents, userEvents]) =>
-        sortEventsByTimeDesc([
-          ...analysisEvents,
-          ...userEvents.map((event) => userEventToBoardEvent(event)),
-        ]),
-      ),
+    () => fetchBoardEventsList({ includeCalendar: false, limit: EVENTS_LIMIT }),
     [],
   );
   const { data: fetchedItems, error, loading, refresh } = useBoardWidgetPoll<AnalysisEvent[]>(

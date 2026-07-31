@@ -27,7 +27,7 @@ function localStorageOrNull(): Storage | null {
  * Load filter selection. Accepts `{taskIds,worksetIds}` or `null`.
  * Legacy / unknown shapes → `null` (all sources).
  */
-export function loadPersistedSourceFilter(
+function loadPersistedSourceFilter(
   options: PersistedSourceFilterOptions,
 ): SourceFilterSelection {
   const store = localStorageOrNull();
@@ -44,7 +44,7 @@ export function loadPersistedSourceFilter(
   }
 }
 
-export function savePersistedSourceFilter(
+function savePersistedSourceFilter(
   options: PersistedSourceFilterOptions,
   selection: SourceFilterSelection,
 ): void {

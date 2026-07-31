@@ -316,7 +316,7 @@ _HARD_REJECT_VERSIONS = [
     if not any(step.source_version == version for step in SCHEMA_MIGRATIONS)
 ]
 # Pre-restart product stamps above CURRENT hard-reject as "newer than supported".
-_LEGACY_HARD_REJECT_VERSIONS = tuple(version for version in (3, 16, 23, 24) if version > CURRENT_SCHEMA_VERSION)
+_LEGACY_HARD_REJECT_VERSIONS = tuple(version for version in (16, 23, 24) if version > CURRENT_SCHEMA_VERSION)
 
 
 @pytest.mark.parametrize(

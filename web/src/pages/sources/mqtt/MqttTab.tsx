@@ -39,16 +39,8 @@ export function MqttTab() {
 
   const addForm = (
     <MqttBrokerForm
-      brokerUrl={form.brokerUrl}
-      setBrokerUrl={(v) => setForm((s) => ({ ...s, brokerUrl: v }))}
-      topics={form.topics}
-      setTopics={(v) => setForm((s) => ({ ...s, topics: v }))}
-      username={form.username}
-      setUsername={(v) => setForm((s) => ({ ...s, username: v }))}
-      password={form.password}
-      setPassword={(v) => setForm((s) => ({ ...s, password: v }))}
-      clientId={form.clientId}
-      setClientId={(v) => setForm((s) => ({ ...s, clientId: v }))}
+      form={form}
+      setForm={setForm}
       submitting={submitting}
       formError={formError}
       onSubmit={() => void handleAddMqttAccount().catch(() => {})}

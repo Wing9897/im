@@ -2,7 +2,10 @@ import { lazy, Suspense, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent, CalendarOccurrence } from "../../types";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
-import { addDays, addMonths, startOfDay, startOfMonth } from "../../domain/timeline/dateUtils";
+import {
+  dayWindowIso,
+  paddedMonthWindowIso,
+} from "../../domain/timeline/boardFetchWindows";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -25,24 +28,6 @@ const LazyCalendarBoardEmbed = lazy(() =>
   import("../embeds/CalendarBoardEmbed").then((m) => ({ default: m.CalendarBoardEmbed })),
 );
 type CalendarMode = "day" | "month";
-
-function monthWindowIso(): { startDate: string; endDate: string } {
-  const start = startOfMonth(new Date());
-  // Pad so the 42-day month grid is covered.
-  const paddedStart = new Date(start);
-  paddedStart.setDate(paddedStart.getDate() - 7);
-  const end = addMonths(start, 1);
-  end.setDate(end.getDate() + 7);
-  return { startDate: paddedStart.toISOString(), endDate: end.toISOString() };
-}
-
-/** ~3-day window around today for the day schedule widget (yesterday–tomorrow). */
-function dayWindowIso(): { startDate: string; endDate: string } {
-  const today = startOfDay(new Date());
-  const start = addDays(today, -1);
-  const end = addDays(today, 2);
-  return { startDate: start.toISOString(), endDate: end.toISOString() };
-}
 
 function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | null {
   if (!event.startTime) {
@@ -71,7 +56,7 @@ function CalendarBoardWidgetContent({
   const { t } = useTranslation();
   const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
   const fetcher = useCallback(() => {
-    const { startDate, endDate } = mode === "day" ? dayWindowIso() : monthWindowIso();
+    const { startDate, endDate } = mode === "day" ? dayWindowIso() : paddedMonthWindowIso();
     return fetchMergedTimedBoardEvents({
       startDate,
       endDate,

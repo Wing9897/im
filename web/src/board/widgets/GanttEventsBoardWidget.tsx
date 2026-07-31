@@ -6,6 +6,7 @@ import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
 import { catalogOrEventSourceOptions } from "../../domain/timeline/sourceFilterOptions";
+import { currentMonthWindowIso } from "../../domain/timeline/boardFetchWindows";
 import {
   fetchMergedTimedBoardEvents,
   withResolvedUserEventTaskNames,
@@ -25,13 +26,6 @@ const LazyGanttBoardEmbed = lazy(() =>
 );
 
 const EVENTS_LIMIT = 80;
-
-function currentMonthWindowIso(): { startDate: string; endDate: string } {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return { startDate: start.toISOString(), endDate: end.toISOString() };
-}
 
 /** Gantt rows = analysis / user / calendar events; filter by task via header checklist. */
 export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetProps) {

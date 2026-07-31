@@ -6,12 +6,9 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import { findActivitySpan } from "../tasks/project/projectDetailModel";
 import {
-  loadTimelineSelectedSources,
-  pruneTimelineSelectedSources,
-  saveTimelineSelectedSources,
-  timelineFilterCatalogIds,
+  timelineSelectedSourcesFilter,
   type TimelineSelectedSources,
-} from "../../domain/timeline/timelineSourceFilter";
+} from "../../domain/ui/namedSourceFilters";
 import { startOfDay } from "../../domain/timeline/dateUtils";
 import type {
   TimelineEventStatus,
@@ -74,11 +71,11 @@ export function useTimelinePageContainer() {
 
   // ─── Persisted UI state ────────────────────────────────────────────────────
   const [selectedSources, setSelectedSourcesState] = useState<TimelineSelectedSources>(
-    () => loadTimelineSelectedSources(),
+    () => timelineSelectedSourcesFilter.load(),
   );
   const setSelectedSources = useCallback((ids: TimelineSelectedSources) => {
     setSelectedSourcesState(ids);
-    saveTimelineSelectedSources(ids);
+    timelineSelectedSourcesFilter.save(ids);
   }, []);
   const [rawViewMode, setViewMode] = usePersistedState<"calendar" | "gantt">(
     TIMELINE_VIEW_MODE_STORAGE_KEY,
@@ -174,7 +171,7 @@ export function useTimelinePageContainer() {
   // ─── Glue logic ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (data.tasksLoading) return;
-    const catalogIds = timelineFilterCatalogIds(data.timelineTasks.map((t) => t.id));
+    const catalogIds = data.timelineTasks.map((t) => t.id);
     const worksetIds = [
       SYSTEM_WORKSET_ID,
       ...new Set(
@@ -183,7 +180,7 @@ export function useTimelinePageContainer() {
           .filter((id): id is string => typeof id === "string" && id.length > 0),
       ),
     ];
-    const pruned = pruneTimelineSelectedSources(selectedSources, catalogIds, worksetIds);
+    const pruned = timelineSelectedSourcesFilter.prune(selectedSources, catalogIds, worksetIds);
     if (pruned !== selectedSources) {
       setSelectedSources(pruned);
     }

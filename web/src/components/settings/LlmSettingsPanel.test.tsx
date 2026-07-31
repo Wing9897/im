@@ -49,19 +49,9 @@ describe("LlmSettingsPanel", () => {
     });
   }
 
-  describe("Deprecated field removal (Req 4.1, 4.3)", () => {
-    it("does not render a 掃描間隔 field", () => {
-      renderPanel();
-      expect(container.textContent).not.toContain("掃描間隔");
-    });
-
-    it("does not accept scanInterval or onScanIntervalChange props", () => {
-      // Verify via TypeScript compilation: LlmSettingsPanelProps no longer includes these.
-      // At runtime, confirm no number input for scan interval exists.
-      renderPanel();
-      const numberInputs = container.querySelectorAll<HTMLInputElement>("input[type='number']");
-      expect(numberInputs.length).toBe(0);
-    });
+  it("does not render a 掃描間隔 field", () => {
+    renderPanel();
+    expect(container.textContent).not.toContain("掃描間隔");
   });
 
   describe("Remaining fields preservation (Req 4.3)", () => {

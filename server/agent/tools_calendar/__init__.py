@@ -2,13 +2,20 @@
 
 Handlers live in :mod:`.handlers`, the LLM-facing JSON schemas in :mod:`.schemas`.
 Importers keep using ``server.agent.tools_calendar`` for both.
+
+Limit aliases (``DEFAULT_LIST_LIMIT`` / ``DEFAULT_WINDOW_LIMIT`` / ``HARD_CAP``)
+re-export the calendar policy constants from :mod:`server.agent.tool_limits`.
 """
 
 from __future__ import annotations
 
 from typing import Any, Awaitable, Callable
 
-from server.agent.tools_calendar.constants import DEFAULT_LIST_LIMIT, DEFAULT_WINDOW_LIMIT, HARD_CAP
+from server.agent.tool_limits import (
+    CALENDAR_DEFAULT_LIST_LIMIT as DEFAULT_LIST_LIMIT,
+    CALENDAR_DEFAULT_WINDOW_LIMIT as DEFAULT_WINDOW_LIMIT,
+    CALENDAR_RESULT_HARD_CAP as HARD_CAP,
+)
 from server.agent.tools_calendar.handlers import (
     _tool_create_event,
     _tool_create_recurring_task,

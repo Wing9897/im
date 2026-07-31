@@ -173,5 +173,3 @@ export function MapBoardEmbed({
     </div>
   );
 }
-
-export default MapBoardEmbed;

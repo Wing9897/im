@@ -28,7 +28,7 @@ export interface HealthPollOptions {
   getManagedProcess: () => ChildProcess | null;
 }
 
-/** Poll /health until ok (or upgrade states) or timeout / cancel. */
+/** Poll /api/v1/health until ok (or upgrade states) or timeout / cancel. */
 export function pollServerHealth(options: HealthPollOptions): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const { healthUrl, healthInterval, healthTimeout, attempt } = options;

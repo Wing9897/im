@@ -16,9 +16,7 @@ import {
  * Scans src/pages/ for hardcoded spacing, borderRadius, maxWidth, and typography values
  * that should use design tokens instead.
  *
- * This test serves two purposes:
- * 1. Prevents NEW hardcoded values from being introduced (ratchet mechanism)
- * 2. Tracks migration progress — as pages are migrated, reduce the baseline counts
+ * Zero-tolerance ratchet: any new hardcoded value fails the suite.
  *
  * **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
  */
@@ -82,18 +80,8 @@ const EXEMPT_PROPERTIES = [
 /** Numeric values that are always allowed (0 and 1 are trivial) */
 const ALWAYS_ALLOWED_VALUES = [0, 1];
 
-/**
- * Known pre-migration violation baselines.
- * These represent pages that have NOT yet been migrated to tokens.
- * As pages are migrated, reduce these numbers. The test will fail if
- * violations INCREASE (preventing regressions) or if the baseline is
- * too generous (prompting you to tighten it after migration).
- *
- * maxWidth exceptions: These 5 values are element-specific widths (not page
- * layout widths) for things like filter dropdowns, action cards, and gantt
- * chart labels. They don't map to layoutWidth tokens.
- */
-const VIOLATION_BASELINES = {
+/** Allowed hardcoded counts in `src/pages/` (must stay at zero). */
+const VIOLATION_LIMITS = {
   spacing: 0,
   borderRadius: 0,
   maxWidth: 0,
@@ -220,7 +208,7 @@ describe("Token Adoption Compliance - src/pages/", () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  it("should not have MORE hardcoded spacing values than baseline (Requirement 7.1)", () => {
+  it("should not have hardcoded spacing values (Requirement 7.1)", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -231,16 +219,13 @@ describe("Token Adoption Compliance - src/pages/", () => {
       allViolations.push(...violations);
     }
 
-    // Ratchet: violations must not increase beyond baseline
     expect(
       allViolations.length,
-      `Spacing violations: ${allViolations.length}/${VIOLATION_BASELINES.spacing}. ` +
-      `New hardcoded spacing values were introduced. Use spacing tokens instead. ` +
-      `If violations decreased, consider tightening VIOLATION_BASELINES.spacing.`
-    ).toBeLessThanOrEqual(VIOLATION_BASELINES.spacing);
+      `Spacing violations: ${allViolations.length}. Use spacing tokens instead.`,
+    ).toBeLessThanOrEqual(VIOLATION_LIMITS.spacing);
   });
 
-  it("should not have MORE hardcoded borderRadius values than baseline (Requirement 7.2)", () => {
+  it("should not have hardcoded borderRadius values (Requirement 7.2)", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -253,13 +238,11 @@ describe("Token Adoption Compliance - src/pages/", () => {
 
     expect(
       allViolations.length,
-      `BorderRadius violations: ${allViolations.length}/${VIOLATION_BASELINES.borderRadius}. ` +
-      `New hardcoded borderRadius values were introduced. Use borderRadius tokens instead. ` +
-      `If violations decreased, consider tightening VIOLATION_BASELINES.borderRadius.`
-    ).toBeLessThanOrEqual(VIOLATION_BASELINES.borderRadius);
+      `BorderRadius violations: ${allViolations.length}. Use borderRadius tokens instead.`,
+    ).toBeLessThanOrEqual(VIOLATION_LIMITS.borderRadius);
   });
 
-  it("should not have MORE hardcoded maxWidth values than baseline (Requirement 7.3)", () => {
+  it("should not have hardcoded maxWidth values (Requirement 7.3)", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -272,13 +255,11 @@ describe("Token Adoption Compliance - src/pages/", () => {
 
     expect(
       allViolations.length,
-      `MaxWidth violations: ${allViolations.length}/${VIOLATION_BASELINES.maxWidth}. ` +
-      `New hardcoded maxWidth values were introduced. Use layoutWidth tokens instead. ` +
-      `If violations decreased, consider tightening VIOLATION_BASELINES.maxWidth.`
-    ).toBeLessThanOrEqual(VIOLATION_BASELINES.maxWidth);
+      `MaxWidth violations: ${allViolations.length}. Use layoutWidth tokens instead.`,
+    ).toBeLessThanOrEqual(VIOLATION_LIMITS.maxWidth);
   });
 
-  it("should not have MORE hardcoded typography values than baseline (Requirement 7.4)", () => {
+  it("should not have hardcoded typography values (Requirement 7.4)", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -291,13 +272,11 @@ describe("Token Adoption Compliance - src/pages/", () => {
 
     expect(
       allViolations.length,
-      `Typography violations: ${allViolations.length}/${VIOLATION_BASELINES.typography}. ` +
-      `New hardcoded typography values were introduced. Use typography tokens instead. ` +
-      `If violations decreased, consider tightening VIOLATION_BASELINES.typography.`
-    ).toBeLessThanOrEqual(VIOLATION_BASELINES.typography);
+      `Typography violations: ${allViolations.length}. Use typography tokens instead.`,
+    ).toBeLessThanOrEqual(VIOLATION_LIMITS.typography);
   });
 
-  it("should not exceed total violation baseline across all categories", () => {
+  it("should not exceed total violation limit across all categories", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -305,21 +284,21 @@ describe("Token Adoption Compliance - src/pages/", () => {
       allViolations.push(...scanFileForViolations(file, content));
     }
 
-    const TOTAL_BASELINE =
-      VIOLATION_BASELINES.spacing +
-      VIOLATION_BASELINES.borderRadius +
-      VIOLATION_BASELINES.maxWidth +
-      VIOLATION_BASELINES.typography;
+    const TOTAL_LIMIT =
+      VIOLATION_LIMITS.spacing +
+      VIOLATION_LIMITS.borderRadius +
+      VIOLATION_LIMITS.maxWidth +
+      VIOLATION_LIMITS.typography;
 
     expect(
       allViolations.length,
-      `Total violations: ${allViolations.length}/${TOTAL_BASELINE} ` +
+      `Total violations: ${allViolations.length}/${TOTAL_LIMIT} ` +
       `(spacing: ${allViolations.filter((v) => v.category === "spacing").length}, ` +
       `borderRadius: ${allViolations.filter((v) => v.category === "borderRadius").length}, ` +
       `maxWidth: ${allViolations.filter((v) => v.category === "maxWidth").length}, ` +
       `typography: ${allViolations.filter((v) => v.category === "typography").length}, ` +
       `files scanned: ${files.length})`
-    ).toBeLessThanOrEqual(TOTAL_BASELINE);
+    ).toBeLessThanOrEqual(TOTAL_LIMIT);
   });
 });
 

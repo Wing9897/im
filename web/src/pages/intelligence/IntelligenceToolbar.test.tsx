@@ -10,7 +10,7 @@ import { setAppLocale } from "../../i18n/locale";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import type { ViewMode } from "../../types";
 import type { TimeFilterPreset } from "../../components/TimeFilter";
-import type { IntelligenceSelectedSources } from "../../domain/intelligence/intelligenceSourceFilter";
+import type { IntelligenceSelectedSources } from "../../domain/ui/namedSourceFilters";
 
 vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
