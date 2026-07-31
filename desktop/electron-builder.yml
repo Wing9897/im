@@ -55,6 +55,7 @@ linux:
     - deb
   category: Office
   icon: resources/icon.png
+  maintainer: Intelligence Monitor <tomt99688@gmail.com>
   mimeTypes:
     - text/calendar
     - x-scheme-handler/intelligencemonitor

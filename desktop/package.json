@@ -3,7 +3,11 @@
   "version": "0.1.0-beta.3",
   "license": "MIT",
   "description": "Intelligence Monitor desktop shell - Electron wrapper for the Python FastAPI server",
-  "author": "Intelligence Monitor",
+  "author": {
+    "name": "Intelligence Monitor",
+    "email": "tomt99688@gmail.com"
+  },
+  "homepage": "https://github.com/Wing9897/im",
   "main": "dist/main.js",
   "engines": {
     "node": ">=20.19.0"

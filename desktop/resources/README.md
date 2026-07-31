@@ -2,7 +2,7 @@
 
 ## Icons
 
-- `icon.png` — 256x256 placeholder for macOS/Linux (and default `icon`)
+- `icon.png` — 512x512 placeholder for macOS/Linux (and default `icon`; mac requires ≥512)
 - `icon.ico` — Windows placeholder (tray + NSIS)
 
 Both are a minimal blue square with white border.
