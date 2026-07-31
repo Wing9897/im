@@ -34,9 +34,7 @@ def bump(version: str) -> str:
     if match:
         major, minor, patch = match.groups()
         return f"{major}.{minor}.{int(patch) + 1}"
-    raise ValueError(
-        f"Cannot bump VERSION={version!r} (expected X.Y.Z or X.Y.Z-<pre>.N)"
-    )
+    raise ValueError(f"Cannot bump VERSION={version!r} (expected X.Y.Z or X.Y.Z-<pre>.N)")
 
 
 def main(argv: list[str] | None = None) -> int:
