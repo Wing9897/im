@@ -60,14 +60,20 @@ native sidecar build／startup smoke); unrelated paths skip the whole matrix.
 
 **Release packaging** (`package` matrix on all three OS): `dist:win`／`dist:mac`／`dist:linux` +
 `verify:desktop:full` + `package:cli` (CLI zip = PyInstaller onedir for the same entry as
-`python -m server`／`intelligence-monitor`). Runs on **`v*` tag** or manual
-**`workflow_dispatch`** only — same trigger for every OS. Pushing a `v*` tag (name without `v`
-must equal root `VERSION`) creates a **GitHub Release** with **Desktop + CLI** attachments for
-Windows／macOS／Linux; incomplete asset sets fail the `release` job. `workflow_dispatch` builds
-artifacts but does **not** create a Release. GHCR publish also runs on tag／dispatch.
+`python -m server`／`intelligence-monitor`). Triggered by **`release-plan`** when:
+pushing to **`main`／`master`** with a shippable `VERSION` (no conflicting tag), pushing a
+manual **`v*` tag**, or **`workflow_dispatch`**. Default-branch and tag paths create／update a
+**GitHub Release** with **Desktop + CLI** for Windows／macOS／Linux and auto-create git tag
+`v$(VERSION)` from the root `VERSION` file (`contents: write` via `GITHUB_TOKEN`). Incomplete
+asset sets fail `release`. If `vVERSION` already points at another commit and `VERSION` was
+not bumped, package／release／container are **skipped** (bump `VERSION` to ship). Reusing a
+VERSION whose tag already exists on a different commit **fails**. Same-commit re-runs
+**overwrite** Release assets. Tag re-entry is deduped when the Release is already complete
+(`GITHUB_TOKEN` tag creation also does not re-trigger workflows). `workflow_dispatch` builds
+artifacts but does **not** create a Release／tag. GHCR follows the same package／release plan.
 
-Release steps: bump root `VERSION` → `npm run sync:version` → commit／push →
-`git tag vX.Y.Z` → `git push origin vX.Y.Z` → wait for Actions.
+Release steps: bump root `VERSION` → `npm run sync:version` → commit／**push to main** →
+wait for Actions (auto tag + Release). Manual `git tag`／`git push --tags` remains optional.
 
 ## Generated files are committed — regenerate, never hand-edit
 
