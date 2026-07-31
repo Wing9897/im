@@ -248,7 +248,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
 6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
-7. **Packaging:** First-class Desktop delivery is **Windows NSIS**. The PyInstaller sidecar must be built on Windows for that installer. CI packages Windows on `v*` tags or manual `workflow_dispatch` (unsigned by default). `dist:mac`／`dist:linux` remain optional manual scripts only — not daily release targets.
+7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). The PyInstaller sidecar must be built on the **target OS** (no cross-compile). CI packages all three on `v*` tags or manual `workflow_dispatch` (unsigned by default); `v*` tags also create a GitHub Release with those artifacts.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push is **tag / manual only** (not every `main` push). Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
 
@@ -286,7 +286,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `clean.mjs` | `npm run clean` | Remove reproducible build outputs and Node/Python caches across workspaces |
 | `smoke.py` | `npm run smoke` / `verify:deploy` | Short post-deploy live smoke against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
-| `desktop_verify.py` | `npm run verify:desktop:fast` / `verify:desktop:full` | Windows Desktop build-path checks; full mode requires packaged sidecar, unpacked runtime, and NSIS installer |
+| `desktop_verify.py` | `npm run verify:desktop:fast` / `verify:desktop:full` | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb) |
 | `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-5 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |

@@ -119,7 +119,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live smoke: `npm run verify:deploy`
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions: Ubuntu `npm run check` + build on every push／PR; Windows sidecar on Desktop-related paths／tag／manual; Windows NSIS + GHCR on tag／manual only.
+- GitHub Actions: Ubuntu `npm run check` + build on every push／PR; Windows sidecar smoke on Desktop-related paths／tag／manual; win／mac／linux Desktop packages + GHCR on tag／manual; `v*` tags also create a GitHub Release with Desktop artifacts.
 
 ## Security (outbound requests)
 
@@ -130,10 +130,10 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 ## Release checklist (Desktop + container)
 
 1. `npm run check`
-2. Windows: `npm run dist:win` then `npm run verify:desktop:full` (or CI `package` on tag／manual)
-3. Sign Windows installers for public distribution (unsigned CI builds are for QA only)
+2. Desktop (on each target OS, or via CI): `npm run dist:win`／`dist:mac`／`dist:linux` then `npm run verify:desktop:full` (CI `package` matrix on tag／manual)
+3. Sign installers for public／store distribution (unsigned CI builds are for QA only; macOS needs Apple identity／notarization for Gatekeeper)
 4. Container: `npm run docker:build` + `npm run verify:deploy`, or CI tag／manual → `ghcr.io/<owner>/<repo>` (healthcheck + deploy smoke)
-5. CI: `workflow_dispatch` or push a `v*` tag (Windows NSIS + GHCR); on `v*` tags CI also creates a **GitHub Release** with Windows Desktop artifacts (tag name without `v` must equal root `VERSION`). macOS／Linux Desktop are not daily release targets.
+5. CI: `workflow_dispatch` or push a `v*` tag (win／mac／linux Desktop + GHCR); on `v*` tags CI also creates a **GitHub Release** with Desktop artifacts (tag name without `v` must equal root `VERSION`). GHCR does not replace Release attachments.
 
 ## Email IMAP outbound policy
 
@@ -154,4 +154,4 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 ## Removed / not restored
 
-Legacy Tauri migration guards and macOS／Linux Desktop daily CI／release targets were retired with the delivery slim-down. Windows Desktop + Docker/Web remain first-class. Do not revive Tauri IPC or three-platform Desktop CI without a product need.
+Legacy Tauri migration guards were retired with the delivery slim-down and stay removed. Windows／macOS／Linux Desktop + Docker/Web are first-class delivery surfaces. Do not revive Tauri IPC.

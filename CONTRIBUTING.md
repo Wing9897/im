@@ -53,8 +53,10 @@ Individual suites are also available: `npm test` (root smoke/audit), `npm run te
 
 The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
 a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
-token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Windows Desktop packaging
-(`npm run dist:win` + `verify:desktop:full`) and GHCR publish run on tag／manual CI only.
+token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Desktop packaging for Windows／macOS／Linux
+(`npm run dist:win`／`dist:mac`／`dist:linux` + `verify:desktop:full` on each target OS) and
+GHCR publish run on tag／manual CI only. Pushing a `v*` tag (name without `v` must equal
+root `VERSION`) also creates a **GitHub Release** with the Desktop artifacts.
 
 ## Generated files are committed — regenerate, never hand-edit
 

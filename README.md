@@ -105,12 +105,12 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 | `npm run build:desktop` | 編譯 Desktop TypeScript |
 | `npm run build:server-sidecar` | 以 PyInstaller 打包內建 Python server（**須在目標 OS 上執行**；輸出 `desktop/server-runtime/`） |
 | `npm run dist:win` | 封裝 Windows 安裝程式（NSIS .exe；**第一等 Desktop 交付**） |
-| `npm run dist:mac` | 可選手動封裝 macOS（DMG／zip；**非日常發佈目標**） |
-| `npm run dist:linux` | 可選手動封裝 Linux（AppImage／deb；**非日常發佈目標**） |
+| `npm run dist:mac` | 封裝 macOS（DMG／zip；**第一等 Desktop 交付**；須在 macOS 上執行） |
+| `npm run dist:linux` | 封裝 Linux（AppImage／deb；**第一等 Desktop 交付**；須在 Linux 上執行） |
 | `npm run dist:current` | 依本機 OS 封裝（`electron-builder --publish never`） |
-| `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`；與 Windows Desktop 同為第一等交付） |
+| `npm run docker:build` | 建置 server+SPA 容器映像（`intelligence-monitor:local`；與三平台 Desktop 同為第一等交付） |
 
-公開商店／企業發佈的 Windows Desktop 建置需 Authenticode 簽章；未簽章建置僅供開發／測試。容器映像在 `v*` tag 或手動 workflow 時推送到 **GHCR**（見下方 CI）。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。推送 `v*` tag 時 CI 會封裝三平台並建立 **GitHub Release**（附件為安裝包）；容器映像在 `v*` tag 或手動 workflow 時推送到 **GHCR**（見下方 CI）。
 
 ### 容器（GHCR）
 
@@ -142,13 +142,13 @@ CI 僅在 `v*` tag 或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<
 | **日常 CI**（push／PR） | `npm run check` + `npm run build` | Ubuntu 核心門禁：lint、漂移檢查（presets／i18n／OpenAPI）、型別檢查、`test:all`、web／desktop 建置 |
 | **Windows Desktop 路徑變更** | CI `windows-desktop` job | 相關路徑／tag／手動時建 sidecar 並做啟動 smoke（tzdata／sse_starlette） |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 smoke（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包後** | `npm run dist:win` + `npm run verify:desktop:full` | Windows sidecar、unpacked、NSIS；CI 在手動 dispatch／`v*` tag 跑 package；`v*` tag 另建 GitHub Release 並推 GHCR |
+| **發行／打包後** | `npm run dist:win`／`dist:mac`／`dist:linux` + `npm run verify:desktop:full` | 各 OS 的 sidecar、unpacked、安裝包；CI 在手動 dispatch／`v*` tag 跑三平台 `package`；`v*` tag 另建 GitHub Release 並推 GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
 | `npm run verify:deploy`（=`smoke`） | 對 `127.0.0.1:18820` 的短部署後驗證 | ~3s |
 | `npm run verify:desktop:fast` | Desktop vitest + 建置路徑檢查；先執行 `npm run build` | ~5–15s |
-| `npm run verify:desktop:full` | 發佈檢查：fast + Windows sidecar／unpacked／NSIS；先執行 `npm run dist:win` | ~5–15s（不含打包） |
+| `npm run verify:desktop:full` | 發佈檢查：fast + 當前 OS 的 sidecar／unpacked／安裝包；先執行對應 `dist:*` | ~5–15s（不含打包） |
 
 ### 營運與報表
 
@@ -177,12 +177,12 @@ CI 僅在 `v*` tag 或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<
 
 ## 版本控制
 
-GitHub Actions 在 push／PR 時於 **Ubuntu** 執行核心品質關卡與 web／desktop 建置。Desktop／web 相關路徑變更、`v*` tag、或手動 `workflow_dispatch` 時另在 **Windows** 建 sidecar 並做啟動 smoke；手動 dispatch／`v*` tag 另封裝 Windows NSIS 並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件為 Windows exe；tag 去掉 `v` 後須等於根目錄 `VERSION`）並推送 **GHCR**（Docker 不再於每次 `main` push 自動推送）。本機請維持相同關卡：
+GitHub Actions 在 push／PR 時於 **Ubuntu** 執行核心品質關卡與 web／desktop 建置。Desktop／web 相關路徑變更、`v*` tag、或手動 `workflow_dispatch` 時另在 **Windows** 建 sidecar 並做啟動 smoke；手動 dispatch／`v*` tag 另以矩陣封裝 **Windows／macOS／Linux** Desktop 並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件為 NSIS／DMG／zip／AppImage／deb 等；tag 去掉 `v` 後須等於根目錄 `VERSION`）並推送 **GHCR**（Docker 不替代 Release 附件，且不再於每次 `main` push 自動推送）。本機請維持相同關卡：
 
 | 時機 | 指令 |
 |------|------|
 | 日常開發 | `npm run check`；部署後可 `npm run verify:deploy`；Desktop 改動另跑 `npm run build && npm run verify:desktop:fast` |
-| 發佈前 | `npm run check`、`npm run dist:win`、`npm run verify:desktop:full`；容器可 `npm run docker:build` 後再 `npm run verify:deploy` |
+| 發佈前 | `npm run check`、在目標 OS 上 `npm run dist:win`／`dist:mac`／`dist:linux`、`npm run verify:desktop:full`；或推送匹配 `VERSION` 的 `v*` tag 讓 CI 三平台打包並建 Release；容器可 `npm run docker:build` 後再 `npm run verify:deploy` |
 
 ## 設定
 

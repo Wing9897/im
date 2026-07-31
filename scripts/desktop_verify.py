@@ -1,10 +1,10 @@
 """Desktop shell verification — daily build or packaged release artifacts.
 
 ``fast`` checks normal Web/Desktop build outputs. ``full`` includes the fast
-checks plus the native sidecar, unpacked package, and Windows NSIS installer
-(first-class Desktop delivery). macOS／Linux artifacts are optional manual
-builds only. Neither mode launches Electron, runs GUI E2E, nor verifies code
-signatures.
+checks plus the native sidecar, unpacked package, and OS installer for the
+current platform (Windows NSIS, macOS DMG, or Linux AppImage/deb). All three
+Desktop targets are first-class. Neither mode launches Electron, runs GUI E2E,
+nor verifies code signatures.
 """
 
 from __future__ import annotations
