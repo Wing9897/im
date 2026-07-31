@@ -53,25 +53,13 @@ Individual suites are also available: `npm test` (root smoke/audit), `npm run te
 
 The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
 a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
-token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday push／PR CI always runs **`quality`**
-(Ubuntu). On **`main`／`master`** pushes (and on `v*` tag／`workflow_dispatch`), the **`desktop`**
-matrix also runs the same lightweight checks on Windows／macOS／Linux (`verify:desktop:fast` +
-native sidecar build／startup smoke). On other branches, unrelated paths skip the whole matrix.
+token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday PR／main CI always runs **`quality`**
+(Ubuntu).
 
-**Release packaging** (`package` matrix on all three OS): `dist:win`／`dist:mac`／`dist:linux` +
-`verify:desktop:full` + `package:cli` (CLI zip = PyInstaller onedir for the same entry as
-`python -m server`／`intelligence-monitor`). Triggered by **`release-plan`** on **every**
-push to **`main`／`master`**, a manual **`v*` tag**, or **`workflow_dispatch`**. Default-branch
-and tag paths create／update a **GitHub Release** with **Desktop + CLI** for Windows／macOS／Linux
-and auto-create git tag `v$(VERSION)` (`contents: write` via `GITHUB_TOKEN`). Incomplete asset
-sets fail `release`. If `vVERSION` already points at another commit, CI **auto-bumps** patch／
-prerelease (`apply-version` bot commit + `sync:version`) and ships the new tag — no silent skip.
-Same-commit re-runs **overwrite** Release assets. Tag re-entry is deduped when the Release is
-already complete (`GITHUB_TOKEN` events also do not re-trigger workflows). `workflow_dispatch`
-builds artifacts but does **not** create a Release／tag. GHCR follows the same package／release plan.
-
-Release steps: merge／**push to main** → wait for Actions (auto bump if needed + tag + Release).
-Manual `VERSION` bump／`git tag` remains optional for intentional major／minor jumps.
+**Release:** merge to **`main`／`master`** (or **`workflow_dispatch`**) automatically bumps
+`VERSION`, packages Desktop + CLI on Windows／macOS／Linux (`dist:*` + `verify:desktop:full` +
+`package:cli`), tags `v$(VERSION)`, and creates a GitHub Release with all attachments (plus
+optional GHCR). Incomplete assets fail the job. No manual tag required.
 
 ## Generated files are committed — regenerate, never hand-edit
 

@@ -2,25 +2,19 @@ name: CI
 
 on:
   push:
+    branches: [main, master]
   pull_request:
   workflow_dispatch:
-  # Release paths:
-  # - every push to main/master → package×3 + GitHub Release + GHCR
-  #   (auto bump patch / prerelease counter when v$(VERSION) is already taken)
-  # - explicit v* tag push (manual) → package + Release + GHCR (skipped if Release already complete)
-  # - workflow_dispatch → package + GHCR artifacts only (no Release / no tag)
 
-# One release pipeline per branch/tag; do not cancel in-flight packaging.
+# One release pipeline per branch; do not cancel in-flight packaging.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 env:
-  # Unsigned Desktop builds in CI unless repo secrets provide signing material.
   CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
 jobs:
-  # PR / push core gate: Ubuntu only (lint, typecheck, i18n, OpenAPI, full tests).
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -51,367 +45,53 @@ jobs:
       - name: Build web and desktop
         run: npm run build
 
-  # Decide whether this run should package / create tag+Release / push GHCR.
-  # main/master always ships (auto bump when tag is taken). Tag-path skip is an
-  # anti-loop safety net when a PAT re-triggers after Release is already complete.
-  release-plan:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    outputs:
-      should_package: ${{ steps.plan.outputs.should_package }}
-      should_release: ${{ steps.plan.outputs.should_release }}
-      should_container: ${{ steps.plan.outputs.should_container }}
-      tag_name: ${{ steps.plan.outputs.tag_name }}
-      version: ${{ steps.plan.outputs.version }}
-      mode: ${{ steps.plan.outputs.mode }}
-      version_writeback: ${{ steps.plan.outputs.version_writeback }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Fetch tags
-        run: git fetch --tags --force origin
-
-      - name: Plan package / release / container
-        id: plan
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          version="$(tr -d '[:space:]' < VERSION)"
-          if [[ -z "$version" ]]; then
-            echo "VERSION file is empty" >&2
-            exit 1
-          fi
-          tag="v${version}"
-          sha="${{ github.sha }}"
-          event="${{ github.event_name }}"
-          ref="${{ github.ref }}"
-
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag_name=$tag" >> "$GITHUB_OUTPUT"
-          echo "version_writeback=false" >> "$GITHUB_OUTPUT"
-
-          set_plan() {
-            # $1 mode, $2 package, $3 release, $4 container, optional $5 version_writeback
-            echo "mode=$1" >> "$GITHUB_OUTPUT"
-            echo "should_package=$2" >> "$GITHUB_OUTPUT"
-            echo "should_release=$3" >> "$GITHUB_OUTPUT"
-            echo "should_container=$4" >> "$GITHUB_OUTPUT"
-            echo "version_writeback=${5:-false}" >> "$GITHUB_OUTPUT"
-            echo "release-plan: mode=$1 package=$2 release=$3 container=$4 writeback=${5:-false} tag=$tag version=$version sha=$sha"
-          }
-
-          resolve_tag_sha() {
-            local t="$1"
-            if git rev-parse "refs/tags/$t" >/dev/null 2>&1; then
-              git rev-list -n 1 "refs/tags/$t"
-            elif git rev-parse "$t" >/dev/null 2>&1; then
-              git rev-list -n 1 "$t"
-            else
-              echo ""
-            fi
-          }
-
-          # Patch bump: 1.2.3 → 1.2.4; 1.2.3-beta.6 → 1.2.3-beta.7
-          bump_version() {
-            local v="$1"
-            if [[ "$v" =~ ^([0-9]+\.[0-9]+\.[0-9]+-)([A-Za-z0-9.-]*[^0-9])?([0-9]+)$ ]]; then
-              local prefix="${BASH_REMATCH[1]}${BASH_REMATCH[2]:-}"
-              local n="${BASH_REMATCH[3]}"
-              echo "${prefix}$((n + 1))"
-              return 0
-            fi
-            if [[ "$v" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(.*)$ ]]; then
-              echo "${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))${BASH_REMATCH[4]}"
-              return 0
-            fi
-            echo "Cannot auto-bump VERSION='$v' (expected semver)" >&2
-            exit 1
-          }
-
-          # --- pull_request / non-default branch push: never release ---
-          if [[ "$event" == "pull_request" ]]; then
-            set_plan "pr" "false" "false" "false"
-            exit 0
-          fi
-
-          if [[ "$event" == "workflow_dispatch" ]]; then
-            set_plan "dispatch" "true" "false" "true"
-            exit 0
-          fi
-
-          # Explicit v* tag push (manual path, or rare re-entry after auto-tag with a PAT).
-          if [[ "$event" == "push" && "$ref" == refs/tags/v* ]]; then
-            tag_from_ref="${GITHUB_REF_NAME}"
-            tag_ver="${tag_from_ref#v}"
-            if [[ "$tag_ver" != "$version" ]]; then
-              echo "Tag $tag_from_ref does not match VERSION ($version)" >&2
-              exit 1
-            fi
-            echo "tag_name=$tag_from_ref" >> "$GITHUB_OUTPUT"
-
-            # Dedup: if Release already has the required Desktop+CLI attachments, skip.
-            if gh release view "$tag_from_ref" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-              assets="$(gh release view "$tag_from_ref" --repo "${{ github.repository }}" --json assets --jq '[.assets[].name] | join("\n")')"
-              need_fail=0
-              require_asset() {
-                local pattern="$1"
-                if ! printf '%s\n' "$assets" | grep -E "$pattern" >/dev/null; then
-                  echo "Release $tag_from_ref missing asset matching: $pattern"
-                  need_fail=1
-                fi
-              }
-              # Looser patterns than softprops staging (names vary slightly by electron-builder).
-              require_asset '\.exe$'
-              require_asset '\.dmg$'
-              require_asset '\.AppImage$'
-              require_asset 'intelligence-monitor-cli-windows-'
-              require_asset 'intelligence-monitor-cli-macos-'
-              require_asset 'intelligence-monitor-cli-linux-'
-              if [[ "$need_fail" -eq 0 ]]; then
-                echo "Release $tag_from_ref already complete — skipping package/release (anti-loop / dedup)."
-                set_plan "tag_skip_complete" "false" "false" "false"
-                exit 0
-              fi
-              echo "Release $tag_from_ref exists but incomplete — will re-package and update."
-              set_plan "tag_refresh" "true" "true" "true"
-              exit 0
-            fi
-
-            set_plan "tag" "true" "true" "true"
-            exit 0
-          fi
-
-          # Default-branch push: always package + Release + GHCR (auto bump if needed).
-          if [[ "$event" == "push" && ( "$ref" == "refs/heads/main" || "$ref" == "refs/heads/master" ) ]]; then
-            tag_sha="$(resolve_tag_sha "$tag")"
-
-            if [[ -z "$tag_sha" ]]; then
-              echo "No tag $tag yet — will package, create tag, and publish Release."
-              set_plan "main_release" "true" "true" "true"
-              exit 0
-            fi
-
-            if [[ "$tag_sha" == "$sha" ]]; then
-              echo "Tag $tag already points at this commit — will re-package and update Release assets."
-              set_plan "main_refresh" "true" "true" "true"
-              exit 0
-            fi
-
-            # Tag exists on another commit → auto bump until vVERSION is free.
-            echo "Tag $tag points at $tag_sha (this push is $sha) — auto-bumping VERSION."
-            base_version="$version"
-            for _ in $(seq 1 50); do
-              version="$(bump_version "$version")"
-              tag="v${version}"
-              if [[ -z "$(resolve_tag_sha "$tag")" ]]; then
-                echo "version=$version" >> "$GITHUB_OUTPUT"
-                echo "tag_name=$tag" >> "$GITHUB_OUTPUT"
-                echo "Auto-bumped $base_version → $version (tag $tag free)."
-                set_plan "main_autobump" "true" "true" "true" "true"
-                exit 0
-              fi
-              echo "Tag $tag still taken; bumping again…"
-            done
-            echo "::error::Failed to find a free version after bumping from $base_version" >&2
-            exit 1
-          fi
-
-          # Other branch pushes: quality (+ path desktop) only.
-          set_plan "branch" "false" "false" "false"
-
-  # When release-plan auto-bumps, commit VERSION + sync:version back to the branch
-  # before package/release so the tagged tree matches artifacts. GITHUB_TOKEN pushes
-  # do not re-trigger workflows (platform rule); [skip ci] is an extra belt.
-  apply-version:
-    if: needs.release-plan.outputs.should_package == 'true'
-    needs: [release-plan]
+  # Always bump once on main/master push or workflow_dispatch, then package that commit.
+  version:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: write
     outputs:
-      checkout_sha: ${{ steps.apply.outputs.checkout_sha }}
+      version: ${{ steps.bump.outputs.version }}
+      tag_name: ${{ steps.bump.outputs.tag_name }}
+      checkout_sha: ${{ steps.bump.outputs.checkout_sha }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.sha }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
 
-      - name: Apply planned VERSION (writeback when auto-bumped)
-        id: apply
+      - name: Bump VERSION + sync manifests
+        id: bump
         shell: bash
-        env:
-          PLANNED: ${{ needs.release-plan.outputs.version }}
-          WRITEBACK: ${{ needs.release-plan.outputs.version_writeback }}
-          BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          current="$(tr -d '[:space:]' < VERSION)"
-          printf '%s\n' "$PLANNED" > VERSION
-          if [[ "$current" != "$PLANNED" ]]; then
-            node scripts/sync-version.mjs
-          fi
-
-          if [[ "$WRITEBACK" != "true" ]]; then
-            echo "No writeback (mode keeps tree VERSION=$current, plan=$PLANNED)."
-            echo "checkout_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
+          git pull --ff-only origin "${{ github.ref_name }}"
+          version="$(python3 scripts/bump_version.py)"
+          node scripts/sync-version.mjs
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add VERSION package.json package-lock.json web/package.json desktop/package.json pyproject.toml
-          if git diff --staged --quiet; then
-            echo "Writeback requested but nothing staged; using ${{ github.sha }}"
-            echo "checkout_sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git commit -m "chore(release): bump VERSION to ${PLANNED} [skip ci]"
-          git push origin "HEAD:refs/heads/${BRANCH}"
+          git commit -m "chore(release): ${version}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=v${version}" >> "$GITHUB_OUTPUT"
           echo "checkout_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "Wrote VERSION=$PLANNED and pushed $(git rev-parse --short HEAD)"
+          echo "Bumped and pushed v${version} @ $(git rev-parse --short HEAD)"
 
-  # Path gate for Desktop smoke. Unrelated push/PR → relevant=false so the whole
-  # `desktop` matrix is Skipped (not a green empty run). Tag / workflow_dispatch /
-  # default-branch pushes always relevant (release packaging path).
-  desktop-paths:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      relevant: ${{ steps.paths.outputs.relevant }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Detect Desktop-related path changes
-        id: paths
-        shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] \
-            || [[ "${{ github.ref }}" == refs/tags/v* ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/main" ]] \
-            || [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            base="${{ github.event.pull_request.base.sha }}"
-            head="${{ github.event.pull_request.head.sha }}"
-          else
-            base="${{ github.event.before }}"
-            head="${{ github.sha }}"
-          fi
-          if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          if git diff --name-only "$base" "$head" | grep -E '^(desktop/|scripts/build_server_sidecar\.py|scripts/package_cli\.py|package\.json|package-lock\.json|web/)' >/dev/null; then
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "relevant=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  # Symmetric Desktop smoke on Windows / macOS / Linux when Desktop/web paths change,
-  # on v* tags, or via manual dispatch. Same job name + matrix — no Windows-only green light.
-  # Full installers + CLI zips remain the separate `package` job.
-  desktop:
-    needs: desktop-paths
-    if: needs.desktop-paths.outputs.relevant == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-    name: desktop (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          activate-environment: true
-
-      - name: Install Python 3.11
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          uv sync --extra dev --locked
-          npm ci
-
-      - name: Build web and desktop
-        run: npm run build
-
-      - name: Desktop fast verify (paths + vitest)
-        run: npm run verify:desktop:fast
-
-      - name: Build server sidecar (PyInstaller, native OS)
-        run: uv run python scripts/build_server_sidecar.py
-
-      - name: Verify bundled server exists
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
-          else
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server"
-          fi
-          test -f "$server" || { echo "Missing bundled server: $server"; exit 1; }
-          if [[ "${{ runner.os }}" != "Windows" ]]; then
-            chmod +x "$server"
-          fi
-          echo "Found sidecar: $server"
-
-      - name: Sidecar startup smoke (tzdata / sse_starlette)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server.exe"
-          else
-            server="desktop/server-runtime/intelligence-monitor-server/intelligence-monitor-server"
-            chmod +x "$server"
-          fi
-          export INTELLIGENCE_MONITOR_DATA_DIR="${RUNNER_TEMP}/im-sidecar-smoke"
-          export INTELLIGENCE_MONITOR_HOST=127.0.0.1
-          mkdir -p "$INTELLIGENCE_MONITOR_DATA_DIR"
-          "$server" &
-          pid=$!
-          cleanup() { kill "$pid" 2>/dev/null || true; }
-          trap cleanup EXIT
-          for i in $(seq 1 60); do
-            if curl -fsS "http://127.0.0.1:18820/api/v1/health" >/tmp/im-health.json; then
-              grep -q '"status"[[:space:]]*:[[:space:]]*"ok"' /tmp/im-health.json
-              exit 0
-            fi
-            sleep 2
-          done
-          echo "Sidecar failed to become healthy within 120s" >&2
-          exit 1
-
-  # Desktop installers + CLI zip (win/mac/linux): default-branch auto-release, tag, or dispatch.
   package:
-    if: needs.release-plan.outputs.should_package == 'true'
-    needs: [quality, release-plan, apply-version]
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    needs: [quality, version]
     strategy:
       fail-fast: false
       matrix:
@@ -437,24 +117,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.apply-version.outputs.checkout_sha }}
-
-      - name: Verify release tag matches VERSION
-        if: startsWith(github.ref, 'refs/tags/v') || needs.release-plan.outputs.should_release == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          expected="${{ needs.release-plan.outputs.version }}"
-          tag_name="${{ needs.release-plan.outputs.tag_name }}"
-          if [[ "$version" != "$expected" ]]; then
-            echo "VERSION file ($version) != release-plan version ($expected)" >&2
-            exit 1
-          fi
-          if [[ "$tag_name" != "v$version" ]]; then
-            echo "tag_name $tag_name does not match v$version" >&2
-            exit 1
-          fi
+          ref: ${{ needs.version.outputs.checkout_sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -488,7 +151,7 @@ jobs:
       - name: Verify Desktop package
         run: npm run verify:desktop:full
 
-      - name: Package CLI zip (same PyInstaller onedir as sidecar)
+      - name: Package CLI zip
         run: npm run package:cli
 
       - name: Assert Desktop + CLI artifacts exist
@@ -514,7 +177,7 @@ jobs:
       - name: Upload Desktop + CLI artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}-${{ github.sha }}
+          name: ${{ matrix.artifact }}-${{ needs.version.outputs.checkout_sha }}
           path: |
             desktop/release/*.exe
             desktop/release/*.dmg
@@ -527,14 +190,11 @@ jobs:
             dist/cli/intelligence-monitor-cli-*.zip
           if-no-files-found: error
 
-  # Create/update GitHub Release + git tag v$(VERSION) from default-branch push or v* tag.
-  # workflow_dispatch builds artifacts but does NOT create a Release.
-  # permissions: contents:write required to create tags/releases via GITHUB_TOKEN.
-  # Tag creation with GITHUB_TOKEN does not re-trigger this workflow (GitHub platform rule);
-  # release-plan also skips tag runs whose Release attachments are already complete.
   release:
-    if: needs.release-plan.outputs.should_release == 'true'
-    needs: [package, release-plan, apply-version]
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    needs: [package, version]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -542,24 +202,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.apply-version.outputs.checkout_sha }}
-
-      - name: Verify tag matches VERSION
-        shell: bash
-        run: |
-          set -euo pipefail
-          version="$(tr -d '[:space:]' < VERSION)"
-          expected="${{ needs.release-plan.outputs.version }}"
-          tag_name="${{ needs.release-plan.outputs.tag_name }}"
-          if [[ "$version" != "$expected" || "$tag_name" != "v$version" ]]; then
-            echo "VERSION/tag mismatch: file=$version plan=$expected tag=$tag_name" >&2
-            exit 1
-          fi
+          ref: ${{ needs.version.outputs.checkout_sha }}
+          fetch-depth: 0
 
       - name: Download Desktop + CLI artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-release-${{ github.sha }}"
+          pattern: "*-release-${{ needs.version.outputs.checkout_sha }}"
           path: release-assets
           merge-multiple: true
 
@@ -568,10 +217,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p staged
-          # Flatten whatever layout download-artifact used so softprops globs cannot miss.
           while IFS= read -r -d '' f; do
             base="$(basename "$f")"
-            # Avoid collisions across platforms (mac zip vs cli zip share .zip).
             if [[ -e "staged/$base" ]]; then
               parent="$(basename "$(dirname "$f")")"
               base="${parent}-${base}"
@@ -604,39 +251,36 @@ jobs:
           require_name 'intelligence-monitor-cli-macos-*.zip'
           require_name 'intelligence-monitor-cli-linux-*.zip'
           if [[ "$need_fail" -ne 0 ]]; then
-            echo "Refusing to publish an empty or incomplete GitHub Release." >&2
+            echo "Refusing to publish an incomplete GitHub Release." >&2
             exit 1
           fi
 
-      - name: Create or update GitHub Release
+      - name: Create and push tag
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          TAG: ${{ needs.version.outputs.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git tag "$TAG" "${{ needs.version.outputs.checkout_sha }}"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ needs.release-plan.outputs.tag_name }}
-          name: ${{ needs.release-plan.outputs.tag_name }}
-          target_commitish: ${{ needs.apply-version.outputs.checkout_sha }}
-          prerelease: ${{ contains(needs.release-plan.outputs.tag_name, 'beta') || contains(needs.release-plan.outputs.tag_name, 'alpha') || contains(needs.release-plan.outputs.tag_name, 'rc') }}
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          name: ${{ needs.version.outputs.tag_name }}
+          target_commitish: ${{ needs.version.outputs.checkout_sha }}
+          prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') }}
           fail_on_unmatched_files: true
-          # Refresh same-commit rebuilds; do not silently retarget a different VERSION.
-          overwrite_files: true
-          body: |
-            Desktop installers + headless CLI for **${{ needs.release-plan.outputs.tag_name }}**.
-
-            **Desktop (first-class):** Windows NSIS (`.exe`), macOS DMG/zip, Linux AppImage/deb.
-
-            **CLI:** `intelligence-monitor-cli-<os>-<arch>.zip` — PyInstaller onedir for the same
-            entry as `python -m server` / `intelligence-monitor` (no Electron). Unpack and run
-            `intelligence-monitor-server` (`.exe` on Windows).
-
-            Docker/Web image is published to GHCR on the same release path (or via manual workflow_dispatch).
-
-            See [`CHANGELOG.md`](https://github.com/${{ github.repository }}/blob/${{ needs.release-plan.outputs.tag_name }}/CHANGELOG.md) for release notes.
           files: |
             staged/*
 
-  # Docker image: default-branch auto-release, tag, or manual dispatch.
   container:
-    if: needs.release-plan.outputs.should_container == 'true'
-    needs: [quality, release-plan, apply-version]
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    needs: [quality, version]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
@@ -645,7 +289,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.apply-version.outputs.checkout_sha }}
+          ref: ${{ needs.version.outputs.checkout_sha }}
 
       - name: Image name (lowercase)
         id: image
@@ -667,11 +311,9 @@ jobs:
         with:
           images: ${{ steps.image.outputs.name }}
           tags: |
-            type=raw,value=latest,enable=${{ needs.release-plan.outputs.should_release == 'true' }}
-            type=sha,prefix=sha-
-            type=raw,value=${{ needs.release-plan.outputs.tag_name }},enable=${{ needs.release-plan.outputs.should_release == 'true' }}
-            type=ref,event=tag
-            type=raw,value=buildcache,enable=false
+            type=raw,value=latest
+            type=raw,value=${{ needs.version.outputs.tag_name }}
+            type=raw,value=sha-${{ needs.version.outputs.checkout_sha }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -687,8 +329,7 @@ jobs:
         run: |
           set -euo pipefail
           image="${{ steps.image.outputs.name }}"
-          # Prefer the just-built sha tag for a deterministic smoke.
-          tag="sha-${GITHUB_SHA}"
+          tag="sha-${{ needs.version.outputs.checkout_sha }}"
           docker pull "${image}:${tag}"
           cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
           cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }

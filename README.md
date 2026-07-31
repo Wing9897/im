@@ -113,7 +113,7 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 
 **CLI** = 無 Electron 的 headless server，與 `python -m server`／`intelligence-monitor`（`pyproject.toml` console script）同一入口；發佈物為各平台 PyInstaller zip（內含 `intelligence-monitor-server`）。
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：push／merge 到 `main`（或 `master`）即會全自動發版——若 `v$(VERSION)` 已被占用，CI **自動 bump patch／prerelease 計數**（如 `0.1.0-beta.6` → `0.1.0-beta.7`），bot 回寫 `VERSION` + `sync:version`，再建立 git tag、封裝 **三平台 Desktop + 三平台 CLI**、建立／更新 **GitHub Release**，並推 **GHCR**。亦可手動推送匹配 `VERSION` 的 `v*` tag（Release 已齊全則跳過避免重複）。`workflow_dispatch` 會打包產物但**不**建立 Release／tag。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：合併到 `main`（或 `master`）即自動 bump 版本、打包三平台 Desktop + CLI、打 tag、發 GitHub Release（並可選推 GHCR）。`workflow_dispatch` 走同一條路徑。
 
 ### 容器（GHCR）
 
@@ -126,7 +126,7 @@ docker run --rm -p 18820:18820 -v im-data:/data intelligence-monitor:local
 docker compose up --build
 ```
 
-CI 在 **main／master 自動發版**、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write；映像預設跟隨 repo 可見性）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
+CI 在 **main／master push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
 
 ### 測試
 
@@ -142,10 +142,9 @@ CI 在 **main／master 自動發版**、`v*` tag、或手動 `workflow_dispatch`
 
 | 場景 | 指令 | 說明 |
 |------|------|------|
-| **日常 CI**（push／PR） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
-| **Desktop 路徑變更／main 發版** | CI `desktop` 矩陣（win／mac／linux） | `main`／`master` push、`v*` tag、`workflow_dispatch`，或變更触及 `desktop/`／`web/`／根 `package.json` 等時，三平台跑對稱輕量檢查；其餘分支無關路徑時整個矩陣 **Skipped** |
+| **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 smoke（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包後** | `dist:*` + `verify:desktop:full` + `package:cli` | 三平台 Desktop 安裝包 + CLI zip 在 **每次 main／master push**、**`v*` tag**、或 **`workflow_dispatch`** 的 `package` 矩陣；main／tag 建立 GitHub Release（Desktop+CLI 附件）並推 GHCR（dispatch 只打包） |
+| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | **main／master push** 或 **`workflow_dispatch`**：三平台 Desktop + CLI → tag + GitHub Release + GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -180,49 +179,18 @@ CI 在 **main／master 自動發版**、`v*` tag、或手動 `workflow_dispatch`
 
 ## 版本控制
 
-### CI 何時跑什麼（`.github/workflows/ci.yml`）
+### CI（`.github/workflows/ci.yml`）
 
-| 觸發 | `quality` | `desktop`（win／mac／linux 對稱 smoke） | `package`（Desktop+CLI 三平台） | `release`（GitHub Release + tag） | `container`（GHCR） |
-|------|-----------|------------------------------------------|----------------------------------|-----------------------------|---------------------|
-| **PR**／非 main／master **push** | ✅ 必跑 | Desktop／web 等路徑變更時 **三平台同啟**；否則整個矩陣 **Skipped** | ❌ | ❌ | ❌ |
-| **push `main`／`master`** | ✅ | ✅ 三平台（預設分支一律跑） | ✅ 三平台（**每次** push） | ✅ 自動建 `v$(VERSION)` tag + 上傳 Desktop+CLI；缺件則失敗 | ✅ |
-| **`v*` tag** push（手動） | ✅ | ✅ 三平台 | ✅（tag 去掉 `v` 須 = `VERSION`）；若 Release 附件已齊全則 **skip**（防重複） | ✅ 或 skip（同上） | ✅ 或 skip |
-| **`workflow_dispatch`** | ✅ | ✅ 三平台 | ✅ 三平台（產物進 Actions artifacts） | ❌ **不**建 Release／tag | ✅ |
-
-**VERSION／tag 策略（`release-plan` + `apply-version`）**
-
-| 情況 | 行為 |
+| 觸發 | 行為 |
 |------|------|
-| `v$(VERSION)` **不存在** | 打包 → 建 tag → 建 Release → GHCR（不改 `VERSION` 檔） |
-| tag 已存在且指向 **同一 commit** | 重跑打包並 **更新（overwrite）** Release 附件 |
-| tag 已存在但指向 **其他 commit** | **自動 bump**（`1.2.3` → `1.2.4`；`1.2.3-beta.6` → `1.2.3-beta.7`），直到 tag 空閒；bot 回寫 `VERSION` + `npm run sync:version` 並 commit，再打包／打 tag／Release |
-| 手動把 `VERSION` 改成尚未占用的新號 | 直接用該號發版（與過去行為相同） |
+| **PR** | 只跑 `quality` |
+| **push `main`／`master`** 或 **`workflow_dispatch`** | `quality` → bump 版本 → 三平台 `package`（Desktop+CLI）→ 打 tag + GitHub Release → GHCR |
 
-**防循環**：`apply-version`／`release` 用 `GITHUB_TOKEN`（`contents: write`）push／建 tag；GitHub 規定以此 token 產生的事件**不會**再觸發新 workflow。commit message 另含 `[skip ci]`。workflow `concurrency` 依 ref 串行，避免並行 push 搶同一版本號。若仍出現 tag push 重入（例如 PAT），`release-plan` 在 Release 附件已齊全時 skip `package`／`release`。
+每次發版固定 bump：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py` + `npm run sync:version`）。`GITHUB_TOKEN` push／tag 不會再觸發 workflow；`concurrency` 依 ref 串行。
 
-#### 正確發版步驟（GitHub Release）
+一句話：**合併到 main 即自動 bump、打包三平台 Desktop+CLI、打 tag、發 Release。**
 
-```bash
-# 日常：merge／push 到 main 即可（無需手動 bump／git tag）
-git push origin HEAD   # main 或 master
-
-# 等待 Actions：
-# quality → apply-version（必要時 auto-bump）→ package(win/mac/linux)
-#          → release（自動 tag + Release）+ container + desktop 三平台 smoke
-```
-
-可選：發大版本前仍可手動 bump `VERSION` + `npm run sync:version` 再 push（例如進 `0.2.0`）；若該號已被占用，CI 仍會自動再 bump 到空閒號。
-
-一句話：**push 到 main → CI 全自動打 tag 並上傳三平台 Desktop + CLI 到 GitHub Release**（VERSION 衝突時自動 bump patch／prerelease）。
-
-可選：仍支援手動 `git tag vX.Y.Z && git push origin vX.Y.Z`（與 main 路徑去重）。mac／linux 完整打包只能在 GitHub Actions（或對應本機 OS）驗證；本機 Windows 可跑 `npm run dist:win && npm run package:cli`。
-
-本機請維持相同關卡：
-
-| 時機 | 指令 |
-|------|------|
-| 日常開發 | `npm run check`；部署後可 `npm run verify:deploy`；Desktop 改動另跑 `npm run build && npm run verify:desktop:fast` |
-| 發佈 | merge／**push 到 main**；CI 自動 bump（若需要）+ tag + Desktop+CLI Release；容器另見 GHCR |
+本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 
 ## 設定
 
