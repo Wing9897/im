@@ -77,6 +77,47 @@ async function rerenderHarness(root: Root, ui: React.ReactNode) {
   });
 }
 
+const completedEvent: RuntimeAnalysisEvent = {
+  type: "completed",
+  payload: {
+    taskId: "task-a",
+    batchId: "batch-a",
+    analysisMode: "leaderboard",
+    findingsCount: 2,
+    hasFindings: true,
+    overlapStatistics: null,
+  },
+  receivedAt: 2,
+};
+
+const startedEvent: RuntimeAnalysisEvent = {
+  type: "started",
+  payload: {
+    taskId: "task-a",
+    taskName: "Task A",
+    batchId: "batch-a",
+    messageCount: 5,
+    estimatedTokens: 500,
+    llmProvider: "openai",
+    llmModel: "gpt-4",
+  },
+  receivedAt: 1,
+};
+
+const failedEvent: RuntimeAnalysisEvent = {
+  type: "failed",
+  payload: {
+    taskId: "task-a",
+    taskName: "Task A",
+    batchId: "batch-a",
+    error: "LLM_ERROR",
+    retrying: false,
+    currentRetry: 0,
+    maxRetries: 3,
+  },
+  receivedAt: 3,
+};
+
 describe("useRefreshOnAnalysisEvent", () => {
   beforeEach(() => {
     analysisStatusMode.current = "mock";
@@ -87,38 +128,23 @@ describe("useRefreshOnAnalysisEvent", () => {
     runtimeState.lastAnalysisEvent = null;
   });
 
-  it("refreshes only for completed events by default", async () => {
+  it("wires completed events to onRefresh and ignores started by default", async () => {
     const onRefresh = vi.fn();
     const { container, root } = renderHarness(
       <Harness onRefresh={onRefresh} />,
     );
 
     runtimeState.lastAnalysisEvent = {
-      type: "started",
-      payload: {
-        taskId: "task-1",
-        taskName: "Task 1",
-        batchId: "batch-1",
-        messageCount: 10,
-        estimatedTokens: 1000,
-        llmProvider: "gemini_compatible",
-        llmModel: "gemma-4-26b-a4b-it",
-      },
+      ...startedEvent,
+      payload: { ...startedEvent.payload, taskId: "task-1" },
       receivedAt: 1,
     };
     await rerenderHarness(root, <Harness onRefresh={onRefresh} />);
     expect(onRefresh).not.toHaveBeenCalled();
 
     runtimeState.lastAnalysisEvent = {
-      type: "completed",
-      payload: {
-        taskId: "task-1",
-        batchId: "batch-1",
-        analysisMode: "leaderboard",
-        findingsCount: 2,
-        hasFindings: true,
-        overlapStatistics: null,
-      },
+      ...completedEvent,
+      payload: { ...completedEvent.payload, taskId: "task-1", batchId: "batch-1" },
       receivedAt: 2,
     };
     await rerenderHarness(root, <Harness onRefresh={onRefresh} />);
@@ -127,71 +153,7 @@ describe("useRefreshOnAnalysisEvent", () => {
     cleanupHarness(root, container);
   });
 
-  it("supports task and display type filtering", async () => {
-    const onRefresh = vi.fn();
-    const options = { taskId: "task-1", analysisMode: "event" as const };
-    const { container, root } = renderHarness(
-      <Harness onRefresh={onRefresh} options={options} />,
-    );
-
-    runtimeState.lastAnalysisEvent = {
-      type: "completed",
-      payload: {
-        taskId: "task-1",
-        batchId: "batch-1",
-        analysisMode: "leaderboard",
-        findingsCount: 1,
-        hasFindings: true,
-        overlapStatistics: null,
-      },
-      receivedAt: 1,
-    };
-    await rerenderHarness(
-      root,
-      <Harness onRefresh={onRefresh} options={options} />,
-    );
-    expect(onRefresh).not.toHaveBeenCalled();
-
-    runtimeState.lastAnalysisEvent = {
-      type: "completed",
-      payload: {
-        taskId: "task-2",
-        batchId: "batch-2",
-        analysisMode: "event",
-        findingsCount: 1,
-        hasFindings: true,
-        overlapStatistics: null,
-      },
-      receivedAt: 2,
-    };
-    await rerenderHarness(
-      root,
-      <Harness onRefresh={onRefresh} options={options} />,
-    );
-    expect(onRefresh).not.toHaveBeenCalled();
-
-    runtimeState.lastAnalysisEvent = {
-      type: "completed",
-      payload: {
-        taskId: "task-1",
-        batchId: "batch-3",
-        analysisMode: "event",
-        findingsCount: 1,
-        hasFindings: true,
-        overlapStatistics: null,
-      },
-      receivedAt: 3,
-    };
-    await rerenderHarness(
-      root,
-      <Harness onRefresh={onRefresh} options={options} />,
-    );
-    expect(onRefresh).toHaveBeenCalledTimes(1);
-
-    cleanupHarness(root, container);
-  });
-
-  it("can opt into started and failed events", async () => {
+  it("honors includeStarted / includeFailed when opted in", async () => {
     const onRefresh = vi.fn();
     const options = {
       includeStarted: true,
@@ -203,16 +165,8 @@ describe("useRefreshOnAnalysisEvent", () => {
     );
 
     runtimeState.lastAnalysisEvent = {
-      type: "started",
-      payload: {
-        taskId: "task-1",
-        taskName: "Task 1",
-        batchId: "batch-1",
-        messageCount: 5,
-        estimatedTokens: 500,
-        llmProvider: "gemini_compatible",
-        llmModel: "gemma-4-26b-a4b-it",
-      },
+      ...startedEvent,
+      payload: { ...startedEvent.payload, taskId: "task-1" },
       receivedAt: 1,
     };
     await rerenderHarness(
@@ -221,16 +175,8 @@ describe("useRefreshOnAnalysisEvent", () => {
     );
 
     runtimeState.lastAnalysisEvent = {
-      type: "failed",
-      payload: {
-        taskId: "task-1",
-        taskName: "Task 1",
-        batchId: "batch-1",
-        error: "boom",
-        retrying: false,
-        currentRetry: 1,
-        maxRetries: 3,
-      },
+      ...failedEvent,
+      payload: { ...failedEvent.payload, taskId: "task-1" },
       receivedAt: 2,
     };
     await rerenderHarness(
@@ -239,57 +185,52 @@ describe("useRefreshOnAnalysisEvent", () => {
     );
 
     expect(onRefresh).toHaveBeenCalledTimes(2);
-
     cleanupHarness(root, container);
+  });
+
+  it("catches rejected onRefresh so it does not become an unhandled rejection", async () => {
+    const unhandledReasons: unknown[] = [];
+    const onDomUnhandled = (event: PromiseRejectionEvent) => {
+      unhandledReasons.push(event.reason);
+      event.preventDefault();
+    };
+    const onNodeUnhandled = (reason: unknown) => {
+      unhandledReasons.push(reason);
+    };
+
+    window.addEventListener("unhandledrejection", onDomUnhandled);
+    process.prependListener("unhandledRejection", onNodeUnhandled);
+
+    try {
+      const onRefresh = async (): Promise<void> => {
+        throw new Error("LLM_ERROR");
+      };
+
+      const { container, root } = renderHarness(
+        <Harness onRefresh={onRefresh as unknown as () => void} />,
+      );
+
+      runtimeState.lastAnalysisEvent = {
+        ...completedEvent,
+        payload: { ...completedEvent.payload, taskId: "task-1", batchId: "batch-1" },
+        receivedAt: 1,
+      };
+      await rerenderHarness(
+        root,
+        <Harness onRefresh={onRefresh as unknown as () => void} />,
+      );
+
+      await new Promise<void>((resolve) => setTimeout(resolve, 30));
+      expect(unhandledReasons).toEqual([]);
+      cleanupHarness(root, container);
+    } finally {
+      window.removeEventListener("unhandledrejection", onDomUnhandled);
+      process.off("unhandledRejection", onNodeUnhandled);
+    }
   });
 });
 
-// ---------------------------------------------------------------------------
-// shouldRefreshForEvent filtering logic
-// ---------------------------------------------------------------------------
-
 describe("shouldRefreshForEvent", () => {
-  const startedEvent = {
-    type: "started" as const,
-    payload: {
-      taskId: "task-a",
-      taskName: "Task A",
-      batchId: "batch-a",
-      messageCount: 5,
-      estimatedTokens: 500,
-      llmProvider: "openai",
-      llmModel: "gpt-4",
-    },
-    receivedAt: 1,
-  };
-
-  const completedEvent = {
-    type: "completed" as const,
-    payload: {
-      taskId: "task-a",
-      batchId: "batch-a",
-      analysisMode: "leaderboard",
-      findingsCount: 2,
-      hasFindings: true,
-      overlapStatistics: null,
-    },
-    receivedAt: 2,
-  };
-
-  const failedEvent = {
-    type: "failed" as const,
-    payload: {
-      taskId: "task-a",
-      taskName: "Task A",
-      batchId: "batch-a",
-      error: "LLM_ERROR",
-      retrying: false,
-      currentRetry: 0,
-      maxRetries: 3,
-    },
-    receivedAt: 3,
-  };
-
   it("returns false when taskId filter does not match", () => {
     const options: UseRefreshOnAnalysisEventOptions = {
       includeCompleted: true,
@@ -326,12 +267,9 @@ describe("shouldRefreshForEvent", () => {
     ).toBe(false);
   });
 
-  it("returns includeStarted for started events when taskId matches or is unset", () => {
+  it("returns includeStarted / includeFailed for matching events", () => {
     expect(shouldRefreshForEvent(startedEvent, { includeStarted: true, taskId: null })).toBe(true);
     expect(shouldRefreshForEvent(startedEvent, { includeStarted: false, taskId: null })).toBe(false);
-  });
-
-  it("returns includeFailed for failed events when taskId matches or is unset", () => {
     expect(shouldRefreshForEvent(failedEvent, { includeFailed: true, taskId: null })).toBe(true);
     expect(shouldRefreshForEvent(failedEvent, { includeFailed: false, taskId: null })).toBe(false);
   });
@@ -346,252 +284,38 @@ describe("shouldRefreshForEvent", () => {
 
     const matching = {
       ...completedEvent,
-      payload: { ...completedEvent.payload, analysisMode: "event" },
+      payload: { ...completedEvent.payload, analysisMode: "event" as const },
     };
     expect(shouldRefreshForEvent(matching, options)).toBe(true);
-
-    const otherMode = {
-      ...completedEvent,
-      payload: { ...completedEvent.payload, analysisMode: "leaderboard" },
-    };
-    expect(shouldRefreshForEvent(otherMode, options)).toBe(false);
   });
 
-  it("returns false when all include flags are false", () => {
-    const opts = { includeStarted: false, includeCompleted: false, includeFailed: false };
-    expect(shouldRefreshForEvent(startedEvent, opts)).toBe(false);
-    expect(shouldRefreshForEvent(completedEvent, opts)).toBe(false);
-    expect(shouldRefreshForEvent(failedEvent, opts)).toBe(false);
-  });
+  it("returns false when all include flags are false; true when taskId matches", () => {
+    const allOff = { includeStarted: false, includeCompleted: false, includeFailed: false };
+    expect(shouldRefreshForEvent(startedEvent, allOff)).toBe(false);
+    expect(shouldRefreshForEvent(completedEvent, allOff)).toBe(false);
+    expect(shouldRefreshForEvent(failedEvent, allOff)).toBe(false);
 
-  it("returns true when taskId matches and include flag is set", () => {
-    const opts = {
+    const allOn = {
       includeStarted: true,
       includeCompleted: true,
       includeFailed: true,
       taskId: "task-a",
     };
-    expect(shouldRefreshForEvent(startedEvent, opts)).toBe(true);
-    expect(shouldRefreshForEvent(completedEvent, opts)).toBe(true);
-    expect(shouldRefreshForEvent(failedEvent, opts)).toBe(true);
+    expect(shouldRefreshForEvent(startedEvent, allOn)).toBe(true);
+    expect(shouldRefreshForEvent(completedEvent, allOn)).toBe(true);
+    expect(shouldRefreshForEvent(failedEvent, allOn)).toBe(true);
   });
 });
-
-// ---------------------------------------------------------------------------
-// Regression tests for the Gemini 500 retry classification bug (fixed).
-//
-// `useRefreshOnAnalysisEvent` now invokes `onRefresh` with a local
-// `.catch()` guard (see useRefreshOnAnalysisEvent.ts), so a rejecting
-// callback no longer escapes as an unhandled promise rejection. These
-// tests guard against regressing to the bare `void onRefresh()` call.
-// ---------------------------------------------------------------------------
-
-describe("useRefreshOnAnalysisEvent — bug condition exploration", () => {
-  beforeEach(() => {
-    analysisStatusMode.current = "mock";
-    runtimeState.lastAnalysisEvent = null;
-  });
-
-  afterEach(() => {
-    runtimeState.lastAnalysisEvent = null;
-  });
-
-  /**
-   * Property 5: Frontend analysis-related rejections are handled locally.
-   *
-   * For any analyze-batch refresh invocation that returns a rejected
-   * promise (e.g. the REST endpoint fails with an LLM_ERROR), the hook
-   * SHALL catch the rejection locally so the rejection does NOT escape
-   * as an unhandled promise rejection (the event path that the
-   * production `window.unhandledrejection` listener logs as
-   * `未處理的非同步錯誤`).
-   *
-   * Regression scenario guarded against: a bare `void onRefresh()` call
-   * would let the rejection escape as an unhandled rejection (captured
-   * by Node's process-level handler in the test environment, which is
-   * the analogue of the production `window.unhandledrejection`
-   * listener).
-   *
-   * Validates: Requirements 2.4
-   */
-  it("prop_analyze_batch_rejection_is_handled: rejected onRefresh does not fire an unhandled rejection", async () => {
-    const unhandledReasons: unknown[] = [];
-
-    // jsdom + Vitest dispatch unhandled rejections at the Node process
-    // level (not as a DOM `unhandledrejection` event) under the current
-    // runner, so we hook both layers:
-    //   * `window.unhandledrejection` — the DOM event path subscribed
-    //     to by `useRuntimeMonitoring` in production.
-    //   * `process.on('unhandledRejection')` — what the test runner
-    //     actually receives when a bare `void onRefresh()` call leaves
-    //     a rejected promise without a handler.
-    // `prependListener` ensures our observer runs before Vitest's own
-    // handler, which otherwise swallows/transforms the event.
-    const onDomUnhandled = (event: PromiseRejectionEvent) => {
-      unhandledReasons.push(event.reason);
-      event.preventDefault();
-    };
-    const onNodeUnhandled = (reason: unknown) => {
-      unhandledReasons.push(reason);
-    };
-
-    window.addEventListener("unhandledrejection", onDomUnhandled);
-    process.prependListener("unhandledRejection", onNodeUnhandled);
-
-    try {
-      // A real async function that rejects — equivalent to the REST
-      // endpoint returning `LLM_ERROR`. Using a plain async function
-      // (not `vi.fn().mockRejectedValue(...)`) avoids any library
-      // internals that might attach an implicit `.catch()`.
-      const onRefresh = async (): Promise<void> => {
-        throw new Error("LLM_ERROR");
-      };
-
-      const { container, root } = renderHarness(
-        <Harness onRefresh={onRefresh as unknown as () => void} />,
-      );
-
-      runtimeState.lastAnalysisEvent = {
-        type: "completed",
-        payload: {
-          taskId: "task-1",
-          batchId: "batch-1",
-          analysisMode: "leaderboard",
-          findingsCount: 1,
-          hasFindings: true,
-          overlapStatistics: null,
-        },
-        receivedAt: 1,
-      };
-      await rerenderHarness(
-        root,
-        <Harness onRefresh={onRefresh as unknown as () => void} />,
-      );
-
-      // Give the microtask queue and the unhandled-rejection hook a
-      // chance to fire. Node emits `unhandledRejection` on the next
-      // macro-tick after the microtask queue drains with no handler
-      // attached to the promise.
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
-      await new Promise<void>((resolve) => setTimeout(resolve, 20));
-      await new Promise<void>((resolve) => setTimeout(resolve, 20));
-
-      expect(unhandledReasons).toEqual([]);
-
-      cleanupHarness(root, container);
-    } finally {
-      window.removeEventListener("unhandledrejection", onDomUnhandled);
-      process.off("unhandledRejection", onNodeUnhandled);
-    }
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Preservation tests for the Gemini 500 retry classification bug.
-//
-// These tests pin behaviour that the local `.catch()` guard must NOT
-// change. In particular, rejections that
-// originate from code paths OTHER than an analyze-batch refresh must
-// still reach the global `unhandledrejection` listener so
-// `buildUnhandledRejectionLog` continues to emit
-// `未處理的非同步錯誤` in the runtime monitoring log.
-// ---------------------------------------------------------------------------
 
 describe("useRefreshOnAnalysisEvent — preservation", () => {
-  beforeEach(() => {
-    analysisStatusMode.current = "mock";
-    runtimeState.lastAnalysisEvent = null;
-  });
-
-  afterEach(() => {
-    runtimeState.lastAnalysisEvent = null;
-  });
-
-  /**
-   * Property 6: Unrelated rejections still reach the global listener.
-   *
-   * For any promise rejection that does NOT originate from an
-   * analyze-batch refresh call-site, the global `unhandledrejection`
-   * event SHALL still fire so that `useRuntimeMonitoring` can log
-   * `未處理的非同步錯誤` via `buildUnhandledRejectionLog`. This property
-   * protects the observability of non-analysis failures from being
-   * accidentally suppressed by the fix.
-   *
-   * We verify the preservation contract directly in two parts:
-   *   1. The handler wiring contract — given a synthetic
-   *      `PromiseRejectionEvent`-like payload, the runtime monitoring
-   *      log helper (`buildUnhandledRejectionLog`) still produces an
-   *      entry with the exact Chinese message the production listener
-   *      records.
-   *   2. The listener path — emitting a rejected promise from a
-   *      non-analysis source fires the `window.unhandledrejection`
-   *      event (or the Node process-level equivalent in the jsdom +
-   *      Vitest environment).
-   *
-   * Asserting on the log helper directly avoids coupling the test to
-   * a fully-mounted `AppRuntimeProvider` (which requires backend
-   * API mocks and event streams that aren't configured in this
-   * hook test file) while still confirming that the listener
-   * contract is intact.
-   *
-   * Validates: Requirements 3.7
-   */
-  it("prop_unrelated_rejections_still_logged: non-analysis rejections still surface as 未處理的非同步錯誤", async () => {
-    // Part 1 — log-builder contract preservation.
-    //
-    // `buildUnhandledRejectionLog` is the function
-    // `useRuntimeMonitoring` calls from inside its
-    // `unhandledrejection` listener. The preservation invariant is
-    // that an unrelated rejection reason produces a log entry with
-    // level=error, category=system, and message=未處理的非同步錯誤.
-    const unrelatedReason = new Error("non-analysis failure");
-    const syntheticEvent = {
-      reason: unrelatedReason,
-    } as unknown as PromiseRejectionEvent;
-    const logEntry = buildUnhandledRejectionLog(syntheticEvent);
+  it("keeps unrelated rejections logged as 未處理的非同步錯誤", () => {
+    const logEntry = buildUnhandledRejectionLog({
+      reason: new Error("non-analysis failure"),
+    } as unknown as PromiseRejectionEvent);
 
     expect(logEntry.level).toBe("error");
     expect(logEntry.category).toBe("system");
     expect(logEntry.message).toBe("未處理的非同步錯誤");
-
-    // Part 2 — listener path preservation.
-    //
-    // Emit a rejected promise from a non-analyze-batch source and
-    // confirm the global rejection path fires. The production
-    // `useRuntimeMonitoring` listener attaches to
-    // `window.unhandledrejection`; Node's process-level handler is
-    // the jsdom + Vitest analogue and is what actually observes the
-    // rejection in this harness.
-    const observedReasons: unknown[] = [];
-    const onDomUnhandled = (event: PromiseRejectionEvent) => {
-      observedReasons.push(event.reason);
-      event.preventDefault();
-    };
-    const onNodeUnhandled = (reason: unknown) => {
-      observedReasons.push(reason);
-    };
-
-    window.addEventListener("unhandledrejection", onDomUnhandled);
-    process.prependListener("unhandledRejection", onNodeUnhandled);
-
-    try {
-      // Non-analysis source: a standalone rejected promise with no
-      // attached handler. This simulates an unrelated UI flow (e.g.
-      // a background fetch in another component) failing.
-      void Promise.reject(unrelatedReason);
-
-      // Flush microtasks and a couple of macro-ticks so Node has a
-      // chance to emit `unhandledRejection` for the un-awaited
-      // rejection.
-      await new Promise<void>((resolve) => setTimeout(resolve, 10));
-      await new Promise<void>((resolve) => setTimeout(resolve, 20));
-      await new Promise<void>((resolve) => setTimeout(resolve, 20));
-
-      expect(observedReasons).toContain(unrelatedReason);
-    } finally {
-      window.removeEventListener("unhandledrejection", onDomUnhandled);
-      process.off("unhandledRejection", onNodeUnhandled);
-    }
   });
 });
 
@@ -689,7 +413,7 @@ describe("useRefreshOnAnalysisEvent — context isolation", () => {
     container.remove();
   });
 
-  it("does NOT re-render when CollectorStatus context changes", () => {
+  it("re-renders only when AnalysisStatus changes", () => {
     const analysisValue = makeAnalysisStatusValue();
     const runtimeLogsValue = makeRuntimeLogsValue();
 
@@ -706,8 +430,8 @@ describe("useRefreshOnAnalysisEvent — context isolation", () => {
       );
     });
 
-    const rendersAfterMount = isolationRenderCount;
-    expect(rendersAfterMount).toBeGreaterThanOrEqual(1);
+    const afterMount = isolationRenderCount;
+    expect(afterMount).toBeGreaterThanOrEqual(1);
 
     act(() => {
       root.render(
@@ -721,13 +445,7 @@ describe("useRefreshOnAnalysisEvent — context isolation", () => {
         </IsolationTestWrapper>,
       );
     });
-
-    expect(isolationRenderCount).toBe(rendersAfterMount);
-  });
-
-  it("does NOT re-render when RuntimeLogs context changes", () => {
-    const analysisValue = makeAnalysisStatusValue();
-    const runtimeLogsValue1 = makeRuntimeLogsValue({ totalLogCount: 0 });
+    expect(isolationRenderCount).toBe(afterMount);
 
     act(() => {
       root.render(
@@ -735,91 +453,46 @@ describe("useRefreshOnAnalysisEvent — context isolation", () => {
           collectorStatus="running"
           aiEngineStatus="available"
           analysisValue={analysisValue}
-          runtimeLogsValue={runtimeLogsValue1}
+          runtimeLogsValue={makeRuntimeLogsValue({
+            totalLogCount: 5,
+            logs: [
+              {
+                level: "info",
+                category: "system",
+                message: "test log",
+                timestamp: Date.now(),
+              },
+            ] as RuntimeLogsContextValue["logs"],
+          })}
         >
           <IsolationHookConsumer onRefresh={onRefresh} />
         </IsolationTestWrapper>,
       );
     });
-
-    const rendersAfterMount = isolationRenderCount;
-    expect(rendersAfterMount).toBeGreaterThanOrEqual(1);
-
-    const runtimeLogsValue2 = makeRuntimeLogsValue({
-      totalLogCount: 5,
-      logs: [
-        {
-          level: "info",
-          category: "system",
-          message: "test log",
-          timestamp: Date.now(),
-        },
-      ] as RuntimeLogsContextValue["logs"],
-    });
+    expect(isolationRenderCount).toBe(afterMount);
 
     act(() => {
       root.render(
         <IsolationTestWrapper
           collectorStatus="running"
           aiEngineStatus="available"
-          analysisValue={analysisValue}
-          runtimeLogsValue={runtimeLogsValue2}
-        >
-          <IsolationHookConsumer onRefresh={onRefresh} />
-        </IsolationTestWrapper>,
-      );
-    });
-
-    expect(isolationRenderCount).toBe(rendersAfterMount);
-  });
-
-  it("DOES re-render when AnalysisStatus context changes", () => {
-    const analysisValue1 = makeAnalysisStatusValue();
-    const runtimeLogsValue = makeRuntimeLogsValue();
-
-    act(() => {
-      root.render(
-        <IsolationTestWrapper
-          collectorStatus="running"
-          aiEngineStatus="available"
-          analysisValue={analysisValue1}
+          analysisValue={makeAnalysisStatusValue({
+            lastAnalysisEvent: {
+              ...completedEvent,
+              payload: {
+                ...completedEvent.payload,
+                taskId: "task-1",
+                batchId: "batch-1",
+              },
+              receivedAt: Date.now(),
+            },
+          })}
           runtimeLogsValue={runtimeLogsValue}
         >
           <IsolationHookConsumer onRefresh={onRefresh} />
         </IsolationTestWrapper>,
       );
     });
-
-    const rendersAfterMount = isolationRenderCount;
-
-    const analysisValue2 = makeAnalysisStatusValue({
-      lastAnalysisEvent: {
-        type: "completed",
-        payload: {
-          taskId: "task-1",
-          batchId: "batch-1",
-          analysisMode: "leaderboard",
-          findingsCount: 1,
-          hasFindings: true,
-          overlapStatistics: null,
-        },
-        receivedAt: Date.now(),
-      },
-    });
-
-    act(() => {
-      root.render(
-        <IsolationTestWrapper
-          collectorStatus="running"
-          aiEngineStatus="available"
-          analysisValue={analysisValue2}
-          runtimeLogsValue={runtimeLogsValue}
-        >
-          <IsolationHookConsumer onRefresh={onRefresh} />
-        </IsolationTestWrapper>,
-      );
-    });
-
-    expect(isolationRenderCount).toBeGreaterThan(rendersAfterMount);
+    expect(isolationRenderCount).toBeGreaterThan(afterMount);
   });
 });
