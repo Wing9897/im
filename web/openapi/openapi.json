@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Intelligence Monitor",
-    "version": "0.1.0-beta.7"
+    "version": "0.1.0-beta.8"
   },
   "paths": {
     "/api/v1/health": {
@@ -10240,8 +10240,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 600.0,
-                "minimum": 0.0
+                "maximum": 600,
+                "minimum": 0
               },
               {
                 "type": "null"
@@ -10253,8 +10253,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 10.0,
-                "minimum": 0.0
+                "maximum": 10,
+                "minimum": 0
               },
               {
                 "type": "null"
@@ -10266,8 +10266,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 500.0,
-                "minimum": 1.0
+                "maximum": 500,
+                "minimum": 1
               },
               {
                 "type": "null"
@@ -10279,8 +10279,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 500.0,
-                "minimum": 1.0
+                "maximum": 500,
+                "minimum": 1
               },
               {
                 "type": "null"
@@ -11061,8 +11061,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 55.0,
-                "minimum": 5.0
+                "maximum": 55,
+                "minimum": 5
               },
               {
                 "type": "null"
