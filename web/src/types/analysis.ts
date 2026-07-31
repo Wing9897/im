@@ -34,8 +34,8 @@ export type TaskActivitySpan = components["schemas"]["TaskActivitySpanResponse"]
 
 /**
  * Virtual ownership span vs real analysis task row.
- * Trust wire ``sourceKind``; prefer ``worksetId`` for ownership (``taskId``
- * still equals the workset id on workset rows for gantt key compat).
+ * Trust wire ``sourceKind``; ``worksetId`` is authoritative on workset rows
+ * (``taskId`` is null).
  */
 export function isWorksetActivitySpan(
   span: Pick<TaskActivitySpan, "sourceKind">,

@@ -38,7 +38,7 @@ describe("system API", () => {
 
   describe("fetchHealth", () => {
     it("fetches public health status", async () => {
-      const response = { status: "ok", version: "0.1.0-beta.1", runtimeReady: true };
+      const response = { status: "ok", version: "0.1.0-beta.3", runtimeReady: true };
       vi.mocked(apiClient.get).mockResolvedValue(response);
 
       const result = await fetchHealth();

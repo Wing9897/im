@@ -3125,7 +3125,7 @@ export interface components {
         /** TaskActivitySpanResponse */
         TaskActivitySpanResponse: {
             /** Taskid */
-            taskId: string;
+            taskId?: string | null;
             /** Taskname */
             taskName: string;
             /** Description */

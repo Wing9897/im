@@ -38,12 +38,12 @@ describe("filterItemsBySourceSelection", () => {
     { taskId: "t1", sourceKind: "task", worksetId: null as string | null },
     { taskId: "t2", sourceKind: "task", worksetId: "ws-1" },
     {
-      taskId: "__user__",
+      taskId: null as string | null,
       sourceKind: "workset",
       worksetId: "__user__",
     },
     {
-      taskId: "ws-1",
+      taskId: null as string | null,
       sourceKind: "workset",
       worksetId: "ws-1",
     },
@@ -65,7 +65,11 @@ describe("filterItemsBySourceSelection", () => {
       { taskIds: [], worksetIds: ["__user__", "ws-1"] },
       new Set(),
     );
-    expect(filtered.map((s) => s.taskId)).toEqual(["t2", "__user__", "ws-1"]);
+    expect(filtered.map((s) => s.worksetId ?? s.taskId)).toEqual([
+      "ws-1",
+      "__user__",
+      "ws-1",
+    ]);
   });
 
   it("matches analysis task rows by taskId", () => {

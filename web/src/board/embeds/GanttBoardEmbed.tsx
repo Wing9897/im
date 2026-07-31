@@ -98,19 +98,24 @@ export function normalizeGanttActivities(spans: TaskActivitySpan[], now = Date.n
     }
     const end = parseMs(span.latestBatchEnd) ?? (span.isActive ? now : start);
     const worksetId = resolveSpanWorksetId(span);
+    const isWorkset = isWorksetActivitySpan(span);
+    const rowId = isWorkset ? worksetId : span.taskId;
+    if (!rowId) {
+      return [];
+    }
     const worksetLabel =
       worksetId === SYSTEM_WORKSET_ID
         ? getGeneralWorksetLabel()
-        : span.taskName.trim() || worksetId || span.taskId;
+        : span.taskName.trim() || worksetId || rowId;
     return [{
-      id: span.taskId,
-      label: isWorksetActivitySpan(span)
+      id: rowId,
+      label: isWorkset
         ? worksetLabel
         : span.taskName.trim() || i18n.t("common:board.gantt.unnamedTask"),
       start,
       end: Math.max(start, end),
       status: span.isActive ? "active" : "complete",
-      taskId: span.taskId,
+      taskId: isWorkset ? null : span.taskId,
     }];
   });
 }

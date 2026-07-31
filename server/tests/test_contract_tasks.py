@@ -580,11 +580,11 @@ async def test_activity_spans_include_virtual_user_events_source(client):
     assert created.status_code == 201
 
     spans = (await client.get("/api/v1/tasks/activity-spans")).json()
-    user_span = next(span for span in spans if span["taskId"] == "__user__")
+    user_span = next(span for span in spans if span["worksetId"] == "__user__")
     assert user_span["taskName"] == "一般"
     assert user_span["sourceKind"] == "workset"
     assert user_span["worksetId"] == "__user__"
-    assert user_span["taskId"] == user_span["worksetId"]
+    assert user_span["taskId"] is None
     assert user_span["earliestBatchStart"] == "2026-07-21T09:00:00Z"
     assert user_span["latestBatchEnd"] == "2026-07-21T11:00:00Z"
     assert user_span["completedBatchCount"] == 1
@@ -629,18 +629,19 @@ async def test_activity_spans_group_user_events_by_workset(client):
 
     spans = (await client.get("/api/v1/tasks/activity-spans")).json()
     workset_spans = [s for s in spans if s["sourceKind"] == "workset"]
-    by_id = {s["taskId"]: s for s in workset_spans}
+    by_id = {s["worksetId"]: s for s in workset_spans}
 
     assert "__user__" in by_id
     assert by_id["__user__"]["taskName"] == "一般"
     assert by_id["__user__"]["worksetId"] == "__user__"
+    assert by_id["__user__"]["taskId"] is None
     assert by_id["__user__"]["completedBatchCount"] == 1
     assert by_id["__user__"]["earliestBatchStart"] == "2026-07-21T09:00:00Z"
 
     assert workset_id in by_id
     assert by_id[workset_id]["taskName"] == "Alpha WS"
     assert by_id[workset_id]["worksetId"] == workset_id
-    assert by_id[workset_id]["taskId"] == workset_id
+    assert by_id[workset_id]["taskId"] is None
     assert by_id[workset_id]["completedBatchCount"] == 2
     assert by_id[workset_id]["earliestBatchStart"] == "2026-07-22T09:00:00Z"
     assert by_id[workset_id]["latestBatchEnd"] == "2026-07-23T13:00:00Z"
@@ -648,8 +649,10 @@ async def test_activity_spans_group_user_events_by_workset(client):
     for span in spans:
         if span["sourceKind"] == "task":
             assert span["worksetId"] is None
+            assert span["taskId"] is not None
         else:
-            assert span["worksetId"] == span["taskId"]
+            assert span["worksetId"] is not None
+            assert span["taskId"] is None
 
 
 async def test_activity_spans_excludes_old_version_batches(client):

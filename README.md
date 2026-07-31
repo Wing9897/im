@@ -141,7 +141,7 @@ CI 在 `main` push、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr
 |------|------|------|
 | **日常 CI**（push／PR） | `npm run check` | lint + 漂移檢查（presets／i18n／OpenAPI）+ 型別檢查 + `test:all`；矩陣：Windows／Ubuntu／macOS；另建置 web／desktop／各 OS sidecar |
 | **本機 live**（需運行中 server） | `npm run verify:fast`／`verify:full`／`verify:operational` | 對 `127.0.0.1:18820` 的 API／營運檢查；多數不進 CI |
-| **發行／打包後** | `npm run dist:win`／`dist:mac`／`dist:linux` + `npm run verify:desktop:full` | 當前 OS 的 sidecar、unpacked、安裝產物；CI 在手動 dispatch／`v*` tag 跑三平台 package，並推 GHCR |
+| **發行／打包後** | `npm run dist:win`／`dist:mac`／`dist:linux` + `npm run verify:desktop:full` | 當前 OS 的 sidecar、unpacked、安裝產物；CI 在手動 dispatch／`v*` tag 跑三平台 package，`v*` tag 另建 GitHub Release 並推 GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
@@ -181,7 +181,7 @@ CI 在 `main` push、`v*` tag、或手動 `workflow_dispatch` 時推送到 `ghcr
 
 ## 版本控制
 
-GitHub Actions 會在 push 與 pull request 時於 **Windows／Ubuntu／macOS** 執行品質關卡與一般建置。手動 `workflow_dispatch` 或推送 `v*` tag 時另建置三平台 Desktop 產物並上傳 artifact；`main`／tag／dispatch 另建置並推送 **GHCR** 容器映像。本機請維持相同關卡：
+GitHub Actions 會在 push 與 pull request 時於 **Windows／Ubuntu／macOS** 執行品質關卡與一般建置。手動 `workflow_dispatch` 或推送 `v*` tag 時另建置三平台 Desktop 產物並上傳 artifact；推送 `v*` tag 時另建立 **GitHub Release**（附件含 exe／dmg／zip／AppImage／deb；tag 去掉 `v` 後須等於根目錄 `VERSION`）；`main`／tag／dispatch 另建置並推送 **GHCR** 容器映像。本機請維持相同關卡：
 
 | 時機 | 指令 |
 |------|------|

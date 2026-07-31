@@ -119,7 +119,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Live regression (local): `npm run verify:fast` / `verify:full`
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions runs `npm run check`, normal builds, and the server-sidecar build; manual dispatch also validates the Windows package.
+- GitHub Actions runs `npm run check`, normal builds, and the server-sidecar build; manual dispatch / `v*` tags also validate three-platform Desktop packages.
 
 ## Security (outbound requests)
 
@@ -133,7 +133,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 2. On each target OS (or CI package job): `npm run dist:win`／`dist:mac`／`dist:linux` then `npm run verify:desktop:full`
 3. Sign／notarize installers for public distribution (unsigned CI builds are for QA only)
 4. Container: `npm run docker:build` or rely on CI → `ghcr.io/<owner>/<repo>`
-5. Optional CI: `workflow_dispatch` or push a `v*` tag (packages + GHCR); `main` push also refreshes GHCR `latest`
+5. Optional CI: `workflow_dispatch` or push a `v*` tag (three-platform packages + GHCR); on `v*` tags CI also creates a **GitHub Release** with Desktop artifacts (tag name without `v` must equal root `VERSION`); `main` push also refreshes GHCR `latest`
 
 ## Email IMAP outbound policy
 

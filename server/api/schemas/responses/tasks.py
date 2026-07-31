@@ -98,7 +98,8 @@ class TaskDeleteResponse(BaseModel):
 
 
 class TaskActivitySpanResponse(BaseModel):
-    taskId: str
+    #: Analysis-task id when ``sourceKind=task``; ``null`` on workset ownership rows.
+    taskId: str | None = None
     taskName: str
     description: str | None = None
     analysisTimeRange: str
@@ -115,10 +116,9 @@ class TaskActivitySpanResponse(BaseModel):
     #: Messages drained in the latest completed tick (0 when skipped).
     lastMessageCount: int | None = None
     #: ``task`` = analysis_tasks row; ``workset`` = user_events ownership span
-    #: (one row per workset_id; wire ``taskId`` still equals that workset id
-    #: for gantt row-key compat — prefer ``worksetId`` + ``sourceKind``).
+    #: (one row per workset_id; prefer ``worksetId`` + ``sourceKind``).
     sourceKind: Literal["task", "workset"] = "task"
-    #: Ownership workset id when ``sourceKind=workset`` (same value as ``taskId``);
+    #: Ownership workset id when ``sourceKind=workset`` (authoritative row key);
     #: ``null`` on analysis-task rows.
     worksetId: str | None = None
 

@@ -63,9 +63,9 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
       }));
     }
     return (spans ?? [])
-      .filter((s) => !isWorksetActivitySpan(s))
+      .filter((s) => !isWorksetActivitySpan(s) && s.taskId)
       .map((s) => ({
-        id: s.taskId,
+        id: s.taskId as string,
         name: s.taskName.trim() || unnamedTaskLabel(),
       }));
   }, [tasks, spans]);
@@ -89,7 +89,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
       const label =
         worksetId === SYSTEM_WORKSET_ID
           ? userEventsLabel
-          : fromCatalog || span.taskName.trim() || worksetId || span.taskId;
+          : fromCatalog || span.taskName.trim() || worksetId || span.taskId || "";
       return span.taskName === label ? span : { ...span, taskName: label };
     });
   }, [filteredSpans, worksets, userEventsLabel]);

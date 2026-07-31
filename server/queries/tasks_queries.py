@@ -68,7 +68,7 @@ async def fetch_activity_span_rows(db: Any) -> list[dict[str, Any]]:
     (``agent_message`` / ``tool_calls_json``) for project detail UI.
 
     Appends one ``source_kind=workset`` row per ``user_events.workset_id``
-    that has events (wire ``taskId`` = ``worksetId`` = that workset id).
+    that has events (wire ``worksetId`` authoritative; ``taskId`` null).
     """
     batch_on = version_matched_batch_on("b", "t")
     latest_where = (
@@ -93,7 +93,7 @@ async def fetch_activity_span_rows(db: Any) -> list[dict[str, Any]]:
         "GROUP BY t.id ORDER BY t.created_at ASC"
     )
     # One Gantt row per workset that owns user_events (row key = workset_id;
-    # wire ``taskId`` = ``worksetId`` with sourceKind=workset).
+    # wire sourceKind=workset, worksetId set, taskId null).
     workset_span_rows = await db.fetch_all(
         "SELECT ue.workset_id AS id, "
         "COALESCE(NULLIF(w.name, ''), ?) AS name, "

@@ -2,13 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.1.0-beta.3] - 2026-07-31
+
+### Notes
+
+- **Current baseline:** schema stamp **v3** / public `schemaSemver` **0.1.0-beta.3** (empty `SCHEMA_MIGRATIONS`; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.3`. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+- **Docs:** index [`docs/README.md`](docs/README.md); intentional deltas [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md); Agent／A2A／project [`docs/agent/assistant.md`](docs/agent/assistant.md)／[`docs/agent/a2a.md`](docs/agent/a2a.md)／[`docs/agent/project.md`](docs/agent/project.md).
 
 ### Changed
 
-- **Wipe-floor stamp 3 + ownership hard-cut:** empty `SCHEMA_MIGRATIONS` (DDL sole truth; prior stamps hard-reject → reset). `user_events.workset_id` is `NOT NULL DEFAULT '__user__'`; deleting a custom workset reassigns events to `__user__`. Agent / voice prefs wire only `worksetId` / `defaultWorksetId` (removed `calendarTaskId` / `defaultCalendarTaskId`). FE filter UI unified on `SourceFilterDialog` + `{ taskIds, worksetIds }`. Activity-spans add `worksetId` (`sourceKind=workset` → same as row `taskId`; task rows → `null`). Board `widgetState.sourceFilters` hard-renames former `taskFilters`; CSS/testid `board-source-filter` replaces `board-task-filter`.
-- **Compat-layer cleanup (no VERSION bump):** drop Legacy task-id filter adapters / flat board filter APIs; rename FE `selectedTaskIds`→`selectedSources` where it means hierarchical selection; project user events with provenance-only `taskId` + ownership `worksetId`; reject list filter `task_id=__user__` (use `workset_id`); OpenAPI types voice `sourceFilter` + assistant `defaultWorksetId`.
+- **Wipe-floor stamp 3 + ownership hard-cut:** empty `SCHEMA_MIGRATIONS` (DDL sole truth; prior stamps hard-reject → reset). `user_events.workset_id` is `NOT NULL DEFAULT '__user__'`; deleting a custom workset reassigns events to `__user__`. Agent / voice prefs wire only `worksetId` / `defaultWorksetId` (removed `calendarTaskId` / `defaultCalendarTaskId`). FE filter UI unified on `SourceFilterDialog` + `{ taskIds, worksetIds }`. Activity-spans add `worksetId` (`sourceKind=workset` → authoritative `worksetId`, `taskId=null`; task rows → `worksetId=null`). Board `widgetState.sourceFilters` hard-renames former `taskFilters`; CSS/testid `board-source-filter` replaces `board-task-filter`.
+- **Compat-layer cleanup:** drop Legacy task-id filter adapters / flat board filter APIs; rename FE `selectedTaskIds`→`selectedSources` where it means hierarchical selection; project user events with provenance-only `taskId` + ownership `worksetId`; reject list filter `task_id=__user__` (use `workset_id`); OpenAPI types voice `sourceFilter` + assistant `defaultWorksetId`.
 - **Docs / deeplink examples:** ownership and Desktop calendar import copy use `worksetId` (not `taskId=__user__` /「選任務」); apiDocs inline deep-link sample matches `desktop/calendar-import.ts`.
+- **CI/CD:** Actions on Node 24 runtime majors; tag builds create GitHub Release with three-platform Desktop artifacts; tag must match root `VERSION`.
 
 ### Added
 
@@ -19,7 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 
-- **Current baseline:** schema stamp **v1** / public `schemaSemver` **0.1.0-beta.1** (product SemVer restart; empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — **must reset**). Internal `PRAGMA user_version` stays int `1` (not a SemVer string). Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
+- **Baseline at release (historical):** schema stamp **v1** / public `schemaSemver` **0.1.0-beta.1** (product SemVer restart; empty `SCHEMA_MIGRATIONS`; legacy stamps including 2–24 hard-reject — **must reset**). Internal `PRAGMA user_version` stays int `1` (not a SemVer string). **Current** stamp／`schemaSemver`／product version: see **[0.1.0-beta.3]** above. Matrix／upgrade／reset: [`docs/ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix).
 - **Docs:** index [`docs/README.md`](docs/README.md); intentional deltas [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md); Agent／A2A／project [`docs/agent/assistant.md`](docs/agent/assistant.md)／[`docs/agent/a2a.md`](docs/agent/a2a.md)／[`docs/agent/project.md`](docs/agent/project.md).
 
 ### Added

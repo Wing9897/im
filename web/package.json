@@ -1,7 +1,7 @@
 {
   "name": "intelligence-monitor-web",
   "private": true,
-  "version": "0.1.0-beta.1",
+  "version": "0.1.0-beta.3",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "gen:themes": "tsx ../scripts/generate-theme-css.mjs",
+    "gen:themes": "npm run gen:themes --prefix ..",
     "build": "npm run gen:themes && tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b && npm run typecheck:test",

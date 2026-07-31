@@ -310,8 +310,9 @@ def serialize_activity_span(row: Mapping[str, Any]) -> dict[str, Any]:
     source_kind = row.get("source_kind") or "task"
     if source_kind not in ("task", "workset"):
         source_kind = "task"
-    # Workset ownership rows: taskId == worksetId (compat); task rows: null.
+    # Workset ownership rows: worksetId is authoritative; taskId is null.
     workset_id: str | None = None
+    task_id: str | None = None
     if source_kind == "workset":
         raw_ws = row.get("workset_id")
         if isinstance(raw_ws, str) and raw_ws.strip():
@@ -321,8 +322,11 @@ def serialize_activity_span(row: Mapping[str, Any]) -> dict[str, Any]:
             workset_id = str(row_id).strip() if row_id is not None else None
             if not workset_id:
                 workset_id = None
+    else:
+        row_id = row.get("id")
+        task_id = str(row_id) if row_id is not None else None
     return {
-        "taskId": row["id"],
+        "taskId": task_id,
         "taskName": row["name"],
         "description": row.get("description"),
         "analysisTimeRange": row.get("analysis_time_range") or "all",
