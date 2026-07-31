@@ -42,7 +42,13 @@ export function AssistantHistoryRail({ collapsed }: { collapsed: boolean }) {
   }, []);
 
   useEffect(() => {
-    void hydrateAssistantSessions().then(() => refresh());
+    let cancelled = false;
+    void hydrateAssistantSessions().then(() => {
+      if (!cancelled) refresh();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [refresh]);
 
   useEffect(() => {
