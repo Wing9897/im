@@ -1,13 +1,16 @@
-import { act, createElement } from "react";
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../i18n";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
+import { formatAppVersionLabel } from "../../utils/appVersion";
 
 const fetchHealth = vi.fn();
 
 vi.mock("../../api/system", () => ({ fetchHealth }));
 
 const { SystemVersionPanel } = await import("./SystemVersionPanel");
+
+const SCHEMA_SEMVER = "0.1.0-beta.6";
 
 describe("SystemVersionPanel", () => {
   let harness: TestHarness;
@@ -18,11 +21,11 @@ describe("SystemVersionPanel", () => {
     vi.clearAllMocks();
     fetchHealth.mockResolvedValue({
       status: "ok",
-      version: "0.1.0-beta.6",
+      version: __APP_VERSION__,
       runtimeReady: true,
       secretsReady: true,
       schemaVersion: 5,
-      schemaSemver: "0.1.0-beta.6",
+      schemaSemver: SCHEMA_SEMVER,
     });
   });
 
@@ -36,9 +39,9 @@ describe("SystemVersionPanel", () => {
 
     const panel = harness.container.querySelector('[data-testid="system-version-panel"]');
     expect(panel?.textContent).toContain("應用版本");
-    expect(panel?.textContent).toContain("DEV · v0.1.0-beta.6");
+    expect(panel?.textContent).toContain(formatAppVersionLabel());
     expect(panel?.textContent).toContain("資料庫 Schema");
-    expect(panel?.textContent).toContain("v0.1.0-beta.6");
+    expect(panel?.textContent).toContain(`v${SCHEMA_SEMVER}`);
   });
 
   it("shows unavailable when schema fetch fails", async () => {
@@ -50,6 +53,6 @@ describe("SystemVersionPanel", () => {
     });
 
     expect(harness.container.textContent).toContain("無法取得");
-    expect(harness.container.textContent).toContain("DEV · v0.1.0-beta.6");
+    expect(harness.container.textContent).toContain(formatAppVersionLabel());
   });
 });
