@@ -54,26 +54,24 @@ Individual suites are also available: `npm test` (root smoke/audit), `npm run te
 The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
 a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
 token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday push／PR CI always runs **`quality`**
-(Ubuntu). When Desktop／web paths change (or on `v*` tag／`workflow_dispatch`), the **`desktop`**
+(Ubuntu). On **`main`／`master`** pushes (and on `v*` tag／`workflow_dispatch`), the **`desktop`**
 matrix also runs the same lightweight checks on Windows／macOS／Linux (`verify:desktop:fast` +
-native sidecar build／startup smoke); unrelated paths skip the whole matrix.
+native sidecar build／startup smoke). On other branches, unrelated paths skip the whole matrix.
 
 **Release packaging** (`package` matrix on all three OS): `dist:win`／`dist:mac`／`dist:linux` +
 `verify:desktop:full` + `package:cli` (CLI zip = PyInstaller onedir for the same entry as
-`python -m server`／`intelligence-monitor`). Triggered by **`release-plan`** when:
-pushing to **`main`／`master`** with a shippable `VERSION` (no conflicting tag), pushing a
-manual **`v*` tag**, or **`workflow_dispatch`**. Default-branch and tag paths create／update a
-**GitHub Release** with **Desktop + CLI** for Windows／macOS／Linux and auto-create git tag
-`v$(VERSION)` from the root `VERSION` file (`contents: write` via `GITHUB_TOKEN`). Incomplete
-asset sets fail `release`. If `vVERSION` already points at another commit and `VERSION` was
-not bumped, package／release／container are **skipped** (bump `VERSION` to ship). Reusing a
-VERSION whose tag already exists on a different commit **fails**. Same-commit re-runs
-**overwrite** Release assets. Tag re-entry is deduped when the Release is already complete
-(`GITHUB_TOKEN` tag creation also does not re-trigger workflows). `workflow_dispatch` builds
-artifacts but does **not** create a Release／tag. GHCR follows the same package／release plan.
+`python -m server`／`intelligence-monitor`). Triggered by **`release-plan`** on **every**
+push to **`main`／`master`**, a manual **`v*` tag**, or **`workflow_dispatch`**. Default-branch
+and tag paths create／update a **GitHub Release** with **Desktop + CLI** for Windows／macOS／Linux
+and auto-create git tag `v$(VERSION)` (`contents: write` via `GITHUB_TOKEN`). Incomplete asset
+sets fail `release`. If `vVERSION` already points at another commit, CI **auto-bumps** patch／
+prerelease (`apply-version` bot commit + `sync:version`) and ships the new tag — no silent skip.
+Same-commit re-runs **overwrite** Release assets. Tag re-entry is deduped when the Release is
+already complete (`GITHUB_TOKEN` events also do not re-trigger workflows). `workflow_dispatch`
+builds artifacts but does **not** create a Release／tag. GHCR follows the same package／release plan.
 
-Release steps: bump root `VERSION` → `npm run sync:version` → commit／**push to main** →
-wait for Actions (auto tag + Release). Manual `git tag`／`git push --tags` remains optional.
+Release steps: merge／**push to main** → wait for Actions (auto bump if needed + tag + Release).
+Manual `VERSION` bump／`git tag` remains optional for intentional major／minor jumps.
 
 ## Generated files are committed — regenerate, never hand-edit
 
