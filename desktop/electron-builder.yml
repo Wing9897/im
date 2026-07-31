@@ -23,8 +23,9 @@ protocols:
   - name: Intelligence Monitor
     schemes:
       - intelligencemonitor
-# Placeholder ICO; replace with multi-res assets before store release.
-icon: resources/icon.ico
+# Placeholder icons; replace with multi-res assets before store release.
+# electron-builder's icon converter accepts png/svg/icns (not ico) on mac/linux.
+icon: resources/icon.png
 win:
   target:
     - target: nsis
@@ -41,7 +42,7 @@ mac:
   category: public.app-category.productivity
   # CI ships unsigned builds unless CSC_* secrets are configured.
   identity: null
-  icon: resources/icon.ico
+  icon: resources/icon.png
   extendInfo:
     CFBundleDocumentTypes:
       - CFBundleTypeExtensions: [ics]
@@ -53,7 +54,7 @@ linux:
     - AppImage
     - deb
   category: Office
-  icon: resources/icon.ico
+  icon: resources/icon.png
   mimeTypes:
     - text/calendar
     - x-scheme-handler/intelligencemonitor
