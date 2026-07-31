@@ -1,9 +1,12 @@
-"""Schema lifecycle tests for server/db/database.py."""
+"""Schema lifecycle tests for server/db/database.py.
+
+Wipe-floor policy (empty registry / prior-stamp hard-reject / fresh DDL stamp)
+lives in ``test_schema_wipe_floor.py``.
+"""
 
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import Any, Literal
 
 import aiosqlite
@@ -20,39 +23,15 @@ from server.db.migrations import (
     validate_migration_registry,
 )
 from server.db.schema import DDL
-from server.tests.schema_fixtures import make_existing_db, make_lookalike_db
+from server.tests.schema_fixtures import (
+    file_snapshot,
+    logical_snapshot,
+    make_existing_db,
+    make_lookalike_db,
+)
 
 _REQUIRED_TABLE_COUNT = 26
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
-
-
-async def _logical_snapshot(path: str) -> dict[str, Any]:
-    """Capture persisted version, rows, and complete SQL inventory."""
-    conn = await aiosqlite.connect(path)
-    conn.row_factory = aiosqlite.Row
-    try:
-        version_cursor = await conn.execute("PRAGMA user_version")
-        version_row = await version_cursor.fetchone()
-        await version_cursor.close()
-        rows_cursor = await conn.execute("SELECT * FROM app_logs ORDER BY id")
-        rows = [dict(row) for row in await rows_cursor.fetchall()]
-        await rows_cursor.close()
-        schema_cursor = await conn.execute(
-            "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"
-        )
-        schema = [tuple(row) for row in await schema_cursor.fetchall()]
-        await schema_cursor.close()
-        assert version_row is not None
-        return {"version": int(version_row[0]), "rows": rows, "schema": schema}
-    finally:
-        await conn.close()
-
-
-def _file_snapshot(path: str) -> dict[str, bytes]:
-    """Capture the database and any SQLite sidecars exactly as persisted."""
-    return {
-        suffix: candidate.read_bytes() for suffix in ("", "-wal", "-shm") if (candidate := Path(path + suffix)).exists()
-    }
 
 
 async def test_fresh_database_creates_full_schema(tmp_path):
@@ -128,8 +107,8 @@ async def test_exact_current_schema_is_fully_validated_without_changes(tmp_path)
         await conn.commit()
     finally:
         await conn.close()
-    before_logical = await _logical_snapshot(path)
-    before_file = _file_snapshot(path)
+    before_logical = await logical_snapshot(path)
+    before_file = file_snapshot(path)
 
     db = Database(path)
     await db.connect()
@@ -138,8 +117,8 @@ async def test_exact_current_schema_is_fully_validated_without_changes(tmp_path)
     finally:
         await db.close()
 
-    assert await _logical_snapshot(path) == before_logical
-    assert _file_snapshot(path) == before_file
+    assert await logical_snapshot(path) == before_logical
+    assert file_snapshot(path) == before_file
 
 
 async def test_ensure_schema_is_idempotent(tmp_path):
@@ -173,8 +152,8 @@ async def test_ensure_schema_is_idempotent(tmp_path):
 async def test_incomplete_lookalike_is_rejected_without_mutation(tmp_path, version: int, defect: _SCHEMA_DEFECT):
     path = str(tmp_path / f"lookalike-{version}-{defect}.db")
     await make_lookalike_db(path, version=version, defect=defect)
-    before_logical = await _logical_snapshot(path)
-    before_file = _file_snapshot(path)
+    before_logical = await logical_snapshot(path)
+    before_file = file_snapshot(path)
 
     caught: SchemaBaselineError | None = None
     db = Database(path)
@@ -187,8 +166,8 @@ async def test_incomplete_lookalike_is_rejected_without_mutation(tmp_path, versi
     finally:
         await db.close()
 
-    after_logical = await _logical_snapshot(path)
-    after_file = _file_snapshot(path)
+    after_logical = await logical_snapshot(path)
+    after_file = file_snapshot(path)
     assert after_logical["version"] == before_logical["version"]
     assert after_logical["rows"] == before_logical["rows"]
     assert after_logical["schema"] == before_logical["schema"]
@@ -204,7 +183,10 @@ async def test_incomplete_lookalike_is_rejected_without_mutation(tmp_path, versi
 
 
 def test_migration_registry_ends_at_current_and_validates_fake_chains():
-    """Live registry ends at current; validator still rejects malformed chains."""
+    """Live registry validates; validator still rejects malformed chains.
+
+    Empty live registry is the wipe-floor SoT in ``test_schema_wipe_floor``.
+    """
 
     async def no_op(_conn: aiosqlite.Connection) -> None:
         return None
@@ -214,8 +196,6 @@ def test_migration_registry_ends_at_current_and_validates_fake_chains():
         MigrationStep(2, 3, no_op),
         MigrationStep(3, 4, no_op),
     )
-    # Stamp-3 wipe-floor: empty SCHEMA_MIGRATIONS (DDL is sole truth).
-    assert SCHEMA_MIGRATIONS == ()
     assert validate_migration_registry(SCHEMA_MIGRATIONS) == SCHEMA_MIGRATIONS
     assert validate_migration_registry((), current_version=CURRENT_SCHEMA_VERSION) == ()
     assert validate_migration_registry(valid, current_version=4) == valid
@@ -235,15 +215,6 @@ def test_migration_registry_ends_at_current_and_validates_fake_chains():
             (MigrationStep(1, 2, no_op), MigrationStep(2, 3, no_op)),
             current_version=4,
         )
-
-
-def test_upgrade_gate_opens_only_for_registered_prior_versions():
-    """Wipe-floor stamp 3: no registered priors; upgrade gate stays closed."""
-    from server.db.migrations import migration_pending
-
-    assert CURRENT_SCHEMA_VERSION == 3
-    assert SCHEMA_MIGRATIONS == ()
-    assert not any(migration_pending(version) for version in range(0, 25))
 
 
 def test_analysis_time_range_values_are_canonical_offset_keys() -> None:
@@ -272,7 +243,7 @@ async def test_partial_table_inventory_is_preserved_and_startup_stops(tmp_path):
     finally:
         await conn.close()
 
-    before_file = _file_snapshot(path)
+    before_file = file_snapshot(path)
     db = Database(path)
     await db.connect()
     try:
@@ -282,7 +253,7 @@ async def test_partial_table_inventory_is_preserved_and_startup_stops(tmp_path):
         assert await db.fetch_value("PRAGMA user_version") == 0
     finally:
         await db.close()
-    assert _file_snapshot(path) == before_file
+    assert file_snapshot(path) == before_file
 
 
 async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
@@ -297,7 +268,7 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
     finally:
         await conn.close()
 
-    before_file = _file_snapshot(path)
+    before_file = file_snapshot(path)
     db = Database(path)
     await db.connect()
     try:
@@ -307,60 +278,12 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
         assert await db.fetch_value("SELECT value FROM preserved") == "keep-me"
     finally:
         await db.close()
-    assert _file_snapshot(path) == before_file
+    assert file_snapshot(path) == before_file
 
 
-_HARD_REJECT_VERSIONS = [
-    version
-    for version in range(1, CURRENT_SCHEMA_VERSION)
-    if not any(step.source_version == version for step in SCHEMA_MIGRATIONS)
-]
 # Pre-restart product stamps above CURRENT hard-reject as "newer than supported".
+# Prior-stamp wipe-floor hard-reject lives in ``test_schema_wipe_floor``.
 _LEGACY_HARD_REJECT_VERSIONS = tuple(version for version in (16, 23, 24) if version > CURRENT_SCHEMA_VERSION)
-
-
-@pytest.mark.parametrize(
-    "version",
-    _HARD_REJECT_VERSIONS,
-    ids=[f"stamped-v{version}" for version in _HARD_REJECT_VERSIONS],
-)
-async def test_stamped_prior_schema_versions_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
-    """Stamped versions without a MigrationStep hard-reject at ensure_schema."""
-    assert not any(step.source_version == version for step in SCHEMA_MIGRATIONS)
-    path = str(tmp_path / f"stamped-v{version}.db")
-    await make_existing_db(
-        path,
-        log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
-    )
-    conn = await aiosqlite.connect(path)
-    try:
-        await conn.execute(f"PRAGMA user_version={version}")
-        await conn.commit()
-    finally:
-        await conn.close()
-
-    before_logical = await _logical_snapshot(path)
-    before_file = _file_snapshot(path)
-    assert before_logical["version"] == version
-
-    db = Database(path)
-    await db.connect()
-    try:
-        with pytest.raises(
-            SchemaBaselineError,
-            match=rf"Unsupported database schema version {version}",
-        ):
-            await db.ensure_schema()
-        assert await db.fetch_value("PRAGMA user_version") == version
-        assert (
-            await db.fetch_value(f"SELECT message FROM app_logs WHERE id = 'log-v{version}'")
-            == f"message for log-v{version}"
-        )
-    finally:
-        await db.close()
-
-    assert await _logical_snapshot(path) == before_logical
-    assert _file_snapshot(path) == before_file
 
 
 @pytest.mark.parametrize(
@@ -382,8 +305,8 @@ async def test_legacy_pre_restart_stamps_are_hard_rejected_without_changes(tmp_p
     finally:
         await conn.close()
 
-    before_logical = await _logical_snapshot(path)
-    before_file = _file_snapshot(path)
+    before_logical = await logical_snapshot(path)
+    before_file = file_snapshot(path)
     assert before_logical["version"] == version
 
     db = Database(path)
@@ -395,8 +318,8 @@ async def test_legacy_pre_restart_stamps_are_hard_rejected_without_changes(tmp_p
     finally:
         await db.close()
 
-    assert await _logical_snapshot(path) == before_logical
-    assert _file_snapshot(path) == before_file
+    assert await logical_snapshot(path) == before_logical
+    assert file_snapshot(path) == before_file
 
 
 async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog) -> None:
@@ -577,7 +500,7 @@ async def test_structural_lookalike_is_rejected_without_closed_snapshot_mutation
     path = str(tmp_path / f"structural-{version}-{dimension}.db")
     await _make_structural_lookalike_db(path, version=version, old_ddl=old_ddl, new_ddl=new_ddl)
     before_logical = await _complete_logical_snapshot(path)
-    before_files = _file_snapshot(path)
+    before_files = file_snapshot(path)
 
     caught: SchemaBaselineError | None = None
     db = Database(path)
@@ -591,7 +514,7 @@ async def test_structural_lookalike_is_rejected_without_closed_snapshot_mutation
         await db.close()
 
     after_logical = await _complete_logical_snapshot(path)
-    after_files = _file_snapshot(path)
+    after_files = file_snapshot(path)
     assert caught is not None, f"{dimension} structural lookalike at version {version} was accepted"
     assert expected_category in str(caught).lower()
     assert after_logical == before_logical
