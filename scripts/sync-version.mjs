@@ -85,3 +85,14 @@ if (nextUvLock !== uvLock) {
 } else {
   console.log(`[sync-version] uv.lock already ${pep440}`);
 }
+
+// Keep committed OpenAPI info.version aligned with VERSION (export embeds FastAPI app version).
+const openapiPath = path.join(root, "web", "openapi", "openapi.json");
+const openapi = JSON.parse(readFileSync(openapiPath, "utf8"));
+if (openapi?.info?.version !== version) {
+  openapi.info.version = version;
+  writeFileSync(openapiPath, `${JSON.stringify(openapi, null, 2)}\n`, "utf8");
+  console.log(`[sync-version] web/openapi/openapi.json info.version → ${version}`);
+} else {
+  console.log(`[sync-version] web/openapi/openapi.json already ${version}`);
+}

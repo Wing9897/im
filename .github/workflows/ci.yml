@@ -79,8 +79,10 @@ jobs:
           node scripts/sync-version.mjs
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add VERSION package.json package-lock.json web/package.json desktop/package.json pyproject.toml uv.lock
-          git commit -m "chore(release): ${version}"
+          git add VERSION package.json package-lock.json web/package.json desktop/package.json pyproject.toml uv.lock web/openapi/openapi.json
+          # [skip ci] avoids an infinite main-push → version-bump → push loop; package/release
+          # in THIS run already consume checkout_sha from the bump commit.
+          git commit -m "chore(release): ${version} [skip ci]"
           git push origin "HEAD:${{ github.ref_name }}"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag_name=v${version}" >> "$GITHUB_OUTPUT"
