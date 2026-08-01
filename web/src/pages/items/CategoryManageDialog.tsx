@@ -1,5 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Plus } from "lucide-react";
+import { ModalDialog } from "../../components/ModalDialog";
+import {
+  AlertBanner,
+  Button,
+  FormActions,
+  FormStack,
+  SettingsRow,
+  TextField,
+  captionClass,
+} from "../../components/ui";
 import {
   createItemCategory,
   deleteItemCategory,
@@ -40,6 +51,10 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setDefaultRemind(null);
     setSchema([]);
     setError(null);
+  };
+
+  const handleClose = () => {
+    if (!busy) onClose();
   };
 
   const save = async () => {
@@ -84,173 +99,183 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
       .finally(() => setBusy(false));
   };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || busy) return;
-      event.preventDefault();
-      onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [busy, onClose]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !busy) onClose();
-      }}
+    <ModalDialog
+      open
+      size="wide"
+      title={t("manageCategories")}
+      onClose={handleClose}
+      bodyClassName="flex flex-col gap-md"
+      footer={
+        <FormActions inline>
+          <Button variant="secondary" onClick={handleClose} disabled={busy}>
+            {t("done")}
+          </Button>
+        </FormActions>
+      }
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-surface p-4 shadow-lg">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="m-0 text-[15px] font-semibold text-text-primary">
-            {t("manageCategories")}
-          </h2>
-          <button
-            type="button"
-            className="rounded-md border border-border px-2 py-1 text-[11px]"
-            onClick={startCreate}
+      <div className="mb-sm flex items-center justify-between gap-sm">
+        <p className={`m-0 ${captionClass}`}>{t("categoriesHint")}</p>
+        <Button variant="secondary" size="sm" onClick={startCreate} disabled={busy}>
+          <Plus size={14} aria-hidden />
+          {t("addCategory")}
+        </Button>
+      </div>
+
+      <ul className="m-0 flex list-none flex-col gap-xs p-0">
+        {categories.map((cat) => (
+          <li
+            key={cat.id}
+            className="flex items-center justify-between gap-sm rounded-lg border border-surface-border/70 px-sm py-xs"
           >
-            +
-          </button>
-        </div>
-
-        <ul className="m-0 mb-3 list-none space-y-1 p-0">
-          {categories.map((cat) => (
-            <li
-              key={cat.id}
-              className="flex items-center justify-between rounded border border-border px-2 py-1.5 text-[12px]"
+            <button
+              type="button"
+              className="min-w-0 flex-1 border-none bg-transparent p-0 text-left text-body text-text-primary hover:text-accent"
+              onClick={() => startEdit(cat)}
+              disabled={busy}
             >
-              <button
-                type="button"
-                className="border-none bg-transparent p-0 text-left text-text-primary"
-                onClick={() => startEdit(cat)}
-              >
-                {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
-              </button>
-              <button
-                type="button"
-                className="text-[11px] text-danger"
-                disabled={busy}
-                onClick={() => confirmDelete(cat)}
-              >
-                {t("deleteCategory")}
-              </button>
-            </li>
-          ))}
-        </ul>
+              {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
+            </button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={busy}
+              onClick={() => confirmDelete(cat)}
+            >
+              {t("deleteCategory")}
+            </Button>
+          </li>
+        ))}
+      </ul>
 
-        {editingId ? (
-          <div className="rounded-md border border-border p-3">
-            <label className="mb-2 block text-[11px] text-text-muted">
-              {t("categoryName")}
-              <input
-                className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
+      {editingId ? (
+        <div className="rounded-lg border border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-raised)_40%,transparent)] p-md">
+          <FormStack gap="lg">
+            <SettingsRow label={t("categoryName")} htmlFor="cat-name">
+              <TextField
+                id="cat-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={busy}
+                autoFocus
               />
-            </label>
-            <label className="mb-2 block text-[11px] text-text-muted">
-              {t("defaultRemind")}
-              <input
+            </SettingsRow>
+            <SettingsRow label={t("defaultRemind")} htmlFor="cat-remind">
+              <TextField
+                id="cat-remind"
                 type="number"
                 min={0}
-                className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
                 value={defaultRemind ?? ""}
                 onChange={(e) =>
                   setDefaultRemind(e.target.value === "" ? null : Number(e.target.value))
                 }
+                disabled={busy}
               />
-            </label>
-            <div className="mb-2 text-[11px] text-text-muted">{t("fieldSchema")}</div>
-            {schema.map((entry, idx) => (
-              <div key={`${entry.key}-${idx}`} className="mb-1 flex gap-1">
-                <input
-                  className="flex-1 rounded border border-border bg-transparent px-2 py-1 text-[12px]"
-                  value={entry.key}
-                  onChange={(e) => {
-                    const next = [...schema];
-                    next[idx] = { ...entry, key: e.target.value };
-                    setSchema(next);
-                  }}
+            </SettingsRow>
+
+            <div className="flex flex-col gap-sm">
+              <p className="m-0 text-caption font-medium text-text-primary">
+                {t("fieldSchema")}
+              </p>
+              <p className={`m-0 ${captionClass}`}>{t("fieldSchemaHint")}</p>
+              {schema.map((entry, idx) => (
+                <div key={`${entry.key}-${idx}`} className="flex gap-xs">
+                  <TextField
+                    className="flex-1"
+                    value={entry.key}
+                    aria-label={t("attributeKey")}
+                    onChange={(e) => {
+                      const next = [...schema];
+                      next[idx] = { ...entry, key: e.target.value };
+                      setSchema(next);
+                    }}
+                    disabled={busy}
+                  />
+                  <TextField
+                    className="flex-1"
+                    value={entry.label}
+                    aria-label={t("schemaFieldLabel")}
+                    onChange={(e) => {
+                      const next = [...schema];
+                      next[idx] = { ...entry, label: e.target.value };
+                      setSchema(next);
+                    }}
+                    disabled={busy}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => setSchema(schema.filter((_, i) => i !== idx))}
+                    aria-label={t("removeSchemaField")}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+              <div className="flex flex-wrap gap-xs">
+                <TextField
+                  className="min-w-[100px] flex-1"
+                  placeholder={t("attributeKey")}
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  disabled={busy}
                 />
-                <input
-                  className="flex-1 rounded border border-border bg-transparent px-2 py-1 text-[12px]"
-                  value={entry.label}
-                  onChange={(e) => {
-                    const next = [...schema];
-                    next[idx] = { ...entry, label: e.target.value };
-                    setSchema(next);
-                  }}
+                <TextField
+                  className="min-w-[100px] flex-1"
+                  placeholder={t("schemaFieldLabel")}
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  disabled={busy}
                 />
-                <button
-                  type="button"
-                  className="px-1 text-[11px] text-danger"
-                  onClick={() => setSchema(schema.filter((_, i) => i !== idx))}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => {
+                    const key = newKey.trim();
+                    if (!key) return;
+                    setSchema([...schema, { key, label: newLabel.trim() || key }]);
+                    setNewKey("");
+                    setNewLabel("");
+                  }}
                 >
-                  ×
-                </button>
+                  {t("addSchemaField")}
+                </Button>
               </div>
-            ))}
-            <div className="mb-2 flex gap-1">
-              <input
-                className="flex-1 rounded border border-border bg-transparent px-2 py-1 text-[12px]"
-                placeholder={t("attributeKey")}
-                value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
-              />
-              <input
-                className="flex-1 rounded border border-border bg-transparent px-2 py-1 text-[12px]"
-                placeholder={t("attributeValue")}
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-              />
-              <button
-                type="button"
-                className="rounded border border-border px-2 text-[11px]"
-                onClick={() => {
-                  const key = newKey.trim();
-                  if (!key) return;
-                  setSchema([...schema, { key, label: newLabel.trim() || key }]);
-                  setNewKey("");
-                  setNewLabel("");
-                }}
-              >
-                {t("addSchemaField")}
-              </button>
             </div>
-            {error ? <p className="text-[12px] text-danger">{error}</p> : null}
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className="rounded border border-border px-3 py-1 text-[12px]"
+
+            {error ? (
+              <AlertBanner variant="error" role="alert" className="mb-0">
+                {error}
+              </AlertBanner>
+            ) : null}
+
+            <FormActions inline>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setEditingId(null)}
+                disabled={busy}
               >
                 {t("cancel")}
-              </button>
-              <button
-                type="button"
-                className="rounded bg-accent px-3 py-1 text-[12px] text-white"
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => void save()}
+                disabled={busy || !name.trim()}
               >
                 {t("save")}
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            className="rounded-md border border-border px-3 py-1.5 text-[12px]"
-            onClick={onClose}
-          >
-            {t("cancel")}
-          </button>
+              </Button>
+            </FormActions>
+          </FormStack>
         </div>
-      </div>
-    </div>
+      ) : error ? (
+        <AlertBanner variant="error" role="alert" className="mb-0">
+          {error}
+        </AlertBanner>
+      ) : null}
+    </ModalDialog>
   );
 }

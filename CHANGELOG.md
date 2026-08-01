@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Items UI polish:** `/items` aligns with design system — `OpsControlBar`/`FilterChip` filter bar, `PanelSection` workset groups, expiry tone badges + left accent, `EmptyState` CTAs; dialogs use `ModalDialog` + `SettingsRow`/`FormStack` (dates vs soft-template extras); tighter tri-locale copy.
 - **Items P2 polish:** category-manage Esc/overlay close; empty vs filter-empty copy; list expiry tone uses per-item `remindBeforeDays`; i18n-friendly items errors; stronger seed-category delete confirm; `patch_item` soft-fills category default remind when empty (keeps existing); attributes normalize enforces scalar values + key/size caps without amplifying dirty rows on unrelated PATCH.
 
 ### Fixed
