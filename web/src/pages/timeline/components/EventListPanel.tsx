@@ -2,7 +2,11 @@ import { useTranslation } from "react-i18next";
 
 import { PillButton, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
-import { groupEventsByTimePhase } from "../../../domain/timeline/eventTimePhase";
+import {
+  groupEventsByDayTimePhase,
+  groupEventsByTimePhase,
+  isCrossDayEvent,
+} from "../../../domain/timeline/eventTimePhase";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import type { TimelineItem } from "../../../types";
 import { formatOsDateTime } from "../../../utils/time";
@@ -17,12 +21,16 @@ export function previewEventBody(body: string): string {
 function EventListItem({
   event,
   onSelectEvent,
+  showCrossDayBadge,
 }: {
   event: TimelineItem;
   onSelectEvent: (event: TimelineItem | null) => void;
+  showCrossDayBadge: boolean;
 }) {
+  const { t } = useTranslation("timeline");
   const bodyPreview = event.body ? previewEventBody(event.body) : "";
   const dismissed = Boolean(event.dismissed);
+  const crossDay = showCrossDayBadge && isCrossDayEvent(event);
   return (
     <SurfaceCard
       density="field"
@@ -36,13 +44,23 @@ function EventListItem({
         className="min-w-0 w-full border-none bg-transparent p-0 text-left font-[inherit]"
         onClick={() => onSelectEvent(event)}
       >
-        <div
-          className={`${cardTitleClass} min-w-0 truncate ${
-            dismissed ? dismissedTitleClass : ""
-          }`}
-          title={event.title}
-        >
-          {event.title}
+        <div className="flex min-w-0 items-start gap-sm">
+          <div
+            className={`${cardTitleClass} min-w-0 flex-1 truncate ${
+              dismissed ? dismissedTitleClass : ""
+            }`}
+            title={event.title}
+          >
+            {event.title}
+          </div>
+          {crossDay ? (
+            <span
+              className="shrink-0 rounded-sm bg-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-text-secondary"
+              data-testid="timeline-event-cross-day"
+            >
+              {t("eventList.crossDay")}
+            </span>
+          ) : null}
         </div>
         {bodyPreview ? (
           <div
@@ -77,11 +95,13 @@ function EventListGroup({
   events,
   onSelectEvent,
   testId,
+  showCrossDayBadge,
 }: {
   title: string;
   events: TimelineItem[];
   onSelectEvent: (event: TimelineItem | null) => void;
   testId: string;
+  showCrossDayBadge: boolean;
 }) {
   if (events.length === 0) return null;
   return (
@@ -97,7 +117,12 @@ function EventListGroup({
         />
       </div>
       {events.map((event) => (
-        <EventListItem key={event.id} event={event} onSelectEvent={onSelectEvent} />
+        <EventListItem
+          key={event.id}
+          event={event}
+          onSelectEvent={onSelectEvent}
+          showCrossDayBadge={showCrossDayBadge}
+        />
       ))}
     </section>
   );
@@ -108,11 +133,13 @@ export function EventListPanel({
   rangeEvents,
   allRangeEvents,
   hasDayFocus,
+  focusedDay,
   onSelectEvent,
 }: {
   rangeEvents: TimelineItem[];
   allRangeEvents: TimelineItem[];
   hasDayFocus: boolean;
+  focusedDay: Date | null;
   onSelectEvent: (event: TimelineItem | null) => void;
 }) {
   const { t } = useTranslation("timeline");
@@ -122,9 +149,22 @@ export function EventListPanel({
     false,
   );
   const showAll = !hasDayFocus || preferShowAll;
+  const dayMode = !showAll && focusedDay != null;
 
   const displayEvents = showAll ? allRangeEvents : rangeEvents;
-  const groups = groupEventsByTimePhase(displayEvents);
+  const groups = dayMode
+    ? groupEventsByDayTimePhase(displayEvents, focusedDay)
+    : groupEventsByTimePhase(displayEvents);
+
+  const upcomingTitle = dayMode
+    ? t("eventList.groupUpcomingOnDay")
+    : t("eventList.groupUpcoming");
+  const ongoingTitle = dayMode
+    ? t("eventList.groupOngoingOnDay")
+    : t("eventList.groupOngoing");
+  const endedTitle = dayMode
+    ? t("eventList.groupEndedOnDay")
+    : t("eventList.groupEnded");
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-hidden">
@@ -152,22 +192,25 @@ export function EventListPanel({
         ) : (
           <>
             <EventListGroup
-              title={t("eventList.groupUpcoming")}
+              title={upcomingTitle}
               events={groups.upcoming}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-upcoming"
+              showCrossDayBadge={dayMode}
             />
             <EventListGroup
-              title={t("eventList.groupOngoing")}
+              title={ongoingTitle}
               events={groups.ongoing}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ongoing"
+              showCrossDayBadge={dayMode}
             />
             <EventListGroup
-              title={t("eventList.groupEnded")}
+              title={endedTitle}
               events={groups.ended}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ended"
+              showCrossDayBadge={dayMode}
             />
           </>
         )}

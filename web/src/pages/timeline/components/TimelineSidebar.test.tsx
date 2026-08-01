@@ -108,6 +108,7 @@ describe("TimelineSidebar ownership label", () => {
               rangeEvents: [],
               allRangeEvents: [],
               hasDayFocus: false,
+              focusedDay: null,
             }),
           }),
         ),

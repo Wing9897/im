@@ -98,7 +98,11 @@
     "empty": "沒有事件",
     "groupUpcoming": "即將到來",
     "groupOngoing": "進行中",
-    "groupEnded": "完結"
+    "groupEnded": "完結",
+    "groupUpcomingOnDay": "尚未開始於該日",
+    "groupOngoingOnDay": "進行中／覆蓋該日",
+    "groupEndedOnDay": "已結束於該日",
+    "crossDay": "跨日"
   },
   "taskDetail": {
     "closeAria": "關閉詳情面板",
