@@ -125,11 +125,11 @@ export async function fetchTimelineEvents({
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
-/** Fetches expanded calendar-task occurrences within an ISO datetime range. */
+/** Fetches expanded calendar-task + optional item DATE rows within an ISO range. */
 export function fetchCalendarOccurrences(
   rangeStart: string,
   rangeEnd: string,
-  opts?: { taskId?: string; taskIds?: string[] },
+  opts?: { taskId?: string; taskIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
   const query: Record<string, string | string[]> = {
     range_start: rangeStart,
@@ -139,6 +139,9 @@ export function fetchCalendarOccurrences(
     query.task_ids = opts.taskIds;
   } else if (opts?.taskId !== undefined) {
     query.task_id = opts.taskId;
+  }
+  if (opts?.includeItems === false) {
+    query.include_items = "false";
   }
   return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/items", query);
 }

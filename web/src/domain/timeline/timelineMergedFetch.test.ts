@@ -14,22 +14,16 @@ const {
   mockFetchSharedTimelineEvents,
   mockFetchSharedCalendarItems,
   mockFetchSharedUserEvents,
-  mockListItems,
 } = vi.hoisted(() => ({
   mockFetchSharedTimelineEvents: vi.fn(),
   mockFetchSharedCalendarItems: vi.fn(),
   mockFetchSharedUserEvents: vi.fn(),
-  mockListItems: vi.fn(),
 }));
 
 vi.mock("./sharedCalendarFetch", () => ({
   fetchSharedTimelineEvents: (...args: unknown[]) => mockFetchSharedTimelineEvents(...args),
   fetchSharedCalendarItems: (...args: unknown[]) => mockFetchSharedCalendarItems(...args),
   fetchSharedUserEvents: (...args: unknown[]) => mockFetchSharedUserEvents(...args),
-}));
-
-vi.mock("../../api/items", () => ({
-  listItems: (...args: unknown[]) => mockListItems(...args),
 }));
 
 function makeAnalysis(overrides: Partial<TimelineItem> = {}): TimelineItem {
@@ -71,6 +65,31 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
     location: null,
     description: null,
     rrule: "FREQ=WEEKLY",
+    source: "recurring",
+    ...overrides,
+  };
+}
+
+function makeItemOccurrence(
+  overrides: Partial<CalendarOccurrence> = {},
+): CalendarOccurrence {
+  return {
+    id: "item:i1:expires",
+    taskId: "",
+    taskName: "",
+    title: "Milk",
+    startTime: "2025-01-20T00:00:00",
+    endTime: "2025-01-20T23:59:59",
+    isAllDay: true,
+    timezone: "floating",
+    location: null,
+    description: null,
+    rrule: "",
+    source: "item",
+    worksetId: SYSTEM_WORKSET_ID,
+    itemId: "i1",
+    itemDateKind: "expires",
+    dismissed: false,
     ...overrides,
   };
 }
@@ -110,6 +129,23 @@ describe("mergeTimelineFilterSources", () => {
     expect(merged.map((e) => e.id).sort()).toEqual(["a-1", "cal-1:20250115T090000Z", "ue-1"]);
   });
 
+  it("merges source=item rows from the unified calendar fetch", () => {
+    const plan = resolveTimelineFilterPlan(null, catalog);
+    const merged = mergeTimelineFilterSources({
+      selectedSources: null,
+      filterPlan: plan,
+      analysisEvents: [],
+      calendarOccurrences: [makeOccurrence(), makeItemOccurrence()],
+      userEvents: [],
+    });
+    const item = merged.find((e) => e.source === "item");
+    expect(item?.id).toBe("item:i1:expires");
+    expect(item?.itemId).toBe("i1");
+    expect(item?.itemDateKind).toBe("expires");
+    expect(item?.dismissed).toBe(false);
+    expect(item?.startTime).toBe("2025-01-20T00:00:00");
+  });
+
   it("returns empty for an explicit empty selection", () => {
     const plan = resolveTimelineFilterPlan({ taskIds: [], worksetIds: [] }, catalog);
     expect(
@@ -146,7 +182,6 @@ describe("fetchMergedTimelineEvents", () => {
     mockFetchSharedTimelineEvents.mockReset().mockResolvedValue([]);
     mockFetchSharedCalendarItems.mockReset().mockResolvedValue([]);
     mockFetchSharedUserEvents.mockReset().mockResolvedValue([]);
-    mockListItems.mockReset().mockResolvedValue([]);
   });
 
   it("skips sources the filter plan does not need", async () => {
@@ -180,8 +215,38 @@ describe("fetchMergedTimelineEvents", () => {
 
     expect(mockFetchSharedTimelineEvents).toHaveBeenCalled();
     expect(mockFetchSharedUserEvents).toHaveBeenCalled();
+    // No recurring + no workset → fetchItems false → calendar skipped
     expect(mockFetchSharedCalendarItems).not.toHaveBeenCalled();
     expect(events.map((e) => e.id).sort()).toEqual(["a-1", "ue-match"]);
+  });
+
+  it("fetches unified calendar items (incl. source=item) for workset selection", async () => {
+    const plan = resolveTimelineFilterPlan(
+      { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
+      [],
+    );
+    expect(plan.fetchItems).toBe(true);
+    expect(plan.fetchCalendar).toBe(false);
+
+    mockFetchSharedCalendarItems.mockResolvedValue([
+      makeItemOccurrence({ dismissed: true }),
+    ]);
+
+    const events = await fetchMergedTimelineEvents({
+      selectedSources: { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
+      filterPlan: plan,
+      startIso: "2025-01-01T00:00:00.000Z",
+      endIso: "2025-02-01T00:00:00.000Z",
+    });
+
+    expect(mockFetchSharedCalendarItems).toHaveBeenCalledWith(
+      "2025-01-01T00:00:00.000Z",
+      "2025-02-01T00:00:00.000Z",
+      { taskIds: [], includeItems: true },
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0].source).toBe("item");
+    expect(events[0].dismissed).toBe(true);
   });
 
   it("propagates calendar fetch failures", async () => {
@@ -198,8 +263,6 @@ describe("fetchMergedTimelineEvents", () => {
   });
 
   it("fetches RRULE occurrences when __user__ workset gains a recurring member", async () => {
-    // Regression: creating a recurring event under「一般」must flip fetchCalendar on
-    // once the new task is in the catalog — otherwise the month grid stays empty.
     const before = resolveTimelineFilterPlan(
       { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
       [],
@@ -241,7 +304,7 @@ describe("fetchMergedTimelineEvents", () => {
     expect(mockFetchSharedCalendarItems).toHaveBeenCalledWith(
       "2026-08-01T00:00:00.000Z",
       "2026-08-31T23:59:59.000Z",
-      { taskIds: ["rec-new"] },
+      { taskIds: ["rec-new"], includeItems: true },
     );
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });

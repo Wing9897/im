@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppPageShell } from "../../components/ui";
 import {
@@ -61,6 +62,7 @@ type PendingTimelineConfirm =
 export function TimelinePage() {
   const { t } = useTranslation("timeline");
   const { t: tc } = useTranslation("common");
+  const navigate = useNavigate();
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks, refreshTasks } = useTaskCatalog();
   const { showToast } = useToast();
@@ -88,6 +90,17 @@ export function TimelinePage() {
     setDialogError(null);
     setDialogOpen(true);
   }, []);
+
+  const openEditItem = useCallback(
+    (event: TimelineItem) => {
+      const itemId = event.itemId?.trim();
+      if (!itemId) return;
+      const params = new URLSearchParams({ itemId });
+      if (event.itemDateKind) params.set("itemDateKind", event.itemDateKind);
+      void navigate(`/items?${params.toString()}`);
+    },
+    [navigate],
+  );
 
   const closeDialog = useCallback(() => {
     if (dialogBusy) return;
@@ -199,6 +212,7 @@ export function TimelinePage() {
       onSetEventStatus: sources.setEventStatus,
       eventStatuses: sources.eventStatuses,
       onEditUserEvent: openEditDialog,
+      onEditItemEvent: openEditItem,
       onDismissTimelineEvent: handleDismissTimelineEvent,
       onRestoreTimelineEvent: handleRestoreTimelineEvent,
       userEventActionBusy,
@@ -230,6 +244,7 @@ export function TimelinePage() {
       gantt,
       selection,
       openEditDialog,
+      openEditItem,
       handleDismissTimelineEvent,
       handleRestoreTimelineEvent,
       userEventActionBusy,

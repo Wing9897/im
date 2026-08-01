@@ -2458,13 +2458,22 @@ export interface components {
             /** Message */
             message: string;
         };
-        /** CalendarOccurrenceResponse */
+        /**
+         * CalendarOccurrenceResponse
+         * @description RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``.
+         */
         CalendarOccurrenceResponse: {
             /** Id */
             id: string;
-            /** Taskid */
+            /**
+             * Taskid
+             * @default
+             */
             taskId: string;
-            /** Taskname */
+            /**
+             * Taskname
+             * @default
+             */
             taskName: string;
             /** Title */
             title: string;
@@ -2472,18 +2481,39 @@ export interface components {
             startTime: string;
             /** Endtime */
             endTime: string;
-            /** Isallday */
+            /**
+             * Isallday
+             * @default false
+             */
             isAllDay: boolean;
             /** Timezone */
             timezone?: string | null;
             /** Location */
-            location: string | null;
+            location?: string | null;
             /** Description */
-            description: string | null;
-            /** Rrule */
+            description?: string | null;
+            /**
+             * Rrule
+             * @default
+             */
             rrule: string;
-            /** Dismissed */
+            /**
+             * Dismissed
+             * @default false
+             */
             dismissed: boolean;
+            /**
+             * Source
+             * @default recurring
+             * @enum {string}
+             */
+            source: "recurring" | "item";
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
+            /** Itemdatekind */
+            itemDateKind?: ("purchased" | "expires") | null;
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -3886,7 +3916,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "analysis" | "user" | "recurring";
+            source: "analysis" | "user" | "recurring" | "item";
             /** Eventid */
             eventId: string;
             /** Dismissedat */
@@ -7155,6 +7185,8 @@ export interface operations {
                 range_end: string;
                 task_id?: string | null;
                 task_ids?: string[] | null;
+                /** @description Include trackable-item purchased/expires DATE projections (source=item). */
+                include_items?: boolean;
             };
             header?: never;
             path?: never;

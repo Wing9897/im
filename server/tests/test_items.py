@@ -107,6 +107,83 @@ async def test_calendar_projects_active_item_dates_not_remind(client, app):
     assert not any(row["id"].endswith(":remind") for row in item_rows)
     assert not any(row.get("itemId") == archived.json()["id"] for row in item_rows)
 
+    purchased_row = next(row for row in item_rows if row["id"].endswith(":purchased"))
+    # Floating all-day wall date — not UTC-converted …Z (East-8 day shift).
+    assert purchased_row["startTime"] == f"{purchased}T00:00:00"
+    assert purchased_row["endTime"] == f"{purchased}T23:59:59"
+    assert purchased_row["timezone"] == "floating"
+    assert purchased_row["isAllDay"] is True
+    assert purchased_row["title"] == "Milk"
+    assert purchased_row["itemDateKind"] == "purchased"
+
+    # Unified REST calendar path includes the same projection.
+    api = await client.get(
+        "/api/v1/calendar/items",
+        params={
+            "range_start": start.isoformat().replace("+00:00", "Z"),
+            "range_end": end.isoformat().replace("+00:00", "Z"),
+        },
+    )
+    assert api.status_code == 200
+    api_items = [row for row in api.json() if row.get("source") == "item"]
+    assert {row["id"] for row in api_items} >= {
+        f"item:{item_id}:purchased",
+        f"item:{item_id}:expires",
+    }
+    api_purchased = next(row for row in api_items if row["id"].endswith(":purchased"))
+    assert api_purchased["startTime"] == f"{purchased}T00:00:00"
+    assert api_purchased["dismissed"] is False
+
+
+@pytest.mark.asyncio
+async def test_item_occurrence_dismiss_source_item(client, app):
+    day = (date.today() + timedelta(days=5)).isoformat()
+    created = await client.post(
+        "/api/v1/items",
+        json={"title": "Badge", "expiresAt": day, "status": "active"},
+    )
+    assert created.status_code == 201
+    item_id = created.json()["id"]
+    event_id = f"item:{item_id}:expires"
+
+    dismissed = await client.put(
+        "/api/v1/calendar/dismissals",
+        json={"source": "item", "eventId": event_id},
+    )
+    assert dismissed.status_code == 200
+    assert dismissed.json()["source"] == "item"
+
+    start = datetime.now(timezone.utc) - timedelta(days=1)
+    end = datetime.now(timezone.utc) + timedelta(days=40)
+    api = await client.get(
+        "/api/v1/calendar/items",
+        params={
+            "range_start": start.isoformat().replace("+00:00", "Z"),
+            "range_end": end.isoformat().replace("+00:00", "Z"),
+            "include_items": "true",
+        },
+    )
+    assert api.status_code == 200
+    row = next(r for r in api.json() if r["id"] == event_id)
+    assert row["source"] == "item"
+    assert row["dismissed"] is True
+
+    restored = await client.delete(
+        "/api/v1/calendar/dismissals",
+        params={"source": "item", "eventId": event_id},
+    )
+    assert restored.status_code == 204
+
+    api2 = await client.get(
+        "/api/v1/calendar/items",
+        params={
+            "range_start": start.isoformat().replace("+00:00", "Z"),
+            "range_end": end.isoformat().replace("+00:00", "Z"),
+        },
+    )
+    row2 = next(r for r in api2.json() if r["id"] == event_id)
+    assert row2["dismissed"] is False
+
 
 @pytest.mark.asyncio
 async def test_agent_list_expiring_and_create(app):

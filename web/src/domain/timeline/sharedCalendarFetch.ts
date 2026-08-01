@@ -1,10 +1,11 @@
 /**
  * Shared Calendar/Timeline fetch helpers.
  *
- * RRULE expansions go through `/api/v1/calendar/items`. Analysis timed events
- * and user events remain separate endpoints (server contract), but in-flight
- * requests with the same key are coalesced so Board widgets + Timeline do not
- * hammer the API in parallel.
+ * RRULE + item DATE projections go through `/api/v1/calendar/items`
+ * (`source=recurring` / `source=item`). Analysis timed events and user events
+ * remain separate endpoints (server contract), but in-flight requests with the
+ * same key are coalesced so Board widgets + Timeline do not hammer the API in
+ * parallel.
  */
 
 import { listUserEvents, type UserEvent } from "../../api/userEvents";
@@ -26,8 +27,9 @@ function taskIdsKey(taskIds: string[] | null | undefined): string {
 export function fetchSharedCalendarItems(
   rangeStart: string,
   rangeEnd: string,
-  opts?: { taskId?: string; taskIds?: string[] },
+  opts?: { taskId?: string; taskIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
+  const includeItems = opts?.includeItems !== false;
   const key = [
     "calendar-items",
     rangeStart,
@@ -37,6 +39,7 @@ export function fetchSharedCalendarItems(
       : opts?.taskId
         ? `id:${opts.taskId}`
         : "*",
+    includeItems ? "items" : "no-items",
   ].join("|");
   return coalesceAsync(key, () => fetchCalendarOccurrences(rangeStart, rangeEnd, opts));
 }

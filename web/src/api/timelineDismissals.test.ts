@@ -24,6 +24,7 @@ describe("timeline dismissals API", () => {
   it("maps timeline item sources to dismissal sources", () => {
     expect(timelineItemDismissalSource("user")).toBe("user");
     expect(timelineItemDismissalSource("recurring")).toBe("recurring");
+    expect(timelineItemDismissalSource("item")).toBe("item");
     expect(timelineItemDismissalSource(undefined)).toBe("analysis");
     expect(timelineItemDismissalSource("analysis")).toBe("analysis");
     expect(timelineItemDismissalSource("rrule")).toBe("analysis");

@@ -323,6 +323,7 @@ async def test_calendar_occurrences(client):
         params={
             "range_start": "2026-07-01T00:00:00Z",
             "range_end": "2026-07-31T23:59:59Z",
+            "include_items": "false",
         },
     )
     body = resp.json()
@@ -341,9 +342,14 @@ async def test_calendar_occurrences(client):
         "description",
         "rrule",
         "dismissed",
+        "source",
+        "worksetId",
+        "itemId",
+        "itemDateKind",
     }
     for occurrence in body:
         assert set(occurrence) == expected_keys
+        assert occurrence["source"] == "recurring"
     assert body[0]["startTime"] == "2026-07-06T10:00:00Z"
 
 
@@ -467,6 +473,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         params={
             "range_start": wire(day1_start),
             "range_end": wire(day2_start),
+            "include_items": "false",
         },
     )
 
@@ -485,6 +492,10 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "description",
         "rrule",
         "dismissed",
+        "source",
+        "worksetId",
+        "itemId",
+        "itemDateKind",
     }
     assert len(body) == 1000
     assert all(set(item) == occurrence_keys for item in body)
@@ -516,6 +527,10 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "description": None,
         "rrule": "FREQ=SECONDLY",
         "dismissed": False,
+        "source": "recurring",
+        "worksetId": None,
+        "itemId": None,
+        "itemDateKind": None,
     }
     assert by_task["z-calendar-boundary"][0] == {
         "id": occurrence_id("z-calendar-boundary", day1_start),
@@ -530,6 +545,10 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "description": "Inclusive endpoints",
         "rrule": "FREQ=DAILY",
         "dismissed": False,
+        "source": "recurring",
+        "worksetId": None,
+        "itemId": None,
+        "itemDateKind": None,
     }
     assert body[-1] == {
         **by_task["z-calendar-boundary"][0],

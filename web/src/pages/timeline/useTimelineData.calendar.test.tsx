@@ -79,6 +79,7 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
     location: null,
     description: "Team sync",
     rrule: "FREQ=WEEKLY;BYDAY=WE",
+    source: "recurring",
     ...overrides,
   };
 }
@@ -315,7 +316,12 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(events.every((e) => e.source === "user")).toBe(true);
     expect(events.find((e) => e.id === "ue-only")?.taskName).toBe(getGeneralWorksetLabel());
     expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
-    expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
+    // Workset selection fetches unified calendar/items (source=item); RRULE taskIds=[].
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { taskIds: [], includeItems: true },
+    );
     expect(resultRef.current!.timelineEvents).toHaveLength(2);
     expect(resultRef.current!.timelineEventsInitialLoading).toBe(false);
   });
@@ -414,9 +420,19 @@ describe("useTimelineData calendar occurrence wiring", () => {
   });
 
   it("refreshEvents(catalogOverride) fetches calendar for a just-created recurring task", async () => {
-    // Source filter is __user__ only with an empty catalog → fetchCalendar false.
-    // After create, caller passes the refreshed catalog so occurrences appear immediately.
+    // Source filter is __user__ only with an empty catalog → fetchCalendar false
+    // but fetchItems true (workset) so calendar/items is already called once.
+    // After create, caller passes the refreshed catalog so RRULE rows appear.
     resetTaskCatalogState([]);
+    mockFetchCalendarOccurrences.mockResolvedValue([]);
+    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { taskIds: [], includeItems: true },
+    );
+
+    mockFetchCalendarOccurrences.mockClear();
     mockFetchCalendarOccurrences.mockResolvedValue([
       makeOccurrence({ id: "rec-new:a", taskId: "rec-new", title: "每日" }),
       makeOccurrence({
@@ -426,8 +442,6 @@ describe("useTimelineData calendar occurrence wiring", () => {
         startTime: "2025-01-16T09:00:00Z",
       }),
     ]);
-    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
-    expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
 
     await act(async () => {
       await resultRef.current!.refreshEvents([
@@ -440,7 +454,11 @@ describe("useTimelineData calendar occurrence wiring", () => {
       ]);
     });
 
-    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { taskIds: ["rec-new"], includeItems: true },
+    );
     const events = resultRef.current!.events;
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });

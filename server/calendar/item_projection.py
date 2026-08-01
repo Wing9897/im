@@ -3,14 +3,17 @@
 DATE columns (``purchased_at`` / ``expires_at``) become floating all-day
 occurrences. ``remind_before_days`` never creates a second calendar point —
 it only drives list / agent expiring windows.
+
+All-day times use wall-date ``YYYY-MM-DDT00:00:00`` / ``T23:59:59`` (no ``Z``)
+so FE ``parseAllDayWallDate`` and user_event all-day DATE semantics stay on the
+calendar day (UTC ``…Z`` conversion would shift East-8 by one day).
 """
 
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Literal, Mapping
-from zoneinfo import ZoneInfo
 
 from server.db.database import Database
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
@@ -21,19 +24,9 @@ ItemDateKind = Literal["purchased", "expires"]
 ITEM_OCCURRENCE_ID_RE = re.compile(r"^item:([^:]+):(purchased|expires)$")
 
 
-def _system_tzinfo() -> timezone | ZoneInfo:
-    try:
-        return datetime.now().astimezone().tzinfo or timezone.utc
-    except Exception:
-        return timezone.utc
-
-
 def _date_to_floating_iso(day: date) -> tuple[str, str]:
-    """Local-wall all-day start/end as UTC ISO (matches manual floating RRULE)."""
-    local_tz = _system_tzinfo()
-    start_dt = datetime.combine(day, time(0, 0), tzinfo=local_tz).astimezone(timezone.utc)
-    end_dt = datetime.combine(day, time(23, 59, 59), tzinfo=local_tz).astimezone(timezone.utc)
-    return start_dt.strftime("%Y-%m-%dT%H:%M:%SZ"), end_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+    """Floating all-day start/end (wall date; align FE ``T00:00:00``)."""
+    return f"{day.isoformat()}T00:00:00", f"{day.isoformat()}T23:59:59"
 
 
 def occurrence_id(item_id: str, kind: ItemDateKind) -> str:
@@ -55,10 +48,9 @@ def build_item_occurrence(
     detail: Literal["compact", "full"] = "compact",
     dismissed: bool = False,
 ) -> dict[str, Any]:
+    """Build a calendar row. ``title`` is the bare item title; FE applies i18n prefixes."""
     item_id = str(row["id"])
     title = str(row.get("title") or "")
-    prefix = "購入" if kind == "purchased" else "到期"
-    display_title = f"{prefix} · {title}" if title else prefix
     start_iso, end_iso = _date_to_floating_iso(day)
     raw_workset = row.get("workset_id")
     workset_id = (
@@ -67,7 +59,7 @@ def build_item_occurrence(
     item: dict[str, Any] = {
         "id": occurrence_id(item_id, kind),
         "taskId": "",
-        "title": display_title,
+        "title": title,
         "startTime": start_iso,
         "endTime": end_iso,
         "location": None,
@@ -117,7 +109,7 @@ def project_item_row(
 def _window_dates(range_start: datetime, range_end: datetime) -> tuple[str, str, date, date]:
     start_utc = range_start.astimezone(timezone.utc) if range_start.tzinfo else range_start.replace(tzinfo=timezone.utc)
     end_utc = range_end.astimezone(timezone.utc) if range_end.tzinfo else range_end.replace(tzinfo=timezone.utc)
-    # Pad one day on each side so floating local all-day near UTC midnight is not clipped.
+    # Pad one day so ISO window edges near midnight do not clip DATE rows.
     start_date = (start_utc - timedelta(days=1)).date()
     end_date = (end_utc + timedelta(days=1)).date()
     return start_date.isoformat(), end_date.isoformat(), start_date, end_date

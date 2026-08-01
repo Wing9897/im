@@ -4286,6 +4286,18 @@
               ],
               "title": "Task Ids"
             }
+          },
+          {
+            "name": "include_items",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include trackable-item purchased/expires DATE projections (source=item).",
+              "default": true,
+              "title": "Include Items"
+            },
+            "description": "Include trackable-item purchased/expires DATE projections (source=item)."
           }
         ],
         "responses": {
@@ -7640,11 +7652,13 @@
           },
           "taskId": {
             "type": "string",
-            "title": "Taskid"
+            "title": "Taskid",
+            "default": ""
           },
           "taskName": {
             "type": "string",
-            "title": "Taskname"
+            "title": "Taskname",
+            "default": ""
           },
           "title": {
             "type": "string",
@@ -7660,7 +7674,8 @@
           },
           "isAllDay": {
             "type": "boolean",
-            "title": "Isallday"
+            "title": "Isallday",
+            "default": false
           },
           "timezone": {
             "anyOf": [
@@ -7697,28 +7712,70 @@
           },
           "rrule": {
             "type": "string",
-            "title": "Rrule"
+            "title": "Rrule",
+            "default": ""
           },
           "dismissed": {
             "type": "boolean",
-            "title": "Dismissed"
+            "title": "Dismissed",
+            "default": false
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "recurring",
+              "item"
+            ],
+            "title": "Source",
+            "default": "recurring"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          },
+          "itemDateKind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "purchased",
+                  "expires"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemdatekind"
           }
         },
         "type": "object",
         "required": [
           "id",
-          "taskId",
-          "taskName",
           "title",
           "startTime",
-          "endTime",
-          "isAllDay",
-          "location",
-          "description",
-          "rrule",
-          "dismissed"
+          "endTime"
         ],
-        "title": "CalendarOccurrenceResponse"
+        "title": "CalendarOccurrenceResponse",
+        "description": "RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."
       },
       "CategoryCreateBody": {
         "properties": {
@@ -12360,7 +12417,8 @@
             "enum": [
               "analysis",
               "user",
-              "recurring"
+              "recurring",
+              "item"
             ],
             "title": "Source"
           },

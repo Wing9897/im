@@ -75,21 +75,27 @@ class TrendingTopicResponse(BaseModel):
 
 
 class TimelineDismissalResponse(BaseModel):
-    source: Literal["analysis", "user", "recurring"]
+    source: Literal["analysis", "user", "recurring", "item"]
     eventId: str
     dismissedAt: str
 
 
 class CalendarOccurrenceResponse(BaseModel):
+    """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."""
+
     id: str
-    taskId: str
-    taskName: str
+    taskId: str = ""
+    taskName: str = ""
     title: str
     startTime: str
     endTime: str
-    isAllDay: bool
+    isAllDay: bool = False
     timezone: str | None = None
-    location: str | None
-    description: str | None
-    rrule: str
-    dismissed: bool
+    location: str | None = None
+    description: str | None = None
+    rrule: str = ""
+    dismissed: bool = False
+    source: Literal["recurring", "item"] = "recurring"
+    worksetId: str | None = None
+    itemId: str | None = None
+    itemDateKind: Literal["purchased", "expires"] | None = None

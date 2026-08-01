@@ -46,12 +46,15 @@ export function TimelineSidebar({
     onResetTimeOverride,
     onSetEventStatus,
     onEditUserEvent,
+    onEditItemEvent,
     onDismissTimelineEvent,
     onRestoreTimelineEvent,
     userEventActionBusy,
   } = useTimelinePageContext();
+  const { t: ti } = useTranslation("items");
 
   const isUserEvent = selectedEvent?.source === "user";
+  const isItemEvent = selectedEvent?.source === "item";
   const isDismissed = Boolean(selectedEvent?.dismissed);
 
   return (
@@ -135,6 +138,15 @@ export function TimelineSidebar({
                   {t("sidebar.edit")}
                 </PillButton>
               ) : null}
+              {isItemEvent && selectedEvent.itemId ? (
+                <PillButton
+                  type="button"
+                  disabled={userEventActionBusy}
+                  onClick={() => onEditItemEvent?.(selectedEvent)}
+                >
+                  {ti("editItem")}
+                </PillButton>
+              ) : null}
               {isDismissed ? (
                 <PillButton
                   type="button"
@@ -155,7 +167,7 @@ export function TimelineSidebar({
             </div>
           </section>
 
-          {!isUserEvent ? (
+          {!isUserEvent && !isItemEvent ? (
             <section className="grid gap-sm border-t border-surface-border pt-md">
               <h3 className="m-0 text-xs font-semibold text-text-primary">
                 {t("sidebar.manualTime")}
