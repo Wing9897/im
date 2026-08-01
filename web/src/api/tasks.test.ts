@@ -156,6 +156,7 @@ describe("tasks API", () => {
       const result = await createRecurringTask(body);
 
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/tasks/recurring", body);
+      expect(apiClient.post).not.toHaveBeenCalledWith("/api/v1/tasks", expect.anything());
       expect(result).toEqual(response);
     });
   });

@@ -3,34 +3,13 @@
  */
 
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type TaskSchedule = {
-  taskId: string;
-  rrule: string;
-  eventStartTime?: string | null;
-  eventEndTime?: string | null;
-  eventIsAllDay?: boolean;
-  eventLocation?: string | null;
-  eventDescription?: string | null;
-  eventTimezone?: string | null;
-  eventStartLocal?: string | null;
-  eventEndLocal?: string | null;
-  eventExdates?: string[];
-  eventRdates?: string[];
-  icsUid?: string | null;
-  icsSource?: string | null;
-  parentTaskId?: string | null;
-};
+/** Schedule row from ``GET /tasks/{id}/schedule``. */
+export type TaskSchedule = components["schemas"]["TaskScheduleResponse"];
 
-export type TaskScheduleConfig = {
-  rrule: string;
-  eventStartTime?: string | null;
-  eventEndTime?: string | null;
-  eventIsAllDay?: boolean;
-  eventLocation?: string | null;
-  eventDescription?: string | null;
-  parentTaskId?: string | null;
-};
+/** Write body for ``PUT /tasks/{id}/schedule``. */
+export type TaskScheduleConfig = components["schemas"]["TaskScheduleBody"];
 
 export function fetchTaskSchedule(taskId: string): Promise<TaskSchedule> {
   return apiClient.get<TaskSchedule>(`/api/v1/tasks/${taskId}/schedule`);

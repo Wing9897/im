@@ -270,7 +270,12 @@ async def create_recurring_task_shell(
     description: str | None = None,
     workset_id: str | None = None,
 ) -> dict[str, Any]:
-    """Create a recurring analysis_tasks row without a schedule (PUT /schedule next)."""
+    """Deprecated: prefer ``create_recurring_task`` / ``POST /tasks/recurring``.
+
+    Creates a recurring ``analysis_tasks`` row without a schedule (caller must
+    ``PUT /tasks/{id}/schedule``). Kept for ``POST /tasks`` + ``analysisMode=recurring``
+    compatibility and existing contract tests — do not use for new web/timeline creates.
+    """
     cleaned_name = (name or "").strip()
     if not cleaned_name:
         raise TaskWriteError("name is required")
