@@ -160,8 +160,8 @@ describe("eventTimePhase", () => {
   });
 
   describe("groupEventsByDayTimePhase", () => {
-    it("puts overnight span ending on a future day into ongoing, not upcoming", () => {
-      // Viewing 8/8 while "now" is still 8/1 — must not dump everything into upcoming.
+    it("puts overnight ending on the focused day into endingSpan, not upcoming/ongoing", () => {
+      // Aligns with month-cell「+N 完結」— started earlier, ends on focused day.
       vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
       const overnight = makeTimelineItem({
         id: "overnight",
@@ -177,12 +177,14 @@ describe("eventTimePhase", () => {
         [overnight, laterSameDay],
         new Date(2026, 7, 8),
       );
-      expect(groups.ongoing.map((e) => e.id)).toEqual(["overnight"]);
+      expect(groups.endingSpan.map((e) => e.id)).toEqual(["overnight"]);
       expect(groups.upcoming.map((e) => e.id)).toEqual(["later"]);
+      expect(groups.ongoing).toEqual([]);
+      expect(groups.covering).toEqual([]);
       expect(groups.ended).toEqual([]);
     });
 
-    it("marks overnight that already finished today as ended", () => {
+    it("keeps overnight ending today in endingSpan even after wall-clock end", () => {
       vi.setSystemTime(new Date(2026, 7, 8, 12, 0, 0));
       const overnight = makeTimelineItem({
         id: "overnight",
@@ -193,7 +195,52 @@ describe("eventTimePhase", () => {
         [overnight],
         new Date(2026, 7, 8),
       );
-      expect(groups.ended.map((e) => e.id)).toEqual(["overnight"]);
+      expect(groups.endingSpan.map((e) => e.id)).toEqual(["overnight"]);
+      expect(groups.ended).toEqual([]);
+    });
+
+    it("puts multi-day middle coverage into covering (month-cell「+N 進行中」)", () => {
+      vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
+      const spanning = makeTimelineItem({
+        id: "span",
+        startTime: new Date(2026, 7, 6, 9, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 10, 18, 0, 0).toISOString(),
+      });
+      const groups = groupEventsByDayTimePhase(
+        [spanning],
+        new Date(2026, 7, 8),
+      );
+      expect(groups.covering.map((e) => e.id)).toEqual(["span"]);
+      expect(groups.endingSpan).toEqual([]);
+      expect(groups.ongoing).toEqual([]);
+    });
+
+    it("keeps same-day timed events in day-anchor time phases", () => {
+      vi.setSystemTime(new Date(2026, 7, 8, 12, 0, 0));
+      const upcoming = makeTimelineItem({
+        id: "up",
+        startTime: new Date(2026, 7, 8, 14, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 15, 0, 0).toISOString(),
+      });
+      const ongoing = makeTimelineItem({
+        id: "on",
+        startTime: new Date(2026, 7, 8, 10, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 14, 0, 0).toISOString(),
+      });
+      const ended = makeTimelineItem({
+        id: "en",
+        startTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 9, 0, 0).toISOString(),
+      });
+      const groups = groupEventsByDayTimePhase(
+        [upcoming, ongoing, ended],
+        new Date(2026, 7, 8),
+      );
+      expect(groups.upcoming.map((e) => e.id)).toEqual(["up"]);
+      expect(groups.ongoing.map((e) => e.id)).toEqual(["on"]);
+      expect(groups.ended.map((e) => e.id)).toEqual(["en"]);
+      expect(groups.covering).toEqual([]);
+      expect(groups.endingSpan).toEqual([]);
     });
   });
 

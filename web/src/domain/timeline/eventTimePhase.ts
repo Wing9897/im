@@ -5,6 +5,7 @@ import {
   startOfDay,
   timelineEventDateRange,
 } from "./dateUtils";
+import { classifyMonthDaySpan } from "./monthDaySpanIndicators";
 
 /** Temporal phase of an event relative to "now" (not annotation status). */
 export type EventTimePhase = "upcoming" | "ongoing" | "ended";
@@ -24,7 +25,7 @@ function effectiveEndDay(start: Date, end: Date): Date {
 /**
  * Reference instant for day-focused list phases.
  * - Today: wall-clock `now` (morning meetings become ended, etc.)
- * - Future day: local midnight of that day (overnight ending that morning → ongoing)
+ * - Future day: local midnight of that day
  * - Past day: just before next midnight (day's schedule is fully resolved)
  */
 export function dayPhaseAnchor(focusedDay: Date, now: Date = new Date()): Date {
@@ -80,6 +81,19 @@ export type EventsByTimePhase = {
   ended: TimelineItem[];
 };
 
+/**
+ * Day-focused sidebar buckets.
+ * Multi-day middle / end days reuse month-cell span semantics
+ * (`+N ongoing` / `+N ending`); same-day (or start-day) items use
+ * {@link dayPhaseAnchor} time phases.
+ */
+export type EventsByFocusedDay = EventsByTimePhase & {
+  /** Middle of a multi-day span (month-cell「+N 進行中」). */
+  covering: TimelineItem[];
+  /** Ends on the focused day after starting earlier (month-cell「+N 完結」). */
+  endingSpan: TimelineItem[];
+};
+
 /** Partition events by time phase, preserving relative order within each bucket. */
 export function groupEventsByTimePhase(
   events: TimelineItem[],
@@ -98,13 +112,37 @@ export function groupEventsByTimePhase(
 }
 
 /**
- * Day-focused sidebar grouping: phases are relative to the selected local day
- * (via {@link dayPhaseAnchor}), not raw wall-clock "upcoming vs now".
+ * Day-focused sidebar grouping aligned with month span chips:
+ * - covering / endingSpan ← {@link classifyMonthDaySpan}
+ * - upcoming / ongoing / ended ← start-day (or single-day) vs {@link dayPhaseAnchor}
  */
 export function groupEventsByDayTimePhase(
   events: TimelineItem[],
   focusedDay: Date,
   now: Date = new Date(),
-): EventsByTimePhase {
-  return groupEventsByTimePhase(events, dayPhaseAnchor(focusedDay, now));
+): EventsByFocusedDay {
+  const anchor = dayPhaseAnchor(focusedDay, now);
+  const upcoming: TimelineItem[] = [];
+  const ongoing: TimelineItem[] = [];
+  const ended: TimelineItem[] = [];
+  const covering: TimelineItem[] = [];
+  const endingSpan: TimelineItem[] = [];
+
+  for (const event of events) {
+    const span = classifyMonthDaySpan(event, focusedDay);
+    if (span === "ongoing") {
+      covering.push(event);
+      continue;
+    }
+    if (span === "ending") {
+      endingSpan.push(event);
+      continue;
+    }
+    const phase = classifyEventTimePhase(event, anchor);
+    if (phase === "upcoming") upcoming.push(event);
+    else if (phase === "ongoing") ongoing.push(event);
+    else ended.push(event);
+  }
+
+  return { upcoming, ongoing, ended, covering, endingSpan };
 }

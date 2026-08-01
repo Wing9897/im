@@ -100,7 +100,9 @@
     "groupOngoing": "进行中",
     "groupEnded": "完结",
     "groupUpcomingOnDay": "尚未开始于该日",
-    "groupOngoingOnDay": "进行中／覆盖该日",
+    "groupOngoingOnDay": "该日进行中",
+    "groupCoveringOnDay": "跨日进行中",
+    "groupEndingSpanOnDay": "跨日完结",
     "groupEndedOnDay": "已结束于该日",
     "crossDay": "跨日"
   },

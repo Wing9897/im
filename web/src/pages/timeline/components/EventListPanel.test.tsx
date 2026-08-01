@@ -96,8 +96,8 @@ describe("EventListPanel", () => {
     expect(container.textContent).toContain("該日 (1)");
   });
 
-  it("in 該日 mode groups by selected-day anchor and labels overnight as 跨日", () => {
-    // Viewing 8/8 while today is still 8/1 — overnight must not land in「即將到來」.
+  it("in 該日 mode uses calendar span groups for overnight / covering events", () => {
+    // Viewing 8/8 while today is still 8/1 — overnight aligns with「+N 完結」, not「進行中」.
     vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
     const overnight = makeTimelineItem({
       id: "overnight",
@@ -105,36 +105,59 @@ describe("EventListPanel", () => {
       startTime: new Date(2026, 7, 7, 8, 0, 0).toISOString(),
       endTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
     });
+    const covering = makeTimelineItem({
+      id: "covering",
+      title: "Conference Week",
+      startTime: new Date(2026, 7, 6, 9, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 10, 18, 0, 0).toISOString(),
+    });
     const later = makeTimelineItem({
       id: "later",
       title: "Afternoon Meet",
       startTime: new Date(2026, 7, 8, 14, 0, 0).toISOString(),
       endTime: new Date(2026, 7, 8, 15, 0, 0).toISOString(),
     });
+    const startsTodayCrossDay = makeTimelineItem({
+      id: "starts",
+      title: "Starts Tonight",
+      startTime: new Date(2026, 7, 8, 20, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 9, 8, 0, 0).toISOString(),
+    });
 
     const { container } = renderPanel({
-      rangeEvents: [overnight, later],
-      allRangeEvents: [overnight, later],
+      rangeEvents: [overnight, covering, later, startsTodayCrossDay],
+      allRangeEvents: [overnight, covering, later, startsTodayCrossDay],
       hasDayFocus: true,
       focusedDay: new Date(2026, 7, 8),
     });
 
-    expect(container.textContent).toContain("進行中／覆蓋該日");
+    expect(container.textContent).toContain("跨日完結");
+    expect(container.textContent).toContain("跨日進行中");
     expect(container.textContent).toContain("尚未開始於該日");
     expect(container.textContent).not.toContain("即將到來");
+    expect(container.textContent).not.toContain("進行中／覆蓋該日");
 
-    const ongoingGroup = container.querySelector(
-      '[data-testid="timeline-event-group-ongoing"]',
+    const endingSpanGroup = container.querySelector(
+      '[data-testid="timeline-event-group-ending-span"]',
+    );
+    const coveringGroup = container.querySelector(
+      '[data-testid="timeline-event-group-covering"]',
     );
     const upcomingGroup = container.querySelector(
       '[data-testid="timeline-event-group-upcoming"]',
     );
-    expect(ongoingGroup?.textContent).toContain("Overnight Watch");
+    expect(endingSpanGroup?.textContent).toContain("Overnight Watch");
+    expect(coveringGroup?.textContent).toContain("Conference Week");
     expect(upcomingGroup?.textContent).toContain("Afternoon Meet");
+    expect(upcomingGroup?.textContent).toContain("Starts Tonight");
+    // Cross-day badge only on start-day multi-day items (span groups already say 跨日).
     expect(
-      container.querySelector('[data-testid="timeline-event-cross-day"]')
+      upcomingGroup?.querySelector('[data-testid="timeline-event-cross-day"]')
         ?.textContent,
     ).toBe("跨日");
+    expect(
+      endingSpanGroup?.querySelector('[data-testid="timeline-event-cross-day"]'),
+    ).toBeNull();
   });
 
   it("renders multiline body as a single truncated preview line", () => {
