@@ -21,13 +21,6 @@ from server.calendar.query import (
     query_upcoming,
     query_window,
 )
-from server.db.database import Database
-from server.services.recurring_task_writes import (
-    create_recurring_task,
-    patch_recurring_task,
-    soft_delete_recurring_task,
-)
-from server.services.task_writes import TaskWriteError
 from server.calendar.timeline_dismissals import (
     CALENDAR_ITEM_DISMISS_SOURCE,
     active_timeline_items,
@@ -38,6 +31,13 @@ from server.calendar.user_events import (
     create_user_event,
     update_user_event,
 )
+from server.db.database import Database
+from server.services.recurring_task_writes import (
+    create_recurring_task,
+    patch_recurring_task,
+    soft_delete_recurring_task,
+)
+from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_task_for_agent
 
 

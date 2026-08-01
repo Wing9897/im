@@ -13,13 +13,13 @@ import aiosqlite
 import pytest
 
 from server.db.database import Database, SchemaBaselineError
+from server.db.schema import DDL
 from server.db.schema_bootstrap import (
     CURRENT_SCHEMA_FINGERPRINT,
     CURRENT_SCHEMA_VERSION,
     SchemaFingerprint,
     inspect_schema,
 )
-from server.db.schema import DDL
 from server.tests.schema_fixtures import (
     file_snapshot,
     logical_snapshot,

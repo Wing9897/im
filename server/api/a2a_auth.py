@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from fastapi import Request
 
+from server.api.deps import get_db
+from server.auth import presented_token
 from server.auth.access_keys import (
     resolve_access_token,
     scopes_allow_full,
     touch_access_key_last_used,
 )
-from server.api.deps import get_db
-from server.auth import presented_token
 from server.errors import FORBIDDEN, http_error
 
 

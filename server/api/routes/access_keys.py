@@ -7,13 +7,13 @@ from typing import Any
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.auth.access_keys import READ_SCOPE, create_access_key, list_access_keys_public, revoke_access_key
 from server.api.deps import API_DEPS, get_db
 from server.api.schemas.responses import (
     AccessKeyCreatedResponse,
     AccessKeyDeleteResponse,
     AccessKeyListResponse,
 )
+from server.auth.access_keys import READ_SCOPE, create_access_key, list_access_keys_public, revoke_access_key
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/api/v1/access-keys", tags=["access-keys"], dependencies=API_DEPS)

@@ -19,6 +19,7 @@ from typing import Any
 from server.agent.runtime import AgentRuntime
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.calendar.query import query_upcoming
+from server.calendar.timeline_dismissals import active_timeline_items
 from server.config import get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import CHILD_RECURRING_MODE, PARENT_PROJECT_MODE
@@ -36,7 +37,6 @@ from server.queries.project_tick_queries import (
 from server.scheduler.batch_claim import load_task
 from server.scheduler.task_schedule_overrides import resolve_project_wave_interval_seconds
 from server.sse import Broadcaster
-from server.calendar.timeline_dismissals import active_timeline_items
 
 logger = logging.getLogger(__name__)
 

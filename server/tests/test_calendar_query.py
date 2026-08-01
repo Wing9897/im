@@ -268,9 +268,9 @@ async def test_get_event_returns_user_event_detail(app) -> None:
 
 
 async def test_query_window_filters_by_workset_id(app) -> None:
+    from server.calendar.user_events import create_user_event
     from server.db.database import TransactionDb
     from server.queries.worksets_queries import insert_workset
-    from server.calendar.user_events import create_user_event
     from server.util import utc_now_iso
 
     db = app.state.db

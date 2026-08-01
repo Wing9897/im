@@ -10,7 +10,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUPPORTED_SCHEDULES = frozenset({"seconds_10", "hourly", "daily", "weekly", "custom_seconds"})
 
 _CHECKED_CONTRACT_PATHS = (
-    "server/api/routes/tasks.py",
+    "server/api/routes/tasks/schedule.py",
+    "server/api/routes/task_helpers.py",
     "server/scheduler/manager.py",
     "server/calendar/rrule.py",
     "web/src/types/tasks.ts",

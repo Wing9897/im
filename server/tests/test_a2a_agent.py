@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from server.auth.access_keys import DEFAULT_SCOPES, FULL_SCOPE, READ_SCOPE, seed_access_key
 from server.agent.runtime import AgentRuntime
 from server.analyzer.llm_client import ConfigurableLlmClient
+from server.auth.access_keys import DEFAULT_SCOPES, FULL_SCOPE, READ_SCOPE, seed_access_key
 from server.auth.device_auth import create_device_session
 
 

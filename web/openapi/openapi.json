@@ -448,6 +448,124 @@
         }
       }
     },
+    "/api/v1/tasks": {
+      "get": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "List Tasks",
+        "operationId": "list_tasks_api_v1_tasks_get",
+        "parameters": [
+          {
+            "name": "top_level_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Top Level Only"
+            }
+          },
+          {
+            "name": "analysis_mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Analysis Mode"
+            }
+          },
+          {
+            "name": "workset_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Workset Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskResponse"
+                  },
+                  "title": "Response List Tasks Api V1 Tasks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Create Task",
+        "operationId": "create_task_api_v1_tasks_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskConfigBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tasks/{task_id}/schedule": {
       "get": {
         "tags": [
@@ -611,124 +729,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProjectTickStatusResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tasks": {
-      "get": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "List Tasks",
-        "operationId": "list_tasks_api_v1_tasks_get",
-        "parameters": [
-          {
-            "name": "top_level_only",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Top Level Only"
-            }
-          },
-          {
-            "name": "analysis_mode",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Analysis Mode"
-            }
-          },
-          {
-            "name": "workset_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Workset Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TaskResponse"
-                  },
-                  "title": "Response List Tasks Api V1 Tasks Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Create Task",
-        "operationId": "create_task_api_v1_tasks_post",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskConfigBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskResponse"
                 }
               }
             }
@@ -10240,8 +10240,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 600,
-                "minimum": 0
+                "maximum": 600.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -10253,8 +10253,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 10,
-                "minimum": 0
+                "maximum": 10.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -10266,8 +10266,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 500,
-                "minimum": 1
+                "maximum": 500.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
@@ -10279,8 +10279,8 @@
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 500,
-                "minimum": 1
+                "maximum": 500.0,
+                "minimum": 1.0
               },
               {
                 "type": "null"
@@ -11061,8 +11061,8 @@
             "anyOf": [
               {
                 "type": "number",
-                "maximum": 55,
-                "minimum": 5
+                "maximum": 55.0,
+                "minimum": 5.0
               },
               {
                 "type": "null"

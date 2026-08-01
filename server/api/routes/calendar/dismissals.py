@@ -7,13 +7,13 @@ from pydantic import BaseModel
 
 from server.api.deps import get_db
 from server.api.schemas.responses import TimelineDismissalResponse
-from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.calendar.timeline_dismissals import (
     TimelineDismissalValidationError,
     dismiss_timeline_event,
     list_timeline_dismissals,
     restore_timeline_event,
 )
+from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/dismissals", tags=["calendar"])
 

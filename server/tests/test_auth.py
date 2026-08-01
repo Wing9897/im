@@ -8,10 +8,10 @@ import pytest
 from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 
-from server.auth.access_keys import READ_SCOPE, seed_access_key
 from server.auth import is_loopback, presented_token, verify_auth, verify_write_access
-from server.config import set_configs
+from server.auth.access_keys import READ_SCOPE, seed_access_key
 from server.auth.device_auth import create_device_session
+from server.config import set_configs
 
 API_KEY = "unit-test-api-key"
 A2A_ONLY_KEY = "unit-test-a2a-only-key"

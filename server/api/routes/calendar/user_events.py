@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 
 from server.api.deps import get_db, publish_resource_modified
 from server.api.schemas.responses import UserEventResponse
-from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.calendar.user_events import (
     UserEventTaskIdError,
     UserEventValidationError,
@@ -20,6 +19,7 @@ from server.calendar.user_events import (
     list_user_events,
     update_user_event,
 )
+from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/user-events", tags=["calendar"])
 

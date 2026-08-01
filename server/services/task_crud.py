@@ -158,9 +158,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
     existing_mode = str(existing.get("analysis_mode") or "")
     effective_mode = body.analysisMode or existing_mode or LEADERBOARD_MODE
     if effective_mode == CHILD_RECURRING_MODE and existing_mode != CHILD_RECURRING_MODE:
-        raise TaskWriteError(
-            "Changing an existing task to recurring is not supported; create a recurring task instead"
-        )
+        raise TaskWriteError("Changing an existing task to recurring is not supported; create a recurring task instead")
 
     if effective_mode == CHILD_RECURRING_MODE and existing_mode == CHILD_RECURRING_MODE:
         fields_set = body.model_fields_set

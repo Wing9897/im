@@ -11,6 +11,9 @@ from typing import Any
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.api.deps import API_DEPS, get_db
+from server.api.schemas.responses import DeviceSessionTokensResponse, SetupStatusResponse
+from server.auth import is_loopback, presented_token
 from server.auth.access_keys import is_valid_access_token
 from server.auth.admin_auth import (
     AdminAuthError,
@@ -24,14 +27,6 @@ from server.auth.admin_auth import (
     verify_admin_credentials,
     verify_password,
 )
-from server.api.deps import API_DEPS, get_db
-from server.api.schemas.responses import DeviceSessionTokensResponse, SetupStatusResponse
-from server.auth import is_loopback, presented_token
-from server.config import get_config_bool
-from server.connection_file import (
-    disarm_local_password_reset,
-    is_local_password_reset_armed,
-)
 from server.auth.device_auth import (
     create_device_session,
     credentials_configured,
@@ -43,6 +38,11 @@ from server.auth.device_auth import (
     resolve_session_id_for_access_token,
     revoke_session,
     revoke_session_for_access_token,
+)
+from server.config import get_config_bool
+from server.connection_file import (
+    disarm_local_password_reset,
+    is_local_password_reset_armed,
 )
 from server.errors import (
     ADMIN_EXISTS,

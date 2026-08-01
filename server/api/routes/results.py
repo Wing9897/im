@@ -20,6 +20,7 @@ from server.api.schemas.responses import (
     TaskAnalysisStatsResponse,
     TrendingTopicResponse,
 )
+from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.config import get_config_bool
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.batch_stats import count_pending_current_batches
@@ -32,7 +33,6 @@ from server.queries.results_queries import (
     fetch_trending_topics,
     query_analysis_events,
 )
-from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.util import parse_bool
 from server.wire.serializers import (
     serialize_analysis_event,

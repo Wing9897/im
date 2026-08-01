@@ -14,7 +14,6 @@ import time
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from server.auth.admin_auth import verify_admin_credentials
 from server.analysis_control import emergency_abort, set_analysis_paused
 from server.api.collector_status import resolve_collector_status
 from server.api.deps import (
@@ -27,6 +26,7 @@ from server.api.deps import (
 )
 from server.api.schemas.responses import RetentionDeletedCounts, RetentionRunResponse
 from server.auth import verify_auth, verify_write_access
+from server.auth.admin_auth import verify_admin_credentials
 from server.errors import INVALID_CREDENTIALS, http_error
 from server.paths import (
     clear_connection_json_files,
