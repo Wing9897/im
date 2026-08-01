@@ -161,18 +161,15 @@
     "previewFailed": "無法預覽日曆匯入",
     "commitFailed": "無法提交日曆匯入",
     "selectAtLeastOne": "請至少選擇一個受支援的項目",
+    "selectAll": "全選",
+    "clearSelection": "清除",
     "importSaved": "已匯入 {count} 個日曆項目",
     "unnamedCalendar": "日曆檔案",
+    "unnamedEvent": "未命名事件",
     "sourceSummary": "{source} · {size} 位元組",
     "previewSummary": "共 {count} 個事件 · {importable} 個可匯入",
-    "start": "開始",
-    "end": "結束",
-    "time": "時間",
     "allDay": "全日",
-    "systemTimezone": "系統時區",
-    "rrule": "循環規則",
-    "recurrenceExceptions": "排除日期 {excluded} 個 · 追加日期 {added} 個",
-    "changes": "差異",
+    "timed": "指定時間",
     "resultTitle": "匯入結果",
     "resultSummary": "已提交 {count} 個 · 新增 {created} 個 · 更新 {updated} 個 · 無變化 {unchanged} 個",
     "source": {
@@ -181,8 +178,8 @@
       "deeplink": "應用程式連結"
     },
     "target": {
-      "user_event": "單次事件",
-      "recurring_task": "循環任務"
+      "user_event": "單次",
+      "recurring_task": "循環"
     },
     "action": {
       "create": "新增",

@@ -22,21 +22,41 @@ import {
   type CalendarImportMessage,
 } from "../../electron/calendarImport";
 import { isElectronDesktop } from "../../electron/electronWindow";
+import { formatDateTime } from "../../utils/dateFormat";
 
-function displayValue(value: unknown): string {
-  if (value == null || value === "") return "—";
-  if (typeof value === "string") return value;
-  return JSON.stringify(value);
+function isoDatePart(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+/** Format preview when-line without dumping raw ISO / timezone internals. */
+function formatImportWhen(item: CalendarImportPreviewItem): string {
+  if (item.isAllDay) {
+    const start = isoDatePart(item.startTime);
+    if (!item.endTime) return start;
+    const exclusiveEnd = isoDatePart(item.endTime);
+    const endMs = Date.parse(`${exclusiveEnd}T00:00:00Z`);
+    if (!Number.isFinite(endMs)) return start;
+    const inclusiveEnd = new Date(endMs - 86_400_000).toISOString().slice(0, 10);
+    if (inclusiveEnd <= start) return start;
+    return `${start} – ${inclusiveEnd}`;
+  }
+  const startMs = Date.parse(item.startTime);
+  const startLabel = Number.isFinite(startMs) ? formatDateTime(startMs) : item.startTime;
+  if (!item.endTime) return startLabel;
+  const endMs = Date.parse(item.endTime);
+  const endLabel = Number.isFinite(endMs) ? formatDateTime(endMs) : item.endTime;
+  return `${startLabel} – ${endLabel}`;
 }
 
 function WarningList({ warnings }: { warnings: CalendarImportWarning[] }) {
-  if (warnings.length === 0) return null;
+  const visible = warnings.filter(
+    (warning) => !/uid/i.test(warning.code) && !/\bUID\b/.test(warning.message),
+  );
+  if (visible.length === 0) return null;
   return (
     <ul className="m-0 flex list-disc flex-col gap-xs pl-lg text-caption text-warning">
-      {warnings.map((warning, index) => (
-        <li key={`${warning.code}-${index}`}>
-          {warning.message}
-        </li>
+      {visible.map((warning, index) => (
+        <li key={`${warning.code}-${index}`}>{warning.message}</li>
       ))}
     </ul>
   );
@@ -142,6 +162,17 @@ function CalendarImportHostInner() {
     });
   }, []);
 
+  const selectAllImportable = useCallback(() => {
+    if (!preview) return;
+    setSelectedUids(
+      new Set(preview.items.filter((item) => item.supported).map((item) => item.uid)),
+    );
+  }, [preview]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedUids(new Set());
+  }, []);
+
   const submit = useCallback(async () => {
     if (!payload || !preview) return;
     const selections = preview.items
@@ -151,39 +182,39 @@ function CalendarImportHostInner() {
       setError(t("calendarImport.selectAtLeastOne"));
       return;
     }
-      setBusy(true);
-      setError(null);
-      try {
-        const committed = await commitCalendarImport({
-          content: payload.content,
-          sourceId: payload.sourceId,
-          selections,
+    setBusy(true);
+    setError(null);
+    try {
+      const committed = await commitCalendarImport({
+        content: payload.content,
+        sourceId: payload.sourceId,
+        selections,
+      });
+      setResult(committed);
+      const invalidatedTypes = new Set<string>();
+      for (const item of committed.results) {
+        if (item.action === "unchanged") continue;
+        const resourceType =
+          item.targetType === "recurring_task" ? "task" : "user_event";
+        if (invalidatedTypes.has(resourceType)) continue;
+        invalidatedTypes.add(resourceType);
+        emitResourceModified({
+          resourceType,
+          resourceId: item.targetId,
+          action: item.action === "updated" ? "updated" : "created",
         });
-        setResult(committed);
-        const invalidatedTypes = new Set<string>();
-        for (const item of committed.results) {
-          if (item.action === "unchanged") continue;
-          const resourceType =
-            item.targetType === "recurring_task" ? "task" : "user_event";
-          if (invalidatedTypes.has(resourceType)) continue;
-          invalidatedTypes.add(resourceType);
-          emitResourceModified({
-            resourceType,
-            resourceId: item.targetId,
-            action: item.action === "updated" ? "updated" : "created",
-          });
-        }
-        showToast(
-          t("calendarImport.importSaved", { count: committed.committedCount }),
-          "success",
-        );
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : t("calendarImport.commitFailed"),
-        );
-      } finally {
-        setBusy(false);
       }
+      showToast(
+        t("calendarImport.importSaved", { count: committed.committedCount }),
+        "success",
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : t("calendarImport.commitFailed"),
+      );
+    } finally {
+      setBusy(false);
+    }
   }, [payload, preview, selectedUids, showToast, t]);
 
   return (
@@ -250,6 +281,9 @@ function CalendarImportHostInner() {
             preview={preview}
             selectedUids={selectedUids}
             onToggle={toggleSelection}
+            onSelectAll={selectAllImportable}
+            onClearSelection={clearSelection}
+            busy={busy}
           />
         ) : null}
       </div>
@@ -261,12 +295,19 @@ function PreviewItems({
   preview,
   selectedUids,
   onToggle,
+  onSelectAll,
+  onClearSelection,
+  busy,
 }: {
   preview: CalendarImportPreview;
   selectedUids: ReadonlySet<string>;
   onToggle: (uid: string, selected: boolean) => void;
+  onSelectAll: () => void;
+  onClearSelection: () => void;
+  busy: boolean;
 }) {
   const { t } = useTranslation("timeline");
+  const importableCount = preview.items.filter((item) => item.supported).length;
   return (
     <>
       <section className="flex flex-col gap-xs">
@@ -280,6 +321,30 @@ function PreviewItems({
           })}
         </p>
         <WarningList warnings={preview.warnings} />
+        {importableCount > 0 ? (
+          <div className="mt-xs flex flex-wrap gap-sm">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={onSelectAll}
+              disabled={busy}
+              data-testid="calendar-import-select-all"
+            >
+              {t("calendarImport.selectAll")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onClearSelection}
+              disabled={busy || selectedUids.size === 0}
+              data-testid="calendar-import-clear-selection"
+            >
+              {t("calendarImport.clearSelection")}
+            </Button>
+          </div>
+        ) : null}
       </section>
       <div className="flex flex-col gap-sm" data-testid="calendar-import-items">
         {preview.items.map((item, index) => (
@@ -305,9 +370,14 @@ function PreviewItem({
   onToggle: (uid: string, selected: boolean) => void;
 }) {
   const { t } = useTranslation("timeline");
+  const whenLabel = formatImportWhen(item);
+  const typeLabel = t(`calendarImport.target.${item.targetType}`);
+  const timeKind = item.isAllDay
+    ? t("calendarImport.allDay")
+    : t("calendarImport.timed");
   return (
     <article
-      className="flex flex-col gap-sm rounded-lg border border-surface-border bg-surface-card p-md"
+      className="flex flex-col gap-xs rounded-lg border border-surface-border bg-surface-card p-md"
       data-testid={`calendar-import-item-${item.uid}`}
     >
       <CheckboxField
@@ -318,52 +388,17 @@ function PreviewItem({
           <span className="flex flex-col gap-xs">
             <span className="font-medium">{item.title}</span>
             <span className="text-caption text-text-muted">
-              {t(`calendarImport.target.${item.targetType}`)} ·{" "}
-              {t(`calendarImport.action.${item.action}`)}
+              {typeLabel}
+              {" · "}
+              {timeKind}
+              {item.supported
+                ? ` · ${t(`calendarImport.action.${item.action}`)}`
+                : ` · ${t("calendarImport.action.unsupported")}`}
             </span>
+            <span className="text-caption text-text-secondary">{whenLabel}</span>
           </span>
         }
       />
-      <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-md gap-y-xs text-caption">
-        <dt className="text-text-muted">{t("calendarImport.start")}</dt>
-        <dd className="m-0 break-all text-text-primary">{item.startTime}</dd>
-        <dt className="text-text-muted">{t("calendarImport.end")}</dt>
-        <dd className="m-0 break-all text-text-primary">{item.endTime || "—"}</dd>
-        <dt className="text-text-muted">{t("calendarImport.time")}</dt>
-        <dd className="m-0 text-text-primary">
-          {item.isAllDay
-            ? t("calendarImport.allDay")
-            : item.timezone || t("calendarImport.systemTimezone")}
-        </dd>
-        {item.rrule ? (
-          <>
-            <dt className="text-text-muted">{t("calendarImport.rrule")}</dt>
-            <dd className="m-0 break-all text-text-primary">{item.rrule}</dd>
-          </>
-        ) : null}
-      </dl>
-      {item.exdates.length || item.rdates.length ? (
-        <p className="m-0 text-caption text-text-muted">
-          {t("calendarImport.recurrenceExceptions", {
-            excluded: item.exdates.length,
-            added: item.rdates.length,
-          })}
-        </p>
-      ) : null}
-      {item.changes.length ? (
-        <div className="flex flex-col gap-xs">
-          <p className="m-0 text-caption font-medium text-text-primary">
-            {t("calendarImport.changes")}
-          </p>
-          <ul className="m-0 flex list-disc flex-col gap-xs pl-lg text-caption text-text-secondary">
-            {item.changes.map((change) => (
-              <li key={change.field}>
-                {change.field}: {displayValue(change.before)} → {displayValue(change.after)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
       <WarningList warnings={item.warnings} />
     </article>
   );
@@ -398,7 +433,7 @@ function CommitResults({
             className="rounded-lg border border-surface-border bg-surface-card px-md py-sm text-caption"
           >
             <span className="font-medium text-text-primary">
-              {titles.get(item.uid) || item.uid}
+              {titles.get(item.uid) || t("calendarImport.unnamedEvent")}
             </span>
             <span className="text-text-muted">
               {" "}

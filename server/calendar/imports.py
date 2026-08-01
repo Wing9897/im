@@ -101,7 +101,7 @@ async def _find_existing(db: Database, source: str, uid: str) -> tuple[str, dict
         (source, uid),
     )
     if event is not None and task is not None:
-        raise CalendarImportError(f"UID {uid!r} is mapped to more than one target")
+        raise CalendarImportError(f"Imported event {uid!r} is mapped to more than one target")
     if event is not None:
         return "user_event", event
     if task is not None:
@@ -129,7 +129,10 @@ async def preview_calendar_import(db: Database, *, content: str, source: str) ->
                 warnings.append(
                     {
                         "code": "target_type_changed",
-                        "message": "An existing UID cannot change between a one-time event and recurring task.",
+                        "message": (
+                            "An existing imported event cannot change between a one-time event "
+                            "and a recurring series."
+                        ),
                     }
                 )
             elif not supported:

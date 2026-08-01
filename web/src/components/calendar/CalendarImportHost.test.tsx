@@ -153,8 +153,9 @@ describe("CalendarImportHost", () => {
     expect(mockPreview).toHaveBeenCalledWith({ content, sourceId: "ics" });
     expect(document.body.textContent).toContain("Weekly sync");
     expect(document.body.textContent).toContain("Unsupported override");
-    expect(document.body.textContent).toContain("Asia/Taipei");
-    expect(document.body.textContent).toContain("Old");
+    expect(document.body.textContent).not.toContain("Asia/Taipei");
+    expect(document.body.textContent).not.toContain("Old");
+    expect(document.body.textContent).not.toMatch(/\bUID\b/);
     const checkboxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
     expect((checkboxes[0] as HTMLInputElement).checked).toBe(true);
     expect((checkboxes[1] as HTMLInputElement).disabled).toBe(true);
@@ -180,6 +181,119 @@ describe("CalendarImportHost", () => {
       resourceId: "task-1",
       action: "updated",
     });
+  });
+
+  it("selects all importable items and clears selection", async () => {
+    mockPreview.mockResolvedValue({
+      sourceId: "ics",
+      calendarName: "Holidays",
+      eventCount: 3,
+      importableCount: 2,
+      warnings: [],
+      items: [
+        {
+          uid: "synth-a",
+          title: "元旦",
+          targetType: "user_event",
+          action: "create",
+          supported: true,
+          existingId: null,
+          fingerprint: "fp-a",
+          startTime: "2026-01-01T00:00:00Z",
+          endTime: "2026-01-02T00:00:00Z",
+          isAllDay: true,
+          timezone: null,
+          rrule: null,
+          exdates: [],
+          rdates: [],
+          changes: [],
+          warnings: [],
+        },
+        {
+          uid: "synth-b",
+          title: "春節",
+          targetType: "user_event",
+          action: "create",
+          supported: true,
+          existingId: null,
+          fingerprint: "fp-b",
+          startTime: "2026-02-17T00:00:00Z",
+          endTime: "2026-02-18T00:00:00Z",
+          isAllDay: true,
+          timezone: null,
+          rrule: null,
+          exdates: [],
+          rdates: [],
+          changes: [],
+          warnings: [],
+        },
+        {
+          uid: "override-x",
+          title: "Exception",
+          targetType: "user_event",
+          action: "unsupported",
+          supported: false,
+          existingId: null,
+          fingerprint: "fp-x",
+          startTime: "2026-02-18T00:00:00Z",
+          endTime: null,
+          isAllDay: true,
+          timezone: null,
+          rrule: null,
+          exdates: [],
+          rdates: [],
+          changes: [],
+          warnings: [{ code: "unsupported_recurrence_id", message: "Not imported" }],
+        },
+      ],
+    });
+    mockGetPending.mockResolvedValue({
+      ok: true,
+      payload: {
+        content: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n",
+        sourceId: "ics",
+        source: "file",
+        sourceLabel: "holidays.ics",
+      },
+    });
+
+    await act(async () => {
+      root!.render(createElement(CalendarImportHost));
+    });
+    await flush();
+
+    const clearBtn = document.querySelector(
+      '[data-testid="calendar-import-clear-selection"]',
+    ) as HTMLButtonElement | null;
+    const selectAllBtn = document.querySelector(
+      '[data-testid="calendar-import-select-all"]',
+    ) as HTMLButtonElement | null;
+    expect(clearBtn).not.toBeNull();
+    expect(selectAllBtn).not.toBeNull();
+
+    const checkboxes = () =>
+      Array.from(document.querySelectorAll('input[type="checkbox"]')) as HTMLInputElement[];
+
+    expect(checkboxes()[0].checked).toBe(true);
+    expect(checkboxes()[1].checked).toBe(true);
+    expect(checkboxes()[2].disabled).toBe(true);
+
+    await act(async () => {
+      clearBtn!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await flush();
+    expect(checkboxes()[0].checked).toBe(false);
+    expect(checkboxes()[1].checked).toBe(false);
+
+    await act(async () => {
+      selectAllBtn!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    await flush();
+    expect(checkboxes()[0].checked).toBe(true);
+    expect(checkboxes()[1].checked).toBe(true);
+    expect(checkboxes()[2].checked).toBe(false);
+    expect(document.body.textContent).toContain("2026-01-01");
+    expect(document.body.textContent).toMatch(/全[天日]|All day/);
   });
 
   it("toasts on import error push", async () => {

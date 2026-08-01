@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from collections import Counter
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime, timedelta, timezone
@@ -22,6 +23,8 @@ from server.time_iso import to_iso_z
 MAX_ICS_BYTES = 2 * 1024 * 1024
 MAX_ICS_EVENTS = 2_000
 DEFAULT_ICS_SOURCE = "ics"
+
+logger = logging.getLogger(__name__)
 
 
 class IcsParseError(ValueError):
@@ -190,27 +193,49 @@ def _fingerprint(event: ParsedIcsEvent) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+def _synthetic_uid(
+    *,
+    title: str,
+    start_time: str,
+    end_time: str | None,
+    is_all_day: bool,
+    location: str,
+) -> str:
+    """Stable identity for VEVENTs that omit UID (common in holiday calendars)."""
+    payload = json.dumps(
+        {
+            "title": title,
+            "startTime": start_time,
+            "endTime": end_time,
+            "isAllDay": is_all_day,
+            "location": location,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]
+    return f"synth-{digest}"
+
+
 def _parse_event(component: Any, timezone_definitions: dict[str, str]) -> ParsedIcsEvent:
     warnings: list[IcsWarning] = []
-    uid = _text(component, "UID")
+    real_uid = _text(component, "UID")
+    event_label = real_uid or "without identity"
     supported = True
-    if not uid:
-        uid = f"missing-{hashlib.sha256(component.to_ical()).hexdigest()[:16]}"
-        supported = False
-        warnings.append(IcsWarning("missing_uid", "VEVENT has no UID and cannot be imported idempotently."))
     if component.get("RECURRENCE-ID") is not None:
         supported = False
         warnings.append(
             IcsWarning(
                 "unsupported_recurrence_id",
-                "RECURRENCE-ID override instances are shown but not imported; the base series is unchanged.",
+                "This exception to a recurring series is shown but not imported; the base series is unchanged.",
             )
         )
 
     start_prop = component.get("DTSTART")
     start_value = _decoded(component, "DTSTART")
     if not isinstance(start_value, (date, datetime)):
-        raise IcsParseError(f"VEVENT {uid!r} has no valid DTSTART")
+        raise IcsParseError(f"VEVENT {event_label!r} has no valid DTSTART")
     start_time, start_local, is_all_day = _canonical_value(start_value, warnings=warnings)
     timezone_id = (
         None
@@ -225,7 +250,7 @@ def _parse_event(component: Any, timezone_definitions: dict[str, str]) -> Parsed
             if isinstance(duration, timedelta):
                 end_value = start_value + duration
         except (TypeError, ValueError, OverflowError):
-            warnings.append(IcsWarning("invalid_duration", "VEVENT DURATION could not be decoded."))
+            warnings.append(IcsWarning("invalid_duration", "Event duration could not be read and was ignored."))
     if end_value is None and is_all_day:
         end_value = start_value + timedelta(days=1)
 
@@ -233,11 +258,16 @@ def _parse_event(component: Any, timezone_definitions: dict[str, str]) -> Parsed
     end_local: str | None = None
     if end_value is not None:
         if not isinstance(end_value, (date, datetime)):
-            raise IcsParseError(f"VEVENT {uid!r} has an invalid DTEND")
+            raise IcsParseError(f"VEVENT {event_label!r} has an invalid DTEND")
         end_time, end_local, end_all_day = _canonical_value(end_value, warnings=warnings)
         if end_all_day != is_all_day:
             supported = False
-            warnings.append(IcsWarning("mixed_date_types", "DTSTART and DTEND use incompatible value types."))
+            warnings.append(
+                IcsWarning(
+                    "mixed_date_types",
+                    "This event mixes all-day and timed values and cannot be imported safely.",
+                )
+            )
 
     rule = _rrule(component)
     if rule:
@@ -251,14 +281,31 @@ def _parse_event(component: Any, timezone_definitions: dict[str, str]) -> Parsed
     rdates = _date_values(component, "RDATE", warnings)
     if (exdates or rdates) and not rule:
         warnings.append(
-            IcsWarning("orphan_recurrence_dates", "EXDATE/RDATE without RRULE are retained but have no effect.")
+            IcsWarning(
+                "orphan_recurrence_dates",
+                "Excluded or extra dates without a recurrence rule are kept but have no effect.",
+            )
         )
+
+    title = _text(component, "SUMMARY") or "(Untitled event)"
+    location = _text(component, "LOCATION")
+    if real_uid:
+        uid = real_uid
+    else:
+        uid = _synthetic_uid(
+            title=title,
+            start_time=start_time,
+            end_time=end_time,
+            is_all_day=is_all_day,
+            location=location,
+        )
+        logger.debug("VEVENT has no UID; using synthetic uid=%s title=%r", uid, title)
 
     event = ParsedIcsEvent(
         uid=uid,
-        title=_text(component, "SUMMARY") or "(Untitled event)",
+        title=title,
         description=_text(component, "DESCRIPTION"),
-        location=_text(component, "LOCATION"),
+        location=location,
         start_time=start_time,
         end_time=end_time,
         is_all_day=is_all_day,
@@ -320,7 +367,7 @@ def parse_ics(content: str | bytes) -> ParsedCalendar:
                 + (
                     IcsWarning(
                         "duplicate_uid_in_file",
-                        "Multiple VEVENT components share this UID; none are imported to avoid ambiguity.",
+                        "This file contains duplicate events that cannot be distinguished; they are skipped.",
                     ),
                 ),
             )

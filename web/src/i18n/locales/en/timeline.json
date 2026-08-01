@@ -161,18 +161,15 @@
     "previewFailed": "Could not preview calendar import",
     "commitFailed": "Could not commit calendar import",
     "selectAtLeastOne": "Select at least one supported item",
+    "selectAll": "Select all",
+    "clearSelection": "Clear",
     "importSaved": "Imported {count} calendar items",
     "unnamedCalendar": "Calendar file",
+    "unnamedEvent": "Untitled event",
     "sourceSummary": "{source} · {size} bytes",
     "previewSummary": "{count} events · {importable} importable",
-    "start": "Start",
-    "end": "End",
-    "time": "Time",
     "allDay": "All day",
-    "systemTimezone": "System timezone",
-    "rrule": "Recurrence",
-    "recurrenceExceptions": "{excluded} excluded dates · {added} additional dates",
-    "changes": "Changes",
+    "timed": "Timed",
     "resultTitle": "Import results",
     "resultSummary": "{count} committed · {created} created · {updated} updated · {unchanged} unchanged",
     "source": {
@@ -181,8 +178,8 @@
       "deeplink": "App link"
     },
     "target": {
-      "user_event": "One-time event",
-      "recurring_task": "Recurring task"
+      "user_event": "One-time",
+      "recurring_task": "Recurring"
     },
     "action": {
       "create": "New",

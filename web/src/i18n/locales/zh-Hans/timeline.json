@@ -161,18 +161,15 @@
     "previewFailed": "无法预览日历导入",
     "commitFailed": "无法提交日历导入",
     "selectAtLeastOne": "请至少选择一个受支持的项目",
+    "selectAll": "全选",
+    "clearSelection": "清除",
     "importSaved": "已导入 {count} 个日历项目",
     "unnamedCalendar": "日历文件",
+    "unnamedEvent": "未命名事件",
     "sourceSummary": "{source} · {size} 字节",
     "previewSummary": "共 {count} 个事件 · {importable} 个可导入",
-    "start": "开始",
-    "end": "结束",
-    "time": "时间",
     "allDay": "全天",
-    "systemTimezone": "系统时区",
-    "rrule": "循环规则",
-    "recurrenceExceptions": "排除日期 {excluded} 个 · 追加日期 {added} 个",
-    "changes": "差异",
+    "timed": "指定时间",
     "resultTitle": "导入结果",
     "resultSummary": "已提交 {count} 个 · 新建 {created} 个 · 更新 {updated} 个 · 无变化 {unchanged} 个",
     "source": {
@@ -181,8 +178,8 @@
       "deeplink": "应用链接"
     },
     "target": {
-      "user_event": "单次事件",
-      "recurring_task": "循环任务"
+      "user_event": "单次",
+      "recurring_task": "循环"
     },
     "action": {
       "create": "新建",
