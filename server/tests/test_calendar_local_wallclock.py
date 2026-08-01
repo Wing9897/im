@@ -55,3 +55,39 @@ def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:
     items = expand_task_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
+
+
+def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
+    """Manual all-day plans store DATE dtstart + UI UNTIL=...Z (task 「1234」 shape).
+
+    SQL aliases dtstart → event_start_local, so expansion uses the imported path
+    with a naive DATE DTSTART. dateutil rejects UTC UNTIL against naive DTSTART
+    unless Z is stripped.
+    """
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+
+    task = {
+        "id": "task-1234",
+        "name": "1234",
+        "analysis_mode": "recurring",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
+        "event_is_all_day": 1,
+        "event_start_time": "2026-08-01",
+        "event_end_time": "2026-08-02",
+        "event_start_local": "2026-08-01",
+        "event_end_local": "2026-08-02",
+        "event_timezone": "floating",
+        "ics_source": None,
+        "event_location": None,
+        "event_description": None,
+    }
+    # August 2026 in UTC+8 (month window used by the timeline month grid).
+    range_start = datetime(2026, 7, 31, 16, 0, 0, tzinfo=timezone.utc)
+    range_end = datetime(2026, 8, 31, 15, 59, 59, tzinfo=timezone.utc)
+    items = expand_task_occurrences(task, range_start, range_end, budget=100)
+    assert len(items) >= 28
+    assert items[0]["startTime"] == "2026-07-31T16:00:00Z"
+    assert items[0]["isAllDay"] is True
+    assert all(item["title"] == "1234" for item in items)

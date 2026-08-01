@@ -241,7 +241,11 @@ def _expand_imported_occurrences(
         anchor = anchor.replace(tzinfo=None)
 
     try:
-        parsed_rule = du_rrule.rrulestr(rule, dtstart=anchor)
+        # dateutil rejects UTC UNTIL (...Z) when DTSTART is naive. All-day /
+        # floating DATE anchors are naive; the timeline UI still emits
+        # UNTIL=...Z, so strip Z to keep the whole rule offset-naive.
+        rule_for_parse = _naive_rule(rule) if anchor.tzinfo is None else rule
+        parsed_rule = du_rrule.rrulestr(rule_for_parse, dtstart=anchor)
         rule_set = du_rrule.rruleset()
         if isinstance(parsed_rule, du_rrule.rruleset):
             rule_set = parsed_rule
