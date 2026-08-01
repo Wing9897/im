@@ -1,4 +1,5 @@
 {
+  "overnightClockHint": "结束时间在翌日",
   "language": {
     "label": "界面语言",
     "help": "自动跟随系统；选语系则整站使用该语言。",
@@ -253,8 +254,7 @@
       "locationPlaceholder": "例：会议室 A、线上",
       "description": "描述（选填）",
       "descriptionPlaceholder": "补充这个活动的细节",
-      "allDayHint": "整天活动不需要设定开始与结束时间。",
-      "overnightHint": "结束时间在翌日"
+      "allDayHint": "整天活动不需要设定开始与结束时间。"
     },
 
     "template": {

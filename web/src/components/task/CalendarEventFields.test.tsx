@@ -51,7 +51,7 @@ describe("CalendarEventFields", () => {
     const { container, root } = renderFields();
     const hint = container.querySelector('[data-testid="calendar-event-overnight-hint"]');
     expect(hint).not.toBeNull();
-    expect(hint?.textContent).toBe("tasks.calendarFields.overnightHint");
+    expect(hint?.textContent).toBe("overnightClockHint");
     cleanup(root, container);
   });
 

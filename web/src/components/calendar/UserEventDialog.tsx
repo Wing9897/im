@@ -27,13 +27,13 @@ import {
   todayDateInput,
 } from "../../domain/timeline/dateUtils";
 import {
-  isOvernightClockRange,
   valuesForKindChange,
   type UserEventKind,
 } from "../../domain/timeline/userEventKindSwitch";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { buildRRule, parseRRule } from "../../utils/rrule";
 import { validateRRuleConfig } from "../../utils/rruleValidation";
+import { OvernightClockHint } from "./OvernightClockHint";
 
 export type { UserEventKind };
 
@@ -218,10 +218,6 @@ export function UserEventDialog({
 
   const displayError = error ?? localError;
   const isRecurring = values.kind === "recurring";
-  const showOvernightHint =
-    isRecurring &&
-    !values.isAllDay &&
-    isOvernightClockRange(values.eventStartTime, values.eventEndTime);
 
   const kindItems = useMemo(
     () => [
@@ -564,14 +560,11 @@ export function UserEventDialog({
                     data-testid="user-event-event-end"
                   />
                 </div>
-                {showOvernightHint ? (
-                  <p
-                    className="m-0 text-caption text-text-muted"
-                    data-testid="user-event-overnight-hint"
-                  >
-                    {t("userEvent.overnightHint")}
-                  </p>
-                ) : null}
+                <OvernightClockHint
+                  startClock={values.eventStartTime}
+                  endClock={values.eventEndTime}
+                  testId="user-event-overnight-hint"
+                />
               </div>
             ) : null
           ) : (

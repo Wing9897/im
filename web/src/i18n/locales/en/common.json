@@ -1,4 +1,5 @@
 {
+  "overnightClockHint": "Ends the next day",
   "language": {
     "label": "Interface language",
     "help": "Auto follows the system; choosing a language applies it site-wide.",
@@ -253,8 +254,7 @@
       "locationPlaceholder": "e.g. Room A, online",
       "description": "Description (optional)",
       "descriptionPlaceholder": "Extra details for this event",
-      "allDayHint": "All-day events do not need start and end times.",
-      "overnightHint": "Ends the next day"
+      "allDayHint": "All-day events do not need start and end times."
     },
 
     "template": {
