@@ -2,19 +2,25 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setAppLocale } from "../../i18n/locale";
 import {
   addDays,
+  addDaysToDateInput,
   addMonths,
+  allDayFormRangeForDays,
   buildCalendarDays,
   buildWeekDays,
   eventOverlapsRange,
   eventStartsOnDay,
   formatRangeLabel,
+  fromAllDayDateInput,
   fromDateTimeLocalInput,
+  inclusiveEndDateFromExclusive,
   isSameDay,
   isToday,
   startOfDay,
   startOfMonth,
   startOfWeek,
+  timedLocalRangeForDays,
   timelineEventDateRange,
+  toAllDayDateInput,
   toDateTimeLocalInput,
 } from "./dateUtils";
 import { makeAnalysisEvent } from "../../test/analysisEventFixtures";
@@ -101,5 +107,20 @@ describe("dateUtils", () => {
     expect(fromDateTimeLocalInput(local)).toBeTruthy();
     expect(fromDateTimeLocalInput("not-a-date")).toBeNull();
     expect(toDateTimeLocalInput(null)).toBe("");
+  });
+
+  it("handles all-day date inputs and day-span presets", () => {
+    expect(toAllDayDateInput("2026-08-01T00:00:00Z")).toBe("2026-08-01");
+    expect(fromAllDayDateInput("2026-08-01")).toBe("2026-08-01T00:00:00.000Z");
+    expect(addDaysToDateInput("2026-08-01", 2)).toBe("2026-08-03");
+    expect(inclusiveEndDateFromExclusive("2026-08-04")).toBe("2026-08-03");
+    expect(timedLocalRangeForDays("2026-08-01", 3)).toEqual({
+      startTime: "2026-08-01T00:00",
+      endTime: "2026-08-03T23:59",
+    });
+    expect(allDayFormRangeForDays("2026-08-01", 3)).toEqual({
+      startDate: "2026-08-01",
+      endDate: "2026-08-03",
+    });
   });
 });

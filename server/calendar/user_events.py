@@ -115,6 +115,7 @@ async def create_user_event(
     body: str = "",
     location: str = "",
     origin: str = "manual",
+    is_all_day: bool = False,
     task_id: Any = None,
     workset_id: Any = _UNSET,
 ) -> dict[str, Any]:
@@ -122,6 +123,7 @@ async def create_user_event(
     clean_start = _require_start_time(start_time)
     clean_end = _normalize_optional_end(end_time, clean_start)
     clean_origin = _normalize_origin(origin)
+    clean_all_day = bool(is_all_day)
     clean_task_id = await resolve_user_event_task_id(db, task_id)
 
     if workset_id is _UNSET:
@@ -145,9 +147,9 @@ async def create_user_event(
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO user_events "
-        "(id, title, body, start_time, end_time, location, origin, task_id, workset_id, "
-        "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
+        "task_id, workset_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -156,6 +158,7 @@ async def create_user_event(
             clean_end,
             (location or "").strip(),
             clean_origin,
+            1 if clean_all_day else 0,
             clean_task_id,
             clean_workset_id,
             now,
@@ -176,6 +179,7 @@ async def update_user_event(
     end_time: Any = _UNSET,
     body: Any = _UNSET,
     location: Any = _UNSET,
+    is_all_day: Any = _UNSET,
     task_id: Any = _UNSET,
     workset_id: Any = _UNSET,
 ) -> dict[str, Any] | None:
@@ -199,6 +203,10 @@ async def update_user_event(
 
     next_body = str(existing.get("body") or "") if body is _UNSET else str(body or "").strip()
     next_location = str(existing.get("location") or "") if location is _UNSET else str(location or "").strip()
+    if is_all_day is _UNSET:
+        next_all_day = bool(existing.get("event_is_all_day"))
+    else:
+        next_all_day = bool(is_all_day)
     if task_id is _UNSET:
         raw_tid = existing.get("task_id")
         next_task_id = str(raw_tid).strip() if isinstance(raw_tid, str) and raw_tid.strip() else None
@@ -218,13 +226,15 @@ async def update_user_event(
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
-        "location = ?, task_id = ?, workset_id = ?, updated_at = ? WHERE id = ?",
+        "location = ?, event_is_all_day = ?, task_id = ?, workset_id = ?, updated_at = ? "
+        "WHERE id = ?",
         (
             next_title,
             next_body,
             next_start,
             next_end,
             next_location,
+            1 if next_all_day else 0,
             next_task_id,
             next_workset_id,
             utc_now_iso(),

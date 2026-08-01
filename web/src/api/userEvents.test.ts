@@ -82,6 +82,7 @@ describe("user events API contract", () => {
       endTime: null,
       body: "",
       location: "",
+      isAllDay: false,
     });
   });
 
@@ -100,7 +101,28 @@ describe("user events API contract", () => {
       endTime: null,
       body: "",
       location: "",
+      isAllDay: false,
       taskId: "__user__",
+    });
+  });
+
+  it("forwards isAllDay on create", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({});
+
+    await createUserEvent({
+      title: "Holiday",
+      startTime: "2026-08-01T00:00:00Z",
+      endTime: "2026-08-04T00:00:00Z",
+      isAllDay: true,
+    });
+
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
+      title: "Holiday",
+      startTime: "2026-08-01T00:00:00Z",
+      endTime: "2026-08-04T00:00:00Z",
+      body: "",
+      location: "",
+      isAllDay: true,
     });
   });
 
@@ -112,6 +134,16 @@ describe("user events API contract", () => {
     expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
       title: "Renamed",
       endTime: null,
+    });
+  });
+
+  it("patches isAllDay when provided", async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({});
+
+    await updateUserEvent("event-1", { isAllDay: true });
+
+    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
+      isAllDay: true,
     });
   });
 

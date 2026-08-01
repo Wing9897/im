@@ -3646,6 +3646,11 @@ export interface components {
              * @default
              */
             location: string;
+            /**
+             * Isallday
+             * @default false
+             */
+            isAllDay: boolean;
             /** Taskid */
             taskId?: string | null;
             /** Worksetid */
@@ -3663,6 +3668,8 @@ export interface components {
             body?: string | null;
             /** Location */
             location?: string | null;
+            /** Isallday */
+            isAllDay?: boolean | null;
             /** Taskid */
             taskId?: string | null;
             /** Worksetid */

@@ -112,6 +112,32 @@ async def test_rest_create_rejects_forged_origin(client) -> None:
     assert response.status_code == 422
 
 
+async def test_user_events_all_day_roundtrip(client) -> None:
+    created = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "全日休假",
+            "startTime": "2026-08-01T00:00:00Z",
+            "endTime": "2026-08-04T00:00:00Z",
+            "isAllDay": True,
+        },
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert body["isAllDay"] is True
+    assert body["startTime"] == "2026-08-01T00:00:00Z"
+    assert body["endTime"] == "2026-08-04T00:00:00Z"
+
+    patched = await client.patch(
+        f"/api/v1/calendar/user-events/{body['id']}",
+        json={"isAllDay": False},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["isAllDay"] is False
+
+    await client.delete(f"/api/v1/calendar/user-events/{body['id']}")
+
+
 async def test_list_user_events_uses_overlap_window(app) -> None:
     db = app.state.db
     spanning = await create_user_event(

@@ -137,6 +137,7 @@ const formValues: UserEventFormValues = {
   location: "Office",
   body: "Notes",
   worksetId: "__user__",
+  isAllDay: false,
 };
 
 function makeUserEvent(): TimelineItem {
@@ -294,6 +295,7 @@ describe("TimelinePage user-event CRUD", () => {
       endTime: null,
       body: "Notes",
       location: "Office",
+      isAllDay: false,
       worksetId: "__user__",
     });
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);

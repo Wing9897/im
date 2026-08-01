@@ -108,6 +108,7 @@ export function TimelinePage() {
             endTime: values.endTime || null,
             body: values.body,
             location: values.location,
+            isAllDay: values.isAllDay,
             worksetId,
           });
         } else if (editingEvent) {
@@ -117,6 +118,7 @@ export function TimelinePage() {
             endTime: values.endTime || null,
             body: values.body,
             location: values.location,
+            isAllDay: values.isAllDay,
             worksetId,
           });
         }
@@ -301,8 +303,9 @@ export function TimelinePage() {
                 location: editingEvent.location ?? "",
                 body: editingEvent.body ?? "",
                 worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
+                isAllDay: Boolean(editingEvent.isAllDay),
               }
-            : { worksetId: toUserEventFormWorksetId(null) }
+            : { worksetId: toUserEventFormWorksetId(null), isAllDay: false }
         }
         busy={dialogBusy}
         error={dialogError}
