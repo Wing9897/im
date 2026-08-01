@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
@@ -51,6 +51,13 @@ describe("EventListPanel", () => {
   beforeEach(async () => {
     setAppLocale("zh-Hant");
     await i18n.changeLanguage("zh-Hant");
+    vi.useFakeTimers();
+    // Local noon — past the default makeEvent window (Jul 14–15 UTC)
+    vi.setSystemTime(new Date(2026, 6, 20, 12, 0, 0));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("defaults to該日 list when hasDayFocus becomes true", () => {
@@ -126,5 +133,127 @@ describe("EventListPanel", () => {
     expect(
       container.querySelector(".im-timeline-event-list-item")?.className,
     ).toContain("im-card-hover");
+  });
+
+  it("groups events into upcoming / ongoing / ended with horizontal dividers", () => {
+    vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0));
+    const upcoming = makeTimelineItem({
+      id: "up",
+      title: "Upcoming Meet",
+      startTime: new Date(2026, 6, 15, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 15, 15, 0, 0).toISOString(),
+    });
+    const ongoing = makeTimelineItem({
+      id: "on",
+      title: "Ongoing Meet",
+      startTime: new Date(2026, 6, 15, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 15, 14, 0, 0).toISOString(),
+    });
+    const ended = makeTimelineItem({
+      id: "en",
+      title: "Ended Meet",
+      startTime: new Date(2026, 6, 15, 8, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 15, 9, 0, 0).toISOString(),
+    });
+
+    const { container } = renderPanel({
+      rangeEvents: [upcoming, ongoing, ended],
+      allRangeEvents: [upcoming, ongoing, ended],
+      hasDayFocus: false,
+    });
+
+    expect(container.textContent).toContain("即將到來");
+    expect(container.textContent).toContain("進行中");
+    expect(container.textContent).toContain("完結");
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-upcoming"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-ongoing"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-ended"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-upcoming-divider"]'),
+    ).not.toBeNull();
+
+    const upcomingGroup = container.querySelector(
+      '[data-testid="timeline-event-group-upcoming"]',
+    );
+    const ongoingGroup = container.querySelector(
+      '[data-testid="timeline-event-group-ongoing"]',
+    );
+    const endedGroup = container.querySelector(
+      '[data-testid="timeline-event-group-ended"]',
+    );
+    expect(upcomingGroup?.textContent).toContain("Upcoming Meet");
+    expect(ongoingGroup?.textContent).toContain("Ongoing Meet");
+    expect(endedGroup?.textContent).toContain("Ended Meet");
+  });
+
+  it("hides empty time-phase groups", () => {
+    vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0));
+    const upcoming = makeTimelineItem({
+      id: "up-only",
+      title: "Only Upcoming",
+      startTime: new Date(2026, 6, 15, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 15, 15, 0, 0).toISOString(),
+    });
+
+    const { container } = renderPanel({
+      rangeEvents: [upcoming],
+      allRangeEvents: [upcoming],
+      hasDayFocus: false,
+    });
+
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-upcoming"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-ongoing"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="timeline-event-group-ended"]'),
+    ).toBeNull();
+    expect(container.textContent).toContain("即將到來");
+    expect(container.textContent).not.toContain("進行中");
+    expect(container.textContent).not.toContain("完結");
+  });
+
+  it("keeps click selection on grouped event cards", () => {
+    vi.setSystemTime(new Date(2026, 6, 15, 12, 0, 0));
+    const upcoming = makeTimelineItem({
+      id: "click-me",
+      title: "Click Me",
+      startTime: new Date(2026, 6, 15, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 15, 15, 0, 0).toISOString(),
+    });
+    const picked: string[] = [];
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(EventListPanel, {
+            rangeEvents: [upcoming],
+            allRangeEvents: [upcoming],
+            hasDayFocus: false,
+            onSelectEvent: (event) => {
+              picked.push(event?.id ?? "");
+            },
+          }),
+        ),
+      );
+    });
+
+    const clickButton = container.querySelector("button");
+    expect(clickButton).not.toBeNull();
+    act(() => {
+      clickButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+    expect(picked).toEqual(["click-me"]);
   });
 });

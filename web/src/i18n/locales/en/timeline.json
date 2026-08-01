@@ -95,7 +95,10 @@
     "day": "This day ({count})",
     "allRange": "Full range ({count})",
     "rangeEvents": "Range events ({count})",
-    "empty": "No events"
+    "empty": "No events",
+    "groupUpcoming": "Upcoming",
+    "groupOngoing": "In progress",
+    "groupEnded": "Ended"
   },
   "taskDetail": {
     "closeAria": "Close detail panel",

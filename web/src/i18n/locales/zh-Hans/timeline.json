@@ -95,7 +95,10 @@
     "day": "该日 ({count})",
     "allRange": "全范围 ({count})",
     "rangeEvents": "范围事件 ({count})",
-    "empty": "没有事件"
+    "empty": "没有事件",
+    "groupUpcoming": "即将到来",
+    "groupOngoing": "进行中",
+    "groupEnded": "完结"
   },
   "taskDetail": {
     "closeAria": "关闭详情面板",
