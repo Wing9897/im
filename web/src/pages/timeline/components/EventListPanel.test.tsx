@@ -22,6 +22,7 @@ function renderPanel(props: {
   rangeEvents: ReturnType<typeof makeEvent>[];
   allRangeEvents: ReturnType<typeof makeEvent>[];
   hasDayFocus: boolean;
+  focusedDay?: Date | null;
   onSelectEvent?: () => void;
 }) {
   const container = document.createElement("div");
@@ -33,6 +34,7 @@ function renderPanel(props: {
         { i18n },
         createElement(EventListPanel, {
           ...props,
+          focusedDay: props.focusedDay ?? null,
           onSelectEvent: props.onSelectEvent ?? (() => {}),
         }),
       ),
@@ -63,10 +65,12 @@ describe("EventListPanel", () => {
   it("defaults to該日 list when hasDayFocus becomes true", () => {
     const dayEvent = makeEvent("day", "Day Event");
     const otherEvent = makeEvent("other", "Other Event");
+    const focusedDay = new Date(2026, 6, 14);
     const { container, root } = renderPanel({
       rangeEvents: [dayEvent],
       allRangeEvents: [dayEvent, otherEvent],
       hasDayFocus: false,
+      focusedDay: null,
     });
 
     expect(container.textContent).toContain("Other Event");
@@ -80,6 +84,7 @@ describe("EventListPanel", () => {
             rangeEvents: [dayEvent],
             allRangeEvents: [dayEvent, otherEvent],
             hasDayFocus: true,
+            focusedDay,
             onSelectEvent: () => {},
           }),
         ),
@@ -89,6 +94,47 @@ describe("EventListPanel", () => {
     expect(container.textContent).toContain("Day Event");
     expect(container.textContent).not.toContain("Other Event");
     expect(container.textContent).toContain("該日 (1)");
+  });
+
+  it("in 該日 mode groups by selected-day anchor and labels overnight as 跨日", () => {
+    // Viewing 8/8 while today is still 8/1 — overnight must not land in「即將到來」.
+    vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
+    const overnight = makeTimelineItem({
+      id: "overnight",
+      title: "Overnight Watch",
+      startTime: new Date(2026, 7, 7, 8, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
+    });
+    const later = makeTimelineItem({
+      id: "later",
+      title: "Afternoon Meet",
+      startTime: new Date(2026, 7, 8, 14, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 8, 15, 0, 0).toISOString(),
+    });
+
+    const { container } = renderPanel({
+      rangeEvents: [overnight, later],
+      allRangeEvents: [overnight, later],
+      hasDayFocus: true,
+      focusedDay: new Date(2026, 7, 8),
+    });
+
+    expect(container.textContent).toContain("進行中／覆蓋該日");
+    expect(container.textContent).toContain("尚未開始於該日");
+    expect(container.textContent).not.toContain("即將到來");
+
+    const ongoingGroup = container.querySelector(
+      '[data-testid="timeline-event-group-ongoing"]',
+    );
+    const upcomingGroup = container.querySelector(
+      '[data-testid="timeline-event-group-upcoming"]',
+    );
+    expect(ongoingGroup?.textContent).toContain("Overnight Watch");
+    expect(upcomingGroup?.textContent).toContain("Afternoon Meet");
+    expect(
+      container.querySelector('[data-testid="timeline-event-cross-day"]')
+        ?.textContent,
+    ).toBe("跨日");
   });
 
   it("renders multiline body as a single truncated preview line", () => {
@@ -241,6 +287,7 @@ describe("EventListPanel", () => {
             rangeEvents: [upcoming],
             allRangeEvents: [upcoming],
             hasDayFocus: false,
+            focusedDay: null,
             onSelectEvent: (event) => {
               picked.push(event?.id ?? "");
             },

@@ -22,6 +22,7 @@ type TimelineSidebarProps = {
   rangeEvents: TimelineItem[];
   allRangeEvents: TimelineItem[];
   hasDayFocus: boolean;
+  focusedDay: Date | null;
   onClose?: () => void;
 };
 
@@ -29,6 +30,7 @@ export function TimelineSidebar({
   rangeEvents,
   allRangeEvents,
   hasDayFocus,
+  focusedDay,
   onClose,
 }: TimelineSidebarProps) {
   const { t } = useTranslation("timeline");
@@ -214,6 +216,7 @@ export function TimelineSidebar({
           rangeEvents={rangeEvents}
           allRangeEvents={allRangeEvents}
           hasDayFocus={hasDayFocus}
+          focusedDay={focusedDay}
           onSelectEvent={onSelectEvent}
         />
       )}

@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeTimelineItem } from "../../test/analysisEventFixtures";
 import {
   classifyEventTimePhase,
+  dayPhaseAnchor,
+  groupEventsByDayTimePhase,
   groupEventsByTimePhase,
+  isCrossDayEvent,
 } from "./eventTimePhase";
 
 describe("eventTimePhase", () => {
@@ -132,6 +135,92 @@ describe("eventTimePhase", () => {
       expect(groups.upcoming.map((e) => e.id)).toEqual(["u-a", "u-b"]);
       expect(groups.ongoing.map((e) => e.id)).toEqual(["o"]);
       expect(groups.ended.map((e) => e.id)).toEqual(["e"]);
+    });
+  });
+
+  describe("dayPhaseAnchor", () => {
+    it("uses now when focused day is today", () => {
+      const now = new Date(2026, 6, 15, 12, 0, 0);
+      expect(dayPhaseAnchor(new Date(2026, 6, 15), now)).toEqual(now);
+    });
+
+    it("uses local midnight for a future focused day", () => {
+      const now = new Date(2026, 6, 1, 12, 0, 0);
+      expect(dayPhaseAnchor(new Date(2026, 6, 8), now)).toEqual(
+        new Date(2026, 6, 8, 0, 0, 0),
+      );
+    });
+
+    it("uses end-of-day for a past focused day", () => {
+      const now = new Date(2026, 6, 20, 12, 0, 0);
+      expect(dayPhaseAnchor(new Date(2026, 6, 8), now).getTime()).toBe(
+        new Date(2026, 6, 9, 0, 0, 0).getTime() - 1,
+      );
+    });
+  });
+
+  describe("groupEventsByDayTimePhase", () => {
+    it("puts overnight span ending on a future day into ongoing, not upcoming", () => {
+      // Viewing 8/8 while "now" is still 8/1 — must not dump everything into upcoming.
+      vi.setSystemTime(new Date(2026, 7, 1, 12, 0, 0));
+      const overnight = makeTimelineItem({
+        id: "overnight",
+        startTime: new Date(2026, 7, 7, 8, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
+      });
+      const laterSameDay = makeTimelineItem({
+        id: "later",
+        startTime: new Date(2026, 7, 8, 14, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 15, 0, 0).toISOString(),
+      });
+      const groups = groupEventsByDayTimePhase(
+        [overnight, laterSameDay],
+        new Date(2026, 7, 8),
+      );
+      expect(groups.ongoing.map((e) => e.id)).toEqual(["overnight"]);
+      expect(groups.upcoming.map((e) => e.id)).toEqual(["later"]);
+      expect(groups.ended).toEqual([]);
+    });
+
+    it("marks overnight that already finished today as ended", () => {
+      vi.setSystemTime(new Date(2026, 7, 8, 12, 0, 0));
+      const overnight = makeTimelineItem({
+        id: "overnight",
+        startTime: new Date(2026, 7, 7, 8, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
+      });
+      const groups = groupEventsByDayTimePhase(
+        [overnight],
+        new Date(2026, 7, 8),
+      );
+      expect(groups.ended.map((e) => e.id)).toEqual(["overnight"]);
+    });
+  });
+
+  describe("isCrossDayEvent", () => {
+    it("detects timed overnight spans", () => {
+      const event = makeTimelineItem({
+        startTime: new Date(2026, 7, 7, 8, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 8, 0, 0).toISOString(),
+      });
+      expect(isCrossDayEvent(event)).toBe(true);
+    });
+
+    it("treats same-day timed events as not cross-day", () => {
+      const event = makeTimelineItem({
+        startTime: new Date(2026, 7, 8, 10, 0, 0).toISOString(),
+        endTime: new Date(2026, 7, 8, 11, 0, 0).toISOString(),
+      });
+      expect(isCrossDayEvent(event)).toBe(false);
+    });
+
+    it("treats exclusive midnight all-day single day as not cross-day", () => {
+      const event = makeTimelineItem({
+        startTime: "2026-08-08T00:00:00Z",
+        endTime: "2026-08-09T00:00:00Z",
+        isAllDay: true,
+      });
+      expect(isCrossDayEvent(event)).toBe(false);
     });
   });
 });

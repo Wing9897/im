@@ -98,7 +98,11 @@
     "empty": "No events",
     "groupUpcoming": "Upcoming",
     "groupOngoing": "In progress",
-    "groupEnded": "Ended"
+    "groupEnded": "Ended",
+    "groupUpcomingOnDay": "Later that day",
+    "groupOngoingOnDay": "Active that day",
+    "groupEndedOnDay": "Ended that day",
+    "crossDay": "Multi-day"
   },
   "taskDetail": {
     "closeAria": "Close detail panel",

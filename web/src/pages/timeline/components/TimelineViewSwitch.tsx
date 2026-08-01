@@ -125,6 +125,7 @@ export function TimelineViewSwitch({
               rangeEvents={sidebarEvents}
               allRangeEvents={rangeEvents}
               hasDayFocus={sidebarEvents !== rangeEvents}
+              focusedDay={focusedDay}
             />
           )}
         </div>

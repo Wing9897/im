@@ -1,5 +1,10 @@
 import type { TimelineItem } from "../../types";
-import { addDays, startOfDay, timelineEventDateRange } from "./dateUtils";
+import {
+  addDays,
+  isSameDay,
+  startOfDay,
+  timelineEventDateRange,
+} from "./dateUtils";
 
 /** Temporal phase of an event relative to "now" (not annotation status). */
 export type EventTimePhase = "upcoming" | "ongoing" | "ended";
@@ -14,6 +19,28 @@ function effectiveEndDay(start: Date, end: Date): Date {
     return addDays(endDay, -1);
   }
   return endDay;
+}
+
+/**
+ * Reference instant for day-focused list phases.
+ * - Today: wall-clock `now` (morning meetings become ended, etc.)
+ * - Future day: local midnight of that day (overnight ending that morning → ongoing)
+ * - Past day: just before next midnight (day's schedule is fully resolved)
+ */
+export function dayPhaseAnchor(focusedDay: Date, now: Date = new Date()): Date {
+  const dayStart = startOfDay(focusedDay);
+  const dayEnd = addDays(dayStart, 1);
+  if (now < dayStart) return dayStart;
+  if (now >= dayEnd) return new Date(dayEnd.getTime() - 1);
+  return now;
+}
+
+/** True when the event's active local days span more than one calendar day. */
+export function isCrossDayEvent(event: TimelineItem): boolean {
+  const { start, end: rawEnd } = timelineEventDateRange(event);
+  if (Number.isNaN(start.getTime())) return false;
+  const end = Number.isNaN(rawEnd.getTime()) || rawEnd < start ? start : rawEnd;
+  return !isSameDay(startOfDay(start), effectiveEndDay(start, end));
 }
 
 /**
@@ -68,4 +95,16 @@ export function groupEventsByTimePhase(
     else ended.push(event);
   }
   return { upcoming, ongoing, ended };
+}
+
+/**
+ * Day-focused sidebar grouping: phases are relative to the selected local day
+ * (via {@link dayPhaseAnchor}), not raw wall-clock "upcoming vs now".
+ */
+export function groupEventsByDayTimePhase(
+  events: TimelineItem[],
+  focusedDay: Date,
+  now: Date = new Date(),
+): EventsByTimePhase {
+  return groupEventsByTimePhase(events, dayPhaseAnchor(focusedDay, now));
 }
