@@ -2,11 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- **Docs / CI hygiene:** Product version authority is **git tags** (`v*`); repo `VERSION` may lag and is never bot-committed back to `main`. Integer schema stamp / public `SCHEMA_SEMVER` are DB-contract identities and are **not** required to equal the product tag. `bump_version.py` defaults to print-only (explicit `--write` to update `VERSION`); CI keeps `--from-tags --print-only`. Package job runs `verify:desktop:full` (= `desktop_verify` only; desktop vitest stays in `quality`). Workflow triggers on `main` only. Post-deploy live check primary name: `npm run verify:deploy` (`smoke` is an alias).
+
 ## [0.1.0-beta.6] - 2026-07-31
 
 ### Notes
 
-- **Current baseline:** schema stamp **v5** / public `schemaSemver` **0.1.0-beta.6** (wipe-only; **no** migration registry; prior stamps hard-reject → reset). Product `VERSION` / packages / OpenAPI / health `version` = `0.1.0-beta.6`. Auth access-key scopes: `*` (full)／`read` (GET-only). Calendar HTTP under `/api/v1/calendar/*` (`items`／`imports`／`dismissals`／`user-events`); legacy `/results/calendar`、`/user-events`、`/timeline/dismissals`、`/calendar-imports/*`、`/system/schema/*` stay 404.
+- **Current baseline:** schema stamp **v5** / public `schemaSemver` **0.1.0-beta.6** (wipe-only; **no** migration registry; prior stamps hard-reject → reset). Stamp / `SCHEMA_SEMVER` are **decoupled** from product release tags — they identify the DB contract, not the shipped app SemVer. Product version authority is git tags (`v*`); root `VERSION` / packages / OpenAPI / health `version` are packaging／display and may lag tags. Auth access-key scopes: `*` (full)／`read` (GET-only). Calendar HTTP under `/api/v1/calendar/*` (`items`／`imports`／`dismissals`／`user-events`); legacy `/results/calendar`、`/user-events`、`/timeline/dismissals`、`/calendar-imports/*`、`/system/schema/*` stay 404.
 
 ### Fixed
 
@@ -50,7 +56,7 @@ All notable changes to this project will be documented in this file.
 - **Wipe-floor stamp 3 + ownership hard-cut:** empty `SCHEMA_MIGRATIONS` (DDL sole truth; prior stamps hard-reject → reset). `user_events.workset_id` is `NOT NULL DEFAULT '__user__'`; deleting a custom workset reassigns events to `__user__`. Agent / voice prefs wire only `worksetId` / `defaultWorksetId` (removed `calendarTaskId` / `defaultCalendarTaskId`). FE filter UI unified on `SourceFilterDialog` + `{ taskIds, worksetIds }`. Activity-spans add `worksetId` (`sourceKind=workset` → authoritative `worksetId`, `taskId=null`; task rows → `worksetId=null`). Board `widgetState.sourceFilters` hard-renames former `taskFilters`; CSS/testid `board-source-filter` replaces `board-task-filter`.
 - **Compat-layer cleanup:** drop Legacy task-id filter adapters / flat board filter APIs; rename FE `selectedTaskIds`→`selectedSources` where it means hierarchical selection; project user events with provenance-only `taskId` + ownership `worksetId`; reject list filter `task_id=__user__` (use `workset_id`); OpenAPI types voice `sourceFilter` + assistant `defaultWorksetId`.
 - **Docs / deeplink examples:** ownership and Desktop calendar import copy use `worksetId` (not `taskId=__user__` /「選任務」); apiDocs inline deep-link sample matches `desktop/calendar-import.ts`.
-- **CI/CD:** Actions on Node 24 runtime majors; tag builds create GitHub Release with three-platform Desktop artifacts; tag must match root `VERSION`.
+- **CI/CD:** Actions on Node 24 runtime majors; tag builds create GitHub Release with three-platform Desktop artifacts. (Historical note: early tag builds required the tag to equal root `VERSION`; current policy is tag authority — CI does not bot-commit `VERSION` to `main`.)
 
 ### Added
 

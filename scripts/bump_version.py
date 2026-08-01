@@ -5,15 +5,17 @@ Bump rules:
   X.Y.Z-beta.N  →  X.Y.Z-beta.(N+1)   (any *-N prerelease suffix)
   X.Y.Z         →  X.Y.(Z+1)
 
-Authority for CI releases is **git tags** (`v*`). The repo-root ``VERSION``
+Authority for CI releases is **git tags** (``v*``). The repo-root ``VERSION``
 file is a development/display fallback when no tags exist (or when
-``--from-tags`` is not used).
+``--from-tags`` is not used). It is **not** written unless ``--write`` is
+passed.
 
 Usage:
   python scripts/bump_version.py --from-tags --print-only
   python scripts/bump_version.py --from-tags --dry-run
   python scripts/bump_version.py --dry-run   # from VERSION file
-  python scripts/bump_version.py             # write VERSION from file base
+  python scripts/bump_version.py            # print next (no write)
+  python scripts/bump_version.py --write    # write VERSION from file base
 """
 
 from __future__ import annotations
@@ -115,14 +117,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--print-only",
         action="store_true",
-        help="Print only the next version (no file write)",
+        help="Print only the next version (no file write; default without --write)",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Print current → next without writing VERSION",
     )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write the next version into the repo-root VERSION file",
+    )
     args = parser.parse_args(argv)
+
+    if args.write and (args.print_only or args.dry_run):
+        print("Cannot combine --write with --print-only or --dry-run", file=sys.stderr)
+        return 2
 
     try:
         current, source = resolve_base(from_tags=args.from_tags)
@@ -135,11 +146,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{current} → {next_version} (from {source})")
         return 0
 
-    if args.print_only:
+    if args.write:
+        VERSION_FILE.write_text(f"{next_version}\n", encoding="utf-8")
         print(next_version)
         return 0
 
-    VERSION_FILE.write_text(f"{next_version}\n", encoding="utf-8")
+    # Default / --print-only: never write.
     print(next_version)
     return 0
 

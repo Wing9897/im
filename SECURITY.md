@@ -2,12 +2,18 @@
 
 ## Supported versions
 
-Only the latest release is supported. The project is in beta (`0.1.0-beta.6`) and
-there are no backports to earlier tags.
+Only the **latest product release** (newest git tag `v*` / GitHub Release) is supported.
+The project is in beta and there are no backports to earlier tags.
+
+Product SemVer is **not** tied to the database contract: integer schema stamp
+(`PRAGMA user_version`) and public `schemaSemver` (`SCHEMA_SEMVER`) identify the
+wipe-only SQLite baseline and may differ from the product tag. The repo-root
+`VERSION` file is for local／display packaging and may lag tags — it is not a
+release authority and is not rewritten by CI bots.
 
 | Version | Supported |
 |---------|-----------|
-| latest release | yes |
+| latest git tag / GitHub Release | yes |
 | anything older | no |
 
 ## Threat model (local-first)
@@ -46,8 +52,8 @@ Please **do not** open a public issue for an exploitable bug. Instead:
 - Open a private security advisory on GitHub (repository → **Security** → *Report a vulnerability*), or
 - Email **tomt99688@gmail.com**
 
-Helpful details: affected version, OS, whether the instance was loopback-only or exposed,
-reproduction steps, and the impact you observed.
+Helpful details: affected version (git tag / Release), OS, whether the instance was
+loopback-only or exposed, reproduction steps, and the impact you observed.
 
 This is a small project maintained in spare time, so responses are best-effort — there is
 no guaranteed response or fix window. Reports that turn out to be real issues will be

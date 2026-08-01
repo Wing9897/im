@@ -248,7 +248,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
 6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
-7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). CI on **main／master** (or `workflow_dispatch`): next SemVer from latest git tag `v*` (inject into build workspace only — **no** bot commit to main) → `package` matrix (win／mac／linux: `dist:*` + `verify:desktop:full` + `package:cli`) → push tag `v$RELEASE_VERSION` + GitHub Release (Desktop **and** CLI; missing assets fail) → optional GHCR. PRs run Ubuntu `quality` only. Release authority is tags; repo `VERSION` may lag.
+7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). CI on **main** (or `workflow_dispatch`): next SemVer from latest git tag `v*` (inject into build workspace only — **no** bot commit to main) → `package` matrix (win／mac／linux: `dist:*` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`] + `package:cli`) → push tag `v$RELEASE_VERSION` + GitHub Release (Desktop **and** CLI; missing assets fail) → optional GHCR. PRs run Ubuntu `quality` only. **Product version authority is git tags**; repo `VERSION` may lag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push follows the same main／dispatch release path. Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
 
@@ -285,13 +285,13 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `build_server_sidecar.py` | `npm run build:server-sidecar` | PyInstaller one-dir bundle for the Electron sidecar／headless CLI (`desktop/server-runtime/`); keeps `tzdata` data + `sse_starlette` submodules |
 | `package_cli.py` | `npm run package:cli` | Zip the sidecar onedir into `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip` for GitHub Release |
 | `clean.mjs` | `npm run clean` | Remove reproducible build outputs and Node/Python caches across workspaces |
-| `smoke.py` | `npm run smoke` / `verify:deploy` | Short post-deploy live smoke against `:18820` (health／SPA／core API／SSE) |
+| `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
-| `desktop_verify.py` | `npm run verify:desktop:fast` / `verify:desktop:full` | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb) |
+| `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
 | `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-5 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
-| `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1); CI uses `--from-tags --print-only` (tag authority; optional VERSION write for local sync) |
+| `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
 | `check-i18n-parity.mjs` | `npm run i18n:check` | Locale key parity vs zh-Hant SoT |
 | `export_openapi.py` / `openapi-check.mjs` | `npm run openapi:export`／`openapi:check` | Export live OpenAPI + drift check vs committed `web/openapi/` |
 | `generate-theme-css.mjs` / `generate-theme-textures.mjs` | `npm run gen:themes`／`gen:textures` | Theme CSS／texture asset generators (also invoked from `build-web`) |
@@ -370,6 +370,8 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/migrations.py`.
 
 **Current stamp is 5.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-5 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+
+**Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
 #### Version support
 

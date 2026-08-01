@@ -113,7 +113,7 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 
 **CLI** = 無 Electron 的 headless server，與 `python -m server`／`intelligence-monitor`（`pyproject.toml` console script）同一入口；發佈物為各平台 PyInstaller zip（內含 `intelligence-monitor-server`）。
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：合併到 `main`（或 `master`）即自動 bump 版本、打包三平台 Desktop + CLI、打 tag、發 GitHub Release（並可選推 GHCR）。`workflow_dispatch` 走同一條路徑。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：合併到 `main` 即依最新 git tag 自動遞增產品版本、打包三平台 Desktop + CLI、打 tag、發 GitHub Release（並可選推 GHCR）——**不** bot 回寫 `VERSION` 到 `main`。`workflow_dispatch` 走同一條路徑。
 
 ### 容器（GHCR）
 
@@ -126,7 +126,7 @@ docker run --rm -p 18820:18820 -v im-data:/data intelligence-monitor:local
 docker compose up --build
 ```
 
-CI 在 **main／master push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
+CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
 
 ### 測試
 
@@ -143,14 +143,14 @@ CI 在 **main／master push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/
 | 場景 | 指令 | 說明 |
 |------|------|------|
 | **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
-| **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 smoke（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | **main／master push** 或 **`workflow_dispatch`**：三平台 Desktop + CLI → tag + GitHub Release + GHCR |
+| **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 live 檢查（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
+| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | **main push** 或 **`workflow_dispatch`**：三平台 Desktop + CLI → tag + GitHub Release + GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
-| `npm run verify:deploy`（=`smoke`） | 對 `127.0.0.1:18820` 的短部署後驗證 | ~3s |
+| `npm run verify:deploy` | 對 `127.0.0.1:18820` 的短部署後驗證（`smoke` 為別名） | ~3s |
 | `npm run verify:desktop:fast` | Desktop vitest + 建置路徑檢查；先執行 `npm run build` | ~5–15s |
-| `npm run verify:desktop:full` | 發佈檢查：fast + 當前 OS 的 sidecar／unpacked／安裝包；先執行對應 `dist:*` | ~5–15s（不含打包） |
+| `npm run verify:desktop:full` | 發佈產物檢查（`desktop_verify` full；**不含** vitest）；先執行對應 `dist:*` | ~5–15s（不含打包） |
 
 ### 營運與報表
 
@@ -184,11 +184,16 @@ CI 在 **main／master push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/
 | 觸發 | 行為 |
 |------|------|
 | **PR** | 只跑 `quality` |
-| **push `main`／`master`** 或 **`workflow_dispatch`** | `quality` → 依最新 git tag 算出下一版 → 三平台 `package`（Desktop+CLI）→ **只 push tag** + GitHub Release → GHCR |
+| **push `main`** 或 **`workflow_dispatch`** | `quality` → 依最新 git tag 算出下一版 → 三平台 `package`（Desktop+CLI；`desktop_verify` only）→ **只 push tag** + GitHub Release → GHCR |
 
-發版權威是 **git tags**（`v*`），不是往 main 回寫 `VERSION`。CI **不會** bot commit／push 到 main，日常 `git push` 不會再被搶提交。每次 bump：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）；打包時把算出的版本注入工作區（不改分支歷史）。無 tag 時以倉庫 `VERSION` 檔為基數再 bump。根目錄 `VERSION` 可作本機／展示用，可能落後於最新 tag；需要時可手動對齊，不必每版回寫。
+**版本權威（勿混用）：**
+- **產品 SemVer** = **git tags**（`v*`）／GitHub Release
+- **schema stamp**（`PRAGMA user_version`）與公開 **`SCHEMA_SEMVER`** = SQLite wipe-only 契約，**不必**等於產品 tag
+- 根目錄 **`VERSION`** = 本機／展示／打包注入用，可能落後 tag；CI **不會** bot commit／push 回寫到 main
 
-一句話：**合併到 main 即自動依 tag 遞增版本、打包三平台 Desktop+CLI、打 tag、發 Release——不改 main 歷史。**
+每次 bump：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）；打包時把算出的版本注入工作區（不改分支歷史）。無 tag 時以倉庫 `VERSION` 檔為基數再 bump。本機若要對齊檔案：`python scripts/bump_version.py --from-tags --write` 再 `npm run sync:version`（預設不寫盤）。
+
+一句話：**合併到 main 即自動依 tag 遞增產品版本、打包三平台 Desktop+CLI、打 tag、發 Release——不改 main 歷史；stamp／SCHEMA_SEMVER 另軌。**
 
 本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 
@@ -268,7 +273,7 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v5**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.6`）；新安裝直接建 stamp-5 庫。這是 wipe-only baseline：v1–v4 與任何其他非空 stamp／fingerprint 都 hard-reject，沒有 in-place migration 或自動刪庫。依 [`ARCHITECTURE.md` 的外部備份與 reset 流程](docs/ARCHITECTURE.md#schema-v5-explicit-reset)保留需要的資料後，再明確 reset：
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v5**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.6`）；新安裝直接建 stamp-5 庫。這是 wipe-only baseline：v1–v4 與任何其他非空 stamp／fingerprint 都 hard-reject，沒有 in-place migration 或自動刪庫。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。依 [`ARCHITECTURE.md` 的外部備份與 reset 流程](docs/ARCHITECTURE.md#schema-v5-explicit-reset)保留需要的資料後，再明確 reset：
 
 ```bash
 python scripts/reset_local_databases.py --apply

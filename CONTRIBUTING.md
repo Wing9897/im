@@ -51,21 +51,28 @@ failure:
 Individual suites are also available: `npm test` (root smoke/audit), `npm run test:server`,
 `npm run test:web`, `npm run test:desktop`.
 
-The short post-deploy smoke (`npm run verify:deploy`) is **not** part of the gate — it needs
-a running server on `127.0.0.1:18820` and, on a database that already has an admin, a bearer
-token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday PR／main CI always runs **`quality`**
-(Ubuntu).
+The short post-deploy live check (`npm run verify:deploy`) is **not** part of the gate — it
+needs a running server on `127.0.0.1:18820` and, on a database that already has an admin, a
+bearer token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. (`smoke` is a deprecated alias for the
+same script.) Everyday PR／main CI always runs **`quality`** (Ubuntu).
 
-**Release:** merge／push to **`main`／`master`** (or **`workflow_dispatch`**) runs a fully
-automatic pipeline: after `quality`, CI computes the next SemVer from the latest git tag
-`v*` (`scripts/bump_version.py --from-tags --print-only`; falls back to the repo `VERSION`
-file if there are no tags), injects that version into the build workspace only (no bot
-commit to `main`), packages Desktop + CLI on Windows／macOS／Linux (`dist:*` +
-`verify:desktop:full` + `package:cli`), pushes **only** the tag `v$RELEASE_VERSION`, and
-creates a GitHub Release (plus optional GHCR). Incomplete assets fail the job. No manual
-tag or VERSION bump on `main` is required — everyday `git push` is not rewritten by CI.
-The committed `VERSION` file is for local／display use and may lag tags; sync manually
-(`bump_version.py` / `npm run sync:version`) only if you want the file aligned.
+**Release:** merge／push to **`main`** (or **`workflow_dispatch`**) runs a fully automatic
+pipeline: after `quality`, CI computes the next SemVer from the latest git tag `v*`
+(`scripts/bump_version.py --from-tags --print-only`; falls back to the repo `VERSION` file
+if there are no tags), injects that version into the build workspace only (no bot commit to
+`main`), packages Desktop + CLI on Windows／macOS／Linux (`dist:*` + `verify:desktop:full` +
+`package:cli`), pushes **only** the tag `v$RELEASE_VERSION`, and creates a GitHub Release
+(plus optional GHCR). `verify:desktop:full` is packaging/`desktop_verify` only — desktop
+vitest already ran in `quality`. Incomplete assets fail the job. No manual tag or VERSION
+bump on `main` is required — everyday `git push` is not rewritten by CI.
+
+**Version authorities (do not conflate):**
+- **Product SemVer** = git tags (`v*`) / GitHub Release
+- **Schema stamp** (`PRAGMA user_version`) + public **`SCHEMA_SEMVER`** = DB wipe-only
+  contract (independent of the product tag)
+- Repo **`VERSION`** = local／display packaging fallback; may lag tags. To align the file
+  locally: `python scripts/bump_version.py --from-tags --write` then `npm run sync:version`
+  (default `bump_version.py` never writes)
 
 ## Generated files are committed — regenerate, never hand-edit
 

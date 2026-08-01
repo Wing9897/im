@@ -64,7 +64,7 @@ One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRU
 
 LLM batch errors: stay `pending`, increment `retry_count`, log to `app_logs`. When `retry_count >= max_batch_retries`, `retry_count` resets to 0 and optional `autoPauseOnRetriesExhausted` pauses analysis. Operational invalidation: incomplete batches are **deleted** (markers cascade).
 
-Ops: prefer contract tests + `npm run verify:deploy`（live smoke）for day-to-day checks; heavy historical eval／ops scripts are not part of the supported workflow.
+Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-day checks; heavy historical eval／ops scripts are not part of the supported workflow.
 
 ## Cross-layer contract quirks (do not "fix" without updating the client)
 
@@ -116,10 +116,10 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 
 - API field shapes: `server/tests/test_contract_*.py`
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
-- Post-deploy live smoke: `npm run verify:deploy`
+- Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions: Ubuntu `quality` on PR／main; on **main／master** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI) → push tag + GitHub Release → GHCR.
+- GitHub Actions: Ubuntu `quality` on PR／main; on **main** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI; `desktop_verify` only — vitest already in `quality`) → push tag + GitHub Release → GHCR.
 
 ## Security (outbound requests)
 
@@ -129,7 +129,7 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 ## Release checklist (Desktop + CLI + container)
 
-1. Merge／push to `main`（or `master`）— no manual tag or VERSION commit required
+1. Merge／push to `main` — no manual tag or VERSION commit required
 2. CI computes next version from latest `v*` tag (`bump_version.py --from-tags --print-only`), injects it for packaging only, packages three OS Desktop+CLI, pushes tag `v$RELEASE_VERSION`, creates GitHub Release (does **not** push commits to main)
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
@@ -149,7 +149,7 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 ## Deploy verify
 
-`npm run verify:deploy` / `npm run smoke` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
+`npm run verify:deploy` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. (`npm run smoke` is a deprecated alias.)
 
 ## Removed / not restored
 

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -49,7 +49,7 @@ jobs:
   version:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -74,7 +74,7 @@ jobs:
   package:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [quality, version]
     strategy:
       fail-fast: false
@@ -141,6 +141,7 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run ${{ matrix.dist }}
 
+      # desktop vitest already ran in quality (test:all); package only re-checks artifacts.
       - name: Verify Desktop package
         run: npm run verify:desktop:full
 
@@ -186,7 +187,7 @@ jobs:
   release:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [package, version]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -283,7 +284,7 @@ jobs:
   container:
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: [quality, version]
     runs-on: ubuntu-latest
     timeout-minutes: 45
