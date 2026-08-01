@@ -7,6 +7,7 @@ layer; this module owns the transactional write path and list filtering.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import EllipsisType
 from typing import Any, Optional
 
 from server.api.channel_refs import parse_channel_refs
@@ -38,6 +39,7 @@ from server.queries.tasks_queries import (
     update_analysis_task,
 )
 from server.services.recurring_task_writes import (
+    create_recurring_task,
     create_recurring_task_shell,
     patch_recurring_task,
 )
@@ -96,6 +98,47 @@ async def list_tasks_payload(
     for link in links:
         by_task.setdefault(str(link["task_id"]), []).append(serialize_channel_ref(link))
     return [serialize_task(row, by_task.get(str(row["id"]), [])) for row in rows]
+
+
+async def create_recurring_task_record(
+    db: Database,
+    *,
+    name: str,
+    rrule: str,
+    event_start_time: str | None,
+    event_end_time: str | None = None,
+    event_is_all_day: bool = False,
+    event_location: str | None = None,
+    event_description: str | None = None,
+    description: str | None = None,
+    workset_id: str | None | EllipsisType = ...,
+    parent_task_id: str | None = None,
+) -> TaskMutationResult:
+    """Atomic recurring create (task + schedule) — same path as the agent tool."""
+    resolved_workset: str | None | EllipsisType
+    if workset_id is ...:
+        resolved_workset = ...
+    else:
+        resolved_workset = await resolve_workset_id(db, supplied=workset_id)
+    row = await create_recurring_task(
+        db,
+        name=name,
+        rrule=rrule,
+        event_start_time=event_start_time,
+        event_end_time=event_end_time,
+        event_is_all_day=event_is_all_day,
+        event_location=event_location,
+        event_description=event_description,
+        description=description,
+        workset_id=resolved_workset,
+        parent_task_id=parent_task_id,
+    )
+    task_id = str(row["id"])
+    return TaskMutationResult(
+        task_id=task_id,
+        payload=task_response(row, await channel_refs_for(db, task_id), deleted=0),
+        register=True,
+    )
 
 
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:

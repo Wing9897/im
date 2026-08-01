@@ -3,29 +3,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { createRecurringTimelineEvent } from "./createRecurringTimelineEvent";
 
-const { mockCreateTask, mockPutTaskSchedule, mockDeleteTask } = vi.hoisted(() => ({
-  mockCreateTask: vi.fn(),
-  mockPutTaskSchedule: vi.fn(),
-  mockDeleteTask: vi.fn(),
+const { mockCreateRecurringTask } = vi.hoisted(() => ({
+  mockCreateRecurringTask: vi.fn(),
 }));
 
 vi.mock("../../api/tasks", () => ({
-  createTask: (...args: unknown[]) => mockCreateTask(...args),
-  deleteTask: (...args: unknown[]) => mockDeleteTask(...args),
-}));
-
-vi.mock("../../api/taskSchedule", () => ({
-  putTaskSchedule: (...args: unknown[]) => mockPutTaskSchedule(...args),
+  createRecurringTask: (...args: unknown[]) => mockCreateRecurringTask(...args),
 }));
 
 describe("createRecurringTimelineEvent", () => {
   beforeEach(() => {
-    mockCreateTask.mockReset().mockResolvedValue({ id: "rec-1", deletedBatchCount: 0 });
-    mockPutTaskSchedule.mockReset().mockResolvedValue({ taskId: "rec-1", rrule: "FREQ=DAILY" });
-    mockDeleteTask.mockReset().mockResolvedValue({ deletedBatchCount: 0 });
+    mockCreateRecurringTask.mockReset().mockResolvedValue({
+      id: "rec-1",
+      deletedBatchCount: 0,
+    });
   });
 
-  it("creates a recurring shell then upserts the schedule", async () => {
+  it("posts a single atomic recurring create", async () => {
     await createRecurringTimelineEvent({
       title: "  Standup  ",
       worksetId: SYSTEM_WORKSET_ID,
@@ -37,24 +31,16 @@ describe("createRecurringTimelineEvent", () => {
       rrule: "FREQ=WEEKLY;BYDAY=MO",
     });
 
-    expect(mockCreateTask).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "Standup",
-        analysisMode: "recurring",
-        worksetId: SYSTEM_WORKSET_ID,
-        includeInTimeline: true,
-        promptTemplate: "",
-        channelIds: [],
-        description: "Daily sync",
-      }),
-    );
-    expect(mockPutTaskSchedule).toHaveBeenCalledWith("rec-1", {
+    expect(mockCreateRecurringTask).toHaveBeenCalledWith({
+      name: "Standup",
+      description: "Daily sync",
       rrule: "FREQ=WEEKLY;BYDAY=MO",
       eventStartTime: "09:00",
       eventEndTime: "09:30",
       eventIsAllDay: false,
       eventLocation: "Room A",
       eventDescription: "Daily sync",
+      worksetId: SYSTEM_WORKSET_ID,
     });
   });
 
@@ -68,19 +54,27 @@ describe("createRecurringTimelineEvent", () => {
       rrule: "FREQ=YEARLY",
     });
 
-    expect(mockPutTaskSchedule).toHaveBeenCalledWith(
-      "rec-1",
+    expect(mockCreateRecurringTask).toHaveBeenCalledWith(
       expect.objectContaining({
         eventIsAllDay: true,
         eventStartTime: null,
         eventEndTime: null,
         rrule: "FREQ=YEARLY",
+        worksetId: SYSTEM_WORKSET_ID,
       }),
     );
   });
 
-  it("deletes the shell task when schedule upsert fails", async () => {
-    mockPutTaskSchedule.mockRejectedValueOnce(new Error("bad rrule"));
+  it("rejects missing title or rrule before calling the API", async () => {
+    await expect(
+      createRecurringTimelineEvent({
+        title: "  ",
+        worksetId: SYSTEM_WORKSET_ID,
+        isAllDay: false,
+        eventStartTime: "09:00",
+        rrule: "FREQ=DAILY",
+      }),
+    ).rejects.toThrow("title is required");
 
     await expect(
       createRecurringTimelineEvent({
@@ -88,10 +82,10 @@ describe("createRecurringTimelineEvent", () => {
         worksetId: SYSTEM_WORKSET_ID,
         isAllDay: false,
         eventStartTime: "09:00",
-        rrule: "FREQ=DAILY",
+        rrule: "  ",
       }),
-    ).rejects.toThrow("bad rrule");
+    ).rejects.toThrow("rrule is required");
 
-    expect(mockDeleteTask).toHaveBeenCalledWith("rec-1");
+    expect(mockCreateRecurringTask).not.toHaveBeenCalled();
   });
 });

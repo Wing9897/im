@@ -98,6 +98,121 @@ describe("UserEventDialog", () => {
     host.remove();
   });
 
+  it("preserves datetime across one_off ↔ recurring kind switches", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement;
+    const endInput = document.body.querySelector(
+      '[data-testid="user-event-end"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(startInput, "2026-08-15T14:30");
+      setInputValue(endInput, "2026-08-15T16:00");
+    });
+
+    const tabs = Array.from(
+      document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
+    ) as HTMLButtonElement[];
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    const oneOffTab = tabs.find((tab) => tab.textContent?.includes("一般"));
+    expect(recurringTab).toBeTruthy();
+    expect(oneOffTab).toBeTruthy();
+
+    await act(async () => {
+      recurringTab!.click();
+    });
+
+    const startClock = document.body.querySelector(
+      '[data-testid="user-event-event-start"]',
+    ) as HTMLInputElement;
+    const endClock = document.body.querySelector(
+      '[data-testid="user-event-event-end"]',
+    ) as HTMLInputElement;
+    expect(startClock.value).toBe("14:30");
+    expect(endClock.value).toBe("16:00");
+
+    await act(async () => {
+      setInputValue(startClock, "15:00");
+      setInputValue(endClock, "17:30");
+    });
+
+    await act(async () => {
+      oneOffTab!.click();
+    });
+
+    const startAfter = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement;
+    const endAfter = document.body.querySelector(
+      '[data-testid="user-event-end"]',
+    ) as HTMLInputElement;
+    expect(startAfter.value).toBe("2026-08-15T15:00");
+    expect(endAfter.value).toBe("2026-08-15T17:30");
+
+    host.remove();
+  });
+
+  it("shows overnight hint when recurring end is before start", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const tabs = Array.from(
+      document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
+    ) as HTMLButtonElement[];
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    await act(async () => {
+      recurringTab!.click();
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-overnight-hint"]')).toBeNull();
+
+    const startClock = document.body.querySelector(
+      '[data-testid="user-event-event-start"]',
+    ) as HTMLInputElement;
+    const endClock = document.body.querySelector(
+      '[data-testid="user-event-event-end"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(startClock, "22:00");
+      setInputValue(endClock, "06:00");
+    });
+
+    const hint = document.body.querySelector(
+      '[data-testid="user-event-overnight-hint"]',
+    );
+    expect(hint).toBeTruthy();
+    expect(hint?.textContent).toContain("翌日");
+
+    host.remove();
+  });
+
   it("switches to recurring and submits RRULE + clock fields", async () => {
     const onSubmit = vi.fn();
     const host = document.createElement("div");

@@ -37,6 +37,26 @@ export function createTask(task: TaskConfig): Promise<TaskMutationResult> {
   return apiClient.post<TaskMutationResult>("/api/v1/tasks", task);
 }
 
+/** Atomic recurring create: task + schedule in one request (timeline / web). */
+export type CreateRecurringTaskConfig = {
+  name: string;
+  rrule: string;
+  eventStartTime?: string | null;
+  eventEndTime?: string | null;
+  eventIsAllDay?: boolean;
+  eventLocation?: string | null;
+  eventDescription?: string | null;
+  description?: string | null;
+  worksetId?: string | null;
+  parentTaskId?: string | null;
+};
+
+export function createRecurringTask(
+  body: CreateRecurringTaskConfig,
+): Promise<TaskMutationResult> {
+  return apiClient.post<TaskMutationResult>("/api/v1/tasks/recurring", body);
+}
+
 /** Updates an existing analysis task's configuration. */
 export function updateTask(
   taskId: string,

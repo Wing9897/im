@@ -566,6 +566,48 @@
         }
       }
     },
+    "/api/v1/tasks/recurring": {
+      "post": {
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Create Recurring Task Endpoint",
+        "description": "Single-shot recurring create (task + schedule). See ``CreateRecurringTaskBody``.",
+        "operationId": "create_recurring_task_endpoint_api_v1_tasks_recurring_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRecurringTaskBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tasks/{task_id}/schedule": {
       "get": {
         "tags": [
@@ -7413,6 +7455,109 @@
           "taskConfig"
         ],
         "title": "ChatAssistantResponse"
+      },
+      "CreateRecurringTaskBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "rrule": {
+            "type": "string",
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "type": "boolean",
+            "title": "Eventisallday",
+            "default": false
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "parentTaskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parenttaskid",
+            "description": "Optional project parent for nested recurring children"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "rrule"
+        ],
+        "title": "CreateRecurringTaskBody",
+        "description": "Atomic recurring create: analysis task + ``recurring_schedules`` in one call.\n\nPrefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for\nweb/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool."
       },
       "DeviceInfoResponse": {
         "properties": {
