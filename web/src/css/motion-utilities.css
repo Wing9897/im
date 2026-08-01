@@ -1,0 +1,154 @@
+/* Motion utilities (formerly motion.css / styles.css keyframes). */
+
+@keyframes im-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes im-fade-in-scale {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes im-enter-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes im-enter-rise-soft {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes im-enter-glow {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+    filter: brightness(1.15);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: brightness(1);
+  }
+}
+
+@keyframes toast-in {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes im-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.im-content-fade {
+  opacity: 1;
+  transition: opacity var(--im-duration-normal) var(--im-easing-out);
+}
+
+.im-animate-in {
+  animation: im-fade-in var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+.im-animate-in-scale {
+  animation: im-fade-in-scale var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+.im-enter-rise {
+  animation: im-enter-rise var(--im-duration-normal) var(--im-easing-out) both;
+  animation-delay: calc(var(--im-stagger-step) * var(--i, 0));
+}
+
+.im-enter-rise-soft {
+  animation: im-enter-rise-soft var(--im-duration-normal) var(--im-easing-out) both;
+  animation-delay: calc(var(--im-stagger-step) * var(--i, 0));
+}
+
+.im-enter-glow {
+  animation: im-enter-glow var(--im-duration-normal) var(--im-easing-out) both;
+  animation-delay: calc(var(--im-stagger-step) * var(--i, 0));
+}
+
+/* Family enter personality — remap shared .im-enter-rise without rewriting call sites */
+[data-theme="sakura"] .im-enter-rise {
+  animation-name: im-enter-rise-soft;
+}
+
+[data-theme="cyberpunk"] .im-enter-rise {
+  animation-name: im-enter-glow;
+}
+
+.im-toast-in {
+  animation: toast-in var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+.im-shimmer {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--surface-border) 30%, transparent) 25%,
+    color-mix(in srgb, var(--surface-border) 45%, transparent) 50%,
+    color-mix(in srgb, var(--surface-border) 30%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: im-shimmer 1.5s infinite linear;
+}
+
+@keyframes imPulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.65;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+}
+
+.im-pulse-dot {
+  animation: imPulse 1.6s ease-out infinite;
+}
+
+@keyframes imSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.im-spin {
+  animation: imSpin 1s linear infinite;
+  color: var(--text-muted);
+}
+
+@keyframes imRefreshIndicatorSpin {
+  to { transform: rotate(360deg); }
+}
+
+.im-refresh-indicator {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--surface-border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: imRefreshIndicatorSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .im-animate-in,
+  .im-animate-in-scale,
+  .im-enter-rise,
+  .im-enter-rise-soft,
+  .im-enter-glow,
+  .im-toast-in,
+  .im-shimmer {
+    animation: none !important;
+  }
+}

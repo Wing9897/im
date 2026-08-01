@@ -1,0 +1,112 @@
+{
+  "toolbar": {
+    "aria": "Assistant toolbar",
+    "description": "Local intelligence & schedule assistant",
+    "stopSpeaking": "Stop speaking",
+    "clearChat": "Clear chat"
+  },
+  "header": {
+    "aria": "Assistant chat header"
+  },
+  "stt": {
+    "unavailable": "Speech recognition unavailable here — please type instead.",
+    "hint": "Hold the mic or Space to speak.",
+    "ttsHintSuffix": " Replies are read aloud."
+  },
+  "empty": {
+    "title": "Ask about local intel or schedule",
+    "description": "e.g. Recent mentions of a keyword? What's next this week?",
+    "hint": "Hold or tap Space to talk when the draft is unfocused (release/toggle sends STT only); use the mic while focused. Empty recognition does not send the draft.",
+    "voiceSettingsLink": "Voice settings"
+  },
+  "toolCallsLabel": "Tools called",
+  "toolStepsLabel": "Tool steps",
+  "toolRunning": "Running…",
+  "sending": "Thinking…",
+  "draft": {
+    "label": "Message",
+    "placeholderListening": "Listening…",
+    "placeholderIdle": "Click to type; hold Space to talk when unfocused"
+  },
+  "targetWorkset": {
+    "label": "Ownership workset",
+    "aria": "Ownership workset for schedule creates"
+  },
+  "mic": {
+    "holdToTalk": "Hold to talk",
+    "releaseToStop": "Release to send",
+    "releaseToStopAria": "Release to stop recording and send",
+    "tapToTalk": "Tap to talk",
+    "tapToStop": "Tap again to send",
+    "tapToStopAria": "Tap to stop recording and send",
+    "tapIdleAria": "Tap to start talking",
+    "tapIdleTitle": "Tap to start, tap again to send"
+  },
+  "ttsOnLabel": "Speech on",
+  "send": {
+    "label": "Send",
+    "sending": "Sending…"
+  },
+  "quick": {
+    "title": "Assistant",
+    "aria": "Caption assistant",
+    "subtitle": "Esc to close",
+    "subtitleStt": " · hold Space to talk",
+    "stopSpeaking": "Stop speaking",
+    "clearChat": "Clear chat",
+    "openFull": "Open full assistant page",
+    "close": "Close",
+    "closeAria": "Close assistant",
+    "emptyTitle": "Ask",
+    "emptyDescription": "",
+    "sending": "Thinking…",
+    "draftLabel": "Assistant message",
+    "placeholderListening": "Listening…",
+    "placeholderIdle": "Click to type; hold Space to talk when unfocused",
+    "micListeningAria": "Release to stop recording and send",
+    "micIdleAria": "Hold to talk (Space)",
+    "micListeningTitle": "Release to send",
+    "micIdleTitle": "Hold to talk, or hold Space",
+    "release": "Release",
+    "voice": "Voice",
+    "ttsLabel": "Speak",
+    "send": "Send",
+    "sendingBtn": "Sending…",
+    "showHistory": "Show chat",
+    "hideHistory": "Hide chat",
+    "historyEmpty": "No messages yet",
+    "historyPanelAria": "Assistant chat history",
+    "triggerLabel": "Voice assistant ({shortcut}) — hold Space to talk",
+    "triggerActive": "Voice assistant on ({shortcut}) — click or Esc to close",
+    "triggerShort": "Assistant",
+    "openComposer": "Type a message (Ctrl+J) — Space still talks when unfocused",
+    "openComposerActive": "Hide text input (Esc)",
+    "openComposerNoVoice": "Type a message (Ctrl+J) — voice input unavailable here"
+  },
+  "direct": {
+    "aria": "Caption assistant",
+    "listening": "Listening…",
+    "readyHint": "Hold Space to talk (release to send)",
+    "desktopBrowserBlockedTitle": "Desktop does not support browser speech — please type instead",
+    "desktopBrowserBlocked": "Desktop does not support browser speech recognition, so direct mode is disabled. Please type instead."
+  },
+  "history": {
+    "aria": "Assistant chat history",
+    "new": "New chat",
+    "empty": "No chats yet. Messages are saved locally after you send.",
+    "deleteAria": "Delete “{title}”",
+    "delete": "Delete"
+  },
+  "parse": {
+    "notObject": "AI response format error: response is not a valid object",
+    "missingMessage": "AI response format error: missing message field",
+    "messageNotString": "AI response format error: message must be a string",
+    "taskConfigNotObject": "AI response format error: taskConfig must be an object",
+    "nameNotString": "AI response format error: name must be a non-empty string",
+    "promptNotString": "AI response format error: promptTemplate must be a non-empty string",
+    "scheduleTypeInvalid": "AI response format error: scheduleType must be one of: {values}",
+    "analysisModeInvalid": "AI response format error: analysisMode must be one of: {values}",
+    "channelIdsNotArray": "AI response format error: channelIds must be an array",
+    "includeInTimelineNotBoolean": "AI response format error: includeInTimeline must be a boolean"
+  }
+}

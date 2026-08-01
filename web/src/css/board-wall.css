@@ -1,0 +1,117 @@
+/* ── Message wall + sources widgets ── */
+
+.board-widget-wall,
+.board-widget-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.board-wall-embed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board-wall-scope-btn {
+  position: relative;
+}
+
+.board-wall-embed__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  align-content: start;
+}
+
+.board-wall-embed__grid .im-wall-card {
+  min-height: 140px;
+  max-height: 220px;
+}
+
+.board-sources-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.board-sources-row__title {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.board-sources-row__platform {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}
+
+/* Multi-handle resize affordances (edit layout only). */
+.board-canvas--edit .react-resizable-handle {
+  z-index: 1200;
+  opacity: 0;
+  background-image: none !important;
+  background-color: color-mix(in srgb, var(--accent, var(--info)) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 40%, transparent);
+  border-radius: 3px;
+  transition: opacity 120ms ease;
+}
+
+.board-canvas--edit .board-free-item:hover .react-resizable-handle,
+.board-canvas--edit .board-free-item:focus-within .react-resizable-handle,
+.board-canvas--edit .react-resizable-handle:hover,
+.board-canvas--edit .react-resizable-handle:active {
+  opacity: 1;
+}
+
+.board-canvas--edit .react-resizable-handle:hover,
+.board-canvas--edit .react-resizable-handle:active {
+  background-color: color-mix(in srgb, var(--accent, var(--info)) 90%, transparent);
+}
+
+.board-canvas--edit .react-resizable-handle-se,
+.board-canvas--edit .react-resizable-handle-sw,
+.board-canvas--edit .react-resizable-handle-ne,
+.board-canvas--edit .react-resizable-handle-nw {
+  width: 14px;
+  height: 14px;
+}
+
+.board-canvas--edit .react-resizable-handle-e,
+.board-canvas--edit .react-resizable-handle-w {
+  width: 10px;
+  height: 36px;
+  top: 50%;
+  margin-top: -18px;
+}
+
+.board-canvas--edit .react-resizable-handle-n,
+.board-canvas--edit .react-resizable-handle-s {
+  width: 36px;
+  height: 10px;
+  left: 50%;
+  margin-left: -18px;
+}
+
+.board-canvas--edit .react-resizable-handle-e { right: -2px; }
+.board-canvas--edit .react-resizable-handle-w { left: -2px; }
+.board-canvas--edit .react-resizable-handle-n { top: -2px; }
+.board-canvas--edit .react-resizable-handle-s { bottom: -2px; }
+.board-canvas--edit .react-resizable-handle-se { right: -2px; bottom: -2px; }
+.board-canvas--edit .react-resizable-handle-sw { left: -2px; bottom: -2px; }
+.board-canvas--edit .react-resizable-handle-ne { right: -2px; top: -2px; }
+.board-canvas--edit .react-resizable-handle-nw { left: -2px; top: -2px; }

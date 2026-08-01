@@ -1,0 +1,19 @@
+# Optional local run for the GHCR server image layout.
+# Build: docker build -t intelligence-monitor .
+# Up:    docker compose up
+
+services:
+  intelligence-monitor:
+    build: .
+    image: intelligence-monitor:local
+    ports:
+      - "18820:18820"
+    volumes:
+      - im-data:/data
+    environment:
+      INTELLIGENCE_MONITOR_HOST: "0.0.0.0"
+      INTELLIGENCE_MONITOR_DATA_DIR: /data
+      IM_FRONTEND_DIST: /app/web-dist
+
+volumes:
+  im-data:

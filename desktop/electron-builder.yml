@@ -1,0 +1,61 @@
+appId: com.intelligencemonitor.desktop
+productName: Intelligence Monitor
+directories:
+  buildResources: resources
+  output: release
+files:
+  - dist/**/*
+  - resources/**/*
+extraResources:
+  - from: ../web/dist
+    to: web-dist
+  - from: server-runtime
+    to: server-runtime
+# Open .ics with this app → calendar import dialog (user_events + optional task).
+fileAssociations:
+  - ext: ics
+    name: iCalendar
+    description: iCalendar Event
+    mimeType: text/calendar
+    role: Editor
+# Deep link: intelligencemonitor://calendar/import?url=… or title+start
+protocols:
+  - name: Intelligence Monitor
+    schemes:
+      - intelligencemonitor
+# Placeholder icons; replace with multi-res assets before store release.
+# electron-builder's icon converter accepts png/svg/icns (not ico) on mac/linux.
+icon: resources/icon.png
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: resources/icon.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  deleteAppDataOnUninstall: false
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.productivity
+  # CI ships unsigned builds unless CSC_* secrets are configured.
+  identity: null
+  icon: resources/icon.png
+  extendInfo:
+    CFBundleDocumentTypes:
+      - CFBundleTypeExtensions: [ics]
+        CFBundleTypeName: iCalendar
+        CFBundleTypeRole: Editor
+        LSItemContentTypes: [public.calendar-event]
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office
+  icon: resources/icon.png
+  maintainer: Intelligence Monitor <tomt99688@gmail.com>
+  mimeTypes:
+    - text/calendar
+    - x-scheme-handler/intelligencemonitor

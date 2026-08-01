@@ -1,0 +1,333 @@
+/* Monitor page: feed board, message wall cards, wall grid + fullscreen. */
+
+.im-monitor-feed-board,
+.im-intelligence-editorial-grid {
+  background: transparent;
+  border: none;
+  /* Do not set overflow here — these classes must never sit on a scroll
+     root. Forcing overflow:visible previously broke monitor/intelligence
+     infinite scroll by overriding overflow-y-auto. */
+}
+
+.im-intelligence-editorial-grid {
+  gap: 14px;
+}
+
+.im-intelligence-card.im-feed-tile {
+  min-height: 118px;
+}
+
+.im-monitor-feed-board > *,
+.im-intelligence-editorial-grid > * {
+  min-width: 0;
+  height: 100%;
+}
+
+.im-feed-tile:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
+/* ── Wall card (monitor message wall) ── */
+.im-wall-card {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  min-height: clamp(280px, 28vw, 420px);
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  isolation: isolate;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--wall-border);
+  box-shadow: var(--wall-shadow);
+  color: var(--wall-text);
+}
+
+.im-wall-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 12% 88%, rgba(255, 255, 255, 0.1), transparent 32%);
+}
+
+.im-wall-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(5, 10, 20, 0.08) 0%,
+    rgba(5, 10, 20, 0.14) 48%,
+    rgba(5, 10, 20, 0.34) 100%
+  );
+}
+
+.im-wall-watermark {
+  position: absolute;
+  top: 11px;
+  left: 13px;
+  right: 54px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.32);
+  font-size: clamp(9px, 0.62vw, 10px);
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.18);
+}
+
+.im-wall-main {
+  position: absolute;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.im-wall-main--text-only {
+  inset: 36px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.im-wall-main--image-only {
+  inset: 28px 6px 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.im-wall-main--overlay-bottom,
+.im-wall-main--stack {
+  inset: 30px 8px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.im-wall-main--side-column {
+  inset: 28px 6px 34px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.im-wall-dots-row {
+  position: absolute;
+  left: 50%;
+  bottom: 11px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--radius-full, 999px);
+  background: rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(8px);
+  /* Hidden until the card is hovered / focused (board + monitor page share WallCard). */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.im-wall-card:hover .im-wall-dots-row,
+.im-wall-card:focus-within .im-wall-dots-row {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .im-wall-dots-row {
+    transition: none;
+  }
+}
+
+.im-wall-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full, 999px);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.42);
+  transition: width 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.im-wall-dot:hover:not(.im-wall-dot--active) {
+  background: rgba(255, 255, 255, 0.72);
+  transform: scale(1.15);
+}
+
+.im-wall-dot--active {
+  width: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.im-wall-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  background: var(--wall-overlay);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-full, 999px);
+  padding: 3px 9px;
+}
+
+.im-wall-empty-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wall-text-muted);
+  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+}
+
+.im-wall-media-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--wall-text-muted);
+  font-size: 11px;
+}
+
+.im-wall-media-frame {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  flex: var(--wall-media-flex, 1 1 auto);
+  min-height: var(--wall-media-min-height, 0);
+}
+
+.im-wall-media-frame--full {
+  width: 100%;
+}
+
+.im-wall-content {
+  margin: 0;
+  max-width: var(--wall-content-max-width, 88%);
+  color: var(--wall-text);
+  font-size: var(--wall-content-font-size);
+  font-weight: 600;
+  line-height: var(--wall-content-line-height);
+  letter-spacing: -0.01em;
+  white-space: pre-line;
+  word-break: break-word;
+  text-align: var(--wall-content-text-align, center);
+  overflow: hidden;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.52);
+  max-height: var(--wall-content-max-height, none);
+}
+
+.im-wall-content--clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--wall-content-line-clamp);
+}
+
+.im-wall-content--side {
+  flex: 0 1 34%;
+  min-width: 0;
+  align-self: center;
+  padding-left: 2px;
+}
+
+.im-wall-content--stacked {
+  flex: 0 1 auto;
+}
+
+/* ── Platform tag hover reveal ── */
+.im-monitor-card-platform-tag,
+.im-monitor-list-platform-tag {
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.im-monitor-message-card:hover .im-monitor-card-platform-tag,
+.im-monitor-list-item:hover .im-monitor-list-platform-tag {
+  border-color: color-mix(in srgb, var(--text-muted) 32%, transparent);
+}
+
+/* ── Wall grid ── */
+.im-wall-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  gap: 16px;
+}
+
+@media (max-width: 1100px) {
+  .im-wall-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .im-wall-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Fullscreen wall: fill viewport and pack cards (e.g. 8 → 4×2).
+   Use :fullscreen so layout applies as soon as the browser enters FS
+   (React state for the button icon can lag one frame). */
+.im-wall-fs-host:fullscreen {
+  box-sizing: border-box;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  overflow: hidden;
+  background: var(--surface-base);
+}
+
+.im-wall-fs-host:fullscreen .im-control-bar {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.im-wall-fs-host:fullscreen .im-wall-grid {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  gap: 8px;
+  /* Fallback until React applies exact cols/rows via inline style */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: unset;
+}
+
+.im-wall-fs-host:fullscreen .im-wall-card,
+.im-wall-fs-host:fullscreen .im-wall-grid > * {
+  aspect-ratio: auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}

@@ -1,0 +1,109 @@
+import { useEffect } from "react";
+
+import { useAnalysisStatus } from "../context/AnalysisStatusContext";
+import type { RuntimeAnalysisEvent } from "../context/runtimeMonitoring";
+import type { AnalysisMode } from "../types";
+import { logWarn } from "../utils/logger";
+
+export interface UseRefreshOnAnalysisEventOptions {
+  includeStarted?: boolean;
+  includeCompleted?: boolean;
+  includeFailed?: boolean;
+  taskId?: string | null;
+  /** When set, wins over single `taskId`. `null`/omit = any task; `[]` = none. */
+  taskIds?: string[] | null;
+  analysisMode?: AnalysisMode;
+}
+
+/** Determines whether a given analysis event matches the refresh filter criteria. */
+export function shouldRefreshForEvent(
+  event: RuntimeAnalysisEvent,
+  {
+    includeStarted = false,
+    includeCompleted = true,
+    includeFailed = false,
+    taskId,
+    taskIds,
+    analysisMode,
+  }: UseRefreshOnAnalysisEventOptions,
+): boolean {
+  if (taskIds !== undefined && taskIds !== null) {
+    if (taskIds.length === 0) return false;
+    if (!event.payload.taskId || !taskIds.includes(event.payload.taskId)) {
+      return false;
+    }
+  } else if (taskId && event.payload.taskId !== taskId) {
+    return false;
+  }
+
+  if (event.type === "started") {
+    return includeStarted;
+  }
+
+  if (event.type === "failed") {
+    return includeFailed;
+  }
+
+  if (!includeCompleted) {
+    return false;
+  }
+
+  if (analysisMode && event.payload.analysisMode !== analysisMode) {
+    return false;
+  }
+
+  return true;
+}
+
+/** Calls `onRefresh` whenever a matching analysis event is emitted by AnalysisStatusContext. */
+export function useRefreshOnAnalysisEvent(
+  onRefresh: () => void | Promise<void>,
+  options: UseRefreshOnAnalysisEventOptions = {},
+) {
+  const { lastAnalysisEvent } = useAnalysisStatus();
+  // Depend on individual fields so inline options literals don't re-trigger
+  // the effect every render.
+  const { includeStarted, includeCompleted, includeFailed, taskId, taskIds, analysisMode } =
+    options;
+  const taskIdsKey = taskIds === undefined || taskIds === null ? "" : taskIds.join("|");
+
+  useEffect(() => {
+    if (
+      !lastAnalysisEvent ||
+      !shouldRefreshForEvent(lastAnalysisEvent, {
+        includeStarted,
+        includeCompleted,
+        includeFailed,
+        taskId,
+        taskIds,
+        analysisMode,
+      })
+    ) {
+      return;
+    }
+
+    // Defense-in-depth: `onRefresh` is typed `() => void | Promise<void>`
+    // but in practice is often async and may reject (e.g. the REST
+    // analyze-batch endpoint surfacing `LLM_ERROR`). Wrap in
+    // `Promise.resolve(...)` so both sync and async returns are handled,
+    // and swallow the rejection locally — the refresh callbacks already
+    // log errors internally, so there is nothing more to report here.
+    // Without this guard the rejection would reach the global
+    // `window.unhandledrejection` listener and be logged as
+    // `未處理的非同步錯誤`.
+    void Promise.resolve(onRefresh()).catch((e) => {
+      logWarn("[useRefreshOnAnalysisEvent] onRefresh rejected", e);
+    });
+    // taskIds mirrored by taskIdsKey so inline [] literals don't retrigger every render
+  }, [
+    lastAnalysisEvent,
+    onRefresh,
+    analysisMode,
+    includeCompleted,
+    includeFailed,
+    includeStarted,
+    taskId,
+    taskIds,
+    taskIdsKey,
+  ]);
+}

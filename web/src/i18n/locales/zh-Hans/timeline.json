@@ -1,0 +1,199 @@
+{
+  "toolbar": {
+    "aria": "时间规划工具列",
+    "viewAria": "时间规划检视模式",
+    "sourceFilterAria": "时间规划来源",
+    "allTasks": "全部时间规划任务",
+    "viewCalendar": "日历",
+    "viewGantt": "甘特",
+    "addEvent": "新增事件",
+    "todayAria": "本日",
+    "todayTitle": "跳到今天",
+    "prevPeriodAria": "上一个时段",
+    "nextPeriodAria": "下一个时段",
+    "jumpToCurrent": "跳到当前{scale}",
+    "switchToScale": "切换到{scale}视图",
+    "enterFullscreen": "全屏",
+    "exitFullscreen": "退出全屏"
+  },
+  "scale": {
+    "day": "日",
+    "week": "周",
+    "month": "月",
+    "quarter": "季",
+    "year": "年"
+  },
+  "status": {
+    "pending": "待确认",
+    "confirmed": "已确认",
+    "completed": "已完成",
+    "cancelled": "已取消"
+  },
+  "filter": {
+    "showOptions": "显示",
+    "showDismissed": "显示已移除",
+    "showDismissedHelp": "软移除的事件会以删除线显示，可从此还原。",
+    "showOngoing": "显示进行中",
+    "showOngoingHelp": "月历格子里显示跨日事件的「+N 进行中」提示（仅圆点颜色区分）。",
+    "showEnding": "显示完结",
+    "showEndingHelp": "月历格子里显示跨日事件的「+N 完结」提示（仅圆点颜色区分）。"
+  },
+  "view": {
+    "loadTimeout": "载入逾时，请重试",
+    "refreshing": "正在更新时间轴"
+  },
+  "empty": {
+    "noUserEvents": "目前没有「一般」工作集事件。可用右上角「新增事件」，或请助手建立会议。",
+    "noTasks": "目前还没有可显示在时间线的任务。你可以先到任务设定新增「关键事件」或「循环任务」类型任务。",
+    "needData": "需要先有成功完成的分析批次、已设定的循环任务排程，或用户／助手事件，时间线才会显示。",
+    "noEventsDescription": "目前这个筛选／日期范围没有事件；仍可切换日期或改选「全部」「一般」查看。",
+    "filteredTitle": "目前筛选条件没有对应事件",
+    "filteredDescription": "可清除筛选或切换其他任务 / 日期范围，日历框架仍会保留。"
+  },
+  "calendar": {
+    "weekdays": [
+      "日",
+      "一",
+      "二",
+      "三",
+      "四",
+      "五",
+      "六"
+    ],
+    "today": "今天",
+    "more": "+{count} 更多",
+    "ongoing": "+{count} 进行中",
+    "ending": "+{count} 完结",
+    "weatherAria": "天气 {high} 至 {low} 度",
+    "weatherTitle": "天气：{high}°C／{low}°C",
+    "dayCellAria": "{date}，{count} 则事件",
+    "dayCellAriaEmpty": "{date}，无事件",
+    "noEventsToday": "当天没有事件",
+    "itemCount": "{count} 则",
+    "noEvents": "无事件"
+  },
+  "sidebar": {
+    "closeAria": "关闭",
+    "backAria": "返回列表",
+    "start": "开始：{value}",
+    "end": "结束：{value}",
+    "location": "地点：{value}",
+    "participants": "参与者：{value}",
+    "task": "任务：{value}",
+    "workset": "工作集：{value}",
+    "source": "来源：{value}",
+    "userEvent": "用户事件",
+    "edit": "编辑",
+    "dismiss": "从时间规划移除",
+    "restore": "还原到时间规划",
+    "manualTime": "手动调整时间",
+    "applyTime": "套用时间",
+    "resetAiTime": "还原 AI 时间",
+    "overrideHint": "这是人工校正层，会覆盖页面显示时间，但不会改动 AI 原始结果。"
+  },
+  "eventList": {
+    "day": "该日 ({count})",
+    "allRange": "全范围 ({count})",
+    "rangeEvents": "范围事件 ({count})",
+    "empty": "没有事件",
+    "groupUpcoming": "即将到来",
+    "groupOngoing": "进行中",
+    "groupEnded": "完结"
+  },
+  "taskDetail": {
+    "closeAria": "关闭详情面板",
+    "analysisRange": "分析范围：{range}",
+    "active": "活动中",
+    "inactive": "已停用",
+    "completedBatches": "已完成批次：{count}"
+  },
+  "gantt": {
+    "loading": "载入排程事件中…",
+    "empty": "目前没有排程事件",
+    "refreshing": "正在更新排程事件",
+    "eventColumn": "事件",
+    "untitled": "(无标题)",
+    "location": "地点：{value}",
+    "participants": "参与者：{value}"
+  },
+  "messages": {
+    "saveFailed": "储存失败",
+    "dismissFailed": "从时间规划移除失败",
+    "restoreFailed": "还原到时间规划失败",
+    "dismissConfirm": "将「{title}」从时间规划移除？之后可以还原。",
+    "restoreConfirm": "将「{title}」还原到时间规划？",
+    "ganttLoadTimeout": "载入任务活动资料逾时，请重试"
+  },
+  "userEvent": {
+    "createTitle": "新增事件",
+    "editTitle": "编辑事件",
+    "importTitle": "从日历加入事件",
+    "importIntro": "已从 .ics 或链接带入内容。可调整后选择归属工作集并新增。",
+    "importSaved": "已加入日历事件",
+    "importFailed": "无法导入日历事件",
+    "cancel": "取消",
+    "saving": "储存中…",
+    "create": "新增",
+    "save": "储存",
+    "intro": "单次事件（无循环）。选择归属工作集，以便时间轴筛选（默认「一般」）。",
+    "titleAria": "标题",
+    "titlePlaceholder": "标题",
+    "taskLabel": "归属工作集",
+    "startAria": "开始时间",
+    "endAria": "结束时间（选填）",
+    "locationAria": "地点（选填）",
+    "locationPlaceholder": "地点（选填）",
+    "bodyAria": "说明（选填）",
+    "bodyPlaceholder": "说明（选填）",
+    "errors": {
+      "titleRequired": "请填写标题",
+      "startRequired": "请填写开始时间",
+      "startInvalid": "开始时间格式无效",
+      "endInvalid": "结束时间格式无效"
+    }
+  },
+  "calendarImport": {
+    "title": "导入日历",
+    "closeAria": "关闭日历导入",
+    "cancel": "取消",
+    "done": "完成",
+    "previewing": "正在检查日历文件…",
+    "committing": "正在导入…",
+    "commit": "导入所选项（{count}）",
+    "importFailed": "无法读取日历导入",
+    "previewFailed": "无法预览日历导入",
+    "commitFailed": "无法提交日历导入",
+    "selectAtLeastOne": "请至少选择一个受支持的项目",
+    "selectAll": "全选",
+    "clearSelection": "清除",
+    "importSaved": "已导入 {count} 个日历项目",
+    "unnamedCalendar": "日历文件",
+    "unnamedEvent": "未命名事件",
+    "sourceSummary": "{source} · {size} 字节",
+    "previewSummary": "共 {count} 个事件 · {importable} 个可导入",
+    "allDay": "全天",
+    "timed": "指定时间",
+    "resultTitle": "导入结果",
+    "resultSummary": "已提交 {count} 个 · 新建 {created} 个 · 更新 {updated} 个 · 无变化 {unchanged} 个",
+    "source": {
+      "file": "本地文件",
+      "url": "日历链接",
+      "deeplink": "应用链接"
+    },
+    "target": {
+      "user_event": "单次",
+      "recurring_task": "循环"
+    },
+    "action": {
+      "create": "新建",
+      "update": "更新",
+      "unchanged": "无变化",
+      "unsupported": "不支持"
+    },
+    "resultAction": {
+      "created": "已新建",
+      "updated": "已更新",
+      "unchanged": "无变化"
+    }
+  }
+}

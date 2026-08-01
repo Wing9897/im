@@ -1,0 +1,363 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# One release pipeline per branch; do not cancel in-flight packaging.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          activate-environment: true
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev --locked
+          npm ci
+
+      - name: Run quality gates
+        run: npm run check
+
+      - name: Build web and desktop
+        run: npm run build
+
+  # SemVer from tags (no tags → VERSION as-is). No commit/push to main.
+  version:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: [quality]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag_name: ${{ steps.bump.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: bump
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(python3 scripts/bump_version.py --from-tags --print-only)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=v${version}" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_VERSION=${version} (tag v${version}) @ ${{ github.sha }}"
+
+  package:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: [quality, version]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            dist: dist:win
+            artifact: windows-release
+            expect_desktop: "*.exe"
+            expect_cli: "intelligence-monitor-cli-windows-*.zip"
+          - os: macos-latest
+            dist: dist:mac
+            artifact: macos-release
+            expect_desktop: "*.dmg"
+            expect_cli: "intelligence-monitor-cli-macos-*.zip"
+          - os: ubuntu-latest
+            dist: dist:linux
+            artifact: linux-release
+            expect_desktop: "*.AppImage"
+            expect_cli: "intelligence-monitor-cli-linux-*.zip"
+    name: package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          activate-environment: true
+
+      - name: Install Python 3.11
+        run: uv python install 3.11
+
+      - name: Install Linux packaging deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot rpm
+
+      - name: Install dependencies
+        run: |
+          uv sync --extra dev --locked
+          npm ci
+
+      - name: Apply release version (workspace only)
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
+
+      - name: Build Desktop package
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run ${{ matrix.dist }}
+
+      # desktop vitest already ran in quality (test:all); package only re-checks artifacts.
+      - name: Verify Desktop package
+        run: npm run verify:desktop:full
+
+      - name: Package CLI zip
+        run: npm run package:cli
+
+      - name: Assert Desktop + CLI artifacts exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          desktop=(desktop/release/${{ matrix.expect_desktop }})
+          cli=(dist/cli/${{ matrix.expect_cli }})
+          echo "Desktop matches: ${desktop[*]:-none}"
+          echo "CLI matches: ${cli[*]:-none}"
+          if [[ ${#desktop[@]} -lt 1 ]]; then
+            echo "Missing Desktop artifact matching desktop/release/${{ matrix.expect_desktop }}" >&2
+            ls -la desktop/release || true
+            exit 1
+          fi
+          if [[ ${#cli[@]} -lt 1 ]]; then
+            echo "Missing CLI zip matching dist/cli/${{ matrix.expect_cli }}" >&2
+            ls -la dist/cli || true
+            exit 1
+          fi
+
+      - name: Upload Desktop + CLI artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}-${{ github.sha }}
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.dmg
+            desktop/release/*.zip
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+            desktop/release/*.yml
+            desktop/release/*.yaml
+            desktop/release/*.blockmap
+            dist/cli/intelligence-monitor-cli-*.zip
+          if-no-files-found: error
+
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: [package, version]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Download Desktop + CLI artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: "*-release-${{ github.sha }}"
+          path: release-assets
+          merge-multiple: true
+
+      - name: Stage and assert Release attachments
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p staged
+          while IFS= read -r -d '' f; do
+            base="$(basename "$f")"
+            if [[ -e "staged/$base" ]]; then
+              parent="$(basename "$(dirname "$f")")"
+              base="${parent}-${base}"
+            fi
+            cp "$f" "staged/$base"
+          done < <(find release-assets -type f \
+            \( -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.AppImage' \
+               -o -name '*.deb' -o -name '*.yml' -o -name '*.yaml' -o -name '*.blockmap' \) \
+            -print0)
+
+          echo "Staged files:"
+          ls -la staged
+
+          need_fail=0
+          require_name() {
+            local pattern="$1"
+            local hit
+            hit="$(find staged -maxdepth 1 -type f -name "$pattern" | head -n 1 || true)"
+            if [[ -z "$hit" ]]; then
+              echo "MISSING required Release attachment: $pattern" >&2
+              need_fail=1
+            else
+              echo "OK: $pattern → $hit"
+            fi
+          }
+          require_name 'Intelligence Monitor Setup *.exe'
+          require_name '*.dmg'
+          require_name '*.AppImage'
+          require_name 'intelligence-monitor-cli-windows-*.zip'
+          require_name 'intelligence-monitor-cli-macos-*.zip'
+          require_name 'intelligence-monitor-cli-linux-*.zip'
+          if [[ "$need_fail" -ne 0 ]]; then
+            echo "Refusing to publish an incomplete GitHub Release." >&2
+            exit 1
+          fi
+
+      - name: Create and push tag
+        env:
+          TAG: ${{ needs.version.outputs.tag_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists locally; refusing to overwrite." >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin; refusing to overwrite." >&2
+            exit 1
+          fi
+          git tag "$TAG" "${{ github.sha }}"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          name: ${{ needs.version.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            Automated release **${{ needs.version.outputs.tag_name }}** from `${{ github.sha }}`.
+
+            Product version authority is git tags. The repo `VERSION` file is for local/dev display and may lag.
+          prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') }}
+          fail_on_unmatched_files: true
+          files: |
+            staged/*
+
+  container:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    needs: [quality, version]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Apply release version (workspace only)
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
+
+      - name: Image name (lowercase)
+        id: image
+        run: echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.version.outputs.tag_name }}
+            type=raw,value=sha-${{ github.sha }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy smoke (healthcheck)
+        run: |
+          set -euo pipefail
+          image="${{ steps.image.outputs.name }}"
+          tag="sha-${{ github.sha }}"
+          docker pull "${image}:${tag}"
+          cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
+          cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 40); do
+            if curl -fsS "http://127.0.0.1:18820/api/v1/health" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Container failed health smoke" >&2
+          docker logs "$cid" || true
+          exit 1

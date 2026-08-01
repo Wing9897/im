@@ -1,0 +1,128 @@
+{
+  "toolbar": {
+    "aria": "監控工具列",
+    "refreshing": "正在更新訊息列表",
+    "searchPlaceholder": "搜尋訊息…",
+    "searchAria": "搜尋訊息"
+  },
+  "view": {
+    "aria": "監控檢視模式",
+    "wall": "訊息牆"
+  },
+  "stream": {
+    "loading": "載入中…",
+    "more": "已載入 {loaded} / {total} 則訊息，向下捲動載入更多",
+    "done": "共 {total} 則訊息",
+    "wallPick": "訊息牆 · 請選擇頻道",
+    "wallLoading": "訊息牆 · {selectedCount} 頻道 · 載入中…",
+    "wallReady": "訊息牆 · {selectedCount} 頻道 · {totalPart}{loadedPart}",
+    "wallTotal": "{total} 則",
+    "wallLoaded": " · 牆上 {loaded}"
+  },
+  "loadMore": {
+    "loading": "載入更多訊息中…",
+    "scroll": "向下捲動以載入更多",
+    "done": "已載入全部訊息",
+    "aria": "載入更多訊息"
+  },
+  "empty": {
+    "filteredTitle": "目前沒有符合條件的訊息",
+    "noAccountsTitle": "尚未開始接收實時訊息",
+    "noneTitle": "目前還沒有訊息",
+    "filteredDescription": "目前的帳號、頻道、時段或搜尋條件把訊息全部篩掉了。",
+    "noAccountsDescription": "先到帳號管理新增並連線帳號，之後這裡才會開始顯示收到的訊息。",
+    "noneDescription": "監控已就緒，但目前資料庫裡還沒有可顯示的訊息。等待新訊息進來後，列表會自動更新。",
+    "filteredHint": "清除篩選後可以快速確認是不是條件太嚴格，而不是系統沒有在收訊。",
+    "noAccountsHint": "如果已經有帳號但仍沒有訊息，也請確認任務與頻道設定是否已完成。",
+    "noneHint": "若長時間沒有新資料，可檢查帳號連線狀態與頻道設定。"
+  },
+  "cta": {
+    "clearFilters": "清除篩選",
+    "goToAccounts": "前往帳號管理",
+    "viewTasks": "查看任務設定",
+    "viewAccountStatus": "查看帳號狀態"
+  },
+  "sections": {
+    "wall": "訊息牆",
+    "list": "訊息列表"
+  },
+  "wall": {
+    "exitFullscreen": "退出全螢幕",
+    "enterFullscreen": "全螢幕訊息牆",
+    "emptyTitle": "尚未選擇頻道",
+    "emptyDescription": "點上方「選擇範圍」勾選要監控的頻道；支援 Telegram、Discord、RSS、Email 等所有已連線來源。",
+    "loadingAria": "載入訊息牆"
+  },
+  "filter": {
+    "timeAll": "全部時段",
+    "timeToday": "今天",
+    "time7d": "近 7 天",
+    "time30d": "近 30 天",
+    "searchPlaceholder": "搜尋 sender / 頻道 / 內容",
+    "searchAria": "搜尋訊息",
+    "accountAria": "帳號過濾",
+    "accountAll": "全部帳號",
+    "timeAria": "時段過濾",
+    "channelSummary": "頻道",
+    "channelEmpty": "沒有符合的頻道",
+    "dialogTitle": "篩選條件",
+    "dialogCloseAria": "關閉篩選",
+    "openAria": "開啟篩選",
+    "openAriaActive": "篩選（{count} 項已啟用）",
+    "title": "篩選",
+    "clearAllAria": "清除所有篩選條件",
+    "clear": "清除篩選",
+    "done": "完成",
+    "removeChipAria": "移除篩選：{label}"
+  },
+  "wallCard": {
+    "unknownChannel": "未知頻道",
+    "carouselAria": "{channel} 訊息輪播",
+    "empty": "尚無訊息",
+    "dotsAria": "輪播指示",
+    "dotAria": "第 {index} 則訊息",
+    "newBadge": "+{count} 新",
+    "expandMedia": "放大預覽媒體",
+    "mediaFailed": "媒體載入失敗",
+    "retry": "重試",
+    "mediaLoading": "媒體載入中",
+    "lightboxAria": "媒體預覽",
+    "lightboxAriaTitled": "{title} 媒體預覽",
+    "closePreview": "關閉預覽",
+    "mediaAlt": "訊息媒體",
+    "noText": "（無文字內容）",
+    "mediaPhoto": "[圖片]",
+    "mediaVideo": "[影片]",
+    "mediaGif": "[GIF]",
+    "mediaSticker": "[貼圖]",
+    "mediaAudio": "[語音]",
+    "mediaFile": "[檔案]"
+  },
+  "message": {
+    "unknownSender": "未知發送者",
+    "noContent": "（無內容）",
+    "channel": "頻道：{name}",
+    "media": "媒體：{label}",
+    "id": "ID：{id}",
+    "hideTech": "隱藏技術信息",
+    "showTech": "技術信息",
+    "platformMessageId": "平台訊息 ID：{id}",
+    "accountId": "帳號 ID：{id}",
+    "platformId": "平台 ID：{id}",
+    "createdAt": "建立時間：{time}",
+    "rawDataLabel": "Raw Data：",
+    "rawDataTruncated": "{preview}…（共 {count} 字元）",
+    "detailAria": "訊息詳情：{sender}",
+    "viewDetailAria": "查看訊息詳情：{sender}",
+    "unread": "未讀",
+    "notFound": "找不到指定的訊息"
+  },
+  "metadata": {
+    "loadError": "無法載入帳號或頻道篩選資料，請重新載入頁面後再試。"
+  },
+  "filterChip": {
+    "search": "搜尋：{query}",
+    "accounts": "帳號 ×{count}",
+    "channels": "頻道 ×{count}"
+  }
+}

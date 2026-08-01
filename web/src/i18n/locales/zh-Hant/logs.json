@@ -1,0 +1,94 @@
+{
+  "toolbar": {
+    "aria": "日誌篩選工具列",
+    "searchPlaceholder": "搜尋日誌…",
+    "searchAria": "搜尋日誌",
+    "levelAria": "層級篩選",
+    "categoryAria": "類別篩選",
+    "resetAria": "重設所有篩選條件",
+    "resetTitle": "重設",
+    "refreshAria": "重新載入日誌",
+    "refreshingAria": "重新載入中",
+    "refreshTitle": "重新載入",
+    "clearAria": "清空所有日誌記錄",
+    "clearTitle": "清空"
+  },
+  "level": {
+    "all": "全部層級",
+    "info": "資訊",
+    "success": "成功",
+    "warning": "警告",
+    "error": "錯誤"
+  },
+  "category": {
+    "all": "全部類別",
+    "analysis": "分析",
+    "collector": "收集器",
+    "account": "帳號",
+    "system": "系統",
+    "frontend": "前端"
+  },
+  "summary": {
+    "status": "處理狀態",
+    "analyzing": "分析中: {task}",
+    "unnamedTask": "未命名任務",
+    "idle": "無進行中分析",
+    "totalEvents": "總事件數",
+    "analysisEvents": "分析事件",
+    "errorEvents": "錯誤事件"
+  },
+  "list": {
+    "loadingMore": "載入更多日誌中…",
+    "loadedMore": "已載入 {summary}，向下捲動或按下方按鈕繼續載入",
+    "allLoaded": "已載入全部 {total} 筆日誌",
+    "loadMoreAria": "載入更多日誌",
+    "loadMoreLabel": "載入更多",
+    "summaryMore": "顯示 {shown} 筆 · 已載入 {summary} 筆，向下捲動載入更多",
+    "summaryAll": "顯示 {shown} 筆 · 共 {total} 筆"
+  },
+  "card": {
+    "detailAria": "查看事件詳情：{message}"
+  },
+  "templates": {
+    "batchExhausted": "分析批次重試用盡（{maxRetries} 次），待恢復分析後再試：{taskName}（{shortBatch}）— {summary}",
+    "batchRetrying": "分析批次將重試（{currentRetry}/{maxRetries}）：{taskName}（{shortBatch}）— {summary}"
+  },
+  "section": {
+    "loadingTitle": "正在載入系統日誌",
+    "loadingDescription": "系統正在整理目前可用的日誌紀錄。若資料量較大，可能需要短暫等待。",
+    "loadingHint": "如果停留太久，可以直接按重新載入再試一次。",
+    "refresh": "重新載入",
+    "refreshing": "重新載入中…",
+    "recoveryTitle": "系統日誌目前無法完成載入",
+    "recoveryDescriptionWithError": "最近一次載入失敗：{error}",
+    "recoveryDescriptionDefault": "系統日誌載入時間過長，可能是後端仍在忙碌或先前請求沒有順利完成。",
+    "recoveryHint": "可以立即重試；若仍持續失敗，代表後端命令或資料庫狀態需要進一步修復。",
+    "loadTimeout": "系統日誌載入逾時，請稍後再試。"
+  },
+  "empty": {
+    "noneTitle": "目前還沒有系統日誌",
+    "filteredTitle": "沒有符合條件的日誌",
+    "noneDescription": "啟動分析、帳號連線、收集器狀態變化或前端錯誤發生後，這裡就會開始累積紀錄。",
+    "filteredDescriptionMore": "已載入 {summary} 筆日誌，但目前搜尋或篩選尚未命中這批資料。",
+    "filteredDescriptionAll": "已載入 {count} 筆日誌，但目前搜尋或篩選把它們全部隱藏了。",
+    "filteredDescriptionNone": "目前條件下沒有可顯示的日誌紀錄。",
+    "noneHint": "日誌頁現在會自動刷新；如果預期應該已有紀錄，也可以手動重新載入確認。",
+    "filteredHintMore": "可以先載入更多舊日誌，或重設篩選後先確認最新事件是否已存在。",
+    "filteredHintAll": "重設篩選後可快速確認最新事件是否其實已經存在。",
+    "loadMoreLoading": "載入更多中…",
+    "loadMoreLabel": "載入更多日誌",
+    "resetFilters": "重設篩選",
+    "refresh": "重新載入",
+    "refreshing": "重新載入中…"
+  },
+  "detail": {
+    "messageLabel": "事件訊息",
+    "detailsLabel": "詳細內容",
+    "close": "關閉",
+    "ariaLabel": "日誌詳情：{message}"
+  },
+  "page": {
+    "loadErrorPrefix": "日誌載入失敗：",
+    "clearFailed": "清空日誌失敗：{error}"
+  }
+}

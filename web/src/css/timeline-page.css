@@ -1,0 +1,105 @@
+/* Timeline page chrome. */
+
+.im-timeline-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.im-timeline-content-row {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+.im-timeline-grid-col {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.im-timeline-sidebar-col {
+  flex: 0 0 min(300px, 34vw);
+  min-width: 0;
+  max-width: 320px;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Sidebar event cards: fixed intrinsic height; only this list scrolls. */
+.im-timeline-event-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+
+.im-timeline-event-list-item {
+  flex: 0 0 auto;
+}
+
+.im-timeline-refresh-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 2px;
+}
+
+.im-timeline-empty-hint {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--surface-card) 55%, transparent);
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.35;
+  flex-shrink: 0;
+}
+
+.im-timeline-panel {
+  /* Flush calendar/gantt surface — page canvas owns the backdrop (no boxed card). */
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Timeline fills the main canvas and owns its own sidebar scroll — do not let the page canvas scroll. */
+.im-page-canvas:has(.timeline-page-fill) {
+  overflow-y: hidden;
+}
+
+.app-main-content:has(.timeline-page-fill) {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-main-content:has(.timeline-page-fill) > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+}

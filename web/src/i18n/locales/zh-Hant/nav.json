@@ -1,0 +1,23 @@
+{
+  "monitor": "實時監控",
+  "tasks": "任務設定",
+  "leaderboard": "排行榜",
+  "keyEvents": "關鍵事件",
+  "timeline": "時間規劃",
+  "actions": "通知",
+  "sources": "來源",
+  "assistant": "助手",
+  "aiSettings": "AI 設定",
+  "systemSettings": "系統設定",
+  "logs": "日誌",
+  "account": "帳戶",
+  "settingsSection": "設定",
+  "menu": "選單",
+  "history": "紀錄",
+  "mainNav": "主導航",
+  "railMode": "側欄模式",
+  "tasksPendingAria": "任務（待分析 {count}）",
+  "tasksPendingTitle": "任務設定 · 待分析 {count}",
+  "pendingAnalysisBadge": "待分析 {count}",
+  "appVersionTitle": "應用版本（前後端共用 semver）"
+}

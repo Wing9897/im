@@ -1,0 +1,23 @@
+{
+  "monitor": "实时监控",
+  "tasks": "任务设定",
+  "leaderboard": "排行榜",
+  "keyEvents": "关键事件",
+  "timeline": "时间规划",
+  "actions": "通知",
+  "sources": "来源",
+  "assistant": "助手",
+  "aiSettings": "AI 设定",
+  "systemSettings": "系统设定",
+  "logs": "日志",
+  "account": "账户",
+  "settingsSection": "设定",
+  "menu": "菜单",
+  "history": "纪录",
+  "mainNav": "主导航",
+  "railMode": "侧栏模式",
+  "tasksPendingAria": "任务（待分析 {count}）",
+  "tasksPendingTitle": "任务设定 · 待分析 {count}",
+  "pendingAnalysisBadge": "待分析 {count}",
+  "appVersionTitle": "应用版本（前后端共用 semver）"
+}

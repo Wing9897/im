@@ -1,0 +1,84 @@
+import { useTranslation } from "react-i18next";
+import { SourceCard, SourceCardErrorLines } from "../SourceCard";
+import { SourceCardActions } from "../SourceCardActions";
+import { Button } from "../../../components/ui";
+import { formatOsDateTime } from "../../../utils/time";
+import type { EmailMailboxInfo } from "../../../types";
+import { useReconnectCard } from "../useReconnectCard";
+
+interface EmailMailboxCardProps {
+  mailbox: EmailMailboxInfo;
+  onRemoveClick: () => void;
+  onEditClick: () => void;
+  onSelectClick: () => void;
+  onReconnectSuccess: () => void;
+}
+
+export function EmailMailboxCard({
+  mailbox,
+  onRemoveClick,
+  onEditClick,
+  onSelectClick,
+  onReconnectSuccess,
+}: EmailMailboxCardProps) {
+  const { t } = useTranslation("sources");
+  const status = mailbox.account.status;
+  const showError = status === "error" || status === "disconnected";
+
+  const { reconnecting, reconnectError, handleReconnect } = useReconnectCard({
+    accountId: mailbox.account.id,
+    onReconnectSuccess,
+  });
+
+  const folderSummary =
+    mailbox.folders.length > 0
+      ? mailbox.folders.join(", ")
+      : t("email.noFolders");
+  const minutes = Math.round(mailbox.pollIntervalSeconds / 60);
+
+  const subtitle = (
+    <>
+      <span title={`${mailbox.imapHost} · ${folderSummary}`}>
+        {mailbox.imapHost} · {t("email.foldersCount", { count: mailbox.folders.length })} ·{" "}
+        {t("card.pollEveryMinutes", { minutes })}
+        {mailbox.lastSuccessAt && status === "connected" && (
+          <>
+            {" "}
+            · {t("email.lastSuccessInline", { time: formatOsDateTime(mailbox.lastSuccessAt) })}
+          </>
+        )}
+      </span>
+      <SourceCardErrorLines
+        status={status}
+        lastError={mailbox.lastError}
+        accountLastError={mailbox.account.lastError}
+        reconnectError={reconnectError}
+      />
+    </>
+  );
+
+  const actions = (
+    <>
+      <Button size="sm" variant="secondary" onClick={onEditClick}>
+        {t("shared.edit")}
+      </Button>
+      <SourceCardActions
+        showReconnect={showError}
+        reconnecting={reconnecting}
+        onReconnect={handleReconnect}
+        onRemove={onRemoveClick}
+      />
+    </>
+  );
+
+  return (
+    <SourceCard
+      platform="email"
+      status={status}
+      title={mailbox.username || mailbox.account.name || t("email.fallbackName")}
+      subtitle={subtitle}
+      actions={actions}
+      onSelect={onSelectClick}
+    />
+  );
+}

@@ -1,0 +1,311 @@
+"""Deterministic seed data covering every entity the contract tests read."""
+
+from __future__ import annotations
+
+import json
+from typing import Any
+
+from server.collector.email_config import build_email_credentials, email_channel_platform_id
+from server.secrets import protect_text
+
+NOW = "2026-07-01T12:00:00+00:00"
+EARLIER = "2026-07-01T11:00:00+00:00"
+
+TG_ACCOUNT = "acc-tg"
+DISCORD_ACCOUNT = "acc-dc"
+RSS_ACCOUNT = "acc-rss"
+MQTT_ACCOUNT = "acc-mqtt"
+EMAIL_ACCOUNT = "acc-email"
+EMAIL_USERNAME = "user@example.com"
+
+TG_CHANNEL = ("telegram", "10001")
+DISCORD_CHANNEL = ("discord", "20002")
+RSS_CHANNEL = ("rss", "https://example.com/feed.xml")
+MQTT_CHANNEL = ("mqtt", "mqtt://broker.example:1883")
+EMAIL_CHANNEL = (
+    "email",
+    email_channel_platform_id("imap.example.com", 993, EMAIL_USERNAME, "INBOX"),
+)
+
+TASK_LEADERBOARD = "task-lb"
+TASK_EVENT = "task-cm"
+TASK_EVENT_TIMED = "task-tl"
+TASK_CALENDAR = "task-cal"
+
+BATCH_LEADERBOARD = "batch-lb"
+BATCH_EVENT = "batch-cm"
+BATCH_EVENT_TIMED = "batch-tl"
+
+TOPIC_1 = "topic-1"
+MESSAGE_1 = "msg-1"
+
+ACTION_1 = "act-1"
+
+
+async def seed_database(db: Any) -> None:
+    now = NOW
+
+    # ── accounts ──────────────────────────────────────────────────────
+    email_creds = build_email_credentials(
+        imap_host="imap.example.com",
+        imap_port=993,
+        use_ssl=True,
+        username=EMAIL_USERNAME,
+        password="seed-app-password",
+        folders=["INBOX"],
+        poll_interval_seconds=300,
+        initial_sync_days=7,
+        initial_sync_max_messages=100,
+        sender_allowlist=[],
+        mark_as_read=False,
+        folder_cursors={"INBOX": 5},
+    )
+    accounts = [
+        (
+            TG_ACCOUNT,
+            "telegram",
+            "+886912345678",
+            "connected",
+            json.dumps({"api_id": 12345, "api_hash": "hash", "phone": "+886912345678"}),
+        ),
+        (DISCORD_ACCOUNT, "discord", "My Discord Bot", "connected", json.dumps({"bot_token": "token"})),
+        (
+            RSS_ACCOUNT,
+            "rss",
+            "Example Feed",
+            "connected",
+            json.dumps({"feed_url": RSS_CHANNEL[1], "poll_interval_seconds": 300}),
+        ),
+        (
+            MQTT_ACCOUNT,
+            "mqtt",
+            MQTT_CHANNEL[1],
+            "connected",
+            json.dumps({"broker_url": MQTT_CHANNEL[1], "topics": ["news/#", "alerts/hk"]}),
+        ),
+        (
+            EMAIL_ACCOUNT,
+            "email",
+            EMAIL_USERNAME,
+            "connected",
+            protect_text(json.dumps(email_creds, ensure_ascii=False)),
+        ),
+    ]
+    for account_id, platform, name, status, credentials in accounts:
+        await db.execute(
+            "INSERT INTO accounts (id, platform, name, status, credentials, "
+            "last_connected_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (account_id, platform, name, status, credentials, now, now, now),
+        )
+
+    # ── channels + account links ──────────────────────────────────────
+    channels = [
+        (*TG_CHANNEL, "TG News Channel"),
+        (*DISCORD_CHANNEL, "general"),
+        (*RSS_CHANNEL, "Example Feed"),
+        (*MQTT_CHANNEL, MQTT_CHANNEL[1]),
+        (*EMAIL_CHANNEL, "INBOX"),
+    ]
+    for platform, platform_id, channel_name in channels:
+        await db.execute(
+            "INSERT INTO channels (platform, platform_id, channel_name, created_at) VALUES (?, ?, ?, ?)",
+            (platform, platform_id, channel_name, now),
+        )
+    links = [
+        (TG_ACCOUNT, *TG_CHANNEL),
+        (DISCORD_ACCOUNT, *DISCORD_CHANNEL),
+        (RSS_ACCOUNT, *RSS_CHANNEL),
+        (MQTT_ACCOUNT, *MQTT_CHANNEL),
+        (EMAIL_ACCOUNT, *EMAIL_CHANNEL),
+    ]
+    for account_id, platform, platform_id in links:
+        await db.execute(
+            "INSERT INTO account_channels (account_id, platform, platform_id) VALUES (?, ?, ?)",
+            (account_id, platform, platform_id),
+        )
+
+    # ── messages ──────────────────────────────────────────────────────
+    messages = [
+        (
+            MESSAGE_1,
+            TG_ACCOUNT,
+            *TG_CHANNEL,
+            "1001",
+            "sender-1",
+            "Alice",
+            "地震速報:規模5.1",
+            "2026-07-01T10:00:00+00:00",
+        ),
+        ("msg-2", TG_ACCOUNT, *TG_CHANNEL, "1002", "sender-2", "Bob", "演唱會門票開賣", "2026-07-01T10:05:00+00:00"),
+        (
+            "msg-3",
+            DISCORD_ACCOUNT,
+            *DISCORD_CHANNEL,
+            "2001",
+            "sender-3",
+            "Carol",
+            "server maintenance tonight",
+            "2026-07-01T10:10:00+00:00",
+        ),
+    ]
+    for message_id, account_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp in messages:
+        await db.execute(
+            "INSERT INTO messages (id, account_id, platform, platform_id, "
+            "platform_message_id, sender_id, sender_name, content, timestamp, "
+            "raw_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)",
+            (message_id, account_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp, now),
+        )
+
+    # ── analysis tasks (leaderboard / event / calendar) ───────────────
+    tasks = [
+        (TASK_LEADERBOARD, "熱門話題排行", "leaderboard", "24h", "seconds_10", None, None, None, None, 0, None, None),
+        (TASK_EVENT, "關鍵情報", "event", "24h", "hourly", None, None, None, None, 0, None, None),
+        (TASK_EVENT_TIMED, "行程提取", "event", "7d", "daily", "09:00", None, None, None, 0, None, None),
+        (
+            TASK_CALENDAR,
+            "每週例會",
+            "recurring",
+            "all",
+            "seconds_10",
+            None,
+            "FREQ=WEEKLY;BYDAY=MO",
+            "2026-07-06T10:00:00+00:00",
+            "2026-07-06T11:00:00+00:00",
+            0,
+            "會議室A",
+            "週會",
+        ),
+    ]
+    for (
+        task_id,
+        name,
+        mode,
+        time_range,
+        schedule_type,
+        schedule_value,
+        rrule,
+        event_start,
+        event_end,
+        all_day,
+        location,
+        description,
+    ) in tasks:
+        await db.execute(
+            "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
+            "analysis_mode, analysis_time_range, version, is_active, schedule_type, "
+            "schedule_value, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?)",
+            (
+                task_id,
+                name,
+                f"{name} description",
+                "分析以下訊息",
+                mode,
+                time_range,
+                schedule_type,
+                schedule_value,
+                now,
+                now,
+            ),
+        )
+        if rrule:
+            await db.execute(
+                "INSERT INTO recurring_schedules "
+                "(task_id, rrule, dtstart, dtend, is_all_day, location, description, "
+                "timezone, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'UTC', ?, ?)",
+                (task_id, rrule, event_start, event_end, all_day, location, description, now, now),
+            )
+    for task_id in (TASK_LEADERBOARD, TASK_EVENT, TASK_EVENT_TIMED):
+        await db.execute(
+            "INSERT INTO task_channels (task_id, platform, platform_id) VALUES (?, ?, ?)",
+            (task_id, *TG_CHANNEL),
+        )
+
+    # ── batches ───────────────────────────────────────────────────────
+    batches = [
+        (BATCH_LEADERBOARD, TASK_LEADERBOARD, "completed", 2, None),
+        (BATCH_EVENT, TASK_EVENT, "completed", 2, None),
+        (BATCH_EVENT_TIMED, TASK_EVENT_TIMED, "completed", 1, None),
+    ]
+    for batch_id, task_id, status, count, error in batches:
+        await db.execute(
+            "INSERT INTO analysis_batches (id, task_id, version, status, "
+            "message_count, retry_count, error_message, created_at, updated_at, "
+            "completed_at) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?, ?)",
+            (batch_id, task_id, status, count, error, EARLIER, now, now if status == "completed" else None),
+        )
+
+    # ── markers ───────────────────────────────────────────────────────
+    await db.execute(
+        "INSERT INTO analysis_markers (id, message_id, task_id, version, batch_id, "
+        "analyzed_at) VALUES ('marker-1', ?, ?, 1, ?, ?)",
+        (MESSAGE_1, TASK_LEADERBOARD, BATCH_LEADERBOARD, now),
+    )
+
+    # ── results: trending / analysis_events ───────────────────────────
+    topics = [
+        (TOPIC_1, 1, "地震討論", 0.92, "regional earthquake chatter"),
+        ("topic-2", 2, "演唱會", 0.71, None),
+    ]
+    for topic_id, rank, topic_name, score, summary in topics:
+        await db.execute(
+            "INSERT INTO trending_topics (id, task_id, version, batch_id, rank, "
+            "topic_name, score, summary, created_at, updated_at) "
+            "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?)",
+            (topic_id, TASK_LEADERBOARD, BATCH_LEADERBOARD, rank, topic_name, score, summary, now, now),
+        )
+    await db.execute(
+        "INSERT INTO topic_messages (topic_id, message_id) VALUES (?, ?)",
+        (TOPIC_1, MESSAGE_1),
+    )
+
+    await db.execute(
+        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
+        "start_time, end_time, location, latitude, longitude, participants_json, "
+        "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
+        "event_key, created_at, updated_at) "
+        "VALUES ('ben-1', ?, 1, ?, '免費演唱會', '7/10 中環海濱免費入場', "
+        "NULL, NULL, '中環海濱', 22.28, 114.16, '[]', ?, ?, 'hash-1', 'sem-1', "
+        "NULL, ?, ?)",
+        (TASK_EVENT, BATCH_EVENT, MESSAGE_1, json.dumps(["TG News Channel"]), now, now),
+    )
+
+    await db.execute(
+        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
+        "start_time, end_time, location, latitude, longitude, participants_json, "
+        "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
+        "event_key, created_at, updated_at) "
+        "VALUES ('ev-1', ?, 1, ?, '季度會議', 'Q3 檢討', "
+        "'2026-07-15T09:00:00+00:00', '2026-07-15T10:00:00+00:00', '台北', NULL, NULL, "
+        "?, ?, NULL, 'ev-key-1', '', 'ev-key-1', ?, ?)",
+        (TASK_EVENT_TIMED, BATCH_EVENT_TIMED, json.dumps(["Alice", "Bob"]), MESSAGE_1, now, now),
+    )
+
+    # ── actions + history ─────────────────────────────────────────────
+    await db.execute(
+        "INSERT INTO actions (id, name, action_type, configuration, "
+        "trigger_conditions, is_enabled, last_triggered_at, created_at, updated_at) "
+        "VALUES (?, '推播到 webhook', 'http_webhook', ?, ?, 1, ?, ?, ?)",
+        (
+            ACTION_1,
+            json.dumps({"url": "http://127.0.0.1:9/hook"}),
+            json.dumps({"score_threshold": 0.5, "task_id": TASK_LEADERBOARD}),
+            now,
+            now,
+            now,
+        ),
+    )
+    await db.execute(
+        "INSERT INTO action_trigger_history (id, action_id, task_id, batch_id, "
+        "trigger_reason, status, error_message, triggered_at) "
+        "VALUES ('hist-1', ?, ?, ?, 'auto', 'success', NULL, ?)",
+        (ACTION_1, TASK_LEADERBOARD, BATCH_LEADERBOARD, now),
+    )
+
+    # ── app logs ──────────────────────────────────────────────────────
+    for i in (1, 2, 3):
+        await db.execute(
+            "INSERT INTO app_logs (id, time, level, category, message, details) "
+            "VALUES (?, ?, 'info', 'system', ?, NULL)",
+            (f"log-{i}", f"2026-07-01T1{i}:00:00+00:00", f"log entry {i}"),
+        )

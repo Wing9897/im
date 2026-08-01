@@ -1,0 +1,470 @@
+{
+  "shell": {
+    "tabsAria": "设定分页",
+    "unsavedChanges": "未储存变更",
+    "loadingSettings": "正在载入设定…",
+    "savingSettings": "正在储存设定…",
+    "systemSettingsSection": "系统设定子页",
+    "aiSettingsSection": "AI 子页"
+  },
+  "tabs": {
+    "general": "一般",
+    "theme": "外观主题",
+    "data": "资料维护",
+    "api": "API",
+    "logs": "系统日志",
+    "aiProvider": "AI 供应商",
+    "voice": "语音",
+    "analysisStrategy": "分析调度",
+    "aiStaff": "AI员工介绍"
+  },
+  "shared": {
+    "saving": "储存中…",
+    "saveSuccess": "✓ 储存成功！",
+    "restarting": "重启中…",
+    "resetting": "重置中…",
+    "cleaning": "清理中…",
+    "enabled": "已启用",
+    "disabled": "已关闭"
+  },
+  "concurrentBatchesConfirm": {
+    "title": "确认增加并行批次数",
+    "confirmLabel": "确认增加",
+    "bodyChange": "并行批次数将从 <strong>{from}</strong> 增加为 <strong>{to}</strong>（{from} → {to}）",
+    "bodyCostWarning": "增加并行批次数会同时发送更多 LLM API 请求，使用付费供应商时会直接提高成本。",
+    "bodyLocalWarning": "若使用本机模型，增加并行批次也可能造成 OOM 或极度缓慢。"
+  },
+  "general": {
+    "weatherLocationLabel": "地区",
+    "weatherLocationHelp": "月历会依此地区显示 Open-Meteo 天气预报。",
+    "followSystem": "跟系统",
+    "simpleModeLabel": "简化模式（AI 日历）",
+    "simpleModeHelp": "只保留助手、时间规划、任务、通知（含语音提醒）、设定／AI 设定与日志；隐藏监控、来源、情报地图与排行榜。适合只用人手／助手排程，不做多源采集与分析。",
+    "weatherLocationPlaceholder": "例如：台北、Hong Kong、Tokyo",
+    "weatherLocationAria": "天气地区",
+    "weatherLocationAutoHelp": "会使用作业系统时区推测所在城市；也可取消勾选后指定城市或地区。",
+    "weatherLocationRequired": "请输入地区名称，或选择跟系统",
+    "weatherLocationSaved": "天气地区已储存",
+    "saveWeatherLocation": "储存地区",
+    "collectorRestartDescription": "重启讯息收集器并重新连线各来源适配器。不会删除资料库或帐号 session。",
+    "restartCollectorButton": "重启收集器",
+    "collectorRestartConfirmTitle": "确定要重启收集器？",
+    "collectorRestartConfirmBody": "将中断并重新连线所有来源适配器（Telegram、Discord、Email、RSS 等）。不会删除讯息或帐号资料。",
+    "confirmRestart": "确认重启",
+    "collectorRestarted": "收集器已重启",
+    "appVersionLabel": "应用版本",
+    "appVersionHelp": "前后端共用 semver，来源为项目根目录 VERSION；dev 模式前缀 DEV。",
+    "databaseVersionLabel": "数据库 Schema",
+    "databaseVersionHelp": "公开 schema SemVer（与应用版本同形）。内部 SQLite stamp 仍为整数，供迁移算术使用。",
+    "databaseVersionCurrent": "v{version}",
+    "databaseVersionMismatch": "v{current} → v{required}",
+    "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
+    "versionLoading": "加载中…",
+    "versionUnavailable": "无法取得",
+    "lanAccessLabel": "允许局域网访问",
+    "lanAccessHelp": "将本机服务绑定到所有网卡（0.0.0.0），以便局域网其他设备以远程客户端连接。默认仅本机环回（127.0.0.1）。更改后会重启应用。若经 port-forward 暴露到公网，须在前面加 Caddy/Nginx 等 TLS 反代——应用本身不处理 HTTPS。",
+    "lanAccessEnabled": "已开启局域网访问（即将重启）",
+    "lanAccessDisabled": "已关闭局域网访问（即将重启）",
+    "lanAccessRestarting": "正在重启以应用绑定地址…"
+  },
+  "theme": {
+    "bgTooLarge": "图片大小不可超过 2MB",
+    "bgQuotaExceeded": "localStorage 空间不足，无法储存背景图片",
+    "bgReadFailed": "读取图片失败",
+    "deskSectionTitle": "工作台",
+    "classicSectionTitle": "经典／自然／风格",
+    "bgImageLabel": "背景图片",
+    "bgImageHelp": "任意主题都可上传；有自定义图时页面纹理会暂停，移除图片后恢复。",
+    "bgImageNone": "尚未上传",
+    "chooseImage": "选择图片",
+    "removeImage": "移除图片",
+    "bgPreviewAlt": "背景预览",
+    "opacity": "透明度",
+    "customizeHeading": "自定义此主题",
+    "colorAccent": "强调色",
+    "colorSurfaceBase": "页面底色",
+    "colorSurfaceCard": "卡片底色",
+    "colorSurfaceBorder": "边框色",
+    "colorSurfaceOverlay": "叠层色",
+    "textureLabel": "纹理",
+    "textureDefaultWithName": "跟随默认（{name}）",
+    "textureNone": "无纹理",
+    "textureEffective": "实际套用：{name}",
+    "texturePausedForBg": "（已上传背景图，纹理暂停显示）",
+    "colorOpacityLabel": "不透明度",
+    "colorOpacityHelp": "每个色票可单独调色与不透明度；调低卡片底色也会让玻璃菜单更通透。",
+    "resetPersonalization": "恢复主题默认",
+    "resetPersonalizationHelp": "清除此主题的颜色、不透明度与纹理覆盖；不会移除背景图片。",
+    "textureMotif": {
+      "grain": "颗粒",
+      "washi": "和纸",
+      "moss": "苔藓",
+      "leaf": "叶片",
+      "wood": "木纹",
+      "wave": "水波",
+      "frost": "霜纹",
+      "ember": "余烬",
+      "petal": "花瓣",
+      "mist": "薄雾",
+      "linen": "亚麻",
+      "grid": "网格",
+      "dune": "沙丘",
+      "ink": "墨迹"
+    }
+  },
+  "data": {
+    "retention": {
+      "categories": {
+        "messages": "实时监控",
+        "analysis": "分析结果",
+        "leaderboard": "排行榜",
+        "appLogs": "应用日志",
+        "userEvents": "用户／助手事件"
+      },
+      "daysLabel": "{category}保留天数",
+      "days": "天",
+      "helpAnalysis": "含关键事件与时间规划（同一 Event 资料）。",
+      "helpAppLogs": "预设较短；设 0 停用自动清理。",
+      "helpUserEvents": "预设较长；手动／助手一笔事件。",
+      "invalid": "保留天数必须为 0 或正整数（0 = 停用自动清理）",
+      "saveButton": "储存保留天数",
+      "savedCheck": "✓ 已储存",
+      "description": "各类资料独立设定保留天数；设为 0 可停用该类清理。背景排程每日执行，也可下方「立即清理」。删除旧讯息不会级联删除已完成的分析结果。"
+    },
+    "summary": {
+      "messages": "讯息",
+      "analysis": "分析",
+      "leaderboard": "排行榜",
+      "triggerHistory": "触发纪录",
+      "appLogs": "日志",
+      "userEvents": "用户事件",
+      "timelineDismissals": "时间轴隐藏",
+      "assistantStores": "助手工作区",
+      "deviceAccessTokens": "设备访问令牌",
+      "deviceSessions": "设备会话",
+      "separator": "、"
+    },
+    "restartApp": "重新启动应用程式",
+    "retentionCleanupDescription": "依目前保留天数设定立即执行一次清理，并回传各类删除笔数。不会重启服务。",
+    "runCleanupButton": "立即清理",
+    "retentionRunConfirmTitle": "确定要立即清理？",
+    "retentionRunConfirmBody": "将依目前保留天数设定删除过期的讯息、分析结果、排行榜、日志与用户事件。此操作无法复原。",
+    "confirmCleanup": "确认清理",
+    "runtimeResetDescription": "删除所有本机状态（数据库、管理员、secret.key、Desktop connection.json、装置／Telegram session 与前端快取），自动重新启动 Desktop／重新加载页面，并进入首次设置。",
+    "fullResetButton": "完全重置",
+    "runtimeResetConfirmTitle": "确定要完全重置？",
+    "runtimeResetConfirmBody": "将删除数据库、secret.key、connection.json、管理员帐号、帐号 session 与前端快取，然后自动重新启动并进入首次设置。此操作无法复原。",
+    "confirmFullReset": "确认完全重置",
+    "preparing": "准备中…"
+  },
+  "provider": {
+    "testingToast": "正在送出极短 AI 测试请求…",
+    "testSuccess": "AI 测试成功（{latency}ms，{tokens}{preview}）",
+    "testPreviewSuffix": "，回复：{preview}",
+    "testFailedDefault": "AI 测试失败",
+    "loading": "载入 AI 供应商设定中…",
+    "loadError": "无法载入 AI 供应商设定",
+    "testHint": "「AI 测试」用目前表单送极短请求，无需先保存。",
+    "testHintUnsaved": "（含未保存变更）",
+    "testing": "测试中…",
+    "testButton": "AI 测试",
+    "saveLabel": "储存 AI 供应商设定"
+  },
+  "webSearch": {
+    "sectionTitle": "助手联网",
+    "sectionHelp": "允许助手呼叫 web.search；关闭后不注入该工具。",
+    "enabledLabel": "允许助手联网搜索",
+    "enabledAria": "允许助手联网搜索",
+    "providerLabel": "搜索供应商",
+    "providerHelp": "DuckDuckGo 免 key；Brave 较准但需 key。",
+    "providerDuckDuckGo": "DuckDuckGo（免 key）",
+    "providerBrave": "Brave Search",
+    "duckDuckGoNote": "免 key，质量可能弱于 Brave。",
+    "braveKeyLabel": "Brave Search API Key",
+    "braveKeyHelp": "于 Brave 后台申请；未填则搜索失败。",
+    "braveKeyPlaceholder": "输入 Brave API key"
+  },
+  "llm": {
+    "apiKeyLabel": "API Key",
+    "geminiVersionAria": "选择 Gemini API 版本",
+    "geminiPresetBeta": "Beta（预览版，官方预设）",
+    "geminiPresetStable": "正式（稳定版）",
+    "geminiPresetCustom": "自订 URL",
+    "baseUrlHelpGemini": "可手填，或点右侧选 Beta／正式。",
+    "modelHelpGemini": "只填模型名（如 `gemini-3.1-flash-lite`），勿加 `:generateContent`。",
+    "jsonModeLabel": "JSON 输出模式",
+    "jsonModeHelp": "严格＝完整 Schema；宽松＝json_object，并在 prompt 附 schema。",
+    "jsonModeSchemaOption": "JSON Schema（严格，适合 OpenAI）",
+    "jsonModeObjectOption": "JSON Object（宽松，适合 DeepSeek）",
+    "thinkingModeLabel": "Thinking 模式",
+    "thinkingModeHelp": "默认关闭（think=false）。若仍见推理文字，改用 instruct 模型。",
+    "thinkingModeAria": "启用 Thinking 模式",
+    "providers": {
+      "ollama": {
+        "label": "Ollama",
+        "hint": "本地",
+        "baseUrlLabel": "Ollama URL",
+        "modelLabel": "Ollama 模型",
+        "emptyBaseUrlMessage": "Ollama URL 不能为空。",
+        "emptyModelMessage": "Ollama 模型 不能为空。",
+        "apiKeyPlaceholder": "通常可留空"
+      },
+      "openai_compatible": {
+        "label": "OpenAI",
+        "baseUrlLabel": "OpenAI 相容 API URL",
+        "modelLabel": "模型名称",
+        "emptyBaseUrlMessage": "OpenAI 相容 API URL 不能为空。",
+        "emptyModelMessage": "模型名称 不能为空。"
+      },
+      "gemini_compatible": {
+        "label": "Gemini",
+        "baseUrlLabel": "Gemini 相容 API URL",
+        "modelLabel": "Gemini 模型",
+        "emptyBaseUrlMessage": "Gemini 相容 API URL 不能为空。",
+        "emptyModelMessage": "Gemini 模型 不能为空。"
+      },
+      "openrouter": {
+        "label": "OpenRouter",
+        "baseUrlLabel": "OpenRouter API URL",
+        "modelLabel": "模型名称",
+        "emptyBaseUrlMessage": "OpenRouter API URL 不能为空。",
+        "emptyModelMessage": "模型名称 不能为空。"
+      }
+    }
+  },
+  "voice": {
+    "disclaimer": "语音只作输入／朗读；Agent 只处理文字。浏览器识别多依赖云端；桌面版不支持浏览器语音，请改用文字输入。",
+    "sttLabel": "语音识别（STT）",
+    "sttHelp": "不可用时隐藏麦克风，仍可打字。",
+    "sttHelpDesktopBlocked": "桌面版不支持浏览器语音识别，请改用文字输入。",
+    "ttsLabel": "语音合成（TTS）",
+    "ttsHelp": "可朗读回答；助手页可随时停止。",
+    "languageLabel": "识别／朗读语言",
+    "autoSpeakLabel": "自动朗读助手回答",
+    "autoSpeakHelp": "关闭后只显示文字。",
+    "spacePttLabel": "空格键语音方式",
+    "spacePttHelp": "按住＝按住空格键说话；切换＝按一下开始／再按结束。麦克风同此设置。",
+    "spacePttHelpDesktopBlocked": "目前无法识别，空格键听写暂不生效。",
+    "spacePttOptions": {
+      "hold": "按住说话",
+      "toggle": "点按切换"
+    },
+    "sttOptions": {
+      "browser": "浏览器（Web Speech）",
+      "whisper": "本机 Whisper（即将推出）",
+      "doubao": "豆包（即将推出）"
+    },
+    "ttsOptions": {
+      "browser": "浏览器（speechSynthesis）",
+      "doubao": "豆包（即将推出）"
+    },
+    "languageOptions": {
+      "zhHK": "粤语 / 香港（zh-HK）",
+      "zhTW": "繁体中文（zh-TW）",
+      "zhCN": "简体中文（zh-CN）",
+      "enUS": "English（en-US）"
+    },
+    "ttsVoiceLabel": "朗读语音",
+    "ttsVoiceHelp": "本机可离线；线上需网络。只影响朗读，不影响识别。",
+    "ttsVoiceDefault": "系统默认（依语言）",
+    "ttsVoiceKindLocal": "本机",
+    "ttsVoiceKindRemote": "线上",
+    "ttsPreview": "试听",
+    "ttsPreviewing": "播放中…",
+    "ttsPreviewSample": "这是语音试听，你好。",
+    "defaultWorksetLabel": "默认归属工作集",
+    "defaultWorksetHelp": "助手写入日程的默认工作集（完整页、系统栏对话、空格键语音共用）。默认为内置「一般」。"
+  },
+  "analysis": {
+    "loading": "载入分析调度设定中…",
+    "loadError": "无法载入分析调度设定",
+    "triggerThresholdLabel": "触发门槛（消息数）",
+    "triggerThresholdHelp": "未分析消息达此数才开新批次。默认 50。事件／排行榜任务可在任务表单覆盖。",
+    "batchLimitLabel": "每批上限（消息数）",
+    "batchLimitHelp": "单批最多处理几条；触发后尽量一批吃满。默认 50。事件／排行榜任务可在任务表单覆盖。",
+    "evidenceStyleLabel": "证据风格",
+    "evidenceStyleHelpSuffix": "控制情报要不要输出、证据严不严。任务可在表单覆盖。",
+    "evidenceStyleOptions": {
+      "conservative": {
+        "label": "保守",
+        "description": "证据门槛较严：不确定就不输出"
+      },
+      "balanced": {
+        "label": "均衡",
+        "description": "兼顾证据与覆盖面（默认）"
+      },
+      "aggressive": {
+        "label": "积极",
+        "description": "门槛较宽：多收线索，仍需消息支持"
+      }
+    },
+    "autoPauseLabel": "重试用尽自动暂停",
+    "autoPauseHelp": "连续失败达上限时暂停，避免无限重试。",
+    "autoPauseAria": "启用重试用尽自动暂停",
+    "saveLabel": "保存分析调度",
+    "advanced": {
+      "batchSectionTitle": "批次与重试",
+      "timeoutLabel": "AI 生成超时（秒）",
+      "timeoutHelp": "单次 LLM 等待上限；硬超时约 2 倍后重试。",
+      "maxRetriesLabel": "批次最大重试次数",
+      "maxRetriesHelp": "单批最多重试次数；用尽可触发自动暂停。",
+      "maxConcurrentLabel": "最大并行分析批次数",
+      "maxConcurrentHelpOllama": "建议 1；本地模型通常不宜高并行。",
+      "maxConcurrentHelpCloud": "建议 3；云端 API 可并行。",
+      "maxConcurrentWarning": "提高并行会增加负载。",
+      "maxConcurrentError": "本地模型可能撑不住高并行，建议调低。",
+      "limitsSectionTitle": "内容上限",
+      "maxCharsLabel": "单批分析最大字符数",
+      "maxCharsHelp": "单批原始内容字符上限；超出提早截断。",
+      "maxTokensLabel": "全局输入 Token 上限",
+      "maxTokensHelp": "全站共用的输入 token 上限；过长易失败时可调低。",
+      "debugSectionTitle": "调试",
+      "rulesVersionLabel": "全局分析规则版本",
+      "rulesVersionHelp": "仅提示词版本标记，不切换规则。",
+      "traceVerboseLabel": "分析 Trace 详细日志",
+      "traceVerboseHelp": "记录完整 request/response。"
+    }
+  },
+  "apiDocs": {
+    "intro": "本机 HTTP API 说明与示例：访问密钥、Webhook 推送、客户经理（A2A）；另附 Desktop 日历 deep link。完整契约见仓库 docs/agent/a2a.md。",
+    "accessKeys": {
+      "title": "访问密钥",
+      "body": "用 `Authorization: Bearer <key>` 调用自动化 API。完整密钥（`*`）可用于 Webhook 与客户经理；仅客户经理密钥只能打 `/api/v1/a2a/*`。不可用于 UI 登录。",
+      "linkKeys": "管理访问密钥"
+    },
+    "webhook": {
+      "title": "Webhook",
+      "body": "`POST /api/v1/messages` 需要完整密钥（`*`）。仅客户经理密钥无法推送。`metadata` 可选，只供 AI 理解来源背景。",
+      "exampleTitle": "推送示例",
+      "exampleContent": "某地交易所暂停提币",
+      "exampleNotes": "只供 AI 理解来源背景",
+      "linkKeys": "管理访问密钥",
+      "linkSources": "打开 Webhook 来源"
+    },
+    "liaison": {
+      "title": "客户经理（A2A）",
+      "body": "`POST /api/v1/a2a/agent`：用自然语言交办即可（给 OpenClaw／Hermes 等）。与助手共用 LLM＋工具；服务器内部自己 loop，返回单次结果＋用过的工具摘要。不存对话历史（可由第三方自行保存）。需 AI 供应商与客户经理密钥（或 `*`）。",
+      "capabilities": [
+        "自然语言输入，单次返回 message + toolCalls",
+        "查消息／情报／日程；可建改删事件",
+        "无需第三方对接专用 events schema"
+      ],
+      "exampleAgent": "调用示例",
+      "exampleInput": "查明天有什么会议，并建立周五下午家庭会议",
+      "exampleMessage": "明天没有会议。已建立周五家庭会议。",
+      "exampleResponseComment": "单次回应（示例）：",
+      "linkStaff": "查看客户经理（AI 员工）",
+      "linkKeys": "管理访问密钥",
+      "docsHint": "完整契约见仓库 docs/agent/a2a.md。"
+    },
+    "deepLink": {
+      "title": "Desktop 日历 deep link",
+      "body": "仅安装版 Desktop（非 HTTP API）。系统已注册 `intelligencemonitor://` 与 `.ics` 文件关联。打开链接或文件后，会弹出「加入日历／选工作集」对话框，确认后经批量 preview/commit（`/api/v1/calendar/imports/*`）写入。不是 webcal／CalDAV 同步。",
+      "capabilities": [
+        "`intelligencemonitor://calendar/import?url=…` — 下载远端 ICS（http／https）",
+        "`title` + `start` 必填（inline）；可选 `end`／`location`／`body`／`worksetId`",
+        "也可直接用系统打开 `.ics` 文件（同样走确认对话框）"
+      ],
+      "exampleTitle": "团队同步",
+      "exampleUrlComment": "远端 ICS：",
+      "exampleInlineComment": "Inline 事件（无 ICS）：",
+      "exampleBlockTitle": "链接示例",
+      "docsHint": "细节见仓库 docs/ARCHITECTURE.md（Desktop calendar import）与 docs/KNOWN-SIMPLIFICATIONS.md。"
+    }
+  },
+  "staff": {
+    "title": "AI 员工介绍",
+    "intro": "系统里有四位 AI 员工：两位前线对话，两位后勤分析消息。另有一位「客户经理」负责接待外部系统（与助手同组，不跟你聊天）。",
+    "capabilitiesLabel": "能做什么",
+    "backofficeNote": "后勤员工由分析任务自动召唤，不会出现在对话框。",
+    "openAssistant": "打开助手对话",
+    "openTaskEditor": "打开任务编辑对话",
+    "displayNameLabel": "显示名称",
+    "displayNameHelp": "留空则使用默认名称。",
+    "editNameAria": "编辑助手显示名称",
+    "editLlmAria": "编辑助手 LLM 设定",
+    "llmDialogTitle": "助手 LLM",
+    "llmDialogCancel": "取消",
+    "llmDialogSave": "保存",
+    "uploadAvatar": "上传",
+    "uploadAvatarAria": "上传助手头像",
+    "resetAvatar": "重设头像",
+    "resetAvatarAria": "将助手头像重设为默认",
+    "avatarTooLarge": "压缩后图片仍过大，请换一张更小的图。",
+    "avatarReadFailed": "无法读取该图片。",
+    "llmProviderLabel": "LLM 供应商",
+    "llmProviderFollow": "跟随 AI 供应商",
+    "llmProviderHelp": "使用该供应商在「AI 供应商」页已保存的地址、模型与 API 密钥。",
+    "historyMaxMessagesLabel": "对话保留条数",
+    "historyMaxMessagesHelp": "送入模型时最多保留的近期消息数（系统提示不计）。超出时省略较早轮次；界面记录仍完整保留。默认 40。",
+    "historyMaxCharsLabel": "对话字符上限",
+    "historyMaxCharsHelp": "送入模型的对话总字符约略上限（含系统提示）。超出时省略较早轮次。默认 48000。",
+    "saveLabel": "保存",
+    "kind": {
+      "agent": "Agent 级",
+      "oneshot": "单次／专职 AI"
+    },
+    "surface": {
+      "frontline": "前线",
+      "backoffice": "后勤"
+    },
+    "assistant": {
+      "summary": "可多轮对话的 Agent：会依问题自己决定要不要查资料或建日程。",
+      "capabilities": [
+        "用自然语言回答本机情报与行程问题",
+        "搜索已采集的消息",
+        "查询／建立／修改／删除用户事件（单次日程）",
+        "建立／修改／删除循环行程（recurring 模式 RRULE 任务）",
+        "在设定允许时可上网搜索补充信息",
+        "支持助手弹窗与完整助手页；可搭配语音输入／朗读"
+      ]
+    },
+    "taskEditor": {
+      "summary": "在新增或编辑分析任务时陪你对话，帮你填好左侧表单（不是 Agent）。",
+      "capabilities": [
+        "听你描述要监控什么，建议任务名称与说明",
+        "建议分析模式（排行榜／关键事件／日历）与 Prompt 方向",
+        "协助调整时间范围与排程相关设定",
+        "只负责设定任务，不会直接去分析消息或调用工具"
+      ]
+    },
+    "leaderboard": {
+      "summary": "后勤：依分析任务批次处理消息，整理热门话题排行。",
+      "capabilities": [
+        "从一批消息抽出讨论主题",
+        "为主题打相关度／热度分数并摘要",
+        "更新排行榜结果供排行榜页查看",
+        "不会跟你聊天；由排程或手动执行任务触发"
+      ]
+    },
+    "eventIntel": {
+      "summary": "后勤：从消息抽出可追踪的情报与行程事件（含时间推理等模板）。",
+      "capabilities": [
+        "抽出关键情报、会议、活动、截止日期等事件",
+        "尽量填写时间、地点、相关人员（可推理相对时间）",
+        "结果出现在情报／地图／时间线等视图",
+        "不会跟你聊天；由排程或手动执行任务触发"
+      ]
+    },
+    "projectManager": {
+      "summary": "后勤闭环 Agent：按小时 tick 根据来源消息调和项目日程。",
+      "capabilities": [
+        "读取本项目单次事件与子循环任务",
+        "以工具建立／修改／软删所属日程项目",
+        "有绑定频道时注入增量来源消息",
+        "不会跟你聊天；由项目任务排程驱动（建议 hourly）"
+      ]
+    },
+    "liaison": {
+      "name": "客户经理",
+      "badgeChannel": "对外席",
+      "summary": "对外 Agent：第三方用自然语言交办即可，不必对接专用 API schema；不跟你聊天。",
+      "capabilities": [
+        "与助手共用 LLM 与工具（不同 system prompt）",
+        "单次返回结果；历史由第三方自行保存",
+        "密钥与示例见「系统设置 → API」"
+      ],
+      "openApiDocs": "查看 API 说明与示例"
+    }
+  }
+}

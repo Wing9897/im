@@ -1,0 +1,158 @@
+/* Surface materials: glass / elevated / solid panels, page canvas, control bar. */
+
+.im-material-glass {
+  background: color-mix(
+    in srgb,
+    var(--surface-card) var(--im-panel-opacity-pct, 96%),
+    transparent
+  );
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+}
+
+.im-menu-surface {
+  background: color-mix(
+    in srgb,
+    var(--surface-raised, var(--surface-card)) var(--im-panel-opacity-pct, 96%),
+    transparent
+  );
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent),
+    0 12px 32px color-mix(in srgb, var(--text-primary) 16%, transparent),
+    var(--shadow-lg);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+}
+
+.im-material-elevated {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 3.5%, transparent),
+      transparent 40%
+    ),
+    var(--surface-raised, var(--surface-card));
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--im-duration-normal) var(--im-easing-out),
+    border-color var(--im-duration-normal) var(--im-easing-out),
+    background var(--im-duration-normal) var(--im-easing-out),
+    transform var(--im-duration-fast) var(--im-easing-out);
+}
+
+.im-material-elevated::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: var(--texture-opacity, 0);
+  background-image: var(--texture-image, none);
+  background-size: var(--texture-size, 140px 140px);
+  background-repeat: repeat;
+  mix-blend-mode: var(--texture-blend, soft-light);
+  z-index: 1;
+}
+
+.im-material-elevated > * {
+  position: relative;
+  z-index: 2;
+}
+
+.im-material-elevated:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--surface-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 4.5%, transparent),
+      transparent 42%
+    ),
+    color-mix(in srgb, var(--surface-raised, var(--surface-card)) 97%, var(--accent) 3%);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+
+.im-material-solid {
+  background: var(--surface-card);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  box-shadow: none;
+}
+
+.im-page-canvas {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -18%, var(--im-page-glow), transparent 62%),
+    var(--surface-page, var(--surface-base));
+}
+
+.im-control-bar {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: color-mix(
+    in srgb,
+    var(--surface-card) var(--im-panel-opacity-pct, 96%),
+    transparent
+  );
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.im-control-bar::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: calc(var(--texture-opacity, 0) * 0.85);
+  background-image: var(--texture-image, none);
+  background-size: var(--texture-size, 140px 140px);
+  background-repeat: repeat;
+  mix-blend-mode: var(--texture-blend, soft-light);
+  z-index: 1;
+}
+
+.im-control-bar > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Shared page ops toolbar control height (Intelligence / Logs / Monitor / …). */
+.im-page-ops-ctrl {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  box-sizing: border-box;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0;
+  border-radius: 7px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.im-page-ops-icon-btn {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  width: 30px !important;
+  min-width: 30px !important;
+  box-sizing: border-box;
+  padding: 0 !important;
+  border-radius: 7px !important;
+}
+
+@media (max-width: 640px) {
+  .im-control-bar {
+    position: static;
+  }
+}

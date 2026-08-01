@@ -1,0 +1,128 @@
+{
+  "toolbar": {
+    "aria": "监控工具列",
+    "refreshing": "正在更新讯息列表",
+    "searchPlaceholder": "搜索讯息…",
+    "searchAria": "搜索讯息"
+  },
+  "view": {
+    "aria": "监控检视模式",
+    "wall": "讯息墙"
+  },
+  "stream": {
+    "loading": "载入中…",
+    "more": "已载入 {loaded} / {total} 则讯息，向下滚动载入更多",
+    "done": "共 {total} 则讯息",
+    "wallPick": "讯息墙 · 请选择频道",
+    "wallLoading": "讯息墙 · {selectedCount} 频道 · 载入中…",
+    "wallReady": "讯息墙 · {selectedCount} 频道 · {totalPart}{loadedPart}",
+    "wallTotal": "{total} 则",
+    "wallLoaded": " · 墙上 {loaded}"
+  },
+  "loadMore": {
+    "loading": "载入更多讯息中…",
+    "scroll": "向下滚动以载入更多",
+    "done": "已载入全部讯息",
+    "aria": "载入更多讯息"
+  },
+  "empty": {
+    "filteredTitle": "目前没有符合条件的讯息",
+    "noAccountsTitle": "尚未开始接收实时讯息",
+    "noneTitle": "目前还没有讯息",
+    "filteredDescription": "目前的帐号、频道、时段或搜索条件把讯息全部筛掉了。",
+    "noAccountsDescription": "先到帐号管理新增并连线帐号，之后这里才会开始显示收到的讯息。",
+    "noneDescription": "监控已就绪，但目前资料库里还没有可显示的讯息。等待新讯息进来后，列表会自动更新。",
+    "filteredHint": "清除筛选后可以快速确认是不是条件太严格，而不是系统没有在收讯。",
+    "noAccountsHint": "如果已经有帐号但仍没有讯息，也请确认任务与频道设定是否已完成。",
+    "noneHint": "若长时间没有新资料，可检查帐号连线状态与频道设定。"
+  },
+  "cta": {
+    "clearFilters": "清除筛选",
+    "goToAccounts": "前往帐号管理",
+    "viewTasks": "查看任务设定",
+    "viewAccountStatus": "查看帐号状态"
+  },
+  "sections": {
+    "wall": "讯息墙",
+    "list": "讯息列表"
+  },
+  "wall": {
+    "exitFullscreen": "退出全萤幕",
+    "enterFullscreen": "全萤幕讯息墙",
+    "emptyTitle": "尚未选择频道",
+    "emptyDescription": "点上方「选择范围」勾选要监控的频道；支援 Telegram、Discord、RSS、Email 等所有已连线来源。",
+    "loadingAria": "载入讯息墙"
+  },
+  "filter": {
+    "timeAll": "全部时段",
+    "timeToday": "今天",
+    "time7d": "近 7 天",
+    "time30d": "近 30 天",
+    "searchPlaceholder": "搜索 sender / 频道 / 内容",
+    "searchAria": "搜索讯息",
+    "accountAria": "帐号过滤",
+    "accountAll": "全部帐号",
+    "timeAria": "时段过滤",
+    "channelSummary": "频道",
+    "channelEmpty": "没有符合的频道",
+    "dialogTitle": "筛选条件",
+    "dialogCloseAria": "关闭筛选",
+    "openAria": "开启筛选",
+    "openAriaActive": "筛选（{count} 项已启用）",
+    "title": "筛选",
+    "clearAllAria": "清除所有筛选条件",
+    "clear": "清除筛选",
+    "done": "完成",
+    "removeChipAria": "移除筛选：{label}"
+  },
+  "wallCard": {
+    "unknownChannel": "未知频道",
+    "carouselAria": "{channel} 消息轮播",
+    "empty": "尚无消息",
+    "dotsAria": "轮播指示",
+    "dotAria": "第 {index} 则消息",
+    "newBadge": "+{count} 新",
+    "expandMedia": "放大预览媒体",
+    "mediaFailed": "媒体加载失败",
+    "retry": "重试",
+    "mediaLoading": "媒体加载中",
+    "lightboxAria": "媒体预览",
+    "lightboxAriaTitled": "{title} 媒体预览",
+    "closePreview": "关闭预览",
+    "mediaAlt": "消息媒体",
+    "noText": "（无文字内容）",
+    "mediaPhoto": "[图片]",
+    "mediaVideo": "[视频]",
+    "mediaGif": "[GIF]",
+    "mediaSticker": "[贴纸]",
+    "mediaAudio": "[语音]",
+    "mediaFile": "[文件]"
+  },
+  "message": {
+    "unknownSender": "未知发送者",
+    "noContent": "（无内容）",
+    "channel": "频道：{name}",
+    "media": "媒体：{label}",
+    "id": "ID：{id}",
+    "hideTech": "隐藏技术信息",
+    "showTech": "技术信息",
+    "platformMessageId": "平台消息 ID：{id}",
+    "accountId": "帐号 ID：{id}",
+    "platformId": "平台 ID：{id}",
+    "createdAt": "建立时间：{time}",
+    "rawDataLabel": "Raw Data：",
+    "rawDataTruncated": "{preview}…（共 {count} 字符）",
+    "detailAria": "消息详情：{sender}",
+    "viewDetailAria": "查看消息详情：{sender}",
+    "unread": "未读",
+    "notFound": "找不到指定的消息"
+  },
+  "metadata": {
+    "loadError": "无法载入帐号或频道筛选资料，请重新载入页面后再试。"
+  },
+  "filterChip": {
+    "search": "搜索：{query}",
+    "accounts": "帐号 ×{count}",
+    "channels": "频道 ×{count}"
+  }
+}

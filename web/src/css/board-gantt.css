@@ -1,0 +1,136 @@
+/* Compact gantt chart — day = 24h cells, month = N day cells */
+.board-gantt-embed {
+  --board-gantt-ticks: 24;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.board-gantt-embed__header,
+.board-gantt-embed__row {
+  display: grid;
+  grid-template-columns: minmax(52px, 22%) minmax(0, 1fr);
+  gap: var(--spacing-xs);
+  min-width: 0;
+}
+
+.board-gantt-embed__header {
+  flex: 0 0 auto;
+  align-items: end;
+}
+
+.board-gantt-embed__header-label {
+  color: var(--text-muted);
+  font-size: var(--text-caption);
+  line-height: 1;
+}
+
+.board-gantt-embed__axis {
+  display: grid;
+  grid-template-columns: repeat(var(--board-gantt-ticks), minmax(0, 1fr));
+  font-size: var(--text-caption);
+  line-height: 1;
+  color: var(--text-muted);
+  border-left: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
+.board-gantt-embed__axis span {
+  min-width: 0;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.board-gantt-embed__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.board-gantt-embed__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 28px;
+  color: var(--text-muted);
+  font-size: var(--text-caption);
+  border: 1px dashed color-mix(in srgb, var(--text-primary) 14%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.board-gantt-embed__row {
+  align-items: center;
+  min-height: 12px;
+}
+
+.board-gantt-embed__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--text-caption);
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-gantt-embed__active-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+}
+
+.board-gantt-embed__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-gantt-embed__track {
+  position: relative;
+  height: 10px;
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+  background-color: color-mix(in srgb, var(--surface-card) 42%, transparent);
+  background-image: linear-gradient(
+    to right,
+    transparent calc(100% - 1px),
+    color-mix(in srgb, var(--surface-border) 55%, transparent) calc(100% - 1px)
+  );
+  background-size: calc(100% / var(--board-gantt-ticks)) 100%;
+  border-left: 1px solid color-mix(in srgb, var(--surface-border) 55%, transparent);
+}
+
+.board-gantt-embed__bar {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text-muted) 62%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-primary) 10%, transparent);
+  cursor: pointer;
+}
+
+.board-gantt-embed__bar--active {
+  background: color-mix(in srgb, var(--accent, var(--info)) 72%, transparent);
+}
+
