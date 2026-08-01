@@ -38,12 +38,17 @@ function fakeResponse(
 }
 
 describe('calendar-import argv / protocol', () => {
-  it('detects protocol and ics args', () => {
-    expect(isCalendarImportProtocolUrl('intelligencemonitor://calendar/import?title=a&start=b')).toBe(
-      true,
-    );
-    expect(isIcsFileArg('C:\\tmp\\meet.ics')).toBe(true);
-    expect(isIcsFileArg('https://example.com/meet.ics')).toBe(false);
+  it.each([
+    {
+      value: 'intelligencemonitor://calendar/import?title=a&start=b',
+      protocol: true,
+      icsFile: false,
+    },
+    { value: 'C:\\tmp\\meet.ics', protocol: false, icsFile: true },
+    { value: 'https://example.com/meet.ics', protocol: false, icsFile: false },
+  ])('classifies $value', ({ value, protocol, icsFile }) => {
+    expect(isCalendarImportProtocolUrl(value)).toBe(protocol);
+    expect(isIcsFileArg(value)).toBe(icsFile);
   });
 
   it('extracts targets from argv', () => {
@@ -74,23 +79,35 @@ describe('calendar-import argv / protocol', () => {
     expect(message.ok).toBe(false);
   });
 
-  it('blocks loopback, private, link-local, and IPv4-mapped remote targets', async () => {
-    for (const address of [
-      '127.0.0.1',
-      '10.1.2.3',
-      '172.16.0.1',
-      '192.168.1.10',
-      '169.254.169.254',
-      '::1',
-      'fe80::1',
-      'fc00::1',
-      '::ffff:127.0.0.1',
-    ]) {
-      expect(isDisallowedRemoteAddress(address), address).toBe(true);
-    }
-    expect(isDisallowedRemoteAddress('8.8.8.8')).toBe(false);
-    expect(isDisallowedRemoteAddress('2606:4700:4700::1111')).toBe(false);
+  it('forwards original ICS text without reducing it to one event', () => {
+    const content =
+      'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:X\r\nDTSTART:20260729T120000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+    const message = messageFromIcsText(content, 'file', 'x.ics');
+    expect(message.ok).toBe(true);
+    if (!message.ok) return;
+    expect(message.payload.content).toBe(content);
+    expect(message.payload.source).toBe('file');
+  });
+});
 
+describe('calendar-import remote SSRF / fetch', () => {
+  it.each([
+    ['127.0.0.1', true],
+    ['10.1.2.3', true],
+    ['172.16.0.1', true],
+    ['192.168.1.10', true],
+    ['169.254.169.254', true],
+    ['::1', true],
+    ['fe80::1', true],
+    ['fc00::1', true],
+    ['::ffff:127.0.0.1', true],
+    ['8.8.8.8', false],
+    ['2606:4700:4700::1111', false],
+  ] as const)('isDisallowedRemoteAddress(%s) → %s', (address, disallowed) => {
+    expect(isDisallowedRemoteAddress(address)).toBe(disallowed);
+  });
+
+  it('blocks loopback remote deep links', async () => {
     const loopback = encodeURIComponent('http://127.0.0.1/calendar.ics');
     const message = await messageFromProtocolUrl(
       `intelligencemonitor://calendar/import?url=${loopback}`,
@@ -158,19 +175,5 @@ describe('calendar-import argv / protocol', () => {
         timeoutMs: 5,
       }),
     ).rejects.toThrow('Download timed out');
-  });
-
-  it('forwards original ICS text without reducing it to one event', () => {
-    const content =
-      'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:X\r\nDTSTART:20260729T120000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
-    const message = messageFromIcsText(
-      content,
-      'file',
-      'x.ics',
-    );
-    expect(message.ok).toBe(true);
-    if (!message.ok) return;
-    expect(message.payload.content).toBe(content);
-    expect(message.payload.source).toBe('file');
   });
 });

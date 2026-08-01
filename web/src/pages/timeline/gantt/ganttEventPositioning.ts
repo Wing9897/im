@@ -122,15 +122,19 @@ export function filterVisibleEvents(
 }
 
 /**
- * 截斷事件標題。
- * 若 title.length > maxLength，回傳前 maxLength 字元加上 "…"；否則原樣回傳。
+ * 截斷標籤／事件標題。
+ * 若 length > maxLength，回傳前 maxLength 字元加上 "…"；否則原樣回傳。
+ * （原 ganttPositioning.truncateLabel 已并入本模块。）
  */
-export function truncateEventTitle(title: string, maxLength: number): string {
-  if (title.length <= maxLength) {
-    return title;
+export function truncateLabel(name: string, maxLength: number): string {
+  if (name.length <= maxLength) {
+    return name;
   }
-  return `${title.slice(0, maxLength)}…`;
+  return `${name.slice(0, maxLength)}…`;
 }
+
+/** Alias kept for event-bar call sites. */
+export const truncateEventTitle = truncateLabel;
 
 /**
  * 產生事件的工具提示文字，包含標題、時間範圍、地點（若有）、參與者（若有）。

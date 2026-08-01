@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Badge } from "../../../components/ui";
 import type { TaskActivitySpan } from "../../../types/analysis";
 import { formatOsDateTime } from "../../../utils/time";
-import { truncateLabel } from "../gantt/ganttPositioning";
+import { truncateLabel } from "../gantt/ganttEventPositioning";
 import { timelinePanelClass } from "../timelineViewLayout";
 
 type TaskDetailPanelProps = {

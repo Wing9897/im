@@ -123,70 +123,42 @@ function render(element: React.ReactElement) {
 /* ------------------------------------------------------------------ */
 
 describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicator in Calendar view", () => {
-  it("calendar occurrences render as event cards in week view", () => {
-    const calEvent = makeCalendarEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "week",
-      rangeEvents: [calEvent],
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // The TimelineEventCard renders the event title
-    expect(container.textContent).toContain("Weekly Standup");
-    expect(container.textContent).toContain("Team standup meeting");
-  });
-
-  it("calendar occurrences render with standard card styling in week view", () => {
-    const calEvent = makeCalendarEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "week",
-      rangeEvents: [calEvent],
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // Calendar events render with the same card style as other events
-    const buttons = container.querySelectorAll("button");
-    const calendarCard = Array.from(buttons).find((btn) =>
-      btn.textContent?.includes("Weekly Standup"),
+  it.each([
+    {
+      name: "calendar occurrence card + status",
+      events: () => [makeCalendarEvent()],
+      expectText: ["Weekly Standup", "Team standup meeting", "待確認"],
+      expectCardTitle: "Weekly Standup",
+    },
+    {
+      name: "analysis event",
+      events: () => [makeAnalysisEvent()],
+      expectText: ["Analysis Meeting"],
+      expectCardTitle: null as string | null,
+    },
+    {
+      name: "calendar + analysis side by side",
+      events: () => [makeCalendarEvent(), makeAnalysisEvent()],
+      expectText: ["Weekly Standup", "Analysis Meeting"],
+      expectCardTitle: "Weekly Standup",
+    },
+  ])("week view: $name", ({ events, expectText, expectCardTitle }) => {
+    const container = render(
+      createElement(
+        TimelineCalendarView,
+        makeCalendarViewProps({ timeScale: "week", rangeEvents: events() }),
+      ),
     );
-    expect(calendarCard).toBeDefined();
-    expect((calendarCard as HTMLElement).className).toContain("bg-surface-card");
-  });
-
-  it("calendar occurrences show status label in week view", () => {
-    const calEvent = makeCalendarEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "week",
-      rangeEvents: [calEvent],
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // Calendar events show the same status labels as other events (default: "待確認")
-    expect(container.textContent).toContain("待確認");
-  });
-
-  it("analysis events render in week view", () => {
-    const analysisEvent = makeAnalysisEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "week",
-      rangeEvents: [analysisEvent],
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    expect(container.textContent).toContain("Analysis Meeting");
-  });
-
-  it("both calendar and analysis events render side by side in week view", () => {
-    const calEvent = makeCalendarEvent();
-    const analysisEvent = makeAnalysisEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "week",
-      rangeEvents: [calEvent, analysisEvent],
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    expect(container.textContent).toContain("Weekly Standup");
-    expect(container.textContent).toContain("Analysis Meeting");
+    for (const fragment of expectText) {
+      expect(container.textContent).toContain(fragment);
+    }
+    if (expectCardTitle) {
+      const calendarCard = Array.from(container.querySelectorAll("button")).find((btn) =>
+        btn.textContent?.includes(expectCardTitle),
+      );
+      expect(calendarCard).toBeDefined();
+      expect((calendarCard as HTMLElement).className).toContain("bg-surface-card");
+    }
   });
 });
 
@@ -259,64 +231,47 @@ describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicat
 });
 
 describe("Timeline Calendar Rendering — Requirement 9.5: All-day occurrences in day view", () => {
-  it("all-day calendar occurrences render in day view", () => {
-    const allDayEvent = makeAllDayCalendarEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "day",
-      rangeEvents: [allDayEvent],
-      rangeStart: new Date(2025, 0, 15),
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // All-day calendar events render in the day view event list
-    expect(container.textContent).toContain("Company Holiday");
-  });
-
-  it("non-all-day calendar events render in day view", () => {
-    const timedEvent = makeCalendarEvent({ isAllDay: false });
-    const props = makeCalendarViewProps({
-      timeScale: "day",
-      rangeEvents: [timedEvent],
-      rangeStart: new Date(2025, 0, 15),
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // Timed events render normally
-    expect(container.textContent).toContain("Weekly Standup");
-  });
-
-  it("all-day analysis events render in day view", () => {
-    const allDayAnalysis = makeAnalysisEvent({
-      isAllDay: true,
-      startTime: "2025-01-15T00:00:00Z",
-      endTime: "2025-01-15T23:59:59Z",
-    });
-    const props = makeCalendarViewProps({
-      timeScale: "day",
-      rangeEvents: [allDayAnalysis],
-      rangeStart: new Date(2025, 0, 15),
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // Analysis all-day events also render in the day view
-    expect(container.textContent).toContain("Analysis Meeting");
-  });
-
-  it("mixed all-day calendar and timed events render correctly in day view", () => {
-    const allDayEvent = makeAllDayCalendarEvent();
-    const timedEvent = makeCalendarEvent();
-    const analysisEvent = makeAnalysisEvent();
-    const props = makeCalendarViewProps({
-      timeScale: "day",
-      rangeEvents: [allDayEvent, timedEvent, analysisEvent],
-      rangeStart: new Date(2025, 0, 15),
-    });
-    const container = render(createElement(TimelineCalendarView, props));
-
-    // All events render in day view
-    expect(container.textContent).toContain("Company Holiday");
-    expect(container.textContent).toContain("Weekly Standup");
-    expect(container.textContent).toContain("Analysis Meeting");
+  it.each([
+    {
+      name: "all-day calendar",
+      events: () => [makeAllDayCalendarEvent()],
+      expectText: ["Company Holiday"],
+    },
+    {
+      name: "timed calendar",
+      events: () => [makeCalendarEvent({ isAllDay: false })],
+      expectText: ["Weekly Standup"],
+    },
+    {
+      name: "all-day analysis",
+      events: () => [
+        makeAnalysisEvent({
+          isAllDay: true,
+          startTime: "2025-01-15T00:00:00Z",
+          endTime: "2025-01-15T23:59:59Z",
+        }),
+      ],
+      expectText: ["Analysis Meeting"],
+    },
+    {
+      name: "mixed all-day + timed + analysis",
+      events: () => [makeAllDayCalendarEvent(), makeCalendarEvent(), makeAnalysisEvent()],
+      expectText: ["Company Holiday", "Weekly Standup", "Analysis Meeting"],
+    },
+  ])("day view: $name", ({ events, expectText }) => {
+    const container = render(
+      createElement(
+        TimelineCalendarView,
+        makeCalendarViewProps({
+          timeScale: "day",
+          rangeEvents: events(),
+          rangeStart: new Date(2025, 0, 15),
+        }),
+      ),
+    );
+    for (const fragment of expectText) {
+      expect(container.textContent).toContain(fragment);
+    }
   });
 });
 
