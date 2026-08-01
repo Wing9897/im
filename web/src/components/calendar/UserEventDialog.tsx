@@ -27,7 +27,8 @@ import {
   todayDateInput,
 } from "../../domain/timeline/dateUtils";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { buildRRule } from "../../utils/rrule";
+import { buildRRule, parseRRule } from "../../utils/rrule";
+import { validateRRuleConfig } from "../../utils/rruleValidation";
 
 export type UserEventKind = "one_off" | "recurring";
 
@@ -318,6 +319,21 @@ export function UserEventDialog({
     if (values.kind === "recurring") {
       const rrule = values.rrule.trim();
       if (!rrule) {
+        setLocalError(t("userEvent.errors.rruleRequired"));
+        return;
+      }
+      try {
+        const validation = validateRRuleConfig(parseRRule(rrule));
+        if (!validation.valid || !validation.rruleString) {
+          const message =
+            validation.errors.byDay ||
+            validation.errors.byMonthDay ||
+            validation.errors.freq ||
+            t("userEvent.errors.rruleRequired");
+          setLocalError(message);
+          return;
+        }
+      } catch {
         setLocalError(t("userEvent.errors.rruleRequired"));
         return;
       }

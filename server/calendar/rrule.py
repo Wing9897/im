@@ -279,8 +279,19 @@ def _expand_imported_occurrences(
             if occurrence.tzinfo is None and not is_all_day:
                 occurrence = occurrence.replace(tzinfo=zone)
             if is_all_day:
-                start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=timezone.utc)
-                end_dt = start_dt + duration
+                # ICS DATE values stay on the UTC calendar day; floating/manual
+                # all-day plans use the host local wall (match the non-import path).
+                imported = bool(str(task_value(task, "ics_source") or "").strip())
+                if imported:
+                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=timezone.utc)
+                    end_dt = start_dt + duration
+                else:
+                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=zone).astimezone(
+                        timezone.utc
+                    )
+                    end_dt = datetime.combine(
+                        occurrence.date(), time(23, 59, 59), tzinfo=zone
+                    ).astimezone(timezone.utc)
             else:
                 start_dt = occurrence.astimezone(timezone.utc)
                 end_dt = (occurrence + duration).astimezone(timezone.utc)

@@ -189,4 +189,53 @@ describe("fetchMergedTimelineEvents", () => {
       }),
     ).rejects.toThrow("calendar boom");
   });
+
+  it("fetches RRULE occurrences when __user__ workset gains a recurring member", async () => {
+    // Regression: creating a recurring event under「一般」must flip fetchCalendar on
+    // once the new task is in the catalog — otherwise the month grid stays empty.
+    const before = resolveTimelineFilterPlan(
+      { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
+      [],
+    );
+    expect(before.fetchCalendar).toBe(false);
+
+    const afterCatalog = [
+      { id: "rec-new", analysisMode: "recurring", worksetId: SYSTEM_WORKSET_ID },
+    ];
+    const plan = resolveTimelineFilterPlan(
+      { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
+      afterCatalog,
+    );
+    expect(plan.fetchCalendar).toBe(true);
+    expect(plan.recurringTaskIds).toEqual(["rec-new"]);
+
+    mockFetchSharedCalendarItems.mockResolvedValue([
+      makeOccurrence({
+        id: "rec-new:20260801T010000Z",
+        taskId: "rec-new",
+        title: "每日",
+        startTime: "2026-08-01T01:00:00Z",
+      }),
+      makeOccurrence({
+        id: "rec-new:20260802T010000Z",
+        taskId: "rec-new",
+        title: "每日",
+        startTime: "2026-08-02T01:00:00Z",
+      }),
+    ]);
+
+    const events = await fetchMergedTimelineEvents({
+      selectedSources: { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
+      filterPlan: plan,
+      startIso: "2026-08-01T00:00:00.000Z",
+      endIso: "2026-08-31T23:59:59.000Z",
+    });
+
+    expect(mockFetchSharedCalendarItems).toHaveBeenCalledWith(
+      "2026-08-01T00:00:00.000Z",
+      "2026-08-31T23:59:59.000Z",
+      { taskIds: ["rec-new"] },
+    );
+    expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
+  });
 });

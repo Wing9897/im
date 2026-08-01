@@ -14,7 +14,7 @@ interface RRuleValidationResult {
   rruleString: string | null;
 }
 
-const VALID_FREQS: RecurrenceFreq[] = ["daily", "weekly", "monthly"];
+const VALID_FREQS: RecurrenceFreq[] = ["daily", "weekly", "monthly", "yearly"];
 
 /** Validates recurrence editor config and produces an RRULE string when valid. */
 export function validateRRuleConfig(config: RecurrenceConfig): RRuleValidationResult {

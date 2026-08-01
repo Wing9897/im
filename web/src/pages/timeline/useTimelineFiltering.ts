@@ -4,6 +4,7 @@ import {
   addMonths,
   eventOverlapsRange,
   startOfMonth,
+  timelineEventDateRange,
 } from "../../domain/timeline/dateUtils";
 import type { TimelineEventTimeOverrideMap } from "../../domain/timeline/status";
 import type { TimelineItem } from "../../types";
@@ -92,7 +93,9 @@ export function useTimelineFiltering({
   const monthEvents = useMemo(
     () =>
       filteredEvents.filter((event) => {
-        const start = new Date(event.startTime);
+        // All-day rows use wall-date parsing so UTC midnight does not slip into
+        // the previous local month (same contract as eventStartsOnDay).
+        const { start } = timelineEventDateRange(event);
         return (
           start >= startOfMonth(monthCursor) &&
           start < addMonths(startOfMonth(monthCursor), 1)

@@ -122,6 +122,7 @@
   },
   "messages": {
     "saveFailed": "Save failed",
+    "recurringCreated": "Recurring event created; the calendar expands it across matching days.",
     "dismissFailed": "Failed to remove from timeline",
     "restoreFailed": "Failed to restore to timeline",
     "dismissConfirm": "Remove “{title}” from the timeline? You can restore it later.",
