@@ -5,6 +5,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/leaderboard": () => import("../pages/leaderboard/LeaderboardPage"),
   "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
   "/timeline": () => import("../pages/timeline/TimelinePage"),
+  "/items": () => import("../pages/items/ItemsPage"),
   "/actions": () => import("../pages/actions/ActionsPage"),
   "/accounts": () => import("../pages/sources/SourceManagementPage"),
   "/assistant": () => import("../pages/ai/assistant/AssistantPage"),

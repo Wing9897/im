@@ -9,6 +9,8 @@ from server.agent.tools_calendar import TOOL_HANDLERS as CALENDAR_HANDLERS
 from server.agent.tools_calendar import TOOL_SCHEMAS as CALENDAR_SCHEMAS
 from server.agent.tools_intelligence import TOOL_HANDLERS as INTELLIGENCE_HANDLERS
 from server.agent.tools_intelligence import TOOL_SCHEMAS as INTELLIGENCE_SCHEMAS
+from server.agent.tools_items import TOOL_HANDLERS as ITEMS_HANDLERS
+from server.agent.tools_items import TOOL_SCHEMAS as ITEMS_SCHEMAS
 from server.agent.tools_messages import TOOL_HANDLERS as MESSAGES_HANDLERS
 from server.agent.tools_messages import TOOL_SCHEMAS as MESSAGES_SCHEMAS
 from server.agent.tools_tasks import TOOL_NAMES as TASKS_TOOL_NAMES
@@ -20,17 +22,19 @@ from server.agent.tools_web_search import execute_web_search_tool
 from server.db.database import Database
 from server.sse import publish_resource_modified
 
-#: Handlers with signature ``(db, arguments)`` — calendar + messages + intelligence.
+#: Handlers with signature ``(db, arguments)`` — calendar + messages + intelligence + items.
 BASE_TOOL_HANDLERS: dict[str, Any] = {
     **CALENDAR_HANDLERS,
     **MESSAGES_HANDLERS,
     **INTELLIGENCE_HANDLERS,
+    **ITEMS_HANDLERS,
 }
 
 BASE_TOOL_SCHEMAS: list[dict[str, Any]] = [
     *CALENDAR_SCHEMAS,
     *MESSAGES_SCHEMAS,
     *INTELLIGENCE_SCHEMAS,
+    *ITEMS_SCHEMAS,
 ]
 
 WEB_TOOL_NAMES = frozenset(WEB_HANDLERS)
@@ -77,6 +81,7 @@ _WRITE_NOTIFICATIONS: dict[str, tuple[str, str, Any]] = {
     "calendar.create_event": ("user_event", "created", lambda r: _nested_id(r, "item")),
     "calendar.update_event": ("user_event", "updated", lambda r: _nested_id(r, "item")),
     "calendar.delete_event": ("user_event", "deleted", _deleted_event_id),
+    "items.create": ("item", "created", lambda r: _nested_id(r, "item")),
 }
 
 
@@ -122,6 +127,11 @@ async def execute_tool(
         if origin:
             args["_origin"] = origin
         # Default target workset from chat request when the tool omits worksetId.
+        if "worksetId" not in args and "workset_id" not in args:
+            default_wid = context.get("default_workset_id")
+            if default_wid is not None:
+                args["_default_workset_id"] = default_wid
+    if name == "items.create" and context:
         if "worksetId" not in args and "workset_id" not in args:
             default_wid = context.get("default_workset_id")
             if default_wid is not None:

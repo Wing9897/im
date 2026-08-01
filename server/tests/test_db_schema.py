@@ -27,7 +27,7 @@ from server.tests.schema_fixtures import (
     make_lookalike_db,
 )
 
-_REQUIRED_TABLE_COUNT = 25
+_REQUIRED_TABLE_COUNT = 27
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 

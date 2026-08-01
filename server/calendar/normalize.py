@@ -22,7 +22,7 @@ from typing import Any, Iterable, Literal, Mapping
 
 from server.util import parse_json_list
 
-Source = Literal["analysis", "recurring", "user"]
+Source = Literal["analysis", "recurring", "user", "item"]
 Detail = Literal["compact", "full"]
 
 OCCURRENCE_ID_RE = re.compile(r"^([^:]+):(\d{8}T\d{6}Z)$")
@@ -41,6 +41,13 @@ _COMPACT_FIELDS = (
 )
 #: Compact ``user`` rows additionally carry ownership workset and dismissal.
 _COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed")
+#: Compact ``item`` rows carry ownership workset, date kind, and dismissal.
+_COMPACT_ITEM_FIELDS = _COMPACT_FIELDS + (
+    "worksetId",
+    "itemId",
+    "itemDateKind",
+    "dismissed",
+)
 
 
 def _text_or_none(value: Any) -> str | None:
@@ -128,6 +135,11 @@ def build_user_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> d
     shape (including ``dismissed``), so this only chooses the detail level.
     """
     return _project(dict(item), detail, _COMPACT_USER_FIELDS)
+
+
+def build_item_calendar_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> dict[str, Any]:
+    """Item purchased/expires projection as a calendar item."""
+    return _project(dict(item), detail, _COMPACT_ITEM_FIELDS)
 
 
 def matches_search(item: Mapping[str, Any], search: str | None) -> bool:

@@ -7,14 +7,15 @@ from typing import Any, Iterable, Literal, Mapping
 from server.db.database import Database
 from server.util import utc_now_iso
 
-DismissSource = Literal["analysis", "user", "recurring"]
-ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring"})
+DismissSource = Literal["analysis", "user", "recurring", "item"]
+ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring", "item"})
 
 # Compact calendar-query / agent item ``source`` → ``timeline_dismissals.source``.
 CALENDAR_ITEM_DISMISS_SOURCE: dict[str, DismissSource] = {
     "analysis": "analysis",
     "user": "user",
     "recurring": "recurring",
+    "item": "item",
 }
 
 
@@ -30,7 +31,9 @@ def active_timeline_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _require_source(source: str) -> DismissSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineDismissalValidationError("source must be 'analysis', 'user', or 'recurring'")
+        raise TimelineDismissalValidationError(
+            "source must be 'analysis', 'user', 'recurring', or 'item'"
+        )
     return value  # type: ignore[return-value]
 
 

@@ -14,12 +14,14 @@ describe("resolveTimelineFilterPlan", () => {
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
+      fetchItems: true,
       analysisTaskIds: null,
     });
     expect(resolveTimelineFilterPlan({ taskIds: [], worksetIds: [] }, tasks)).toMatchObject({
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: false,
+      fetchItems: false,
     });
     expect(
       resolveTimelineFilterPlan({ taskIds: ["evt-1", "cal-1"], worksetIds: [] }, tasks),
@@ -27,6 +29,7 @@ describe("resolveTimelineFilterPlan", () => {
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
+      fetchItems: false,
       analysisTaskIds: ["evt-1"],
       recurringTaskIds: ["cal-1"],
       selectedRealTaskIds: ["evt-1", "cal-1"],
@@ -37,12 +40,14 @@ describe("resolveTimelineFilterPlan", () => {
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: true,
+      fetchItems: true,
       includeGeneralWorksetUserEvents: true,
     });
     expect(
       resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks),
     ).toMatchObject({
       fetchAnalysis: true,
+      fetchItems: true,
       analysisTaskIds: ["evt-1"],
       selectedRealTaskIds: ["evt-1"],
       selectedWorksetIds: ["ws-a"],

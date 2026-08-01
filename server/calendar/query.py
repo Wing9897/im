@@ -9,10 +9,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from server.calendar.item_projection import fetch_item_occurrences_in_range, get_item_occurrence
 from server.calendar.normalize import (
     OCCURRENCE_ID_RE,
     Source,
     build_analysis_item,
+    build_item_calendar_item,
     build_occurrence_item,
     build_user_item,
     clamp_limit,
@@ -188,6 +190,25 @@ async def _annotate_analysis_dismissed(
     return items
 
 
+async def _fetch_items_in_range(
+    db: Database,
+    *,
+    range_start: datetime,
+    range_end: datetime,
+    workset_id: str | None = None,
+) -> list[dict[str, Any]]:
+    """Active item DATE projections (purchased/expires); archived excluded."""
+    raw = await fetch_item_occurrences_in_range(
+        db,
+        range_start=range_start,
+        range_end=range_end,
+        workset_id=workset_id,
+    )
+    items = [build_item_calendar_item(item) for item in raw]
+    await attach_dismissed_flag(db, source="item", items=items)
+    return items
+
+
 def _merge_sort_slice(
     items: list[dict[str, Any]],
     *,
@@ -256,8 +277,19 @@ async def query_window(
         task_id=task_id,
         workset_id=workset_id,
     )
+    # Items are ownership-scoped by workset only (no task provenance).
+    # When filtering by task_id alone with no workset, skip item projections.
+    if task_id is not None and workset_id is None:
+        item_items: list[dict[str, Any]] = []
+    else:
+        item_items = await _fetch_items_in_range(
+            db,
+            range_start=range_start,
+            range_end=range_end,
+            workset_id=workset_id,
+        )
     items, next_cursor = _merge_sort_slice(
-        analysis + rrule_items + user_items,
+        analysis + rrule_items + user_items + item_items,
         search=search,
         limit=capped,
         offset=offset,
@@ -351,8 +383,17 @@ async def query_recent(
         task_id=task_id,
         workset_id=workset_id,
     )
+    if task_id is not None and workset_id is None:
+        item_items: list[dict[str, Any]] = []
+    else:
+        item_items = await _fetch_items_in_range(
+            db,
+            range_start=range_start,
+            range_end=range_end,
+            workset_id=workset_id,
+        )
     items, _ = _merge_sort_slice(
-        analysis + rrule_items + user_items,
+        analysis + rrule_items + user_items + item_items,
         search=search,
         limit=capped,
         offset=0,
@@ -362,7 +403,7 @@ async def query_recent(
 
 
 async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
-    """Fetch one event by analysis id, user-event id, or RRULE occurrence id."""
+    """Fetch one event by analysis id, user-event id, item, or RRULE occurrence id."""
     eid = (event_id or "").strip()
     if not eid:
         return None
@@ -379,6 +420,12 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
     if user_row is not None:
         dismissed = await is_timeline_event_dismissed(db, source="user", event_id=eid)
         return build_user_item(serialize_user_event(user_row, dismissed=dismissed), detail="full")
+
+    item_occ = await get_item_occurrence(db, eid)
+    if item_occ is not None:
+        dismissed = await is_timeline_event_dismissed(db, source="item", event_id=eid)
+        item_occ["dismissed"] = dismissed
+        return build_item_calendar_item(item_occ, detail="full")
 
     match = OCCURRENCE_ID_RE.match(eid)
     if match is None:
