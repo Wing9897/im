@@ -45,7 +45,7 @@ jobs:
       - name: Build web and desktop
         run: npm run build
 
-  # Always bump once on main/master push or workflow_dispatch, then package that commit.
+  # Compute next SemVer from latest git tag (no commit/push to main).
   version:
     if: >-
       github.event_name == 'workflow_dispatch' ||
@@ -53,41 +53,23 @@ jobs:
     needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      contents: write
     outputs:
       version: ${{ steps.bump.outputs.version }}
       tag_name: ${{ steps.bump.outputs.tag_name }}
-      checkout_sha: ${{ steps.bump.outputs.checkout_sha }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-
-      - name: Bump VERSION + sync manifests
+      - name: Compute next release version from tags
         id: bump
         shell: bash
         run: |
           set -euo pipefail
-          git pull --ff-only origin "${{ github.ref_name }}"
-          version="$(python3 scripts/bump_version.py)"
-          node scripts/sync-version.mjs
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add VERSION package.json package-lock.json web/package.json desktop/package.json pyproject.toml uv.lock web/openapi/openapi.json
-          # [skip ci] avoids an infinite main-push → version-bump → push loop; package/release
-          # in THIS run already consume checkout_sha from the bump commit.
-          git commit -m "chore(release): ${version} [skip ci]"
-          git push origin "HEAD:${{ github.ref_name }}"
+          version="$(python3 scripts/bump_version.py --from-tags --print-only)"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag_name=v${version}" >> "$GITHUB_OUTPUT"
-          echo "checkout_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          echo "Bumped and pushed v${version} @ $(git rev-parse --short HEAD)"
+          echo "RELEASE_VERSION=${version} (tag v${version}) @ ${{ github.sha }}"
 
   package:
     if: >-
@@ -119,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.checkout_sha }}
+          ref: ${{ github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -144,6 +126,15 @@ jobs:
         run: |
           uv sync --extra dev --locked
           npm ci
+
+      - name: Apply release version (workspace only)
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
 
       - name: Build Desktop package
         env:
@@ -179,7 +170,7 @@ jobs:
       - name: Upload Desktop + CLI artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}-${{ needs.version.outputs.checkout_sha }}
+          name: ${{ matrix.artifact }}-${{ github.sha }}
           path: |
             desktop/release/*.exe
             desktop/release/*.dmg
@@ -204,13 +195,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.checkout_sha }}
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Download Desktop + CLI artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "*-release-${{ needs.version.outputs.checkout_sha }}"
+          pattern: "*-release-${{ github.sha }}"
           path: release-assets
           merge-multiple: true
 
@@ -259,12 +250,19 @@ jobs:
 
       - name: Create and push tag
         env:
-          VERSION: ${{ needs.version.outputs.version }}
           TAG: ${{ needs.version.outputs.tag_name }}
         shell: bash
         run: |
           set -euo pipefail
-          git tag "$TAG" "${{ needs.version.outputs.checkout_sha }}"
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "Tag $TAG already exists locally; refusing to overwrite." >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on origin; refusing to overwrite." >&2
+            exit 1
+          fi
+          git tag "$TAG" "${{ github.sha }}"
           git push origin "$TAG"
 
       - name: Create GitHub Release
@@ -272,7 +270,11 @@ jobs:
         with:
           tag_name: ${{ needs.version.outputs.tag_name }}
           name: ${{ needs.version.outputs.tag_name }}
-          target_commitish: ${{ needs.version.outputs.checkout_sha }}
+          target_commitish: ${{ github.sha }}
+          body: |
+            Automated release **${{ needs.version.outputs.tag_name }}** from `${{ github.sha }}`.
+
+            Product version authority is git tags. The repo `VERSION` file is for local/dev display and may lag.
           prerelease: ${{ contains(needs.version.outputs.tag_name, 'beta') || contains(needs.version.outputs.tag_name, 'alpha') || contains(needs.version.outputs.tag_name, 'rc') }}
           fail_on_unmatched_files: true
           files: |
@@ -291,7 +293,20 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.version.outputs.checkout_sha }}
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Apply release version (workspace only)
+        env:
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RELEASE_VERSION" > VERSION
+          node scripts/sync-version.mjs
 
       - name: Image name (lowercase)
         id: image
@@ -315,7 +330,7 @@ jobs:
           tags: |
             type=raw,value=latest
             type=raw,value=${{ needs.version.outputs.tag_name }}
-            type=raw,value=sha-${{ needs.version.outputs.checkout_sha }}
+            type=raw,value=sha-${{ github.sha }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -331,7 +346,7 @@ jobs:
         run: |
           set -euo pipefail
           image="${{ steps.image.outputs.name }}"
-          tag="sha-${{ needs.version.outputs.checkout_sha }}"
+          tag="sha-${{ github.sha }}"
           docker pull "${image}:${tag}"
           cid="$(docker run -d -p 18820:18820 -e INTELLIGENCE_MONITOR_HOST=0.0.0.0 "${image}:${tag}")"
           cleanup() { docker rm -f "$cid" >/dev/null 2>&1 || true; }

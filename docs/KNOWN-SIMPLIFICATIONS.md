@@ -119,7 +119,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Post-deploy live smoke: `npm run verify:deploy`
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
-- GitHub Actions: Ubuntu `quality` on PR／main; on **main／master** push or **`workflow_dispatch`**: bump `VERSION` → win／mac／linux `package` (Desktop+CLI) → tag + GitHub Release → GHCR.
+- GitHub Actions: Ubuntu `quality` on PR／main; on **main／master** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI) → push tag + GitHub Release → GHCR.
 
 ## Security (outbound requests)
 
@@ -129,8 +129,8 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 ## Release checklist (Desktop + CLI + container)
 
-1. Merge／push to `main`（or `master`）— no manual tag required
-2. CI bumps `VERSION` (`scripts/bump_version.py` + `sync:version`), packages three OS Desktop+CLI, tags `v$(VERSION)`, creates GitHub Release
+1. Merge／push to `main`（or `master`）— no manual tag or VERSION commit required
+2. CI computes next version from latest `v*` tag (`bump_version.py --from-tags --print-only`), injects it for packaging only, packages three OS Desktop+CLI, pushes tag `v$RELEASE_VERSION`, creates GitHub Release (does **not** push commits to main)
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
 

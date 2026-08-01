@@ -184,11 +184,11 @@ CI 在 **main／master push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/
 | 觸發 | 行為 |
 |------|------|
 | **PR** | 只跑 `quality` |
-| **push `main`／`master`** 或 **`workflow_dispatch`** | `quality` → bump 版本 → 三平台 `package`（Desktop+CLI）→ 打 tag + GitHub Release → GHCR |
+| **push `main`／`master`** 或 **`workflow_dispatch`** | `quality` → 依最新 git tag 算出下一版 → 三平台 `package`（Desktop+CLI）→ **只 push tag** + GitHub Release → GHCR |
 
-每次發版固定 bump：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py` + `npm run sync:version`）。`GITHUB_TOKEN` push／tag 不會再觸發 workflow；`concurrency` 依 ref 串行。
+發版權威是 **git tags**（`v*`），不是往 main 回寫 `VERSION`。CI **不會** bot commit／push 到 main，日常 `git push` 不會再被搶提交。每次 bump：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）；打包時把算出的版本注入工作區（不改分支歷史）。無 tag 時以倉庫 `VERSION` 檔為基數再 bump。根目錄 `VERSION` 可作本機／展示用，可能落後於最新 tag；需要時可手動對齊，不必每版回寫。
 
-一句話：**合併到 main 即自動 bump、打包三平台 Desktop+CLI、打 tag、發 Release。**
+一句話：**合併到 main 即自動依 tag 遞增版本、打包三平台 Desktop+CLI、打 tag、發 Release——不改 main 歷史。**
 
 本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 

@@ -56,10 +56,16 @@ a running server on `127.0.0.1:18820` and, on a database that already has an adm
 token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday PR／main CI always runs **`quality`**
 (Ubuntu).
 
-**Release:** merge to **`main`／`master`** (or **`workflow_dispatch`**) automatically bumps
-`VERSION`, packages Desktop + CLI on Windows／macOS／Linux (`dist:*` + `verify:desktop:full` +
-`package:cli`), tags `v$(VERSION)`, and creates a GitHub Release with all attachments (plus
-optional GHCR). Incomplete assets fail the job. No manual tag required.
+**Release:** merge／push to **`main`／`master`** (or **`workflow_dispatch`**) runs a fully
+automatic pipeline: after `quality`, CI computes the next SemVer from the latest git tag
+`v*` (`scripts/bump_version.py --from-tags --print-only`; falls back to the repo `VERSION`
+file if there are no tags), injects that version into the build workspace only (no bot
+commit to `main`), packages Desktop + CLI on Windows／macOS／Linux (`dist:*` +
+`verify:desktop:full` + `package:cli`), pushes **only** the tag `v$RELEASE_VERSION`, and
+creates a GitHub Release (plus optional GHCR). Incomplete assets fail the job. No manual
+tag or VERSION bump on `main` is required — everyday `git push` is not rewritten by CI.
+The committed `VERSION` file is for local／display use and may lag tags; sync manually
+(`bump_version.py` / `npm run sync:version`) only if you want the file aligned.
 
 ## Generated files are committed — regenerate, never hand-edit
 
