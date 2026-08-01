@@ -371,6 +371,54 @@ async def test_calendar_schedule_update_validates_rrule(client, app):
     assert await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,)) == before
 
 
+async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
+    """Dialog-shaped create: recurring shell + all-day schedule with UI UNTIL=...Z."""
+    created = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "1234",
+            "promptTemplate": "",
+            "analysisMode": "recurring",
+            "channelIds": [],
+            "includeInTimeline": True,
+            "worksetId": "__user__",
+        },
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+    row = await app.state.db.fetch_one(
+        "SELECT workset_id, analysis_mode FROM analysis_tasks WHERE id = ?",
+        (task_id,),
+    )
+    assert row is not None
+    assert row["analysis_mode"] == "recurring"
+    assert row["workset_id"] == "__user__"
+
+    scheduled = await client.put(
+        f"/api/v1/tasks/{task_id}/schedule",
+        json={
+            "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
+            "eventIsAllDay": True,
+            "eventStartTime": None,
+            "eventEndTime": None,
+        },
+    )
+    assert scheduled.status_code == 200, scheduled.text
+
+    items = await client.get(
+        "/api/v1/calendar/items",
+        params={
+            "range_start": "2026-07-31T16:00:00Z",
+            "range_end": "2026-08-31T15:59:59Z",
+            "task_ids": [task_id],
+        },
+    )
+    assert items.status_code == 200
+    body = items.json()
+    assert len(body) >= 28
+    assert all(item["taskId"] == task_id and item["title"] == "1234" for item in body)
+
+
 async def test_rejected_update_uses_persisted_mode_and_preserves_all_state(client, app):
     db = app.state.db
     task_id = seed.TASK_LEADERBOARD
