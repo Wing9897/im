@@ -413,6 +413,38 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
   });
 
+  it("refreshEvents(catalogOverride) fetches calendar for a just-created recurring task", async () => {
+    // Source filter is __user__ only with an empty catalog → fetchCalendar false.
+    // After create, caller passes the refreshed catalog so occurrences appear immediately.
+    resetTaskCatalogState([]);
+    mockFetchCalendarOccurrences.mockResolvedValue([
+      makeOccurrence({ id: "rec-new:a", taskId: "rec-new", title: "每日" }),
+      makeOccurrence({
+        id: "rec-new:b",
+        taskId: "rec-new",
+        title: "每日",
+        startTime: "2025-01-16T09:00:00Z",
+      }),
+    ]);
+    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
+    expect(mockFetchCalendarOccurrences).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await resultRef.current!.refreshEvents([
+        makeAnalysisTask({
+          id: "rec-new",
+          name: "每日",
+          analysisMode: "recurring",
+          worksetId: SYSTEM_WORKSET_ID,
+        }),
+      ]);
+    });
+
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    const events = resultRef.current!.events;
+    expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
+  });
+
   it("includes event, recurring, and project modes in timelineTasks", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),

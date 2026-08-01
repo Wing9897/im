@@ -122,6 +122,7 @@
   },
   "messages": {
     "saveFailed": "儲存失敗",
+    "recurringCreated": "已建立循環事件；月曆會依重複規則展開多次。",
     "dismissFailed": "從時間規劃移除失敗",
     "restoreFailed": "還原到時間規劃失敗",
     "dismissConfirm": "將「{title}」從時間規劃移除？之後可以還原。",

@@ -122,6 +122,7 @@
   },
   "messages": {
     "saveFailed": "储存失败",
+    "recurringCreated": "已建立循环事件；月历会按重复规则展开多次。",
     "dismissFailed": "从时间规划移除失败",
     "restoreFailed": "还原到时间规划失败",
     "dismissConfirm": "将「{title}」从时间规划移除？之后可以还原。",

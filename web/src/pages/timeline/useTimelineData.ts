@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useMonitorMode } from "../../context/MonitorModeContext";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
@@ -13,7 +13,7 @@ import {
 import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
-import type { TimelineItem, TaskActivitySpan } from "../../types";
+import type { AnalysisTask, TimelineItem, TaskActivitySpan } from "../../types";
 import { logWarn } from "../../utils/logger";
 import { useGanttData } from "./useGanttData";
 
@@ -42,7 +42,12 @@ interface UseTimelineDataReturn {
   initialLoading: boolean;
   isRefreshing: boolean;
   pageError: string | null;
-  refreshEvents: () => Promise<void>;
+  /**
+   * Refetch merged timeline events.
+   * Pass ``catalogOverride`` after create/refreshTasks so the filter plan includes
+   * newly created recurring tasks before React re-renders the catalog.
+   */
+  refreshEvents: (catalogOverride?: readonly AnalysisTask[]) => Promise<void>;
 
   // Gantt: task activity spans
   taskSpans: TaskActivitySpan[];
@@ -123,6 +128,12 @@ export function useTimelineData({
     () => paddedTimelineFetchWindow(rangeStart, rangeEnd),
     [rangeStart, rangeEnd],
   );
+  const calendarWindowRef = useRef(calendarWindow);
+  calendarWindowRef.current = calendarWindow;
+  const selectedSourcesRef = useRef(selectedSources);
+  selectedSourcesRef.current = selectedSources;
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
 
   const recurringTaskFingerprint = useMemo(
     () =>
@@ -155,18 +166,25 @@ export function useTimelineData({
     execute: fetchEvents,
   } = useAsyncResource(fetcher, { toastOnError: false });
 
-  const refreshEvents = useCallback(async () => {
-    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
-      return;
-    }
-    await fetchEvents({
-      startIso: calendarWindow.startIso,
-      endIso: calendarWindow.endIso,
-      selectedSources,
-      planKey,
-      filterPlan,
-    });
-  }, [fetchEvents, filterPlan, calendarWindow, selectedSources, planKey]);
+  const refreshEvents = useCallback(
+    async (catalogOverride?: readonly AnalysisTask[]) => {
+      const catalog = catalogOverride ?? tasksRef.current;
+      const selection = selectedSourcesRef.current;
+      const plan = resolveTimelineFilterPlan(selection, catalog);
+      if (!plan.fetchAnalysis && !plan.fetchCalendar && !plan.fetchUserEvents) {
+        return;
+      }
+      const window = calendarWindowRef.current;
+      await fetchEvents({
+        startIso: window.startIso,
+        endIso: window.endIso,
+        selectedSources: selection,
+        planKey: filterPlanKey(plan),
+        filterPlan: plan,
+      });
+    },
+    [fetchEvents],
+  );
 
   useEffect(() => {
     if (!pageActive) return;

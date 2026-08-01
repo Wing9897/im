@@ -315,6 +315,17 @@ describe("TimelinePage user-event CRUD", () => {
   });
 
   it("creates a recurring event via the recurring-task API path", async () => {
+    const { taskCatalogState } = await import("../../test/context-mocks");
+    const refreshedCatalog = [
+      {
+        id: "rec-1",
+        name: "Weekly standup",
+        analysisMode: "recurring" as const,
+        worksetId: "__user__",
+      },
+    ];
+    taskCatalogState.refreshTasks.mockResolvedValueOnce(refreshedCatalog as never);
+
     await renderPage();
     await flushAction(() => captures.addEvent!());
     const dialog = captures.dialog as CapturedDialog;
@@ -346,7 +357,12 @@ describe("TimelinePage user-event CRUD", () => {
       rrule: "FREQ=WEEKLY;BYDAY=MO",
     });
     expect(mockCreateUserEvent).not.toHaveBeenCalled();
-    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
+    // refreshEvents receives the post-create catalog so workset filters include the new task
+    expect(mockRefreshEvents).toHaveBeenCalledWith(refreshedCatalog);
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.stringMatching(/循環|循环|Recurring/i),
+      "success",
+    );
   });
 
   it("edits an event and refreshes the visible data", async () => {

@@ -42,7 +42,7 @@ async def fetch_active_recurring_task_rows(
             "rs.description AS event_description, rs.timezone AS event_timezone, "
             "rs.timezone_ical AS event_timezone_ical, rs.dtstart AS event_start_local, "
             "rs.dtend AS event_end_local, rs.exdates_json AS event_exdates_json, "
-            "rs.rdates_json AS event_rdates_json, rs.parent_task_id "
+            "rs.rdates_json AS event_rdates_json, rs.ics_source, rs.parent_task_id "
             "FROM analysis_tasks t JOIN recurring_schedules rs ON rs.task_id = t.id "
             "WHERE t.analysis_mode = 'recurring' AND t.is_active = 1 "
             f"AND (t.id IN ({placeholders}) OR rs.parent_task_id IN ({placeholders}))",
@@ -55,7 +55,7 @@ async def fetch_active_recurring_task_rows(
             "rs.description AS event_description, rs.timezone AS event_timezone, "
             "rs.timezone_ical AS event_timezone_ical, rs.dtstart AS event_start_local, "
             "rs.dtend AS event_end_local, rs.exdates_json AS event_exdates_json, "
-            "rs.rdates_json AS event_rdates_json, rs.parent_task_id "
+            "rs.rdates_json AS event_rdates_json, rs.ics_source, rs.parent_task_id "
             "FROM analysis_tasks t JOIN recurring_schedules rs ON rs.task_id = t.id "
             "WHERE t.analysis_mode = 'recurring' AND t.is_active = 1 "
             "AND (t.id = ? OR rs.parent_task_id = ?)",
@@ -67,7 +67,7 @@ async def fetch_active_recurring_task_rows(
         "rs.description AS event_description, rs.timezone AS event_timezone, "
         "rs.timezone_ical AS event_timezone_ical, rs.dtstart AS event_start_local, "
         "rs.dtend AS event_end_local, rs.exdates_json AS event_exdates_json, "
-        "rs.rdates_json AS event_rdates_json, rs.parent_task_id "
+        "rs.rdates_json AS event_rdates_json, rs.ics_source, rs.parent_task_id "
         "FROM analysis_tasks t JOIN recurring_schedules rs ON rs.task_id = t.id "
         "WHERE t.analysis_mode = 'recurring' AND t.is_active = 1"
     )
