@@ -45,6 +45,96 @@ async def test_items_change_category_keeps_attributes(client):
     assert body["categoryId"] == food["id"]
     assert body["attributes"]["id_number"] == "A123"
     assert body["attributes"]["custom"] == "keep"
+    # Existing remind must not be overwritten by the new category default.
+    assert body["remindBeforeDays"] == 90
+
+
+@pytest.mark.asyncio
+async def test_patch_category_applies_default_remind_when_empty(client):
+    cats = await client.get("/api/v1/items/categories")
+    assert cats.status_code == 200
+    food = next(c for c in cats.json() if c["slug"] == "food")
+    passport = next(c for c in cats.json() if c["slug"] == "passport_docs")
+
+    created = await client.post(
+        "/api/v1/items",
+        json={
+            "title": "Snack",
+            "categoryId": food["id"],
+            "worksetId": SYSTEM_WORKSET_ID,
+            "expiresAt": "2026-12-01",
+            "remindBeforeDays": None,
+        },
+    )
+    assert created.status_code == 201
+    item = created.json()
+    assert item["remindBeforeDays"] == 3
+
+    # Clear remind, then switch to passport → soft-fill 90 (FE-aligned).
+    cleared = await client.patch(
+        f"/api/v1/items/{item['id']}",
+        json={"remindBeforeDays": None},
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["remindBeforeDays"] is None
+
+    patched = await client.patch(
+        f"/api/v1/items/{item['id']}",
+        json={"categoryId": passport["id"]},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["remindBeforeDays"] == 90
+    assert patched.json()["categoryId"] == passport["id"]
+
+
+def test_normalize_attributes_scalar_and_caps():
+    from server.items.normalize import ItemValidationError, normalize_attributes
+
+    assert normalize_attributes({"a": "1", "b": 2, "c": True}) == {
+        "a": "1",
+        "b": "2",
+        "c": "true",
+    }
+    with pytest.raises(ItemValidationError, match="single scalars"):
+        normalize_attributes({"bad": {"inner": "x"}})
+    with pytest.raises(ItemValidationError, match="500"):
+        normalize_attributes({"note": "x" * 501})
+    with pytest.raises(ItemValidationError, match="40 keys"):
+        normalize_attributes({f"k{i}": "v" for i in range(41)})
+
+
+@pytest.mark.asyncio
+async def test_attributes_reject_oversize_and_preserve_on_patch(client):
+    oversize = await client.post(
+        "/api/v1/items",
+        json={
+            "title": "Huge",
+            "attributes": {"note": "x" * 501},
+        },
+    )
+    assert oversize.status_code == 422
+
+    ok = await client.post(
+        "/api/v1/items",
+        json={"title": "Ok", "attributes": {"note": "fine", "qty": "2"}},
+    )
+    assert ok.status_code == 201
+    item_id = ok.json()["id"]
+
+    # Unrelated PATCH must not amplify / rewrite attributes payload.
+    patched = await client.patch(
+        f"/api/v1/items/{item_id}",
+        json={"title": "Ok2"},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["attributes"] == {"note": "fine", "qty": "2"}
+
+    too_many = {f"k{i}": "v" for i in range(41)}
+    reject_keys = await client.patch(
+        f"/api/v1/items/{item_id}",
+        json={"attributes": too_many},
+    )
+    assert reject_keys.status_code == 422
 
 
 @pytest.mark.asyncio

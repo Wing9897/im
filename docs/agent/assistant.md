@@ -101,7 +101,16 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 
 ## Tools
 
-统一注册：`server/agent/tools_registry.py`（合并 calendar / messages / intelligence / 条件性 web／条件性 tasks）。
+统一注册：`server/agent/tools_registry.py`（合并 calendar / messages / intelligence / items / 条件性 web／条件性 tasks）。
+
+### 物品（trackable items）
+
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；到期投影走统一 `GET /api/v1/calendar/items`（`source=item`），勿另开双轨。
+
+| Tool | 行为 | 限额 |
+|------|------|------|
+| `items.list_expiring` | 列出即将到期／已过期的 active 物品（相对「今天」+ `days` 窗） | 默认合理上限，见 handler |
+| `items.create` | 创建物品（可选分类／到期日／attributes；空 remind 时套分类 `defaultRemindBeforeDays`） | 1 条 |
 
 ### 任务顾问（仅任务编辑 surface）
 
@@ -204,7 +213,7 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 |------|------|
 | Agent API | `server/api/routes/agent.py` |
 | Runtime / registry | `server/agent/runtime.py`, `server/agent/tools_registry.py` |
-| Tools | `server/agent/tools_calendar/`, `tools_messages.py`, `tools_intelligence.py`, `tools_web_search.py`, `tools_tasks.py`；参数强制转换 `server/agent/tool_args.py` |
+| Tools | `server/agent/tools_calendar/`, `tools_items/`, `tools_messages.py`, `tools_intelligence.py`, `tools_web_search.py`, `tools_tasks.py`；参数强制转换 `server/agent/tool_args.py` |
 | 任务页 bridge／双头像 | `web/src/domain/tasks/taskEditorDraftBridge.ts`；`AssistantQuickDialog`／`AssistantDirectBubbles`／`AssistantToolSteps` |
 | 消息查询 | `server/queries/messages_queries.py` |
 | Web search | `server/web_search/` |

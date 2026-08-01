@@ -18,9 +18,11 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   daysUntil,
   expiryTone,
+  itemsEmptyKind,
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
 } from "../../domain/items/itemAttributes";
+import { formatItemsError } from "../../domain/items/itemErrors";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { CategoryManageDialog } from "./CategoryManageDialog";
 
@@ -66,11 +68,11 @@ export function ItemsPage() {
       setCategories(categoryRows);
       setWorksets(worksetRows);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(formatItemsError(err, t));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void reload();
@@ -150,6 +152,11 @@ export function ItemsPage() {
       return { worksetId, rows };
     });
   }, [filtered, worksets]);
+
+  const emptyKind = itemsEmptyKind({
+    totalCount: items.length,
+    filteredCount: filtered.length,
+  });
 
   const handleSave = async (draft: {
     id?: string;
@@ -240,10 +247,14 @@ export function ItemsPage() {
       ) : null}
       {loading ? <p className="text-[13px] text-text-muted">…</p> : null}
 
-      {!loading && filtered.length === 0 ? (
+      {!loading && emptyKind !== "none" ? (
         <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
-          <p className="m-0 text-[14px] text-text-secondary">{t("empty")}</p>
-          <p className="m-0 mt-2 text-[12px] text-text-muted">{t("emptyHint")}</p>
+          <p className="m-0 text-[14px] text-text-secondary">
+            {emptyKind === "true-empty" ? t("empty") : t("emptyFiltered")}
+          </p>
+          <p className="m-0 mt-2 text-[12px] text-text-muted">
+            {emptyKind === "true-empty" ? t("emptyHint") : t("emptyFilteredHint")}
+          </p>
         </div>
       ) : null}
 
@@ -256,7 +267,7 @@ export function ItemsPage() {
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
               {rows.map((item) => {
                 const days = daysUntil(item.expiresAt);
-                const tone = expiryTone(days);
+                const tone = expiryTone(days, item.remindBeforeDays);
                 const cat = item.categoryId ? categoryById.get(item.categoryId) : undefined;
                 return (
                   <li

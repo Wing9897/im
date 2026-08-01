@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   daysUntil,
   expiryTone,
+  itemsEmptyKind,
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
 } from "./itemAttributes";
@@ -52,5 +53,22 @@ describe("daysUntil / expiryTone", () => {
     expect(expiryTone(-1)).toBe("overdue");
     expect(expiryTone(30)).toBe("ok");
     expect(expiryTone(null)).toBe("none");
+  });
+
+  it("uses remindBeforeDays as the soon window (not hard-coded 7)", () => {
+    expect(expiryTone(10, 14)).toBe("soon");
+    expect(expiryTone(20, 14)).toBe("ok");
+    expect(expiryTone(5, 3)).toBe("ok");
+    expect(expiryTone(3, 3)).toBe("soon");
+    expect(expiryTone(8, null)).toBe("ok");
+    expect(expiryTone(7, undefined)).toBe("soon");
+  });
+});
+
+describe("itemsEmptyKind", () => {
+  it("splits true-empty vs filter-empty", () => {
+    expect(itemsEmptyKind({ totalCount: 0, filteredCount: 0 })).toBe("true-empty");
+    expect(itemsEmptyKind({ totalCount: 4, filteredCount: 0 })).toBe("filtered-empty");
+    expect(itemsEmptyKind({ totalCount: 4, filteredCount: 2 })).toBe("none");
   });
 });

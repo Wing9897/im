@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   createItemCategory,
@@ -7,6 +7,7 @@ import {
   type ItemCategory,
   type ItemFieldSchemaEntry,
 } from "../../api/items";
+import { formatItemsError } from "../../domain/items/itemErrors";
 
 type Props = {
   categories: ItemCategory[];
@@ -23,6 +24,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const [newKey, setNewKey] = useState("");
   const [newLabel, setNewLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const startEdit = (cat: ItemCategory) => {
     setEditingId(cat.id);
@@ -41,8 +43,9 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   };
 
   const save = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || busy) return;
     setError(null);
+    setBusy(true);
     try {
       if (editingId === "new") {
         await createItemCategory({
@@ -60,15 +63,45 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
       setEditingId(null);
       await onChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(formatItemsError(err, t));
+    } finally {
+      setBusy(false);
     }
   };
+
+  const confirmDelete = (cat: ItemCategory) => {
+    const label = cat.slug
+      ? t(`seed.${cat.slug}`, { defaultValue: cat.name })
+      : cat.name;
+    const message = cat.slug
+      ? t("deleteSeedCategoryConfirm", { name: label })
+      : t("deleteCategoryConfirm");
+    if (!window.confirm(message)) return;
+    setBusy(true);
+    void deleteItemCategory(cat.id)
+      .then(onChanged)
+      .catch((err) => setError(formatItemsError(err, t)))
+      .finally(() => setBusy(false));
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || busy) return;
+      event.preventDefault();
+      onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [busy, onClose]);
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       role="dialog"
       aria-modal="true"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !busy) onClose();
+      }}
     >
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-surface p-4 shadow-lg">
         <div className="mb-3 flex items-center justify-between">
@@ -100,10 +133,8 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
               <button
                 type="button"
                 className="text-[11px] text-danger"
-                onClick={() => {
-                  if (!window.confirm(t("deleteCategoryConfirm"))) return;
-                  void deleteItemCategory(cat.id).then(onChanged);
-                }}
+                disabled={busy}
+                onClick={() => confirmDelete(cat)}
               >
                 {t("deleteCategory")}
               </button>
