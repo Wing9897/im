@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 
+import { ApiRequestError } from "../../api/client";
 import { fetchCalendarOccurrences } from "../../api/results";
 import { fetchTaskSchedule } from "../../api/taskSchedule";
 import { listUserEvents, type UserEvent } from "../../api/userEvents";
@@ -64,6 +65,10 @@ function sortByStart(items: TaskScheduleRelatedItem[]): TaskScheduleRelatedItem[
   return [...items].sort((a, b) => a.startTime.localeCompare(b.startTime)).slice(0, MAX_ITEMS);
 }
 
+function isScheduleNotFound(error: unknown): boolean {
+  return error instanceof ApiRequestError && error.status === 404;
+}
+
 export function useTaskScheduleRelatedEvents(
   taskId: string | undefined,
   analysisMode: AnalysisMode | undefined,
@@ -94,23 +99,38 @@ export function useTaskScheduleRelatedEvents(
       try {
         const ownedEvents = await listUserEvents({ taskId, start, end });
         let occurrences: CalendarOccurrence[] = [];
-        let location: string | null = null;
+        /** undefined = keep previous location (soft schedule failure). */
+        let nextLocation: string | null | undefined = undefined;
+        let scheduleError: string | null = null;
         if (analysisMode === "recurring") {
-          const [occRows, schedule] = await Promise.all([
+          const [occRows, scheduleOutcome] = await Promise.all([
             fetchCalendarOccurrences(start, end, { taskId }),
-            fetchTaskSchedule(taskId).catch(() => null),
+            fetchTaskSchedule(taskId).then(
+              (schedule) => ({ kind: "ok" as const, schedule }),
+              (err: unknown) => ({ kind: "error" as const, err }),
+            ),
           ]);
           occurrences = occRows;
-          location = schedule?.eventLocation?.trim() || null;
+          if (scheduleOutcome.kind === "ok") {
+            nextLocation = scheduleOutcome.schedule.eventLocation?.trim() || null;
+          } else if (isScheduleNotFound(scheduleOutcome.err)) {
+            nextLocation = null;
+          } else {
+            // Soft failure: keep related events / prior location; toast via `error`.
+            scheduleError = toErrorMessage(scheduleOutcome.err);
+          }
         }
         if (cancelled) return;
-        setEventLocation(location);
+        if (nextLocation !== undefined) {
+          setEventLocation(nextLocation);
+        }
         setItems(
           sortByStart([
             ...occurrences.map(fromOccurrence),
             ...ownedEvents.map(fromUserEvent),
           ]),
         );
+        setError(scheduleError);
       } catch (err) {
         if (cancelled) return;
         setItems([]);

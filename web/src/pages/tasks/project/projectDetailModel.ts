@@ -46,3 +46,35 @@ export function findActivitySpan(
     ) ?? null
   );
 }
+
+/** Outcome of fetching one child recurring task's schedule subresource. */
+export type ChildScheduleFetchResult =
+  | { childId: string; kind: "ok"; rrule: string }
+  | { childId: string; kind: "missing" }
+  | { childId: string; kind: "error"; message: string };
+
+/**
+ * Merge child schedule fetch outcomes into displayed RRULEs.
+ * Failures must not look like empty RRULE: preserve the last success and
+ * surface the first error message.
+ */
+export function mergeChildRrules(
+  prev: ReadonlyMap<string, string>,
+  results: readonly ChildScheduleFetchResult[],
+): { rrules: Map<string, string>; error: string | null } {
+  const rrules = new Map<string, string>();
+  let error: string | null = null;
+  for (const row of results) {
+    if (row.kind === "ok") {
+      if (row.rrule) rrules.set(row.childId, row.rrule);
+      continue;
+    }
+    if (row.kind === "missing") {
+      continue;
+    }
+    const kept = prev.get(row.childId);
+    if (kept) rrules.set(row.childId, kept);
+    if (!error) error = row.message;
+  }
+  return { rrules, error };
+}
