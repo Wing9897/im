@@ -50,7 +50,7 @@ async def test_query_window_merges_analysis_events_and_rrule(app) -> None:
 
 
 async def test_query_window_merges_user_events(app) -> None:
-    from server.user_events import create_user_event, list_user_events
+    from server.calendar.user_events import create_user_event, list_user_events
 
     db = app.state.db
     created = await create_user_event(
@@ -232,7 +232,7 @@ async def test_get_event_analysis_and_rrule_occurrence(app) -> None:
 
 
 async def test_get_event_returns_user_event_detail(app) -> None:
-    from server.user_events import create_user_event
+    from server.calendar.user_events import create_user_event
 
     created = await create_user_event(
         app.state.db,
@@ -270,7 +270,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
 async def test_query_window_filters_by_workset_id(app) -> None:
     from server.db.database import TransactionDb
     from server.queries.worksets_queries import insert_workset
-    from server.user_events import create_user_event
+    from server.calendar.user_events import create_user_event
     from server.util import utc_now_iso
 
     db = app.state.db

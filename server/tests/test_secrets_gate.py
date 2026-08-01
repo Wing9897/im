@@ -8,7 +8,7 @@ import pytest
 from cryptography.fernet import Fernet
 from httpx import ASGITransport, AsyncClient
 
-from server.admin_auth import create_admin_account
+from server.auth.admin_auth import create_admin_account
 from server.config import set_configs
 from server.db.database import Database
 from server.main import create_app

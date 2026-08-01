@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from server.access_keys import DEFAULT_SCOPES, FULL_SCOPE, READ_SCOPE, seed_access_key
+from server.auth.access_keys import DEFAULT_SCOPES, FULL_SCOPE, READ_SCOPE, seed_access_key
 from server.agent.runtime import AgentRuntime
 from server.analyzer.llm_client import ConfigurableLlmClient
-from server.device_auth import create_device_session
+from server.auth.device_auth import create_device_session
 
 
 async def _auth_headers(secret: str) -> dict[str, str]:

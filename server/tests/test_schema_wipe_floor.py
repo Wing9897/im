@@ -10,7 +10,7 @@ import aiosqlite
 import pytest
 
 from server.db.database import Database, SchemaBaselineError
-from server.db.migrations import (
+from server.db.schema_bootstrap import (
     CURRENT_SCHEMA_FINGERPRINT,
     CURRENT_SCHEMA_VERSION,
     ensure_supported_schema,

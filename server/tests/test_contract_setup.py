@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from server.access_keys import create_access_key, seed_access_key
+from server.auth.access_keys import create_access_key, seed_access_key
 from server.config import get_config_bool, set_configs
 
 

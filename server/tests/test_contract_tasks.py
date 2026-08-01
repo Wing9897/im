@@ -244,7 +244,7 @@ async def test_delete_rolls_back_batch_cleanup_when_row_delete_fails(client, app
     async def boom(*_args, **_kwargs):
         raise RuntimeError("task row delete exploded")
 
-    monkeypatch.setattr("server.api.routes.tasks.delete_analysis_task", boom)
+    monkeypatch.setattr("server.services.task_crud.delete_analysis_task", boom)
 
     with pytest.raises(RuntimeError):
         await client.delete(f"/api/v1/tasks/{task_id}")
@@ -269,7 +269,7 @@ async def test_delete_reregisters_task_when_the_write_fails(client, app, monkeyp
     async def boom(*_args, **_kwargs):
         raise RuntimeError("task row delete exploded")
 
-    monkeypatch.setattr("server.api.routes.tasks.delete_analysis_task", boom)
+    monkeypatch.setattr("server.services.task_crud.delete_analysis_task", boom)
 
     with pytest.raises(RuntimeError):
         await client.delete(f"/api/v1/tasks/{seed.TASK_LEADERBOARD}")

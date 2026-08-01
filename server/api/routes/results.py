@@ -32,7 +32,7 @@ from server.queries.results_queries import (
     fetch_trending_topics,
     query_analysis_events,
 )
-from server.timeline_dismissals import attach_dismissed_flag
+from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.util import parse_bool
 from server.wire.serializers import (
     serialize_analysis_event,

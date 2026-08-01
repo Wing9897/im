@@ -36,7 +36,7 @@ from server.queries.project_tick_queries import (
 from server.scheduler.batch_claim import load_task
 from server.scheduler.task_schedule_overrides import resolve_project_wave_interval_seconds
 from server.sse import Broadcaster
-from server.timeline_dismissals import active_timeline_items
+from server.calendar.timeline_dismissals import active_timeline_items
 
 logger = logging.getLogger(__name__)
 

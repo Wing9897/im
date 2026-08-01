@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from server.access_keys import (
+from server.auth.access_keys import (
     resolve_access_token,
     scopes_allow_full,
     touch_access_key_last_used,

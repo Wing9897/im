@@ -7,7 +7,7 @@ from server.analyzer.prompt import (
     build_json_instruction,
     format_messages,
 )
-from server.api.routes.task_preset_data import BUILTIN_PRESETS
+from server.presets.task_presets import BUILTIN_PRESETS
 
 
 def test_event_json_instruction_covers_optional_time_location_rules():

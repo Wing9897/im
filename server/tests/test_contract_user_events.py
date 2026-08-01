@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from server.tests.contract_helpers import assert_keys
-from server.user_events import create_user_event
+from server.calendar.user_events import create_user_event
 
 USER_EVENT_KEYS = [
     "id",

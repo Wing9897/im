@@ -5,7 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from server.collector.base import AdapterStatus
-from server.db.migrations import CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inspect_schema
+from server.db.schema_bootstrap import CURRENT_SCHEMA_FINGERPRINT, CURRENT_SCHEMA_VERSION, inspect_schema
 from server.tests import seed
 from server.tests.contract_helpers import assert_keys
 

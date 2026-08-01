@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from server.user_events import create_user_event, list_user_events
+from server.calendar.user_events import create_user_event, list_user_events
 
 USER_EVENT_KEYS = {
     "id",

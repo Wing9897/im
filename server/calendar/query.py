@@ -20,6 +20,8 @@ from server.calendar.normalize import (
     parse_cursor,
 )
 from server.calendar.rrule import expand_calendar_occurrences
+from server.calendar.timeline_dismissals import attach_dismissed_flag, is_timeline_event_dismissed
+from server.calendar.user_events import list_user_events
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
 from server.queries.calendar_queries import (
@@ -30,8 +32,6 @@ from server.queries.calendar_queries import (
 )
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import parse_iso, to_iso_z
-from server.timeline_dismissals import attach_dismissed_flag, is_timeline_event_dismissed
-from server.user_events import list_user_events
 from server.wire.serializers import serialize_user_event
 from server.worksets_const import SYSTEM_WORKSET_ID
 

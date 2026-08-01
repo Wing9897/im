@@ -40,6 +40,10 @@ def main() -> None:
     # Windows uses ';' as --add-data separator; POSIX uses ':'.
     data_sep = ";" if sys.platform == "win32" else ":"
     version_data = f"{VERSION_FILE}{data_sep}."
+    presets_src = ROOT / "shared" / "task_presets.json"
+    if not presets_src.is_file():
+        raise SystemExit(f"Missing task presets catalog at {presets_src}")
+    presets_data = f"{presets_src}{data_sep}."
     PyInstaller.__main__.run(
         [
             str(ROOT / "server" / "__main__.py"),
@@ -52,6 +56,7 @@ def main() -> None:
             f"--workpath={WORK_DIR}",
             f"--specpath={WORK_DIR}",
             f"--add-data={version_data}",
+            f"--add-data={presets_data}",
             "--exclude-module=server.tests",
             "--exclude-module=icalendar.tests",
             *(f"--hidden-import={name}" for name in server_modules),
@@ -67,6 +72,9 @@ def main() -> None:
     bundled = DIST_DIR / "intelligence-monitor-server" / "_internal" / "VERSION"
     if not bundled.is_file():
         raise SystemExit(f"PyInstaller did not bundle VERSION at {bundled}")
+    bundled_presets = DIST_DIR / "intelligence-monitor-server" / "_internal" / "task_presets.json"
+    if not bundled_presets.is_file():
+        raise SystemExit(f"PyInstaller did not bundle task presets at {bundled_presets}")
 
 
 if __name__ == "__main__":

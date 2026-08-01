@@ -12,19 +12,19 @@ from __future__ import annotations
 
 from fastapi import Request
 
-from server.access_keys import (
+from server.auth.access_keys import (
     READ_SCOPE,
     access_key_allows_method,
     resolve_access_token,
     touch_access_key_last_used,
 )
-from server.config import get_config_bool
-from server.db.database import Database
-from server.device_auth import (
+from server.auth.device_auth import (
     credentials_configured,
     maybe_touch_session,
     resolve_session_id_for_access_token,
 )
+from server.config import get_config_bool
+from server.db.database import Database
 from server.errors import AUTH_SETUP_REQUIRED, FORBIDDEN, http_error
 
 _LOOPBACK_HOSTS = ("127.0.0.1", "::1", "localhost", "testclient")

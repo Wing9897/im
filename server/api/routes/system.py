@@ -14,7 +14,7 @@ import time
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from server.admin_auth import verify_admin_credentials
+from server.auth.admin_auth import verify_admin_credentials
 from server.analysis_control import emergency_abort, set_analysis_paused
 from server.api.collector_status import resolve_collector_status
 from server.api.deps import (

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from httpx import ASGITransport, AsyncClient
 
-from server.db.migrations import CURRENT_SCHEMA_VERSION
+from server.db.schema_bootstrap import CURRENT_SCHEMA_VERSION
 from server.main import create_app
 
 

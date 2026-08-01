@@ -12,7 +12,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-from server.admin_auth import has_admin_account
+from server.auth.admin_auth import has_admin_account
 from server.config import get_config_bool, set_configs
 from server.db.database import Database, TransactionDb
 from server.time_iso import parse_iso, to_iso_z
@@ -84,7 +84,7 @@ async def credentials_configured(db: Database) -> bool:
     (credentials exist but the presented Bearer is invalid). Active device
     sessions count — otherwise a valid session + bad token incorrectly yields 503.
     """
-    from server.access_keys import access_keys_configured
+    from server.auth.access_keys import access_keys_configured
 
     if await access_keys_configured(db):
         return True

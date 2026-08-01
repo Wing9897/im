@@ -13,7 +13,7 @@ from pydantic import BaseModel
 
 from server import __version__
 from server.constants import HOST_ENV
-from server.db.migrations import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
+from server.db.schema_bootstrap import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
 
 router = APIRouter(tags=["health"])
 

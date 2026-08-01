@@ -28,12 +28,12 @@ from server.services.recurring_task_writes import (
     soft_delete_recurring_task,
 )
 from server.services.task_writes import TaskWriteError
-from server.timeline_dismissals import (
+from server.calendar.timeline_dismissals import (
     CALENDAR_ITEM_DISMISS_SOURCE,
     active_timeline_items,
     dismiss_timeline_event,
 )
-from server.user_events import (
+from server.calendar.user_events import (
     UserEventValidationError,
     create_user_event,
     update_user_event,

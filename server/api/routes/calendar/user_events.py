@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from server.api.deps import get_db, publish_resource_modified
 from server.api.schemas.responses import UserEventResponse
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
-from server.user_events import (
+from server.calendar.user_events import (
     UserEventTaskIdError,
     UserEventValidationError,
     UserEventWorksetIdError,

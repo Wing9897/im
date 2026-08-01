@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from server.timeline_dismissals import dismiss_timeline_event, restore_timeline_event
-from server.user_events import create_user_event, get_user_event_row, list_user_events
+from server.calendar.timeline_dismissals import dismiss_timeline_event, restore_timeline_event
+from server.calendar.user_events import create_user_event, get_user_event_row, list_user_events
 
 
 async def test_dismiss_restore_roundtrip(client) -> None:

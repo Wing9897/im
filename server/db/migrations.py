@@ -1,88 +1,11 @@
-"""Wipe-only schema bootstrap and validation (no migration registry).
+"""Compatibility shim — use :mod:`server.db.schema_bootstrap`.
 
-Stamp **5** is the sole supported floor. There is no ``SCHEMA_MIGRATIONS`` list,
-step runner, backup/restore path, or upgrade route — only create-from-DDL or
-hard-reject → ``python scripts/reset_local_databases.py --apply``.
-
-Empty databases are created from the authoritative DDL in ``schema_ddl.py``
-(currently **25** tables). Exact unstamped stamp-5 fingerprints are stamped
-(``PRAGMA user_version=5``). Every other non-empty schema is rejected without
-mutation and with an explicit reset command.
+Stamp-5 wipe-only bootstrap lives in ``schema_bootstrap.py``. This module
+re-exports the same public API so older ``from server.db.migrations import …``
+imports keep working during the rename window.
 """
 
 from __future__ import annotations
 
-import aiosqlite
-
-from server.db.schema import DDL
-from server.db.schema_inspect import (
-    CURRENT_SCHEMA_FINGERPRINT,
-    CURRENT_SCHEMA_VERSION,
-    SCHEMA_SEMVER,
-    ColumnSignature,
-    ForeignKeyGroupSignature,
-    IndexSignature,
-    SchemaEvolutionError,
-    SchemaFingerprint,
-    _fingerprint_mismatch_categories,
-    _require_current_structure,
-    inspect_schema,
-)
-
-RESET_COMMAND = "python scripts/reset_local_databases.py --apply"
-
-__all__ = [
-    "CURRENT_SCHEMA_FINGERPRINT",
-    "CURRENT_SCHEMA_VERSION",
-    "RESET_COMMAND",
-    "SCHEMA_SEMVER",
-    "ColumnSignature",
-    "ForeignKeyGroupSignature",
-    "IndexSignature",
-    "SchemaEvolutionError",
-    "SchemaFingerprint",
-    "_fingerprint_mismatch_categories",
-    "_require_current_structure",
-    "ensure_supported_schema",
-    "inspect_schema",
-]
-
-
-def _reset_required(message: str) -> SchemaEvolutionError:
-    return SchemaEvolutionError(f"{message}. Reset required: {RESET_COMMAND}")
-
-
-async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
-    """Create stamp 5 or validate it; never migrate or silently wipe data."""
-    fingerprint = await inspect_schema(conn)
-    version = fingerprint.version
-
-    if not fingerprint.tables and version == 0:
-        await conn.executescript(DDL)
-        created = await inspect_schema(conn)
-        _require_current_structure(created)
-        await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
-        await conn.commit()
-        return
-
-    if version == CURRENT_SCHEMA_VERSION:
-        try:
-            _require_current_structure(fingerprint)
-        except SchemaEvolutionError as exc:
-            raise _reset_required(str(exc)) from exc
-        return
-
-    if version == 0 and not _fingerprint_mismatch_categories(fingerprint):
-        await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
-        await conn.commit()
-        return
-
-    if version > CURRENT_SCHEMA_VERSION:
-        raise _reset_required(
-            f"Database schema version {version} is newer than supported version {CURRENT_SCHEMA_VERSION}"
-        )
-    if version == 0:
-        categories = _fingerprint_mismatch_categories(fingerprint)
-        detail = ", ".join(categories) if categories else "unknown structure"
-        raise _reset_required(f"Unstamped database fingerprint mismatch: {detail}")
-    raise _reset_required(f"Unsupported database schema version {version}; stamp {CURRENT_SCHEMA_VERSION} is wipe-only")
+from server.db.schema_bootstrap import *  # noqa: F403
+from server.db.schema_bootstrap import __all__ as __all__  # noqa: F401

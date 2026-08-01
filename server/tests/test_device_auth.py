@@ -6,8 +6,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from server.admin_auth import create_admin_account
-from server.device_auth import (
+from server.auth.admin_auth import create_admin_account
+from server.auth.device_auth import (
     ACCESS_TTL,
     create_device_session,
     has_active_device_session,
@@ -104,7 +104,7 @@ async def test_issue_tokens_rolls_back_a_session_without_its_access_token(app, m
     Writing them as two independent statements left, on a mid-way failure, a
     session that could neither authenticate nor be refreshed.
     """
-    from server import device_auth
+    from server.auth import device_auth
 
     db = app.state.db
     real_new_id = device_auth.new_id

@@ -11,8 +11,8 @@ from typing import Any
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.access_keys import is_valid_access_token
-from server.admin_auth import (
+from server.auth.access_keys import is_valid_access_token
+from server.auth.admin_auth import (
     AdminAuthError,
     create_admin_account,
     get_admin_by_username,
@@ -32,7 +32,7 @@ from server.connection_file import (
     disarm_local_password_reset,
     is_local_password_reset_armed,
 )
-from server.device_auth import (
+from server.auth.device_auth import (
     create_device_session,
     credentials_configured,
     has_active_device_session,

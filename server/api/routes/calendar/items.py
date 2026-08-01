@@ -11,7 +11,7 @@ from server.api.schemas.responses import CalendarOccurrenceResponse
 from server.calendar.query import expand_active_calendar_occurrences
 from server.errors import VALIDATION_ERROR, http_error
 from server.time_iso import parse_iso
-from server.timeline_dismissals import attach_dismissed_flag
+from server.calendar.timeline_dismissals import attach_dismissed_flag
 
 router = APIRouter(tags=["calendar"])
 

@@ -1,10 +1,10 @@
-"""Tests for server.access_keys."""
+"""Tests for server.auth.access_keys."""
 
 from __future__ import annotations
 
 import pytest
 
-from server.access_keys import (
+from server.auth.access_keys import (
     READ_SCOPE,
     access_key_allows_method,
     access_key_path_allowed,

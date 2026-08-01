@@ -1,7 +1,7 @@
 """Shared CRUD for user-authored timed events (manual UI + assistant tools).
 
 Field normalization / FK-resolution helpers live in ``user_events_normalize``
-and are re-exported below so existing ``from server.user_events import ...``
+and are re-exported below so existing ``from server.calendar.user_events import ...``
 call sites keep working unchanged.
 """
 
@@ -9,9 +9,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.db.database import Database
-from server.timeline_dismissals import attach_dismissed_flag, dismiss_timeline_event
-from server.user_events_normalize import (
+from server.calendar.timeline_dismissals import attach_dismissed_flag, dismiss_timeline_event
+from server.calendar.user_events_normalize import (
     _UNSET,
     ALLOWED_ORIGINS,
     USER_EVENT_TASK_MODES,
@@ -28,6 +27,7 @@ from server.user_events_normalize import (
     resolve_user_event_task_id,
     resolve_user_event_workset_id,
 )
+from server.db.database import Database
 from server.util import new_id, utc_now_iso
 from server.wire.serializers import serialize_user_event
 from server.worksets_const import SYSTEM_WORKSET_ID

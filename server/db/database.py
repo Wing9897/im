@@ -1,8 +1,9 @@
 """aiosqlite connection wrapper with schema-fingerprint validation.
 
-Schema evolution is delegated to ``server.db.migrations``; destructive rebuild
-remains an explicit reset operation. See ``docs/ARCHITECTURE.md`` for the
-supported schema matrix.
+Schema bootstrap／reject is delegated to ``server.db.schema_bootstrap``
+(wipe-only stamp-5; no migration registry). Destructive rebuild remains an
+explicit reset operation. See ``docs/ARCHITECTURE.md`` for the supported
+schema matrix.
 """
 
 from __future__ import annotations
@@ -14,12 +15,12 @@ from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Protocol, 
 
 import aiosqlite
 
-from server.db.migrations import (
+from server.db.schema import DDL
+from server.db.schema_bootstrap import (
     CURRENT_SCHEMA_VERSION,
     SchemaEvolutionError,
     ensure_supported_schema,
 )
-from server.db.schema import DDL
 from server.db.sqlite_busy import is_sqlite_busy
 
 logger = logging.getLogger(__name__)

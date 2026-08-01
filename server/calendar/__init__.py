@@ -1,4 +1,9 @@
-"""Calendar read／RRULE／wire-shape helpers (shared by Results API and Agent tools)."""
+"""Calendar domain: read／RRULE／wire-shape + user_events／timeline dismissals.
+
+Read paths: ``query`` + ``normalize``. Write domain: ``user_events`` /
+``user_events_normalize`` / ``timeline_dismissals``. Shared by Results API,
+Calendar HTTP routes, and Agent tools.
+"""
 
 from server.calendar.normalize import (
     OCCURRENCE_ID_RE,

@@ -1,8 +1,9 @@
-"""Parity guard: ``BUILTIN_PRESETS`` vs zh-Hant ``tasks.presets`` (display SoT).
+"""Parity guard: shared JSON catalog vs zh-Hant ``tasks.presets`` (display SoT).
 
-Display text source of truth is the zh-Hant UI locale; ``task_preset_data.py``
-is only the API fallback (see docs/I18N-GLOSSARY.md#任務模板-presets顯示文案-sot).
-This test fails if either file is edited without the other — fix drift with
+Display text source of truth is the zh-Hant UI locale; ``BUILTIN_PRESETS``
+(loaded from ``shared/task_presets.json``) is the API fallback
+(see docs/I18N-GLOSSARY.md#任務模板-presets顯示文案-sot).
+This test fails if either side drifts — fix with
 ``uv run python scripts/sync_task_presets.py``.
 """
 
@@ -11,10 +12,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from server.api.routes.task_preset_data import BUILTIN_PRESETS
+from server.presets.task_presets import BUILTIN_PRESETS
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _LOCALE_PATH = _REPO_ROOT / "web" / "src" / "i18n" / "locales" / "zh-Hant" / "common.json"
+_SHARED_PATH = _REPO_ROOT / "shared" / "task_presets.json"
 
 _SYNCED_FIELDS = ("name", "description", "promptTemplate")
 
@@ -43,3 +45,10 @@ def test_task_preset_display_text_matches_locale_source_of_truth():
                 f"tasks.presets.{preset['id']}.{field}; "
                 "run `uv run python scripts/sync_task_presets.py`."
             )
+
+
+def test_builtin_presets_load_from_shared_json():
+    assert _SHARED_PATH.is_file()
+    raw = json.loads(_SHARED_PATH.read_text(encoding="utf-8"))
+    assert len(BUILTIN_PRESETS) == len(raw)
+    assert BUILTIN_PRESETS[0]["id"] == raw[0]["id"]

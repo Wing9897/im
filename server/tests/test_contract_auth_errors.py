@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-from server.access_keys import READ_SCOPE, seed_access_key
+from server.auth.access_keys import READ_SCOPE, seed_access_key
 
 API_KEY = "contract-test-key-123"
 A2A_ONLY_KEY = "contract-a2a-only-key"
