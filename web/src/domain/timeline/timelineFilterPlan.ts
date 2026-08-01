@@ -16,6 +16,8 @@ export type TimelineFilterPlan = {
   fetchAnalysis: boolean;
   fetchCalendar: boolean;
   fetchUserEvents: boolean;
+  /** Items are owned by workset only — not an isolated filter bucket. */
+  fetchItems: boolean;
   /** `null` = no task_id filter (all); otherwise IN list for event-mode tasks. */
   analysisTaskIds: string[] | null;
   /** `null` = all recurring; otherwise IN list for recurring tasks. */
@@ -50,6 +52,7 @@ export function resolveTimelineFilterPlan(
       fetchAnalysis: true,
       fetchCalendar: true,
       fetchUserEvents: true,
+      fetchItems: true,
       analysisTaskIds: null,
       recurringTaskIds: null,
       selectedRealTaskIds: [],
@@ -64,6 +67,7 @@ export function resolveTimelineFilterPlan(
       fetchAnalysis: false,
       fetchCalendar: false,
       fetchUserEvents: false,
+      fetchItems: false,
       analysisTaskIds: [],
       recurringTaskIds: [],
       selectedRealTaskIds: [],
@@ -105,11 +109,14 @@ export function resolveTimelineFilterPlan(
     includeGeneralWorksetUserEvents ||
     fetchUserForTagged ||
     selectedWorksetIds.some((id) => id !== SYSTEM_WORKSET_ID);
+  // Items ride along with selected worksets (no separate items bucket).
+  const fetchItems = selectedWorksetIds.length > 0;
 
   return {
     fetchAnalysis: analysisTaskIds.length > 0,
     fetchCalendar: recurringTaskIds.length > 0,
     fetchUserEvents,
+    fetchItems,
     analysisTaskIds: analysisTaskIds.length > 0 ? analysisTaskIds : [],
     recurringTaskIds: recurringTaskIds.length > 0 ? recurringTaskIds : [],
     selectedRealTaskIds,

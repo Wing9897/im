@@ -14,16 +14,22 @@ const {
   mockFetchSharedTimelineEvents,
   mockFetchSharedCalendarItems,
   mockFetchSharedUserEvents,
+  mockListItems,
 } = vi.hoisted(() => ({
   mockFetchSharedTimelineEvents: vi.fn(),
   mockFetchSharedCalendarItems: vi.fn(),
   mockFetchSharedUserEvents: vi.fn(),
+  mockListItems: vi.fn(),
 }));
 
 vi.mock("./sharedCalendarFetch", () => ({
   fetchSharedTimelineEvents: (...args: unknown[]) => mockFetchSharedTimelineEvents(...args),
   fetchSharedCalendarItems: (...args: unknown[]) => mockFetchSharedCalendarItems(...args),
   fetchSharedUserEvents: (...args: unknown[]) => mockFetchSharedUserEvents(...args),
+}));
+
+vi.mock("../../api/items", () => ({
+  listItems: (...args: unknown[]) => mockListItems(...args),
 }));
 
 function makeAnalysis(overrides: Partial<TimelineItem> = {}): TimelineItem {
@@ -140,6 +146,7 @@ describe("fetchMergedTimelineEvents", () => {
     mockFetchSharedTimelineEvents.mockReset().mockResolvedValue([]);
     mockFetchSharedCalendarItems.mockReset().mockResolvedValue([]);
     mockFetchSharedUserEvents.mockReset().mockResolvedValue([]);
+    mockListItems.mockReset().mockResolvedValue([]);
   });
 
   it("skips sources the filter plan does not need", async () => {

@@ -380,6 +380,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/items/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Categories */
+        get: operations["list_categories_api_v1_items_categories_get"];
+        put?: never;
+        /** Post Category */
+        post: operations["post_category_api_v1_items_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items/categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Category */
+        get: operations["get_category_api_v1_items_categories__category_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Category Route */
+        delete: operations["delete_category_route_api_v1_items_categories__category_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Category Route */
+        patch: operations["patch_category_route_api_v1_items_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Items */
+        get: operations["list_items_api_v1_items_get"];
+        put?: never;
+        /** Post Item */
+        post: operations["post_item_api_v1_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Item */
+        get: operations["get_item_api_v1_items__item_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Item Route */
+        delete: operations["delete_item_route_api_v1_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Item Route */
+        patch: operations["patch_item_route_api_v1_items__item_id__patch"];
+        trace?: never;
+    };
     "/api/v1/accounts": {
         parameters: {
             query?: never;
@@ -2411,6 +2485,43 @@ export interface components {
             /** Dismissed */
             dismissed: boolean;
         };
+        /** CategoryCreateBody */
+        CategoryCreateBody: {
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /**
+             * Sortorder
+             * @default 0
+             */
+            sortOrder: number | null;
+            /** Color */
+            color?: string | null;
+            /** Fieldschema */
+            fieldSchema?: {
+                [key: string]: string;
+            }[] | null;
+            /** Defaultremindbeforedays */
+            defaultRemindBeforeDays?: number | null;
+        };
+        /** CategoryUpdateBody */
+        CategoryUpdateBody: {
+            /** Name */
+            name?: string | null;
+            /** Slug */
+            slug?: string | null;
+            /** Sortorder */
+            sortOrder?: number | null;
+            /** Color */
+            color?: string | null;
+            /** Fieldschema */
+            fieldSchema?: {
+                [key: string]: string;
+            }[] | null;
+            /** Defaultremindbeforedays */
+            defaultRemindBeforeDays?: number | null;
+        };
         /** ChangePasswordBody */
         ChangePasswordBody: {
             /** Currentpassword */
@@ -2863,6 +2974,140 @@ export interface components {
             /** Metadata */
             metadata?: {
                 [key: string]: unknown;
+            } | null;
+        };
+        /** ItemCategoryDeleteResponse */
+        ItemCategoryDeleteResponse: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
+        /** ItemCategoryResponse */
+        ItemCategoryResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+            /**
+             * Sortorder
+             * @default 0
+             */
+            sortOrder: number;
+            /** Color */
+            color?: string | null;
+            /** Fieldschema */
+            fieldSchema?: components["schemas"]["ItemFieldSchemaEntry"][];
+            /** Defaultremindbeforedays */
+            defaultRemindBeforeDays?: number | null;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** ItemCreateBody */
+        ItemCreateBody: {
+            /** Title */
+            title: string;
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Categoryid */
+            categoryId?: string | null;
+            /** Purchasedat */
+            purchasedAt?: string | null;
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string | null;
+            /**
+             * Status
+             * @default active
+             */
+            status: string | null;
+            /** Attributes */
+            attributes?: {
+                [key: string]: string;
+            } | null;
+        };
+        /** ItemDeleteResponse */
+        ItemDeleteResponse: {
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+        };
+        /** ItemFieldSchemaEntry */
+        ItemFieldSchemaEntry: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
+        /** ItemResponse */
+        ItemResponse: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Categoryid */
+            categoryId?: string | null;
+            /** Worksetid */
+            worksetId: string;
+            /** Purchasedat */
+            purchasedAt?: string | null;
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Status
+             * @default active
+             */
+            status: string;
+            /** Attributes */
+            attributes?: {
+                [key: string]: string;
+            };
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** ItemUpdateBody */
+        ItemUpdateBody: {
+            /** Title */
+            title?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Categoryid */
+            categoryId?: string | null;
+            /** Purchasedat */
+            purchasedAt?: string | null;
+            /** Expiresat */
+            expiresAt?: string | null;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
+            /** Notes */
+            notes?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Attributes */
+            attributes?: {
+                [key: string]: string;
             } | null;
         };
         /** LogCreate */
@@ -4788,6 +5033,320 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorksetDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_categories_api_v1_items_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemCategoryResponse"][];
+                };
+            };
+        };
+    };
+    post_category_api_v1_items_categories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemCategoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_category_api_v1_items_categories__category_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemCategoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_category_route_api_v1_items_categories__category_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemCategoryDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_category_route_api_v1_items_categories__category_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryUpdateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemCategoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_items_api_v1_items_get: {
+        parameters: {
+            query?: {
+                worksetId?: string | null;
+                categoryId?: string | null;
+                status?: string | null;
+                search?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    post_item_api_v1_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_item_api_v1_items__item_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_item_route_api_v1_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_item_route_api_v1_items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemUpdateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemResponse"];
                 };
             };
             /** @description Validation Error */

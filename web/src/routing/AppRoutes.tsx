@@ -44,6 +44,7 @@ const ProjectDetailPage = lazyNamed(
 const LeaderboardPage = lazyNamed(() => import("../pages/leaderboard/LeaderboardPage"), "LeaderboardPage");
 const IntelligencePage = lazyNamed(() => import("../pages/intelligence/IntelligencePage"), "IntelligencePage");
 const TimelinePage = lazyNamed(() => import("../pages/timeline/TimelinePage"), "TimelinePage");
+const ItemsPage = lazyNamed(() => import("../pages/items/ItemsPage"), "ItemsPage");
 const SourceManagementPage = lazyNamed(
   () => import("../pages/sources/SourceManagementPage"),
   "SourceManagementPage",
@@ -103,6 +104,7 @@ export function AppRoutes() {
         <Route path="/leaderboard" element={<LazyPage Page={LeaderboardPage} />} />
         <Route path="/intelligence" element={<LazyPage Page={IntelligencePage} />} />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />
+        <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
         <Route path="/accounts" element={<LazyPage Page={SourceManagementPage} />} />
         <Route path="/actions" element={<LazyPage Page={ActionsPage} />} />
         <Route path="/assistant" element={<LazyPage Page={AssistantPage} />} />

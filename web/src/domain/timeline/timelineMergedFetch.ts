@@ -5,8 +5,11 @@
  * Timeline uses this plan-aware path with the same shared fetch + merge helpers.
  */
 
+import { listItems, type TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 import type { CalendarOccurrence, TimelineItem } from "../../types";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { projectItemToTimelineItems } from "../items/itemCalendarProjection";
 import { userEventMatchesSourceSelection } from "../tasks/sourceFilterSelection";
 import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
 import {
@@ -43,8 +46,16 @@ export function mergeTimelineFilterSources(opts: {
   analysisEvents: readonly TimelineItem[];
   calendarOccurrences: readonly CalendarOccurrence[];
   userEvents: readonly TimelineItem[];
+  itemEvents?: readonly TimelineItem[];
 }): TimelineItem[] {
-  const { selectedSources, filterPlan, analysisEvents, calendarOccurrences, userEvents } = opts;
+  const {
+    selectedSources,
+    filterPlan,
+    analysisEvents,
+    calendarOccurrences,
+    userEvents,
+    itemEvents = EMPTY_EVENTS,
+  } = opts;
 
   if (
     selectedSources !== null &&
@@ -76,8 +87,20 @@ export function mergeTimelineFilterSources(opts: {
         )
     : EMPTY_EVENTS;
 
+  const items = filterPlan.fetchItems
+    ? isAll
+      ? [...itemEvents]
+      : itemEvents.filter((event) => {
+          const wid =
+            typeof event.worksetId === "string" && event.worksetId.trim()
+              ? event.worksetId.trim()
+              : SYSTEM_WORKSET_ID;
+          return allowWorksets.has(wid);
+        })
+    : EMPTY_EVENTS;
+
   return mergeWithCalendarOccurrences(
-    [...analysis, ...users],
+    [...analysis, ...users, ...items],
     calendarFiltered,
   ) as TimelineItem[];
 }
@@ -117,11 +140,16 @@ export async function fetchMergedTimelineEvents(
     return EMPTY_EVENTS;
   }
 
-  if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+  if (
+    !filterPlan.fetchAnalysis &&
+    !filterPlan.fetchCalendar &&
+    !filterPlan.fetchUserEvents &&
+    !filterPlan.fetchItems
+  ) {
     return EMPTY_EVENTS;
   }
 
-  const [analysisEvents, calendarOccurrences, rawUserEvents] = await Promise.all([
+  const [analysisEvents, calendarOccurrences, rawUserEvents, rawItems] = await Promise.all([
     filterPlan.fetchAnalysis
       ? fetchSharedTimelineEvents({
           taskIds: filterPlan.analysisTaskIds,
@@ -141,6 +169,9 @@ export async function fetchMergedTimelineEvents(
     filterPlan.fetchUserEvents
       ? fetchSharedUserEvents({ start: startIso, end: endIso })
       : Promise.resolve([] as UserEvent[]),
+    filterPlan.fetchItems
+      ? listItems({ status: "active" })
+      : Promise.resolve([] as TrackableItem[]),
   ]);
 
   const userEvents = rawUserEvents
@@ -149,11 +180,14 @@ export async function fetchMergedTimelineEvents(
     )
     .filter((event): event is TimelineItem => event !== null);
 
+  const itemEvents = rawItems.flatMap((item) => projectItemToTimelineItems(item));
+
   return mergeTimelineFilterSources({
     selectedSources,
     filterPlan,
     analysisEvents,
     calendarOccurrences,
     userEvents,
+    itemEvents,
   });
 }

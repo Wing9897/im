@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Trackable items (schema stamp 6 / `schemaSemver` 0.1.0-beta.7):** `item_categories` + `items`, `/api/v1/items`, calendar `source=item`, agent `items.list_expiring` / `items.create`, FE `/items`. Wipe-only — existing DBs must reset.
+
 ## [1.0.0] - 2026-08-01
 
 ### Notes

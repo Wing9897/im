@@ -5,16 +5,15 @@
 create-from-DDL or hard-reject. A thin ``migrations.py`` shim re-exports this
 API for transitional imports.
 
-Stamp **5** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
+Stamp **6** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative DDL in
-``schema_ddl.py`` (currently **25** tables). Exact unstamped stamp-5
-fingerprints are stamped (``PRAGMA user_version=5``). Every other non-empty
+``schema_ddl.py`` (currently **27** tables). Exact unstamped stamp-6
+fingerprints are stamped (``PRAGMA user_version=6``). Every other non-empty
 schema is rejected without mutation →
 ``python scripts/reset_local_databases.py --apply``.
 
-This round does **not** bump the stamp; product SemVer / git tags are decoupled
-from ``SCHEMA_SEMVER`` / ``user_version``.
+Product SemVer / git tags are decoupled from ``SCHEMA_SEMVER`` / ``user_version``.
 """
 
 from __future__ import annotations
@@ -60,7 +59,7 @@ def _reset_required(message: str) -> SchemaEvolutionError:
 
 
 async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
-    """Create stamp 5 or validate it; never migrate or silently wipe data."""
+    """Create stamp 6 or validate it; never migrate or silently wipe data."""
     fingerprint = await inspect_schema(conn)
     version = fingerprint.version
 

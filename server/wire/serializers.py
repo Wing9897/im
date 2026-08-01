@@ -177,6 +177,51 @@ def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def serialize_item_category(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Soft-template item category."""
+    from server.items.normalize import parse_field_schema_json
+
+    remind = row.get("default_remind_before_days")
+    return {
+        "id": str(row["id"]),
+        "name": str(row.get("name") or ""),
+        "slug": row.get("slug") or None,
+        "sortOrder": int(row.get("sort_order") or 0),
+        "color": row.get("color") or None,
+        "fieldSchema": parse_field_schema_json(row.get("field_schema")),
+        "defaultRemindBeforeDays": int(remind) if remind is not None else None,
+        "createdAt": row.get("created_at"),
+        "updatedAt": row.get("updated_at"),
+    }
+
+
+def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Trackable item (core columns + soft attributes)."""
+    from server.items.normalize import parse_attributes_json
+
+    remind = row.get("remind_before_days")
+    raw_workset = row.get("workset_id")
+    workset_id = (
+        str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
+    )
+    raw_category = row.get("category_id")
+    category_id = str(raw_category).strip() if isinstance(raw_category, str) and raw_category.strip() else None
+    return {
+        "id": str(row["id"]),
+        "title": str(row.get("title") or ""),
+        "categoryId": category_id,
+        "worksetId": workset_id,
+        "purchasedAt": row.get("purchased_at") or None,
+        "expiresAt": row.get("expires_at") or None,
+        "remindBeforeDays": int(remind) if remind is not None else None,
+        "notes": str(row.get("notes") or ""),
+        "status": str(row.get("status") or "active"),
+        "attributes": parse_attributes_json(row.get("attributes_json")),
+        "createdAt": row.get("created_at"),
+        "updatedAt": row.get("updated_at"),
+    }
+
+
 def serialize_channel_ref(row: Mapping[str, Any]) -> dict[str, Any]:
     """ChannelRef inside AnalysisTask.channelIds."""
     platform = str(row["platform"])
