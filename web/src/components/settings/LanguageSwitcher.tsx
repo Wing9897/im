@@ -1,0 +1,109 @@
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { SelectField, SettingsRow } from "../ui";
+import {
+  APP_LOCALE_PREFERENCES,
+  APP_LOCALE_PREFERENCE_LABEL_KEYS,
+  getAppLocalePreference,
+  onAppLocaleChange,
+  setAppLocalePreference,
+  type AppLocalePreference,
+} from "../../i18n";
+
+const optionBaseClass =
+  "inline-flex cursor-pointer items-center rounded-md border text-body leading-snug transition-[border-color,background,color] duration-200";
+
+const optionSelectedClass =
+  "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-card))] font-medium text-text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_28%,transparent)]";
+
+const optionIdleClass =
+  "border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] text-text-secondary hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:text-text-primary";
+
+export type LanguageSwitcherVariant = "settings" | "compact";
+
+interface LanguageSwitcherProps {
+  /**
+   * `settings` — chip radiogroup with help (Settings → General).
+   * `compact` — native select for auth cards (top-right).
+   */
+  variant?: LanguageSwitcherVariant;
+}
+
+/** UI language preference (independent of TTS/STT speechLanguage). */
+export function LanguageSwitcher({ variant = "settings" }: LanguageSwitcherProps) {
+  const { t } = useTranslation("common");
+  const [preference, setPreference] = useState<AppLocalePreference>(() => getAppLocalePreference());
+
+  useEffect(() => {
+    return onAppLocaleChange(() => {
+      setPreference(getAppLocalePreference());
+    });
+  }, []);
+
+  const handleChange = (next: AppLocalePreference) => {
+    setPreference(next);
+    setAppLocalePreference(next);
+  };
+
+  if (variant === "compact") {
+    return (
+      <div data-testid="language-switcher" data-variant="compact">
+        <SelectField
+          id="auth-ui-locale"
+          className="min-w-[8.5rem] cursor-pointer py-1 pe-8 text-caption"
+          value={preference}
+          onChange={(e) => handleChange(e.target.value as AppLocalePreference)}
+          aria-label={t("language.label")}
+          data-testid="language-switcher-select"
+          title={t("language.label")}
+        >
+          {APP_LOCALE_PREFERENCES.map((id) => (
+            <option key={id} value={id} data-testid={`language-option-${id}`}>
+              {t(APP_LOCALE_PREFERENCE_LABEL_KEYS[id])}
+            </option>
+          ))}
+        </SelectField>
+      </div>
+    );
+  }
+
+  return (
+    <div data-testid="language-switcher" data-variant="settings">
+      <SettingsRow label={t("language.label")} help={t("language.help")}>
+        <div
+          role="radiogroup"
+          aria-label={t("language.label")}
+          className="flex flex-wrap gap-2"
+          data-testid="language-switcher-options"
+        >
+          {APP_LOCALE_PREFERENCES.map((id) => {
+            const selected = preference === id;
+            return (
+              <label
+                key={id}
+                className={[
+                  optionBaseClass,
+                  "px-3 py-1.5",
+                  selected ? optionSelectedClass : optionIdleClass,
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+              >
+                <input
+                  type="radio"
+                  name="ui-language"
+                  value={id}
+                  checked={selected}
+                  onChange={() => handleChange(id)}
+                  className="sr-only"
+                  data-testid={`language-option-${id}`}
+                />
+                {t(APP_LOCALE_PREFERENCE_LABEL_KEYS[id])}
+              </label>
+            );
+          })}
+        </div>
+      </SettingsRow>
+    </div>
+  );
+}

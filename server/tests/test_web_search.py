@@ -1,0 +1,177 @@
+"""Web search providers + schema gating."""
+
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, patch
+
+from server.agent.tools_registry import build_tool_schemas, execute_tool
+from server.web_search.providers import search_brave, search_duckduckgo, search_web, unwrap_ddg_redirect
+
+
+def test_unwrap_ddg_redirect() -> None:
+    wrapped = "https://duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fpath&rut=abc"
+    assert unwrap_ddg_redirect(wrapped) == "https://example.com/path"
+    assert unwrap_ddg_redirect("https://example.com/direct") == "https://example.com/direct"
+
+
+def test_normalize_protocol_relative_ddg_href() -> None:
+    from server.web_search.providers import _normalize_href
+
+    href = _normalize_href("//duckduckgo.com/l/?uddg=https%3A%2F%2Fopenai.com%2Fgpt-4")
+    assert href == "https://openai.com/gpt-4"
+
+
+def test_build_tool_schemas_omits_web_when_disabled() -> None:
+    enabled = {s["name"] for s in build_tool_schemas(web_search_enabled=True)}
+    disabled = {s["name"] for s in build_tool_schemas(web_search_enabled=False)}
+    assert "web.search" in enabled
+    assert "messages.search" in enabled
+    assert "intelligence.search_events" in enabled
+    assert "web.search" not in disabled
+    assert "messages.search" in disabled
+    assert "intelligence.search_events" in disabled
+    assert "calendar.upcoming" in disabled
+
+
+async def test_duckduckgo_parses_instant_answer() -> None:
+    payload = {
+        "Heading": "Example",
+        "AbstractText": "An example abstract.",
+        "AbstractURL": "https://example.com/page",
+        "RelatedTopics": [{"Text": "Related topic", "FirstURL": "https://example.com/related"}],
+        "Results": [],
+    }
+
+    class _Resp:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def raise_for_status(self):
+            return None
+
+        async def json(self, content_type=None):
+            return payload
+
+        async def text(self):
+            return ""
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def get(self, url, headers=None, allow_redirects=None):
+            return _Resp()
+
+    with (
+        patch("server.web_search.providers.aiohttp.ClientSession", _Session),
+        patch("server.web_search.providers.validate_outbound_url", AsyncMock()),
+    ):
+        result = await search_duckduckgo("example", count=5)
+
+    assert result["provider"] == "duckduckgo"
+    assert result["count"] >= 1
+    assert result["items"][0]["url"] == "https://example.com/page"
+
+
+async def test_brave_requires_api_key() -> None:
+    result = await search_brave("query", api_key="")
+    assert result["error"] == "brave_search_api_key not configured"
+    assert result["count"] == 0
+
+
+async def test_brave_parses_results_with_key() -> None:
+    payload = {
+        "web": {
+            "results": [
+                {
+                    "title": "Brave Hit",
+                    "url": "https://example.com/brave",
+                    "description": "Snippet",
+                }
+            ]
+        }
+    }
+
+    class _Resp:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def raise_for_status(self):
+            return None
+
+        async def json(self, content_type=None):
+            return payload
+
+    class _Session:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        def get(self, url, headers=None, allow_redirects=None):
+            assert headers and "X-Subscription-Token" in headers
+            return _Resp()
+
+    with (
+        patch("server.web_search.providers.aiohttp.ClientSession", _Session),
+        patch("server.web_search.providers.validate_outbound_url", AsyncMock()),
+    ):
+        result = await search_brave("query", api_key="test-key", count=3)
+
+    assert result["provider"] == "brave"
+    assert result["count"] == 1
+    assert result["items"][0]["title"] == "Brave Hit"
+
+
+async def test_search_web_empty_query() -> None:
+    result = await search_web("  ")
+    assert "error" in result
+
+
+async def test_execute_web_search_disabled_returns_error(app) -> None:
+    result = await execute_tool(
+        app.state.db,
+        "web.search",
+        {"query": "news"},
+        context={"web_search_enabled": False, "web_search_provider": "duckduckgo"},
+    )
+    assert result["error"] == "web search is disabled"
+
+
+async def test_execute_web_search_uses_provider(app) -> None:
+    mock_result = {
+        "items": [{"title": "T", "url": "https://example.com", "snippet": "S"}],
+        "provider": "duckduckgo",
+        "count": 1,
+    }
+    with patch("server.agent.tools_web_search.search_web", AsyncMock(return_value=mock_result)) as mocked:
+        result = await execute_tool(
+            app.state.db,
+            "web.search",
+            {"query": "hello", "count": 3},
+            context={
+                "web_search_enabled": True,
+                "web_search_provider": "duckduckgo",
+                "brave_search_api_key": "",
+            },
+        )
+    assert result["count"] == 1
+    mocked.assert_awaited_once()
+    assert mocked.await_args is not None
+    assert mocked.await_args.kwargs["provider"] == "duckduckgo"

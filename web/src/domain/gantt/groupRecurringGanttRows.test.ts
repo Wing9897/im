@@ -1,0 +1,194 @@
+import { describe, expect, it } from "vitest";
+
+import { makeEvent } from "../../test/timelineTestHelpers";
+import { groupRecurringGanttRows } from "./groupRecurringGanttRows";
+
+describe("groupRecurringGanttRows", () => {
+  it("merges recurring occurrences with the same taskId into one row with multiple bars", () => {
+    const events = [
+      makeEvent({
+        id: "task-meet:2025-01-15T09:00:00Z",
+        taskId: "task-meet",
+        title: "開會",
+        source: "recurring",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "task-meet:2025-01-22T09:00:00Z",
+        taskId: "task-meet",
+        title: "開會",
+        source: "recurring",
+        startTime: "2025-01-22T09:00:00Z",
+        endTime: "2025-01-22T10:00:00Z",
+      }),
+      makeEvent({
+        id: "task-meet:2025-01-29T09:00:00Z",
+        taskId: "task-meet",
+        title: "開會",
+        source: "recurring",
+        startTime: "2025-01-29T09:00:00Z",
+        endTime: "2025-01-29T10:00:00Z",
+      }),
+    ];
+
+    const rows = groupRecurringGanttRows(events);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.rowId).toBe("recurring:task-meet");
+    expect(rows[0]!.label).toBe("開會");
+    expect(rows[0]!.occurrences).toHaveLength(3);
+    expect(rows[0]!.occurrences.map((item) => item.id)).toEqual([
+      "task-meet:2025-01-15T09:00:00Z",
+      "task-meet:2025-01-22T09:00:00Z",
+      "task-meet:2025-01-29T09:00:00Z",
+    ]);
+    expect(rows[0]!.dismissed).toBe(false);
+  });
+
+  it("does not merge non-recurring events even when taskId matches", () => {
+    const events = [
+      makeEvent({
+        id: "analysis-1",
+        taskId: "task-shared",
+        title: "Analysis A",
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "analysis-2",
+        taskId: "task-shared",
+        title: "Analysis B",
+        startTime: "2025-01-15T11:00:00Z",
+        endTime: "2025-01-15T12:00:00Z",
+      }),
+      makeEvent({
+        id: "user-1",
+        taskId: "task-shared",
+        title: "User note",
+        source: "user",
+        startTime: "2025-01-15T13:00:00Z",
+        endTime: "2025-01-15T14:00:00Z",
+      }),
+    ];
+
+    const rows = groupRecurringGanttRows(events);
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => row.rowId)).toEqual(["analysis-1", "analysis-2", "user-1"]);
+    expect(rows.every((row) => row.occurrences.length === 1)).toBe(true);
+  });
+
+  it("keeps recurring events without taskId as singleton rows", () => {
+    const event = makeEvent({
+      id: "orphan-occ",
+      taskId: null,
+      title: "Orphan",
+      source: "recurring",
+      startTime: "2025-01-15T09:00:00Z",
+      endTime: "2025-01-15T10:00:00Z",
+    });
+    const rows = groupRecurringGanttRows([event]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.rowId).toBe("orphan-occ");
+    expect(rows[0]!.occurrences).toHaveLength(1);
+  });
+
+  it("marks a series row dismissed only when every occurrence is dismissed", () => {
+    const mixed = groupRecurringGanttRows([
+      makeEvent({
+        id: "a:1",
+        taskId: "a",
+        title: "A",
+        source: "recurring",
+        dismissed: true,
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "a:2",
+        taskId: "a",
+        title: "A",
+        source: "recurring",
+        dismissed: false,
+        startTime: "2025-01-16T09:00:00Z",
+        endTime: "2025-01-16T10:00:00Z",
+      }),
+    ]);
+    expect(mixed[0]!.dismissed).toBe(false);
+
+    const allDismissed = groupRecurringGanttRows([
+      makeEvent({
+        id: "b:1",
+        taskId: "b",
+        title: "B",
+        source: "recurring",
+        dismissed: true,
+        startTime: "2025-01-15T09:00:00Z",
+        endTime: "2025-01-15T10:00:00Z",
+      }),
+      makeEvent({
+        id: "b:2",
+        taskId: "b",
+        title: "B",
+        source: "recurring",
+        dismissed: true,
+        startTime: "2025-01-16T09:00:00Z",
+        endTime: "2025-01-16T10:00:00Z",
+      }),
+    ]);
+    expect(allDismissed[0]!.dismissed).toBe(true);
+  });
+
+  it("sorts active rows before fully dismissed rows", () => {
+    const rows = groupRecurringGanttRows([
+      makeEvent({
+        id: "dismissed-early",
+        title: "Dismissed",
+        dismissed: true,
+        startTime: "2025-01-15T08:00:00Z",
+        endTime: "2025-01-15T09:00:00Z",
+      }),
+      makeEvent({
+        id: "active-late",
+        title: "Active",
+        dismissed: false,
+        startTime: "2025-01-15T12:00:00Z",
+        endTime: "2025-01-15T13:00:00Z",
+      }),
+    ]);
+    expect(rows.map((row) => row.rowId)).toEqual(["active-late", "dismissed-early"]);
+  });
+
+  it("keeps separate series for different taskIds and sorts occurrences by startTime", () => {
+    const rows = groupRecurringGanttRows([
+      makeEvent({
+        id: "b:later",
+        taskId: "task-b",
+        title: "B",
+        source: "recurring",
+        startTime: "2025-01-20T09:00:00Z",
+        endTime: "2025-01-20T10:00:00Z",
+      }),
+      makeEvent({
+        id: "a:later",
+        taskId: "task-a",
+        title: "A",
+        source: "recurring",
+        startTime: "2025-01-18T09:00:00Z",
+        endTime: "2025-01-18T10:00:00Z",
+      }),
+      makeEvent({
+        id: "a:earlier",
+        taskId: "task-a",
+        title: "A",
+        source: "recurring",
+        startTime: "2025-01-11T09:00:00Z",
+        endTime: "2025-01-11T10:00:00Z",
+      }),
+    ]);
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]!.rowId).toBe("recurring:task-a");
+    expect(rows[0]!.occurrences.map((item) => item.id)).toEqual(["a:earlier", "a:later"]);
+    expect(rows[1]!.rowId).toBe("recurring:task-b");
+  });
+});

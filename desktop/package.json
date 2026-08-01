@@ -1,0 +1,35 @@
+{
+  "name": "intelligence-monitor-desktop",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Intelligence Monitor desktop shell - Electron wrapper for the Python FastAPI server",
+  "author": {
+    "name": "Intelligence Monitor",
+    "email": "tomt99688@gmail.com"
+  },
+  "homepage": "https://github.com/Wing9897/im",
+  "main": "dist/main.js",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
+    "build:server-sidecar": "uv run --project .. --extra dev python ../scripts/build_server_sidecar.py",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "dist:win": "npm run build && npm run build:server-sidecar && electron-builder --win",
+    "dist:mac": "npm run build && npm run build:server-sidecar && electron-builder --mac",
+    "dist:linux": "npm run build && npm run build:server-sidecar && electron-builder --linux",
+    "dist:current": "npm run build && npm run build:server-sidecar && electron-builder --publish never",
+    "clean": "rimraf dist release"
+  },
+  "devDependencies": {
+    "electron": "43.1.0",
+    "electron-builder": "26.15.3",
+    "rimraf": "^6.0.0",
+    "typescript": "5.6.3",
+    "vitest": "3.2.7"
+  }
+}

@@ -1,0 +1,79 @@
+node_modules/
+dist/
+web/node_modules/
+web/dist/
+**/.vite/
+.vitest/
+**/.vitest/
+**/coverage/
+
+# Python packaging artifacts
+*.egg-info/
+.venv/
+/build/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Python caches and test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.hypothesis/
+.hypothesis/tmp/
+.hypothesis/constants/
+.coverage
+.mypy_cache/
+.ruff_cache/
+
+# Smoke-test log files at workspace root
+/*.stderr.log
+/*.stdout.log
+
+# Local build / test debug output (agent or manual redirects)
+/build-log*.txt
+/repair-out.txt
+/web/*.txt
+!/web/**/*.md
+/scripts/*-out.txt
+
+# Sweep-slice audit scratch outputs
+/ruff_findings.json
+/test-results.json
+
+# Local editor / tool state
+.vscode/
+.kiro/
+.cursor/
+stitch_intelligence_monitor_ui_redesign_portfolio_v1/
+stitch_intelligence_monitor_ui_redesign_portfolio_v2/
+stitch_intelligence_console_design_prompts/
+
+# Local session / machine-specific files
+*.session
+.env*
+
+# One-off test/debug scripts (may contain secrets)
+*.log
+*.db
+*.db-shm
+*.db-wal
+*.db.backup-*
+*.bak
+*.bak-shm
+*.bak-wal
+*.sqlite
+backups/
+
+# Local pre-rebuild snapshot archive
+.backup/
+
+# Generated project evaluation reports (keep room for checked-in documentation)
+/reports/*
+!/reports/README.md
+
+# Electron packaging output
+desktop/dist/
+desktop/release/
+desktop/server-runtime/
+

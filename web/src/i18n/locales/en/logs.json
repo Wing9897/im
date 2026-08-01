@@ -1,0 +1,94 @@
+{
+  "toolbar": {
+    "aria": "Log filter toolbar",
+    "searchPlaceholder": "Search logs…",
+    "searchAria": "Search logs",
+    "levelAria": "Level filter",
+    "categoryAria": "Category filter",
+    "resetAria": "Reset all filters",
+    "resetTitle": "Reset",
+    "refreshAria": "Refresh logs",
+    "refreshingAria": "Refreshing",
+    "refreshTitle": "Refresh",
+    "clearAria": "Clear all log records",
+    "clearTitle": "Clear"
+  },
+  "level": {
+    "all": "All levels",
+    "info": "Info",
+    "success": "Success",
+    "warning": "Warning",
+    "error": "Error"
+  },
+  "category": {
+    "all": "All categories",
+    "analysis": "Analysis",
+    "collector": "Collector",
+    "account": "Account",
+    "system": "System",
+    "frontend": "Frontend"
+  },
+  "summary": {
+    "status": "Status",
+    "analyzing": "Analyzing: {task}",
+    "unnamedTask": "Untitled task",
+    "idle": "No analysis running",
+    "totalEvents": "Total events",
+    "analysisEvents": "Analysis events",
+    "errorEvents": "Error events"
+  },
+  "list": {
+    "loadingMore": "Loading more logs…",
+    "loadedMore": "Loaded {summary} — scroll or use the button below to load more",
+    "allLoaded": "All {total} logs loaded",
+    "loadMoreAria": "Load more logs",
+    "loadMoreLabel": "Load more",
+    "summaryMore": "Showing {shown} · loaded {summary} — scroll to load more",
+    "summaryAll": "Showing {shown} · {total} total"
+  },
+  "card": {
+    "detailAria": "View event detail: {message}"
+  },
+  "templates": {
+    "batchExhausted": "Analysis batch retries exhausted ({maxRetries}); resume analysis to retry: {taskName} ({shortBatch}) — {summary}",
+    "batchRetrying": "Analysis batch will retry ({currentRetry}/{maxRetries}): {taskName} ({shortBatch}) — {summary}"
+  },
+  "section": {
+    "loadingTitle": "Loading system logs",
+    "loadingDescription": "The system is preparing the currently available log records. This may take a moment if there's a lot of data.",
+    "loadingHint": "If this takes too long, try refreshing.",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing…",
+    "recoveryTitle": "System logs could not finish loading",
+    "recoveryDescriptionWithError": "Last load failed: {error}",
+    "recoveryDescriptionDefault": "Loading system logs took too long — the backend may be busy or a previous request didn't complete.",
+    "recoveryHint": "You can retry immediately; if it keeps failing, the backend command or database state may need further repair.",
+    "loadTimeout": "System log load timed out. Please try again later."
+  },
+  "empty": {
+    "noneTitle": "No system logs yet",
+    "filteredTitle": "No logs match the current filters",
+    "noneDescription": "Records will accumulate here once analysis, account connections, collector status changes, or frontend errors occur.",
+    "filteredDescriptionMore": "Loaded {summary} logs, but the search or filters haven't matched this batch yet.",
+    "filteredDescriptionAll": "Loaded {count} logs, but the search or filters are hiding all of them.",
+    "filteredDescriptionNone": "No logs to show under the current conditions.",
+    "noneHint": "The logs page refreshes automatically; you can also refresh manually to confirm.",
+    "filteredHintMore": "Try loading more older logs, or reset filters to check whether the latest events already exist.",
+    "filteredHintAll": "Reset filters to quickly confirm whether the latest events already exist.",
+    "loadMoreLoading": "Loading more…",
+    "loadMoreLabel": "Load more logs",
+    "resetFilters": "Reset filters",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing…"
+  },
+  "detail": {
+    "messageLabel": "Event message",
+    "detailsLabel": "Details",
+    "close": "Close",
+    "ariaLabel": "Log detail: {message}"
+  },
+  "page": {
+    "loadErrorPrefix": "Failed to load logs: ",
+    "clearFailed": "Failed to clear logs: {error}"
+  }
+}
