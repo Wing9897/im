@@ -150,4 +150,74 @@ describe("SourceFilterDialog", () => {
     });
     expect(onChange).toHaveBeenCalledWith(null);
   });
+
+  it("merges catalog titles when expandTasks omit name; never shows bare hex ids", () => {
+    const hex = "2049aa3c7fa64c01b19c45ad336cc7be";
+    act(() => {
+      root.render(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(SourceFilterDialog, {
+            tasks: [
+              { id: hex, name: "Alpha briefing" },
+              { id: "task-empty", name: "" },
+            ],
+            worksets: WORKSETS,
+            expandTasks: [
+              { id: hex, worksetId: null },
+              { id: "task-empty", worksetId: null, analysisMode: "recurring" },
+            ],
+            selection: null,
+            onChange: vi.fn(),
+            ariaLabelPrefix: "Timeline",
+            variant: "toolbar",
+          }),
+        ),
+      );
+    });
+    openDialog();
+    const dialog = document.querySelector('[data-testid="source-filter-dialog"]')!;
+    expect(dialog.textContent).toContain("chevron");
+    expect(dialog.textContent).not.toContain("▶");
+    act(() => {
+      (
+        document.querySelector(
+          '[data-testid="board-workset-expand-__unassigned__"]',
+        ) as HTMLButtonElement
+      ).click();
+    });
+    const labeled = document.querySelector(`[data-testid="board-source-filter-${hex}"]`)!
+      .closest("label")!;
+    expect(labeled.textContent).toContain("Alpha briefing");
+    expect(labeled.textContent).not.toContain(hex);
+
+    const emptyRow = document
+      .querySelector('[data-testid="board-source-filter-task-empty"]')!
+      .closest("label")!;
+    expect(emptyRow.textContent).toContain("Unnamed task");
+    expect(emptyRow.textContent).not.toContain("task-empty");
+    expect(
+      document.querySelector('[data-testid="source-filter-recurring-task-empty"]'),
+    ).toBeTruthy();
+  });
+
+  it("filters the tree by task title, not only id", () => {
+    renderDialog();
+    openDialog();
+    const search = document.querySelector(
+      '[data-testid="source-filter-dialog-search"]',
+    ) as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    act(() => {
+      setter.call(search, "Third");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(document.querySelector('[data-testid="board-source-filter-task-3"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="board-source-filter-task-1"]')).toBeNull();
+    expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeNull();
+    expect(
+      document.querySelector('[data-testid="board-workset-filter-__unassigned__"]'),
+    ).toBeTruthy();
+  });
 });

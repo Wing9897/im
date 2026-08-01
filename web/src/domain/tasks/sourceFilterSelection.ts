@@ -15,6 +15,8 @@ export type WorksetMemberTask = {
   id: string;
   worksetId?: string | null;
   name?: string;
+  /** Optional mode hint for lightweight badges (e.g. recurring). */
+  analysisMode?: string | null;
 };
 
 /** True when selection means "show nothing". */

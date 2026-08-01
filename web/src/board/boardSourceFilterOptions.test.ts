@@ -18,15 +18,15 @@ describe("boardSourceFilterOptions", () => {
     ]);
   });
 
-  it("normalizes missing task workset ids to null", () => {
+  it("normalizes missing task workset ids to null and keeps analysisMode", () => {
     expect(
       boardSourceFilterExpandTasks([
         { id: "task-1", name: "One" },
-        { id: "task-2", name: "Two", worksetId: "ws-1" },
+        { id: "task-2", name: "Two", worksetId: "ws-1", analysisMode: "recurring" },
       ]),
     ).toEqual([
-      { id: "task-1", name: "One", worksetId: null },
-      { id: "task-2", name: "Two", worksetId: "ws-1" },
+      { id: "task-1", name: "One", worksetId: null, analysisMode: null },
+      { id: "task-2", name: "Two", worksetId: "ws-1", analysisMode: "recurring" },
     ]);
   });
 });

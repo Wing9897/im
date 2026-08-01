@@ -9,6 +9,7 @@ export type BoardFilterTaskOption = {
   id: string;
   name: string;
   worksetId: string | null;
+  analysisMode?: string | null;
 };
 
 export type BoardFilterWorksetOption = {
@@ -30,11 +31,17 @@ export function boardSourceFilterWorksets(
 }
 
 export function boardSourceFilterExpandTasks(
-  tasks: readonly { id: string; name: string; worksetId?: string | null }[],
+  tasks: readonly {
+    id: string;
+    name: string;
+    worksetId?: string | null;
+    analysisMode?: string | null;
+  }[],
 ): BoardFilterTaskOption[] {
   return tasks.map((task) => ({
     id: task.id,
     name: task.name,
     worksetId: task.worksetId ?? null,
+    analysisMode: task.analysisMode ?? null,
   }));
 }

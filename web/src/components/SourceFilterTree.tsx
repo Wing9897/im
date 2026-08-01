@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { TextField } from "./ui";
 import type { FilterTreeRow } from "../domain/tasks/sourceFilterSelection";
+import { resolveSourceFilterTaskLabel } from "../domain/timeline/sourceFilterOptions";
 
 export function matchesSourceFilterQuery(name: string, query: string): boolean {
   const q = query.trim().toLocaleLowerCase();
@@ -27,6 +28,15 @@ type SourceFilterTreeProps = {
   onToggleWorkset: (worksetId: string) => void;
 };
 
+function taskSearchText(
+  child: { id: string; name?: string },
+  unnamedLabel: string,
+): string {
+  const label = resolveSourceFilterTaskLabel(child.name, child.id, unnamedLabel);
+  const rawName = (child.name ?? "").trim();
+  return rawName && rawName !== label ? `${label} ${rawName}` : label;
+}
+
 /** Search box + expandable workset-primary checkbox tree. */
 export function SourceFilterTree({
   rows,
@@ -41,6 +51,8 @@ export function SourceFilterTree({
 }: SourceFilterTreeProps) {
   const { t } = useTranslation("common");
   const searching = Boolean(query.trim());
+  const unnamedLabel = t("board.common.unnamedTask");
+  const recurringBadge = t("workset.filterRecurringBadge");
 
   return (
     <div className="flex flex-col gap-md">
@@ -54,7 +66,7 @@ export function SourceFilterTree({
         data-testid="source-filter-dialog-search"
       />
       <ul
-        className="m-0 flex max-h-[44vh] list-none flex-col gap-1 overflow-auto p-0"
+        className="m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0"
         aria-label={t("workset.filterBrowseAria")}
       >
         {rows.map((row) => {
@@ -67,14 +79,20 @@ export function SourceFilterTree({
               : checkedWorksets.has(row.id);
           const visibleChildren = searching
             ? row.children.filter((child) =>
-                matchesSourceFilterQuery(child.name ?? child.id, query),
+                matchesSourceFilterQuery(taskSearchText(child, unnamedLabel), query),
               )
             : row.children;
+          const isUnassigned = row.kind === "unassigned";
 
           return (
             <li
               key={`${row.kind}-${row.id}`}
-              className="overflow-hidden rounded-md border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)]"
+              className={[
+                "overflow-hidden rounded-md border",
+                isUnassigned
+                  ? "border-dashed border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-raised)_40%,transparent)]"
+                  : "border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)]",
+              ].join(" ")}
             >
               <div className="flex items-center gap-1 px-1.5 py-1.5">
                 <button
@@ -109,21 +127,37 @@ export function SourceFilterTree({
               </div>
               {isOpen && visibleChildren.length > 0 ? (
                 <ul className="m-0 list-none border-t border-surface-border/60 bg-[color-mix(in_srgb,var(--surface-raised)_55%,transparent)] p-0">
-                  {visibleChildren.map((child) => (
-                    <li key={child.id}>
-                      <label className="flex cursor-pointer items-center gap-sm py-1.5 pl-9 pr-sm hover:bg-surface-raised">
-                        <input
-                          type="checkbox"
-                          checked={checkedTasks.has(child.id)}
-                          data-testid={`board-source-filter-${child.id}`}
-                          onChange={() => onToggleTask(child.id)}
-                        />
-                        <span className="truncate text-sm text-text-secondary">
-                          {child.name ?? child.id}
-                        </span>
-                      </label>
-                    </li>
-                  ))}
+                  {visibleChildren.map((child) => {
+                    const label = resolveSourceFilterTaskLabel(
+                      child.name,
+                      child.id,
+                      unnamedLabel,
+                    );
+                    const isRecurring = child.analysisMode === "recurring";
+                    return (
+                      <li key={child.id}>
+                        <label className="flex cursor-pointer items-center gap-sm border-l-2 border-l-accent/35 py-1.5 pl-9 pr-sm hover:bg-surface-raised">
+                          <input
+                            type="checkbox"
+                            checked={checkedTasks.has(child.id)}
+                            data-testid={`board-source-filter-${child.id}`}
+                            onChange={() => onToggleTask(child.id)}
+                          />
+                          <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                            {label}
+                          </span>
+                          {isRecurring ? (
+                            <span
+                              className="shrink-0 rounded px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted ring-1 ring-inset ring-surface-border/80"
+                              data-testid={`source-filter-recurring-${child.id}`}
+                            >
+                              {recurringBadge}
+                            </span>
+                          ) : null}
+                        </label>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : null}
             </li>

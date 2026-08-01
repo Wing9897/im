@@ -251,7 +251,9 @@ export function TimelinePage() {
               worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
               expandTasks={tasks.map((row) => ({
                 id: row.id,
+                name: row.name,
                 worksetId: row.worksetId ?? null,
+                analysisMode: row.analysisMode ?? null,
               }))}
               viewMode={sources.viewMode}
               setViewMode={sources.setViewMode}

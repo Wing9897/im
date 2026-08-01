@@ -5,13 +5,17 @@ import { useTranslation } from "react-i18next";
 import { ModalDialog } from "./ModalDialog";
 import { matchesSourceFilterQuery, SourceFilterTree } from "./SourceFilterTree";
 import { Button, PillButton } from "./ui";
-import type { SourceFilterOption } from "../domain/timeline/sourceFilterOptions";
+import {
+  resolveSourceFilterTaskLabel,
+  type SourceFilterOption,
+} from "../domain/timeline/sourceFilterOptions";
 import {
   buildFilterTreeRows,
   isEmptySourceFilter,
   sourceFilterSelectedCount,
   UNASSIGNED_FILTER_GROUP_ID,
   type SourceFilterSelection,
+  type WorksetMemberTask,
 } from "../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { useGeneralWorksetLabel } from "../domain/timeline/useGeneralWorksetLabel";
@@ -22,11 +26,18 @@ export type WorksetFilterOption = {
   isSystem?: boolean;
 };
 
+export type SourceFilterExpandTask = {
+  id: string;
+  name?: string;
+  worksetId?: string | null;
+  analysisMode?: string | null;
+};
+
 interface SourceFilterDialogProps {
   tasks: SourceFilterOption[];
   worksets?: WorksetFilterOption[];
   /** Tasks used to place children under worksets (may include all catalog tasks). */
-  expandTasks?: Array<{ id: string; name?: string; worksetId?: string | null }>;
+  expandTasks?: SourceFilterExpandTask[];
   /** `null` = all sources. */
   selection: SourceFilterSelection;
   onChange: (next: SourceFilterSelection) => void;
@@ -67,16 +78,28 @@ export function SourceFilterDialog({
   const [draft, setDraft] = useState<SourceFilterSelection>(selection);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
-  const memberTasks = useMemo(
-    () =>
+  const memberTasks = useMemo((): WorksetMemberTask[] => {
+    const catalogNameById = new Map(
+      tasks.map((task) => [task.id, task.name] as const),
+    );
+    const rows: SourceFilterExpandTask[] =
       expandTasks ??
       tasks.map((task) => ({
         id: task.id,
         name: task.name,
         worksetId: (task as { worksetId?: string | null }).worksetId ?? null,
-      })),
-    [expandTasks, tasks],
-  );
+      }));
+    return rows.map((task) => {
+      const fromExpand = (task.name ?? "").trim();
+      const fromCatalog = (catalogNameById.get(task.id) ?? "").trim();
+      return {
+        id: task.id,
+        name: fromExpand || fromCatalog || undefined,
+        worksetId: task.worksetId ?? null,
+        analysisMode: task.analysisMode ?? null,
+      };
+    });
+  }, [expandTasks, tasks]);
 
   const displayWorksets = useMemo(
     () =>
@@ -121,16 +144,23 @@ export function SourceFilterDialog({
     [displayWorksets, memberTasks, t],
   );
 
+  const unnamedLabel = t("board.common.unnamedTask");
+
   const visibleRows = useMemo(() => {
     const q = query.trim();
     if (!q) return treeRows;
     return treeRows.filter((row) => {
       if (matchesSourceFilterQuery(row.name, q)) return true;
-      return row.children.some((child) =>
-        matchesSourceFilterQuery(child.name ?? child.id, q),
-      );
+      return row.children.some((child) => {
+        const label = resolveSourceFilterTaskLabel(child.name, child.id, unnamedLabel);
+        const rawName = (child.name ?? "").trim();
+        return (
+          matchesSourceFilterQuery(label, q) ||
+          (rawName ? matchesSourceFilterQuery(rawName, q) : false)
+        );
+      });
     });
-  }, [treeRows, query]);
+  }, [treeRows, query, unnamedLabel]);
 
   const allWorksetIds = useMemo(() => displayWorksets.map((ws) => ws.id), [displayWorksets]);
 

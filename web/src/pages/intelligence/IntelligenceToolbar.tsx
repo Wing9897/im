@@ -28,7 +28,9 @@ type WorksetOption = {
 
 type ExpandTaskOption = {
   id: string;
+  name?: string;
   worksetId?: string | null;
+  analysisMode?: string | null;
 };
 
 interface IntelligenceToolbarProps {
