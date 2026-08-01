@@ -150,7 +150,7 @@ def _full_reference_task_sequence(
                 datetime.combine(date_part, end_tod, tzinfo=local_tz).astimezone(timezone.utc) if end_tod else start_dt
             )
             if end_dt < start_dt:
-                end_dt = start_dt
+                end_dt = end_dt + timedelta(days=1)
         if start_dt < range_start_utc or start_dt > range_end_utc:
             continue
         result.append(

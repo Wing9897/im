@@ -104,7 +104,7 @@ export function TimelinePage() {
         const worksetId = toUserEventFormWorksetId(values.worksetId);
         let catalogForRefresh: Awaited<ReturnType<typeof refreshTasks>> | undefined;
         if (dialogMode === "create" && values.kind === "recurring") {
-          await createRecurringTimelineEvent({
+          const created = await createRecurringTimelineEvent({
             title: values.title,
             worksetId,
             isAllDay: values.isAllDay,
@@ -116,7 +116,10 @@ export function TimelinePage() {
           });
           // Await the refreshed catalog so the filter plan includes the new
           // recurring task (workset-only filters otherwise skip calendar fetch).
-          catalogForRefresh = await refreshTasks().catch(() => undefined);
+          // If catalog refresh fails, stitch the created task into the current
+          // snapshot so the same race does not resurface.
+          catalogForRefresh =
+            (await refreshTasks().catch(() => undefined)) ?? [...tasks, created];
           showToast(t("messages.recurringCreated"), "success");
         } else if (dialogMode === "create") {
           await createUserEvent({
@@ -148,7 +151,7 @@ export function TimelinePage() {
         setDialogBusy(false);
       }
     },
-    [dialogMode, editingEvent, data, refreshTasks, showToast, t],
+    [dialogMode, editingEvent, data, refreshTasks, showToast, t, tasks],
   );
 
   const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {

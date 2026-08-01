@@ -400,8 +400,10 @@ def expand_task_occurrences(
                 start_dt = datetime.combine(date_part, start_tod, tzinfo=local_tz).astimezone(timezone.utc)
                 if end_tod is not None:
                     end_dt = datetime.combine(date_part, end_tod, tzinfo=local_tz).astimezone(timezone.utc)
+                    # Overnight spans (e.g. 22:00→06:00) roll to the next local day —
+                    # same rule as ``_manual_end_anchor`` / imported-duration expand.
                     if end_dt < start_dt:
-                        end_dt = start_dt
+                        end_dt = end_dt + timedelta(days=1)
                 else:
                     end_dt = start_dt
             # The acquisition window is widened by one second to preserve

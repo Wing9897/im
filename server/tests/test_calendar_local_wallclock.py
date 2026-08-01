@@ -57,6 +57,33 @@ def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
 
 
+def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
+    """Non-import expand must keep overnight clocks (22:00→06:00), not clamp to zero."""
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+
+    task = {
+        "id": "overnight-cal",
+        "name": "夜班",
+        "analysis_mode": "recurring",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY",
+        "event_is_all_day": 0,
+        # No event_start_local → synthetic-anchor expand path.
+        "event_start_time": "22:00",
+        "event_end_time": "06:00",
+        "event_location": None,
+        "event_description": None,
+    }
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    items = expand_task_occurrences(task, range_start, range_end, budget=5)
+    assert len(items) == 1
+    # 22:00 +08 = 14:00Z; 06:00 next day +08 = 22:00Z.
+    assert items[0]["startTime"] == "2026-07-01T14:00:00Z"
+    assert items[0]["endTime"] == "2026-07-01T22:00:00Z"
+
+
 def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
     """Manual all-day plans store DATE dtstart + UI UNTIL=...Z (task 「1234」 shape).
 

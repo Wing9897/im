@@ -6,7 +6,7 @@
  */
 
 import { putTaskSchedule } from "../../api/taskSchedule";
-import { createTask } from "../../api/tasks";
+import { createTask, deleteTask } from "../../api/tasks";
 import type { TaskMutationResult } from "../../types";
 import { toUserEventFormWorksetId } from "./userEvents";
 
@@ -57,14 +57,21 @@ export async function createRecurringTimelineEvent(
     worksetId,
   });
 
-  await putTaskSchedule(created.id, {
-    rrule,
-    eventStartTime,
-    eventEndTime,
-    eventIsAllDay: isAllDay,
-    eventLocation: location,
-    eventDescription: description,
-  });
+  try {
+    await putTaskSchedule(created.id, {
+      rrule,
+      eventStartTime,
+      eventEndTime,
+      eventIsAllDay: isAllDay,
+      eventLocation: location,
+      eventDescription: description,
+    });
+  } catch (error) {
+    // Two-step create leaves an empty recurring shell if schedule upsert fails;
+    // roll it back so retries do not pile up orphan tasks in the catalog/filter.
+    await deleteTask(created.id).catch(() => undefined);
+    throw error;
+  }
 
   return created;
 }
