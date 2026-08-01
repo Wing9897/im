@@ -253,8 +253,10 @@
       "locationPlaceholder": "e.g. Room A, online",
       "description": "Description (optional)",
       "descriptionPlaceholder": "Extra details for this event",
-      "allDayHint": "All-day events do not need start and end times."
+      "allDayHint": "All-day events do not need start and end times.",
+      "overnightHint": "Ends the next day"
     },
+
     "template": {
       "title": "Choose a task template",
       "all": "All",

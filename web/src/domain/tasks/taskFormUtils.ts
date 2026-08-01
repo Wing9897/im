@@ -1,4 +1,5 @@
 import type { TaskSchedule, TaskScheduleConfig } from "../../api/taskSchedule";
+import type { CreateRecurringTaskConfig } from "../../api/tasks";
 import type {
   AnalysisMode,
   AnalysisTask,
@@ -107,13 +108,36 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
 
 /** Builds the schedule subresource payload for recurring tasks. */
 export function formStateToTaskSchedule(formState: TaskFormState): TaskScheduleConfig {
+  const isAllDay = formState.eventIsAllDay;
   return {
     rrule: formState.rrule.trim(),
-    eventStartTime: formState.eventStartTime.trim() || null,
-    eventEndTime: formState.eventEndTime.trim() || null,
-    eventIsAllDay: formState.eventIsAllDay,
+    eventStartTime: isAllDay ? null : formState.eventStartTime.trim() || null,
+    eventEndTime: isAllDay ? null : formState.eventEndTime.trim() || null,
+    eventIsAllDay: isAllDay,
     eventLocation: formState.eventLocation.trim() || null,
     eventDescription: formState.eventDescription.trim() || null,
+  };
+}
+
+/**
+ * Payload for atomic ``POST /api/v1/tasks/recurring``.
+ * Same writer as timeline ``createRecurringTimelineEvent`` — do not use
+ * shell ``POST /tasks`` + ``PUT /schedule`` for task-page creates.
+ */
+export function formStateToCreateRecurringConfig(
+  formState: TaskFormState,
+): CreateRecurringTaskConfig {
+  const schedule = formStateToTaskSchedule(formState);
+  return {
+    name: formState.name.trim(),
+    description: formState.description.trim() || null,
+    rrule: schedule.rrule,
+    eventStartTime: schedule.eventStartTime,
+    eventEndTime: schedule.eventEndTime,
+    eventIsAllDay: schedule.eventIsAllDay,
+    eventLocation: schedule.eventLocation,
+    eventDescription: schedule.eventDescription,
+    worksetId: formState.worksetId,
   };
 }
 

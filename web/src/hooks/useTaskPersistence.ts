@@ -2,10 +2,11 @@ import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchTaskSchedule, putTaskSchedule } from "../api/taskSchedule";
-import { createTask, updateTask } from "../api/tasks";
+import { createRecurringTask, createTask, updateTask } from "../api/tasks";
 import {
   analysisTaskToFormState,
   applyScheduleToFormState,
+  formStateToCreateRecurringConfig,
   formStateToTaskConfig,
   formStateToTaskSchedule,
 } from "../domain/tasks/taskFormUtils";
@@ -169,11 +170,13 @@ export function useTaskPersistence({
             "info",
           );
         }
+      } else if (formState.analysisMode === "recurring") {
+        // Atomic create — same POST /tasks/recurring as timeline; never shell+PUT.
+        await createRecurringTask(formStateToCreateRecurringConfig(formState));
+        if (!isMountedRef.current) return;
+        showToast(String(i18n.t("common:tasks.toast.created")), "success");
       } else {
-        const created = await createTask(taskConfig);
-        if (formState.analysisMode === "recurring") {
-          await putTaskSchedule(created.id, formStateToTaskSchedule(formState));
-        }
+        await createTask(taskConfig);
         if (!isMountedRef.current) return;
         showToast(String(i18n.t("common:tasks.toast.created")), "success");
       }
