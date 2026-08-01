@@ -21,6 +21,7 @@ from server.items.normalize import (
     normalize_status,
     normalize_workset_id_wire,
     parse_date_or_none,
+    preserve_attributes_json,
     require_category_name,
     require_title,
 )
@@ -232,12 +233,15 @@ async def patch_item(
         next_workset = str(existing["workset_id"])
     else:
         next_workset = await _require_workset(db, normalize_workset_id_wire(workset_id))
+    prev_category = existing.get("category_id")
+    prev_category = str(prev_category) if prev_category else None
     if category_id is _UNSET:
-        next_category = existing.get("category_id")
-        next_category = str(next_category) if next_category else None
+        next_category = prev_category
+        category_changed = False
     else:
         # Changing category must NOT strip attributes (soft template).
         next_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
+        category_changed = next_category != prev_category
     next_purchased = (
         parse_date_or_none(purchased_at) if purchased_at is not _UNSET else existing.get("purchased_at")
     )
@@ -248,15 +252,18 @@ async def patch_item(
             next_remind = int(next_remind)
     else:
         next_remind = normalize_remind_before_days(remind_before_days)
+    # Align with FE resolveRemindOnCategoryChange: only soft-fill when remind is empty.
+    if category_changed and next_remind is None and next_category is not None:
+        cat = await fetch_category_row(db, next_category)
+        if cat is not None and cat.get("default_remind_before_days") is not None:
+            next_remind = int(cat["default_remind_before_days"])
     next_notes = normalize_notes(notes) if notes is not _UNSET else str(existing.get("notes") or "")
     next_status = normalize_status(status) if status is not _UNSET else str(existing.get("status") or "active")
     if attributes is _UNSET:
-        # Preserve existing attributes_json verbatim path via re-serialize of parsed form.
-        from server.items.normalize import parse_attributes_json
-
-        next_attrs = parse_attributes_json(existing.get("attributes_json"))
+        # Do not re-parse/re-serialize: dirty nested rows must not amplify on unrelated PATCH.
+        next_attrs_json = preserve_attributes_json(existing.get("attributes_json"))
     else:
-        next_attrs = normalize_attributes(attributes)
+        next_attrs_json = attributes_to_json(normalize_attributes(attributes))
 
     now = utc_now_iso()
     async with db.transaction() as conn:
@@ -271,7 +278,7 @@ async def patch_item(
             remind_before_days=next_remind,
             notes=next_notes,
             status=next_status,
-            attributes_json=attributes_to_json(next_attrs),
+            attributes_json=next_attrs_json,
             now=now,
         )
     row = await fetch_item_row(db, item_id)

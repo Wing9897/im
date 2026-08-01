@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - **Trackable items (schema stamp 6 / `schemaSemver` 0.1.0-beta.7):** `item_categories` + `items`, `/api/v1/items`, calendar `source=item`, agent `items.list_expiring` / `items.create`, FE `/items`. Wipe-only — existing DBs must reset.
 
+### Changed
+
+- **Items P2 polish:** category-manage Esc/overlay close; empty vs filter-empty copy; list expiry tone uses per-item `remindBeforeDays`; i18n-friendly items errors; stronger seed-category delete confirm; `patch_item` soft-fills category default remind when empty (keeps existing); attributes normalize enforces scalar values + key/size caps without amplifying dirty rows on unrelated PATCH.
+
 ### Fixed
 
 - **Items on Timeline (no dual-track):** `GET /api/v1/calendar/items` includes `source=item` DATE projections (same `item_projection` as agent `query_window`); Timeline merge consumes that path instead of FE `listItems` re-projection. Floating all-day uses wall `T00:00:00` (not UTC-shifted `…Z`). Dismiss `source=item` maps correctly; SSE refreshes on `item` / `item_category`; sidebar deep-links to `/items?itemId=`.

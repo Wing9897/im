@@ -8,6 +8,7 @@ import {
   resolveRemindOnCategoryChange as defaultResolveRemind,
   type AttributePartitions,
 } from "../../domain/items/itemAttributes";
+import { formatItemsError } from "../../domain/items/itemErrors";
 
 type SaveDraft = {
   id?: string;
@@ -107,7 +108,7 @@ export function ItemFormDialog({
         status: item?.status ?? "active",
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(formatItemsError(err, t));
       setSaving(false);
     }
   };

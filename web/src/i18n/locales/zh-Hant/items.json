@@ -10,6 +10,8 @@
   "cancel": "取消",
   "empty": "尚未有物品。先選工作集 → 選分類 → 填到期日。",
   "emptyHint": "選工作集 → 選分類 → 填到期日",
+  "emptyFiltered": "沒有符合目前篩選的物品。",
+  "emptyFilteredHint": "試試調整篩選、搜尋關鍵字，或切回「全部」。",
   "filterAll": "全部",
   "filterExpiring": "即將到期",
   "filterOverdue": "已過期",
@@ -38,7 +40,19 @@
   "addSchemaField": "新增建議鍵",
   "deleteCategory": "刪除分類",
   "deleteCategoryConfirm": "刪除後物品會變成未分類，擴展欄位保留。",
+  "deleteSeedCategoryConfirm": "這是系統預設分類「{{name}}」。刪除後該分類下的物品會變成未分類（擴展欄位保留）。確定刪除？",
   "deleteItemConfirm": "確定刪除此物品？",
+  "errors": {
+    "generic": "操作失敗，請稍後再試。",
+    "network": "無法連線到伺服器，請檢查網路後再試。",
+    "loadFailed": "無法載入物品列表。",
+    "validation": "輸入內容有誤，請檢查後再儲存。",
+    "required": "請填寫必要欄位。",
+    "attributes": "擴展欄位超出限制（單值過長、鍵過多或總量過大）。",
+    "remind": "提前提醒天數無效。",
+    "date": "日期格式須為 YYYY-MM-DD。",
+    "notFound": "找不到此物品或分類。"
+  },
   "seed": {
     "passport_docs": "證件",
     "food": "食物",

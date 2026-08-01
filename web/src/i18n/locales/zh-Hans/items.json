@@ -10,6 +10,8 @@
   "cancel": "取消",
   "empty": "还没有物品。先选工作集 → 选分类 → 填到期日。",
   "emptyHint": "选工作集 → 选分类 → 填到期日",
+  "emptyFiltered": "没有符合当前筛选的物品。",
+  "emptyFilteredHint": "试试调整筛选、搜索关键词，或切回「全部」。",
   "filterAll": "全部",
   "filterExpiring": "即将到期",
   "filterOverdue": "已过期",
@@ -38,7 +40,19 @@
   "addSchemaField": "新增建议键",
   "deleteCategory": "删除分类",
   "deleteCategoryConfirm": "删除后物品会变成未分类，扩展字段保留。",
+  "deleteSeedCategoryConfirm": "这是系统预设分类「{{name}}」。删除后该分类下的物品会变成未分类（扩展字段保留）。确定删除？",
   "deleteItemConfirm": "确定删除此物品？",
+  "errors": {
+    "generic": "操作失败，请稍后再试。",
+    "network": "无法连接到服务器，请检查网络后再试。",
+    "loadFailed": "无法加载物品列表。",
+    "validation": "输入内容有误，请检查后再保存。",
+    "required": "请填写必要字段。",
+    "attributes": "扩展字段超出限制（单值过长、键过多或总量过大）。",
+    "remind": "提前提醒天数无效。",
+    "date": "日期格式须为 YYYY-MM-DD。",
+    "notFound": "找不到此物品或分类。"
+  },
   "seed": {
     "passport_docs": "证件",
     "food": "食物",

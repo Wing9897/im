@@ -56,10 +56,28 @@ export function daysUntil(expiresAt: string | null | undefined, today = new Date
   return Math.round((expiry.getTime() - start.getTime()) / 86_400_000);
 }
 
-/** Color step for remaining days (CSS custom property / class hint). */
-export function expiryTone(days: number | null): "ok" | "soon" | "overdue" | "none" {
+/**
+ * Color step for remaining days.
+ * `remindBeforeDays` drives the "soon" window (fallback 7), matching list filters.
+ */
+export function expiryTone(
+  days: number | null,
+  remindBeforeDays?: number | null,
+): "ok" | "soon" | "overdue" | "none" {
   if (days == null) return "none";
   if (days < 0) return "overdue";
-  if (days <= 7) return "soon";
+  const window =
+    remindBeforeDays != null && Number.isFinite(remindBeforeDays) ? remindBeforeDays : 7;
+  if (days <= window) return "soon";
   return "ok";
+}
+
+/** True-empty inventory vs filter/search miss (for empty-state copy). */
+export function itemsEmptyKind(opts: {
+  totalCount: number;
+  filteredCount: number;
+}): "none" | "true-empty" | "filtered-empty" {
+  if (opts.filteredCount > 0) return "none";
+  if (opts.totalCount === 0) return "true-empty";
+  return "filtered-empty";
 }

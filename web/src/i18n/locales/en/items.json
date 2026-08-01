@@ -10,6 +10,8 @@
   "cancel": "Cancel",
   "empty": "No items yet. Pick a workset → category → expiry date.",
   "emptyHint": "Pick a workset → category → expiry date",
+  "emptyFiltered": "No items match the current filters.",
+  "emptyFilteredHint": "Try adjusting filters or search, or switch back to All.",
   "filterAll": "All",
   "filterExpiring": "Expiring soon",
   "filterOverdue": "Overdue",
@@ -38,7 +40,19 @@
   "addSchemaField": "Add suggested key",
   "deleteCategory": "Delete category",
   "deleteCategoryConfirm": "Items become uncategorized; attributes are kept.",
+  "deleteSeedCategoryConfirm": "“{{name}}” is a built-in category. Items under it become uncategorized (attributes kept). Delete anyway?",
   "deleteItemConfirm": "Delete this item?",
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Cannot reach the server. Check your connection and try again.",
+    "loadFailed": "Could not load items.",
+    "validation": "Some fields are invalid. Please check and save again.",
+    "required": "Please fill in the required fields.",
+    "attributes": "Attributes exceed limits (value too long, too many keys, or payload too large).",
+    "remind": "Remind-before days is invalid.",
+    "date": "Dates must be YYYY-MM-DD.",
+    "notFound": "Item or category not found."
+  },
   "seed": {
     "passport_docs": "Documents",
     "food": "Food",

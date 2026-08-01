@@ -13,6 +13,8 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 ATTR_VALUE_MAX = 500
 #: Whole attributes_json max serialized size (bytes, utf-8).
 ATTR_JSON_MAX_BYTES = 8 * 1024
+#: Max number of attribute keys (aligned with field schema soft cap).
+ATTR_MAX_KEYS = 40
 FIELD_SCHEMA_MAX_KEYS = 40
 TITLE_MAX = 200
 NOTES_MAX = 4000
@@ -20,12 +22,26 @@ NAME_MAX = 120
 SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 ALLOWED_STATUSES = frozenset({"active", "archived"})
+_SCALAR_ATTR_TYPES = (str, int, float, bool)
 
 _UNSET = object()
 
 
 class ItemValidationError(ValueError):
     """Invalid item / category fields."""
+
+
+def _coerce_attr_scalar(value: Any) -> str | None:
+    """Accept only single scalar values; reject nested structures that amplify on str()."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, str):
+        return value
+    raise ItemValidationError("attribute values must be single scalars (string/number/boolean)")
 
 
 def parse_date_or_none(value: Any) -> str | None:
@@ -113,12 +129,14 @@ def normalize_attributes(attributes: Any) -> dict[str, str]:
             continue
         if len(k) > 64:
             raise ItemValidationError("attribute keys must be <= 64 characters")
-        if value is None:
+        text = _coerce_attr_scalar(value)
+        if text is None:
             continue
-        text = str(value)
         if len(text) > ATTR_VALUE_MAX:
             raise ItemValidationError(f"attribute values must be <= {ATTR_VALUE_MAX} characters")
         out[k] = text
+        if len(out) > ATTR_MAX_KEYS:
+            raise ItemValidationError(f"attributes must have <= {ATTR_MAX_KEYS} keys")
     encoded = json.dumps(out, ensure_ascii=False, separators=(",", ":"))
     if len(encoded.encode("utf-8")) > ATTR_JSON_MAX_BYTES:
         raise ItemValidationError(f"attributes must be <= {ATTR_JSON_MAX_BYTES} bytes")
@@ -129,23 +147,51 @@ def attributes_to_json(attributes: dict[str, str]) -> str:
     return json.dumps(attributes, ensure_ascii=False, separators=(",", ":"))
 
 
+def preserve_attributes_json(raw: Any) -> str:
+    """Keep stored attributes_json bytes as-is on unrelated PATCHes (no re-amplify)."""
+    if raw is None:
+        return "{}"
+    if isinstance(raw, dict):
+        return attributes_to_json(normalize_attributes(raw))
+    text = str(raw).strip()
+    return text if text else "{}"
+
+
 def parse_attributes_json(raw: Any) -> dict[str, str]:
+    """Read path: soft-sanitize dirty rows (drop nested / oversize) without raising."""
     if raw is None or raw == "":
         return {}
     if isinstance(raw, dict):
-        return normalize_attributes(raw)
-    try:
-        parsed = json.loads(str(raw))
-    except json.JSONDecodeError:
-        return {}
+        parsed: Any = raw
+    else:
+        try:
+            parsed = json.loads(str(raw))
+        except json.JSONDecodeError:
+            return {}
     if not isinstance(parsed, dict):
         return {}
     out: dict[str, str] = {}
     for key, value in parsed.items():
         k = str(key).strip()
-        if not k or value is None:
+        if not k or len(k) > 64:
             continue
-        out[k] = str(value)
+        if value is None or isinstance(value, (dict, list)):
+            continue
+        if not isinstance(value, _SCALAR_ATTR_TYPES):
+            continue
+        try:
+            text = _coerce_attr_scalar(value)
+        except ItemValidationError:
+            continue
+        if text is None or len(text) > ATTR_VALUE_MAX:
+            continue
+        candidate = {**out, k: text}
+        encoded = json.dumps(candidate, ensure_ascii=False, separators=(",", ":"))
+        if len(encoded.encode("utf-8")) > ATTR_JSON_MAX_BYTES:
+            break
+        out = candidate
+        if len(out) >= ATTR_MAX_KEYS:
+            break
     return out
 
 
