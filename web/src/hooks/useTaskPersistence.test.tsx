@@ -26,6 +26,7 @@ vi.mock("../context/TaskCatalogContext", () => ({
 
 vi.mock("../api/tasks", () => ({
   createTask: vi.fn(),
+  createRecurringTask: vi.fn(),
   updateTask: vi.fn(),
   listTasks: vi.fn(),
 }));
@@ -37,9 +38,10 @@ vi.mock("../utils/errors", () => ({
 }));
 
 import { mockShowToast } from "../test/context-mocks";
-import { createTask, updateTask } from "../api/tasks";
+import { createRecurringTask, createTask, updateTask } from "../api/tasks";
 
 const mockCreateTask = createTask as ReturnType<typeof vi.fn>;
+const mockCreateRecurringTask = createRecurringTask as ReturnType<typeof vi.fn>;
 const mockUpdateTask = updateTask as ReturnType<typeof vi.fn>;
 
 // ---------------------------------------------------------------------------
@@ -69,6 +71,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
 };
 
 function Harness({
@@ -119,6 +122,7 @@ describe("useTaskPersistence", () => {
     mockShowToast.mockClear();
     mockRefreshTasks.mockClear();
     mockCreateTask.mockReset();
+    mockCreateRecurringTask.mockReset();
     mockUpdateTask.mockReset();
   });
 
@@ -162,6 +166,66 @@ describe("useTaskPersistence", () => {
     expect(onError).toHaveBeenCalledWith("Server Error");
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(latestResult!.isSaving).toBe(false);
+
+    cleanup(root, container);
+  });
+
+  it("recurring create uses atomic POST /tasks/recurring (not shell+PUT)", async () => {
+    mockCreateRecurringTask.mockResolvedValue({ id: "rec-1" });
+
+    const recurringForm: TaskFormState = {
+      ...DEFAULT_FORM_STATE,
+      analysisMode: "recurring",
+      promptTemplate: "",
+      channelIds: [],
+      rrule: "FREQ=DAILY",
+      eventStartTime: "22:00",
+      eventEndTime: "06:00",
+      worksetId: "ws-1",
+    };
+    const { container, root } = renderHarness({ formState: recurringForm });
+
+    await act(async () => {
+      await latestResult!.save();
+    });
+
+    expect(mockCreateRecurringTask).toHaveBeenCalledTimes(1);
+    expect(mockCreateRecurringTask).toHaveBeenCalledWith({
+      name: "My Task",
+      description: "A test task",
+      rrule: "FREQ=DAILY",
+      eventStartTime: "22:00",
+      eventEndTime: "06:00",
+      eventIsAllDay: false,
+      eventLocation: null,
+      eventDescription: null,
+      worksetId: "ws-1",
+    });
+    expect(mockCreateTask).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith("/tasks");
+
+    cleanup(root, container);
+  });
+
+  it("recurring create failure does not call createTask (no orphan shell)", async () => {
+    mockCreateRecurringTask.mockRejectedValue(new Error("schedule invalid"));
+    const onError = vi.fn();
+    const recurringForm: TaskFormState = {
+      ...DEFAULT_FORM_STATE,
+      analysisMode: "recurring",
+      rrule: "FREQ=DAILY",
+      eventStartTime: "09:00",
+    };
+    const { container, root } = renderHarness({ formState: recurringForm, onError });
+
+    await act(async () => {
+      await latestResult!.save();
+    });
+
+    expect(mockCreateRecurringTask).toHaveBeenCalled();
+    expect(mockCreateTask).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith("schedule invalid");
+    expect(mockNavigate).not.toHaveBeenCalled();
 
     cleanup(root, container);
   });

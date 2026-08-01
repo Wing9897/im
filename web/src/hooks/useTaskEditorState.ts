@@ -47,11 +47,17 @@ function computeCanSave(
     channelIds: string[];
     rrule: string;
     analysisMode: AnalysisMode;
+    eventIsAllDay: boolean;
+    eventStartTime: string;
   },
   isSaving: boolean,
 ): boolean {
   if (fields.analysisMode === "recurring") {
-    return Boolean(fields.name.trim() && fields.rrule.trim() && !isSaving);
+    const hasStart =
+      fields.eventIsAllDay || Boolean(fields.eventStartTime.trim());
+    return Boolean(
+      fields.name.trim() && fields.rrule.trim() && hasStart && !isSaving,
+    );
   }
   return Boolean(
     fields.name.trim() &&
@@ -124,6 +130,8 @@ export function useTaskEditorState(
       channelIds: formState.channelIds,
       rrule: formState.rrule,
       analysisMode: formState.analysisMode,
+      eventIsAllDay: formState.eventIsAllDay,
+      eventStartTime: formState.eventStartTime,
     },
     isSaving,
   );

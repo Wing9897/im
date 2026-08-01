@@ -4,7 +4,9 @@ import { DEFAULT_FORM_STATE } from "../../hooks/useTaskEditorState";
 import {
   applyConfigToFormState,
   buildCurrentTaskPayload,
+  formStateToCreateRecurringConfig,
   formStateToTaskConfig,
+  formStateToTaskSchedule,
   roundTripFormState,
 } from "./taskFormUtils";
 
@@ -29,6 +31,7 @@ const sampleBase: TaskFormState = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
 };
 
 const fullConfig: Partial<TaskFormState> = {
@@ -261,7 +264,7 @@ describe("formStateToTaskConfig calendar contract", () => {
       promptTemplate: "",
       channelIds: [],
       includeInTimeline: true,
-      worksetId: undefined,
+      worksetId: null,
     });
     for (const calendarOnlyKey of [
       "rrule",
@@ -273,6 +276,49 @@ describe("formStateToTaskConfig calendar contract", () => {
     ]) {
       expect(payload).not.toHaveProperty(calendarOnlyKey);
     }
+  });
+
+  it("formStateToCreateRecurringConfig maps editor fields for atomic create", () => {
+    const calendarState: TaskFormState = {
+      ...sampleBase,
+      analysisMode: "recurring",
+      rrule: "  FREQ=DAILY  ",
+      eventStartTime: "22:00",
+      eventEndTime: "06:00",
+      eventIsAllDay: false,
+      eventLocation: "  Night desk  ",
+      eventDescription: "  Overnight  ",
+      worksetId: "ws-ops",
+    };
+
+    expect(formStateToCreateRecurringConfig(calendarState)).toEqual({
+      name: "Base Task",
+      description: "Base description",
+      rrule: "FREQ=DAILY",
+      eventStartTime: "22:00",
+      eventEndTime: "06:00",
+      eventIsAllDay: false,
+      eventLocation: "Night desk",
+      eventDescription: "Overnight",
+      worksetId: "ws-ops",
+    });
+  });
+
+  it("formStateToTaskSchedule clears clocks when all-day", () => {
+    expect(
+      formStateToTaskSchedule({
+        ...sampleBase,
+        analysisMode: "recurring",
+        rrule: "FREQ=DAILY",
+        eventIsAllDay: true,
+        eventStartTime: "09:00",
+        eventEndTime: "10:00",
+      }),
+    ).toMatchObject({
+      eventIsAllDay: true,
+      eventStartTime: null,
+      eventEndTime: null,
+    });
   });
 
   it("includes includeInTimeline for event mode payloads", () => {

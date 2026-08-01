@@ -10,6 +10,7 @@ import { apiClient } from "./client";
 import {
   listTasks,
   createTask,
+  createRecurringTask,
   updateTask,
   deleteTask,
   toggleTaskActive,
@@ -135,6 +136,27 @@ describe("tasks API", () => {
       vi.mocked(apiClient.post).mockRejectedValue(new Error("Validation error"));
 
       await expect(createTask({} as any)).rejects.toThrow("Validation error");
+    });
+  });
+
+  // ─── createRecurringTask ───────────────────────────────────────────
+
+  describe("createRecurringTask", () => {
+    it("posts atomic recurring payload to /tasks/recurring", async () => {
+      const body = {
+        name: "Night",
+        rrule: "FREQ=DAILY",
+        eventStartTime: "22:00",
+        eventEndTime: "06:00",
+        eventIsAllDay: false,
+      };
+      const response = { id: "rec-1", deletedBatchCount: 0 };
+      vi.mocked(apiClient.post).mockResolvedValue(response);
+
+      const result = await createRecurringTask(body);
+
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/tasks/recurring", body);
+      expect(result).toEqual(response);
     });
   });
 

@@ -253,8 +253,10 @@
       "locationPlaceholder": "例：會議室 A、線上",
       "description": "描述（選填）",
       "descriptionPlaceholder": "補充這個活動的細節",
-      "allDayHint": "整天活動不需要設定開始與結束時間。"
+      "allDayHint": "整天活動不需要設定開始與結束時間。",
+      "overnightHint": "結束時間在翌日"
     },
+
     "template": {
       "title": "選擇任務模板",
       "all": "全部",
