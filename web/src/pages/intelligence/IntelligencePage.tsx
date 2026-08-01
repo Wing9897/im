@@ -117,7 +117,9 @@ export function IntelligencePage() {
         worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
         expandTasks={tasks.map((task) => ({
           id: task.id,
+          name: task.name,
           worksetId: task.worksetId ?? null,
+          analysisMode: task.analysisMode ?? null,
         }))}
       />
 

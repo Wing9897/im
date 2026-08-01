@@ -23,7 +23,12 @@ export function VoiceReminderSourcesSection({
   tasksLoading: boolean;
   filterTasks: SourceFilterOption[];
   worksets: Array<{ id: string; name: string; isSystem?: boolean }>;
-  expandTasks: Array<{ id: string; name?: string; worksetId?: string | null }>;
+  expandTasks: Array<{
+    id: string;
+    name?: string;
+    worksetId?: string | null;
+    analysisMode?: string | null;
+  }>;
   selection: SourceFilterSelection;
   onChange: (next: SourceFilterSelection) => void;
 }) {

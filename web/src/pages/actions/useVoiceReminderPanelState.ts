@@ -73,6 +73,7 @@ export function useVoiceReminderPanelState() {
         id: task.id,
         name: task.name,
         worksetId: task.worksetId ?? null,
+        analysisMode: task.analysisMode ?? null,
       })),
     [tasks],
   );
