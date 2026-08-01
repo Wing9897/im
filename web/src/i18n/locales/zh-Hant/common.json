@@ -117,7 +117,7 @@
       "optionalTitle": "選填設定",
       "channelsLoadError": "無法載入頻道列表",
       "scheduleHydrating": "正在載入循環排程…",
-      "scheduleHydrateFailed": "無法載入循環排程：{{message}}",
+      "scheduleHydrateFailed": "無法載入循環排程：{message}",
       "scheduleHydrateRetry": "重試",
       "timeRangeLabel": "分析時間範圍",
       "timeAll": "不限時間",

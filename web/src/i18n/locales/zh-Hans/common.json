@@ -117,7 +117,7 @@
       "optionalTitle": "选填设定",
       "channelsLoadError": "无法加载频道列表",
       "scheduleHydrating": "正在加载循环排程…",
-      "scheduleHydrateFailed": "无法加载循环排程：{{message}}",
+      "scheduleHydrateFailed": "无法加载循环排程：{message}",
       "scheduleHydrateRetry": "重试",
       "timeRangeLabel": "分析时间范围",
       "timeAll": "不限时间",

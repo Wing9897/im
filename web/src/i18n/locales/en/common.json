@@ -117,7 +117,7 @@
       "optionalTitle": "Optional settings",
       "channelsLoadError": "Could not load channels",
       "scheduleHydrating": "Loading recurrence schedule…",
-      "scheduleHydrateFailed": "Could not load recurrence schedule: {{message}}",
+      "scheduleHydrateFailed": "Could not load recurrence schedule: {message}",
       "scheduleHydrateRetry": "Retry",
       "timeRangeLabel": "Analysis time range",
       "timeAll": "No time limit",
