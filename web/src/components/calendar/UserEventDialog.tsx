@@ -26,11 +26,16 @@ import {
   toDateTimeLocalInput,
   todayDateInput,
 } from "../../domain/timeline/dateUtils";
+import {
+  isOvernightClockRange,
+  valuesForKindChange,
+  type UserEventKind,
+} from "../../domain/timeline/userEventKindSwitch";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { buildRRule, parseRRule } from "../../utils/rrule";
 import { validateRRuleConfig } from "../../utils/rruleValidation";
 
-export type UserEventKind = "one_off" | "recurring";
+export type { UserEventKind };
 
 export type UserEventFormValues = {
   /** Create-dialog kind; edit / import paths always submit ``one_off``. */
@@ -213,6 +218,10 @@ export function UserEventDialog({
 
   const displayError = error ?? localError;
   const isRecurring = values.kind === "recurring";
+  const showOvernightHint =
+    isRecurring &&
+    !values.isAllDay &&
+    isOvernightClockRange(values.eventStartTime, values.eventEndTime);
 
   const kindItems = useMemo(
     () => [
@@ -250,34 +259,9 @@ export function UserEventDialog({
     const nextKind: UserEventKind = id === "recurring" ? "recurring" : "one_off";
     if (nextKind === values.kind) return;
     setLocalError(null);
-    setValues((prev) => {
-      if (nextKind === "recurring") {
-        const clockFromStart = prev.startTime.includes("T")
-          ? prev.startTime.slice(11, 16)
-          : "";
-        const clockFromEnd = prev.endTime.includes("T")
-          ? prev.endTime.slice(11, 16)
-          : "";
-        return {
-          ...prev,
-          kind: "recurring",
-          rrule: prev.rrule.trim() || DEFAULT_RRULE,
-          eventStartTime: CLOCK_RE.test(clockFromStart) ? clockFromStart : prev.eventStartTime || "09:00",
-          eventEndTime: CLOCK_RE.test(clockFromEnd) ? clockFromEnd : prev.eventEndTime || "10:00",
-        };
-      }
-      const today = todayDateInput();
-      return {
-        ...prev,
-        kind: "one_off",
-        startTime: prev.isAllDay
-          ? today
-          : `${today}T${prev.eventStartTime || "09:00"}`,
-        endTime: prev.isAllDay
-          ? today
-          : `${today}T${prev.eventEndTime || "10:00"}`,
-      };
-    });
+    setValues((prev) =>
+      valuesForKindChange(prev, nextKind, { defaultRrule: DEFAULT_RRULE }),
+    );
   };
 
   const handleAllDayChange = (checked: boolean) => {
@@ -580,6 +564,14 @@ export function UserEventDialog({
                     data-testid="user-event-event-end"
                   />
                 </div>
+                {showOvernightHint ? (
+                  <p
+                    className="m-0 text-caption text-text-muted"
+                    data-testid="user-event-overnight-hint"
+                  >
+                    {t("userEvent.overnightHint")}
+                  </p>
+                ) : null}
               </div>
             ) : null
           ) : (

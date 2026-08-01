@@ -23,6 +23,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from dateutil import rrule as du_rrule
 from dateutil import tz as du_tz
 
+from server.calendar.occurrence_span import roll_end_if_overnight
 from server.time_iso import parse_iso, to_iso_z
 from server.util import parse_json_list, task_value
 
@@ -397,13 +398,14 @@ def expand_task_occurrences(
                 start_dt = datetime.combine(date_part, time(0, 0), tzinfo=local_tz).astimezone(timezone.utc)
                 end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(timezone.utc)
             else:
-                start_dt = datetime.combine(date_part, start_tod, tzinfo=local_tz).astimezone(timezone.utc)
+                start_local = datetime.combine(date_part, start_tod, tzinfo=local_tz)
+                start_dt = start_local.astimezone(timezone.utc)
                 if end_tod is not None:
-                    end_dt = datetime.combine(date_part, end_tod, tzinfo=local_tz).astimezone(timezone.utc)
-                    # Overnight spans (e.g. 22:00→06:00) roll to the next local day —
-                    # same rule as ``_manual_end_anchor`` / imported-duration expand.
-                    if end_dt < start_dt:
-                        end_dt = end_dt + timedelta(days=1)
+                    end_local = roll_end_if_overnight(
+                        start_local,
+                        datetime.combine(date_part, end_tod, tzinfo=local_tz),
+                    )
+                    end_dt = end_local.astimezone(timezone.utc)
                 else:
                     end_dt = start_dt
             # The acquisition window is widened by one second to preserve

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import Query, Request
+from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import get_db
 from server.api.routes.task_helpers import TaskConfigBody, validate_task_body
@@ -14,9 +15,37 @@ from server.api.schemas.responses import TaskActivitySpanResponse, TaskResponse
 from server.errors import VALIDATION_ERROR, http_error
 from server.presets.task_presets import BUILTIN_PRESETS
 from server.queries.tasks_queries import fetch_activity_span_rows
-from server.services.task_crud import create_task_record, list_tasks_payload
+from server.services.task_crud import (
+    create_recurring_task_record,
+    create_task_record,
+    list_tasks_payload,
+)
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_activity_span
+
+
+class CreateRecurringTaskBody(BaseModel):
+    """Atomic recurring create: analysis task + ``recurring_schedules`` in one call.
+
+    Prefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for
+    web/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    rrule: str
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool = False
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    description: str | None = None
+    worksetId: str | None = None
+    parentTaskId: str | None = Field(
+        default=None,
+        description="Optional project parent for nested recurring children",
+    )
 
 
 @router.get("/templates")
@@ -46,6 +75,34 @@ async def list_tasks(
         )
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+
+
+@router.post("/recurring", status_code=201, response_model=TaskResponse)
+async def create_recurring_task_endpoint(
+    request: Request,
+    body: CreateRecurringTaskBody,
+) -> dict:
+    """Single-shot recurring create (task + schedule). See ``CreateRecurringTaskBody``."""
+    try:
+        result = await create_recurring_task_record(
+            get_db(request),
+            name=body.name,
+            rrule=body.rrule,
+            event_start_time=body.eventStartTime,
+            event_end_time=body.eventEndTime,
+            event_is_all_day=bool(body.eventIsAllDay),
+            event_location=body.eventLocation,
+            event_description=body.eventDescription,
+            description=body.description,
+            workset_id=body.worksetId if "worksetId" in body.model_fields_set else ...,
+            parent_task_id=body.parentTaskId,
+        )
+    except TaskWriteError as exc:
+        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    if result.register:
+        await register_task(request, result.task_id)
+    notify(request, result.task_id, "created")
+    return result.payload
 
 
 @router.post("", status_code=201, response_model=TaskResponse)

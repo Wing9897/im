@@ -84,6 +84,48 @@ def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
     assert items[0]["endTime"] == "2026-07-01T22:00:00Z"
 
 
+def test_overnight_imported_and_synthetic_paths_agree(monkeypatch) -> None:
+    """Write-path dtend overnight + imported expand must match synthetic expand."""
+    from server.calendar.occurrence_span import roll_end_if_overnight
+    from server.services.recurring_task_writes import _manual_end_anchor
+
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+
+    dtstart = "2026-07-01T22:00:00"
+    dtend = _manual_end_anchor(dtstart, "06:00", is_all_day=False)
+    assert dtend == "2026-07-02T06:00:00"
+    assert roll_end_if_overnight(
+        datetime.fromisoformat(dtstart),
+        datetime.fromisoformat("2026-07-01T06:00:00"),
+    ) == datetime.fromisoformat(dtend)
+
+    synthetic = {
+        "id": "overnight-parity",
+        "name": "夜班",
+        "analysis_mode": "recurring",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY",
+        "event_is_all_day": 0,
+        "event_start_time": "22:00",
+        "event_end_time": "06:00",
+    }
+    imported = {
+        **synthetic,
+        "event_start_local": dtstart,
+        "event_end_local": dtend,
+        "event_timezone": "floating",
+        "ics_source": None,
+    }
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    syn_items = expand_task_occurrences(synthetic, range_start, range_end, budget=5)
+    imp_items = expand_task_occurrences(imported, range_start, range_end, budget=5)
+    assert len(syn_items) == 1 and len(imp_items) == 1
+    assert syn_items[0]["startTime"] == imp_items[0]["startTime"]
+    assert syn_items[0]["endTime"] == imp_items[0]["endTime"]
+
+
 def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
     """Manual all-day plans store DATE dtstart + UI UNTIL=...Z (task 「1234」 shape).
 

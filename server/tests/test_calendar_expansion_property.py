@@ -13,6 +13,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from server.calendar import rrule as calendar_module
+from server.calendar.occurrence_span import roll_end_if_overnight
 from server.calendar.rrule import (
     MAX_OCCURRENCES,
     expand_calendar_occurrences,
@@ -146,11 +147,15 @@ def _full_reference_task_sequence(
             end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(timezone.utc)
         else:
             start_dt = datetime.combine(date_part, start_tod, tzinfo=local_tz).astimezone(timezone.utc)
-            end_dt = (
-                datetime.combine(date_part, end_tod, tzinfo=local_tz).astimezone(timezone.utc) if end_tod else start_dt
-            )
-            if end_dt < start_dt:
-                end_dt = end_dt + timedelta(days=1)
+            if end_tod is None:
+                end_dt = start_dt
+            else:
+                start_local = datetime.combine(date_part, start_tod, tzinfo=local_tz)
+                end_local = roll_end_if_overnight(
+                    start_local,
+                    datetime.combine(date_part, end_tod, tzinfo=local_tz),
+                )
+                end_dt = end_local.astimezone(timezone.utc)
         if start_dt < range_start_utc or start_dt > range_end_utc:
             continue
         result.append(

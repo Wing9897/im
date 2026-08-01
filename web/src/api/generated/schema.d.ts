@@ -249,6 +249,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tasks/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Recurring Task Endpoint
+         * @description Single-shot recurring create (task + schedule). See ``CreateRecurringTaskBody``.
+         */
+        post: operations["create_recurring_task_endpoint_api_v1_tasks_recurring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tasks/{task_id}/schedule": {
         parameters: {
             query?: never;
@@ -2455,6 +2475,41 @@ export interface components {
             message: string;
             taskConfig: components["schemas"]["TaskDraftPayload"] | null;
         };
+        /**
+         * CreateRecurringTaskBody
+         * @description Atomic recurring create: analysis task + ``recurring_schedules`` in one call.
+         *
+         *     Prefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for
+         *     web/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool.
+         */
+        CreateRecurringTaskBody: {
+            /** Name */
+            name: string;
+            /** Rrule */
+            rrule: string;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /**
+             * Eventisallday
+             * @default false
+             */
+            eventIsAllDay: boolean;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /**
+             * Parenttaskid
+             * @description Optional project parent for nested recurring children
+             */
+            parentTaskId?: string | null;
+        };
         /** DeviceInfoResponse */
         DeviceInfoResponse: {
             /** Id */
@@ -4315,6 +4370,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["TaskConfigBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_recurring_task_endpoint_api_v1_tasks_recurring_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurringTaskBody"];
             };
         };
         responses: {

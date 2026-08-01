@@ -165,6 +165,7 @@
     "endDateAria": "结束日期",
     "eventStartAria": "开始时间",
     "eventEndAria": "结束时间（选填）",
+    "overnightHint": "结束时间在翌日",
     "locationAria": "地点（选填）",
     "locationPlaceholder": "地点",
     "bodyAria": "说明（选填）",

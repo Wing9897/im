@@ -371,20 +371,63 @@ async def test_calendar_schedule_update_validates_rrule(client, app):
     assert await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,)) == before
 
 
-async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
-    """Dialog-shaped create: recurring shell + all-day schedule with UI UNTIL=...Z."""
+async def test_atomic_recurring_create_endpoint(client, app):
+    """Timeline path: POST /tasks/recurring creates task + schedule atomically."""
+    before_tasks = await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
+    before_schedules = await app.state.db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
+
     created = await client.post(
-        "/api/v1/tasks",
+        "/api/v1/tasks/recurring",
+        json={
+            "name": "Atomic standup",
+            "rrule": "FREQ=WEEKLY;BYDAY=MO",
+            "eventStartTime": "09:00",
+            "eventEndTime": "09:30",
+            "eventIsAllDay": False,
+            "worksetId": "__user__",
+            "description": "notes",
+            "eventDescription": "notes",
+        },
+    )
+    assert created.status_code == 201, created.text
+    body = created.json()
+    assert body["analysisMode"] == "recurring"
+    assert body["worksetId"] == "__user__"
+    task_id = body["id"]
+
+    schedule = await client.get(f"/api/v1/tasks/{task_id}/schedule")
+    assert schedule.status_code == 200
+    assert schedule.json()["rrule"] == "FREQ=WEEKLY;BYDAY=MO"
+    assert schedule.json()["eventStartTime"] == "09:00"
+
+    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_tasks + 1
+    assert (
+        await app.state.db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
+        == before_schedules + 1
+    )
+
+    bad = await client.post(
+        "/api/v1/tasks/recurring",
+        json={"name": "bad", "rrule": "FREQ=BOGUS", "eventStartTime": "09:00"},
+    )
+    assert bad.status_code == 422
+    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_tasks + 1
+
+
+async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
+    """Dialog-shaped create: atomic recurring + all-day schedule with UI UNTIL=...Z."""
+    created = await client.post(
+        "/api/v1/tasks/recurring",
         json={
             "name": "1234",
-            "promptTemplate": "",
-            "analysisMode": "recurring",
-            "channelIds": [],
-            "includeInTimeline": True,
+            "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
+            "eventIsAllDay": True,
+            "eventStartTime": None,
+            "eventEndTime": None,
             "worksetId": "__user__",
         },
     )
-    assert created.status_code == 201
+    assert created.status_code == 201, created.text
     task_id = created.json()["id"]
     row = await app.state.db.fetch_one(
         "SELECT workset_id, analysis_mode FROM analysis_tasks WHERE id = ?",
@@ -393,17 +436,6 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
     assert row is not None
     assert row["analysis_mode"] == "recurring"
     assert row["workset_id"] == "__user__"
-
-    scheduled = await client.put(
-        f"/api/v1/tasks/{task_id}/schedule",
-        json={
-            "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
-            "eventIsAllDay": True,
-            "eventStartTime": None,
-            "eventEndTime": None,
-        },
-    )
-    assert scheduled.status_code == 200, scheduled.text
 
     items = await client.get(
         "/api/v1/calendar/items",

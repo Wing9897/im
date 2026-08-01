@@ -165,6 +165,7 @@
     "endDateAria": "End date",
     "eventStartAria": "Start time",
     "eventEndAria": "End time (optional)",
+    "overnightHint": "Ends the next day",
     "locationAria": "Location (optional)",
     "locationPlaceholder": "Location",
     "bodyAria": "Notes (optional)",

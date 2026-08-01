@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from types import EllipsisType
 from typing import Any
 
+from server.calendar.occurrence_span import roll_end_if_overnight
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import CHILD_RECURRING_MODE
 from server.queries.tasks_queries import (
@@ -34,15 +35,14 @@ def _manual_anchor(clock: str | None, *, is_all_day: bool) -> str:
 
 
 def _manual_end_anchor(dtstart: str, end_clock: str | None, *, is_all_day: bool) -> str | None:
+    """Build dtend; overnight clocks share ``roll_end_if_overnight`` with expand."""
     if is_all_day:
         return (datetime.fromisoformat(dtstart) + timedelta(days=1)).date().isoformat()
     if end_clock is None:
         return None
     start = datetime.fromisoformat(dtstart)
     hour, minute = (int(part) for part in end_clock.split(":", 1))
-    end = start.replace(hour=hour, minute=minute)
-    if end < start:
-        end += timedelta(days=1)
+    end = roll_end_if_overnight(start, start.replace(hour=hour, minute=minute))
     return end.isoformat()
 
 
