@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
@@ -8,17 +7,8 @@ import { findActivitySpan } from "../tasks/project/projectDetailModel";
 import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { startOfDay } from "../../domain/timeline/dateUtils";
-import type {
-  TimelineEventStatus,
-  TimelineEventStatusMap,
-  TimelineEventTimeOverrideMap,
-} from "../../domain/timeline/status";
-import { useDeepLinkFingerprint } from "../../hooks/useDeepLinkFingerprint";
 import { usePersistedState } from "../../hooks/usePersistedState";
-import {
-  hydrateTimelineAnnotations,
-  saveTimelineAnnotations,
-} from "./timelineAnnotationsStore";
+import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineData } from "./useTimelineData";
 import { useTimelineFiltering } from "./useTimelineFiltering";
 import {
@@ -26,6 +16,7 @@ import {
   useTimelineNavigation,
 } from "./useTimelineNavigation";
 import { useTimelineSelection } from "./useTimelineSelection";
+import { useTimelineViewDeepLink } from "./useTimelineViewDeepLink";
 import {
   TIMELINE_FOCUSED_DAY_STORAGE_KEY,
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
@@ -41,11 +32,6 @@ export {
 } from "../../domain/prefs";
 
 const VALID_VIEW_MODES = ["calendar", "gantt"] as const;
-const ANNOTATIONS_SAVE_DEBOUNCE_MS = 400;
-
-function isTimelineViewMode(value: string | null): value is "calendar" | "gantt" {
-  return value === "calendar" || value === "gantt";
-}
 
 /**
  * Timeline composed state (sources / data / navigation / filters / selection / gantt).
@@ -62,10 +48,6 @@ function isTimelineViewMode(value: string | null): value is "calendar" | "gantt"
  */
 export function useTimelinePageContainer() {
   const { t } = useTranslation("timeline");
-  const location = useLocation();
-  const navigate = useNavigate();
-  const deepLinkGate = useDeepLinkFingerprint();
-  const urlView = new URLSearchParams(location.search).get("view");
 
   // ─── Persisted UI state ────────────────────────────────────────────────────
   const [selectedSources, setSelectedSourcesState] = useState<SourceFilterSelection>(
@@ -95,9 +77,13 @@ export function useTimelinePageContainer() {
     TIMELINE_SHOW_ENDING_STORAGE_KEY,
     true,
   );
-  const [eventStatuses, setEventStatuses] = useState<TimelineEventStatusMap>({});
-  const [eventTimeOverrides, setEventTimeOverrides] = useState<TimelineEventTimeOverrideMap>({});
-  const [annotationsReady, setAnnotationsReady] = useState(false);
+  const {
+    eventStatuses,
+    eventTimeOverrides,
+    setEventStatuses,
+    setEventTimeOverrides,
+    setEventStatus,
+  } = useTimelineAnnotations();
   const [focusedDayIso, setFocusedDayIso] = usePersistedState<string | null>(
     TIMELINE_FOCUSED_DAY_STORAGE_KEY,
     null,
@@ -116,27 +102,6 @@ export function useTimelinePageContainer() {
     TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
     null,
   );
-
-  useEffect(() => {
-    let cancelled = false;
-    void hydrateTimelineAnnotations().then((data) => {
-      if (cancelled) return;
-      setEventStatuses(data.eventStatuses);
-      setEventTimeOverrides(data.eventTimeOverrides);
-      setAnnotationsReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!annotationsReady) return;
-    const timer = window.setTimeout(() => {
-      void saveTimelineAnnotations({ eventStatuses, eventTimeOverrides });
-    }, ANNOTATIONS_SAVE_DEBOUNCE_MS);
-    return () => window.clearTimeout(timer);
-  }, [annotationsReady, eventStatuses, eventTimeOverrides]);
 
   // ─── Composed hooks ────────────────────────────────────────────────────────
   const navigation = useTimelineNavigation();
@@ -196,36 +161,7 @@ export function useTimelinePageContainer() {
     }
   }, [setViewMode, navigation]);
 
-  // Board / deep-link: `/timeline?view=calendar|gantt` is one-shot (Monitor-style).
-  // Clear `?view=` after apply so later UI toggles are not forced back by a sticky URL.
-  useEffect(() => {
-    if (!isTimelineViewMode(urlView)) {
-      deepLinkGate(location.key, null);
-      return;
-    }
-    if (deepLinkGate(location.key, urlView) === "skip") {
-      return;
-    }
-    handleSetViewMode(urlView);
-    const params = new URLSearchParams(location.search);
-    if (!params.has("view")) {
-      return;
-    }
-    params.delete("view");
-    const nextSearch = params.toString();
-    navigate(
-      `${location.pathname}${nextSearch ? `?${nextSearch}` : ""}`,
-      { replace: true },
-    );
-  }, [
-    deepLinkGate,
-    handleSetViewMode,
-    location.key,
-    location.pathname,
-    location.search,
-    navigate,
-    urlView,
-  ]);
+  useTimelineViewDeepLink(handleSetViewMode);
 
   const handleSelectGanttTask = useCallback(
     (taskId: string) => setSelectedGanttTaskId((prev) => (prev === taskId ? null : taskId)),
@@ -258,13 +194,6 @@ export function useTimelinePageContainer() {
       navigation.moveCursor(delta);
     },
     [navigation, setFocusedDay],
-  );
-
-  const setEventStatus = useCallback(
-    (eventId: string, status: TimelineEventStatus) => {
-      setEventStatuses((current) => ({ ...current, [eventId]: status }));
-    },
-    [setEventStatuses],
   );
 
   const emptyState =

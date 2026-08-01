@@ -1,57 +1,23 @@
 import { useCallback, useEffect, useMemo } from "react";
 
 import { useMonitorMode } from "../../context/MonitorModeContext";
-import { userEventMatchesSourceSelection } from "../../domain/tasks/sourceFilterSelection";
-import {
-  fetchSharedCalendarItems,
-  fetchSharedTimelineEvents,
-  fetchSharedUserEvents,
-} from "../../domain/timeline/sharedCalendarFetch";
-import {
-  mergeWithCalendarOccurrences,
-  userEventToTimelineItem,
-} from "../../domain/timeline/timedEventMerge";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
+import {
+  fetchMergedTimelineEvents,
+  paddedTimelineFetchWindow,
+} from "../../domain/timeline/timelineMergedFetch";
+import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import type { TimelineItem, TaskActivitySpan } from "../../types";
 import { logWarn } from "../../utils/logger";
 import { useGanttData } from "./useGanttData";
-import { resolveTimelineFilterPlan, type TimelineFilterPlan } from "./shared";
 
 const EMPTY_EVENTS: TimelineItem[] = [];
-
-/** Padding (days) around the visible range so the 42-day month grid is covered. */
-const CALENDAR_FETCH_PADDING_DAYS = 7;
-
-function anySourceFlag(
-  plan: TimelineFilterPlan,
-  analysis: boolean,
-  calendar: boolean,
-  user: boolean,
-): boolean {
-  return (
-    (plan.fetchAnalysis && analysis) ||
-    (plan.fetchCalendar && calendar) ||
-    (plan.fetchUserEvents && user)
-  );
-}
-
-function firstSourceError(
-  plan: TimelineFilterPlan,
-  analysis: string | null,
-  calendar: string | null,
-  user: string | null,
-): string | null {
-  if (plan.fetchAnalysis && analysis) return analysis;
-  if (plan.fetchCalendar && calendar) return calendar;
-  if (plan.fetchUserEvents && user) return user;
-  return null;
-}
 
 interface UseTimelineDataOptions {
   /** `null` = all, `[]` = none, otherwise multi-select (may include `__user__`). */
@@ -93,21 +59,36 @@ interface UseTimelineDataReturn {
   retryTimelineEvents: () => void;
 }
 
-type AnalysisFetchKey = {
+type TimelineFetchKey = {
   startIso: string;
   endIso: string;
-  /** `null` = all tasks; otherwise IN filter (may be empty → short-circuit). */
-  taskIds: string[] | null;
+  selectedSources: SourceFilterSelection;
+  /** Stable fingerprint of the filter plan for cache/effect identity. */
+  planKey: string;
+  filterPlan: ReturnType<typeof resolveTimelineFilterPlan>;
 };
 
+function filterPlanKey(plan: ReturnType<typeof resolveTimelineFilterPlan>): string {
+  return [
+    plan.fetchAnalysis ? "A" : "-",
+    plan.fetchCalendar ? "C" : "-",
+    plan.fetchUserEvents ? "U" : "-",
+    plan.analysisTaskIds === null ? "*" : plan.analysisTaskIds.join(","),
+    plan.recurringTaskIds === null ? "*" : plan.recurringTaskIds.join(","),
+    plan.selectedRealTaskIds.join(","),
+    plan.explicitTaskIds.join(","),
+    plan.selectedWorksetIds.join(","),
+  ].join("|");
+}
+
 /**
- * Encapsulates data fetching for the timeline page:
- * - Event-mode analysis results (filtered by task multi-select)
- * - Calendar-mode RRULE occurrences (filtered by task)
- * - Manual / assistant user events
- * - "All tasks" merges all applicable sources
- * - Auto-refresh on analysis completion
- * Gantt activity spans live in useGanttData; Gantt events reuse the primary list.
+ * Timeline page data hook: catalog + plan-aware merged events + gantt spans.
+ *
+ * INVARIANTS:
+ * - Pages shell stays keep-mounted under canvas — pause expensive Timeline
+ *   fetches/subscriptions while the board is the visible shell (`pageActive`).
+ * - Fetch + merge go through {@link fetchMergedTimelineEvents} (sharedCalendarFetch
+ *   + timedEventMerge). Board keeps {@link fetchMergedTimedBoardEvents} separately.
  */
 export function useTimelineData({
   selectedSources,
@@ -136,66 +117,12 @@ export function useTimelineData({
     () => resolveTimelineFilterPlan(selectedSources, tasks),
     [selectedSources, tasks],
   );
+  const planKey = useMemo(() => filterPlanKey(filterPlan), [filterPlan]);
 
-  const selectedSourcesKey =
-    selectedSources === null
-      ? "*"
-      : `t:${selectedSources.taskIds.join("|")}|w:${selectedSources.worksetIds.join("|")}`;
-
-  const calendarWindow = useMemo(() => {
-    const start = new Date(rangeStart);
-    start.setDate(start.getDate() - CALENDAR_FETCH_PADDING_DAYS);
-    const end = new Date(rangeEnd);
-    end.setDate(end.getDate() + CALENDAR_FETCH_PADDING_DAYS);
-    return { startIso: start.toISOString(), endIso: end.toISOString() };
-  }, [rangeStart, rangeEnd]);
-
-  const fetcher = useCallback(
-    (key: AnalysisFetchKey) =>
-      fetchSharedTimelineEvents({
-        taskIds: key.taskIds,
-        startDate: key.startIso,
-        endDate: key.endIso,
-      }),
-    [],
+  const calendarWindow = useMemo(
+    () => paddedTimelineFetchWindow(rangeStart, rangeEnd),
+    [rangeStart, rangeEnd],
   );
-  const {
-    data,
-    initialLoading,
-    isRefreshing,
-    error,
-    execute: fetchEvents,
-  } = useAsyncResource(fetcher, { toastOnError: false });
-
-  const calendarFetcher = useCallback(
-    (window: { startIso: string; endIso: string; taskIds: string[] | null }) =>
-      fetchSharedCalendarItems(
-        window.startIso,
-        window.endIso,
-        window.taskIds === null ? undefined : { taskIds: window.taskIds },
-      ),
-    [],
-  );
-  const {
-    data: calendarData,
-    initialLoading: calendarInitialLoading,
-    isRefreshing: calendarIsRefreshing,
-    error: calendarError,
-    execute: executeCalendarFetch,
-  } = useAsyncResource(calendarFetcher, { toastOnError: false });
-
-  const userEventsFetcher = useCallback(
-    (window: { startIso: string; endIso: string }) =>
-      fetchSharedUserEvents({ start: window.startIso, end: window.endIso }),
-    [],
-  );
-  const {
-    data: userEventsData,
-    initialLoading: userEventsInitialLoading,
-    isRefreshing: userEventsIsRefreshing,
-    error: userEventsError,
-    execute: executeUserEventsFetch,
-  } = useAsyncResource(userEventsFetcher, { toastOnError: false });
 
   const recurringTaskFingerprint = useMemo(
     () =>
@@ -206,71 +133,61 @@ export function useTimelineData({
     [tasks],
   );
 
+  const fetcher = useCallback(
+    (key: TimelineFetchKey) =>
+      fetchMergedTimelineEvents({
+        selectedSources: key.selectedSources,
+        filterPlan: key.filterPlan,
+        startIso: key.startIso,
+        endIso: key.endIso,
+        taskNameById,
+        generalWorksetLabel,
+        worksetNameById,
+      }),
+    [taskNameById, generalWorksetLabel, worksetNameById],
+  );
+
+  const {
+    data,
+    initialLoading,
+    isRefreshing,
+    error,
+    execute: fetchEvents,
+  } = useAsyncResource(fetcher, { toastOnError: false });
+
+  const refreshEvents = useCallback(async () => {
+    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+      return;
+    }
+    await fetchEvents({
+      startIso: calendarWindow.startIso,
+      endIso: calendarWindow.endIso,
+      selectedSources,
+      planKey,
+      filterPlan,
+    });
+  }, [fetchEvents, filterPlan, calendarWindow, selectedSources, planKey]);
+
   useEffect(() => {
-    if (!pageActive || !filterPlan.fetchAnalysis) return;
+    if (!pageActive) return;
+    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+      return;
+    }
     void fetchEvents({
       startIso: calendarWindow.startIso,
       endIso: calendarWindow.endIso,
-      taskIds: filterPlan.analysisTaskIds,
+      selectedSources,
+      planKey,
+      filterPlan,
     });
   }, [
     pageActive,
     fetchEvents,
     calendarWindow,
-    filterPlan.fetchAnalysis,
-    filterPlan.analysisTaskIds,
-    selectedSourcesKey,
-  ]);
-
-  useEffect(() => {
-    if (!pageActive || !filterPlan.fetchCalendar) return;
-    void executeCalendarFetch({
-      ...calendarWindow,
-      taskIds: filterPlan.recurringTaskIds,
-    });
-  }, [
-    pageActive,
-    executeCalendarFetch,
-    calendarWindow,
-    recurringTaskFingerprint,
-    filterPlan.fetchCalendar,
-    filterPlan.recurringTaskIds,
-  ]);
-
-  useEffect(() => {
-    if (!pageActive || !filterPlan.fetchUserEvents) return;
-    void executeUserEventsFetch(calendarWindow);
-  }, [pageActive, executeUserEventsFetch, calendarWindow, filterPlan.fetchUserEvents]);
-
-  const refreshEvents = useCallback(async () => {
-    const jobs: Promise<unknown>[] = [];
-    if (filterPlan.fetchAnalysis) {
-      jobs.push(
-        fetchEvents({
-          startIso: calendarWindow.startIso,
-          endIso: calendarWindow.endIso,
-          taskIds: filterPlan.analysisTaskIds,
-        }),
-      );
-    }
-    if (filterPlan.fetchCalendar) {
-      jobs.push(
-        executeCalendarFetch({
-          ...calendarWindow,
-          taskIds: filterPlan.recurringTaskIds,
-        }),
-      );
-    }
-    if (filterPlan.fetchUserEvents) {
-      jobs.push(executeUserEventsFetch(calendarWindow));
-    }
-    await Promise.all(jobs);
-  }, [
-    fetchEvents,
+    selectedSources,
+    planKey,
     filterPlan,
-    executeCalendarFetch,
-    executeUserEventsFetch,
-    calendarWindow,
+    recurringTaskFingerprint,
   ]);
 
   useRefreshOnAnalysisEvent(
@@ -287,82 +204,30 @@ export function useTimelineData({
       if (detail.resourceType !== "task" && detail.resourceType !== "user_event") {
         return;
       }
-      void refreshEvents().catch((error) => {
-        logWarn("[timeline] refresh after resource_modified failed", error);
+      void refreshEvents().catch((err) => {
+        logWarn("[timeline] refresh after resource_modified failed", err);
       });
     });
   }, [pageActive, refreshEvents]);
 
-  const userEvents = useMemo(
-    () =>
-      (userEventsData ?? [])
-        .map((event) =>
-          userEventToTimelineItem(event, taskNameById, generalWorksetLabel, worksetNameById),
-        )
-        .filter((event): event is TimelineItem => event !== null),
-    [userEventsData, taskNameById, generalWorksetLabel, worksetNameById],
-  );
-
+  // Empty / no-op plans must not keep showing a prior merge (effect skips fetch).
   const events = useMemo(() => {
-    if (selectedSources !== null && selectedSources.taskIds.length === 0 && selectedSources.worksetIds.length === 0) {
+    if (
+      selectedSources !== null &&
+      selectedSources.taskIds.length === 0 &&
+      selectedSources.worksetIds.length === 0
+    ) {
       return EMPTY_EVENTS;
     }
-
-    const analysis = filterPlan.fetchAnalysis ? (data ?? EMPTY_EVENTS) : EMPTY_EVENTS;
-    const allow = new Set(filterPlan.selectedRealTaskIds);
-    const allowWorksets = new Set(filterPlan.selectedWorksetIds);
-    const allowExplicitTasks = new Set(filterPlan.explicitTaskIds);
-    const isAll = selectedSources === null;
-
-    const calendarOccurrences = filterPlan.fetchCalendar
-      ? isAll
-        ? (calendarData ?? [])
-        : (calendarData ?? []).filter(
-            (occurrence) => occurrence.taskId != null && allow.has(occurrence.taskId),
-          )
-      : [];
-
-    const users = filterPlan.fetchUserEvents
-      ? isAll
-        ? userEvents
-        : userEvents.filter((event) =>
-            userEventMatchesSourceSelection(event, allowWorksets, allowExplicitTasks),
-          )
-      : EMPTY_EVENTS;
-
-    // Same id / taskId|startTime dedupe as Board (skip RRULE bars already covered).
-    return mergeWithCalendarOccurrences(
-      [...analysis, ...users],
-      calendarOccurrences,
-    ) as TimelineItem[];
-  }, [data, selectedSources, filterPlan, calendarData, userEvents]);
-
-  const sourceError = firstSourceError(
-    filterPlan,
-    error,
-    calendarError,
-    userEventsError,
-  );
-  const pageError = sourceError ?? taskLoadError;
-  const pageInitialLoading = anySourceFlag(
-    filterPlan,
-    initialLoading,
-    calendarInitialLoading,
-    userEventsInitialLoading,
-  );
-  const pageIsRefreshing = anySourceFlag(
-    filterPlan,
-    isRefreshing,
-    calendarIsRefreshing,
-    userEventsIsRefreshing,
-  );
+    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+      return EMPTY_EVENTS;
+    }
+    return data ?? EMPTY_EVENTS;
+  }, [data, selectedSources, filterPlan]);
+  const pageError = error ?? taskLoadError;
 
   const ganttData = useGanttData({ viewMode });
 
-  const timelineEvents = events;
-  const timelineEventsInitialLoading = pageInitialLoading;
-  const timelineEventsIsRefreshing = pageIsRefreshing;
-  const timelineEventsError = sourceError;
   const retryTimelineEvents = useCallback(() => {
     void refreshEvents();
   }, [refreshEvents]);
@@ -374,17 +239,17 @@ export function useTimelineData({
     timelineTasks,
 
     events,
-    initialLoading: pageInitialLoading,
-    isRefreshing: pageIsRefreshing,
+    initialLoading,
+    isRefreshing,
     pageError,
     refreshEvents,
 
     ...ganttData,
 
-    timelineEvents,
-    timelineEventsInitialLoading,
-    timelineEventsIsRefreshing,
-    timelineEventsError,
+    timelineEvents: events,
+    timelineEventsInitialLoading: initialLoading,
+    timelineEventsIsRefreshing: isRefreshing,
+    timelineEventsError: error,
     retryTimelineEvents,
   };
 }
