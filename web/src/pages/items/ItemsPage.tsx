@@ -2,7 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Package } from "lucide-react";
-import { AppPageShell } from "../../components/ui";
+import { EmptyState } from "../../components/common/EmptyState";
+import {
+  AlertBanner,
+  AppPageShell,
+  Badge,
+  Button,
+  FilterChip,
+  OpsControlBar,
+  PanelSection,
+  TextField,
+  captionClass,
+  pageTitleClass,
+  type BadgeTone,
+} from "../../components/ui";
 import {
   createItem,
   deleteItem,
@@ -39,6 +52,20 @@ function categoryLabel(
     if (translated !== key) return translated;
   }
   return category.name;
+}
+
+function toneBadge(tone: ReturnType<typeof expiryTone>): BadgeTone {
+  if (tone === "overdue") return "danger";
+  if (tone === "soon") return "warning";
+  if (tone === "ok") return "success";
+  return "neutral";
+}
+
+function toneBorderClass(tone: ReturnType<typeof expiryTone>): string {
+  if (tone === "overdue") return "border-l-error";
+  if (tone === "soon") return "border-l-warning";
+  if (tone === "ok") return "border-l-success";
+  return "border-l-surface-border";
 }
 
 export function ItemsPage() {
@@ -158,6 +185,11 @@ export function ItemsPage() {
     filteredCount: filtered.length,
   });
 
+  const clearFilters = () => {
+    setFilter("all");
+    setSearch("");
+  };
+
   const handleSave = async (draft: {
     id?: string;
     title: string;
@@ -183,33 +215,28 @@ export function ItemsPage() {
     <AppPageShell
       width="fluid"
       actions={
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-border px-2.5 py-1.5 text-[12px] text-text-secondary hover:text-text-primary"
-            onClick={() => setManageCategories(true)}
-          >
+        <div className="flex flex-wrap items-center gap-sm">
+          <Button variant="secondary" size="sm" onClick={() => setManageCategories(true)}>
             {t("manageCategories")}
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-accent px-2.5 py-1.5 text-[12px] font-medium text-white"
-            onClick={() => setEditing("new")}
-          >
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
             {t("addItem")}
-          </button>
+          </Button>
         </div>
       }
     >
-      <div className="mb-4 flex items-start gap-3">
-        <Package className="mt-0.5 shrink-0 text-accent" size={20} aria-hidden />
-        <div>
-          <h1 className="m-0 text-[18px] font-semibold text-text-primary">{t("title")}</h1>
-          <p className="m-0 mt-1 text-[12px] text-text-muted">{t("subtitle")}</p>
+      <div className="mb-md flex items-start gap-sm">
+        <Package className="mt-0.5 shrink-0 text-accent" size={18} aria-hidden />
+        <div className="min-w-0">
+          <h1 className={pageTitleClass}>{t("title")}</h1>
+          <p className={`${captionClass} mt-xs`}>{t("subtitle")}</p>
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <OpsControlBar
+        ariaLabel={t("filterBarAria")}
+        className="mb-md flex-wrap"
+      >
         {(
           [
             ["all", "filterAll"],
@@ -218,53 +245,64 @@ export function ItemsPage() {
             ["archived", "filterArchived"],
           ] as const
         ).map(([key, labelKey]) => (
-          <button
+          <FilterChip
             key={key}
-            type="button"
-            className={[
-              "rounded-md border px-2.5 py-1 text-[12px]",
-              filter === key
-                ? "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] text-text-primary"
-                : "border-border text-text-secondary",
-            ].join(" ")}
+            size="sm"
+            active={filter === key}
             onClick={() => setFilter(key)}
           >
             {t(labelKey)}
-          </button>
+          </FilterChip>
         ))}
-        <input
-          className="min-w-[200px] flex-1 rounded-md border border-border bg-transparent px-2.5 py-1.5 text-[12px] text-text-primary"
+        <TextField
+          className="min-w-[160px] flex-1"
           placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label={t("searchPlaceholder")}
         />
-      </div>
+      </OpsControlBar>
 
       {error ? (
-        <p className="text-[13px] text-danger" role="alert">
+        <AlertBanner variant="error" role="alert">
           {error}
-        </p>
+        </AlertBanner>
       ) : null}
-      {loading ? <p className="text-[13px] text-text-muted">…</p> : null}
+      {loading ? <p className={captionClass}>…</p> : null}
 
       {!loading && emptyKind !== "none" ? (
-        <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center">
-          <p className="m-0 text-[14px] text-text-secondary">
-            {emptyKind === "true-empty" ? t("empty") : t("emptyFiltered")}
-          </p>
-          <p className="m-0 mt-2 text-[12px] text-text-muted">
-            {emptyKind === "true-empty" ? t("emptyHint") : t("emptyFilteredHint")}
-          </p>
-        </div>
+        <EmptyState
+          compact
+          title={emptyKind === "true-empty" ? t("empty") : t("emptyFiltered")}
+          description={
+            emptyKind === "true-empty" ? t("emptyHint") : t("emptyFilteredHint")
+          }
+          illustration={
+            <Package size={40} color="var(--accent)" strokeWidth={1.5} aria-hidden />
+          }
+          actions={
+            emptyKind === "true-empty" ? (
+              <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
+                {t("addItem")}
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" onClick={clearFilters}>
+                {t("clearFilters")}
+              </Button>
+            )
+          }
+        />
       ) : null}
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-md">
         {grouped.map(({ worksetId, rows }) => (
-          <section key={worksetId}>
-            <h2 className="mb-2 text-[13px] font-semibold text-text-primary">
-              {worksetById.get(worksetId)?.name || worksetId}
-            </h2>
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          <PanelSection
+            key={worksetId}
+            title={worksetById.get(worksetId)?.name || worksetId}
+            showCount
+            itemCount={rows.length}
+          >
+            <ul className="m-0 flex list-none flex-col gap-sm p-0">
               {rows.map((item) => {
                 const days = daysUntil(item.expiresAt);
                 const tone = expiryTone(days, item.remindBeforeDays);
@@ -272,40 +310,45 @@ export function ItemsPage() {
                 return (
                   <li
                     key={item.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border px-3 py-2"
+                    className={[
+                      "flex flex-wrap items-center justify-between gap-sm rounded-lg border border-surface-border/70 border-l-[3px] bg-[color-mix(in_srgb,var(--surface-card)_40%,transparent)] px-sm py-xs",
+                      toneBorderClass(tone),
+                    ].join(" ")}
                   >
                     <button
                       type="button"
                       className="min-w-0 flex-1 border-none bg-transparent p-0 text-left"
                       onClick={() => setEditing(item)}
                     >
-                      <div className="truncate text-[13px] font-medium text-text-primary">
+                      <div className="truncate text-body font-medium text-text-primary">
                         {item.title}
                       </div>
-                      <div className="mt-0.5 flex flex-wrap gap-2 text-[11px] text-text-muted">
-                        <span>{categoryLabel(cat, t)}</span>
-                        {item.expiresAt ? <span>{item.expiresAt}</span> : <span>{t("noExpiry")}</span>}
+                      <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                        <Badge
+                          tone="neutral"
+                          className="normal-case tracking-normal"
+                        >
+                          {categoryLabel(cat, t)}
+                        </Badge>
+                        <span className={captionClass}>
+                          {item.expiresAt ? item.expiresAt : t("noExpiry")}
+                        </span>
                         {days != null ? (
-                          <span
-                            className={
-                              tone === "overdue"
-                                ? "text-danger"
-                                : tone === "soon"
-                                  ? "text-warning"
-                                  : "text-text-secondary"
-                            }
+                          <Badge
+                            tone={toneBadge(tone)}
+                            className="normal-case tracking-normal"
                           >
                             {days < 0
                               ? t("daysOverdue", { count: Math.abs(days) })
                               : t("daysLeft", { count: days })}
-                          </span>
+                          </Badge>
                         ) : null}
                       </div>
                     </button>
-                    <div className="flex gap-1">
-                      <button
-                        type="button"
-                        className="rounded border border-border px-2 py-1 text-[11px] text-text-secondary"
+                    <div className="flex shrink-0 gap-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() =>
                           void updateItem(item.id, {
                             status: item.status === "archived" ? "active" : "archived",
@@ -313,23 +356,23 @@ export function ItemsPage() {
                         }
                       >
                         {item.status === "archived" ? t("unarchive") : t("archive")}
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded border border-border px-2 py-1 text-[11px] text-danger"
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
                         onClick={() => {
                           if (!window.confirm(t("deleteItemConfirm"))) return;
                           void deleteItem(item.id).then(reload);
                         }}
                       >
                         {t("deleteItem")}
-                      </button>
+                      </Button>
                     </div>
                   </li>
                 );
               })}
             </ul>
-          </section>
+          </PanelSection>
         ))}
       </div>
 

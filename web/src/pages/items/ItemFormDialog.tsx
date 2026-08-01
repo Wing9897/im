@@ -1,5 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ModalDialog } from "../../components/ModalDialog";
+import {
+  AlertBanner,
+  Button,
+  FormActions,
+  FormGrid,
+  FormStack,
+  SelectField,
+  SettingsRow,
+  TextArea,
+  TextField,
+  captionClass,
+} from "../../components/ui";
 import type { ItemCategory, TrackableItem } from "../../api/items";
 import type { Workset } from "../../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -90,6 +103,10 @@ export function ItemFormDialog({
     );
   };
 
+  const handleClose = () => {
+    if (!saving) onClose();
+  };
+
   const submit = async () => {
     if (!title.trim()) return;
     setSaving(true);
@@ -113,60 +130,60 @@ export function ItemFormDialog({
     }
   };
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || saving) return;
-      event.preventDefault();
-      onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose, saving]);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      role="dialog"
-      aria-modal="true"
-      onClick={(event) => {
-        if (event.target === event.currentTarget && !saving) onClose();
-      }}
+    <ModalDialog
+      open
+      size="wide"
+      title={item ? t("editItem") : t("addItem")}
+      onClose={handleClose}
+      bodyClassName="flex flex-col gap-lg"
+      footer={
+        <FormActions inline>
+          <Button variant="secondary" onClick={handleClose} disabled={saving}>
+            {t("cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => void submit()}
+            disabled={saving || !title.trim()}
+          >
+            {t("save")}
+          </Button>
+        </FormActions>
+      }
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-border bg-surface p-4 shadow-lg">
-        <h2 className="m-0 mb-3 text-[15px] font-semibold text-text-primary">
-          {item ? t("editItem") : t("addItem")}
-        </h2>
-
-        <label className="mb-2 block text-[11px] text-text-muted">
-          {t("titleField")}
-          <input
-            className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px] text-text-primary"
+      <FormStack gap="lg">
+        <SettingsRow label={t("titleField")} htmlFor="item-title">
+          <TextField
+            id="item-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            disabled={saving}
+            autoFocus
           />
-        </label>
+        </SettingsRow>
 
-        <div className="mb-2 grid grid-cols-2 gap-2">
-          <label className="block text-[11px] text-text-muted">
-            {t("workset")}
-            <select
-              className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
+        <FormGrid>
+          <SettingsRow label={t("workset")} htmlFor="item-workset">
+            <SelectField
+              id="item-workset"
               value={worksetId}
               onChange={(e) => setWorksetId(e.target.value)}
+              disabled={saving}
             >
               {worksets.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="block text-[11px] text-text-muted">
-            {t("category")}
-            <select
-              className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
+            </SelectField>
+          </SettingsRow>
+          <SettingsRow label={t("category")} htmlFor="item-category">
+            <SelectField
+              id="item-category"
               value={categoryId ?? ""}
               onChange={(e) => onCategoryChange(e.target.value)}
+              disabled={saving}
             >
               <option value="">{t("noCategory")}</option>
               {categories.map((c) => (
@@ -174,92 +191,137 @@ export function ItemFormDialog({
                   {categoryLabel(c, t)}
                 </option>
               ))}
-            </select>
-          </label>
-        </div>
+            </SelectField>
+          </SettingsRow>
+        </FormGrid>
 
-        <div className="mb-2 grid grid-cols-2 gap-2">
-          <label className="block text-[11px] text-text-muted">
-            {t("purchasedAt")}
-            <input
-              type="date"
-              className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
-              value={purchasedAt}
-              onChange={(e) => setPurchasedAt(e.target.value)}
+        <section
+          className="flex flex-col gap-md rounded-lg border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-raised)_40%,transparent)] p-md"
+          aria-label={t("sectionDates")}
+        >
+          <h3 className="m-0 text-caption font-semibold text-text-primary">
+            {t("sectionDates")}
+          </h3>
+          <FormGrid>
+            <SettingsRow label={t("purchasedAt")} htmlFor="item-purchased">
+              <TextField
+                id="item-purchased"
+                type="date"
+                value={purchasedAt}
+                onChange={(e) => setPurchasedAt(e.target.value)}
+                disabled={saving}
+              />
+            </SettingsRow>
+            <SettingsRow label={t("expiresAt")} htmlFor="item-expires">
+              <TextField
+                id="item-expires"
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                disabled={saving}
+              />
+            </SettingsRow>
+          </FormGrid>
+          <SettingsRow label={t("remindBeforeDays")} htmlFor="item-remind">
+            <TextField
+              id="item-remind"
+              type="number"
+              min={0}
+              value={remindBeforeDays ?? ""}
+              onChange={(e) =>
+                setRemindBeforeDays(e.target.value === "" ? null : Number(e.target.value))
+              }
+              disabled={saving}
             />
-          </label>
-          <label className="block text-[11px] text-text-muted">
-            {t("expiresAt")}
-            <input
-              type="date"
-              className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
-              value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
-            />
-          </label>
-        </div>
+          </SettingsRow>
+        </section>
 
-        <label className="mb-2 block text-[11px] text-text-muted">
-          {t("remindBeforeDays")}
-          <input
-            type="number"
-            min={0}
-            className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
-            value={remindBeforeDays ?? ""}
-            onChange={(e) =>
-              setRemindBeforeDays(e.target.value === "" ? null : Number(e.target.value))
-            }
-          />
-        </label>
+        {(partitions.suggested.length > 0 || partitions.other.length > 0) ? (
+          <section
+            className="flex flex-col gap-md rounded-lg border border-dashed border-surface-border/80 p-md"
+            aria-label={t("sectionExtras")}
+          >
+            <div>
+              <h3 className="m-0 text-caption font-semibold text-text-primary">
+                {t("sectionExtras")}
+              </h3>
+              <p className={`${captionClass} mt-xs`}>{t("sectionExtrasHint")}</p>
+            </div>
 
-        {partitions.suggested.length > 0 ? (
-          <fieldset className="mb-2 rounded-md border border-border p-2">
-            <legend className="px-1 text-[11px] text-text-muted">{t("attributesSuggested")}</legend>
-            {partitions.suggested.map((field) => (
-              <label key={field.key} className="mb-1 block text-[11px] text-text-muted">
-                {field.label}
-                <input
-                  className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
-                  value={field.value}
-                  onChange={(e) => setAttr(field.key, e.target.value)}
-                />
-              </label>
-            ))}
-          </fieldset>
+            {partitions.suggested.length > 0 ? (
+              <div className="flex flex-col gap-md">
+                <p className="m-0 text-[11px] font-medium uppercase tracking-wide text-text-muted">
+                  {t("attributesSuggested")}
+                </p>
+                {partitions.suggested.map((field) => (
+                  <SettingsRow
+                    key={field.key}
+                    label={field.label}
+                    htmlFor={`item-attr-${field.key}`}
+                  >
+                    <TextField
+                      id={`item-attr-${field.key}`}
+                      value={field.value}
+                      onChange={(e) => setAttr(field.key, e.target.value)}
+                      disabled={saving}
+                    />
+                  </SettingsRow>
+                ))}
+              </div>
+            ) : null}
+
+            {partitions.other.length > 0 ? (
+              <div className="flex flex-col gap-md">
+                <p className="m-0 text-[11px] font-medium uppercase tracking-wide text-text-muted">
+                  {t("attributesOther")}
+                </p>
+                {partitions.other.map((field) => (
+                  <SettingsRow
+                    key={field.key}
+                    label={field.key}
+                    htmlFor={`item-other-${field.key}`}
+                  >
+                    <TextField
+                      id={`item-other-${field.key}`}
+                      value={field.value}
+                      onChange={(e) => setAttr(field.key, e.target.value)}
+                      disabled={saving}
+                    />
+                  </SettingsRow>
+                ))}
+              </div>
+            ) : null}
+          </section>
         ) : null}
 
-        {partitions.other.length > 0 ? (
-          <fieldset className="mb-2 rounded-md border border-border p-2">
-            <legend className="px-1 text-[11px] text-text-muted">{t("attributesOther")}</legend>
-            {partitions.other.map((field) => (
-              <label key={field.key} className="mb-1 block text-[11px] text-text-muted">
-                {field.key}
-                <input
-                  className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
-                  value={field.value}
-                  onChange={(e) => setAttr(field.key, e.target.value)}
-                />
-              </label>
-            ))}
-          </fieldset>
-        ) : null}
-
-        <div className="mb-2 flex gap-2">
-          <input
-            className="flex-1 rounded-md border border-border bg-transparent px-2 py-1.5 text-[12px]"
-            placeholder={t("attributeKey")}
-            value={extraKey}
-            onChange={(e) => setExtraKey(e.target.value)}
-          />
-          <input
-            className="flex-1 rounded-md border border-border bg-transparent px-2 py-1.5 text-[12px]"
-            placeholder={t("attributeValue")}
-            value={extraValue}
-            onChange={(e) => setExtraValue(e.target.value)}
-          />
-          <button
-            type="button"
-            className="rounded-md border border-border px-2 text-[11px]"
+        <div className="flex flex-wrap items-end gap-sm">
+          <div className="min-w-[120px] flex-1">
+            <SettingsRow label={t("attributeKey")} htmlFor="item-extra-key">
+              <TextField
+                id="item-extra-key"
+                placeholder={t("attributeKey")}
+                value={extraKey}
+                onChange={(e) => setExtraKey(e.target.value)}
+                disabled={saving}
+              />
+            </SettingsRow>
+          </div>
+          <div className="min-w-[120px] flex-1">
+            <SettingsRow label={t("attributeValue")} htmlFor="item-extra-value">
+              <TextField
+                id="item-extra-value"
+                placeholder={t("attributeValue")}
+                value={extraValue}
+                onChange={(e) => setExtraValue(e.target.value)}
+                disabled={saving}
+              />
+            </SettingsRow>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="mb-0.5"
+            disabled={saving}
             onClick={() => {
               const key = extraKey.trim();
               if (!key) return;
@@ -269,44 +331,26 @@ export function ItemFormDialog({
             }}
           >
             {t("addAttribute")}
-          </button>
+          </Button>
         </div>
 
-        <label className="mb-3 block text-[11px] text-text-muted">
-          {t("notes")}
-          <textarea
-            className="mt-1 w-full rounded-md border border-border bg-transparent px-2 py-1.5 text-[13px]"
+        <SettingsRow label={t("notes")} htmlFor="item-notes">
+          <TextArea
+            id="item-notes"
             rows={3}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            disabled={saving}
+            className="min-h-[88px]"
           />
-        </label>
+        </SettingsRow>
 
         {error ? (
-          <p className="mb-2 text-[12px] text-danger" role="alert">
+          <AlertBanner variant="error" role="alert" className="mb-0">
             {error}
-          </p>
+          </AlertBanner>
         ) : null}
-
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-md border border-border px-3 py-1.5 text-[12px]"
-            onClick={onClose}
-            disabled={saving}
-          >
-            {t("cancel")}
-          </button>
-          <button
-            type="button"
-            className="rounded-md bg-accent px-3 py-1.5 text-[12px] font-medium text-white"
-            onClick={() => void submit()}
-            disabled={saving || !title.trim()}
-          >
-            {t("save")}
-          </button>
-        </div>
-      </div>
-    </div>
+      </FormStack>
+    </ModalDialog>
   );
 }
