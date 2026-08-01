@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 import type {
   AnalysisTask,
   TaskAssistantReply,
@@ -18,6 +19,9 @@ import type {
 } from "../types";
 
 export type { TaskDraftPayload };
+
+/** Atomic recurring create body - OpenAPI ``CreateRecurringTaskBody``. */
+export type CreateRecurringTaskConfig = components["schemas"]["CreateRecurringTaskBody"];
 
 /** Fetches all analysis tasks from the backend. */
 export function listTasks(opts?: {
@@ -38,19 +42,6 @@ export function createTask(task: TaskConfig): Promise<TaskMutationResult> {
 }
 
 /** Atomic recurring create: task + schedule in one request (timeline / web). */
-export type CreateRecurringTaskConfig = {
-  name: string;
-  rrule: string;
-  eventStartTime?: string | null;
-  eventEndTime?: string | null;
-  eventIsAllDay?: boolean;
-  eventLocation?: string | null;
-  eventDescription?: string | null;
-  description?: string | null;
-  worksetId?: string | null;
-  parentTaskId?: string | null;
-};
-
 export function createRecurringTask(
   body: CreateRecurringTaskConfig,
 ): Promise<TaskMutationResult> {

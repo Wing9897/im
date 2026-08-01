@@ -22,7 +22,7 @@ interface RenderOpts {
   setSelectedSources?: (v: SourceFilterSelection) => void;
   timelineTasks?: { id: string; name: string }[];
   worksets?: { id: string; name: string }[];
-  expandTasks?: { id: string; worksetId?: string | null }[];
+  expandTasks?: { id: string; name?: string; worksetId?: string | null }[];
   viewMode?: "calendar" | "gantt";
   setViewMode?: (m: "calendar" | "gantt") => void;
   timeScale?: TimelineScale;
@@ -85,9 +85,11 @@ describe("TimelineControlBar", () => {
         { id: "t2", name: "Task 2" },
       ],
       worksets: [{ id: SYSTEM_WORKSET_ID, name: "General" }],
+      // Mirror production TimelinePage: expandTasks include name (catalog-merge
+      // without name is covered by SourceFilterDialog.test).
       expandTasks: [
-        { id: "t1", worksetId: SYSTEM_WORKSET_ID },
-        { id: "t2", worksetId: SYSTEM_WORKSET_ID },
+        { id: "t1", name: "Task 1", worksetId: SYSTEM_WORKSET_ID },
+        { id: "t2", name: "Task 2", worksetId: SYSTEM_WORKSET_ID },
       ],
       viewMode: "calendar",
     });
@@ -109,7 +111,7 @@ describe("TimelineControlBar", () => {
     const container = renderControlBar({
       timelineTasks: [{ id: "t1", name: "Task 1" }],
       worksets: [{ id: SYSTEM_WORKSET_ID, name: "General" }],
-      expandTasks: [{ id: "t1", worksetId: SYSTEM_WORKSET_ID }],
+      expandTasks: [{ id: "t1", name: "Task 1", worksetId: SYSTEM_WORKSET_ID }],
       viewMode: "gantt",
     });
     const filterBtn = container.querySelector<HTMLButtonElement>(
