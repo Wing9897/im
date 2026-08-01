@@ -39,6 +39,7 @@ export function ProjectDetailPage() {
     events,
     eventsLoading,
     eventsError,
+    childSchedulesError,
     activitySpan,
     tickStatus,
     spanLoading,
@@ -61,6 +62,7 @@ export function ProjectDetailPage() {
 
   useErrorToast(catalogError);
   useErrorToast(eventsError);
+  useErrorToast(childSchedulesError);
 
   useEffect(() => {
     setChildrenOpen(children.length > 0);

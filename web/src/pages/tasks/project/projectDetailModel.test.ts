@@ -6,6 +6,7 @@ import type { TaskActivitySpan } from "../../../types/analysis";
 import {
   findActivitySpan,
   isProjectTask,
+  mergeChildRrules,
   selectOwnedUserEvents,
   selectProjectChildren,
   selectTopLevelTasks,
@@ -147,5 +148,35 @@ describe("projectDetailModel", () => {
     expect(findActivitySpan(spans, "__user__")?.sourceKind).toBe("workset");
     expect(findActivitySpan(spans, "__user__")?.worksetId).toBe("__user__");
     expect(findActivitySpan(spans, "proj-1")).toBeNull();
+  });
+
+  it("mergeChildRrules: missing schedule stays empty without error", () => {
+    const merged = mergeChildRrules(new Map(), [
+      { childId: "child-1", kind: "missing" },
+      { childId: "child-2", kind: "ok", rrule: "" },
+    ]);
+    expect(merged.rrules.size).toBe(0);
+    expect(merged.error).toBeNull();
+  });
+
+  it("mergeChildRrules: failure preserves last success and surfaces error", () => {
+    const prev = new Map([["child-1", "FREQ=DAILY"], ["child-2", "FREQ=WEEKLY"]]);
+    const merged = mergeChildRrules(prev, [
+      { childId: "child-1", kind: "error", message: "schedule upstream timeout" },
+      { childId: "child-2", kind: "ok", rrule: "FREQ=MONTHLY" },
+      { childId: "child-3", kind: "error", message: "second failure" },
+    ]);
+    expect(merged.rrules.get("child-1")).toBe("FREQ=DAILY");
+    expect(merged.rrules.get("child-2")).toBe("FREQ=MONTHLY");
+    expect(merged.rrules.has("child-3")).toBe(false);
+    expect(merged.error).toBe("schedule upstream timeout");
+  });
+
+  it("mergeChildRrules: failure without prior value does not invent empty RRULE", () => {
+    const merged = mergeChildRrules(new Map(), [
+      { childId: "child-1", kind: "error", message: "boom" },
+    ]);
+    expect(merged.rrules.size).toBe(0);
+    expect(merged.error).toBe("boom");
   });
 });

@@ -6,9 +6,10 @@
  * shared catalog to top-level-only.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { ApiRequestError } from "../../../api/client";
 import { fetchTaskSchedule } from "../../../api/taskSchedule";
 import { listUserEvents, type UserEvent } from "../../../api/userEvents";
 import { fetchProjectTickStatus, fetchTaskActivitySpans } from "../../../api/tasks";
@@ -26,7 +27,9 @@ import type { AnalysisTask } from "../../../types/tasks";
 import {
   findActivitySpan,
   isProjectTask,
+  mergeChildRrules,
   selectProjectChildren,
+  type ChildScheduleFetchResult,
 } from "./projectDetailModel";
 
 export function useProjectDetail() {
@@ -56,6 +59,7 @@ export function useProjectDetail() {
   const [events, setEvents] = useState<UserEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [childSchedulesError, setChildSchedulesError] = useState<string | null>(null);
 
   const [activitySpan, setActivitySpan] = useState<TaskActivitySpan | null>(null);
   const [tickStatus, setTickStatus] = useState<ProjectTickStatus | null>(null);
@@ -63,23 +67,33 @@ export function useProjectDetail() {
   const [childRrules, setChildRrules] = useState<ReadonlyMap<string, string>>(
     () => new Map(),
   );
+  const childRrulesRef = useRef(childRrules);
+  childRrulesRef.current = childRrules;
 
   const loadSideData = useCallback(async (id: string, childIds: readonly string[] = []) => {
     setEventsLoading(true);
     setSpanLoading(true);
     setEventsError(null);
+    setChildSchedulesError(null);
     try {
-      const [ownedEvents, spans, status, scheduleRows] = await Promise.all([
+      const [ownedEvents, spans, status, scheduleResults] = await Promise.all([
         listUserEvents({ taskId: id }),
         fetchTaskActivitySpans(),
         fetchProjectTickStatus(id, { limit: 20 }),
         Promise.all(
-          childIds.map(async (childId) => {
+          childIds.map(async (childId): Promise<ChildScheduleFetchResult> => {
             try {
               const schedule = await fetchTaskSchedule(childId);
-              return [childId, schedule.rrule?.trim() || ""] as const;
-            } catch {
-              return [childId, ""] as const;
+              return {
+                childId,
+                kind: "ok",
+                rrule: schedule.rrule?.trim() || "",
+              };
+            } catch (err) {
+              if (err instanceof ApiRequestError && err.status === 404) {
+                return { childId, kind: "missing" };
+              }
+              return { childId, kind: "error", message: toErrorMessage(err) };
             }
           }),
         ),
@@ -87,13 +101,16 @@ export function useProjectDetail() {
       setEvents(ownedEvents);
       setActivitySpan(findActivitySpan(spans, id));
       setTickStatus(status);
-      setChildRrules(new Map(scheduleRows.filter(([, rrule]) => Boolean(rrule))));
+      const merged = mergeChildRrules(childRrulesRef.current, scheduleResults);
+      setChildRrules(merged.rrules);
+      setChildSchedulesError(merged.error);
     } catch (err) {
       setEventsError(toErrorMessage(err));
       setEvents([]);
       setActivitySpan(null);
       setTickStatus(null);
       setChildRrules(new Map());
+      setChildSchedulesError(null);
     } finally {
       setEventsLoading(false);
       setSpanLoading(false);
@@ -188,6 +205,7 @@ export function useProjectDetail() {
     events,
     eventsLoading,
     eventsError,
+    childSchedulesError,
     activitySpan,
     tickStatus,
     spanLoading,
