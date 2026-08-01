@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { OvernightClockHint } from "../../components/calendar/OvernightClockHint";
 import { InfoTooltip } from "../../components/common/InfoTooltip";
 import {
   Button,
@@ -129,6 +130,11 @@ export function VoiceReminderPanel() {
                 }
               />
             </label>
+            <OvernightClockHint
+              startClock={settings.quietHours.start}
+              endClock={settings.quietHours.end}
+              testId="voice-quiet-overnight-hint"
+            />
           </div>
           <p className={`m-0 ${formHelpClass}`}>
             {t("voice.quietHelp")}

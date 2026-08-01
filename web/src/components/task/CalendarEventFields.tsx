@@ -1,6 +1,6 @@
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { isOvernightClockRange } from "../../domain/timeline/userEventKindSwitch";
+import { OvernightClockHint } from "../calendar/OvernightClockHint";
 import { FieldLabel, SurfaceCard, TextArea, TextField } from "../ui";
 import { InfoTooltip } from "../common/InfoTooltip";
 import { sectionTitleClass } from "../ui/pageTypography";
@@ -49,8 +49,6 @@ export function CalendarEventFields({
   isBusy = false,
 }: CalendarEventFieldsProps) {
   const { t } = useTranslation();
-  const showOvernightHint =
-    !eventIsAllDay && isOvernightClockRange(eventStartTime, eventEndTime);
 
   return (
     <SurfaceCard className="p-xl" data-testid="calendar-event-fields">
@@ -110,14 +108,11 @@ export function CalendarEventFields({
                 />
               </div>
             </div>
-            {showOvernightHint ? (
-              <p
-                className="m-0 text-caption text-text-muted"
-                data-testid="calendar-event-overnight-hint"
-              >
-                {t("tasks.calendarFields.overnightHint")}
-              </p>
-            ) : null}
+            <OvernightClockHint
+              startClock={eventStartTime}
+              endClock={eventEndTime}
+              testId="calendar-event-overnight-hint"
+            />
           </div>
         )}
 
