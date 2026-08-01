@@ -146,7 +146,7 @@ describe("UserEventDialog", () => {
     host.remove();
   });
 
-  it("applies a timed day preset as 00:00–23:59 and still allows editing", async () => {
+  it("interpolates day-preset labels and applies 00:00–23:59 range", async () => {
     const onSubmit = vi.fn();
     const host = document.createElement("div");
     document.body.appendChild(host);
@@ -174,6 +174,9 @@ describe("UserEventDialog", () => {
       '[data-testid="user-event-days-3"]',
     ) as HTMLButtonElement;
     expect(threeDay).toBeTruthy();
+    expect(threeDay.textContent).toBe("3 天");
+    expect(threeDay.textContent).not.toContain("{{count}}");
+    expect(document.body.textContent).toContain("1 天");
     await act(async () => {
       threeDay.click();
     });

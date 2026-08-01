@@ -3,7 +3,14 @@ import { useTranslation } from "react-i18next";
 
 import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
-import { Button, CheckboxField, FieldLabel, PillButton, TextField } from "../ui";
+import {
+  Button,
+  CheckboxField,
+  FieldLabel,
+  FormStack,
+  PillButton,
+  TextField,
+} from "../ui";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import {
   addDaysToDateInput,
@@ -62,8 +69,6 @@ const emptyValues: UserEventFormValues = {
 };
 
 const DAY_PRESETS = [1, 3, 7, 13] as const;
-
-const fieldsClass = "flex flex-col gap-md";
 
 function valuesFromInitial(initial?: Partial<UserEventFormValues> | null): UserEventFormValues {
   const isAllDay = Boolean(initial?.isAllDay);
@@ -253,6 +258,13 @@ export function UserEventDialog({
     });
   };
 
+  const startLabel = values.isAllDay
+    ? t("userEvent.startDateAria")
+    : t("userEvent.startAria");
+  const endLabel = values.isAllDay
+    ? t("userEvent.endDateAria")
+    : t("userEvent.endAria");
+
   return (
     <ModalDialog
       open={open}
@@ -274,7 +286,7 @@ export function UserEventDialog({
         </>
       }
     >
-      <div className={fieldsClass}>
+      <FormStack gap="lg">
         <p className="m-0 text-caption text-text-muted">
           {introOverride ?? t("userEvent.intro")}
         </p>
@@ -296,7 +308,10 @@ export function UserEventDialog({
           data-testid="user-event-workset-select"
         />
 
-        <div className="flex flex-col gap-sm" data-testid="user-event-time-section">
+        <div
+          className="flex flex-col gap-sm rounded-md border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-overlay)_35%,transparent)] px-md py-sm"
+          data-testid="user-event-time-section"
+        >
           <CheckboxField
             id="user-event-all-day"
             label={t("userEvent.allDay")}
@@ -307,7 +322,7 @@ export function UserEventDialog({
 
           <div className="flex flex-col gap-xs">
             <FieldLabel className="mb-0">{t("userEvent.durationPresets")}</FieldLabel>
-            <div className="flex flex-wrap items-center gap-sm">
+            <div className="flex flex-wrap items-center gap-xs">
               {DAY_PRESETS.map((days) => (
                 <PillButton
                   key={days}
@@ -321,13 +336,14 @@ export function UserEventDialog({
               <div className="inline-flex items-center gap-xs">
                 <TextField
                   aria-label={t("userEvent.customDaysAria")}
+                  placeholder={t("userEvent.customDaysPlaceholder")}
                   type="number"
                   min={1}
                   max={366}
                   inputMode="numeric"
                   value={customDays}
                   onChange={(event) => setCustomDays(event.target.value)}
-                  className="w-20"
+                  className="w-16"
                   data-testid="user-event-custom-days"
                 />
                 <Button
@@ -345,32 +361,43 @@ export function UserEventDialog({
                 </Button>
               </div>
             </div>
-            <p className="m-0 text-caption text-text-muted">{t("userEvent.durationHint")}</p>
           </div>
 
-          <TextField
-            aria-label={
-              values.isAllDay ? t("userEvent.startDateAria") : t("userEvent.startAria")
-            }
-            type={values.isAllDay ? "date" : "datetime-local"}
-            value={values.startTime}
-            onChange={(event) =>
-              setValues((prev) => ({ ...prev, startTime: event.target.value }))
-            }
-            className="w-full"
-            required
-            data-testid="user-event-start"
-          />
-          <TextField
-            aria-label={
-              values.isAllDay ? t("userEvent.endDateAria") : t("userEvent.endAria")
-            }
-            type={values.isAllDay ? "date" : "datetime-local"}
-            value={values.endTime}
-            onChange={(event) => setValues((prev) => ({ ...prev, endTime: event.target.value }))}
-            className="w-full"
-            data-testid="user-event-end"
-          />
+          <div className="flex flex-col gap-sm">
+            <div className="flex flex-col gap-xs">
+              <FieldLabel className="mb-0" htmlFor="user-event-start">
+                {startLabel}
+              </FieldLabel>
+              <TextField
+                id="user-event-start"
+                aria-label={startLabel}
+                type={values.isAllDay ? "date" : "datetime-local"}
+                value={values.startTime}
+                onChange={(event) =>
+                  setValues((prev) => ({ ...prev, startTime: event.target.value }))
+                }
+                className="w-full"
+                required
+                data-testid="user-event-start"
+              />
+            </div>
+            <div className="flex flex-col gap-xs">
+              <FieldLabel className="mb-0" htmlFor="user-event-end">
+                {endLabel}
+              </FieldLabel>
+              <TextField
+                id="user-event-end"
+                aria-label={endLabel}
+                type={values.isAllDay ? "date" : "datetime-local"}
+                value={values.endTime}
+                onChange={(event) =>
+                  setValues((prev) => ({ ...prev, endTime: event.target.value }))
+                }
+                className="w-full"
+                data-testid="user-event-end"
+              />
+            </div>
+          </div>
         </div>
 
         <TextField
@@ -392,7 +419,7 @@ export function UserEventDialog({
             {displayError}
           </p>
         ) : null}
-      </div>
+      </FormStack>
     </ModalDialog>
   );
 }
