@@ -130,8 +130,7 @@ async def preview_calendar_import(db: Database, *, content: str, source: str) ->
                     {
                         "code": "target_type_changed",
                         "message": (
-                            "An existing imported event cannot change between a one-time event "
-                            "and a recurring series."
+                            "An existing imported event cannot change between a one-time event and a recurring series."
                         ),
                     }
                 )

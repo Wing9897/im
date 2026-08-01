@@ -225,8 +225,7 @@ async def test_preview_commit_no_uid_all_day_events_are_idempotent(client, app) 
             "content": NO_UID_ALL_DAY_ICS,
             "sourceId": "tw-holidays",
             "selections": [
-                {"uid": item["uid"], "fingerprint": item["fingerprint"]}
-                for item in again_preview.json()["items"]
+                {"uid": item["uid"], "fingerprint": item["fingerprint"]} for item in again_preview.json()["items"]
             ],
         },
     )
@@ -235,9 +234,7 @@ async def test_preview_commit_no_uid_all_day_events_are_idempotent(client, app) 
     assert second["createdCount"] == 0
     assert second["updatedCount"] == 0
     assert second["unchangedCount"] == 3
-    assert await app.state.db.fetch_value(
-        "SELECT COUNT(*) FROM user_events WHERE ics_source = 'tw-holidays'"
-    ) == 3
+    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM user_events WHERE ics_source = 'tw-holidays'") == 3
 
 
 def test_parser_accepts_google_outlook_samples_and_marks_floating_time() -> None:
