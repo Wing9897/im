@@ -137,6 +137,12 @@
     "save": "储存",
     "closeAria": "关闭",
     "intro": "单次事件（无循环）。默认归属「一般」工作集。",
+    "introRecurring": "将创建带 RRULE 的循环任务，展开后出现在时间规划中。",
+    "kindAria": "事件类型",
+    "kind": {
+      "oneOff": "一般事件",
+      "recurring": "循环事件"
+    },
     "titleAria": "标题",
     "titlePlaceholder": "标题",
     "taskLabel": "归属工作集",
@@ -150,6 +156,8 @@
     "endAria": "结束（选填）",
     "startDateAria": "开始日期",
     "endDateAria": "结束日期",
+    "eventStartAria": "开始时间",
+    "eventEndAria": "结束时间（选填）",
     "locationAria": "地点（选填）",
     "locationPlaceholder": "地点",
     "bodyAria": "说明（选填）",
@@ -158,7 +166,8 @@
       "titleRequired": "请填写标题",
       "startRequired": "请填写开始时间",
       "startInvalid": "开始时间格式无效",
-      "endInvalid": "结束时间格式无效"
+      "endInvalid": "结束时间格式无效",
+      "rruleRequired": "请设置重复规则"
     }
   },
   "calendarImport": {

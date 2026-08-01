@@ -30,6 +30,7 @@ import {
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
+import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import type { TimelineItem } from "../../types";
@@ -61,7 +62,7 @@ export function TimelinePage() {
   const { t } = useTranslation("timeline");
   const { t: tc } = useTranslation("common");
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
-  const { worksets, tasks } = useTaskCatalog();
+  const { worksets, tasks, refreshTasks } = useTaskCatalog();
   const { showToast } = useToast();
   useErrorToast(data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
@@ -101,7 +102,19 @@ export function TimelinePage() {
       setDialogError(null);
       try {
         const worksetId = toUserEventFormWorksetId(values.worksetId);
-        if (dialogMode === "create") {
+        if (dialogMode === "create" && values.kind === "recurring") {
+          await createRecurringTimelineEvent({
+            title: values.title,
+            worksetId,
+            isAllDay: values.isAllDay,
+            eventStartTime: values.eventStartTime,
+            eventEndTime: values.eventEndTime,
+            location: values.location,
+            body: values.body,
+            rrule: values.rrule,
+          });
+          await refreshTasks().catch(() => {});
+        } else if (dialogMode === "create") {
           await createUserEvent({
             title: values.title,
             startTime: values.startTime,
@@ -131,7 +144,7 @@ export function TimelinePage() {
         setDialogBusy(false);
       }
     },
-    [dialogMode, editingEvent, data, t],
+    [dialogMode, editingEvent, data, refreshTasks, t],
   );
 
   const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {

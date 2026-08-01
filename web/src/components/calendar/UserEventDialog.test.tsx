@@ -88,12 +88,103 @@ describe("UserEventDialog", () => {
 
     expect(onSubmit).toHaveBeenCalled();
     const arg = onSubmit.mock.calls[0][0];
+    expect(arg.kind).toBe("one_off");
     expect(arg.title).toBe("測試");
     expect(arg.startTime).toBeTruthy();
     expect(arg.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(arg.isAllDay).toBe(false);
     expect(arg.taskId).toBeUndefined();
 
+    host.remove();
+  });
+
+  it("switches to recurring and submits RRULE + clock fields", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-kind-tabs"]')).toBeTruthy();
+    const tabs = Array.from(
+      document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
+    ) as HTMLButtonElement[];
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    expect(recurringTab).toBeTruthy();
+    await act(async () => {
+      recurringTab!.click();
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-recurrence"]')).toBeTruthy();
+    expect(document.body.querySelector('[data-testid="user-event-days-1"]')).toBeNull();
+
+    const titleInput = document.body.querySelector(
+      'input[aria-label="標題"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(titleInput, "週會");
+    });
+
+    const startClock = document.body.querySelector(
+      '[data-testid="user-event-event-start"]',
+    ) as HTMLInputElement;
+    expect(startClock).toBeTruthy();
+    await act(async () => {
+      setInputValue(startClock, "09:30");
+    });
+
+    const buttons = Array.from(document.body.querySelectorAll("button"));
+    const submit = buttons.find((b) => b.textContent === "新增");
+    await act(async () => {
+      submit!.click();
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: "recurring",
+        title: "週會",
+        isAllDay: false,
+        eventStartTime: "09:30",
+        rrule: expect.stringContaining("FREQ="),
+      }),
+    );
+
+    host.remove();
+  });
+
+  it("hides kind switch in edit mode", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "edit",
+          initial: {
+            title: "既有",
+            startTime: "2026-07-20T10:00:00.000Z",
+            worksetId: SYSTEM_WORKSET_ID,
+            isAllDay: false,
+          },
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-kind-tabs"]')).toBeNull();
     host.remove();
   });
 
