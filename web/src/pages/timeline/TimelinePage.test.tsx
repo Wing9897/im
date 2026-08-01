@@ -10,6 +10,7 @@ import { makeEvent } from "../../test/timelineTestHelpers";
 const {
   captures,
   mockCreateUserEvent,
+  mockCreateRecurringTimelineEvent,
   mockDismissTimelineEvent,
   mockRefreshEvents,
   mockRestoreTimelineEvent,
@@ -24,6 +25,7 @@ const {
     dialog: null as unknown,
   },
   mockCreateUserEvent: vi.fn(),
+  mockCreateRecurringTimelineEvent: vi.fn(),
   mockDismissTimelineEvent: vi.fn(),
   mockRefreshEvents: vi.fn(),
   mockRestoreTimelineEvent: vi.fn(),
@@ -36,6 +38,11 @@ const {
 vi.mock("../../api/userEvents", () => ({
   createUserEvent: (...args: unknown[]) => mockCreateUserEvent(...args),
   updateUserEvent: (...args: unknown[]) => mockUpdateUserEvent(...args),
+}));
+
+vi.mock("../../domain/timeline/createRecurringTimelineEvent", () => ({
+  createRecurringTimelineEvent: (...args: unknown[]) =>
+    mockCreateRecurringTimelineEvent(...args),
 }));
 
 vi.mock("../../api/timelineDismissals", () => ({
@@ -131,6 +138,7 @@ interface CapturedDialog {
 }
 
 const formValues: UserEventFormValues = {
+  kind: "one_off",
   title: "Manual event",
   startTime: "2026-07-20T10:00:00Z",
   endTime: "",
@@ -138,6 +146,9 @@ const formValues: UserEventFormValues = {
   body: "Notes",
   worksetId: "__user__",
   isAllDay: false,
+  rrule: "",
+  eventStartTime: "",
+  eventEndTime: "",
 };
 
 function makeUserEvent(): TimelineItem {
@@ -236,6 +247,7 @@ describe("TimelinePage user-event CRUD", () => {
     captures.context = null;
     captures.dialog = null;
     mockCreateUserEvent.mockReset().mockResolvedValue({});
+    mockCreateRecurringTimelineEvent.mockReset().mockResolvedValue({ id: "rec-1" });
     mockDismissTimelineEvent.mockReset().mockResolvedValue({});
     mockRestoreTimelineEvent.mockReset().mockResolvedValue(undefined);
     mockUpdateUserEvent.mockReset().mockResolvedValue({});
@@ -298,6 +310,42 @@ describe("TimelinePage user-event CRUD", () => {
       isAllDay: false,
       worksetId: "__user__",
     });
+    expect(mockCreateRecurringTimelineEvent).not.toHaveBeenCalled();
+    expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("creates a recurring event via the recurring-task API path", async () => {
+    await renderPage();
+    await flushAction(() => captures.addEvent!());
+    const dialog = captures.dialog as CapturedDialog;
+
+    await flushAction(() =>
+      dialog.onSubmit({
+        kind: "recurring",
+        title: "Weekly standup",
+        startTime: "",
+        endTime: "",
+        location: "Zoom",
+        body: "Sync",
+        worksetId: "__user__",
+        isAllDay: false,
+        rrule: "FREQ=WEEKLY;BYDAY=MO",
+        eventStartTime: "09:00",
+        eventEndTime: "09:30",
+      }),
+    );
+
+    expect(mockCreateRecurringTimelineEvent).toHaveBeenCalledWith({
+      title: "Weekly standup",
+      worksetId: "__user__",
+      isAllDay: false,
+      eventStartTime: "09:00",
+      eventEndTime: "09:30",
+      location: "Zoom",
+      body: "Sync",
+      rrule: "FREQ=WEEKLY;BYDAY=MO",
+    });
+    expect(mockCreateUserEvent).not.toHaveBeenCalled();
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
   });
 

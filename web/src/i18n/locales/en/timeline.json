@@ -137,6 +137,12 @@
     "save": "Save",
     "closeAria": "Close",
     "intro": "One-off event (no recurrence). Defaults to General ownership.",
+    "introRecurring": "Creates a recurring task with an RRULE schedule. Occurrences appear on the timeline.",
+    "kindAria": "Event type",
+    "kind": {
+      "oneOff": "One-off",
+      "recurring": "Recurring"
+    },
     "titleAria": "Title",
     "titlePlaceholder": "Title",
     "taskLabel": "Ownership workset",
@@ -150,6 +156,8 @@
     "endAria": "End (optional)",
     "startDateAria": "Start date",
     "endDateAria": "End date",
+    "eventStartAria": "Start time",
+    "eventEndAria": "End time (optional)",
     "locationAria": "Location (optional)",
     "locationPlaceholder": "Location",
     "bodyAria": "Notes (optional)",
@@ -158,7 +166,8 @@
       "titleRequired": "Please enter a title",
       "startRequired": "Please enter a start time",
       "startInvalid": "Invalid start time format",
-      "endInvalid": "Invalid end time format"
+      "endInvalid": "Invalid end time format",
+      "rruleRequired": "Please set a recurrence rule"
     }
   },
   "calendarImport": {

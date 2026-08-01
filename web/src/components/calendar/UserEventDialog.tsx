@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
+import { RecurrenceRuleEditor } from "../task/RecurrenceRuleEditor";
 import {
   Button,
   CheckboxField,
   FieldLabel,
   FormStack,
   PillButton,
+  SegmentedControl,
   TextField,
 } from "../ui";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
@@ -25,16 +27,28 @@ import {
   todayDateInput,
 } from "../../domain/timeline/dateUtils";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { buildRRule } from "../../utils/rrule";
+
+export type UserEventKind = "one_off" | "recurring";
 
 export type UserEventFormValues = {
+  /** Create-dialog kind; edit / import paths always submit ``one_off``. */
+  kind: UserEventKind;
   title: string;
+  /** One-off: ISO wire datetime (or all-day DATE start). Recurring: unused. */
   startTime: string;
+  /** One-off: ISO wire datetime / exclusive all-day end. Recurring: unused. */
   endTime: string;
   location: string;
   body: string;
   /** Ownership workset id (``__user__`` = builtin system workset). */
   worksetId: string;
   isAllDay: boolean;
+  /** RRULE when ``kind === "recurring"``. */
+  rrule: string;
+  /** HH:MM when recurring and not all-day. */
+  eventStartTime: string;
+  eventEndTime: string;
 };
 
 export type UserEventTaskOption = {
@@ -58,7 +72,18 @@ type UserEventDialogProps = {
   onSubmit: (values: UserEventFormValues) => void;
 };
 
+const DEFAULT_RRULE = buildRRule({
+  freq: "daily",
+  interval: 1,
+  byDay: [],
+  byMonthDay: [],
+  byMonth: [],
+  ordinal: null,
+  end: { type: "never", until: null, count: null },
+});
+
 const emptyValues: UserEventFormValues = {
+  kind: "one_off",
   title: "",
   startTime: "",
   endTime: "",
@@ -66,39 +91,56 @@ const emptyValues: UserEventFormValues = {
   body: "",
   worksetId: SYSTEM_WORKSET_ID,
   isAllDay: false,
+  rrule: DEFAULT_RRULE,
+  eventStartTime: "09:00",
+  eventEndTime: "10:00",
 };
 
 const DAY_PRESETS = [1, 3, 7, 13] as const;
+const CLOCK_RE = /^\d{2}:\d{2}$/;
 
 function valuesFromInitial(initial?: Partial<UserEventFormValues> | null): UserEventFormValues {
   const isAllDay = Boolean(initial?.isAllDay);
+  const kind: UserEventKind = initial?.kind === "recurring" ? "recurring" : "one_off";
+  const base = {
+    kind,
+    title: initial?.title ?? "",
+    location: initial?.location ?? "",
+    body: initial?.body ?? "",
+    worksetId: toUserEventFormWorksetId(initial?.worksetId),
+    isAllDay,
+    rrule: (initial?.rrule ?? "").trim() || DEFAULT_RRULE,
+    eventStartTime: (initial?.eventStartTime ?? "").trim() || "09:00",
+    eventEndTime: (initial?.eventEndTime ?? "").trim() || "10:00",
+  };
+
+  if (kind === "recurring") {
+    return {
+      ...base,
+      startTime: "",
+      endTime: "",
+    };
+  }
+
   if (isAllDay) {
     const startDate = toAllDayDateInput(initial?.startTime ?? "");
     const exclusiveEnd = toAllDayDateInput(initial?.endTime ?? "");
     const endDate =
       (exclusiveEnd ? inclusiveEndDateFromExclusive(exclusiveEnd) : "") || startDate;
     return {
-      title: initial?.title ?? "",
+      ...base,
       startTime: startDate,
       endTime: endDate,
-      location: initial?.location ?? "",
-      body: initial?.body ?? "",
-      worksetId: toUserEventFormWorksetId(initial?.worksetId),
-      isAllDay: true,
     };
   }
   return {
-    title: initial?.title ?? "",
+    ...base,
     startTime: toDateTimeLocalInput(initial?.startTime ?? ""),
     endTime: toDateTimeLocalInput(initial?.endTime ?? ""),
-    location: initial?.location ?? "",
-    body: initial?.body ?? "",
-    worksetId: toUserEventFormWorksetId(initial?.worksetId),
-    isAllDay: false,
   };
 }
 
-/** One-off user event form (no RRULE). */
+/** User / recurring event create-edit form (timeline Add Event dialog). */
 export function UserEventDialog({
   open,
   mode,
@@ -116,6 +158,9 @@ export function UserEventDialog({
   const [localError, setLocalError] = useState<string | null>(null);
   const [customDays, setCustomDays] = useState("");
 
+  // Import / edit stay on one-off user events; only plain create can switch.
+  const allowKindSwitch = mode === "create" && !titleOverride;
+
   // Depend on field values — not `initial` object identity — so parent re-renders
   // (inline `{ worksetId }` / editing snapshots) do not wipe in-progress edits.
   const initialTitle = initial?.title ?? "";
@@ -125,6 +170,10 @@ export function UserEventDialog({
   const initialBody = initial?.body ?? "";
   const initialWorksetId = initial?.worksetId;
   const initialIsAllDay = Boolean(initial?.isAllDay);
+  const initialKind = initial?.kind === "recurring" ? "recurring" : "one_off";
+  const initialRrule = initial?.rrule ?? "";
+  const initialEventStart = initial?.eventStartTime ?? "";
+  const initialEventEnd = initial?.eventEndTime ?? "";
 
   useEffect(() => {
     if (!open) return;
@@ -132,6 +181,7 @@ export function UserEventDialog({
     setCustomDays("");
     setValues(
       valuesFromInitial({
+        kind: allowKindSwitch ? initialKind : "one_off",
         title: initialTitle,
         startTime: initialStart,
         endTime: initialEnd,
@@ -139,10 +189,15 @@ export function UserEventDialog({
         body: initialBody,
         worksetId: initialWorksetId,
         isAllDay: initialIsAllDay,
+        rrule: initialRrule,
+        eventStartTime: initialEventStart,
+        eventEndTime: initialEventEnd,
       }),
     );
   }, [
     open,
+    allowKindSwitch,
+    initialKind,
     initialTitle,
     initialStart,
     initialEnd,
@@ -150,9 +205,21 @@ export function UserEventDialog({
     initialBody,
     initialWorksetId,
     initialIsAllDay,
+    initialRrule,
+    initialEventStart,
+    initialEventEnd,
   ]);
 
   const displayError = error ?? localError;
+  const isRecurring = values.kind === "recurring";
+
+  const kindItems = useMemo(
+    () => [
+      { id: "one_off", label: t("userEvent.kind.oneOff") },
+      { id: "recurring", label: t("userEvent.kind.recurring") },
+    ],
+    [t],
+  );
 
   const baseStartDate = () =>
     datePartFromInput(values.startTime) || todayDateInput();
@@ -178,8 +245,45 @@ export function UserEventDialog({
     }));
   };
 
+  const handleKindChange = (id: string) => {
+    const nextKind: UserEventKind = id === "recurring" ? "recurring" : "one_off";
+    if (nextKind === values.kind) return;
+    setLocalError(null);
+    setValues((prev) => {
+      if (nextKind === "recurring") {
+        const clockFromStart = prev.startTime.includes("T")
+          ? prev.startTime.slice(11, 16)
+          : "";
+        const clockFromEnd = prev.endTime.includes("T")
+          ? prev.endTime.slice(11, 16)
+          : "";
+        return {
+          ...prev,
+          kind: "recurring",
+          rrule: prev.rrule.trim() || DEFAULT_RRULE,
+          eventStartTime: CLOCK_RE.test(clockFromStart) ? clockFromStart : prev.eventStartTime || "09:00",
+          eventEndTime: CLOCK_RE.test(clockFromEnd) ? clockFromEnd : prev.eventEndTime || "10:00",
+        };
+      }
+      const today = todayDateInput();
+      return {
+        ...prev,
+        kind: "one_off",
+        startTime: prev.isAllDay
+          ? today
+          : `${today}T${prev.eventStartTime || "09:00"}`,
+        endTime: prev.isAllDay
+          ? today
+          : `${today}T${prev.eventEndTime || "10:00"}`,
+      };
+    });
+  };
+
   const handleAllDayChange = (checked: boolean) => {
     setValues((prev) => {
+      if (prev.kind === "recurring") {
+        return { ...prev, isAllDay: checked };
+      }
       if (checked) {
         const startDate = datePartFromInput(prev.startTime) || todayDateInput();
         const endDate =
@@ -211,6 +315,39 @@ export function UserEventDialog({
       return;
     }
 
+    if (values.kind === "recurring") {
+      const rrule = values.rrule.trim();
+      if (!rrule) {
+        setLocalError(t("userEvent.errors.rruleRequired"));
+        return;
+      }
+      if (!values.isAllDay) {
+        if (!CLOCK_RE.test(values.eventStartTime.trim())) {
+          setLocalError(t("userEvent.errors.startRequired"));
+          return;
+        }
+        const endClock = values.eventEndTime.trim();
+        if (endClock && !CLOCK_RE.test(endClock)) {
+          setLocalError(t("userEvent.errors.endInvalid"));
+          return;
+        }
+      }
+      onSubmit({
+        kind: "recurring",
+        title,
+        startTime: "",
+        endTime: "",
+        location: values.location.trim(),
+        body: values.body.trim(),
+        worksetId: toUserEventFormWorksetId(values.worksetId),
+        isAllDay: values.isAllDay,
+        rrule,
+        eventStartTime: values.isAllDay ? "" : values.eventStartTime.trim(),
+        eventEndTime: values.isAllDay ? "" : values.eventEndTime.trim(),
+      });
+      return;
+    }
+
     if (values.isAllDay) {
       const startDate = datePartFromInput(values.startTime);
       if (!startDate) {
@@ -226,6 +363,7 @@ export function UserEventDialog({
         return;
       }
       onSubmit({
+        kind: "one_off",
         title,
         startTime,
         endTime: exclusiveEnd,
@@ -233,6 +371,9 @@ export function UserEventDialog({
         body: values.body.trim(),
         worksetId: toUserEventFormWorksetId(values.worksetId),
         isAllDay: true,
+        rrule: "",
+        eventStartTime: "",
+        eventEndTime: "",
       });
       return;
     }
@@ -248,6 +389,7 @@ export function UserEventDialog({
       return;
     }
     onSubmit({
+      kind: "one_off",
       title,
       startTime,
       endTime: endTime || "",
@@ -255,15 +397,25 @@ export function UserEventDialog({
       body: values.body.trim(),
       worksetId: toUserEventFormWorksetId(values.worksetId),
       isAllDay: false,
+      rrule: "",
+      eventStartTime: "",
+      eventEndTime: "",
     });
   };
 
-  const startLabel = values.isAllDay
-    ? t("userEvent.startDateAria")
-    : t("userEvent.startAria");
-  const endLabel = values.isAllDay
-    ? t("userEvent.endDateAria")
-    : t("userEvent.endAria");
+  const startLabel = isRecurring
+    ? t("userEvent.eventStartAria")
+    : values.isAllDay
+      ? t("userEvent.startDateAria")
+      : t("userEvent.startAria");
+  const endLabel = isRecurring
+    ? t("userEvent.eventEndAria")
+    : values.isAllDay
+      ? t("userEvent.endDateAria")
+      : t("userEvent.endAria");
+
+  const introText = introOverride
+    ?? (isRecurring ? t("userEvent.introRecurring") : t("userEvent.intro"));
 
   return (
     <ModalDialog
@@ -287,8 +439,19 @@ export function UserEventDialog({
       }
     >
       <FormStack gap="lg">
+        {allowKindSwitch ? (
+          <div data-testid="user-event-kind-tabs">
+            <SegmentedControl
+              items={kindItems}
+              value={values.kind}
+              onChange={handleKindChange}
+              ariaLabel={t("userEvent.kindAria")}
+              layout="inline"
+            />
+          </div>
+        ) : null}
         <p className="m-0 text-caption text-text-muted">
-          {introOverride ?? t("userEvent.intro")}
+          {introText}
         </p>
         <TextField
           aria-label={t("userEvent.titleAria")}
@@ -320,85 +483,137 @@ export function UserEventDialog({
             data-testid="user-event-all-day"
           />
 
-          <div className="flex flex-col gap-xs">
-            <FieldLabel className="mb-0">{t("userEvent.durationPresets")}</FieldLabel>
-            <div className="flex flex-wrap items-center gap-xs">
-              {DAY_PRESETS.map((days) => (
-                <PillButton
-                  key={days}
-                  type="button"
-                  onClick={() => applyDaySpan(days)}
-                  data-testid={`user-event-days-${days}`}
-                >
-                  {t("userEvent.daysPreset", { count: days })}
-                </PillButton>
-              ))}
-              <div className="inline-flex items-center gap-xs">
-                <TextField
-                  aria-label={t("userEvent.customDaysAria")}
-                  placeholder={t("userEvent.customDaysPlaceholder")}
-                  type="number"
-                  min={1}
-                  max={366}
-                  inputMode="numeric"
-                  value={customDays}
-                  onChange={(event) => setCustomDays(event.target.value)}
-                  className="w-16"
-                  data-testid="user-event-custom-days"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    const days = Number.parseInt(customDays, 10);
-                    if (!Number.isFinite(days) || days < 1) return;
-                    applyDaySpan(Math.min(days, 366));
-                  }}
-                  data-testid="user-event-apply-custom-days"
-                >
-                  {t("userEvent.applyDays")}
-                </Button>
+          {!isRecurring ? (
+            <div className="flex flex-col gap-xs">
+              <FieldLabel className="mb-0">{t("userEvent.durationPresets")}</FieldLabel>
+              <div className="flex flex-wrap items-center gap-xs">
+                {DAY_PRESETS.map((days) => (
+                  <PillButton
+                    key={days}
+                    type="button"
+                    onClick={() => applyDaySpan(days)}
+                    data-testid={`user-event-days-${days}`}
+                  >
+                    {t("userEvent.daysPreset", { count: days })}
+                  </PillButton>
+                ))}
+                <div className="inline-flex items-center gap-xs">
+                  <TextField
+                    aria-label={t("userEvent.customDaysAria")}
+                    placeholder={t("userEvent.customDaysPlaceholder")}
+                    type="number"
+                    min={1}
+                    max={366}
+                    inputMode="numeric"
+                    value={customDays}
+                    onChange={(event) => setCustomDays(event.target.value)}
+                    className="w-16"
+                    data-testid="user-event-custom-days"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      const days = Number.parseInt(customDays, 10);
+                      if (!Number.isFinite(days) || days < 1) return;
+                      applyDaySpan(Math.min(days, 366));
+                    }}
+                    data-testid="user-event-apply-custom-days"
+                  >
+                    {t("userEvent.applyDays")}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
+          ) : null}
 
-          <div className="flex flex-col gap-sm">
-            <div className="flex flex-col gap-xs">
-              <FieldLabel className="mb-0" htmlFor="user-event-start">
-                {startLabel}
-              </FieldLabel>
-              <TextField
-                id="user-event-start"
-                aria-label={startLabel}
-                type={values.isAllDay ? "date" : "datetime-local"}
-                value={values.startTime}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, startTime: event.target.value }))
-                }
-                className="w-full"
-                required
-                data-testid="user-event-start"
-              />
+          {isRecurring ? (
+            !values.isAllDay ? (
+              <div className="flex flex-col gap-sm">
+                <div className="flex flex-col gap-xs">
+                  <FieldLabel className="mb-0" htmlFor="user-event-event-start">
+                    {startLabel}
+                  </FieldLabel>
+                  <TextField
+                    id="user-event-event-start"
+                    aria-label={startLabel}
+                    type="time"
+                    value={values.eventStartTime}
+                    onChange={(event) =>
+                      setValues((prev) => ({ ...prev, eventStartTime: event.target.value }))
+                    }
+                    className="w-full"
+                    required
+                    data-testid="user-event-event-start"
+                  />
+                </div>
+                <div className="flex flex-col gap-xs">
+                  <FieldLabel className="mb-0" htmlFor="user-event-event-end">
+                    {endLabel}
+                  </FieldLabel>
+                  <TextField
+                    id="user-event-event-end"
+                    aria-label={endLabel}
+                    type="time"
+                    value={values.eventEndTime}
+                    onChange={(event) =>
+                      setValues((prev) => ({ ...prev, eventEndTime: event.target.value }))
+                    }
+                    className="w-full"
+                    data-testid="user-event-event-end"
+                  />
+                </div>
+              </div>
+            ) : null
+          ) : (
+            <div className="flex flex-col gap-sm">
+              <div className="flex flex-col gap-xs">
+                <FieldLabel className="mb-0" htmlFor="user-event-start">
+                  {startLabel}
+                </FieldLabel>
+                <TextField
+                  id="user-event-start"
+                  aria-label={startLabel}
+                  type={values.isAllDay ? "date" : "datetime-local"}
+                  value={values.startTime}
+                  onChange={(event) =>
+                    setValues((prev) => ({ ...prev, startTime: event.target.value }))
+                  }
+                  className="w-full"
+                  required
+                  data-testid="user-event-start"
+                />
+              </div>
+              <div className="flex flex-col gap-xs">
+                <FieldLabel className="mb-0" htmlFor="user-event-end">
+                  {endLabel}
+                </FieldLabel>
+                <TextField
+                  id="user-event-end"
+                  aria-label={endLabel}
+                  type={values.isAllDay ? "date" : "datetime-local"}
+                  value={values.endTime}
+                  onChange={(event) =>
+                    setValues((prev) => ({ ...prev, endTime: event.target.value }))
+                  }
+                  className="w-full"
+                  data-testid="user-event-end"
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-xs">
-              <FieldLabel className="mb-0" htmlFor="user-event-end">
-                {endLabel}
-              </FieldLabel>
-              <TextField
-                id="user-event-end"
-                aria-label={endLabel}
-                type={values.isAllDay ? "date" : "datetime-local"}
-                value={values.endTime}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, endTime: event.target.value }))
-                }
-                className="w-full"
-                data-testid="user-event-end"
-              />
-            </div>
-          </div>
+          )}
         </div>
+
+        {isRecurring ? (
+          <div data-testid="user-event-recurrence">
+            <RecurrenceRuleEditor
+              value={values.rrule}
+              onChange={(rrule) => setValues((prev) => ({ ...prev, rrule }))}
+              disabled={busy}
+            />
+          </div>
+        ) : null}
 
         <TextField
           aria-label={t("userEvent.locationAria")}
