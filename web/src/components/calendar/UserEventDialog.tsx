@@ -3,11 +3,19 @@ import { useTranslation } from "react-i18next";
 
 import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
-import { Button, TextField } from "../ui";
+import { Button, CheckboxField, FieldLabel, PillButton, TextField } from "../ui";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import {
+  addDaysToDateInput,
+  allDayFormRangeForDays,
+  datePartFromInput,
+  fromAllDayDateInput,
   fromDateTimeLocalInput,
+  inclusiveEndDateFromExclusive,
+  timedLocalRangeForDays,
+  toAllDayDateInput,
   toDateTimeLocalInput,
+  todayDateInput,
 } from "../../domain/timeline/dateUtils";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
@@ -19,6 +27,7 @@ export type UserEventFormValues = {
   body: string;
   /** Ownership workset id (``__user__`` = builtin system workset). */
   worksetId: string;
+  isAllDay: boolean;
 };
 
 export type UserEventTaskOption = {
@@ -49,9 +58,40 @@ const emptyValues: UserEventFormValues = {
   location: "",
   body: "",
   worksetId: SYSTEM_WORKSET_ID,
+  isAllDay: false,
 };
 
+const DAY_PRESETS = [1, 3, 7, 13] as const;
+
 const fieldsClass = "flex flex-col gap-md";
+
+function valuesFromInitial(initial?: Partial<UserEventFormValues> | null): UserEventFormValues {
+  const isAllDay = Boolean(initial?.isAllDay);
+  if (isAllDay) {
+    const startDate = toAllDayDateInput(initial?.startTime ?? "");
+    const exclusiveEnd = toAllDayDateInput(initial?.endTime ?? "");
+    const endDate =
+      (exclusiveEnd ? inclusiveEndDateFromExclusive(exclusiveEnd) : "") || startDate;
+    return {
+      title: initial?.title ?? "",
+      startTime: startDate,
+      endTime: endDate,
+      location: initial?.location ?? "",
+      body: initial?.body ?? "",
+      worksetId: toUserEventFormWorksetId(initial?.worksetId),
+      isAllDay: true,
+    };
+  }
+  return {
+    title: initial?.title ?? "",
+    startTime: toDateTimeLocalInput(initial?.startTime ?? ""),
+    endTime: toDateTimeLocalInput(initial?.endTime ?? ""),
+    location: initial?.location ?? "",
+    body: initial?.body ?? "",
+    worksetId: toUserEventFormWorksetId(initial?.worksetId),
+    isAllDay: false,
+  };
+}
 
 /** One-off user event form (no RRULE). */
 export function UserEventDialog({
@@ -69,34 +109,139 @@ export function UserEventDialog({
   const { t } = useTranslation("timeline");
   const [values, setValues] = useState<UserEventFormValues>(emptyValues);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [customDays, setCustomDays] = useState("");
+
+  // Depend on field values — not `initial` object identity — so parent re-renders
+  // (inline `{ worksetId }` / editing snapshots) do not wipe in-progress edits.
+  const initialTitle = initial?.title ?? "";
+  const initialStart = initial?.startTime ?? "";
+  const initialEnd = initial?.endTime ?? "";
+  const initialLocation = initial?.location ?? "";
+  const initialBody = initial?.body ?? "";
+  const initialWorksetId = initial?.worksetId;
+  const initialIsAllDay = Boolean(initial?.isAllDay);
 
   useEffect(() => {
     if (!open) return;
     setLocalError(null);
-    setValues({
-      title: initial?.title ?? "",
-      startTime: toDateTimeLocalInput(initial?.startTime ?? ""),
-      endTime: toDateTimeLocalInput(initial?.endTime ?? ""),
-      location: initial?.location ?? "",
-      body: initial?.body ?? "",
-      worksetId: toUserEventFormWorksetId(initial?.worksetId),
-    });
-  }, [open, initial]);
+    setCustomDays("");
+    setValues(
+      valuesFromInitial({
+        title: initialTitle,
+        startTime: initialStart,
+        endTime: initialEnd,
+        location: initialLocation,
+        body: initialBody,
+        worksetId: initialWorksetId,
+        isAllDay: initialIsAllDay,
+      }),
+    );
+  }, [
+    open,
+    initialTitle,
+    initialStart,
+    initialEnd,
+    initialLocation,
+    initialBody,
+    initialWorksetId,
+    initialIsAllDay,
+  ]);
 
   const displayError = error ?? localError;
+
+  const baseStartDate = () =>
+    datePartFromInput(values.startTime) || todayDateInput();
+
+  const applyDaySpan = (days: number) => {
+    const startDate = baseStartDate();
+    if (values.isAllDay) {
+      const range = allDayFormRangeForDays(startDate, days);
+      if (!range) return;
+      setValues((prev) => ({
+        ...prev,
+        startTime: range.startDate,
+        endTime: range.endDate,
+      }));
+      return;
+    }
+    const range = timedLocalRangeForDays(startDate, days);
+    if (!range) return;
+    setValues((prev) => ({
+      ...prev,
+      startTime: range.startTime,
+      endTime: range.endTime,
+    }));
+  };
+
+  const handleAllDayChange = (checked: boolean) => {
+    setValues((prev) => {
+      if (checked) {
+        const startDate = datePartFromInput(prev.startTime) || todayDateInput();
+        const endDate =
+          datePartFromInput(prev.endTime) || startDate;
+        const orderedEnd = endDate < startDate ? startDate : endDate;
+        return {
+          ...prev,
+          isAllDay: true,
+          startTime: startDate,
+          endTime: orderedEnd,
+        };
+      }
+      const startDate = datePartFromInput(prev.startTime) || todayDateInput();
+      const endDate = datePartFromInput(prev.endTime) || startDate;
+      const orderedEnd = endDate < startDate ? startDate : endDate;
+      return {
+        ...prev,
+        isAllDay: false,
+        startTime: `${startDate}T00:00`,
+        endTime: `${orderedEnd}T23:59`,
+      };
+    });
+  };
 
   const handleSubmit = () => {
     const title = values.title.trim();
     if (!title) {
-      setLocalError(t("userEvent.titleRequired"));
+      setLocalError(t("userEvent.errors.titleRequired"));
       return;
     }
+
+    if (values.isAllDay) {
+      const startDate = datePartFromInput(values.startTime);
+      if (!startDate) {
+        setLocalError(t("userEvent.errors.startRequired"));
+        return;
+      }
+      let endDate = datePartFromInput(values.endTime) || startDate;
+      if (endDate < startDate) endDate = startDate;
+      const startTime = fromAllDayDateInput(startDate);
+      const exclusiveEnd = fromAllDayDateInput(addDaysToDateInput(endDate, 1));
+      if (!startTime || !exclusiveEnd) {
+        setLocalError(t("userEvent.errors.startInvalid"));
+        return;
+      }
+      onSubmit({
+        title,
+        startTime,
+        endTime: exclusiveEnd,
+        location: values.location.trim(),
+        body: values.body.trim(),
+        worksetId: toUserEventFormWorksetId(values.worksetId),
+        isAllDay: true,
+      });
+      return;
+    }
+
     const startTime = fromDateTimeLocalInput(values.startTime);
     if (!startTime) {
-      setLocalError(t("userEvent.startRequired"));
+      setLocalError(t("userEvent.errors.startRequired"));
       return;
     }
     const endTime = values.endTime ? fromDateTimeLocalInput(values.endTime) : "";
+    if (values.endTime && !endTime) {
+      setLocalError(t("userEvent.errors.endInvalid"));
+      return;
+    }
     onSubmit({
       title,
       startTime,
@@ -104,6 +249,7 @@ export function UserEventDialog({
       location: values.location.trim(),
       body: values.body.trim(),
       worksetId: toUserEventFormWorksetId(values.worksetId),
+      isAllDay: false,
     });
   };
 
@@ -149,23 +295,84 @@ export function UserEventDialog({
           className="w-full"
           data-testid="user-event-workset-select"
         />
-        <TextField
-          aria-label={t("userEvent.startAria")}
-          type="datetime-local"
-          value={values.startTime}
-          onChange={(event) =>
-            setValues((prev) => ({ ...prev, startTime: event.target.value }))
-          }
-          className="w-full"
-          required
-        />
-        <TextField
-          aria-label={t("userEvent.endAria")}
-          type="datetime-local"
-          value={values.endTime}
-          onChange={(event) => setValues((prev) => ({ ...prev, endTime: event.target.value }))}
-          className="w-full"
-        />
+
+        <div className="flex flex-col gap-sm" data-testid="user-event-time-section">
+          <CheckboxField
+            id="user-event-all-day"
+            label={t("userEvent.allDay")}
+            checked={values.isAllDay}
+            onChange={(event) => handleAllDayChange(event.target.checked)}
+            data-testid="user-event-all-day"
+          />
+
+          <div className="flex flex-col gap-xs">
+            <FieldLabel className="mb-0">{t("userEvent.durationPresets")}</FieldLabel>
+            <div className="flex flex-wrap items-center gap-sm">
+              {DAY_PRESETS.map((days) => (
+                <PillButton
+                  key={days}
+                  type="button"
+                  onClick={() => applyDaySpan(days)}
+                  data-testid={`user-event-days-${days}`}
+                >
+                  {t("userEvent.daysPreset", { count: days })}
+                </PillButton>
+              ))}
+              <div className="inline-flex items-center gap-xs">
+                <TextField
+                  aria-label={t("userEvent.customDaysAria")}
+                  type="number"
+                  min={1}
+                  max={366}
+                  inputMode="numeric"
+                  value={customDays}
+                  onChange={(event) => setCustomDays(event.target.value)}
+                  className="w-20"
+                  data-testid="user-event-custom-days"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    const days = Number.parseInt(customDays, 10);
+                    if (!Number.isFinite(days) || days < 1) return;
+                    applyDaySpan(Math.min(days, 366));
+                  }}
+                  data-testid="user-event-apply-custom-days"
+                >
+                  {t("userEvent.applyDays")}
+                </Button>
+              </div>
+            </div>
+            <p className="m-0 text-caption text-text-muted">{t("userEvent.durationHint")}</p>
+          </div>
+
+          <TextField
+            aria-label={
+              values.isAllDay ? t("userEvent.startDateAria") : t("userEvent.startAria")
+            }
+            type={values.isAllDay ? "date" : "datetime-local"}
+            value={values.startTime}
+            onChange={(event) =>
+              setValues((prev) => ({ ...prev, startTime: event.target.value }))
+            }
+            className="w-full"
+            required
+            data-testid="user-event-start"
+          />
+          <TextField
+            aria-label={
+              values.isAllDay ? t("userEvent.endDateAria") : t("userEvent.endAria")
+            }
+            type={values.isAllDay ? "date" : "datetime-local"}
+            value={values.endTime}
+            onChange={(event) => setValues((prev) => ({ ...prev, endTime: event.target.value }))}
+            className="w-full"
+            data-testid="user-event-end"
+          />
+        </div>
+
         <TextField
           aria-label={t("userEvent.locationAria")}
           placeholder={t("userEvent.locationPlaceholder")}

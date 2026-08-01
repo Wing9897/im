@@ -30,6 +30,8 @@ class UserEventCreateBody(BaseModel):
     endTime: str | None = None
     body: str = ""
     location: str = ""
+    #: All-day events use ICS DATE semantics (wire end exclusive).
+    isAllDay: bool = False
     #: Optional analysis-task provenance; omit / null / "" → NULL. ``__user__`` rejected.
     taskId: str | None = None
     #: Ownership workset; omit / null / "" / "__user__" → builtin system workset.
@@ -43,6 +45,7 @@ class UserEventPatchBody(BaseModel):
     endTime: str | None = Field(default=None)
     body: str | None = None
     location: str | None = None
+    isAllDay: bool | None = None
     taskId: str | None = None
     worksetId: str | None = None
     model_config = {"extra": "forbid"}
@@ -89,6 +92,7 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
             "body": body.body,
             "location": body.location,
             "origin": "manual",
+            "is_all_day": bool(body.isAllDay),
             "task_id": body.taskId,
         }
         if "worksetId" in fields_set:
@@ -128,6 +132,7 @@ async def patch_event(
         "endTime": "end_time",
         "body": "body",
         "location": "location",
+        "isAllDay": "is_all_day",
         "taskId": "task_id",
         "worksetId": "workset_id",
     }

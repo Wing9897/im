@@ -196,6 +196,83 @@ export function fromDateTimeLocalInput(value: string): string | null {
   return parsed.toISOString();
 }
 
+const DATE_INPUT_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** Calendar date part for all-day ISO values (`YYYY-MM-DDT00:00:00Z` → wall date). */
+export function toAllDayDateInput(value: string | null | undefined): string {
+  if (!value) return "";
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(value.trim());
+  return match?.[1] ?? "";
+}
+
+/** All-day wire start: date part as UTC midnight (ICS DATE semantics). */
+export function fromAllDayDateInput(value: string): string | null {
+  const date = value.trim();
+  if (!DATE_INPUT_RE.test(date)) return null;
+  return `${date}T00:00:00.000Z`;
+}
+
+/** Shift a `YYYY-MM-DD` wall date by whole days (DST-safe via UTC noon). */
+export function addDaysToDateInput(value: string, delta: number): string {
+  const match = DATE_INPUT_RE.exec(value.trim());
+  if (!match) return "";
+  const utcNoon = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  const shifted = new Date(utcNoon + delta * 86_400_000);
+  const year = shifted.getUTCFullYear();
+  const month = String(shifted.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(shifted.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** Inclusive end date for an all-day range whose wire end is exclusive. */
+export function inclusiveEndDateFromExclusive(exclusiveEnd: string): string {
+  const date = toAllDayDateInput(exclusiveEnd);
+  return date ? addDaysToDateInput(date, -1) : "";
+}
+
+export function todayDateInput(now: Date = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** Date part from `datetime-local` / `date` / ISO input values. */
+export function datePartFromInput(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (DATE_INPUT_RE.test(trimmed)) return trimmed;
+  const match = /^(\d{4}-\d{2}-\d{2})/.exec(trimmed);
+  return match?.[1] ?? "";
+}
+
+/**
+ * Build a timed span of ``days`` calendar days: start 00:00, end 23:59 (local).
+ * ``days`` is inclusive (1 = same calendar day).
+ */
+export function timedLocalRangeForDays(
+  startDate: string,
+  days: number,
+): { startTime: string; endTime: string } | null {
+  if (!DATE_INPUT_RE.test(startDate) || !Number.isFinite(days) || days < 1) return null;
+  const endDate = addDaysToDateInput(startDate, Math.floor(days) - 1);
+  if (!endDate) return null;
+  return { startTime: `${startDate}T00:00`, endTime: `${endDate}T23:59` };
+}
+
+/**
+ * Build an all-day form span (inclusive end date) of ``days`` calendar days.
+ */
+export function allDayFormRangeForDays(
+  startDate: string,
+  days: number,
+): { startDate: string; endDate: string } | null {
+  if (!DATE_INPUT_RE.test(startDate) || !Number.isFinite(days) || days < 1) return null;
+  const endDate = addDaysToDateInput(startDate, Math.floor(days) - 1);
+  if (!endDate) return null;
+  return { startDate, endDate };
+}
+
 export type GanttColumn = {
   key: string;
   label: string;

@@ -21,6 +21,8 @@ interface UserEventWriteParams {
   endTime?: string | null;
   body?: string;
   location?: string;
+  /** All-day uses ICS DATE semantics (wire end exclusive). */
+  isAllDay?: boolean;
   /** Analysis-task provenance; `""` / omit → null. `"__user__"` rejected by API. */
   taskId?: string | null;
   /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset. */
@@ -50,6 +52,7 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
     endTime: params.endTime ?? null,
     body: params.body ?? "",
     location: params.location ?? "",
+    isAllDay: Boolean(params.isAllDay),
   };
   if (params.taskId !== undefined) body.taskId = params.taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
@@ -66,6 +69,7 @@ export function updateUserEvent(
   if (params.endTime !== undefined) body.endTime = params.endTime;
   if (params.body !== undefined) body.body = params.body;
   if (params.location !== undefined) body.location = params.location;
+  if (params.isAllDay !== undefined) body.isAllDay = params.isAllDay;
   if (params.taskId !== undefined) body.taskId = params.taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
   return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
