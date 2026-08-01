@@ -152,19 +152,10 @@ export function EventListPanel({
   const dayMode = !showAll && focusedDay != null;
 
   const displayEvents = showAll ? allRangeEvents : rangeEvents;
-  const groups = dayMode
+  const dayGroups = dayMode
     ? groupEventsByDayTimePhase(displayEvents, focusedDay)
-    : groupEventsByTimePhase(displayEvents);
-
-  const upcomingTitle = dayMode
-    ? t("eventList.groupUpcomingOnDay")
-    : t("eventList.groupUpcoming");
-  const ongoingTitle = dayMode
-    ? t("eventList.groupOngoingOnDay")
-    : t("eventList.groupOngoing");
-  const endedTitle = dayMode
-    ? t("eventList.groupEndedOnDay")
-    : t("eventList.groupEnded");
+    : null;
+  const rangeGroups = dayMode ? null : groupEventsByTimePhase(displayEvents);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-hidden">
@@ -189,28 +180,66 @@ export function EventListPanel({
       >
         {displayEvents.length === 0 ? (
           <p className={`${captionClass} m-0 shrink-0`}>{t("eventList.empty")}</p>
+        ) : dayGroups ? (
+          <>
+            <EventListGroup
+              title={t("eventList.groupUpcomingOnDay")}
+              events={dayGroups.upcoming}
+              onSelectEvent={onSelectEvent}
+              testId="timeline-event-group-upcoming"
+              showCrossDayBadge
+            />
+            <EventListGroup
+              title={t("eventList.groupOngoingOnDay")}
+              events={dayGroups.ongoing}
+              onSelectEvent={onSelectEvent}
+              testId="timeline-event-group-ongoing"
+              showCrossDayBadge
+            />
+            <EventListGroup
+              title={t("eventList.groupCoveringOnDay")}
+              events={dayGroups.covering}
+              onSelectEvent={onSelectEvent}
+              testId="timeline-event-group-covering"
+              showCrossDayBadge={false}
+            />
+            <EventListGroup
+              title={t("eventList.groupEndingSpanOnDay")}
+              events={dayGroups.endingSpan}
+              onSelectEvent={onSelectEvent}
+              testId="timeline-event-group-ending-span"
+              showCrossDayBadge={false}
+            />
+            <EventListGroup
+              title={t("eventList.groupEndedOnDay")}
+              events={dayGroups.ended}
+              onSelectEvent={onSelectEvent}
+              testId="timeline-event-group-ended"
+              showCrossDayBadge
+            />
+          </>
         ) : (
           <>
             <EventListGroup
-              title={upcomingTitle}
-              events={groups.upcoming}
+              title={t("eventList.groupUpcoming")}
+              events={rangeGroups!.upcoming}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-upcoming"
-              showCrossDayBadge={dayMode}
+              showCrossDayBadge={false}
             />
             <EventListGroup
-              title={ongoingTitle}
-              events={groups.ongoing}
+              title={t("eventList.groupOngoing")}
+              events={rangeGroups!.ongoing}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ongoing"
-              showCrossDayBadge={dayMode}
+              showCrossDayBadge={false}
             />
             <EventListGroup
-              title={endedTitle}
-              events={groups.ended}
+              title={t("eventList.groupEnded")}
+              events={rangeGroups!.ended}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ended"
-              showCrossDayBadge={dayMode}
+              showCrossDayBadge={false}
             />
           </>
         )}

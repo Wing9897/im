@@ -101,6 +101,8 @@
     "groupEnded": "Ended",
     "groupUpcomingOnDay": "Later that day",
     "groupOngoingOnDay": "Active that day",
+    "groupCoveringOnDay": "Multi-day in progress",
+    "groupEndingSpanOnDay": "Multi-day ending",
     "groupEndedOnDay": "Ended that day",
     "crossDay": "Multi-day"
   },
