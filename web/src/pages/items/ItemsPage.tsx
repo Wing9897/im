@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Package } from "lucide-react";
 import { AppPageShell } from "../../components/ui";
@@ -40,6 +41,7 @@ function categoryLabel(
 
 export function ItemsPage() {
   const { t } = useTranslation("items");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<TrackableItem[]>([]);
   const [categories, setCategories] = useState<ItemCategory[]>([]);
   const [worksets, setWorksets] = useState<Workset[]>([]);
@@ -49,6 +51,7 @@ export function ItemsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<TrackableItem | null | "new">(null);
   const [manageCategories, setManageCategories] = useState(false);
+  const deepLinkHandled = useRef<string | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -72,6 +75,25 @@ export function ItemsPage() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  // Deep-link from Timeline: /items?itemId=…&itemDateKind=purchased|expires
+  useEffect(() => {
+    if (loading) return;
+    const itemId = searchParams.get("itemId")?.trim();
+    if (!itemId) {
+      deepLinkHandled.current = null;
+      return;
+    }
+    if (deepLinkHandled.current === itemId) return;
+    const match = items.find((row) => row.id === itemId);
+    if (!match) return;
+    deepLinkHandled.current = itemId;
+    setEditing(match);
+    const next = new URLSearchParams(searchParams);
+    next.delete("itemId");
+    next.delete("itemDateKind");
+    setSearchParams(next, { replace: true });
+  }, [loading, items, searchParams, setSearchParams]);
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),

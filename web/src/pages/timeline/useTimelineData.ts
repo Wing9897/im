@@ -172,7 +172,12 @@ export function useTimelineData({
       const catalog = catalogOverride ?? tasksRef.current;
       const selection = selectedSourcesRef.current;
       const plan = resolveTimelineFilterPlan(selection, catalog);
-      if (!plan.fetchAnalysis && !plan.fetchCalendar && !plan.fetchUserEvents) {
+      if (
+        !plan.fetchAnalysis &&
+        !plan.fetchCalendar &&
+        !plan.fetchUserEvents &&
+        !plan.fetchItems
+      ) {
         return;
       }
       const window = calendarWindowRef.current;
@@ -189,7 +194,12 @@ export function useTimelineData({
 
   useEffect(() => {
     if (!pageActive) return;
-    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+    if (
+      !filterPlan.fetchAnalysis &&
+      !filterPlan.fetchCalendar &&
+      !filterPlan.fetchUserEvents &&
+      !filterPlan.fetchItems
+    ) {
       return;
     }
     void fetchEvents({
@@ -220,7 +230,12 @@ export function useTimelineData({
   useEffect(() => {
     if (!pageActive) return;
     return subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "task" && detail.resourceType !== "user_event") {
+      if (
+        detail.resourceType !== "task" &&
+        detail.resourceType !== "user_event" &&
+        detail.resourceType !== "item" &&
+        detail.resourceType !== "item_category"
+      ) {
         return;
       }
       void refreshEvents().catch((err) => {
@@ -238,7 +253,12 @@ export function useTimelineData({
     ) {
       return EMPTY_EVENTS;
     }
-    if (!filterPlan.fetchAnalysis && !filterPlan.fetchCalendar && !filterPlan.fetchUserEvents) {
+    if (
+      !filterPlan.fetchAnalysis &&
+      !filterPlan.fetchCalendar &&
+      !filterPlan.fetchUserEvents &&
+      !filterPlan.fetchItems
+    ) {
       return EMPTY_EVENTS;
     }
     return data ?? EMPTY_EVENTS;

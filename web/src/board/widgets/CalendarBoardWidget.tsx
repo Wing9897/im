@@ -36,6 +36,11 @@ function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | n
     location: event.location,
     description: event.body || null,
     rrule: "",
+    source: event.source === "item" ? "item" : "recurring",
+    worksetId: event.worksetId ?? null,
+    itemId: event.itemId ?? null,
+    itemDateKind: event.itemDateKind ?? null,
+    dismissed: Boolean(event.dismissed),
   };
 }
 

@@ -1,63 +1,20 @@
 /**
  * REST client for trackable items + soft-template categories.
+ *
+ * Transport stays hand-written; response/body shapes align with OpenAPI
+ * ``components["schemas"]`` (same style as tasks.ts).
  */
 
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type ItemFieldSchemaEntry = {
-  key: string;
-  label: string;
-};
+export type ItemFieldSchemaEntry = components["schemas"]["ItemFieldSchemaEntry"];
+export type ItemCategory = components["schemas"]["ItemCategoryResponse"];
+export type TrackableItem = components["schemas"]["ItemResponse"];
+export type ItemWriteParams = components["schemas"]["ItemCreateBody"];
+export type CategoryWriteParams = components["schemas"]["CategoryCreateBody"];
 
-export type ItemCategory = {
-  id: string;
-  name: string;
-  slug?: string | null;
-  sortOrder: number;
-  color?: string | null;
-  fieldSchema: ItemFieldSchemaEntry[];
-  defaultRemindBeforeDays?: number | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
-
-export type ItemStatus = "active" | "archived";
-
-export type TrackableItem = {
-  id: string;
-  title: string;
-  categoryId?: string | null;
-  worksetId: string;
-  purchasedAt?: string | null;
-  expiresAt?: string | null;
-  remindBeforeDays?: number | null;
-  notes: string;
-  status: ItemStatus;
-  attributes: Record<string, string>;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-};
-
-export type ItemWriteParams = {
-  title: string;
-  worksetId?: string | null;
-  categoryId?: string | null;
-  purchasedAt?: string | null;
-  expiresAt?: string | null;
-  remindBeforeDays?: number | null;
-  notes?: string;
-  status?: ItemStatus;
-  attributes?: Record<string, string>;
-};
-
-export type CategoryWriteParams = {
-  name: string;
-  slug?: string | null;
-  sortOrder?: number;
-  color?: string | null;
-  fieldSchema?: ItemFieldSchemaEntry[];
-  defaultRemindBeforeDays?: number | null;
-};
+export type ItemStatus = TrackableItem["status"];
 
 export function listItemCategories(): Promise<ItemCategory[]> {
   return apiClient.get<ItemCategory[]>("/api/v1/items/categories");
@@ -69,7 +26,7 @@ export function createItemCategory(params: CategoryWriteParams): Promise<ItemCat
 
 export function updateItemCategory(
   id: string,
-  params: Partial<CategoryWriteParams>,
+  params: Partial<components["schemas"]["CategoryUpdateBody"]>,
 ): Promise<ItemCategory> {
   return apiClient.patch<ItemCategory>(`/api/v1/items/categories/${encodeURIComponent(id)}`, params);
 }
@@ -96,7 +53,10 @@ export function createItem(params: ItemWriteParams): Promise<TrackableItem> {
   return apiClient.post<TrackableItem>("/api/v1/items", params);
 }
 
-export function updateItem(id: string, params: Partial<ItemWriteParams>): Promise<TrackableItem> {
+export function updateItem(
+  id: string,
+  params: Partial<components["schemas"]["ItemUpdateBody"]>,
+): Promise<TrackableItem> {
   return apiClient.patch<TrackableItem>(`/api/v1/items/${encodeURIComponent(id)}`, params);
 }
 

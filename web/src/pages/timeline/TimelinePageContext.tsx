@@ -30,6 +30,8 @@ export interface TimelinePageContextValue {
   eventStatuses: TimelineEventStatusMap;
   /** Open edit dialog for a user event (source === "user"). */
   onEditUserEvent?: (event: TimelineItem) => void;
+  /** Navigate to /items for a trackable-item occurrence (source === "item"). */
+  onEditItemEvent?: (event: TimelineItem) => void;
   /** Soft-dismiss any source from the timeline. */
   onDismissTimelineEvent?: (event: TimelineItem) => void;
   /** Restore a soft-dismissed timeline event. */

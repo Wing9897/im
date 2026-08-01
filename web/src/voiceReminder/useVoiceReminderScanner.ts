@@ -149,7 +149,10 @@ export function useVoiceReminderScanner(): void {
             fetchCalendarOccurrences(
               rangeStart,
               rangeEnd,
-              serverTaskIds !== undefined ? { taskIds: serverTaskIds } : undefined,
+              {
+                ...(serverTaskIds !== undefined ? { taskIds: serverTaskIds } : {}),
+                includeItems: false,
+              },
             ),
           ]);
         } catch (error) {

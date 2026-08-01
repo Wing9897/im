@@ -156,7 +156,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: ["task-1"] },
+      { taskIds: ["task-1"], includeItems: false },
     );
     expect(mockAnnounce).toHaveBeenCalledTimes(2);
     expect(mockAnnounce.mock.calls.map((call) => String(call[1]))).toEqual([
@@ -229,7 +229,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: ["cal-task"] },
+      { taskIds: ["cal-task"], includeItems: false },
     );
     expect(mockAnnounce).toHaveBeenCalledTimes(1);
     expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("站立會議");
@@ -296,7 +296,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: [] },
+      { taskIds: [], includeItems: false },
     );
   });
 

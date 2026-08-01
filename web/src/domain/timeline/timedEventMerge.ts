@@ -1,6 +1,7 @@
 import type { UserEvent } from "../../api/userEvents";
 import { listUserEvents } from "../../api/userEvents";
 import { fetchEvents } from "../../api/results";
+import { formatItemOccurrenceTitle } from "../items/itemCalendarProjection";
 import { getEventTimestamp } from "../intelligence/mapFilters";
 import {
   fetchSharedCalendarItems,
@@ -110,16 +111,20 @@ export function withResolvedUserEventTaskNames(
   );
 }
 
-/** Projects an expanded RRULE occurrence into the board timed-event contract. */
+/** Projects an expanded RRULE / item calendar row into the board timed-event contract. */
 export function calendarOccurrenceToBoardEvent(
   occurrence: CalendarOccurrence,
 ): AnalysisEvent {
+  const isItem = occurrence.source === "item";
+  const bareTitle = occurrence.title || "";
   return {
     id: occurrence.id,
-    taskId: occurrence.taskId,
+    taskId: isItem ? null : occurrence.taskId || null,
     version: 1,
     batchId: "",
-    title: occurrence.title,
+    title: isItem
+      ? formatItemOccurrenceTitle(occurrence.itemDateKind, bareTitle)
+      : bareTitle,
     body: occurrence.description ?? "",
     startTime: occurrence.startTime,
     endTime: occurrence.endTime,
@@ -133,13 +138,22 @@ export function calendarOccurrenceToBoardEvent(
     sourceMessageTime: null,
     analysisTimeRange: null,
     batchSourceChannelNames: [],
-    taskName: occurrence.taskName,
+    taskName: isItem ? null : occurrence.taskName || null,
     createdAt: occurrence.startTime,
     updatedAt: occurrence.startTime,
-    source: "recurring",
+    source: isItem ? "item" : "recurring",
     isAllDay: occurrence.isAllDay,
     timezone: occurrence.timezone ?? null,
     dismissed: Boolean(occurrence.dismissed),
+    worksetId: isItem
+      ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
+      : undefined,
+    itemId: isItem ? occurrence.itemId ?? null : undefined,
+    itemDateKind: isItem
+      ? occurrence.itemDateKind === "expires"
+        ? "expires"
+        : "purchased"
+      : undefined,
   };
 }
 
