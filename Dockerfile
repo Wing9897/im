@@ -40,6 +40,8 @@ COPY --from=python-deps /app/server /app/server
 COPY --from=python-deps /app/pyproject.toml /app/pyproject.toml
 COPY --from=web /src/web/dist /app/web-dist
 COPY VERSION /app/VERSION
+# Runtime catalog for server.presets.task_presets → /app/shared/task_presets.json
+COPY shared /app/shared
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH=/app \
