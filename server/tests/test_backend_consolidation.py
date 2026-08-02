@@ -71,8 +71,12 @@ def test_analysis_mode_specs_drive_capability_sets() -> None:
             assert spec.message_batch and spec.ai and spec.schedulable
         elif spec.pipeline == "project_tick":
             assert spec.ai and spec.schedulable and not spec.message_batch
-        elif spec.pipeline in {"rrule_expand", "filter_bucket"}:
+        elif spec.pipeline == "web_intel_tick":
+            assert spec.ai and spec.schedulable and not spec.message_batch and spec.timeline_owning
+        elif spec.pipeline == "rrule_expand":
             assert not spec.ai and not spec.schedulable and not spec.message_batch
+        else:
+            raise AssertionError(f"unexpected pipeline: {spec.pipeline}")
     assert get_analysis_mode_spec("nope") is None
 
 

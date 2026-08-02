@@ -218,7 +218,7 @@
         "searchQueryPlaceholder": "例：OpenAI API 定價 更新 OR 監管",
         "searchQueryHint": "每次排程觸發會用此查詢做網頁搜尋；可與上方 Prompt 搭配",
         "scheduleDefaultHint": "預設建議「每小時」觸發；切換到此類型時若仍是每 10 秒會自動改為每小時。",
-        "noChannelsHint": "此類型以網頁搜尋為輸入，無需綁定本地訊息頻道；沿用助手設定中的聯網搜尋供應商"
+        "noChannelsHint": "此類型以網頁搜尋為輸入，無需綁定本地訊息頻道；搜尋供應商與助手設定共用（不受助手聯網總開關影響）"
       },
       "recurring": {
         "modeOptionLabel": "循環任務（無處理）",
@@ -653,8 +653,8 @@
       "description": "事件時間跨度（長條）"
     },
     "events": {
-      "title": "關鍵事件",
-      "description": "最新關鍵事件"
+      "title": "情報事件",
+      "description": "最新關鍵事件與網路情報"
     },
     "feed": {
       "title": "實時監控",
@@ -966,8 +966,8 @@
       "empty": "尚未設定來源"
     },
     "events": {
-      "empty": "尚無關鍵事件",
-      "ariaPrefix": "關鍵事件"
+      "empty": "尚無情報事件",
+      "ariaPrefix": "情報事件"
     },
     "calendarWidget": {
       "monthAria": "月曆",

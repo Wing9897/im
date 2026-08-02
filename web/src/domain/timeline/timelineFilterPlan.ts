@@ -5,6 +5,10 @@
  */
 
 import {
+  getAnalysisModeCapabilities,
+  isAnalysisEventsMode,
+} from "../tasks/analysisModeCapabilities";
+import {
   expandWorksetIdsToTaskIds,
   isEmptySourceFilter,
   type SourceFilterSelection,
@@ -92,16 +96,16 @@ export function resolveTimelineFilterPlan(
 
   for (const id of selectedRealTaskIds) {
     const mode = byId.get(id)?.analysisMode;
-    if (mode === "recurring") {
+    const caps = getAnalysisModeCapabilities(mode);
+    if (!caps) continue;
+    if (caps.pipeline === "rrule_expand" || caps.pipeline === "project_tick") {
       recurringTaskIds.push(id);
       fetchUserForTagged = true;
-    } else if (mode === "project") {
-      recurringTaskIds.push(id);
-      fetchUserForTagged = true;
-    } else {
+    } else if (isAnalysisEventsMode(mode)) {
       analysisTaskIds.push(id);
       fetchUserForTagged = true;
     }
+    // leaderboard (and unknown) — not a timeline analysis_events source
   }
 
   // Workset-only selection (e.g. only __user__) still needs user events.

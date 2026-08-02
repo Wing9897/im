@@ -12,7 +12,20 @@ export interface UseRefreshOnAnalysisEventOptions {
   taskId?: string | null;
   /** When set, wins over single `taskId`. `null`/omit = any task; `[]` = none. */
   taskIds?: string[] | null;
-  analysisMode?: AnalysisMode;
+  /** Single mode or any-of list (e.g. Intelligence: event + web_intel). */
+  analysisMode?: AnalysisMode | readonly AnalysisMode[];
+}
+
+function analysisModeMatches(
+  eventMode: string | null | undefined,
+  filter: AnalysisMode | readonly AnalysisMode[] | undefined,
+): boolean {
+  if (filter == null) return true;
+  if (Array.isArray(filter)) {
+    if (filter.length === 0) return false;
+    return eventMode != null && (filter as readonly string[]).includes(eventMode);
+  }
+  return eventMode === filter;
 }
 
 /** Determines whether a given analysis event matches the refresh filter criteria. */
@@ -48,7 +61,7 @@ export function shouldRefreshForEvent(
     return false;
   }
 
-  if (analysisMode && event.payload.analysisMode !== analysisMode) {
+  if (!analysisModeMatches(event.payload.analysisMode, analysisMode)) {
     return false;
   }
 
@@ -66,6 +79,9 @@ export function useRefreshOnAnalysisEvent(
   const { includeStarted, includeCompleted, includeFailed, taskId, taskIds, analysisMode } =
     options;
   const taskIdsKey = taskIds === undefined || taskIds === null ? "" : taskIds.join("|");
+  const analysisModeKey = Array.isArray(analysisMode)
+    ? analysisMode.join("|")
+    : (analysisMode ?? "");
 
   useEffect(() => {
     if (
@@ -94,11 +110,12 @@ export function useRefreshOnAnalysisEvent(
     void Promise.resolve(onRefresh()).catch((e) => {
       logWarn("[useRefreshOnAnalysisEvent] onRefresh rejected", e);
     });
-    // taskIds mirrored by taskIdsKey so inline [] literals don't retrigger every render
+    // taskIds / analysisMode mirrored by *Key so inline literals don't retrigger every render
   }, [
     lastAnalysisEvent,
     onRefresh,
     analysisMode,
+    analysisModeKey,
     includeCompleted,
     includeFailed,
     includeStarted,

@@ -11,6 +11,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { Map as LeafletMap } from "leaflet";
 import { fetchEvents } from "../../api/results";
+import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import type { AnalysisEvent } from "../../types";
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
@@ -67,7 +68,7 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
     BOARD_POLL_MS.standard,
     { active },
   );
-  useRefreshOnAnalysisEvent(refresh, { analysisMode: "event" });
+  useRefreshOnAnalysisEvent(refresh, { analysisMode: ANALYSIS_EVENTS_MODES });
 
   const onMarkerClick = useCallback((item: AnalysisEvent) => {
     focusBoardEvent({

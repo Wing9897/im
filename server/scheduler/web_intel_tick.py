@@ -126,8 +126,10 @@ async def execute_web_intel_tick(
     )
 
     llm_cfg = await load_llm_config(db)
+    # Scheduled web_intel always searches; only the provider/native path is shared
+    # with assistant settings. The assistant master switch must not pause ticks.
     route = resolve_web_search_route(
-        web_search_enabled=await get_config_bool(db, "assistant_web_search_enabled"),
+        web_search_enabled=True,
         web_search_provider=await get_config(db, "web_search_provider"),
         llm_provider=llm_cfg["provider"],
         llm_base_url=llm_cfg["base_url"],
@@ -261,7 +263,7 @@ async def _run_web_intel_pipeline(
             )
 
     if not web_search_enabled:
-        raise RuntimeError("assistant web search is disabled")
+        raise RuntimeError("web_intel search route resolved to disabled")
 
     items, pt, ct = await _tool_two_step(
         db,

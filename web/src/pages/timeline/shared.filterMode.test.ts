@@ -6,6 +6,8 @@ import { resolveTimelineFilterPlan } from "./shared";
 describe("resolveTimelineFilterPlan", () => {
   const tasks = [
     { id: "evt-1", analysisMode: "event", worksetId: "ws-a" },
+    { id: "web-1", analysisMode: "web_intel", worksetId: "ws-a" },
+    { id: "lb-1", analysisMode: "leaderboard", worksetId: "ws-a" },
     { id: "cal-1", analysisMode: "recurring", worksetId: null },
   ];
 
@@ -48,9 +50,12 @@ describe("resolveTimelineFilterPlan", () => {
     ).toMatchObject({
       fetchAnalysis: true,
       fetchItems: true,
-      analysisTaskIds: ["evt-1"],
-      selectedRealTaskIds: ["evt-1"],
+      analysisTaskIds: expect.arrayContaining(["evt-1", "web-1"]),
+      selectedRealTaskIds: expect.arrayContaining(["evt-1", "web-1", "lb-1"]),
       selectedWorksetIds: ["ws-a"],
     });
+    expect(
+      resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks).analysisTaskIds,
+    ).not.toEqual(expect.arrayContaining(["lb-1"]));
   });
 });

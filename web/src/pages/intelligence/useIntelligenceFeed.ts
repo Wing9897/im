@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { intelligenceSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
+import { ANALYSIS_EVENTS_MODES, isAnalysisEventsMode } from "../../domain/tasks/analysisModeCapabilities";
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
@@ -72,10 +73,7 @@ export function useIntelligenceFeed() {
   const prevIsMapModeRef = useRef(isMapMode);
 
   const intelligenceTasks = useMemo(
-    () =>
-      tasks.filter(
-        (task) => task.analysisMode === "event" || task.analysisMode === "web_intel",
-      ),
+    () => tasks.filter((task) => isAnalysisEventsMode(task.analysisMode)),
     [tasks],
   );
 
@@ -96,10 +94,14 @@ export function useIntelligenceFeed() {
     }
   }, [intelligenceTasks, selectedSources, setSelectedSources, tasksLoading]);
 
-  const resolvedApiTaskIds = useMemo(
-    () => resolveAnalysisTaskIdsFromFilter(selectedSources, intelligenceTasks),
-    [selectedSources, intelligenceTasks],
-  );
+  const resolvedApiTaskIds = useMemo(() => {
+    const fromFilter = resolveAnalysisTaskIdsFromFilter(selectedSources, intelligenceTasks);
+    if (fromFilter !== null) return fromFilter;
+    // "All sources" on Intelligence = all event/web_intel tasks, not every DB task.
+    // While the catalog is still loading, keep null so we do not flash an empty IN [].
+    if (tasksLoading) return null;
+    return intelligenceTasks.map((task) => task.id).sort();
+  }, [selectedSources, intelligenceTasks, tasksLoading]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -217,7 +219,7 @@ export function useIntelligenceFeed() {
 
   useRefreshOnAnalysisEvent(refreshItems, {
     taskIds: resolvedApiTaskIds,
-    analysisMode: "event",
+    analysisMode: ANALYSIS_EVENTS_MODES,
   });
 
   useInfiniteScroll({

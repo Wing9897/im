@@ -14,6 +14,7 @@ import {
   useTaskNameById,
   useWorksetNameById,
 } from "../context/TaskCatalogContext";
+import { ANALYSIS_EVENTS_MODES } from "../domain/tasks/analysisModeCapabilities";
 import { useRefreshOnAnalysisEvent } from "../hooks/useRefreshOnAnalysisEvent";
 import type { AnalysisEvent } from "../types";
 import { useBoardWidgetHeaderActions } from "./BoardWidgetFrame";
@@ -60,8 +61,8 @@ export function useBoardTimedEventsWidget(options: {
     [refresh],
   );
 
-  // Poll alone can lag ~45s after event analysis; pages refresh on SSE.
-  useRefreshOnAnalysisEvent(refresh, { analysisMode: "event" });
+  // Poll alone can lag ~45s after event / web_intel analysis; pages refresh on SSE.
+  useRefreshOnAnalysisEvent(refresh, { analysisMode: ANALYSIS_EVENTS_MODES });
 
   const events = useMemo(
     () =>

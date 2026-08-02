@@ -104,21 +104,21 @@
     "aria": "Load more Key Events"
   },
   "empty": {
-    "noTasksTitle": "No Key Events tasks yet",
-    "noTasksDescription": "Create at least one Key Events task. After analysis finishes, curated highlights will appear here.",
-    "noTasksHint": "If accounts and channels are ready, add a Key Events task under Tasks next.",
-    "filteredBothTitle": "No Key Events match",
+    "noTasksTitle": "No intelligence tasks yet",
+    "noTasksDescription": "Create at least one Key Events or Web Intel task. After analysis finishes, curated highlights will appear here.",
+    "noTasksHint": "If accounts and channels are ready, add a Key Events or Web Intel task under Tasks next.",
+    "filteredBothTitle": "No intelligence matches",
     "filteredBothDescription": "Your current filters do not match any results.",
-    "filteredSearchTitle": "No Key Events match your search",
+    "filteredSearchTitle": "No intelligence matches your search",
     "filteredSearchDescription": "Try adjusting the search text, or clear filters and browse again.",
     "filteredTimeTitle": "No matching intelligence in this time range",
     "filteredTimeDescription": "Try adjusting the time filter, or clear filters and browse again.",
-    "filteredSourceTitle": "No Key Events for the selected sources",
+    "filteredSourceTitle": "No intelligence for the selected sources",
     "filteredSourceDescription": "Try adjusting the source (task / workset) filter, or clear filters and browse again.",
     "filteredHint": "Clear filters to see whether there is no data, or it is just filtered out.",
-    "noneTitle": "No Key Events yet",
-    "noneDescription": "Data loaded, but there are no Key Events results to show.",
-    "noneHint": "Key Events appear after a successful Key Events analysis batch."
+    "noneTitle": "No intelligence yet",
+    "noneDescription": "Data loaded, but there are no intelligence results to show.",
+    "noneHint": "Results appear after a successful Key Events message batch or Web Intel scheduled search."
   },
   "cta": {
     "goToTasks": "Go to Tasks",

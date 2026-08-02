@@ -112,3 +112,16 @@ export function isScheduleOnlyAnalysisMode(mode: AnalysisMode): boolean {
 export function analysisModeSupportsTaskPresets(mode: AnalysisMode): boolean {
   return ANALYSIS_MODE_CAPABILITIES[mode].schedulable;
 }
+
+/**
+ * Modes that persist findings into ``analysis_events`` (Intelligence feed /
+ * Timeline analysis layer / Board event widgets).
+ */
+export const ANALYSIS_EVENTS_MODES = ["event", "web_intel"] as const;
+export type AnalysisEventsMode = (typeof ANALYSIS_EVENTS_MODES)[number];
+
+export function isAnalysisEventsMode(
+  mode: string | null | undefined,
+): mode is AnalysisEventsMode {
+  return mode === "event" || mode === "web_intel";
+}
