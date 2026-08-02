@@ -16,6 +16,7 @@ function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     name: "Test Task",
     description: null,
     promptTemplate: "test prompt",
+    webSearchQuery: "",
     analysisMode: "event",
     analysisTimeRange: "7d",
     version: 1,
@@ -150,6 +151,24 @@ describe("TaskCard", () => {
   it("shows leaderboard staff avatar for leaderboard tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
     expect(container.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
+  });
+
+  it("shows web_intel avatar and search meta without message-batch stats", () => {
+    renderCard({
+      task: createMockTask({
+        analysisMode: "web_intel",
+        webSearchQuery: "OpenAI pricing",
+        channelIds: [],
+      }),
+      stats: createMockStats({ unanalyzedCount: 9, analyzedCount: 3 }),
+    });
+
+    expect(container.querySelector('[data-testid="ai-staff-avatar-webIntel"]')).not.toBeNull();
+    expect(container.textContent).toContain("網路情報");
+    expect(container.textContent).toContain("OpenAI pricing");
+    expect(container.textContent).toContain("排程觸發網頁搜尋");
+    expect(container.textContent).not.toContain("待分析");
+    expect(container.textContent).not.toContain("個頻道");
   });
 
   it("shows the workset name when the task has a worksetId", () => {

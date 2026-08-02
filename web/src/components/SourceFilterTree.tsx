@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { TextField } from "./ui";
 import type { FilterTreeRow } from "../domain/tasks/sourceFilterSelection";
 import { resolveSourceFilterTaskLabel } from "../domain/timeline/sourceFilterOptions";
+import { formatAnalysisMode } from "../utils/analysis";
 
 export function matchesSourceFilterQuery(name: string, query: string): boolean {
   const q = query.trim().toLocaleLowerCase();
@@ -134,6 +135,11 @@ export function SourceFilterTree({
                       unnamedLabel,
                     );
                     const isRecurring = child.analysisMode === "recurring";
+                    const modeBadge = isRecurring
+                      ? recurringBadge
+                      : child.analysisMode
+                        ? formatAnalysisMode(child.analysisMode)
+                        : null;
                     return (
                       <li key={child.id}>
                         <label className="flex cursor-pointer items-center gap-sm border-l-2 border-l-accent/35 py-1.5 pl-9 pr-sm hover:bg-surface-raised">
@@ -146,12 +152,16 @@ export function SourceFilterTree({
                           <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
                             {label}
                           </span>
-                          {isRecurring ? (
+                          {modeBadge ? (
                             <span
-                              className="shrink-0 rounded px-1 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted ring-1 ring-inset ring-surface-border/80"
-                              data-testid={`source-filter-recurring-${child.id}`}
+                              className="shrink-0 rounded px-1 py-0.5 text-[10px] font-medium tracking-wide text-text-muted ring-1 ring-inset ring-surface-border/80"
+                              data-testid={
+                                isRecurring
+                                  ? `source-filter-recurring-${child.id}`
+                                  : `source-filter-mode-${child.id}`
+                              }
                             >
-                              {recurringBadge}
+                              {modeBadge}
                             </span>
                           ) : null}
                         </label>

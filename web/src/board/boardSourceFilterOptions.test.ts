@@ -23,10 +23,12 @@ describe("boardSourceFilterOptions", () => {
       boardSourceFilterExpandTasks([
         { id: "task-1", name: "One" },
         { id: "task-2", name: "Two", worksetId: "ws-1", analysisMode: "recurring" },
+        { id: "task-3", name: "Web", worksetId: "ws-1", analysisMode: "web_intel" },
       ]),
     ).toEqual([
       { id: "task-1", name: "One", worksetId: null, analysisMode: null },
       { id: "task-2", name: "Two", worksetId: "ws-1", analysisMode: "recurring" },
+      { id: "task-3", name: "Web", worksetId: "ws-1", analysisMode: "web_intel" },
     ]);
   });
 });

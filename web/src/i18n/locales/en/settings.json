@@ -432,8 +432,8 @@
       "summary": "Chats beside new/edit task forms to help fill settings (not an Agent).",
       "capabilities": [
         "Suggest task name and description from what you want to monitor",
-        "Suggest which employee to assign (leaderboard / key events / schedule clerk / project manager) and prompt direction",
-        "Help with time range and schedule-related fields",
+        "Suggest task type (leaderboard / key events / web intel / recurring / project) and prompt direction",
+        "Help with time range, search query, and schedule-related fields",
         "Only configures tasks—does not analyze messages or call tools"
       ]
     },
@@ -456,11 +456,11 @@
       ]
     },
     "webIntel": {
-      "summary": "Back-office: scheduled web search into analysis events (same store as key events).",
+      "summary": "Back-office intel gatherer: scheduled web search into analysis events (same store as key events).",
       "capabilities": [
-        "Run a short search to JSON tick on the task schedule (default hourly)",
+        "Run a short search → JSON tick on the task schedule (default hourly)",
         "Uses assistant web-search routing (native OpenAI/Gemini or DDG/Brave tools)",
-        "Task prompt describes how to extract events from search hits",
+        "Task prompt describes how to extract events; search query decides what to search",
         "No chat UI; results appear on intelligence / timeline"
       ]
     },

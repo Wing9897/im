@@ -40,6 +40,9 @@
       "projectProgressHint": "进度按消息游标推进（非标记统计）",
       "recurringProgressHint": "循环日程（无消息分析统计）",
       "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
+      "webIntel": "网页搜索 · {query}",
+      "webIntelQueryEmpty": "（尚未设置查询）",
+      "webIntelProgressHint": "排程触发网页搜索后写入情报事件（非本地消息批次统计）",
       "retryCount": "重试 {count}",
       "analysisPausedHint": "分析已自动或手动暂停"
     },
@@ -150,6 +153,17 @@
       "descriptionPlaceholder": "任务描述（选填）",
       "promptLabel": "Prompt 模板",
       "promptPlaceholder": "输入分析 Prompt 模板",
+      "requiredSuffix": "（必填）",
+      "saveNeeds": {
+        "generic": "请先完成必填栏位",
+        "saving": "正在保存…",
+        "name": "请填写任务名称",
+        "prompt": "请填写任务 Prompt",
+        "webSearchQuery": "请填写搜索查询／关键词",
+        "channels": "请至少选择一个来源频道",
+        "rrule": "请设置重复规则",
+        "eventStart": "请设置开始时间，或改为全天活动"
+      },
       "pickChannels": "点击选择频道",
       "channelsSelected": "已选 {selected} / {total} 个频道",
       "channelsLabel": "分析来源频道",
@@ -203,6 +217,7 @@
         "searchQueryLabel": "搜索查询／关键词",
         "searchQueryPlaceholder": "例：OpenAI API 定价 更新 OR 监管",
         "searchQueryHint": "每次排程触发会用此查询做网页搜索；可与上方 Prompt 搭配",
+        "scheduleDefaultHint": "默认建议「每小时」触发；切换到此类型时若仍是每 10 秒会自动改为每小时。",
         "noChannelsHint": "此类型以网页搜索为输入，无需绑定本地消息频道；沿用助手设置中的联网搜索供应商"
       },
       "recurring": {
@@ -522,7 +537,7 @@
     "taskEditor": "任务顾问",
     "leaderboard": "排行榜分析员",
     "eventIntel": "关键事件分析员",
-    "webIntel": "网络情报分析员",
+    "webIntel": "情报搜集",
     "projectManager": "项目管理助手"
   },
   "ui": {

@@ -46,40 +46,54 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
 
 export const DEFAULT_FORM_STATE: TaskFormState = INITIAL_EDITOR_FIELDS;
 
-function computeCanSave(
-  fields: {
-    name: string;
-    promptTemplate: string;
-    webSearchQuery: string;
-    channelIds: string[];
-    rrule: string;
-    analysisMode: AnalysisMode;
-    eventIsAllDay: boolean;
-    eventStartTime: string;
-  },
-  isSaving: boolean,
-): boolean {
+type SaveGateFields = {
+  name: string;
+  promptTemplate: string;
+  webSearchQuery: string;
+  channelIds: string[];
+  rrule: string;
+  analysisMode: AnalysisMode;
+  eventIsAllDay: boolean;
+  eventStartTime: string;
+};
+
+function computeCanSave(fields: SaveGateFields, isSaving: boolean): boolean {
+  return getTaskSaveBlockReason(fields, isSaving) == null;
+}
+
+/** Localized reason the save button stays disabled; null when save is allowed. */
+export function getTaskSaveBlockReason(
+  fields: SaveGateFields,
+  isSaving = false,
+): string | null {
+  if (isSaving) return String(i18n.t("tasks.editor.saveNeeds.saving"));
+  if (!fields.name.trim()) return String(i18n.t("tasks.editor.saveNeeds.name"));
+
   if (fields.analysisMode === "recurring") {
+    if (!fields.rrule.trim()) return String(i18n.t("tasks.editor.saveNeeds.rrule"));
     const hasStart =
       fields.eventIsAllDay || Boolean(fields.eventStartTime.trim());
-    return Boolean(
-      fields.name.trim() && fields.rrule.trim() && hasStart && !isSaving,
-    );
+    if (!hasStart) return String(i18n.t("tasks.editor.saveNeeds.eventStart"));
+    return null;
   }
+
   if (fields.analysisMode === "web_intel") {
-    return Boolean(
-      fields.name.trim() &&
-        fields.promptTemplate.trim() &&
-        fields.webSearchQuery.trim() &&
-        !isSaving,
-    );
+    if (!fields.promptTemplate.trim()) {
+      return String(i18n.t("tasks.editor.saveNeeds.prompt"));
+    }
+    if (!fields.webSearchQuery.trim()) {
+      return String(i18n.t("tasks.editor.saveNeeds.webSearchQuery"));
+    }
+    return null;
   }
-  return Boolean(
-    fields.name.trim() &&
-      fields.promptTemplate.trim() &&
-      fields.channelIds.length > 0 &&
-      !isSaving,
-  );
+
+  if (!fields.promptTemplate.trim()) {
+    return String(i18n.t("tasks.editor.saveNeeds.prompt"));
+  }
+  if (fields.channelIds.length === 0) {
+    return String(i18n.t("tasks.editor.saveNeeds.channels"));
+  }
+  return null;
 }
 
 export interface UseTaskEditorStateReturn {
@@ -88,6 +102,8 @@ export interface UseTaskEditorStateReturn {
   updateField: <K extends keyof TaskFormState>(field: K, value: TaskFormState[K]) => void;
   applyPreset: (preset: TaskTemplatePreset) => void;
   canSave: boolean;
+  /** Why save is blocked (for disabled button title / inline hint). */
+  saveBlockReason: string | null;
 }
 
 interface UseTaskEditorStateOptions {
@@ -152,19 +168,25 @@ export function useTaskEditorState(
     [setFormState],
   );
 
-  const canSave = computeCanSave(
-    {
-      name: formState.name,
-      promptTemplate: formState.promptTemplate,
-      webSearchQuery: formState.webSearchQuery,
-      channelIds: formState.channelIds,
-      rrule: formState.rrule,
-      analysisMode: formState.analysisMode,
-      eventIsAllDay: formState.eventIsAllDay,
-      eventStartTime: formState.eventStartTime,
-    },
-    isSaving,
-  );
+  const saveGateFields = {
+    name: formState.name,
+    promptTemplate: formState.promptTemplate,
+    webSearchQuery: formState.webSearchQuery,
+    channelIds: formState.channelIds,
+    rrule: formState.rrule,
+    analysisMode: formState.analysisMode,
+    eventIsAllDay: formState.eventIsAllDay,
+    eventStartTime: formState.eventStartTime,
+  };
+  const saveBlockReason = getTaskSaveBlockReason(saveGateFields, isSaving);
+  const canSave = computeCanSave(saveGateFields, isSaving);
 
-  return { formState, setFormState, updateField, applyPreset, canSave };
+  return {
+    formState,
+    setFormState,
+    updateField,
+    applyPreset,
+    canSave,
+    saveBlockReason,
+  };
 }

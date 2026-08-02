@@ -160,9 +160,15 @@ def _validate_web_intel_fields(*, effective_mode: str, prompt: str, search_query
     if effective_mode != WEB_INTEL_MODE:
         return
     if not prompt.strip():
-        raise TaskWriteError("web_intel tasks require promptTemplate")
+        raise TaskWriteError(
+            "web_intel tasks require a non-empty promptTemplate "
+            "(how to turn search hits into events)"
+        )
     if not search_query.strip():
-        raise TaskWriteError("web_intel tasks require webSearchQuery")
+        raise TaskWriteError(
+            "web_intel tasks require a non-empty webSearchQuery "
+            "(keywords used on each schedule tick)"
+        )
 
 
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:

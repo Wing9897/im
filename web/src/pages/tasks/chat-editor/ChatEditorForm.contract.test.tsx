@@ -68,6 +68,35 @@ describe("ChatEditorForm recurring-only contract", () => {
     },
   );
 
+  it("shows web_intel search query, required hints, and default schedule copy", async () => {
+    await act(async () => {
+      root.render(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(ChatEditorForm, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "web_intel",
+              scheduleType: "hourly",
+              promptTemplate: "",
+              webSearchQuery: "",
+            },
+            updateField: () => undefined,
+            channels: [],
+            onOpenChannelDialog: () => undefined,
+          }),
+        ),
+      );
+    });
+    expect(container.querySelector('[data-testid="task-web-search-query"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-web-intel-schedule-hint"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-web-search-query-required"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-prompt-required"]')).not.toBeNull();
+    expect(container.textContent).toContain("無需綁定本地訊息頻道");
+    expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).toBeNull();
+  });
+
   it("shows project wave interval after schedule type in project mode", async () => {
     await act(async () => {
       root.render(

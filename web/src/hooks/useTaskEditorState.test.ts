@@ -192,6 +192,23 @@ describe("useTaskEditorState", () => {
       });
       expect(latest.canSave).toBe(false);
     });
+
+    it("requires prompt + webSearchQuery for web_intel (no channels)", () => {
+      renderHarness();
+      act(() => {
+        latest.updateField("analysisMode", "web_intel");
+        latest.updateField("name", "Web intel");
+        latest.updateField("promptTemplate", "Extract official notes");
+      });
+      expect(latest.canSave).toBe(false);
+      expect(latest.saveBlockReason).toMatch(/搜尋|查询|search/i);
+
+      act(() => {
+        latest.updateField("webSearchQuery", "OpenAI pricing");
+      });
+      expect(latest.canSave).toBe(true);
+      expect(latest.saveBlockReason).toBeNull();
+    });
   });
 
   it("setFormState allows direct state replacement", () => {

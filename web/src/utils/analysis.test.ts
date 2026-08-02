@@ -23,9 +23,10 @@ describe("formatAnalysisMode", () => {
     expect(formatAnalysisMode("leaderboard")).toBe("排行榜");
   });
 
-  it('returns task-type name for "project" and "recurring"', () => {
+  it('returns task-type name for "project", "recurring", and "web_intel"', () => {
     expect(formatAnalysisMode("project")).toBe("專案");
     expect(formatAnalysisMode("recurring")).toBe("循環日程");
+    expect(formatAnalysisMode("web_intel")).toBe("網路情報");
   });
 
   it('returns "未知" for unrecognized values', () => {
@@ -41,6 +42,7 @@ describe("formatAnalysisMode", () => {
     expect(formatAnalysisMode("event")).toBe("Key events");
     expect(formatAnalysisMode("leaderboard")).toBe("Leaderboard");
     expect(formatAnalysisMode("project")).toBe("Project");
+    expect(formatAnalysisMode("web_intel")).toBe("Web intel");
     expect(formatAnalysisMode("unknown")).toBe("Unknown");
   });
 });
