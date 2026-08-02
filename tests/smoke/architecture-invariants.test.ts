@@ -297,15 +297,44 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     const content = fs.readFileSync(hintPath, "utf-8");
 
     expect(content).toMatch(
-      new RegExp(String.raw`schema baseline ${current}|current is v${current}\b`, "i"),
+      new RegExp(
+        String.raw`SHELL_SCHEMA_BASELINE\s*=\s*${current}|schema baseline \$\{baseline\}|schema baseline ${current}`,
+        "i",
+      ),
+    );
+    expect(content).toMatch(
+      new RegExp(String.raw`SHELL_SCHEMA_SEMVER\s*=\s*'${semver.replace(/\./g, "\\.")}'`),
     );
     expect(content).toContain(semver);
     if (hardRejectCeiling >= 1) {
       expect(content).toMatch(
-        new RegExp(String.raw`v1[–-]v${hardRejectCeiling}[^\r\n]*hard-rejected`, "i"),
+        new RegExp(
+          String.raw`v1[–-]v\$\{ceiling\}|v1[–-]v${hardRejectCeiling}[^\r\n]*hard-rejected`,
+        ),
       );
     } else {
       expect(content).toMatch(/must be reset|舊庫須重置|旧库须重置/i);
+    }
+  });
+
+  it("web boot unavailableHint states the current wipe-only baseline", () => {
+    const current = readCurrentSchemaVersion();
+    const semver = readSchemaSemver();
+    for (const locale of ["en", "zh-Hant", "zh-Hans"] as const) {
+      const localePath = path.resolve(
+        ROOT_DIR,
+        "web",
+        "src",
+        "i18n",
+        "locales",
+        locale,
+        "common.json",
+      );
+      const content = fs.readFileSync(localePath, "utf-8");
+      expect(content, localePath).toMatch(
+        new RegExp(String.raw`wipe-only stamp ${current}`),
+      );
+      expect(content, localePath).toContain(semver);
     }
   });
 });

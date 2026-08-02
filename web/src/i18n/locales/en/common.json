@@ -302,6 +302,8 @@
         "weekly": "Weekly",
         "custom_seconds": "Custom seconds"
       },
+      "unmappedOption": "Custom trigger RRULE",
+      "unmappedHelp": "This task uses a trigger RRULE that is not one of the presets below. Choosing a preset will replace it on save.",
       "weekday": {
         "0": "Sunday",
         "1": "Monday",
@@ -1092,7 +1094,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 5 / SemVer 0.1.0-beta.6 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 8 / SemVer 0.1.0-beta.9 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"
@@ -1355,7 +1357,7 @@
     "viewByWorkset": "Worksets",
     "groupingAria": "Task list grouping",
     "filterTitle": "Filter sources",
-    "filterHint": "Worksets first — use the chevron ▸ to expand member tasks.",
+    "filterHint": "Worksets first — use ▸ to expand member tasks. Trackable items and workset-owned events appear only when their workset is selected; task-only filters hide them.",
     "filterSearchPlaceholder": "Search…",
     "filterBrowseAria": "Browse sources by workset",
     "filterChildCount": "{count}",

@@ -15,12 +15,12 @@ describe("formatAnalysisMode", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
-  it('returns "關鍵事件" for "event"', () => {
-    expect(formatAnalysisMode("event")).toBe("關鍵事件");
+  it('returns employee name for "event"', () => {
+    expect(formatAnalysisMode("event")).toBe("關鍵事件分析員");
   });
 
-  it('returns "排行榜" for "leaderboard"', () => {
-    expect(formatAnalysisMode("leaderboard")).toBe("排行榜");
+  it('returns employee name for "leaderboard"', () => {
+    expect(formatAnalysisMode("leaderboard")).toBe("排行榜分析員");
   });
 
   it('returns "未知" for unrecognized values', () => {
@@ -33,7 +33,7 @@ describe("formatAnalysisMode", () => {
   it("switches to English under en locale", async () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
-    expect(formatAnalysisMode("event")).toBe("Key Events");
+    expect(formatAnalysisMode("event")).toBe("Key-event analyst");
     expect(formatAnalysisMode("unknown")).toBe("Unknown");
   });
 });

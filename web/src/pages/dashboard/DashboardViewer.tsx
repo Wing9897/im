@@ -36,6 +36,7 @@ import { useParams } from "react-router-dom";
 import { buildChannelNameById, useDetailSelection } from "../../components/detail";
 import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
 import { listItems } from "../../api/items";
+import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import {
   DashboardViewerDialogs,
   type DashboardWorksetNameDialogState,
@@ -107,26 +108,36 @@ export function DashboardViewer() {
   );
   useSlashFocusSearch(!loading);
 
-  // Soft-load item counts for workset cards (list aggregate; no stamp bump).
+  // Soft-load item counts for workset cards; refresh on item SSE (no stamp bump).
   useEffect(() => {
     if (groupingView !== "by_workset") return;
     let cancelled = false;
-    void listItems()
-      .then((rows) => {
-        if (cancelled) return;
-        const counts = new Map<string, number>();
-        for (const row of rows) {
-          if (row.status === "archived") continue;
-          const wid = row.worksetId || SYSTEM_WORKSET_ID;
-          counts.set(wid, (counts.get(wid) ?? 0) + 1);
-        }
-        setItemCountByWorkset(counts);
-      })
-      .catch(() => {
-        if (!cancelled) setItemCountByWorkset(new Map());
-      });
+    const reloadCounts = () => {
+      void listItems()
+        .then((rows) => {
+          if (cancelled) return;
+          const counts = new Map<string, number>();
+          for (const row of rows) {
+            if (row.status === "archived") continue;
+            const wid = row.worksetId || SYSTEM_WORKSET_ID;
+            counts.set(wid, (counts.get(wid) ?? 0) + 1);
+          }
+          setItemCountByWorkset(counts);
+        })
+        .catch(() => {
+          if (!cancelled) setItemCountByWorkset(new Map());
+        });
+    };
+    reloadCounts();
+    const unsubscribe = subscribeResourceModified((detail) => {
+      if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
+        return;
+      }
+      reloadCounts();
+    });
     return () => {
       cancelled = true;
+      unsubscribe();
     };
   }, [groupingView, worksets]);
 

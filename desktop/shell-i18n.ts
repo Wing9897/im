@@ -7,6 +7,15 @@ export type ShellLocale = 'zh-Hant' | 'zh-Hans' | 'en';
 
 export type ServerStatusKey = 'Running' | 'Stopped' | 'Error';
 
+/**
+ * Must match ``server/db/schema_inspect.py`` (drift-tested by architecture-invariants).
+ * Bump these when SCHEMA stamp / SemVer changes — do not hardcode elsewhere in this file.
+ */
+export const SHELL_SCHEMA_BASELINE = 8;
+export const SHELL_SCHEMA_SEMVER = '0.1.0-beta.9';
+/** Inclusive hard-reject ceiling = baseline - 1 when wipe-floor is current-only. */
+export const SHELL_SCHEMA_HARD_REJECT_CEILING = SHELL_SCHEMA_BASELINE - 1;
+
 export type ShellCopy = {
   showWindow: string;
   restartServer: string;
@@ -31,6 +40,37 @@ export type ShellCopy = {
 
 const PRODUCT_NAME = 'Intelligence Monitor';
 
+function schemaHardRejectHint(locale: ShellLocale): string {
+  const baseline = SHELL_SCHEMA_BASELINE;
+  const semver = SHELL_SCHEMA_SEMVER;
+  const ceiling = SHELL_SCHEMA_HARD_REJECT_CEILING;
+  if (locale === 'zh-Hans') {
+    return (
+      `本地数据库结构不兼容（schema baseline ${baseline}／schemaSemver ${semver}；` +
+      `v1–v${ceiling} hard-rejected，旧库须重置）。\n\n` +
+      '请先备份数据，再到设置 → 数据 重置，或运行：\n' +
+      'scripts/reset_local_databases.py --apply\n\n' +
+      '然后重新启动应用程序。'
+    );
+  }
+  if (locale === 'en') {
+    return (
+      `The local database schema is incompatible (schema baseline ${baseline} / schemaSemver ${semver}; ` +
+      `v1–v${ceiling} hard-rejected; older databases must be reset).\n\n` +
+      'Back up the data first, then reset with Settings → Data, or run:\n' +
+      'scripts/reset_local_databases.py --apply\n\n' +
+      'Then restart the app.'
+    );
+  }
+  return (
+    `本機資料庫結構不相容（schema baseline ${baseline}／schemaSemver ${semver}；` +
+    `v1–v${ceiling} hard-rejected，舊庫須重置）。\n\n` +
+    '請先備份資料，再到設定 → 資料 重置，或執行：\n' +
+    'scripts/reset_local_databases.py --apply\n\n' +
+    '然後重新啟動應用程式。'
+  );
+}
+
 const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
   'zh-Hant': {
     showWindow: '顯示視窗',
@@ -46,8 +86,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedTitle: '伺服器啟動失敗',
     serverStartFailedBody: (message) => `無法啟動內建伺服器：\n\n${message}`,
     incompatibleDatabaseTitle: '資料庫不相容',
-    schemaHardRejectHint:
-      '本機資料庫結構不相容（schema baseline 8／schemaSemver 0.1.0-beta.9；v1–v7 hard-rejected，舊庫須重置）。\n\n請先備份資料，再到設定 → 資料 重置，或執行：\nscripts/reset_local_databases.py --apply\n\n然後重新啟動應用程式。',
+    schemaHardRejectHint: schemaHardRejectHint('zh-Hant'),
     serverStartupTimeoutTitle: '伺服器啟動逾時',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `伺服器未能在 ${seconds} 秒內啟動。請檢查日誌以取得詳細資訊。\n\n${schemaHint}`,
@@ -69,8 +108,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedTitle: '服务器启动失败',
     serverStartFailedBody: (message) => `无法启动内置服务器：\n\n${message}`,
     incompatibleDatabaseTitle: '数据库不兼容',
-    schemaHardRejectHint:
-      '本地数据库结构不兼容（schema baseline 8／schemaSemver 0.1.0-beta.9；v1–v7 hard-rejected，旧库须重置）。\n\n请先备份数据，再到设置 → 数据 重置，或运行：\nscripts/reset_local_databases.py --apply\n\n然后重新启动应用程序。',
+    schemaHardRejectHint: schemaHardRejectHint('zh-Hans'),
     serverStartupTimeoutTitle: '服务器启动超时',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `服务器未能在 ${seconds} 秒内启动。请检查日志以获取详细信息。\n\n${schemaHint}`,
@@ -93,8 +131,7 @@ const SHELL_COPY: Record<ShellLocale, ShellCopy> = {
     serverStartFailedBody: (message) =>
       `Failed to start the bundled server:\n\n${message}`,
     incompatibleDatabaseTitle: 'Incompatible Database',
-    schemaHardRejectHint:
-      'The local database schema is incompatible (schema baseline 8 / schemaSemver 0.1.0-beta.9; v1–v7 hard-rejected; older databases must be reset).\n\nBack up the data first, then reset with Settings → Data, or run:\nscripts/reset_local_databases.py --apply\n\nThen restart the app.',
+    schemaHardRejectHint: schemaHardRejectHint('en'),
     serverStartupTimeoutTitle: 'Server Startup Timeout',
     serverStartupTimeoutBody: (seconds, schemaHint) =>
       `Server failed to start within ${seconds} seconds. Check logs for details.\n\n${schemaHint}`,

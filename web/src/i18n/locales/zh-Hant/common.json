@@ -302,6 +302,8 @@
         "weekly": "每週",
         "custom_seconds": "自訂秒數"
       },
+      "unmappedOption": "自訂觸發 RRULE",
+      "unmappedHelp": "此任務的觸發 RRULE 不在下方預設選項中。選擇預設排程後儲存會覆寫它。",
       "weekday": {
         "0": "星期日",
         "1": "星期一",
@@ -1092,7 +1094,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 5／SemVer 0.1.0-beta.6；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 8／SemVer 0.1.0-beta.9；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"
@@ -1355,7 +1357,7 @@
     "viewByWorkset": "工作集",
     "groupingAria": "任務列表分組",
     "filterTitle": "篩選來源",
-    "filterHint": "以工作集為主；點擊 ▸ 箭頭展開其下任務。",
+    "filterHint": "以工作集為主；點擊 ▸ 展開其下任務。物品與工作集自有事件需勾選工作集才會顯示；只選任務時會隱藏它們。",
     "filterSearchPlaceholder": "搜尋…",
     "filterBrowseAria": "按工作集瀏覽來源",
     "filterChildCount": "{count}",

@@ -53,7 +53,11 @@ class _QueuedTask:
 
 
 def schedule_trigger(schedule_type: str, schedule_value: str | None) -> IntervalTrigger | CronTrigger:
-    """Build an AI trigger from wire presets (maps to trigger-purpose RRULE).
+    """Deprecated test/helper: map legacy presets → trigger RRULE → APScheduler trigger.
+
+    Runtime registration uses :func:`schedule_trigger_from_rrule` only
+    (``analysis_tasks.schedule_rrule``). Keep this for property / dispatch tests that
+    still speak ``schedule_type`` / ``schedule_value``.
 
     Calendar RRULE and event metadata are recurring-only and intentionally are not inputs —
     trigger schedules never calendar-expand.
