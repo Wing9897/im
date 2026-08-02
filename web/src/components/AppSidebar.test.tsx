@@ -129,12 +129,22 @@ describe("AppSidebar", () => {
   it("renders visual nav group labels in zh-Hant", () => {
     renderSidebar();
     expect(container.textContent).toContain("管理");
-    expect(container.textContent).toContain("洞察");
+    expect(container.textContent).toContain("情報");
     expect(container.textContent).toContain("時間");
-    expect(container.textContent).toContain("助手");
+    expect(container.textContent).toContain("互動");
     expect(
       container.querySelectorAll("[data-testid='sidebar-nav-group']").length,
     ).toBeGreaterThanOrEqual(3);
+  });
+
+  it("renders visual nav group labels in en", async () => {
+    setAppLocale("en");
+    await i18n.changeLanguage("en");
+    renderSidebar();
+    expect(container.textContent).toContain("Management");
+    expect(container.textContent).toContain("Intelligence");
+    expect(container.textContent).toContain("Time");
+    expect(container.textContent).toContain("Interact");
   });
 
   it("renders all navigation labels in zh-Hant", () => {
