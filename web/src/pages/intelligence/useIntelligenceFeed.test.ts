@@ -392,6 +392,7 @@ describe("useIntelligenceFeed", () => {
 
     const options = mockUseRefreshOnAnalysisEvent.mock.calls.at(-1)?.[1] as {
       taskIds?: unknown;
+      analysisMode?: unknown;
     };
     expect(Array.isArray(options.taskIds)).toBe(true);
     expect(options.taskIds).toEqual(["t-a"]);
@@ -399,5 +400,28 @@ describe("useIntelligenceFeed", () => {
     expect(options.taskIds).not.toEqual(
       expect.objectContaining({ taskIds: expect.any(Array), worksetIds: expect.any(Array) }),
     );
+    expect(options.analysisMode).toEqual(["event", "web_intel"]);
+  });
+
+  it("scopes all-sources fetch to event/web_intel task ids (not null)", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "t-event", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
+    ]);
+    localStorage.removeItem(INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY);
+    mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+
+    await act(async () => {
+      root.render(createElement(Harness));
+      await flushPromises();
+    });
+
+    const fetchArgs = mockFetchEvents.mock.calls.at(-1)?.[0] as {
+      taskIds?: string[] | null;
+    };
+    expect(fetchArgs.taskIds).toEqual(expect.arrayContaining(["t-event", "t-web"]));
+    expect(fetchArgs.taskIds).toHaveLength(2);
+    expect(fetchArgs.taskIds).not.toEqual(expect.arrayContaining(["t-lb"]));
   });
 });

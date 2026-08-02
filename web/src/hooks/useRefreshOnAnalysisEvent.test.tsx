@@ -289,6 +289,26 @@ describe("shouldRefreshForEvent", () => {
     expect(shouldRefreshForEvent(matching, options)).toBe(true);
   });
 
+  it("accepts analysisMode as any-of list (event + web_intel)", () => {
+    const options: UseRefreshOnAnalysisEventOptions = {
+      includeCompleted: true,
+      analysisMode: ["event", "web_intel"],
+      taskId: null,
+    };
+    expect(shouldRefreshForEvent(completedEvent, options)).toBe(false);
+
+    const eventMode = {
+      ...completedEvent,
+      payload: { ...completedEvent.payload, analysisMode: "event" as const },
+    };
+    const webIntelMode = {
+      ...completedEvent,
+      payload: { ...completedEvent.payload, analysisMode: "web_intel" as const },
+    };
+    expect(shouldRefreshForEvent(eventMode, options)).toBe(true);
+    expect(shouldRefreshForEvent(webIntelMode, options)).toBe(true);
+  });
+
   it("returns false when all include flags are false; true when taskId matches", () => {
     const allOff = { includeStarted: false, includeCompleted: false, includeFailed: false };
     expect(shouldRefreshForEvent(startedEvent, allOff)).toBe(false);

@@ -218,7 +218,7 @@
         "searchQueryPlaceholder": "e.g. OpenAI API pricing update OR regulation",
         "searchQueryHint": "Each schedule tick runs a web search with this query; combine with the prompt above",
         "scheduleDefaultHint": "Default recommendation is hourly; switching to this type remaps every-10-seconds to hourly.",
-        "noChannelsHint": "This type uses web search as input — no local message channels required. It follows the assistant web-search provider settings."
+        "noChannelsHint": "This type uses web search as input — no local message channels required. It shares the assistant search-provider setting (not gated by the assistant master switch)."
       },
       "recurring": {
         "modeOptionLabel": "Recurring (no AI)",
@@ -653,8 +653,8 @@
       "description": "Event time spans"
     },
     "events": {
-      "title": "Key Events",
-      "description": "Latest key events"
+      "title": "Intelligence events",
+      "description": "Latest Key Events and Web Intel"
     },
     "feed": {
       "title": "Live Monitor",
@@ -966,8 +966,8 @@
       "empty": "No sources yet"
     },
     "events": {
-      "empty": "No key events yet",
-      "ariaPrefix": "Key events"
+      "empty": "No intelligence events yet",
+      "ariaPrefix": "Intelligence events"
     },
     "calendarWidget": {
       "monthAria": "Month calendar",

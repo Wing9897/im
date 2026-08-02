@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- **web_intel cross-surface:** Intelligence / Timeline / Board SSE refresh accepts `event` + `web_intel`; Intelligence “all sources” scopes API `taskIds` to finding modes; Timeline filter no longer treats `leaderboard` as analysis_events; web_intel ticks ignore the assistant web-search master switch (provider setting still shared); empty-state / settings copy clarified.
 - **Items on Timeline (no dual-track):** `GET /api/v1/calendar/items` includes `source=item` DATE projections (same `item_projection` as agent `query_window`); Timeline merge consumes that path instead of FE `listItems` re-projection. Floating all-day uses wall `T00:00:00` (not UTC-shifted `…Z`). Dismiss `source=item` maps correctly; SSE refreshes on `item` / `item_category`; sidebar deep-links to `/items?itemId=`.
 
 ## [1.0.0] - 2026-08-01

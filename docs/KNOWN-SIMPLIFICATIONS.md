@@ -18,7 +18,7 @@ Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats
 
 - Message blocks: `[id=...][time=...][sender] content`. `intelligence_rules_version` is a version marker in the system prompt; `analysis_strategy_mode` is evidence guidance (server default `balanced`).
 - **Event mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
-- **Web intel:** schedule tick uses `webSearchQuery` + `promptTemplate` (no local message claim); empty query/prompt completes a `skipped:` batch with SSE instead of a silent no-op.
+- **Web intel:** schedule tick uses `webSearchQuery` + `promptTemplate` (no local message claim); empty query/prompt completes a `skipped:` batch with SSE instead of a silent no-op. Search **provider** (auto/DDG/Brave) is shared with assistant settings; the assistant master switch (`assistant_web_search_enabled`) does **not** gate web_intel ticks.
 - CJK-aware token heuristic; no `truncated_by_count` in batch metadata.
 
 ## Leaderboard

@@ -10,6 +10,7 @@ import {
   fetchMergedTimelineEvents,
   paddedTimelineFetchWindow,
 } from "../../domain/timeline/timelineMergedFetch";
+import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";
 import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
@@ -223,7 +224,7 @@ export function useTimelineData({
     refreshEvents,
     {
       taskIds: pageActive && filterPlan.fetchAnalysis ? filterPlan.analysisTaskIds : [],
-      analysisMode: "event",
+      analysisMode: ANALYSIS_EVENTS_MODES,
     },
   );
 
