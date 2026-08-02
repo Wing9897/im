@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import {
+  llmHasNativeWebSearch,
   normalizeWebSearchProviderSetting,
   resolveAssistantWebSearchStatus,
   type WebSearchProviderSetting,
@@ -34,12 +35,17 @@ export function AssistantWebSearchPanel({
 }: AssistantWebSearchPanelProps) {
   const { t } = useTranslation("settings");
   const resolvedProvider = normalizeWebSearchProviderSetting(provider);
+  const nativeAvailable = llmHasNativeWebSearch(llmProvider, llmBaseUrl);
   const status = resolveAssistantWebSearchStatus({
     enabled,
     searchProvider: resolvedProvider,
     llmProvider,
     llmBaseUrl,
   });
+
+  // Auto is meaningful for official OpenAI/Gemini only. Keep the option visible when
+  // the saved value is still "auto" so the select is not blank (tool-path label).
+  const showAutoOption = nativeAvailable || resolvedProvider === "auto";
 
   const statusText = (() => {
     switch (status) {
@@ -54,7 +60,7 @@ export function AssistantWebSearchPanel({
       case "tool_duckduckgo":
         return t("webSearch.statusToolDuckDuckGo");
       case "auto_fallback_tool":
-        return t("webSearch.statusAutoFallback");
+        return t("webSearch.statusAutoTool");
       default:
         return "";
     }
@@ -77,7 +83,9 @@ export function AssistantWebSearchPanel({
           <SettingsRow
             label={t("webSearch.providerLabel")}
             htmlFor="web-search-provider"
-            help={t("webSearch.providerHelp")}
+            help={
+              nativeAvailable ? t("webSearch.providerHelpNative") : t("webSearch.providerHelpTool")
+            }
           >
             <SelectField
               id="web-search-provider"
@@ -87,7 +95,13 @@ export function AssistantWebSearchPanel({
                 onProviderChange(next);
               }}
             >
-              <option value="auto">{t("webSearch.providerAuto")}</option>
+              {showAutoOption ? (
+                <option value="auto">
+                  {nativeAvailable
+                    ? t("webSearch.providerAutoNative")
+                    : t("webSearch.providerAutoTool")}
+                </option>
+              ) : null}
               <option value="duckduckgo">{t("webSearch.providerDuckDuckGo")}</option>
               <option value="brave">{t("webSearch.providerBrave")}</option>
             </SelectField>
@@ -112,17 +126,11 @@ export function AssistantWebSearchPanel({
               />
             </SettingsRow>
           ) : null}
-
-          {resolvedProvider === "duckduckgo" ? (
-            <p className={`mb-0 ${formHelpClass}`}>{t("webSearch.duckDuckGoNote")}</p>
-          ) : null}
-
-          {resolvedProvider === "auto" && status === "auto_fallback_tool" ? (
-            <p className={`mb-0 ${formHelpClass}`}>{t("webSearch.autoFallbackNote")}</p>
-          ) : null}
         </>
       ) : (
-        <p className={`mb-0 ${formHelpClass}`}>{t("webSearch.statusDisabled")}</p>
+        <p className={`mb-0 ${formHelpClass}`} data-testid="web-search-status">
+          {t("webSearch.statusDisabled")}
+        </p>
       )}
     </FormStack>
   );
