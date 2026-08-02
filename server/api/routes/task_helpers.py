@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES, AnalysisMode
+from server.domain.schedule import ALLOWED_SCHEDULE_PRESETS, ScheduleValidationError, resolve_trigger_rrule
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row
 from server.queries.worksets_queries import workset_exists
@@ -26,10 +27,14 @@ from server.services.task_writes import TaskWriteError, validate_task_recurrence
 from server.wire.serializers import serialize_channel_ref, serialize_task
 
 ALLOWED_MODES = ALL_ANALYSIS_MODES
+#: Wire preset vocabulary; persisted as trigger-purpose ``schedule_rrule``.
 ALLOWED_SCHEDULE_TYPES = ("seconds_10", "hourly", "daily", "weekly", "custom_seconds")
+assert frozenset(ALLOWED_SCHEDULE_TYPES) == frozenset(ALLOWED_SCHEDULE_PRESETS)
 
 # Recurring calendar RRULE lives on PUT /tasks/{id}/schedule (not TaskConfigBody).
 # Recurring-only recurrence expanded at query time — never an AI analysis trigger.
+# AI trigger schedules use RRULE-shaped strings (purpose=trigger) for APScheduler
+# only and must never calendar-expand.
 
 
 class TaskConfigBody(BaseModel):
@@ -43,11 +48,18 @@ class TaskConfigBody(BaseModel):
     channelIds: Optional[list[Union[str, dict[str, Any]]]] = None
     scheduleType: Optional[str] = Field(
         default=None,
-        description="Interval/cron execution schedule for non-recurring AI analysis tasks",
+        description="FE preset for AI trigger schedule (maps to scheduleRrule)",
     )
     scheduleValue: Optional[str] = Field(
         default=None,
         description="Value interpreted only with the non-recurring AI analysis scheduleType",
+    )
+    scheduleRrule: Optional[str] = Field(
+        default=None,
+        description=(
+            "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). "
+            "Never calendar-expanded. Prefer this over scheduleType/scheduleValue when both are sent."
+        ),
     )
     includeInTimeline: Optional[bool] = None
     isActive: Optional[bool] = None
@@ -104,6 +116,16 @@ def validate_task_body(body: TaskConfigBody) -> None:
             f"Invalid scheduleType: {body.scheduleType}",
             error_code=VALIDATION_ERROR,
         )
+    if body.scheduleRrule is not None or body.scheduleType is not None:
+        try:
+            resolve_trigger_rrule(
+                analysis_mode=body.analysisMode,
+                schedule_type=body.scheduleType,
+                schedule_value=body.scheduleValue,
+                schedule_rrule=body.scheduleRrule,
+            )
+        except (ScheduleValidationError, ValueError, TypeError) as exc:
+            raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
     if body.analysisStrategyMode is not None and body.analysisStrategyMode not in ALLOWED_STRATEGY_MODES:
         raise http_error(
             422,

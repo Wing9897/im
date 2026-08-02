@@ -34,8 +34,8 @@ async def _seed_overlap_fixture(
     )
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) VALUES (?, ?, ?, ?, 'all', 1, 1, "
-        "'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, ?, 'all', 1, 1, "
+        "'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         (task_id, "Overlap Task", "prompt", analysis_mode, now, now),
     )
     await db.execute(
@@ -97,8 +97,8 @@ async def test_fetch_overlap_context_returns_empty_without_completed_batch(db: D
     task_id = new_id()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) VALUES (?, ?, ?, 'event', "
-        "'all', 1, 1, 'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, 'event', "
+        "'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         (task_id, "No Batch", "prompt", now, now),
     )
     task = await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))

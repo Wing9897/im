@@ -11,7 +11,7 @@
 
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — interval/cron 計時器（10 秒、每小時、每日、每週、自訂秒數）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
-- **時間規劃** — Timeline 合併分析事件、`recurring`（RRULE 僅查詢展開、不跑 AI）與用戶事件；可在對話框建立一次性／循環日程
+- **時間規劃** — Timeline 合併分析事件、循環任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
 - **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期／提醒日投影到日曆（`source=item`）；分類與物品可選 emoji（含 seed logo），歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案** — `project` 閉環多波消化來源積壓
@@ -276,15 +276,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v7**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.8`）——含可追蹤物品（`item_categories`／`items`，emoji／提醒日投影）。新安裝直接建 stamp-7 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v8**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.9`）——統一 AI 排程為 `schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-8 庫。
 
-**Wipe-only：** v1–v6 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v7 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v7 explicit reset](docs/ARCHITECTURE.md#schema-v7-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v8 explicit reset](docs/ARCHITECTURE.md#schema-v8-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 

@@ -11547,7 +11547,7 @@
               }
             ],
             "title": "Scheduletype",
-            "description": "Interval/cron execution schedule for non-recurring AI analysis tasks"
+            "description": "FE preset for AI trigger schedule (maps to scheduleRrule)"
           },
           "scheduleValue": {
             "anyOf": [
@@ -11560,6 +11560,18 @@
             ],
             "title": "Schedulevalue",
             "description": "Value interpreted only with the non-recurring AI analysis scheduleType"
+          },
+          "scheduleRrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedulerrule",
+            "description": "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Prefer this over scheduleType/scheduleValue when both are sent."
           },
           "includeInTimeline": {
             "anyOf": [
@@ -11740,6 +11752,17 @@
             ],
             "title": "Schedulevalue"
           },
+          "scheduleRrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedulerrule"
+          },
           "analysisMode": {
             "anyOf": [
               {
@@ -11853,6 +11876,17 @@
           "isActive": {
             "type": "boolean",
             "title": "Isactive"
+          },
+          "scheduleRrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedulerrule"
           },
           "scheduleType": {
             "anyOf": [

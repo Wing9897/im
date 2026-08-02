@@ -366,8 +366,8 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
     for task_id, is_active, rrule in fixtures:
         await app.state.db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, created_at, updated_at) "
-            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, ?)",
+            "version, is_active, schedule_rrule, created_at, updated_at) "
+            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, NULL, ?, ?)",
             (task_id, task_id, is_active, now, now),
         )
         await app.state.db.execute(
@@ -441,8 +441,8 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
     for task_id, name, is_active, rrule, start_time, end_time, location, description in fixtures:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, created_at, updated_at) "
-            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, 'seconds_10', ?, ?)",
+            "version, is_active, schedule_rrule, created_at, updated_at) "
+            "VALUES (?, ?, 'Analyze', 'recurring', 'all', 1, ?, NULL, ?, ?)",
             (
                 task_id,
                 name,

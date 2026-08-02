@@ -26,6 +26,12 @@ from server.domain.analysis_modes import (
     SCHEDULABLE_ANALYSIS_MODES,
     get_analysis_mode_spec,
 )
+from server.domain.schedule import (
+    ScheduleValidationError,
+    legacy_to_trigger_rrule,
+    may_register_trigger,
+    trigger_from_rrule,
+)
 from server.queries.batch_housekeeping import purge_all_superseded_version_data
 from server.queries.project_tick_queries import complete_project_batch
 from server.scheduler.batch import execute_batch
@@ -39,8 +45,6 @@ logger = logging.getLogger(__name__)
 
 _SHUTDOWN_GRACE_SECONDS = 30.0
 
-_DAY_MAP = {0: "sun", 1: "mon", 2: "tue", 3: "wed", 4: "thu", 5: "fri", 6: "sat"}
-
 
 @dataclass
 class _QueuedTask:
@@ -49,26 +53,29 @@ class _QueuedTask:
 
 
 def schedule_trigger(schedule_type: str, schedule_value: str | None) -> IntervalTrigger | CronTrigger:
-    """Build an AI-analysis interval/cron trigger solely from schedule fields.
+    """Build an AI trigger from wire presets (maps to trigger-purpose RRULE).
 
-    RRULE and event metadata are recurring-only and intentionally are not inputs.
+    Calendar RRULE and event metadata are recurring-only and intentionally are not inputs —
+    trigger schedules never calendar-expand.
     seconds_10 → every 10s; hourly → every hour; custom_seconds → every N s;
     daily → "HH:MM"; weekly → "D:HH:MM" with D=0(Sun)..6(Sat).
     """
-    if schedule_type == "seconds_10":
-        return IntervalTrigger(seconds=10)
-    if schedule_type == "hourly":
-        return IntervalTrigger(hours=1)
-    if schedule_type == "custom_seconds":
-        seconds = max(1, int(schedule_value or "60"))
-        return IntervalTrigger(seconds=seconds)
-    if schedule_type == "daily":
-        hour, minute = (schedule_value or "00:00").split(":")[:2]
-        return CronTrigger(hour=int(hour), minute=int(minute))
-    if schedule_type == "weekly":
-        day, hour, minute = (schedule_value or "0:00:00").split(":")[:3]
-        return CronTrigger(day_of_week=_DAY_MAP[int(day)], hour=int(hour), minute=int(minute))
-    raise ValueError(f"Unknown schedule_type: {schedule_type}")
+    try:
+        return trigger_from_rrule(legacy_to_trigger_rrule(schedule_type, schedule_value))
+    except ScheduleValidationError as exc:
+        raise ValueError(str(exc)) from exc
+
+
+def schedule_trigger_from_rrule(schedule_rrule: str) -> IntervalTrigger | CronTrigger:
+    """Build an AI-analysis trigger solely from ``analysis_tasks.schedule_rrule``.
+
+    Calendar RRULE / event metadata are recurring-only and intentionally are not inputs.
+    SECONDLY trigger RRULEs must never enter calendar expand.
+    """
+    try:
+        return trigger_from_rrule(schedule_rrule)
+    except ScheduleValidationError as exc:
+        raise ValueError(str(exc)) from exc
 
 
 class SchedulerManager:
@@ -213,19 +220,19 @@ class SchedulerManager:
         if self._scheduler.get_job(task_id):
             self._scheduler.remove_job(task_id)
         task = await self._db.fetch_one(
-            "SELECT id, is_active, analysis_mode, schedule_type, schedule_value FROM analysis_tasks WHERE id = ?",
+            "SELECT id, is_active, analysis_mode, schedule_rrule FROM analysis_tasks WHERE id = ?",
             (task_id,),
         )
         if task is None or not task["is_active"]:
             return
-        if task["analysis_mode"] not in SCHEDULABLE_ANALYSIS_MODES:
+        if not may_register_trigger(task["analysis_mode"]):
             return
-        schedule_type = task.get("schedule_type")
-        if not schedule_type:
+        schedule_rrule = task.get("schedule_rrule")
+        if not schedule_rrule:
             return
         try:
-            trigger = schedule_trigger(schedule_type, task.get("schedule_value"))
-        except (ValueError, KeyError) as exc:
+            trigger = schedule_trigger_from_rrule(str(schedule_rrule))
+        except (ValueError, KeyError, ScheduleValidationError) as exc:
             logger.error("Invalid schedule for task %s: %s", task_id, exc)
             return
         self._scheduler.add_job(
@@ -235,7 +242,7 @@ class SchedulerManager:
             args=[task_id],
             replace_existing=True,
         )
-        logger.info("Registered timer for task %s (%s)", task_id, schedule_type)
+        logger.info("Registered timer for task %s (%s)", task_id, schedule_rrule)
 
     async def unregister_task(self, task_id: str) -> None:
         if self._scheduler.get_job(task_id):

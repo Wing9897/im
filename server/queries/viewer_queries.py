@@ -49,7 +49,7 @@ async def fetch_viewer_stats(db: Database) -> dict[str, Any]:
 
 async def fetch_viewer_tasks(db: Database) -> list[dict[str, Any]]:
     rows = await db.fetch_all(
-        "SELECT t.id, t.name, t.is_active, t.schedule_type, t.schedule_value, "
+        "SELECT t.id, t.name, t.is_active, t.schedule_rrule, "
         "(SELECT MAX(b.completed_at) FROM analysis_batches b "
         " WHERE b.task_id = t.id AND b.status = 'completed' AND b.version = t.version) AS last_analysis_at "
         "FROM analysis_tasks t ORDER BY t.created_at ASC"
@@ -63,8 +63,7 @@ async def fetch_viewer_tasks(db: Database) -> list[dict[str, Any]]:
         }
         if row.get("last_analysis_at"):
             entry["lastAnalysisAt"] = row["last_analysis_at"]
-        if row.get("schedule_type"):
-            value = row.get("schedule_value")
-            entry["cronExpression"] = f"{row['schedule_type']}:{value}" if value else str(row["schedule_type"])
+        if row.get("schedule_rrule"):
+            entry["cronExpression"] = str(row["schedule_rrule"])
         result.append(entry)
     return result

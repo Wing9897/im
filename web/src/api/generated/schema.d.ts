@@ -3667,7 +3667,7 @@ export interface components {
             })[] | null;
             /**
              * Scheduletype
-             * @description Interval/cron execution schedule for non-recurring AI analysis tasks
+             * @description FE preset for AI trigger schedule (maps to scheduleRrule)
              */
             scheduleType?: string | null;
             /**
@@ -3675,6 +3675,11 @@ export interface components {
              * @description Value interpreted only with the non-recurring AI analysis scheduleType
              */
             scheduleValue?: string | null;
+            /**
+             * Schedulerrule
+             * @description Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Prefer this over scheduleType/scheduleValue when both are sent.
+             */
+            scheduleRrule?: string | null;
             /** Includeintimeline */
             includeInTimeline?: boolean | null;
             /** Isactive */
@@ -3717,6 +3722,8 @@ export interface components {
             scheduleType?: string | null;
             /** Schedulevalue */
             scheduleValue?: string | null;
+            /** Schedulerrule */
+            scheduleRrule?: string | null;
             /** Analysismode */
             analysisMode?: ("leaderboard" | "event" | "recurring" | "project") | null;
             /** Analysistimerange */
@@ -3752,6 +3759,8 @@ export interface components {
             version: number;
             /** Isactive */
             isActive: boolean;
+            /** Schedulerrule */
+            scheduleRrule?: string | null;
             /** Scheduletype */
             scheduleType?: string | null;
             /** Schedulevalue */

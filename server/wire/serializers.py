@@ -9,8 +9,22 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from server.action_config import masked_action_configuration
+from server.domain.schedule import trigger_rrule_to_legacy
 from server.util import parse_json_dict, parse_json_list
 from server.worksets_const import SYSTEM_WORKSET_ID
+
+
+def _serialize_task_schedule_fields(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Emit canonical ``scheduleRrule`` plus FE preset mirrors when mappable."""
+    schedule_rrule = row.get("schedule_rrule")
+    schedule_type, schedule_value = trigger_rrule_to_legacy(
+        None if schedule_rrule is None else str(schedule_rrule)
+    )
+    return {
+        "scheduleRrule": schedule_rrule,
+        "scheduleType": schedule_type,
+        "scheduleValue": schedule_value,
+    }
 
 
 def _message_media_from_raw(raw_data: Any) -> dict[str, Any] | None:
@@ -105,8 +119,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "analysisTimeRange": row.get("analysis_time_range") or "all",
         "version": int(row.get("version") or 1),
         "isActive": bool(row.get("is_active")),
-        "scheduleType": row.get("schedule_type"),
-        "scheduleValue": row.get("schedule_value"),
+        **_serialize_task_schedule_fields(row),
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
         "parentTaskId": row.get("parent_task_id") or None,
         "worksetId": row.get("workset_id") or None,

@@ -240,8 +240,8 @@ async def _upsert_recurring_task(
         await conn.execute(
             "INSERT INTO analysis_tasks "
             "(id, name, description, prompt_template, analysis_mode, analysis_time_range, version, "
-            "is_active, schedule_type, schedule_value, include_in_timeline, workset_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, '', 'recurring', 'all', 1, 1, 'seconds_10', NULL, 1, NULL, ?, ?)",
+            "is_active, schedule_rrule, include_in_timeline, workset_id, created_at, updated_at) "
+            "VALUES (?, ?, ?, '', 'recurring', 'all', 1, 1, NULL, 1, NULL, ?, ?)",
             (
                 task_id,
                 event.title,

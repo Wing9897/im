@@ -48,16 +48,15 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
 
     db = app.state.db
     bad_schedules = (
-        ("invalid-daily-schedule", "daily", "not-a-time"),
-        ("invalid-weekly-schedule", "weekly", "7:12:00"),
+        ("invalid-daily-schedule", "INVALID;broken=daily"),
+        ("invalid-weekly-schedule", "FREQ=WEEKLY;BYDAY=XX"),
     )
-    for task_id, schedule_type, schedule_value in bad_schedules:
+    for task_id, schedule_rrule in bad_schedules:
         await insert_legacy_analysis_task(
             db,
             task_id,
             analysis_mode="leaderboard",
-            schedule_type=schedule_type,
-            schedule_value=schedule_value,
+            schedule_rrule=schedule_rrule,
             rrule=None,
         )
 
@@ -67,7 +66,7 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
 
     registered_ids = {job.id for job in manager._scheduler.get_jobs()}
     assert {seed.TASK_LEADERBOARD, seed.TASK_EVENT, seed.TASK_EVENT_TIMED} <= registered_ids
-    assert registered_ids.isdisjoint({task_id for task_id, _, _ in bad_schedules})
+    assert registered_ids.isdisjoint({task_id for task_id, _ in bad_schedules})
     assert "Invalid schedule for task invalid-daily-schedule" in caplog.text
     assert "Invalid schedule for task invalid-weekly-schedule" in caplog.text
 
@@ -85,7 +84,7 @@ async def test_re_registration_replaces_the_existing_task_job(app):
     assert original.trigger.interval.total_seconds() == 10
 
     await app.state.db.execute(
-        "UPDATE analysis_tasks SET schedule_type = 'hourly', schedule_value = NULL WHERE id = ?",
+        "UPDATE analysis_tasks SET schedule_rrule = 'FREQ=HOURLY' WHERE id = ?",
         (seed.TASK_LEADERBOARD,),
     )
     await manager.register_task(seed.TASK_LEADERBOARD)
