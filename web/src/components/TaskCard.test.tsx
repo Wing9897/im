@@ -121,22 +121,22 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("閒置");
   });
 
-  it("shows 循環任務 badge for recurring mode tasks", () => {
+  it("shows schedule clerk badge for recurring mode tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "recurring" }) });
 
-    expect(container.textContent).toContain("循環任務");
+    expect(container.textContent).toContain("循環日程員工");
   });
 
-  it("does not show 循環任務 badge for non-recurring mode tasks", () => {
+  it("does not show schedule clerk badge for non-recurring mode tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "event" }) });
 
     const allText = container.textContent ?? "";
-    expect(allText).not.toContain("循環任務");
+    expect(allText).not.toContain("循環日程員工");
   });
 
-  it("shows the analysis mode badge for every mode", () => {
+  it("shows the employee badge for every mode", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
-    expect(container.textContent).toContain("排行榜");
+    expect(container.textContent).toContain("排行榜分析員");
   });
 
   it("shows the matching AI staff avatar for analysis modes", () => {
@@ -149,9 +149,9 @@ describe("TaskCard", () => {
     expect(container.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
   });
 
-  it("omits AI staff avatar for calendar tasks", () => {
+  it("shows schedule clerk avatar for calendar tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "recurring" }) });
-    expect(container.querySelector('[data-testid^="ai-staff-avatar-"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-employee-avatar-scheduleClerk"]')).not.toBeNull();
   });
 
   it("shows the workset name when the task has a worksetId", () => {

@@ -114,8 +114,7 @@
       "createTask": "建立任務",
       "requiredAria": "必填欄位",
       "settingsTitle": "任務設定",
-      "optionalAria": "選填設定",
-      "optionalTitle": "選填設定",
+      "optionalAria": "進階技能",
       "channelsLoadError": "無法載入頻道列表",
       "scheduleHydrating": "正在載入循環排程…",
       "scheduleHydrateFailed": "無法載入循環排程：{message}",
@@ -140,7 +139,17 @@
       "evidenceStyleHelp": "留空則跟隨全域證據風格。",
       "nameLabel": "任務名稱",
       "namePlaceholder": "輸入任務名稱",
-      "modeLabel": "分析模式",
+      "foundationTitle": "循環事件",
+      "foundationHint": "任務建立在可重複／可觸發的時間排程之上；先選負責的員工，再配置其技能。",
+      "staffLabel": "員工",
+      "staffGroup": {
+        "noAi": "無處理",
+        "ai": "AI 員工"
+      },
+      "skillsTitle": "技能／能力",
+      "skillsAria": "員工技能",
+      "skillsHint": "依所選員工顯示可配置的能力（排程、Prompt、來源頻道等）。",
+      "optionalTitle": "進階技能",
       "descriptionLabel": "描述",
       "descriptionPlaceholder": "任務描述（選填）",
       "promptLabel": "Prompt 模板",
@@ -152,11 +161,17 @@
       "channelsPreview": "已選頻道預覽",
       "channelsMore": "還有 {count} 個頻道…"
     },
+    "employees": {
+      "scheduleClerk": {
+        "name": "循環日程員工",
+        "blurb": "RRULE 週期日程，無 AI 處理"
+      }
+    },
     "modes": {
       "leaderboard": {
         "displayLabel": "排行榜",
         "modeOptionLabel": "排行榜 - 比較排名",
-        "modeDescription": "💡 排行榜會顯示最相關的前 N 條訊息，適合追蹤熱門話題",
+        "modeDescription": "比較與追蹤熱門訊息排名",
         "promptLabel": "任務 Task Prompt（告訴 AI 要比較什麼）",
         "promptPlaceholder": "例：新產品發布、政策變化、合作進展、風險信號",
         "promptHint": "💡 例如：只在內容明確提及官方公告、產品更新、合作進展或風險信號時命中"
@@ -164,23 +179,23 @@
       "event": {
         "displayLabel": "關鍵事件",
         "modeOptionLabel": "關鍵事件 - 情報 / 行程",
-        "modeDescription": "💡 一條事件可同時帶時間與地點；有座標顯示在地圖，有時間顯示在時間線，缺欄位則只出現在對應視圖",
+        "modeDescription": "從訊息抽取關鍵事件與行程",
         "promptLabel": "任務 Task Prompt（告訴 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、會議、截止日；有明確時間填 start_time，有地點填 location",
         "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
       },
       "recurring": {
-        "displayLabel": "循環任務",
-        "modeOptionLabel": "循環任務 - 週期性活動",
-        "modeDescription": "💡 循環任務用於管理週期性活動，使用 RRULE 定義重複規則，不涉及 AI 分析",
+        "displayLabel": "循環日程",
+        "modeOptionLabel": "循環任務（無處理）",
+        "modeDescription": "RRULE 週期日程，無 AI 處理",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "displayLabel": "專案管理",
-        "modeOptionLabel": "專案管理 - 閉環日程助手",
-        "modeDescription": "按小時排程驅動多輪 Agent：讀來源與現有日程，以工具建立／修改／軟刪本專案單次事件與子循環任務（非一次性 JSON 批次）",
+        "displayLabel": "專案",
+        "modeOptionLabel": "專案 - 閉環日程助手",
+        "modeDescription": "閉環 reconcile 專案日程與子任務",
         "promptLabel": "專案目標／規則",
         "promptPlaceholder": "例如：依 Telegram 更新站會與 demo 日期；偏好上午時段；已取消的系列請軟刪",
         "promptHint": "請綁定來源頻道，建議 hourly 排程；即使本小時無新訊息也會跑 reconcile"
@@ -266,13 +281,13 @@
       "loading": "正在載入模板...",
       "empty": "目前沒有可用的模板",
       "noMatch": "沒有符合目前篩選條件的模板",
-      "noMatchHint": "可改用其他分析模式或清空搜尋字詞",
+      "noMatchHint": "可改用其他任務類型或清空搜尋字詞",
       "commonTitle": "常用模板",
-      "sortedWithMode": "依最近使用、使用次數與目前分析模式排序，優先顯示 {mode}",
-      "pinnedMode": "已按目前分析模式優先置頂 {mode}",
-      "viewMode": "查看 {mode} 模式的模板",
+      "sortedWithMode": "依最近使用、使用次數與目前任務類型排序，優先顯示 {mode}",
+      "pinnedMode": "已按目前任務類型優先置頂 {mode}",
+      "viewMode": "查看 {mode} 類型的模板",
       "apply": "套用選定模板",
-      "suitable": "適合目前分析模式"
+      "suitable": "適合目前任務類型"
     },
     "schedule": {
       "typeLabel": "排程類型",

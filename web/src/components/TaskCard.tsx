@@ -1,14 +1,16 @@
 import React, { useCallback, useState } from "react";
-import { CalendarDays, Pencil, PowerOff, Trash2 } from "lucide-react";
+import { Pencil, PowerOff, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { ToggleSwitch } from "./ToggleSwitch";
 import { AccentBarCard, Badge } from "./ui";
 import { cardTitleClass } from "./ui/pageTypography";
-import { getTaskFormAnalysisModeMeta } from "./task/taskFormAnalysisModeMeta";
+import {
+  getTaskEmployeeDisplayName,
+  getTaskEmployeeIdForMode,
+} from "./task/taskFormAnalysisModeMeta";
 import { MODE_ACCENT_CLASS, MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
-import { AiStaffAvatar } from "./aiStaff/AiStaffAvatar";
-import { staffIdForAnalysisMode } from "../domain/aiStaff/aiStaff";
+import { TaskEmployeeAvatar } from "./task/TaskEmployeeAvatar";
 import { useWorksetNameById } from "../context/TaskCatalogContext";
 import {
   SelectableSurface,
@@ -48,8 +50,8 @@ export const TaskCard = React.memo(function TaskCard({
   const isRecurringMode = task.analysisMode === "recurring";
   const isProjectMode = task.analysisMode === "project";
   const hideAnalysisStats = isProjectMode || isRecurringMode;
-  const modeMeta = getTaskFormAnalysisModeMeta(task.analysisMode);
-  const staffId = staffIdForAnalysisMode(task.analysisMode);
+  const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
+  const employeeName = getTaskEmployeeDisplayName(employeeId);
   const queuedMessageCount = stats.queuedMessageCount;
   const worksetName =
     task.worksetId != null ? worksetNameById.get(task.worksetId) ?? null : null;
@@ -103,9 +105,7 @@ export const TaskCard = React.memo(function TaskCard({
       >
         <div className="flex items-start justify-between gap-sm">
           <div className="flex min-w-0 flex-1 items-center gap-sm">
-            {staffId ? (
-              <AiStaffAvatar staffId={staffId} size="xs" label={modeMeta.displayLabel} />
-            ) : null}
+            <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
             <span
               className={`min-w-0 flex-1 truncate ${cardTitleClass}`}
               title={task.name}
@@ -113,10 +113,7 @@ export const TaskCard = React.memo(function TaskCard({
               {task.name}
             </span>
           </div>
-          <Badge tone={MODE_BADGE_TONE[task.analysisMode]}>
-            {isRecurringMode && <CalendarDays size={11} aria-hidden="true" />}
-            {modeMeta.displayLabel}
-          </Badge>
+          <Badge tone={MODE_BADGE_TONE[task.analysisMode]}>{employeeName}</Badge>
         </div>
 
         <div className="text-[11px] text-text-muted">

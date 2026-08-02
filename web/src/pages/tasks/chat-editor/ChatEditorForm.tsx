@@ -1,5 +1,5 @@
 /**
- * Task form for create/edit — two-column on md+; tall fields span full width.
+ * Task form for create/edit — L1 foundation + L2 employee + L3 skills.
  */
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -71,7 +71,23 @@ export function ChatEditorForm({
             }}
             onWorksetIdChange={(v) => updateField("worksetId", v)}
           />
+        </FormGrid>
+      </SurfaceCard>
 
+      <SurfaceCard
+        material="glass"
+        density="compact"
+        className="shrink-0"
+        aria-label={t("tasks.editor.skillsAria")}
+        role="region"
+        data-testid="task-skills-section"
+      >
+        <h2 className="mb-xs mt-0 text-xs font-semibold tracking-wide text-text-secondary">
+          {t("tasks.editor.skillsTitle")}
+        </h2>
+        <p className={`mb-sm mt-0 ${formHelpClass}`}>{t("tasks.editor.skillsHint")}</p>
+
+        <FormGrid className="gap-lg">
           {isRecurringMode ? (
             <div className="md:col-span-2">
               <ChatCalendarFields formState={formState} updateField={updateField} />
