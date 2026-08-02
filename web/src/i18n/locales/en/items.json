@@ -6,6 +6,7 @@
   "allCategories": "All types",
   "backToCategories": "Back to types",
   "openCategoryAria": "Open type {name}",
+  "openItemAria": "Open item {name}",
   "categoryItemCount": "{count} items",
   "categoryExpiringCount": "{count} soon",
   "categoryOverdueCount": "{count} overdue",

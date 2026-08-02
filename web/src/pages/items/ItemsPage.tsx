@@ -6,7 +6,6 @@ import { EmptyState } from "../../components/common/EmptyState";
 import {
   AlertBanner,
   AppPageShell,
-  Badge,
   Button,
   CardGrid,
   FilterChip,
@@ -15,7 +14,6 @@ import {
   TextField,
   captionClass,
   pageTitleClass,
-  type BadgeTone,
 } from "../../components/ui";
 import {
   createItem,
@@ -39,7 +37,6 @@ import {
 } from "../../domain/items/categoryAggregates";
 import {
   daysUntil,
-  expiryTone,
   itemsEmptyKind,
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
@@ -49,22 +46,9 @@ import { formatItemsError } from "../../domain/items/itemErrors";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { CategoryManageDialog } from "./CategoryManageDialog";
 import { ItemsCategoryCard } from "./ItemsCategoryCard";
+import { ItemsEntryCard } from "./ItemsEntryCard";
 
 type FilterKey = "all" | "expiring" | "overdue" | "archived";
-
-function toneBadge(tone: ReturnType<typeof expiryTone>): BadgeTone {
-  if (tone === "overdue") return "danger";
-  if (tone === "soon") return "warning";
-  if (tone === "ok") return "success";
-  return "neutral";
-}
-
-function toneBorderClass(tone: ReturnType<typeof expiryTone>): string {
-  if (tone === "overdue") return "border-l-error";
-  if (tone === "soon") return "border-l-warning";
-  if (tone === "ok") return "border-l-success";
-  return "border-l-surface-border";
-}
 
 export function ItemsPage() {
   const { t } = useTranslation("items");
@@ -461,7 +445,7 @@ export function ItemsPage() {
             />
           ) : null}
 
-          <div className="flex flex-col gap-md">
+          <div className="flex flex-col gap-md" data-testid="items-entry-sections">
             {grouped.map(({ worksetId, rows }) => (
               <PanelSection
                 key={worksetId}
@@ -469,83 +453,48 @@ export function ItemsPage() {
                 showCount
                 itemCount={rows.length}
               >
-                <ul className="m-0 flex list-none flex-col gap-sm p-0">
+                <CardGrid data-testid={`items-entry-grid-${worksetId}`}>
                   {rows.map((item) => {
-                    const days = daysUntil(item.expiresAt);
-                    const tone = expiryTone(days, item.remindBeforeDays);
                     const cat = item.categoryId
                       ? categoryById.get(item.categoryId)
                       : undefined;
-                    const emoji = resolveItemEmoji(item, cat);
                     return (
-                      <li
+                      <ItemsEntryCard
                         key={item.id}
-                        className={[
-                          "flex flex-wrap items-center justify-between gap-sm rounded-lg border border-surface-border/70 border-l-[3px] bg-[color-mix(in_srgb,var(--surface-card)_40%,transparent)] px-sm py-xs",
-                          toneBorderClass(tone),
-                        ].join(" ")}
-                      >
-                        <button
-                          type="button"
-                          className="min-w-0 flex-1 border-none bg-transparent p-0 text-left"
-                          onClick={() => setEditing(item)}
-                        >
-                          <div className="truncate text-body font-medium text-text-primary">
-                            <span className="mr-xs" aria-hidden>
-                              {emoji}
-                            </span>
-                            {item.title}
-                          </div>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-xs">
-                            <Badge
-                              tone="neutral"
-                              className="normal-case tracking-normal"
+                        item={item}
+                        emoji={resolveItemEmoji(item, cat)}
+                        categoryLabel={categoryLabel(cat, t)}
+                        onOpen={() => setEditing(item)}
+                        actions={
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                void updateItem(item.id, {
+                                  status:
+                                    item.status === "archived" ? "active" : "archived",
+                                }).then(reload)
+                              }
                             >
-                              {categoryLabel(cat, t)}
-                            </Badge>
-                            <span className={captionClass}>
-                              {item.expiresAt ? item.expiresAt : t("noExpiry")}
-                            </span>
-                            {days != null ? (
-                              <Badge
-                                tone={toneBadge(tone)}
-                                className="normal-case tracking-normal"
-                              >
-                                {days < 0
-                                  ? t("daysOverdue", { count: Math.abs(days) })
-                                  : t("daysLeft", { count: days })}
-                              </Badge>
-                            ) : null}
-                          </div>
-                        </button>
-                        <div className="flex shrink-0 gap-xs">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              void updateItem(item.id, {
-                                status:
-                                  item.status === "archived" ? "active" : "archived",
-                              }).then(reload)
-                            }
-                          >
-                            {item.status === "archived" ? t("unarchive") : t("archive")}
-                          </Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => {
-                              if (!window.confirm(t("deleteItemConfirm"))) return;
-                              void deleteItem(item.id).then(reload);
-                            }}
-                          >
-                            {t("deleteItem")}
-                          </Button>
-                        </div>
-                      </li>
+                              {item.status === "archived" ? t("unarchive") : t("archive")}
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => {
+                                if (!window.confirm(t("deleteItemConfirm"))) return;
+                                void deleteItem(item.id).then(reload);
+                              }}
+                            >
+                              {t("deleteItem")}
+                            </Button>
+                          </>
+                        }
+                      />
                     );
                   })}
-                </ul>
+                </CardGrid>
               </PanelSection>
             ))}
           </div>
