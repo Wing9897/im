@@ -40,6 +40,8 @@ export interface TaskFormState
   extends Omit<BaseTaskFormFields, "taskName" | "taskDescription"> {
   name: string;
   description: string;
+  /** Search query / keywords for ``web_intel`` (empty for other modes). */
+  webSearchQuery: string;
   scheduleType: ScheduleType;
   scheduleValue: string | null;
   /**

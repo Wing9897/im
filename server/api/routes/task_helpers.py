@@ -43,6 +43,8 @@ class TaskConfigBody(BaseModel):
     name: str
     description: Optional[str] = None
     promptTemplate: str = ""
+    #: Search query / keywords for ``analysisMode=web_intel`` (ignored otherwise).
+    webSearchQuery: Optional[str] = None
     analysisMode: Optional[AnalysisMode] = None
     analysisTimeRange: Optional[str] = None
     channelIds: Optional[list[Union[str, dict[str, Any]]]] = None

@@ -68,14 +68,14 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 **In → Task → Out**
 
 1. **In:** Collectors write `messages` for accounts/channels (signal plane).
-2. **Task:** Scheduler runs AI for `leaderboard` / `event` via `execute_batch`, and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time.
+2. **Task:** Scheduler runs AI for `leaderboard` / `event` via `execute_batch`, `web_intel` via `web_intel_tick` (scheduled web search → JSON events), and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time.
 3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; `project` writes owned `user_events` + child `recurring` only (no analysis_events).
 
 **Task-scoped UI vs exceptions**
 
 | Surface | Scoped by |
 |---------|-----------|
-| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`event` / `recurring` / `project`); builtin workset `__user__` for「一般」 |
+| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`event` / `web_intel` / `recurring` / `project`); builtin workset `__user__` for「一般」 |
 | Voice reminder filter | ui-prefs `sourceFilter: { taskIds, worksetIds } \| null` (not a lone `taskId` / `__user__` sentinel) |
 | Monitor / Sources | Signal plane (accounts/channels), not analysis tasks |
 | Manual / assistant / A2A calendar items | `user_events`: ownership via `workset_id` (builtin `__user__`); optional `task_id` provenance only |
@@ -95,7 +95,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `api/routes/task_preset_data.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — generated from [`shared/task_presets.json`](../shared/task_presets.json) via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v8** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/migrations.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v9** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/migrations.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories (re-exported from `migrations` for callers/tests) |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -288,7 +288,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-8 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-9 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
 | `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
@@ -371,7 +371,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/migrations.py`.
 
-**Current stamp is 8.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-8 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 9.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-9 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -379,18 +379,19 @@ Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **8** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.9`) |
+| **9** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.10`) |
+| **8** (prior) | Hard-reject → reset |
 | **7** (prior) | Hard-reject → reset |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other non-empty schema** | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 8. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 9. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 8 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 9 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v8 explicit reset
+#### Schema v9 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -398,7 +399,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v8-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v9-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -411,9 +412,9 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v8 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v9 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 8** unifies AI timer storage onto `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Trackable items (categories, emoji marks, remind projections) are part of the current stamp-8 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
+**Stamp 9** unifies AI timer storage onto `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Trackable items (categories, emoji marks, remind projections) are part of the current stamp-9 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 
@@ -431,18 +432,18 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 
 ### Schema support matrix
 
-Stamp-8 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-9 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v8 DDL, validate its full fingerprint, then stamp 8 | Schema creation and v8 stamp |
-| Unstamped current, version 0 | Require the exact v8 fingerprint and stamp 8 | Stamp only |
-| Current, version 8 | Validate the exact v8 fingerprint on every startup | None |
+| Empty, version 0 | Create v9 DDL, validate its full fingerprint, then stamp 9 | Schema creation and v9 stamp |
+| Unstamped current, version 0 | Require the exact v9 fingerprint and stamp 9 | Stamp only |
+| Current, version 9 | Validate the exact v9 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
 | Incomplete/lookalike version 0 or 8 | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 8. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 9. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -472,7 +473,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
-| `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `event` / `leaderboard` / `project` |
+| `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `event` / `leaderboard` / `project` / `web_intel` |
 | `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/items`, Timeline／Board) | `recurring` only |
 
 - Wire FE presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE at the API boundary (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). Responses may still emit `scheduleType` / `scheduleValue` as read-compat mirrors when mappable.
@@ -601,7 +602,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_contract_user_events.py` | user-events CRUD |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. `test_schema_wipe_floor.py` and `test_db_schema.py` cover stamp-8 creation, exact fingerprint validation, non-current rejection, no mutation, and explicit reset guidance.
+Fake migration-chain suites were removed. `test_schema_wipe_floor.py` and `test_db_schema.py` cover stamp-9 creation, exact fingerprint validation, non-current rejection, no mutation, and explicit reset guidance.
 
 **Removed endpoints** (404/405 guard): `server/tests/test_dead_endpoints.py` — see [Removed endpoints](#removed-endpoints).
 
@@ -667,7 +668,7 @@ Canonical calendar surface: `GET /api/v1/calendar/items`, `POST /api/v1/calendar
 
 ### Startup readiness (perf note)
 
-Repeatable ASGI fresh-db readiness (`scripts/measure_startup_baseline.py`, collector/scheduler/static disabled): median ~247 ms after empty-account collector deferral on stamp 8 (earlier same harness ~433 ms median). Not a CI gate.
+Repeatable ASGI fresh-db readiness (`scripts/measure_startup_baseline.py`, collector/scheduler/static disabled): median ~247 ms after empty-account collector deferral on stamp 9 (earlier same harness ~433 ms median). Not a CI gate.
 
 ## Agent / assistant
 

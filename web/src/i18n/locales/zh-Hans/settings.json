@@ -455,6 +455,15 @@
         "不会跟你聊天；由排程或手动执行任务触发"
       ]
     },
+    "webIntel": {
+      "summary": "后勤：排程网页搜索并写入情报事件（与关键事件同一 analysis_events）。",
+      "capabilities": [
+        "按任务排程执行短管线 search to JSON（默认 hourly）",
+        "沿用助手联网搜索路由（OpenAI/Gemini 原生或 DDG/Brave 工具）",
+        "任务 Prompt 描述如何把搜索结果抽成事件",
+        "不会与你聊天；结果出现在情报／时间规划页"
+      ]
+    },
     "projectManager": {
       "summary": "后勤闭环 Agent：按小时 tick 根据来源消息调和项目日程。",
       "capabilities": [

@@ -455,6 +455,15 @@
         "No chat UI; triggered by schedules or manual task runs"
       ]
     },
+    "webIntel": {
+      "summary": "Back-office: scheduled web search into analysis events (same store as key events).",
+      "capabilities": [
+        "Run a short search to JSON tick on the task schedule (default hourly)",
+        "Uses assistant web-search routing (native OpenAI/Gemini or DDG/Brave tools)",
+        "Task prompt describes how to extract events from search hits",
+        "No chat UI; results appear on intelligence / timeline"
+      ]
+    },
     "projectManager": {
       "summary": "Back-office closed-loop agent: hourly ticks reconcile a project's calendar from sources.",
       "capabilities": [

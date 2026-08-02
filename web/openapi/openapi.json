@@ -11487,6 +11487,17 @@
             "title": "Prompttemplate",
             "default": ""
           },
+          "webSearchQuery": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Websearchquery"
+          },
           "analysisMode": {
             "anyOf": [
               {
@@ -11494,6 +11505,7 @@
                 "enum": [
                   "leaderboard",
                   "event",
+                  "web_intel",
                   "recurring",
                   "project"
                 ]
@@ -11730,6 +11742,17 @@
             ],
             "title": "Prompttemplate"
           },
+          "webSearchQuery": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Websearchquery"
+          },
           "scheduleType": {
             "anyOf": [
               {
@@ -11770,6 +11793,7 @@
                 "enum": [
                   "leaderboard",
                   "event",
+                  "web_intel",
                   "recurring",
                   "project"
                 ]
@@ -11855,11 +11879,17 @@
             "title": "Prompttemplate",
             "default": ""
           },
+          "webSearchQuery": {
+            "type": "string",
+            "title": "Websearchquery",
+            "default": ""
+          },
           "analysisMode": {
             "type": "string",
             "enum": [
               "leaderboard",
               "event",
+              "web_intel",
               "recurring",
               "project"
             ],

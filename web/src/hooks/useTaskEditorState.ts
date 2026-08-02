@@ -22,6 +22,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   name: "",
   description: "",
   promptTemplate: "",
+  webSearchQuery: "",
   analysisMode: "recurring",
   analysisTimeRange: "1d",
   channelIds: [],
@@ -49,6 +50,7 @@ function computeCanSave(
   fields: {
     name: string;
     promptTemplate: string;
+    webSearchQuery: string;
     channelIds: string[];
     rrule: string;
     analysisMode: AnalysisMode;
@@ -62,6 +64,14 @@ function computeCanSave(
       fields.eventIsAllDay || Boolean(fields.eventStartTime.trim());
     return Boolean(
       fields.name.trim() && fields.rrule.trim() && hasStart && !isSaving,
+    );
+  }
+  if (fields.analysisMode === "web_intel") {
+    return Boolean(
+      fields.name.trim() &&
+        fields.promptTemplate.trim() &&
+        fields.webSearchQuery.trim() &&
+        !isSaving,
     );
   }
   return Boolean(
@@ -126,7 +136,7 @@ export function useTaskEditorState(
           analysisTimeRange: localized.defaultAnalysisTimeRange,
         };
         if (
-          nextMode === "project" &&
+          (nextMode === "project" || nextMode === "web_intel") &&
           prev.scheduleType === "seconds_10" &&
           !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
         ) {
@@ -146,6 +156,7 @@ export function useTaskEditorState(
     {
       name: formState.name,
       promptTemplate: formState.promptTemplate,
+      webSearchQuery: formState.webSearchQuery,
       channelIds: formState.channelIds,
       rrule: formState.rrule,
       analysisMode: formState.analysisMode,

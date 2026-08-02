@@ -166,6 +166,10 @@
         "name": "Key events",
         "blurb": "Extract key events and itineraries"
       },
+      "webIntel": {
+        "name": "Web intel",
+        "blurb": "Scheduled web search into analysis events"
+      },
       "leaderboard": {
         "name": "Leaderboard",
         "blurb": "Compare and track top message rankings"
@@ -189,6 +193,17 @@
         "promptLabel": "Task prompt (which events should AI extract)",
         "promptPlaceholder": "e.g. extract announcements, meetings, deadlines; fill start_time when clear, location when known",
         "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
+      },
+      "web_intel": {
+        "modeOptionLabel": "Web intel - web search",
+        "modeDescription": "Scheduled web search, then extract analysis events",
+        "promptLabel": "Task prompt (how to turn search hits into events)",
+        "promptPlaceholder": "e.g. keep only official announcements and regulatory moves; fill start_time when clear, location when known; ignore ads and forum chatter",
+        "promptHint": "The prompt describes which events to extract from search results and how to write title/body; the search-query field decides what to search",
+        "searchQueryLabel": "Search query / keywords",
+        "searchQueryPlaceholder": "e.g. OpenAI API pricing update OR regulation",
+        "searchQueryHint": "Each schedule tick runs a web search with this query; combine with the prompt above",
+        "noChannelsHint": "This type uses web search as input — no local message channels required. It follows the assistant web-search provider settings."
       },
       "recurring": {
         "modeOptionLabel": "Recurring (no AI)",
@@ -507,6 +522,7 @@
     "taskEditor": "Task advisor",
     "leaderboard": "Leaderboard analyst",
     "eventIntel": "Key-event analyst",
+    "webIntel": "Web-intel analyst",
     "projectManager": "Project manager"
   },
   "ui": {
@@ -1098,7 +1114,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 8 / SemVer 0.1.0-beta.9 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 9 / SemVer 0.1.0-beta.10 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

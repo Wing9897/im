@@ -14,18 +14,20 @@ from typing import Final, Literal
 
 LEADERBOARD_MODE: Final = "leaderboard"
 EVENT_MODE: Final = "event"
+WEB_INTEL_MODE: Final = "web_intel"
 CHILD_RECURRING_MODE: Final = "recurring"
 PARENT_PROJECT_MODE: Final = "project"
 
 AnalysisMode = Literal[
     "leaderboard",
     "event",
+    "web_intel",
     "recurring",
     "project",
 ]
 
 #: How the mode is executed at runtime (developer-facing; drives which code path owns work).
-AnalysisPipeline = Literal["message_batch", "project_tick", "rrule_expand"]
+AnalysisPipeline = Literal["message_batch", "project_tick", "web_intel_tick", "rrule_expand"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +63,14 @@ ANALYSIS_MODE_SPECS: Final[tuple[AnalysisModeSpec, ...]] = (
         message_batch=True,
         timeline_owning=True,
         pipeline="message_batch",
+    ),
+    AnalysisModeSpec(
+        mode=WEB_INTEL_MODE,
+        ai=True,
+        schedulable=True,
+        message_batch=False,
+        timeline_owning=True,
+        pipeline="web_intel_tick",
     ),
     AnalysisModeSpec(
         mode=CHILD_RECURRING_MODE,

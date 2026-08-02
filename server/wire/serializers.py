@@ -115,6 +115,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "name": row.get("name") or "",
         "description": row.get("description"),
         "promptTemplate": row.get("prompt_template") or "",
+        "webSearchQuery": row.get("web_search_query") or "",
         "analysisMode": row.get("analysis_mode") or "leaderboard",
         "analysisTimeRange": row.get("analysis_time_range") or "all",
         "version": int(row.get("version") or 1),

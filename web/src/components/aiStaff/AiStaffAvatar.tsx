@@ -11,6 +11,8 @@ const AVATAR_SRC: Record<AiStaffId, string> = {
   taskEditor: taskEditorSrc,
   leaderboard: leaderboardSrc,
   eventIntel: eventIntelSrc,
+  // MVP: reuse eventIntel artwork until a dedicated webIntel asset ships.
+  webIntel: eventIntelSrc,
   projectManager: projectManagerSrc,
 };
 

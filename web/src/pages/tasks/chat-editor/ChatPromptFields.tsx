@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsRow, TextArea, TextField } from "../../../components/ui";
+import { formHelpClass } from "../../../components/ui/pageTypography";
 
 interface ChatPromptFieldsProps {
   description: string;
@@ -9,6 +10,12 @@ interface ChatPromptFieldsProps {
   onPromptTemplateChange: (value: string) => void;
   /** Optional right-column neighbor for description (e.g. schedule). */
   scheduleSlot?: ReactNode;
+  /** Mode-specific prompt label (falls back to editor default). */
+  promptLabel?: string;
+  promptPlaceholder?: string;
+  promptHint?: string;
+  /** Optional web-intel search query field rendered above the prompt. */
+  webSearchQuerySlot?: ReactNode;
 }
 
 /**
@@ -21,8 +28,14 @@ export function ChatPromptFields({
   onDescriptionChange,
   onPromptTemplateChange,
   scheduleSlot,
+  promptLabel,
+  promptPlaceholder,
+  promptHint,
+  webSearchQuerySlot,
 }: ChatPromptFieldsProps) {
   const { t } = useTranslation("common");
+  const label = promptLabel?.trim() || t("tasks.editor.promptLabel");
+  const placeholder = promptPlaceholder?.trim() || t("tasks.editor.promptPlaceholder");
 
   return (
     <>
@@ -38,15 +51,21 @@ export function ChatPromptFields({
 
       {scheduleSlot ?? null}
 
+      {webSearchQuerySlot ?? null}
+
       <div className="md:col-span-2">
-        <SettingsRow label={t("tasks.editor.promptLabel")} htmlFor="chat-prompt-template">
+        <SettingsRow label={label} htmlFor="chat-prompt-template">
           <TextArea
             id="chat-prompt-template"
             className="min-h-[96px] text-sm"
-            placeholder={t("tasks.editor.promptPlaceholder")}
+            placeholder={placeholder}
             value={promptTemplate}
             onChange={(e) => onPromptTemplateChange(e.target.value)}
+            data-testid="task-prompt-template"
           />
+          {promptHint?.trim() ? (
+            <p className={`mt-xs mb-0 ${formHelpClass}`}>{promptHint}</p>
+          ) : null}
         </SettingsRow>
       </div>
     </>

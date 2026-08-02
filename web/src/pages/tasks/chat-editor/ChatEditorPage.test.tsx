@@ -59,6 +59,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   name: "",
   description: "",
   promptTemplate: "",
+  webSearchQuery: "",
   scheduleType: "seconds_10",
   scheduleValue: null,
   scheduleRrule: null,
@@ -155,6 +156,7 @@ describe("ChatEditorPage integration tests", () => {
         description: "追蹤群組中的熱門話題",
         analysisMode: "leaderboard",
         promptTemplate: "分析以下訊息中的熱門話題",
+        webSearchQuery: "",
         defaultAnalysisTimeRange: "24h",
         badge: "🔥",
       },
@@ -225,11 +227,12 @@ describe("ChatEditorPage integration tests", () => {
 
       expect(container.textContent).toContain("任務名稱");
       expect(container.textContent).toContain("描述");
-      expect(container.textContent).toContain("Prompt 模板");
+      expect(container.textContent).toContain("Task Prompt");
       expect(container.textContent).toContain("排程類型");
       expect(container.textContent).toContain("任務類型");
       expect(container.textContent).toContain("基本設定");
       expect(container.textContent).toContain("設定／技能");
+      expect(container.querySelector('[data-testid="task-prompt-template"]')).not.toBeNull();
 
       cleanup();
     });
@@ -458,6 +461,7 @@ describe("ChatEditorPage integration tests", () => {
         name: "Existing Task",
         description: "Existing description",
         promptTemplate: "Existing prompt template",
+        webSearchQuery: "",
         scheduleType: "daily",
         scheduleValue: "09:00",
         scheduleRrule: null,
@@ -502,7 +506,7 @@ describe("ChatEditorPage integration tests", () => {
       expect(descInput.value).toBe("Existing description");
 
       const promptTextarea = container.querySelector(
-        'textarea[placeholder="輸入分析 Prompt 模板"]',
+        '[data-testid="task-prompt-template"]',
       ) as HTMLTextAreaElement;
       expect(promptTextarea.value).toBe("Existing prompt template");
 
@@ -517,6 +521,7 @@ describe("ChatEditorPage integration tests", () => {
         name: "Daily Task",
         description: "",
         promptTemplate: "Daily prompt",
+        webSearchQuery: "",
         scheduleType: "daily",
         scheduleValue: "14:30",
         scheduleRrule: null,
@@ -569,6 +574,7 @@ describe("ChatEditorPage integration tests", () => {
         name: "Event Task",
         description: "",
         promptTemplate: "Some prompt",
+        webSearchQuery: "",
         scheduleType: "seconds_10",
         scheduleValue: null,
         scheduleRrule: null,

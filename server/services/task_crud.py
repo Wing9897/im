@@ -24,6 +24,7 @@ from server.domain.analysis_modes import (
     CHILD_RECURRING_MODE,
     LEADERBOARD_MODE,
     PARENT_PROJECT_MODE,
+    WEB_INTEL_MODE,
 )
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.batch_housekeeping import purge_superseded_task_version_data
@@ -142,6 +143,28 @@ async def create_recurring_task_record(
     )
 
 
+def _resolve_web_search_query(
+    *,
+    effective_mode: str,
+    supplied: str | None,
+    existing: str | None = None,
+) -> str:
+    if effective_mode != WEB_INTEL_MODE:
+        return ""
+    if supplied is not None:
+        return supplied.strip()
+    return (existing or "").strip()
+
+
+def _validate_web_intel_fields(*, effective_mode: str, prompt: str, search_query: str) -> None:
+    if effective_mode != WEB_INTEL_MODE:
+        return
+    if not prompt.strip():
+        raise TaskWriteError("web_intel tasks require promptTemplate")
+    if not search_query.strip():
+        raise TaskWriteError("web_intel tasks require webSearchQuery")
+
+
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:
     effective_mode = body.analysisMode or LEADERBOARD_MODE
 
@@ -165,6 +188,15 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
     task_id = new_id()
     now = utc_now_iso()
     refs = parse_channel_refs(body.channelIds)
+    web_search_query = _resolve_web_search_query(
+        effective_mode=effective_mode,
+        supplied=body.webSearchQuery,
+    )
+    _validate_web_intel_fields(
+        effective_mode=effective_mode,
+        prompt=body.promptTemplate,
+        search_query=web_search_query,
+    )
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,
         supplied=body.includeInTimeline,
@@ -192,6 +224,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
+            web_search_query=web_search_query,
             now=now,
             **schedule_override_write_fields(body),
         )
@@ -238,6 +271,16 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
     new_version = int(existing.get("version") or 1) + 1
     now = utc_now_iso()
     refs = parse_channel_refs(body.channelIds) if body.channelIds is not None else None
+    web_search_query = _resolve_web_search_query(
+        effective_mode=effective_mode,
+        supplied=body.webSearchQuery if "webSearchQuery" in body.model_fields_set else None,
+        existing=str(existing.get("web_search_query") or ""),
+    )
+    _validate_web_intel_fields(
+        effective_mode=effective_mode,
+        prompt=body.promptTemplate,
+        search_query=web_search_query,
+    )
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,
         supplied=body.includeInTimeline,
@@ -292,6 +335,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
             schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
+            web_search_query=web_search_query,
             now=now,
             **schedule_override_write_fields(body),
         )

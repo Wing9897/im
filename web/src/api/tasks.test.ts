@@ -64,6 +64,7 @@ describe("tasks API", () => {
         name: "Existing analysis task",
         description: null,
         promptTemplate: "Analyze",
+        webSearchQuery: "",
         analysisMode: "leaderboard",
         analysisTimeRange: "24h",
         version: 3,
@@ -98,6 +99,7 @@ describe("tasks API", () => {
         "scheduleValue",
         "updatedAt",
         "version",
+        "webSearchQuery",
         "worksetId",
       ].sort());
       expect(result[0]).toMatchObject({

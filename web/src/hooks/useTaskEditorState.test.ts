@@ -70,6 +70,7 @@ describe("useTaskEditorState", () => {
       name: "Preset Name",
       description: "Preset Description",
       promptTemplate: "Analyze {{messages}}",
+      webSearchQuery: "",
       analysisMode: "leaderboard",
       defaultAnalysisTimeRange: "7d",
       badge: "trending",
@@ -95,6 +96,7 @@ describe("useTaskEditorState", () => {
       name: "產品上線專案",
       description: "desc",
       promptTemplate: "prompt",
+      webSearchQuery: "",
       analysisMode: "project",
       defaultAnalysisTimeRange: "7d",
       badge: "🚀",
@@ -200,6 +202,7 @@ describe("useTaskEditorState", () => {
       name: "Loaded Task",
       description: "From DB",
       promptTemplate: "Do analysis",
+      webSearchQuery: "",
       channelIds: ["ch1", "ch2"],
     };
 

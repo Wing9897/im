@@ -72,7 +72,10 @@ export function useIntelligenceFeed() {
   const prevIsMapModeRef = useRef(isMapMode);
 
   const intelligenceTasks = useMemo(
-    () => tasks.filter((task) => task.analysisMode === "event"),
+    () =>
+      tasks.filter(
+        (task) => task.analysisMode === "event" || task.analysisMode === "web_intel",
+      ),
     [tasks],
   );
 

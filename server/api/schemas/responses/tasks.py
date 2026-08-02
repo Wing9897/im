@@ -21,13 +21,14 @@ class TaskDraftPayload(BaseModel):
     name: str | None = None
     description: str | None = None
     promptTemplate: str | None = None
+    webSearchQuery: str | None = None
     scheduleType: str | None = None
     scheduleValue: str | None = None
     scheduleRrule: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
     channelIds: list[Union[str, dict[str, Any]]] | None = None
-    #: Event-mode time-planning visibility; omitted / null = leave form unchanged.
+    #: Event / web_intel time-planning visibility; omitted / null = leave form unchanged.
     includeInTimeline: bool | None = None
 
 
@@ -67,6 +68,7 @@ class TaskResponse(BaseModel):
     name: str
     description: str | None = None
     promptTemplate: str = ""
+    webSearchQuery: str = ""
     analysisMode: AnalysisMode
     analysisTimeRange: str
     version: int
