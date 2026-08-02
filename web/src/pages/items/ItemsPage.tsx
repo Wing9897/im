@@ -44,6 +44,7 @@ import {
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
 } from "../../domain/items/itemAttributes";
+import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { CategoryManageDialog } from "./CategoryManageDialog";
@@ -120,7 +121,7 @@ export function ItemsPage() {
     void reload();
   }, [reload]);
 
-  // Deep-link from Timeline: /items?itemId=…&itemDateKind=purchased|expires
+  // Deep-link from Timeline: /items?itemId=…&itemDateKind=purchased|expires|remind
   useEffect(() => {
     if (loading) return;
     const itemId = searchParams.get("itemId")?.trim();
@@ -258,6 +259,7 @@ export function ItemsPage() {
     expiresAt: string | null;
     remindBeforeDays: number | null;
     notes: string;
+    emoji: string | null;
     attributes: Record<string, string>;
     status: "active" | "archived";
   }) => {
@@ -450,6 +452,7 @@ export function ItemsPage() {
                     const cat = item.categoryId
                       ? categoryById.get(item.categoryId)
                       : undefined;
+                    const emoji = resolveItemEmoji(item, cat);
                     return (
                       <li
                         key={item.id}
@@ -464,6 +467,11 @@ export function ItemsPage() {
                           onClick={() => setEditing(item)}
                         >
                           <div className="truncate text-body font-medium text-text-primary">
+                            {emoji ? (
+                              <span className="mr-xs" aria-hidden>
+                                {emoji}
+                              </span>
+                            ) : null}
                             {item.title}
                           </div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-xs">

@@ -182,12 +182,15 @@ def serialize_item_category(row: Mapping[str, Any]) -> dict[str, Any]:
     from server.items.normalize import parse_field_schema_json
 
     remind = row.get("default_remind_before_days")
+    raw_emoji = row.get("emoji")
+    emoji = str(raw_emoji).strip() if isinstance(raw_emoji, str) and raw_emoji.strip() else None
     return {
         "id": str(row["id"]),
         "name": str(row.get("name") or ""),
         "slug": row.get("slug") or None,
         "sortOrder": int(row.get("sort_order") or 0),
         "color": row.get("color") or None,
+        "emoji": emoji,
         "fieldSchema": parse_field_schema_json(row.get("field_schema")),
         "defaultRemindBeforeDays": int(remind) if remind is not None else None,
         "createdAt": row.get("created_at"),
@@ -206,6 +209,8 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
     )
     raw_category = row.get("category_id")
     category_id = str(raw_category).strip() if isinstance(raw_category, str) and raw_category.strip() else None
+    raw_emoji = row.get("emoji")
+    emoji = str(raw_emoji).strip() if isinstance(raw_emoji, str) and raw_emoji.strip() else None
     return {
         "id": str(row["id"]),
         "title": str(row.get("title") or ""),
@@ -216,6 +221,7 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
         "remindBeforeDays": int(remind) if remind is not None else None,
         "notes": str(row.get("notes") or ""),
         "status": str(row.get("status") or "active"),
+        "emoji": emoji,
         "attributes": parse_attributes_json(row.get("attributes_json")),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),

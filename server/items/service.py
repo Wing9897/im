@@ -13,6 +13,7 @@ from server.items.normalize import (
     normalize_attributes,
     normalize_category_id_wire,
     normalize_color,
+    normalize_emoji,
     normalize_field_schema,
     normalize_notes,
     normalize_remind_before_days,
@@ -63,6 +64,7 @@ async def create_category(
     slug: str | None = None,
     sort_order: int | None = 0,
     color: str | None = None,
+    emoji: str | None = None,
     field_schema: Any = None,
     default_remind_before_days: int | None = None,
 ) -> dict[str, Any]:
@@ -70,6 +72,7 @@ async def create_category(
     clean_slug = normalize_slug(slug)
     clean_sort = normalize_sort_order(sort_order)
     clean_color = normalize_color(color)
+    clean_emoji = normalize_emoji(emoji)
     clean_schema = normalize_field_schema(field_schema)
     clean_remind = normalize_remind_before_days(default_remind_before_days)
     if clean_slug is not None:
@@ -86,6 +89,7 @@ async def create_category(
             slug=clean_slug,
             sort_order=clean_sort,
             color=clean_color,
+            emoji=clean_emoji,
             field_schema=field_schema_to_json(clean_schema),
             default_remind_before_days=clean_remind,
             now=now,
@@ -103,6 +107,7 @@ async def patch_category(
     slug: Any = _UNSET,
     sort_order: Any = _UNSET,
     color: Any = _UNSET,
+    emoji: Any = _UNSET,
     field_schema: Any = _UNSET,
     default_remind_before_days: Any = _UNSET,
 ) -> dict[str, Any]:
@@ -120,6 +125,12 @@ async def patch_category(
         else int(existing.get("sort_order") or 0)
     )
     next_color = normalize_color(color) if color is not _UNSET else existing.get("color")
+    if emoji is _UNSET:
+        next_emoji = existing.get("emoji")
+        if next_emoji is not None:
+            next_emoji = str(next_emoji) if next_emoji else None
+    else:
+        next_emoji = normalize_emoji(emoji)
     if field_schema is _UNSET:
         next_schema_json = str(existing.get("field_schema") or "[]")
         next_schema = normalize_field_schema(next_schema_json)
@@ -145,6 +156,7 @@ async def patch_category(
             slug=str(next_slug) if next_slug else None,
             sort_order=next_sort,
             color=str(next_color) if next_color else None,
+            emoji=str(next_emoji) if next_emoji else None,
             field_schema=next_schema_json,
             default_remind_before_days=next_remind,
             now=now,
@@ -173,6 +185,7 @@ async def create_item(
     remind_before_days: Any = None,
     notes: Any = "",
     status: Any = "active",
+    emoji: Any = None,
     attributes: Any = None,
 ) -> dict[str, Any]:
     clean_title = require_title(title)
@@ -187,6 +200,7 @@ async def create_item(
             clean_remind = int(cat["default_remind_before_days"])
     clean_notes = normalize_notes(notes)
     clean_status = normalize_status(status)
+    clean_emoji = normalize_emoji(emoji)
     clean_attrs = normalize_attributes(attributes)
     item_id = new_id()
     now = utc_now_iso()
@@ -202,6 +216,7 @@ async def create_item(
             remind_before_days=clean_remind,
             notes=clean_notes,
             status=clean_status,
+            emoji=clean_emoji,
             attributes_json=attributes_to_json(clean_attrs),
             now=now,
         )
@@ -222,6 +237,7 @@ async def patch_item(
     remind_before_days: Any = _UNSET,
     notes: Any = _UNSET,
     status: Any = _UNSET,
+    emoji: Any = _UNSET,
     attributes: Any = _UNSET,
 ) -> dict[str, Any]:
     existing = await fetch_item_row(db, item_id)
@@ -259,6 +275,12 @@ async def patch_item(
             next_remind = int(cat["default_remind_before_days"])
     next_notes = normalize_notes(notes) if notes is not _UNSET else str(existing.get("notes") or "")
     next_status = normalize_status(status) if status is not _UNSET else str(existing.get("status") or "active")
+    if emoji is _UNSET:
+        next_emoji = existing.get("emoji")
+        if next_emoji is not None:
+            next_emoji = str(next_emoji) if next_emoji else None
+    else:
+        next_emoji = normalize_emoji(emoji)
     if attributes is _UNSET:
         # Do not re-parse/re-serialize: dirty nested rows must not amplify on unrelated PATCH.
         next_attrs_json = preserve_attributes_json(existing.get("attributes_json"))
@@ -278,6 +300,7 @@ async def patch_item(
             remind_before_days=next_remind,
             notes=next_notes,
             status=next_status,
+            emoji=str(next_emoji) if next_emoji else None,
             attributes_json=next_attrs_json,
             now=now,
         )

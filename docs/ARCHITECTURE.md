@@ -95,7 +95,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `api/routes/task_preset_data.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — generated from [`shared/task_presets.json`](../shared/task_presets.json) via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v6** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/migrations.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v7** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/migrations.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories (re-exported from `migrations` for callers/tests) |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -364,14 +364,14 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `action_trigger_history` | Action execution audit trail; read via `GET /api/v1/actions/trigger-history` |
 | `project_message_cursors` | Per-project last-seen message cursor for `project_tick` (replaces `system_config` keys `project_last_message_at:*`) |
 | `worksets` | Ownership dimension (`id` / `name` / `is_system`); builtin `__user__` (`is_system=1`); `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events`／`items.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
-| `item_categories` | Soft-template categories (`slug`, `field_schema` JSON suggestions, `default_remind_before_days`); seed rows with stable slugs |
-| `items` | Trackable inventory (core flat dates + `attributes_json`); ownership via `workset_id`; calendar `source=item` projects purchased/expires DATE as floating all-day |
+| `item_categories` | Soft-template categories (`slug`, optional `emoji`, `field_schema` JSON suggestions, `default_remind_before_days`); seed rows with stable slugs + emoji logos |
+| `items` | Trackable inventory (core flat dates + optional `emoji` + `attributes_json`); ownership via `workset_id`; calendar `source=item` projects purchased/expires/remind DATE as floating all-day |
 
 ### Schema baseline (wipe-only)
 
 Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/migrations.py`.
 
-**Current stamp is 6.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-6 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 7.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-7 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -379,17 +379,17 @@ Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **6** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.7`) |
+| **7** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.8`) |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other non-empty schema** | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 6. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 7. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 6 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 7 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v6 explicit reset
+#### Schema v7 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -397,7 +397,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v6-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v7-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -410,9 +410,9 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v6 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v7 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 6** adds the trackable-items domain (`item_categories` + `items`) and extends `timeline_dismissals.source` with `item`. Categories are **soft templates** (`field_schema` suggests extension keys; API never strips `attributes_json` on category change). Item dates are **DATE** (local calendar day) projected as floating all-day calendar points for purchase/expiry only — `remind_before_days` drives list/agent windows and does **not** create a second calendar marker. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
+**Stamp 7** extends trackable items with optional `emoji` on categories and items, expands seed types, and projects a calendar **remind** occurrence (`expires_at - remind_before_days` when `remind_before_days > 0`) alongside purchase/expiry floating all-day markers via the unified `item_projection` path. Stamp 6 introduced the trackable-items domain (`item_categories` + `items`) and `timeline_dismissals.source=item`. Categories remain **soft templates** (`field_schema` suggests extension keys; API never strips `attributes_json` on category change). List/agent expiring windows still use remind independently. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 
@@ -430,18 +430,18 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 
 ### Schema support matrix
 
-Stamp-6 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-7 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v6 DDL, validate its full fingerprint, then stamp 6 | Schema creation and v6 stamp |
-| Unstamped current, version 0 | Require the exact v6 fingerprint and stamp 6 | Stamp only |
-| Current, version 6 | Validate the exact v6 fingerprint on every startup | None |
+| Empty, version 0 | Create v7 DDL, validate its full fingerprint, then stamp 7 | Schema creation and v7 stamp |
+| Unstamped current, version 0 | Require the exact v7 fingerprint and stamp 7 | Stamp only |
+| Current, version 7 | Validate the exact v7 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
-| Incomplete/lookalike version 0 or 6 | Reject with table/column/index/foreign-key mismatch categories | None |
+| Incomplete/lookalike version 0 or 7 | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 6. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 7. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -652,7 +652,7 @@ Canonical calendar surface: `GET /api/v1/calendar/items`, `POST /api/v1/calendar
 
 ### Startup readiness (perf note)
 
-Repeatable ASGI fresh-db readiness (`scripts/measure_startup_baseline.py`, collector/scheduler/static disabled): median ~247 ms after empty-account collector deferral on stamp 6 (earlier same harness ~433 ms median). Not a CI gate.
+Repeatable ASGI fresh-db readiness (`scripts/measure_startup_baseline.py`, collector/scheduler/static disabled): median ~247 ms after empty-account collector deferral on stamp 7 (earlier same harness ~433 ms median). Not a CI gate.
 
 ## Agent / assistant
 

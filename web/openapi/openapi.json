@@ -7757,7 +7757,8 @@
                 "type": "string",
                 "enum": [
                   "purchased",
-                  "expires"
+                  "expires",
+                  "remind"
                 ]
               },
               {
@@ -7818,6 +7819,17 @@
               }
             ],
             "title": "Color"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "fieldSchema": {
             "anyOf": [
@@ -7902,6 +7914,17 @@
               }
             ],
             "title": "Color"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "fieldSchema": {
             "anyOf": [
@@ -9446,6 +9469,17 @@
             ],
             "title": "Color"
           },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
           "fieldSchema": {
             "items": {
               "$ref": "#/components/schemas/ItemFieldSchemaEntry"
@@ -9581,6 +9615,17 @@
             "title": "Status",
             "default": "active"
           },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
           "attributes": {
             "anyOf": [
               {
@@ -9699,6 +9744,17 @@
             "type": "string",
             "title": "Status",
             "default": "active"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "attributes": {
             "additionalProperties": {
@@ -9829,6 +9885,17 @@
               }
             ],
             "title": "Status"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
           },
           "attributes": {
             "anyOf": [

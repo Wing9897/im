@@ -19,6 +19,8 @@ FIELD_SCHEMA_MAX_KEYS = 40
 TITLE_MAX = 200
 NOTES_MAX = 4000
 NAME_MAX = 120
+#: Optional emoji / short logo (grapheme cluster may be multi-codepoint).
+EMOJI_MAX = 16
 SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 ALLOWED_STATUSES = frozenset({"active", "archived"})
@@ -261,6 +263,17 @@ def normalize_color(color: Any) -> str | None:
         return None
     cleaned = str(color).strip()
     return cleaned or None
+
+
+def normalize_emoji(value: Any) -> str | None:
+    if value is None:
+        return None
+    cleaned = str(value).strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > EMOJI_MAX:
+        raise ItemValidationError(f"emoji must be <= {EMOJI_MAX} characters")
+    return cleaned
 
 
 def normalize_sort_order(value: Any) -> int:

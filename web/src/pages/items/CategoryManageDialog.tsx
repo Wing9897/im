@@ -32,6 +32,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [color, setColor] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState("");
   const [defaultRemind, setDefaultRemind] = useState<number | null>(null);
   const [schema, setSchema] = useState<ItemFieldSchemaEntry[]>([]);
   const [newKey, setNewKey] = useState("");
@@ -43,6 +44,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setEditingId(cat.id);
     setName(cat.name);
     setColor(cat.color ?? null);
+    setEmoji(cat.emoji ?? "");
     setDefaultRemind(cat.defaultRemindBeforeDays ?? null);
     setSchema([...(cat.fieldSchema ?? [])]);
     setError(null);
@@ -52,6 +54,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setEditingId("new");
     setName("");
     setColor(CATEGORY_COLOR_PRESETS[0]);
+    setEmoji("");
     setDefaultRemind(null);
     setSchema([]);
     setError(null);
@@ -66,10 +69,12 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setError(null);
     setBusy(true);
     try {
+      const emojiValue = emoji.trim() || null;
       if (editingId === "new") {
         await createItemCategory({
           name: name.trim(),
           color,
+          emoji: emojiValue,
           fieldSchema: schema,
           defaultRemindBeforeDays: defaultRemind,
           sortOrder: 0,
@@ -78,6 +83,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
         await updateItemCategory(editingId, {
           name: name.trim(),
           color,
+          emoji: emojiValue,
           fieldSchema: schema,
           defaultRemindBeforeDays: defaultRemind,
         });
@@ -141,11 +147,17 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
               onClick={() => startEdit(cat)}
               disabled={busy}
             >
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full border border-surface-border"
-                style={{ backgroundColor: cat.color?.trim() || "var(--text-muted)" }}
-                aria-hidden
-              />
+              {cat.emoji?.trim() ? (
+                <span className="shrink-0 text-body" aria-hidden>
+                  {cat.emoji.trim()}
+                </span>
+              ) : (
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full border border-surface-border"
+                  style={{ backgroundColor: cat.color?.trim() || "var(--text-muted)" }}
+                  aria-hidden
+                />
+              )}
               <span className="truncate">
                 {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
               </span>
@@ -173,6 +185,18 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
                 disabled={busy}
                 autoFocus
               />
+            </SettingsRow>
+            <SettingsRow label={t("emoji")} htmlFor="cat-emoji">
+              <div className="flex flex-col gap-xs">
+                <TextField
+                  id="cat-emoji"
+                  value={emoji}
+                  onChange={(e) => setEmoji(e.target.value)}
+                  disabled={busy}
+                  maxLength={16}
+                />
+                <p className={`m-0 ${captionClass}`}>{t("emojiHint")}</p>
+              </div>
             </SettingsRow>
             <SettingsRow label={t("categoryColor")} htmlFor="cat-color">
               <div className="flex flex-col gap-xs">

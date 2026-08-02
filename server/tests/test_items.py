@@ -17,6 +17,10 @@ async def test_items_change_category_keeps_attributes(client):
     assert cats.status_code == 200
     seed = cats.json()
     assert any(c.get("slug") == "passport_docs" for c in seed)
+    assert any(c.get("slug") == "medicine" for c in seed)
+    assert any(c.get("slug") == "vehicle" for c in seed)
+    passport_seed = next(c for c in seed if c["slug"] == "passport_docs")
+    assert passport_seed.get("emoji")
     passport = next(c for c in seed if c["slug"] == "passport_docs")
     food = next(c for c in seed if c["slug"] == "food")
 
@@ -159,17 +163,19 @@ async def test_workset_delete_reassigns_items(client):
 
 
 @pytest.mark.asyncio
-async def test_calendar_projects_active_item_dates_not_remind(client, app):
+async def test_calendar_projects_active_item_dates_and_remind(client, app):
     today = date.today()
     expires = (today + timedelta(days=10)).isoformat()
     purchased = (today + timedelta(days=2)).isoformat()
+    remind_before = 3
+    remind_day = (today + timedelta(days=10 - remind_before)).isoformat()
     created = await client.post(
         "/api/v1/items",
         json={
             "title": "Milk",
             "purchasedAt": purchased,
             "expiresAt": expires,
-            "remindBeforeDays": 3,
+            "remindBeforeDays": remind_before,
             "status": "active",
         },
     )
@@ -181,6 +187,7 @@ async def test_calendar_projects_active_item_dates_not_remind(client, app):
         json={
             "title": "Old",
             "expiresAt": expires,
+            "remindBeforeDays": remind_before,
             "status": "archived",
         },
     )
@@ -193,8 +200,7 @@ async def test_calendar_projects_active_item_dates_not_remind(client, app):
     ids = {row["id"] for row in item_rows}
     assert f"item:{item_id}:purchased" in ids
     assert f"item:{item_id}:expires" in ids
-    # remind_before_days must not invent a third point
-    assert not any(row["id"].endswith(":remind") for row in item_rows)
+    assert f"item:{item_id}:remind" in ids
     assert not any(row.get("itemId") == archived.json()["id"] for row in item_rows)
 
     purchased_row = next(row for row in item_rows if row["id"].endswith(":purchased"))
@@ -205,6 +211,29 @@ async def test_calendar_projects_active_item_dates_not_remind(client, app):
     assert purchased_row["isAllDay"] is True
     assert purchased_row["title"] == "Milk"
     assert purchased_row["itemDateKind"] == "purchased"
+
+    remind_row = next(row for row in item_rows if row["id"].endswith(":remind"))
+    assert remind_row["startTime"] == f"{remind_day}T00:00:00"
+    assert remind_row["endTime"] == f"{remind_day}T23:59:59"
+    assert remind_row["timezone"] == "floating"
+    assert remind_row["isAllDay"] is True
+    assert remind_row["itemDateKind"] == "remind"
+
+    # Changing remind days moves the calendar remind point.
+    patched = await client.patch(
+        f"/api/v1/items/{item_id}",
+        json={"remindBeforeDays": 5},
+    )
+    assert patched.status_code == 200
+    remind_day_5 = (today + timedelta(days=10 - 5)).isoformat()
+    result2 = await query_window(app.state.db, start=start, end=end, limit=100)
+    remind_rows = [
+        row
+        for row in result2["items"]
+        if row.get("source") == "item" and row["id"] == f"item:{item_id}:remind"
+    ]
+    assert len(remind_rows) == 1
+    assert remind_rows[0]["startTime"] == f"{remind_day_5}T00:00:00"
 
     # Unified REST calendar path includes the same projection.
     api = await client.get(
@@ -219,10 +248,14 @@ async def test_calendar_projects_active_item_dates_not_remind(client, app):
     assert {row["id"] for row in api_items} >= {
         f"item:{item_id}:purchased",
         f"item:{item_id}:expires",
+        f"item:{item_id}:remind",
     }
     api_purchased = next(row for row in api_items if row["id"].endswith(":purchased"))
     assert api_purchased["startTime"] == f"{purchased}T00:00:00"
     assert api_purchased["dismissed"] is False
+    api_remind = next(row for row in api_items if row["id"] == f"item:{item_id}:remind")
+    assert api_remind["startTime"] == f"{remind_day_5}T00:00:00"
+    assert api_remind["itemDateKind"] == "remind"
 
 
 @pytest.mark.asyncio

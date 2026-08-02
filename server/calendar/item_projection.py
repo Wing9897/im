@@ -1,8 +1,10 @@
 """Project trackable items into calendar wire rows (source=item).
 
 DATE columns (``purchased_at`` / ``expires_at``) become floating all-day
-occurrences. ``remind_before_days`` never creates a second calendar point —
-it only drives list / agent expiring windows.
+occurrences. Active items with ``expires_at`` and ``remind_before_days > 0``
+also emit a **remind** occurrence on ``expires_at - remind_before_days``
+(same floating all-day DATE semantics). List / agent expiring windows still
+use the remind value independently of calendar dots.
 
 All-day times use wall-date ``YYYY-MM-DDT00:00:00`` / ``T23:59:59`` (no ``Z``)
 so FE ``parseAllDayWallDate`` and user_event all-day DATE semantics stay on the
@@ -19,9 +21,9 @@ from server.db.database import Database
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-ItemDateKind = Literal["purchased", "expires"]
+ItemDateKind = Literal["purchased", "expires", "remind"]
 
-ITEM_OCCURRENCE_ID_RE = re.compile(r"^item:([^:]+):(purchased|expires)$")
+ITEM_OCCURRENCE_ID_RE = re.compile(r"^item:([^:]+):(purchased|expires|remind)$")
 
 
 def _date_to_floating_iso(day: date) -> tuple[str, str]:
@@ -38,6 +40,27 @@ def parse_occurrence_id(event_id: str) -> tuple[str, ItemDateKind] | None:
     if match is None:
         return None
     return match.group(1), match.group(2)  # type: ignore[return-value]
+
+
+def remind_day_for_item(row: Mapping[str, Any]) -> date | None:
+    """Return remind calendar day when expires_at + remind_before_days > 0."""
+    raw_expires = row.get("expires_at")
+    if not isinstance(raw_expires, str) or not raw_expires.strip():
+        return None
+    remind = row.get("remind_before_days")
+    if remind is None:
+        return None
+    try:
+        days = int(remind)
+    except (TypeError, ValueError):
+        return None
+    if days <= 0:
+        return None
+    try:
+        expires = date.fromisoformat(raw_expires.strip()[:10])
+    except ValueError:
+        return None
+    return expires - timedelta(days=days)
 
 
 def build_item_occurrence(
@@ -88,7 +111,7 @@ def project_item_row(
     range_start: date,
     range_end: date,
 ) -> list[dict[str, Any]]:
-    """Emit purchased/expires occurrences that fall in the DATE window."""
+    """Emit purchased/expires/remind occurrences that fall in the DATE window."""
     if str(row.get("status") or "") != "active":
         return []
     out: list[dict[str, Any]] = []
@@ -103,6 +126,9 @@ def project_item_row(
         if day < range_start or day > range_end:
             continue
         out.append(build_item_occurrence(row, kind=kind, day=day))  # type: ignore[arg-type]
+    remind_day = remind_day_for_item(row)
+    if remind_day is not None and range_start <= remind_day <= range_end:
+        out.append(build_item_occurrence(row, kind="remind", day=remind_day))
     return out
 
 
@@ -122,7 +148,7 @@ async def fetch_item_occurrences_in_range(
     range_end: datetime,
     workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    start_s, end_s, start_d, end_d = _window_dates(range_start, range_end)
+    start_s, end_s, base_start_d, base_end_d = _window_dates(range_start, range_end)
     rows = await fetch_active_items_with_dates(
         db,
         range_start_date=start_s,
@@ -131,7 +157,7 @@ async def fetch_item_occurrences_in_range(
     )
     items: list[dict[str, Any]] = []
     for row in rows:
-        items.extend(project_item_row(row, range_start=start_d, range_end=end_d))
+        items.extend(project_item_row(row, range_start=base_start_d, range_end=base_end_d))
     return items
 
 
@@ -143,6 +169,11 @@ async def get_item_occurrence(db: Database, event_id: str) -> dict[str, Any] | N
     row = await fetch_item_row(db, item_id)
     if row is None or str(row.get("status") or "") != "active":
         return None
+    if kind == "remind":
+        day = remind_day_for_item(row)
+        if day is None:
+            return None
+        return build_item_occurrence(row, kind=kind, day=day, detail="full")
     raw = row.get("purchased_at" if kind == "purchased" else "expires_at")
     if not isinstance(raw, str) or not raw.strip():
         return None

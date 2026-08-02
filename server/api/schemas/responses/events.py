@@ -98,4 +98,4 @@ class CalendarOccurrenceResponse(BaseModel):
     source: Literal["recurring", "item"] = "recurring"
     worksetId: str | None = None
     itemId: str | None = None
-    itemDateKind: Literal["purchased", "expires"] | None = None
+    itemDateKind: Literal["purchased", "expires", "remind"] | None = None

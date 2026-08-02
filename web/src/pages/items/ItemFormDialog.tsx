@@ -32,6 +32,7 @@ type SaveDraft = {
   expiresAt: string | null;
   remindBeforeDays: number | null;
   notes: string;
+  emoji: string | null;
   attributes: Record<string, string>;
   status: "active" | "archived";
 };
@@ -79,6 +80,7 @@ export function ItemFormDialog({
     return seed?.defaultRemindBeforeDays ?? null;
   });
   const [notes, setNotes] = useState(item?.notes ?? "");
+  const [emoji, setEmoji] = useState(item?.emoji ?? "");
   const [attributes, setAttributes] = useState<Record<string, string>>(item?.attributes ?? {});
   const [extraKey, setExtraKey] = useState("");
   const [extraValue, setExtraValue] = useState("");
@@ -130,6 +132,7 @@ export function ItemFormDialog({
         expiresAt: expiresAt || null,
         remindBeforeDays,
         notes,
+        emoji: emoji.trim() || null,
         attributes,
         status: item?.status === "archived" ? "archived" : "active",
       });
@@ -172,6 +175,20 @@ export function ItemFormDialog({
           />
         </SettingsRow>
 
+        <SettingsRow label={t("emoji")} htmlFor="item-emoji">
+          <div className="flex flex-col gap-xs">
+            <TextField
+              id="item-emoji"
+              value={emoji}
+              onChange={(e) => setEmoji(e.target.value)}
+              disabled={saving}
+              maxLength={16}
+              placeholder={category?.emoji ?? undefined}
+            />
+            <p className={`m-0 ${captionClass}`}>{t("emojiHint")}</p>
+          </div>
+        </SettingsRow>
+
         <FormGrid>
           <SettingsRow label={t("workset")} htmlFor="item-workset">
             <SelectField
@@ -197,6 +214,7 @@ export function ItemFormDialog({
               <option value="">{t("noCategory")}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
+                  {c.emoji?.trim() ? `${c.emoji.trim()} ` : ""}
                   {categoryLabel(c, t)}
                 </option>
               ))}

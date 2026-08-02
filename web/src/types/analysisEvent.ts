@@ -26,8 +26,8 @@ export type AnalysisEvent = Omit<
   worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */
   dismissed?: boolean;
-  /** Present when source === "item": purchased vs expires projection. */
-  itemDateKind?: "purchased" | "expires";
+  /** Present when source === "item": purchased / expires / remind projection. */
+  itemDateKind?: "purchased" | "expires" | "remind";
   /** Present when source === "item": backing inventory row id. */
   itemId?: string | null;
 };
