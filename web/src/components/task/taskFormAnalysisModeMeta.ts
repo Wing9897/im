@@ -41,12 +41,21 @@ export const taskFormAnalysisModeGroups: ReadonlyArray<{
   modes: group.employees.map((employeeId) => analysisModeForTaskEmployee(employeeId)),
 }));
 
+/** L2 employee display name (aiStaff / schedule clerk). */
+export function getTaskEmployeeDisplayName(employeeId: TaskEmployeeId): string {
+  if (employeeId === "scheduleClerk") {
+    return String(i18n.t("tasks.employees.scheduleClerk.name"));
+  }
+  return String(i18n.t(`aiStaff.${employeeId}`));
+}
+
 export function getTaskFormAnalysisModeMeta(
   analysisMode: AnalysisMode,
 ): TaskFormAnalysisModeMeta {
   const prefix = `tasks.modes.${analysisMode}`;
   return {
-    displayLabel: String(i18n.t(`${prefix}.displayLabel`)),
+    // Cards / filters / badges share L2 employee bilingual names (not short mode labels).
+    displayLabel: getTaskEmployeeDisplayName(taskEmployeeForAnalysisMode(analysisMode)),
     modeOptionLabel: String(i18n.t(`${prefix}.modeOptionLabel`)),
     modeDescription: String(i18n.t(`${prefix}.modeDescription`)),
     promptLabel: String(i18n.t(`${prefix}.promptLabel`)),
@@ -55,14 +64,6 @@ export function getTaskFormAnalysisModeMeta(
     isRecurringMode: analysisModeShowsRruleFields(analysisMode) || undefined,
     hidesPromptAndChannel: analysisModeHidesPromptAndChannel(analysisMode) || undefined,
   };
-}
-
-/** L2 employee display name (aiStaff / schedule clerk). */
-export function getTaskEmployeeDisplayName(employeeId: TaskEmployeeId): string {
-  if (employeeId === "scheduleClerk") {
-    return String(i18n.t("tasks.employees.scheduleClerk.name"));
-  }
-  return String(i18n.t(`aiStaff.${employeeId}`));
 }
 
 /** One-line capability blurb for L2 picker cards. */

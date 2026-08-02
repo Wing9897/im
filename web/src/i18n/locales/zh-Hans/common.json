@@ -302,6 +302,8 @@
         "weekly": "每周",
         "custom_seconds": "自定义秒数"
       },
+      "unmappedOption": "自定义触发 RRULE",
+      "unmappedHelp": "此任务的触发 RRULE 不在下方预设选项中。选择预设排程后保存会覆盖它。",
       "weekday": {
         "0": "星期日",
         "1": "星期一",
@@ -1092,7 +1094,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 5／SemVer 0.1.0-beta.6；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 8／SemVer 0.1.0-beta.9；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"
@@ -1355,7 +1357,7 @@
     "viewByWorkset": "工作集",
     "groupingAria": "任务列表分组",
     "filterTitle": "筛选来源",
-    "filterHint": "以工作集为主；点击 ▸ 箭头展开其下任务。",
+    "filterHint": "以工作集为主；点击 ▸ 展开其下任务。物品与工作集自有事件需勾选工作集才会显示；只选任务时会隐藏它们。",
     "filterSearchPlaceholder": "搜索…",
     "filterBrowseAria": "按工作集浏览来源",
     "filterChildCount": "{count}",

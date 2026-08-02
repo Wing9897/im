@@ -126,9 +126,12 @@ describe("ScheduleInput component", () => {
   function renderScheduleInput(props: {
     scheduleType: ScheduleType;
     scheduleValue: string | null;
+    scheduleRrule?: string | null;
     onScheduleTypeChange?: (type: ScheduleType) => void;
     onScheduleValueChange?: (value: string | null) => void;
     validationError?: string | null;
+    showProjectWaveInterval?: boolean;
+    projectWaveIntervalSeconds?: string;
   }) {
     const container = document.createElement("div");
     act(() => {
@@ -167,6 +170,23 @@ describe("ScheduleInput component", () => {
       expect(options[3].textContent).toBe("每週");
       expect(options[4].value).toBe("custom_seconds");
       expect(options[4].textContent).toBe("自訂秒數");
+    });
+
+    it("shows read-only RRULE when wire value is not a FE preset", () => {
+      const container = renderScheduleInput({
+        scheduleType: "seconds_10",
+        scheduleValue: null,
+        scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+      });
+      const code = container.querySelector(
+        '[data-testid="schedule-unmapped-rrule"]',
+      ) as HTMLElement;
+      expect(code).not.toBeNull();
+      expect(code.textContent).toBe("FREQ=HOURLY;INTERVAL=2");
+      expect(container.textContent).toContain("不在下方預設選項");
+      const select = container.querySelector('select[aria-label="排程類型"]') as HTMLSelectElement;
+      expect(select.value).toBe("");
+      expect(select.querySelector('option[value=""]')?.textContent).toBe("自訂觸發 RRULE");
     });
 
     it("shows project wave interval after schedule type when enabled", () => {

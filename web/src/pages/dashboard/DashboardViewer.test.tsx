@@ -8,6 +8,7 @@ const mockNavigate = vi.fn();
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
+  useParams: () => ({}),
 }));
 
 vi.mock("../../context/ToastContext", async () =>
@@ -33,6 +34,10 @@ vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
 vi.mock("../../api/tasks", () => ({
   deleteTask: vi.fn().mockResolvedValue(undefined),
   toggleTaskActive: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../../api/items", () => ({
+  listItems: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("../../api/worksets", () => ({

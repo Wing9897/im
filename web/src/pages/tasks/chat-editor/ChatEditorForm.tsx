@@ -107,6 +107,7 @@ export function ChatEditorForm({
                   <ScheduleInput
                     scheduleType={formState.scheduleType}
                     scheduleValue={formState.scheduleValue}
+                    scheduleRrule={formState.scheduleRrule}
                     onScheduleTypeChange={(type) => updateField("scheduleType", type)}
                     onScheduleValueChange={(value) => updateField("scheduleValue", value)}
                     showProjectWaveInterval={isProjectMode}
