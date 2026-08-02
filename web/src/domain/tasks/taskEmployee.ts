@@ -1,6 +1,7 @@
 /**
  * Task-type identity mapped from analysis_mode (DB enum unchanged).
- * Recurring is a calendar task type (no AI avatar); other modes map to AI staff.
+ * Recurring is a calendar task type (no AI avatar); other modes may show AI
+ * staff avatars, but task-type labels use `tasks.employees.*.name` (not aiStaff titles).
  */
 import type { AnalysisMode } from "../../types/common";
 import type { AiStaffId } from "../aiStaff/aiStaff";

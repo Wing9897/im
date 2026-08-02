@@ -605,7 +605,7 @@ describe("ChatEditorPage integration tests", () => {
       const picker = container.querySelector('[data-testid="task-employee-picker"]');
       expect(picker).not.toBeNull();
       const activeTile = picker!.querySelector('[aria-pressed="true"]');
-      expect(activeTile?.textContent).toContain("關鍵事件分析員");
+      expect(activeTile?.textContent).toContain("關鍵事件");
 
       cleanup();
     });

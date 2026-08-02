@@ -36,7 +36,7 @@
       "editAria": "編輯 {name}",
       "deleteAria": "刪除 {name}",
       "openProjectAria": "開啟專案：{name}",
-      "project": "專案管理",
+      "project": "專案",
       "projectProgressHint": "進度以訊息游標推進（非標記統計）",
       "recurringProgressHint": "循環日程（無訊息分析統計）",
       "calendarTaskProgressHint": "日曆任務桶（顯示關聯時間事件）",
@@ -161,6 +161,18 @@
       "scheduleClerk": {
         "name": "循環日程",
         "blurb": "RRULE 週期日程，無 AI 處理"
+      },
+      "eventIntel": {
+        "name": "關鍵事件",
+        "blurb": "從訊息抽取關鍵事件與行程"
+      },
+      "leaderboard": {
+        "name": "排行榜",
+        "blurb": "比較與追蹤熱門訊息排名"
+      },
+      "projectManager": {
+        "name": "專案",
+        "blurb": "閉環 reconcile 專案日程與子任務"
       }
     },
     "modes": {
@@ -186,7 +198,7 @@
         "promptHint": ""
       },
       "project": {
-        "modeOptionLabel": "專案 - 閉環日程助手",
+        "modeOptionLabel": "專案 - 閉環日程",
         "modeDescription": "閉環 reconcile 專案日程與子任務",
         "promptLabel": "專案目標／規則",
         "promptPlaceholder": "例如：依 Telegram 更新站會與 demo 日期；偏好上午時段；已取消的系列請軟刪",

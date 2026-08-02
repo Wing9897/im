@@ -139,7 +139,7 @@ describe("TaskCard", () => {
 
   it("shows the employee badge for every mode", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
-    expect(container.textContent).toContain("排行榜分析員");
+    expect(container.textContent).toContain("排行榜");
   });
 
   it("shows the matching AI staff avatar for analysis modes", () => {
