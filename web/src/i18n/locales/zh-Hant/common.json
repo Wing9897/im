@@ -114,7 +114,7 @@
       "createTask": "建立任務",
       "requiredAria": "必填欄位",
       "settingsTitle": "任務設定",
-      "optionalAria": "進階技能",
+      "optionalAria": "進階設定",
       "channelsLoadError": "無法載入頻道列表",
       "scheduleHydrating": "正在載入循環排程…",
       "scheduleHydrateFailed": "無法載入循環排程：{message}",
@@ -139,17 +139,13 @@
       "evidenceStyleHelp": "留空則跟隨全域證據風格。",
       "nameLabel": "任務名稱",
       "namePlaceholder": "輸入任務名稱",
-      "foundationTitle": "選擇員工",
-      "foundationHint": "任務建立在可重複／可觸發的時間排程之上；先選負責的員工，再配置其技能。",
-      "staffLabel": "員工",
-      "staffGroup": {
-        "noAi": "無處理",
-        "ai": "AI 員工"
-      },
-      "skillsTitle": "技能／能力",
-      "skillsAria": "員工技能",
-      "skillsHint": "依所選員工顯示可配置的能力（排程、Prompt、來源頻道等）。",
-      "optionalTitle": "進階技能",
+      "foundationTitle": "基本設定",
+      "foundationHint": "任務建立在可重複／可觸發的時間排程之上。",
+      "taskTypeLabel": "任務類型",
+      "skillsTitle": "設定／技能",
+      "skillsAria": "任務設定與技能",
+      "skillsHint": "依所選任務類型顯示可配置項目（排程、Prompt、來源頻道等）。",
+      "optionalTitle": "進階設定",
       "descriptionLabel": "描述",
       "descriptionPlaceholder": "任務描述（選填）",
       "promptLabel": "Prompt 模板",
@@ -163,7 +159,7 @@
     },
     "employees": {
       "scheduleClerk": {
-        "name": "循環日程員工",
+        "name": "循環日程",
         "blurb": "RRULE 週期日程，無 AI 處理"
       }
     },

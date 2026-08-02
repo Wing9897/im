@@ -14,7 +14,7 @@ import {
   getTaskEmployeeBlurb,
   getTaskEmployeeDisplayName,
   getTaskEmployeeIdForMode,
-  taskFormAnalysisModeGroups,
+  taskFormAnalysisModeOrder,
 } from "../../../components/task/taskFormAnalysisModeMeta";
 import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
 import { analysisModeForTaskEmployee } from "../../../domain/tasks/taskEmployee";
@@ -34,7 +34,7 @@ interface ChatNameModeFieldsProps {
   onWorksetIdChange: (value: string | null) => void;
 }
 
-/** Name + L2 employee picker + workset as FormGrid cells. */
+/** Name + task-type picker + workset as FormGrid cells. */
 export function ChatNameModeFields({
   name,
   analysisMode,
@@ -111,54 +111,46 @@ export function ChatNameModeFields({
       <div
         className="flex flex-col gap-sm md:col-span-2"
         role="group"
-        aria-label={t("tasks.editor.staffLabel")}
+        aria-label={t("tasks.editor.taskTypeLabel")}
         data-testid="task-employee-picker"
       >
         <span className="text-caption font-medium text-text-primary">
-          {t("tasks.editor.staffLabel")}
+          {t("tasks.editor.taskTypeLabel")}
         </span>
-        <div className="flex flex-col gap-md">
-          {taskFormAnalysisModeGroups.map((group) => (
-            <div key={group.id} className="flex flex-col gap-sm">
-              <span className="text-[11px] font-semibold tracking-wide text-text-muted">
-                {t(`tasks.editor.staffGroup.${group.id}`)}
-              </span>
-              <SelectTileGrid
-                columns="repeat(auto-fit, minmax(148px, 1fr))"
-                className="gap-sm"
+        <SelectTileGrid
+          columns="repeat(auto-fit, minmax(148px, 1fr))"
+          className="gap-sm"
+        >
+          {taskFormAnalysisModeOrder.map((mode) => {
+            const employeeId = getTaskEmployeeIdForMode(mode);
+            const nameLabel = getTaskEmployeeDisplayName(employeeId);
+            const blurb = getTaskEmployeeBlurb(employeeId);
+            const selected = analysisMode === mode;
+            return (
+              <SelectTile
+                key={mode}
+                compact
+                active={selected}
+                aria-pressed={selected}
+                onClick={() =>
+                  onAnalysisModeChange(analysisModeForTaskEmployee(employeeId))
+                }
+                hint={blurb}
+                className="min-h-0"
               >
-                {group.modes.map((mode) => {
-                  const employeeId = getTaskEmployeeIdForMode(mode);
-                  const nameLabel = getTaskEmployeeDisplayName(employeeId);
-                  const blurb = getTaskEmployeeBlurb(employeeId);
-                  const selected = analysisMode === mode;
-                  return (
-                    <SelectTile
-                      key={mode}
-                      compact
-                      active={selected}
-                      aria-pressed={selected}
-                      onClick={() =>
-                        onAnalysisModeChange(analysisModeForTaskEmployee(employeeId))
-                      }
-                      hint={blurb}
-                      className="min-h-0"
-                    >
-                      <span className="flex items-center gap-sm">
-                        <TaskEmployeeAvatar
-                          employeeId={employeeId}
-                          size="sm"
-                          label={nameLabel}
-                        />
-                        <span className="leading-snug">{nameLabel}</span>
-                      </span>
-                    </SelectTile>
-                  );
-                })}
-              </SelectTileGrid>
-            </div>
-          ))}
-        </div>
+                <span className="flex items-center gap-sm">
+                  <TaskEmployeeAvatar
+                    employeeId={employeeId}
+                    size="sm"
+                    label={nameLabel}
+                    showRecurringIcon
+                  />
+                  <span className="leading-snug">{nameLabel}</span>
+                </span>
+              </SelectTile>
+            );
+          })}
+        </SelectTileGrid>
       </div>
 
       <WorksetNameDialog

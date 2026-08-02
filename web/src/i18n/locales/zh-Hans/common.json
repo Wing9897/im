@@ -114,7 +114,7 @@
       "createTask": "建立任务",
       "requiredAria": "必填栏位",
       "settingsTitle": "任务设定",
-      "optionalAria": "进阶技能",
+      "optionalAria": "进阶设定",
       "channelsLoadError": "无法加载频道列表",
       "scheduleHydrating": "正在加载循环排程…",
       "scheduleHydrateFailed": "无法加载循环排程：{message}",
@@ -139,17 +139,13 @@
       "evidenceStyleHelp": "留空则跟随全局证据风格。",
       "nameLabel": "任务名称",
       "namePlaceholder": "输入任务名称",
-      "foundationTitle": "选择员工",
-      "foundationHint": "任务建立在可重复／可触发的时间排程之上；先选负责的员工，再配置其技能。",
-      "staffLabel": "员工",
-      "staffGroup": {
-        "noAi": "无处理",
-        "ai": "AI 员工"
-      },
-      "skillsTitle": "技能／能力",
-      "skillsAria": "员工技能",
-      "skillsHint": "依所选员工显示可配置的能力（排程、Prompt、来源频道等）。",
-      "optionalTitle": "进阶技能",
+      "foundationTitle": "基本设置",
+      "foundationHint": "任务建立在可重复／可触发的时间排程之上。",
+      "taskTypeLabel": "任务类型",
+      "skillsTitle": "设定／技能",
+      "skillsAria": "任务设定与技能",
+      "skillsHint": "依所选任务类型显示可配置项目（排程、Prompt、来源频道等）。",
+      "optionalTitle": "进阶设定",
       "descriptionLabel": "描述",
       "descriptionPlaceholder": "任务描述（选填）",
       "promptLabel": "Prompt 模板",
@@ -163,7 +159,7 @@
     },
     "employees": {
       "scheduleClerk": {
-        "name": "循环日程员工",
+        "name": "循环日程",
         "blurb": "RRULE 周期日程，无 AI 处理"
       }
     },
