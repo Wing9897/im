@@ -8,24 +8,29 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ModalDialog } from "../../components/ModalDialog";
 import {
+  AccentBarCard,
   AlertBanner,
   Badge,
   Button,
   FormActions,
+  PanelSection,
   captionClass,
-  sectionTitleClass,
 } from "../../components/ui";
+import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
+import { MODE_BADGE_TONE } from "../../components/task/analysisModeBadgeTone";
 import { listItems, type TrackableItem } from "../../api/items";
 import { listUserEvents, type UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
+import type { AnalysisMode } from "../../types/common";
 import { formatItemsError } from "../../domain/items/itemErrors";
-import { daysUntil } from "../../domain/items/itemAttributes";
+import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import {
   selectSummaryExpiringItems,
   selectSummaryUserEvents,
   worksetEventsQueryWindow,
 } from "../../domain/worksets/worksetDetailSummary";
 import { formatOsDateTime } from "../../utils/time";
+import { ItemsEntryCard } from "../items/ItemsEntryCard";
 
 export type WorksetDetailTarget = {
   id: string;
@@ -41,6 +46,16 @@ type Props = {
   onRename?: () => void;
   onDelete?: () => void;
 };
+
+const MODE_BAR_CLASS: Record<AnalysisMode, string> = {
+  leaderboard: "bg-accent",
+  event: "bg-info",
+  recurring: "bg-success",
+  project: "bg-warning",
+};
+
+const detailCardGridClass =
+  "grid grid-cols-1 gap-card-gap sm:grid-cols-2 [&>*]:min-w-0 [&>*]:h-full";
 
 export function WorksetDetailDialog({
   workset,
@@ -199,162 +214,166 @@ export function WorksetDetailDialog({
         </AlertBanner>
       ) : null}
 
-      <section aria-label={t("workset.detailSummaryExpiringHeading")} data-testid="workset-summary-expiring">
-        <h3 className={`${sectionTitleClass} mb-sm`}>
-          {t("workset.detailSummaryExpiringHeading")}
-          <span className={`ml-xs font-normal ${captionClass}`}>
-            ({loadingItems ? "…" : expiringSummary.length})
-          </span>
-        </h3>
-        {loadingItems ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
-        ) : expiringSummary.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryExpiringEmpty")}</p>
-        ) : (
-          <ul className="m-0 flex list-none flex-col gap-xs p-0">
-            {expiringSummary.map((item) => {
-              const days = daysUntil(item.expiresAt);
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-sm rounded-lg border border-surface-border/70 bg-transparent px-sm py-xs text-left hover:border-accent/50"
-                    onClick={() => openItem(item.id)}
-                    data-testid={`workset-summary-item-${item.id}`}
-                  >
-                    <span className="min-w-0 truncate text-body text-text-primary">
-                      {item.title}
-                    </span>
-                    <span className={`shrink-0 ${captionClass}`}>
-                      {item.expiresAt
-                        ? days != null && days < 0
-                          ? t("workset.itemOverdue", { count: Math.abs(days) })
-                          : item.expiresAt
-                        : t("workset.itemNoExpiry")}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <div data-testid="workset-summary-expiring">
+        <PanelSection
+          title={t("workset.detailSummaryExpiringHeading")}
+          showCount={!loadingItems}
+          itemCount={expiringSummary.length}
+          aria-label={t("workset.detailSummaryExpiringHeading")}
+          className="!shadow-none"
+        >
+          {loadingItems ? (
+            <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
+          ) : expiringSummary.length === 0 ? (
+            <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryExpiringEmpty")}</p>
+          ) : (
+            <div className={detailCardGridClass}>
+              {expiringSummary.map((item) => (
+                <ItemsEntryCard
+                  key={item.id}
+                  item={item}
+                  emoji={resolveItemEmoji(item, null)}
+                  onOpen={() => openItem(item.id)}
+                  testId={`workset-summary-item-${item.id}`}
+                />
+              ))}
+            </div>
+          )}
+        </PanelSection>
+      </div>
 
-      <section aria-label={t("workset.detailSummaryEventsHeading")} data-testid="workset-summary-events">
-        <h3 className={`${sectionTitleClass} mb-sm`}>
-          {t("workset.detailSummaryEventsHeading")}
-          <span className={`ml-xs font-normal ${captionClass}`}>
-            ({loadingEvents ? "…" : eventsSummary.length})
-          </span>
-        </h3>
-        {loadingEvents ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
-        ) : eventsError ? (
-          <p className={`m-0 ${captionClass}`} role="status">
-            {eventsError}
-          </p>
-        ) : eventsSummary.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryEventsEmpty")}</p>
-        ) : (
-          <ul className="m-0 flex list-none flex-col gap-xs p-0">
-            {eventsSummary.map((row) => (
-              <li key={row.id}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-sm rounded-lg border border-surface-border/70 bg-transparent px-sm py-xs text-left hover:border-accent/50"
-                  onClick={() => openEvent(row)}
+      <div data-testid="workset-summary-events">
+        <PanelSection
+          title={t("workset.detailSummaryEventsHeading")}
+          showCount={!loadingEvents}
+          itemCount={eventsSummary.length}
+          aria-label={t("workset.detailSummaryEventsHeading")}
+          className="!shadow-none"
+        >
+          {loadingEvents ? (
+            <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
+          ) : eventsError ? (
+            <p className={`m-0 ${captionClass}`} role="status">
+              {eventsError}
+            </p>
+          ) : eventsSummary.length === 0 ? (
+            <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryEventsEmpty")}</p>
+          ) : (
+            <div className={detailCardGridClass}>
+              {eventsSummary.map((row) => (
+                <AccentBarCard
+                  key={row.id}
+                  accentClass="bg-info"
+                  material="elevated"
+                  interactive
+                  enter="rise"
                   data-testid={`workset-summary-event-${row.id}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openEvent(row)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openEvent(row);
+                    }
+                  }}
+                  aria-label={t("workset.openEventAria", { name: row.title })}
                 >
-                  <span className="min-w-0 truncate text-body text-text-primary">
+                  <span className={`min-w-0 truncate ${cardTitleClass}`} title={row.title}>
                     {row.title}
                   </span>
-                  <span className={`shrink-0 ${captionClass}`}>
+                  <p className={cardBodyClass}>
                     {formatOsDateTime(row.startTime, {
                       month: "short",
                       day: "numeric",
                       hour: row.isAllDay ? undefined : "2-digit",
                       minute: row.isAllDay ? undefined : "2-digit",
                     })}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                  </p>
+                  {row.isAllDay ? (
+                    <Badge tone="neutral" className="normal-case tracking-normal w-fit">
+                      {t("workset.eventAllDay")}
+                    </Badge>
+                  ) : null}
+                </AccentBarCard>
+              ))}
+            </div>
+          )}
+        </PanelSection>
+      </div>
 
-      <section aria-label={t("workset.detailTasksHeading")}>
-        <h3 className={`${sectionTitleClass} mb-sm`}>
-          {t("workset.detailTasksHeading")}
-          <span className={`ml-xs font-normal ${captionClass}`}>
-            ({workset.tasks.length})
-          </span>
-        </h3>
+      <PanelSection
+        title={t("workset.detailTasksHeading")}
+        showCount
+        itemCount={workset.tasks.length}
+        aria-label={t("workset.detailTasksHeading")}
+        className="!shadow-none"
+      >
         {workset.tasks.length === 0 ? (
           <p className={`m-0 ${captionClass}`}>{t("workset.detailTasksEmpty")}</p>
         ) : (
-          <ul className="m-0 flex list-none flex-col gap-xs p-0">
+          <div className={detailCardGridClass}>
             {workset.tasks.map((task) => (
-              <li key={task.id}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-sm rounded-lg border border-surface-border/70 bg-transparent px-sm py-xs text-left hover:border-accent/50"
-                  onClick={() => onOpenTask(task)}
-                  data-testid={`workset-detail-task-${task.id}`}
-                >
-                  <span className="min-w-0 truncate text-body text-text-primary">
+              <AccentBarCard
+                key={task.id}
+                accentClass={MODE_BAR_CLASS[task.analysisMode] ?? "bg-accent"}
+                material="elevated"
+                interactive
+                enter="rise"
+                data-testid={`workset-detail-task-${task.id}`}
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenTask(task)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onOpenTask(task);
+                  }
+                }}
+                aria-label={t("workset.openTaskAria", { name: task.name })}
+              >
+                <div className="flex items-start justify-between gap-sm">
+                  <span className={`min-w-0 flex-1 truncate ${cardTitleClass}`} title={task.name}>
                     {task.name}
                   </span>
-                  <Badge tone="neutral" className="normal-case tracking-normal shrink-0">
+                  <Badge
+                    tone={MODE_BADGE_TONE[task.analysisMode] ?? "neutral"}
+                    className="normal-case tracking-normal shrink-0"
+                  >
                     {task.analysisMode}
                   </Badge>
-                </button>
-              </li>
+                </div>
+              </AccentBarCard>
             ))}
-          </ul>
+          </div>
         )}
-      </section>
+      </PanelSection>
 
-      <section aria-label={t("workset.detailItemsHeading")}>
-        <h3 className={`${sectionTitleClass} mb-sm`}>
-          {t("workset.detailItemsHeading")}
-          <span className={`ml-xs font-normal ${captionClass}`}>
-            ({loadingItems ? "…" : activeItems.length})
-          </span>
-        </h3>
+      <PanelSection
+        title={t("workset.detailItemsHeading")}
+        showCount={!loadingItems}
+        itemCount={activeItems.length}
+        aria-label={t("workset.detailItemsHeading")}
+        className="!shadow-none"
+      >
         {loadingItems ? (
           <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
         ) : activeItems.length === 0 ? (
           <p className={`m-0 ${captionClass}`}>{t("workset.detailItemsEmpty")}</p>
         ) : (
-          <ul className="m-0 flex list-none flex-col gap-xs p-0">
-            {activeItems.map((item) => {
-              const days = daysUntil(item.expiresAt);
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between gap-sm rounded-lg border border-surface-border/70 bg-transparent px-sm py-xs text-left hover:border-accent/50"
-                    onClick={() => openItem(item.id)}
-                    data-testid={`workset-detail-item-${item.id}`}
-                  >
-                    <span className="min-w-0 truncate text-body text-text-primary">
-                      {item.title}
-                    </span>
-                    <span className={`shrink-0 ${captionClass}`}>
-                      {item.expiresAt
-                        ? days != null && days < 0
-                          ? t("workset.itemOverdue", { count: Math.abs(days) })
-                          : item.expiresAt
-                        : t("workset.itemNoExpiry")}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className={detailCardGridClass}>
+            {activeItems.map((item) => (
+              <ItemsEntryCard
+                key={item.id}
+                item={item}
+                emoji={resolveItemEmoji(item, null)}
+                onOpen={() => openItem(item.id)}
+                testId={`workset-detail-item-${item.id}`}
+              />
+            ))}
+          </div>
         )}
-      </section>
+      </PanelSection>
     </ModalDialog>
   );
 }

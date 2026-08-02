@@ -62,6 +62,9 @@ vi.mock("react-i18next", () => ({
       if (key === "workset.addEvent") return "add event";
       if (key === "workset.itemNoExpiry") return "no expiry";
       if (key === "workset.itemOverdue") return `overdue ${opts?.count}`;
+      if (key === "workset.openTaskAria") return `Open task ${opts?.name ?? ""}`;
+      if (key === "workset.openEventAria") return `Open event ${opts?.name ?? ""}`;
+      if (key === "workset.eventAllDay") return "All day";
       if (key === "tasks.addTask") return "add task";
       if (key === "dialog.close") return "close";
       if (key === "workset.rename") return "rename";
@@ -175,7 +178,7 @@ describe("WorksetDetailDialog", () => {
     container.remove();
   });
 
-  it("lists member tasks, active items, and summary rows", async () => {
+  it("renders member tasks, active items, and summary cards", async () => {
     const onOpenTask = vi.fn();
     const onClose = vi.fn();
 

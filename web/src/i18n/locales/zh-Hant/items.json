@@ -6,6 +6,7 @@
   "allCategories": "全部類型",
   "backToCategories": "返回類型",
   "openCategoryAria": "開啟類型 {name}",
+  "openItemAria": "開啟物品 {name}",
   "categoryItemCount": "{count} 件物品",
   "categoryExpiringCount": "即將到期 {count}",
   "categoryOverdueCount": "已過期 {count}",
