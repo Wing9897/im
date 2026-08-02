@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Web intel (`analysis_mode=web_intel` / 網路情報):** scheduled web-search ticks write `analysis_events` (same store as key events). Short pipeline — native OpenAI/Gemini search+JSON when available, else DDG/Brave tool search → LLM JSON. Task fields: `promptTemplate` + `webSearchQuery`; default trigger `hourly`. Schema stamp **9** / `schemaSemver` **0.1.0-beta.10** (wipe-only — existing DBs must reset).
+- **Web intel phase-2 polish:** dedicated AI-staff avatar + title「情報蒐集」; TaskCard / L3 form validation copy; empty-query skip writes observable `skipped:` batches; SourceFilter mode badges cover `web_intel`.
 - **Schema stamp 8 / `schemaSemver` 0.1.0-beta.9:** unified AI schedule storage as `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger → APScheduler only; never calendar-expand). Calendar series stay on `recurring_schedules.rrule`. Wipe-only — existing DBs must reset.
 - **Schema stamp 7 / `schemaSemver` 0.1.0-beta.8:** optional `emoji` on `item_categories` + `items`; expanded seed types with emoji logos. Wipe-only — existing DBs must reset.
 - **Calendar remind occurrences:** active items with `expires_at` and `remind_before_days > 0` project floating all-day `itemDateKind=remind` on `expires_at - remind_before_days` via unified `item_projection` / `GET /calendar/items` (i18n `remindPrefix`; sidebar deep-link `/items`).

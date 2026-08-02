@@ -88,6 +88,7 @@ function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): Use
     error: null,
     save: vi.fn().mockResolvedValue(undefined),
     canSave: false,
+    saveBlockReason: null,
     isSaving: false,
     scheduleHydrating: false,
     scheduleHydrateError: null,

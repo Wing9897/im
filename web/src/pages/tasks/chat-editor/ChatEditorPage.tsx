@@ -29,6 +29,7 @@ export function ChatEditorPage() {
     error,
     save,
     canSave,
+    saveBlockReason,
     isSaving,
     scheduleHydrating,
     scheduleHydrateError,
@@ -96,6 +97,7 @@ export function ChatEditorPage() {
 
   const scheduleError = validateScheduleValue(formState.scheduleType, formState.scheduleValue);
   const canSaveForm = canSave && !scheduleError;
+  const disabledSaveReason = scheduleError ?? saveBlockReason;
 
   const handleBack = () => {
     navigate("/tasks");
@@ -127,6 +129,7 @@ export function ChatEditorPage() {
       <ChatEditorToolbar
         isEditMode={isEditMode}
         canSaveForm={canSaveForm}
+        saveBlockReason={disabledSaveReason}
         isSaving={isSaving}
         showPresets={showPresets}
         onBack={handleBack}

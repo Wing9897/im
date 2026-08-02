@@ -350,6 +350,30 @@ describe("useIntelligenceFeed", () => {
     expect(latest!.allItems).toHaveLength(4);
   });
 
+  it("includes web_intel tasks in the intelligence source catalog", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "t-event", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
+    ]);
+    localStorage.setItem(
+      INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY,
+      JSON.stringify({ taskIds: [], worksetIds: ["ws-1"] }),
+    );
+    mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+
+    await act(async () => {
+      root.render(createElement(Harness));
+      await flushPromises();
+    });
+
+    const fetchArgs = mockFetchEvents.mock.calls.at(-1)?.[0] as {
+      taskIds?: string[] | null;
+    };
+    expect(fetchArgs.taskIds).toEqual(expect.arrayContaining(["t-event", "t-web"]));
+    expect(fetchArgs.taskIds).not.toEqual(expect.arrayContaining(["t-lb"]));
+  });
+
   it("passes flat resolvedApiTaskIds (string[]|null) to useRefreshOnAnalysisEvent", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "t-a", analysisMode: "event", worksetId: "ws-1" }),

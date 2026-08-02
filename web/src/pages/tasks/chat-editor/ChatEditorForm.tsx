@@ -128,57 +128,69 @@ export function ChatEditorForm({
                 promptPlaceholder={modeMeta.promptPlaceholder}
                 promptHint={modeMeta.promptHint}
                 scheduleSlot={
-                  <ScheduleInput
-                    scheduleType={formState.scheduleType}
-                    scheduleValue={formState.scheduleValue}
-                    scheduleRrule={formState.scheduleRrule}
-                    onScheduleTypeChange={(type) => updateField("scheduleType", type)}
-                    onScheduleValueChange={(value) => updateField("scheduleValue", value)}
-                    showProjectWaveInterval={isProjectMode}
-                    projectWaveIntervalSeconds={projectWaveIntervalSeconds}
-                    onProjectWaveIntervalSecondsChange={(value) => {
-                      const trimmed = value.trim();
-                      if (!trimmed) {
-                        updateField("projectWaveIntervalSeconds", null);
-                        return;
-                      }
-                      const num = Number(trimmed);
-                      updateField(
-                        "projectWaveIntervalSeconds",
-                        Number.isInteger(num) ? num : null,
-                      );
-                    }}
-                    onProjectWaveIntervalSecondsCommit={(value) => {
-                      const trimmed = value.trim();
-                      if (!trimmed) {
+                  <div className="flex flex-col gap-xs">
+                    <ScheduleInput
+                      scheduleType={formState.scheduleType}
+                      scheduleValue={formState.scheduleValue}
+                      scheduleRrule={formState.scheduleRrule}
+                      onScheduleTypeChange={(type) => updateField("scheduleType", type)}
+                      onScheduleValueChange={(value) => updateField("scheduleValue", value)}
+                      showProjectWaveInterval={isProjectMode}
+                      projectWaveIntervalSeconds={projectWaveIntervalSeconds}
+                      onProjectWaveIntervalSecondsChange={(value) => {
+                        const trimmed = value.trim();
+                        if (!trimmed) {
+                          updateField("projectWaveIntervalSeconds", null);
+                          return;
+                        }
+                        const num = Number(trimmed);
                         updateField(
                           "projectWaveIntervalSeconds",
-                          DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+                          Number.isInteger(num) ? num : null,
                         );
-                        return;
-                      }
-                      const num = Number(trimmed);
-                      if (!Number.isInteger(num) || num < 0) {
-                        updateField(
-                          "projectWaveIntervalSeconds",
-                          DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
-                        );
-                        return;
-                      }
-                      updateField("projectWaveIntervalSeconds", Math.min(num, 600));
-                    }}
-                  />
+                      }}
+                      onProjectWaveIntervalSecondsCommit={(value) => {
+                        const trimmed = value.trim();
+                        if (!trimmed) {
+                          updateField(
+                            "projectWaveIntervalSeconds",
+                            DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+                          );
+                          return;
+                        }
+                        const num = Number(trimmed);
+                        if (!Number.isInteger(num) || num < 0) {
+                          updateField(
+                            "projectWaveIntervalSeconds",
+                            DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+                          );
+                          return;
+                        }
+                        updateField("projectWaveIntervalSeconds", Math.min(num, 600));
+                      }}
+                    />
+                    {showWebSearchQuery ? (
+                      <p
+                        className={`m-0 ${formHelpClass}`}
+                        data-testid="task-web-intel-schedule-hint"
+                      >
+                        {t("tasks.modes.web_intel.scheduleDefaultHint")}
+                      </p>
+                    ) : null}
+                  </div>
                 }
                 webSearchQuerySlot={
                   showWebSearchQuery ? (
                     <div className="md:col-span-2">
                       <SettingsRow
-                        label={t("tasks.modes.web_intel.searchQueryLabel")}
+                        label={`${t("tasks.modes.web_intel.searchQueryLabel")}${t("tasks.editor.requiredSuffix")}`}
                         htmlFor="chat-web-search-query"
                       >
                         <TextField
                           id="chat-web-search-query"
                           type="text"
+                          required
+                          aria-required="true"
                           placeholder={t("tasks.modes.web_intel.searchQueryPlaceholder")}
                           value={formState.webSearchQuery}
                           onChange={(e) => updateField("webSearchQuery", e.target.value)}
@@ -187,10 +199,19 @@ export function ChatEditorForm({
                         <p className={`mt-xs mb-0 ${formHelpClass}`}>
                           {t("tasks.modes.web_intel.searchQueryHint")}
                         </p>
+                        {!formState.webSearchQuery.trim() ? (
+                          <p
+                            className={`mt-xs mb-0 ${formHelpClass} text-error`}
+                            data-testid="task-web-search-query-required"
+                          >
+                            {t("tasks.editor.saveNeeds.webSearchQuery")}
+                          </p>
+                        ) : null}
                       </SettingsRow>
                     </div>
                   ) : null
                 }
+                promptRequired={showWebSearchQuery}
               />
 
               {showChannels ? (

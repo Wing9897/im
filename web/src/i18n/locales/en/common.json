@@ -40,6 +40,9 @@
       "projectProgressHint": "Progress uses a message cursor (not marker stats)",
       "recurringProgressHint": "Recurring schedule (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
+      "webIntel": "Web search · {query}",
+      "webIntelQueryEmpty": "(no query yet)",
+      "webIntelProgressHint": "Scheduled web search writes analysis events (not local message-batch stats)",
       "retryCount": "Retry {count}",
       "analysisPausedHint": "Analysis paused (auto or manual)"
     },
@@ -150,6 +153,17 @@
       "descriptionPlaceholder": "Task description (optional)",
       "promptLabel": "Prompt template",
       "promptPlaceholder": "Enter analysis prompt template",
+      "requiredSuffix": " (required)",
+      "saveNeeds": {
+        "generic": "Complete the required fields first",
+        "saving": "Saving…",
+        "name": "Enter a task name",
+        "prompt": "Enter the task prompt",
+        "webSearchQuery": "Enter a search query / keywords",
+        "channels": "Select at least one source channel",
+        "rrule": "Set a recurrence rule",
+        "eventStart": "Set a start time, or mark the event as all-day"
+      },
       "pickChannels": "Click to select channels",
       "channelsSelected": "{selected} / {total} channels selected",
       "channelsLabel": "Source channels",
@@ -203,6 +217,7 @@
         "searchQueryLabel": "Search query / keywords",
         "searchQueryPlaceholder": "e.g. OpenAI API pricing update OR regulation",
         "searchQueryHint": "Each schedule tick runs a web search with this query; combine with the prompt above",
+        "scheduleDefaultHint": "Default recommendation is hourly; switching to this type remaps every-10-seconds to hourly.",
         "noChannelsHint": "This type uses web search as input — no local message channels required. It follows the assistant web-search provider settings."
       },
       "recurring": {
@@ -522,7 +537,7 @@
     "taskEditor": "Task advisor",
     "leaderboard": "Leaderboard analyst",
     "eventIntel": "Key-event analyst",
-    "webIntel": "Web-intel analyst",
+    "webIntel": "Intel gatherer",
     "projectManager": "Project manager"
   },
   "ui": {

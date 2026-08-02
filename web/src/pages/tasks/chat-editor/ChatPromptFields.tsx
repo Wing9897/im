@@ -16,6 +16,8 @@ interface ChatPromptFieldsProps {
   promptHint?: string;
   /** Optional web-intel search query field rendered above the prompt. */
   webSearchQuerySlot?: ReactNode;
+  /** Mark prompt as required (web_intel / other AI modes that gate save on it). */
+  promptRequired?: boolean;
 }
 
 /**
@@ -32,9 +34,13 @@ export function ChatPromptFields({
   promptPlaceholder,
   promptHint,
   webSearchQuerySlot,
+  promptRequired = false,
 }: ChatPromptFieldsProps) {
   const { t } = useTranslation("common");
-  const label = promptLabel?.trim() || t("tasks.editor.promptLabel");
+  const baseLabel = promptLabel?.trim() || t("tasks.editor.promptLabel");
+  const label = promptRequired
+    ? `${baseLabel}${t("tasks.editor.requiredSuffix")}`
+    : baseLabel;
   const placeholder = promptPlaceholder?.trim() || t("tasks.editor.promptPlaceholder");
 
   return (
@@ -62,9 +68,19 @@ export function ChatPromptFields({
             value={promptTemplate}
             onChange={(e) => onPromptTemplateChange(e.target.value)}
             data-testid="task-prompt-template"
+            required={promptRequired}
+            aria-required={promptRequired || undefined}
           />
           {promptHint?.trim() ? (
             <p className={`mt-xs mb-0 ${formHelpClass}`}>{promptHint}</p>
+          ) : null}
+          {promptRequired && !promptTemplate.trim() ? (
+            <p
+              className={`mt-xs mb-0 ${formHelpClass} text-error`}
+              data-testid="task-prompt-required"
+            >
+              {t("tasks.editor.saveNeeds.prompt")}
+            </p>
           ) : null}
         </SettingsRow>
       </div>

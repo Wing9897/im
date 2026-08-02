@@ -9,6 +9,8 @@ import { hasDeviceSession } from "../../../domain/connection/connectionStore";
 interface ChatEditorToolbarProps {
   isEditMode: boolean;
   canSaveForm: boolean;
+  /** Shown on the disabled save button (missing fields / schedule error). */
+  saveBlockReason?: string | null;
   isSaving: boolean;
   /** When false, hide quick presets (recurring). */
   showPresets?: boolean;
@@ -24,6 +26,7 @@ interface ChatEditorToolbarProps {
 export function ChatEditorToolbar({
   isEditMode,
   canSaveForm,
+  saveBlockReason = null,
   isSaving,
   showPresets = true,
   onBack,
@@ -76,6 +79,11 @@ export function ChatEditorToolbar({
               disabled={!canSaveForm || isSaving}
               onClick={onSave}
               data-testid="task-editor-save"
+              title={
+                !canSaveForm || isSaving
+                  ? (saveBlockReason ?? t("tasks.editor.saveNeeds.generic"))
+                  : undefined
+              }
             >
               {isEditMode ? t("tasks.editor.updateTask") : t("tasks.editor.createTask")}
             </Button>

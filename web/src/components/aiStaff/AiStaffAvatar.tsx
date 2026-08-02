@@ -4,6 +4,7 @@ import assistantSrc from "../../assets/ai-staff/assistant.png";
 import taskEditorSrc from "../../assets/ai-staff/taskEditor.png";
 import leaderboardSrc from "../../assets/ai-staff/leaderboard.png";
 import eventIntelSrc from "../../assets/ai-staff/eventIntel.png";
+import webIntelSrc from "../../assets/ai-staff/webIntel.png";
 import projectManagerSrc from "../../assets/ai-staff/projectManager.png";
 
 const AVATAR_SRC: Record<AiStaffId, string> = {
@@ -11,8 +12,7 @@ const AVATAR_SRC: Record<AiStaffId, string> = {
   taskEditor: taskEditorSrc,
   leaderboard: leaderboardSrc,
   eventIntel: eventIntelSrc,
-  // MVP: reuse eventIntel artwork until a dedicated webIntel asset ships.
-  webIntel: eventIntelSrc,
+  webIntel: webIntelSrc,
   projectManager: projectManagerSrc,
 };
 

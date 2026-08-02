@@ -35,6 +35,42 @@ from server.web_search import search_web
 logger = logging.getLogger(__name__)
 
 _SEARCH_RESULT_CAP = 8
+_SKIP_EMPTY_QUERY = "skipped: empty web_search_query"
+_SKIP_EMPTY_PROMPT = "skipped: empty prompt_template"
+
+
+async def _record_web_intel_skip(
+    *,
+    db: Database,
+    broadcaster: Broadcaster,
+    task: dict[str, Any],
+    task_id: str,
+    reason: str,
+) -> None:
+    """Persist a completed skip batch + SSE so empty fires are observable."""
+    batch_id = new_id()
+    now = utc_now_iso()
+    version = int(task.get("version") or 1)
+    await db.execute(
+        "INSERT INTO analysis_batches "
+        "(id, task_id, version, status, message_count, agent_message, "
+        "created_at, updated_at, completed_at) "
+        "VALUES (?, ?, ?, 'completed', 0, ?, ?, ?, ?)",
+        (batch_id, task_id, version, reason, now, now, now),
+    )
+    logger.info("web_intel tick skipped task=%s batch=%s: %s", task_id, batch_id, reason)
+    broadcaster.publish(
+        "analysis_completed",
+        {
+            "taskId": task_id,
+            "batchId": batch_id,
+            "analysisMode": WEB_INTEL_MODE,
+            "findingsCount": 0,
+            "hasFindings": False,
+            "skipped": True,
+            "skipReason": reason,
+        },
+    )
 
 
 async def execute_web_intel_tick(
@@ -62,10 +98,22 @@ async def execute_web_intel_tick(
     version = int(task.get("version") or 1)
 
     if not search_query:
-        logger.info("web_intel tick skipped task=%s: empty web_search_query", task_id)
+        await _record_web_intel_skip(
+            db=db,
+            broadcaster=broadcaster,
+            task=task,
+            task_id=task_id,
+            reason=_SKIP_EMPTY_QUERY,
+        )
         return
     if not prompt_template:
-        logger.info("web_intel tick skipped task=%s: empty prompt_template", task_id)
+        await _record_web_intel_skip(
+            db=db,
+            broadcaster=broadcaster,
+            task=task,
+            task_id=task_id,
+            reason=_SKIP_EMPTY_PROMPT,
+        )
         return
 
     batch_id = new_id()

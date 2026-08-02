@@ -113,3 +113,49 @@ async def test_web_intel_tick_two_step_writes_events(app, monkeypatch: pytest.Mo
     )
     assert title == "Web hit"
     assert any(name == "analysis_completed" for name, _ in broadcaster.events)
+
+
+@pytest.mark.asyncio
+async def test_web_intel_tick_empty_query_records_skipped_batch(
+    app, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db = app.state.db
+    now = utc_now_iso()
+    task_id = "web-intel-empty-query"
+    await db.execute(
+        "INSERT INTO analysis_tasks (id, name, description, prompt_template, web_search_query, "
+        "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
+        "include_in_timeline, created_at, updated_at) "
+        "VALUES (?, ?, '', ?, '', ?, 'all', 1, 1, ?, 1, ?, ?)",
+        (
+            task_id,
+            "Web intel empty",
+            "Extract official announcements only",
+            WEB_INTEL_MODE,
+            legacy_to_trigger_rrule("hourly", None),
+            now,
+            now,
+        ),
+    )
+
+    class _Broadcaster:
+        def __init__(self) -> None:
+            self.events: list[tuple[str, dict]] = []
+
+        def publish(self, name: str, payload: dict) -> None:
+            self.events.append((name, payload))
+
+    broadcaster = _Broadcaster()
+    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+
+    row = await db.fetch_one(
+        "SELECT status, agent_message FROM analysis_batches WHERE task_id = ?",
+        (task_id,),
+    )
+    assert row is not None
+    assert row["status"] == "completed"
+    assert row["agent_message"] == "skipped: empty web_search_query"
+    completed = [payload for name, payload in broadcaster.events if name == "analysis_completed"]
+    assert completed
+    assert completed[0]["skipped"] is True
+    assert completed[0]["skipReason"] == "skipped: empty web_search_query"

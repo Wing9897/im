@@ -40,6 +40,9 @@
       "projectProgressHint": "進度以訊息游標推進（非標記統計）",
       "recurringProgressHint": "循環日程（無訊息分析統計）",
       "calendarTaskProgressHint": "日曆任務桶（顯示關聯時間事件）",
+      "webIntel": "網頁搜尋 · {query}",
+      "webIntelQueryEmpty": "（尚未設定查詢）",
+      "webIntelProgressHint": "排程觸發網頁搜尋後寫入情報事件（非本地訊息批次統計）",
       "retryCount": "重試 {count}",
       "analysisPausedHint": "分析已自動或手動暫停"
     },
@@ -150,6 +153,17 @@
       "descriptionPlaceholder": "任務描述（選填）",
       "promptLabel": "Prompt 模板",
       "promptPlaceholder": "輸入分析 Prompt 模板",
+      "requiredSuffix": "（必填）",
+      "saveNeeds": {
+        "generic": "請先完成必填欄位",
+        "saving": "正在儲存…",
+        "name": "請填寫任務名稱",
+        "prompt": "請填寫任務 Prompt",
+        "webSearchQuery": "請填寫搜尋查詢／關鍵詞",
+        "channels": "請至少選擇一個來源頻道",
+        "rrule": "請設定重複規則",
+        "eventStart": "請設定開始時間，或改為整天活動"
+      },
       "pickChannels": "點擊選擇頻道",
       "channelsSelected": "已選 {selected} / {total} 個頻道",
       "channelsLabel": "分析來源頻道",
@@ -203,6 +217,7 @@
         "searchQueryLabel": "搜尋查詢／關鍵詞",
         "searchQueryPlaceholder": "例：OpenAI API 定價 更新 OR 監管",
         "searchQueryHint": "每次排程觸發會用此查詢做網頁搜尋；可與上方 Prompt 搭配",
+        "scheduleDefaultHint": "預設建議「每小時」觸發；切換到此類型時若仍是每 10 秒會自動改為每小時。",
         "noChannelsHint": "此類型以網頁搜尋為輸入，無需綁定本地訊息頻道；沿用助手設定中的聯網搜尋供應商"
       },
       "recurring": {
@@ -522,7 +537,7 @@
     "taskEditor": "任務顧問",
     "leaderboard": "排行榜分析員",
     "eventIntel": "關鍵事件分析員",
-    "webIntel": "網路情報分析員",
+    "webIntel": "情報蒐集",
     "projectManager": "專案管理助手"
   },
   "ui": {

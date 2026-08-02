@@ -21,6 +21,7 @@ export interface UseChatEditorReturn {
   error: string | null;
   save: () => Promise<void>;
   canSave: boolean;
+  saveBlockReason: string | null;
   isSaving: boolean;
   scheduleHydrating: boolean;
   scheduleHydrateError: string | null;
@@ -48,7 +49,14 @@ export function useChatEditor(): UseChatEditorReturn {
   }, []);
 
   const [isSavingState, setIsSavingState] = useState(false);
-  const { formState, setFormState, updateField, applyPreset, canSave } = useTaskEditorState({
+  const {
+    formState,
+    setFormState,
+    updateField,
+    applyPreset,
+    canSave,
+    saveBlockReason,
+  } = useTaskEditorState({
     isSaving: isSavingState,
   });
   const formStateRef = useRef(formState);
@@ -104,6 +112,7 @@ export function useChatEditor(): UseChatEditorReturn {
     error,
     save,
     canSave: canSave && !scheduleHydrating,
+    saveBlockReason,
     isSaving,
     scheduleHydrating,
     scheduleHydrateError,
