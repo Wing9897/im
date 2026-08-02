@@ -35,6 +35,15 @@ const {
   mockUseTimelinePageContainer: vi.fn(),
 }));
 
+const mockNavigate = vi.fn();
+const mockSetSearchParams = vi.fn();
+let mockSearchParams = new URLSearchParams();
+
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => mockNavigate,
+  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+}));
+
 vi.mock("../../api/userEvents", () => ({
   createUserEvent: (...args: unknown[]) => mockCreateUserEvent(...args),
   updateUserEvent: (...args: unknown[]) => mockUpdateUserEvent(...args),
@@ -246,6 +255,9 @@ describe("TimelinePage user-event CRUD", () => {
     captures.addEvent = null;
     captures.context = null;
     captures.dialog = null;
+    mockSearchParams = new URLSearchParams();
+    mockNavigate.mockReset();
+    mockSetSearchParams.mockReset();
     mockCreateUserEvent.mockReset().mockResolvedValue({});
     mockCreateRecurringTimelineEvent.mockReset().mockResolvedValue({ id: "rec-1" });
     mockDismissTimelineEvent.mockReset().mockResolvedValue({});

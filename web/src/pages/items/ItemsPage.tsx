@@ -79,8 +79,10 @@ export function ItemsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<TrackableItem | null | "new">(null);
+  const [createWorksetId, setCreateWorksetId] = useState<string | null>(null);
   const [manageCategories, setManageCategories] = useState(false);
   const deepLinkHandled = useRef<string | null>(null);
+  const createLinkHandled = useRef(false);
 
   // Support /items?category=… → list layer
   useEffect(() => {
@@ -148,6 +150,25 @@ export function ItemsPage() {
     next.delete("itemDateKind");
     setSearchParams(next, { replace: true });
   }, [loading, items, searchParams, setSearchParams, listLayer, navigate]);
+
+  // Deep-link from workset detail: /items?new=1&worksetId=…
+  useEffect(() => {
+    if (loading) return;
+    const wantsNew = searchParams.get("new") === "1";
+    if (!wantsNew) {
+      createLinkHandled.current = false;
+      return;
+    }
+    if (createLinkHandled.current) return;
+    createLinkHandled.current = true;
+    const wid = searchParams.get("worksetId")?.trim() || null;
+    setCreateWorksetId(wid);
+    setEditing("new");
+    const next = new URLSearchParams(searchParams);
+    next.delete("new");
+    next.delete("worksetId");
+    setSearchParams(next, { replace: true });
+  }, [loading, searchParams, setSearchParams]);
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -292,7 +313,10 @@ export function ItemsPage() {
           <Button
             variant="primary"
             size="sm"
-            onClick={() => setEditing("new")}
+            onClick={() => {
+              setCreateWorksetId(null);
+              setEditing("new");
+            }}
           >
             {t("addItem")}
           </Button>
@@ -467,11 +491,9 @@ export function ItemsPage() {
                           onClick={() => setEditing(item)}
                         >
                           <div className="truncate text-body font-medium text-text-primary">
-                            {emoji ? (
-                              <span className="mr-xs" aria-hidden>
-                                {emoji}
-                              </span>
-                            ) : null}
+                            <span className="mr-xs" aria-hidden>
+                              {emoji}
+                            </span>
                             {item.title}
                           </div>
                           <div className="mt-0.5 flex flex-wrap items-center gap-xs">
@@ -537,7 +559,11 @@ export function ItemsPage() {
           worksets={worksets}
           categoryLabel={categoryLabel}
           initialCategoryId={editing === "new" ? defaultNewCategoryId : undefined}
-          onClose={() => setEditing(null)}
+          initialWorksetId={editing === "new" ? createWorksetId : undefined}
+          onClose={() => {
+            setEditing(null);
+            setCreateWorksetId(null);
+          }}
           onSave={handleSave}
           partitionItemAttributes={partitionItemAttributes}
           resolveRemindOnCategoryChange={resolveRemindOnCategoryChange}

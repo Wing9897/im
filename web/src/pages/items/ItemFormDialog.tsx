@@ -47,6 +47,8 @@ type Props = {
   ) => string;
   /** Prefill category when creating from a type list layer. */
   initialCategoryId?: string | null;
+  /** Prefill workset when creating from workset detail / deep-link. */
+  initialWorksetId?: string | null;
   onClose: () => void;
   onSave: (draft: SaveDraft) => Promise<void>;
   partitionItemAttributes?: typeof defaultPartition;
@@ -59,6 +61,7 @@ export function ItemFormDialog({
   worksets,
   categoryLabel,
   initialCategoryId = null,
+  initialWorksetId = null,
   onClose,
   onSave,
   partitionItemAttributes = defaultPartition,
@@ -66,7 +69,9 @@ export function ItemFormDialog({
 }: Props) {
   const { t } = useTranslation("items");
   const [title, setTitle] = useState(item?.title ?? "");
-  const [worksetId, setWorksetId] = useState(item?.worksetId || SYSTEM_WORKSET_ID);
+  const [worksetId, setWorksetId] = useState(
+    item?.worksetId || initialWorksetId || SYSTEM_WORKSET_ID,
+  );
   const [categoryId, setCategoryId] = useState<string | null>(
     item?.categoryId ?? initialCategoryId ?? null,
   );

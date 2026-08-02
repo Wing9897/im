@@ -1,7 +1,12 @@
 import { useTranslation } from "react-i18next";
 
-import { PillButton, SurfaceCard } from "../../../components/ui";
+import { Badge, PillButton, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
+import {
+  itemDateKindBadgeTone,
+  itemDateKindDotClass,
+  itemDateKindLabel,
+} from "../../../domain/items/itemCalendarProjection";
 import {
   groupEventsByDayTimePhase,
   groupEventsByTimePhase,
@@ -31,6 +36,8 @@ function EventListItem({
   const bodyPreview = event.body ? previewEventBody(event.body) : "";
   const dismissed = Boolean(event.dismissed);
   const crossDay = showCrossDayBadge && isCrossDayEvent(event);
+  const itemKind =
+    event.source === "item" && event.itemDateKind ? event.itemDateKind : null;
   return (
     <SurfaceCard
       density="field"
@@ -45,6 +52,13 @@ function EventListItem({
         onClick={() => onSelectEvent(event)}
       >
         <div className="flex min-w-0 items-start gap-sm">
+          {itemKind ? (
+            <span
+              className={`mt-1.5 ${itemDateKindDotClass(itemKind)}`}
+              aria-hidden="true"
+              data-testid="timeline-item-kind-dot"
+            />
+          ) : null}
           <div
             className={`${cardTitleClass} min-w-0 flex-1 truncate ${
               dismissed ? dismissedTitleClass : ""
@@ -53,6 +67,15 @@ function EventListItem({
           >
             {event.title}
           </div>
+          {itemKind ? (
+            <Badge
+              tone={itemDateKindBadgeTone(itemKind)}
+              className="normal-case tracking-normal shrink-0"
+              data-testid="timeline-item-kind-badge"
+            >
+              {itemDateKindLabel(itemKind)}
+            </Badge>
+          ) : null}
           {crossDay ? (
             <span
               className="shrink-0 rounded-sm bg-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-text-secondary"

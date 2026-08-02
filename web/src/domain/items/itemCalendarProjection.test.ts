@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
 import {
+  DEFAULT_ITEM_EMOJI,
   formatItemOccurrenceTitle,
+  itemDateKindBadgeTone,
+  itemDateKindLabel,
   itemOccurrenceId,
   resolveItemEmoji,
 } from "./itemCalendarProjection";
@@ -31,9 +34,16 @@ describe("itemCalendarProjection helpers", () => {
     );
   });
 
-  it("prefers item emoji over category emoji", () => {
+  it("prefers item emoji over category emoji, else clear fallback", () => {
     expect(resolveItemEmoji({ emoji: "🍎" }, { emoji: "📦" })).toBe("🍎");
     expect(resolveItemEmoji({ emoji: null }, { emoji: "📦" })).toBe("📦");
-    expect(resolveItemEmoji({}, null)).toBeNull();
+    expect(resolveItemEmoji({}, null)).toBe(DEFAULT_ITEM_EMOJI);
+  });
+
+  it("labels and tones distinguish remind vs expires", () => {
+    expect(itemDateKindLabel("remind")).toBe(String(i18n.t("items:remindPrefix")));
+    expect(itemDateKindLabel("expires")).toBe(String(i18n.t("items:expiresPrefix")));
+    expect(itemDateKindBadgeTone("remind")).toBe("warning");
+    expect(itemDateKindBadgeTone("expires")).toBe("danger");
   });
 });
