@@ -178,14 +178,14 @@ describe("SourceFilterDialog", () => {
     });
     openDialog();
     const dialog = document.querySelector('[data-testid="source-filter-dialog"]')!;
-    expect(dialog.textContent).toContain("chevron");
+    const expandUnassigned = document.querySelector(
+      '[data-testid="board-workset-expand-__unassigned__"]',
+    ) as HTMLButtonElement | null;
+    expect(expandUnassigned).toBeTruthy();
+    // Hint uses ▸ (not legacy ▶ / word "chevron"); jsdom may normalize glyph text.
     expect(dialog.textContent).not.toContain("▶");
     act(() => {
-      (
-        document.querySelector(
-          '[data-testid="board-workset-expand-__unassigned__"]',
-        ) as HTMLButtonElement
-      ).click();
+      expandUnassigned!.click();
     });
     const labeled = document.querySelector(`[data-testid="board-source-filter-${hex}"]`)!
       .closest("label")!;

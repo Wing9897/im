@@ -60,7 +60,8 @@ export type ExpiryTone = "ok" | "soon" | "overdue" | "none";
 
 /**
  * Color step for remaining days.
- * `remindBeforeDays` drives the "soon" window (fallback 7), matching list filters.
+ * `remindBeforeDays` drives the "soon" window (must be > 0), matching server
+ * calendar/remind projection — null / missing / ≤0 means no soon window.
  */
 export function expiryTone(
   days: number | null,
@@ -68,9 +69,14 @@ export function expiryTone(
 ): ExpiryTone {
   if (days == null) return "none";
   if (days < 0) return "overdue";
-  const window =
-    remindBeforeDays != null && Number.isFinite(remindBeforeDays) ? remindBeforeDays : 7;
-  if (days <= window) return "soon";
+  if (
+    remindBeforeDays == null ||
+    !Number.isFinite(remindBeforeDays) ||
+    remindBeforeDays <= 0
+  ) {
+    return "ok";
+  }
+  if (days <= remindBeforeDays) return "soon";
   return "ok";
 }
 

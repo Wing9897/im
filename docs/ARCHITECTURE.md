@@ -288,7 +288,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-5 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-8 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
 | `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
@@ -601,7 +601,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_contract_user_events.py` | user-events CRUD |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. `test_schema_wipe_floor.py` and `test_db_schema.py` cover stamp-5 creation, exact fingerprint validation, non-current rejection, no mutation, and explicit reset guidance.
+Fake migration-chain suites were removed. `test_schema_wipe_floor.py` and `test_db_schema.py` cover stamp-8 creation, exact fingerprint validation, non-current rejection, no mutation, and explicit reset guidance.
 
 **Removed endpoints** (404/405 guard): `server/tests/test_dead_endpoints.py` — see [Removed endpoints](#removed-endpoints).
 

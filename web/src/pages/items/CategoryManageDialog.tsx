@@ -223,7 +223,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
                 </div>
                 <TextField
                   id="cat-color"
-                  placeholder="#3B82F6"
+                  placeholder={CATEGORY_COLOR_PRESETS[0]}
                   value={color ?? ""}
                   onChange={(e) => {
                     const v = e.target.value.trim();

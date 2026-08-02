@@ -2,8 +2,35 @@
 
 from __future__ import annotations
 
+import json
+
 from server.calendar.timeline_dismissals import dismiss_timeline_event, restore_timeline_event
 from server.calendar.user_events import create_user_event, get_user_event_row, list_user_events
+
+
+async def test_dismiss_restore_publishes_resource_modified(client, app) -> None:
+    broadcaster = app.state.broadcaster
+    queue = broadcaster.subscribe()
+    try:
+        created = await client.put(
+            "/api/v1/calendar/dismissals",
+            json={"source": "item", "eventId": "item-occ-1"},
+        )
+        assert created.status_code == 200
+        restored = await client.delete(
+            "/api/v1/calendar/dismissals",
+            params={"source": "item", "eventId": "item-occ-1"},
+        )
+        assert restored.status_code == 204
+        events = [queue.get_nowait() for _ in range(2)]
+    finally:
+        broadcaster.unsubscribe(queue)
+
+    payloads = [json.loads(event["data"])["payload"] for event in events]
+    assert payloads == [
+        {"resourceType": "item", "resourceId": "item-occ-1", "action": "dismissed"},
+        {"resourceType": "item", "resourceId": "item-occ-1", "action": "restored"},
+    ]
 
 
 async def test_dismiss_restore_roundtrip(client) -> None:

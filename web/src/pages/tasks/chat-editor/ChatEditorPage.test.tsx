@@ -111,11 +111,19 @@ function renderPage(route = "/tasks/chat") {
           Routes,
           null,
           createElement(Route, {
+            path: "/tasks/new",
+            element: createElement(ChatEditorPage),
+          }),
+          createElement(Route, {
             path: "/tasks/chat",
             element: createElement(ChatEditorPage),
           }),
           createElement(Route, {
             path: "/tasks/chat/:taskId",
+            element: createElement(ChatEditorPage),
+          }),
+          createElement(Route, {
+            path: "/tasks/:taskId/edit",
             element: createElement(ChatEditorPage),
           }),
         ),
@@ -157,6 +165,22 @@ describe("ChatEditorPage integration tests", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  describe("workset deep-link", () => {
+    it("applies worksetId from /tasks/new query on create", async () => {
+      const updateField = vi.fn();
+      mockUseChatEditor.mockReturnValue(createMockHookReturn({ updateField }));
+
+      let result: ReturnType<typeof renderPage>;
+      await act(async () => {
+        result = renderPage("/tasks/new?worksetId=ws-ops");
+        await Promise.resolve();
+      });
+      const { cleanup } = result!;
+      expect(updateField).toHaveBeenCalledWith("worksetId", "ws-ops");
+      cleanup();
+    });
   });
 
   describe("renders form (no page advisor chat)", () => {
