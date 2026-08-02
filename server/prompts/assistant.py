@@ -141,9 +141,21 @@ CHAT_ASSISTANT_SYSTEM_PROMPT = (
 )
 
 #: Runtime user-facing / system-assembly snippets (not the main AGENT_SYSTEM_PROMPT).
-AGENT_WEB_SEARCH_DISABLED_NOTE = "\n（設定已關閉助手聯網；本次對話不提供 web.search。）\n"
+AGENT_WEB_SEARCH_DISABLED_NOTE = (
+    "\n（設定已關閉助手聯網；本次對話不提供 web.search，也不啟用供應商原生搜尋。）\n"
+)
 AGENT_WEB_SEARCH_BRAVE_HINT = " Brave 需已設定 API key；若 tool 回傳未配置錯誤，請改用 DuckDuckGo 或補上 key。"
 AGENT_WEB_SEARCH_DUCKDUCKGO_HINT = " DuckDuckGo 免 API key；結果品質可能弱於 Brave。"
+AGENT_WEB_SEARCH_OPENAI_NATIVE_NOTE = (
+    "\n（聯網搜尋已啟用：OpenAI 原生 web_search。"
+    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search tool。"
+    "本機資料仍用 messages／intelligence／calendar／items。）\n"
+)
+AGENT_WEB_SEARCH_GEMINI_NATIVE_NOTE = (
+    "\n（聯網搜尋已啟用：Gemini Google Search grounding。"
+    "需要外部／即時資訊時由模型自行搜尋；不要呼叫不存在的 web.search tool。"
+    "本機資料仍用 messages／intelligence／calendar／items。）\n"
+)
 
 AGENT_EMPTY_USER_MESSAGE = "請輸入你想查詢的問題。"
 AGENT_UNPARSEABLE_REPLY = "我暫時無法完成這次查詢，請換種說法或縮小時間範圍後再試。"
@@ -157,10 +169,19 @@ AGENT_TASK_ADVISOR_NOTE = (
 )
 
 
-def web_search_prompt_note(*, web_search_enabled: bool, provider: str) -> str:
+def web_search_prompt_note(
+    *,
+    web_search_enabled: bool,
+    provider: str,
+    mode: str | None = None,
+) -> str:
     """Assembly helper for the web-search status line appended to the agent system prompt."""
-    if not web_search_enabled:
+    if not web_search_enabled or mode == "off":
         return AGENT_WEB_SEARCH_DISABLED_NOTE
+    if mode == "openai_native":
+        return AGENT_WEB_SEARCH_OPENAI_NATIVE_NOTE
+    if mode == "gemini_native":
+        return AGENT_WEB_SEARCH_GEMINI_NATIVE_NOTE
     name = (provider or "duckduckgo").strip().lower() or "duckduckgo"
     note = f"\n（聯網搜尋已啟用；供應商：{name}。"
     if name == "brave":

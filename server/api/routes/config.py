@@ -92,7 +92,7 @@ _BOOL_KEYS = {
     "assistantWebSearchEnabled",
 }
 
-_WEB_SEARCH_PROVIDERS = frozenset({"duckduckgo", "brave"})
+_WEB_SEARCH_PROVIDERS = frozenset({"auto", "duckduckgo", "brave"})
 _SECRET_WIRE_KEYS = {wire_key for wire_key, config_key in _SETTINGS_KEYS.items() if config_key in SECRET_CONFIG_KEYS}
 
 # Read-only on PUT /settings — analysisPaused: POST /system/analysis/pause.
@@ -134,7 +134,7 @@ async def save_settings(request: Request, body: dict[str, Any]) -> dict:
             updates[config_key] = normalize_ui_locale("" if value is None else str(value))
         elif config_key == "web_search_provider":
             provider = ("" if value is None else str(value)).strip().lower()
-            updates[config_key] = provider if provider in _WEB_SEARCH_PROVIDERS else "duckduckgo"
+            updates[config_key] = provider if provider in _WEB_SEARCH_PROVIDERS else "auto"
         elif config_key == "assistant_display_name":
             name = ("" if value is None else str(value)).strip()
             updates[config_key] = name[:_ASSISTANT_DISPLAY_NAME_MAX]
