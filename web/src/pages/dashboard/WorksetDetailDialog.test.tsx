@@ -211,7 +211,7 @@ describe("WorksetDetailDialog", () => {
     // L2 employee label on the task card — not raw analysisMode enum.
     const taskCardText =
       container.querySelector('[data-testid="workset-detail-task-t1"]')?.textContent ?? "";
-    expect(taskCardText).toContain("關鍵事件分析員");
+    expect(taskCardText).toContain("關鍵事件");
     expect(taskCardText).not.toMatch(/(^|[^a-zA-Z])event([^a-zA-Z]|$)/);
     expect(container.textContent).toContain("Passport");
     expect(container.textContent).not.toContain("Old");

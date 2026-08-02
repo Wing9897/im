@@ -1,4 +1,4 @@
-/** Returns the L2 employee display name for an analysis mode (locale-aware). */
+/** Returns the task-type product name for an analysis mode (locale-aware). */
 import i18n from "../i18n";
 import { isAnalysisMode } from "../domain/tasks/analysisModeCapabilities";
 import { taskEmployeeForAnalysisMode } from "../domain/tasks/taskEmployee";
@@ -6,10 +6,7 @@ import { taskEmployeeForAnalysisMode } from "../domain/tasks/taskEmployee";
 export function formatAnalysisMode(value: string | null | undefined): string {
   if (isAnalysisMode(value)) {
     const employeeId = taskEmployeeForAnalysisMode(value);
-    if (employeeId === "scheduleClerk") {
-      return String(i18n.t("tasks.employees.scheduleClerk.name"));
-    }
-    return String(i18n.t(`aiStaff.${employeeId}`));
+    return String(i18n.t(`tasks.employees.${employeeId}.name`));
   }
   return String(i18n.t("ui.unknownMode"));
 }

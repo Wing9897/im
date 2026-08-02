@@ -36,7 +36,7 @@
       "editAria": "Edit {name}",
       "deleteAria": "Delete {name}",
       "openProjectAria": "Open project: {name}",
-      "project": "Project manager",
+      "project": "Project",
       "projectProgressHint": "Progress uses a message cursor (not marker stats)",
       "recurringProgressHint": "Recurring schedule (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
@@ -161,6 +161,18 @@
       "scheduleClerk": {
         "name": "Recurring",
         "blurb": "RRULE recurring schedule, no AI"
+      },
+      "eventIntel": {
+        "name": "Key events",
+        "blurb": "Extract key events and itineraries"
+      },
+      "leaderboard": {
+        "name": "Leaderboard",
+        "blurb": "Compare and track top message rankings"
+      },
+      "projectManager": {
+        "name": "Project",
+        "blurb": "Closed-loop reconcile of project calendar and child tasks"
       }
     },
     "modes": {
@@ -186,7 +198,7 @@
         "promptHint": ""
       },
       "project": {
-        "modeOptionLabel": "Project - closed-loop calendar agent",
+        "modeOptionLabel": "Project - closed-loop calendar",
         "modeDescription": "Closed-loop reconcile of project calendar and child tasks",
         "promptLabel": "Project goals / rules",
         "promptPlaceholder": "e.g. keep standup + demo dates current from Telegram; prefer morning slots; soft-delete cancelled series",
