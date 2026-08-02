@@ -10,9 +10,12 @@ import { Navigate } from "react-router-dom";
 
 import { EmptyState } from "../../../components/common/EmptyState";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
-import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
+import {
+  getTaskEmployeeDisplayName,
+  getTaskEmployeeIdForMode,
+} from "../../../components/task/taskFormAnalysisModeMeta";
 import { MODE_BADGE_TONE } from "../../../components/task/analysisModeBadgeTone";
-import { AiStaffAvatar } from "../../../components/aiStaff/AiStaffAvatar";
+import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
 import {
   AppPageShell,
   Badge,
@@ -20,7 +23,6 @@ import {
   PanelSection,
 } from "../../../components/ui";
 import { pageTitleClass, captionClass } from "../../../components/ui/pageTypography";
-import { staffIdForAnalysisMode } from "../../../domain/aiStaff/aiStaff";
 import { colorStatusDotStyle } from "../../../styles/statusDot";
 import { formatAnalysisTimeRangeNullable } from "../../../utils/analysis";
 import { useErrorToast } from "../../../hooks/useErrorToast";
@@ -80,8 +82,8 @@ export function ProjectDetailPage() {
     );
   }
 
-  const modeMeta = getTaskFormAnalysisModeMeta(project.analysisMode);
-  const staffId = staffIdForAnalysisMode(project.analysisMode);
+  const employeeId = getTaskEmployeeIdForMode(project.analysisMode);
+  const employeeName = getTaskEmployeeDisplayName(employeeId);
   const timeRange =
     formatAnalysisTimeRangeNullable(project.analysisTimeRange) ?? project.analysisTimeRange;
   const scheduleLabel = [project.scheduleType, project.scheduleValue]
@@ -105,12 +107,10 @@ export function ProjectDetailPage() {
           <ArrowLeft size={16} strokeWidth={2.25} aria-hidden="true" />
         </Button>
         <div className="flex min-w-0 flex-1 items-center gap-sm">
-          {staffId ? (
-            <AiStaffAvatar staffId={staffId} size="sm" label={modeMeta.displayLabel} />
-          ) : null}
+          <TaskEmployeeAvatar employeeId={employeeId} size="sm" label={employeeName} />
           <h1 className={`min-w-0 truncate ${pageTitleClass}`}>{project.name}</h1>
           <Badge tone={MODE_BADGE_TONE.project} className="shrink-0 normal-case tracking-normal">
-            {modeMeta.displayLabel}
+            {employeeName}
           </Badge>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-sm">

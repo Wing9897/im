@@ -114,8 +114,7 @@
       "createTask": "建立任务",
       "requiredAria": "必填栏位",
       "settingsTitle": "任务设定",
-      "optionalAria": "选填设定",
-      "optionalTitle": "选填设定",
+      "optionalAria": "进阶技能",
       "channelsLoadError": "无法加载频道列表",
       "scheduleHydrating": "正在加载循环排程…",
       "scheduleHydrateFailed": "无法加载循环排程：{message}",
@@ -140,7 +139,17 @@
       "evidenceStyleHelp": "留空则跟随全局证据风格。",
       "nameLabel": "任务名称",
       "namePlaceholder": "输入任务名称",
-      "modeLabel": "分析模式",
+      "foundationTitle": "循环事件",
+      "foundationHint": "任务建立在可重复／可触发的时间排程之上；先选负责的员工，再配置其技能。",
+      "staffLabel": "员工",
+      "staffGroup": {
+        "noAi": "无处理",
+        "ai": "AI 员工"
+      },
+      "skillsTitle": "技能／能力",
+      "skillsAria": "员工技能",
+      "skillsHint": "依所选员工显示可配置的能力（排程、Prompt、来源频道等）。",
+      "optionalTitle": "进阶技能",
       "descriptionLabel": "描述",
       "descriptionPlaceholder": "任务描述（选填）",
       "promptLabel": "Prompt 模板",
@@ -152,11 +161,17 @@
       "channelsPreview": "已选频道预览",
       "channelsMore": "还有 {count} 个频道…"
     },
+    "employees": {
+      "scheduleClerk": {
+        "name": "循环日程员工",
+        "blurb": "RRULE 周期日程，无 AI 处理"
+      }
+    },
     "modes": {
       "leaderboard": {
         "displayLabel": "排行榜",
         "modeOptionLabel": "排行榜 - 比较排名",
-        "modeDescription": "💡 排行榜会显示最相关的前 N 条消息，适合追踪热门话题",
+        "modeDescription": "比较与追踪热门消息排名",
         "promptLabel": "任务 Task Prompt（告诉 AI 要比较什么）",
         "promptPlaceholder": "例：新产品发布、政策变化、合作进展、风险信号",
         "promptHint": "💡 例如：只在内容明确提及官方公告、产品更新、合作进展或风险信号时命中"
@@ -164,23 +179,23 @@
       "event": {
         "displayLabel": "关键事件",
         "modeOptionLabel": "关键事件 - 情报 / 行程",
-        "modeDescription": "💡 一条事件可同时带时间与地点；有坐标显示在地图，有时间显示在时间线，缺栏位则只出现在对应视图",
+        "modeDescription": "从消息抽取关键事件与行程",
         "promptLabel": "任务 Task Prompt（告诉 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、会议、截止日；有明确时间填 start_time，有地点填 location",
         "promptHint": "💡 时间与地点无法确定时请省略对应栏位，禁止猜测；可同时出现在情报页与时间规划页"
       },
       "recurring": {
-        "displayLabel": "循环任务",
-        "modeOptionLabel": "循环任务 - 周期性活动",
-        "modeDescription": "💡 循环任务用于管理周期性活动，使用 RRULE 定义重复规则，不涉及 AI 分析",
+        "displayLabel": "循环日程",
+        "modeOptionLabel": "循环任务（无处理）",
+        "modeDescription": "RRULE 周期日程，无 AI 处理",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "displayLabel": "项目管理",
-        "modeOptionLabel": "项目管理 - 闭环日程助手",
-        "modeDescription": "按小时排程驱动多轮 Agent：读来源与现有日程，以工具建立／修改／软删本项目单次事件与子循环任务（非一次性 JSON 批次）",
+        "displayLabel": "项目",
+        "modeOptionLabel": "项目 - 闭环日程助手",
+        "modeDescription": "闭环 reconcile 项目日程与子任务",
         "promptLabel": "项目目标／规则",
         "promptPlaceholder": "例如：依 Telegram 更新站会与 demo 日期；偏好上午时段；已取消的系列请软删",
         "promptHint": "请绑定来源频道，建议 hourly 排程；即使本小时无新消息也会跑 reconcile"
@@ -266,13 +281,13 @@
       "loading": "正在加载模板...",
       "empty": "目前没有可用的模板",
       "noMatch": "没有符合目前筛选条件的模板",
-      "noMatchHint": "可改用其他分析模式或清空搜索词",
+      "noMatchHint": "可改用其他任务类型或清空搜索词",
       "commonTitle": "常用模板",
-      "sortedWithMode": "依最近使用、使用次数与目前分析模式排序，优先显示 {mode}",
-      "pinnedMode": "已按目前分析模式优先置顶 {mode}",
-      "viewMode": "查看 {mode} 模式的模板",
+      "sortedWithMode": "依最近使用、使用次数与目前任务类型排序，优先显示 {mode}",
+      "pinnedMode": "已按目前任务类型优先置顶 {mode}",
+      "viewMode": "查看 {mode} 类型的模板",
       "apply": "套用选定模板",
-      "suitable": "适合目前分析模式"
+      "suitable": "适合目前任务类型"
     },
     "schedule": {
       "typeLabel": "排程类型",

@@ -18,7 +18,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   name: "",
   description: "",
   promptTemplate: "",
-  analysisMode: "leaderboard",
+  analysisMode: "recurring",
   analysisTimeRange: "1d",
   channelIds: [],
   scheduleType: "seconds_10",

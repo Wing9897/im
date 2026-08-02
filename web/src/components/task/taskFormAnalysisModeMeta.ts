@@ -1,10 +1,17 @@
 import type { AnalysisMode } from "../../types";
 import i18n from "../../i18n";
 import {
-  ANALYSIS_MODE_ORDER,
   analysisModeHidesPromptAndChannel,
   analysisModeShowsRruleFields,
 } from "../../domain/tasks/analysisModeCapabilities";
+import {
+  TASK_EMPLOYEE_GROUPS,
+  TASK_EMPLOYEE_ORDER,
+  analysisModeForTaskEmployee,
+  taskEmployeeForAnalysisMode,
+  type TaskEmployeeGroupId,
+  type TaskEmployeeId,
+} from "../../domain/tasks/taskEmployee";
 
 type TaskFormAnalysisModeMeta = {
   displayLabel: string;
@@ -19,7 +26,20 @@ type TaskFormAnalysisModeMeta = {
   hidesPromptAndChannel?: boolean;
 };
 
-export const taskFormAnalysisModeOrder: AnalysisMode[] = [...ANALYSIS_MODE_ORDER];
+/** Editor picker order: schedule clerk first, then AI employees. */
+export const taskFormAnalysisModeOrder: AnalysisMode[] = TASK_EMPLOYEE_ORDER.map(
+  (employeeId) => analysisModeForTaskEmployee(employeeId),
+);
+
+export type TaskFormModeGroupId = TaskEmployeeGroupId;
+
+export const taskFormAnalysisModeGroups: ReadonlyArray<{
+  id: TaskFormModeGroupId;
+  modes: readonly AnalysisMode[];
+}> = TASK_EMPLOYEE_GROUPS.map((group) => ({
+  id: group.id,
+  modes: group.employees.map((employeeId) => analysisModeForTaskEmployee(employeeId)),
+}));
 
 export function getTaskFormAnalysisModeMeta(
   analysisMode: AnalysisMode,
@@ -35,4 +55,24 @@ export function getTaskFormAnalysisModeMeta(
     isRecurringMode: analysisModeShowsRruleFields(analysisMode) || undefined,
     hidesPromptAndChannel: analysisModeHidesPromptAndChannel(analysisMode) || undefined,
   };
+}
+
+/** L2 employee display name (aiStaff / schedule clerk). */
+export function getTaskEmployeeDisplayName(employeeId: TaskEmployeeId): string {
+  if (employeeId === "scheduleClerk") {
+    return String(i18n.t("tasks.employees.scheduleClerk.name"));
+  }
+  return String(i18n.t(`aiStaff.${employeeId}`));
+}
+
+/** One-line capability blurb for L2 picker cards. */
+export function getTaskEmployeeBlurb(employeeId: TaskEmployeeId): string {
+  if (employeeId === "scheduleClerk") {
+    return String(i18n.t("tasks.employees.scheduleClerk.blurb"));
+  }
+  return getTaskFormAnalysisModeMeta(analysisModeForTaskEmployee(employeeId)).modeDescription;
+}
+
+export function getTaskEmployeeIdForMode(mode: AnalysisMode): TaskEmployeeId {
+  return taskEmployeeForAnalysisMode(mode);
 }

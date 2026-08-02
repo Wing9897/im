@@ -202,7 +202,9 @@ describe("ChatEditorPage integration tests", () => {
       expect(container.textContent).toContain("描述");
       expect(container.textContent).toContain("Prompt 模板");
       expect(container.textContent).toContain("排程類型");
-      expect(container.textContent).toContain("分析模式");
+      expect(container.textContent).toContain("員工");
+      expect(container.textContent).toContain("循環事件");
+      expect(container.textContent).toContain("技能／能力");
 
       cleanup();
     });
@@ -572,9 +574,10 @@ describe("ChatEditorPage integration tests", () => {
       });
       const { container, cleanup } = result!;
 
-      const selects = container.querySelectorAll("select");
-      const analysisModeSelect = Array.from(selects).find((s) => s.value === "event");
-      expect(analysisModeSelect).not.toBeNull();
+      const picker = container.querySelector('[data-testid="task-employee-picker"]');
+      expect(picker).not.toBeNull();
+      const activeTile = picker!.querySelector('[aria-pressed="true"]');
+      expect(activeTile?.textContent).toContain("關鍵事件分析員");
 
       cleanup();
     });

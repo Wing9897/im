@@ -1,11 +1,23 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SettingsRow, SelectField, TextField, Button } from "../../../components/ui";
+import {
+  SettingsRow,
+  SelectField,
+  TextField,
+  Button,
+  SelectTile,
+  SelectTileGrid,
+} from "../../../components/ui";
+import { formHelpClass } from "../../../components/ui/pageTypography";
 import type { AnalysisMode } from "../../../types";
 import {
-  getTaskFormAnalysisModeMeta,
-  taskFormAnalysisModeOrder,
+  getTaskEmployeeBlurb,
+  getTaskEmployeeDisplayName,
+  getTaskEmployeeIdForMode,
+  taskFormAnalysisModeGroups,
 } from "../../../components/task/taskFormAnalysisModeMeta";
+import { TaskEmployeeAvatar } from "../../../components/task/TaskEmployeeAvatar";
+import { analysisModeForTaskEmployee } from "../../../domain/tasks/taskEmployee";
 import { WorksetNameDialog } from "../../../components/dialogs/WorksetNameDialog";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import { createWorkset } from "../../../api/worksets";
@@ -22,7 +34,7 @@ interface ChatNameModeFieldsProps {
   onWorksetIdChange: (value: string | null) => void;
 }
 
-/** Name + analysis mode + workset as FormGrid cells. */
+/** Name + L2 employee picker + workset as FormGrid cells. */
 export function ChatNameModeFields({
   name,
   analysisMode,
@@ -54,6 +66,13 @@ export function ChatNameModeFields({
 
   return (
     <>
+      <div className="flex flex-col gap-xs md:col-span-2">
+        <span className="text-caption font-semibold tracking-wide text-text-secondary">
+          {t("tasks.editor.foundationTitle")}
+        </span>
+        <p className={`m-0 ${formHelpClass}`}>{t("tasks.editor.foundationHint")}</p>
+      </div>
+
       <SettingsRow label={t("tasks.editor.nameLabel")} htmlFor="chat-task-name">
         <TextField
           id="chat-task-name"
@@ -62,19 +81,6 @@ export function ChatNameModeFields({
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
         />
-      </SettingsRow>
-      <SettingsRow label={t("tasks.editor.modeLabel")} htmlFor="chat-analysis-mode">
-        <SelectField
-          id="chat-analysis-mode"
-          value={analysisMode}
-          onChange={(e) => onAnalysisModeChange(e.target.value as AnalysisMode)}
-        >
-          {taskFormAnalysisModeOrder.map((mode) => (
-            <option key={mode} value={mode}>
-              {getTaskFormAnalysisModeMeta(mode).displayLabel}
-            </option>
-          ))}
-        </SelectField>
       </SettingsRow>
       <SettingsRow label={t("workset.ownershipLabel")} htmlFor="chat-workset">
         <div className="flex flex-wrap items-center gap-sm">
@@ -101,6 +107,60 @@ export function ChatNameModeFields({
           </Button>
         </div>
       </SettingsRow>
+
+      <div
+        className="flex flex-col gap-sm md:col-span-2"
+        role="group"
+        aria-label={t("tasks.editor.staffLabel")}
+        data-testid="task-employee-picker"
+      >
+        <span className="text-caption font-medium text-text-primary">
+          {t("tasks.editor.staffLabel")}
+        </span>
+        <div className="flex flex-col gap-md">
+          {taskFormAnalysisModeGroups.map((group) => (
+            <div key={group.id} className="flex flex-col gap-sm">
+              <span className="text-[11px] font-semibold tracking-wide text-text-muted">
+                {t(`tasks.editor.staffGroup.${group.id}`)}
+              </span>
+              <SelectTileGrid
+                columns="repeat(auto-fit, minmax(148px, 1fr))"
+                className="gap-sm"
+              >
+                {group.modes.map((mode) => {
+                  const employeeId = getTaskEmployeeIdForMode(mode);
+                  const nameLabel = getTaskEmployeeDisplayName(employeeId);
+                  const blurb = getTaskEmployeeBlurb(employeeId);
+                  const selected = analysisMode === mode;
+                  return (
+                    <SelectTile
+                      key={mode}
+                      compact
+                      active={selected}
+                      aria-pressed={selected}
+                      onClick={() =>
+                        onAnalysisModeChange(analysisModeForTaskEmployee(employeeId))
+                      }
+                      hint={blurb}
+                      className="min-h-0"
+                    >
+                      <span className="flex items-center gap-sm">
+                        <TaskEmployeeAvatar
+                          employeeId={employeeId}
+                          size="sm"
+                          label={nameLabel}
+                        />
+                        <span className="leading-snug">{nameLabel}</span>
+                      </span>
+                    </SelectTile>
+                  );
+                })}
+              </SelectTileGrid>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <WorksetNameDialog
         open={createOpen}
         mode="create"

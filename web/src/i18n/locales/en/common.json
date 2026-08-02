@@ -114,8 +114,7 @@
       "createTask": "Create task",
       "requiredAria": "Required fields",
       "settingsTitle": "Task settings",
-      "optionalAria": "Optional settings",
-      "optionalTitle": "Optional settings",
+      "optionalAria": "Advanced skills",
       "channelsLoadError": "Could not load channels",
       "scheduleHydrating": "Loading recurrence schedule…",
       "scheduleHydrateFailed": "Could not load recurrence schedule: {message}",
@@ -140,7 +139,17 @@
       "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
       "nameLabel": "Task name",
       "namePlaceholder": "Enter task name",
-      "modeLabel": "Analysis mode",
+      "foundationTitle": "Recurring events",
+      "foundationHint": "Tasks build on a repeatable / triggerable schedule. Choose who owns the work, then configure their skills.",
+      "staffLabel": "Employee",
+      "staffGroup": {
+        "noAi": "No processing",
+        "ai": "AI employees"
+      },
+      "skillsTitle": "Skills / capabilities",
+      "skillsAria": "Employee skills",
+      "skillsHint": "Configurable capabilities for the selected employee (schedule, prompt, source channels, and more).",
+      "optionalTitle": "Advanced skills",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Task description (optional)",
       "promptLabel": "Prompt template",
@@ -152,11 +161,17 @@
       "channelsPreview": "Selected channel preview",
       "channelsMore": "{count} more channels…"
     },
+    "employees": {
+      "scheduleClerk": {
+        "name": "Schedule clerk",
+        "blurb": "RRULE recurring schedule, no AI"
+      }
+    },
     "modes": {
       "leaderboard": {
         "displayLabel": "Leaderboard",
         "modeOptionLabel": "Leaderboard - compare rankings",
-        "modeDescription": "Leaderboard shows the top N most relevant messages — good for tracking hot topics",
+        "modeDescription": "Compare and track top message rankings",
         "promptLabel": "Task prompt (what should AI compare)",
         "promptPlaceholder": "e.g. product launches, policy changes, partnerships, risk signals",
         "promptHint": "e.g. only hit when content clearly mentions official announcements, product updates, partnerships, or risk signals"
@@ -164,23 +179,23 @@
       "event": {
         "displayLabel": "Key Events",
         "modeOptionLabel": "Key Events - intelligence / schedule",
-        "modeDescription": "An event can carry time and place; coordinates show on the map, times on the timeline; missing fields only appear in matching views",
+        "modeDescription": "Extract key events and itineraries",
         "promptLabel": "Task prompt (which events should AI extract)",
         "promptPlaceholder": "e.g. extract announcements, meetings, deadlines; fill start_time when clear, location when known",
         "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
       },
       "recurring": {
-        "displayLabel": "Recurring task",
-        "modeOptionLabel": "Recurring task - periodic activities",
-        "modeDescription": "Recurring tasks manage periodic activities with RRULE and do not involve AI analysis",
+        "displayLabel": "Recurring schedule",
+        "modeOptionLabel": "Recurring (no AI)",
+        "modeDescription": "RRULE recurring schedule, no AI",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "displayLabel": "Project manager",
-        "modeOptionLabel": "Project manager - closed-loop calendar agent",
-        "modeDescription": "Hourly Agent ticks read sources and reconcile this project's one-off events and child recurring tasks via tools (not a one-shot JSON batch)",
+        "displayLabel": "Project",
+        "modeOptionLabel": "Project - closed-loop calendar agent",
+        "modeDescription": "Closed-loop reconcile of project calendar and child tasks",
         "promptLabel": "Project goals / rules",
         "promptPlaceholder": "e.g. keep standup + demo dates current from Telegram; prefer morning slots; soft-delete cancelled series",
         "promptHint": "Bind source channels and prefer hourly schedule; the agent may run even with no new messages to reconcile the calendar"
@@ -266,13 +281,13 @@
       "loading": "Loading templates...",
       "empty": "No templates available",
       "noMatch": "No templates match the current filters",
-      "noMatchHint": "Try another analysis mode or clear the search",
+      "noMatchHint": "Try another task type or clear the search",
       "commonTitle": "Common templates",
-      "sortedWithMode": "Sorted by recent use, frequency, and current mode — prioritizing {mode}",
-      "pinnedMode": "Pinned for current analysis mode {mode}",
+      "sortedWithMode": "Sorted by recent use, frequency, and current task type — prioritizing {mode}",
+      "pinnedMode": "Pinned for current task type {mode}",
       "viewMode": "View {mode} templates",
       "apply": "Apply selected template",
-      "suitable": "Fits current analysis mode"
+      "suitable": "Fits current task type"
     },
     "schedule": {
       "typeLabel": "Schedule type",
