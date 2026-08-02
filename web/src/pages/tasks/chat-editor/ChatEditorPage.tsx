@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { validateScheduleValue } from "../ScheduleInput";
 import { ChatEditorForm } from "./ChatEditorForm";
 import { ChatEditorToolbar } from "./ChatEditorToolbar";
@@ -19,7 +19,9 @@ export function ChatEditorPage() {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
   const { taskId } = useParams<{ taskId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const isEditMode = Boolean(taskId);
+  const worksetDeepLinkHandled = useRef(false);
 
   const {
     formState,
@@ -46,6 +48,25 @@ export function ChatEditorPage() {
   );
 
   const showPresets = analysisModeSupportsTaskPresets(formState.analysisMode);
+
+  // Deep-link from workset detail: /tasks/new?worksetId=…
+  useEffect(() => {
+    if (isEditMode) {
+      worksetDeepLinkHandled.current = false;
+      return;
+    }
+    const wid = searchParams.get("worksetId")?.trim();
+    if (!wid) {
+      worksetDeepLinkHandled.current = false;
+      return;
+    }
+    if (worksetDeepLinkHandled.current) return;
+    worksetDeepLinkHandled.current = true;
+    updateField("worksetId", wid);
+    const next = new URLSearchParams(searchParams);
+    next.delete("worksetId");
+    setSearchParams(next, { replace: true });
+  }, [isEditMode, searchParams, setSearchParams, updateField]);
 
   useEffect(() => {
     if (!showPresetDialog) return;

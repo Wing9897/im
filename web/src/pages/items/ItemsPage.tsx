@@ -32,6 +32,7 @@ import {
   buildCategorySummaries,
   categoryLabel,
   filterItemsByCategoryRoute,
+  isItemExpiringSoon,
   isSyntheticCategoryId,
 } from "../../domain/items/categoryAggregates";
 import {
@@ -84,8 +85,8 @@ export function ItemsPage() {
   const listLayer = Boolean(routeCategoryId);
   const categoryRouteId = routeCategoryId ?? null;
 
-  const reload = useCallback(async () => {
-    setLoading(true);
+  const reload = useCallback(async (opts?: { background?: boolean }) => {
+    if (!opts?.background) setLoading(true);
     setError(null);
     try {
       const [itemRows, categoryRows, worksetRows] = await Promise.all([
@@ -99,7 +100,7 @@ export function ItemsPage() {
     } catch (err) {
       setError(formatItemsError(err, t));
     } finally {
-      setLoading(false);
+      if (!opts?.background) setLoading(false);
     }
   }, [t]);
 
@@ -112,7 +113,7 @@ export function ItemsPage() {
       if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
         return;
       }
-      void reload();
+      void reload({ background: true });
     });
   }, [reload]);
 
@@ -206,9 +207,7 @@ export function ItemsPage() {
         if (days == null || days >= 0) return false;
       }
       if (filter === "expiring") {
-        const days = daysUntil(item.expiresAt);
-        const remind = item.remindBeforeDays ?? 7;
-        if (days == null || days < 0 || days > remind) return false;
+        if (!isItemExpiringSoon(item)) return false;
       }
       if (!needle) return true;
       const hay = `${item.title} ${item.notes} ${JSON.stringify(item.attributes)}`.toLowerCase();

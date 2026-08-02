@@ -208,6 +208,11 @@ describe("WorksetDetailDialog", () => {
       expect.objectContaining({ worksetId: "ws-1", start: expect.any(String), end: expect.any(String) }),
     );
     expect(container.textContent).toContain("Scan");
+    // L2 employee label on the task card — not raw analysisMode enum.
+    const taskCardText =
+      container.querySelector('[data-testid="workset-detail-task-t1"]')?.textContent ?? "";
+    expect(taskCardText).toContain("關鍵事件分析員");
+    expect(taskCardText).not.toMatch(/(^|[^a-zA-Z])event([^a-zA-Z]|$)/);
     expect(container.textContent).toContain("Passport");
     expect(container.textContent).not.toContain("Old");
     expect(container.querySelector('[data-testid="workset-summary-item-i1"]')).toBeTruthy();
@@ -321,6 +326,34 @@ describe("WorksetDetailDialog", () => {
     });
     expect(onClose).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith("/timeline?newEvent=1&worksetId=ws-1");
+
+    onClose.mockClear();
+    navigate.mockClear();
+
+    act(() => {
+      root!.render(
+        <WorksetDetailDialog
+          workset={{
+            id: "ws-1",
+            title: "Ops",
+            isSystem: false,
+            tasks: [],
+          }}
+          onClose={onClose}
+          onOpenTask={vi.fn()}
+        />,
+      );
+    });
+
+    await flushLoads();
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="workset-detail-add-task"]')!
+        .click();
+    });
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/tasks/new?worksetId=ws-1");
   });
 
   it("shows empty summary copy when nothing is due", async () => {

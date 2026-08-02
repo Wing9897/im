@@ -23,6 +23,10 @@ import {
   MODE_BADGE_TONE,
 } from "../../components/task/analysisModeBadgeTone";
 import {
+  getTaskEmployeeDisplayName,
+  getTaskEmployeeIdForMode,
+} from "../../components/task/taskFormAnalysisModeMeta";
+import {
   listItemCategories,
   listItems,
   type ItemCategory,
@@ -110,21 +114,29 @@ export function WorksetDetailDialog({
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingEvents(true);
-    setEventsError(null);
-    const { start, end } = worksetEventsQueryWindow();
-    void listUserEvents({ worksetId: workset.id, start, end })
-      .then((rows) => {
-        if (!cancelled) setEvents(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setEventsError(t("workset.detailSummaryEventsError"));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingEvents(false);
-      });
+    const loadEvents = () => {
+      setLoadingEvents(true);
+      setEventsError(null);
+      const { start, end } = worksetEventsQueryWindow();
+      void listUserEvents({ worksetId: workset.id, start, end })
+        .then((rows) => {
+          if (!cancelled) setEvents(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setEventsError(t("workset.detailSummaryEventsError"));
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingEvents(false);
+        });
+    };
+    loadEvents();
+    const unsubscribe = subscribeResourceModified((detail) => {
+      if (detail.resourceType !== "user_event") return;
+      loadEvents();
+    });
     return () => {
       cancelled = true;
+      unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workset.id is the load key
   }, [workset.id]);
@@ -220,8 +232,9 @@ export function WorksetDetailDialog({
             size="sm"
             onClick={() => {
               onClose();
-              navigate("/tasks/new");
+              navigate(`/tasks/new?worksetId=${encodeURIComponent(workset.id)}`);
             }}
+            data-testid="workset-detail-add-task"
           >
             {t("tasks.addTask")}
           </Button>
@@ -365,7 +378,7 @@ export function WorksetDetailDialog({
                     tone={MODE_BADGE_TONE[task.analysisMode] ?? "neutral"}
                     className="normal-case tracking-normal shrink-0"
                   >
-                    {task.analysisMode}
+                    {getTaskEmployeeDisplayName(getTaskEmployeeIdForMode(task.analysisMode))}
                   </Badge>
                 </div>
               </AccentBarCard>

@@ -26,7 +26,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 5 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
+Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 8 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
 
 ## Sources / accounts
 
@@ -80,7 +80,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v5 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v5-explicit-reset) (wipe-only, `recurring_schedules`, `__user__`, `user_events.workset_id`) |
+| Schema stamp v8 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v8-explicit-reset) (wipe-only, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
