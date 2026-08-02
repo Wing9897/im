@@ -42,6 +42,12 @@ export interface TaskFormState
   description: string;
   scheduleType: ScheduleType;
   scheduleValue: string | null;
+  /**
+   * Canonical trigger-purpose RRULE sent to the API.
+   * Kept in sync with scheduleType/scheduleValue for presets; preserves
+   * unmappable server RRULEs so save does not silently overwrite them.
+   */
+  scheduleRrule: string | null;
   /** Project wave cool-down seconds; null → 20 at runtime. */
   projectWaveIntervalSeconds: number | null;
   /** Event batch overlap; null → 0 (no overlap). Event tasks only. */

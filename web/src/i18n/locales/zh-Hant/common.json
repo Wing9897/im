@@ -139,7 +139,7 @@
       "evidenceStyleHelp": "留空則跟隨全域證據風格。",
       "nameLabel": "任務名稱",
       "namePlaceholder": "輸入任務名稱",
-      "foundationTitle": "循環事件",
+      "foundationTitle": "選擇員工",
       "foundationHint": "任務建立在可重複／可觸發的時間排程之上；先選負責的員工，再配置其技能。",
       "staffLabel": "員工",
       "staffGroup": {

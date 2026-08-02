@@ -47,7 +47,12 @@ export function useBoardTimedEventsWidget(options: {
   useEffect(
     () =>
       subscribeResourceModified((detail) => {
-        if (detail.resourceType === "task" || detail.resourceType === "user_event") {
+        if (
+          detail.resourceType === "task" ||
+          detail.resourceType === "user_event" ||
+          detail.resourceType === "item" ||
+          detail.resourceType === "item_category"
+        ) {
           void refresh();
         }
       }),

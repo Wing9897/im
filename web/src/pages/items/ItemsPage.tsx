@@ -42,6 +42,7 @@ import {
 } from "../../domain/items/itemAttributes";
 import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import { formatItemsError } from "../../domain/items/itemErrors";
+import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { CategoryManageDialog } from "./CategoryManageDialog";
 import { ItemsCategoryCard } from "./ItemsCategoryCard";
@@ -104,6 +105,15 @@ export function ItemsPage() {
 
   useEffect(() => {
     void reload();
+  }, [reload]);
+
+  useEffect(() => {
+    return subscribeResourceModified((detail) => {
+      if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
+        return;
+      }
+      void reload();
+    });
   }, [reload]);
 
   // Deep-link from Timeline: /items?itemId=…&itemDateKind=purchased|expires|remind

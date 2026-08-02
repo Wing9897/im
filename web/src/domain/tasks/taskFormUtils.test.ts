@@ -2,13 +2,16 @@ import { describe, it, expect } from "vitest";
 import type { TaskFormState } from "../../types";
 import { DEFAULT_FORM_STATE } from "../../hooks/useTaskEditorState";
 import {
+  analysisTaskToFormState,
   applyConfigToFormState,
   buildCurrentTaskPayload,
   formStateToCreateRecurringConfig,
   formStateToTaskConfig,
   formStateToTaskSchedule,
   roundTripFormState,
+  scheduleFieldsFromTask,
 } from "./taskFormUtils";
+import type { AnalysisTask } from "../../types";
 
 const sampleBase: TaskFormState = {
   name: "Base Task",
@@ -16,6 +19,7 @@ const sampleBase: TaskFormState = {
   promptTemplate: "Analyze messages",
   scheduleType: "daily",
   scheduleValue: "09:00",
+  scheduleRrule: null,
   analysisMode: "leaderboard",
   analysisTimeRange: "24h",
   channelIds: ["ch-1", "ch-2"],
@@ -40,6 +44,7 @@ const fullConfig: Partial<TaskFormState> = {
   promptTemplate: "New prompt",
   scheduleType: "weekly",
   scheduleValue: "1:10:30",
+  scheduleRrule: null,
   analysisMode: "event",
   analysisTimeRange: "48h",
   channelIds: ["ch-3"],
@@ -56,6 +61,7 @@ const validFormStates: TaskFormState[] = [
     promptTemplate: "Analyze hourly",
     scheduleType: "hourly",
     scheduleValue: null,
+    scheduleRrule: null,
     analysisMode: "leaderboard",
     analysisTimeRange: "24h",
     channelIds: ["abc12345"],
@@ -71,6 +77,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
   },
   {
     name: "Daily Task",
@@ -78,6 +85,7 @@ const validFormStates: TaskFormState[] = [
     promptTemplate: "Analyze daily",
     scheduleType: "daily",
     scheduleValue: "14:30",
+    scheduleRrule: null,
     analysisMode: "event",
     analysisTimeRange: "48h",
     channelIds: ["ch-1", "ch-2"],
@@ -93,6 +101,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
   },
   {
     name: "Weekly Task",
@@ -100,6 +109,7 @@ const validFormStates: TaskFormState[] = [
     promptTemplate: "Analyze weekly",
     scheduleType: "weekly",
     scheduleValue: "3:09:00",
+    scheduleRrule: null,
     analysisMode: "event",
     analysisTimeRange: "7d",
     channelIds: ["weekly-ch"],
@@ -115,6 +125,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
   },
   {
     name: "Custom Seconds",
@@ -122,6 +133,7 @@ const validFormStates: TaskFormState[] = [
     promptTemplate: "Fast poll",
     scheduleType: "custom_seconds",
     scheduleValue: "300",
+    scheduleRrule: null,
     analysisMode: "leaderboard",
     analysisTimeRange: "1h",
     channelIds: ["fast-ch"],
@@ -137,6 +149,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
+  worksetId: null,
   },
 ];
 
@@ -146,6 +159,7 @@ const sampleFormState: TaskFormState = {
   promptTemplate: "Analyze crypto messages",
   scheduleType: "daily",
   scheduleValue: "08:00",
+  scheduleRrule: null,
   analysisMode: "leaderboard",
   analysisTimeRange: "24h",
   channelIds: ["ch-abc123", "ch-def456"],
@@ -261,6 +275,7 @@ describe("formStateToTaskConfig calendar contract", () => {
       analysisMode: "recurring",
       scheduleType: sampleBase.scheduleType,
       scheduleValue: sampleBase.scheduleValue,
+      scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
       promptTemplate: "",
       channelIds: [],
       includeInTimeline: true,
@@ -329,6 +344,78 @@ describe("formStateToTaskConfig calendar contract", () => {
     });
     expect(payload.includeInTimeline).toBe(false);
   });
+
+  it("sends canonical scheduleRrule derived from presets", () => {
+    const payload = formStateToTaskConfig({
+      ...sampleBase,
+      scheduleType: "hourly",
+      scheduleValue: null,
+      scheduleRrule: null,
+    });
+    expect(payload.scheduleRrule).toBe("FREQ=HOURLY");
+  });
+
+  it("preserves unmappable scheduleRrule on save", () => {
+    const payload = formStateToTaskConfig({
+      ...sampleBase,
+      scheduleType: "seconds_10",
+      scheduleValue: null,
+      scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+    });
+    expect(payload.scheduleRrule).toBe("FREQ=HOURLY;INTERVAL=2");
+  });
+});
+
+describe("scheduleFieldsFromTask", () => {
+  it("maps canonical RRULE into FE presets", () => {
+    expect(
+      scheduleFieldsFromTask({
+        scheduleType: null,
+        scheduleValue: null,
+        scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
+      }),
+    ).toEqual({
+      scheduleType: "daily",
+      scheduleValue: "09:30",
+      scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
+    });
+  });
+
+  it("preserves unmappable RRULE instead of defaulting overwrite", () => {
+    expect(
+      scheduleFieldsFromTask({
+        scheduleType: null,
+        scheduleValue: null,
+        scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+      }),
+    ).toEqual({
+      scheduleType: "seconds_10",
+      scheduleValue: null,
+      scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
+    });
+  });
+
+  it("analysisTaskToFormState hydrates from scheduleRrule", () => {
+    const task = {
+      id: "t1",
+      name: "Hydrate",
+      description: null,
+      promptTemplate: "p",
+      analysisMode: "event",
+      analysisTimeRange: "24h",
+      version: 1,
+      isActive: true,
+      scheduleType: null,
+      scheduleValue: null,
+      scheduleRrule: "FREQ=HOURLY",
+      channelIds: [],
+      createdAt: "2024-01-01T00:00:00Z",
+      updatedAt: "2024-01-01T00:00:00Z",
+    } as AnalysisTask;
+    const form = analysisTaskToFormState(task);
+    expect(form.scheduleType).toBe("hourly");
+    expect(form.scheduleRrule).toBe("FREQ=HOURLY");
+  });
 });
 
 describe("roundTripFormState", () => {
@@ -376,9 +463,11 @@ describe("buildCurrentTaskPayload", () => {
       "includeInTimeline",
       "name",
       "promptTemplate",
+      "scheduleRrule",
       "scheduleType",
       "scheduleValue",
     ].sort());
+    expect(payload.scheduleRrule).toBe("FREQ=DAILY;BYHOUR=8;BYMINUTE=0");
   });
 
   it("forwards includeInTimeline false for event-mode drafts", () => {
@@ -400,6 +489,7 @@ describe("buildCurrentTaskPayload", () => {
       ...sampleFormState,
       scheduleType: "weekly",
       scheduleValue: "1:12:00",
+      scheduleRrule: null,
       analysisMode: "event",
       analysisTimeRange: "7d",
     };
@@ -407,6 +497,7 @@ describe("buildCurrentTaskPayload", () => {
       ...sampleFormState,
       scheduleType: "custom_seconds",
       scheduleValue: "600",
+      scheduleRrule: null,
       channelIds: ["single-ch"],
     };
 

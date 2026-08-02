@@ -64,7 +64,7 @@
   "removeSchemaField": "移除字段",
   "deleteCategory": "删除",
   "deleteCategoryConfirm": "删除后物品变为未分类，扩展字段保留。",
-  "deleteSeedCategoryConfirm": "删除预设分类「{{name}}」？下属物品变为未分类，扩展字段保留。",
+  "deleteSeedCategoryConfirm": "删除预设分类「{name}」？下属物品变为未分类，扩展字段保留。",
   "deleteItemConfirm": "确定删除此物品？",
   "errors": {
     "generic": "操作失败，请稍后再试。",
