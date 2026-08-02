@@ -169,7 +169,6 @@
     },
     "modes": {
       "leaderboard": {
-        "displayLabel": "Leaderboard",
         "modeOptionLabel": "Leaderboard - compare rankings",
         "modeDescription": "Compare and track top message rankings",
         "promptLabel": "Task prompt (what should AI compare)",
@@ -177,7 +176,6 @@
         "promptHint": "e.g. only hit when content clearly mentions official announcements, product updates, partnerships, or risk signals"
       },
       "event": {
-        "displayLabel": "Key Events",
         "modeOptionLabel": "Key Events - intelligence / schedule",
         "modeDescription": "Extract key events and itineraries",
         "promptLabel": "Task prompt (which events should AI extract)",
@@ -185,7 +183,6 @@
         "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
       },
       "recurring": {
-        "displayLabel": "Recurring schedule",
         "modeOptionLabel": "Recurring (no AI)",
         "modeDescription": "RRULE recurring schedule, no AI",
         "promptLabel": "",
@@ -193,7 +190,6 @@
         "promptHint": ""
       },
       "project": {
-        "displayLabel": "Project",
         "modeOptionLabel": "Project - closed-loop calendar agent",
         "modeDescription": "Closed-loop reconcile of project calendar and child tasks",
         "promptLabel": "Project goals / rules",

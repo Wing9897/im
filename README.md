@@ -10,7 +10,7 @@
 **[`docs/功能特色.md`](docs/功能特色.md)**
 
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
-- **排程 AI 分析** — interval/cron 計時器（10 秒、每小時、每日、每週、自訂秒數）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
+- **排程 AI 分析** — 統一 trigger-purpose `schedule_rrule`（APScheduler next-run only；FE 預設：10 秒、每小時、每日、每週、自訂秒數 → RRULE）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
 - **時間規劃** — Timeline 合併分析事件、循環任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
 - **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期／提醒日投影到日曆（`source=item`）；分類與物品可選 emoji（含 seed logo），歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做

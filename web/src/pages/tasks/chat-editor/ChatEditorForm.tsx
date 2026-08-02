@@ -8,6 +8,7 @@ import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import { ChatCalendarFields } from "./ChatCalendarFields";
+import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { ScheduleInput } from "../ScheduleInput";
 import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
@@ -62,7 +63,16 @@ export function ChatEditorForm({
             onNameChange={(v) => updateField("name", v)}
             onAnalysisModeChange={(v) => {
               updateField("analysisMode", v);
-              if (v === "project" && formState.scheduleType === "seconds_10") {
+              // Do not remap placeholder seconds_10 when wire RRULE is unmapped/read-only.
+              if (
+                v === "project" &&
+                formState.scheduleType === "seconds_10" &&
+                !isUnmappedTriggerSchedule(
+                  formState.scheduleType,
+                  formState.scheduleValue,
+                  formState.scheduleRrule,
+                )
+              ) {
                 updateField("scheduleType", "hourly");
               }
               if (v === "project" && formState.projectWaveIntervalSeconds == null) {

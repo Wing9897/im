@@ -169,7 +169,6 @@
     },
     "modes": {
       "leaderboard": {
-        "displayLabel": "排行榜",
         "modeOptionLabel": "排行榜 - 比較排名",
         "modeDescription": "比較與追蹤熱門訊息排名",
         "promptLabel": "任務 Task Prompt（告訴 AI 要比較什麼）",
@@ -177,7 +176,6 @@
         "promptHint": "💡 例如：只在內容明確提及官方公告、產品更新、合作進展或風險信號時命中"
       },
       "event": {
-        "displayLabel": "關鍵事件",
         "modeOptionLabel": "關鍵事件 - 情報 / 行程",
         "modeDescription": "從訊息抽取關鍵事件與行程",
         "promptLabel": "任務 Task Prompt（告訴 AI 要抽取哪些事件）",
@@ -185,7 +183,6 @@
         "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
       },
       "recurring": {
-        "displayLabel": "循環日程",
         "modeOptionLabel": "循環任務（無處理）",
         "modeDescription": "RRULE 週期日程，無 AI 處理",
         "promptLabel": "",
@@ -193,7 +190,6 @@
         "promptHint": ""
       },
       "project": {
-        "displayLabel": "專案",
         "modeOptionLabel": "專案 - 閉環日程助手",
         "modeDescription": "閉環 reconcile 專案日程與子任務",
         "promptLabel": "專案目標／規則",

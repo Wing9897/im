@@ -28,7 +28,6 @@ from server.domain.analysis_modes import (
 )
 from server.domain.schedule import (
     ScheduleValidationError,
-    legacy_to_trigger_rrule,
     may_register_trigger,
     trigger_from_rrule,
 )
@@ -52,28 +51,10 @@ class _QueuedTask:
     enqueued_at: float
 
 
-def schedule_trigger(schedule_type: str, schedule_value: str | None) -> IntervalTrigger | CronTrigger:
-    """Deprecated test/helper: map legacy presets → trigger RRULE → APScheduler trigger.
-
-    Runtime registration uses :func:`schedule_trigger_from_rrule` only
-    (``analysis_tasks.schedule_rrule``). Keep this for property / dispatch tests that
-    still speak ``schedule_type`` / ``schedule_value``.
-
-    Calendar RRULE and event metadata are recurring-only and intentionally are not inputs —
-    trigger schedules never calendar-expand.
-    seconds_10 → every 10s; hourly → every hour; custom_seconds → every N s;
-    daily → "HH:MM"; weekly → "D:HH:MM" with D=0(Sun)..6(Sat).
-    """
-    try:
-        return trigger_from_rrule(legacy_to_trigger_rrule(schedule_type, schedule_value))
-    except ScheduleValidationError as exc:
-        raise ValueError(str(exc)) from exc
-
-
 def schedule_trigger_from_rrule(schedule_rrule: str) -> IntervalTrigger | CronTrigger:
     """Build an AI-analysis trigger solely from ``analysis_tasks.schedule_rrule``.
 
-    Calendar RRULE / event metadata are recurring-only and intentionally are not inputs.
+    Calendar RRULE and event metadata are recurring-only and intentionally are not inputs.
     SECONDLY trigger RRULEs must never enter calendar expand.
     """
     try:

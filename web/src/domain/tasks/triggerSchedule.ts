@@ -73,3 +73,14 @@ export function triggerRruleToLegacy(
   }
   return null;
 }
+
+/** True when wire RRULE is not represented by the current FE preset fields. */
+export function isUnmappedTriggerSchedule(
+  scheduleType: ScheduleType,
+  scheduleValue: string | null,
+  scheduleRrule: string | null | undefined,
+): boolean {
+  const wire = scheduleRrule?.trim() || "";
+  if (!wire) return false;
+  return legacyToTriggerRrule(scheduleType, scheduleValue) !== wire;
+}

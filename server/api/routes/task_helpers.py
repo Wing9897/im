@@ -48,17 +48,24 @@ class TaskConfigBody(BaseModel):
     channelIds: Optional[list[Union[str, dict[str, Any]]]] = None
     scheduleType: Optional[str] = Field(
         default=None,
-        description="FE preset for AI trigger schedule (maps to scheduleRrule)",
+        description=(
+            "Read-compat FE preset mirror (maps to scheduleRrule). "
+            "Write path should send scheduleRrule; accepted only when scheduleRrule is omitted."
+        ),
     )
     scheduleValue: Optional[str] = Field(
         default=None,
-        description="Value interpreted only with the non-recurring AI analysis scheduleType",
+        description=(
+            "Read-compat value for scheduleType presets. "
+            "Ignored when scheduleRrule is provided."
+        ),
     )
     scheduleRrule: Optional[str] = Field(
         default=None,
         description=(
             "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). "
-            "Never calendar-expanded. Prefer this over scheduleType/scheduleValue when both are sent."
+            "Never calendar-expanded. Create/update write SoT — prefer this alone over "
+            "scheduleType/scheduleValue."
         ),
     )
     includeInTimeline: Optional[bool] = None
