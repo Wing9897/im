@@ -11,11 +11,13 @@
 
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — interval/cron 計時器（10 秒、每小時、每日、每週、自訂秒數）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
-- **循環任務** — Recurring task（`analysis_mode=recurring`）；RRULE 僅於查詢時展開，不會觸發 AI 分析
+- **時間規劃** — Timeline 合併分析事件、`recurring`（RRULE 僅查詢展開、不跑 AI）與用戶事件；可在對話框建立一次性／循環日程
+- **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期日投影到日曆（`source=item`），歸屬工作集
+- **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案** — `project` 閉環多波消化來源積壓
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的 Ops Board
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描關鍵事件與日程
-- **本地優先** — SQLite、憑證加密、本機綁定；Electron 開箱即用
+- **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
 
 ## 核心設計理念
 
@@ -72,15 +74,16 @@ npm ci
 npm run dev
 ```
 
-若要**空庫起跑**（刪除本地歷史資料），先停止 dev 再執行：
+> **Schema stamp 不符／升級後無法啟動？** 本專案是 **wipe-only**（無 in-place migration）。先停掉 `npm run dev`／Electron／獨立 server，再於倉庫根執行：
+>
+> ```bash
+> uv run python scripts/reset_local_databases.py          # dry-run：列出將刪除的檔案
+> uv run python scripts/reset_local_databases.py --apply  # 確認後刪除
+> ```
+>
+> 腳本**只**刪已知的 `intelligence_monitor.db` 及其 `-wal`／`-shm`（專案根、Electron userData、`INTELLIGENCE_MONITOR_*` 覆寫路徑等）；**不動** Telegram sessions、`secret.key`、`connection.json`。詳見 [`scripts/reset_local_databases.py`](scripts/reset_local_databases.py) 與下方「資料庫」。
 
-```bash
-python scripts/reset_local_databases.py --apply
-```
-
-會刪除專案根與 Electron userData 下的 `intelligence_monitor.db`、schema bak、Telegram sessions、`secret.key`、以及 `connection.json`。詳見 [`scripts/reset_local_databases.py`](scripts/reset_local_databases.py)。
-
-Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.session.txt`）。Desktop 與 CLI **共用同一預設資料根**（Windows：`%APPDATA%\Intelligence Monitor`；對齊 Electron `productName`）。可用 `INTELLIGENCE_MONITOR_DATA_DIR` 覆寫。全量／資料庫 reset（或 `python scripts/reset_local_databases.py --apply`）會刪除 `*.session.txt`、殘留 `*.session`、`secret.key`、`connection.json`。
+Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.session.txt`）。Desktop 與 CLI **共用同一預設資料根**（Windows：`%APPDATA%\Intelligence Monitor`；對齊 Electron `productName`）。可用 `INTELLIGENCE_MONITOR_DATA_DIR` 覆寫。Settings「完全重置」／`POST /system/reset/database` 另會清 sessions、`secret.key`、`connection.json`（比上述腳本更徹底）。
 
 ## 指令
 
@@ -273,13 +276,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v6**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.7`）；新安裝直接建 stamp-6 庫。這是 wipe-only baseline：v1–v5 與任何其他非空 stamp／fingerprint 都 hard-reject，沒有 in-place migration 或自動刪庫。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。依 [`ARCHITECTURE.md` 的外部備份與 reset 流程](docs/ARCHITECTURE.md#schema-v6-explicit-reset)保留需要的資料後，再明確 reset：
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema stamp 7**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.8`）——含可追蹤物品（`item_categories`／`items`，emoji／提醒日投影）。新安裝直接建 stamp-7 庫。
+
+**Wipe-only：** 非空且 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
-python scripts/reset_local_databases.py --apply
+uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v7 explicit reset](docs/ARCHITECTURE.md#schema-v7-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 
