@@ -99,12 +99,14 @@ export function AppRoutes() {
         />
         <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
+        <Route path="/tasks/worksets/:worksetId" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/project" element={<LazyPage Page={ProjectDetailPage} />} />
         <Route path="/leaderboard" element={<LazyPage Page={LeaderboardPage} />} />
         <Route path="/intelligence" element={<LazyPage Page={IntelligencePage} />} />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
+        <Route path="/items/category/:categoryId" element={<LazyPage Page={ItemsPage} />} />
         <Route path="/accounts" element={<LazyPage Page={SourceManagementPage} />} />
         <Route path="/actions" element={<LazyPage Page={ActionsPage} />} />
         <Route path="/assistant" element={<LazyPage Page={AssistantPage} />} />

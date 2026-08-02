@@ -41,9 +41,11 @@ type Props = {
   categories: ItemCategory[];
   worksets: Workset[];
   categoryLabel: (
-    category: ItemCategory | undefined,
+    category: ItemCategory | null | undefined,
     t: (key: string) => string,
   ) => string;
+  /** Prefill category when creating from a type list layer. */
+  initialCategoryId?: string | null;
   onClose: () => void;
   onSave: (draft: SaveDraft) => Promise<void>;
   partitionItemAttributes?: typeof defaultPartition;
@@ -55,6 +57,7 @@ export function ItemFormDialog({
   categories,
   worksets,
   categoryLabel,
+  initialCategoryId = null,
   onClose,
   onSave,
   partitionItemAttributes = defaultPartition,
@@ -63,12 +66,18 @@ export function ItemFormDialog({
   const { t } = useTranslation("items");
   const [title, setTitle] = useState(item?.title ?? "");
   const [worksetId, setWorksetId] = useState(item?.worksetId || SYSTEM_WORKSET_ID);
-  const [categoryId, setCategoryId] = useState<string | null>(item?.categoryId ?? null);
+  const [categoryId, setCategoryId] = useState<string | null>(
+    item?.categoryId ?? initialCategoryId ?? null,
+  );
   const [purchasedAt, setPurchasedAt] = useState(item?.purchasedAt ?? "");
   const [expiresAt, setExpiresAt] = useState(item?.expiresAt ?? "");
-  const [remindBeforeDays, setRemindBeforeDays] = useState<number | null>(
-    item?.remindBeforeDays ?? null,
-  );
+  const [remindBeforeDays, setRemindBeforeDays] = useState<number | null>(() => {
+    if (item?.remindBeforeDays != null) return item.remindBeforeDays;
+    const seedId = item?.categoryId ?? initialCategoryId;
+    if (!seedId) return null;
+    const seed = categories.find((c) => c.id === seedId);
+    return seed?.defaultRemindBeforeDays ?? null;
+  });
   const [notes, setNotes] = useState(item?.notes ?? "");
   const [attributes, setAttributes] = useState<Record<string, string>>(item?.attributes ?? {});
   const [extraKey, setExtraKey] = useState("");
@@ -122,7 +131,7 @@ export function ItemFormDialog({
         remindBeforeDays,
         notes,
         attributes,
-        status: item?.status ?? "active",
+        status: item?.status === "archived" ? "archived" : "active",
       });
     } catch (err) {
       setError(formatItemsError(err, t));

@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Package } from "lucide-react";
+import { ArrowLeft, Package, Tags } from "lucide-react";
 import { EmptyState } from "../../components/common/EmptyState";
 import {
   AlertBanner,
   AppPageShell,
   Badge,
   Button,
+  CardGrid,
   FilterChip,
   OpsControlBar,
   PanelSection,
@@ -29,6 +30,14 @@ import { listWorksets } from "../../api/worksets";
 import type { Workset } from "../../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
+  ALL_CATEGORIES_ID,
+  UNCATEGORIZED_CATEGORY_ID,
+  buildCategorySummaries,
+  categoryLabel,
+  filterItemsByCategoryRoute,
+  isSyntheticCategoryId,
+} from "../../domain/items/categoryAggregates";
+import {
   daysUntil,
   expiryTone,
   itemsEmptyKind,
@@ -38,21 +47,9 @@ import {
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { CategoryManageDialog } from "./CategoryManageDialog";
+import { ItemsCategoryCard } from "./ItemsCategoryCard";
 
 type FilterKey = "all" | "expiring" | "overdue" | "archived";
-
-function categoryLabel(
-  category: ItemCategory | undefined,
-  t: (key: string, opts?: Record<string, unknown>) => string,
-): string {
-  if (!category) return t("noCategory");
-  if (category.slug) {
-    const key = `seed.${category.slug}`;
-    const translated = t(key);
-    if (translated !== key) return translated;
-  }
-  return category.name;
-}
 
 function toneBadge(tone: ReturnType<typeof expiryTone>): BadgeTone {
   if (tone === "overdue") return "danger";
@@ -70,6 +67,8 @@ function toneBorderClass(tone: ReturnType<typeof expiryTone>): string {
 
 export function ItemsPage() {
   const { t } = useTranslation("items");
+  const navigate = useNavigate();
+  const { categoryId: routeCategoryId } = useParams<{ categoryId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<TrackableItem[]>([]);
   const [categories, setCategories] = useState<ItemCategory[]>([]);
@@ -81,6 +80,22 @@ export function ItemsPage() {
   const [editing, setEditing] = useState<TrackableItem | null | "new">(null);
   const [manageCategories, setManageCategories] = useState(false);
   const deepLinkHandled = useRef<string | null>(null);
+
+  // Support /items?category=… → list layer
+  useEffect(() => {
+    if (routeCategoryId) return;
+    const q = searchParams.get("category")?.trim();
+    if (!q) return;
+    const next = new URLSearchParams(searchParams);
+    next.delete("category");
+    const qs = next.toString();
+    navigate(`/items/category/${encodeURIComponent(q)}${qs ? `?${qs}` : ""}`, {
+      replace: true,
+    });
+  }, [routeCategoryId, searchParams, navigate]);
+
+  const listLayer = Boolean(routeCategoryId);
+  const categoryRouteId = routeCategoryId ?? null;
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -117,12 +132,21 @@ export function ItemsPage() {
     const match = items.find((row) => row.id === itemId);
     if (!match) return;
     deepLinkHandled.current = itemId;
+    // If on type layer, jump into the item's category list first.
+    if (!listLayer) {
+      const catId = match.categoryId ?? UNCATEGORIZED_CATEGORY_ID;
+      const next = new URLSearchParams(searchParams);
+      navigate(`/items/category/${encodeURIComponent(catId)}?${next.toString()}`, {
+        replace: true,
+      });
+      return;
+    }
     setEditing(match);
     const next = new URLSearchParams(searchParams);
     next.delete("itemId");
     next.delete("itemDateKind");
     setSearchParams(next, { replace: true });
-  }, [loading, items, searchParams, setSearchParams]);
+  }, [loading, items, searchParams, setSearchParams, listLayer, navigate]);
 
   const categoryById = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -133,9 +157,30 @@ export function ItemsPage() {
     [worksets],
   );
 
+  const categorySummaries = useMemo(
+    () => buildCategorySummaries(categories, items),
+    [categories, items],
+  );
+
+  const allTypesSummary = useMemo(() => {
+    const active = items.filter((i) => i.status !== "archived");
+    return {
+      id: ALL_CATEGORIES_ID,
+      category: null,
+      itemCount: active.length,
+      expiringCount: categorySummaries.reduce((n, s) => n + s.expiringCount, 0),
+      overdueCount: categorySummaries.reduce((n, s) => n + s.overdueCount, 0),
+    };
+  }, [items, categorySummaries]);
+
+  const scopedItems = useMemo(
+    () => filterItemsByCategoryRoute(items, categoryRouteId),
+    [items, categoryRouteId],
+  );
+
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return items.filter((item) => {
+    return scopedItems.filter((item) => {
       if (filter === "archived") {
         if (item.status !== "archived") return false;
       } else if (item.status === "archived") {
@@ -154,7 +199,7 @@ export function ItemsPage() {
       const hay = `${item.title} ${item.notes} ${JSON.stringify(item.attributes)}`.toLowerCase();
       return hay.includes(needle);
     });
-  }, [items, filter, search]);
+  }, [scopedItems, filter, search]);
 
   const grouped = useMemo(() => {
     const byWorkset = new Map<string, TrackableItem[]>();
@@ -181,13 +226,27 @@ export function ItemsPage() {
   }, [filtered, worksets]);
 
   const emptyKind = itemsEmptyKind({
-    totalCount: items.length,
+    totalCount: scopedItems.length,
     filteredCount: filtered.length,
   });
+
+  const listTitle = useMemo(() => {
+    if (!categoryRouteId || categoryRouteId === ALL_CATEGORIES_ID) {
+      return t("allCategories");
+    }
+    if (categoryRouteId === UNCATEGORIZED_CATEGORY_ID) {
+      return t("noCategory");
+    }
+    return categoryLabel(categoryById.get(categoryRouteId), t);
+  }, [categoryRouteId, categoryById, t]);
 
   const clearFilters = () => {
     setFilter("all");
     setSearch("");
+  };
+
+  const openCategory = (id: string) => {
+    navigate(`/items/category/${encodeURIComponent(id)}`);
   };
 
   const handleSave = async (draft: {
@@ -211,15 +270,28 @@ export function ItemsPage() {
     await reload();
   };
 
+  const defaultNewCategoryId = useMemo(() => {
+    if (!categoryRouteId || isSyntheticCategoryId(categoryRouteId)) {
+      if (categoryRouteId === UNCATEGORIZED_CATEGORY_ID) return null;
+      return null;
+    }
+    return categoryRouteId;
+  }, [categoryRouteId]);
+
   return (
     <AppPageShell
       width="fluid"
       actions={
         <div className="flex flex-wrap items-center gap-sm">
           <Button variant="secondary" size="sm" onClick={() => setManageCategories(true)}>
+            <Tags size={14} aria-hidden />
             {t("manageCategories")}
           </Button>
-          <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setEditing("new")}
+          >
             {t("addItem")}
           </Button>
         </div>
@@ -227,41 +299,31 @@ export function ItemsPage() {
     >
       <div className="mb-md flex items-start gap-sm">
         <Package className="mt-0.5 shrink-0 text-accent" size={18} aria-hidden />
-        <div className="min-w-0">
-          <h1 className={pageTitleClass}>{t("title")}</h1>
-          <p className={`${captionClass} mt-xs`}>{t("subtitle")}</p>
+        <div className="min-w-0 flex-1">
+          {listLayer ? (
+            <>
+              <div className="mb-xs flex flex-wrap items-center gap-sm">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/items")}
+                  aria-label={t("backToCategories")}
+                >
+                  <ArrowLeft size={14} aria-hidden />
+                  {t("backToCategories")}
+                </Button>
+              </div>
+              <h1 className={pageTitleClass}>{listTitle}</h1>
+              <p className={`${captionClass} mt-xs`}>{t("listSubtitle")}</p>
+            </>
+          ) : (
+            <>
+              <h1 className={pageTitleClass}>{t("title")}</h1>
+              <p className={`${captionClass} mt-xs`}>{t("typesSubtitle")}</p>
+            </>
+          )}
         </div>
       </div>
-
-      <OpsControlBar
-        ariaLabel={t("filterBarAria")}
-        className="mb-md flex-wrap"
-      >
-        {(
-          [
-            ["all", "filterAll"],
-            ["expiring", "filterExpiring"],
-            ["overdue", "filterOverdue"],
-            ["archived", "filterArchived"],
-          ] as const
-        ).map(([key, labelKey]) => (
-          <FilterChip
-            key={key}
-            size="sm"
-            active={filter === key}
-            onClick={() => setFilter(key)}
-          >
-            {t(labelKey)}
-          </FilterChip>
-        ))}
-        <TextField
-          className="min-w-[160px] flex-1"
-          placeholder={t("searchPlaceholder")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          aria-label={t("searchPlaceholder")}
-        />
-      </OpsControlBar>
 
       {error ? (
         <AlertBanner variant="error" role="alert">
@@ -270,111 +332,195 @@ export function ItemsPage() {
       ) : null}
       {loading ? <p className={captionClass}>…</p> : null}
 
-      {!loading && emptyKind !== "none" ? (
-        <EmptyState
-          compact
-          title={emptyKind === "true-empty" ? t("empty") : t("emptyFiltered")}
-          description={
-            emptyKind === "true-empty" ? t("emptyHint") : t("emptyFilteredHint")
-          }
-          illustration={
-            <Package size={40} color="var(--accent)" strokeWidth={1.5} aria-hidden />
-          }
-          actions={
-            emptyKind === "true-empty" ? (
-              <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
-                {t("addItem")}
-              </Button>
-            ) : (
-              <Button variant="secondary" size="sm" onClick={clearFilters}>
-                {t("clearFilters")}
-              </Button>
-            )
-          }
-        />
+      {!listLayer && !loading ? (
+        <>
+          {categories.length === 0 && items.length === 0 ? (
+            <EmptyState
+              compact
+              title={t("emptyCategories")}
+              description={t("emptyCategoriesHint")}
+              illustration={
+                <Tags size={40} color="var(--accent)" strokeWidth={1.5} aria-hidden />
+              }
+              actions={
+                <div className="flex flex-wrap gap-sm">
+                  <Button variant="secondary" size="sm" onClick={() => setManageCategories(true)}>
+                    {t("addCategory")}
+                  </Button>
+                  <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
+                    {t("addItem")}
+                  </Button>
+                </div>
+              }
+            />
+          ) : (
+            <CardGrid data-testid="items-category-grid">
+              <ItemsCategoryCard
+                summary={allTypesSummary}
+                title={t("allCategories")}
+                onOpen={() => openCategory(ALL_CATEGORIES_ID)}
+              />
+              {categorySummaries.map((summary) => (
+                <ItemsCategoryCard
+                  key={summary.id}
+                  summary={summary}
+                  onOpen={() => openCategory(summary.id)}
+                />
+              ))}
+            </CardGrid>
+          )}
+        </>
       ) : null}
 
-      <div className="flex flex-col gap-md">
-        {grouped.map(({ worksetId, rows }) => (
-          <PanelSection
-            key={worksetId}
-            title={worksetById.get(worksetId)?.name || worksetId}
-            showCount
-            itemCount={rows.length}
+      {listLayer ? (
+        <>
+          <OpsControlBar
+            ariaLabel={t("filterBarAria")}
+            className="mb-md flex-wrap"
           >
-            <ul className="m-0 flex list-none flex-col gap-sm p-0">
-              {rows.map((item) => {
-                const days = daysUntil(item.expiresAt);
-                const tone = expiryTone(days, item.remindBeforeDays);
-                const cat = item.categoryId ? categoryById.get(item.categoryId) : undefined;
-                return (
-                  <li
-                    key={item.id}
-                    className={[
-                      "flex flex-wrap items-center justify-between gap-sm rounded-lg border border-surface-border/70 border-l-[3px] bg-[color-mix(in_srgb,var(--surface-card)_40%,transparent)] px-sm py-xs",
-                      toneBorderClass(tone),
-                    ].join(" ")}
-                  >
-                    <button
-                      type="button"
-                      className="min-w-0 flex-1 border-none bg-transparent p-0 text-left"
-                      onClick={() => setEditing(item)}
-                    >
-                      <div className="truncate text-body font-medium text-text-primary">
-                        {item.title}
-                      </div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-xs">
-                        <Badge
-                          tone="neutral"
-                          className="normal-case tracking-normal"
+            <FilterChip
+              size="sm"
+              active={false}
+              onClick={() => navigate("/items")}
+            >
+              {t("allCategories")}
+            </FilterChip>
+            {(
+              [
+                ["all", "filterAll"],
+                ["expiring", "filterExpiring"],
+                ["overdue", "filterOverdue"],
+                ["archived", "filterArchived"],
+              ] as const
+            ).map(([key, labelKey]) => (
+              <FilterChip
+                key={key}
+                size="sm"
+                active={filter === key}
+                onClick={() => setFilter(key)}
+              >
+                {t(labelKey)}
+              </FilterChip>
+            ))}
+            <TextField
+              className="min-w-[160px] flex-1"
+              placeholder={t("searchPlaceholder")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label={t("searchPlaceholder")}
+            />
+          </OpsControlBar>
+
+          {!loading && emptyKind !== "none" ? (
+            <EmptyState
+              compact
+              title={emptyKind === "true-empty" ? t("empty") : t("emptyFiltered")}
+              description={
+                emptyKind === "true-empty" ? t("emptyHint") : t("emptyFilteredHint")
+              }
+              illustration={
+                <Package size={40} color="var(--accent)" strokeWidth={1.5} aria-hidden />
+              }
+              actions={
+                emptyKind === "true-empty" ? (
+                  <Button variant="primary" size="sm" onClick={() => setEditing("new")}>
+                    {t("addItem")}
+                  </Button>
+                ) : (
+                  <Button variant="secondary" size="sm" onClick={clearFilters}>
+                    {t("clearFilters")}
+                  </Button>
+                )
+              }
+            />
+          ) : null}
+
+          <div className="flex flex-col gap-md">
+            {grouped.map(({ worksetId, rows }) => (
+              <PanelSection
+                key={worksetId}
+                title={worksetById.get(worksetId)?.name || worksetId}
+                showCount
+                itemCount={rows.length}
+              >
+                <ul className="m-0 flex list-none flex-col gap-sm p-0">
+                  {rows.map((item) => {
+                    const days = daysUntil(item.expiresAt);
+                    const tone = expiryTone(days, item.remindBeforeDays);
+                    const cat = item.categoryId
+                      ? categoryById.get(item.categoryId)
+                      : undefined;
+                    return (
+                      <li
+                        key={item.id}
+                        className={[
+                          "flex flex-wrap items-center justify-between gap-sm rounded-lg border border-surface-border/70 border-l-[3px] bg-[color-mix(in_srgb,var(--surface-card)_40%,transparent)] px-sm py-xs",
+                          toneBorderClass(tone),
+                        ].join(" ")}
+                      >
+                        <button
+                          type="button"
+                          className="min-w-0 flex-1 border-none bg-transparent p-0 text-left"
+                          onClick={() => setEditing(item)}
                         >
-                          {categoryLabel(cat, t)}
-                        </Badge>
-                        <span className={captionClass}>
-                          {item.expiresAt ? item.expiresAt : t("noExpiry")}
-                        </span>
-                        {days != null ? (
-                          <Badge
-                            tone={toneBadge(tone)}
-                            className="normal-case tracking-normal"
+                          <div className="truncate text-body font-medium text-text-primary">
+                            {item.title}
+                          </div>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-xs">
+                            <Badge
+                              tone="neutral"
+                              className="normal-case tracking-normal"
+                            >
+                              {categoryLabel(cat, t)}
+                            </Badge>
+                            <span className={captionClass}>
+                              {item.expiresAt ? item.expiresAt : t("noExpiry")}
+                            </span>
+                            {days != null ? (
+                              <Badge
+                                tone={toneBadge(tone)}
+                                className="normal-case tracking-normal"
+                              >
+                                {days < 0
+                                  ? t("daysOverdue", { count: Math.abs(days) })
+                                  : t("daysLeft", { count: days })}
+                              </Badge>
+                            ) : null}
+                          </div>
+                        </button>
+                        <div className="flex shrink-0 gap-xs">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              void updateItem(item.id, {
+                                status:
+                                  item.status === "archived" ? "active" : "archived",
+                              }).then(reload)
+                            }
                           >
-                            {days < 0
-                              ? t("daysOverdue", { count: Math.abs(days) })
-                              : t("daysLeft", { count: days })}
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </button>
-                    <div className="flex shrink-0 gap-xs">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() =>
-                          void updateItem(item.id, {
-                            status: item.status === "archived" ? "active" : "archived",
-                          }).then(reload)
-                        }
-                      >
-                        {item.status === "archived" ? t("unarchive") : t("archive")}
-                      </Button>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => {
-                          if (!window.confirm(t("deleteItemConfirm"))) return;
-                          void deleteItem(item.id).then(reload);
-                        }}
-                      >
-                        {t("deleteItem")}
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </PanelSection>
-        ))}
-      </div>
+                            {item.status === "archived" ? t("unarchive") : t("archive")}
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              if (!window.confirm(t("deleteItemConfirm"))) return;
+                              void deleteItem(item.id).then(reload);
+                            }}
+                          >
+                            {t("deleteItem")}
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </PanelSection>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       {editing != null ? (
         <ItemFormDialog
@@ -382,6 +528,7 @@ export function ItemsPage() {
           categories={categories}
           worksets={worksets}
           categoryLabel={categoryLabel}
+          initialCategoryId={editing === "new" ? defaultNewCategoryId : undefined}
           onClose={() => setEditing(null)}
           onSave={handleSave}
           partitionItemAttributes={partitionItemAttributes}
