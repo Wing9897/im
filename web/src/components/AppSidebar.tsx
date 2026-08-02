@@ -44,7 +44,7 @@ interface SidebarNavGroup {
 
 /**
  * Visual grouping only — routes/paths unchanged.
- * Live → Manage → Insights → Time → Assist.
+ * Live → Management → Intelligence → Time → Interact.
  */
 const mainNavGroups: readonly SidebarNavGroup[] = [
   {
@@ -60,7 +60,7 @@ const mainNavGroups: readonly SidebarNavGroup[] = [
     ],
   },
   {
-    labelKey: "groupInsights",
+    labelKey: "groupIntelligence",
     items: [
       { to: "/leaderboard", labelKey: "leaderboard", icon: Trophy },
       { to: "/intelligence", labelKey: "keyEvents", icon: MapPin },
@@ -71,7 +71,7 @@ const mainNavGroups: readonly SidebarNavGroup[] = [
     items: [{ to: "/timeline", labelKey: "timeline", icon: CalendarDays }],
   },
   {
-    labelKey: "groupAssist",
+    labelKey: "groupInteract",
     items: [
       { to: "/actions", labelKey: "actions", icon: BellRing },
       { to: "/assistant", labelKey: "assistant", icon: MessageSquare },
