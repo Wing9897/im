@@ -71,6 +71,17 @@ export function effectiveAssistantLlm(settings: SystemSettingsSnapshot): {
   return { provider, baseUrl };
 }
 
+/** True only when the assistant LLM can use official native web search. */
+export function llmHasNativeWebSearch(llmProvider: LlmProvider, llmBaseUrl: string): boolean {
+  if (llmProvider === "openai_compatible" && isOfficialOpenaiBase(llmBaseUrl)) {
+    return true;
+  }
+  if (llmProvider === "gemini_compatible" && isOfficialGeminiBase(llmBaseUrl)) {
+    return true;
+  }
+  return false;
+}
+
 export function resolveAssistantWebSearchStatus(args: {
   enabled: boolean;
   searchProvider: string;

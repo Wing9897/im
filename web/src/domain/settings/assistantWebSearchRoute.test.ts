@@ -4,6 +4,7 @@ import {
   effectiveAssistantLlm,
   isOfficialGeminiBase,
   isOfficialOpenaiBase,
+  llmHasNativeWebSearch,
   resolveAssistantWebSearchStatus,
 } from "./assistantWebSearchRoute";
 
@@ -13,6 +14,16 @@ describe("assistantWebSearchRoute", () => {
     expect(isOfficialOpenaiBase("https://proxy.example/v1")).toBe(false);
     expect(isOfficialGeminiBase("https://generativelanguage.googleapis.com/v1beta")).toBe(true);
     expect(isOfficialGeminiBase("https://gemini.example/v1")).toBe(false);
+  });
+
+  it("llmHasNativeWebSearch only for official OpenAI / Gemini", () => {
+    expect(llmHasNativeWebSearch("openai_compatible", "https://api.openai.com/v1")).toBe(true);
+    expect(llmHasNativeWebSearch("gemini_compatible", "https://generativelanguage.googleapis.com/v1beta")).toBe(
+      true,
+    );
+    expect(llmHasNativeWebSearch("ollama", "http://localhost:11434")).toBe(false);
+    expect(llmHasNativeWebSearch("openai_compatible", "https://proxy.example/v1")).toBe(false);
+    expect(llmHasNativeWebSearch("openrouter", "https://openrouter.ai/api/v1")).toBe(false);
   });
 
   it("resolves auto to OpenAI native on official base", () => {
