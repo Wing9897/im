@@ -3,12 +3,18 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnalysisTask } from "../../types/tasks";
 import type { TrackableItem } from "../../api/items";
+import type { UserEvent } from "../../api/userEvents";
 
 const listItems = vi.fn();
+const listUserEvents = vi.fn();
 const navigate = vi.fn();
 
 vi.mock("../../api/items", () => ({
   listItems: (...args: unknown[]) => listItems(...args),
+}));
+
+vi.mock("../../api/userEvents", () => ({
+  listUserEvents: (...args: unknown[]) => listUserEvents(...args),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -41,6 +47,12 @@ vi.mock("react-i18next", () => ({
       if (ns === "items") return key;
       if (key === "workset.detailTitle") return `Detail ${opts?.name ?? ""}`;
       if (key === "workset.detailSubtitle") return "subtitle";
+      if (key === "workset.detailSummaryExpiringHeading") return "Expiring";
+      if (key === "workset.detailSummaryEventsHeading") return "Events";
+      if (key === "workset.detailSummaryExpiringEmpty") return "no expiring";
+      if (key === "workset.detailSummaryEventsEmpty") return "no events";
+      if (key === "workset.detailSummaryLoading") return "loading";
+      if (key === "workset.detailSummaryEventsError") return "events error";
       if (key === "workset.detailTasksHeading") return "Tasks";
       if (key === "workset.detailItemsHeading") return "Items";
       if (key === "workset.detailTasksEmpty") return "no tasks";
@@ -60,6 +72,16 @@ vi.mock("react-i18next", () => ({
 }));
 
 import { WorksetDetailDialog } from "./WorksetDetailDialog";
+
+function isoDaysFromNow(days: number): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 function task(partial: Partial<AnalysisTask> & { id: string; name: string }): AnalysisTask {
   return {
@@ -93,16 +115,51 @@ function item(partial: Partial<TrackableItem> & { id: string; title: string }): 
   };
 }
 
+function userEvent(
+  partial: Partial<UserEvent> & { id: string; title: string; startTime: string },
+): UserEvent {
+  return {
+    body: "",
+    endTime: null,
+    location: null,
+    origin: "manual",
+    isAllDay: false,
+    taskId: "",
+    worksetId: "ws-1",
+    source: "user",
+    dismissed: false,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+    ...partial,
+  };
+}
+
+async function flushLoads() {
+  await act(async () => {
+    await Promise.all([
+      listItems.mock.results.at(-1)?.value,
+      listUserEvents.mock.results.at(-1)?.value,
+    ]);
+  });
+}
+
 describe("WorksetDetailDialog", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
   beforeEach(() => {
     listItems.mockReset();
+    listUserEvents.mockReset();
     navigate.mockReset();
     listItems.mockResolvedValue([
-      item({ id: "i1", title: "Passport" }),
+      item({ id: "i1", title: "Passport", expiresAt: isoDaysFromNow(2) }),
       item({ id: "i2", title: "Old", status: "archived" }),
+      item({ id: "i3", title: "Far", expiresAt: isoDaysFromNow(60) }),
+    ]);
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 3);
+    listUserEvents.mockResolvedValue([
+      userEvent({ id: "e1", title: "Standup", startTime: soon.toISOString() }),
     ]);
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -118,7 +175,7 @@ describe("WorksetDetailDialog", () => {
     container.remove();
   });
 
-  it("lists member tasks and active items", async () => {
+  it("lists member tasks, active items, and summary rows", async () => {
     const onOpenTask = vi.fn();
     const onClose = vi.fn();
 
@@ -138,14 +195,18 @@ describe("WorksetDetailDialog", () => {
       );
     });
 
-    await act(async () => {
-      await listItems.mock.results[0]?.value;
-    });
+    await flushLoads();
 
     expect(listItems).toHaveBeenCalledWith({ worksetId: "ws-1" });
+    expect(listUserEvents).toHaveBeenCalledWith(
+      expect.objectContaining({ worksetId: "ws-1", start: expect.any(String), end: expect.any(String) }),
+    );
     expect(container.textContent).toContain("Scan");
     expect(container.textContent).toContain("Passport");
     expect(container.textContent).not.toContain("Old");
+    expect(container.querySelector('[data-testid="workset-summary-item-i1"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="workset-summary-item-i3"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-summary-event-e1"]')).toBeTruthy();
 
     const taskBtn = container.querySelector('[data-testid="workset-detail-task-t1"]');
     expect(taskBtn).toBeTruthy();
@@ -153,6 +214,49 @@ describe("WorksetDetailDialog", () => {
       (taskBtn as HTMLElement).click();
     });
     expect(onOpenTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("navigates into item / event from summary", async () => {
+    const onClose = vi.fn();
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <WorksetDetailDialog
+          workset={{
+            id: "ws-1",
+            title: "Ops",
+            isSystem: false,
+            tasks: [],
+          }}
+          onClose={onClose}
+          onOpenTask={vi.fn()}
+        />,
+      );
+    });
+
+    await flushLoads();
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="workset-summary-item-i1"]')!
+        .click();
+    });
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/items?itemId=i1");
+
+    onClose.mockClear();
+    navigate.mockClear();
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="workset-summary-event-e1"]')!
+        .click();
+    });
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.stringMatching(/^\/timeline\?eventId=e1&at=/),
+    );
   });
 
   it("navigates to items/timeline create with workset prefill", async () => {
@@ -174,9 +278,7 @@ describe("WorksetDetailDialog", () => {
       );
     });
 
-    await act(async () => {
-      await listItems.mock.results[0]?.value;
-    });
+    await flushLoads();
 
     act(() => {
       container
@@ -204,9 +306,7 @@ describe("WorksetDetailDialog", () => {
       );
     });
 
-    await act(async () => {
-      await listItems.mock.results[1]?.value;
-    });
+    await flushLoads();
 
     act(() => {
       container
@@ -215,5 +315,25 @@ describe("WorksetDetailDialog", () => {
     });
     expect(onClose).toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith("/timeline?newEvent=1&worksetId=ws-1");
+  });
+
+  it("shows empty summary copy when nothing is due", async () => {
+    listItems.mockResolvedValue([item({ id: "ok", title: "Ok", expiresAt: isoDaysFromNow(40) })]);
+    listUserEvents.mockResolvedValue([]);
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <WorksetDetailDialog
+          workset={{ id: "ws-1", title: "Ops", isSystem: false, tasks: [] }}
+          onClose={vi.fn()}
+          onOpenTask={vi.fn()}
+        />,
+      );
+    });
+
+    await flushLoads();
+    expect(container.textContent).toContain("no expiring");
+    expect(container.textContent).toContain("no events");
   });
 });
