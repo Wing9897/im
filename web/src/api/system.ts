@@ -15,8 +15,10 @@ export interface HealthStatus {
   schemaVersion: number;
   schemaSemver: string;
   /** False when secret.key cannot decrypt stored enc:v1: ciphertext. */
-  secretsReady?: boolean;
+  secretsReady: boolean;
   secretsError?: string;
+  bindHost: string;
+  lanAccessEnabled: boolean;
 }
 
 /** Public health probe (backend version + runtime readiness). */

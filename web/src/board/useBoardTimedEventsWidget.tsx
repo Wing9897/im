@@ -14,6 +14,7 @@ import {
   useTaskNameById,
   useWorksetNameById,
 } from "../context/TaskCatalogContext";
+import { useRefreshOnAnalysisEvent } from "../hooks/useRefreshOnAnalysisEvent";
 import type { AnalysisEvent } from "../types";
 import { useBoardWidgetHeaderActions } from "./BoardWidgetFrame";
 import {
@@ -58,6 +59,9 @@ export function useBoardTimedEventsWidget(options: {
       }),
     [refresh],
   );
+
+  // Poll alone can lag ~45s after event analysis; pages refresh on SSE.
+  useRefreshOnAnalysisEvent(refresh, { analysisMode: "event" });
 
   const events = useMemo(
     () =>

@@ -139,6 +139,7 @@
     },
     "preview": "Preview",
     "previewing": "Playing…",
+    "previewFailed": "Preview failed. Check browser speech or system volume.",
     "previewAria": "Preview voice reminder",
     "apply": "Apply",
     "cancel": "Cancel",

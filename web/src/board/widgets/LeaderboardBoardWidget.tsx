@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchTrendingTopics } from "../../api/results";
+import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import type { TrendingTopic } from "../../types";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -15,6 +16,7 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
     BOARD_POLL_MS.standard,
     { active },
   );
+  useRefreshOnAnalysisEvent(refresh, { analysisMode: "leaderboard" });
 
   const ranked = (topics ?? [])
     .filter((item) => item.rank != null)

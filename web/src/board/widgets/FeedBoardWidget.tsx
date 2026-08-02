@@ -1,7 +1,8 @@
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { queryMessagesPage } from "../../api/messages";
 import { MessageCard } from "../../components/common/MessageCard";
+import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
 import type { Message } from "../../types";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -12,6 +13,7 @@ const FEED_LIMIT = 10;
 /** Compact monitor card list (truncated via FeedCard clamp). */
 export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
+  const { lastMessagesUpdate } = useAnalysisStatus();
   const fetcher = useCallback(
     () =>
       queryMessagesPage({ filters: {}, limit: FEED_LIMIT, includeTotal: false }).then(
@@ -24,6 +26,11 @@ export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
     BOARD_POLL_MS.standard,
     { active },
   );
+
+  useEffect(() => {
+    if (!lastMessagesUpdate) return;
+    refresh();
+  }, [lastMessagesUpdate, refresh]);
 
   return (
     <div className="board-widget-body board-widget-feed" data-testid="board-feed-widget">

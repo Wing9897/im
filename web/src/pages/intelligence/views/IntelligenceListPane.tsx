@@ -40,6 +40,7 @@ interface IntelligenceListPaneProps {
   hasActiveFilters: boolean;
   hasSearchFilter: boolean;
   hasTimeFilter: boolean;
+  hasSourceFilter: boolean;
   resetFilters: () => void;
 }
 
@@ -61,6 +62,7 @@ function IntelligenceListPaneComponent({
   hasActiveFilters,
   hasSearchFilter,
   hasTimeFilter,
+  hasSourceFilter,
   resetFilters,
 }: IntelligenceListPaneProps) {
   const { t } = useTranslation("intelligence");
@@ -92,6 +94,7 @@ function IntelligenceListPaneComponent({
         hasActiveFilters,
         hasSearchFilter,
         hasTimeFilter,
+        hasSourceFilter,
       },
       t,
     );

@@ -19,6 +19,7 @@ import {
 import { resolveSpanWorksetId, useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
+import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import { useBoardGanttViewMode } from "../useBoardGanttViewMode";
 import { GanttViewModeControls } from "./GanttViewModeControls";
 import { unnamedTaskLabel } from "../boardLabels";
@@ -45,6 +46,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
     BOARD_POLL_MS.standard,
     { active },
   );
+  useRefreshOnAnalysisEvent(refresh);
   const { tasks, worksets } = useTaskCatalog();
   const userEventsLabel = useGeneralWorksetLabel();
 

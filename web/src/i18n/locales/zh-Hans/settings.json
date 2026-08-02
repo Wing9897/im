@@ -55,7 +55,7 @@
     "appVersionLabel": "应用版本",
     "appVersionHelp": "前后端共用 semver，来源为项目根目录 VERSION；dev 模式前缀 DEV。",
     "databaseVersionLabel": "数据库 Schema",
-    "databaseVersionHelp": "公开 schema SemVer（与应用版本同形）。内部 SQLite stamp 仍为整数，供迁移算术使用。",
+    "databaseVersionHelp": "公开 schema SemVer（与应用版本同形）。内部 SQLite stamp 为整数 wipe-only 基线；不符当前 stamp 须重置数据库（无迁移升级路径）。",
     "databaseVersionCurrent": "v{version}",
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
@@ -271,6 +271,7 @@
     "ttsVoiceKindRemote": "线上",
     "ttsPreview": "试听",
     "ttsPreviewing": "播放中…",
+    "ttsPreviewFailed": "试听失败，请检查浏览器语音或系统音量。",
     "ttsPreviewSample": "这是语音试听，你好。",
     "defaultWorksetLabel": "默认归属工作集",
     "defaultWorksetHelp": "助手写入日程的默认工作集（完整页、系统栏对话、空格键语音共用）。默认为内置「一般」。"
@@ -374,7 +375,7 @@
   },
   "staff": {
     "title": "AI 员工介绍",
-    "intro": "系统里有四位 AI 员工：两位前线对话，两位后勤分析消息。另有一位「客户经理」负责接待外部系统（与助手同组，不跟你聊天）。",
+    "intro": "系统里有五位 AI 员工：两位前线对话，三位后勤（排行榜／关键事件／项目管理员）。另有一位「客户经理」负责接待外部系统（与助手同组，不跟你聊天）。",
     "capabilitiesLabel": "能做什么",
     "backofficeNote": "后勤员工由分析任务自动召唤，不会出现在对话框。",
     "openAssistant": "打开助手对话",
@@ -414,7 +415,7 @@
         "用自然语言回答本机情报与行程问题",
         "搜索已采集的消息",
         "查询／建立／修改／删除用户事件（单次日程）",
-        "建立／修改／删除循环行程（recurring 模式 RRULE 任务）",
+        "建立／修改／删除循环行程（循环日程员工的 RRULE 任务）",
         "在设定允许时可上网搜索补充信息",
         "支持助手弹窗与完整助手页；可搭配语音输入／朗读"
       ]
@@ -423,7 +424,7 @@
       "summary": "在新增或编辑分析任务时陪你对话，帮你填好左侧表单（不是 Agent）。",
       "capabilities": [
         "听你描述要监控什么，建议任务名称与说明",
-        "建议分析模式（排行榜／关键事件／日历）与 Prompt 方向",
+        "建议负责员工（排行榜／关键事件／循环日程员工／项目管理员）与 Prompt 方向",
         "协助调整时间范围与排程相关设定",
         "只负责设定任务，不会直接去分析消息或调用工具"
       ]

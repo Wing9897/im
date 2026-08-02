@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { Badge } from "../../components/ui";
+import { formatAnalysisMode } from "../../utils/analysis";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import type { BoardWidgetProps } from "../types";
 
@@ -38,7 +39,7 @@ export function TasksBoardWidget({ active = true }: BoardWidgetProps) {
                     </Badge>
                   </span>
                   <span className="board-widget-list__meta">
-                    {task.analysisMode}
+                    {formatAnalysisMode(task.analysisMode)}
                     {task.channelIds.length > 0
                       ? ` · ${t("board.common.channelCount", { count: task.channelIds.length })}`
                       : ""}
