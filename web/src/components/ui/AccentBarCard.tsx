@@ -1,4 +1,4 @@
-import type { HTMLAttributes, ReactNode } from "react";
+import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 import {
   SurfaceCard,
   type SurfaceCardEnter,
@@ -7,7 +7,9 @@ import {
 
 type AccentBarCardProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   /** Tailwind background class for the 2px left accent rail. */
-  accentClass: string;
+  accentClass?: string;
+  /** Inline accent when color is dynamic (e.g. category hex). */
+  accentStyle?: CSSProperties;
   children: ReactNode;
   material?: SurfaceCardMaterial;
   interactive?: boolean;
@@ -20,6 +22,7 @@ type AccentBarCardProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
  */
 export function AccentBarCard({
   accentClass,
+  accentStyle,
   children,
   material = "elevated",
   interactive = false,
@@ -39,7 +42,8 @@ export function AccentBarCard({
       {...rest}
     >
       <span
-        className={`w-[2px] shrink-0 self-stretch ${accentClass}`}
+        className={["w-[2px] shrink-0 self-stretch", accentClass ?? ""].filter(Boolean).join(" ")}
+        style={accentStyle}
         aria-hidden="true"
       />
       <div className="flex min-w-0 flex-1 flex-col gap-sm px-card-inner py-md">

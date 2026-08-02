@@ -1,16 +1,41 @@
 /**
- * Thin helpers for trackable-item calendar rows.
+ * Trackable-item display helpers for calendar rows and Items / workset UI.
  *
- * Projection lives on the server (`item_projection` → GET /calendar/items).
- * This module only formats display titles (i18n) and occurrence ids.
+ * Occurrence projection lives on the server (`item_projection` → GET /calendar/items)
+ * and includes purchased / expires / remind floating all-day markers. This module
+ * only formats titles (i18n), occurrence ids, badge/dot tones, and emoji brand marks.
  */
 
 import i18n from "../../i18n";
+import {
+  ALL_CATEGORIES_ID,
+  UNCATEGORIZED_CATEGORY_ID,
+} from "./categoryAggregates";
 
 export type ItemDateKind = "purchased" | "expires" | "remind";
 
+/**
+ * Visual language for Items / workset item cards:
+ * - Type & item brand → emoji (this module). Ops / nav → Lucide elsewhere.
+ * - Fallback package is shared with seed slug `other`; synthetic cards use distinct marks.
+ */
 /** Clear default when neither item nor category has an emoji. */
 export const DEFAULT_ITEM_EMOJI = "📦";
+
+/** Synthetic「全部类型」card — must not collide with seed insurance (was 📋). */
+export const ALL_CATEGORIES_EMOJI = "🗂️";
+
+/** Synthetic「未分类」card — distinct from seed `other` / default package. */
+export const UNCATEGORIZED_EMOJI = "🏷️";
+
+/**
+ * FE display overlay for built-in seed slugs when DB rows may still hold older glyphs
+ * (`INSERT OR IGNORE` does not rewrite existing installs). Prefer this over stamp bumps.
+ */
+export const SEED_CATEGORY_EMOJI_OVERLAY: Readonly<Record<string, string>> = {
+  /** Was 📋 — collided with the old「全部类型」mark. */
+  insurance: "☂️",
+};
 
 export function itemOccurrenceId(itemId: string, kind: ItemDateKind): string {
   return `item:${itemId}:${kind}`;
@@ -39,19 +64,47 @@ export function itemDateKindLabel(
   return String(i18n.t(prefixKeyForKind(kind)));
 }
 
+type EmojiSource = {
+  slug?: string | null;
+  emoji?: string | null;
+} | null | undefined;
+
 /**
- * Prefer item emoji, else category emoji, else a clear package fallback.
+ * Category brand emoji: seed overlay (by slug) → stored emoji → package fallback.
+ */
+export function resolveCategoryEmoji(category?: EmojiSource): string {
+  const slug = category?.slug?.trim();
+  if (slug && SEED_CATEGORY_EMOJI_OVERLAY[slug]) {
+    return SEED_CATEGORY_EMOJI_OVERLAY[slug];
+  }
+  const fromCat = category?.emoji?.trim();
+  if (fromCat) return fromCat;
+  return DEFAULT_ITEM_EMOJI;
+}
+
+/**
+ * Emoji for type-layer cards, including synthetic all / uncategorized sentinels.
+ */
+export function resolveCategoryCardEmoji(
+  summaryId: string,
+  category?: EmojiSource,
+): string {
+  if (summaryId === ALL_CATEGORIES_ID) return ALL_CATEGORIES_EMOJI;
+  if (summaryId === UNCATEGORIZED_CATEGORY_ID) return UNCATEGORIZED_EMOJI;
+  return resolveCategoryEmoji(category);
+}
+
+/**
+ * Prefer item emoji, else category brand (with seed overlay), else package fallback.
  * Always returns a non-empty display string for type cards / list rows.
  */
 export function resolveItemEmoji(
   item: { emoji?: string | null } | null | undefined,
-  category?: { emoji?: string | null } | null,
+  category?: EmojiSource,
 ): string {
   const fromItem = item?.emoji?.trim();
   if (fromItem) return fromItem;
-  const fromCat = category?.emoji?.trim();
-  if (fromCat) return fromCat;
-  return DEFAULT_ITEM_EMOJI;
+  return resolveCategoryEmoji(category);
 }
 
 /** Badge tone for remind vs expires vs purchased in list/sidebar. */

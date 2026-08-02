@@ -12,16 +12,24 @@ import {
   AlertBanner,
   Badge,
   Button,
+  CardGrid,
   FormActions,
   PanelSection,
   captionClass,
 } from "../../components/ui";
 import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
-import { MODE_BADGE_TONE } from "../../components/task/analysisModeBadgeTone";
-import { listItems, type TrackableItem } from "../../api/items";
+import {
+  MODE_ACCENT_CLASS,
+  MODE_BADGE_TONE,
+} from "../../components/task/analysisModeBadgeTone";
+import {
+  listItemCategories,
+  listItems,
+  type ItemCategory,
+  type TrackableItem,
+} from "../../api/items";
 import { listUserEvents, type UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
-import type { AnalysisMode } from "../../types/common";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import {
@@ -47,16 +55,6 @@ type Props = {
   onDelete?: () => void;
 };
 
-const MODE_BAR_CLASS: Record<AnalysisMode, string> = {
-  leaderboard: "bg-accent",
-  event: "bg-info",
-  recurring: "bg-success",
-  project: "bg-warning",
-};
-
-const detailCardGridClass =
-  "grid grid-cols-1 gap-card-gap sm:grid-cols-2 [&>*]:min-w-0 [&>*]:h-full";
-
 export function WorksetDetailDialog({
   workset,
   onClose,
@@ -68,6 +66,7 @@ export function WorksetDetailDialog({
   const { t: tItems } = useTranslation("items");
   const navigate = useNavigate();
   const [items, setItems] = useState<TrackableItem[]>([]);
+  const [categories, setCategories] = useState<ItemCategory[]>([]);
   const [events, setEvents] = useState<UserEvent[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -78,9 +77,12 @@ export function WorksetDetailDialog({
     let cancelled = false;
     setLoadingItems(true);
     setItemsError(null);
-    void listItems({ worksetId: workset.id })
-      .then((rows) => {
-        if (!cancelled) setItems(rows);
+    void Promise.all([listItems({ worksetId: workset.id }), listItemCategories()])
+      .then(([rows, cats]) => {
+        if (!cancelled) {
+          setItems(rows);
+          setCategories(cats);
+        }
       })
       .catch((err) => {
         if (!cancelled) setItemsError(formatItemsError(err, tItems));
@@ -116,9 +118,21 @@ export function WorksetDetailDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workset.id is the load key
   }, [workset.id]);
 
+  const categoryById = useMemo(() => {
+    const map = new Map<string, ItemCategory>();
+    for (const cat of categories) map.set(cat.id, cat);
+    return map;
+  }, [categories]);
+
   const activeItems = items.filter((row) => row.status !== "archived");
   const expiringSummary = useMemo(() => selectSummaryExpiringItems(items), [items]);
   const eventsSummary = useMemo(() => selectSummaryUserEvents(events), [events]);
+
+  const itemEmoji = (item: TrackableItem) =>
+    resolveItemEmoji(
+      item,
+      item.categoryId ? categoryById.get(item.categoryId) ?? null : null,
+    );
 
   const goCreateItem = () => {
     onClose();
@@ -227,17 +241,17 @@ export function WorksetDetailDialog({
           ) : expiringSummary.length === 0 ? (
             <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryExpiringEmpty")}</p>
           ) : (
-            <div className={detailCardGridClass}>
+            <CardGrid density="compact">
               {expiringSummary.map((item) => (
                 <ItemsEntryCard
                   key={item.id}
                   item={item}
-                  emoji={resolveItemEmoji(item, null)}
+                  emoji={itemEmoji(item)}
                   onOpen={() => openItem(item.id)}
                   testId={`workset-summary-item-${item.id}`}
                 />
               ))}
-            </div>
+            </CardGrid>
           )}
         </PanelSection>
       </div>
@@ -259,7 +273,7 @@ export function WorksetDetailDialog({
           ) : eventsSummary.length === 0 ? (
             <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryEventsEmpty")}</p>
           ) : (
-            <div className={detailCardGridClass}>
+            <CardGrid density="compact">
               {eventsSummary.map((row) => (
                 <AccentBarCard
                   key={row.id}
@@ -297,7 +311,7 @@ export function WorksetDetailDialog({
                   ) : null}
                 </AccentBarCard>
               ))}
-            </div>
+            </CardGrid>
           )}
         </PanelSection>
       </div>
@@ -312,11 +326,11 @@ export function WorksetDetailDialog({
         {workset.tasks.length === 0 ? (
           <p className={`m-0 ${captionClass}`}>{t("workset.detailTasksEmpty")}</p>
         ) : (
-          <div className={detailCardGridClass}>
+          <CardGrid density="compact">
             {workset.tasks.map((task) => (
               <AccentBarCard
                 key={task.id}
-                accentClass={MODE_BAR_CLASS[task.analysisMode] ?? "bg-accent"}
+                accentClass={MODE_ACCENT_CLASS[task.analysisMode] ?? "bg-accent"}
                 material="elevated"
                 interactive
                 enter="rise"
@@ -345,7 +359,7 @@ export function WorksetDetailDialog({
                 </div>
               </AccentBarCard>
             ))}
-          </div>
+          </CardGrid>
         )}
       </PanelSection>
 
@@ -361,17 +375,17 @@ export function WorksetDetailDialog({
         ) : activeItems.length === 0 ? (
           <p className={`m-0 ${captionClass}`}>{t("workset.detailItemsEmpty")}</p>
         ) : (
-          <div className={detailCardGridClass}>
+          <CardGrid density="compact">
             {activeItems.map((item) => (
               <ItemsEntryCard
                 key={item.id}
                 item={item}
-                emoji={resolveItemEmoji(item, null)}
+                emoji={itemEmoji(item)}
                 onOpen={() => openItem(item.id)}
                 testId={`workset-detail-item-${item.id}`}
               />
             ))}
-          </div>
+          </CardGrid>
         )}
       </PanelSection>
     </ModalDialog>

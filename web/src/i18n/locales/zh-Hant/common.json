@@ -1376,8 +1376,6 @@
     "openItems": "前往物品",
     "addItem": "新增物品",
     "addEvent": "新增事件",
-    "itemNoExpiry": "無到期日",
-    "itemOverdue": "過期 {count} 天",
     "openTaskAria": "打開任務 {name}",
     "openEventAria": "打開事件 {name}",
     "eventAllDay": "全天",

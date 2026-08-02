@@ -8,3 +8,11 @@ export const MODE_BADGE_TONE: Record<AnalysisMode, BadgeTone> = {
   recurring: "success",
   project: "warning",
 };
+
+/** Left AccentBar class for analysis-mode entity cards (TaskCard / workset detail). */
+export const MODE_ACCENT_CLASS: Record<AnalysisMode, string> = {
+  leaderboard: "bg-accent",
+  event: "bg-info",
+  recurring: "bg-success",
+  project: "bg-warning",
+};

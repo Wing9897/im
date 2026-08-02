@@ -56,6 +56,8 @@ export function daysUntil(expiresAt: string | null | undefined, today = new Date
   return Math.round((expiry.getTime() - start.getTime()) / 86_400_000);
 }
 
+export type ExpiryTone = "ok" | "soon" | "overdue" | "none";
+
 /**
  * Color step for remaining days.
  * `remindBeforeDays` drives the "soon" window (fallback 7), matching list filters.
@@ -63,13 +65,31 @@ export function daysUntil(expiresAt: string | null | undefined, today = new Date
 export function expiryTone(
   days: number | null,
   remindBeforeDays?: number | null,
-): "ok" | "soon" | "overdue" | "none" {
+): ExpiryTone {
   if (days == null) return "none";
   if (days < 0) return "overdue";
   const window =
     remindBeforeDays != null && Number.isFinite(remindBeforeDays) ? remindBeforeDays : 7;
   if (days <= window) return "soon";
   return "ok";
+}
+
+/** AccentBar class for item expiry rail (shared by ItemsEntryCard). */
+export function expiryToneAccentClass(tone: ExpiryTone): string {
+  if (tone === "overdue") return "bg-error";
+  if (tone === "soon") return "bg-warning";
+  if (tone === "ok") return "bg-success";
+  return "bg-text-muted";
+}
+
+/** Badge tone for item expiry chips (shared by ItemsEntryCard). */
+export function expiryToneBadgeTone(
+  tone: ExpiryTone,
+): "danger" | "warning" | "success" | "neutral" {
+  if (tone === "overdue") return "danger";
+  if (tone === "soon") return "warning";
+  if (tone === "ok") return "success";
+  return "neutral";
 }
 
 /** True-empty inventory vs filter/search miss (for empty-state copy). */

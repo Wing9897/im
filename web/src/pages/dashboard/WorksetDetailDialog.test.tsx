@@ -6,11 +6,13 @@ import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 
 const listItems = vi.fn();
+const listItemCategories = vi.fn();
 const listUserEvents = vi.fn();
 const navigate = vi.fn();
 
 vi.mock("../../api/items", () => ({
   listItems: (...args: unknown[]) => listItems(...args),
+  listItemCategories: (...args: unknown[]) => listItemCategories(...args),
 }));
 
 vi.mock("../../api/userEvents", () => ({
@@ -60,8 +62,6 @@ vi.mock("react-i18next", () => ({
       if (key === "workset.openItems") return "items";
       if (key === "workset.addItem") return "add item";
       if (key === "workset.addEvent") return "add event";
-      if (key === "workset.itemNoExpiry") return "no expiry";
-      if (key === "workset.itemOverdue") return `overdue ${opts?.count}`;
       if (key === "workset.openTaskAria") return `Open task ${opts?.name ?? ""}`;
       if (key === "workset.openEventAria") return `Open event ${opts?.name ?? ""}`;
       if (key === "workset.eventAllDay") return "All day";
@@ -141,6 +141,7 @@ async function flushLoads() {
   await act(async () => {
     await Promise.all([
       listItems.mock.results.at(-1)?.value,
+      listItemCategories.mock.results.at(-1)?.value,
       listUserEvents.mock.results.at(-1)?.value,
     ]);
   });
@@ -152,8 +153,10 @@ describe("WorksetDetailDialog", () => {
 
   beforeEach(() => {
     listItems.mockReset();
+    listItemCategories.mockReset();
     listUserEvents.mockReset();
     navigate.mockReset();
+    listItemCategories.mockResolvedValue([]);
     listItems.mockResolvedValue([
       item({ id: "i1", title: "Passport", expiresAt: isoDaysFromNow(2) }),
       item({ id: "i2", title: "Old", status: "archived" }),

@@ -1,8 +1,4 @@
 {
-  "title": "Items",
-  "subtitle": "Track expiries by workset — documents, food, cards, and more",
-  "typesSubtitle": "Pick a type, then browse its items. Types are fully customizable.",
-  "listSubtitle": "Items in this type. Filter for soon, overdue, or archived.",
   "allCategories": "All types",
   "backToCategories": "Back to types",
   "openCategoryAria": "Open type {name}",

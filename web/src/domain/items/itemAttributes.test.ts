@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   daysUntil,
   expiryTone,
+  expiryToneAccentClass,
+  expiryToneBadgeTone,
   itemsEmptyKind,
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
@@ -62,6 +64,17 @@ describe("daysUntil / expiryTone", () => {
     expect(expiryTone(3, 3)).toBe("soon");
     expect(expiryTone(8, null)).toBe("ok");
     expect(expiryTone(7, undefined)).toBe("soon");
+  });
+
+  it("maps expiry tones to shared accent / badge tokens", () => {
+    expect(expiryToneAccentClass("overdue")).toBe("bg-error");
+    expect(expiryToneAccentClass("soon")).toBe("bg-warning");
+    expect(expiryToneAccentClass("ok")).toBe("bg-success");
+    expect(expiryToneAccentClass("none")).toBe("bg-text-muted");
+    expect(expiryToneBadgeTone("overdue")).toBe("danger");
+    expect(expiryToneBadgeTone("soon")).toBe("warning");
+    expect(expiryToneBadgeTone("ok")).toBe("success");
+    expect(expiryToneBadgeTone("none")).toBe("neutral");
   });
 });
 
