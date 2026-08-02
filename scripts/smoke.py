@@ -156,7 +156,7 @@ def main() -> int:
             "analysisMode": "leaderboard",
             "analysisTimeRange": "24h",
             "channelIds": ["telegram:smoke-channel"],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
         timeout=15,
     )

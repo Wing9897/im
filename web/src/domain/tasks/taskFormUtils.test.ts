@@ -273,14 +273,14 @@ describe("formStateToTaskConfig calendar contract", () => {
       name: sampleBase.name,
       description: sampleBase.description,
       analysisMode: "recurring",
-      scheduleType: sampleBase.scheduleType,
-      scheduleValue: sampleBase.scheduleValue,
-      scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
+      scheduleRrule: null,
       promptTemplate: "",
       channelIds: [],
       includeInTimeline: true,
       worksetId: null,
     });
+    expect(payload).not.toHaveProperty("scheduleType");
+    expect(payload).not.toHaveProperty("scheduleValue");
     for (const calendarOnlyKey of [
       "rrule",
       "eventStartTime",
@@ -353,6 +353,8 @@ describe("formStateToTaskConfig calendar contract", () => {
       scheduleRrule: null,
     });
     expect(payload.scheduleRrule).toBe("FREQ=HOURLY");
+    expect(payload).not.toHaveProperty("scheduleType");
+    expect(payload).not.toHaveProperty("scheduleValue");
   });
 
   it("preserves unmappable scheduleRrule on save", () => {
@@ -363,6 +365,8 @@ describe("formStateToTaskConfig calendar contract", () => {
       scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
     });
     expect(payload.scheduleRrule).toBe("FREQ=HOURLY;INTERVAL=2");
+    expect(payload).not.toHaveProperty("scheduleType");
+    expect(payload).not.toHaveProperty("scheduleValue");
   });
 });
 

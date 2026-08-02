@@ -2,24 +2,14 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import { FieldLabel, FormStack, SelectField, TextField } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
-import { legacyToTriggerRrule } from "../../domain/tasks/triggerSchedule";
+import { isUnmappedTriggerSchedule } from "../../domain/tasks/triggerSchedule";
 import i18n from "../../i18n";
 import type { ScheduleType } from "../../types";
 
 export type { ScheduleType } from "../../types";
+export { isUnmappedTriggerSchedule } from "../../domain/tasks/triggerSchedule";
 
 /** FE preset UI for AI trigger schedules (persisted as scheduleRrule server-side). */
-
-/** True when wire RRULE is not represented by the current FE preset fields. */
-export function isUnmappedTriggerSchedule(
-  scheduleType: ScheduleType,
-  scheduleValue: string | null,
-  scheduleRrule: string | null | undefined,
-): boolean {
-  const wire = scheduleRrule?.trim() || "";
-  if (!wire) return false;
-  return legacyToTriggerRrule(scheduleType, scheduleValue) !== wire;
-}
 
 const SCHEDULE_TYPES: ScheduleType[] = [
   "seconds_10",

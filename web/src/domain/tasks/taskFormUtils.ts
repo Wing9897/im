@@ -118,26 +118,22 @@ export function applyConfigToFormState(
  * camelCase wire names for recurrence and event presentation fields.
  */
 export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
+  // Write path SoT: only scheduleRrule. Presets stay in form state for UX;
+  // API still accepts scheduleType/scheduleValue as read-compat / legacy clients.
   const scheduleRrule =
-    formState.scheduleRrule?.trim() ||
-    legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+    formState.analysisMode === "recurring"
+      ? null
+      : formState.scheduleRrule?.trim() ||
+        legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue);
   const commonConfig = {
     name: formState.name,
     description: formState.description || null,
     analysisMode: formState.analysisMode,
-    scheduleType: formState.scheduleType,
-    scheduleValue: formState.scheduleValue,
     scheduleRrule,
     worksetId: formState.worksetId,
   } satisfies Pick<
     TaskConfig,
-    | "name"
-    | "description"
-    | "analysisMode"
-    | "scheduleType"
-    | "scheduleValue"
-    | "scheduleRrule"
-    | "worksetId"
+    "name" | "description" | "analysisMode" | "scheduleRrule" | "worksetId"
   >;
 
   if (formState.analysisMode === "recurring") {
@@ -269,6 +265,11 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
       ? { platform: "telegram", platformId: ch, id: ch }
       : ch,
   );
+  const schedule = scheduleFieldsFromTask({
+    scheduleType: (config.scheduleType as TaskFormState["scheduleType"] | null) ?? null,
+    scheduleValue: config.scheduleValue ?? null,
+    scheduleRrule: config.scheduleRrule ?? null,
+  });
 
   return {
     id: "test-id",
@@ -279,14 +280,9 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     analysisTimeRange: config.analysisTimeRange ?? "24h",
     version: 1,
     isActive: true,
-    scheduleType: config.scheduleType ?? "seconds_10",
-    scheduleValue: config.scheduleValue ?? null,
-    scheduleRrule:
-      config.scheduleRrule ??
-      legacyToTriggerRrule(
-        (config.scheduleType ?? "seconds_10") as TaskFormState["scheduleType"],
-        config.scheduleValue ?? null,
-      ),
+    scheduleType: schedule.scheduleType,
+    scheduleValue: schedule.scheduleValue,
+    scheduleRrule: schedule.scheduleRrule,
     channelIds,
     includeInTimeline: config.includeInTimeline ?? true,
     projectWaveIntervalSeconds: config.projectWaveIntervalSeconds ?? null,
@@ -311,15 +307,17 @@ export function roundTripFormState(formState: TaskFormState): TaskFormState {
 
 /** Payload shape for POST /tasks/chat-assistant currentTask context. */
 export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayload {
+  // Prefer canonical RRULE; keep preset mirrors only as assistant UX hints.
+  const scheduleRrule =
+    formState.scheduleRrule?.trim() ||
+    legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue);
   return {
     name: formState.name,
     description: formState.description,
     promptTemplate: formState.promptTemplate,
+    scheduleRrule,
     scheduleType: formState.scheduleType,
     scheduleValue: formState.scheduleValue,
-    scheduleRrule:
-      formState.scheduleRrule ??
-      legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue),
     analysisMode: formState.analysisMode,
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,

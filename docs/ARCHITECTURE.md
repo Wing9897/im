@@ -475,7 +475,8 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 | `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `event` / `leaderboard` / `project` |
 | `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/items`, Timeline／Board) | `recurring` only |
 
-- Wire FE presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE at the API boundary (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`).
+- Wire FE presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE at the API boundary (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). Responses may still emit `scheduleType` / `scheduleValue` as read-compat mirrors when mappable.
+- **Create/update write SoT is `scheduleRrule` alone** — clients should send the canonical RRULE; `scheduleType` / `scheduleValue` remain accepted only when `scheduleRrule` is omitted (legacy / assistant mirrors). Runtime registration reads `analysis_tasks.schedule_rrule` only (`schedule_trigger_from_rrule`).
 - **AI schedules never calendar-expand** — even `FREQ=SECONDLY` trigger strings must not enter month grids. Expand SQL + `may_calendar_expand` enforce this.
 - Recurring tasks do not create scheduler jobs or run LLM analysis. Their calendar RRULEs are expanded only at query time; a calendar RRULE never triggers AI analysis.
 - Analysis-task findings (`analysis_events`) keep their own timeline semantics — they are results, not second-level trigger points.
@@ -483,6 +484,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 The scheduler uses **APScheduler** (AsyncIOScheduler) interval/cron triggers built from trigger-purpose RRULE to run periodic AI analysis batches:
 
 - **Per-task independent timers** — each non-recurring analysis task uses one of `seconds_10`, `hourly`, `daily`, `weekly`, or `custom_seconds`
+- Those FE presets map to the persisted trigger-purpose schedule RRULE column; runtime registration reads that RRULE only (`schedule_trigger_from_rrule`)
 - **Task-owned wave / overlap** — project `project_wave_interval_seconds` (NULL → 20) and event `batch_overlap_count` (NULL → 0) live on the task row (not `system_config`). Trigger threshold, batch message limit, and evidence style may still follow AI Settings when the task override is NULL
 - **Integer capacity control** — a configurable plain integer capacity counter (atomic within the event loop; no semaphore) limits how many batches run simultaneously
 - **FIFO wait queue** — batches that exceed the concurrency limit queue in order

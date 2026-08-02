@@ -3667,17 +3667,17 @@ export interface components {
             })[] | null;
             /**
              * Scheduletype
-             * @description FE preset for AI trigger schedule (maps to scheduleRrule)
+             * @description Read-compat FE preset mirror (maps to scheduleRrule). Write path should send scheduleRrule; accepted only when scheduleRrule is omitted.
              */
             scheduleType?: string | null;
             /**
              * Schedulevalue
-             * @description Value interpreted only with the non-recurring AI analysis scheduleType
+             * @description Read-compat value for scheduleType presets. Ignored when scheduleRrule is provided.
              */
             scheduleValue?: string | null;
             /**
              * Schedulerrule
-             * @description Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Prefer this over scheduleType/scheduleValue when both are sent.
+             * @description Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Create/update write SoT — prefer this alone over scheduleType/scheduleValue.
              */
             scheduleRrule?: string | null;
             /** Includeintimeline */

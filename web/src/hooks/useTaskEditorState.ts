@@ -8,7 +8,10 @@ import i18n from "../i18n";
 import { localizeTaskPreset } from "../domain/tasks/localizeTaskPreset";
 import { chatEditorFormStorageKey } from "../domain/prefs";
 import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
-import { legacyToTriggerRrule } from "../domain/tasks/triggerSchedule";
+import {
+  isUnmappedTriggerSchedule,
+  legacyToTriggerRrule,
+} from "../domain/tasks/triggerSchedule";
 import type { AnalysisMode, TaskFormState, TaskTemplatePreset } from "../types";
 import { usePersistedState } from "./usePersistedState";
 
@@ -122,7 +125,11 @@ export function useTaskEditorState(
           analysisMode: nextMode,
           analysisTimeRange: localized.defaultAnalysisTimeRange,
         };
-        if (nextMode === "project" && prev.scheduleType === "seconds_10") {
+        if (
+          nextMode === "project" &&
+          prev.scheduleType === "seconds_10" &&
+          !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
+        ) {
           next.scheduleType = "hourly";
           next.scheduleRrule = legacyToTriggerRrule("hourly", next.scheduleValue);
         }
