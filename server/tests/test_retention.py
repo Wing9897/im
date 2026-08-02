@@ -48,8 +48,8 @@ async def _seed_task_and_batch(db: Database) -> None:
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("task-1", "Task", "prompt", now, now),
     )
     await db.execute(
@@ -414,8 +414,8 @@ async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None
     old = "2020-01-01T00:00:00+00:00"
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("task-batch", "Task", "prompt", now, now),
     )
     await db.execute(
@@ -478,8 +478,8 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
     )
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'recurring', 'all', 1, 1, 'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'recurring', 'all', 1, 1, NULL, ?, ?)",
         ("task-cal-live", "Cal Live", "", now, now),
     )
     await db.execute(

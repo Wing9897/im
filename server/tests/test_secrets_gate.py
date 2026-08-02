@@ -99,8 +99,8 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
         )
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, created_at, updated_at) "
-            "VALUES ('t1', 'Keep me', 'p', 'leaderboard', 'all', 1, 1, 'seconds_10', "
+            "version, is_active, schedule_rrule, created_at, updated_at) "
+            "VALUES ('t1', 'Keep me', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', "
             "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
         )
 
@@ -139,8 +139,8 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
         await set_configs(app1.state.db, {"openai_api_key": "sk-keep"})
         await app1.state.db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_type, created_at, updated_at) "
-            "VALUES ('t-keep', 'Keep Task', 'p', 'leaderboard', 'all', 1, 1, 'seconds_10', "
+            "version, is_active, schedule_rrule, created_at, updated_at) "
+            "VALUES ('t-keep', 'Keep Task', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', "
             "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
         )
         transport = ASGITransport(app=app1)

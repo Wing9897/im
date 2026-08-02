@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Schema stamp 8 / `schemaSemver` 0.1.0-beta.9:** unified AI schedule storage as `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger → APScheduler only; never calendar-expand). Calendar series stay on `recurring_schedules.rrule`. Wipe-only — existing DBs must reset.
 - **Schema stamp 7 / `schemaSemver` 0.1.0-beta.8:** optional `emoji` on `item_categories` + `items`; expanded seed types with emoji logos. Wipe-only — existing DBs must reset.
 - **Calendar remind occurrences:** active items with `expires_at` and `remind_before_days > 0` project floating all-day `itemDateKind=remind` on `expires_at - remind_before_days` via unified `item_projection` / `GET /calendar/items` (i18n `remindPrefix`; sidebar deep-link `/items`).
 - **Trackable items (schema stamp 6 / `schemaSemver` 0.1.0-beta.7):** `item_categories` + `items`, `/api/v1/items`, calendar `source=item`, agent `items.list_expiring` / `items.create`, FE `/items`. Wipe-only — existing DBs must reset.

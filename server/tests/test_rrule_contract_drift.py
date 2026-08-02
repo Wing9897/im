@@ -82,7 +82,7 @@ _CALENDAR_ONLY_REQUIREMENTS = {
         r"never an AI analysis trigger",
     ),
     "server/scheduler/manager.py": (
-        r"RRULE and event metadata are recurring-only",
+        r"Calendar RRULE and event metadata are recurring-only",
         r"intentionally are not inputs",
     ),
     "server/calendar/rrule.py": (
@@ -106,6 +106,7 @@ _CALENDAR_ONLY_REQUIREMENTS = {
     "docs/ARCHITECTURE.md": (
         r"Recurring tasks do not create scheduler jobs or run LLM analysis",
         r"RRULE never triggers AI analysis",
+        r"AI schedules never calendar-expand",
     ),
 }
 
@@ -125,21 +126,8 @@ def _python_string_collection(relative_path: str, variable_name: str) -> set[str
 
 
 def _scheduler_schedule_types() -> set[str]:
-    relative_path = "server/scheduler/manager.py"
-    tree = ast.parse(_read(relative_path), filename=relative_path)
-    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "schedule_trigger")
-    return {
-        str(node.comparators[0].value)
-        for node in ast.walk(function)
-        if isinstance(node, ast.Compare)
-        and isinstance(node.left, ast.Name)
-        and node.left.id == "schedule_type"
-        and len(node.ops) == 1
-        and isinstance(node.ops[0], ast.Eq)
-        and len(node.comparators) == 1
-        and isinstance(node.comparators[0], ast.Constant)
-        and isinstance(node.comparators[0].value, str)
-    }
+    """Wire presets live in domain schedule; manager maps them via legacy_to_trigger_rrule."""
+    return _python_string_collection("server/domain/schedule.py", "ALLOWED_SCHEDULE_PRESETS")
 
 
 def _frontend_schedule_type_union() -> set[str]:
@@ -191,7 +179,7 @@ def test_supported_schedule_vocabulary_is_consistent_across_layers() -> None:
         "server/api/routes/task_helpers.py:ALLOWED_SCHEDULE_TYPES": _python_string_collection(
             "server/api/routes/task_helpers.py", "ALLOWED_SCHEDULE_TYPES"
         ),
-        "server/scheduler/manager.py:schedule_trigger": _scheduler_schedule_types(),
+        "server/domain/schedule.py:ALLOWED_SCHEDULE_PRESETS": _scheduler_schedule_types(),
         "web/src/types/taskFormFields.ts:ScheduleType": _frontend_schedule_type_union(),
         "web/src/pages/tasks/ScheduleInput.tsx:SCHEDULE_TYPES": _frontend_schedule_types(),
         "docs/ARCHITECTURE.md:Scheduler": _architecture_schedule_types(),

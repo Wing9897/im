@@ -23,8 +23,8 @@ async def test_concurrent_transactions_do_not_nested_begin(db: Database) -> None
     await db.execute(
         "INSERT INTO analysis_tasks "
         "(id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "schedule_type, version, is_active, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 'custom_seconds', 1, 1, ?, ?)",
+        "schedule_rrule, version, is_active, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'event', 'all', 'FREQ=SECONDLY;INTERVAL=60', 1, 1, ?, ?)",
         (task_id, "lock-test", "prompt", now, now),
     )
 

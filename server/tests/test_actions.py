@@ -228,8 +228,8 @@ async def test_execute_success_records_history_and_last_triggered(db, monkeypatc
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_type, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'seconds_10', ?, ?)",
+        "version, is_active, schedule_rrule, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("t-1", "Task", "prompt", now, now),
     )
     await db.execute(

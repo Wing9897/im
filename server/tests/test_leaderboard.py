@@ -79,9 +79,9 @@ async def _insert_leaderboard_task(db, *, task_id: str, batch_id: str) -> dict:
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-        "analysis_mode, analysis_time_range, version, is_active, schedule_type, "
-        "schedule_value, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, 'leaderboard', '24h', 1, 1, 'seconds_10', '10', ?, ?)",
+        "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
+        "created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, 'leaderboard', '24h', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         (task_id, "Cap Test", "desc", "分析", now, now),
     )
     await db.execute(

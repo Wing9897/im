@@ -158,15 +158,14 @@ async def seed_database(db: Any) -> None:
 
     # ── analysis tasks (leaderboard / event / calendar) ───────────────
     tasks = [
-        (TASK_LEADERBOARD, "熱門話題排行", "leaderboard", "24h", "seconds_10", None, None, None, None, 0, None, None),
-        (TASK_EVENT, "關鍵情報", "event", "24h", "hourly", None, None, None, None, 0, None, None),
-        (TASK_EVENT_TIMED, "行程提取", "event", "7d", "daily", "09:00", None, None, None, 0, None, None),
+        (TASK_LEADERBOARD, "熱門話題排行", "leaderboard", "24h", "FREQ=SECONDLY;INTERVAL=10", None, None, None, 0, None, None),
+        (TASK_EVENT, "關鍵情報", "event", "24h", "FREQ=HOURLY", None, None, None, 0, None, None),
+        (TASK_EVENT_TIMED, "行程提取", "event", "7d", "FREQ=DAILY;BYHOUR=9;BYMINUTE=0", None, None, None, 0, None, None),
         (
             TASK_CALENDAR,
             "每週例會",
             "recurring",
             "all",
-            "seconds_10",
             None,
             "FREQ=WEEKLY;BYDAY=MO",
             "2026-07-06T10:00:00+00:00",
@@ -181,8 +180,7 @@ async def seed_database(db: Any) -> None:
         name,
         mode,
         time_range,
-        schedule_type,
-        schedule_value,
+        schedule_rrule,
         rrule,
         event_start,
         event_end,
@@ -192,9 +190,9 @@ async def seed_database(db: Any) -> None:
     ) in tasks:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-            "analysis_mode, analysis_time_range, version, is_active, schedule_type, "
-            "schedule_value, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?)",
+            "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
+            "created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?)",
             (
                 task_id,
                 name,
@@ -202,8 +200,7 @@ async def seed_database(db: Any) -> None:
                 "分析以下訊息",
                 mode,
                 time_range,
-                schedule_type,
-                schedule_value,
+                schedule_rrule,
                 now,
                 now,
             ),

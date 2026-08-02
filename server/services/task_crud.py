@@ -25,6 +25,7 @@ from server.domain.analysis_modes import (
     LEADERBOARD_MODE,
     PARENT_PROJECT_MODE,
 )
+from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.batch_housekeeping import purge_superseded_task_version_data
 from server.queries.tasks_queries import (
     delete_analysis_task,
@@ -171,6 +172,15 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
     workset_id = await resolve_workset_id(db, supplied=body.worksetId)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
+        try:
+            schedule_rrule = resolve_trigger_rrule(
+                analysis_mode=effective_mode,
+                schedule_type=body.scheduleType,
+                schedule_value=body.scheduleValue,
+                schedule_rrule=body.scheduleRrule,
+            )
+        except (ScheduleValidationError, ValueError, TypeError) as exc:
+            raise TaskWriteError(str(exc)) from exc
         await insert_analysis_task(
             tx,
             task_id=task_id,
@@ -179,8 +189,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             prompt_template=body.promptTemplate,
             analysis_mode=effective_mode,
             analysis_time_range=body.analysisTimeRange or "all",
-            schedule_type=body.scheduleType or ("hourly" if effective_mode == "project" else "seconds_10"),
-            schedule_value=body.scheduleValue,
+            schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
             now=now,
@@ -261,6 +270,16 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         deleted = await delete_incomplete_batches(conn, task_id)
+        try:
+            schedule_rrule = resolve_trigger_rrule(
+                analysis_mode=effective_mode,
+                schedule_type=body.scheduleType,
+                schedule_value=body.scheduleValue,
+                schedule_rrule=body.scheduleRrule,
+                existing_rrule=existing.get("schedule_rrule"),
+            )
+        except (ScheduleValidationError, ValueError, TypeError) as exc:
+            raise TaskWriteError(str(exc)) from exc
         await update_analysis_task(
             tx,
             task_id=task_id,
@@ -270,8 +289,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
             analysis_mode=effective_mode,
             analysis_time_range=body.analysisTimeRange or existing.get("analysis_time_range") or "all",
             version=new_version,
-            schedule_type=body.scheduleType or existing.get("schedule_type") or "seconds_10",
-            schedule_value=body.scheduleValue,
+            schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
             now=now,

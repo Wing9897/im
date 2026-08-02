@@ -103,8 +103,7 @@ async def create_recurring_task(
             prompt_template="",
             analysis_mode=CHILD_RECURRING_MODE,
             analysis_time_range="all",
-            schedule_type="seconds_10",
-            schedule_value=None,
+            schedule_rrule=None,
             workset_id=resolved_workset,
             now=now,
         )
@@ -233,8 +232,7 @@ async def patch_recurring_task(
             analysis_mode=CHILD_RECURRING_MODE,
             analysis_time_range=str(row.get("analysis_time_range") or "all"),
             version=new_version,
-            schedule_type=str(row.get("schedule_type") or "seconds_10"),
-            schedule_value=row.get("schedule_value"),
+            schedule_rrule=row.get("schedule_rrule"),
             include_in_timeline=1,
             workset_id=(
                 (str(workset_id).strip() if workset_id else None)
@@ -291,8 +289,7 @@ async def create_recurring_task_shell(
             prompt_template="",
             analysis_mode=CHILD_RECURRING_MODE,
             analysis_time_range="all",
-            schedule_type="seconds_10",
-            schedule_value=None,
+            schedule_rrule=None,
             include_in_timeline=1,
             workset_id=workset_id,
             now=now,

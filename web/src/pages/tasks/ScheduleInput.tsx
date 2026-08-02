@@ -7,6 +7,8 @@ import type { ScheduleType } from "../../types";
 
 export type { ScheduleType } from "../../types";
 
+/** FE preset UI for AI trigger schedules (persisted as scheduleRrule server-side). */
+
 const SCHEDULE_TYPES: ScheduleType[] = [
   "seconds_10",
   "hourly",

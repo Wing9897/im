@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 7 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 8 (single schema source).
 
 ``server.db.migrations`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -132,9 +132,10 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
                          {ANALYSIS_TIME_RANGE_CHECK_SQL},
     version              INTEGER NOT NULL DEFAULT 1,
     is_active            INTEGER NOT NULL DEFAULT 1,
-    schedule_type        TEXT NOT NULL DEFAULT 'seconds_10'
-                         CHECK (schedule_type IN ('seconds_10','hourly','daily','weekly','custom_seconds')),
-    schedule_value       TEXT DEFAULT NULL,
+    -- Trigger-purpose RRULE-shaped string for AI modes (APScheduler next-run only).
+    -- NULL for recurring shells; calendar series live on recurring_schedules.rrule.
+    -- Never calendar-expanded (hard-gated by analysis_mode / purpose=trigger).
+    schedule_rrule       TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
     workset_id           TEXT DEFAULT NULL
                          REFERENCES worksets(id) ON DELETE SET NULL,

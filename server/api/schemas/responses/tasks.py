@@ -23,6 +23,7 @@ class TaskDraftPayload(BaseModel):
     promptTemplate: str | None = None
     scheduleType: str | None = None
     scheduleValue: str | None = None
+    scheduleRrule: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
     channelIds: list[Union[str, dict[str, Any]]] | None = None
@@ -70,6 +71,7 @@ class TaskResponse(BaseModel):
     analysisTimeRange: str
     version: int
     isActive: bool
+    scheduleRrule: str | None = None
     scheduleType: str | None = None
     scheduleValue: str | None = None
     includeInTimeline: bool = True

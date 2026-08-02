@@ -134,8 +134,12 @@ async def expand_active_calendar_occurrences(
     task_id: str | None = None,
     task_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """RRULE occurrences in camelCase CalendarOccurrence shape (Calendar items API)."""
+    """Calendar-purpose RRULE occurrences (never AI trigger ``schedule_rrule``)."""
+    from server.domain.schedule import may_calendar_expand
+
     tasks = await fetch_active_recurring_tasks(db, task_id=task_id, task_ids=task_ids)
+    # Defense in depth: SQL already filters analysis_mode=recurring; re-gate by purpose.
+    tasks = [task for task in tasks if may_calendar_expand(str(task.get("analysis_mode") or ""))]
     return expand_calendar_occurrences(tasks, range_start, range_end)
 
 
