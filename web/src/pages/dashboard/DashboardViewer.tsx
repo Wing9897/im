@@ -31,19 +31,23 @@ import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { createWorkset, deleteWorkset, renameWorkset } from "../../api/worksets";
 import { useToast } from "../../context/ToastContext";
 import { toError } from "../../utils/errors";
-import { useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
 import { buildChannelNameById, useDetailSelection } from "../../components/detail";
 import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
+import { listItems } from "../../api/items";
 import {
   DashboardViewerDialogs,
   type DashboardWorksetNameDialogState,
 } from "./DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
+import { WorksetDetailDialog } from "./WorksetDetailDialog";
 
 export function DashboardViewer() {
   const { t } = useTranslation();
   const copy = getTasksPageCopy(t);
   const systemCatalog = getSystemTaskCatalog(t);
+  const { worksetId: routeWorksetId } = useParams<{ worksetId?: string }>();
   const {
     tasks,
     filteredTasks,
@@ -97,7 +101,41 @@ export function DashboardViewer() {
     name: string;
   } | null>(null);
   const [worksetDeleting, setWorksetDeleting] = useState(false);
+  const [detailWorksetId, setDetailWorksetId] = useState<string | null>(null);
+  const [itemCountByWorkset, setItemCountByWorkset] = useState<Map<string, number>>(
+    () => new Map(),
+  );
   useSlashFocusSearch(!loading);
+
+  // Soft-load item counts for workset cards (list aggregate; no stamp bump).
+  useEffect(() => {
+    if (groupingView !== "by_workset") return;
+    let cancelled = false;
+    void listItems()
+      .then((rows) => {
+        if (cancelled) return;
+        const counts = new Map<string, number>();
+        for (const row of rows) {
+          if (row.status === "archived") continue;
+          const wid = row.worksetId || SYSTEM_WORKSET_ID;
+          counts.set(wid, (counts.get(wid) ?? 0) + 1);
+        }
+        setItemCountByWorkset(counts);
+      })
+      .catch(() => {
+        if (!cancelled) setItemCountByWorkset(new Map());
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [groupingView, worksets]);
+
+  // Deep link: /tasks/worksets/:worksetId
+  useEffect(() => {
+    if (!routeWorksetId) return;
+    setGroupingView("by_workset");
+    setDetailWorksetId(routeWorksetId);
+  }, [routeWorksetId, setGroupingView]);
   const { selected: detailTask, select: selectTask, clear: clearTask } =
     useDetailSelection<AnalysisTask>();
   const visibleTasks = useMemo(
@@ -223,6 +261,42 @@ export function DashboardViewer() {
     [handleOpenProject, selectTask],
   );
 
+  const openWorksetDetail = useCallback(
+    (id: string) => {
+      setDetailWorksetId(id);
+      navigate(`/tasks/worksets/${encodeURIComponent(id)}`, { replace: false });
+    },
+    [navigate],
+  );
+
+  const closeWorksetDetail = useCallback(() => {
+    setDetailWorksetId(null);
+    if (routeWorksetId) {
+      navigate("/tasks", { replace: true });
+    }
+  }, [navigate, routeWorksetId]);
+
+  const detailWorkset = useMemo(() => {
+    if (!detailWorksetId) return null;
+    const group = worksetGroups.find((g) => g.key === detailWorksetId);
+    if (group) {
+      return {
+        id: group.key,
+        title: group.title,
+        isSystem: group.isSystem,
+        tasks: group.tasks,
+      };
+    }
+    const ws = worksets.find((w) => w.id === detailWorksetId);
+    if (!ws) return null;
+    return {
+      id: ws.id,
+      title: ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name,
+      isSystem: Boolean(ws.isSystem) || ws.id === SYSTEM_WORKSET_ID,
+      tasks: visibleTasks.filter((task) => task.worksetId === ws.id),
+    };
+  }, [detailWorksetId, worksetGroups, worksets, visibleTasks, t]);
+
   useListKeyboardNavigation({
     items: visibleTasks,
     selectedId: focusedId ?? detailTask?.id ?? null,
@@ -307,6 +381,7 @@ export function DashboardViewer() {
         <DashboardByWorksetList
           groups={worksetGroups}
           t={t}
+          itemCountByWorkset={itemCountByWorkset}
           statsMap={statsMap}
           defaultStats={defaultStats}
           focusedId={focusedId}
@@ -315,6 +390,7 @@ export function DashboardViewer() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onOpenTask={openTask}
+          onOpenWorkset={openWorksetDetail}
           onRenameWorkset={(id, name) =>
             setWorksetNameDialog({ mode: "rename", id, name })
           }
@@ -372,6 +448,38 @@ export function DashboardViewer() {
           }
         }}
       />
+
+      {detailWorkset ? (
+        <WorksetDetailDialog
+          workset={detailWorkset}
+          onClose={closeWorksetDetail}
+          onOpenTask={(task) => {
+            closeWorksetDetail();
+            openTask(task);
+          }}
+          onRename={
+            detailWorkset.isSystem
+              ? undefined
+              : () => {
+                  setWorksetNameDialog({
+                    mode: "rename",
+                    id: detailWorkset.id,
+                    name: detailWorkset.title,
+                  });
+                }
+          }
+          onDelete={
+            detailWorkset.isSystem
+              ? undefined
+              : () => {
+                  setWorksetDeleteTarget({
+                    id: detailWorkset.id,
+                    name: detailWorkset.title,
+                  });
+                }
+          }
+        />
+      ) : null}
     </AppPageShell>
   );
 }

@@ -18,6 +18,7 @@ import {
   type ItemCategory,
   type ItemFieldSchemaEntry,
 } from "../../api/items";
+import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
 import { formatItemsError } from "../../domain/items/itemErrors";
 
 type Props = {
@@ -30,6 +31,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const { t } = useTranslation("items");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [color, setColor] = useState<string | null>(null);
   const [defaultRemind, setDefaultRemind] = useState<number | null>(null);
   const [schema, setSchema] = useState<ItemFieldSchemaEntry[]>([]);
   const [newKey, setNewKey] = useState("");
@@ -40,6 +42,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const startEdit = (cat: ItemCategory) => {
     setEditingId(cat.id);
     setName(cat.name);
+    setColor(cat.color ?? null);
     setDefaultRemind(cat.defaultRemindBeforeDays ?? null);
     setSchema([...(cat.fieldSchema ?? [])]);
     setError(null);
@@ -48,6 +51,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const startCreate = () => {
     setEditingId("new");
     setName("");
+    setColor(CATEGORY_COLOR_PRESETS[0]);
     setDefaultRemind(null);
     setSchema([]);
     setError(null);
@@ -65,12 +69,15 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
       if (editingId === "new") {
         await createItemCategory({
           name: name.trim(),
+          color,
           fieldSchema: schema,
           defaultRemindBeforeDays: defaultRemind,
+          sortOrder: 0,
         });
       } else if (editingId) {
         await updateItemCategory(editingId, {
           name: name.trim(),
+          color,
           fieldSchema: schema,
           defaultRemindBeforeDays: defaultRemind,
         });
@@ -130,11 +137,18 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           >
             <button
               type="button"
-              className="min-w-0 flex-1 border-none bg-transparent p-0 text-left text-body text-text-primary hover:text-accent"
+              className="flex min-w-0 flex-1 items-center gap-sm border-none bg-transparent p-0 text-left text-body text-text-primary hover:text-accent"
               onClick={() => startEdit(cat)}
               disabled={busy}
             >
-              {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full border border-surface-border"
+                style={{ backgroundColor: cat.color?.trim() || "var(--text-muted)" }}
+                aria-hidden
+              />
+              <span className="truncate">
+                {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
+              </span>
             </button>
             <Button
               variant="danger"
@@ -159,6 +173,50 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
                 disabled={busy}
                 autoFocus
               />
+            </SettingsRow>
+            <SettingsRow label={t("categoryColor")} htmlFor="cat-color">
+              <div className="flex flex-col gap-xs">
+                <div className="flex flex-wrap gap-xs" role="listbox" aria-label={t("categoryColor")}>
+                  {CATEGORY_COLOR_PRESETS.map((preset) => {
+                    const selected = (color ?? "").toUpperCase() === preset.toUpperCase();
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        role="option"
+                        aria-selected={selected}
+                        disabled={busy}
+                        className={[
+                          "h-7 w-7 rounded-full border-2",
+                          selected ? "border-accent" : "border-transparent",
+                        ].join(" ")}
+                        style={{ backgroundColor: preset }}
+                        onClick={() => setColor(preset)}
+                        aria-label={preset}
+                      />
+                    );
+                  })}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    className="rounded-md border border-surface-border px-xs text-caption text-text-secondary"
+                    onClick={() => setColor(null)}
+                  >
+                    {t("categoryColorClear")}
+                  </button>
+                </div>
+                <TextField
+                  id="cat-color"
+                  placeholder="#3B82F6"
+                  value={color ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value.trim();
+                    setColor(v || null);
+                  }}
+                  disabled={busy}
+                  aria-label={t("categoryColorCustom")}
+                />
+              </div>
             </SettingsRow>
             <SettingsRow label={t("defaultRemind")} htmlFor="cat-remind">
               <TextField

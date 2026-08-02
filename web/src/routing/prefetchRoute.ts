@@ -30,8 +30,18 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   if (/\/tasks\/[^/]+\/project$/.test(path)) {
     return () => import("../pages/tasks/project/ProjectDetailPage");
   }
+  if (/\/tasks\/worksets\//.test(path)) {
+    return ROUTE_PREFETCHERS["/tasks"];
+  }
   if (path.startsWith("/tasks")) {
     return ROUTE_PREFETCHERS["/tasks"];
+  }
+  return undefined;
+}
+
+function resolveItemsPrefetch(path: string): (() => Promise<unknown>) | undefined {
+  if (path === "/items" || path.startsWith("/items/")) {
+    return ROUTE_PREFETCHERS["/items"];
   }
   return undefined;
 }
@@ -45,6 +55,7 @@ export function prefetchRoute(to: string): void {
   const loader =
     ROUTE_PREFETCHERS[path] ??
     resolveTasksPrefetch(path) ??
+    resolveItemsPrefetch(path) ??
     (path.startsWith("/ai")
       ? ROUTE_PREFETCHERS["/ai"]
       : path.startsWith("/settings")

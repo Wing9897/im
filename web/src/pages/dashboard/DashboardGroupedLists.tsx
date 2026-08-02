@@ -136,6 +136,8 @@ export interface DashboardWorksetGroup {
 export function DashboardByWorksetList({
   groups,
   t,
+  itemCountByWorkset,
+  onOpenWorkset,
   onRenameWorkset,
   onDeleteWorkset,
   onCreateWorkset,
@@ -143,6 +145,8 @@ export function DashboardByWorksetList({
 }: TaskListActions & {
   groups: DashboardWorksetGroup[];
   t: TFunction;
+  itemCountByWorkset?: Map<string, number>;
+  onOpenWorkset: (id: string) => void;
   onRenameWorkset: (id: string, name: string) => void;
   onDeleteWorkset: (id: string, name: string) => void;
   onCreateWorkset: () => void;
@@ -163,6 +167,8 @@ export function DashboardByWorksetList({
               title={group.title}
               isSystem={group.isSystem}
               taskCount={group.tasks.length}
+              itemCount={itemCountByWorkset?.get(group.key) ?? 0}
+              onOpen={() => onOpenWorkset(group.key)}
               onRename={
                 group.isSystem
                   ? undefined
