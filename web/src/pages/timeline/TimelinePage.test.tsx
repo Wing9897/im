@@ -183,6 +183,7 @@ function makeContainer(selectedEvent: TimelineItem | null = null) {
       eventStatuses: {},
       setEventStatus: vi.fn(),
       focusDay: vi.fn(),
+      goToDay: vi.fn(),
     },
     data: {
       events: [],

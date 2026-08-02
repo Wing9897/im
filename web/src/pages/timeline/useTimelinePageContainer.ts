@@ -178,6 +178,16 @@ export function useTimelinePageContainer() {
     setFocusedDay(startOfDay(day));
   }, [navigation, selection, setFocusedDay]);
 
+  /** Jump calendar cursor + focused day (deep-links from workset summary). */
+  const goToDay = useCallback(
+    (day: Date) => {
+      const normalized = startOfDay(day);
+      navigation.setTimeCursor(normalized);
+      setFocusedDay(normalized);
+    },
+    [navigation, setFocusedDay],
+  );
+
   const handleJumpTo = useCallback(
     (scale: Parameters<typeof navigation.jumpTo>[0]) => {
       setFocusedDay(null);
@@ -219,6 +229,7 @@ export function useTimelinePageContainer() {
       eventStatuses,
       setEventStatus,
       focusDay,
+      goToDay,
     },
     data: {
       events: data.events,

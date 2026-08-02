@@ -32,9 +32,11 @@ import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
+import { startOfDay } from "../../domain/timeline/dateUtils";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import type { TimelineItem } from "../../types";
+import { getOsTimeMs } from "../../utils/time";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
@@ -79,6 +81,8 @@ export function TimelinePage() {
   const [userEventActionBusy, setUserEventActionBusy] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
   const createLinkHandled = useRef(false);
+  const eventLinkHandled = useRef<string | null>(null);
+  const eventDayJumped = useRef<string | null>(null);
 
   const openCreateDialog = useCallback((worksetId?: string | null) => {
     setDialogMode("create");
@@ -104,6 +108,53 @@ export function TimelinePage() {
     next.delete("worksetId");
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams, openCreateDialog]);
+
+  // Deep-link from workset summary: /timeline?eventId=…&at=…
+  useEffect(() => {
+    const eventId = searchParams.get("eventId")?.trim();
+    if (!eventId) {
+      eventLinkHandled.current = null;
+      eventDayJumped.current = null;
+      return;
+    }
+
+    if (eventDayJumped.current !== eventId) {
+      const atRaw = searchParams.get("at")?.trim();
+      if (atRaw) {
+        const atMs = getOsTimeMs(atRaw);
+        if (Number.isFinite(atMs)) {
+          sources.goToDay(startOfDay(new Date(atMs)));
+        }
+      }
+      eventDayJumped.current = eventId;
+    }
+
+    if (eventLinkHandled.current === eventId) return;
+    if (data.initialLoading) return;
+
+    const match =
+      data.events.find((row) => row.id === eventId) ??
+      filters.filteredEvents.find((row) => row.id === eventId) ??
+      null;
+
+    eventLinkHandled.current = eventId;
+    const next = new URLSearchParams(searchParams);
+    next.delete("eventId");
+    next.delete("at");
+    setSearchParams(next, { replace: true });
+
+    if (match) {
+      selection.setSelectedEvent(match);
+    }
+  }, [
+    searchParams,
+    setSearchParams,
+    data.initialLoading,
+    data.events,
+    filters.filteredEvents,
+    sources.goToDay,
+    selection.setSelectedEvent,
+  ]);
 
   const openEditDialog = useCallback((event: TimelineItem) => {
     setDialogMode("edit");
