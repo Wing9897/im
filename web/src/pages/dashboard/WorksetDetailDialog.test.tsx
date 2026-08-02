@@ -46,6 +46,8 @@ vi.mock("react-i18next", () => ({
       if (key === "workset.detailTasksEmpty") return "no tasks";
       if (key === "workset.detailItemsEmpty") return "no items";
       if (key === "workset.openItems") return "items";
+      if (key === "workset.addItem") return "add item";
+      if (key === "workset.addEvent") return "add event";
       if (key === "workset.itemNoExpiry") return "no expiry";
       if (key === "workset.itemOverdue") return `overdue ${opts?.count}`;
       if (key === "tasks.addTask") return "add task";
@@ -151,5 +153,67 @@ describe("WorksetDetailDialog", () => {
       (taskBtn as HTMLElement).click();
     });
     expect(onOpenTask).toHaveBeenCalledTimes(1);
+  });
+
+  it("navigates to items/timeline create with workset prefill", async () => {
+    const onClose = vi.fn();
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <WorksetDetailDialog
+          workset={{
+            id: "ws-1",
+            title: "Ops",
+            isSystem: false,
+            tasks: [],
+          }}
+          onClose={onClose}
+          onOpenTask={vi.fn()}
+        />,
+      );
+    });
+
+    await act(async () => {
+      await listItems.mock.results[0]?.value;
+    });
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="workset-detail-add-item"]')!
+        .click();
+    });
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/items?new=1&worksetId=ws-1");
+
+    onClose.mockClear();
+    navigate.mockClear();
+
+    act(() => {
+      root!.render(
+        <WorksetDetailDialog
+          workset={{
+            id: "ws-1",
+            title: "Ops",
+            isSystem: false,
+            tasks: [],
+          }}
+          onClose={onClose}
+          onOpenTask={vi.fn()}
+        />,
+      );
+    });
+
+    await act(async () => {
+      await listItems.mock.results[1]?.value;
+    });
+
+    act(() => {
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="workset-detail-add-event"]')!
+        .click();
+    });
+    expect(onClose).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith("/timeline?newEvent=1&worksetId=ws-1");
   });
 });

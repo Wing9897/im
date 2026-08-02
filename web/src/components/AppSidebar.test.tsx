@@ -113,11 +113,12 @@ describe("AppSidebar", () => {
     expect(hrefs).toEqual([
       "/monitor",
       "/tasks",
+      "/items",
+      "/accounts",
       "/leaderboard",
       "/intelligence",
       "/timeline",
       "/actions",
-      "/accounts",
       "/assistant",
       "/ai/provider",
       "/settings",
@@ -125,16 +126,28 @@ describe("AppSidebar", () => {
     ]);
   });
 
+  it("renders visual nav group labels in zh-Hant", () => {
+    renderSidebar();
+    expect(container.textContent).toContain("管理");
+    expect(container.textContent).toContain("洞察");
+    expect(container.textContent).toContain("時間");
+    expect(container.textContent).toContain("助手");
+    expect(
+      container.querySelectorAll("[data-testid='sidebar-nav-group']").length,
+    ).toBeGreaterThanOrEqual(3);
+  });
+
   it("renders all navigation labels in zh-Hant", () => {
     renderSidebar();
     const expectedLabels = [
       "實時監控",
       getTasksPageLabel(),
+      "物品",
+      "來源",
       "排行榜",
       "關鍵事件",
       "時間規劃",
       "通知",
-      "來源",
       "助手",
       "AI 設定",
       "系統設定",
@@ -224,6 +237,7 @@ describe("AppSidebar", () => {
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
       "/tasks",
+      "/items",
       "/timeline",
       "/actions",
       "/assistant",
@@ -233,7 +247,9 @@ describe("AppSidebar", () => {
     ]);
     expect(hrefs).not.toContain("/monitor");
     expect(hrefs).not.toContain("/accounts");
+    expect(hrefs).not.toContain("/leaderboard");
     expect(hrefs).toContain("/actions");
+    expect(hrefs).toContain("/items");
   });
 
   it("does not own collapsed localStorage writes from an inline collapse control", () => {

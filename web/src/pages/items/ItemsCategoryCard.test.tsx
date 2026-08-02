@@ -68,11 +68,40 @@ describe("ItemsCategoryCard", () => {
     expect(container.textContent).toContain("4 items");
     expect(container.textContent).toContain("2 soon");
     expect(container.textContent).toContain("1 overdue");
+    expect(container.textContent).toContain("🍎");
     const card = container.querySelector('[data-testid="items-category-card-c1"]');
     expect(card).toBeTruthy();
     act(() => {
       (card as HTMLElement).click();
     });
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows package fallback emoji when category has none", () => {
+    const summary: CategorySummary = {
+      id: "c2",
+      category: {
+        id: "c2",
+        name: "Custom",
+        slug: null,
+        sortOrder: 2,
+        color: null,
+        emoji: null,
+        fieldSchema: [],
+        defaultRemindBeforeDays: null,
+        createdAt: null,
+        updatedAt: null,
+      },
+      itemCount: 0,
+      expiringCount: 0,
+      overdueCount: 0,
+    };
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<ItemsCategoryCard summary={summary} onOpen={vi.fn()} />);
+    });
+
+    expect(container.textContent).toContain("📦");
   });
 });

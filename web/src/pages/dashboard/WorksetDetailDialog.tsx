@@ -72,6 +72,16 @@ export function WorksetDetailDialog({
 
   const activeItems = items.filter((row) => row.status !== "archived");
 
+  const goCreateItem = () => {
+    onClose();
+    navigate(`/items?new=1&worksetId=${encodeURIComponent(workset.id)}`);
+  };
+
+  const goCreateEvent = () => {
+    onClose();
+    navigate(`/timeline?newEvent=1&worksetId=${encodeURIComponent(workset.id)}`);
+  };
+
   return (
     <ModalDialog
       open
@@ -92,6 +102,22 @@ export function WorksetDetailDialog({
               {t("workset.delete")}
             </Button>
           ) : null}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={goCreateItem}
+            data-testid="workset-detail-add-item"
+          >
+            {t("workset.addItem")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={goCreateEvent}
+            data-testid="workset-detail-add-event"
+          >
+            {t("workset.addEvent")}
+          </Button>
           <Button
             variant="secondary"
             size="sm"

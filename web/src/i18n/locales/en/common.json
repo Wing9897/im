@@ -1368,6 +1368,8 @@
     "detailTasksEmpty": "No tasks yet",
     "detailItemsEmpty": "No items yet",
     "openItems": "Go to items",
+    "addItem": "Add item",
+    "addEvent": "Add event",
     "itemNoExpiry": "No expiry",
     "itemOverdue": "{count}d overdue",
     "showSystemWorksets": "Show system worksets",

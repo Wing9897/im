@@ -7,6 +7,7 @@ import { Badge, SurfaceCard, captionClass } from "../../components/ui";
 import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
 import type { CategorySummary } from "../../domain/items/categoryAggregates";
 import { ALL_CATEGORIES_ID, categoryLabel } from "../../domain/items/categoryAggregates";
+import { DEFAULT_ITEM_EMOJI } from "../../domain/items/itemCalendarProjection";
 
 type Props = {
   summary: CategorySummary;
@@ -55,14 +56,14 @@ export function ItemsCategoryCard({ summary, title, onOpen }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-sm px-card-inner py-md">
         <div className="flex items-start justify-between gap-sm">
           <span className={`min-w-0 flex-1 truncate ${cardTitleClass}`} title={label}>
-            {summary.category?.emoji?.trim() ? (
-              <span className="mr-xs" aria-hidden>
-                {summary.category.emoji.trim()}
-              </span>
-            ) : null}
+            <span className="mr-xs" aria-hidden>
+              {summary.id === ALL_CATEGORIES_ID
+                ? "📋"
+                : summary.category?.emoji?.trim() || DEFAULT_ITEM_EMOJI}
+            </span>
             {label}
           </span>
-          {!summary.category?.emoji?.trim() && summary.category?.color ? (
+          {summary.category?.color ? (
             <span
               className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full border border-surface-border"
               style={{ backgroundColor: summary.category.color }}

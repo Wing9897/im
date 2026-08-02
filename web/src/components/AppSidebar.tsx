@@ -36,16 +36,47 @@ interface SidebarNavItem {
   activePrefix?: string;
 }
 
-const mainNavItems: readonly SidebarNavItem[] = [
-  { to: "/monitor", labelKey: "monitor", icon: Radio },
-  { to: "/tasks", labelKey: "tasks", icon: ListChecks, activePrefix: "/tasks" },
-  { to: "/leaderboard", labelKey: "leaderboard", icon: Trophy },
-  { to: "/intelligence", labelKey: "keyEvents", icon: MapPin },
-  { to: "/timeline", labelKey: "timeline", icon: CalendarDays },
-  { to: "/items", labelKey: "items", icon: Package },
-  { to: "/actions", labelKey: "actions", icon: BellRing },
-  { to: "/accounts", labelKey: "sources", icon: Database, activePrefix: "/accounts" },
-  { to: "/assistant", labelKey: "assistant", icon: MessageSquare },
+interface SidebarNavGroup {
+  /** i18n key under `nav` for the section label; null = no label (first cluster). */
+  labelKey: string | null;
+  items: readonly SidebarNavItem[];
+}
+
+/**
+ * Visual grouping only — routes/paths unchanged.
+ * Live → Manage → Insights → Time → Assist.
+ */
+const mainNavGroups: readonly SidebarNavGroup[] = [
+  {
+    labelKey: null,
+    items: [{ to: "/monitor", labelKey: "monitor", icon: Radio }],
+  },
+  {
+    labelKey: "groupManage",
+    items: [
+      { to: "/tasks", labelKey: "tasks", icon: ListChecks, activePrefix: "/tasks" },
+      { to: "/items", labelKey: "items", icon: Package },
+      { to: "/accounts", labelKey: "sources", icon: Database, activePrefix: "/accounts" },
+    ],
+  },
+  {
+    labelKey: "groupInsights",
+    items: [
+      { to: "/leaderboard", labelKey: "leaderboard", icon: Trophy },
+      { to: "/intelligence", labelKey: "keyEvents", icon: MapPin },
+    ],
+  },
+  {
+    labelKey: "groupTime",
+    items: [{ to: "/timeline", labelKey: "timeline", icon: CalendarDays }],
+  },
+  {
+    labelKey: "groupAssist",
+    items: [
+      { to: "/actions", labelKey: "actions", icon: BellRing },
+      { to: "/assistant", labelKey: "assistant", icon: MessageSquare },
+    ],
+  },
 ];
 
 const bottomNavItems: readonly SidebarNavItem[] = [
@@ -53,6 +84,10 @@ const bottomNavItems: readonly SidebarNavItem[] = [
   { to: "/settings", labelKey: "systemSettings", icon: Settings, activePrefix: "/settings" },
   { to: "/account/identity", labelKey: "account", icon: User },
 ];
+
+const mainNavItems: readonly SidebarNavItem[] = mainNavGroups.flatMap(
+  (group) => group.items,
+);
 
 /** Primary sidebar paths for idle prefetch after App ready. */
 export const MAIN_SIDEBAR_PREFETCH_PATHS: readonly string[] = mainNavItems.map(
@@ -76,6 +111,32 @@ const railModeButtonClass = (active: boolean, collapsed: boolean) =>
       ? "bg-[color-mix(in_srgb,var(--text-primary)_8%,transparent)] text-text-primary"
       : "bg-transparent text-text-muted hover:bg-[color-mix(in_srgb,var(--text-primary)_4%,transparent)] hover:text-text-primary",
   ].join(" ");
+
+function SidebarSectionLabel({
+  label,
+  collapsed,
+}: {
+  label: string;
+  collapsed: boolean;
+}) {
+  if (collapsed) {
+    return (
+      <div
+        className="mx-1 my-1.5 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]"
+        aria-hidden="true"
+      />
+    );
+  }
+  return (
+    <div
+      className="mx-1 mb-1 mt-2 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted max-[780px]:hidden"
+      aria-hidden="true"
+      data-testid="sidebar-nav-group"
+    >
+      {label}
+    </div>
+  );
+}
 
 /** Isolated so SSE queue updates re-render only this nav item, not the whole rail. */
 function TasksNavLink({
@@ -153,9 +214,15 @@ export function AppSidebar() {
   const { collapsed } = useSidebarCollapsed();
   const { mode, setMode } = useSidebarRailMode();
   const { simpleMode } = useSimpleMode();
-  const visibleMainNav = simpleMode
-    ? mainNavItems.filter((item) => !isSimpleModeHiddenPath(item.to))
-    : mainNavItems;
+
+  const visibleGroups = mainNavGroups
+    .map((group) => ({
+      ...group,
+      items: simpleMode
+        ? group.items.filter((item) => !isSimpleModeHiddenPath(item.to))
+        : group.items,
+    }))
+    .filter((group) => group.items.length > 0);
 
   useEffect(() => {
     if (location.pathname.startsWith("/tasks")) {
@@ -233,48 +300,55 @@ export function AppSidebar() {
         <AssistantHistoryRail collapsed={hideLabel} />
       ) : (
         <>
-          {visibleMainNav.map((item) => {
-            const Icon = item.icon;
-            const isActive = isItemActive(item);
-            const label = t(item.labelKey);
-            if (item.to === "/tasks") {
-              return (
-                <TasksNavLink
-                  key={item.to}
-                  to={lastTasksPath}
-                  collapsed={hideLabel}
-                  isActive={isActive}
-                />
-              );
-            }
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={sidebarNavLinkClass(isActive, hideLabel)}
-                onMouseEnter={() => prefetchRoute(item.to)}
-                onFocus={() => prefetchRoute(item.to)}
-                aria-label={label}
-                title={label}
-                data-testid="sidebar-link"
-              >
-                {isActive ? (
-                  <span
-                    className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
-                    aria-hidden="true"
-                  />
-                ) : null}
-                <span className="relative inline-flex shrink-0">
-                  <Icon size={16} strokeWidth={2} aria-hidden="true" />
-                </span>
-                {!hideLabel ? (
-                  <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-                    <span className="truncate">{label}</span>
-                  </span>
-                ) : null}
-              </NavLink>
-            );
-          })}
+          {visibleGroups.map((group, groupIndex) => (
+            <div key={group.labelKey ?? `group-${groupIndex}`} className="flex flex-col gap-0.5">
+              {group.labelKey ? (
+                <SidebarSectionLabel label={t(group.labelKey)} collapsed={hideLabel} />
+              ) : null}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = isItemActive(item);
+                const label = t(item.labelKey);
+                if (item.to === "/tasks") {
+                  return (
+                    <TasksNavLink
+                      key={item.to}
+                      to={lastTasksPath}
+                      collapsed={hideLabel}
+                      isActive={isActive}
+                    />
+                  );
+                }
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={sidebarNavLinkClass(isActive, hideLabel)}
+                    onMouseEnter={() => prefetchRoute(item.to)}
+                    onFocus={() => prefetchRoute(item.to)}
+                    aria-label={label}
+                    title={label}
+                    data-testid="sidebar-link"
+                  >
+                    {isActive ? (
+                      <span
+                        className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    <span className="relative inline-flex shrink-0">
+                      <Icon size={16} strokeWidth={2} aria-hidden="true" />
+                    </span>
+                    {!hideLabel ? (
+                      <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
+                        <span className="truncate">{label}</span>
+                      </span>
+                    ) : null}
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
           <div className="min-h-md flex-1" />
           <div className="mx-1 my-2 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]" />
           {!hideLabel ? (

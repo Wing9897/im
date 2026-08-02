@@ -1,7 +1,11 @@
 import { ChevronLeft, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { PillButton, TextField } from "../../../components/ui";
+import { Badge, PillButton, TextField } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
+import {
+  itemDateKindBadgeTone,
+  itemDateKindLabel,
+} from "../../../domain/items/itemCalendarProjection";
 import {
   getEventStatusColor,
   getEventStatusLabel,
@@ -90,6 +94,16 @@ export function TimelineSidebar({
           >
             {selectedEvent.title}
           </h2>
+
+          {isItemEvent && selectedEvent.itemDateKind ? (
+            <Badge
+              tone={itemDateKindBadgeTone(selectedEvent.itemDateKind)}
+              className="normal-case tracking-normal self-start"
+              data-testid="timeline-sidebar-item-kind"
+            >
+              {itemDateKindLabel(selectedEvent.itemDateKind)}
+            </Badge>
+          ) : null}
 
           {selectedEvent.body ? (
             <p className="m-0 whitespace-pre-wrap break-words text-xs leading-relaxed text-text-secondary">

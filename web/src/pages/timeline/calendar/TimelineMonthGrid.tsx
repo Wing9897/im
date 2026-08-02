@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TimelineItem } from "../../../types";
+import { itemDateKindDotClass } from "../../../domain/items/itemCalendarProjection";
 import {
   classifyMonthDaySpan,
   countMonthDaySpanIndicators,
@@ -179,7 +180,19 @@ export function TimelineMonthGrid({
                         onSelectEvent(event);
                       }}
                     >
-                      <span className={monthEventDotClass} aria-hidden="true" />
+                      <span
+                        className={
+                          event.source === "item"
+                            ? itemDateKindDotClass(event.itemDateKind)
+                            : monthEventDotClass
+                        }
+                        aria-hidden="true"
+                        data-testid={
+                          event.source === "item"
+                            ? `month-item-dot-${event.itemDateKind ?? "item"}`
+                            : undefined
+                        }
+                      />
                       <span
                         className={`${monthEventPreviewTextClass} ${
                           onlyDismissed || event.dismissed ? dismissedTitleClass : ""

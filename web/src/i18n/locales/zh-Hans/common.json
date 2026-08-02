@@ -1368,6 +1368,8 @@
     "detailTasksEmpty": "尚无任务",
     "detailItemsEmpty": "尚无物品",
     "openItems": "前往物品",
+    "addItem": "新增物品",
+    "addEvent": "新增事件",
     "itemNoExpiry": "无到期日",
     "itemOverdue": "过期 {count} 天",
     "showSystemWorksets": "显示系统工作集",

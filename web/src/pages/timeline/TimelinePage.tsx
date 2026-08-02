@@ -15,8 +15,8 @@
  *   `useTimelineFiltering.test.ts`.
  */
 
-import { useCallback, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { AppPageShell } from "../../components/ui";
 import {
@@ -63,6 +63,7 @@ export function TimelinePage() {
   const { t } = useTranslation("timeline");
   const { t: tc } = useTranslation("common");
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks, refreshTasks } = useTaskCatalog();
   const { showToast } = useToast();
@@ -72,17 +73,37 @@ export function TimelinePage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [editingEvent, setEditingEvent] = useState<TimelineItem | null>(null);
+  const [createWorksetId, setCreateWorksetId] = useState<string | null>(null);
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [userEventActionBusy, setUserEventActionBusy] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
+  const createLinkHandled = useRef(false);
 
-  const openCreateDialog = useCallback(() => {
+  const openCreateDialog = useCallback((worksetId?: string | null) => {
     setDialogMode("create");
     setEditingEvent(null);
+    setCreateWorksetId(worksetId?.trim() || null);
     setDialogError(null);
     setDialogOpen(true);
   }, []);
+
+  // Deep-link from workset detail: /timeline?newEvent=1&worksetId=…
+  useEffect(() => {
+    const wantsNew = searchParams.get("newEvent") === "1";
+    if (!wantsNew) {
+      createLinkHandled.current = false;
+      return;
+    }
+    if (createLinkHandled.current) return;
+    createLinkHandled.current = true;
+    const wid = searchParams.get("worksetId")?.trim() || null;
+    openCreateDialog(wid);
+    const next = new URLSearchParams(searchParams);
+    next.delete("newEvent");
+    next.delete("worksetId");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, openCreateDialog]);
 
   const openEditDialog = useCallback((event: TimelineItem) => {
     setDialogMode("edit");
@@ -106,6 +127,7 @@ export function TimelinePage() {
     if (dialogBusy) return;
     setDialogOpen(false);
     setEditingEvent(null);
+    setCreateWorksetId(null);
     setDialogError(null);
   }, [dialogBusy]);
 
@@ -342,7 +364,10 @@ export function TimelinePage() {
                 worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
                 isAllDay: Boolean(editingEvent.isAllDay),
               }
-            : { worksetId: toUserEventFormWorksetId(null), isAllDay: false }
+            : {
+                worksetId: toUserEventFormWorksetId(createWorksetId),
+                isAllDay: false,
+              }
         }
         busy={dialogBusy}
         error={dialogError}
