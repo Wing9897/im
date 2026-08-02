@@ -29,21 +29,23 @@ async def insert_category(
     slug: str | None,
     sort_order: int,
     color: str | None,
+    emoji: str | None,
     field_schema: str,
     default_remind_before_days: int | None,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO item_categories ("
-        "id, name, slug, sort_order, color, field_schema, default_remind_before_days, "
+        "id, name, slug, sort_order, color, emoji, field_schema, default_remind_before_days, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             category_id,
             name,
             slug,
             sort_order,
             color,
+            emoji,
             field_schema,
             default_remind_before_days,
             now,
@@ -60,18 +62,20 @@ async def update_category(
     slug: str | None,
     sort_order: int,
     color: str | None,
+    emoji: str | None,
     field_schema: str,
     default_remind_before_days: int | None,
     now: str,
 ) -> None:
     await tx.execute(
         "UPDATE item_categories SET name = ?, slug = ?, sort_order = ?, color = ?, "
-        "field_schema = ?, default_remind_before_days = ?, updated_at = ? WHERE id = ?",
+        "emoji = ?, field_schema = ?, default_remind_before_days = ?, updated_at = ? WHERE id = ?",
         (
             name,
             slug,
             sort_order,
             color,
+            emoji,
             field_schema,
             default_remind_before_days,
             now,
@@ -133,15 +137,32 @@ async def fetch_active_items_with_dates(
     range_end_date: str,
     workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Active items whose purchased_at or expires_at falls in [start, end] DATE range."""
+    """Active items with purchase/expiry/remind DATE falling in [start, end].
+
+    Remind day is ``date(expires_at, '-' || remind_before_days || ' days')`` when
+    ``remind_before_days > 0``.
+    """
     clauses = [
         "status = 'active'",
         "("
         "(purchased_at IS NOT NULL AND purchased_at >= ? AND purchased_at <= ?) "
-        "OR (expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?)"
+        "OR (expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?) "
+        "OR ("
+        "expires_at IS NOT NULL AND remind_before_days IS NOT NULL "
+        "AND remind_before_days > 0 "
+        "AND date(expires_at, '-' || remind_before_days || ' days') >= ? "
+        "AND date(expires_at, '-' || remind_before_days || ' days') <= ?"
+        ")"
         ")",
     ]
-    params: list[Any] = [range_start_date, range_end_date, range_start_date, range_end_date]
+    params: list[Any] = [
+        range_start_date,
+        range_end_date,
+        range_start_date,
+        range_end_date,
+        range_start_date,
+        range_end_date,
+    ]
     if workset_id is not None:
         clauses.append("workset_id = ?")
         params.append(workset_id)
@@ -192,14 +213,15 @@ async def insert_item(
     remind_before_days: int | None,
     notes: str,
     status: str,
+    emoji: str | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO items ("
         "id, title, category_id, workset_id, purchased_at, expires_at, "
-        "remind_before_days, notes, status, attributes_json, created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "remind_before_days, notes, status, emoji, attributes_json, created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item_id,
             title,
@@ -210,6 +232,7 @@ async def insert_item(
             remind_before_days,
             notes,
             status,
+            emoji,
             attributes_json,
             now,
             now,
@@ -229,12 +252,13 @@ async def update_item(
     remind_before_days: int | None,
     notes: str,
     status: str,
+    emoji: str | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "UPDATE items SET title = ?, category_id = ?, workset_id = ?, purchased_at = ?, "
-        "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, "
+        "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, emoji = ?, "
         "attributes_json = ?, updated_at = ? WHERE id = ?",
         (
             title,
@@ -245,6 +269,7 @@ async def update_item(
             remind_before_days,
             notes,
             status,
+            emoji,
             attributes_json,
             now,
             item_id,

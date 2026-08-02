@@ -18,6 +18,7 @@ class ItemCategoryResponse(BaseModel):
     slug: str | None = None
     sortOrder: int = 0
     color: str | None = None
+    emoji: str | None = None
     fieldSchema: list[ItemFieldSchemaEntry] = Field(default_factory=list)
     defaultRemindBeforeDays: int | None = None
     createdAt: str | None = None
@@ -34,6 +35,7 @@ class ItemResponse(BaseModel):
     remindBeforeDays: int | None = None
     notes: str = ""
     status: str = "active"
+    emoji: str | None = None
     attributes: dict[str, str] = Field(default_factory=dict)
     createdAt: str | None = None
     updatedAt: str | None = None

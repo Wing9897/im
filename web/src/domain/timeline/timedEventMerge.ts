@@ -150,8 +150,10 @@ export function calendarOccurrenceToBoardEvent(
       : undefined,
     itemId: isItem ? occurrence.itemId ?? null : undefined,
     itemDateKind: isItem
-      ? occurrence.itemDateKind === "expires"
-        ? "expires"
+      ? occurrence.itemDateKind === "expires" ||
+        occurrence.itemDateKind === "remind" ||
+        occurrence.itemDateKind === "purchased"
+        ? occurrence.itemDateKind
         : "purchased"
       : undefined,
   };

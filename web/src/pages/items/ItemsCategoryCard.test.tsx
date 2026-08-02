@@ -49,6 +49,7 @@ describe("ItemsCategoryCard", () => {
         slug: "food",
         sortOrder: 1,
         color: "#22C55E",
+        emoji: "🍎",
         fieldSchema: [],
         defaultRemindBeforeDays: 3,
         createdAt: null,

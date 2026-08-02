@@ -105,7 +105,7 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；到期投影走统一 `GET /api/v1/calendar/items`（`source=item`），勿另开双轨。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；购入／到期／提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`purchased`｜`expires`｜`remind`），勿另开双轨。
 
 | Tool | 行为 | 限额 |
 |------|------|------|

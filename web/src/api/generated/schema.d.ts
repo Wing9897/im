@@ -2513,7 +2513,7 @@ export interface components {
             /** Itemid */
             itemId?: string | null;
             /** Itemdatekind */
-            itemDateKind?: ("purchased" | "expires") | null;
+            itemDateKind?: ("purchased" | "expires" | "remind") | null;
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -2528,6 +2528,8 @@ export interface components {
             sortOrder: number | null;
             /** Color */
             color?: string | null;
+            /** Emoji */
+            emoji?: string | null;
             /** Fieldschema */
             fieldSchema?: {
                 [key: string]: string;
@@ -2545,6 +2547,8 @@ export interface components {
             sortOrder?: number | null;
             /** Color */
             color?: string | null;
+            /** Emoji */
+            emoji?: string | null;
             /** Fieldschema */
             fieldSchema?: {
                 [key: string]: string;
@@ -3029,6 +3033,8 @@ export interface components {
             sortOrder: number;
             /** Color */
             color?: string | null;
+            /** Emoji */
+            emoji?: string | null;
             /** Fieldschema */
             fieldSchema?: components["schemas"]["ItemFieldSchemaEntry"][];
             /** Defaultremindbeforedays */
@@ -3062,6 +3068,8 @@ export interface components {
              * @default active
              */
             status: string | null;
+            /** Emoji */
+            emoji?: string | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3108,6 +3116,8 @@ export interface components {
              * @default active
              */
             status: string;
+            /** Emoji */
+            emoji?: string | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3135,6 +3145,8 @@ export interface components {
             notes?: string | null;
             /** Status */
             status?: string | null;
+            /** Emoji */
+            emoji?: string | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;

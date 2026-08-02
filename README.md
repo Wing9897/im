@@ -276,9 +276,9 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema stamp 7**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.8`）——含可追蹤物品（`item_categories`／`items`，emoji／提醒日投影）。新安裝直接建 stamp-7 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v7**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.8`）——含可追蹤物品（`item_categories`／`items`，emoji／提醒日投影）。新安裝直接建 stamp-7 庫。
 
-**Wipe-only：** 非空且 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v6 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply

@@ -42,6 +42,7 @@ class CategoryCreateBody(BaseModel):
     slug: str | None = None
     sortOrder: int | None = 0
     color: str | None = None
+    emoji: str | None = None
     fieldSchema: list[dict[str, str]] | None = None
     defaultRemindBeforeDays: int | None = None
 
@@ -53,6 +54,7 @@ class CategoryUpdateBody(BaseModel):
     slug: str | None = None
     sortOrder: int | None = None
     color: str | None = None
+    emoji: str | None = None
     fieldSchema: list[dict[str, str]] | None = None
     defaultRemindBeforeDays: int | None = None
 
@@ -68,6 +70,7 @@ class ItemCreateBody(BaseModel):
     remindBeforeDays: int | None = None
     notes: str | None = ""
     status: str | None = "active"
+    emoji: str | None = None
     attributes: dict[str, str] | None = None
 
 
@@ -82,6 +85,7 @@ class ItemUpdateBody(BaseModel):
     remindBeforeDays: int | None = None
     notes: str | None = None
     status: str | None = None
+    emoji: str | None = None
     attributes: dict[str, str] | None = None
 
 
@@ -118,6 +122,7 @@ async def post_category(request: Request, body: CategoryCreateBody) -> dict[str,
             slug=body.slug,
             sort_order=body.sortOrder,
             color=body.color,
+            emoji=body.emoji,
             field_schema=body.fieldSchema,
             default_remind_before_days=body.defaultRemindBeforeDays,
         )
@@ -147,6 +152,7 @@ async def patch_category_route(
         "slug": "slug",
         "sortOrder": "sort_order",
         "color": "color",
+        "emoji": "emoji",
         "fieldSchema": "field_schema",
         "defaultRemindBeforeDays": "default_remind_before_days",
     }
@@ -207,6 +213,7 @@ async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
             remind_before_days=body.remindBeforeDays,
             notes=body.notes,
             status=body.status,
+            emoji=body.emoji,
             attributes=body.attributes,
         )
     except ItemValidationError as exc:
@@ -236,6 +243,7 @@ async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody)
         "remindBeforeDays": "remind_before_days",
         "notes": "notes",
         "status": "status",
+        "emoji": "emoji",
         "attributes": "attributes",
     }
     kwargs = {mapping[wire]: value for wire, value in fields.items() if wire in mapping}

@@ -15,6 +15,8 @@
   "categoryColor": "顏色",
   "categoryColorClear": "清除",
   "categoryColorCustom": "自訂色碼",
+  "emoji": "Emoji",
+  "emojiHint": "可選短 emoji 標誌（不支援圖片上傳）。",
   "addItem": "新增物品",
   "editItem": "編輯物品",
   "deleteItem": "刪除",
@@ -84,10 +86,17 @@
     "credit_card": "信用卡",
     "warranty": "保固",
     "contract": "合約",
+    "household": "家庭用品",
+    "medicine": "藥品",
+    "subscription": "訂閱",
+    "membership": "會員",
+    "insurance": "保險",
+    "vehicle": "車輛",
     "other": "其他"
   },
   "purchasedPrefix": "購入",
   "expiresPrefix": "到期",
+  "remindPrefix": "提醒",
   "statusActive": "使用中",
   "statusArchived": "已封存"
 }
