@@ -139,7 +139,7 @@
       "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
       "nameLabel": "Task name",
       "namePlaceholder": "Enter task name",
-      "foundationTitle": "Recurring events",
+      "foundationTitle": "Choose staff",
       "foundationHint": "Tasks build on a repeatable / triggerable schedule. Choose who owns the work, then configure their skills.",
       "staffLabel": "Employee",
       "staffGroup": {

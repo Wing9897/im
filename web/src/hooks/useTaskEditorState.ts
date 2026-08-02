@@ -8,6 +8,7 @@ import i18n from "../i18n";
 import { localizeTaskPreset } from "../domain/tasks/localizeTaskPreset";
 import { chatEditorFormStorageKey } from "../domain/prefs";
 import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
+import { legacyToTriggerRrule } from "../domain/tasks/triggerSchedule";
 import type { AnalysisMode, TaskFormState, TaskTemplatePreset } from "../types";
 import { usePersistedState } from "./usePersistedState";
 
@@ -23,6 +24,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   channelIds: [],
   scheduleType: "seconds_10",
   scheduleValue: null,
+  scheduleRrule: "FREQ=SECONDLY;INTERVAL=10",
   rrule: "",
   eventStartTime: "",
   eventEndTime: "",
@@ -93,7 +95,16 @@ export function useTaskEditorState(
 
   const updateField = useCallback(
     <K extends keyof EditorFormFields>(field: K, value: EditorFormFields[K]) => {
-      setFormState((prev) => ({ ...prev, [field]: value }));
+      setFormState((prev) => {
+        const next = { ...prev, [field]: value };
+        if (field === "scheduleType" || field === "scheduleValue") {
+          next.scheduleRrule = legacyToTriggerRrule(
+            next.scheduleType,
+            next.scheduleValue,
+          );
+        }
+        return next;
+      });
     },
     [setFormState],
   );
@@ -113,6 +124,7 @@ export function useTaskEditorState(
         };
         if (nextMode === "project" && prev.scheduleType === "seconds_10") {
           next.scheduleType = "hourly";
+          next.scheduleRrule = legacyToTriggerRrule("hourly", next.scheduleValue);
         }
         if (nextMode === "project" && next.projectWaveIntervalSeconds == null) {
           next.projectWaveIntervalSeconds = DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS;

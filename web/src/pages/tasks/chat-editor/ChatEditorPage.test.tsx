@@ -61,6 +61,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   promptTemplate: "",
   scheduleType: "seconds_10",
   scheduleValue: null,
+  scheduleRrule: null,
   analysisMode: "leaderboard",
   analysisTimeRange: "24h",
   channelIds: [],
@@ -203,7 +204,7 @@ describe("ChatEditorPage integration tests", () => {
       expect(container.textContent).toContain("Prompt 模板");
       expect(container.textContent).toContain("排程類型");
       expect(container.textContent).toContain("員工");
-      expect(container.textContent).toContain("循環事件");
+      expect(container.textContent).toContain("選擇員工");
       expect(container.textContent).toContain("技能／能力");
 
       cleanup();
@@ -435,6 +436,7 @@ describe("ChatEditorPage integration tests", () => {
         promptTemplate: "Existing prompt template",
         scheduleType: "daily",
         scheduleValue: "09:00",
+        scheduleRrule: null,
         analysisMode: "event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1", "ch-2"],
@@ -493,6 +495,7 @@ describe("ChatEditorPage integration tests", () => {
         promptTemplate: "Daily prompt",
         scheduleType: "daily",
         scheduleValue: "14:30",
+        scheduleRrule: null,
         analysisMode: "leaderboard",
         analysisTimeRange: "24h",
         channelIds: ["ch-1"],
@@ -544,6 +547,7 @@ describe("ChatEditorPage integration tests", () => {
         promptTemplate: "Some prompt",
         scheduleType: "seconds_10",
         scheduleValue: null,
+        scheduleRrule: null,
         analysisMode: "event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1"],

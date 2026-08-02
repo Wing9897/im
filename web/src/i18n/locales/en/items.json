@@ -64,7 +64,7 @@
   "removeSchemaField": "Remove field",
   "deleteCategory": "Delete",
   "deleteCategoryConfirm": "Items become uncategorized; attributes are kept.",
-  "deleteSeedCategoryConfirm": "Delete built-in “{{name}}”? Items become uncategorized; attributes stay.",
+  "deleteSeedCategoryConfirm": "Delete built-in “{name}”? Items become uncategorized; attributes stay.",
   "deleteItemConfirm": "Delete this item?",
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -413,7 +413,7 @@ uv run python scripts/reset_local_databases.py --apply  # destructive only after
 
 The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v8 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 8** unifies AI timer storage onto `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Stamp 7 added optional `emoji` on trackable item categories/items and remind projections; stamp 6 introduced the trackable-items domain. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
+**Stamp 8** unifies AI timer storage onto `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Trackable items (categories, emoji marks, remind projections) are part of the current stamp-8 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 

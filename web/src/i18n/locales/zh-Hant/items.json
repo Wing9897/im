@@ -64,7 +64,7 @@
   "removeSchemaField": "移除欄位",
   "deleteCategory": "刪除",
   "deleteCategoryConfirm": "刪除後物品變為未分類，擴展欄位保留。",
-  "deleteSeedCategoryConfirm": "刪除預設分類「{{name}}」？下屬物品變為未分類，擴展欄位保留。",
+  "deleteSeedCategoryConfirm": "刪除預設分類「{name}」？下屬物品變為未分類，擴展欄位保留。",
   "deleteItemConfirm": "確定刪除此物品？",
   "errors": {
     "generic": "操作失敗，請稍後再試。",

@@ -32,6 +32,7 @@ import { listUserEvents, type UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
+import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import {
   selectSummaryExpiringItems,
   selectSummaryUserEvents,
@@ -75,23 +76,33 @@ export function WorksetDetailDialog({
 
   useEffect(() => {
     let cancelled = false;
-    setLoadingItems(true);
-    setItemsError(null);
-    void Promise.all([listItems({ worksetId: workset.id }), listItemCategories()])
-      .then(([rows, cats]) => {
-        if (!cancelled) {
-          setItems(rows);
-          setCategories(cats);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setItemsError(formatItemsError(err, tItems));
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingItems(false);
-      });
+    const loadItems = () => {
+      setLoadingItems(true);
+      setItemsError(null);
+      void Promise.all([listItems({ worksetId: workset.id }), listItemCategories()])
+        .then(([rows, cats]) => {
+          if (!cancelled) {
+            setItems(rows);
+            setCategories(cats);
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) setItemsError(formatItemsError(err, tItems));
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingItems(false);
+        });
+    };
+    loadItems();
+    const unsubscribe = subscribeResourceModified((detail) => {
+      if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
+        return;
+      }
+      loadItems();
+    });
     return () => {
       cancelled = true;
+      unsubscribe();
     };
     // tItems is stable under real i18n; omit to avoid mock/re-render loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- workset.id is the load key

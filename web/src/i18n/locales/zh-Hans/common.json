@@ -139,7 +139,7 @@
       "evidenceStyleHelp": "留空则跟随全局证据风格。",
       "nameLabel": "任务名称",
       "namePlaceholder": "输入任务名称",
-      "foundationTitle": "循环事件",
+      "foundationTitle": "选择员工",
       "foundationHint": "任务建立在可重复／可触发的时间排程之上；先选负责的员工，再配置其技能。",
       "staffLabel": "员工",
       "staffGroup": {

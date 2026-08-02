@@ -9,7 +9,10 @@ import { TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY } from "../../domain/tasks/s
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { colorStatusDotStyle } from "../../styles/statusDot";
 import { Badge } from "../../components/ui/Badge";
-import { getTaskFormAnalysisModeMeta } from "../../components/task/taskFormAnalysisModeMeta";
+import {
+  getTaskEmployeeDisplayName,
+  getTaskEmployeeIdForMode,
+} from "../../components/task/taskFormAnalysisModeMeta";
 import { MODE_BADGE_TONE } from "../../components/task/analysisModeBadgeTone";
 import {
   DetailPresentationShell,
@@ -72,7 +75,9 @@ export function TaskDetailView({
     TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY,
     false,
   );
-  const modeMeta = getTaskFormAnalysisModeMeta(task.analysisMode);
+  const employeeName = getTaskEmployeeDisplayName(
+    getTaskEmployeeIdForMode(task.analysisMode),
+  );
   const scheduleOnly = isScheduleOnlyAnalysisMode(task.analysisMode);
   const {
     items: relatedEvents,
@@ -116,7 +121,7 @@ export function TaskDetailView({
         </div>
         <div className={taskDetailBadgesClass}>
           <Badge tone={MODE_BADGE_TONE[task.analysisMode]} className="normal-case tracking-normal">
-            {modeMeta.displayLabel}
+            {employeeName}
           </Badge>
           <span className={taskDetailStatusPillClass}>
             <span

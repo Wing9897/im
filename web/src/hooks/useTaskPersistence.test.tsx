@@ -56,6 +56,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   promptTemplate: "Analyze this",
   scheduleType: "seconds_10",
   scheduleValue: null,
+  scheduleRrule: null,
   analysisMode: "leaderboard",
   analysisTimeRange: "24h",
   channelIds: ["ch-1"],
