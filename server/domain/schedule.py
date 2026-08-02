@@ -2,11 +2,11 @@
 
 Two purposes share RRULE syntax but **never** share consumption paths:
 
-- ``purpose=trigger`` — AI modes (``event`` / ``leaderboard`` / ``project``).
-  Stored on ``analysis_tasks.schedule_rrule``. Consumed **only** by the
-  APScheduler next-run path. Sub-day FREQ (``SECONDLY`` / ``HOURLY``) is
-  allowed. **Never** expanded into calendar occurrences / Board / Timeline
-  month grids.
+- ``purpose=trigger`` — AI modes (``event`` / ``leaderboard`` / ``project`` /
+  ``web_intel``). Stored on ``analysis_tasks.schedule_rrule``. Consumed
+  **only** by the APScheduler next-run path. Sub-day FREQ (``SECONDLY`` /
+  ``HOURLY``) is allowed. **Never** expanded into calendar occurrences /
+  Board / Timeline month grids.
 - ``purpose=calendar`` — ``analysis_mode=recurring`` series on
   ``recurring_schedules.rrule``. Day-grained FREQ only. Expanded at query
   time. **Never** registers an AI timer.
@@ -227,7 +227,7 @@ def trigger_rrule_to_legacy(rule: str | None) -> tuple[str | None, str | None]:
 
 def default_trigger_rrule(analysis_mode: str | None) -> str:
     """Default AI timer when the client omits schedule fields."""
-    if analysis_mode == "project":
+    if analysis_mode in {"project", "web_intel"}:
         return legacy_to_trigger_rrule("hourly", None)
     return legacy_to_trigger_rrule("seconds_10", None)
 

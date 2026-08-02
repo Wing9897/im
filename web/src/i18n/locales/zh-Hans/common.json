@@ -166,6 +166,10 @@
         "name": "关键事件",
         "blurb": "从消息抽取关键事件与行程"
       },
+      "webIntel": {
+        "name": "网络情报",
+        "blurb": "排程网页搜索并抽成情报事件"
+      },
       "leaderboard": {
         "name": "排行榜",
         "blurb": "比较与追踪热门消息排名"
@@ -189,6 +193,17 @@
         "promptLabel": "任务 Task Prompt（告诉 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、会议、截止日；有明确时间填 start_time，有地点填 location",
         "promptHint": "💡 时间与地点无法确定时请省略对应栏位，禁止猜测；可同时出现在情报页与时间规划页"
+      },
+      "web_intel": {
+        "modeOptionLabel": "网络情报 - 网页搜索",
+        "modeDescription": "按排程搜索网页，再抽成情报事件",
+        "promptLabel": "任务 Prompt（如何把搜索结果抽成事件）",
+        "promptPlaceholder": "例：只保留官方公告与监管动态；有明确时间填 start_time，有地点填 location；忽略广告与无关论坛闲聊",
+        "promptHint": "💡 Prompt 描述「从搜索结果抽出哪些事件、如何写 title／body」；搜索查询栏位决定要搜什么",
+        "searchQueryLabel": "搜索查询／关键词",
+        "searchQueryPlaceholder": "例：OpenAI API 定价 更新 OR 监管",
+        "searchQueryHint": "每次排程触发会用此查询做网页搜索；可与上方 Prompt 搭配",
+        "noChannelsHint": "此类型以网页搜索为输入，无需绑定本地消息频道；沿用助手设置中的联网搜索供应商"
       },
       "recurring": {
         "modeOptionLabel": "循环任务（无处理）",
@@ -507,6 +522,7 @@
     "taskEditor": "任务顾问",
     "leaderboard": "排行榜分析员",
     "eventIntel": "关键事件分析员",
+    "webIntel": "网络情报分析员",
     "projectManager": "项目管理助手"
   },
   "ui": {
@@ -1098,7 +1114,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 8／SemVer 0.1.0-beta.9；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 9／SemVer 0.1.0-beta.10；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

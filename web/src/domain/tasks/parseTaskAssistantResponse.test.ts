@@ -11,6 +11,7 @@ function validResponse(overrides?: Record<string, unknown>) {
     taskConfig: {
       name: "熱門話題追蹤",
       promptTemplate: "分析以下訊息的熱門話題",
+      webSearchQuery: "",
       scheduleType: "hourly",
       analysisMode: "leaderboard",
       channelIds: ["ch-1", "ch-2"],

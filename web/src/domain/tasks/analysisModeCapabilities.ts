@@ -9,6 +9,7 @@
 export const ANALYSIS_MODE_ORDER = [
   "leaderboard",
   "event",
+  "web_intel",
   "recurring",
   "project",
 ] as const;
@@ -18,6 +19,7 @@ export type AnalysisMode = (typeof ANALYSIS_MODE_ORDER)[number];
 export type AnalysisPipeline =
   | "message_batch"
   | "project_tick"
+  | "web_intel_tick"
   | "rrule_expand";
 
 export type AnalysisModeCapabilities = {
@@ -42,6 +44,13 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     messageBatch: true,
     timelineOwning: true,
     pipeline: "message_batch",
+  },
+  web_intel: {
+    ai: true,
+    schedulable: true,
+    messageBatch: false,
+    timelineOwning: true,
+    pipeline: "web_intel_tick",
   },
   recurring: {
     ai: false,
@@ -78,6 +87,17 @@ export function analysisModeShowsRruleFields(mode: AnalysisMode): boolean {
 /** Schedule-only buckets hide prompt + channel pickers. */
 export function analysisModeHidesPromptAndChannel(mode: AnalysisMode): boolean {
   return !ANALYSIS_MODE_CAPABILITIES[mode].schedulable;
+}
+
+/** Modes that bind local collector channels as analysis input. */
+export function analysisModeRequiresChannels(mode: AnalysisMode): boolean {
+  const caps = ANALYSIS_MODE_CAPABILITIES[mode];
+  return caps.messageBatch || caps.pipeline === "project_tick";
+}
+
+/** Modes that collect web search queries in L3. */
+export function analysisModeShowsWebSearchQuery(mode: AnalysisMode): boolean {
+  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "web_intel_tick";
 }
 
 export function isTimelineAssignableAnalysisMode(mode: string | null | undefined): boolean {

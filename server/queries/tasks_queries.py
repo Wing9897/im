@@ -170,6 +170,7 @@ async def insert_analysis_task(
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
     workset_id: str | None = None,
+    web_search_query: str = "",
     project_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -186,17 +187,18 @@ async def insert_analysis_task(
 ) -> None:
     await tx.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-        "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
-        "include_in_timeline, workset_id, "
+        "web_search_query, analysis_mode, analysis_time_range, version, is_active, "
+        "schedule_rrule, include_in_timeline, workset_id, "
         "project_wave_interval_seconds, batch_overlap_count, "
         "analysis_trigger_threshold, analysis_batch_message_limit, "
         "analysis_strategy_mode, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
             description,
             prompt_template,
+            web_search_query or "",
             analysis_mode,
             analysis_time_range,
             schedule_rrule,
@@ -252,6 +254,7 @@ async def update_analysis_task(
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
     workset_id: str | None = None,
+    web_search_query: str = "",
     project_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -261,8 +264,8 @@ async def update_analysis_task(
 ) -> None:
     await tx.execute(
         "UPDATE analysis_tasks SET name = ?, description = ?, prompt_template = ?, "
-        "analysis_mode = ?, analysis_time_range = ?, version = ?, schedule_rrule = ?, "
-        "include_in_timeline = ?, workset_id = ?, "
+        "web_search_query = ?, analysis_mode = ?, analysis_time_range = ?, version = ?, "
+        "schedule_rrule = ?, include_in_timeline = ?, workset_id = ?, "
         "project_wave_interval_seconds = ?, batch_overlap_count = ?, "
         "analysis_trigger_threshold = ?, analysis_batch_message_limit = ?, "
         "analysis_strategy_mode = ?, updated_at = ? WHERE id = ?",
@@ -270,6 +273,7 @@ async def update_analysis_task(
             name,
             description,
             prompt_template,
+            web_search_query or "",
             analysis_mode,
             analysis_time_range,
             version,

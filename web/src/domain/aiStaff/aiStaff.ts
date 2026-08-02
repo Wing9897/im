@@ -7,6 +7,7 @@ export type AiStaffId =
   | "taskEditor"
   | "leaderboard"
   | "eventIntel"
+  | "webIntel"
   | "projectManager";
 
 /** Agent = multi-turn tool loop; oneshot = dedicated single-purpose LLM pass / form chat. */
@@ -48,6 +49,12 @@ export const AI_STAFF_ROSTER: readonly AiStaffDefinition[] = [
     accent: "oklch(0.68 0.14 25)",
   },
   {
+    id: "webIntel",
+    kind: "oneshot",
+    surface: "backoffice",
+    accent: "oklch(0.70 0.12 200)",
+  },
+  {
     id: "projectManager",
     kind: "agent",
     surface: "backoffice",
@@ -65,6 +72,7 @@ export function getAiStaff(id: AiStaffId): AiStaffDefinition {
 export function staffIdForAnalysisMode(mode: AnalysisMode): AiStaffId | null {
   if (mode === "leaderboard") return "leaderboard";
   if (mode === "event") return "eventIntel";
+  if (mode === "web_intel") return "webIntel";
   if (mode === "project") return "projectManager";
   return null;
 }

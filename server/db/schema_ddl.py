@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 8 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 9 (single schema source).
 
 ``server.db.migrations`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -126,6 +126,8 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     name                 TEXT NOT NULL,
     description          TEXT,
     prompt_template      TEXT NOT NULL DEFAULT '',
+    -- Web-intel search query / keywords (empty for other modes).
+    web_search_query     TEXT NOT NULL DEFAULT '',
     analysis_mode        TEXT NOT NULL DEFAULT 'leaderboard'
                          {ANALYSIS_MODE_CHECK_SQL},
     analysis_time_range  TEXT NOT NULL DEFAULT 'all'

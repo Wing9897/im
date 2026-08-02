@@ -24,6 +24,7 @@ from server.db.database import Database
 from server.domain.analysis_modes import (
     PARENT_PROJECT_MODE,
     SCHEDULABLE_ANALYSIS_MODES,
+    WEB_INTEL_MODE,
     get_analysis_mode_spec,
 )
 from server.domain.schedule import (
@@ -37,6 +38,7 @@ from server.scheduler.batch import execute_batch
 from server.scheduler.batch_failure import apply_retry_outcome, decide_batch_error_outcome
 from server.scheduler.project_tick import execute_project_tick
 from server.scheduler.retention import retention_timer
+from server.scheduler.web_intel_tick import execute_web_intel_tick
 from server.sse import SseBroadcaster
 from server.util import utc_now_iso
 
@@ -100,28 +102,28 @@ class SchedulerManager:
         """
         now = utc_now_iso()
 
-        # Project fires left mid-drain: close as completed(error). Cursor already
-        # advanced per successful wave; next schedule continues from there.
-        project_orphans = await self._db.fetch_all(
-            "SELECT b.id, b.message_count FROM analysis_batches b "
+        # Project / web_intel fires left mid-run: close as completed(error).
+        # These modes have no marker-claim retry path.
+        tick_orphans = await self._db.fetch_all(
+            "SELECT b.id, b.message_count, t.analysis_mode FROM analysis_batches b "
             "JOIN analysis_tasks t ON t.id = b.task_id "
-            "WHERE b.status = 'processing' AND t.analysis_mode = ?",
-            (PARENT_PROJECT_MODE,),
+            "WHERE b.status = 'processing' AND t.analysis_mode IN (?, ?)",
+            (PARENT_PROJECT_MODE, WEB_INTEL_MODE),
         )
-        for row in project_orphans:
+        for row in tick_orphans:
             await complete_project_batch(
                 self._db,
                 str(row["id"]),
                 error_message="interrupted: process restart",
                 message_count=int(row["message_count"] or 0),
             )
-        if project_orphans:
+        if tick_orphans:
             logger.info(
-                "Closed %d interrupted project-tick batch(es) on recovery",
-                len(project_orphans),
+                "Closed %d interrupted tick batch(es) on recovery",
+                len(tick_orphans),
             )
 
-        # Non-project crash recovery — everything left in 'processing' → 'pending'.
+        # Marker-batch crash recovery — everything left in 'processing' → 'pending'.
         await self._db.execute(
             "UPDATE analysis_batches SET status = 'pending', updated_at = ? WHERE status = 'processing'",
             (now,),
@@ -142,9 +144,9 @@ class SchedulerManager:
                 "FROM analysis_batches b "
                 "JOIN analysis_tasks t ON t.id = b.task_id "
                 "WHERE b.status = 'pending' "
-                "AND t.analysis_mode != ? "
+                "AND t.analysis_mode NOT IN (?, ?) "
                 "AND datetime(b.updated_at) < datetime('now', ?)",
-                (PARENT_PROJECT_MODE, f"-{stall_seconds} seconds"),
+                (PARENT_PROJECT_MODE, WEB_INTEL_MODE, f"-{stall_seconds} seconds"),
             )
             for row in stalled:
                 batch_id = str(row["id"])
@@ -292,6 +294,13 @@ class SchedulerManager:
             spec = get_analysis_mode_spec(mode)
             if spec is not None and spec.pipeline == "project_tick":
                 await execute_project_tick(
+                    db=self._db,
+                    broadcaster=self._broadcaster,
+                    task_id=task_id,
+                    analysis_paused=self._paused,
+                )
+            elif spec is not None and spec.pipeline == "web_intel_tick":
+                await execute_web_intel_tick(
                     db=self._db,
                     broadcaster=self._broadcaster,
                     task_id=task_id,

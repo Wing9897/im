@@ -9,6 +9,7 @@ import type { AiStaffId } from "../aiStaff/aiStaff";
 export type TaskEmployeeId =
   | "scheduleClerk"
   | "eventIntel"
+  | "webIntel"
   | "leaderboard"
   | "projectManager";
 
@@ -16,6 +17,7 @@ export type TaskEmployeeId =
 export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
   "scheduleClerk",
   "eventIntel",
+  "webIntel",
   "leaderboard",
   "projectManager",
 ] as const;
@@ -23,6 +25,7 @@ export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
 const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
   scheduleClerk: "recurring",
   eventIntel: "event",
+  webIntel: "web_intel",
   leaderboard: "leaderboard",
   projectManager: "project",
 };
@@ -30,6 +33,7 @@ const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
 const EMPLOYEE_BY_MODE: Record<AnalysisMode, TaskEmployeeId> = {
   recurring: "scheduleClerk",
   event: "eventIntel",
+  web_intel: "webIntel",
   leaderboard: "leaderboard",
   project: "projectManager",
 };

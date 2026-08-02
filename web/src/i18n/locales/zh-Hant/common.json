@@ -166,6 +166,10 @@
         "name": "關鍵事件",
         "blurb": "從訊息抽取關鍵事件與行程"
       },
+      "webIntel": {
+        "name": "網路情報",
+        "blurb": "排程網頁搜尋並抽成情報事件"
+      },
       "leaderboard": {
         "name": "排行榜",
         "blurb": "比較與追蹤熱門訊息排名"
@@ -189,6 +193,17 @@
         "promptLabel": "任務 Task Prompt（告訴 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、會議、截止日；有明確時間填 start_time，有地點填 location",
         "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
+      },
+      "web_intel": {
+        "modeOptionLabel": "網路情報 - 網頁搜尋",
+        "modeDescription": "依排程搜尋網頁，再抽成情報事件",
+        "promptLabel": "任務 Prompt（如何把搜尋結果抽成事件）",
+        "promptPlaceholder": "例：只保留官方公告與監管動態；有明確時間填 start_time，有地點填 location；忽略廣告與無關論壇閒聊",
+        "promptHint": "💡 Prompt 描述「從搜尋結果抽出哪些事件、如何寫 title／body」；搜尋查詢欄位決定要搜什麼",
+        "searchQueryLabel": "搜尋查詢／關鍵詞",
+        "searchQueryPlaceholder": "例：OpenAI API 定價 更新 OR 監管",
+        "searchQueryHint": "每次排程觸發會用此查詢做網頁搜尋；可與上方 Prompt 搭配",
+        "noChannelsHint": "此類型以網頁搜尋為輸入，無需綁定本地訊息頻道；沿用助手設定中的聯網搜尋供應商"
       },
       "recurring": {
         "modeOptionLabel": "循環任務（無處理）",
@@ -507,6 +522,7 @@
     "taskEditor": "任務顧問",
     "leaderboard": "排行榜分析員",
     "eventIntel": "關鍵事件分析員",
+    "webIntel": "網路情報分析員",
     "projectManager": "專案管理助手"
   },
   "ui": {
@@ -1098,7 +1114,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 8／SemVer 0.1.0-beta.9；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 9／SemVer 0.1.0-beta.10；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

@@ -276,15 +276,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v8**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.9`）——統一 AI 排程為 `schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-8 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v9**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.10`）——含 `web_intel` 任務類型、`schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-9 庫。
 
-**Wipe-only：** v1–v7 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v8 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v8 explicit reset](docs/ARCHITECTURE.md#schema-v8-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v9 explicit reset](docs/ARCHITECTURE.md#schema-v9-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 

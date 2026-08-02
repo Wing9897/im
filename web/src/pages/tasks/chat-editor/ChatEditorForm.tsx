@@ -4,11 +4,15 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
-import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
+import { CollapsePanel, FormGrid, SettingsRow, SurfaceCard, TextField } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import { ChatCalendarFields } from "./ChatCalendarFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
+import {
+  analysisModeRequiresChannels,
+  analysisModeShowsWebSearchQuery,
+} from "../../../domain/tasks/analysisModeCapabilities";
 import { ScheduleInput } from "../ScheduleInput";
 import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
@@ -35,7 +39,14 @@ export function ChatEditorForm({
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
   const isRecurringMode = Boolean(modeMeta.isRecurringMode);
   const hidePromptAndChannel = Boolean(modeMeta.hidesPromptAndChannel);
+  const showChannels = !hidePromptAndChannel && analysisModeRequiresChannels(formState.analysisMode);
+  const showWebSearchQuery = analysisModeShowsWebSearchQuery(formState.analysisMode);
   const isProjectMode = formState.analysisMode === "project";
+  const showTimelineToggle =
+    formState.analysisMode === "event" ||
+    formState.analysisMode === "project" ||
+    formState.analysisMode === "web_intel";
+  const showAnalysisTimeRange = !hidePromptAndChannel && !showWebSearchQuery;
   const [optionalOpen, setOptionalOpen] = useState(true);
 
   const projectWaveIntervalSeconds = String(
@@ -65,7 +76,7 @@ export function ChatEditorForm({
               updateField("analysisMode", v);
               // Do not remap placeholder seconds_10 when wire RRULE is unmapped/read-only.
               if (
-                v === "project" &&
+                (v === "project" || v === "web_intel") &&
                 formState.scheduleType === "seconds_10" &&
                 !isUnmappedTriggerSchedule(
                   formState.scheduleType,
@@ -113,6 +124,9 @@ export function ChatEditorForm({
                 promptTemplate={formState.promptTemplate}
                 onDescriptionChange={(v) => updateField("description", v)}
                 onPromptTemplateChange={(v) => updateField("promptTemplate", v)}
+                promptLabel={modeMeta.promptLabel}
+                promptPlaceholder={modeMeta.promptPlaceholder}
+                promptHint={modeMeta.promptHint}
                 scheduleSlot={
                   <ScheduleInput
                     scheduleType={formState.scheduleType}
@@ -155,15 +169,43 @@ export function ChatEditorForm({
                     }}
                   />
                 }
+                webSearchQuerySlot={
+                  showWebSearchQuery ? (
+                    <div className="md:col-span-2">
+                      <SettingsRow
+                        label={t("tasks.modes.web_intel.searchQueryLabel")}
+                        htmlFor="chat-web-search-query"
+                      >
+                        <TextField
+                          id="chat-web-search-query"
+                          type="text"
+                          placeholder={t("tasks.modes.web_intel.searchQueryPlaceholder")}
+                          value={formState.webSearchQuery}
+                          onChange={(e) => updateField("webSearchQuery", e.target.value)}
+                          data-testid="task-web-search-query"
+                        />
+                        <p className={`mt-xs mb-0 ${formHelpClass}`}>
+                          {t("tasks.modes.web_intel.searchQueryHint")}
+                        </p>
+                      </SettingsRow>
+                    </div>
+                  ) : null
+                }
               />
 
-              <div className="md:col-span-2">
-                <ChatChannelSelector
-                  channelIds={formState.channelIds}
-                  channels={channels}
-                  onOpenChannelDialog={onOpenChannelDialog}
-                />
-              </div>
+              {showChannels ? (
+                <div className="md:col-span-2">
+                  <ChatChannelSelector
+                    channelIds={formState.channelIds}
+                    channels={channels}
+                    onOpenChannelDialog={onOpenChannelDialog}
+                  />
+                </div>
+              ) : showWebSearchQuery ? (
+                <p className={`m-0 text-caption text-text-muted md:col-span-2`}>
+                  {t("tasks.modes.web_intel.noChannelsHint")}
+                </p>
+              ) : null}
             </>
           )}
         </FormGrid>
@@ -177,12 +219,16 @@ export function ChatEditorForm({
             onToggle={() => setOptionalOpen((v) => !v)}
           >
             <FormGrid className="gap-lg">
-              <ChatAnalysisFields
-                analysisTimeRange={formState.analysisTimeRange}
-                onAnalysisTimeRangeChange={(v) => updateField("analysisTimeRange", v)}
-              />
+              {showAnalysisTimeRange ? (
+                <ChatAnalysisFields
+                  analysisTimeRange={formState.analysisTimeRange}
+                  onAnalysisTimeRangeChange={(v) => updateField("analysisTimeRange", v)}
+                />
+              ) : (
+                <div className="hidden md:block" aria-hidden="true" />
+              )}
 
-              {formState.analysisMode === "event" || formState.analysisMode === "project" ? (
+              {showTimelineToggle ? (
                 <label className="flex items-start gap-sm">
                   <input
                     type="checkbox"

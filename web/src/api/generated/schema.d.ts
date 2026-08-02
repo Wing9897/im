@@ -3657,8 +3657,10 @@ export interface components {
              * @default
              */
             promptTemplate: string;
+            /** Websearchquery */
+            webSearchQuery?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "event" | "web_intel" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3718,6 +3720,8 @@ export interface components {
             description?: string | null;
             /** Prompttemplate */
             promptTemplate?: string | null;
+            /** Websearchquery */
+            webSearchQuery?: string | null;
             /** Scheduletype */
             scheduleType?: string | null;
             /** Schedulevalue */
@@ -3725,7 +3729,7 @@ export interface components {
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "event" | "web_intel" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3749,10 +3753,15 @@ export interface components {
              */
             promptTemplate: string;
             /**
+             * Websearchquery
+             * @default
+             */
+            webSearchQuery: string;
+            /**
              * Analysismode
              * @enum {string}
              */
-            analysisMode: "leaderboard" | "event" | "recurring" | "project";
+            analysisMode: "leaderboard" | "event" | "web_intel" | "recurring" | "project";
             /** Analysistimerange */
             analysisTimeRange: string;
             /** Version */

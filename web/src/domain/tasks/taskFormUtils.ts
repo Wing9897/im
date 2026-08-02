@@ -9,6 +9,7 @@ import type {
 } from "../../types";
 import {
   analysisModeHidesPromptAndChannel,
+  analysisModeRequiresChannels,
   analysisModeShowsRruleFields,
 } from "./analysisModeCapabilities";
 import { legacyToTriggerRrule, triggerRruleToLegacy } from "./triggerSchedule";
@@ -59,6 +60,7 @@ export function applyConfigToFormState(
   if (config.name !== undefined) updated.name = config.name;
   if (config.description !== undefined) updated.description = config.description;
   if (config.promptTemplate !== undefined) updated.promptTemplate = config.promptTemplate;
+  if (config.webSearchQuery !== undefined) updated.webSearchQuery = config.webSearchQuery;
   if (config.scheduleType !== undefined) updated.scheduleType = config.scheduleType;
   if (config.scheduleValue !== undefined) updated.scheduleValue = config.scheduleValue;
   if (
@@ -149,9 +151,13 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
   return {
     ...commonConfig,
     promptTemplate: formState.promptTemplate,
+    webSearchQuery:
+      formState.analysisMode === "web_intel" ? formState.webSearchQuery.trim() : "",
     analysisTimeRange: formState.analysisTimeRange,
-    channelIds: formState.channelIds,
-    ...(formState.analysisMode === "event" || formState.analysisMode === "project"
+    channelIds: formState.analysisMode === "web_intel" ? [] : formState.channelIds,
+    ...(formState.analysisMode === "event" ||
+    formState.analysisMode === "project" ||
+    formState.analysisMode === "web_intel"
       ? { includeInTimeline: formState.includeInTimeline }
       : {}),
     ...(formState.analysisMode === "project"
@@ -229,6 +235,7 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
     name: task.name,
     description: task.description ?? "",
     promptTemplate: task.promptTemplate,
+    webSearchQuery: task.webSearchQuery ?? "",
     scheduleType: schedule.scheduleType,
     scheduleValue: schedule.scheduleValue,
     scheduleRrule: schedule.scheduleRrule,
@@ -276,6 +283,7 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     name: config.name,
     description: config.description ?? null,
     promptTemplate: config.promptTemplate,
+    webSearchQuery: config.webSearchQuery ?? "",
     analysisMode: config.analysisMode ?? "leaderboard",
     analysisTimeRange: config.analysisTimeRange ?? "24h",
     version: 1,
@@ -315,6 +323,7 @@ export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayl
     name: formState.name,
     description: formState.description,
     promptTemplate: formState.promptTemplate,
+    webSearchQuery: formState.webSearchQuery,
     scheduleRrule,
     scheduleType: formState.scheduleType,
     scheduleValue: formState.scheduleValue,
@@ -337,6 +346,6 @@ export function getTaskModeFieldVisibility(mode: AnalysisMode): TaskModeFieldVis
   return {
     rruleFieldsVisible: analysisModeShowsRruleFields(mode),
     promptFieldsVisible: !hidesPromptAndChannel,
-    channelFieldsVisible: !hidesPromptAndChannel,
+    channelFieldsVisible: !hidesPromptAndChannel && analysisModeRequiresChannels(mode),
   };
 }
