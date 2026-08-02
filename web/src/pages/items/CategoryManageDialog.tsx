@@ -19,7 +19,9 @@ import {
   type ItemFieldSchemaEntry,
 } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
+import { resolveCategoryEmoji } from "../../domain/items/itemCalendarProjection";
 import { formatItemsError } from "../../domain/items/itemErrors";
+import { ItemEmojiMark } from "./ItemEmojiMark";
 
 type Props = {
   categories: ItemCategory[];
@@ -147,17 +149,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
               onClick={() => startEdit(cat)}
               disabled={busy}
             >
-              {cat.emoji?.trim() ? (
-                <span className="shrink-0 text-body" aria-hidden>
-                  {cat.emoji.trim()}
-                </span>
-              ) : (
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-full border border-surface-border"
-                  style={{ backgroundColor: cat.color?.trim() || "var(--text-muted)" }}
-                  aria-hidden
-                />
-              )}
+              <ItemEmojiMark emoji={resolveCategoryEmoji(cat)} />
               <span className="truncate">
                 {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
               </span>

@@ -1376,8 +1376,6 @@
     "openItems": "Go to items",
     "addItem": "Add item",
     "addEvent": "Add event",
-    "itemNoExpiry": "No expiry",
-    "itemOverdue": "{count}d overdue",
     "openTaskAria": "Open task {name}",
     "openEventAria": "Open event {name}",
     "eventAllDay": "All day",

@@ -6,7 +6,7 @@ import { ToggleSwitch } from "./ToggleSwitch";
 import { AccentBarCard, Badge } from "./ui";
 import { cardTitleClass } from "./ui/pageTypography";
 import { getTaskFormAnalysisModeMeta } from "./task/taskFormAnalysisModeMeta";
-import { MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
+import { MODE_ACCENT_CLASS, MODE_BADGE_TONE } from "./task/analysisModeBadgeTone";
 import { AiStaffAvatar } from "./aiStaff/AiStaffAvatar";
 import { staffIdForAnalysisMode } from "../domain/aiStaff/aiStaff";
 import { useWorksetNameById } from "../context/TaskCatalogContext";
@@ -15,7 +15,6 @@ import {
   stopSelectableActivation,
 } from "./detail/SelectableSurface";
 import { colorStatusDotStyle } from "../styles/statusDot";
-import type { AnalysisMode } from "../types/common";
 import type { AnalysisTask } from "../types/tasks";
 import type { TaskCardStats } from "../types/dashboard";
 
@@ -30,13 +29,6 @@ export interface TaskCardProps {
   onSelect?: () => void;
   isSelected?: boolean;
 }
-
-const MODE_BAR_CLASS: Record<AnalysisMode, string> = {
-  leaderboard: "bg-accent",
-  event: "bg-info",
-  recurring: "bg-success",
-  project: "bg-warning",
-};
 
 const actionIconBtnClass =
   "im-icon-btn !h-7 !w-7 !rounded-md text-text-secondary transition-colors";
@@ -100,7 +92,7 @@ export const TaskCard = React.memo(function TaskCard({
       data-testid={`task-card-${task.id}`}
     >
       <AccentBarCard
-        accentClass={MODE_BAR_CLASS[task.analysisMode]}
+        accentClass={MODE_ACCENT_CLASS[task.analysisMode]}
         interactive
         enter="rise"
         className={

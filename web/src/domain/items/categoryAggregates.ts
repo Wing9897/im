@@ -4,7 +4,7 @@
  */
 
 import type { ItemCategory, TrackableItem } from "../../api/items";
-import { daysUntil } from "./itemAttributes";
+import { daysUntil, expiryTone } from "./itemAttributes";
 
 /** URL / route sentinel for items with null category_id. */
 export const UNCATEGORIZED_CATEGORY_ID = "uncategorized";
@@ -30,18 +30,15 @@ export function resolveCategoryRouteId(categoryId: string | null | undefined): s
   return categoryId;
 }
 
-/** Whether an active item is inside its remind window (matches list filter). */
+/** Whether an active item is inside its remind window (matches list filter / expiryTone). */
 export function isItemExpiringSoon(item: TrackableItem): boolean {
   if (item.status === "archived") return false;
-  const days = daysUntil(item.expiresAt);
-  const remind = item.remindBeforeDays ?? 7;
-  return days != null && days >= 0 && days <= remind;
+  return expiryTone(daysUntil(item.expiresAt), item.remindBeforeDays) === "soon";
 }
 
 export function isItemOverdue(item: TrackableItem): boolean {
   if (item.status === "archived") return false;
-  const days = daysUntil(item.expiresAt);
-  return days != null && days < 0;
+  return expiryTone(daysUntil(item.expiresAt), item.remindBeforeDays) === "overdue";
 }
 
 /**

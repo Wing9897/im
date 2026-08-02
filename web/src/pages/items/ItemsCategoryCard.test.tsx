@@ -104,4 +104,53 @@ describe("ItemsCategoryCard", () => {
 
     expect(container.textContent).toContain("📦");
   });
+
+  it("uses distinct all-types emoji (not clipboard / package)", () => {
+    const summary: CategorySummary = {
+      id: "all",
+      category: null,
+      itemCount: 3,
+      expiringCount: 0,
+      overdueCount: 0,
+    };
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <ItemsCategoryCard summary={summary} title="All types" onOpen={vi.fn()} />,
+      );
+    });
+
+    expect(container.textContent).toContain("🗂️");
+    expect(container.textContent).not.toContain("📋");
+  });
+
+  it("overlays legacy insurance seed emoji", () => {
+    const summary: CategorySummary = {
+      id: "seed_insurance",
+      category: {
+        id: "seed_insurance",
+        name: "Insurance",
+        slug: "insurance",
+        sortOrder: 75,
+        color: "#0EA5E9",
+        emoji: "📋",
+        fieldSchema: [],
+        defaultRemindBeforeDays: 30,
+        createdAt: null,
+        updatedAt: null,
+      },
+      itemCount: 1,
+      expiringCount: 0,
+      overdueCount: 0,
+    };
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<ItemsCategoryCard summary={summary} onOpen={vi.fn()} />);
+    });
+
+    expect(container.textContent).toContain("☂️");
+    expect(container.textContent).not.toContain("📋");
+  });
 });

@@ -1,8 +1,4 @@
 {
-  "title": "物品",
-  "subtitle": "依工作集追蹤證件、食物、信用卡等到期日",
-  "typesSubtitle": "先選類型，再看該類型下的物品。可自訂增刪改類型。",
-  "listSubtitle": "此類型下的物品；可用篩選查看即將到期或已封存。",
   "allCategories": "全部類型",
   "backToCategories": "返回類型",
   "openCategoryAria": "開啟類型 {name}",

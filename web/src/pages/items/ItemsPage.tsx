@@ -13,7 +13,6 @@ import {
   PanelSection,
   TextField,
   captionClass,
-  pageTitleClass,
 } from "../../components/ui";
 import {
   createItem,
@@ -236,16 +235,6 @@ export function ItemsPage() {
     filteredCount: filtered.length,
   });
 
-  const listTitle = useMemo(() => {
-    if (!categoryRouteId || categoryRouteId === ALL_CATEGORIES_ID) {
-      return t("allCategories");
-    }
-    if (categoryRouteId === UNCATEGORIZED_CATEGORY_ID) {
-      return t("noCategory");
-    }
-    return categoryLabel(categoryById.get(categoryRouteId), t);
-  }, [categoryRouteId, categoryById, t]);
-
   const clearFilters = () => {
     setFilter("all");
     setSearch("");
@@ -291,7 +280,7 @@ export function ItemsPage() {
       actions={
         <div className="flex flex-wrap items-center gap-sm">
           <Button variant="secondary" size="sm" onClick={() => setManageCategories(true)}>
-            <Tags size={14} aria-hidden />
+            <Tags size={14} strokeWidth={2} aria-hidden />
             {t("manageCategories")}
           </Button>
           <Button
@@ -307,34 +296,6 @@ export function ItemsPage() {
         </div>
       }
     >
-      <div className="mb-md flex items-start gap-sm">
-        <Package className="mt-0.5 shrink-0 text-accent" size={18} aria-hidden />
-        <div className="min-w-0 flex-1">
-          {listLayer ? (
-            <>
-              <div className="mb-xs flex flex-wrap items-center gap-sm">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate("/items")}
-                  aria-label={t("backToCategories")}
-                >
-                  <ArrowLeft size={14} aria-hidden />
-                  {t("backToCategories")}
-                </Button>
-              </div>
-              <h1 className={pageTitleClass}>{listTitle}</h1>
-              <p className={`${captionClass} mt-xs`}>{t("listSubtitle")}</p>
-            </>
-          ) : (
-            <>
-              <h1 className={pageTitleClass}>{t("title")}</h1>
-              <p className={`${captionClass} mt-xs`}>{t("typesSubtitle")}</p>
-            </>
-          )}
-        </div>
-      </div>
-
       {error ? (
         <AlertBanner variant="error" role="alert">
           {error}
@@ -388,13 +349,15 @@ export function ItemsPage() {
             ariaLabel={t("filterBarAria")}
             className="mb-md flex-wrap"
           >
-            <FilterChip
+            <Button
+              variant="ghost"
               size="sm"
-              active={false}
               onClick={() => navigate("/items")}
+              aria-label={t("backToCategories")}
             >
-              {t("allCategories")}
-            </FilterChip>
+              <ArrowLeft size={14} strokeWidth={2} aria-hidden />
+              {t("backToCategories")}
+            </Button>
             {(
               [
                 ["all", "filterAll"],

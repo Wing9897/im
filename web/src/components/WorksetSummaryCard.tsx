@@ -1,7 +1,9 @@
 /**
  * Compact ownership workset card for the dashboard「工作集」grouping view.
+ * Worksets are ownership containers — Lucide mark (not emoji brand).
  */
 
+import { Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AccentBarCard, Badge, Button } from "./ui";
 import { cardBodyClass, cardTitleClass } from "./ui/pageTypography";
@@ -53,8 +55,16 @@ export function WorksetSummaryCard({
       aria-label={t("workset.openDetailAria", { name: title })}
     >
       <div className="flex items-start justify-between gap-sm">
-        <span className={`min-w-0 flex-1 truncate ${cardTitleClass}`} title={title}>
-          {title}
+        <span className={`flex min-w-0 flex-1 items-center gap-xs ${cardTitleClass}`}>
+          <Layers
+            size={16}
+            strokeWidth={2}
+            className="shrink-0 text-text-secondary"
+            aria-hidden
+          />
+          <span className="min-w-0 truncate" title={title}>
+            {title}
+          </span>
         </span>
         {isSystem ? (
           <Badge tone="info">{t("workset.systemBadge")}</Badge>

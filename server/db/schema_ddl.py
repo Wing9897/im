@@ -504,7 +504,7 @@ INSERT OR IGNORE INTO item_categories (
     14, '1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z'
 ),
 (
-    'seed_insurance', '保險', 'insurance', 75, '#0EA5E9', '📋',
+    'seed_insurance', '保險', 'insurance', 75, '#0EA5E9', '☂️',
     '[{{"key":"insurer","label":"保險公司"}},{{"key":"policy_number","label":"保單號碼"}}]',
     30, '1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z'
 ),
