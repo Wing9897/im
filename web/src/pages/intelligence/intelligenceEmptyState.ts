@@ -6,6 +6,7 @@ interface IntelligenceEmptyFilters {
   hasActiveFilters: boolean;
   hasSearchFilter: boolean;
   hasTimeFilter: boolean;
+  hasSourceFilter: boolean;
 }
 
 export interface IntelligenceEmptyCopy {
@@ -23,23 +24,42 @@ function intelligenceT(key: string, t?: Translate): string {
   return String(i18n.t(`intelligence:${key}`));
 }
 
+function filteredEmptyKeys(filters: IntelligenceEmptyFilters): {
+  titleKey: string;
+  descriptionKey: string;
+} {
+  const { hasSearchFilter, hasTimeFilter, hasSourceFilter } = filters;
+  const activeCount =
+    Number(hasSearchFilter) + Number(hasTimeFilter) + Number(hasSourceFilter);
+
+  if (activeCount >= 2) {
+    return {
+      titleKey: "empty.filteredBothTitle",
+      descriptionKey: "empty.filteredBothDescription",
+    };
+  }
+  if (hasSearchFilter) {
+    return {
+      titleKey: "empty.filteredSearchTitle",
+      descriptionKey: "empty.filteredSearchDescription",
+    };
+  }
+  if (hasTimeFilter) {
+    return {
+      titleKey: "empty.filteredTimeTitle",
+      descriptionKey: "empty.filteredTimeDescription",
+    };
+  }
+  return {
+    titleKey: "empty.filteredSourceTitle",
+    descriptionKey: "empty.filteredSourceDescription",
+  };
+}
+
 export function getIntelligenceEmptyCopy(
   filters: IntelligenceEmptyFilters,
   t?: Translate,
 ): IntelligenceEmptyCopy {
-  const filteredTitle =
-    filters.hasSearchFilter && filters.hasTimeFilter
-      ? intelligenceT("empty.filteredBothTitle", t)
-      : filters.hasSearchFilter
-        ? intelligenceT("empty.filteredSearchTitle", t)
-        : intelligenceT("empty.filteredTimeTitle", t);
-  const filteredDescription =
-    filters.hasSearchFilter && filters.hasTimeFilter
-      ? intelligenceT("empty.filteredBothDescription", t)
-      : filters.hasSearchFilter
-        ? intelligenceT("empty.filteredSearchDescription", t)
-        : intelligenceT("empty.filteredTimeDescription", t);
-
   if (filters.intelligenceTasksCount === 0) {
     return {
       title: intelligenceT("empty.noTasksTitle", t),
@@ -51,9 +71,10 @@ export function getIntelligenceEmptyCopy(
   }
 
   if (filters.hasActiveFilters) {
+    const keys = filteredEmptyKeys(filters);
     return {
-      title: filteredTitle,
-      description: filteredDescription,
+      title: intelligenceT(keys.titleKey, t),
+      description: intelligenceT(keys.descriptionKey, t),
       hint: intelligenceT("empty.filteredHint", t),
       showClearFilters: true,
       showGoToTasks: false,

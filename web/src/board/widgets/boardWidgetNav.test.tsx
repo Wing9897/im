@@ -142,6 +142,24 @@ vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock(),
 );
 
+vi.mock("../../context/AnalysisStatusContext", () => ({
+  useAnalysisStatus: () => ({
+    queueStatus: {
+      pendingCount: 0,
+      processingBatches: [],
+      attentionBatches: [],
+      analysisPaused: false,
+    },
+    analysisPaused: false,
+    activeAnalysis: null,
+    activeAnalyses: new Map(),
+    lastAnalysisEvent: null,
+    lastAccountStatusChange: null,
+    lastMessagesUpdate: null,
+    requestQueueStatusRefresh: vi.fn(),
+  }),
+}));
+
 vi.mock("../../api/channels", () => ({
   listChannelsWithAccounts: vi.fn(async () => [
     {

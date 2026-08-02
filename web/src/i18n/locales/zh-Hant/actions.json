@@ -139,6 +139,7 @@
     },
     "preview": "試播",
     "previewing": "試播中…",
+    "previewFailed": "試播失敗，請檢查瀏覽器語音或系統音量。",
     "previewAria": "試播語音提醒",
     "apply": "確定套用",
     "cancel": "取消",

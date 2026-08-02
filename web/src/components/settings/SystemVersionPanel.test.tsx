@@ -26,6 +26,8 @@ describe("SystemVersionPanel", () => {
       secretsReady: true,
       schemaVersion: 8,
       schemaSemver: SCHEMA_SEMVER,
+      bindHost: "127.0.0.1",
+      lanAccessEnabled: false,
     });
   });
 

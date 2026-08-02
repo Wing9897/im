@@ -72,6 +72,10 @@ vi.mock("./useBoardWidgetPoll", () => ({
   useBoardWidgetPoll: mocks.poll,
 }));
 
+vi.mock("../hooks/useRefreshOnAnalysisEvent", () => ({
+  useRefreshOnAnalysisEvent: vi.fn(),
+}));
+
 const fetchedEvents = [
   {
     id: "user-event",

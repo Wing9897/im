@@ -30,7 +30,7 @@ const intelligencePageClass = "im-intelligence-page";
 export function IntelligencePage() {
   const { t } = useTranslation("intelligence");
   const feed = useIntelligenceFeed();
-  const { worksets, tasks } = useTaskCatalog();
+  const { worksets } = useTaskCatalog();
   const { showToast } = useToast();
   useErrorToast(feed.pageError);
   useSlashFocusSearch(!feed.loading);
@@ -115,7 +115,7 @@ export function IntelligencePage() {
         setSelectedSources={feed.setSelectedSources}
         intelligenceTasks={feed.intelligenceTasks}
         worksets={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
-        expandTasks={tasks.map((task) => ({
+        expandTasks={feed.intelligenceTasks.map((task) => ({
           id: task.id,
           name: task.name,
           worksetId: task.worksetId ?? null,

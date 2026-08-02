@@ -8,6 +8,7 @@ import {
   formHelpClass,
 } from "../../components/ui";
 import { WorksetTargetSelect } from "../../components/assistant/WorksetTargetSelect";
+import { useToast } from "../../context/ToastContext";
 import { isAssistantDirectModeSupported } from "../../domain/assistant/directModeSupport";
 import {
   createSpeechPorts,
@@ -33,6 +34,7 @@ import { SettingsContentCard, SettingsFieldGroup } from "../settings/SettingsSha
  */
 export function SettingsVoicePage() {
   const { t } = useTranslation(["settings", "common"]);
+  const toast = useToast();
   const [settings, setSettings] = useState<VoiceSettings>(() => loadVoiceSettings());
   const [previewing, setPreviewing] = useState(false);
   const voicePttSupported = isAssistantDirectModeSupported();
@@ -82,7 +84,9 @@ export function SettingsVoicePage() {
     const { tts } = createSpeechPorts({ ttsProvider: settings.ttsProvider });
     void tts
       .speak(String(t("voice.ttsPreviewSample")), ttsSpeakOptionsFromVoiceSettings(settings))
-      .catch(() => {})
+      .catch(() => {
+        toast?.showToast(t("voice.ttsPreviewFailed"), "error");
+      })
       .finally(() => setPreviewing(false));
   };
 

@@ -55,7 +55,7 @@
     "appVersionLabel": "應用版本",
     "appVersionHelp": "前後端共用 semver，來源為專案根目錄 VERSION；dev 模式前綴 DEV。",
     "databaseVersionLabel": "資料庫 Schema",
-    "databaseVersionHelp": "公開 schema SemVer（與應用版本同形）。內部 SQLite stamp 仍為整數，供遷移算術使用。",
+    "databaseVersionHelp": "公開 schema SemVer（與應用版本同形）。內部 SQLite stamp 為整數 wipe-only 基線；不符目前 stamp 須重置資料庫（無遷移升級路徑）。",
     "databaseVersionCurrent": "v{version}",
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
@@ -271,6 +271,7 @@
     "ttsVoiceKindRemote": "線上",
     "ttsPreview": "試聽",
     "ttsPreviewing": "播放中…",
+    "ttsPreviewFailed": "試聽失敗，請檢查瀏覽器語音或系統音量。",
     "ttsPreviewSample": "這是語音試聽，你好。",
     "defaultWorksetLabel": "預設歸屬工作集",
     "defaultWorksetHelp": "助手寫入日程的預設工作集（完整頁、系統欄對話、空格鍵語音共用）。預設為內建「一般」。"
@@ -374,7 +375,7 @@
   },
   "staff": {
     "title": "AI 員工介紹",
-    "intro": "系統裡有四位 AI 員工：兩位前線對話，兩位後勤分析訊息。另有一位「客戶經理」負責接待外部系統（與助手同組，不跟你聊天）。",
+    "intro": "系統裡有五位 AI 員工：兩位前線對話，三位後勤（排行榜／關鍵事件／專案管理員）。另有一位「客戶經理」負責接待外部系統（與助手同組，不跟你聊天）。",
     "capabilitiesLabel": "能做什麼",
     "backofficeNote": "後勤員工由分析任務自動召喚，不會出現在對話框。",
     "openAssistant": "開啟助手對話",
@@ -414,7 +415,7 @@
         "用自然語言回答本機情報與行程問題",
         "搜尋已採集的訊息",
         "查詢／建立／修改／刪除用戶事件（單次日程）",
-        "建立／修改／刪除循環行程（recurring 模式 RRULE 任務）",
+        "建立／修改／刪除循環行程（循環日程員工的 RRULE 任務）",
         "在設定允許時可上網搜尋補充資訊",
         "支援助手彈窗與完整助手頁；可搭配語音輸入／朗讀"
       ]
@@ -423,7 +424,7 @@
       "summary": "在新增或編輯分析任務時陪你對話，幫你填好左側表單（不是 Agent）。",
       "capabilities": [
         "聽你描述要監控什麼，建議任務名稱與說明",
-        "建議分析模式（排行榜／關鍵事件／循環任務／日曆任務）與 Prompt 方向",
+        "建議負責員工（排行榜／關鍵事件／循環日程員工／專案管理員）與 Prompt 方向",
         "協助調整時間範圍與排程相關設定",
         "只負責設定任務，不會直接去分析訊息或呼叫工具"
       ]

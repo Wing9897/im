@@ -69,7 +69,7 @@ export function useVoiceReminderPanelState() {
 
   const expandTasks = useMemo(
     () =>
-      tasks.map((task) => ({
+      filterAssignableTimelineTasks(tasks, { activeOnly: true }).map((task) => ({
         id: task.id,
         name: task.name,
         worksetId: task.worksetId ?? null,
@@ -118,7 +118,9 @@ export function useVoiceReminderPanelState() {
     void announceVoiceReminder(tts, buildPreviewSpeakText(lead), {
       ...ttsSpeakOptionsFromVoiceSettings(voice),
     })
-      .catch(() => {})
+      .catch(() => {
+        toast?.showToast(t("voice.previewFailed"), "error");
+      })
       .finally(() => setPreviewing(false));
   };
 

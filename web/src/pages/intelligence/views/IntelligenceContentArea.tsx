@@ -37,6 +37,7 @@ interface IntelligenceContentAreaProps {
     | "hasActiveFilters"
     | "hasSearchFilter"
     | "hasTimeFilter"
+    | "hasSourceFilter"
     | "resetFilters"
     | "handleMapFetchWindowChange"
     | "mapSyncAtCap"
@@ -124,6 +125,7 @@ function IntelligenceContentAreaComponent({
             hasActiveFilters={feed.hasActiveFilters}
             hasSearchFilter={feed.hasSearchFilter}
             hasTimeFilter={feed.hasTimeFilter}
+            hasSourceFilter={feed.hasSourceFilter}
             resetFilters={feed.resetFilters}
           />
         </div>
