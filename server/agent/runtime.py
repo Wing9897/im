@@ -43,6 +43,8 @@ from server.agent.runtime_parse import (
 from server.agent.session_clock import resolve_conversation_clock
 from server.agent.tools_registry import build_tool_schemas, execute_tool
 from server.agent.tools_tasks import CONSULT_ADVISOR_TOOL_NAME
+from server.agent.web_search_routing import WebSearchRoute, resolve_web_search_route
+from server.analyzer.llm_client import load_agent_llm_config
 from server.analyzer.llm_json import parse_json_response
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
@@ -71,15 +73,17 @@ class LlmCompleter(Protocol):
         temperature: float = 0.7,
         json_mode: bool = False,
         max_output_tokens: int | None = None,
+        *,
+        native_web_search: str | None = None,
     ) -> dict: ...
 
     async def close(self) -> None: ...
 
 
-def _tools_prompt_block(*, web_search_enabled: bool, task_advisor_enabled: bool = False) -> str:
+def _tools_prompt_block(*, inject_web_search_tool: bool, task_advisor_enabled: bool = False) -> str:
     return json.dumps(
         build_tool_schemas(
-            web_search_enabled=web_search_enabled,
+            web_search_enabled=inject_web_search_tool,
             task_advisor_enabled=task_advisor_enabled,
         ),
         ensure_ascii=False,
@@ -93,16 +97,27 @@ def build_system_prompt(
     locale: str | None = None,
     web_search_enabled: bool = True,
     web_search_provider: str = "duckduckgo",
+    web_search_mode: str | None = None,
+    inject_web_search_tool: bool | None = None,
     task_advisor_enabled: bool = False,
     base_prompt: str | None = None,
 ) -> str:
+    inject_tool = (
+        web_search_enabled
+        if inject_web_search_tool is None
+        else inject_web_search_tool
+    )
     return (
         (base_prompt if base_prompt is not None else AGENT_SYSTEM_PROMPT)
         + current_time_prompt_block(now, authority_note=ASSISTANT_CLOCK_NOTE)
-        + web_search_prompt_note(web_search_enabled=web_search_enabled, provider=web_search_provider)
+        + web_search_prompt_note(
+            web_search_enabled=web_search_enabled,
+            provider=web_search_provider,
+            mode=web_search_mode,
+        )
         + task_advisor_prompt_note(task_advisor_enabled=task_advisor_enabled)
         + _tools_prompt_block(
-            web_search_enabled=web_search_enabled,
+            inject_web_search_tool=inject_tool,
             task_advisor_enabled=task_advisor_enabled,
         )
         + "\n\n"
@@ -133,6 +148,22 @@ class AgentRuntime:
             return True
         return is_openai_json_mode_enabled(await get_config(self.db, "openai_json_mode"))
 
+    async def _resolve_web_search_route(self) -> WebSearchRoute:
+        web_enabled = await get_config_bool(self.db, "assistant_web_search_enabled")
+        setting = await get_config(self.db, "web_search_provider")
+        llm_cfg = await load_agent_llm_config(self.db)
+        # Prefer live client strings when set; ignore MagicMock auto-attrs.
+        live_provider = getattr(self.llm, "provider", None)
+        live_base = getattr(self.llm, "base_url", None)
+        llm_provider = live_provider if isinstance(live_provider, str) and live_provider else llm_cfg["provider"]
+        llm_base_url = live_base if isinstance(live_base, str) and live_base else llm_cfg["base_url"]
+        return resolve_web_search_route(
+            web_search_enabled=web_enabled,
+            web_search_provider=setting,
+            llm_provider=str(llm_provider),
+            llm_base_url=str(llm_base_url or ""),
+        )
+
     async def _tool_context(
         self,
         *,
@@ -142,15 +173,15 @@ class AgentRuntime:
         task_advisor_enabled: bool = False,
         current_task: dict[str, Any] | None = None,
         locale: str | None = None,
+        web_route: WebSearchRoute | None = None,
     ) -> dict[str, Any]:
-        web_enabled = await get_config_bool(self.db, "assistant_web_search_enabled")
-        provider = (await get_config(self.db, "web_search_provider") or "duckduckgo").strip().lower()
-        if provider not in {"duckduckgo", "brave"}:
-            provider = "duckduckgo"
+        route = web_route or await self._resolve_web_search_route()
         brave_key = await get_config(self.db, "brave_search_api_key")
         return {
-            "web_search_enabled": web_enabled,
-            "web_search_provider": provider,
+            "web_search_enabled": route.enabled and route.inject_web_search_tool,
+            "web_search_provider": route.tool_provider,
+            "web_search_mode": route.mode,
+            "native_web_search": route.native_web_search,
             "brave_search_api_key": brave_key,
             "user_event_origin": user_event_origin,
             "default_workset_id": workset_id,
@@ -161,7 +192,12 @@ class AgentRuntime:
             "locale": locale,
         }
 
-    async def _complete_for_agent(self, history: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _complete_for_agent(
+        self,
+        history: list[dict[str, Any]],
+        *,
+        native_web_search: str | None = None,
+    ) -> dict[str, Any]:
         """Complete with optional API json_mode; fall back if the provider rejects it.
 
         Settings 「AI 測試」uses json_mode=False. Forcing json_mode=True breaks many
@@ -169,7 +205,12 @@ class AgentRuntime:
         """
         prefer = await self._prefer_json_mode()
         try:
-            return await self.llm.complete(history, temperature=0.2, json_mode=prefer)
+            return await self.llm.complete(
+                history,
+                temperature=0.2,
+                json_mode=prefer,
+                native_web_search=native_web_search,
+            )
         except Exception as exc:  # noqa: BLE001 — retry path for provider capability gaps
             if not prefer:
                 raise
@@ -177,7 +218,12 @@ class AgentRuntime:
                 "Agent LLM json_mode failed (%s); retrying without response_format/format=json",
                 exc,
             )
-            return await self.llm.complete(history, temperature=0.2, json_mode=False)
+            return await self.llm.complete(
+                history,
+                temperature=0.2,
+                json_mode=False,
+                native_web_search=native_web_search,
+            )
 
     async def iter_chat_events(
         self,
@@ -212,6 +258,7 @@ class AgentRuntime:
         )
         # Task advisor is UI-gated (task editor + assistant channel only).
         task_advisor_enabled = policy.id == "assistant" and surface == "task_editor"
+        web_route = await self._resolve_web_search_route()
         tool_context = await self._tool_context(
             user_event_origin=policy.user_event_origin,
             workset_id=workset_id,
@@ -219,15 +266,19 @@ class AgentRuntime:
             task_advisor_enabled=task_advisor_enabled,
             current_task=current_task if task_advisor_enabled else None,
             locale=resolved_locale if task_advisor_enabled else None,
+            web_route=web_route,
         )
+        native_web_search = web_route.native_web_search
         history: list[dict[str, Any]] = [
             {
                 "role": "system",
                 "content": build_system_prompt(
                     now=clock,
                     locale=resolved_locale,
-                    web_search_enabled=bool(tool_context["web_search_enabled"]),
-                    web_search_provider=str(tool_context["web_search_provider"]),
+                    web_search_enabled=web_route.enabled,
+                    web_search_provider=web_route.tool_provider,
+                    web_search_mode=web_route.mode,
+                    inject_web_search_tool=web_route.inject_web_search_tool,
                     task_advisor_enabled=task_advisor_enabled,
                     base_prompt=base_prompt if base_prompt is not None else policy.system_prompt,
                 ),
@@ -268,7 +319,10 @@ class AgentRuntime:
             yield {"type": "llm_start", "round": round_index}
 
             history = _compact(history)
-            result = await self._complete_for_agent(history)
+            result = await self._complete_for_agent(
+                history,
+                native_web_search=native_web_search,
+            )
             raw_text = str(result.get("text") or "")
             try:
                 parsed = parse_json_response(raw_text)

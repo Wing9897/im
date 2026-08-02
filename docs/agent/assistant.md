@@ -1,6 +1,6 @@
 # 内置助手（Agent + 浏览器语音）
 
-IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（`web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／AI 分析任务。
+IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（OpenAI／Gemini 原生或自研 `web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／AI 分析任务。
 
 ## 怎么用
 
@@ -30,7 +30,7 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 
 换 Whisper / 豆包 = 新 Adapter + 设置枚举，**不改** Runtime / Tools。
 
-工具选择由模型在 loop 内自选（**非固定 flow**）。Prompt 要求 local-first；是否注入 `web.search` schema 由 `assistant_web_search_enabled` 硬门控。
+工具选择由模型在 loop 内自选（**非固定 flow**）。Prompt 要求 local-first；总闸 `assistant_web_search_enabled` 关闭时既不注入 `web.search` 也不开原生 search。开启时由 `web_search_provider` + 助手 LLM 路由（见下「联网搜索」）。
 
 ## HTTP 契约
 
@@ -168,14 +168,22 @@ IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO�
 
 ### 联网搜索（可选）
 
-实现：`server/agent/tools_web_search.py` + `server/web_search/`。设定键：
+实现：`server/agent/web_search_routing.py`（路由）+ `server/agent/tools_web_search.py` + `server/web_search/` + OpenAI Responses／Gemini grounding（原生路径）。设定键：
 
-- `assistant_web_search_enabled`（默认 `true`）— 关闭则 **不** 向 LLM 注入 `web.search` schema
-- `web_search_provider`：`duckduckgo`（默认，免 API key）| `brave`（需 `brave_search_api_key`）
+- `assistant_web_search_enabled`（默认 `true`）— **总闸**：关闭则不注入 `web.search`，也不开启供应商原生 search tools
+- `web_search_provider`：
+  - `auto`（默认）— 跟当前助手／聊天 LLM：
+    - OpenAI（官方 `api.openai.com`）→ Responses API 原生 `web_search`，**不**注入自研 `web.search`
+    - Gemini（官方 `generativelanguage.googleapis.com`）→ Google Search grounding；非官方基址则诚实回退 DDG／Brave 工具并在设定 UI 提示
+    - 其他（Ollama／OpenRouter／compatible 非官方）→ 自研 `web.search` + DuckDuckGo（可选手动 Brave）
+  - `duckduckgo` / `brave` — **强制**工具路径（忽略原生）
 - Brave key 未配置时 tool 返回明确 error
+- 分析管线（event／leaderboard 等）**不**走助手联网
 
-| Tool | 行为 | 限额 |
+| 路径 | 行为 | 限额／备注 |
 |------|------|------|
+| OpenAI 原生 | Responses `tools: [{type: web_search}]` | 由 OpenAI 托管；本机 tools 仍用 JSON 协议 |
+| Gemini 原生 | `generateContent` + `tools: [{google_search: {}}]` | 官方基址；失败／非官方 → 工具回退 |
 | `web.search` | 外部网页检索；统一 `{ items: [{ title, url, snippet }], provider, count }` | 默认 5，硬顶 8 |
 
 DuckDuckGo：Instant Answer JSON（`api.duckduckgo.com`），空结果时再试 lite HTML（固定 host + `validate_outbound_url`）。**不**引入 `duckduckgo-search` 包；结果质量通常弱于 Brave。这是可选检索，**不是** RAG／向量库。
@@ -216,7 +224,7 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 | Tools | `server/agent/tools_calendar/`, `tools_items/`, `tools_messages.py`, `tools_intelligence.py`, `tools_web_search.py`, `tools_tasks.py`；参数强制转换 `server/agent/tool_args.py` |
 | 任务页 bridge／双头像 | `web/src/domain/tasks/taskEditorDraftBridge.ts`；`AssistantQuickDialog`／`AssistantDirectBubbles`／`AssistantToolSteps` |
 | 消息查询 | `server/queries/messages_queries.py` |
-| Web search | `server/web_search/` |
+| Web search | `server/agent/web_search_routing.py`, `server/web_search/`, OpenAI Responses / Gemini grounding in `llm_providers.py` |
 | 查询层 | `server/calendar/query.py` |
 | 用户事件 | `server/user_events.py`, `server/api/routes/user_events.py` |
 | 前端 API | `web/src/api/agent.ts`, `web/src/api/userEvents.ts` |
@@ -235,7 +243,7 @@ uv run --extra dev pytest server/tests/test_calendar_query.py \
   server/tests/test_calendar_tools.py server/tests/test_agent_runtime.py \
   server/tests/test_agent_task_advisor.py \
   server/tests/test_agent_tools_messages.py server/tests/test_agent_tools_intelligence.py \
-  server/tests/test_web_search.py \
+  server/tests/test_web_search.py server/tests/test_web_search_routing.py \
   server/tests/test_messages_queries.py server/tests/test_contract_config.py \
   server/tests/test_user_events.py -q
 
@@ -247,6 +255,7 @@ cd web && npx vitest run src/api/agent.test.ts src/speech \
   src/components/assistant/AssistantToolSteps.test.tsx \
   src/components/assistant/assistantToolStaff.test.ts \
   src/pages/ai/assistant src/components/settings/AssistantWebSearchPanel.test.tsx \
+  src/domain/settings/assistantWebSearchRoute.test.ts \
   src/pages/shared/routes.test.tsx \
   src/components/AppSidebar.test.tsx src/components/AppTopBar.test.tsx \
   src/components/DesktopTitleBar.test.tsx \

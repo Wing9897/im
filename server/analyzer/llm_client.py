@@ -22,6 +22,7 @@ from server.analyzer.llm_providers import (
     LlmClientError,
     complete_gemini,
     complete_ollama,
+    complete_openai_responses_web_search,
     complete_openai_style,
     probe_gemini,
     probe_ollama,
@@ -56,7 +57,15 @@ _PROVIDER_WIRE_KEY: dict[str, str] = {
 }
 
 CompleteHandler = Callable[
-    ["ConfigurableLlmClient", aiohttp.ClientSession, list[dict], float, bool, int | None],
+    [
+        "ConfigurableLlmClient",
+        aiohttp.ClientSession,
+        list[dict],
+        float,
+        bool,
+        int | None,
+        str | None,
+    ],
     Awaitable[dict],
 ]
 ProbeHandler = Callable[["ConfigurableLlmClient", aiohttp.ClientSession], Awaitable[None]]
@@ -222,7 +231,9 @@ class ConfigurableLlmClient:
         temperature: float,
         json_mode: bool,
         max_output_tokens: int | None,
+        native_web_search: str | None = None,
     ) -> dict:
+        del native_web_search  # Ollama has no hosted web search.
         return await complete_ollama(
             session,
             base_url=self.base_url,
@@ -241,7 +252,19 @@ class ConfigurableLlmClient:
         temperature: float,
         json_mode: bool,
         max_output_tokens: int | None,
+        native_web_search: str | None = None,
     ) -> dict:
+        if native_web_search == "openai":
+            return await complete_openai_responses_web_search(
+                session,
+                base_url=self.base_url,
+                api_key=self.api_key,
+                model=self.model,
+                messages=messages,
+                temperature=temperature,
+                json_mode=json_mode,
+                max_output_tokens=max_output_tokens,
+            )
         return await complete_openai_style(
             session,
             base_url=self.base_url,
@@ -260,6 +283,7 @@ class ConfigurableLlmClient:
         temperature: float,
         json_mode: bool,
         max_output_tokens: int | None,
+        native_web_search: str | None = None,
     ) -> dict:
         return await complete_gemini(
             session,
@@ -270,6 +294,7 @@ class ConfigurableLlmClient:
             temperature=temperature,
             json_mode=json_mode,
             max_output_tokens=max_output_tokens,
+            google_search=native_web_search == "gemini",
         )
 
     async def _probe_ollama(self, session: aiohttp.ClientSession) -> None:
@@ -287,6 +312,8 @@ class ConfigurableLlmClient:
         temperature: float = 0.7,
         json_mode: bool = False,
         max_output_tokens: int | None = None,
+        *,
+        native_web_search: str | None = None,
     ) -> dict:
         await validate_outbound_url(self.base_url, allow_loopback=self.allow_loopback)
         wire_key = self._wire_key()
@@ -294,7 +321,15 @@ class ConfigurableLlmClient:
             raise LlmClientError(f"Unsupported provider: {self.provider}")
         handler = ConfigurableLlmClient._COMPLETE_HANDLERS[wire_key]
         session = self._get_session()
-        return await handler(self, session, messages, temperature, json_mode, max_output_tokens)
+        return await handler(
+            self,
+            session,
+            messages,
+            temperature,
+            json_mode,
+            max_output_tokens,
+            native_web_search,
+        )
 
     _TEST_PROMPT = "Reply with exactly: ok"
 

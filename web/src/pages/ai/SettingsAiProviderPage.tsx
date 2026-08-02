@@ -9,6 +9,7 @@ import { Button, FormActions } from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
 import { useCollectorStatus } from "../../context/CollectorStatusContext";
+import { effectiveAssistantLlm } from "../../domain/settings/assistantWebSearchRoute";
 import { toErrorMessage } from "../../utils/errors";
 import {
   SettingsContentCard,
@@ -99,6 +100,8 @@ export function SettingsAiProviderPage() {
     );
   }
 
+  const agentLlm = effectiveAssistantLlm(settings);
+
   return (
     <SettingsContentCard>
       <LlmSettingsPanel
@@ -121,6 +124,8 @@ export function SettingsAiProviderPage() {
           enabled={settings.assistantWebSearchEnabled}
           provider={settings.webSearchProvider}
           braveApiKey={settings.braveSearchApiKey}
+          llmProvider={agentLlm.provider}
+          llmBaseUrl={agentLlm.baseUrl}
           onEnabledChange={(value) => updateSettings("assistantWebSearchEnabled", value)}
           onProviderChange={(value) => updateSettings("webSearchProvider", value)}
           onBraveApiKeyChange={(value) => updateSettings("braveSearchApiKey", value)}

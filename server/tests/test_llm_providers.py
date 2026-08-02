@@ -13,8 +13,10 @@ from server.analyzer.llm_providers import (
     check_response,
     complete_gemini,
     complete_ollama,
+    complete_openai_responses_web_search,
     complete_openai_style,
     convert_messages_to_gemini,
+    extract_openai_responses_text,
     probe_gemini,
     probe_ollama,
     probe_openai_style,
@@ -191,6 +193,68 @@ async def test_complete_gemini_returns_unified_shape() -> None:
         json_mode=True,
     )
     assert result == {"text": "gemini-reply", "prompt_tokens": 4, "completion_tokens": 6}
+
+
+async def test_complete_gemini_google_search_tool_flag() -> None:
+    captured: dict[str, Any] = {}
+
+    def responder(method: str, url: str, **_kwargs: Any) -> _FakeResponse:
+        captured["json"] = _kwargs.get("json")
+        return _FakeResponse(
+            200,
+            json_data={
+                "candidates": [{"content": {"parts": [{"text": '{"message":"ok"}'}]}}],
+                "usageMetadata": {"promptTokenCount": 1, "candidatesTokenCount": 1},
+            },
+        )
+
+    session = _FakeSession(responder)
+    await complete_gemini(
+        session,  # type: ignore[arg-type]
+        base_url="https://generativelanguage.googleapis.com/v1beta",
+        api_key="gem-key",
+        model="gemini-test",
+        messages=[{"role": "user", "content": "news"}],
+        temperature=0.2,
+        json_mode=True,
+        google_search=True,
+    )
+    assert captured["json"]["tools"] == [{"google_search": {}}]
+
+
+async def test_complete_openai_responses_web_search() -> None:
+    captured: dict[str, Any] = {}
+
+    def responder(method: str, url: str, **_kwargs: Any) -> _FakeResponse:
+        assert method == "POST"
+        assert url.endswith("/responses")
+        captured["json"] = _kwargs.get("json")
+        return _FakeResponse(
+            200,
+            json_data={
+                "output_text": '{"message":"grounded"}',
+                "usage": {"input_tokens": 9, "output_tokens": 3},
+            },
+        )
+
+    session = _FakeSession(responder)
+    result = await complete_openai_responses_web_search(
+        session,  # type: ignore[arg-type]
+        base_url="https://api.openai.com/v1",
+        api_key="sk-test",
+        model="gpt-test",
+        messages=[
+            {"role": "system", "content": "sys"},
+            {"role": "user", "content": "latest news"},
+        ],
+        temperature=0.2,
+        json_mode=True,
+    )
+    assert result["text"] == '{"message":"grounded"}'
+    assert result["prompt_tokens"] == 9
+    assert captured["json"]["tools"] == [{"type": "web_search"}]
+    assert captured["json"]["instructions"] == "sys"
+    assert extract_openai_responses_text({"output": []}) == ""
 
 
 async def test_complete_gemini_raises_on_http_error() -> None:

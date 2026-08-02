@@ -72,7 +72,7 @@ async def test_settings_snapshot_and_roundtrip(client):
     assert isinstance(snapshot["autoPauseOnRetriesExhausted"], bool)
     assert isinstance(snapshot["ollamaThinkingEnabled"], bool)
     assert isinstance(snapshot["assistantWebSearchEnabled"], bool)
-    assert snapshot["webSearchProvider"] in {"duckduckgo", "brave"}
+    assert snapshot["webSearchProvider"] in {"auto", "duckduckgo", "brave"}
     assert "braveSearchApiKey" in snapshot
     assert "autoPauseOnRateLimit" not in snapshot
     assert isinstance(snapshot["maxConcurrentBatches"], str)

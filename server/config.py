@@ -52,9 +52,10 @@ CONFIG_DEFAULTS: dict[str, str] = {
     # UI / AI output language (zh-Hant | zh-Hans | en). Client localStorage is
     # the live UI source of truth; this copy drives background analysis.
     "ui_locale": "zh-Hant",
-    # Assistant web search (Agent tool web.search). DuckDuckGo needs no API key.
+    # Assistant web search. auto = follow assistant LLM native when available,
+    # else DuckDuckGo/Brave tool path. Manual duckduckgo|brave force the tool.
     "assistant_web_search_enabled": "true",
-    "web_search_provider": "duckduckgo",
+    "web_search_provider": "auto",
     "brave_search_api_key": "",
     # Agent LLM: empty / "follow" = use llm_provider; else a provider id.
     # Non-empty assistant_llm_{base_url,model,api_key} override that provider's

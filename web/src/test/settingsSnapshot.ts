@@ -36,7 +36,7 @@ export const defaultSettingsSnapshot: SystemSettingsSnapshot = {
   weatherLocation: "system",
   uiLocale: "zh-Hant",
   assistantWebSearchEnabled: true,
-  webSearchProvider: "duckduckgo",
+  webSearchProvider: "auto",
   braveSearchApiKey: "",
   assistantLlmProvider: "",
   assistantLlmBaseUrl: "",

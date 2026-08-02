@@ -199,6 +199,19 @@ def test_build_system_prompt_omits_web_search_when_disabled() -> None:
     assert "設定已關閉助手聯網" in prompt
 
 
+def test_build_system_prompt_omits_web_search_tool_for_openai_native() -> None:
+    from datetime import datetime, timezone
+
+    prompt = build_system_prompt(
+        now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc),
+        web_search_enabled=True,
+        web_search_mode="openai_native",
+        inject_web_search_tool=False,
+    )
+    assert '"name": "web.search"' not in prompt
+    assert "OpenAI 原生 web_search" in prompt
+
+
 def test_build_system_prompt_appends_english_output_directive() -> None:
     from datetime import datetime, timezone
 
