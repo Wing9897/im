@@ -114,7 +114,7 @@
       "createTask": "Create task",
       "requiredAria": "Required fields",
       "settingsTitle": "Task settings",
-      "optionalAria": "Advanced skills",
+      "optionalAria": "Advanced settings",
       "channelsLoadError": "Could not load channels",
       "scheduleHydrating": "Loading recurrence schedule…",
       "scheduleHydrateFailed": "Could not load recurrence schedule: {message}",
@@ -139,17 +139,13 @@
       "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
       "nameLabel": "Task name",
       "namePlaceholder": "Enter task name",
-      "foundationTitle": "Choose staff",
-      "foundationHint": "Tasks build on a repeatable / triggerable schedule. Choose who owns the work, then configure their skills.",
-      "staffLabel": "Employee",
-      "staffGroup": {
-        "noAi": "No processing",
-        "ai": "AI employees"
-      },
-      "skillsTitle": "Skills / capabilities",
-      "skillsAria": "Employee skills",
-      "skillsHint": "Configurable capabilities for the selected employee (schedule, prompt, source channels, and more).",
-      "optionalTitle": "Advanced skills",
+      "foundationTitle": "Basics",
+      "foundationHint": "Tasks build on a repeatable / triggerable schedule.",
+      "taskTypeLabel": "Task type",
+      "skillsTitle": "Settings / skills",
+      "skillsAria": "Task settings and skills",
+      "skillsHint": "Configurable options for the selected task type (schedule, prompt, source channels, and more).",
+      "optionalTitle": "Advanced settings",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Task description (optional)",
       "promptLabel": "Prompt template",
@@ -163,7 +159,7 @@
     },
     "employees": {
       "scheduleClerk": {
-        "name": "Schedule clerk",
+        "name": "Recurring",
         "blurb": "RRULE recurring schedule, no AI"
       }
     },

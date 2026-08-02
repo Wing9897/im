@@ -58,13 +58,13 @@ describe("ChatEditorForm recurring-only contract", () => {
       expect(container.querySelector('[role="note"]')?.textContent).toBe(helperCopy);
       expect(container.textContent).toContain("重複規則");
       expect(container.querySelector('[aria-label="排程類型"]')).toBeNull();
-      expect(container.querySelector('[aria-label="進階技能"]')).toBeNull();
+      expect(container.querySelector('[aria-label="進階設定"]')).toBeNull();
 
       renderMode(analysisMode);
       expect(container.querySelector('[role="note"]')).toBeNull();
       expect(container.textContent).not.toContain("重複規則");
       expect(container.querySelector('[aria-label="排程類型"]')).not.toBeNull();
-      expect(container.querySelector('[aria-label="進階技能"]')).not.toBeNull();
+      expect(container.querySelector('[aria-label="進階設定"]')).not.toBeNull();
     },
   );
 

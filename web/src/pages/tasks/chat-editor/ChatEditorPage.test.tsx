@@ -227,9 +227,9 @@ describe("ChatEditorPage integration tests", () => {
       expect(container.textContent).toContain("描述");
       expect(container.textContent).toContain("Prompt 模板");
       expect(container.textContent).toContain("排程類型");
-      expect(container.textContent).toContain("員工");
-      expect(container.textContent).toContain("選擇員工");
-      expect(container.textContent).toContain("技能／能力");
+      expect(container.textContent).toContain("任務類型");
+      expect(container.textContent).toContain("基本設定");
+      expect(container.textContent).toContain("設定／技能");
 
       cleanup();
     });

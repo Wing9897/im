@@ -105,7 +105,9 @@ export const TaskCard = React.memo(function TaskCard({
       >
         <div className="flex items-start justify-between gap-sm">
           <div className="flex min-w-0 flex-1 items-center gap-sm">
-            <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
+            {!isRecurringMode ? (
+              <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
+            ) : null}
             <span
               className={`min-w-0 flex-1 truncate ${cardTitleClass}`}
               title={task.name}

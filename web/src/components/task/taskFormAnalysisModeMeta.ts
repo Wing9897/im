@@ -5,11 +5,9 @@ import {
   analysisModeShowsRruleFields,
 } from "../../domain/tasks/analysisModeCapabilities";
 import {
-  TASK_EMPLOYEE_GROUPS,
   TASK_EMPLOYEE_ORDER,
   analysisModeForTaskEmployee,
   taskEmployeeForAnalysisMode,
-  type TaskEmployeeGroupId,
   type TaskEmployeeId,
 } from "../../domain/tasks/taskEmployee";
 
@@ -26,22 +24,12 @@ type TaskFormAnalysisModeMeta = {
   hidesPromptAndChannel?: boolean;
 };
 
-/** Editor picker order: schedule clerk first, then AI employees. */
+/** Editor picker order: recurring first, then AI task types. */
 export const taskFormAnalysisModeOrder: AnalysisMode[] = TASK_EMPLOYEE_ORDER.map(
   (employeeId) => analysisModeForTaskEmployee(employeeId),
 );
 
-export type TaskFormModeGroupId = TaskEmployeeGroupId;
-
-export const taskFormAnalysisModeGroups: ReadonlyArray<{
-  id: TaskFormModeGroupId;
-  modes: readonly AnalysisMode[];
-}> = TASK_EMPLOYEE_GROUPS.map((group) => ({
-  id: group.id,
-  modes: group.employees.map((employeeId) => analysisModeForTaskEmployee(employeeId)),
-}));
-
-/** L2 employee display name (aiStaff / schedule clerk). */
+/** Display name for a task type (recurring calendar label or AI staff name). */
 export function getTaskEmployeeDisplayName(employeeId: TaskEmployeeId): string {
   if (employeeId === "scheduleClerk") {
     return String(i18n.t("tasks.employees.scheduleClerk.name"));
@@ -54,7 +42,7 @@ export function getTaskFormAnalysisModeMeta(
 ): TaskFormAnalysisModeMeta {
   const prefix = `tasks.modes.${analysisMode}`;
   return {
-    // Cards / filters / badges share L2 employee bilingual names (not short mode labels).
+    // Cards / filters / badges share task-type bilingual names.
     displayLabel: getTaskEmployeeDisplayName(taskEmployeeForAnalysisMode(analysisMode)),
     modeOptionLabel: String(i18n.t(`${prefix}.modeOptionLabel`)),
     modeDescription: String(i18n.t(`${prefix}.modeDescription`)),
@@ -66,7 +54,7 @@ export function getTaskFormAnalysisModeMeta(
   };
 }
 
-/** One-line capability blurb for L2 picker cards. */
+/** One-line capability blurb for task-type picker cards. */
 export function getTaskEmployeeBlurb(employeeId: TaskEmployeeId): string {
   if (employeeId === "scheduleClerk") {
     return String(i18n.t("tasks.employees.scheduleClerk.blurb"));

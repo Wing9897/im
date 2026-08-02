@@ -1,6 +1,6 @@
 /**
- * L2 task employees — identity mapped from analysis_mode (DB enum unchanged).
- * Recurring has a schedule clerk (no AI); other modes map to AI staff logos.
+ * Task-type identity mapped from analysis_mode (DB enum unchanged).
+ * Recurring is a calendar task type (no AI avatar); other modes map to AI staff.
  */
 import type { AnalysisMode } from "../../types/common";
 import type { AiStaffId } from "../aiStaff/aiStaff";
@@ -11,22 +11,13 @@ export type TaskEmployeeId =
   | "leaderboard"
   | "projectManager";
 
-export type TaskEmployeeGroupId = "noAi" | "ai";
-
+/** Picker / badge order: recurring first, then AI modes. */
 export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
   "scheduleClerk",
   "eventIntel",
   "leaderboard",
   "projectManager",
 ] as const;
-
-export const TASK_EMPLOYEE_GROUPS: ReadonlyArray<{
-  id: TaskEmployeeGroupId;
-  employees: readonly TaskEmployeeId[];
-}> = [
-  { id: "noAi", employees: ["scheduleClerk"] },
-  { id: "ai", employees: ["eventIntel", "leaderboard", "projectManager"] },
-];
 
 const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
   scheduleClerk: "recurring",
@@ -50,7 +41,12 @@ export function analysisModeForTaskEmployee(employeeId: TaskEmployeeId): Analysi
   return MODE_BY_EMPLOYEE[employeeId];
 }
 
-/** AI roster id when the employee has an AiStaffAvatar; null for schedule clerk. */
+/** True when the task type uses AI staff (avatar + AI roster). */
+export function taskEmployeeUsesAi(employeeId: TaskEmployeeId): boolean {
+  return employeeId !== "scheduleClerk";
+}
+
+/** AI roster id when the type has an AiStaffAvatar; null for recurring. */
 export function aiStaffIdForTaskEmployee(employeeId: TaskEmployeeId): AiStaffId | null {
   if (employeeId === "scheduleClerk") return null;
   return employeeId;

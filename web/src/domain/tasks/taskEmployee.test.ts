@@ -4,6 +4,7 @@ import {
   analysisModeForTaskEmployee,
   aiStaffIdForTaskEmployee,
   taskEmployeeForAnalysisMode,
+  taskEmployeeUsesAi,
 } from "./taskEmployee";
 import { ANALYSIS_MODE_ORDER } from "./analysisModeCapabilities";
 
@@ -15,7 +16,7 @@ describe("taskEmployee", () => {
     }
   });
 
-  it("covers all employees in picker order", () => {
+  it("covers all task types in picker order", () => {
     expect(TASK_EMPLOYEE_ORDER).toEqual([
       "scheduleClerk",
       "eventIntel",
@@ -24,10 +25,17 @@ describe("taskEmployee", () => {
     ]);
   });
 
-  it("maps AI employees to AiStaff ids and schedule clerk to null", () => {
+  it("maps AI task types to AiStaff ids and recurring to null", () => {
     expect(aiStaffIdForTaskEmployee("scheduleClerk")).toBeNull();
     expect(aiStaffIdForTaskEmployee("eventIntel")).toBe("eventIntel");
     expect(aiStaffIdForTaskEmployee("leaderboard")).toBe("leaderboard");
     expect(aiStaffIdForTaskEmployee("projectManager")).toBe("projectManager");
+  });
+
+  it("marks only non-recurring types as AI", () => {
+    expect(taskEmployeeUsesAi("scheduleClerk")).toBe(false);
+    expect(taskEmployeeUsesAi("eventIntel")).toBe(true);
+    expect(taskEmployeeUsesAi("leaderboard")).toBe(true);
+    expect(taskEmployeeUsesAi("projectManager")).toBe(true);
   });
 });
