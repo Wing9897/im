@@ -70,10 +70,9 @@
       "sectionTitle": "调试与诊断",
       "rulesVersionLabel": "分析规则版本标记",
       "rulesVersionPlaceholder": "v2",
-      "rulesVersionHelp": "写入消息批次提示（关键事件／排行榜系统提示）的版本字符串（例如 v2），以便对照批次提示词修订。不会切换证据风格、调度或分析规则。留空表示不附加标记。网络情报／项目／循环不使用此标记。",
+      "rulesVersionHelp": "写入消息批次提示（关键事件／排行榜系统提示）的版本字符串（例如 v2），以便对照批次提示词修订。不会切换证据风格、调度或分析规则。留空表示不附加标记。网络情报／项目／循环不使用此标记。失焦或按 Enter 即保存。",
       "traceVerboseLabel": "服务器分析 Trace",
-      "traceVerboseHelp": "在服务器日志写入较详细的分析追踪（不是设置→系统日志页）。",
-      "saveLabel": "保存调试设置",
+      "traceVerboseHelp": "在服务器日志写入较详细的分析追踪（不是设置→系统日志页）。切换后立即生效。",
       "saved": "调试设置已保存"
     }
   },

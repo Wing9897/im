@@ -70,10 +70,9 @@
       "sectionTitle": "除錯與診斷",
       "rulesVersionLabel": "分析規則版本標記",
       "rulesVersionPlaceholder": "v2",
-      "rulesVersionHelp": "寫入訊息批次提示（關鍵事件／排行榜系統提示）的版本字串（例如 v2），以便對照批次提示詞修訂。不會切換證據風格、調度或分析規則。留空表示不附加標記。網路情報／專案／循環不使用此標記。",
+      "rulesVersionHelp": "寫入訊息批次提示（關鍵事件／排行榜系統提示）的版本字串（例如 v2），以便對照批次提示詞修訂。不會切換證據風格、調度或分析規則。留空表示不附加標記。網路情報／專案／循環不使用此標記。失焦或按 Enter 即儲存。",
       "traceVerboseLabel": "伺服器分析 Trace",
-      "traceVerboseHelp": "在伺服器日誌寫入較詳細的分析追蹤（不是設定→系統日誌頁）。",
-      "saveLabel": "儲存除錯設定",
+      "traceVerboseHelp": "在伺服器日誌寫入較詳細的分析追蹤（不是設定→系統日誌頁）。切換後立即生效。",
       "saved": "除錯設定已儲存"
     }
   },
