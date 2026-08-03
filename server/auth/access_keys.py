@@ -99,16 +99,6 @@ def access_key_allows_method(method: str, scopes: list[str]) -> bool:
     return False
 
 
-def access_key_path_allowed(path: str, scopes: list[str]) -> bool:
-    """Backward-compatible name: method-agnostic check used by older tests.
-
-    Path limits for A2A-only keys are retired; non-``*`` keys are read-only
-    via :func:`access_key_allows_method`.
-    """
-    del path  # path no longer scopes access
-    return FULL_SCOPE in scopes or READ_SCOPE in scopes
-
-
 def _public_key_dto(row: Any) -> dict[str, Any]:
     last_used = row["last_used_at"]
     return {

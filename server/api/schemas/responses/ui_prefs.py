@@ -43,7 +43,7 @@ class BoardWidgetSchema(BaseModel):
 
 
 class BoardLayoutSchema(BaseModel):
-    """Layout blob stored under ``ops_board_layout`` (v14 widgets mosaic)."""
+    """Layout blob stored under ``ops_board_layout`` (v15 widgets mosaic)."""
 
     model_config = ConfigDict(extra="forbid")
 

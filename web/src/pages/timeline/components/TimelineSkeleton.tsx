@@ -3,8 +3,6 @@
  *
  * Renders shimmer placeholders that approximate the final calendar or gantt
  * grid layout, providing immediate visual feedback during initial data loading.
- *
- * Requirements: 5.1, 5.3, 5.4
  */
 
 import { timelinePanelClass } from "../timelineViewLayout";

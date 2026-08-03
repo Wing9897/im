@@ -1,8 +1,6 @@
 /**
  * REST API client functions for account management, split per platform.
  * Barrel export preserves the historical `api/accounts` import path.
- *
- * Requirements: 12.1, 12.4
  */
 
 export { listAccounts, deleteAccount, reconnectAccount, refreshAllAccounts } from "./core";

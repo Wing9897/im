@@ -1,7 +1,5 @@
 /**
  * REST API client functions for application log operations.
- *
- * Requirements: 12.1, 12.4
  */
 
 import { apiClient } from "./client";

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Message } from "../../../types";
 import {
-  migrateSharedDanmakuModeStorage,
+  readSharedDanmakuMode,
   SHARED_DANMAKU_MODE_KEY,
   MAP_TIME_WINDOW_STORAGE_KEY,
   parsePersistedMapTimeWindow,
@@ -12,7 +12,7 @@ import {
   MAX_RUNTIME_MESSAGES,
 } from "./mapViewHelpers";
 
-describe("migrateSharedDanmakuModeStorage", () => {
+describe("readSharedDanmakuMode", () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -24,19 +24,19 @@ describe("migrateSharedDanmakuModeStorage", () => {
   it("returns the shared key when it is already valid", () => {
     localStorage.setItem(SHARED_DANMAKU_MODE_KEY, "transient");
 
-    expect(migrateSharedDanmakuModeStorage()).toBe("transient");
+    expect(readSharedDanmakuMode()).toBe("transient");
     expect(localStorage.getItem(SHARED_DANMAKU_MODE_KEY)).toBe("transient");
   });
 
   it("defaults to persistent when no valid value exists", () => {
-    expect(migrateSharedDanmakuModeStorage()).toBe("persistent");
+    expect(readSharedDanmakuMode()).toBe("persistent");
     expect(localStorage.getItem(SHARED_DANMAKU_MODE_KEY)).toBeNull();
   });
 
   it("defaults to persistent when shared key has invalid value", () => {
     localStorage.setItem(SHARED_DANMAKU_MODE_KEY, "invalid");
 
-    expect(migrateSharedDanmakuModeStorage()).toBe("persistent");
+    expect(readSharedDanmakuMode()).toBe("persistent");
   });
 });
 

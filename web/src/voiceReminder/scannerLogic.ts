@@ -7,6 +7,7 @@ import {
 import {
   expandWorksetIdsToTaskIds,
   isEmptySourceFilter,
+  userEventMatchesSourceSelection,
   type SourceFilterSelection,
   type WorksetMemberTask,
 } from "../domain/tasks/sourceFilterSelection";
@@ -90,9 +91,12 @@ export function buildSpeakText(
 
 /**
  * Filter timed events by hierarchical source selection (same model as
- * board/timeline). `null` selection means all sources. Workset selection
- * matches `event.worksetId` directly and also expands to member task ids
- * from `catalogTasks` (for analysis/calendar rows without ownership fields).
+ * board/timeline). `null` selection means all sources.
+ *
+ * - `kind === "user"`: ownership via `userEventMatchesSourceSelection`
+ *   (workset match only; explicit taskIds may match provenance; `__user__`
+ *   fake taskId is null provenance — never via workset expansion).
+ * - analysis / recurring: workset ownership or expanded member task ids.
  */
 export function filterEventsBySourceFilter(
   events: readonly TimedKeyEvent[],
@@ -105,12 +109,16 @@ export function filterEventsBySourceFilter(
   if (isEmptySourceFilter(selection)) {
     return [];
   }
+  const allowExplicitTaskIds = new Set(selection.taskIds);
   const allowTasks = new Set<string>([
     ...selection.taskIds,
     ...expandWorksetIdsToTaskIds(selection.worksetIds, catalogTasks),
   ]);
   const allowWorksets = new Set(selection.worksetIds);
   return events.filter((event) => {
+    if (event.kind === "user") {
+      return userEventMatchesSourceSelection(event, allowWorksets, allowExplicitTaskIds);
+    }
     if (event.worksetId && allowWorksets.has(event.worksetId)) return true;
     if (event.taskId != null && event.taskId !== "" && allowTasks.has(event.taskId)) {
       return true;

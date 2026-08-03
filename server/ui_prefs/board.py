@@ -17,7 +17,7 @@ from server.ui_prefs.common import (
 )
 
 # Design: GET/PUT ``/api/v1/ui-prefs/board`` carries both ``layout`` and
-# ``widgetState`` together to avoid two roundtrips on hydrate/migrate.
+# ``widgetState`` together to avoid two roundtrips on hydrate/normalize.
 # Partial PUT is allowed (omit a field to leave that key unchanged); send
 # ``null`` to clear a key. ``configured`` is true when either key has data.
 

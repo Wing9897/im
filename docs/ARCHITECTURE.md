@@ -231,10 +231,10 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 - **Code:** `web/src/board/` (entry: `BoardRoot`)
 - **CSS:** `web/src/css/board-*.css`; shell chrome: `css/monitor-chrome.css`
 - **Persistence:** SQLite `ui_prefs` table via `GET/PUT /api/v1/ui-prefs/board`
-  - `layout` — board mosaic (`version` + `widgets`; mosaic layout schema **v14** / `BOARD_LAYOUT_VERSION`)
+  - `layout` — board mosaic (`version` + `widgets`; mosaic layout schema **v15** / `BOARD_LAYOUT_VERSION`)
   - `widgetState` — `{ mapViews, sourceFilters, ganttViewModes }` (FE type `BoardSourceFilterPref`; hard-cut wire key, former `taskFilters` dropped)
   - Empty server (`configured: false`) → seed default mosaic + empty widgetState (no localStorage migrate bridge)
-  - **Layout version policy:** any version `< BOARD_LAYOUT_VERSION` and sparse caches are **reset** to the current default mosaic — no incremental mid-version upgrades. The parser accepts only the current grid/preset widget shape.
+  - **Layout version policy:** any version `< BOARD_LAYOUT_VERSION` and sparse caches are **reset** to the current default mosaic — no incremental mid-version upgrades. The parser accepts only the current grid/preset widget shape. Hydrate **write-backs** when `parseBoardConfig` / widgetState normalize changes the blob vs server.
   - Still local (device chrome): `im:monitor-mode`, `im:pages-last-path`
 - Shared timed-event projectors live in `domain/timeline/timedEventMerge` (board widgets + timeline). Source filter UI: `components/SourceFilterDialog` + `SourceFilterTree` (hierarchical `{ taskIds, worksetIds } | null`).
 
@@ -371,7 +371,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
 
-**Current stamp is 10.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-11 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 11.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-11 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -432,7 +432,7 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 
 ### Schema support matrix
 
-Stamp-10 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-11 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|

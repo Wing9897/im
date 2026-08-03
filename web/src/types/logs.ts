@@ -11,20 +11,21 @@ export type LogLevel = "info" | "success" | "warning" | "error";
     accepted by POST /api/v1/logs). */
 export type LogCategory = "analysis" | "collector" | "account" | "system" | "frontend";
 
-/** A runtime log entry displayed in the UI */
-export interface AppLogEntry {
-  id: string;
-  time: string;
+/** OpenAPI wire shape for a stored / listed app log. */
+export type AppLogEntryPayload = components["schemas"]["AppLogEntryResponse"];
+
+/**
+ * UI-narrowed {@link AppLogEntryPayload} (`level` / `category` as closed unions).
+ * Runtime conversion: `toAppLogEntry` in `context/appRuntimeShared`.
+ */
+export type AppLogEntry = Omit<AppLogEntryPayload, "level" | "category" | "details"> & {
   level: LogLevel;
   category: LogCategory;
-  message: string;
   details?: string;
-}
+};
 
 /** Input type for creating a new log entry (id and time are auto-generated) */
 export type AppLogInput = Omit<AppLogEntry, "id" | "time">;
-
-export type AppLogEntryPayload = components["schemas"]["AppLogEntryResponse"];
 
 export type AppLogCursorPayload = components["schemas"]["AppLogCursorResponse"];
 

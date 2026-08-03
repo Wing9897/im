@@ -8,8 +8,6 @@
  * - Reset button clears error and re-renders children
  * - Custom fallback prop is used when provided
  * - Accessibility: role="alert" on error UI
- *
- * Requirements: 3.6
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

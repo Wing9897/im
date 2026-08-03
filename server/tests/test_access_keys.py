@@ -7,7 +7,6 @@ import pytest
 from server.auth.access_keys import (
     READ_SCOPE,
     access_key_allows_method,
-    access_key_path_allowed,
     create_access_key,
     is_valid_access_token,
     list_access_keys_public,
@@ -96,13 +95,13 @@ async def test_read_strips_retired_scopes_without_upgrading_to_full(app) -> None
     assert access_key_allows_method("POST", match["scopes"]) is False
 
 
-def test_access_key_method_and_path_helpers() -> None:
+def test_access_key_method_helpers() -> None:
     assert access_key_allows_method("GET", ["*"]) is True
     assert access_key_allows_method("POST", ["*"]) is True
     assert access_key_allows_method("GET", [READ_SCOPE]) is True
     assert access_key_allows_method("POST", [READ_SCOPE]) is False
-    assert access_key_path_allowed("/api/v1/tasks", ["*"]) is True
-    assert access_key_path_allowed("/api/v1/tasks", [READ_SCOPE]) is True
+    assert access_key_allows_method("HEAD", [READ_SCOPE]) is True
+    assert access_key_allows_method("OPTIONS", [READ_SCOPE]) is True
 
 
 @pytest.mark.asyncio

@@ -86,13 +86,13 @@ describe("user events API contract", () => {
     });
   });
 
-  it("forwards taskId on create when provided", async () => {
+  it("forwards real provenance taskId on create", async () => {
     vi.mocked(apiClient.post).mockResolvedValue({});
 
     await createUserEvent({
       title: "Tagged",
       startTime: "2026-07-20T10:00:00Z",
-      taskId: "__user__",
+      taskId: "ct-1",
     });
 
     expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
@@ -102,7 +102,29 @@ describe("user events API contract", () => {
       body: "",
       location: "",
       isAllDay: false,
+      taskId: "ct-1",
+    });
+  });
+
+  it("strips fake __user__ taskId on create (worksetId __user__ stays live)", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({});
+
+    await createUserEvent({
+      title: "Owned",
+      startTime: "2026-07-20T10:00:00Z",
       taskId: "__user__",
+      worksetId: "__user__",
+    });
+
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
+      title: "Owned",
+      startTime: "2026-07-20T10:00:00Z",
+      endTime: null,
+      body: "",
+      location: "",
+      isAllDay: false,
+      taskId: null,
+      worksetId: "__user__",
     });
   });
 
@@ -154,6 +176,16 @@ describe("user events API contract", () => {
 
     expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
       taskId: "ct-1",
+    });
+  });
+
+  it("strips fake __user__ taskId on patch", async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({});
+
+    await updateUserEvent("event-1", { taskId: "__user__" });
+
+    expect(apiClient.patch).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1", {
+      taskId: null,
     });
   });
 
