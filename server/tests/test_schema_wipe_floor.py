@@ -92,7 +92,7 @@ async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog)
     """App lifespan logs reset script for wipe-only prior stamps."""
     from server.main import create_app
 
-    wipe_only_version = 1  # any prior stamp; registry empty → hard-reject
+    wipe_only_version = 1  # any prior stamp → hard-reject
     path = tmp_path / "startup-reject.db"
     await make_stamped_db(
         str(path),

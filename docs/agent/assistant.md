@@ -63,7 +63,7 @@
 }
 ```
 
-`taskConfig` 可选：仅在任务页助手成功委派顾问并得到非空表单补丁时出现（与页内 `POST /tasks/chat-assistant` 同形）。LLM 不可用时仍返回上述形状，`message` 为友好错误文案，并可能带 `error` 字段。前端客户端：`web/src/api/agent.ts`（`postAgentChat` / `streamAgentChat`）。
+`taskConfig` 可选：仅在任务页助手成功委派顾问（`tasks.consult_advisor`）并得到非空表单补丁时出现。LLM 不可用时仍返回上述形状，`message` 为友好错误文案，并可能带 `error` 字段。前端：`web/src/api/agent.ts`（`postAgentChat` / `streamAgentChat`）。
 
 ### 任务页委派任务顾问 + 双头像
 
