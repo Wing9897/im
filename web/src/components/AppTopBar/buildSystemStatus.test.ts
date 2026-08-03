@@ -2,11 +2,13 @@ import { describe, it, expect, beforeEach } from "vitest";
 import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
 import { buildSystemStatus } from "./buildSystemStatus";
+
 describe("buildSystemStatus", () => {
   beforeEach(async () => {
     setAppLocale("zh-Hant");
     await i18n.changeLanguage("zh-Hant");
   });
+
   it("shows analysis when a batch is active", () => {
     const view = buildSystemStatus({
       collectorStatus: "running",
@@ -26,15 +28,16 @@ describe("buildSystemStatus", () => {
     expect(view.color).toBe("var(--info)");
   });
 
-  it("shows collector state instead of duplicate offline labels", () => {
+  it("shows collector-down with analysis-still-active copy when not paused", () => {
     const view = buildSystemStatus({
       collectorStatus: "stopped",
       aiEngineStatus: "available",
       analysisPaused: false,
       activeAnalysis: null,
     });
-    expect(view.label).toBe("已停止");
-    expect(view.title).toContain("收集器已停止");
+    expect(view.label).toBe("收集器已停");
+    expect(view.title).toBe("收集器已停止 · AI 分析仍可運行");
+    expect(view.color).toBe("var(--error)");
   });
 
   it("shows healthy system when collector and AI are ok", () => {
@@ -56,17 +59,53 @@ describe("buildSystemStatus", () => {
       activeAnalysis: null,
     });
     expect(view.label).toBe("分析已暫停");
+    expect(view.title).toBe("收集器運行中 · AI 分析已暫停");
     expect(view.color).toBe("var(--warning)");
   });
 
-  it("prioritizes collector stopped over analysis paused", () => {
+  it("prioritizes analysis paused over collector stopped (pill toggles analysis)", () => {
     const view = buildSystemStatus({
       collectorStatus: "stopped",
       aiEngineStatus: "available",
       analysisPaused: true,
       activeAnalysis: null,
     });
-    expect(view.label).toBe("已停止");
-    expect(view.title).toContain("收集器已停止");
+    expect(view.label).toBe("分析已暫停");
+    expect(view.title).toBe("AI 分析已暫停 · 收集器已停止");
+    expect(view.color).toBe("var(--warning)");
+  });
+
+  it("keeps collector error primary because controls are disabled", () => {
+    const view = buildSystemStatus({
+      collectorStatus: "error",
+      aiEngineStatus: "available",
+      analysisPaused: true,
+      activeAnalysis: null,
+    });
+    expect(view.label).toBe("啟動失敗");
+    expect(view.title).toContain("收集器啟動失敗");
+  });
+
+  it("uses collector-down AI unavailable title when collector is stopped", () => {
+    const view = buildSystemStatus({
+      collectorStatus: "stopped",
+      aiEngineStatus: "unavailable",
+      analysisPaused: false,
+      activeAnalysis: null,
+    });
+    expect(view.label).toBe("AI 無法連線");
+    expect(view.title).toBe("收集器已停止，且 AI 引擎無法連線");
+  });
+
+  it("shows collector transition states without claiming a stable stop", () => {
+    const view = buildSystemStatus({
+      collectorStatus: "restarting",
+      aiEngineStatus: "available",
+      analysisPaused: true,
+      activeAnalysis: null,
+    });
+    expect(view.label).toBe("重啟中…");
+    expect(view.title).toContain("收集器重啟中");
+    expect(view.title).not.toContain("收集器已停止");
   });
 });

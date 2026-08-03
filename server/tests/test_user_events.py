@@ -112,6 +112,20 @@ async def test_rest_create_rejects_forged_origin(client) -> None:
     assert response.status_code == 422
 
 
+async def test_user_events_list_preserves_a2a_origin(client, app) -> None:
+    event = await create_user_event(
+        app.state.db,
+        title="A2A list origin",
+        start_time="2026-07-28T09:00:00Z",
+        origin="a2a",
+    )
+    response = await client.get("/api/v1/calendar/user-events")
+    assert response.status_code == 200
+    listed = next(item for item in response.json() if item["id"] == event["id"])
+    assert listed["origin"] == "a2a"
+    assert set(listed) == USER_EVENT_KEYS
+
+
 async def test_user_events_all_day_roundtrip(client) -> None:
     created = await client.post(
         "/api/v1/calendar/user-events",

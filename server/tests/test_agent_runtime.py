@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from server.agent.runtime import (
     MAX_TOOL_ROUNDS,
     AgentRuntime,
-    _summarize_tool_result,
     build_system_prompt,
 )
+from server.agent.runtime_parse import summarize_tool_result as _summarize_tool_result
 from server.agent.session_clock import clear_session_clocks
 from server.agent.timeouts import (
     AGENT_WALL_TIMEOUT_CAP_SECONDS,

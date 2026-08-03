@@ -7,7 +7,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
-from server.domain.schedule import legacy_to_trigger_rrule
+from server.domain.schedule import preset_to_trigger_rrule
 from server.scheduler.manager import schedule_trigger_from_rrule
 from server.tests.property_strategies import MIN_PROPERTY_EXAMPLES, property_trace, supported_schedules, task_modes
 
@@ -26,9 +26,7 @@ def _normalized_trigger(trigger: IntervalTrigger | CronTrigger) -> tuple[Any, ..
 
 
 def _trigger_from_task(task: dict[str, Any]) -> IntervalTrigger | CronTrigger:
-    return schedule_trigger_from_rrule(
-        legacy_to_trigger_rrule(task["schedule_type"], task["schedule_value"])
-    )
+    return schedule_trigger_from_rrule(preset_to_trigger_rrule(task["schedule_type"], task["schedule_value"]))
 
 
 _unrelated_metadata = st.fixed_dictionaries(

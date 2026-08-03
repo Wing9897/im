@@ -3,6 +3,7 @@
 import {
   fetchVoiceReminderHistory,
   putVoiceReminderHistory,
+  type VoiceReminderHistoryEntryPayload,
 } from "../api/uiPrefs";
 import i18n from "../i18n";
 import { logWarn } from "../utils/logger";
@@ -14,17 +15,8 @@ const MAX_ENTRIES = 100;
 /** Same-tab signal so the history tab can refresh after a speak. */
 export { VOICE_REMINDER_HISTORY_CHANGED_EVENT };
 
-export interface VoiceReminderTriggerEntry {
-  id: string;
-  /** Display line, e.g. 語音提醒 · 提前約一小時 · 「標題」 */
-  triggerReason: string;
-  status: "success" | "failure";
-  errorMessage: string | null;
-  triggeredAt: string;
-  eventId?: string;
-  title?: string;
-  leadOffsetMinutes?: number;
-}
+/** OpenAPI ``VoiceReminderHistoryEntrySchema`` (wire SoT). */
+export type VoiceReminderTriggerEntry = VoiceReminderHistoryEntryPayload;
 
 type VoiceReminderTriggerInput = {
   triggerReason: string;

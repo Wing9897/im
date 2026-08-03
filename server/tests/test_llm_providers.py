@@ -56,8 +56,24 @@ class _FakeSession:
 
 async def test_check_response_raises_on_4xx() -> None:
     resp = _FakeResponse(401, text='{"error":"unauthorized"}')
-    with pytest.raises(LlmClientError, match="status 401"):
+    with pytest.raises(LlmClientError, match="status 401") as caught:
         await check_response(cast(aiohttp.ClientResponse, resp))
+    exc = caught.value
+    assert exc.status_code == 401
+    assert exc.response_body == '{"error":"unauthorized"}'
+
+
+async def test_check_response_retains_capped_429_body() -> None:
+    body = '{"error":{"message":"rate limit","details":"' + ("x" * 5000) + '"}}'
+    resp = _FakeResponse(429, text=body)
+    with pytest.raises(LlmClientError, match="status 429") as caught:
+        await check_response(cast(aiohttp.ClientResponse, resp), provider="openai")
+    exc = caught.value
+    assert exc.status_code == 429
+    assert exc.provider == "openai"
+    assert exc.response_body is not None
+    assert len(exc.response_body) == 4000
+    assert exc.response_body.startswith('{"error"')
 
 
 async def test_complete_ollama_returns_unified_shape() -> None:
@@ -158,7 +174,7 @@ async def test_complete_openai_style_returns_unified_shape() -> None:
 
 async def test_complete_openai_style_raises_on_http_error() -> None:
     session = _FakeSession(lambda *_a, **_k: _FakeResponse(429, text="rate limited"))
-    with pytest.raises(LlmClientError, match="status 429"):
+    with pytest.raises(LlmClientError, match="status 429") as caught:
         await complete_openai_style(
             session,  # type: ignore[arg-type]
             base_url="https://api.example.com/v1",
@@ -168,6 +184,8 @@ async def test_complete_openai_style_raises_on_http_error() -> None:
             temperature=0.0,
             json_mode=False,
         )
+    assert caught.value.status_code == 429
+    assert caught.value.response_body == "rate limited"
 
 
 async def test_complete_gemini_returns_unified_shape() -> None:

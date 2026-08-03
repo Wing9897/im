@@ -1,10 +1,10 @@
 import type {
   AnalysisMode,
   AnalysisTimeRange,
-  ScheduleType,
   TaskFormState,
 } from "../../types";
 import i18n from "../../i18n";
+import { ANALYSIS_MODE_ORDER } from "./analysisModeCapabilities";
 
 // ============================================================
 // Types
@@ -23,20 +23,8 @@ type ParseResult =
 // Validation constants
 // ============================================================
 
-const VALID_SCHEDULE_TYPES: readonly string[] = [
-  "seconds_10",
-  "hourly",
-  "daily",
-  "weekly",
-  "custom_seconds",
-];
-
-const VALID_ANALYSIS_MODES: readonly string[] = [
-  "leaderboard",
-  "event",
-  "recurring",
-  "project",
-];
+/** Keep in lockstep with ANALYSIS_MODE_ORDER (includes web_intel). */
+const VALID_ANALYSIS_MODES: readonly string[] = ANALYSIS_MODE_ORDER;
 
 const VALID_ANALYSIS_TIME_RANGES: readonly AnalysisTimeRange[] = [
   "all",
@@ -56,7 +44,7 @@ const VALID_ANALYSIS_TIME_RANGES: readonly AnalysisTimeRange[] = [
 // ============================================================
 
 /**
- * Parses and validates the raw response from the chat_task_assistant REST endpoint.
+ * Parses and validates the raw response from the task advisor (``tasks.consult_advisor``).
  *
  * Multi-turn conversation semantics (graceful incremental parsing):
  * - The AI may return a conversational reply without a complete task config
@@ -133,22 +121,18 @@ export function parseTaskAssistantResponse(raw: unknown): ParseResult {
     }
   }
 
-  // scheduleType (enum)
-  if (config.scheduleType !== undefined && config.scheduleType !== null) {
-    if (typeof config.scheduleType !== "string") {
+  // scheduleRrule (canonical trigger RRULE string)
+  if (config.scheduleRrule !== undefined && config.scheduleRrule !== null) {
+    if (typeof config.scheduleRrule !== "string") {
       return {
         ok: false,
-        error: String(
-          i18n.t("assistant:parse.scheduleTypeInvalid", {
-            values: VALID_SCHEDULE_TYPES.join(", "),
-          }),
-        ),
+        error: String(i18n.t("assistant:parse.scheduleRruleNotString")),
       };
     }
-    if (VALID_SCHEDULE_TYPES.includes(config.scheduleType)) {
-      taskConfig.scheduleType = config.scheduleType as ScheduleType;
+    const trimmed = config.scheduleRrule.trim();
+    if (trimmed) {
+      taskConfig.scheduleRrule = trimmed;
     }
-    // Invalid enum value → skip silently (graceful degradation).
   }
 
   // analysisMode (enum)
@@ -193,13 +177,6 @@ export function parseTaskAssistantResponse(raw: unknown): ParseResult {
       && VALID_ANALYSIS_TIME_RANGES.includes(config.analysisTimeRange as AnalysisTimeRange)
     ) {
       taskConfig.analysisTimeRange = config.analysisTimeRange as AnalysisTimeRange;
-    }
-  }
-
-  // scheduleValue (optional, string or null)
-  if (config.scheduleValue !== undefined) {
-    if (config.scheduleValue === null || typeof config.scheduleValue === "string") {
-      taskConfig.scheduleValue = config.scheduleValue;
     }
   }
 

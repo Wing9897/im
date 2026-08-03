@@ -84,23 +84,17 @@ export function SettingsAnalysisStrategyPage() {
         <AdvancedSettingsPanel
           analysisMaxTotalChars={settingsObject.analysisMaxTotalChars}
           analysisMaxEstimatedInputTokens={settingsObject.analysisMaxEstimatedInputTokens}
-          analysisTraceVerbose={settingsObject.analysisTraceVerbose}
           llmGenerationTimeout={settingsObject.llmGenerationTimeout}
           maxConcurrentBatches={settingsObject.maxConcurrentBatches}
           maxBatchRetries={settingsObject.maxBatchRetries}
           llmProvider={settingsObject.llmProvider}
-          intelligenceRulesVersion={settingsObject.intelligenceRulesVersion}
           onAnalysisMaxTotalCharsChange={(v) => handleSettingChange("analysisMaxTotalChars", v)}
           onAnalysisMaxEstimatedInputTokensChange={(v) =>
             handleSettingChange("analysisMaxEstimatedInputTokens", v)
           }
-          onAnalysisTraceVerboseChange={(v) => handleSettingChange("analysisTraceVerbose", v)}
           onLlmGenerationTimeoutChange={(v) => handleSettingChange("llmGenerationTimeout", v)}
           onMaxConcurrentBatchesChange={(v) => handleSettingChange("maxConcurrentBatches", v)}
           onMaxBatchRetriesChange={(v) => handleSettingChange("maxBatchRetries", v)}
-          onIntelligenceRulesVersionChange={(v) =>
-            handleSettingChange("intelligenceRulesVersion", v)
-          }
         />
       </SettingsFieldGroup>
 

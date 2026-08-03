@@ -16,7 +16,8 @@
  *   (not soft-dismiss; that stays on `/api/v1/calendar/dismissals`).
  * - UI locale remains LS-first (`i18n/locale.ts`); do not make server authoritative
  *   for `auto` locale the same way as board layout.
- * Hand-written. OpenAPI paths live under `/api/v1/ui-prefs/*`.
+ * Transport is hand-written; request/response shapes derive from OpenAPI
+ * `components["schemas"]` (see `server/api/schemas/responses/ui_prefs.py`).
  */
 
 export * from "./board";

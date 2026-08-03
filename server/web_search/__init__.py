@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from server.web_search.execution import (
+    ASSISTANT_TOOL_DEFAULT_COUNT,
+    WEB_INTEL_SEARCH_COUNT,
+    WebSearchExecutionService,
+)
 from server.web_search.providers import (
     DEFAULT_COUNT,
     MAX_COUNT,
@@ -12,8 +17,11 @@ from server.web_search.providers import (
 )
 
 __all__ = [
+    "ASSISTANT_TOOL_DEFAULT_COUNT",
     "DEFAULT_COUNT",
     "MAX_COUNT",
+    "WEB_INTEL_SEARCH_COUNT",
+    "WebSearchExecutionService",
     "search_brave",
     "search_duckduckgo",
     "search_web",

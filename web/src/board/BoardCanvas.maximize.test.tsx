@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, useState, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../context/MonitorModeContext";
+import { MONITOR_MODE_KEY } from "../context/MonitorModeContext";
 import { BoardCanvas, nudgeBoardRemeasure } from "./BoardCanvas";
+import { wrapBoardProviders } from "./boardTestHarness";
 import type { BoardConfig } from "./types";
 
 vi.mock("../api/results", () => ({
@@ -33,23 +30,9 @@ vi.mock("../api/tasks", () => ({
   fetchTaskActivitySpans: vi.fn(async () => []),
 }));
 
-vi.mock("../context/AnalysisStatusContext", () => ({
-  useAnalysisStatus: () => ({
-    queueStatus: {
-      pendingCount: 0,
-      processingBatches: [],
-      attentionBatches: [],
-      analysisPaused: false,
-    },
-    analysisPaused: false,
-    activeAnalysis: null,
-    activeAnalyses: new Map(),
-    lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
-    lastMessagesUpdate: null,
-    requestQueueStatusRefresh: vi.fn(),
-  }),
-}));
+vi.mock("../context/AnalysisStatusContext", async () =>
+  (await import("../test/context-mocks")).analysisStatusModuleMock(),
+);
 
 vi.mock("../context/TaskCatalogContext", async () =>
   (await import("../test/context-mocks")).taskCatalogModuleMock(),
@@ -117,13 +100,7 @@ describe("BoardCanvas maximize keeps siblings mounted", () => {
 
   it("keeps all widget mounts in the DOM when one is maximized", async () => {
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(Harness)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(Harness)));
     });
     await flush();
 
@@ -159,13 +136,7 @@ describe("BoardCanvas maximize keeps siblings mounted", () => {
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
 
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(Harness)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(Harness)));
     });
     await flush();
     dispatchSpy.mockClear();
@@ -215,20 +186,14 @@ describe("BoardCanvas maximize keeps siblings mounted", () => {
   it("shows empty board hint when there are no widgets", async () => {
     act(() => {
       root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(BoardCanvas, {
-              config: { ...sampleConfig, widgets: [] },
-              editMode: "edit",
-              maximizedId: null,
-              onConfigChange: () => {},
-              onMaximize: () => {},
-            }),
-          ),
+        wrapBoardProviders(
+          createElement(BoardCanvas, {
+            config: { ...sampleConfig, widgets: [] },
+            editMode: "edit",
+            maximizedId: null,
+            onConfigChange: () => {},
+            onMaximize: () => {},
+          }),
         ),
       );
     });
@@ -240,20 +205,14 @@ describe("BoardCanvas maximize keeps siblings mounted", () => {
   it("exposes size presets in edit mode (not free resize handles)", async () => {
     act(() => {
       root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(BoardCanvas, {
-              config: sampleConfig,
-              editMode: "edit",
-              maximizedId: null,
-              onConfigChange: () => {},
-              onMaximize: () => {},
-            }),
-          ),
+        wrapBoardProviders(
+          createElement(BoardCanvas, {
+            config: sampleConfig,
+            editMode: "edit",
+            maximizedId: null,
+            onConfigChange: () => {},
+            onMaximize: () => {},
+          }),
         ),
       );
     });

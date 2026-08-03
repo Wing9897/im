@@ -8,8 +8,8 @@ from server.util import new_id, utc_now_iso
 
 async def test_viewer_stats_excludes_old_version_batches(client):
     before = (await client.get("/api/v1/viewer/stats")).json()
-    assert before["totalBatches"] == 3
-    assert before["completedBatches"] == 3
+    assert before["totalBatches"] == 5
+    assert before["completedBatches"] == 5
 
     update = await client.put(
         f"/api/v1/tasks/{seed.TASK_LEADERBOARD}",
@@ -19,7 +19,7 @@ async def test_viewer_stats_excludes_old_version_batches(client):
             "analysisMode": "leaderboard",
             "analysisTimeRange": "all",
             "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-            "scheduleType": "seconds_10",
+            "scheduleRrule": "FREQ=SECONDLY;INTERVAL=10",
         },
     )
     assert update.status_code == 200
@@ -50,7 +50,7 @@ async def test_queue_excludes_old_version_pending(app, client):
             "analysisMode": "leaderboard",
             "analysisTimeRange": "all",
             "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-            "scheduleType": "seconds_10",
+            "scheduleRrule": "FREQ=SECONDLY;INTERVAL=10",
         },
     )
     assert update.status_code == 200
@@ -115,7 +115,7 @@ async def test_version_bump_deletes_superseded_batch_rows(app, client):
             "analysisMode": "leaderboard",
             "analysisTimeRange": "all",
             "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-            "scheduleType": "seconds_10",
+            "scheduleRrule": "FREQ=SECONDLY;INTERVAL=10",
         },
     )
     assert update.status_code == 200

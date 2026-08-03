@@ -10,7 +10,7 @@ from server.domain.analysis_modes import AnalysisMode
 
 
 class TaskDraftPayload(BaseModel):
-    """Wire shape for chat-assistant ``currentTask`` / ``taskConfig``.
+    """Wire shape for agent task-advisor ``currentTask`` / tool ``taskConfig``.
 
     Aligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.
     Extra AI keys are ignored so OpenAPI stays a concrete object (not unknown).
@@ -22,19 +22,12 @@ class TaskDraftPayload(BaseModel):
     description: str | None = None
     promptTemplate: str | None = None
     webSearchQuery: str | None = None
-    scheduleType: str | None = None
-    scheduleValue: str | None = None
     scheduleRrule: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
     channelIds: list[Union[str, dict[str, Any]]] | None = None
     #: Event / web_intel time-planning visibility; omitted / null = leave form unchanged.
     includeInTimeline: bool | None = None
-
-
-class ChatAssistantResponse(BaseModel):
-    message: str
-    taskConfig: TaskDraftPayload | None
 
 
 class AgentToolCallSummary(BaseModel):
@@ -74,8 +67,6 @@ class TaskResponse(BaseModel):
     version: int
     isActive: bool
     scheduleRrule: str | None = None
-    scheduleType: str | None = None
-    scheduleValue: str | None = None
     includeInTimeline: bool = True
     parentTaskId: str | None = None
     worksetId: str | None = None

@@ -1,13 +1,12 @@
+import type { TimelineEventTimeOverridePayload } from "../../api/uiPrefs";
 import i18n from "../../i18n";
 
 export type TimelineEventStatus = "pending" | "confirmed" | "completed";
 export type EventStatus = TimelineEventStatus | "cancelled";
 export type TimelineEventStatusMap = Record<string, TimelineEventStatus>;
 
-export type TimelineEventTimeOverride = {
-  startTime: string;
-  endTime: string | null;
-};
+/** OpenAPI ``TimelineEventTimeOverrideSchema`` (wire SoT). */
+export type TimelineEventTimeOverride = TimelineEventTimeOverridePayload;
 
 export type TimelineEventTimeOverrideMap = Record<string, TimelineEventTimeOverride>;
 

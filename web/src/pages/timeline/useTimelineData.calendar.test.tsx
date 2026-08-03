@@ -52,8 +52,10 @@ vi.mock("../../context/TaskCatalogContext", async () =>
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 
+const mockUseRefreshOnAnalysisEvent = vi.hoisted(() => vi.fn());
+
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({
-  useRefreshOnAnalysisEvent: vi.fn(),
+  useRefreshOnAnalysisEvent: (...args: unknown[]) => mockUseRefreshOnAnalysisEvent(...args),
 }));
 
 import { MemoryRouter } from "react-router-dom";
@@ -62,7 +64,9 @@ import {
   MonitorModeProvider,
 } from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetTaskCatalogState } from "../../test/context-mocks";
+import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";
 import { calendarOccurrenceToBoardEvent } from "../../domain/timeline/timedEventMerge";
+import { emitResourceModified } from "../../domain/sse/resourceModified";
 import { useTimelineData } from "./useTimelineData";
 
 type HookResult = ReturnType<typeof useTimelineData>;
@@ -149,6 +153,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     mockListUserEvents.mockReset().mockResolvedValue([]);
+    mockUseRefreshOnAnalysisEvent.mockReset();
     resetTaskCatalogState();
     resultRef = { current: null };
   });
@@ -463,16 +468,78 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });
 
-  it("includes event, recurring, and project modes in timelineTasks", async () => {
+  it("includes event, web_intel, recurring, and project modes in timelineTasks", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "web-1", name: "Web Intel", analysisMode: "web_intel" }),
       makeAnalysisTask({ id: "cal-1", name: "Calendar Task", analysisMode: "recurring" }),
       makeAnalysisTask({ id: "proj-1", name: "Project Alpha", analysisMode: "project" }),
       makeAnalysisTask({ id: "lb-1", name: "Leaderboard", analysisMode: "leaderboard" }),
     ]);
     await renderHook(null);
     const ids = resultRef.current!.timelineTasks.map((t) => t.id);
-    expect(ids).toEqual(["evt-1", "cal-1", "proj-1"]);
+    expect(ids).toEqual(["evt-1", "web-1", "cal-1", "proj-1"]);
+  });
+
+  it("wires SSE refresh to event + web_intel analysis modes", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "web-1", name: "Web Intel", analysisMode: "web_intel" }),
+    ]);
+    await renderHook(null);
+    const options = mockUseRefreshOnAnalysisEvent.mock.calls.at(-1)?.[1] as {
+      analysisMode?: unknown;
+      taskIds?: unknown;
+    };
+    expect(options.analysisMode).toEqual(ANALYSIS_EVENTS_MODES);
+    expect(options.analysisMode).toEqual(["event", "web_intel"]);
+    expect(options.taskIds).toBeNull();
+  });
+
+  it("merges source=item calendar rows and refreshes on item SSE", async () => {
+    mockFetchCalendarOccurrences.mockResolvedValue([
+      makeOccurrence({
+        id: "item:i1:expires",
+        taskId: "",
+        taskName: "",
+        title: "Milk",
+        startTime: "2025-01-20T00:00:00",
+        endTime: "2025-01-20T23:59:59",
+        isAllDay: true,
+        rrule: "",
+        source: "item",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "i1",
+        itemDateKind: "expires",
+      }),
+    ]);
+    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(String),
+      { taskIds: [], includeItems: true },
+    );
+    const itemEvent = resultRef.current!.events.find((e) => e.source === "item");
+    expect(itemEvent?.id).toBe("item:i1:expires");
+    expect(itemEvent?.itemId).toBe("i1");
+    expect(itemEvent?.itemDateKind).toBe("expires");
+
+    mockFetchCalendarOccurrences.mockClear();
+    mockFetchCalendarOccurrences.mockResolvedValue([]);
+    await act(async () => {
+      emitResourceModified({
+        resourceType: "item",
+        resourceId: "i1",
+        action: "updated",
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
   });
 
   it("drops soft-deleted calendar tasks from the assignable timeline task list", async () => {

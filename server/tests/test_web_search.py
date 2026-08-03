@@ -160,7 +160,7 @@ async def test_execute_web_search_uses_provider(app) -> None:
         "provider": "duckduckgo",
         "count": 1,
     }
-    with patch("server.agent.tools_web_search.search_web", AsyncMock(return_value=mock_result)) as mocked:
+    with patch("server.web_search.execution.search_web", AsyncMock(return_value=mock_result)) as mocked:
         result = await execute_tool(
             app.state.db,
             "web.search",
@@ -175,3 +175,30 @@ async def test_execute_web_search_uses_provider(app) -> None:
     mocked.assert_awaited_once()
     assert mocked.await_args is not None
     assert mocked.await_args.kwargs["provider"] == "duckduckgo"
+
+
+async def test_web_search_execution_service_respects_enabled_and_count() -> None:
+    from server.web_search.execution import (
+        ASSISTANT_TOOL_DEFAULT_COUNT,
+        WEB_INTEL_SEARCH_COUNT,
+        WebSearchExecutionService,
+    )
+
+    service = WebSearchExecutionService()
+    disabled = await service.tool_search("q", provider="duckduckgo", enabled=False)
+    assert disabled["error"] == "web search is disabled"
+    assert ASSISTANT_TOOL_DEFAULT_COUNT == 5
+    assert WEB_INTEL_SEARCH_COUNT == 8
+
+    with patch(
+        "server.web_search.execution.search_web",
+        AsyncMock(return_value={"items": [], "provider": "duckduckgo", "count": 0}),
+    ) as mocked:
+        await service.tool_search(
+            "hello",
+            provider="duckduckgo",
+            count=WEB_INTEL_SEARCH_COUNT,
+            enabled=True,
+        )
+    assert mocked.await_args is not None
+    assert mocked.await_args.kwargs["count"] == WEB_INTEL_SEARCH_COUNT

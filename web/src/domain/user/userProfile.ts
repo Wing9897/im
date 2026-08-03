@@ -6,16 +6,18 @@ import {
   DISPLAY_NAME_MAX_CHARS,
   compressAvatarToDataUrl,
 } from "../aiStaff/assistantIdentity";
+import {
+  USER_PROFILE_DRAFT_KEY,
+  USER_PROFILE_EVENT,
+  USER_PROFILE_KEY,
+} from "../prefs/keys";
 
 /**
  * User display name + avatar + background bio.
  * Source of truth: SQLite ``system_config`` via settings API.
  * ``localStorage`` is a sync/offline cache only (not a migrate source).
  */
-export const USER_PROFILE_KEY = "im:user:profile:v1";
-export const USER_PROFILE_EVENT = "im:user:profile:v1-change";
-/** sessionStorage: unsaved profile editor fields (not the committed SoT key above). */
-export const USER_PROFILE_DRAFT_KEY = "im:user:profile:draft:v1";
+export { USER_PROFILE_DRAFT_KEY, USER_PROFILE_EVENT, USER_PROFILE_KEY };
 
 export { AVATAR_MAX_DATA_URL_CHARS, AVATAR_MAX_EDGE_PX, DISPLAY_NAME_MAX_CHARS, compressAvatarToDataUrl };
 

@@ -30,7 +30,6 @@ def all_routers() -> list[APIRouter]:
         results,
         setup,
         system,
-        task_assistant,
         tasks,
         ui_prefs,
         viewer,
@@ -41,9 +40,6 @@ def all_routers() -> list[APIRouter]:
     routers.extend(
         [
             setup.router,
-            # task_assistant's fixed /chat-assistant path must mount before
-            # tasks' /{task_id} routes.
-            task_assistant.router,
             tasks.router,
             worksets.router,
             items.router,

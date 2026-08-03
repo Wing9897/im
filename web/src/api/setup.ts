@@ -8,6 +8,7 @@
 
 import { apiClient } from "./client";
 import { publicFetchJson } from "./publicFetch";
+import type { components } from "./generated/schema";
 export {
   loginWithPassword,
   refreshDeviceSession,
@@ -15,15 +16,7 @@ export {
 } from "./setupSession";
 export type { DeviceSessionResponse } from "./setupSession";
 
-export interface SetupStatus {
-  bootstrapped: boolean;
-  hasAdmin: boolean;
-  hasActiveDevice: boolean;
-  credentialsConfigured: boolean;
-  localhostAuthExempt: boolean;
-  /** File-armed local forgot-password (`connection.json` → resetPasswordForLocal). */
-  resetPasswordForLocal: boolean;
-}
+export type SetupStatus = components["schemas"]["SetupStatusResponse"];
 
 export interface SetupDevice {
   id: string;

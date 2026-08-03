@@ -54,6 +54,15 @@ async def test_project_message_cursor_roundtrip(app) -> None:
     loaded = await load_project_message_cursor(db, task_id)
     assert loaded == ProjectMessageCursor(timestamp="2026-07-27T13:00:00Z", message_id="msg-b")
 
+    row = await db.fetch_one(
+        "SELECT last_message_at, last_message_id FROM project_message_cursors WHERE task_id = ?",
+        (task_id,),
+    )
+    assert row is not None
+    assert row["last_message_at"] == "2026-07-27T13:00:00Z"
+    assert row["last_message_id"] == "msg-b"
+    assert "\t" not in str(row["last_message_at"])
+
     legacy = await db.fetch_one(
         "SELECT value FROM system_config WHERE key = ?",
         (f"project_last_message_at:{task_id}",),

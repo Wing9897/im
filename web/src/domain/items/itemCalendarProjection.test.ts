@@ -16,6 +16,22 @@ import {
 } from "./itemCalendarProjection";
 import { ALL_CATEGORIES_ID, UNCATEGORIZED_CATEGORY_ID } from "./categoryAggregates";
 
+/** Canonical seed emojis from `server/db/schema_ddl.py` INSERT OR IGNORE rows. */
+const DDL_SEED_CATEGORY_EMOJIS: Readonly<Record<string, string>> = {
+  passport_docs: "🪪",
+  food: "🍎",
+  credit_card: "💳",
+  warranty: "🛡️",
+  contract: "📄",
+  household: "🏠",
+  medicine: "💊",
+  subscription: "🔁",
+  membership: "🎫",
+  insurance: "☂️",
+  vehicle: "🚗",
+  other: "📦",
+};
+
 describe("itemCalendarProjection helpers", () => {
   beforeEach(async () => {
     await setAppLocale("zh-Hant");
@@ -45,14 +61,27 @@ describe("itemCalendarProjection helpers", () => {
     expect(resolveItemEmoji({}, null)).toBe(DEFAULT_ITEM_EMOJI);
   });
 
-  it("applies seed emoji overlay and synthetic card marks", () => {
-    expect(resolveCategoryEmoji({ slug: "insurance", emoji: "📋" })).toBe("☂️");
+  it("uses stored category emoji and synthetic card marks", () => {
+    expect(resolveCategoryEmoji({ slug: "insurance", emoji: "☂️" })).toBe("☂️");
     expect(resolveCategoryEmoji({ slug: "food", emoji: "🍎" })).toBe("🍎");
     expect(resolveCategoryCardEmoji(ALL_CATEGORIES_ID, null)).toBe(ALL_CATEGORIES_EMOJI);
     expect(resolveCategoryCardEmoji(UNCATEGORIZED_CATEGORY_ID, null)).toBe(
       UNCATEGORIZED_EMOJI,
     );
     expect(resolveCategoryCardEmoji("c1", { emoji: null })).toBe(DEFAULT_ITEM_EMOJI);
+  });
+
+  it("keeps resolveCategoryEmoji aligned with DDL seed glyphs (no FE overlay)", () => {
+    for (const [slug, emoji] of Object.entries(DDL_SEED_CATEGORY_EMOJIS)) {
+      expect(resolveCategoryEmoji({ slug, emoji })).toBe(emoji);
+    }
+    // Without overlay, stored legacy glyphs pass through as-is (wipe resets seeds).
+    expect(resolveCategoryEmoji({ slug: "insurance", emoji: "📋" })).toBe("📋");
+
+    const seedGlyphs = new Set(Object.values(DDL_SEED_CATEGORY_EMOJIS));
+    expect(seedGlyphs.has(ALL_CATEGORIES_EMOJI)).toBe(false);
+    expect(seedGlyphs.has(UNCATEGORIZED_EMOJI)).toBe(false);
+    expect(DEFAULT_ITEM_EMOJI).toBe(DDL_SEED_CATEGORY_EMOJIS.other);
   });
 
   it("labels and tones distinguish remind vs expires", () => {

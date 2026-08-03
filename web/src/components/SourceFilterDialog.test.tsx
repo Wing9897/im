@@ -220,4 +220,59 @@ describe("SourceFilterDialog", () => {
       document.querySelector('[data-testid="board-workset-filter-__unassigned__"]'),
     ).toBeTruthy();
   });
+
+  it("lists web_intel tasks with mode label and allows selecting them", () => {
+    const onChange = vi.fn();
+    act(() => {
+      root.render(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(SourceFilterDialog, {
+            tasks: [{ id: "web-1", name: "Pricing watch" }],
+            worksets: WORKSETS,
+            expandTasks: [
+              {
+                id: "web-1",
+                name: "Pricing watch",
+                worksetId: "ws-1",
+                analysisMode: "web_intel",
+              },
+            ],
+            selection: { taskIds: [], worksetIds: [] },
+            onChange,
+            ariaLabelPrefix: "Intelligence",
+            variant: "toolbar",
+          }),
+        ),
+      );
+    });
+    openDialog();
+    act(() => {
+      (
+        document.querySelector(
+          '[data-testid="board-workset-expand-ws-1"]',
+        ) as HTMLButtonElement
+      ).click();
+    });
+
+    const row = document
+      .querySelector('[data-testid="board-source-filter-web-1"]')!
+      .closest("label")!;
+    expect(row.textContent).toContain("Pricing watch");
+    expect(row.textContent).toMatch(/Web intel|網路情報/i);
+
+    act(() => {
+      (document.querySelector('[data-testid="board-source-filter-web-1"]') as HTMLInputElement).click();
+    });
+    act(() => {
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const apply = buttons.find((btn) => btn.textContent === "Apply");
+      apply?.click();
+    });
+    expect(onChange).toHaveBeenCalledWith({
+      taskIds: ["web-1"],
+      worksetIds: [],
+    });
+  });
 });

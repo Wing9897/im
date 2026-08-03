@@ -65,7 +65,17 @@
     "lanAccessHelp": "將本機服務綁定到所有網卡（0.0.0.0），以便區網其他裝置以遠端用戶端連線。預設僅本機迴環（127.0.0.1）。變更後會重啟應用。若經 port-forward 暴露到公網，須在前面加 Caddy/Nginx 等 TLS 反向代理——應用本身不處理 HTTPS。",
     "lanAccessEnabled": "已開啟區域網路存取（即將重啟）",
     "lanAccessDisabled": "已關閉區域網路存取（即將重啟）",
-    "lanAccessRestarting": "正在重啟以套用綁定位址…"
+    "lanAccessRestarting": "正在重啟以套用綁定位址…",
+    "debug": {
+      "sectionTitle": "除錯與診斷",
+      "rulesVersionLabel": "分析規則版本標記",
+      "rulesVersionPlaceholder": "v2",
+      "rulesVersionHelp": "寫入訊息批次提示（關鍵事件／排行榜系統提示）的版本字串（例如 v2），以便對照批次提示詞修訂。不會切換證據風格、調度或分析規則。留空表示不附加標記。網路情報／專案／循環不使用此標記。",
+      "traceVerboseLabel": "伺服器分析 Trace",
+      "traceVerboseHelp": "在伺服器日誌寫入較詳細的分析追蹤（不是設定→系統日誌頁）。",
+      "saveLabel": "儲存除錯設定",
+      "saved": "除錯設定已儲存"
+    }
   },
   "theme": {
     "bgTooLarge": "圖片大小不可超過 2MB",
@@ -326,12 +336,7 @@
       "maxCharsLabel": "單批分析最大字元數",
       "maxCharsHelp": "單批原始內容字元上限；超出提早截斷。",
       "maxTokensLabel": "全域輸入 Token 上限",
-      "maxTokensHelp": "全站共用的輸入 token 上限；過長易失敗時可調低。",
-      "debugSectionTitle": "除錯",
-      "rulesVersionLabel": "全局分析規則版本",
-      "rulesVersionHelp": "僅提示詞版本標記，不切換規則。",
-      "traceVerboseLabel": "分析 Trace 詳細日誌",
-      "traceVerboseHelp": "記錄完整 request/response。"
+      "maxTokensHelp": "全站共用的輸入 token 上限；過長易失敗時可調低。"
     }
   },
   "apiDocs": {

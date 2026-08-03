@@ -305,7 +305,6 @@
       "descriptionPlaceholder": "補充這個活動的細節",
       "allDayHint": "整天活動不需要設定開始與結束時間。"
     },
-
     "template": {
       "title": "選擇任務模板",
       "all": "全部",
@@ -500,6 +499,16 @@
         "name": "工作輪更表",
         "description": "依來源訊息建立與維護工作輪更／更份表，含更份變更、對調與取消",
         "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子循環或單次事件就更新，對不上才新建；2) 固定輪更用 recurring 子任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
+      },
+      "web-intel-pricing-watch": {
+        "name": "定價監管情報",
+        "description": "定期搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
+        "promptTemplate": "從搜尋結果抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
+      },
+      "web-intel-geopolitics-hotspots": {
+        "name": "地緣熱點掃描",
+        "description": "定期搜尋東亞等地緣／安全熱點動態動向，抽成情報事件",
+        "promptTemplate": "從搜尋結果抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
       }
     }
   },
@@ -1087,19 +1096,27 @@
     "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暫停新批次",
     "aiUnavailable": "AI 無法連線",
     "aiUnavailableTitle": "收集器運行中，但 AI 引擎無法連線",
+    "aiUnavailableTitleCollectorDown": "收集器已停止，且 AI 引擎無法連線",
     "analysisPaused": "分析已暫停",
     "analysisPausedTitle": "收集器運行中 · AI 分析已暫停",
+    "analysisPausedTitleCollectorDown": "AI 分析已暫停 · 收集器已停止",
+    "collectorStoppedShort": "收集器已停",
+    "collectorStoppedAnalysisActive": "收集器已停止 · AI 分析仍可運行",
     "systemOk": "系統正常",
     "systemOkTitle": "收集器運行中 · AI 引擎正常",
     "busy": "處理中",
     "clickResume": "點擊繼續分析",
     "clickPause": "點擊暫停分析",
+    "controlsUnavailable": "控制暫時無法使用",
     "analysisControl": "分析控制",
     "analysisControlMenu": "分析控制選單",
     "emergencyAbort": "緊急中止",
     "aborting": "中止中…",
     "pillTitle": "{title}（{pauseHint}；懸停展開可緊急中止）",
+    "pillTitleBusy": "{title}（{pauseHint}）",
+    "pillTitleDisabled": "{title}",
     "pillAria": "{label}。{pauseHint}",
+    "pillAriaDisabled": "{label}",
     "abortDialogTitle": "緊急中止分析",
     "abortDialogBody": "確定要緊急中止所有分析嗎？此操作無法復原。"
   },
@@ -1129,7 +1146,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 9／SemVer 0.1.0-beta.10；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 10／SemVer 0.1.0-beta.11；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

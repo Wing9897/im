@@ -241,15 +241,12 @@ describe("Schema narratives track CURRENT_SCHEMA_VERSION", () => {
     return match![1];
   }
 
-  /** Wipe-floor hard-reject ceiling = min(registered MigrationStep sources) - 1, else current - 1. */
+  /**
+   * Wipe-only bootstrap (schema_bootstrap.py): no MigrationStep registry.
+   * Non-current stamps hard-reject; narrative ceiling is current - 1.
+   */
   function readHardRejectCeiling(current: number): number {
-    const migrationsPath = path.resolve(ROOT_DIR, "server", "db", "migrations.py");
-    const source = fs.readFileSync(migrationsPath, "utf-8");
-    const sources = [...source.matchAll(/MigrationStep\(\s*(\d+)\s*,\s*(\d+)/g)].map((m) =>
-      Number(m[1]),
-    );
-    if (sources.length === 0) return current - 1;
-    return Math.min(...sources) - 1;
+    return current - 1;
   }
 
   it("ARCHITECTURE.md states the current baseline (not an older one)", () => {

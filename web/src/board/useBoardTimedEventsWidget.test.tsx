@@ -10,6 +10,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnalysisEvent } from "../types";
 import { emitResourceModified } from "../domain/sse/resourceModified";
+import { ANALYSIS_EVENTS_MODES } from "../domain/tasks/analysisModeCapabilities";
 import { useBoardTimedEventsWidget } from "./useBoardTimedEventsWidget";
 
 const mocks = vi.hoisted(() => ({
@@ -26,6 +27,7 @@ const mocks = vi.hoisted(() => ({
     ),
   ),
   poll: vi.fn(),
+  refreshOnAnalysis: vi.fn(),
 }));
 
 vi.mock("../components/SourceFilterDialog", () => ({
@@ -73,7 +75,7 @@ vi.mock("./useBoardWidgetPoll", () => ({
 }));
 
 vi.mock("../hooks/useRefreshOnAnalysisEvent", () => ({
-  useRefreshOnAnalysisEvent: vi.fn(),
+  useRefreshOnAnalysisEvent: (...args: unknown[]) => mocks.refreshOnAnalysis(...args),
 }));
 
 const fetchedEvents = [
@@ -177,5 +179,37 @@ describe("useBoardTimedEventsWidget", () => {
     });
 
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("subscribes to analysis SSE for event + web_intel finding modes", () => {
+    act(() => root.render(createElement(Probe)));
+
+    expect(mocks.refreshOnAnalysis).toHaveBeenCalledWith(
+      mocks.refresh,
+      expect.objectContaining({ analysisMode: ANALYSIS_EVENTS_MODES }),
+    );
+    expect(ANALYSIS_EVENTS_MODES).toEqual(["event", "web_intel"]);
+  });
+
+  it("refreshes when trackable items / categories change via SSE", () => {
+    act(() => root.render(createElement(Probe)));
+    mocks.refresh.mockClear();
+
+    act(() => {
+      emitResourceModified({
+        resourceType: "item",
+        resourceId: "item-1",
+        action: "updated",
+      });
+    });
+    act(() => {
+      emitResourceModified({
+        resourceType: "item_category",
+        resourceId: "seed_food",
+        action: "updated",
+      });
+    });
+
+    expect(mocks.refresh).toHaveBeenCalledTimes(2);
   });
 });

@@ -180,23 +180,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tasks/chat-assistant": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Chat Assistant */
-        post: operations["chat_assistant_api_v1_tasks_chat_assistant_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/tasks/templates": {
         parameters: {
             query?: never;
@@ -2250,14 +2233,70 @@ export interface components {
             /** Totalcount */
             totalCount: number;
         };
+        /** AssistantSessionMessageSchema */
+        AssistantSessionMessageSchema: {
+            /** Id */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /** Content */
+            content: string;
+            /** Toolcalls */
+            toolCalls?: components["schemas"]["AssistantToolCallSchema"][] | null;
+        };
+        /** AssistantSessionSchema */
+        "AssistantSessionSchema-Input": {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Updatedat */
+            updatedAt: number;
+            /** Messages */
+            messages: components["schemas"]["AssistantSessionMessageSchema"][];
+            /** Sessionid */
+            sessionId?: string | null;
+        };
+        /** AssistantSessionSchema */
+        "AssistantSessionSchema-Output": {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Updatedat */
+            updatedAt: number;
+            /** Messages */
+            messages: components["schemas"]["AssistantSessionMessageSchema"][];
+            /** Sessionid */
+            sessionId?: string | null;
+        };
+        /** AssistantSessionsPutBody */
+        AssistantSessionsPutBody: {
+            /** Deviceid */
+            deviceId: string;
+            /** Sessions */
+            sessions: components["schemas"]["AssistantSessionSchema-Input"][];
+            /** Activesessionid */
+            activeSessionId?: string | null;
+        };
         /** AssistantSessionsResponse */
         AssistantSessionsResponse: {
             /** Configured */
             configured: boolean;
             /** Sessions */
-            sessions?: unknown[] | null;
+            sessions?: components["schemas"]["AssistantSessionSchema-Output"][] | null;
             /** Activesessionid */
             activeSessionId?: string | null;
+        };
+        /** AssistantToolCallSchema */
+        AssistantToolCallSchema: {
+            /** Name */
+            name: string;
+            /** Resultsummary */
+            resultSummary?: string | null;
         };
         /** AssistantVoiceIoBody */
         AssistantVoiceIoBody: {
@@ -2297,8 +2336,9 @@ export interface components {
             /**
              * Spacepttmode
              * @default hold
+             * @enum {string}
              */
-            spacePttMode: string;
+            spacePttMode: "hold" | "toggle";
             /**
              * Ttsvoiceuri
              * @default
@@ -2309,21 +2349,71 @@ export interface components {
              * @default __user__
              */
             defaultWorksetId: string;
-        } & {
-            [key: string]: unknown;
+        };
+        /**
+         * BoardLayoutSchema
+         * @description Layout blob stored under ``ops_board_layout`` (v14 widgets mosaic).
+         */
+        BoardLayoutSchema: {
+            /** Version */
+            version: number;
+            /** Widgets */
+            widgets: components["schemas"]["BoardWidgetSchema"][];
+        };
+        /** BoardMapViewSchema */
+        BoardMapViewSchema: {
+            /** Center */
+            center: number[];
+            /** Zoom */
+            zoom: number;
+        };
+        /**
+         * BoardPrefsPutBody
+         * @description Partial board upsert. Omit a key to leave unchanged; ``null`` clears it.
+         */
+        BoardPrefsPutBody: {
+            layout?: components["schemas"]["BoardLayoutSchema"] | null;
+            widgetState?: components["schemas"]["BoardWidgetStateSchema"] | null;
         };
         /** BoardPrefsResponse */
         BoardPrefsResponse: {
             /** Configured */
             configured: boolean;
-            /** Layout */
-            layout?: {
-                [key: string]: unknown;
-            } | null;
-            /** Widgetstate */
-            widgetState?: {
-                [key: string]: unknown;
-            } | null;
+            layout?: components["schemas"]["BoardLayoutSchema"] | null;
+            widgetState?: components["schemas"]["BoardWidgetStateSchema"] | null;
+        };
+        /** BoardWidgetSchema */
+        BoardWidgetSchema: {
+            /** I */
+            i: string;
+            /** Type */
+            type: string;
+            /** Col */
+            col: number;
+            /** Row */
+            row: number;
+            /** Sizeid */
+            sizeId: string;
+            /** Z */
+            z?: number | null;
+        };
+        /**
+         * BoardWidgetStateSchema
+         * @description Per-widget map / source-filter / gantt zoom state.
+         */
+        BoardWidgetStateSchema: {
+            /** Mapviews */
+            mapViews: {
+                [key: string]: components["schemas"]["BoardMapViewSchema"];
+            };
+            /** Sourcefilters */
+            sourceFilters: {
+                [key: string]: components["schemas"]["SourceFilterSelectionSchema"] | null;
+            };
+            /** Ganttviewmodes */
+            ganttViewModes: {
+                [key: string]: "day" | "month";
+            };
         };
         /** CalendarImportChangeResponse */
         CalendarImportChangeResponse: {
@@ -2603,22 +2693,6 @@ export interface components {
             accountId: string | null;
             /** Accountname */
             accountName: string | null;
-        };
-        /** ChatAssistantBody */
-        ChatAssistantBody: {
-            /** Messages */
-            messages: {
-                [key: string]: unknown;
-            }[];
-            currentTask?: components["schemas"]["TaskDraftPayload"] | null;
-            /** Locale */
-            locale?: string | null;
-        };
-        /** ChatAssistantResponse */
-        ChatAssistantResponse: {
-            /** Message */
-            message: string;
-            taskConfig: components["schemas"]["TaskDraftPayload"] | null;
         };
         /**
          * CreateRecurringTaskBody
@@ -3668,18 +3742,8 @@ export interface components {
                 [key: string]: unknown;
             })[] | null;
             /**
-             * Scheduletype
-             * @description Read-compat FE preset mirror (maps to scheduleRrule). Write path should send scheduleRrule; accepted only when scheduleRrule is omitted.
-             */
-            scheduleType?: string | null;
-            /**
-             * Schedulevalue
-             * @description Read-compat value for scheduleType presets. Ignored when scheduleRrule is provided.
-             */
-            scheduleValue?: string | null;
-            /**
              * Schedulerrule
-             * @description Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Create/update write SoT — prefer this alone over scheduleType/scheduleValue.
+             * @description Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Sole create/update schedule write SoT on the HTTP wire.
              */
             scheduleRrule?: string | null;
             /** Includeintimeline */
@@ -3708,7 +3772,7 @@ export interface components {
         };
         /**
          * TaskDraftPayload
-         * @description Wire shape for chat-assistant ``currentTask`` / ``taskConfig``.
+         * @description Wire shape for agent task-advisor ``currentTask`` / tool ``taskConfig``.
          *
          *     Aligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.
          *     Extra AI keys are ignored so OpenAPI stays a concrete object (not unknown).
@@ -3722,10 +3786,6 @@ export interface components {
             promptTemplate?: string | null;
             /** Websearchquery */
             webSearchQuery?: string | null;
-            /** Scheduletype */
-            scheduleType?: string | null;
-            /** Schedulevalue */
-            scheduleValue?: string | null;
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
@@ -3770,10 +3830,6 @@ export interface components {
             isActive: boolean;
             /** Schedulerrule */
             scheduleRrule?: string | null;
-            /** Scheduletype */
-            scheduleType?: string | null;
-            /** Schedulevalue */
-            scheduleValue?: string | null;
             /**
              * Includeintimeline
              * @default true
@@ -3920,17 +3976,28 @@ export interface components {
             /** Timeoutseconds */
             timeoutSeconds?: number | null;
         };
+        /** TimelineAnnotationsPutBody */
+        TimelineAnnotationsPutBody: {
+            /** Eventstatuses */
+            eventStatuses: {
+                [key: string]: "pending" | "confirmed" | "completed";
+            };
+            /** Eventtimeoverrides */
+            eventTimeOverrides: {
+                [key: string]: components["schemas"]["TimelineEventTimeOverrideSchema"];
+            };
+        };
         /** TimelineAnnotationsResponse */
         TimelineAnnotationsResponse: {
             /** Configured */
             configured: boolean;
             /** Eventstatuses */
             eventStatuses?: {
-                [key: string]: unknown;
+                [key: string]: "pending" | "confirmed" | "completed";
             } | null;
             /** Eventtimeoverrides */
             eventTimeOverrides?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["TimelineEventTimeOverrideSchema"];
             } | null;
         };
         /** TimelineDismissalBody */
@@ -3951,6 +4018,13 @@ export interface components {
             eventId: string;
             /** Dismissedat */
             dismissedAt: string;
+        };
+        /** TimelineEventTimeOverrideSchema */
+        TimelineEventTimeOverrideSchema: {
+            /** Starttime */
+            startTime: string;
+            /** Endtime */
+            endTime: string | null;
         };
         /** TrendingTopicResponse */
         TrendingTopicResponse: {
@@ -4133,12 +4207,12 @@ export interface components {
         /** VoiceFiredBody */
         VoiceFiredBody: {
             /** Keys */
-            keys: unknown[];
+            keys: string[];
         };
         /** VoiceHistoryBody */
         VoiceHistoryBody: {
             /** Entries */
-            entries: unknown[];
+            entries: components["schemas"]["VoiceReminderHistoryEntrySchema"][];
         };
         /** VoiceQuietHoursSchema */
         VoiceQuietHoursSchema: {
@@ -4163,23 +4237,45 @@ export interface components {
             /** Configured */
             configured: boolean;
             /** Claimed */
-            claimed?: unknown[];
+            claimed?: string[];
             /** Keys */
-            keys?: unknown[];
+            keys?: string[];
         };
         /** VoiceReminderFiredResponse */
         VoiceReminderFiredResponse: {
             /** Configured */
             configured: boolean;
             /** Keys */
-            keys?: unknown[] | null;
+            keys?: string[] | null;
+        };
+        /** VoiceReminderHistoryEntrySchema */
+        VoiceReminderHistoryEntrySchema: {
+            /** Id */
+            id: string;
+            /** Triggerreason */
+            triggerReason: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "success" | "failure";
+            /** Errormessage */
+            errorMessage?: string | null;
+            /** Triggeredat */
+            triggeredAt: string;
+            /** Eventid */
+            eventId?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Leadoffsetminutes */
+            leadOffsetMinutes?: number | null;
         };
         /** VoiceReminderHistoryResponse */
         VoiceReminderHistoryResponse: {
             /** Configured */
             configured: boolean;
             /** Entries */
-            entries?: unknown[] | null;
+            entries?: components["schemas"]["VoiceReminderHistoryEntrySchema"][] | null;
         };
         /** VoiceReminderSettingsResponse */
         VoiceReminderSettingsResponse: {
@@ -4206,8 +4302,6 @@ export interface components {
              */
             preambleChimeId: string;
             quietHours?: components["schemas"]["VoiceQuietHoursSchema"] | null;
-        } & {
-            [key: string]: unknown;
         };
         /** VoiceSettingsBody */
         VoiceSettingsBody: {
@@ -4544,39 +4638,6 @@ export interface operations {
                     "application/json": {
                         [key: string]: boolean;
                     };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    chat_assistant_api_v1_tasks_chat_assistant_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChatAssistantBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChatAssistantResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7595,9 +7656,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["BoardPrefsPutBody"];
             };
         };
         responses: {
@@ -7853,9 +7912,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["AssistantSessionsPutBody"];
             };
         };
         responses: {
@@ -7961,9 +8018,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["TimelineAnnotationsPutBody"];
             };
         };
         responses: {

@@ -114,9 +114,17 @@ export function AnalysisStatusControl({
 
   const pauseLabel = busy
     ? t("topBar.busy")
-    : analysisPaused
-      ? t("topBar.clickResume")
-      : t("topBar.clickPause");
+    : disabled
+      ? t("topBar.controlsUnavailable")
+      : analysisPaused
+        ? t("topBar.clickResume")
+        : t("topBar.clickPause");
+
+  const pillTitle = interactive
+    ? t("topBar.pillTitle", { title, pauseHint: pauseLabel })
+    : busy
+      ? t("topBar.pillTitleBusy", { title, pauseHint: pauseLabel })
+      : t("topBar.pillTitleDisabled", { title });
 
   const handleConfirmAbort = async () => {
     setAbortConfirmOpen(false);
@@ -185,12 +193,16 @@ export function AnalysisStatusControl({
             background: "color-mix(in srgb, var(--pill-color) 14%, transparent)",
             border: "1px solid color-mix(in srgb, var(--pill-color) 32%, transparent)",
           }}
-          title={t("topBar.pillTitle", { title, pauseHint: pauseLabel })}
+          title={pillTitle}
         >
           <button
             type="button"
             data-testid="system-status-pill"
-            aria-label={t("topBar.pillAria", { label, pauseHint: pauseLabel })}
+            aria-label={
+              interactive
+                ? t("topBar.pillAria", { label, pauseHint: pauseLabel })
+                : t("topBar.pillAriaDisabled", { label })
+            }
             disabled={!interactive}
             onClick={() => {
               if (!interactive) return;

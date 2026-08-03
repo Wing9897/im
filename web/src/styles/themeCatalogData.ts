@@ -87,7 +87,11 @@ function accentWash(accentHex: string, amountPct: number): string {
   return `color-mix(in srgb, ${accentHex} ${amountPct}%, transparent)`;
 }
 
-/** Legacy localStorage IDs → current catalog IDs */
+/**
+ * Retired localStorage theme IDs → current catalog IDs.
+ * Keep while users may still hold old ids under the current prefs schema;
+ * drop on the next prefs-schema bump that already wipes `im:*` (see clearLegacyPrefsIfNeeded).
+ */
 export const LEGACY_THEME_REMAP: Readonly<Record<string, string>> = {
   mocha: "moss",
   macchiato: "moss",

@@ -20,7 +20,11 @@ vi.mock("./SettingsShared", () => ({
   SettingsContentCard: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   SettingsFieldGroup: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   useSettingsPageState: () => ({
-    settings: { weatherLocation: "system" },
+    settings: {
+      weatherLocation: "system",
+      intelligenceRulesVersion: "v2",
+      analysisTraceVerbose: false,
+    },
     applyPersistedSnapshot,
   }),
 }));
@@ -100,6 +104,20 @@ describe("SettingsGeneralPage", () => {
       save.click();
     });
     expect(saveSystemSettings).toHaveBeenCalledWith({ weatherLocation: "臺北" });
+  });
+
+  it("hosts analysis debug controls under system general settings", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+    expect(harness.container.textContent).toContain("除錯與診斷");
+    const toggle = Array.from(harness.container.querySelectorAll("button")).find(
+      (btn) =>
+        btn.getAttribute("aria-expanded") === "false" &&
+        btn.closest("div")?.textContent?.includes("除錯與診斷"),
+    );
+    expect(toggle).toBeTruthy();
+    await act(async () => toggle!.click());
+    expect(harness.container.textContent).toContain("分析規則版本標記");
+    expect(harness.container.querySelector("#analysis-trace-verbose")).toBeTruthy();
   });
 
   it("keeps the collector restart action wired", async () => {

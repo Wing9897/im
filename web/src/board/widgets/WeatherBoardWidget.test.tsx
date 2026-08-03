@@ -1,11 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../../context/MonitorModeContext";
+import { MONITOR_MODE_KEY } from "../../context/MonitorModeContext";
+import { wrapBoardProviders } from "../boardTestHarness";
 import { WeatherBoardWidget } from "./WeatherBoardWidget";
 
 vi.mock("../../api/config", () => ({
@@ -77,15 +74,7 @@ describe("WeatherBoardWidget", () => {
   it("renders today plus a wrap forecast of the next six days", async () => {
     await act(async () => {
       root.render(
-        createElement(
-          MemoryRouter,
-          { initialEntries: ["/"] },
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(WeatherBoardWidget, { active: true }),
-          ),
-        ),
+        wrapBoardProviders(createElement(WeatherBoardWidget, { active: true })),
       );
     });
 

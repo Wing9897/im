@@ -595,7 +595,7 @@ async def test_queue_attention_batches_include_error_message(app, client):
 async def test_stats(client):
     resp = await client.get("/api/v1/results/stats", params={"time_range": "all"})
     body = resp.json()
-    assert len(body) == 4
+    assert len(body) == 6
     for entry in body:
         assert_keys(
             entry,

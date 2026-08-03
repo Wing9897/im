@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES, AnalysisMode
-from server.domain.schedule import ALLOWED_SCHEDULE_PRESETS, ScheduleValidationError, resolve_trigger_rrule
+from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row
 from server.queries.worksets_queries import workset_exists
@@ -23,13 +24,10 @@ from server.scheduler.task_schedule_overrides import (
     PROJECT_WAVE_INTERVAL_MAX,
     PROJECT_WAVE_INTERVAL_MIN,
 )
-from server.services.task_writes import TaskWriteError, validate_task_recurrence
 from server.wire.serializers import serialize_channel_ref, serialize_task
 
 ALLOWED_MODES = ALL_ANALYSIS_MODES
-#: Wire preset vocabulary; persisted as trigger-purpose ``schedule_rrule``.
-ALLOWED_SCHEDULE_TYPES = ("seconds_10", "hourly", "daily", "weekly", "custom_seconds")
-assert frozenset(ALLOWED_SCHEDULE_TYPES) == frozenset(ALLOWED_SCHEDULE_PRESETS)
+# FE editor presets live in ``ALLOWED_SCHEDULE_PRESETS`` (domain); not on HTTP wire.
 
 # Recurring calendar RRULE lives on PUT /tasks/{id}/schedule (not TaskConfigBody).
 # Recurring-only recurrence expanded at query time — never an AI analysis trigger.
@@ -48,26 +46,11 @@ class TaskConfigBody(BaseModel):
     analysisMode: Optional[AnalysisMode] = None
     analysisTimeRange: Optional[str] = None
     channelIds: Optional[list[Union[str, dict[str, Any]]]] = None
-    scheduleType: Optional[str] = Field(
-        default=None,
-        description=(
-            "Read-compat FE preset mirror (maps to scheduleRrule). "
-            "Write path should send scheduleRrule; accepted only when scheduleRrule is omitted."
-        ),
-    )
-    scheduleValue: Optional[str] = Field(
-        default=None,
-        description=(
-            "Read-compat value for scheduleType presets. "
-            "Ignored when scheduleRrule is provided."
-        ),
-    )
     scheduleRrule: Optional[str] = Field(
         default=None,
         description=(
             "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). "
-            "Never calendar-expanded. Create/update write SoT — prefer this alone over "
-            "scheduleType/scheduleValue."
+            "Never calendar-expanded. Sole create/update schedule write SoT on the HTTP wire."
         ),
     )
     includeInTimeline: Optional[bool] = None
@@ -119,18 +102,10 @@ def validate_task_body(body: TaskConfigBody) -> None:
             f"Invalid analysisTimeRange: {body.analysisTimeRange}",
             error_code=VALIDATION_ERROR,
         )
-    if body.scheduleType is not None and body.scheduleType not in ALLOWED_SCHEDULE_TYPES:
-        raise http_error(
-            422,
-            f"Invalid scheduleType: {body.scheduleType}",
-            error_code=VALIDATION_ERROR,
-        )
-    if body.scheduleRrule is not None or body.scheduleType is not None:
+    if body.scheduleRrule is not None:
         try:
             resolve_trigger_rrule(
                 analysis_mode=body.analysisMode,
-                schedule_type=body.scheduleType,
-                schedule_value=body.scheduleValue,
                 schedule_rrule=body.scheduleRrule,
             )
         except (ScheduleValidationError, ValueError, TypeError) as exc:
@@ -165,16 +140,6 @@ def validate_task_body(body: TaskConfigBody) -> None:
         minimum=ANALYSIS_BATCH_LIMIT_MIN,
         maximum=ANALYSIS_BATCH_LIMIT_MAX,
     )
-
-
-def validate_task_rrule(*, effective_mode: str, supplied_rrule: str | None) -> str | None:
-    try:
-        return validate_task_recurrence(
-            effective_mode=effective_mode,
-            supplied_rrule=supplied_rrule,
-        )
-    except TaskWriteError as exc:
-        raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
 
 
 def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
@@ -223,11 +188,30 @@ async def resolve_workset_id(
     return existing or None
 
 
-async def get_task_row(db: Any, task_id: str) -> dict[str, Any]:
+async def require_task_row(
+    db: Any,
+    task_id: str,
+    *,
+    missing: Callable[[str], BaseException] | type[BaseException] = LookupError,
+) -> dict[str, Any]:
+    """Load a task row or raise a parameterized not-found error.
+
+    ``missing`` may be an exception type (``LookupError``) or a factory
+    (``lambda msg: http_error(404, msg)``) so HTTP routes and service-layer
+    writers share one fetch path.
+    """
     row = await fetch_task_row(db, task_id)
     if row is None:
-        raise http_error(404, "Task not found")
+        message = "Task not found"
+        if isinstance(missing, type) and issubclass(missing, BaseException):
+            raise missing(message)
+        raise missing(message)
     return row
+
+
+async def get_task_row(db: Any, task_id: str) -> dict[str, Any]:
+    """HTTP helper: missing task → 404 ``http_error``."""
+    return await require_task_row(db, task_id, missing=lambda msg: http_error(404, msg))
 
 
 async def channel_refs_for(db: Any, task_id: str) -> list[dict[str, Any]]:

@@ -7,6 +7,7 @@ describe("analysisModeSupportsTaskPresets", () => {
     expect(analysisModeSupportsTaskPresets("leaderboard")).toBe(true);
     expect(analysisModeSupportsTaskPresets("event")).toBe(true);
     expect(analysisModeSupportsTaskPresets("project")).toBe(true);
+    expect(analysisModeSupportsTaskPresets("web_intel")).toBe(true);
   });
 
   it("hides recurring", () => {

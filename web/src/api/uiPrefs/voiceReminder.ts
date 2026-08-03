@@ -1,47 +1,19 @@
 import { apiClient } from "../client";
+import type { components } from "../generated/schema";
 
 /** Settings blob stored under ``voice_reminder_settings``. */
-export type VoiceReminderSettingsPayload = {
-  enabled: boolean;
-  leadOffsetsMinutes: number[];
-  /** Hierarchical source selection (same model as board/timeline); `null` = all. */
-  sourceFilter: { taskIds: string[]; worksetIds: string[] } | null;
-  preambleChimeId: string;
-  quietHours: { enabled: boolean; start: string; end: string };
-};
-
-export type VoiceReminderHistoryEntryPayload = {
-  id: string;
-  triggerReason: string;
-  status: "success" | "failure";
-  errorMessage: string | null;
-  triggeredAt: string;
-  eventId?: string;
-  title?: string;
-  leadOffsetMinutes?: number;
-};
-
-export type VoiceReminderSettingsResponse = {
-  configured: boolean;
-  settings: VoiceReminderSettingsPayload | null;
-};
-
-export type VoiceReminderFiredResponse = {
-  configured: boolean;
-  keys: string[] | null;
-};
-
-export type VoiceReminderFiredClaimResponse = {
-  configured: boolean;
-  /** Keys newly reserved for this client to speak. */
-  claimed: string[];
-  keys: string[];
-};
-
-export type VoiceReminderHistoryResponse = {
-  configured: boolean;
-  entries: VoiceReminderHistoryEntryPayload[] | null;
-};
+export type VoiceReminderSettingsPayload =
+  components["schemas"]["VoiceReminderSettingsSchema"];
+export type VoiceReminderHistoryEntryPayload =
+  components["schemas"]["VoiceReminderHistoryEntrySchema"];
+export type VoiceReminderSettingsResponse =
+  components["schemas"]["VoiceReminderSettingsResponse"];
+export type VoiceReminderFiredResponse =
+  components["schemas"]["VoiceReminderFiredResponse"];
+export type VoiceReminderFiredClaimResponse =
+  components["schemas"]["VoiceReminderFiredClaimResponse"];
+export type VoiceReminderHistoryResponse =
+  components["schemas"]["VoiceReminderHistoryResponse"];
 
 const VOICE_SETTINGS_PATH = "/api/v1/ui-prefs/voice-reminder/settings";
 const VOICE_FIRED_PATH = "/api/v1/ui-prefs/voice-reminder/fired";

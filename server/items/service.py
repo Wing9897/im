@@ -119,11 +119,7 @@ async def patch_category(
         next_slug = existing.get("slug")
     else:
         next_slug = normalize_slug(slug)
-    next_sort = (
-        normalize_sort_order(sort_order)
-        if sort_order is not _UNSET
-        else int(existing.get("sort_order") or 0)
-    )
+    next_sort = normalize_sort_order(sort_order) if sort_order is not _UNSET else int(existing.get("sort_order") or 0)
     next_color = normalize_color(color) if color is not _UNSET else existing.get("color")
     if emoji is _UNSET:
         next_emoji = existing.get("emoji")
@@ -258,9 +254,7 @@ async def patch_item(
         # Changing category must NOT strip attributes (soft template).
         next_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
         category_changed = next_category != prev_category
-    next_purchased = (
-        parse_date_or_none(purchased_at) if purchased_at is not _UNSET else existing.get("purchased_at")
-    )
+    next_purchased = parse_date_or_none(purchased_at) if purchased_at is not _UNSET else existing.get("purchased_at")
     next_expires = parse_date_or_none(expires_at) if expires_at is not _UNSET else existing.get("expires_at")
     if remind_before_days is _UNSET:
         next_remind = existing.get("remind_before_days")
@@ -295,7 +289,9 @@ async def patch_item(
             title=next_title,
             category_id=next_category,
             workset_id=next_workset,
-            purchased_at=next_purchased if isinstance(next_purchased, str) or next_purchased is None else str(next_purchased),
+            purchased_at=(
+                next_purchased if isinstance(next_purchased, str) or next_purchased is None else str(next_purchased)
+            ),
             expires_at=next_expires if isinstance(next_expires, str) or next_expires is None else str(next_expires),
             remind_before_days=next_remind,
             notes=next_notes,

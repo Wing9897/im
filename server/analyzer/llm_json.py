@@ -5,6 +5,9 @@ from __future__ import annotations
 import json
 import re
 
+#: Max chars retained on parse failures for Settings→Logs forensics.
+LLM_PARSE_RAW_CAP = 4000
+
 #: Markdown ```json ... ``` (or bare ```) fence; group 1 is the fenced body.
 JSON_FENCE_RE = re.compile(r"```(?:json)?\s*\n?(.*?)\n?\s*```", re.DOTALL)
 
@@ -39,6 +42,18 @@ def extract_json_from_markdown(text: str) -> str | None:
     return None
 
 
+class LlmParseError(ValueError):
+    """Raised when an LLM reply cannot be parsed as JSON.
+
+    ``str(exc)`` stays a short summary for batch ``error_message``; the capped
+    raw reply is on ``raw_response`` for Settings→Logs details.
+    """
+
+    def __init__(self, message: str, *, raw_response: str) -> None:
+        super().__init__(message)
+        self.raw_response = raw_response[:LLM_PARSE_RAW_CAP]
+
+
 def parse_json_response(text: str) -> dict | list:
     """Parse an LLM reply as JSON, tolerating markdown/prose wrapping."""
     text = strip_reasoning_preamble(text)
@@ -62,7 +77,10 @@ def parse_json_response(text: str) -> dict | list:
         except (json.JSONDecodeError, TypeError):
             pass
 
-    raise ValueError(f"Failed to parse LLM response as JSON: {text[:200]}")
+    raise LlmParseError(
+        f"Failed to parse LLM response as JSON: {text[:200]}",
+        raw_response=text,
+    )
 
 
 def normalize_items(parsed: dict | list) -> list:

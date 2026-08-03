@@ -18,6 +18,7 @@ from server.analyzer.incremental import fetch_unanalyzed_messages
 from server.analyzer.leaderboard import load_leaderboard_context
 from server.analyzer.overlap import fetch_overlap_context
 from server.analyzer.prompt import build_analysis_prompt
+from server.app_logging import failure_details_from_exc
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import EVENT_MODE, LEADERBOARD_MODE, MESSAGE_BATCH_ANALYSIS_MODES
@@ -197,7 +198,7 @@ async def _process_batch(
     llm_timeout = await get_config_int(db, "llm_generation_timeout")
     try:
         result = await asyncio.wait_for(analysis_engine.analyze(prompt), timeout=llm_timeout * 2)
-    except asyncio.TimeoutError:
+    except asyncio.TimeoutError as exc:
         await handle_batch_failure(
             db=db,
             broadcaster=broadcaster,
@@ -206,6 +207,7 @@ async def _process_batch(
             batch_id=batch_id,
             error_message=f"LLM call exceeded hard timeout ({llm_timeout * 2}s)",
             scheduler=scheduler,
+            failure_details=failure_details_from_exc(exc),
         )
         return
     except Exception as exc:  # noqa: BLE001 — all LLM/parse errors route to failure policy
@@ -217,6 +219,7 @@ async def _process_batch(
             batch_id=batch_id,
             error_message=str(exc),
             scheduler=scheduler,
+            failure_details=failure_details_from_exc(exc),
         )
         return
 

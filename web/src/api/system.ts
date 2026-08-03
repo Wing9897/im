@@ -1,25 +1,11 @@
-/**
- * REST API client functions for system control operations.
- *
- * Requirements: 12.1, 12.4
- */
+/** REST API client functions for system control operations. */
 
 import { apiClient } from "./client";
 import { publicFetchJson } from "./publicFetch";
+import type { components } from "./generated/schema";
 import type { AiEngineHealthStatus, AiEngineTestDraft, AiEngineTestResult } from "../types";
 
-export interface HealthStatus {
-  status: string;
-  version: string;
-  runtimeReady: boolean;
-  schemaVersion: number;
-  schemaSemver: string;
-  /** False when secret.key cannot decrypt stored enc:v1: ciphertext. */
-  secretsReady: boolean;
-  secretsError?: string;
-  bindHost: string;
-  lanAccessEnabled: boolean;
-}
+export type HealthStatus = components["schemas"]["HealthResponse"];
 
 /** Public health probe (backend version + runtime readiness). */
 export function fetchHealth(): Promise<HealthStatus> {

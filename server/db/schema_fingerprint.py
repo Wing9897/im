@@ -25,7 +25,7 @@ ForeignKeyGroupSpec = tuple[str, str, str, tuple[ForeignKeyMemberSpec, ...]]
 def _quoted_identifier(value: str) -> str:
     """Quote an introspected SQLite identifier for a PRAGMA statement.
 
-    Shared with ``server.db.migrations.inspect_schema`` (same escaping rules).
+    Shared with ``server.db.schema_inspect.inspect_schema`` (same escaping rules).
     """
     return '"' + value.replace('"', '""') + '"'
 

@@ -216,16 +216,13 @@ async def test_execute_project_tick_drains_multiple_waves(app) -> None:
     assert "wave-one" in (batch["agent_message"] or "")
     assert "wave-two" in (batch["agent_message"] or "")
     cursor = await db.fetch_one(
-        "SELECT last_message_at FROM project_message_cursors WHERE task_id = ?",
+        "SELECT last_message_at, last_message_id FROM project_message_cursors WHERE task_id = ?",
         ("proj-drain",),
     )
     assert cursor is not None
-    from server.queries.project_tick_queries import parse_project_message_cursor
-
-    parsed = parse_project_message_cursor(str(cursor["last_message_at"]))
-    assert parsed is not None
-    assert parsed.timestamp.endswith(":41:00Z") or "T10:41" in parsed.timestamp
-    assert parsed.message_id  # composite cursor stores last message id
+    ts = str(cursor["last_message_at"] or "")
+    assert ts.endswith(":41:00Z") or "T10:41" in ts
+    assert cursor["last_message_id"]  # same-second tie-break column
 
 
 @pytest.mark.asyncio
@@ -255,7 +252,7 @@ async def test_execute_project_tick_cools_between_waves(app) -> None:
             "from_db_for_agent",
             AsyncMock(return_value=mock_llm),
         ),
-        patch("server.scheduler.project_tick.asyncio.sleep", new_callable=AsyncMock) as sleep_mock,
+        patch("server.scheduler.project_tick_drain.asyncio.sleep", new_callable=AsyncMock) as sleep_mock,
     ):
         await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-cool")
 
@@ -434,7 +431,7 @@ async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> N
             AsyncMock(return_value=mock_llm),
         ),
         patch.object(AgentRuntime, "chat", _hang_chat),
-        patch("server.scheduler.project_tick.get_config_int", side_effect=_config_int),
+        patch("server.scheduler.project_tick_drain.get_config_int", side_effect=_config_int),
     ):
         await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-timeout")
 

@@ -1,14 +1,9 @@
-/**
- * REST API client functions for analysis task CRUD operations.
- *
- * Requirements: 12.1, 12.4
- */
+/** REST API client functions for analysis task CRUD operations. */
 
 import { apiClient } from "./client";
 import type { components } from "./generated/schema";
 import type {
   AnalysisTask,
-  TaskAssistantReply,
   TaskConfig,
   TaskDeleteResult,
   TaskDraftPayload,
@@ -86,14 +81,4 @@ export function fetchProjectTickStatus(
   return Object.keys(query).length > 0
     ? apiClient.get<ProjectTickStatus>(`/api/v1/tasks/${taskId}/project-ticks`, query)
     : apiClient.get<ProjectTickStatus>(`/api/v1/tasks/${taskId}/project-ticks`);
-}
-
-/** Sends a chat message to the AI task assistant for task configuration guidance. */
-export function chatTaskAssistant(params: {
-  messages: { role: string; content: string }[];
-  currentTask?: TaskDraftPayload | null;
-  /** UI locale for AI output language; server falls back to ``ui_locale``. */
-  locale?: string;
-}): Promise<TaskAssistantReply> {
-  return apiClient.post<TaskAssistantReply>("/api/v1/tasks/chat-assistant", params);
 }

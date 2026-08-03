@@ -18,7 +18,7 @@ Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats
 
 - Message blocks: `[id=...][time=...][sender] content`. `intelligence_rules_version` is a version marker in the system prompt; `analysis_strategy_mode` is evidence guidance (server default `balanced`).
 - **Event mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
-- **Web intel:** schedule tick uses `webSearchQuery` + `promptTemplate` (no local message claim); empty query/prompt completes a `skipped:` batch with SSE instead of a silent no-op. Search **provider** (auto/DDG/Brave) is shared with assistant settings; the assistant master switch (`assistant_web_search_enabled`) does **not** gate web_intel ticks.
+- **Web intel:** tick uses `webSearchQuery` + `promptTemplate` (no local messages); empty → `skipped:` batch + SSE. Search routing shared with assistant (`WebSearchExecutionService`); tick cap **8** vs assistant tool **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `write_batch_failure_log` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
 - CJK-aware token heuristic; no `truncated_by_count` in batch metadata.
 
 ## Leaderboard
@@ -27,7 +27,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 9 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
+Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 10 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
 
 ## Sources / accounts
 
@@ -81,7 +81,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v9 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v9-explicit-reset) (wipe-only, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
+| Schema stamp v10 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v10-explicit-reset) (wipe-only, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
@@ -119,7 +119,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
-- Analysis batch failures → `app_logs` (category `analysis`) with full error JSON in `details`
+- Analysis batch failures → `app_logs` (category `analysis`) with error JSON in `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps)
 - GitHub Actions: Ubuntu `quality` on PR／main; on **main** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI; `desktop_verify` only — vitest already in `quality`) → push tag + GitHub Release → GHCR.
 
 ## Security (outbound requests)
@@ -145,7 +145,7 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 | Kind | Platforms | Initial connect failure | Runtime / poll errors |
 |------|-----------|-------------------------|-------------------------|
-| **Long-lived session** | Telegram, Discord, MQTT | Account → `error` / disconnected; SSE `account_status_changed` | Connect/disconnect and reconnect failures update status and broadcast SSE |
+| **Long-lived session** | Telegram, Discord, MQTT | Account → `error` / disconnected; SSE `account_status_changed` | Connect/disconnect and reconnect failures update status and broadcast SSE. **Telegram:** after handler registration, one bounded serial `iter_messages` backfill (100/dialog); `FloodWait` sleeps with jitter, wait >120s aborts remaining dialogs; no full history / edit-delete sync |
 | **Poll loop** | RSS, Email (IMAP) | Validation/login failure → account `error` | **RSS:** consecutive failures (default 3) escalate to `error` + SSE. **Email:** transient poll errors retry; repeated IMAP auth failures escalate to `error` + SSE |
 
 ## Deploy verify
@@ -155,3 +155,7 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 ## Removed / not restored
 
 Legacy Tauri migration guards were retired with the delivery slim-down and stay removed. Windows／macOS／Linux Desktop + Docker/Web are first-class delivery surfaces. Do not revive Tauri IPC.
+
+## Agent workspace hygiene
+
+Heavy parallel agent edits on a large dirty tree have been observed to leave **0-byte source files** (Cursor file-cache／writeback class bug — not intentional empty Writes). Prefer commit／worktree isolation before big cleanups; one writable agent per tree; scan `web/src|server|docs` for `Length -eq 0` around gate runs.

@@ -1,8 +1,8 @@
 """Tasks routes: catalog / schedule / project / crud (thin modules + services).
 
 Fixed-path routes (templates / activity-spans) register before ``/{task_id}``
-routes so they are never captured as ids. The chat-assistant endpoint lives in
-``server/api/routes/task_assistant.py``.
+routes so they are never captured as ids. Task advisor runs via agent tool
+``tasks.consult_advisor`` (engine ``handle_chat_assistant``), not a REST path.
 
 Side-effect import order below is intentional (isort disabled for this block).
 """

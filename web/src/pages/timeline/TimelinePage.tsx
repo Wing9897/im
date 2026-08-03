@@ -152,8 +152,8 @@ export function TimelinePage() {
     data.initialLoading,
     data.events,
     filters.filteredEvents,
-    sources.goToDay,
-    selection.setSelectedEvent,
+    sources,
+    selection,
   ]);
 
   const openEditDialog = useCallback((event: TimelineItem) => {

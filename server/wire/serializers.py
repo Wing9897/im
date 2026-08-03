@@ -9,22 +9,13 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from server.action_config import masked_action_configuration
-from server.domain.schedule import trigger_rrule_to_legacy
 from server.util import parse_json_dict, parse_json_list
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 
 def _serialize_task_schedule_fields(row: Mapping[str, Any]) -> dict[str, Any]:
-    """Emit canonical ``scheduleRrule`` plus FE preset mirrors when mappable."""
-    schedule_rrule = row.get("schedule_rrule")
-    schedule_type, schedule_value = trigger_rrule_to_legacy(
-        None if schedule_rrule is None else str(schedule_rrule)
-    )
-    return {
-        "scheduleRrule": schedule_rrule,
-        "scheduleType": schedule_type,
-        "scheduleValue": schedule_value,
-    }
+    """Emit canonical ``scheduleRrule`` only (FE presets stay client-local)."""
+    return {"scheduleRrule": row.get("schedule_rrule")}
 
 
 def _message_media_from_raw(raw_data: Any) -> dict[str, Any] | None:
@@ -218,9 +209,7 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
 
     remind = row.get("remind_before_days")
     raw_workset = row.get("workset_id")
-    workset_id = (
-        str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
-    )
+    workset_id = str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
     raw_category = row.get("category_id")
     category_id = str(raw_category).strip() if isinstance(raw_category, str) and raw_category.strip() else None
     raw_emoji = row.get("emoji")

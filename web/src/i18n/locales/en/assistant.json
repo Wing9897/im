@@ -104,7 +104,7 @@
     "taskConfigNotObject": "AI response format error: taskConfig must be an object",
     "nameNotString": "AI response format error: name must be a non-empty string",
     "promptNotString": "AI response format error: promptTemplate must be a non-empty string",
-    "scheduleTypeInvalid": "AI response format error: scheduleType must be one of: {values}",
+    "scheduleRruleNotString": "AI response format error: scheduleRrule must be a string",
     "analysisModeInvalid": "AI response format error: analysisMode must be one of: {values}",
     "channelIdsNotArray": "AI response format error: channelIds must be an array",
     "includeInTimelineNotBoolean": "AI response format error: includeInTimeline must be a boolean"

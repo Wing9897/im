@@ -1,7 +1,7 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor policy (empty registry / prior-stamp hard-reject / fresh DDL stamp)
-lives in ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-10 / prior hard-reject): ``test_schema_wipe_floor.py``.
+This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
 from __future__ import annotations

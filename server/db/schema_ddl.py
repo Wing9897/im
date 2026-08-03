@@ -1,6 +1,6 @@
-"""Authoritative SQLite DDL for schema stamp 9 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 10 (single schema source).
 
-``server.db.migrations`` owns classification and version stamping; the
+``server.db.schema_bootstrap`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
 ``server.db.schema_fingerprint``.
 
@@ -184,10 +184,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_recurring_schedules_ics_source_uid
     WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 
 -- Project-manager incremental message cursor (not system_config).
+-- last_message_at = ISO timestamp only; last_message_id = same-second tie-break (nullable).
 CREATE TABLE IF NOT EXISTS project_message_cursors (
     task_id          TEXT PRIMARY KEY
                      REFERENCES analysis_tasks(id) ON DELETE CASCADE,
-    last_message_at  TEXT NOT NULL
+    last_message_at  TEXT NOT NULL,
+    last_message_id  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS task_channels (

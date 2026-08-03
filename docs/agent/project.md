@@ -6,7 +6,7 @@
 
 1. Scheduler 與 `leaderboard`／`event` 一樣註冊 timer（預設 `hourly`；也允許 `daily`／`custom_seconds`）。
 2. 到點呼叫 [`server/scheduler/project_tick.py`](../../server/scheduler/project_tick.py)：
-   - 讀取自 `project_message_cursors.last_message_at` 起、綁定來源的增量訊息（每波最多 40 條）。游標為複合值 `timestamp` + 可選 `message_id`（同秒訊息以 id 排序推進；API `cursorAt` 只回傳時間戳）
+   - 讀取自 `project_message_cursors`（`last_message_at` ISO + 可選 `last_message_id`）起、綁定來源的增量訊息（每波最多 40 條）。同秒訊息以 id 排序推進；API `cursorAt` 只回傳時間戳
    - **若 0 條新訊息：不喚醒 LLM**，只寫入 `analysis_batches`（`skipped: no new messages`）後結束——省 token
    - **若有新訊息：抽乾積壓**——每波跑一次 `AgentRuntime`（每波最多 40 條），成功後推進游標再拉下一批，**預設波數無上限**直到沒有新訊息；可選 `agent_project_max_drain_waves`（`0`=無限，正整數=安全上限）
    - **波間冷卻**：任務欄位 `project_wave_interval_seconds`（NULL → 20；`0`=不等待；不再跟隨全域）。任務編輯「排程類型」下方可調，並隨任務一併儲存
@@ -41,5 +41,5 @@
 - Prompt：[`server/prompts/project.py`](../../server/prompts/project.py)（`build_project_base_prompt`）
 - Channel：`server/agent/channels.py` → `project`（`stateless=False`，tick 內連續；不持久化跨次排程 UI session）
 - AI 員工：`projectManager`（`/ai/staff`）
-- Schema：stamp v9／`schemaSemver` 0.1.0-beta.10（wipe-only；非當前 stamp 須 reset；AI 排程 `schedule_rrule` trigger-only；`user_events.origin` 含 `project`／`ics`；物品域 `items`／`item_categories`）— 見 [`ARCHITECTURE.md`](../ARCHITECTURE.md)
+- Schema：stamp v10／`schemaSemver` 0.1.0-beta.11（wipe-only；非當前 stamp 須 reset；游標拆欄 `last_message_at`＋`last_message_id`；AI 排程 `schedule_rrule` trigger-only；`user_events.origin` 含 `project`／`ics`；物品域 `items`／`item_categories`）— 見 [`ARCHITECTURE.md`](../ARCHITECTURE.md)
 - UI：任務底下的專案詳情 `/tasks/:taskId/project`（概覽、來源、子循環、所屬事件、最近 tick 訊息與工具步驟）；**不是**與 Sources／Assistant 同層的頂層導航。

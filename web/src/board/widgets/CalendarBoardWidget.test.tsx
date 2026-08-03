@@ -1,16 +1,13 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../../context/MonitorModeContext";
+import { MONITOR_MODE_KEY } from "../../context/MonitorModeContext";
 import {
   makeAnalysisTask,
   resetTaskCatalogState,
 } from "../../test/context-mocks";
+import { wrapBoardProviders } from "../boardTestHarness";
 import { CalendarBoardWidget, CalendarDayBoardWidget } from "./CalendarBoardWidget";
 
 const mockFetchEvents = vi.fn();
@@ -30,23 +27,9 @@ vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock(),
 );
 
-vi.mock("../../context/AnalysisStatusContext", () => ({
-  useAnalysisStatus: () => ({
-    queueStatus: {
-      pendingCount: 0,
-      processingBatches: [],
-      attentionBatches: [],
-      analysisPaused: false,
-    },
-    analysisPaused: false,
-    activeAnalysis: null,
-    activeAnalyses: new Map(),
-    lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
-    lastMessagesUpdate: null,
-    requestQueueStatusRefresh: vi.fn(),
-  }),
-}));
+vi.mock("../../context/AnalysisStatusContext", async () =>
+  (await import("../../test/context-mocks")).analysisStatusModuleMock(),
+);
 
 vi.mock("../embeds/CalendarBoardEmbed", () => ({
   CalendarBoardEmbed: ({
@@ -152,11 +135,7 @@ describe("CalendarBoardWidget recurring occurrences", () => {
   }
 
   function wrap(node: React.ReactNode) {
-    return createElement(
-      MemoryRouter,
-      null,
-      createElement(MonitorModeProvider, null, node),
-    );
+    return wrapBoardProviders(node);
   }
 
   it("month widget fetches and renders RRULE calendar occurrences", async () => {

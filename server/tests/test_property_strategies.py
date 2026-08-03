@@ -7,7 +7,7 @@ from hypothesis import find, settings
 
 from server.calendar.rrule import validate_rrule
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
-from server.domain.schedule import legacy_to_trigger_rrule
+from server.domain.schedule import preset_to_trigger_rrule
 from server.scheduler.manager import schedule_trigger_from_rrule
 from server.tests.property_strategies import (
     MIN_PROPERTY_EXAMPLES,
@@ -24,10 +24,7 @@ def test_supported_schedule_strategy_reaches_every_schedule_type(schedule_type):
     generated_type, generated_value = find(supported_schedules, lambda value: value[0] == schedule_type)
 
     assert generated_type == schedule_type
-    assert (
-        schedule_trigger_from_rrule(legacy_to_trigger_rrule(generated_type, generated_value))
-        is not None
-    )
+    assert schedule_trigger_from_rrule(preset_to_trigger_rrule(generated_type, generated_value)) is not None
 
 
 @pytest.mark.parametrize("mode", ALL_ANALYSIS_MODES)

@@ -1,15 +1,10 @@
 """Wipe-only schema bootstrap and validation (no migration registry).
 
-**Naming**: this module used to be called ``migrations.py``. It was renamed to
-``schema_bootstrap`` because there is **no** upgrade/migration chain — only
-create-from-DDL or hard-reject. A thin ``migrations.py`` shim re-exports this
-API for transitional imports.
-
-Stamp **8** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
+Stamp **10** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative DDL in
-``schema_ddl.py`` (currently **27** tables). Exact unstamped stamp-9
-fingerprints are stamped (``PRAGMA user_version=9``). Every other non-empty
+``schema_ddl.py`` (currently **27** tables). Exact unstamped stamp-10
+fingerprints are stamped (``PRAGMA user_version=10``). Every other non-empty
 schema is rejected without mutation →
 ``python scripts/reset_local_databases.py --apply``.
 
@@ -59,7 +54,7 @@ def _reset_required(message: str) -> SchemaEvolutionError:
 
 
 async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
-    """Create stamp 9 or validate it; never migrate or silently wipe data."""
+    """Create stamp 10 or validate it; never migrate or silently wipe data."""
     fingerprint = await inspect_schema(conn)
     version = fingerprint.version
 

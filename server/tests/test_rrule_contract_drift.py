@@ -126,7 +126,7 @@ def _python_string_collection(relative_path: str, variable_name: str) -> set[str
 
 
 def _scheduler_schedule_types() -> set[str]:
-    """Wire presets live in domain schedule; manager maps them via legacy_to_trigger_rrule."""
+    """Wire presets live in domain schedule; manager maps them via preset_to_trigger_rrule."""
     return _python_string_collection("server/domain/schedule.py", "ALLOWED_SCHEDULE_PRESETS")
 
 
@@ -176,9 +176,6 @@ def test_rrule_calendar_only_wording_is_present_across_layers() -> None:
 
 def test_supported_schedule_vocabulary_is_consistent_across_layers() -> None:
     actual_by_location = {
-        "server/api/routes/task_helpers.py:ALLOWED_SCHEDULE_TYPES": _python_string_collection(
-            "server/api/routes/task_helpers.py", "ALLOWED_SCHEDULE_TYPES"
-        ),
         "server/domain/schedule.py:ALLOWED_SCHEDULE_PRESETS": _scheduler_schedule_types(),
         "web/src/types/taskFormFields.ts:ScheduleType": _frontend_schedule_type_union(),
         "web/src/pages/tasks/ScheduleInput.tsx:SCHEDULE_TYPES": _frontend_schedule_types(),

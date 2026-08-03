@@ -110,6 +110,7 @@ describe("paddedTimelineFetchWindow", () => {
 describe("mergeTimelineFilterSources", () => {
   const catalog = [
     { id: "evt-1", analysisMode: "event", worksetId: "ws-A" },
+    { id: "web-1", analysisMode: "web_intel", worksetId: "ws-A" },
     { id: "cal-1", analysisMode: "recurring", worksetId: "ws-A" },
   ];
 
@@ -127,6 +128,30 @@ describe("mergeTimelineFilterSources", () => {
       userEvents: [user],
     });
     expect(merged.map((e) => e.id).sort()).toEqual(["a-1", "cal-1:20250115T090000Z", "ue-1"]);
+  });
+
+  it("keeps web_intel analysis events when that task is selected (no items)", () => {
+    const plan = resolveTimelineFilterPlan({ taskIds: ["web-1"], worksetIds: [] }, catalog);
+    expect(plan).toMatchObject({
+      fetchAnalysis: true,
+      fetchItems: false,
+      analysisTaskIds: ["web-1"],
+    });
+    // Fetch layer already scopes by analysisTaskIds; merge trusts that payload.
+    const webFinding = makeAnalysis({
+      id: "web-hit",
+      taskId: "web-1",
+      title: "Pricing spike",
+    });
+    const merged = mergeTimelineFilterSources({
+      selectedSources: { taskIds: ["web-1"], worksetIds: [] },
+      filterPlan: plan,
+      analysisEvents: [webFinding],
+      calendarOccurrences: [makeOccurrence(), makeItemOccurrence()],
+      userEvents: [],
+    });
+    expect(merged.map((e) => e.id)).toEqual(["web-hit"]);
+    expect(merged.every((e) => e.source !== "item")).toBe(true);
   });
 
   it("merges source=item rows from the unified calendar fetch", () => {

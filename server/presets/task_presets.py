@@ -39,7 +39,7 @@ def _source_path() -> Path:
 
 def _flatten_entry(entry: dict[str, Any]) -> dict[str, Any]:
     zh = entry["i18n"][_DISPLAY_LOCALE]
-    return {
+    flat: dict[str, Any] = {
         "id": entry["id"],
         "name": zh["name"],
         "description": zh["description"],
@@ -48,6 +48,11 @@ def _flatten_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "defaultAnalysisTimeRange": entry["defaultAnalysisTimeRange"],
         "badge": entry["badge"],
     }
+    # Language-neutral search keywords for web_intel presets (optional elsewhere).
+    query = str(entry.get("webSearchQuery") or "").strip()
+    if query:
+        flat["webSearchQuery"] = query
+    return flat
 
 
 @lru_cache(maxsize=1)
