@@ -228,9 +228,6 @@ describe('Main Process', () => {
   });
 
   describe('Single Instance Lock (Requirement 1.1, 1.2)', () => {
-    /**
-     * **Validates: Requirements 1.1, 1.2**
-     */
     it('when lock is not acquired, app.quit() is called', async () => {
       gotLockReturn = false;
 
@@ -242,9 +239,6 @@ describe('Main Process', () => {
       expect(mockQuit).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 1.3**
-     */
     it('when second-instance event fires, existing window is shown and focused', async () => {
       gotLockReturn = true;
 
@@ -272,9 +266,6 @@ describe('Main Process', () => {
       expect(mockFocus).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 1.3**
-     */
     it('when second-instance fires and window is minimized, it is restored', async () => {
       gotLockReturn = true;
       mockIsMinimized.mockReturnValue(true);
@@ -300,9 +291,6 @@ describe('Main Process', () => {
   });
 
   describe('Window Creation (Requirements 4.1-4.5, 11.1-11.3)', () => {
-    /**
-     * **Validates: Requirements 4.1, 4.2, 4.4, 11.1, 11.2**
-     */
     it('BrowserWindow is created with correct dimensions and webPreferences', async () => {
       gotLockReturn = true;
 
@@ -331,9 +319,6 @@ describe('Main Process', () => {
       expect(mockWebContents.setWindowOpenHandler).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 4.3**
-     */
     it('ready-to-show event loads URL and shows window', async () => {
       gotLockReturn = true;
 
@@ -362,9 +347,6 @@ describe('Main Process', () => {
   });
 
   describe('Close Event — Hide to Tray (Requirements 6.1, 6.2)', () => {
-    /**
-     * **Validates: Requirements 6.1, 6.2**
-     */
     it('event.preventDefault() is called and window is hidden', async () => {
       gotLockReturn = true;
 
@@ -390,9 +372,6 @@ describe('Main Process', () => {
   });
 
   describe('Quit Sequence (Requirements 7.4, 7.5)', () => {
-    /**
-     * **Validates: Requirements 7.4, 7.5**
-     */
     it('before-quit sets isQuitting, calls processManager.stop(), then app.exit(0)', async () => {
       gotLockReturn = true;
 
@@ -426,9 +405,6 @@ describe('Main Process', () => {
       });
     });
 
-    /**
-     * **Validates: Requirements 7.5**
-     */
     it('Ctrl+Q global shortcut is registered', async () => {
       gotLockReturn = true;
 
@@ -446,9 +422,6 @@ describe('Main Process', () => {
       expect(mockRegister).toHaveBeenCalledWith('CommandOrControl+Q', expect.any(Function));
     });
 
-    /**
-     * **Validates: Requirements 6.1, 6.2**
-     */
     it('when isQuitting is true, close event does NOT preventDefault', async () => {
       gotLockReturn = true;
 
@@ -477,9 +450,6 @@ describe('Main Process', () => {
   });
 
   describe('Dev Mode (Requirements 8.1, 8.4)', () => {
-    /**
-     * **Validates: Requirements 8.1, 8.4**
-     */
     it('with --dev flag, ProcessManager is NOT started', async () => {
       gotLockReturn = true;
 
@@ -558,9 +528,6 @@ describe('Main Process', () => {
       process.argv = originalArgv;
     });
 
-    /**
-     * **Validates: Requirements 8.1**
-     */
     it('without --dev flag, ProcessManager IS started', async () => {
       gotLockReturn = true;
 
@@ -587,7 +554,6 @@ describe('Main Process', () => {
 
   describe('Property 1: Single Instance Lock', () => {
     /**
-     * **Validates: Requirements 1.2**
      *
      * For any launch attempt while an instance exists, the new instance is rejected.
      * When lock cannot be acquired, app.quit() is called and no subprocess spawning occurs.
@@ -604,7 +570,6 @@ describe('Main Process', () => {
     });
 
     /**
-     * **Validates: Requirements 1.2, 1.3**
      *
      * For any launch where lock IS acquired, the app does not quit and
      * whenReady is called to proceed with setup.
@@ -649,7 +614,6 @@ describe('Main Process', () => {
 
   describe('Property 4: Tray Persistence', () => {
     /**
-     * **Validates: Requirements 6.1, 6.2**
      *
      * For any close event, the app process remains running.
      * The window is hidden but not destroyed, and quit is not called.
@@ -770,7 +734,6 @@ describe('Main Process', () => {
 
   describe('Property 7: Dev/Prod Mode Isolation', () => {
     /**
-     * **Validates: Requirements 8.1, 8.4**
      *
      * For any launch with the --dev flag, ProcessManager.start() is skipped
      * (no subprocess spawned), health check polling is skipped.
@@ -810,7 +773,6 @@ describe('Main Process', () => {
     });
 
     /**
-     * **Validates: Requirements 8.1**
      *
      * For any launch WITHOUT --dev flag, ProcessManager IS created and started.
      */

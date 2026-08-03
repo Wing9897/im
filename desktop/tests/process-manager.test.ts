@@ -513,7 +513,6 @@ describe('ProcessManager', () => {
 
   describe('Property 2: Process Lifecycle Coupling', () => {
     /**
-     * **Validates: Requirements 7.1, 7.3**
      *
      * For any exit scenario, if stop() is called then the Python subprocess
      * receives a termination signal (taskkill /PID) within killTimeout ms.
@@ -567,7 +566,6 @@ describe('ProcessManager', () => {
 
   describe('Property 3: Health Gate', () => {
     /**
-     * **Validates: Requirements 3.2, 3.3**
      *
      * For any startup sequence, start() does not resolve (server not considered ready)
      * until the health endpoint returns HTTP 200 with {"status":"ok"}.
@@ -632,7 +630,6 @@ describe('ProcessManager', () => {
 
   describe('Property 5: Graceful Shutdown Ordering', () => {
     /**
-     * **Validates: Requirements 7.1, 7.2, 7.3**
      *
      * For any quit sequence, the Python process first receives taskkill /PID (graceful),
      * and force kill (taskkill /F /PID) is only issued if the process has not exited

@@ -73,43 +73,28 @@ describe('Notifications Module', () => {
   });
 
   describe('isWindowVisibleAndFocused', () => {
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('returns false when no window is set', () => {
       expect(isWindowVisibleAndFocused()).toBe(false);
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('returns false when window is destroyed', () => {
       const win = createMockWindow({ destroyed: true });
       initAnalysisNotifications(win, { enabled: false });
       expect(isWindowVisibleAndFocused()).toBe(false);
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('returns false when window is visible but not focused', () => {
       const win = createMockWindow({ visible: true, focused: false });
       initAnalysisNotifications(win, { enabled: false });
       expect(isWindowVisibleAndFocused()).toBe(false);
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('returns false when window is focused but not visible', () => {
       const win = createMockWindow({ visible: false, focused: true });
       initAnalysisNotifications(win, { enabled: false });
       expect(isWindowVisibleAndFocused()).toBe(false);
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('returns true when window is both visible and focused', () => {
       const win = createMockWindow({ visible: true, focused: true });
       initAnalysisNotifications(win, { enabled: false });
@@ -118,9 +103,6 @@ describe('Notifications Module', () => {
   });
 
   describe('showCompletedNotification', () => {
-    /**
-     * **Validates: Requirements 5.1**
-     */
     it('shows notification with task name and 分析完成 message', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -158,9 +140,6 @@ describe('Notifications Module', () => {
       expect(notificationConstructorArgs.body).toBe('Market watch — 分析失败: 未知错误');
     });
 
-    /**
-     * **Validates: Requirements 5.1**
-     */
     it('falls back to taskId when taskName is not provided', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -174,9 +153,6 @@ describe('Notifications Module', () => {
       expect(notificationConstructorArgs.body).toBe('task-123 — 分析完成');
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('suppresses notification when window is visible and focused', () => {
       const win = createMockWindow({ visible: true, focused: true });
       initAnalysisNotifications(win, { enabled: true });
@@ -190,9 +166,6 @@ describe('Notifications Module', () => {
       expect(mockNotificationShow).not.toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 5.4**
-     */
     it('suppresses notification when notifications are disabled', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: false });
@@ -222,9 +195,6 @@ describe('Notifications Module', () => {
   });
 
   describe('showFailedNotification', () => {
-    /**
-     * **Validates: Requirements 5.2**
-     */
     it('shows notification with task name and failure reason', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -241,9 +211,6 @@ describe('Notifications Module', () => {
       expect(notificationConstructorArgs.body).toBe('Discord 分析 — 分析失敗: LLM connection timeout');
     });
 
-    /**
-     * **Validates: Requirements 5.2**
-     */
     it('truncates long error messages', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -263,9 +230,6 @@ describe('Notifications Module', () => {
       expect(body).toContain('AAA...');
     });
 
-    /**
-     * **Validates: Requirements 5.2**
-     */
     it('uses "未知錯誤" when error message is empty', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -281,9 +245,6 @@ describe('Notifications Module', () => {
       expect(notificationConstructorArgs.body).toBe('Test Task — 分析失敗: 未知錯誤');
     });
 
-    /**
-     * **Validates: Requirements 5.3**
-     */
     it('suppresses notification when window is visible and focused', () => {
       const win = createMockWindow({ visible: true, focused: true });
       initAnalysisNotifications(win, { enabled: true });
@@ -298,9 +259,6 @@ describe('Notifications Module', () => {
       expect(mockNotificationShow).not.toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 5.4**
-     */
     it('suppresses notification when notifications are disabled', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: false });
@@ -317,9 +275,6 @@ describe('Notifications Module', () => {
   });
 
   describe('handleSseMessage', () => {
-    /**
-     * **Validates: Requirements 5.1**
-     */
     it('dispatches analysis_completed event to showCompletedNotification', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });
@@ -336,9 +291,6 @@ describe('Notifications Module', () => {
       expect(notificationConstructorArgs.body).toBe('My Task — 分析完成');
     });
 
-    /**
-     * **Validates: Requirements 5.2**
-     */
     it('dispatches analysis_failed event to showFailedNotification', () => {
       const win = createMockWindow({ visible: false, focused: false });
       initAnalysisNotifications(win, { enabled: true });

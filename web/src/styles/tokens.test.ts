@@ -94,7 +94,7 @@ describe("Typography tokens", () => {
 // ─── Typography & Token Invariants ───────────────────────────────────────────
 
 /**
- * Typography scale ordering invariant (Validates: Requirements 4.1)
+ * Typography scale ordering invariant
  *
  * For any two typography levels where level A is defined before level B in the
  * scale ordering (display > h1 > h2 > body > caption > micro), fontSize of A
@@ -140,7 +140,7 @@ describe("Typography scale ordering invariant", () => {
 });
 
 /**
- * Typography overflow classification consistency (Validates: Requirements 4.8)
+ * Typography overflow classification consistency
  *
  * Single-line levels (display, h1, h2) should have fontSize >= 16px.
  * Multi-line levels (body, caption, micro) should have fontSize <= 14px.
@@ -162,7 +162,7 @@ describe("Typography overflow classification consistency", () => {
 });
 
 /**
- * Token scale geometry (Validates: Requirements 8.6)
+ * Token scale geometry
  *
  * Spacing and radius tokens stay within 4px of their reference pixel values.
  * Typography is intentionally excluded (compact-density sizes exceed that bound).

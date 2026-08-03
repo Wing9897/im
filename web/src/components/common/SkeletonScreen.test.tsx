@@ -1,7 +1,6 @@
 /**
  * Unit tests for SkeletonScreen component.
  *
- * Validates: Requirements 4.4, 4.6
  *
  * Verifies that SkeletonScreen renders correct number of placeholders per variant,
  * respects prefers-reduced-motion, and maintains accessibility attributes.

@@ -47,10 +47,7 @@ class _RecordingAdapter:
 
 
 async def test_lifespan_awaits_blocked_geocode_before_database_close(tmp_path, monkeypatch):
-    """The lifespan must own and drain geocode work before closing its DB.
-
-    **Validates: Requirements 3.1–3.4, 3.8, 3.9, 5.4, 8.2**
-    """
+    """The lifespan must own and drain geocode work before closing its DB."""
     events: list[str] = []
     backfill_entered = asyncio.Event()
     backfill_release = asyncio.Event()
@@ -139,10 +136,7 @@ async def _start_blocked_scheduler_batch(
 
 
 async def test_scheduler_grace_completion_uses_fake_wait_without_wall_clock_sleep(monkeypatch):
-    """A batch completing in grace drains normally without a 30-second sleep.
-
-    **Validates: Requirements 3.3, 3.6, 3.8–3.10, 8.2**
-    """
+    """A batch completing in grace drains normally without a 30-second sleep."""
     events: list[str] = []
     manager = SchedulerManager(object(), analysis_engine=None, broadcaster=SseBroadcaster())  # type: ignore[arg-type]
     task, release = await _start_blocked_scheduler_batch(manager, monkeypatch, events)
@@ -177,10 +171,7 @@ async def test_scheduler_grace_completion_uses_fake_wait_without_wall_clock_slee
 
 
 async def test_scheduler_timeout_cancels_and_awaits_before_invalidation_and_close(monkeypatch):
-    """Timeout must abort batches before invalidating rows or closing the DB.
-
-    **Validates: Requirements 3.1–3.3, 3.6–3.10, 5.4, 8.2**
-    """
+    """Timeout must abort batches before invalidating rows or closing the DB."""
     events: list[str] = []
     manager = SchedulerManager(object(), analysis_engine=None, broadcaster=SseBroadcaster())  # type: ignore[arg-type]
     task, _release = await _start_blocked_scheduler_batch(manager, monkeypatch, events)
@@ -225,10 +216,7 @@ async def test_scheduler_timeout_cancels_and_awaits_before_invalidation_and_clos
 
 
 async def test_collector_awaits_active_auto_connect_before_adapter_disconnect(app):
-    """Collector shutdown drains its active auto-connect owner first.
-
-    **Validates: Requirements 3.1–3.3, 3.5, 3.8, 3.9, 8.2**
-    """
+    """Collector shutdown drains its active auto-connect owner first."""
     events: list[str] = []
     entered = asyncio.Event()
     blocker = asyncio.Event()
@@ -259,10 +247,7 @@ async def test_collector_awaits_active_auto_connect_before_adapter_disconnect(ap
 
 
 async def test_collector_awaits_deferred_retry_before_adapter_disconnect(app):
-    """Collector shutdown must not clear retry ownership before task cleanup.
-
-    **Validates: Requirements 3.1–3.3, 3.5, 3.8, 3.9, 5.4, 8.2**
-    """
+    """Collector shutdown must not clear retry ownership before task cleanup."""
     events: list[str] = []
     entered = asyncio.Event()
     blocker = asyncio.Event()

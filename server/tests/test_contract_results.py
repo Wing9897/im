@@ -354,10 +354,7 @@ async def test_calendar_occurrences(client):
 
 
 async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persisted_tasks(app, client, caplog):
-    """Persisted bad/inactive calendar rows stay isolated from inclusive expansion.
-
-    **Validates: Requirements 1.4, 1.5, 1.6**
-    """
+    """Persisted bad/inactive calendar rows stay isolated from inclusive expansion."""
     now = "2026-07-01T00:00:00+00:00"
     fixtures = (
         ("calendar-invalid-persisted", 1, "FREQ=NOTREAL"),
@@ -396,10 +393,7 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
 
 
 async def test_calendar_persisted_mixture_preserves_allocation_contract_and_final_order(app, client, caplog):
-    """The persisted API path preserves skip, budget, boundary, and wire contracts.
-
-    **Validates: Requirements 2.7, 3.5, 3.6, 3.7, 3.9**
-    """
+    """The persisted API path preserves skip, budget, boundary, and wire contracts."""
     # Task-form ``HH:MM`` clocks are system-local wall time, so the requested
     # window and the expected wire instants are derived from the host timezone.
     local_tz = calendar_module._system_tzinfo()

@@ -1,7 +1,6 @@
 /**
  * Empty state rendering tests for all list components.
  *
- * Validates: Requirements 3.1, 3.6
  *
  * Verifies that each list page renders an appropriate empty state UI
  * without throwing errors when receiving empty arrays from API data.

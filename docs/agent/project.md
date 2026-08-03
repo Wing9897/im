@@ -41,5 +41,5 @@
 - Prompt：[`server/prompts/project.py`](../../server/prompts/project.py)（`build_project_base_prompt`）
 - Channel：`server/agent/channels.py` → `project`（`stateless=False`，tick 內連續；不持久化跨次排程 UI session）
 - AI 員工：`projectManager`（`/ai/staff`）
-- Schema：stamp v10／`schemaSemver` 0.1.0-beta.11（wipe-only；非當前 stamp 須 reset；游標拆欄 `last_message_at`＋`last_message_id`；AI 排程 `schedule_rrule` trigger-only；`user_events.origin` 含 `project`／`ics`；物品域 `items`／`item_categories`）— 見 [`ARCHITECTURE.md`](../ARCHITECTURE.md)
+- Schema：見 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix)
 - UI：任務底下的專案詳情 `/tasks/:taskId/project`（概覽、來源、子循環、所屬事件、最近 tick 訊息與工具步驟）；**不是**與 Sources／Assistant 同層的頂層導航。

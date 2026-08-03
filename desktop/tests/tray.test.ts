@@ -69,9 +69,6 @@ describe('Tray Module', () => {
   });
 
   describe('createTray', () => {
-    /**
-     * **Validates: Requirements 5.1**
-     */
     it('creates a Tray with the correct icon path', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -80,9 +77,6 @@ describe('Tray Module', () => {
       expect(trayConstructorIcon).toEqual({ path: 'resources/icon.ico', _isMockImage: true });
     });
 
-    /**
-     * **Validates: Requirements 7.1**
-     */
     it('sets initial tooltip to "Intelligence Monitor - Stopped"', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -90,9 +84,6 @@ describe('Tray Module', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - Stopped');
     });
 
-    /**
-     * **Validates: Requirements 7.4**
-     */
     it('context menu contains items: Show Window, Restart Server, Quit', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -118,9 +109,6 @@ describe('Tray Module', () => {
       expect(labels).toEqual(['Show Window', 'Quit']);
     });
 
-    /**
-     * **Validates: Requirements 7.4**
-     */
     it('"Show Window" menu item click calls win.show() and win.focus()', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -134,9 +122,6 @@ describe('Tray Module', () => {
       expect(win.focus).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 7.4**
-     */
     it('"Restart Server" menu item click calls the onRestartServer handler', () => {
       const win = createMockWindow();
       const mockRestart = vi.fn();
@@ -150,9 +135,6 @@ describe('Tray Module', () => {
       expect(mockRestart).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 7.4**
-     */
     it('"Restart Server" does not throw when no handler is provided', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -164,9 +146,6 @@ describe('Tray Module', () => {
       expect(() => restartItem.click()).not.toThrow();
     });
 
-    /**
-     * **Validates: Requirements 7.4**
-     */
     it('"Quit" menu item click calls app.quit()', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -179,9 +158,6 @@ describe('Tray Module', () => {
       expect(app.quit).toHaveBeenCalled();
     });
 
-    /**
-     * **Validates: Requirements 5.6**
-     */
     it('double-click on tray icon shows and focuses window', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -202,9 +178,6 @@ describe('Tray Module', () => {
   });
 
   describe('updateTrayStatus', () => {
-    /**
-     * **Validates: Requirements 7.1**
-     */
     it('updates tooltip to show "Running" status', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -215,9 +188,6 @@ describe('Tray Module', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - Running');
     });
 
-    /**
-     * **Validates: Requirements 7.1**
-     */
     it('updates tooltip to show "Stopped" status', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -228,9 +198,6 @@ describe('Tray Module', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - Stopped');
     });
 
-    /**
-     * **Validates: Requirements 7.1**
-     */
     it('updates tooltip to show "Error" status', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);
@@ -241,9 +208,6 @@ describe('Tray Module', () => {
       expect(mockSetToolTip).toHaveBeenCalledWith('Intelligence Monitor - Error');
     });
 
-    /**
-     * **Validates: Requirements 7.3**
-     */
     it('updates tooltip immediately when called (synchronous update)', () => {
       const win = createMockWindow();
       createTray('resources/icon.ico', win);

@@ -10,7 +10,6 @@
  * - Files ending in Styles.ts (controlStyles, segmentedTabStyles)
  * - Test files (.test.ts, .test.tsx)
  *
- * **Validates: Requirements 22.2**
  */
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";

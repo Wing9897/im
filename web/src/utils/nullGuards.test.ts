@@ -3,7 +3,6 @@
  *
  * Feature: api-null-safety-audit, Property 3: Null guard transparency and safety
  *
- * Validates: Requirements 4.1, 4.2, 4.4, 4.5
  */
 import { describe, it, expect } from "vitest";
 import { safeArray } from "./nullGuards";

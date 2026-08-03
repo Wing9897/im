@@ -31,10 +31,7 @@ _task_ids = st.text(
 )
 @given(mode=task_modes, active=st.booleans(), task_id=_task_ids, schedule=supported_schedules)
 async def test_scheduler_eligibility_and_registration_idempotence(app, mode, active, task_id, schedule):
-    """Feature: technical-debt-simplification, Property 4.
-
-    **Validates: Requirements 1.6**
-    """
+    """Feature: technical-debt-simplification, Property 4."""
     schedule_type, schedule_value = schedule
     schedule_rrule = preset_to_trigger_rrule(schedule_type, schedule_value)
     now = utc_now_iso()

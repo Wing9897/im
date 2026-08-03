@@ -24,10 +24,7 @@ from server.tests.db_helpers import insert_direct_analysis_task
     ],
 )
 def test_supported_schedule_examples(schedule_type, schedule_value, trigger_type, expected):
-    """Preserve concrete examples for all five interval/cron schedules.
-
-    **Validates: Requirements 1.1, 1.2**
-    """
+    """Preserve concrete examples for all five interval/cron schedules."""
     trigger = schedule_trigger_from_rrule(preset_to_trigger_rrule(schedule_type, schedule_value))
 
     assert type(trigger) is trigger_type
@@ -40,10 +37,7 @@ def test_supported_schedule_examples(schedule_type, schedule_value, trigger_type
 
 
 async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app, caplog):
-    """Unknown input fails clearly; bad persisted values do not block valid tasks.
-
-    **Validates: Requirements 1.1, 1.2, 1.7**
-    """
+    """Unknown input fails clearly; bad persisted values do not block valid tasks."""
     with pytest.raises(ValueError, match="Unknown schedule_type: unsupported"):
         schedule_trigger_from_rrule(preset_to_trigger_rrule("unsupported", None))
 
@@ -73,10 +67,7 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
 
 
 async def test_re_registration_replaces_the_existing_task_job(app):
-    """Re-registering a task replaces, rather than duplicates, its timer.
-
-    **Validates: Requirements 1.1, 1.2, 1.6**
-    """
+    """Re-registering a task replaces, rather than duplicates, its timer."""
     manager = SchedulerManager(app.state.db, analysis_engine=None, broadcaster=SseBroadcaster())
     await manager.register_task(seed.TASK_LEADERBOARD)
     original = manager._scheduler.get_job(seed.TASK_LEADERBOARD)
@@ -102,10 +93,7 @@ async def test_re_registration_replaces_the_existing_task_job(app):
     [("recurring", 1), ("leaderboard", 0)],
 )
 async def test_re_registration_removes_jobs_for_recurring_or_inactive(app, analysis_mode, is_active):
-    """Recurring and inactive tasks retain no scheduler job, including stale jobs.
-
-    **Validates: Requirements 1.6**
-    """
+    """Recurring and inactive tasks retain no scheduler job, including stale jobs."""
     manager = SchedulerManager(app.state.db, analysis_engine=None, broadcaster=SseBroadcaster())
     await manager.register_task(seed.TASK_LEADERBOARD)
     assert manager._scheduler.get_job(seed.TASK_LEADERBOARD) is not None

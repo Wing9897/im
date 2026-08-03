@@ -2,7 +2,6 @@
  * Unit tests for src/api/actions.ts
  * Covers success and error paths for all public API functions.
  *
- * Validates: Requirements 7.1, 7.3
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { apiClient } from "./client";

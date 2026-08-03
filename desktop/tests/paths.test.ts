@@ -5,7 +5,6 @@ import * as path from 'node:path';
  * Unit tests for desktop/paths.ts
  *
  * Property 6: Environment Path Resolution
- * Validates: Requirements 9.1, 9.2, 9.3, 9.4
  *
  * For any execution context (dev mode or packaged .exe), the resolved paths
  * point to the correct directories for frontend dist and server cwd.

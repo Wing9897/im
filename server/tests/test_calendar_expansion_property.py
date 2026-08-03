@@ -220,10 +220,7 @@ def _calendar_expansion_cases(draw: st.DrawFn):
 def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     case, interval, occurrence_index, boundary_span, boundary_time
 ):
-    """Feature: technical-debt-simplification, Property 3.
-
-    **Validates: Requirements 1.4**
-    """
+    """Feature: technical-debt-simplification, Property 3."""
     tasks, (range_start, range_end) = case
     for task in tasks:
         validate_rrule(task["rrule"])
@@ -335,10 +332,7 @@ def _legacy_preservation_cases(draw: st.DrawFn):
 @settings(max_examples=100, deadline=None)
 @given(case=_legacy_preservation_cases())
 def test_property_5_preserves_legacy_calendar_semantics_when_sequence_fits_budget(case):
-    """The unfixed observable sequence is preserved for every generated N <= B case.
-
-    **Validates: Requirements 2.10, 2.11, 3.5, 3.6, 3.8**
-    """
+    """The unfixed observable sequence is preserved for every generated N <= B case."""
     task, mixed_tasks, range_start, range_end, budget, interval, complete_count = case
     reference = _full_reference_task_sequence(task, range_start, range_end)
     assert len(reference) == complete_count <= budget
@@ -387,10 +381,7 @@ def _shared_allocation_cases(draw: st.DrawFn):
 @settings(max_examples=100, deadline=None)
 @given(case=_shared_allocation_cases())
 def test_property_6_preserves_shared_allocation_final_order_and_exact_contract(case):
-    """Input order owns the cap while public output remains sorted and unchanged.
-
-    **Validates: Requirements 2.7, 2.11, 3.7, 3.9**
-    """
+    """Input order owns the cap while public output remains sorted and unchanged."""
     tasks, range_start, range_end, counts = case
     expected = _reference_calendar_occurrences(tasks, range_start, range_end)
     actual = expand_calendar_occurrences(tasks, range_start, range_end)
@@ -480,10 +471,7 @@ def _calendar_bug_condition_cases(draw: st.DrawFn):
 @settings(max_examples=100, deadline=None)
 @given(case=_calendar_bug_condition_cases())
 def test_property_2_bounded_calendar_reference_prefix_for_generated_bug_conditions(case):
-    """Every generated N>B case returns its exact bounded reference prefix.
-
-    **Validates: Requirements 2.5, 2.6, 2.10, 2.11**
-    """
+    """Every generated N>B case returns its exact bounded reference prefix."""
     task, range_start, range_end, budget = case
     reference = _full_reference_task_sequence(task, range_start, range_end)
     assert len(reference) > budget
@@ -522,10 +510,7 @@ def test_property_2_bounded_calendar_reference_prefix_for_generated_bug_conditio
 def test_property_2_budget_and_widened_boundary_examples(
     budget: int, range_start: str, range_end: None, expected_reference_count: int
 ):
-    """Lock the B=0, B=1, N=B+1, and widened-boundary cases.
-
-    **Validates: Requirements 2.5, 2.6, 2.10**
-    """
+    """Lock the B=0, B=1, N=B+1, and widened-boundary cases."""
     local_tz = calendar_module._system_tzinfo()
     if range_start == "local-day-point":
         start = datetime(2000, 1, 1, 0, 0, tzinfo=local_tz)
@@ -549,10 +534,7 @@ def test_property_2_budget_and_widened_boundary_examples(
 
 
 def test_property_2_secondly_365_day_regression_is_exact_and_bounded():
-    """The dense 365-day query obtains only the exact 1000-member prefix.
-
-    **Validates: Requirements 2.5, 2.6, 2.12**
-    """
+    """The dense 365-day query obtains only the exact 1000-member prefix."""
     budget = MAX_OCCURRENCES
     local_tz = calendar_module._system_tzinfo()
     range_start = datetime(2000, 1, 1, tzinfo=local_tz)

@@ -2,7 +2,7 @@
 
 Intentional product／ops **deltas** vs naive “full platform” expectations. Live shapes: `server/tests/test_contract_*.py` and `server/tests/test_dead_endpoints.py`. **Do not** recreate removed historical integrations unless a user-visible bug requires it.
 
-Contract／schema／API SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)（[API contract](./ARCHITECTURE.md#api-contract)、[Schema support matrix](./ARCHITECTURE.md#schema-support-matrix)、[Removed endpoints](./ARCHITECTURE.md#removed-endpoints)、[Scheduler](./ARCHITECTURE.md#scheduler)、[Unified event analysis](./ARCHITECTURE.md#unified-event-analysis-pipeline)、[Telegram session storage](./ARCHITECTURE.md#telegram-session-storage)）. Agent contracts: [`agent/assistant.md`](./agent/assistant.md)、[`agent/a2a.md`](./agent/a2a.md). Docs index: [`README.md`](./README.md).
+SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent: [`agent/assistant.md`](./agent/assistant.md)、[`agent/a2a.md`](./agent/a2a.md)。
 
 ## API / stats deltas
 
@@ -27,7 +27,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler SoT: [`ARCHITECTURE.md` Scheduler](./ARCHITECTURE.md#scheduler). Retention: five category TTLs (0 disables) + daily `server/scheduler/retention.py`; immediate `POST /api/v1/system/retention/run`. Ops also: `POST /api/v1/system/collector/restart`. Stamp 10 is wipe-only: no migration registry, `_data_migrations` ledger, or runtime schema-upgrade gate remains.
+Scheduler／stamp-10 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 ## Sources / accounts
 
@@ -150,7 +150,7 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 ## Deploy verify
 
-`npm run verify:deploy` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. (`npm run smoke` is a deprecated alias.)
+`npm run verify:deploy` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
 
 ## Removed / not restored
 

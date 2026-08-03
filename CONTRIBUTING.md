@@ -53,8 +53,7 @@ Individual suites are also available: `npm test` (root smoke/audit), `npm run te
 
 The short post-deploy live check (`npm run verify:deploy`) is **not** part of the gate — it
 needs a running server on `127.0.0.1:18820` and, on a database that already has an admin, a
-bearer token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. (`smoke` is a deprecated alias for the
-same script.) Everyday PR／main CI always runs **`quality`** (Ubuntu).
+bearer token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday PR／main CI always runs **`quality`** (Ubuntu).
 
 **Release:** merge／push to **`main`** (or **`workflow_dispatch`**) runs a fully automatic
 pipeline: after `quality`, CI computes the release SemVer from the latest git tag `v*`

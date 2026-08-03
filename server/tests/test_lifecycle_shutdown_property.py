@@ -50,7 +50,6 @@ async def test_managed_task_drain_precedes_dependent_resource_closure(
     Fixed integration examples exercise each concrete lifespan/scheduler/collector
     owner; this property broadens task outcomes and shutdown interleavings.
 
-    **Validates: Requirements 3.1–3.3, 3.7–3.9**
     """
     events: list[str] = []
     blocker = asyncio.Event()

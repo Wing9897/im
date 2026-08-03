@@ -1,7 +1,6 @@
 /**
  * Smoke test for ActionsPage rendering.
  *
- * Validates: Requirements 13.2, 13.3, 13.4
  *
  * Verifies that the component renders without throwing exceptions
  * when REST API calls are mocked to return empty/default data.
