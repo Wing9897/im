@@ -63,13 +63,18 @@ export function AnalysisDebugPanel({
           label={t("general.debug.traceVerboseLabel")}
           help={t("general.debug.traceVerboseHelp")}
         >
-          <ToggleSwitch
-            checked={analysisTraceVerbose}
-            disabled={busy}
-            showLabel={false}
-            label={t("general.debug.traceVerboseLabel")}
-            onChange={onAnalysisTraceVerboseChange}
-          />
+          <div className="flex items-center gap-md">
+            <ToggleSwitch
+              checked={analysisTraceVerbose}
+              disabled={busy}
+              showLabel={false}
+              label={t("general.debug.traceVerboseLabel")}
+              onChange={onAnalysisTraceVerboseChange}
+            />
+            <span className="select-none text-body text-text-primary" aria-hidden="true">
+              {analysisTraceVerbose ? t("shared.enabled") : t("shared.disabled")}
+            </span>
+          </div>
         </SettingsRow>
       </FormStack>
     </CollapsePanel>
