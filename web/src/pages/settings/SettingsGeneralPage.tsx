@@ -104,24 +104,42 @@ export function SettingsGeneralPage() {
     }
   };
 
-  const debugDirty =
-    intelligenceRulesVersion !== (settings?.intelligenceRulesVersion ?? "v2") ||
-    analysisTraceVerbose !== Boolean(settings?.analysisTraceVerbose);
-
-  const saveDebugSettings = async () => {
+  const persistDebugPatch = async (patch: {
+    intelligenceRulesVersion?: string;
+    analysisTraceVerbose?: boolean;
+  }) => {
     setDebugSaving(true);
+    const prevVersion = settings?.intelligenceRulesVersion ?? "v2";
+    const prevTrace = Boolean(settings?.analysisTraceVerbose);
+    if (patch.analysisTraceVerbose !== undefined) {
+      setAnalysisTraceVerbose(patch.analysisTraceVerbose);
+    }
+    if (patch.intelligenceRulesVersion !== undefined) {
+      setIntelligenceRulesVersion(patch.intelligenceRulesVersion);
+    }
     try {
-      const snapshot = await saveSystemSettings({
-        intelligenceRulesVersion,
-        analysisTraceVerbose,
-      });
+      const snapshot = await saveSystemSettings(patch);
       applyPersistedSnapshot(snapshot);
       showToast(t("general.debug.saved"), "success");
     } catch (error) {
+      setIntelligenceRulesVersion(prevVersion);
+      setAnalysisTraceVerbose(prevTrace);
       showToast(toErrorMessage(error), "error");
     } finally {
       setDebugSaving(false);
     }
+  };
+
+  const commitRulesVersion = (value: string) => {
+    const next = value.trim();
+    const current = (settings?.intelligenceRulesVersion ?? "v2").trim();
+    if (next === current) return;
+    void persistDebugPatch({ intelligenceRulesVersion: next });
+  };
+
+  const onTraceVerboseChange = (next: boolean) => {
+    if (next === Boolean(settings?.analysisTraceVerbose)) return;
+    void persistDebugPatch({ analysisTraceVerbose: next });
   };
 
   return (
@@ -211,22 +229,11 @@ export function SettingsGeneralPage() {
         <AnalysisDebugPanel
           intelligenceRulesVersion={intelligenceRulesVersion}
           analysisTraceVerbose={analysisTraceVerbose}
+          busy={debugSaving}
           onIntelligenceRulesVersionChange={setIntelligenceRulesVersion}
-          onAnalysisTraceVerboseChange={setAnalysisTraceVerbose}
+          onIntelligenceRulesVersionCommit={commitRulesVersion}
+          onAnalysisTraceVerboseChange={onTraceVerboseChange}
         />
-        {debugDirty ? (
-          <div className="mt-sm">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={debugSaving}
-              onClick={() => void saveDebugSettings()}
-              data-testid="save-debug-settings"
-            >
-              {debugSaving ? t("shared.saving") : t("general.debug.saveLabel")}
-            </Button>
-          </div>
-        ) : null}
       </SettingsFieldGroup>
 
       <SettingsFieldGroup showDivider>

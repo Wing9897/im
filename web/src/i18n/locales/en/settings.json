@@ -70,10 +70,9 @@
       "sectionTitle": "Debug & diagnostics",
       "rulesVersionLabel": "Analysis rules version tag",
       "rulesVersionPlaceholder": "v2",
-      "rulesVersionHelp": "Version string written into message-batch prompts (event / leaderboard system prompts), e.g. v2, so you can correlate prompt revisions. Does not change evidence style, scheduling, or analysis rules. Leave empty to omit the tag. Unused by web intel / project / recurring.",
+      "rulesVersionHelp": "Version string written into message-batch prompts (event / leaderboard system prompts), e.g. v2, so you can correlate prompt revisions. Does not change evidence style, scheduling, or analysis rules. Leave empty to omit the tag. Unused by web intel / project / recurring. Saves on blur or Enter.",
       "traceVerboseLabel": "Server analysis trace",
-      "traceVerboseHelp": "Write more detailed analysis tracing to server logs (not the Settings → Logs page).",
-      "saveLabel": "Save debug settings",
+      "traceVerboseHelp": "Write more detailed analysis tracing to server logs (not the Settings → Logs page). Takes effect immediately when toggled.",
       "saved": "Debug settings saved"
     }
   },

@@ -17,6 +17,7 @@ describe("AnalysisDebugPanel", () => {
       intelligenceRulesVersion: "v2",
       analysisTraceVerbose: false,
       onIntelligenceRulesVersionChange: vi.fn(),
+      onIntelligenceRulesVersionCommit: vi.fn(),
       onAnalysisTraceVerboseChange: vi.fn(),
       defaultOpen: true,
     };
@@ -35,16 +36,34 @@ describe("AnalysisDebugPanel", () => {
     expect(container.textContent).toContain("伺服器分析 Trace");
     expect(container.textContent).toContain("不會切換證據風格");
     expect(container.textContent).toContain("不是設定→系統日誌頁");
+    expect(container.textContent).toContain("切換後立即生效");
     expect(container.textContent).not.toContain("記錄完整 request/response");
   });
 
-  it("notifies when the trace checkbox changes", () => {
+  it("notifies when the trace switch changes", () => {
     const container = document.createElement("div");
     const props = renderPanel(container);
-    const checkbox = container.querySelector<HTMLInputElement>("#analysis-trace-verbose")!;
+    const switchEl = container.querySelector<HTMLElement>('[role="switch"]')!;
+    expect(switchEl.getAttribute("aria-checked")).toBe("false");
     act(() => {
-      checkbox.click();
+      switchEl.click();
     });
     expect(props.onAnalysisTraceVerboseChange).toHaveBeenCalledWith(true);
+  });
+
+  it("commits rules version on blur", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    try {
+      const props = renderPanel(container, { intelligenceRulesVersion: "v3" });
+      const input = container.querySelector<HTMLInputElement>("#intelligence-rules-version")!;
+      act(() => {
+        input.focus();
+        input.blur();
+      });
+      expect(props.onIntelligenceRulesVersionCommit).toHaveBeenCalledWith("v3");
+    } finally {
+      container.remove();
+    }
   });
 });

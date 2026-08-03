@@ -117,7 +117,26 @@ describe("SettingsGeneralPage", () => {
     expect(toggle).toBeTruthy();
     await act(async () => toggle!.click());
     expect(harness.container.textContent).toContain("分析規則版本標記");
-    expect(harness.container.querySelector("#analysis-trace-verbose")).toBeTruthy();
+    expect(harness.container.querySelector('[role="switch"]')).toBeTruthy();
+  });
+
+  it("persists analysis trace immediately when the switch is toggled", async () => {
+    saveSystemSettings.mockResolvedValue({
+      weatherLocation: "system",
+      intelligenceRulesVersion: "v2",
+      analysisTraceVerbose: true,
+    });
+    await harness.render(SettingsGeneralPageWithProviders);
+    const sectionToggle = Array.from(harness.container.querySelectorAll("button")).find(
+      (btn) =>
+        btn.getAttribute("aria-expanded") === "false" &&
+        btn.closest("div")?.textContent?.includes("除錯與診斷"),
+    );
+    await act(async () => sectionToggle!.click());
+    const switchEl = harness.container.querySelector<HTMLElement>('[role="switch"]')!;
+    await act(async () => switchEl.click());
+    expect(saveSystemSettings).toHaveBeenCalledWith({ analysisTraceVerbose: true });
+    expect(applyPersistedSnapshot).toHaveBeenCalled();
   });
 
   it("keeps the collector restart action wired", async () => {
