@@ -31,23 +31,9 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 可選 `messages`：由**第三方**自行保存的先前輪次，僅用於**本次**請求（本服務不落庫、不恢復 session）。若同時給 `input`，會接在 `messages` 之後。
 
-### Response（單次，類似網頁版 agent）
+### Response（單次）
 
-```json
-{
-  "message": "明天沒有會議。已建立每週三 10:00「睇電視」循環行事曆任務。",
-  "sessionId": null,
-  "toolCalls": [
-    { "name": "calendar.upcoming", "arguments": { "days": 1 }, "resultSummary": "…" },
-    { "name": "calendar.create_recurring_task", "arguments": { "…" }, "resultSummary": "…" }
-  ],
-  "error": null
-}
-```
-
-- `message`：給第三方 agent 的最終結果（給人／給上游模型皆可）。
-- `toolCalls`：內部用過哪些工具的摘要（說明／除錯用），**不是**要第三方逐步重放的協議。
-- 無串流進度協議要求；無需對接本產品的 events schema。
+與 `/agent/chat` **final** 同形（`message`／`sessionId`／`toolCalls`／`error`）；契約見 [`assistant.md`](./assistant.md)。`toolCalls` 僅供說明／除錯，不是逐步重放協議。無串流進度要求。
 
 需要本機已設定可用的 **AI 供應商**。
 

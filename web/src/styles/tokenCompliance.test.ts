@@ -18,7 +18,6 @@ import {
  *
  * Zero-tolerance ratchet: any new hardcoded value fails the suite.
  *
- * **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
  */
 
 // ─── Configuration ───────────────────────────────────────────────────────────
@@ -309,7 +308,6 @@ describe("Token Adoption Compliance - src/pages/", () => {
  * Verifies that the JavaScript token mirror stays aligned with the runtime
  * values defined by tailwind.css @theme.
  *
- * **Validates: Requirements 7.1**
  */
 
 const EXPECTED_SPACING: Record<string, number> = {

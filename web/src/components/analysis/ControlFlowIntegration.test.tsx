@@ -6,7 +6,6 @@
  * 2. Abort flow: handleEmergencyAbort → emergencyAbortAnalysis API → state update
  * 3. Interlock: start pause → attempt abort → verify rejection
  *
- * **Validates: Requirements 4.4, 5.1, 5.2, 5.3**
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, useState, act } from "react";
@@ -319,7 +318,6 @@ describe("Control flow integration tests", () => {
 
   describe("Interlock: operations reject when another is in progress", () => {
     /**
-     * Validates: Requirements 4.4, 5.1, 5.2, 5.3
      *
      * Interlock test:
      * 1. Start a pause operation (sets updatingAnalysisPaused=true)
@@ -358,7 +356,6 @@ describe("Control flow integration tests", () => {
     });
 
     /**
-     * Validates: Requirements 4.4, 5.2, 5.1
      *
      * Interlock test:
      * 1. Start an abort operation (sets abortingAnalysis=true)
@@ -397,7 +394,6 @@ describe("Control flow integration tests", () => {
     });
 
     /**
-     * Validates: Requirements 4.4, 5.1, 5.2, 5.3
      *
      * Interlock test: After one operation completes, a new operation should proceed.
      */

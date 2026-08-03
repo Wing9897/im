@@ -19,10 +19,7 @@ from server.collector.manager_retry import CollectorRetryOrchestrator
     old_completes_first=st.booleans(),
 )
 def test_retry_handle_cleanup_is_identity_safe(account_id: str, old_completes_first: bool) -> None:
-    """A stale completion callback never removes its replacement handle.
-
-    **Validates: Requirements 4.5**
-    """
+    """A stale completion callback never removes its replacement handle."""
     owner = cast(Any, object.__new__(CollectorRetryOrchestrator))
     old_task = object()
     replacement_task = object()

@@ -1,7 +1,6 @@
 /**
  * Unit tests for ActionCard visual polish updates.
  *
- * Validates: Requirements 8.4, 10.5
  *
  * Tests:
  * - Card uses flat solid chrome (no elevated hover-lift shadow), matching FeedCard density

@@ -89,7 +89,6 @@ describe("getOsTimeMs", () => {
 // Feature: project-audit-optimization, Property 7: 時間戳格式化有效性
 describe("formatOsDateTime — validity", () => {
   /**
-   * **Validates: Requirements 12.6**
    *
    * For valid ISO 8601 timestamps, output is a localized string;
    * for invalid timestamps, returns the original input.

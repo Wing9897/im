@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
  * These tests verify the INTERACTIONS between ProcessManager, BrowserWindow,
  * and the quit/close sequences — ensuring components are correctly wired together.
  *
- * **Validates: Requirements 2.1, 6.3, 7.4**
  */
 
 // --- Shared Mock State ---
@@ -259,7 +258,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Full Startup Sequence', () => {
     /**
-     * **Validates: Requirements 2.1**
      *
      * Test that start sequence calls ProcessManager.start() then creates window then creates tray.
      * The correct ordering is: ProcessManager.start() → BrowserWindow created → createTray called.
@@ -283,7 +281,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
     });
 
     /**
-     * **Validates: Requirements 2.1**
      *
      * Verifies that all components are initialized after a successful startup.
      */
@@ -344,7 +341,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Startup Failure', () => {
     /**
-     * **Validates: Requirements 2.1**
      *
      * When ProcessManager.start() rejects, error dialog is shown,
      * app.exit(1) is called, and no window is created.
@@ -389,7 +385,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Full Quit Sequence', () => {
     /**
-     * **Validates: Requirements 7.4**
      *
      * Test that quit sequence calls ProcessManager.stop() then app.exit(0).
      * The correct ordering is: before-quit fires → processManager.stop() → app.exit(0).
@@ -426,7 +421,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
     });
 
     /**
-     * **Validates: Requirements 7.4**
      *
      * Even if processManager.stop() is slow, app.exit(0) waits for it.
      */
@@ -458,7 +452,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Close Event Keeps Process Running', () => {
     /**
-     * **Validates: Requirements 6.3**
      *
      * Test that close event hides window but keeps process running.
      */
@@ -485,7 +478,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
     });
 
     /**
-     * **Validates: Requirements 6.3**
      *
      * Multiple close events don't trigger any shutdown.
      */
@@ -507,7 +499,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Property 2: Process Lifecycle Coupling', () => {
     /**
-     * **Validates: Requirements 2.1, 7.4**
      *
      * Property 2: For any exit scenario, if app exits then processManager.stop() is always called.
      *
@@ -567,7 +558,6 @@ describe('Integration: Full Startup/Shutdown Cycle', () => {
 
   describe('Property 4: Tray Persistence', () => {
     /**
-     * **Validates: Requirements 6.3**
      *
      * Property 4: For any window close event, processManager.isRunning() remains true.
      * The application process remains running, the Python subprocess remains running,

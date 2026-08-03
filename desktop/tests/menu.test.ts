@@ -36,9 +36,6 @@ describe('Menu Module', () => {
   });
 
   describe('buildApplicationMenu', () => {
-    /**
-     * **Validates: Requirements 2.1**
-     */
     it('creates a menu with Edit, View, and Window menus on non-macOS', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       buildApplicationMenu(config);
@@ -47,9 +44,6 @@ describe('Menu Module', () => {
       expect(topLabels).toEqual(['Edit', 'View', 'Window']);
     });
 
-    /**
-     * **Validates: Requirements 2.2**
-     */
     it('Edit menu contains Undo, Redo, Cut, Copy, Paste, Select All', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       buildApplicationMenu(config);
@@ -70,9 +64,6 @@ describe('Menu Module', () => {
       expect(roles).toContain('selectAll');
     });
 
-    /**
-     * **Validates: Requirements 2.3**
-     */
     it('View menu contains Reload, Toggle DevTools, Zoom In, Zoom Out, Reset Zoom', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       buildApplicationMenu(config);
@@ -92,9 +83,6 @@ describe('Menu Module', () => {
       expect(roles).toContain('resetZoom');
     });
 
-    /**
-     * **Validates: Requirements 2.4**
-     */
     it('Window menu contains Minimize and Close', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       buildApplicationMenu(config);
@@ -111,9 +99,6 @@ describe('Menu Module', () => {
       expect(roles).toContain('close');
     });
 
-    /**
-     * **Validates: Requirements 2.5**
-     */
     it('on macOS, prepends an app menu with About and Quit', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: true };
       buildApplicationMenu(config);
@@ -133,9 +118,6 @@ describe('Menu Module', () => {
       expect(roles).toContain('quit');
     });
 
-    /**
-     * **Validates: Requirements 2.5**
-     */
     it('on non-macOS, does NOT include an app menu', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       buildApplicationMenu(config);
@@ -144,9 +126,6 @@ describe('Menu Module', () => {
       expect(topLabels).not.toContain('Intelligence Monitor');
     });
 
-    /**
-     * **Validates: Requirements 2.1**
-     */
     it('calls Menu.buildFromTemplate and Menu.setApplicationMenu', () => {
       const config: MenuConfig = { appName: 'Intelligence Monitor', isMac: false };
       const result = buildApplicationMenu(config);
@@ -156,9 +135,6 @@ describe('Menu Module', () => {
       expect(mockSetApplicationMenu).toHaveBeenCalledWith(result);
     });
 
-    /**
-     * **Validates: Requirements 2.5**
-     */
     it('macOS app menu uses the provided appName as label', () => {
       const config: MenuConfig = { appName: 'Custom App Name', isMac: true };
       buildApplicationMenu(config);

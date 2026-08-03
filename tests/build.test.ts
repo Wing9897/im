@@ -8,7 +8,6 @@ import viteConfig from "../web/vite.config";
  * The project is pinned to Vite 6.4.3; manualChunks remains a Rollup function.
  * We test it by calling the function with representative module IDs.
  *
- * Validates: Requirements 2.5
  */
 describe("Vite build chunk splitting configuration", () => {
   const buildConfig = viteConfig.build;

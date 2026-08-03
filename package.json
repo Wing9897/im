@@ -55,7 +55,6 @@
     "openapi:check": "node scripts/openapi-check.mjs",
     "stats": "uv run python scripts/project_stats.py",
     "verify:deploy": "uv run python scripts/smoke.py",
-    "smoke": "npm run verify:deploy",
     "verify:desktop:fast": "npm run test:desktop && uv run python scripts/desktop_verify.py --mode fast",
     "verify:desktop:full": "uv run python scripts/desktop_verify.py --mode full",
     "clean": "node scripts/clean.mjs"

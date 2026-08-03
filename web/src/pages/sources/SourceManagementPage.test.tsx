@@ -1,7 +1,6 @@
 /**
  * Smoke test for SourceManagementPage rendering.
  *
- * Validates: Requirements 13.1, 13.3, 12.2, 12.3, 12.4
  *
  * Verifies that the component renders without throwing exceptions
  * when REST API calls are mocked to return empty/default data.
@@ -312,7 +311,6 @@ describe("SourceManagementPage smoke test", () => {
 
 /* ------------------------------------------------------------------ */
 /*  Visual Update Tests                                                */
-/*  Validates: Requirements 12.2, 12.3, 12.4                          */
 /* ------------------------------------------------------------------ */
 
 describe("SourceManagementPage visual updates", () => {

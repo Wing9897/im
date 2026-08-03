@@ -96,10 +96,7 @@ async def _ensure_incomplete_state(db: Any, task_id: str) -> None:
 )
 @given(mode=_ANALYSIS_RRULE_MODES, supplied_rrule=_SUPPLIED_RRULES)
 async def test_new_analysis_rrule_writes_are_rejected_atomically(client, app, mode: str, supplied_rrule: str) -> None:
-    """Feature: technical-debt-simplification, Property 2.
-
-    Validates: Requirements 1.3
-    """
+    """Feature: technical-debt-simplification, Property 2."""
     db = app.state.db
     scheduler = app.state.scheduler
     task_id = _TASK_BY_MODE[mode]

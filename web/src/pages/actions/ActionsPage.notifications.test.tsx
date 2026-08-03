@@ -1,7 +1,6 @@
 /**
  * Unit tests for UI renaming and channel selector.
  *
- * Validates: Requirements 1.1, 1.2, 1.3, 2.1, 2.2
  *
  * Tests:
  * - "通知" heading is displayed

@@ -608,8 +608,6 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 
 Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-10 / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
-**Removed endpoints** (404/405 guard): `server/tests/test_dead_endpoints.py` — see [Removed endpoints](#removed-endpoints).
-
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/ui-prefs/*`).
 
 ### Wire conventions
@@ -629,7 +627,7 @@ Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` i
 
 ### Startup readiness (perf note)
 
-Repeatable ASGI fresh-db readiness (`scripts/measure_startup_baseline.py`, collector/scheduler/static disabled): median ~247 ms after empty-account collector deferral on stamp 10 (earlier same harness ~433 ms median). Not a CI gate.
+Local ASGI fresh-db baseline: `scripts/measure_startup_baseline.py` (collector/scheduler/static disabled). Not a CI gate.
 
 ## Agent / assistant
 
