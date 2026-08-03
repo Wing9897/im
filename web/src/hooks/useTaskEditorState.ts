@@ -10,7 +10,7 @@ import { chatEditorFormStorageKey } from "../domain/prefs";
 import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
 import {
   isUnmappedTriggerSchedule,
-  legacyToTriggerRrule,
+  presetToTriggerRrule,
 } from "../domain/tasks/triggerSchedule";
 import type { AnalysisMode, TaskFormState, TaskTemplatePreset } from "../types";
 import { usePersistedState } from "./usePersistedState";
@@ -127,7 +127,7 @@ export function useTaskEditorState(
       setFormState((prev) => {
         const next = { ...prev, [field]: value };
         if (field === "scheduleType" || field === "scheduleValue") {
-          next.scheduleRrule = legacyToTriggerRrule(
+          next.scheduleRrule = presetToTriggerRrule(
             next.scheduleType,
             next.scheduleValue,
           );
@@ -150,6 +150,10 @@ export function useTaskEditorState(
           promptTemplate: localized.promptTemplate,
           analysisMode: nextMode,
           analysisTimeRange: localized.defaultAnalysisTimeRange,
+          webSearchQuery:
+            nextMode === "web_intel"
+              ? (localized.webSearchQuery ?? prev.webSearchQuery)
+              : "",
         };
         if (
           (nextMode === "project" || nextMode === "web_intel") &&
@@ -157,7 +161,7 @@ export function useTaskEditorState(
           !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
         ) {
           next.scheduleType = "hourly";
-          next.scheduleRrule = legacyToTriggerRrule("hourly", next.scheduleValue);
+          next.scheduleRrule = presetToTriggerRrule("hourly", next.scheduleValue);
         }
         if (nextMode === "project" && next.projectWaveIntervalSeconds == null) {
           next.projectWaveIntervalSeconds = DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS;

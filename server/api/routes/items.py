@@ -142,9 +142,7 @@ async def get_category(request: Request, category_id: str) -> dict[str, Any]:
 
 
 @router.patch("/categories/{category_id}", response_model=ItemCategoryResponse)
-async def patch_category_route(
-    request: Request, category_id: str, body: CategoryUpdateBody
-) -> dict[str, Any]:
+async def patch_category_route(request: Request, category_id: str, body: CategoryUpdateBody) -> dict[str, Any]:
     fields = body.model_dump(exclude_unset=True)
     kwargs: dict[str, Any] = {}
     mapping = {

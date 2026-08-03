@@ -17,6 +17,8 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         # Plain channel list: every caller needs /channels/with-accounts instead.
         ("GET", "/api/v1/channels", None),
         ("POST", "/api/v1/tasks/suggest", {}),
+        # FE uses agent ``tasks.consult_advisor``; REST chat-assistant retired.
+        ("POST", "/api/v1/tasks/chat-assistant", {"messages": []}),
         ("POST", f"/api/v1/tasks/{task_id}/preview-invalidation", {}),
         ("DELETE", "/api/v1/results/batches/stats", None),
         ("DELETE", "/api/v1/results/batches/failed", None),
@@ -60,7 +62,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("PATCH", "/api/v1/user-events", {}),
         ("PUT", "/api/v1/user-events", {}),
         ("DELETE", "/api/v1/user-events", None),
-        # Schema upgrade gate retired (wipe-only stamp 5).
+        # Schema upgrade gate retired (wipe-only stamp 10).
         ("GET", "/api/v1/system/schema/status", None),
         ("POST", "/api/v1/system/schema/upgrade", {}),
     ]

@@ -3,6 +3,10 @@
 Returns RRULE expansions plus optional trackable-item DATE projections
 (``source=item``) from the same ``item_projection`` path used by agent
 ``query_window`` — one server projection, no FE dual-track.
+
+Wire shape is ``CalendarOccurrenceResponse`` (Pydantic defaults fill optional
+fields). Expansion / item_projection rows are coerced directly — no private
+``_as_api_*`` reshape layer.
 """
 
 from __future__ import annotations
@@ -14,7 +18,6 @@ from fastapi import APIRouter, Query, Request
 from server.api.deps import get_db
 from server.api.schemas.responses import CalendarOccurrenceResponse
 from server.calendar.item_projection import fetch_item_occurrences_in_range
-from server.calendar.normalize import build_item_calendar_item
 from server.calendar.query import expand_active_calendar_occurrences
 from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.errors import VALIDATION_ERROR, http_error
@@ -30,46 +33,17 @@ def _parse_range_param(value: str, name: str, *, end_of_day: bool = False):
     return parsed
 
 
-def _as_api_recurring_row(occ: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "id": occ["id"],
-        "taskId": occ.get("taskId") or "",
-        "taskName": occ.get("taskName") or "",
-        "title": occ.get("title") or "",
-        "startTime": occ["startTime"],
-        "endTime": occ.get("endTime") or occ["startTime"],
-        "isAllDay": bool(occ.get("isAllDay")),
-        "timezone": occ.get("timezone"),
-        "location": occ.get("location"),
-        "description": occ.get("description"),
-        "rrule": occ.get("rrule") or "",
-        "dismissed": bool(occ.get("dismissed")),
-        "source": "recurring",
-        "worksetId": None,
-        "itemId": None,
-        "itemDateKind": None,
+def _occurrence_wire(row: dict[str, Any], *, source: str) -> dict[str, Any]:
+    """Coerce expansion / item_projection rows into CalendarOccurrenceResponse."""
+    start = row["startTime"]
+    end = row.get("endTime") or start
+    payload = {
+        **row,
+        "startTime": start,
+        "endTime": end,
+        "source": source,
     }
-
-
-def _as_api_item_row(item: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "id": item["id"],
-        "taskId": item.get("taskId") or "",
-        "taskName": "",
-        "title": item.get("title") or "",
-        "startTime": item["startTime"],
-        "endTime": item.get("endTime") or item["startTime"],
-        "isAllDay": True,
-        "timezone": item.get("timezone") or "floating",
-        "location": item.get("location"),
-        "description": None,
-        "rrule": "",
-        "dismissed": bool(item.get("dismissed")),
-        "source": "item",
-        "worksetId": item.get("worksetId"),
-        "itemId": item.get("itemId"),
-        "itemDateKind": item.get("itemDateKind"),
-    }
+    return CalendarOccurrenceResponse.model_validate(payload).model_dump(mode="json")
 
 
 @router.get("/items", response_model=list[CalendarOccurrenceResponse])
@@ -96,18 +70,17 @@ async def list_calendar_items(
         task_ids=effective_ids,
     )
     await attach_dismissed_flag(db, source="recurring", items=occurrences)
-    rows = [_as_api_recurring_row(occ) for occ in occurrences]
+    rows = [_occurrence_wire(occ, source="recurring") for occ in occurrences]
 
     if include_items:
         # Same projection path as agent query_window (item_projection + dismiss).
-        raw_items = await fetch_item_occurrences_in_range(
+        item_rows = await fetch_item_occurrences_in_range(
             db,
             range_start=start,
             range_end=end,
             workset_id=None,
         )
-        item_rows = [build_item_calendar_item(item) for item in raw_items]
         await attach_dismissed_flag(db, source="item", items=item_rows)
-        rows.extend(_as_api_item_row(item) for item in item_rows)
+        rows.extend(_occurrence_wire(item, source="item") for item in item_rows)
 
     return rows

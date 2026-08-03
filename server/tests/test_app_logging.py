@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
+from server.analyzer.llm_json import LlmParseError
+from server.analyzer.llm_providers import LlmClientError
 from server.app_logging import (
+    failure_details_from_exc,
     format_batch_failure_message,
     summarize_error_message,
     write_batch_failure_log,
@@ -66,9 +71,95 @@ async def test_write_batch_failure_log_persists_details(app):
     assert row["category"] == "analysis"
     assert "重試用盡" in row["message"]
     assert "LLM timeout" in row["details"]
-    import json
 
     details = json.loads(row["details"])
     assert details["messageKey"] == "logs:templates.batchExhausted"
     assert details["messageParams"]["taskName"] == "測試任務"
     assert details["messageParams"]["summary"] == "LLM timeout"
+
+
+def test_failure_details_from_exc_http_429():
+    body = '{"error":{"message":"Rate limit exceeded","type":"rate_limit_error"}}'
+    exc = LlmClientError(
+        "LLM request failed with status 429: rate limited",
+        status_code=429,
+        response_body=body,
+        provider="openai",
+    )
+    details = failure_details_from_exc(exc)
+    assert details["failureKind"] == "http"
+    assert details["httpStatus"] == 429
+    assert details["responseBody"] == body
+    assert details["provider"] == "openai"
+    assert "429" in details["error"]
+
+
+def test_failure_details_from_exc_parse():
+    raw = '{"items": [{"title": "broken"' + (" x" * 3000)
+    exc = LlmParseError("Failed to parse LLM response as JSON: " + raw[:200], raw_response=raw)
+    details = failure_details_from_exc(exc)
+    assert details["failureKind"] == "parse"
+    assert details["responseBody"].startswith('{"items"')
+    assert len(details["responseBody"]) <= 4000
+
+
+def test_failure_details_from_exc_timeout():
+    details = failure_details_from_exc(TimeoutError("timed out"))
+    assert details["failureKind"] == "timeout"
+
+
+@pytest.mark.asyncio
+async def test_write_batch_failure_log_merges_http_forensics(app):
+    db = app.state.db
+    body = '{"error":{"code":429,"message":"Too Many Requests"}}'
+    await write_batch_failure_log(
+        db,
+        task_id="task-1",
+        task_name="AI Task",
+        batch_id="batch-429fail1",
+        error_message="LLM request failed with status 429: Too Many Requests",
+        retries_exhausted=False,
+        current_retry=1,
+        max_retries=3,
+        ui_locale="en",
+        failure_details={
+            "failureKind": "http",
+            "httpStatus": 429,
+            "responseBody": body,
+            "error": "should not overwrite owned error",
+        },
+    )
+    row = await db.fetch_one("SELECT * FROM app_logs ORDER BY time DESC LIMIT 1")
+    assert row is not None
+    details = json.loads(row["details"])
+    assert details["failureKind"] == "http"
+    assert details["httpStatus"] == 429
+    assert details["responseBody"] == body
+    assert details["error"].startswith("LLM request failed with status 429")
+    assert details["messageKey"] == "logs:templates.batchRetrying"
+
+
+@pytest.mark.asyncio
+async def test_write_batch_failure_log_redacts_secrets_in_body(app):
+    db = app.state.db
+    await write_batch_failure_log(
+        db,
+        task_id="task-1",
+        task_name="AI Task",
+        batch_id="batch-secret01",
+        error_message="LLM request failed with status 401",
+        retries_exhausted=True,
+        current_retry=3,
+        max_retries=3,
+        ui_locale="en",
+        failure_details={
+            "failureKind": "http",
+            "httpStatus": 401,
+            "responseBody": "api_key=sk-abcdefghijklmnop Bearer secret-token",
+        },
+    )
+    row = await db.fetch_one("SELECT * FROM app_logs ORDER BY time DESC LIMIT 1")
+    details = json.loads(row["details"])
+    assert "sk-abcdefghijklmnop" not in details["responseBody"]
+    assert "secret-token" not in details["responseBody"]
+    assert "[REDACTED]" in details["responseBody"]

@@ -321,15 +321,21 @@ class ConfigurableLlmClient:
             raise LlmClientError(f"Unsupported provider: {self.provider}")
         handler = ConfigurableLlmClient._COMPLETE_HANDLERS[wire_key]
         session = self._get_session()
-        return await handler(
-            self,
-            session,
-            messages,
-            temperature,
-            json_mode,
-            max_output_tokens,
-            native_web_search,
-        )
+        try:
+            return await handler(
+                self,
+                session,
+                messages,
+                temperature,
+                json_mode,
+                max_output_tokens,
+                native_web_search,
+            )
+        except LlmClientError as exc:
+            # Wire helpers may omit provider; attach for Settings→Logs forensics.
+            if exc.provider is None:
+                exc.provider = self.provider
+            raise
 
     _TEST_PROMPT = "Reply with exactly: ok"
 

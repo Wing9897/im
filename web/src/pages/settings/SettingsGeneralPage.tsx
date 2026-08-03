@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { saveSystemSettings } from "../../api/config";
 import { restartCollector } from "../../api/system";
+import { AnalysisDebugPanel } from "../../components/settings/AnalysisDebugPanel";
 import { CollectorRestartPanel } from "../../components/settings/CollectorRestartPanel";
 import { LanguageSwitcher } from "../../components/settings/LanguageSwitcher";
 import { SystemVersionPanel } from "../../components/settings/SystemVersionPanel";
@@ -26,6 +27,9 @@ export function SettingsGeneralPage() {
   const { simpleMode, setSimpleMode } = useSimpleMode();
   const [weatherLocation, setWeatherLocation] = useState(SYSTEM_LOCATION);
   const [saving, setSaving] = useState(false);
+  const [debugSaving, setDebugSaving] = useState(false);
+  const [intelligenceRulesVersion, setIntelligenceRulesVersion] = useState("v2");
+  const [analysisTraceVerbose, setAnalysisTraceVerbose] = useState(false);
   const [restartingCollector, setRestartingCollector] = useState(false);
   const [showCollectorRestartConfirm, setShowCollectorRestartConfirm] = useState(false);
   const isDesktopHost = Boolean(getElectronConnection());
@@ -35,6 +39,11 @@ export function SettingsGeneralPage() {
   useEffect(() => {
     setWeatherLocation(settings?.weatherLocation || SYSTEM_LOCATION);
   }, [settings?.weatherLocation]);
+
+  useEffect(() => {
+    setIntelligenceRulesVersion(settings?.intelligenceRulesVersion ?? "v2");
+    setAnalysisTraceVerbose(Boolean(settings?.analysisTraceVerbose));
+  }, [settings?.intelligenceRulesVersion, settings?.analysisTraceVerbose]);
 
   useEffect(() => {
     const api = getElectronConnection();
@@ -92,6 +101,26 @@ export function SettingsGeneralPage() {
     } finally {
       setRestartingCollector(false);
       setShowCollectorRestartConfirm(false);
+    }
+  };
+
+  const debugDirty =
+    intelligenceRulesVersion !== (settings?.intelligenceRulesVersion ?? "v2") ||
+    analysisTraceVerbose !== Boolean(settings?.analysisTraceVerbose);
+
+  const saveDebugSettings = async () => {
+    setDebugSaving(true);
+    try {
+      const snapshot = await saveSystemSettings({
+        intelligenceRulesVersion,
+        analysisTraceVerbose,
+      });
+      applyPersistedSnapshot(snapshot);
+      showToast(t("general.debug.saved"), "success");
+    } catch (error) {
+      showToast(toErrorMessage(error), "error");
+    } finally {
+      setDebugSaving(false);
     }
   };
 
@@ -176,6 +205,28 @@ export function SettingsGeneralPage() {
 
       <SettingsFieldGroup showDivider>
         <SystemVersionPanel />
+      </SettingsFieldGroup>
+
+      <SettingsFieldGroup showDivider>
+        <AnalysisDebugPanel
+          intelligenceRulesVersion={intelligenceRulesVersion}
+          analysisTraceVerbose={analysisTraceVerbose}
+          onIntelligenceRulesVersionChange={setIntelligenceRulesVersion}
+          onAnalysisTraceVerboseChange={setAnalysisTraceVerbose}
+        />
+        {debugDirty ? (
+          <div className="mt-sm">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={debugSaving}
+              onClick={() => void saveDebugSettings()}
+              data-testid="save-debug-settings"
+            >
+              {debugSaving ? t("shared.saving") : t("general.debug.saveLabel")}
+            </Button>
+          </div>
+        ) : null}
       </SettingsFieldGroup>
 
       <SettingsFieldGroup showDivider>

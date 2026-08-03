@@ -24,6 +24,7 @@ import {
 } from "../../../components/ui";
 import { pageTitleClass, captionClass } from "../../../components/ui/pageTypography";
 import { colorStatusDotStyle } from "../../../styles/statusDot";
+import { scheduleFieldsFromTask } from "../../../domain/tasks/taskFormUtils";
 import { formatAnalysisTimeRangeNullable } from "../../../utils/analysis";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { ExpandableErrorText, formatIsoLocal } from "./projectDetailFormat";
@@ -86,7 +87,8 @@ export function ProjectDetailPage() {
   const employeeName = getTaskEmployeeDisplayName(employeeId);
   const timeRange =
     formatAnalysisTimeRangeNullable(project.analysisTimeRange) ?? project.analysisTimeRange;
-  const scheduleLabel = [project.scheduleType, project.scheduleValue]
+  const scheduleFields = scheduleFieldsFromTask(project);
+  const scheduleLabel = [scheduleFields.scheduleType, scheduleFields.scheduleValue]
     .filter((part) => Boolean(part && String(part).trim()))
     .join(" · ");
 

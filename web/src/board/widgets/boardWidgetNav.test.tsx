@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../../context/MonitorModeContext";
+import { MONITOR_MODE_KEY } from "../../context/MonitorModeContext";
 import { EventsBoardWidget } from "./EventsBoardWidget";
 import { FeedBoardWidget } from "./FeedBoardWidget";
 import { CalendarBoardWidget, CalendarDayBoardWidget } from "./CalendarBoardWidget";
 import { GanttBoardWidget } from "./GanttBoardWidget";
 import { WallBoardWidget } from "./WallBoardWidget";
 import { BoardWidgetFrame } from "../BoardWidgetFrame";
+import { wrapBoardProviders } from "../boardTestHarness";
 import type { BoardWidgetType } from "../types";
 import {
   makeAnalysisTask,
@@ -142,23 +139,9 @@ vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock(),
 );
 
-vi.mock("../../context/AnalysisStatusContext", () => ({
-  useAnalysisStatus: () => ({
-    queueStatus: {
-      pendingCount: 0,
-      processingBatches: [],
-      attentionBatches: [],
-      analysisPaused: false,
-    },
-    analysisPaused: false,
-    activeAnalysis: null,
-    activeAnalyses: new Map(),
-    lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
-    lastMessagesUpdate: null,
-    requestQueueStatusRefresh: vi.fn(),
-  }),
-}));
+vi.mock("../../context/AnalysisStatusContext", async () =>
+  (await import("../../test/context-mocks")).analysisStatusModuleMock(),
+);
 
 vi.mock("../../api/channels", () => ({
   listChannelsWithAccounts: vi.fn(async () => [
@@ -304,11 +287,7 @@ describe("board widget in-frame interactions", () => {
   }
 
   function wrap(node: React.ReactNode) {
-    return createElement(
-      MemoryRouter,
-      null,
-      createElement(MonitorModeProvider, null, node),
-    );
+    return wrapBoardProviders(node);
   }
 
   function inFrame(type: BoardWidgetType, node: React.ReactNode) {

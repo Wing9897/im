@@ -4,7 +4,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from server.domain.analysis_modes import SCHEDULABLE_ANALYSIS_MODES
-from server.domain.schedule import legacy_to_trigger_rrule
+from server.domain.schedule import preset_to_trigger_rrule
 from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster
 from server.tests.property_strategies import (
@@ -36,7 +36,7 @@ async def test_scheduler_eligibility_and_registration_idempotence(app, mode, act
     **Validates: Requirements 1.6**
     """
     schedule_type, schedule_value = schedule
-    schedule_rrule = legacy_to_trigger_rrule(schedule_type, schedule_value)
+    schedule_rrule = preset_to_trigger_rrule(schedule_type, schedule_value)
     now = utc_now_iso()
     await app.state.db.execute("DELETE FROM analysis_tasks WHERE id = ?", (task_id,))
     await app.state.db.execute(

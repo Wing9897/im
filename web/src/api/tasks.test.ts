@@ -1,9 +1,4 @@
-/**
- * Unit tests for src/api/tasks.ts
- * Covers success and error paths for all public API functions.
- *
- * Validates: Requirements 7.1, 7.3
- */
+/** Unit tests for src/api/tasks.ts — success and error paths for public API functions. */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { AnalysisTask } from "../types";
 import { apiClient } from "./client";
@@ -16,7 +11,6 @@ import {
   toggleTaskActive,
   listTaskTemplatePresets,
   fetchTaskActivitySpans,
-  chatTaskAssistant,
 } from "./tasks";
 
 vi.mock("./client", () => ({
@@ -70,8 +64,7 @@ describe("tasks API", () => {
         version: 3,
         isActive: true,
         channelIds: [{ platform: "telegram", platformId: "42", id: "telegram:42" }],
-        scheduleType: "daily",
-        scheduleValue: "09:30",
+        scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
         includeInTimeline: true,
         parentTaskId: null,
         worksetId: null,
@@ -95,8 +88,7 @@ describe("tasks API", () => {
         "name",
         "parentTaskId",
         "promptTemplate",
-        "scheduleType",
-        "scheduleValue",
+        "scheduleRrule",
         "updatedAt",
         "version",
         "webSearchQuery",
@@ -105,8 +97,7 @@ describe("tasks API", () => {
       expect(result[0]).toMatchObject({
         id: "t-1",
         analysisMode: "leaderboard",
-        scheduleType: "daily",
-        scheduleValue: "09:30",
+        scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
         version: 3,
       });
       expect(result[0]).not.toHaveProperty("rrule");
@@ -262,29 +253,4 @@ describe("tasks API", () => {
     });
   });
 
-  // ─── chatTaskAssistant ─────────────────────────────────────────────
-
-  describe("chatTaskAssistant", () => {
-    it("posts chat messages and returns response", async () => {
-      const params = {
-        messages: [{ role: "user", content: "Help me configure" }],
-        currentTask: { name: "Test" },
-      };
-      const response = { role: "assistant", content: "Sure!" };
-      vi.mocked(apiClient.post).mockResolvedValue(response);
-
-      const result = await chatTaskAssistant(params);
-
-      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/tasks/chat-assistant", params);
-      expect(result).toEqual(response);
-    });
-
-    it("propagates errors", async () => {
-      vi.mocked(apiClient.post).mockRejectedValue(new Error("AI error"));
-
-      await expect(
-        chatTaskAssistant({ messages: [], currentTask: null }),
-      ).rejects.toThrow("AI error");
-    });
-  });
 });

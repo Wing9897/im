@@ -17,19 +17,15 @@ describe("AdvancedSettingsPanel", () => {
     const defaults = {
       analysisMaxTotalChars: "100000",
       analysisMaxEstimatedInputTokens: "8000",
-      analysisTraceVerbose: false,
       llmGenerationTimeout: "120",
       maxConcurrentBatches: "1",
       maxBatchRetries: "3",
       llmProvider: "ollama",
-      intelligenceRulesVersion: "v2",
       onAnalysisMaxTotalCharsChange: vi.fn(),
       onAnalysisMaxEstimatedInputTokensChange: vi.fn(),
-      onAnalysisTraceVerboseChange: vi.fn(),
       onLlmGenerationTimeoutChange: vi.fn(),
       onMaxConcurrentBatchesChange: vi.fn(),
       onMaxBatchRetriesChange: vi.fn(),
-      onIntelligenceRulesVersionChange: vi.fn(),
     };
     const props = { ...defaults, ...overrides };
     act(() => {
@@ -50,12 +46,12 @@ describe("AdvancedSettingsPanel", () => {
     });
   }
 
-  it("renders three collapsed advanced section headers", () => {
+  it("renders two collapsed advanced section headers", () => {
     const container = document.createElement("div");
     renderPanel(container);
     expect(container.textContent).toContain("批次與重試");
     expect(container.textContent).toContain("內容上限");
-    expect(container.textContent).toContain("除錯");
+    expect(container.textContent).not.toContain("除錯");
     expect(container.textContent).not.toContain("AI 生成超時（秒）");
     expect(container.textContent).not.toContain("全域每批上限");
   });
@@ -78,16 +74,6 @@ describe("AdvancedSettingsPanel", () => {
     expect(container.textContent).toContain(i18n.t("settings:analysis.advanced.maxTokensLabel"));
   });
 
-  it("shows debug fields when 除錯 is expanded", () => {
-    const container = document.createElement("div");
-    renderPanel(container);
-    expandSection(container, "除錯");
-    expect(container.textContent).toContain(i18n.t("settings:analysis.advanced.rulesVersionLabel"));
-    expect(container.textContent).toContain(i18n.t("settings:analysis.advanced.rulesVersionHelp"));
-    expect(container.querySelector("#analysis-trace-verbose")).toBeTruthy();
-    expect(container.querySelector("#evidence-style")).toBeNull();
-  });
-
   it("calls onLlmGenerationTimeoutChange when timeout input changes", () => {
     const container = document.createElement("div");
     const props = renderPanel(container);
@@ -102,16 +88,6 @@ describe("AdvancedSettingsPanel", () => {
     expect(props.onLlmGenerationTimeoutChange).toHaveBeenCalledWith("180");
   });
 
-  it("calls onAnalysisTraceVerboseChange when checkbox changes", () => {
-    const container = document.createElement("div");
-    const props = renderPanel(container);
-    expandSection(container, "除錯");
-    const checkbox = container.querySelector<HTMLInputElement>("#analysis-trace-verbose")!;
-    act(() => {
-      checkbox.click();
-    });
-    expect(props.onAnalysisTraceVerboseChange).toHaveBeenCalledWith(true);
-  });
 });
 
 // --- LlmSettingsPanel ---

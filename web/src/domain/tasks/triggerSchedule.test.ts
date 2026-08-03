@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { legacyToTriggerRrule, triggerRruleToLegacy } from "./triggerSchedule";
+import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
 
 describe("triggerSchedule", () => {
   it("maps presets to trigger RRULE", () => {
-    expect(legacyToTriggerRrule("seconds_10", null)).toBe("FREQ=SECONDLY;INTERVAL=10");
-    expect(legacyToTriggerRrule("hourly", null)).toBe("FREQ=HOURLY");
-    expect(legacyToTriggerRrule("custom_seconds", "7")).toBe("FREQ=SECONDLY;INTERVAL=7");
-    expect(legacyToTriggerRrule("daily", "09:30")).toBe("FREQ=DAILY;BYHOUR=9;BYMINUTE=30");
-    expect(legacyToTriggerRrule("weekly", "1:14:45")).toBe(
+    expect(presetToTriggerRrule("seconds_10", null)).toBe("FREQ=SECONDLY;INTERVAL=10");
+    expect(presetToTriggerRrule("hourly", null)).toBe("FREQ=HOURLY");
+    expect(presetToTriggerRrule("custom_seconds", "7")).toBe("FREQ=SECONDLY;INTERVAL=7");
+    expect(presetToTriggerRrule("daily", "09:30")).toBe("FREQ=DAILY;BYHOUR=9;BYMINUTE=30");
+    expect(presetToTriggerRrule("weekly", "1:14:45")).toBe(
       "FREQ=WEEKLY;BYDAY=MO;BYHOUR=14;BYMINUTE=45",
     );
   });
@@ -20,8 +20,8 @@ describe("triggerSchedule", () => {
       ["daily", "09:30"],
       ["weekly", "1:14:45"],
     ] as const) {
-      const rrule = legacyToTriggerRrule(type, value);
-      expect(triggerRruleToLegacy(rrule)).toEqual({
+      const rrule = presetToTriggerRrule(type, value);
+      expect(triggerRruleToPreset(rrule)).toEqual({
         scheduleType: type,
         scheduleValue: value,
       });

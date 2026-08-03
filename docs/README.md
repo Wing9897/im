@@ -2,8 +2,7 @@
 
 | Doc | When to read |
 |-----|----------------|
-| [../README.md](../README.md) | Install, run, ports, desktop host/client |
-| [功能特色.md](功能特色.md) | Product cover／feature narrative (zh；emoji 封面式介紹) |
+| [../README.md](../README.md) | Install, run, ports, desktop host/client, product overview |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, schema matrix, API contract, frontend layering, auth |
 | [KNOWN-SIMPLIFICATIONS.md](KNOWN-SIMPLIFICATIONS.md) | Intentional deltas／quirks only; contract detail → ARCHITECTURE／`docs/agent/*` |
 | [I18N-GLOSSARY.md](I18N-GLOSSARY.md) | UI locale keys, error_code vocabulary, preset display Sot |

@@ -5,7 +5,7 @@
 import type { components } from "../api/generated/schema";
 import type { AnalysisMode, AnalysisTimeRange } from "./common";
 
-/** Wire shape for chat-assistant ``currentTask`` / ``taskConfig`` (OpenAPI). */
+/** Wire shape for task-advisor ``currentTask`` / ``taskConfig`` (OpenAPI). */
 export type TaskDraftPayload = components["schemas"]["TaskDraftPayload"];
 
 /** Channel reference in task associations */
@@ -60,11 +60,6 @@ export interface TaskTemplatePreset {
   promptTemplate: string;
   defaultAnalysisTimeRange: AnalysisTimeRange;
   badge: string;
-}
-
-/** Raw reply from POST /tasks/chat-assistant. `taskConfig` is AI-generated
- * and must still be validated field-by-field (see parseTaskAssistantResponse). */
-export interface TaskAssistantReply {
-  message: string;
-  taskConfig: TaskDraftPayload | null;
+  /** Language-neutral search keywords for web_intel presets (optional). */
+  webSearchQuery?: string;
 }

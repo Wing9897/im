@@ -197,68 +197,16 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 
 ## 语音是 IO，不是 Agent
 
-- Agent 与日历逻辑**只处理文字**。
-- STT：识别结果写入草稿；PTT 松开／再按送出**识别文字**（空识别不送草稿）。文字路径仍用「送出」按钮。
-- TTS：对最终 `message` 朗读；失败不阻塞聊天。
-- v1 provider：`browser`。设置里可出现 `whisper` / `doubao` 枚举，但**本阶段未实现**。
+Agent／日历只处理文字。STT→草稿；PTT 松开送出识别文字（空识别不送）。TTS 读最终 `message`。v1 provider＝`browser`（`whisper`／`doubao` 枚举未实现）。Electron 桌面壳不跑浏览器 STT。
 
 ## 明确不做（本阶段）
 
-- webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（Desktop 一次性 ICS／deep-link 见开篇例外与 ARCHITECTURE）
-- OpenClaw / Hermes 作为主 Agent  
-- FTS5 / RAG / 向量库  
-- 每条消息「验证」按钮 / 请求级 `allowWebSearch`（总开关即可）  
-- Tavily / Serper / Bing（供应商枚举可日后扩展）  
-- 创建／修改／删除非 recurring 模式的分析任务（leaderboard／event／AI）；写入 `analysis_events`；改动 actions（recurring 模式 RRULE 系列可用 `create`／`update`／`delete_recurring_task`）
-- 助手无 timeline dismiss 恢复 tool（恢复仅 UI「顯示已移除」）  
-- 本机 Whisper、豆包、云 STT/TTS（仅预留接口与设置枚举）  
-- 全双工连续对话 / barge-in（v1 为按住说话）  
-- Token 级 LLM streaming  
+webcal／CalDAV／OAuth 双向同步（Desktop 一次性 ICS 除外）；OpenClaw 主 Agent；FTS5／RAG；请求级 `allowWebSearch`；创建／改非 recurring 分析任务；助手无 dismiss restore；本机 Whisper／云 STT/TTS；全双工／token streaming。
 
 ## 相关代码
 
-| 区域 | 路径 |
-|------|------|
-| Agent API | `server/api/routes/agent.py` |
-| Runtime / registry | `server/agent/runtime.py`, `server/agent/tools_registry.py` |
-| Tools | `server/agent/tools_calendar/`, `tools_items/`, `tools_messages.py`, `tools_intelligence.py`, `tools_web_search.py`, `tools_tasks.py`；参数强制转换 `server/agent/tool_args.py` |
-| 任务页 bridge／双头像 | `web/src/domain/tasks/taskEditorDraftBridge.ts`；`AssistantQuickDialog`／`AssistantDirectBubbles`／`AssistantToolSteps` |
-| 消息查询 | `server/queries/messages_queries.py` |
-| Web search | `server/agent/web_search_routing.py`, `server/web_search/`, OpenAI Responses / Gemini grounding in `llm_providers.py` |
-| 查询层 | `server/calendar/query.py` |
-| 用户事件 | `server/user_events.py`, `server/api/routes/user_events.py` |
-| 前端 API | `web/src/api/agent.ts`, `web/src/api/userEvents.ts` |
-| Speech | `web/src/speech/`（`BrowserStt` listen generation；Electron 隐藏 STT） |
-| 助手 PTT | `web/src/hooks/assistantPtt/`（hold／toggle 策略 + release-to-send）；`useAssistantMicPtt`／`useAssistantSpacePtt`；`AssistantMicButton` |
-| 助手页 | `web/src/pages/ai/assistant/`（路由 `/assistant`）；会话列表 `web/src/domain/assistant/assistantSessions.ts`；侧栏历史 `web/src/components/AssistantHistoryRail.tsx` |
-| 快捷助手 | `web/src/components/AssistantQuickDialog.tsx`；`useAssistantQuick`（`voiceLive`＝Space 可武装，不等于停 mic） |
-| 时间规划 | `web/src/pages/timeline/` |
-| 语音／联网设定 | `web/src/pages/ai/SettingsVoicePage.tsx`, `SettingsAiProviderPage.tsx` |
+`server/api/routes/agent.py` · `server/agent/{runtime,tools_*}` · `server/web_search/` · `server/calendar/` · `web/src/api/agent.ts` · `web/src/domain/assistant/` · `web/src/speech/` · `web/src/hooks/assistantPtt/` · `web/src/pages/ai/assistant/` · `SettingsVoicePage`／`SettingsAiProviderPage`。
 
-## 测试（聚焦）
+## 测试
 
-```bash
-# 服务端（日历 + messages + web search + runtime / contract + 任务顾问闸道）
-uv run --extra dev pytest server/tests/test_calendar_query.py \
-  server/tests/test_calendar_tools.py server/tests/test_agent_runtime.py \
-  server/tests/test_agent_task_advisor.py \
-  server/tests/test_agent_tools_messages.py server/tests/test_agent_tools_intelligence.py \
-  server/tests/test_web_search.py server/tests/test_web_search_routing.py \
-  server/tests/test_messages_queries.py server/tests/test_contract_config.py \
-  server/tests/test_user_events.py -q
-
-# 前端（agent 客户端 + speech + 助手页 + 任务页委派／双头像）
-cd web && npx vitest run src/api/agent.test.ts src/speech \
-  src/hooks/useAssistantChat.test.tsx \
-  src/domain/tasks/taskEditorDraftBridge.test.ts \
-  src/components/assistant/AssistantDirectBubbles.test.tsx \
-  src/components/assistant/AssistantToolSteps.test.tsx \
-  src/components/assistant/assistantToolStaff.test.ts \
-  src/pages/ai/assistant src/components/settings/AssistantWebSearchPanel.test.tsx \
-  src/domain/settings/assistantWebSearchRoute.test.ts \
-  src/pages/shared/routes.test.tsx \
-  src/components/AppSidebar.test.tsx src/components/AppTopBar.test.tsx \
-  src/components/DesktopTitleBar.test.tsx \
-  src/domain/commandPalette/commandPaletteCommands.test.ts src/routing/prefetchRoute.test.ts \
-  src/pages/ai/AiWorkspacePage.test.tsx
-```
+Gate：`npm run check`。聚焦：`test_agent_*.py`、`test_web_search*.py`、`test_calendar_*.py`、`test_user_events.py`；FE `web/src/api/agent.test.ts`、`pages/ai/assistant/`、speech／PTT。

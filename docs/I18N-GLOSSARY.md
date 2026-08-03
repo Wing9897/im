@@ -38,10 +38,10 @@
 | 函式庫 | `i18next` + `react-i18next`（`web/src/i18n/i18n.ts`） |
 | Locale | `zh-Hant`（預設手動）／`zh-Hans`／`en`；偏好另含 `auto` |
 | 切換 UI | **設定 → 一般**（`LanguageSwitcher`：自動／繁中／簡中／English；整站介面跟隨選擇）。主題頁僅主題，不含語言 |
-| Namespaces | `common`、`nav`、`actions`、`intelligence`、`monitor`、`sources`、`timeline`、`settings`、`assistant`、`logs` |
+| Namespaces | `common`、`nav`、`actions`、`intelligence`、`monitor`、`sources`、`timeline`、`settings`、`assistant`、`logs`、`items` |
 | Interpolation | `{name}`（非 `{{name}}`）；見 `i18n.ts` `prefix`／`suffix` |
 | 列表分隔 | `joinList`／`common:ui.listSep`（中文 `、`、英文 `, `） |
-| 產品 chrome | 主路徑 UI（側欄／設定／Actions／Intelligence／Monitor／Sources／Timeline／Logs／Assistant／board／任務表單／語音提醒／排行榜等）已三語；UAT 就緒 |
+| 產品 chrome | 主路徑 UI（側欄／設定／Actions／Intelligence／Monitor／Sources／Timeline／Items／Logs／Assistant／board／任務表單／語音提醒／排行榜等）已三語；UAT 就緒 |
 | 明確不做 | 任務／頻道等**用戶內容**；主題專有名詞（Latte／Mocha 等）；切語言不重跑歷史分析；Email auth-error **regex**（非 UI chrome） |
 | TTS／STT | `speechLanguage` **仍獨立**，不跟 UI locale／`ui_locale` 自動綁死 |
 
@@ -51,7 +51,7 @@
 |------|----------|------|
 | 故意保留 | `EmailMailboxForm.tsx` auth-error regex；主題專有名詞（Latte／Mocha 等） | 非 chrome／非 UI 標籤 |
 | API 範例 | `domain/apiDocs/examples.ts` + `settings:apiDocs.*.example*` | **協議／欄位名英文化**；示範 `content`／`notes`／自然語言 `input` 走 i18n，A2A `locale` 跟當前 UI |
-| 天氣城市專名 | `pages/timeline/calendar/useMonthWeather.ts` | 時區→城市字串兼 API 查詢鍵（臺北／香港…）；**勿**為 city id 發明翻譯 |
+| 天氣城市專名 | `hooks/useMonthWeather.ts` | 時區→城市字串兼 API 查詢鍵（臺北／香港…）；**勿**為 city id 發明翻譯 |
 | 命令面板 keywords | `web/src/domain/commandPalette/commandPaletteCommands.ts` | 搜尋輔助關鍵字（顯示標籤已走 `labelKey`） |
 | 後端錯誤原文 | API `message`／`error_summary` passthrough、runtime toast 內嵌後端摘要 | 外層標籤已 i18n |
 | 用戶內容 | 任務名／頻道名／訊息正文／AI 產出欄 | 非產品 chrome |
@@ -62,7 +62,7 @@
 - **做法**：不整份翻譯 system prompt；在既有 prompt 末尾追加 output-language directive（`server/prompts/locale.py` → `output_language_directive`）。
 - **單一路徑**：`server/prompts/locale.py` ← `agent/runtime.py`／`analyzer/engine.py`／`analyzer/prompt.py`／`api/routes/config.py`；批次經 `scheduler/batch.py` 讀 `ui_locale` 再交給 analyzer 組裝。
 - **Prompt 雙層**：`prompts/*` 放字串範本；`analyzer/prompt.py`（與 agent runtime）負責組裝與附加 locale directive——找文案看 `prompts/`，找怎麼拼看 assembly。
-- **解析順序**：請求可選 `locale`（助手 chat／chat-assistant）→ 否則 `get_config(ui_locale)` → `normalize_ui_locale` 未知值（含前端偏好 `auto`）回退 `zh-Hant`；API **不接受** 把 `auto` 寫入 server `uiLocale`。
+- **解析順序**：請求可選 `locale`（助手 chat／task advisor）→ 否則 `get_config(ui_locale)` → `normalize_ui_locale` 未知值（含前端偏好 `auto`）回退 `zh-Hant`；API **不接受** 把 `auto` 寫入 server `uiLocale`。
 - **同步**：`setAppLocale`／`setAppLocalePreference` 寫入 `localStorage`（偏好可為 `auto`）並 best-effort `PUT` **解析後** settings（`uiLocale`）；localStorage 負責即時 UI，server 副本服務背景分析批次。
 
 ## Channel／ActionType 命名
@@ -94,16 +94,16 @@
 ## 日誌正文語言
 
 - UI chrome（篩選、分頁）跟隨當前 locale。
-- **新批次失敗日誌**在 `details` 存 `messageKey` + `messageParams`；Logs 列表／詳情／board widget 顯示時以 `domain/logs/resolveLogDisplayMessage` 再 `t()`，切語系可重翻。
+- **新批次失敗日誌**在 `details` 存 `messageKey` + `messageParams`；Logs 列表／詳情／board widget 顯示時以 `domain/logs/resolveLogDisplayMessage` 再 `t()`，切語系可重翻。AI／LLM 失敗另保留 `failureKind`／`httpStatus`／`responseBody`（截斷片段，供 Settings→Logs 除錯）。
 - **舊日誌**仍是寫入時已翻成字串的 `message`（fallback）；前端 runtime 多數仍 write-time `t()`。
 - 後端模板 SoT：`server/app_logging.py` `_BATCH_FAILURE_MESSAGES`（落庫預覽字串）與 `logs:templates.*`（顯示重翻）需保持語意對齊。
 
 ## 任務模板 Presets（顯示文案 SoT）
 
 - **顯示文案 SoT**：[`shared/task_presets.json`](../shared/task_presets.json) — 各 preset 的 `i18n.{zh-Hant,en,zh-Hans}.{name,description,promptTemplate}`。UI 經 `localizeTaskPreset()` 查 locale key。
-- **API fallback**：[`server/api/routes/task_preset_data.py`](../server/api/routes/task_preset_data.py) 的 `BUILTIN_PRESETS` 由 sync 腳本從 JSON 生成（zh-Hant 文案）。
-- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。
-- **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 生成 Python 與三語 locale；`npm run sync:presets:check` 只檢查不覆寫。
+- **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）；`web_intel` 可選頂層 `webSearchQuery`（語系無關關鍵詞）。
+- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge`（及可選 `webSearchQuery`）僅在 JSON 來源定義。
+- **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `common.json` → `tasks.presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。
 
 ## 產品用語
@@ -113,12 +113,28 @@
 | 分析 mode `event`／情報頁／側欄／widget | **關鍵事件** | Key Events | 关键事件 |
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
 | mode `leaderboard` | 排行榜 | Leaderboard | 排行榜 |
+| mode `web_intel` | **網路情報** | Web intel | 网络情报 |
+| mode `project` | 專案（閉環） | Project | 项目（闭环） |
 | mode `recurring` | 循環任務 | Recurring task | 循环任务 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
 | 收集子系統 | **收集器**（勿用「採集器」） | Collector | 收集器 |
+| 物品頁／trackable inventory | **物品**（namespace `items`） | Items | 物品 |
+
+## AI 員工（staff／employees／intro）
+
+產品顯示名統一稱 **AI 員工**（en: **AI Staff**）。下列 id／路徑**刻意雙名**，只改文案對照，**不要**為統一用語而改 wire／API／路由 id。
+
+| 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
+|----|----------|-------------------|------|
+| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；含助手、任務編輯、排行榜、關鍵事件、**網路情報**、專案管理員 + 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime） |
+| 任務類型徽章／選擇器 | 員工名（循環日程／關鍵事件／網路情報…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`event`／`web_intel`／`leaderboard`／`project`）；**DB／API enum 仍是 analysisMode** |
+| AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的任務類型才顯示頭像；`scheduleClerk`（recurring）無 AI avatar |
+| 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |
+
+**對照規則：** UI 對用戶說「員工／Staff」；任務表單內部類型 id 可叫 employee；後端與 OpenAPI 繼續用 `analysisMode`／`web_intel` 等既有 id。
 
 ### 平台範圍名詞（`common.platformScope.*`）
 

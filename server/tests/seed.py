@@ -31,10 +31,17 @@ TASK_LEADERBOARD = "task-lb"
 TASK_EVENT = "task-cm"
 TASK_EVENT_TIMED = "task-tl"
 TASK_CALENDAR = "task-cal"
+TASK_WEB_INTEL = "task-wi"
+TASK_PROJECT = "task-proj"
 
 BATCH_LEADERBOARD = "batch-lb"
 BATCH_EVENT = "batch-cm"
 BATCH_EVENT_TIMED = "batch-tl"
+BATCH_WEB_INTEL = "batch-wi"
+BATCH_WEB_INTEL_SKIPPED = "batch-wi-skip"
+
+ITEM_PASSPORT = "item-passport"
+ITEM_FOOD = "item-food"
 
 TOPIC_1 = "topic-1"
 MESSAGE_1 = "msg-1"
@@ -156,11 +163,37 @@ async def seed_database(db: Any) -> None:
             (message_id, account_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp, now),
         )
 
-    # ── analysis tasks (leaderboard / event / calendar) ───────────────
+    # ── analysis tasks (leaderboard / event / calendar / web_intel / project) ─
     tasks = [
-        (TASK_LEADERBOARD, "熱門話題排行", "leaderboard", "24h", "FREQ=SECONDLY;INTERVAL=10", None, None, None, 0, None, None),
-        (TASK_EVENT, "關鍵情報", "event", "24h", "FREQ=HOURLY", None, None, None, 0, None, None),
-        (TASK_EVENT_TIMED, "行程提取", "event", "7d", "FREQ=DAILY;BYHOUR=9;BYMINUTE=0", None, None, None, 0, None, None),
+        (
+            TASK_LEADERBOARD,
+            "熱門話題排行",
+            "leaderboard",
+            "24h",
+            "FREQ=SECONDLY;INTERVAL=10",
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            "",
+        ),
+        (TASK_EVENT, "關鍵情報", "event", "24h", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
+        (
+            TASK_EVENT_TIMED,
+            "行程提取",
+            "event",
+            "7d",
+            "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            "",
+        ),
         (
             TASK_CALENDAR,
             "每週例會",
@@ -173,6 +206,35 @@ async def seed_database(db: Any) -> None:
             0,
             "會議室A",
             "週會",
+            "",
+        ),
+        (
+            TASK_WEB_INTEL,
+            "定價監管情報",
+            "web_intel",
+            "all",
+            "FREQ=HOURLY",
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            "OpenAI Gemini Anthropic API pricing changes",
+        ),
+        (
+            TASK_PROJECT,
+            "專案殼",
+            "project",
+            "7d",
+            "FREQ=HOURLY",
+            None,
+            None,
+            None,
+            0,
+            None,
+            None,
+            "",
         ),
     ]
     for (
@@ -187,17 +249,24 @@ async def seed_database(db: Any) -> None:
         all_day,
         location,
         description,
+        web_search_query,
     ) in tasks:
+        prompt = (
+            "從搜尋結果抽出官方定價變更"
+            if mode == "web_intel"
+            else ("對帳專案日程" if mode == "project" else "分析以下訊息")
+        )
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-            "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
-            "created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?)",
+            "web_search_query, analysis_mode, analysis_time_range, version, is_active, "
+            "schedule_rrule, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?)",
             (
                 task_id,
                 name,
                 f"{name} description",
-                "分析以下訊息",
+                prompt,
+                web_search_query,
                 mode,
                 time_range,
                 schedule_rrule,
@@ -212,7 +281,7 @@ async def seed_database(db: Any) -> None:
                 "timezone, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'UTC', ?, ?)",
                 (task_id, rrule, event_start, event_end, all_day, location, description, now, now),
             )
-    for task_id in (TASK_LEADERBOARD, TASK_EVENT, TASK_EVENT_TIMED):
+    for task_id in (TASK_LEADERBOARD, TASK_EVENT, TASK_EVENT_TIMED, TASK_PROJECT):
         await db.execute(
             "INSERT INTO task_channels (task_id, platform, platform_id) VALUES (?, ?, ?)",
             (task_id, *TG_CHANNEL),
@@ -220,16 +289,35 @@ async def seed_database(db: Any) -> None:
 
     # ── batches ───────────────────────────────────────────────────────
     batches = [
-        (BATCH_LEADERBOARD, TASK_LEADERBOARD, "completed", 2, None),
-        (BATCH_EVENT, TASK_EVENT, "completed", 2, None),
-        (BATCH_EVENT_TIMED, TASK_EVENT_TIMED, "completed", 1, None),
+        (BATCH_LEADERBOARD, TASK_LEADERBOARD, "completed", 2, None, None),
+        (BATCH_EVENT, TASK_EVENT, "completed", 2, None, None),
+        (BATCH_EVENT_TIMED, TASK_EVENT_TIMED, "completed", 1, None, None),
+        (BATCH_WEB_INTEL, TASK_WEB_INTEL, "completed", 0, None, None),
+        (
+            BATCH_WEB_INTEL_SKIPPED,
+            TASK_WEB_INTEL,
+            "completed",
+            0,
+            None,
+            "skipped: empty web_search_query",
+        ),
     ]
-    for batch_id, task_id, status, count, error in batches:
+    for batch_id, task_id, status, count, error, agent_message in batches:
         await db.execute(
             "INSERT INTO analysis_batches (id, task_id, version, status, "
-            "message_count, retry_count, error_message, created_at, updated_at, "
-            "completed_at) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?, ?)",
-            (batch_id, task_id, status, count, error, EARLIER, now, now if status == "completed" else None),
+            "message_count, retry_count, error_message, agent_message, created_at, "
+            "updated_at, completed_at) VALUES (?, ?, 1, ?, ?, 0, ?, ?, ?, ?, ?)",
+            (
+                batch_id,
+                task_id,
+                status,
+                count,
+                error,
+                agent_message,
+                EARLIER,
+                now,
+                now if status == "completed" else None,
+            ),
         )
 
     # ── markers ───────────────────────────────────────────────────────
@@ -276,6 +364,33 @@ async def seed_database(db: Any) -> None:
         "'2026-07-15T09:00:00+00:00', '2026-07-15T10:00:00+00:00', '台北', NULL, NULL, "
         "?, ?, NULL, 'ev-key-1', '', 'ev-key-1', ?, ?)",
         (TASK_EVENT_TIMED, BATCH_EVENT_TIMED, json.dumps(["Alice", "Bob"]), MESSAGE_1, now, now),
+    )
+
+    await db.execute(
+        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
+        "start_time, end_time, location, latitude, longitude, participants_json, "
+        "source_message_id, batch_source_channel_names, content_hash, semantic_hash, "
+        "event_key, created_at, updated_at) "
+        "VALUES ('wi-1', ?, 1, ?, 'API 定價更新', '官方調降輸入 token 價格', "
+        "NULL, NULL, '', NULL, NULL, '[]', NULL, ?, 'wi-hash-1', 'wi-sem-1', "
+        "NULL, ?, ?)",
+        (TASK_WEB_INTEL, BATCH_WEB_INTEL, json.dumps(["Web"]), now, now),
+    )
+
+    # ── sample items (DDL seed categories + __user__ workset) ─────────
+    await db.execute(
+        "INSERT INTO items (id, title, category_id, workset_id, purchased_at, "
+        "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
+        "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__user__', "
+        "NULL, '2029-06-01', 90, 'seed passport', 'active', NULL, ?, ?, ?)",
+        (ITEM_PASSPORT, "護照樣本", json.dumps({"id_number": "A123456789"}, ensure_ascii=False), now, now),
+    )
+    await db.execute(
+        "INSERT INTO items (id, title, category_id, workset_id, purchased_at, "
+        "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
+        "created_at, updated_at) VALUES (?, ?, 'seed_food', '__user__', "
+        "'2027-03-01', '2027-03-15', 3, 'seed food', 'active', NULL, ?, ?, ?)",
+        (ITEM_FOOD, "牛奶樣本", json.dumps({"brand": "SeedDairy"}, ensure_ascii=False), now, now),
     )
 
     # ── actions + history ─────────────────────────────────────────────

@@ -91,7 +91,6 @@ async def test_request_body_limit_allows_small_body() -> None:
     ("path", "expected"),
     [
         ("/api/v1/messages/batch", 120),
-        ("/api/v1/tasks/chat-assistant", 120),
         ("/api/v1/system/llm/test", 120),
         ("/api/v1/accounts/acc-1/media", 120),
         ("/api/v1/tasks", 600),

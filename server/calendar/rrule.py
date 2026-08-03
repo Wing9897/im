@@ -24,6 +24,7 @@ from dateutil import rrule as du_rrule
 from dateutil import tz as du_tz
 
 from server.calendar.occurrence_span import roll_end_if_overnight
+from server.domain.rrule_parts import parse_rrule_body_parts
 from server.time_iso import parse_iso, to_iso_z
 from server.util import parse_json_list, task_value
 
@@ -71,30 +72,22 @@ def validate_rrule(rule: str | None) -> None:
 
     Check order mirrors the reference implementation: empty → unsupported
     component → UNTIL/COUNT conflict → range checks → actual parse.
+
+    Component / FREQ allow-lists are calendar-purpose only (day-grained);
+    trigger schedules use a separate whitelist in ``domain.schedule``.
     """
     text = (rule or "").strip()
-    if not text:
-        raise RruleValidationError("empty", "RRULE is empty")
-    if text.upper().startswith("RRULE:"):
-        raise RruleValidationError(
-            "rrule_prefix",
-            "RRULE must not include an 'RRULE:' prefix",
-        )
-
-    parts: dict[str, str] = {}
-    for chunk in text.split(";"):
-        if not chunk:
-            continue
-        if "=" not in chunk:
-            raise RruleValidationError("malformed", f"Malformed RRULE component: {chunk}")
-        key, value = chunk.split("=", 1)
-        key = key.strip().upper()
+    parts = parse_rrule_body_parts(
+        text,
+        error=lambda code, message: RruleValidationError(code, message),
+    )
+    for key in parts:
         if key not in _ALLOWED_COMPONENTS:
-            raise RruleValidationError("unsupported_component", f"Unsupported RRULE component: {key}")
-        parts[key] = value.strip()
+            raise RruleValidationError(
+                "unsupported_component",
+                f"Unsupported RRULE component: {key}",
+            )
 
-    if "FREQ" not in parts:
-        raise RruleValidationError("missing_freq", "RRULE must include FREQ")
     freq = parts["FREQ"].upper()
     if freq not in _ALLOWED_FREQS:
         raise RruleValidationError(
@@ -291,12 +284,8 @@ def _expand_imported_occurrences(
                     start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=timezone.utc)
                     end_dt = start_dt + duration
                 else:
-                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=zone).astimezone(
-                        timezone.utc
-                    )
-                    end_dt = datetime.combine(
-                        occurrence.date(), time(23, 59, 59), tzinfo=zone
-                    ).astimezone(timezone.utc)
+                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=zone).astimezone(timezone.utc)
+                    end_dt = datetime.combine(occurrence.date(), time(23, 59, 59), tzinfo=zone).astimezone(timezone.utc)
             else:
                 start_dt = occurrence.astimezone(timezone.utc)
                 end_dt = (occurrence + duration).astimezone(timezone.utc)

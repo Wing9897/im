@@ -1,7 +1,7 @@
 """Assistant / task-config chat prompt texts.
 
-Agent tool-loop assembly stays in ``server.agent.runtime``; chat-assistant
-orchestration stays in ``server.analyzer.engine``.
+Agent tool-loop assembly stays in ``server.agent.runtime``; task-advisor
+orchestration stays in ``server.analyzer.engine`` (``tasks.consult_advisor``).
 """
 
 from __future__ import annotations
@@ -14,7 +14,8 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 查已採集聊天／來源內容必須用 messages.* tools，禁止編造本機訊息。
 查分析產出的關鍵事件／情報必須用 intelligence.search_events（含無時間的事件），禁止編造。
 查日程必須使用 calendar.* tools，不要編造事件。
-查物品到期／過期／即將到期必須用 items.list_expiring，禁止臆造到期日；新增物品用 items.create（須帶 workset，預設一般／__user__）。
+查物品到期／過期／即將到期必須用 items.list_expiring，禁止臆造到期日；
+新增物品用 items.create（須帶 workset，預設一般／__user__）。
 回答口語化：先結論後要點；單次不要羅列超過約 10 條，更多請用戶收窄時間。
 回答時清楚區分「本機資料」與「網路來源」。
 
@@ -103,7 +104,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 可用 tools：
 """
 
-#: taskConfig field list embedded in the chat-assistant system prompt.
+#: taskConfig field list embedded in the task-advisor system prompt.
 _ANALYSIS_MODE_PROMPT_VALUES = ", ".join(repr(mode) for mode in ALL_ANALYSIS_MODES)
 
 TASK_CONFIG_SCHEMA_PROMPT = (
@@ -114,9 +115,9 @@ TASK_CONFIG_SCHEMA_PROMPT = (
     "- webSearchQuery: search query / keywords; required for analysisMode=web_intel\n"
     f"- analysisMode: one of {_ANALYSIS_MODE_PROMPT_VALUES} (string)\n"
     "- analysisTimeRange: one of '1d', '7d', '30d', 'all' (string)\n"
-    "- scheduleRrule: canonical AI trigger RRULE (prefer this); "
-    "scheduleType / scheduleValue are optional FE preset mirrors only when "
-    "the user asks to change schedule\n"
+    "- scheduleRrule: canonical AI trigger RRULE (sole schedule field; "
+    "e.g. FREQ=HOURLY or FREQ=SECONDLY;INTERVAL=10) when the user asks to "
+    "change schedule\n"
     "- includeInTimeline: bool; for analysisMode=event or web_intel; default true "
     "(when false, analysis events stay on Key Events / map but off calendar / "
     "Gantt / timeline)\n"
@@ -143,9 +144,7 @@ CHAT_ASSISTANT_SYSTEM_PROMPT = (
 )
 
 #: Runtime user-facing / system-assembly snippets (not the main AGENT_SYSTEM_PROMPT).
-AGENT_WEB_SEARCH_DISABLED_NOTE = (
-    "\n（設定已關閉助手聯網；本次對話不提供 web.search，也不啟用供應商原生搜尋。）\n"
-)
+AGENT_WEB_SEARCH_DISABLED_NOTE = "\n（設定已關閉助手聯網；本次對話不提供 web.search，也不啟用供應商原生搜尋。）\n"
 AGENT_WEB_SEARCH_BRAVE_HINT = " Brave 需已設定 API key；若 tool 回傳未配置錯誤，請改用 DuckDuckGo 或補上 key。"
 AGENT_WEB_SEARCH_DUCKDUCKGO_HINT = " DuckDuckGo 免 API key；結果品質可能弱於 Brave。"
 AGENT_WEB_SEARCH_OPENAI_NATIVE_NOTE = (

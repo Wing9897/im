@@ -63,7 +63,9 @@ function normalizeOverrides(raw: unknown): TimelineEventTimeOverrideMap {
   return out;
 }
 
-function normalizeAnnotations(raw: Partial<TimelineAnnotations> | null | undefined): TimelineAnnotations {
+function normalizeAnnotations(
+  raw: { eventStatuses?: unknown; eventTimeOverrides?: unknown } | null | undefined,
+): TimelineAnnotations {
   return {
     eventStatuses: normalizeStatuses(raw?.eventStatuses),
     eventTimeOverrides: normalizeOverrides(raw?.eventTimeOverrides),
@@ -104,12 +106,13 @@ export async function hydrateTimelineAnnotations(): Promise<TimelineAnnotations>
         if (!response.configured) {
           return { configured: false, data: null };
         }
+        // Normalize wire → domain (OpenAPI endTime is required nullish; domain requires null).
         return {
           configured: true,
-          data: {
+          data: normalizeAnnotations({
             eventStatuses: response.eventStatuses ?? {},
             eventTimeOverrides: response.eventTimeOverrides ?? {},
-          },
+          }),
         };
       },
       normalize: normalizeAnnotations,

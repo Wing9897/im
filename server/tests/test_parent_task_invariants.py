@@ -48,7 +48,7 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
             "analysisMode": "project",
             "promptTemplate": "x",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert create_proj.status_code == 201
@@ -74,7 +74,7 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
             "analysisMode": "event",
             "analysisTimeRange": "12h",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert update.status_code == 200
@@ -104,7 +104,7 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
             "analysisMode": "project",
             "promptTemplate": "x",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert create_proj.status_code == 201
@@ -130,7 +130,7 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
             "analysisMode": "event",
             "analysisTimeRange": "12h",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert update.status_code == 200
@@ -190,7 +190,7 @@ async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
             "analysisMode": "project",
             "promptTemplate": "x",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     proj_id = create_proj.json()["id"]

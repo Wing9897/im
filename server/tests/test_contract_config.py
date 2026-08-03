@@ -32,7 +32,7 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "access_api_keys",
         # Stamp 5: device-scoped assistant sessions live in ui_prefs.
         "assistant_sessions",
-        # Schema v15: board / voice / timeline / assistant voice-io → ui_prefs table.
+        # Board / voice / timeline / assistant voice-io live in ui_prefs (wipe-only).
         "ops_board_layout",
         "ops_board_widget_state",
         "voice_reminder_settings",

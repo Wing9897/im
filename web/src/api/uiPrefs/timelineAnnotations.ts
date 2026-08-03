@@ -1,22 +1,17 @@
 import { apiClient } from "../client";
+import type { components } from "../generated/schema";
 
-export type TimelineEventStatusPayload = "pending" | "confirmed" | "completed";
-
-export type TimelineEventTimeOverridePayload = {
-  startTime: string;
-  endTime: string | null;
-};
-
-export type TimelineAnnotationsPayload = {
-  eventStatuses: Record<string, TimelineEventStatusPayload>;
-  eventTimeOverrides: Record<string, TimelineEventTimeOverridePayload>;
-};
-
-export type TimelineAnnotationsResponse = {
-  configured: boolean;
-  eventStatuses: Record<string, TimelineEventStatusPayload> | null;
-  eventTimeOverrides: Record<string, TimelineEventTimeOverridePayload> | null;
-};
+export type TimelineEventStatusPayload = NonNullable<
+  components["schemas"]["TimelineAnnotationsResponse"]["eventStatuses"]
+> extends Record<string, infer V>
+  ? V
+  : never;
+export type TimelineEventTimeOverridePayload =
+  components["schemas"]["TimelineEventTimeOverrideSchema"];
+export type TimelineAnnotationsPayload =
+  components["schemas"]["TimelineAnnotationsPutBody"];
+export type TimelineAnnotationsResponse =
+  components["schemas"]["TimelineAnnotationsResponse"];
 
 const TIMELINE_ANNOTATIONS_PATH = "/api/v1/ui-prefs/timeline/annotations";
 

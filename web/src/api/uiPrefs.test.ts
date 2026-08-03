@@ -38,7 +38,7 @@ describe("uiPrefs board API", () => {
   it("putBoardPrefs PUTs body to /api/v1/ui-prefs/board", async () => {
     const body = {
       layout: { version: 14, widgets: [] },
-      widgetState: { mapViews: {}, sourceFilters: {} },
+      widgetState: { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
     };
     const response = { configured: true, ...body };
     vi.mocked(apiClient.put).mockResolvedValue(response);
@@ -62,7 +62,7 @@ describe("uiPrefs voice reminder API", () => {
     const settings = {
       enabled: true,
       leadOffsetsMinutes: [60],
-      taskIds: [],
+      sourceFilter: { taskIds: [] as string[], worksetIds: [] as string[] },
       preambleChimeId: "broadcast",
       quietHours: { enabled: true, start: "22:00", end: "07:00" },
     };
@@ -170,6 +170,9 @@ describe("uiPrefs assistant sessions + voice IO", () => {
       ttsProvider: "browser",
       ttsEnabled: true,
       speechLanguage: "zh-HK",
+      spacePttMode: "hold" as const,
+      ttsVoiceUri: "",
+      defaultWorksetId: "__user__",
     };
     vi.mocked(apiClient.put).mockResolvedValue({ configured: true, settings });
     await putAssistantVoiceIo(settings);

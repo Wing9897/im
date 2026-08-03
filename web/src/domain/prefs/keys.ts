@@ -131,13 +131,16 @@ export const DISCORD_CHANNELS_EXPANDED_STORAGE_KEY =
 // ── Assistant / voice / runtime / profile ───────────────────────────────────
 
 export const ASSISTANT_COMPOSER_DRAFTS_STORAGE_KEY = "im:assistant:composer-drafts";
+/** SoT — re-exported by `domain/assistant/assistantSessions` (do not redefine there). */
 export const ASSISTANT_SESSIONS_CHANGED_EVENT = "im:assistant-sessions-changed";
 export const ASSISTANT_CLIENT_INSTANCE_STORAGE_KEY = "im:assistant:client-instance-id";
 export const VOICE_SETTINGS_CHANGED_EVENT = "im:voice-settings-changed";
 export const VOICE_REMINDER_SETTINGS_CHANGED_EVENT = "im:voice-reminder-settings-changed";
 export const VOICE_REMINDER_HISTORY_CHANGED_EVENT = "im:voice-reminder-history-changed";
 export const RUNTIME_LOG_CACHE_STORAGE_KEY = "im:runtime:stored-log-cache";
+/** SoT — re-exported by `domain/user/userProfile` (do not redefine there). */
 export const USER_PROFILE_KEY = "im:user:profile:v1";
 export const USER_PROFILE_EVENT = "im:user:profile:v1-change";
+/** sessionStorage: unsaved profile editor fields (not the committed SoT key above). */
 export const USER_PROFILE_DRAFT_KEY = "im:user:profile:draft:v1";
 export const CONNECTION_STORAGE_KEY = "im:connection";

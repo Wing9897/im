@@ -1,6 +1,6 @@
 """SQLite schema fingerprint types and live introspection.
 
-Version classification and wipe-only stamping live in :mod:`server.db.migrations`.
+Version classification and wipe-only stamping live in :mod:`server.db.schema_bootstrap`.
 DDL-derived expected signatures come from
 :mod:`server.db.schema`.
 """
@@ -21,10 +21,10 @@ from server.db.schema import (
 )
 from server.db.schema_fingerprint import _quoted_identifier
 
-CURRENT_SCHEMA_VERSION = 9
+CURRENT_SCHEMA_VERSION = 10
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
-SCHEMA_SEMVER = "0.1.0-beta.10"
+SCHEMA_SEMVER = "0.1.0-beta.11"
 
 
 class SchemaEvolutionError(RuntimeError):

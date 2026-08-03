@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 
 from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster
-from server.tests.db_helpers import insert_legacy_analysis_task
+from server.tests.db_helpers import insert_direct_analysis_task
 from server.tests.property_strategies import (
     MIN_PROPERTY_EXAMPLES,
     analysis_task_modes,
@@ -74,8 +74,8 @@ async def test_legacy_rrule_does_not_interfere_with_scheduler(app, mode, schedul
         "schedule_type": schedule_type,
         "schedule_value": schedule_value,
     }
-    await insert_legacy_analysis_task(db, legacy_id, rrule=legacy_rrule, **common)
-    await insert_legacy_analysis_task(db, control_id, rrule=None, **common)
+    await insert_direct_analysis_task(db, legacy_id, rrule=legacy_rrule, **common)
+    await insert_direct_analysis_task(db, control_id, rrule=None, **common)
 
     legacy = await _registered_job_observation(db, legacy_id)
     control = await _registered_job_observation(db, control_id)

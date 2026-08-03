@@ -1,4 +1,4 @@
-"""Contract keys: tasks routes."""
+"""Contract keys: tasks CRUD / templates / project-ticks."""
 
 from __future__ import annotations
 
@@ -6,38 +6,13 @@ import pytest
 
 from server.tests import seed
 from server.tests.contract_helpers import assert_keys
-
-TASK_KEYS = [
-    "id",
-    "name",
-    "description",
-    "promptTemplate",
-    "analysisMode",
-    "analysisTimeRange",
-    "isActive",
-    "channelIds",
-    "scheduleType",
-    "scheduleValue",
-    "includeInTimeline",
-    "parentTaskId",
-    "worksetId",
-]
-
-SCHEDULE_KEYS = [
-    "taskId",
-    "rrule",
-    "eventStartTime",
-    "eventEndTime",
-    "eventIsAllDay",
-    "eventLocation",
-    "eventDescription",
-]
+from server.tests.contract_tasks_helpers import TASK_KEYS
 
 
 async def test_list_tasks(client):
     resp = await client.get("/api/v1/tasks")
     body = resp.json()
-    assert len(body) == 4
+    assert len(body) == 6
     for task in body:
         assert_keys(task, TASK_KEYS, "AnalysisTask")
         assert "parentTaskId" in task
@@ -47,6 +22,11 @@ async def test_list_tasks(client):
     for ref in lb["channelIds"]:
         assert_keys(ref, ["id", "platform", "platformId"], "ChannelRef")
     assert lb["parentTaskId"] is None
+    wi = next(t for t in body if t["id"] == seed.TASK_WEB_INTEL)
+    assert wi["analysisMode"] == "web_intel"
+    assert wi["webSearchQuery"]
+    proj = next(t for t in body if t["id"] == seed.TASK_PROJECT)
+    assert proj["analysisMode"] == "project"
 
 
 async def test_invalid_analysis_time_range_returns_422(client):
@@ -58,7 +38,7 @@ async def test_invalid_analysis_time_range_returns_422(client):
             "promptTemplate": "x",
             "analysisMode": "leaderboard",
             "analysisTimeRange": "bogus",
-            "scheduleType": "seconds_10",
+            "scheduleRrule": "FREQ=SECONDLY;INTERVAL=10",
             "channelIds": [],
         },
     )
@@ -78,8 +58,7 @@ async def test_create_update_delete_task_roundtrip(client):
             "analysisMode": "event",
             "analysisTimeRange": "12h",
             "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-            "scheduleType": "hourly",
-            "scheduleValue": None,
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert create.status_code == 201
@@ -95,8 +74,7 @@ async def test_create_update_delete_task_roundtrip(client):
             "analysisMode": "event",
             "analysisTimeRange": "24h",
             "channelIds": [],
-            "scheduleType": "daily",
-            "scheduleValue": "08:00",
+            "scheduleRrule": "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
         },
     )
     assert update.status_code == 200
@@ -125,7 +103,7 @@ async def test_put_task_applies_optional_is_active(client, app):
             "analysisMode": "event",
             "analysisTimeRange": "12h",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert create.status_code == 201
@@ -141,7 +119,7 @@ async def test_put_task_applies_optional_is_active(client, app):
             "analysisMode": "event",
             "analysisTimeRange": "12h",
             "channelIds": [],
-            "scheduleType": "hourly",
+            "scheduleRrule": "FREQ=HOURLY",
             "isActive": False,
         },
     )
@@ -175,7 +153,7 @@ async def test_create_rolls_back_task_row_when_channel_linking_fails(client, app
                 "name": "rollback probe",
                 "promptTemplate": "分析",
                 "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-                "scheduleType": "hourly",
+                "scheduleRrule": "FREQ=HOURLY",
             },
         )
 
@@ -210,7 +188,7 @@ async def test_update_rolls_back_version_bump_and_batch_deletion_together(client
                 "promptTemplate": "分析",
                 "analysisMode": "leaderboard",
                 "channelIds": [f"{seed.DISCORD_CHANNEL[0]}:{seed.DISCORD_CHANNEL[1]}"],
-                "scheduleType": "hourly",
+                "scheduleRrule": "FREQ=HOURLY",
             },
         )
 
@@ -278,177 +256,6 @@ async def test_delete_reregisters_task_when_the_write_fails(client, app, monkeyp
         ("unregister", seed.TASK_LEADERBOARD),
         ("register", seed.TASK_LEADERBOARD),
     ]
-
-
-def _assert_validation_error(response, expected_message: str) -> None:
-    assert response.status_code == 422
-    body = response.json()
-    assert_keys(body, ["error_code", "message", "details", "correlation_id"], "ValidationError")
-    assert body["error_code"] == "VALIDATION_ERROR"
-    assert body["message"] == expected_message
-    assert body["details"] is None
-    assert isinstance(body["correlation_id"], str) and body["correlation_id"]
-
-
-async def test_non_calendar_create_rejects_legacy_rrule_fields(client, app):
-    """Recurring fields are forbidden on TaskConfigBody (use /tasks/{id}/schedule)."""
-    db = app.state.db
-    before_count = await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
-
-    for name, extra_fields in (
-        ("analysis rrule", {"analysisMode": "event", "rrule": "FREQ=DAILY"}),
-        ("empty default-mode rrule", {"rrule": ""}),
-    ):
-        resp = await client.post(
-            "/api/v1/tasks",
-            json={
-                "name": name,
-                "promptTemplate": "analyse",
-                "channelIds": [],
-                "scheduleType": "hourly",
-                **extra_fields,
-            },
-        )
-        assert resp.status_code == 422, name
-
-    assert await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_count
-
-
-async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(client, app):
-    db = app.state.db
-    created = await client.post(
-        "/api/v1/tasks",
-        json={
-            "name": "schedule-validation-shell",
-            "promptTemplate": "",
-            "analysisMode": "recurring",
-            "channelIds": [],
-        },
-    )
-    assert created.status_code == 201
-    task_id = created.json()["id"]
-    before_schedules = await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
-
-    for name, rrule, expected_detail in (
-        ("empty calendar rrule", "", "Invalid RRULE (empty): RRULE is empty"),
-        (
-            "bad calendar frequency",
-            "FREQ=BOGUS",
-            "Invalid RRULE (unsupported_freq): Unsupported FREQ: BOGUS (allowed: DAILY, WEEKLY, MONTHLY, YEARLY)",
-        ),
-        (
-            "sub-day calendar frequency",
-            "FREQ=HOURLY",
-            "Invalid RRULE (unsupported_freq): Unsupported FREQ: HOURLY (allowed: DAILY, WEEKLY, MONTHLY, YEARLY)",
-        ),
-        (
-            "rrule prefix rejected",
-            "RRULE:FREQ=DAILY",
-            "RRULE must not include an 'RRULE:' prefix",
-        ),
-    ):
-        resp = await client.put(
-            f"/api/v1/tasks/{task_id}/schedule",
-            json={"rrule": rrule, "eventStartTime": "09:00"},
-        )
-        _assert_validation_error(resp, expected_detail)
-
-    assert await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules") == before_schedules
-
-
-async def test_calendar_schedule_update_validates_rrule(client, app):
-    db = app.state.db
-    task_id = seed.TASK_CALENDAR
-    before = await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,))
-    resp = await client.put(
-        f"/api/v1/tasks/{task_id}/schedule",
-        json={"rrule": "FREQ=BOGUS", "eventStartTime": "09:00"},
-    )
-    _assert_validation_error(
-        resp,
-        "Invalid RRULE (unsupported_freq): Unsupported FREQ: BOGUS (allowed: DAILY, WEEKLY, MONTHLY, YEARLY)",
-    )
-    assert await db.fetch_one("SELECT * FROM recurring_schedules WHERE task_id = ?", (task_id,)) == before
-
-
-async def test_atomic_recurring_create_endpoint(client, app):
-    """Timeline path: POST /tasks/recurring creates task + schedule atomically."""
-    before_tasks = await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
-    before_schedules = await app.state.db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
-
-    created = await client.post(
-        "/api/v1/tasks/recurring",
-        json={
-            "name": "Atomic standup",
-            "rrule": "FREQ=WEEKLY;BYDAY=MO",
-            "eventStartTime": "09:00",
-            "eventEndTime": "09:30",
-            "eventIsAllDay": False,
-            "worksetId": "__user__",
-            "description": "notes",
-            "eventDescription": "notes",
-        },
-    )
-    assert created.status_code == 201, created.text
-    body = created.json()
-    assert body["analysisMode"] == "recurring"
-    assert body["worksetId"] == "__user__"
-    task_id = body["id"]
-
-    schedule = await client.get(f"/api/v1/tasks/{task_id}/schedule")
-    assert schedule.status_code == 200
-    assert schedule.json()["rrule"] == "FREQ=WEEKLY;BYDAY=MO"
-    assert schedule.json()["eventStartTime"] == "09:00"
-
-    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_tasks + 1
-    assert (
-        await app.state.db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
-        == before_schedules + 1
-    )
-
-    bad = await client.post(
-        "/api/v1/tasks/recurring",
-        json={"name": "bad", "rrule": "FREQ=BOGUS", "eventStartTime": "09:00"},
-    )
-    assert bad.status_code == 422
-    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_tasks + 1
-
-
-async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
-    """Dialog-shaped create: atomic recurring + all-day schedule with UI UNTIL=...Z."""
-    created = await client.post(
-        "/api/v1/tasks/recurring",
-        json={
-            "name": "1234",
-            "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
-            "eventIsAllDay": True,
-            "eventStartTime": None,
-            "eventEndTime": None,
-            "worksetId": "__user__",
-        },
-    )
-    assert created.status_code == 201, created.text
-    task_id = created.json()["id"]
-    row = await app.state.db.fetch_one(
-        "SELECT workset_id, analysis_mode FROM analysis_tasks WHERE id = ?",
-        (task_id,),
-    )
-    assert row is not None
-    assert row["analysis_mode"] == "recurring"
-    assert row["workset_id"] == "__user__"
-
-    items = await client.get(
-        "/api/v1/calendar/items",
-        params={
-            "range_start": "2026-07-31T16:00:00Z",
-            "range_end": "2026-08-31T15:59:59Z",
-            "task_ids": [task_id],
-        },
-    )
-    assert items.status_code == 200
-    body = items.json()
-    assert len(body) >= 28
-    assert all(item["taskId"] == task_id and item["title"] == "1234" for item in body)
 
 
 async def test_rejected_update_uses_persisted_mode_and_preserves_all_state(client, app):
@@ -556,8 +363,7 @@ async def test_rejected_update_uses_persisted_mode_and_preserves_all_state(clien
                 # leaderboard mode must make this an analysis-task write.
                 "analysisTimeRange": "7d",
                 "channelIds": [f"{seed.DISCORD_CHANNEL[0]}:{seed.DISCORD_CHANNEL[1]}"],
-                "scheduleType": "daily",
-                "scheduleValue": "08:00",
+                "scheduleRrule": "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
                 # Legacy recurring field — rejected by TaskConfigBody(extra=forbid).
                 "rrule": "FREQ=DAILY",
             },
@@ -582,194 +388,6 @@ async def test_task_templates(client):
             ["id", "name", "description", "analysisMode", "promptTemplate", "defaultAnalysisTimeRange", "badge"],
             "TaskTemplatePreset",
         )
-
-
-async def test_chat_assistant_contract(client):
-    empty = await client.post("/api/v1/tasks/chat-assistant", json={"messages": []})
-    assert empty.status_code == 200
-    empty_body = empty.json()
-    assert_keys(empty_body, ["message", "taskConfig"], "ChatAssistantResponse (empty)")
-    assert empty_body["taskConfig"] is None
-
-    assistant_only = await client.post(
-        "/api/v1/tasks/chat-assistant",
-        json={"messages": [{"role": "assistant", "content": "hello"}]},
-    )
-    assert assistant_only.status_code == 200
-    assert_keys(assistant_only.json(), ["message", "taskConfig"], "ChatAssistantResponse (no user)")
-
-    resp = await client.post(
-        "/api/v1/tasks/chat-assistant",
-        json={"messages": [{"role": "user", "content": "幫我建立一個監控任務"}]},
-    )
-    assert resp.status_code == 200
-    body = resp.json()
-    assert_keys(body, ["message", "taskConfig"], "ChatAssistantResponse")
-    assert isinstance(body["message"], str)
-    assert body["message"]
-    assert body["taskConfig"] is None or isinstance(body["taskConfig"], dict)
-
-
-async def test_activity_spans(client):
-    resp = await client.get("/api/v1/tasks/activity-spans")
-    body = resp.json()
-    assert len(body) == 4
-    for span in body:
-        assert_keys(
-            span,
-            [
-                "taskId",
-                "taskName",
-                "description",
-                "analysisTimeRange",
-                "isActive",
-                "earliestBatchStart",
-                "latestBatchEnd",
-                "completedBatchCount",
-                "lastAgentMessage",
-                "lastToolCalls",
-                "lastErrorMessage",
-                "lastMessageCount",
-                "sourceKind",
-                "worksetId",
-            ],
-            "TaskActivitySpan",
-        )
-    lb = next(s for s in body if s["taskId"] == seed.TASK_LEADERBOARD)
-    assert lb["completedBatchCount"] == 1
-    assert lb["sourceKind"] == "task"
-    assert lb["worksetId"] is None
-
-
-async def test_activity_spans_include_virtual_user_events_source(client):
-    created = await client.post(
-        "/api/v1/calendar/user-events",
-        json={
-            "title": "手動排程",
-            "startTime": "2026-07-21T09:00:00Z",
-            "endTime": "2026-07-21T11:00:00Z",
-        },
-    )
-    assert created.status_code == 201
-
-    spans = (await client.get("/api/v1/tasks/activity-spans")).json()
-    user_span = next(span for span in spans if span["worksetId"] == "__user__")
-    assert user_span["taskName"] == "一般"
-    assert user_span["sourceKind"] == "workset"
-    assert user_span["worksetId"] == "__user__"
-    assert user_span["taskId"] is None
-    assert user_span["earliestBatchStart"] == "2026-07-21T09:00:00Z"
-    assert user_span["latestBatchEnd"] == "2026-07-21T11:00:00Z"
-    assert user_span["completedBatchCount"] == 1
-
-
-async def test_activity_spans_group_user_events_by_workset(client):
-    """user_events produce one workset-kind span per distinct workset_id."""
-    ws = await client.post("/api/v1/worksets", json={"name": "Alpha WS"})
-    assert ws.status_code == 201
-    workset_id = ws.json()["id"]
-
-    sys_evt = await client.post(
-        "/api/v1/calendar/user-events",
-        json={
-            "title": "System WS event",
-            "startTime": "2026-07-21T09:00:00Z",
-            "endTime": "2026-07-21T10:00:00Z",
-        },
-    )
-    assert sys_evt.status_code == 201
-
-    custom_a = await client.post(
-        "/api/v1/calendar/user-events",
-        json={
-            "title": "Custom A",
-            "startTime": "2026-07-22T09:00:00Z",
-            "endTime": "2026-07-22T11:00:00Z",
-            "worksetId": workset_id,
-        },
-    )
-    assert custom_a.status_code == 201
-    custom_b = await client.post(
-        "/api/v1/calendar/user-events",
-        json={
-            "title": "Custom B",
-            "startTime": "2026-07-23T12:00:00Z",
-            "endTime": "2026-07-23T13:00:00Z",
-            "worksetId": workset_id,
-        },
-    )
-    assert custom_b.status_code == 201
-
-    spans = (await client.get("/api/v1/tasks/activity-spans")).json()
-    workset_spans = [s for s in spans if s["sourceKind"] == "workset"]
-    by_id = {s["worksetId"]: s for s in workset_spans}
-
-    assert "__user__" in by_id
-    assert by_id["__user__"]["taskName"] == "一般"
-    assert by_id["__user__"]["worksetId"] == "__user__"
-    assert by_id["__user__"]["taskId"] is None
-    assert by_id["__user__"]["completedBatchCount"] == 1
-    assert by_id["__user__"]["earliestBatchStart"] == "2026-07-21T09:00:00Z"
-
-    assert workset_id in by_id
-    assert by_id[workset_id]["taskName"] == "Alpha WS"
-    assert by_id[workset_id]["worksetId"] == workset_id
-    assert by_id[workset_id]["taskId"] is None
-    assert by_id[workset_id]["completedBatchCount"] == 2
-    assert by_id[workset_id]["earliestBatchStart"] == "2026-07-22T09:00:00Z"
-    assert by_id[workset_id]["latestBatchEnd"] == "2026-07-23T13:00:00Z"
-
-    for span in spans:
-        if span["sourceKind"] == "task":
-            assert span["worksetId"] is None
-            assert span["taskId"] is not None
-        else:
-            assert span["worksetId"] is not None
-            assert span["taskId"] is None
-
-
-async def test_activity_spans_excludes_old_version_batches(client):
-    """Version bump should stop old completed batches from counting in Gantt stats."""
-    before = (await client.get("/api/v1/tasks/activity-spans")).json()
-    lb_before = next(s for s in before if s["taskId"] == seed.TASK_LEADERBOARD)
-    assert lb_before["completedBatchCount"] == 1
-
-    update = await client.put(
-        f"/api/v1/tasks/{seed.TASK_LEADERBOARD}",
-        json={
-            "name": "Leaderboard v2",
-            "promptTemplate": "分析 v2",
-            "analysisMode": "leaderboard",
-            "analysisTimeRange": "all",
-            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
-            "scheduleType": "seconds_10",
-        },
-    )
-    assert update.status_code == 200
-    assert update.json()["version"] == 2
-
-    after = (await client.get("/api/v1/tasks/activity-spans")).json()
-    lb_after = next(s for s in after if s["taskId"] == seed.TASK_LEADERBOARD)
-    assert lb_after["completedBatchCount"] == 0
-
-
-@pytest.mark.asyncio
-async def test_activity_spans_include_last_tick_summary(app, client):
-    """Latest completed batch agent_message / tool_calls_json surface on spans."""
-    db = app.state.db
-    await db.execute(
-        "UPDATE analysis_batches SET agent_message = ?, tool_calls_json = ? WHERE task_id = ? AND status = 'completed'",
-        (
-            "tick summary",
-            '[{"name":"calendar.upcoming","arguments":{"limit":3},"resultSummary":"0 items"}]',
-            seed.TASK_LEADERBOARD,
-        ),
-    )
-    spans = (await client.get("/api/v1/tasks/activity-spans")).json()
-    lb = next(s for s in spans if s["taskId"] == seed.TASK_LEADERBOARD)
-    assert lb["lastAgentMessage"] == "tick summary"
-    assert lb["lastToolCalls"][0]["name"] == "calendar.upcoming"
-    assert lb["lastToolCalls"][0]["resultSummary"] == "0 items"
 
 
 @pytest.mark.asyncio

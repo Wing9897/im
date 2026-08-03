@@ -4,11 +4,6 @@
 
 ## 功能特色
 
-> 🏗️ Input→Process→Output · 🎯 任務中心 · ✍️ Prompt 規則化 · 🏠 本地隱私 · 📡 文字與 IoT 同源
-
-完整封面式介紹（含擴展來源、AI 員工、助手、儀表板、資訊過濾、事件提醒等）：  
-**[`docs/功能特色.md`](docs/功能特色.md)**
-
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — 統一 trigger-purpose `schedule_rrule`（APScheduler next-run only；FE 預設：10 秒、每小時、每日、每週、自訂秒數 → RRULE）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
 - **時間規劃** — Timeline 合併分析事件、循環任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
@@ -18,6 +13,8 @@
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的 Ops Board
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描關鍵事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
+
+架構與契約細節見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
 
 ## 核心設計理念
 
@@ -276,15 +273,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v9**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.10`）——含 `web_intel` 任務類型、`schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-9 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v10**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.11`）——含 `project_message_cursors` 拆欄、`web_intel` 任務類型、`schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-10 庫。
 
-**Wipe-only：** v1–v8 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v9 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v9 explicit reset](docs/ARCHITECTURE.md#schema-v9-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v10 explicit reset](docs/ARCHITECTURE.md#schema-v10-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 

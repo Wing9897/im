@@ -8,9 +8,7 @@ from server.db.database import TransactionDb
 
 
 async def fetch_all_category_rows(db: Any) -> list[dict[str, Any]]:
-    return await db.fetch_all(
-        "SELECT * FROM item_categories ORDER BY sort_order ASC, name ASC, id ASC"
-    )
+    return await db.fetch_all("SELECT * FROM item_categories ORDER BY sort_order ASC, name ASC, id ASC")
 
 
 async def fetch_category_row(db: Any, category_id: str) -> dict[str, Any] | None:
@@ -118,9 +116,7 @@ async def fetch_item_rows(
         params.append(status)
     if search and search.strip():
         needle = f"%{search.strip().lower()}%"
-        clauses.append(
-            "(LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ?)"
-        )
+        clauses.append("(LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ?)")
         params.extend([needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return await db.fetch_all(

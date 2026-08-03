@@ -204,7 +204,7 @@ describe("P0 shell smoke (en)", () => {
     const items = filterCommandPaletteItems("");
     expect(items.some((item) => item.label === "Key Events")).toBe(true);
     expect(items.some((item) => item.label === "Live Monitor")).toBe(true);
-    expect(getWidgetMeta("events").title).toBe("Key Events");
+    expect(getWidgetMeta("events").title).toBe("Intelligence events");
   });
 });
 

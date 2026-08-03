@@ -33,8 +33,7 @@ _CURRENT_TASK_CONTEXT_KEYS = (
     "webSearchQuery",
     "analysisMode",
     "analysisTimeRange",
-    "scheduleType",
-    "scheduleValue",
+    "scheduleRrule",
     "rrule",
     "eventStartTime",
     "eventEndTime",
@@ -128,7 +127,7 @@ class AnalysisEngine:
             "completion_tokens": int(result.get("completion_tokens") or 0),
         }
 
-    # ── chat assistant (POST /tasks/chat-assistant) ─────────────────────
+    # ── task advisor (agent tool tasks.consult_advisor) ─────────────────
 
     async def handle_chat_assistant(
         self,

@@ -1,47 +1,16 @@
 import { apiClient } from "../client";
+import type { components } from "../generated/schema";
 
-export type AssistantSessionMessagePayload = {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  toolCalls?: Array<{ name: string; resultSummary?: string }>;
-};
-
-export type AssistantSessionPayload = {
-  id: string;
-  title: string;
-  updatedAt: number;
-  messages: AssistantSessionMessagePayload[];
-  sessionId?: string;
-};
-
-export type AssistantSessionsResponse = {
-  configured: boolean;
-  sessions: AssistantSessionPayload[] | null;
-  activeSessionId: string | null;
-};
-
-export type AssistantSessionsPutBody = {
-  deviceId: string;
-  sessions: AssistantSessionPayload[];
-  activeSessionId?: string | null;
-};
-
-export type AssistantVoiceIoSettingsPayload = {
-  sttProvider: string;
-  ttsProvider: string;
-  ttsEnabled: boolean;
-  speechLanguage: string;
-  spacePttMode?: "hold" | "toggle";
-  ttsVoiceUri?: string;
-  /** Default assistant create target; ``__user__`` = 一般. */
-  defaultWorksetId?: string;
-};
-
-export type AssistantVoiceIoResponse = {
-  configured: boolean;
-  settings: AssistantVoiceIoSettingsPayload | null;
-};
+export type AssistantSessionMessagePayload =
+  components["schemas"]["AssistantSessionMessageSchema"];
+/** Wire session row (OpenAPI Input/Output variants are identical). */
+export type AssistantSessionPayload =
+  components["schemas"]["AssistantSessionSchema-Output"];
+export type AssistantSessionsResponse = components["schemas"]["AssistantSessionsResponse"];
+export type AssistantSessionsPutBody = components["schemas"]["AssistantSessionsPutBody"];
+export type AssistantVoiceIoSettingsPayload =
+  components["schemas"]["AssistantVoiceIoSettingsSchema"];
+export type AssistantVoiceIoResponse = components["schemas"]["AssistantVoiceIoResponse"];
 
 const ASSISTANT_SESSIONS_PATH = "/api/v1/ui-prefs/assistant/sessions";
 const ASSISTANT_VOICE_IO_PATH = "/api/v1/ui-prefs/assistant/voice-io";

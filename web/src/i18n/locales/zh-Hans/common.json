@@ -305,7 +305,6 @@
       "descriptionPlaceholder": "补充这个活动的细节",
       "allDayHint": "整天活动不需要设定开始与结束时间。"
     },
-
     "template": {
       "title": "选择任务模板",
       "all": "全部",
@@ -500,6 +499,16 @@
         "name": "工作轮更表",
         "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
         "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子循环或单次事件就更新，对不上才新建；2) 固定轮更用 recurring 子任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+      },
+      "web-intel-pricing-watch": {
+        "name": "定价监管情报",
+        "description": "定期搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
+        "promptTemplate": "从搜索结果抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
+      },
+      "web-intel-geopolitics-hotspots": {
+        "name": "地缘热点扫描",
+        "description": "定期搜索东亚等地缘／安全热点动态，抽成情报事件",
+        "promptTemplate": "从搜索结果抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
       }
     }
   },
@@ -1087,19 +1096,27 @@
     "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暂停新批次",
     "aiUnavailable": "AI 无法连线",
     "aiUnavailableTitle": "收集器运行中，但 AI 引擎无法连线",
+    "aiUnavailableTitleCollectorDown": "收集器已停止，且 AI 引擎无法连线",
     "analysisPaused": "分析已暂停",
     "analysisPausedTitle": "收集器运行中 · AI 分析已暂停",
+    "analysisPausedTitleCollectorDown": "AI 分析已暂停 · 收集器已停止",
+    "collectorStoppedShort": "收集器已停",
+    "collectorStoppedAnalysisActive": "收集器已停止 · AI 分析仍可运行",
     "systemOk": "系统正常",
     "systemOkTitle": "收集器运行中 · AI 引擎正常",
     "busy": "处理中",
     "clickResume": "点击继续分析",
     "clickPause": "点击暂停分析",
+    "controlsUnavailable": "控制暂时无法使用",
     "analysisControl": "分析控制",
     "analysisControlMenu": "分析控制菜单",
     "emergencyAbort": "紧急中止",
     "aborting": "中止中…",
     "pillTitle": "{title}（{pauseHint}；悬停展开可紧急中止）",
+    "pillTitleBusy": "{title}（{pauseHint}）",
+    "pillTitleDisabled": "{title}",
     "pillAria": "{label}。{pauseHint}",
+    "pillAriaDisabled": "{label}",
     "abortDialogTitle": "紧急中止分析",
     "abortDialogBody": "确定要紧急中止所有分析吗？此操作无法复原。"
   },
@@ -1129,7 +1146,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 9／SemVer 0.1.0-beta.10；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 10／SemVer 0.1.0-beta.11；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

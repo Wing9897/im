@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { ANALYSIS_MODE_ORDER } from "./analysisModeCapabilities";
 import { parseTaskAssistantResponse } from "./parseTaskAssistantResponse";
 
 // ============================================================
@@ -12,7 +13,7 @@ function validResponse(overrides?: Record<string, unknown>) {
       name: "熱門話題追蹤",
       promptTemplate: "分析以下訊息的熱門話題",
       webSearchQuery: "",
-      scheduleType: "hourly",
+      scheduleRrule: "FREQ=HOURLY",
       analysisMode: "leaderboard",
       channelIds: ["ch-1", "ch-2"],
       ...overrides,
@@ -33,7 +34,7 @@ describe("parseTaskAssistantResponse", () => {
         expect(result.data.message).toBe("已為你設定任務");
         expect(result.data.taskConfig.name).toBe("熱門話題追蹤");
         expect(result.data.taskConfig.promptTemplate).toBe("分析以下訊息的熱門話題");
-        expect(result.data.taskConfig.scheduleType).toBe("hourly");
+        expect(result.data.taskConfig.scheduleRrule).toBe("FREQ=HOURLY");
         expect(result.data.taskConfig.analysisMode).toBe("leaderboard");
         expect(result.data.taskConfig.channelIds).toEqual(["ch-1", "ch-2"]);
       }
@@ -44,7 +45,7 @@ describe("parseTaskAssistantResponse", () => {
         validResponse({
           description: "追蹤群組熱門話題",
           analysisTimeRange: "48h",
-          scheduleValue: "14:30",
+          scheduleRrule: "FREQ=DAILY;BYHOUR=14;BYMINUTE=30",
           includeInTimeline: false,
         }),
       );
@@ -52,7 +53,7 @@ describe("parseTaskAssistantResponse", () => {
       if (result.ok) {
         expect(result.data.taskConfig.description).toBe("追蹤群組熱門話題");
         expect(result.data.taskConfig.analysisTimeRange).toBe("48h");
-        expect(result.data.taskConfig.scheduleValue).toBe("14:30");
+        expect(result.data.taskConfig.scheduleRrule).toBe("FREQ=DAILY;BYHOUR=14;BYMINUTE=30");
         expect(result.data.taskConfig.includeInTimeline).toBe(false);
       }
     });
@@ -81,14 +82,6 @@ describe("parseTaskAssistantResponse", () => {
       }
     });
 
-    it("handles null scheduleValue", () => {
-      const result = parseTaskAssistantResponse(validResponse({ scheduleValue: null }));
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.data.taskConfig.scheduleValue).toBeNull();
-      }
-    });
-
     it("trims whitespace from name and promptTemplate", () => {
       const result = parseTaskAssistantResponse(
         validResponse({ name: "  test  ", promptTemplate: "  prompt  " }),
@@ -100,19 +93,31 @@ describe("parseTaskAssistantResponse", () => {
       }
     });
 
-    it("accepts all valid schedule types", () => {
-      const types = ["seconds_10", "hourly", "daily", "weekly", "custom_seconds"];
-      for (const scheduleType of types) {
-        const result = parseTaskAssistantResponse(validResponse({ scheduleType }));
+    it("accepts common trigger RRULE shapes", () => {
+      const rules = [
+        "FREQ=SECONDLY;INTERVAL=10",
+        "FREQ=HOURLY",
+        "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
+        "FREQ=WEEKLY;BYDAY=MO;BYHOUR=14;BYMINUTE=30",
+        "FREQ=SECONDLY;INTERVAL=120",
+      ];
+      for (const scheduleRrule of rules) {
+        const result = parseTaskAssistantResponse(validResponse({ scheduleRrule }));
         expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.data.taskConfig.scheduleRrule).toBe(scheduleRrule);
+        }
       }
     });
 
-    it("accepts all valid analysis modes", () => {
-      const modes = ["leaderboard", "event", "recurring", "project"];
-      for (const analysisMode of modes) {
+    it("accepts all valid analysis modes including web_intel", () => {
+      expect(ANALYSIS_MODE_ORDER).toContain("web_intel");
+      for (const analysisMode of ANALYSIS_MODE_ORDER) {
         const result = parseTaskAssistantResponse(validResponse({ analysisMode }));
         expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.data.taskConfig.analysisMode).toBe(analysisMode);
+        }
       }
     });
   });
@@ -166,8 +171,8 @@ describe("parseTaskAssistantResponse", () => {
       if (!result.ok) expect(result.error).toContain("promptTemplate 必須是非空字串");
     });
 
-    it("rejects non-string scheduleType type (number)", () => {
-      const result = parseTaskAssistantResponse(validResponse({ scheduleType: 123 }));
+    it("rejects non-string scheduleRrule type (number)", () => {
+      const result = parseTaskAssistantResponse(validResponse({ scheduleRrule: 123 }));
       expect(result.ok).toBe(false);
     });
 
@@ -212,13 +217,11 @@ describe("parseTaskAssistantResponse", () => {
       }
     });
 
-    it("skips invalid scheduleType silently (graceful degradation)", () => {
-      const result = parseTaskAssistantResponse(validResponse({ scheduleType: "every_minute" }));
+    it("skips blank scheduleRrule silently", () => {
+      const result = parseTaskAssistantResponse(validResponse({ scheduleRrule: "   " }));
       expect(result.ok).toBe(true);
       if (result.ok) {
-        // Invalid enum value is simply not included
-        expect(result.data.taskConfig.scheduleType).toBeUndefined();
-        // Other valid fields are still returned
+        expect(result.data.taskConfig.scheduleRrule).toBeUndefined();
         expect(result.data.taskConfig.name).toBe("熱門話題追蹤");
       }
     });
@@ -264,12 +267,6 @@ describe("parseTaskAssistantResponse", () => {
       const result = parseTaskAssistantResponse(validResponse({ analysisTimeRange: "  " }));
       expect(result.ok).toBe(true);
       if (result.ok) expect(result.data.taskConfig.analysisTimeRange).toBeUndefined();
-    });
-
-    it("ignores non-string scheduleValue", () => {
-      const result = parseTaskAssistantResponse(validResponse({ scheduleValue: 123 }));
-      expect(result.ok).toBe(true);
-      if (result.ok) expect(result.data.taskConfig.scheduleValue).toBeUndefined();
     });
   });
 });

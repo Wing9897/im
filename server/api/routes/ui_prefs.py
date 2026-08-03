@@ -10,20 +10,24 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, ConfigDict
 
 from server.api.deps import API_DEPS, get_db
 from server.api.schemas.responses import (
+    AssistantSessionsPutBody,
     AssistantSessionsResponse,
+    AssistantVoiceIoBody,
     AssistantVoiceIoResponse,
-    AssistantVoiceIoSettingsSchema,
+    BoardPrefsPutBody,
     BoardPrefsResponse,
+    TimelineAnnotationsPutBody,
     TimelineAnnotationsResponse,
+    VoiceFiredBody,
+    VoiceHistoryBody,
     VoiceReminderFiredClaimResponse,
     VoiceReminderFiredResponse,
     VoiceReminderHistoryResponse,
     VoiceReminderSettingsResponse,
-    VoiceReminderSettingsSchema,
+    VoiceSettingsBody,
 )
 from server.errors import VALIDATION_ERROR, http_error
 from server.ui_prefs import (
@@ -48,32 +52,19 @@ from server.ui_prefs import (
 router = APIRouter(prefix="/api/v1/ui-prefs", tags=["ui-prefs"], dependencies=API_DEPS)
 
 
-class VoiceSettingsBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    settings: VoiceReminderSettingsSchema
-
-
-class VoiceFiredBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    keys: list[Any]
-
-
-class VoiceHistoryBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    entries: list[Any]
-
-
-class AssistantVoiceIoBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    settings: AssistantVoiceIoSettingsSchema
-
-
 def _http_from_validation(exc: UiPrefsValidationError):
     return http_error(422, str(exc), error_code=VALIDATION_ERROR)
+
+
+def _board_put_arg(body: BoardPrefsPutBody, field: str) -> Any:
+    """Ellipsis = omit (leave unchanged); ``None`` clears; otherwise dump model."""
+    if field not in body.model_fields_set:
+        return ...
+    value = getattr(body, field)
+    if value is None:
+        return None
+    # Keep explicit nulls inside widgetState.sourceFilters (null = all sources).
+    return value.model_dump()
 
 
 @router.get("/board", response_model=BoardPrefsResponse)
@@ -82,34 +73,23 @@ async def fetch_board_prefs(request: Request) -> dict:
 
 
 @router.put("/board", response_model=BoardPrefsResponse)
-async def save_board_prefs(request: Request, body: dict[str, Any]) -> dict:
+async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> dict:
     """Persist board layout and/or widget state.
 
     Accepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;
     explicit ``null`` clears that ``system_config`` key.
     """
-    if not isinstance(body, dict):
-        raise http_error(422, "Body must be an object", error_code=VALIDATION_ERROR)
-    unknown = set(body) - {"layout", "widgetState"}
-    if unknown:
-        raise http_error(
-            422,
-            f"Unknown fields: {', '.join(sorted(unknown))}",
-            error_code=VALIDATION_ERROR,
-        )
-    if "layout" not in body and "widgetState" not in body:
+    if "layout" not in body.model_fields_set and "widgetState" not in body.model_fields_set:
         raise http_error(
             422,
             "Provide layout and/or widgetState",
             error_code=VALIDATION_ERROR,
         )
-    layout = body["layout"] if "layout" in body else ...
-    widget_state = body["widgetState"] if "widgetState" in body else ...
     try:
         return await put_board_prefs(
             get_db(request),
-            layout=layout,
-            widget_state=widget_state,
+            layout=_board_put_arg(body, "layout"),
+            widget_state=_board_put_arg(body, "widgetState"),
         )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
@@ -158,7 +138,10 @@ async def fetch_voice_history(request: Request) -> dict:
 @router.put("/voice-reminder/history", response_model=VoiceReminderHistoryResponse)
 async def save_voice_history(request: Request, body: VoiceHistoryBody) -> dict:
     try:
-        return await put_voice_history(get_db(request), body.entries)
+        return await put_voice_history(
+            get_db(request),
+            [entry.model_dump(exclude_none=True) for entry in body.entries],
+        )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
 
@@ -179,14 +162,15 @@ async def fetch_assistant_sessions(request: Request, deviceId: str) -> dict:
 
 
 @router.put("/assistant/sessions", response_model=AssistantSessionsResponse)
-async def save_assistant_sessions(request: Request, body: dict[str, Any]) -> dict:
-    if not isinstance(body, dict):
-        raise http_error(422, "Body must be an object", error_code=VALIDATION_ERROR)
-    device_id = body.get("deviceId")
-    if not isinstance(device_id, str) or not device_id.strip():
+async def save_assistant_sessions(request: Request, body: AssistantSessionsPutBody) -> dict:
+    if not body.deviceId.strip():
         raise http_error(422, "deviceId is required", error_code=VALIDATION_ERROR)
     try:
-        return await put_assistant_sessions(get_db(request), device_id, body)
+        return await put_assistant_sessions(
+            get_db(request),
+            body.deviceId,
+            body.model_dump(exclude_none=True),
+        )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
 
@@ -211,10 +195,8 @@ async def fetch_timeline_annotations(request: Request) -> dict:
 
 
 @router.put("/timeline/annotations", response_model=TimelineAnnotationsResponse)
-async def save_timeline_annotations(request: Request, body: dict[str, Any]) -> dict:
-    if not isinstance(body, dict):
-        raise http_error(422, "Body must be an object", error_code=VALIDATION_ERROR)
+async def save_timeline_annotations(request: Request, body: TimelineAnnotationsPutBody) -> dict:
     try:
-        return await put_timeline_annotations(get_db(request), body)
+        return await put_timeline_annotations(get_db(request), body.model_dump())
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc

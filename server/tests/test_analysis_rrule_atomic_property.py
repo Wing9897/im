@@ -121,8 +121,7 @@ async def test_new_analysis_rrule_writes_are_rejected_atomically(client, app, mo
                 "promptTemplate": "must not persist",
                 "analysisMode": mode,
                 "channelIds": [f"{seed.DISCORD_CHANNEL[0]}:{seed.DISCORD_CHANNEL[1]}"],
-                "scheduleType": "daily",
-                "scheduleValue": "08:00",
+                "scheduleRrule": "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
                 "rrule": supplied_rrule,
             },
         )
@@ -143,8 +142,7 @@ async def test_new_analysis_rrule_writes_are_rejected_atomically(client, app, mo
                 "analysisMode": mode,
                 "analysisTimeRange": "7d",
                 "channelIds": [f"{seed.DISCORD_CHANNEL[0]}:{seed.DISCORD_CHANNEL[1]}"],
-                "scheduleType": "daily",
-                "scheduleValue": "08:00",
+                "scheduleRrule": "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
                 "rrule": supplied_rrule,
             },
         )

@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 
 from server.calendar.rrule import expand_calendar_occurrences
 from server.domain.schedule import (
-    legacy_to_trigger_rrule,
     may_calendar_expand,
     may_register_trigger,
+    preset_to_trigger_rrule,
 )
 from server.queries.calendar_queries import fetch_active_recurring_task_rows
 from server.util import utc_now_iso
@@ -26,7 +26,7 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
         "analysis_time_range, version, is_active, schedule_rrule, created_at, updated_at) "
         "VALUES (?, 'AI gate', 'Analyze', 'event', 'all', 1, 1, ?, ?, ?)",
-        (ai_id, legacy_to_trigger_rrule("custom_seconds", "10"), now, now),
+        (ai_id, preset_to_trigger_rrule("custom_seconds", "10"), now, now),
     )
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "

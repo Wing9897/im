@@ -12,7 +12,7 @@ import {
   analysisModeRequiresChannels,
   analysisModeShowsRruleFields,
 } from "./analysisModeCapabilities";
-import { legacyToTriggerRrule, triggerRruleToLegacy } from "./triggerSchedule";
+import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
 import { safeArray } from "../../utils/nullGuards";
 
 /** Keep canonical scheduleRrule aligned with FE preset fields. */
@@ -22,23 +22,19 @@ export function withSyncedTriggerSchedule(
   return {
     scheduleType: state.scheduleType,
     scheduleValue: state.scheduleValue,
-    scheduleRrule: legacyToTriggerRrule(state.scheduleType, state.scheduleValue),
+    scheduleRrule: presetToTriggerRrule(state.scheduleType, state.scheduleValue),
   };
 }
 
 /** Resolve FE presets + canonical RRULE from a persisted task wire shape. */
 export function scheduleFieldsFromTask(
-  task: Pick<AnalysisTask, "scheduleType" | "scheduleValue" | "scheduleRrule">,
+  task: Pick<AnalysisTask, "scheduleRrule">,
 ): Pick<TaskFormState, "scheduleType" | "scheduleValue" | "scheduleRrule"> {
-  const fromCanonical = triggerRruleToLegacy(task.scheduleRrule);
+  const fromCanonical = triggerRruleToPreset(task.scheduleRrule);
   if (fromCanonical) {
-    return withSyncedTriggerSchedule(fromCanonical);
-  }
-  if (task.scheduleType) {
     return withSyncedTriggerSchedule({
-      scheduleType: task.scheduleType as TaskFormState["scheduleType"],
-      scheduleValue: task.scheduleValue ?? null,
-      scheduleRrule: null,
+      ...fromCanonical,
+      scheduleRrule: task.scheduleRrule ?? null,
     });
   }
   // Unmappable RRULE: preserve wire value so save cannot overwrite with seconds_10.
@@ -46,7 +42,7 @@ export function scheduleFieldsFromTask(
   return {
     scheduleType: "seconds_10",
     scheduleValue: null,
-    scheduleRrule: preserved ?? legacyToTriggerRrule("seconds_10", null),
+    scheduleRrule: preserved ?? presetToTriggerRrule("seconds_10", null),
   };
 }
 
@@ -69,9 +65,15 @@ export function applyConfigToFormState(
     config.scheduleRrule !== undefined
   ) {
     if (config.scheduleRrule !== undefined && config.scheduleType === undefined) {
-      const mapped = triggerRruleToLegacy(config.scheduleRrule);
+      const mapped = triggerRruleToPreset(config.scheduleRrule);
       if (mapped) {
-        Object.assign(updated, withSyncedTriggerSchedule(mapped));
+        Object.assign(
+          updated,
+          withSyncedTriggerSchedule({
+            ...mapped,
+            scheduleRrule: config.scheduleRrule,
+          }),
+        );
       } else {
         updated.scheduleRrule = config.scheduleRrule;
       }
@@ -120,13 +122,12 @@ export function applyConfigToFormState(
  * camelCase wire names for recurrence and event presentation fields.
  */
 export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
-  // Write path SoT: only scheduleRrule. Presets stay in form state for UX;
-  // API still accepts scheduleType/scheduleValue as read-compat / legacy clients.
+  // Write path SoT: only scheduleRrule. Presets stay in form state for UX.
   const scheduleRrule =
     formState.analysisMode === "recurring"
       ? null
       : formState.scheduleRrule?.trim() ||
-        legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+        presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
   const commonConfig = {
     name: formState.name,
     description: formState.description || null,
@@ -273,8 +274,6 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
       : ch,
   );
   const schedule = scheduleFieldsFromTask({
-    scheduleType: (config.scheduleType as TaskFormState["scheduleType"] | null) ?? null,
-    scheduleValue: config.scheduleValue ?? null,
     scheduleRrule: config.scheduleRrule ?? null,
   });
 
@@ -288,8 +287,6 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     analysisTimeRange: config.analysisTimeRange ?? "24h",
     version: 1,
     isActive: true,
-    scheduleType: schedule.scheduleType,
-    scheduleValue: schedule.scheduleValue,
     scheduleRrule: schedule.scheduleRrule,
     channelIds,
     includeInTimeline: config.includeInTimeline ?? true,
@@ -313,20 +310,18 @@ export function roundTripFormState(formState: TaskFormState): TaskFormState {
   return analysisTaskToFormState(taskConfigToPersistedTask(formStateToTaskConfig(formState)));
 }
 
-/** Payload shape for POST /tasks/chat-assistant currentTask context. */
+/** Payload shape for agent task-advisor ``currentTask`` context. */
 export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayload {
-  // Prefer canonical RRULE; keep preset mirrors only as assistant UX hints.
+  // Prefer canonical RRULE; presets stay local to the form editor.
   const scheduleRrule =
     formState.scheduleRrule?.trim() ||
-    legacyToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+    presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
   return {
     name: formState.name,
     description: formState.description,
     promptTemplate: formState.promptTemplate,
     webSearchQuery: formState.webSearchQuery,
     scheduleRrule,
-    scheduleType: formState.scheduleType,
-    scheduleValue: formState.scheduleValue,
     analysisMode: formState.analysisMode,
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,

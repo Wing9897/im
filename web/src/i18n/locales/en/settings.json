@@ -65,7 +65,17 @@
     "lanAccessHelp": "Bind the local server to all network interfaces (0.0.0.0) so other devices on your LAN can connect as remote clients. Default is loopback-only (127.0.0.1). Changing this restarts the app. For internet / port-forward access, put Caddy or Nginx TLS in front — the app does not terminate HTTPS.",
     "lanAccessEnabled": "LAN access enabled (app will restart)",
     "lanAccessDisabled": "LAN access disabled (app will restart)",
-    "lanAccessRestarting": "Restarting to apply bind address…"
+    "lanAccessRestarting": "Restarting to apply bind address…",
+    "debug": {
+      "sectionTitle": "Debug & diagnostics",
+      "rulesVersionLabel": "Analysis rules version tag",
+      "rulesVersionPlaceholder": "v2",
+      "rulesVersionHelp": "Version string written into message-batch prompts (event / leaderboard system prompts), e.g. v2, so you can correlate prompt revisions. Does not change evidence style, scheduling, or analysis rules. Leave empty to omit the tag. Unused by web intel / project / recurring.",
+      "traceVerboseLabel": "Server analysis trace",
+      "traceVerboseHelp": "Write more detailed analysis tracing to server logs (not the Settings → Logs page).",
+      "saveLabel": "Save debug settings",
+      "saved": "Debug settings saved"
+    }
   },
   "theme": {
     "bgTooLarge": "Image size must not exceed 2MB",
@@ -326,12 +336,7 @@
       "maxCharsLabel": "Max characters per analysis batch",
       "maxCharsHelp": "Raw-content cap per batch; truncate early past this.",
       "maxTokensLabel": "Global input token cap",
-      "maxTokensHelp": "Shared input-token ceiling; lower if long content fails often.",
-      "debugSectionTitle": "Debug",
-      "rulesVersionLabel": "Global analysis rules version",
-      "rulesVersionHelp": "Prompt version tag only; does not switch rules.",
-      "traceVerboseLabel": "Verbose analysis trace logging",
-      "traceVerboseHelp": "Log full request/response."
+      "maxTokensHelp": "Shared input-token ceiling; lower if long content fails often."
     }
   },
   "apiDocs": {

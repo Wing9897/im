@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from server.analysis_control import set_analysis_paused
 from server.app_logging import write_batch_failure_log
@@ -49,6 +49,7 @@ async def apply_retry_outcome(
     outcome: BatchErrorOutcome,
     max_retries: int,
     scheduler: SchedulerManager | None = None,
+    failure_details: dict[str, Any] | None = None,
 ) -> None:
     """Persist retry state and emit logs/SSE/auto-pause side effects."""
     now = utc_now_iso()
@@ -103,6 +104,7 @@ async def apply_retry_outcome(
         current_retry=outcome.next_retry,
         max_retries=max_retries,
         ui_locale=ui_locale,
+        failure_details=failure_details,
     )
 
     broadcaster.publish(
@@ -129,6 +131,7 @@ async def handle_batch_failure(
     batch_id: str,
     error_message: str,
     scheduler: SchedulerManager | None = None,
+    failure_details: dict[str, Any] | None = None,
 ) -> None:
     batch = await db.fetch_one("SELECT retry_count FROM analysis_batches WHERE id = ?", (batch_id,))
     current_retry = int(batch["retry_count"]) if batch else 0
@@ -145,4 +148,5 @@ async def handle_batch_failure(
         outcome=outcome,
         max_retries=max_retries,
         scheduler=scheduler,
+        failure_details=failure_details,
     )

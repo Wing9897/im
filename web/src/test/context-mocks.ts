@@ -10,9 +10,13 @@
  *   (await import("../../test/context-mocks")).toastContextModuleMock());
  * vi.mock("../../context/TaskCatalogContext", async () =>
  *   (await import("../../test/context-mocks")).taskCatalogModuleMock());
+ * vi.mock("../../context/AnalysisStatusContext", async () =>
+ *   (await import("../../test/context-mocks")).analysisStatusModuleMock());
  *
  * import { mockShowToast, taskCatalogState } from "../../test/context-mocks";
  * ```
+ *
+ * Board tests: also wrap with `wrapBoardProviders` from `../board/boardTestHarness`.
  */
 import { createContext, type ReactNode } from "react";
 import { vi } from "vitest";
@@ -42,10 +46,12 @@ export function makeAnalysisTask(overrides: Partial<AnalysisTask> = {}): Analysi
     name: "Task 1",
     description: "Task 1",
     promptTemplate: "prompt",
+    webSearchQuery: "",
     analysisMode: "event",
     analysisTimeRange: "7d",
     version: 1,
     isActive: true,
+    scheduleRrule: "FREQ=SECONDLY;INTERVAL=10",
     channelIds: [],
     worksetId: null,
     createdAt: "2026-01-01T00:00:00Z",
@@ -91,5 +97,51 @@ export function taskCatalogModuleMock() {
       return map;
     },
     TaskCatalogProvider: ({ children }: { children: ReactNode }) => children,
+  };
+}
+
+// ── AnalysisStatusContext ───────────────────────────────────────────────
+
+/**
+ * Mutable analysis-status value returned by the mocked `useAnalysisStatus()`.
+ * Prefer this over hand-rolled empty stubs so board tests never omit the mock.
+ */
+export const analysisStatusState = {
+  queueStatus: {
+    pendingCount: 0,
+    processingBatches: [] as unknown[],
+    attentionBatches: [] as unknown[],
+    analysisPaused: false,
+  },
+  analysisPaused: false,
+  activeAnalysis: null as null,
+  activeAnalyses: new Map<string, unknown>(),
+  lastAnalysisEvent: null as null,
+  lastAccountStatusChange: null as null,
+  lastMessagesUpdate: null as null,
+  requestQueueStatusRefresh: vi.fn(),
+};
+
+export function resetAnalysisStatusState() {
+  analysisStatusState.queueStatus = {
+    pendingCount: 0,
+    processingBatches: [],
+    attentionBatches: [],
+    analysisPaused: false,
+  };
+  analysisStatusState.analysisPaused = false;
+  analysisStatusState.activeAnalysis = null;
+  analysisStatusState.activeAnalyses = new Map();
+  analysisStatusState.lastAnalysisEvent = null;
+  analysisStatusState.lastAccountStatusChange = null;
+  analysisStatusState.lastMessagesUpdate = null;
+  analysisStatusState.requestQueueStatusRefresh.mockReset();
+}
+
+/** Module-shape mock for `vi.mock("<path>/context/AnalysisStatusContext", ...)`. */
+export function analysisStatusModuleMock() {
+  return {
+    AnalysisStatusProvider: ({ children }: { children: ReactNode }) => children,
+    useAnalysisStatus: () => analysisStatusState,
   };
 }

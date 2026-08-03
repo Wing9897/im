@@ -10,34 +10,20 @@ from server.domain.analysis_modes import PARENT_PROJECT_MODE
 from server.queries.tasks_queries import fetch_task_channel_rows
 from server.util import new_id, utc_now_iso
 
-#: Composite cursor delimiter (timestamp + message id). Legacy rows are bare ISO timestamps.
-_CURSOR_SEP = "\t"
-
 
 @dataclass(frozen=True, slots=True)
 class ProjectMessageCursor:
-    """Incremental drain position: time + message id (tie-break for same-second bursts)."""
+    """Incremental drain position: ISO time + optional message id (same-second tie-break)."""
 
     timestamp: str
     message_id: str | None = None
 
-    def encoded(self) -> str:
-        ts = self.timestamp.strip()
-        mid = (self.message_id or "").strip()
-        return f"{ts}{_CURSOR_SEP}{mid}" if mid else ts
-
 
 def parse_project_message_cursor(raw: str | None) -> ProjectMessageCursor | None:
+    """Parse a bare ISO timestamp into a cursor (no message-id; used for string ``since``)."""
     text = (raw or "").strip()
     if not text:
         return None
-    if _CURSOR_SEP in text:
-        ts, mid = text.split(_CURSOR_SEP, 1)
-        ts = ts.strip()
-        mid = mid.strip()
-        if not ts:
-            return None
-        return ProjectMessageCursor(timestamp=ts, message_id=mid or None)
     return ProjectMessageCursor(timestamp=text, message_id=None)
 
 
@@ -58,12 +44,17 @@ def _after_cursor_sql(
 
 async def load_project_message_cursor(db: Database, task_id: str) -> ProjectMessageCursor | None:
     row = await db.fetch_one(
-        "SELECT last_message_at FROM project_message_cursors WHERE task_id = ?",
+        "SELECT last_message_at, last_message_id FROM project_message_cursors WHERE task_id = ?",
         (task_id,),
     )
     if row is None:
         return None
-    return parse_project_message_cursor(str(row.get("last_message_at") or ""))
+    ts = str(row.get("last_message_at") or "").strip()
+    if not ts:
+        return None
+    mid_raw = row.get("last_message_id")
+    mid = str(mid_raw).strip() if mid_raw is not None else ""
+    return ProjectMessageCursor(timestamp=ts, message_id=mid or None)
 
 
 async def store_project_message_cursor(
@@ -73,16 +64,17 @@ async def store_project_message_cursor(
     *,
     message_id: str | None = None,
 ) -> None:
-    cursor = ProjectMessageCursor(
-        timestamp=str(timestamp).strip(),
-        message_id=(str(message_id).strip() if message_id else None),
-    )
-    if not cursor.timestamp:
+    ts = str(timestamp).strip()
+    if not ts:
         return
+    mid = (str(message_id).strip() if message_id else "") or None
     await db.execute(
-        "INSERT INTO project_message_cursors (task_id, last_message_at) VALUES (?, ?) "
-        "ON CONFLICT(task_id) DO UPDATE SET last_message_at = excluded.last_message_at",
-        (task_id, cursor.encoded()),
+        "INSERT INTO project_message_cursors (task_id, last_message_at, last_message_id) "
+        "VALUES (?, ?, ?) "
+        "ON CONFLICT(task_id) DO UPDATE SET "
+        "last_message_at = excluded.last_message_at, "
+        "last_message_id = excluded.last_message_id",
+        (task_id, ts, mid),
     )
 
 

@@ -305,7 +305,6 @@
       "descriptionPlaceholder": "Extra details for this event",
       "allDayHint": "All-day events do not need start and end times."
     },
-
     "template": {
       "title": "Choose a task template",
       "all": "All",
@@ -500,6 +499,16 @@
         "name": "Work shift roster",
         "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
         "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
+      },
+      "web-intel-pricing-watch": {
+        "name": "Pricing watch intel",
+        "description": "Periodically search major LLM/cloud API pricing and plan changes into trackable intel events",
+        "promptTemplate": "From search results, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
+      },
+      "web-intel-geopolitics-hotspots": {
+        "name": "Geopolitics hotspot scan",
+        "description": "Periodically search East Asia and related security hotspots into intel events",
+        "promptTemplate": "From search results, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
       }
     }
   },
@@ -1087,19 +1096,27 @@
     "analyzingTitlePaused": "AI analyzing: {task} ({batch}); new batches paused",
     "aiUnavailable": "AI unavailable",
     "aiUnavailableTitle": "Collector running, but AI engine is unreachable",
+    "aiUnavailableTitleCollectorDown": "Collector stopped, and AI engine is unreachable",
     "analysisPaused": "Analysis paused",
     "analysisPausedTitle": "Collector running · AI analysis paused",
+    "analysisPausedTitleCollectorDown": "AI analysis paused · collector stopped",
+    "collectorStoppedShort": "Collector stopped",
+    "collectorStoppedAnalysisActive": "Collector stopped · AI analysis can still run",
     "systemOk": "System OK",
     "systemOkTitle": "Collector running · AI engine healthy",
     "busy": "Working…",
     "clickResume": "Click to resume analysis",
     "clickPause": "Click to pause analysis",
+    "controlsUnavailable": "Controls temporarily unavailable",
     "analysisControl": "Analysis controls",
     "analysisControlMenu": "Analysis control menu",
     "emergencyAbort": "Emergency abort",
     "aborting": "Aborting…",
     "pillTitle": "{title} ({pauseHint}; hover to expand for emergency abort)",
+    "pillTitleBusy": "{title} ({pauseHint})",
+    "pillTitleDisabled": "{title}",
     "pillAria": "{label}. {pauseHint}",
+    "pillAriaDisabled": "{label}",
     "abortDialogTitle": "Emergency abort analysis",
     "abortDialogBody": "Abort all analysis now? This cannot be undone."
   },
@@ -1129,7 +1146,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 9 / SemVer 0.1.0-beta.10 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 10 / SemVer 0.1.0-beta.11 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

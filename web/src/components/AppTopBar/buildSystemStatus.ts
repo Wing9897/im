@@ -14,9 +14,14 @@ interface SystemStatusView {
   pulse: boolean;
 }
 
+const COLLECTOR_TRANSITIONS = new Set<CollectorStatus>(["starting", "stopping", "restarting"]);
+
 /**
  * Collapses collector + AI + analysis into one top-bar status pill.
- * Avoids redundant pairs when the collector is down.
+ *
+ * The pill click toggles analysis pause (not collector restart). Prefer
+ * analysis-facing labels when they match the control action; surface
+ * collector-down as secondary context so copy is not misleading.
  */
 export function buildSystemStatus(input: {
   collectorStatus: CollectorStatus;
@@ -27,6 +32,7 @@ export function buildSystemStatus(input: {
   const { collectorStatus, aiEngineStatus, analysisPaused, activeAnalysis } = input;
   const t = (key: string, opts?: Record<string, string>) =>
     String(i18n.t(`topBar.${key}`, opts));
+  const collectorRunning = collectorStatus === "running";
 
   if (activeAnalysis) {
     const taskLabel = activeAnalysis.taskName || t("unnamedTask");
@@ -41,11 +47,12 @@ export function buildSystemStatus(input: {
     };
   }
 
-  if (collectorStatus !== "running") {
+  // Controls are disabled on collector error — surface it first.
+  if (collectorStatus === "error") {
     return {
-      color: statusColorsByCollectorState[collectorStatus],
-      label: statusShortLabelsByCollectorState()[collectorStatus],
-      title: statusLabelsByCollectorState()[collectorStatus],
+      color: statusColorsByCollectorState.error,
+      label: statusShortLabelsByCollectorState().error,
+      title: statusLabelsByCollectorState().error,
       pulse: false,
     };
   }
@@ -54,16 +61,39 @@ export function buildSystemStatus(input: {
     return {
       color: "var(--error)",
       label: t("aiUnavailable"),
-      title: t("aiUnavailableTitle"),
+      title: collectorRunning ? t("aiUnavailableTitle") : t("aiUnavailableTitleCollectorDown"),
       pulse: false,
     };
   }
 
+  // Brief collector transitions — avoid labeling them as a stable "stopped".
+  if (COLLECTOR_TRANSITIONS.has(collectorStatus)) {
+    return {
+      color: statusColorsByCollectorState[collectorStatus],
+      label: statusShortLabelsByCollectorState()[collectorStatus],
+      title: statusLabelsByCollectorState()[collectorStatus],
+      pulse: false,
+    };
+  }
+
+  // Analysis pause is what the pill click toggles — keep it primary even when
+  // the collector is stopped (web_intel / project ticks do not need the collector).
   if (analysisPaused) {
     return {
       color: "var(--warning)",
       label: t("analysisPaused"),
-      title: t("analysisPausedTitle"),
+      title: collectorRunning
+        ? t("analysisPausedTitle")
+        : t("analysisPausedTitleCollectorDown"),
+      pulse: false,
+    };
+  }
+
+  if (!collectorRunning) {
+    return {
+      color: statusColorsByCollectorState.stopped,
+      label: t("collectorStoppedShort"),
+      title: t("collectorStoppedAnalysisActive"),
       pulse: false,
     };
   }

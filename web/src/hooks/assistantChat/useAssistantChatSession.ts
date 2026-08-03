@@ -32,7 +32,7 @@ function loadActiveChat(): ActiveChatSnapshot {
   return {
     activeSessionId,
     messages: session.messages,
-    sessionId: session.sessionId,
+    sessionId: session.sessionId ?? undefined,
   };
 }
 

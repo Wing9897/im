@@ -550,5 +550,53 @@
         "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子循环或单次事件就更新，对不上才新建；2) 固定轮更用 recurring 子任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
       }
     }
+  },
+  {
+    "id": "web-intel-pricing-watch",
+    "analysisMode": "web_intel",
+    "defaultAnalysisTimeRange": "all",
+    "badge": "💹",
+    "webSearchQuery": "OpenAI Gemini Anthropic API pricing changes",
+    "i18n": {
+      "zh-Hant": {
+        "name": "定價監管情報",
+        "description": "定期搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
+        "promptTemplate": "從搜尋結果抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
+      },
+      "en": {
+        "name": "Pricing watch intel",
+        "description": "Periodically search major LLM/cloud API pricing and plan changes into trackable intel events",
+        "promptTemplate": "From search results, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
+      },
+      "zh-Hans": {
+        "name": "定价监管情报",
+        "description": "定期搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
+        "promptTemplate": "从搜索结果抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
+      }
+    }
+  },
+  {
+    "id": "web-intel-geopolitics-hotspots",
+    "analysisMode": "web_intel",
+    "defaultAnalysisTimeRange": "all",
+    "badge": "🌐",
+    "webSearchQuery": "East Asia geopolitics security hotspot latest",
+    "i18n": {
+      "zh-Hant": {
+        "name": "地緣熱點掃描",
+        "description": "定期搜尋東亞等地緣／安全熱點動態動向，抽成情報事件",
+        "promptTemplate": "從搜尋結果抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
+      },
+      "en": {
+        "name": "Geopolitics hotspot scan",
+        "description": "Periodically search East Asia and related security hotspots into intel events",
+        "promptTemplate": "From search results, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
+      },
+      "zh-Hans": {
+        "name": "地缘热点扫描",
+        "description": "定期搜索东亚等地缘／安全热点动态，抽成情报事件",
+        "promptTemplate": "从搜索结果抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
+      }
+    }
   }
 ]

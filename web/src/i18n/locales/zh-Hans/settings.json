@@ -65,7 +65,17 @@
     "lanAccessHelp": "将本机服务绑定到所有网卡（0.0.0.0），以便局域网其他设备以远程客户端连接。默认仅本机环回（127.0.0.1）。更改后会重启应用。若经 port-forward 暴露到公网，须在前面加 Caddy/Nginx 等 TLS 反代——应用本身不处理 HTTPS。",
     "lanAccessEnabled": "已开启局域网访问（即将重启）",
     "lanAccessDisabled": "已关闭局域网访问（即将重启）",
-    "lanAccessRestarting": "正在重启以应用绑定地址…"
+    "lanAccessRestarting": "正在重启以应用绑定地址…",
+    "debug": {
+      "sectionTitle": "调试与诊断",
+      "rulesVersionLabel": "分析规则版本标记",
+      "rulesVersionPlaceholder": "v2",
+      "rulesVersionHelp": "写入消息批次提示（关键事件／排行榜系统提示）的版本字符串（例如 v2），以便对照批次提示词修订。不会切换证据风格、调度或分析规则。留空表示不附加标记。网络情报／项目／循环不使用此标记。",
+      "traceVerboseLabel": "服务器分析 Trace",
+      "traceVerboseHelp": "在服务器日志写入较详细的分析追踪（不是设置→系统日志页）。",
+      "saveLabel": "保存调试设置",
+      "saved": "调试设置已保存"
+    }
   },
   "theme": {
     "bgTooLarge": "图片大小不可超过 2MB",
@@ -326,12 +336,7 @@
       "maxCharsLabel": "单批分析最大字符数",
       "maxCharsHelp": "单批原始内容字符上限；超出提早截断。",
       "maxTokensLabel": "全局输入 Token 上限",
-      "maxTokensHelp": "全站共用的输入 token 上限；过长易失败时可调低。",
-      "debugSectionTitle": "调试",
-      "rulesVersionLabel": "全局分析规则版本",
-      "rulesVersionHelp": "仅提示词版本标记，不切换规则。",
-      "traceVerboseLabel": "分析 Trace 详细日志",
-      "traceVerboseHelp": "记录完整 request/response。"
+      "maxTokensHelp": "全站共用的输入 token 上限；过长易失败时可调低。"
     }
   },
   "apiDocs": {

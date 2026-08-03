@@ -31,9 +31,7 @@ def active_timeline_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _require_source(source: str) -> DismissSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineDismissalValidationError(
-            "source must be 'analysis', 'user', 'recurring', or 'item'"
-        )
+        raise TimelineDismissalValidationError("source must be 'analysis', 'user', 'recurring', or 'item'")
     return value  # type: ignore[return-value]
 
 

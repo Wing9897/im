@@ -1,16 +1,16 @@
 """Unit tests for unified trigger / calendar schedule helpers."""
 
+import pytest
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-import pytest
 
 from server.domain.schedule import (
-    legacy_to_trigger_rrule,
     may_calendar_expand,
     may_register_trigger,
+    preset_to_trigger_rrule,
     resolve_trigger_rrule,
     trigger_from_rrule,
-    trigger_rrule_to_legacy,
+    trigger_rrule_to_preset,
 )
 
 
@@ -25,8 +25,8 @@ from server.domain.schedule import (
     ],
 )
 def test_legacy_preset_round_trip(preset, value, rrule):
-    assert legacy_to_trigger_rrule(preset, value) == rrule
-    assert trigger_rrule_to_legacy(rrule) == (preset, value)
+    assert preset_to_trigger_rrule(preset, value) == rrule
+    assert trigger_rrule_to_preset(rrule) == (preset, value)
 
 
 def test_purpose_gates():
@@ -41,7 +41,7 @@ def test_purpose_gates():
 
 
 def test_resolve_recurring_shell_is_null():
-    assert resolve_trigger_rrule(analysis_mode="recurring", schedule_type="seconds_10") is None
+    assert resolve_trigger_rrule(analysis_mode="recurring", schedule_rrule="FREQ=SECONDLY;INTERVAL=10") is None
 
 
 def test_trigger_from_rrule_builds_apscheduler_triggers():

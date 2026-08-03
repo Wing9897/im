@@ -86,4 +86,34 @@ describe("AnalysisStatusControl", () => {
     expect(container.querySelector("[data-testid='pause-resume-button']")).toBeNull();
     expect(container.querySelector("[data-testid='emergency-abort-button']")).toBeNull();
   });
+
+  it("composes tooltip that matches analysis resume + emergency abort", () => {
+    render({
+      label: "分析已暫停",
+      title: "AI 分析已暫停 · 收集器已停止",
+      analysisPaused: true,
+    });
+    const pill = container.querySelector("[data-testid='system-status-pill']") as HTMLButtonElement;
+    const root = pill.closest("[data-testid='analysis-status-control']");
+    const titled = root?.querySelector("[title]") as HTMLElement | null;
+    expect(titled?.getAttribute("title")).toBe(
+      "AI 分析已暫停 · 收集器已停止（點擊繼續分析；懸停展開可緊急中止）",
+    );
+    expect(pill.getAttribute("aria-label")).toBe("分析已暫停。點擊繼續分析");
+  });
+
+  it("omits click/abort hints when controls are disabled", () => {
+    render({
+      label: "啟動失敗",
+      title: "收集器啟動失敗",
+      analysisPaused: true,
+      disabled: true,
+    });
+    const pill = container.querySelector("[data-testid='system-status-pill']") as HTMLButtonElement;
+    const root = pill.closest("[data-testid='analysis-status-control']");
+    const titled = root?.querySelector("[title]") as HTMLElement | null;
+    expect(titled?.getAttribute("title")).toBe("收集器啟動失敗");
+    expect(pill.getAttribute("aria-label")).toBe("啟動失敗");
+    expect(pill.disabled).toBe(true);
+  });
 });

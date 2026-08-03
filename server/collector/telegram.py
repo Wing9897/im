@@ -51,6 +51,8 @@ class TelegramAdapter(BasePlatformAdapter):
         self._startup_task: asyncio.Task[None] | None = None
         self._message_handler: Callable[[events.NewMessage.Event], Awaitable[None]] | None = None
         self._message_event_builder: events.NewMessage | None = None
+        #: One bounded history backfill per connect (reset on each ``connect``).
+        self._history_backfill_done = False
 
     def _platform_name(self) -> str:
         return "telegram"
@@ -84,6 +86,7 @@ class TelegramAdapter(BasePlatformAdapter):
                 self._state.last_error = str(exc)
             raise
         self._mark_connected()
+        self._history_backfill_done = False
         logger.info("Telegram adapter connected for account %s", self._account_id)
         self._startup_task = asyncio.create_task(self._finish_startup())
 
@@ -153,6 +156,11 @@ class TelegramAdapter(BasePlatformAdapter):
             if self._client is not None and await self._client.is_user_authorized():
                 await self._run_with_busy_retry("dialog sync", self.sync_dialog_channels)
             await self._run_with_busy_retry("handler registration", self._register_message_handlers)
+            if not self._history_backfill_done:
+                try:
+                    await telegram_ingest.backfill_recent_messages(self)
+                finally:
+                    self._history_backfill_done = True
             self._persist_string_session()
         except asyncio.CancelledError:
             raise

@@ -73,7 +73,6 @@ class RateLimitMiddleware:
     def _limit_for(path: str) -> int:
         if path.endswith("/media") or path in {
             "/api/v1/messages/batch",
-            "/api/v1/tasks/chat-assistant",
             "/api/v1/system/llm/test",
         }:
             return 120

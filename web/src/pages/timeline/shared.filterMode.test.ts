@@ -58,4 +58,17 @@ describe("resolveTimelineFilterPlan", () => {
       resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks).analysisTaskIds,
     ).not.toEqual(expect.arrayContaining(["lb-1"]));
   });
+
+  it("treats explicit web_intel selection as an analysis_events fetch", () => {
+    expect(
+      resolveTimelineFilterPlan({ taskIds: ["web-1"], worksetIds: [] }, tasks),
+    ).toMatchObject({
+      fetchAnalysis: true,
+      fetchCalendar: false,
+      fetchItems: false,
+      analysisTaskIds: ["web-1"],
+      recurringTaskIds: [],
+      selectedRealTaskIds: ["web-1"],
+    });
+  });
 });

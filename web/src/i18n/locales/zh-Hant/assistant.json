@@ -104,7 +104,7 @@
     "taskConfigNotObject": "AI 回應格式錯誤：taskConfig 必須是物件",
     "nameNotString": "AI 回應格式錯誤：name 必須是非空字串",
     "promptNotString": "AI 回應格式錯誤：promptTemplate 必須是非空字串",
-    "scheduleTypeInvalid": "AI 回應格式錯誤：scheduleType 必須是以下值之一: {values}",
+    "scheduleRruleNotString": "AI 回應格式錯誤：scheduleRrule 必須是字串",
     "analysisModeInvalid": "AI 回應格式錯誤：analysisMode 必須是以下值之一: {values}",
     "channelIdsNotArray": "AI 回應格式錯誤：channelIds 必須是陣列",
     "includeInTimelineNotBoolean": "AI 回應格式錯誤：includeInTimeline 必須是布林值"

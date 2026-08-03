@@ -106,8 +106,7 @@ describe("ProjectDetailPage", () => {
         name: "Launch",
         analysisMode: "project",
         description: "Ship the product",
-        scheduleType: "hourly",
-        scheduleValue: null,
+        scheduleRrule: "FREQ=HOURLY",
       }),
       makeAnalysisTask({
         id: "child-1",

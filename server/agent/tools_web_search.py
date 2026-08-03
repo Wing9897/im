@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Awaitable, Callable
 
 from server.db.database import Database
-from server.web_search import search_web
+from server.web_search.execution import ASSISTANT_TOOL_DEFAULT_COUNT, WebSearchExecutionService
 from server.web_search.providers import MAX_COUNT
 
 ToolHandler = Callable[[Database, dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]]
@@ -17,28 +17,25 @@ async def _tool_web_search(
     context: dict[str, Any],
 ) -> dict[str, Any]:
     provider = str(context.get("web_search_provider") or "duckduckgo")
-    if not context.get("web_search_enabled", True):
-        return {
-            "error": "web search is disabled",
-            "items": [],
-            "provider": provider,
-            "count": 0,
-        }
+    enabled = bool(context.get("web_search_enabled", True))
     query = args.get("query") or args.get("q")
-    if query is None or not str(query).strip():
-        return {"error": "query is required", "items": [], "count": 0, "provider": provider}
-    # ``search_web`` clamps count; omit / invalid → provider default.
     raw_count = args.get("count")
     count: int | None
     try:
         count = int(raw_count) if raw_count not in (None, "") else None
     except (TypeError, ValueError):
         count = None
-    return await search_web(
-        str(query).strip(),
+    # Default count stays a param (assistant 5 vs web_intel 8) — not a forked copy.
+    if count is None:
+        count = ASSISTANT_TOOL_DEFAULT_COUNT
+    service = WebSearchExecutionService(
+        brave_api_key=str(context.get("brave_search_api_key") or ""),
+    )
+    return await service.tool_search(
+        str(query).strip() if query is not None else "",
         provider=provider,
-        api_key=str(context.get("brave_search_api_key") or ""),
         count=count,
+        enabled=enabled,
     )
 
 

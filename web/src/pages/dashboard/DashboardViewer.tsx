@@ -9,38 +9,23 @@ import { DashboardSystemTasksSection } from "./DashboardSystemTasksSection";
 import { AppPageShell, Button } from "../../components/ui";
 import { useListKeyboardNavigation } from "../../hooks/useListKeyboardNavigation";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
-import { usePersistedEnum, usePersistedState } from "../../hooks/usePersistedState";
+import { usePersistedEnum } from "../../hooks/usePersistedState";
 import type { AnalysisTask } from "../../types/tasks";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useTranslation } from "react-i18next";
 import { getTasksPageCopy } from "../../domain/tasks/taskPageCopy";
 import {
-  SHOW_SYSTEM_TASKS_STORAGE_KEY,
-  SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
-  TASKS_GROUPING_VIEW_STORAGE_KEY,
   TASKS_MODE_FILTER_STORAGE_KEY,
   getSystemTaskCatalog,
-  isTasksGroupingView,
   isTasksModeFilter,
-  type TasksGroupingView,
   type TasksModeFilter,
 } from "../../domain/tasks/systemTaskCatalog";
 import { useDashboardViewer } from "./useDashboardViewer";
+import { useDashboardViewerShell } from "./useDashboardViewerShell";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import { createWorkset, deleteWorkset, renameWorkset } from "../../api/worksets";
-import { useToast } from "../../context/ToastContext";
-import { toError } from "../../utils/errors";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useMemo, useState, useCallback } from "react";
 import { buildChannelNameById, useDetailSelection } from "../../components/detail";
 import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
-import { listItems } from "../../api/items";
-import { subscribeResourceModified } from "../../domain/sse/resourceModified";
-import {
-  DashboardViewerDialogs,
-  type DashboardWorksetNameDialogState,
-} from "./DashboardViewerDialogs";
+import { DashboardViewerDialogs } from "./DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
 import { WorksetDetailDialog } from "./WorksetDetailDialog";
 
@@ -48,7 +33,6 @@ export function DashboardViewer() {
   const { t } = useTranslation();
   const copy = getTasksPageCopy(t);
   const systemCatalog = getSystemTaskCatalog(t);
-  const { worksetId: routeWorksetId } = useParams<{ worksetId?: string }>();
   const {
     tasks,
     filteredTasks,
@@ -77,76 +61,9 @@ export function DashboardViewer() {
     "all",
     isTasksModeFilter,
   );
-  const [groupingView, setGroupingView] = usePersistedEnum<TasksGroupingView>(
-    TASKS_GROUPING_VIEW_STORAGE_KEY,
-    "by_task",
-    isTasksGroupingView,
-  );
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [showSystemTasks, setShowSystemTasks] = usePersistedState(
-    SHOW_SYSTEM_TASKS_STORAGE_KEY,
-    false,
-  );
-  const [showSystemWorksets, setShowSystemWorksets] = usePersistedState(
-    SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
-    true,
-  );
-  const { worksets, refreshWorksets } = useTaskCatalog();
-  const { showToast } = useToast();
-  const [worksetNameDialog, setWorksetNameDialog] = useState<DashboardWorksetNameDialogState | null>(
-    null,
-  );
-  const [worksetNameBusy, setWorksetNameBusy] = useState(false);
-  const [worksetDeleteTarget, setWorksetDeleteTarget] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
-  const [worksetDeleting, setWorksetDeleting] = useState(false);
-  const [detailWorksetId, setDetailWorksetId] = useState<string | null>(null);
-  const [itemCountByWorkset, setItemCountByWorkset] = useState<Map<string, number>>(
-    () => new Map(),
-  );
   useSlashFocusSearch(!loading);
 
-  // Soft-load item counts for workset cards; refresh on item SSE (no stamp bump).
-  useEffect(() => {
-    if (groupingView !== "by_workset") return;
-    let cancelled = false;
-    const reloadCounts = () => {
-      void listItems()
-        .then((rows) => {
-          if (cancelled) return;
-          const counts = new Map<string, number>();
-          for (const row of rows) {
-            if (row.status === "archived") continue;
-            const wid = row.worksetId || SYSTEM_WORKSET_ID;
-            counts.set(wid, (counts.get(wid) ?? 0) + 1);
-          }
-          setItemCountByWorkset(counts);
-        })
-        .catch(() => {
-          if (!cancelled) setItemCountByWorkset(new Map());
-        });
-    };
-    reloadCounts();
-    const unsubscribe = subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
-        return;
-      }
-      reloadCounts();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [groupingView, worksets]);
-
-  // Deep link: /tasks/worksets/:worksetId
-  useEffect(() => {
-    if (!routeWorksetId) return;
-    setGroupingView("by_workset");
-    setDetailWorksetId(routeWorksetId);
-  }, [routeWorksetId, setGroupingView]);
   const { selected: detailTask, select: selectTask, clear: clearTask } =
     useDetailSelection<AnalysisTask>();
   const visibleTasks = useMemo(
@@ -157,108 +74,7 @@ export function DashboardViewer() {
     [filteredTasks, modeFilter],
   );
 
-  const worksetGroups = useMemo(() => {
-    if (groupingView !== "by_workset") return [];
-    const byId = new Map(worksets.map((ws) => [ws.id, ws]));
-    const groups = new Map<
-      string,
-      { key: string; title: string; isSystem: boolean; tasks: AnalysisTask[] }
-    >();
-    for (const ws of worksets) {
-      const title =
-        ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name;
-      groups.set(ws.id, {
-        key: ws.id,
-        title,
-        isSystem: Boolean(ws.isSystem) || ws.id === SYSTEM_WORKSET_ID,
-        tasks: [],
-      });
-    }
-    for (const task of visibleTasks) {
-      const key = task.worksetId ?? "__unassigned__";
-      if (key === "__unassigned__") {
-        const group = groups.get("__unassigned__") ?? {
-          key: "__unassigned__",
-          title: t("workset.unassignedGroup"),
-          isSystem: false,
-          tasks: [],
-        };
-        group.tasks.push(task);
-        groups.set("__unassigned__", group);
-        continue;
-      }
-      const existing = groups.get(key);
-      if (existing) {
-        existing.tasks.push(task);
-      } else {
-        const ws = byId.get(key);
-        groups.set(key, {
-          key,
-          title: ws?.name ?? t("workset.unknownGroup"),
-          isSystem: Boolean(ws?.isSystem),
-          tasks: [task],
-        });
-      }
-    }
-    const ordered: Array<{
-      key: string;
-      title: string;
-      isSystem: boolean;
-      tasks: AnalysisTask[];
-    }> = [];
-    for (const ws of worksets) {
-      const group = groups.get(ws.id);
-      if (!group) continue;
-      if (!showSystemWorksets && group.isSystem) continue;
-      ordered.push(group);
-    }
-    const unassigned = groups.get("__unassigned__");
-    if (unassigned) ordered.push(unassigned);
-    return ordered;
-  }, [groupingView, visibleTasks, worksets, t, showSystemWorksets]);
-
-  const openCreateWorkset = useCallback(() => {
-    setWorksetNameDialog({ mode: "create" });
-  }, []);
-
-  const handleWorksetNameSubmit = useCallback(
-    async (cleaned: string) => {
-      if (!worksetNameDialog) return;
-      setWorksetNameBusy(true);
-      try {
-        if (worksetNameDialog.mode === "create") {
-          await createWorkset(cleaned);
-          await refreshWorksets();
-          showToast(t("workset.createdToast", { name: cleaned }), "success");
-        } else {
-          await renameWorkset(worksetNameDialog.id, cleaned);
-          await refreshWorksets();
-          showToast(t("workset.renamedToast", { name: cleaned }), "success");
-        }
-        setWorksetNameDialog(null);
-      } catch (error) {
-        showToast(toError(error).message, "error");
-      } finally {
-        setWorksetNameBusy(false);
-      }
-    },
-    [refreshWorksets, showToast, t, worksetNameDialog],
-  );
-
-  const confirmDeleteWorkset = useCallback(async () => {
-    if (!worksetDeleteTarget) return;
-    setWorksetDeleting(true);
-    try {
-      await deleteWorkset(worksetDeleteTarget.id);
-      await refreshWorksets();
-      showToast(t("workset.deletedToast", { name: worksetDeleteTarget.name }), "success");
-      setWorksetDeleteTarget(null);
-    } catch (error) {
-      showToast(toError(error).message, "error");
-    } finally {
-      setWorksetDeleting(false);
-    }
-  }, [refreshWorksets, showToast, t, worksetDeleteTarget]);
+  const shell = useDashboardViewerShell({ visibleTasks, navigate });
 
   const openTask = useCallback(
     (task: AnalysisTask) => {
@@ -272,42 +88,6 @@ export function DashboardViewer() {
     [handleOpenProject, selectTask],
   );
 
-  const openWorksetDetail = useCallback(
-    (id: string) => {
-      setDetailWorksetId(id);
-      navigate(`/tasks/worksets/${encodeURIComponent(id)}`, { replace: false });
-    },
-    [navigate],
-  );
-
-  const closeWorksetDetail = useCallback(() => {
-    setDetailWorksetId(null);
-    if (routeWorksetId) {
-      navigate("/tasks", { replace: true });
-    }
-  }, [navigate, routeWorksetId]);
-
-  const detailWorkset = useMemo(() => {
-    if (!detailWorksetId) return null;
-    const group = worksetGroups.find((g) => g.key === detailWorksetId);
-    if (group) {
-      return {
-        id: group.key,
-        title: group.title,
-        isSystem: group.isSystem,
-        tasks: group.tasks,
-      };
-    }
-    const ws = worksets.find((w) => w.id === detailWorksetId);
-    if (!ws) return null;
-    return {
-      id: ws.id,
-      title: ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name,
-      isSystem: Boolean(ws.isSystem) || ws.id === SYSTEM_WORKSET_ID,
-      tasks: visibleTasks.filter((task) => task.worksetId === ws.id),
-    };
-  }, [detailWorksetId, worksetGroups, worksets, visibleTasks, t]);
-
   useListKeyboardNavigation({
     items: visibleTasks,
     selectedId: focusedId ?? detailTask?.id ?? null,
@@ -319,7 +99,7 @@ export function DashboardViewer() {
   });
 
   const systemTasksSection =
-    groupingView === "by_task" && showSystemTasks && !loading && !error ? (
+    shell.groupingView === "by_task" && shell.showSystemTasks && !loading && !error ? (
       <DashboardSystemTasksSection
         catalog={systemCatalog}
         title={copy.systemSectionTitle}
@@ -327,30 +107,30 @@ export function DashboardViewer() {
       />
     ) : null;
 
-  const isTaskView = groupingView === "by_task";
-  const isWorksetView = groupingView === "by_workset";
+  const isTaskView = shell.groupingView === "by_task";
+  const isWorksetView = shell.groupingView === "by_workset";
 
   return (
     <AppPageShell>
       {!loading && !error ? (
         <DashboardViewerToolbar
           t={t}
-          groupingView={groupingView}
+          groupingView={shell.groupingView}
           modeFilter={modeFilter}
           taskCount={tasks.length}
           searchQuery={searchQuery}
-          showSystemTasks={showSystemTasks}
-          showSystemWorksets={showSystemWorksets}
+          showSystemTasks={shell.showSystemTasks}
+          showSystemWorksets={shell.showSystemWorksets}
           createTaskLabel={copy.createLabel}
           showSystemTasksLabel={copy.showSystemTasks}
           hideSystemTasksLabel={copy.hideSystemTasks}
-          onGroupingViewChange={setGroupingView}
+          onGroupingViewChange={shell.setGroupingView}
           onModeFilterChange={setModeFilter}
           onSearchQueryChange={setSearchQuery}
-          onToggleSystemTasks={() => setShowSystemTasks((prev) => !prev)}
-          onToggleSystemWorksets={() => setShowSystemWorksets((prev) => !prev)}
+          onToggleSystemTasks={() => shell.setShowSystemTasks((prev) => !prev)}
+          onToggleSystemWorksets={() => shell.setShowSystemWorksets((prev) => !prev)}
           onCreateTask={() => navigate("/tasks/new")}
-          onCreateWorkset={openCreateWorkset}
+          onCreateWorkset={shell.openCreateWorkset}
         />
       ) : null}
 
@@ -390,9 +170,9 @@ export function DashboardViewer() {
 
       {!loading && !error && isWorksetView ? (
         <DashboardByWorksetList
-          groups={worksetGroups}
+          groups={shell.worksetGroups}
           t={t}
-          itemCountByWorkset={itemCountByWorkset}
+          itemCountByWorkset={shell.itemCountByWorkset}
           statsMap={statsMap}
           defaultStats={defaultStats}
           focusedId={focusedId}
@@ -401,12 +181,12 @@ export function DashboardViewer() {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onOpenTask={openTask}
-          onOpenWorkset={openWorksetDetail}
+          onOpenWorkset={shell.openWorksetDetail}
           onRenameWorkset={(id, name) =>
-            setWorksetNameDialog({ mode: "rename", id, name })
+            shell.setWorksetNameDialog({ mode: "rename", id, name })
           }
-          onDeleteWorkset={(id, name) => setWorksetDeleteTarget({ id, name })}
-          onCreateWorkset={openCreateWorkset}
+          onDeleteWorkset={(id, name) => shell.setWorksetDeleteTarget({ id, name })}
+          onCreateWorkset={shell.openCreateWorkset}
         />
       ) : null}
 
@@ -433,22 +213,22 @@ export function DashboardViewer() {
         t={t}
         taskDeleteTarget={deleteTarget}
         taskDeleting={deleting}
-        worksetNameDialog={worksetNameDialog}
-        worksetNameBusy={worksetNameBusy}
-        worksetDeleteTarget={worksetDeleteTarget}
-        worksetDeleting={worksetDeleting}
+        worksetNameDialog={shell.worksetNameDialog}
+        worksetNameBusy={shell.worksetNameBusy}
+        worksetDeleteTarget={shell.worksetDeleteTarget}
+        worksetDeleting={shell.worksetDeleting}
         detailTask={detailTask}
         detailStats={detailTask ? (statsMap.get(detailTask.id) ?? defaultStats) : defaultStats}
         channelNameById={channelNameById}
         onConfirmTaskDelete={confirmDelete}
         onCancelTaskDelete={() => setDeleteTarget(null)}
         onCloseWorksetNameDialog={() => {
-          if (!worksetNameBusy) setWorksetNameDialog(null);
+          if (!shell.worksetNameBusy) shell.setWorksetNameDialog(null);
         }}
-        onSubmitWorksetName={handleWorksetNameSubmit}
-        onConfirmWorksetDelete={confirmDeleteWorkset}
+        onSubmitWorksetName={shell.handleWorksetNameSubmit}
+        onConfirmWorksetDelete={shell.confirmDeleteWorkset}
         onCancelWorksetDelete={() => {
-          if (!worksetDeleting) setWorksetDeleteTarget(null);
+          if (!shell.worksetDeleting) shell.setWorksetDeleteTarget(null);
         }}
         onCloseTaskDetail={clearTask}
         onEditDetailTask={() => {
@@ -460,32 +240,32 @@ export function DashboardViewer() {
         }}
       />
 
-      {detailWorkset ? (
+      {shell.detailWorkset ? (
         <WorksetDetailDialog
-          workset={detailWorkset}
-          onClose={closeWorksetDetail}
+          workset={shell.detailWorkset}
+          onClose={shell.closeWorksetDetail}
           onOpenTask={(task) => {
-            closeWorksetDetail();
+            shell.closeWorksetDetail();
             openTask(task);
           }}
           onRename={
-            detailWorkset.isSystem
+            shell.detailWorkset.isSystem
               ? undefined
               : () => {
-                  setWorksetNameDialog({
+                  shell.setWorksetNameDialog({
                     mode: "rename",
-                    id: detailWorkset.id,
-                    name: detailWorkset.title,
+                    id: shell.detailWorkset!.id,
+                    name: shell.detailWorkset!.title,
                   });
                 }
           }
           onDelete={
-            detailWorkset.isSystem
+            shell.detailWorkset.isSystem
               ? undefined
               : () => {
-                  setWorksetDeleteTarget({
-                    id: detailWorkset.id,
-                    name: detailWorkset.title,
+                  shell.setWorksetDeleteTarget({
+                    id: shell.detailWorkset!.id,
+                    name: shell.detailWorkset!.title,
                   });
                 }
           }

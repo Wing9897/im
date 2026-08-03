@@ -1,7 +1,7 @@
-import type { AgentToolCallSummary } from "../../api/agent";
 import {
   fetchAssistantSessions,
   putAssistantSessions,
+  type AssistantSessionMessagePayload,
   type AssistantSessionPayload,
 } from "../../api/uiPrefs";
 import i18n from "../../i18n";
@@ -14,21 +14,10 @@ export const ASSISTANT_SESSIONS_CHANGED_EVENT = "im:assistant-sessions-changed";
 const MAX_SESSIONS = 50;
 const TITLE_MAX_LEN = 40;
 
-export interface AssistantSessionMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  toolCalls?: AgentToolCallSummary[];
-}
-
-export interface AssistantSession {
-  id: string;
-  title: string;
-  updatedAt: number;
-  messages: AssistantSessionMessage[];
-  /** Server Agent session id (conversation clock); optional until first reply. */
-  sessionId?: string;
-}
+/** OpenAPI ``AssistantSessionMessageSchema`` (wire SoT). */
+export type AssistantSessionMessage = AssistantSessionMessagePayload;
+/** OpenAPI ``AssistantSessionSchema`` (wire SoT); cache may omit null sessionId. */
+export type AssistantSession = AssistantSessionPayload;
 
 type SessionsCache = {
   sessions: AssistantSession[];

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { ensureZhHantLocale, wrapWithI18n } from "../test/i18nHarness";
 
 const collectorState = vi.hoisted(() => ({
   collectorStatus: "stopped" as "stopped" | "running" | "error",
@@ -48,7 +49,8 @@ describe("App shell status integration", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await ensureZhHantLocale();
     collectorState.collectorStatus = "stopped";
     collectorState.aiEngineStatus = "available";
     analysisState.analysisPaused = true;
@@ -70,11 +72,13 @@ describe("App shell status integration", () => {
   it("exposes pause/resume on the top-bar status pill without task-page toolbar icons", () => {
     act(() => {
       root = createRoot(container);
-      root.render(createElement(TopBarStatusActions));
+      root.render(wrapWithI18n(createElement(TopBarStatusActions)));
     });
 
     const topBarPill = container.querySelector("[data-testid='system-status-pill']");
-    expect(topBarPill?.textContent).toContain("已停止");
+    // Collector stopped + analysis paused → show analysis (what click toggles), not bare collector stop.
+    expect(topBarPill?.textContent).toContain("分析已暫停");
+    expect(topBarPill?.getAttribute("aria-label")).toContain("點擊繼續分析");
     expect(topBarPill?.tagName).toBe("BUTTON");
     expect(container.querySelector("[data-testid='pause-resume-button']")).toBeNull();
     expect(container.querySelector("[data-testid='analysis-control-toolbar']")).toBeNull();

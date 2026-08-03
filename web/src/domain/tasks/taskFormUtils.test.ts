@@ -383,8 +383,6 @@ describe("scheduleFieldsFromTask", () => {
   it("maps canonical RRULE into FE presets", () => {
     expect(
       scheduleFieldsFromTask({
-        scheduleType: null,
-        scheduleValue: null,
         scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
       }),
     ).toEqual({
@@ -397,8 +395,6 @@ describe("scheduleFieldsFromTask", () => {
   it("preserves unmappable RRULE instead of defaulting overwrite", () => {
     expect(
       scheduleFieldsFromTask({
-        scheduleType: null,
-        scheduleValue: null,
         scheduleRrule: "FREQ=HOURLY;INTERVAL=2",
       }),
     ).toEqual({
@@ -419,8 +415,6 @@ describe("scheduleFieldsFromTask", () => {
       analysisTimeRange: "24h",
       version: 1,
       isActive: true,
-      scheduleType: null,
-      scheduleValue: null,
       scheduleRrule: "FREQ=HOURLY",
       channelIds: [],
       createdAt: "2024-01-01T00:00:00Z",
@@ -463,8 +457,6 @@ describe("buildCurrentTaskPayload", () => {
     expect(payload.name).toBe(sampleFormState.name);
     expect(payload.description).toBe(sampleFormState.description);
     expect(payload.promptTemplate).toBe(sampleFormState.promptTemplate);
-    expect(payload.scheduleType).toBe(sampleFormState.scheduleType);
-    expect(payload.scheduleValue).toBe(sampleFormState.scheduleValue);
     expect(payload.analysisMode).toBe(sampleFormState.analysisMode);
     expect(payload.analysisTimeRange).toBe(sampleFormState.analysisTimeRange);
     expect(payload.channelIds).toEqual(sampleFormState.channelIds);
@@ -478,11 +470,11 @@ describe("buildCurrentTaskPayload", () => {
       "name",
       "promptTemplate",
       "scheduleRrule",
-      "scheduleType",
-      "scheduleValue",
       "webSearchQuery",
     ].sort());
     expect(payload.scheduleRrule).toBe("FREQ=DAILY;BYHOUR=8;BYMINUTE=0");
+    expect(payload).not.toHaveProperty("scheduleType");
+    expect(payload).not.toHaveProperty("scheduleValue");
   });
 
   it("forwards includeInTimeline false for event-mode drafts", () => {
@@ -499,7 +491,7 @@ describe("buildCurrentTaskPayload", () => {
     expect(payload.includeInTimeline).toBe(false);
   });
 
-  it("includes schedule-specific values for weekly and custom_seconds types", () => {
+  it("derives scheduleRrule from weekly and custom_seconds presets", () => {
     const weekly: TaskFormState = {
       ...sampleFormState,
       scheduleType: "weekly",
@@ -516,7 +508,9 @@ describe("buildCurrentTaskPayload", () => {
       channelIds: ["single-ch"],
     };
 
-    expect(buildCurrentTaskPayload(weekly).scheduleValue).toBe("1:12:00");
-    expect(buildCurrentTaskPayload(custom).scheduleValue).toBe("600");
+    expect(buildCurrentTaskPayload(weekly).scheduleRrule).toBe(
+      "FREQ=WEEKLY;BYDAY=MO;BYHOUR=12;BYMINUTE=0",
+    );
+    expect(buildCurrentTaskPayload(custom).scheduleRrule).toBe("FREQ=SECONDLY;INTERVAL=600");
   });
 });

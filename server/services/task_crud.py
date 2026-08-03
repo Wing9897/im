@@ -15,6 +15,7 @@ from server.api.routes.task_helpers import (
     ALLOWED_MODES,
     TaskConfigBody,
     channel_refs_for,
+    require_task_row,
     resolve_workset_id,
     schedule_override_write_fields,
     task_response,
@@ -34,7 +35,6 @@ from server.queries.tasks_queries import (
     fetch_all_task_channel_rows,
     fetch_all_task_rows,
     fetch_task_channel_rows,
-    fetch_task_row,
     insert_analysis_task,
     replace_task_channels,
     set_task_active,
@@ -56,10 +56,8 @@ from server.wire.serializers import serialize_channel_ref, serialize_task
 
 
 async def _require_task_row(db: Database, task_id: str) -> dict[str, Any]:
-    row = await fetch_task_row(db, task_id)
-    if row is None:
-        raise LookupError("Task not found")
-    return row
+    """Service-layer alias: missing task → ``LookupError`` (routes map to 404)."""
+    return await require_task_row(db, task_id, missing=LookupError)
 
 
 @dataclass(frozen=True)
@@ -160,15 +158,9 @@ def _validate_web_intel_fields(*, effective_mode: str, prompt: str, search_query
     if effective_mode != WEB_INTEL_MODE:
         return
     if not prompt.strip():
-        raise TaskWriteError(
-            "web_intel tasks require a non-empty promptTemplate "
-            "(how to turn search hits into events)"
-        )
+        raise TaskWriteError("web_intel tasks require a non-empty promptTemplate (how to turn search hits into events)")
     if not search_query.strip():
-        raise TaskWriteError(
-            "web_intel tasks require a non-empty webSearchQuery "
-            "(keywords used on each schedule tick)"
-        )
+        raise TaskWriteError("web_intel tasks require a non-empty webSearchQuery (keywords used on each schedule tick)")
 
 
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:
@@ -213,8 +205,6 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
         try:
             schedule_rrule = resolve_trigger_rrule(
                 analysis_mode=effective_mode,
-                schedule_type=body.scheduleType,
-                schedule_value=body.scheduleValue,
                 schedule_rrule=body.scheduleRrule,
             )
         except (ScheduleValidationError, ValueError, TypeError) as exc:
@@ -322,8 +312,6 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         try:
             schedule_rrule = resolve_trigger_rrule(
                 analysis_mode=effective_mode,
-                schedule_type=body.scheduleType,
-                schedule_value=body.scheduleValue,
                 schedule_rrule=body.scheduleRrule,
                 existing_rrule=existing.get("schedule_rrule"),
             )

@@ -356,47 +356,6 @@
         }
       }
     },
-    "/api/v1/tasks/chat-assistant": {
-      "post": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Chat Assistant",
-        "operationId": "chat_assistant_api_v1_tasks_chat_assistant_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChatAssistantBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChatAssistantResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/tasks/templates": {
       "get": {
         "tags": [
@@ -4850,9 +4809,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Body"
+                "$ref": "#/components/schemas/BoardPrefsPutBody"
               }
             }
           },
@@ -5157,9 +5114,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "title": "Body"
+                "$ref": "#/components/schemas/AssistantSessionsPutBody"
               }
             }
           }
@@ -5279,9 +5234,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Body"
+                "$ref": "#/components/schemas/TimelineAnnotationsPutBody"
               }
             }
           },
@@ -7121,6 +7074,167 @@
         ],
         "title": "AppLogPageResponse"
       },
+      "AssistantSessionMessageSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "toolCalls": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AssistantToolCallSchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Toolcalls"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "content"
+        ],
+        "title": "AssistantSessionMessageSchema"
+      },
+      "AssistantSessionSchema-Input": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "updatedAt": {
+            "type": "integer",
+            "title": "Updatedat"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantSessionMessageSchema"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "updatedAt",
+          "messages"
+        ],
+        "title": "AssistantSessionSchema"
+      },
+      "AssistantSessionSchema-Output": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "updatedAt": {
+            "type": "integer",
+            "title": "Updatedat"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantSessionMessageSchema"
+            },
+            "type": "array",
+            "title": "Messages"
+          },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessionid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "updatedAt",
+          "messages"
+        ],
+        "title": "AssistantSessionSchema"
+      },
+      "AssistantSessionsPutBody": {
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "title": "Deviceid"
+          },
+          "sessions": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantSessionSchema-Input"
+            },
+            "type": "array",
+            "title": "Sessions"
+          },
+          "activeSessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activesessionid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "deviceId",
+          "sessions"
+        ],
+        "title": "AssistantSessionsPutBody"
+      },
       "AssistantSessionsResponse": {
         "properties": {
           "configured": {
@@ -7130,7 +7244,9 @@
           "sessions": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/AssistantSessionSchema-Output"
+                },
                 "type": "array"
               },
               {
@@ -7156,6 +7272,31 @@
           "configured"
         ],
         "title": "AssistantSessionsResponse"
+      },
+      "AssistantToolCallSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "resultSummary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resultsummary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "AssistantToolCallSchema"
       },
       "AssistantVoiceIoBody": {
         "properties": {
@@ -7217,6 +7358,10 @@
           },
           "spacePttMode": {
             "type": "string",
+            "enum": [
+              "hold",
+              "toggle"
+            ],
             "title": "Spacepttmode",
             "default": "hold"
           },
@@ -7231,10 +7376,84 @@
             "default": "__user__"
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "title": "AssistantVoiceIoSettingsSchema",
         "description": "Assistant STT/TTS IO defaults (incl. calendar create target workset)."
+      },
+      "BoardLayoutSchema": {
+        "properties": {
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "widgets": {
+            "items": {
+              "$ref": "#/components/schemas/BoardWidgetSchema"
+            },
+            "type": "array",
+            "title": "Widgets"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "version",
+          "widgets"
+        ],
+        "title": "BoardLayoutSchema",
+        "description": "Layout blob stored under ``ops_board_layout`` (v14 widgets mosaic)."
+      },
+      "BoardMapViewSchema": {
+        "properties": {
+          "center": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Center"
+          },
+          "zoom": {
+            "type": "number",
+            "title": "Zoom"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "center",
+          "zoom"
+        ],
+        "title": "BoardMapViewSchema"
+      },
+      "BoardPrefsPutBody": {
+        "properties": {
+          "layout": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoardLayoutSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "widgetState": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoardWidgetStateSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "BoardPrefsPutBody",
+        "description": "Partial board upsert. Omit a key to leave unchanged; ``null`` clears it."
       },
       "BoardPrefsResponse": {
         "properties": {
@@ -7245,26 +7464,22 @@
           "layout": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/BoardLayoutSchema"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Layout"
+            ]
           },
           "widgetState": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/BoardWidgetStateSchema"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Widgetstate"
+            ]
           }
         },
         "type": "object",
@@ -7272,6 +7487,96 @@
           "configured"
         ],
         "title": "BoardPrefsResponse"
+      },
+      "BoardWidgetSchema": {
+        "properties": {
+          "i": {
+            "type": "string",
+            "title": "I"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "col": {
+            "type": "integer",
+            "title": "Col"
+          },
+          "row": {
+            "type": "integer",
+            "title": "Row"
+          },
+          "sizeId": {
+            "type": "string",
+            "title": "Sizeid"
+          },
+          "z": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "i",
+          "type",
+          "col",
+          "row",
+          "sizeId"
+        ],
+        "title": "BoardWidgetSchema"
+      },
+      "BoardWidgetStateSchema": {
+        "properties": {
+          "mapViews": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/BoardMapViewSchema"
+            },
+            "type": "object",
+            "title": "Mapviews"
+          },
+          "sourceFilters": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SourceFilterSelectionSchema"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "object",
+            "title": "Sourcefilters"
+          },
+          "ganttViewModes": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "day",
+                "month"
+              ]
+            },
+            "type": "object",
+            "title": "Ganttviewmodes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mapViews",
+          "sourceFilters",
+          "ganttViewModes"
+        ],
+        "title": "BoardWidgetStateSchema",
+        "description": "Per-widget map / source-filter / gantt zoom state."
       },
       "CalendarImportChangeResponse": {
         "properties": {
@@ -8100,68 +8405,6 @@
           "accountName"
         ],
         "title": "ChannelWithAccountResponse"
-      },
-      "ChatAssistantBody": {
-        "properties": {
-          "messages": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Messages"
-          },
-          "currentTask": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskDraftPayload"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "locale": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Locale"
-          }
-        },
-        "type": "object",
-        "required": [
-          "messages"
-        ],
-        "title": "ChatAssistantBody"
-      },
-      "ChatAssistantResponse": {
-        "properties": {
-          "message": {
-            "type": "string",
-            "title": "Message"
-          },
-          "taskConfig": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/TaskDraftPayload"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "message",
-          "taskConfig"
-        ],
-        "title": "ChatAssistantResponse"
       },
       "CreateRecurringTaskBody": {
         "properties": {
@@ -11549,30 +11792,6 @@
             ],
             "title": "Channelids"
           },
-          "scheduleType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduletype",
-            "description": "Read-compat FE preset mirror (maps to scheduleRrule). Write path should send scheduleRrule; accepted only when scheduleRrule is omitted."
-          },
-          "scheduleValue": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Schedulevalue",
-            "description": "Read-compat value for scheduleType presets. Ignored when scheduleRrule is provided."
-          },
           "scheduleRrule": {
             "anyOf": [
               {
@@ -11583,7 +11802,7 @@
               }
             ],
             "title": "Schedulerrule",
-            "description": "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Create/update write SoT — prefer this alone over scheduleType/scheduleValue."
+            "description": "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). Never calendar-expanded. Sole create/update schedule write SoT on the HTTP wire."
           },
           "includeInTimeline": {
             "anyOf": [
@@ -11753,28 +11972,6 @@
             ],
             "title": "Websearchquery"
           },
-          "scheduleType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduletype"
-          },
-          "scheduleValue": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Schedulevalue"
-          },
           "scheduleRrule": {
             "anyOf": [
               {
@@ -11851,7 +12048,7 @@
         },
         "type": "object",
         "title": "TaskDraftPayload",
-        "description": "Wire shape for chat-assistant ``currentTask`` / ``taskConfig``.\n\nAligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.\nExtra AI keys are ignored so OpenAPI stays a concrete object (not unknown)."
+        "description": "Wire shape for agent task-advisor ``currentTask`` / tool ``taskConfig``.\n\nAligned with ``web/src/domain/tasks/taskFormUtils.buildCurrentTaskPayload``.\nExtra AI keys are ignored so OpenAPI stays a concrete object (not unknown)."
       },
       "TaskResponse": {
         "properties": {
@@ -11917,28 +12114,6 @@
               }
             ],
             "title": "Schedulerrule"
-          },
-          "scheduleType": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Scheduletype"
-          },
-          "scheduleValue": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Schedulevalue"
           },
           "includeInTimeline": {
             "type": "boolean",
@@ -12485,6 +12660,36 @@
         "type": "object",
         "title": "TelegramQrWaitBody"
       },
+      "TimelineAnnotationsPutBody": {
+        "properties": {
+          "eventStatuses": {
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "completed"
+              ]
+            },
+            "type": "object",
+            "title": "Eventstatuses"
+          },
+          "eventTimeOverrides": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/TimelineEventTimeOverrideSchema"
+            },
+            "type": "object",
+            "title": "Eventtimeoverrides"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "eventStatuses",
+          "eventTimeOverrides"
+        ],
+        "title": "TimelineAnnotationsPutBody"
+      },
       "TimelineAnnotationsResponse": {
         "properties": {
           "configured": {
@@ -12494,7 +12699,14 @@
           "eventStatuses": {
             "anyOf": [
               {
-                "additionalProperties": true,
+                "additionalProperties": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "completed"
+                  ]
+                },
                 "type": "object"
               },
               {
@@ -12506,7 +12718,9 @@
           "eventTimeOverrides": {
             "anyOf": [
               {
-                "additionalProperties": true,
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/TimelineEventTimeOverrideSchema"
+                },
                 "type": "object"
               },
               {
@@ -12569,6 +12783,32 @@
           "dismissedAt"
         ],
         "title": "TimelineDismissalResponse"
+      },
+      "TimelineEventTimeOverrideSchema": {
+        "properties": {
+          "startTime": {
+            "type": "string",
+            "title": "Starttime"
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endtime"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "startTime",
+          "endTime"
+        ],
+        "title": "TimelineEventTimeOverrideSchema"
       },
       "TrendingTopicResponse": {
         "properties": {
@@ -13111,7 +13351,9 @@
       "VoiceFiredBody": {
         "properties": {
           "keys": {
-            "items": {},
+            "items": {
+              "type": "string"
+            },
             "type": "array",
             "title": "Keys"
           }
@@ -13126,7 +13368,9 @@
       "VoiceHistoryBody": {
         "properties": {
           "entries": {
-            "items": {},
+            "items": {
+              "$ref": "#/components/schemas/VoiceReminderHistoryEntrySchema"
+            },
             "type": "array",
             "title": "Entries"
           }
@@ -13167,12 +13411,16 @@
             "title": "Configured"
           },
           "claimed": {
-            "items": {},
+            "items": {
+              "type": "string"
+            },
             "type": "array",
             "title": "Claimed"
           },
           "keys": {
-            "items": {},
+            "items": {
+              "type": "string"
+            },
             "type": "array",
             "title": "Keys"
           }
@@ -13192,7 +13440,9 @@
           "keys": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "type": "string"
+                },
                 "type": "array"
               },
               {
@@ -13208,6 +13458,83 @@
         ],
         "title": "VoiceReminderFiredResponse"
       },
+      "VoiceReminderHistoryEntrySchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "triggerReason": {
+            "type": "string",
+            "title": "Triggerreason"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure"
+            ],
+            "title": "Status"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "triggeredAt": {
+            "type": "string",
+            "title": "Triggeredat"
+          },
+          "eventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventid"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "leadOffsetMinutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leadoffsetminutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "triggerReason",
+          "status",
+          "triggeredAt"
+        ],
+        "title": "VoiceReminderHistoryEntrySchema"
+      },
       "VoiceReminderHistoryResponse": {
         "properties": {
           "configured": {
@@ -13217,7 +13544,9 @@
           "entries": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "$ref": "#/components/schemas/VoiceReminderHistoryEntrySchema"
+                },
                 "type": "array"
               },
               {
@@ -13296,7 +13625,6 @@
             ]
           }
         },
-        "additionalProperties": true,
         "type": "object",
         "title": "VoiceReminderSettingsSchema",
         "description": "Voice reminder settings blob under ``voice_reminder_settings``."

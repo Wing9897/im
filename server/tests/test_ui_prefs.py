@@ -1,12 +1,22 @@
-"""API + sanitize tests for /api/v1/ui-prefs (board + voice reminder)."""
+"""API + sanitize + wire-shape tests for /api/v1/ui-prefs."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import pytest
+
+from server.api.schemas.responses.ui_prefs import (
+    AssistantSessionsPutBody,
+    BoardPrefsPutBody,
+    BoardPrefsResponse,
+    TimelineAnnotationsPutBody,
+    VoiceReminderHistoryEntrySchema,
+)
 from server.config import CONFIG_DEFAULTS, get_config
 from server.db.database import Database
+from server.tests.contract_helpers import assert_keys
 from server.ui_prefs import (
     KEY_OPS_BOARD_LAYOUT,
     KEY_OPS_BOARD_WIDGET_STATE,
@@ -17,7 +27,9 @@ from server.ui_prefs import (
     MAX_VOICE_HISTORY_ENTRIES,
     UI_PREF_KEYS,
     sanitize_board_layout,
+    sanitize_board_widget_state,
     sanitize_fired_keys,
+    sanitize_timeline_annotations,
     sanitize_voice_history,
     sanitize_voice_settings,
 )
@@ -25,6 +37,48 @@ from server.ui_prefs import (
 
 async def _ui_pref_payload(db: Database, key: str) -> Optional[str]:
     return await db.fetch_value("SELECT payload_json FROM ui_prefs WHERE key = ?", (key,))
+
+
+def test_ui_prefs_pydantic_shapes_are_concrete() -> None:
+    """Response/PUT models expose nested fields (no loose dict/Any blobs)."""
+    board = BoardPrefsResponse.model_json_schema()
+    nested = board.get("$defs", {})
+    assert "BoardLayoutSchema" in nested
+    assert "BoardWidgetStateSchema" in nested
+    assert "layout" in board["properties"]
+    assert BoardPrefsPutBody.model_json_schema().get("additionalProperties") is False
+    sessions_put = AssistantSessionsPutBody.model_json_schema()
+    assert {"deviceId", "sessions"} <= set(sessions_put["properties"])
+    timeline_put = TimelineAnnotationsPutBody.model_json_schema()
+    assert {"eventStatuses", "eventTimeOverrides"} <= set(timeline_put["properties"])
+    history = VoiceReminderHistoryEntrySchema.model_json_schema()
+    assert history["properties"]["status"]["enum"] == ["success", "failure"]
+
+
+@pytest.mark.parametrize(
+    ("path", "params", "response_keys"),
+    [
+        ("/api/v1/ui-prefs/board", None, ["configured", "layout", "widgetState"]),
+        ("/api/v1/ui-prefs/voice-reminder/settings", None, ["configured", "settings"]),
+        ("/api/v1/ui-prefs/voice-reminder/fired", None, ["configured", "keys"]),
+        ("/api/v1/ui-prefs/voice-reminder/history", None, ["configured", "entries"]),
+        (
+            "/api/v1/ui-prefs/assistant/sessions",
+            {"deviceId": "contract-device"},
+            ["configured", "sessions", "activeSessionId"],
+        ),
+        ("/api/v1/ui-prefs/assistant/voice-io", None, ["configured", "settings"]),
+        (
+            "/api/v1/ui-prefs/timeline/annotations",
+            None,
+            ["configured", "eventStatuses", "eventTimeOverrides"],
+        ),
+    ],
+)
+async def test_ui_prefs_get_response_keys(client, path, params, response_keys) -> None:
+    response = await client.get(path, params=params)
+    assert response.status_code == 200
+    assert_keys(response.json(), response_keys, path)
 
 
 def test_ui_pref_keys_retired_from_config_defaults() -> None:
@@ -138,7 +192,7 @@ async def test_board_roundtrip(client, app) -> None:
             "gantt-1": {"taskIds": ["task-a", "task-b"], "worksetIds": []},
             "gantt-2": None,
         },
-        "ganttViewModes": {"gantt-1": "day", "gantt-2": "month", "bad": "week"},
+        "ganttViewModes": {"gantt-1": "day", "gantt-2": "month"},
     }
     put = await client.put(
         "/api/v1/ui-prefs/board",
@@ -168,8 +222,32 @@ async def test_board_roundtrip(client, app) -> None:
     assert await get_config(app.state.db, KEY_OPS_BOARD_LAYOUT) == ""
 
 
+def test_sanitize_board_widget_state_drops_flat_source_filters() -> None:
+    """Sanitize hard-cuts flat/legacy shapes; PUT body schema rejects them earlier."""
+    clean = sanitize_board_widget_state(
+        {
+            "mapViews": {},
+            "sourceFilters": {
+                "events-1": {
+                    "taskIds": ["t1", "t1", ""],
+                    "worksetIds": ["__user__", "ws-a"],
+                },
+                "legacy-flat": ["old-a", "old-b"],
+                "bad-shape": {"taskIds": "nope"},
+                "all-sources": None,
+            },
+            "ganttViewModes": {"gantt-1": "day", "bad": "week"},
+        }
+    )
+    assert clean["sourceFilters"] == {
+        "events-1": {"taskIds": ["t1"], "worksetIds": ["__user__", "ws-a"]},
+        "all-sources": None,
+    }
+    assert clean["ganttViewModes"] == {"gantt-1": "day"}
+
+
 async def test_board_source_filters_hierarchical_shape(client) -> None:
-    """Ownership v3 tree filter persists as {taskIds, worksetIds}; flat discarded."""
+    """Ownership v3 tree filter persists as {taskIds, worksetIds}; null = all sources."""
     put = await client.put(
         "/api/v1/ui-prefs/board",
         json={
@@ -180,8 +258,6 @@ async def test_board_source_filters_hierarchical_shape(client) -> None:
                         "taskIds": ["t1", "t1", ""],
                         "worksetIds": ["__user__", "ws-a"],
                     },
-                    "legacy-flat": ["old-a", "old-b"],
-                    "bad-shape": {"taskIds": "nope"},
                     "all-sources": None,
                 },
                 "ganttViewModes": {},
@@ -194,9 +270,22 @@ async def test_board_source_filters_hierarchical_shape(client) -> None:
         "taskIds": ["t1"],
         "worksetIds": ["__user__", "ws-a"],
     }
-    assert "legacy-flat" not in filters
-    assert "bad-shape" not in filters
     assert filters["all-sources"] is None
+
+
+async def test_board_source_filters_reject_flat_shape(client) -> None:
+    put = await client.put(
+        "/api/v1/ui-prefs/board",
+        json={
+            "widgetState": {
+                "mapViews": {},
+                "sourceFilters": {"legacy-flat": ["old-a", "old-b"]},
+                "ganttViewModes": {},
+            }
+        },
+    )
+    assert put.status_code == 422
+    assert put.json()["error_code"] == "VALIDATION_ERROR"
 
 
 async def test_board_partial_put_and_clear(client) -> None:
@@ -595,18 +684,9 @@ async def test_assistant_voice_io_roundtrip(client, app) -> None:
     assert put_toggle.json()["settings"]["defaultWorksetId"] == "memo-task-1"
 
 
-async def test_timeline_annotations_roundtrip_and_sanitize(client, app) -> None:
-    empty = await client.get("/api/v1/ui-prefs/timeline/annotations")
-    assert empty.status_code == 200
-    assert empty.json() == {
-        "configured": False,
-        "eventStatuses": None,
-        "eventTimeOverrides": None,
-    }
-
-    put = await client.put(
-        "/api/v1/ui-prefs/timeline/annotations",
-        json={
+def test_sanitize_timeline_annotations_drops_invalid_entries() -> None:
+    clean = sanitize_timeline_annotations(
+        {
             "eventStatuses": {
                 "evt-1": "confirmed",
                 "evt-bad": "nope",
@@ -620,6 +700,44 @@ async def test_timeline_annotations_roundtrip_and_sanitize(client, app) -> None:
                 "evt-2": {
                     "startTime": "not-iso",
                     "endTime": None,
+                },
+                "evt-3": {
+                    "startTime": "2026-07-24T12:00:00Z",
+                    "endTime": None,
+                },
+            },
+        }
+    )
+    assert clean["eventStatuses"] == {"evt-1": "confirmed"}
+    assert clean["eventTimeOverrides"] == {
+        "evt-1": {
+            "startTime": "2026-07-24T10:00:00Z",
+            "endTime": "2026-07-24T11:00:00Z",
+        },
+        "evt-3": {
+            "startTime": "2026-07-24T12:00:00Z",
+            "endTime": None,
+        },
+    }
+
+
+async def test_timeline_annotations_roundtrip(client, app) -> None:
+    empty = await client.get("/api/v1/ui-prefs/timeline/annotations")
+    assert empty.status_code == 200
+    assert empty.json() == {
+        "configured": False,
+        "eventStatuses": None,
+        "eventTimeOverrides": None,
+    }
+
+    put = await client.put(
+        "/api/v1/ui-prefs/timeline/annotations",
+        json={
+            "eventStatuses": {"evt-1": "confirmed"},
+            "eventTimeOverrides": {
+                "evt-1": {
+                    "startTime": "2026-07-24T10:00:00Z",
+                    "endTime": "2026-07-24T11:00:00Z",
                 },
                 "evt-3": {
                     "startTime": "2026-07-24T12:00:00Z",
@@ -649,3 +767,12 @@ async def test_timeline_annotations_roundtrip_and_sanitize(client, app) -> None:
     again = await client.get("/api/v1/ui-prefs/timeline/annotations")
     assert again.status_code == 200
     assert again.json()["eventStatuses"]["evt-1"] == "confirmed"
+
+
+async def test_timeline_annotations_reject_invalid_status(client) -> None:
+    put = await client.put(
+        "/api/v1/ui-prefs/timeline/annotations",
+        json={"eventStatuses": {"evt-bad": "nope"}, "eventTimeOverrides": {}},
+    )
+    assert put.status_code == 422
+    assert put.json()["error_code"] == "VALIDATION_ERROR"

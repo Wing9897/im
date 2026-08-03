@@ -6,11 +6,11 @@ import pytest
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
-from server.domain.schedule import legacy_to_trigger_rrule
+from server.domain.schedule import preset_to_trigger_rrule
 from server.scheduler.manager import SchedulerManager, _QueuedTask, schedule_trigger_from_rrule
 from server.sse import SseBroadcaster
 from server.tests import seed
-from server.tests.db_helpers import insert_legacy_analysis_task
+from server.tests.db_helpers import insert_direct_analysis_task
 
 
 @pytest.mark.parametrize(
@@ -28,7 +28,7 @@ def test_supported_schedule_examples(schedule_type, schedule_value, trigger_type
 
     **Validates: Requirements 1.1, 1.2**
     """
-    trigger = schedule_trigger_from_rrule(legacy_to_trigger_rrule(schedule_type, schedule_value))
+    trigger = schedule_trigger_from_rrule(preset_to_trigger_rrule(schedule_type, schedule_value))
 
     assert type(trigger) is trigger_type
     if isinstance(trigger, IntervalTrigger):
@@ -45,7 +45,7 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
     **Validates: Requirements 1.1, 1.2, 1.7**
     """
     with pytest.raises(ValueError, match="Unknown schedule_type: unsupported"):
-        schedule_trigger_from_rrule(legacy_to_trigger_rrule("unsupported", None))
+        schedule_trigger_from_rrule(preset_to_trigger_rrule("unsupported", None))
 
     db = app.state.db
     bad_schedules = (
@@ -53,7 +53,7 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
         ("invalid-weekly-schedule", "FREQ=WEEKLY;BYDAY=XX"),
     )
     for task_id, schedule_rrule in bad_schedules:
-        await insert_legacy_analysis_task(
+        await insert_direct_analysis_task(
             db,
             task_id,
             analysis_mode="leaderboard",

@@ -125,7 +125,7 @@ describe("ItemsCategoryCard", () => {
     expect(container.textContent).not.toContain("📋");
   });
 
-  it("overlays legacy insurance seed emoji", () => {
+  it("uses category emoji as-is for insurance seed (no FE overlay)", () => {
     const summary: CategorySummary = {
       id: "seed_insurance",
       category: {
@@ -134,7 +134,7 @@ describe("ItemsCategoryCard", () => {
         slug: "insurance",
         sortOrder: 75,
         color: "#0EA5E9",
-        emoji: "📋",
+        emoji: "☂️",
         fieldSchema: [],
         defaultRemindBeforeDays: 30,
         createdAt: null,
@@ -151,6 +151,5 @@ describe("ItemsCategoryCard", () => {
     });
 
     expect(container.textContent).toContain("☂️");
-    expect(container.textContent).not.toContain("📋");
   });
 });

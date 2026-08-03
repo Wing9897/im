@@ -22,7 +22,7 @@ async def insert_minimal_account(
     )
 
 
-async def insert_legacy_analysis_task(
+async def insert_direct_analysis_task(
     db: Database,
     task_id: str,
     *,
@@ -33,12 +33,12 @@ async def insert_legacy_analysis_task(
     rrule: str | None = None,
 ) -> None:
     """Persist an analysis task directly, bypassing API recurrence validation."""
-    from server.domain.schedule import legacy_to_trigger_rrule
+    from server.domain.schedule import preset_to_trigger_rrule
 
     now = utc_now_iso()
     if schedule_rrule is None and schedule_type is not None:
         try:
-            schedule_rrule = legacy_to_trigger_rrule(schedule_type, schedule_value)
+            schedule_rrule = preset_to_trigger_rrule(schedule_type, schedule_value)
         except Exception:
             # Preserve intentionally invalid schedules for negative registration tests.
             schedule_rrule = f"INVALID;type={schedule_type};value={schedule_value}"
@@ -46,7 +46,7 @@ async def insert_legacy_analysis_task(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
         "analysis_time_range, version, is_active, schedule_rrule, "
         "created_at, updated_at) VALUES (?, ?, 'Analyze', ?, 'all', 1, 1, ?, ?, ?)",
-        (task_id, f"Legacy task {task_id}", analysis_mode, schedule_rrule, now, now),
+        (task_id, f"Direct task {task_id}", analysis_mode, schedule_rrule, now, now),
     )
     if rrule is not None:
         await db.execute(

@@ -1,12 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
 import {
   MONITOR_MODE_KEY,
-  MonitorModeProvider,
   useMonitorMode,
 } from "../context/MonitorModeContext";
+import { wrapBoardProviders } from "./boardTestHarness";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "./useBoardWidgetPoll";
 
 function PollProbe({
@@ -61,17 +60,11 @@ describe("useBoardWidgetPoll", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, mode);
     act(() => {
       root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(PollProbe, {
-              fetcher,
-              intervalMs: BOARD_POLL_MS.queue,
-            }),
-          ),
+        wrapBoardProviders(
+          createElement(PollProbe, {
+            fetcher,
+            intervalMs: BOARD_POLL_MS.queue,
+          }),
         ),
       );
     });
@@ -127,13 +120,7 @@ describe("useBoardWidgetPoll", () => {
     }
 
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(ModeFlipper)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(ModeFlipper)));
     });
     await flushMicrotasks();
     const callsAfterMount = fetcher.mock.calls.length;
@@ -160,13 +147,7 @@ describe("useBoardWidgetPoll", () => {
     }
 
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(InactiveProbe)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(InactiveProbe)));
     });
     await flushMicrotasks();
     expect(fetcher).not.toHaveBeenCalled();

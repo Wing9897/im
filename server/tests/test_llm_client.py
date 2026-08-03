@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
-from server.analyzer.llm_client import load_agent_llm_config, load_llm_config
+from server.analyzer.llm_client import ConfigurableLlmClient, load_agent_llm_config, load_llm_config
 from server.analyzer.llm_json import extract_json_from_markdown, normalize_items, parse_json_response
+from server.analyzer.llm_providers import LlmClientError
 from server.config import set_configs
 
 
@@ -175,3 +179,34 @@ async def test_load_agent_llm_config_override_accepts_alias(app) -> None:
     assert config["provider_raw"] == "openai_compatible"
     assert config["model"] == "gpt-agent-override"
     assert config["api_key"] == "openai-secret"
+
+
+async def test_complete_attaches_provider_on_http_error() -> None:
+    client = ConfigurableLlmClient(
+        provider="openai",
+        model="gpt-test",
+        api_key="sk-test",
+        base_url="https://api.openai.com/v1",
+        timeout_seconds=5,
+        allow_loopback=False,
+    )
+
+    async def _boom(*_args: Any, **_kwargs: Any) -> dict:
+        raise LlmClientError(
+            "LLM request failed with status 429: rate limited",
+            status_code=429,
+            response_body="rate limited",
+        )
+
+    handlers = dict(ConfigurableLlmClient._COMPLETE_HANDLERS)
+    handlers["openai_style"] = _boom
+    with (
+        patch("server.analyzer.llm_client.validate_outbound_url", new=AsyncMock()),
+        patch.object(ConfigurableLlmClient, "_COMPLETE_HANDLERS", handlers),
+    ):
+        with pytest.raises(LlmClientError) as caught:
+            await client.complete([{"role": "user", "content": "ping"}])
+
+    assert caught.value.provider == "openai"
+    assert caught.value.status_code == 429
+    await client.close()

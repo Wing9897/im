@@ -43,7 +43,7 @@ function toUnifiedFromVoice(entry: VoiceReminderTriggerEntry): UnifiedTriggerEnt
     source: "voice_reminder",
     triggerReason: entry.triggerReason,
     status: entry.status,
-    errorMessage: entry.errorMessage,
+    errorMessage: entry.errorMessage ?? null,
     triggeredAt: entry.triggeredAt,
   };
 }

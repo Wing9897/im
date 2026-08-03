@@ -1,6 +1,7 @@
 import {
   fetchVoiceReminderSettings,
   putVoiceReminderSettings,
+  type VoiceReminderSettingsPayload,
 } from "../api/uiPrefs";
 import type { SourceFilterSelection } from "../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
@@ -23,22 +24,17 @@ export type LeadOffsetMinutes = (typeof LEAD_OFFSET_OPTIONS)[number];
 
 export type { PreambleChimeId };
 
-export interface VoiceReminderSettings {
-  /** When false, the background scanner does nothing. */
-  enabled: boolean;
-  /** Minutes before start to speak; multi-select from LEAD_OFFSET_OPTIONS. */
+/**
+ * Sanitized domain settings derived from OpenAPI ``VoiceReminderSettingsSchema``.
+ * Wire SoT: ``VoiceReminderSettingsPayload``; leads/chime narrowed after sanitize.
+ */
+export type VoiceReminderSettings = {
+  enabled: VoiceReminderSettingsPayload["enabled"];
   leadOffsetsMinutes: LeadOffsetMinutes[];
-  /**
-   * Hierarchical source selection (task ids for event / recurring /
-   * project) plus workset ids (incl. builtin `__user__` for 一般).
-   * `null` = all sources. Default is `__user__` workset only.
-   */
   sourceFilter: SourceFilterSelection;
-  /** Attention chime played before TTS. */
   preambleChimeId: PreambleChimeId;
-  /** Local quiet period; reminders remain pending until its next eligible scan. */
-  quietHours: { enabled: boolean; start: string; end: string };
-}
+  quietHours: NonNullable<VoiceReminderSettingsPayload["quietHours"]>;
+};
 
 export const DEFAULT_VOICE_REMINDER_SETTINGS: VoiceReminderSettings = {
   enabled: false,

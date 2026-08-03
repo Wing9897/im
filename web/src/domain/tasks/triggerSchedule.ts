@@ -8,7 +8,7 @@ import type { ScheduleType } from "../../types";
 
 const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"] as const;
 
-export function legacyToTriggerRrule(
+export function presetToTriggerRrule(
   scheduleType: ScheduleType,
   scheduleValue: string | null,
 ): string {
@@ -35,7 +35,7 @@ export function legacyToTriggerRrule(
   }
 }
 
-export function triggerRruleToLegacy(
+export function triggerRruleToPreset(
   rrule: string | null | undefined,
 ): { scheduleType: ScheduleType; scheduleValue: string | null } | null {
   if (!rrule?.trim()) return null;
@@ -82,5 +82,5 @@ export function isUnmappedTriggerSchedule(
 ): boolean {
   const wire = scheduleRrule?.trim() || "";
   if (!wire) return false;
-  return legacyToTriggerRrule(scheduleType, scheduleValue) !== wire;
+  return presetToTriggerRrule(scheduleType, scheduleValue) !== wire;
 }

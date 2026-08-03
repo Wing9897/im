@@ -76,9 +76,7 @@ def build_item_occurrence(
     title = str(row.get("title") or "")
     start_iso, end_iso = _date_to_floating_iso(day)
     raw_workset = row.get("workset_id")
-    workset_id = (
-        str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
-    )
+    workset_id = str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
     item: dict[str, Any] = {
         "id": occurrence_id(item_id, kind),
         "taskId": "",

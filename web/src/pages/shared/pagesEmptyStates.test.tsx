@@ -334,7 +334,7 @@ describe("Empty state rendering for list components", () => {
       });
 
       // Should show empty state for no intelligence tasks
-      expect(container.textContent).toContain("尚未建立關鍵事件任務");
+      expect(container.textContent).toContain("尚未建立情報任務");
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
 
@@ -364,7 +364,7 @@ describe("Empty state rendering for list components", () => {
       });
 
       // Should show empty state for no results
-      expect(container.textContent).toContain("目前還沒有關鍵事件");
+      expect(container.textContent).toContain("目前還沒有情報");
       expect(container.querySelector('[role="status"]')).not.toBeNull();
     });
   });

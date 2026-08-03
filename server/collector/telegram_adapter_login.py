@@ -157,6 +157,7 @@ async def on_login_success(adapter: Any) -> None:
         except asyncio.CancelledError:
             pass
         adapter._startup_task = None
+    adapter._history_backfill_done = False
     adapter._startup_task = asyncio.create_task(adapter._finish_startup())
     logger.info("Telegram login successful for account %s", adapter._account_id)
 

@@ -103,7 +103,12 @@ export function resolveBoardMapBootView(
     return initialView;
   }
   if (widgetId) {
-    return loadBoardMapViewFromCache(widgetId);
+    const cached = loadBoardMapViewFromCache(widgetId);
+    if (!cached || cached.center.length < 2) return null;
+    return {
+      center: [cached.center[0], cached.center[1]],
+      zoom: cached.zoom,
+    };
   }
   return null;
 }

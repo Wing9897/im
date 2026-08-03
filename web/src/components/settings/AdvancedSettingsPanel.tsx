@@ -1,46 +1,37 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertBanner, CheckboxField, CollapsePanel, FormStack, SettingsRow, TextField } from "../ui";
+import { AlertBanner, CollapsePanel, FormStack, SettingsRow, TextField } from "../ui";
 
 interface AdvancedSettingsPanelProps {
   analysisMaxTotalChars: string;
   analysisMaxEstimatedInputTokens: string;
-  analysisTraceVerbose: boolean;
   llmGenerationTimeout: string;
   maxConcurrentBatches: string;
   maxBatchRetries: string;
   llmProvider: string;
-  intelligenceRulesVersion: string;
   onAnalysisMaxTotalCharsChange: (v: string) => void;
   onAnalysisMaxEstimatedInputTokensChange: (v: string) => void;
-  onAnalysisTraceVerboseChange: (v: boolean) => void;
   onLlmGenerationTimeoutChange: (v: string) => void;
   onMaxConcurrentBatchesChange: (v: string) => void;
   onMaxBatchRetriesChange: (v: string) => void;
-  onIntelligenceRulesVersionChange: (v: string) => void;
 }
 
 export function AdvancedSettingsPanel({
   analysisMaxTotalChars,
   analysisMaxEstimatedInputTokens,
-  analysisTraceVerbose,
   llmGenerationTimeout,
   maxConcurrentBatches,
   maxBatchRetries,
   llmProvider,
-  intelligenceRulesVersion,
   onAnalysisMaxTotalCharsChange,
   onAnalysisMaxEstimatedInputTokensChange,
-  onAnalysisTraceVerboseChange,
   onLlmGenerationTimeoutChange,
   onMaxConcurrentBatchesChange,
   onMaxBatchRetriesChange,
-  onIntelligenceRulesVersionChange,
 }: AdvancedSettingsPanelProps) {
   const { t } = useTranslation("settings");
   const [batchOpen, setBatchOpen] = useState(false);
   const [limitsOpen, setLimitsOpen] = useState(false);
-  const [promptOpen, setPromptOpen] = useState(false);
 
   const concurrentNum = parseInt(maxConcurrentBatches, 10);
 
@@ -148,39 +139,6 @@ export function AdvancedSettingsPanel({
             className="max-w-[200px]"
             value={analysisMaxEstimatedInputTokens}
             onChange={(e) => onAnalysisMaxEstimatedInputTokensChange(e.target.value)}
-          />
-        </SettingsRow>
-      </CollapsePanel>
-
-      <CollapsePanel
-        title={t("analysis.advanced.debugSectionTitle")}
-        open={promptOpen}
-        onToggle={() => setPromptOpen((v) => !v)}
-      >
-        <SettingsRow
-          label={t("analysis.advanced.rulesVersionLabel")}
-          htmlFor="intelligence-rules-version"
-          help={t("analysis.advanced.rulesVersionHelp")}
-        >
-          <TextField
-            id="intelligence-rules-version"
-            value={intelligenceRulesVersion}
-            onChange={(e) => onIntelligenceRulesVersionChange(e.target.value)}
-            placeholder="v2"
-            className="max-w-[200px]"
-          />
-        </SettingsRow>
-
-        <SettingsRow
-          label={t("analysis.advanced.traceVerboseLabel")}
-          help={t("analysis.advanced.traceVerboseHelp")}
-        >
-          <CheckboxField
-            id="analysis-trace-verbose"
-            label={analysisTraceVerbose ? t("shared.enabled") : t("shared.disabled")}
-            checked={analysisTraceVerbose}
-            onChange={(e) => onAnalysisTraceVerboseChange(e.target.checked)}
-            aria-label={t("analysis.advanced.traceVerboseLabel")}
           />
         </SettingsRow>
       </CollapsePanel>

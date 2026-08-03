@@ -1,12 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
-import {
-  MONITOR_MODE_KEY,
-  MonitorModeProvider,
-} from "../context/MonitorModeContext";
+import { MONITOR_MODE_KEY } from "../context/MonitorModeContext";
 import { BoardCanvas } from "./BoardCanvas";
+import { wrapBoardProviders } from "./boardTestHarness";
 import type { BoardConfig } from "./types";
 
 const mapEmbedMount = vi.fn();
@@ -133,6 +130,10 @@ vi.mock("../api/tasks", () => ({
   ]),
 }));
 
+vi.mock("../context/AnalysisStatusContext", async () =>
+  (await import("../test/context-mocks")).analysisStatusModuleMock(),
+);
+
 vi.mock("../context/TaskCatalogContext", async () =>
   (await import("../test/context-mocks")).taskCatalogModuleMock(),
 );
@@ -230,13 +231,7 @@ describe("board heavy embed mount gating", () => {
 
   it("mounts map and gantt embeds when all widgets are active", async () => {
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(Harness)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(Harness)));
     });
     await flushLazy();
 
@@ -251,15 +246,7 @@ describe("board heavy embed mount gating", () => {
   it("unmounts obscured heavy embeds when another widget is maximized", async () => {
     act(() => {
       root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(
-            MonitorModeProvider,
-            null,
-            createElement(Harness, { initialMax: "w-events" }),
-          ),
-        ),
+        wrapBoardProviders(createElement(Harness, { initialMax: "w-events" })),
       );
     });
     await flushLazy();
@@ -279,13 +266,7 @@ describe("board heavy embed mount gating", () => {
   it("does not mount map/wall embeds when monitorMode is pages", async () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "pages");
     act(() => {
-      root.render(
-        createElement(
-          MemoryRouter,
-          null,
-          createElement(MonitorModeProvider, null, createElement(Harness)),
-        ),
-      );
+      root.render(wrapBoardProviders(createElement(Harness)));
     });
     await flushLazy();
 

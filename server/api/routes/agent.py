@@ -47,7 +47,7 @@ class AgentChatBody(BaseModel):
     worksetId: Optional[str] = None
     #: Page gate: only ``task_editor`` enables ``tasks.consult_advisor``.
     surface: Optional[Literal["task_editor"]] = None
-    #: Live task form draft for the advisor (same shape as chat-assistant).
+    #: Live task form draft for the advisor (``tasks.consult_advisor``).
     currentTask: Optional[TaskDraftPayload] = None
 
 

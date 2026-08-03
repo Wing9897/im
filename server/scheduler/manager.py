@@ -305,6 +305,7 @@ class SchedulerManager:
                     broadcaster=self._broadcaster,
                     task_id=task_id,
                     analysis_paused=self._paused,
+                    scheduler=self,
                 )
             else:
                 await execute_batch(

@@ -28,20 +28,11 @@ export const ALL_CATEGORIES_EMOJI = "🗂️";
 /** Synthetic「未分类」card — distinct from seed `other` / default package. */
 export const UNCATEGORIZED_EMOJI = "🏷️";
 
-/**
- * FE display overlay for built-in seed slugs when DB rows may still hold older glyphs
- * (`INSERT OR IGNORE` does not rewrite existing installs). Prefer this over stamp bumps.
- */
-export const SEED_CATEGORY_EMOJI_OVERLAY: Readonly<Record<string, string>> = {
-  /** Was 📋 — collided with the old「全部类型」mark. */
-  insurance: "☂️",
-};
-
 export function itemOccurrenceId(itemId: string, kind: ItemDateKind): string {
   return `item:${itemId}:${kind}`;
 }
 
-function prefixKeyForKind(kind: ItemDateKind | string | null | undefined): string {
+function prefixKeyForKind(kind: string | null | undefined): string {
   if (kind === "expires") return "items:expiresPrefix";
   if (kind === "remind") return "items:remindPrefix";
   return "items:purchasedPrefix";
@@ -49,7 +40,7 @@ function prefixKeyForKind(kind: ItemDateKind | string | null | undefined): strin
 
 /** i18n display title: `{prefix} · {bareTitle}` (server sends bare title). */
 export function formatItemOccurrenceTitle(
-  kind: ItemDateKind | string | null | undefined,
+  kind: string | null | undefined,
   bareTitle: string,
 ): string {
   const prefix = String(i18n.t(prefixKeyForKind(kind)));
@@ -59,7 +50,7 @@ export function formatItemOccurrenceTitle(
 
 /** i18n short label for badges (same keys as title prefixes). */
 export function itemDateKindLabel(
-  kind: ItemDateKind | string | null | undefined,
+  kind: string | null | undefined,
 ): string {
   return String(i18n.t(prefixKeyForKind(kind)));
 }
@@ -70,13 +61,10 @@ type EmojiSource = {
 } | null | undefined;
 
 /**
- * Category brand emoji: seed overlay (by slug) → stored emoji → package fallback.
+ * Category brand emoji: stored emoji → package fallback.
+ * (Wipe-only stamp ships DDL seed glyphs; no FE overlay for legacy drift.)
  */
 export function resolveCategoryEmoji(category?: EmojiSource): string {
-  const slug = category?.slug?.trim();
-  if (slug && SEED_CATEGORY_EMOJI_OVERLAY[slug]) {
-    return SEED_CATEGORY_EMOJI_OVERLAY[slug];
-  }
   const fromCat = category?.emoji?.trim();
   if (fromCat) return fromCat;
   return DEFAULT_ITEM_EMOJI;
@@ -95,7 +83,7 @@ export function resolveCategoryCardEmoji(
 }
 
 /**
- * Prefer item emoji, else category brand (with seed overlay), else package fallback.
+ * Prefer item emoji, else category brand, else package fallback.
  * Always returns a non-empty display string for type cards / list rows.
  */
 export function resolveItemEmoji(
@@ -109,7 +97,7 @@ export function resolveItemEmoji(
 
 /** Badge tone for remind vs expires vs purchased in list/sidebar. */
 export function itemDateKindBadgeTone(
-  kind: ItemDateKind | string | null | undefined,
+  kind: string | null | undefined,
 ): "warning" | "danger" | "info" | "neutral" {
   if (kind === "remind") return "warning";
   if (kind === "expires") return "danger";
@@ -119,7 +107,7 @@ export function itemDateKindBadgeTone(
 
 /** Month-cell / list accent class for item kind dots (design-system tokens). */
 export function itemDateKindDotClass(
-  kind: ItemDateKind | string | null | undefined,
+  kind: string | null | undefined,
 ): string {
   if (kind === "remind") {
     return "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ending)] opacity-90";

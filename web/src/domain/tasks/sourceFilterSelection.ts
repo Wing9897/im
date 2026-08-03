@@ -1,15 +1,22 @@
 /**
  * Hierarchical source filter selection for timeline / intelligence / board.
  * `null` = all sources; otherwise explicit task + workset multi-select.
+ * Wire SoT: OpenAPI ``SourceFilterSelectionSchema`` (arrays optional there;
+ * domain always materializes both lists when non-null).
  */
 
+import type { components } from "../../api/generated/schema";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isNullProvenanceTaskId } from "../timeline/userEvents";
 
-export type SourceFilterSelection = {
-  taskIds: string[];
-  worksetIds: string[];
-} | null;
+type SourceFilterWire = components["schemas"]["SourceFilterSelectionSchema"];
+
+export type SourceFilterSelection =
+  | {
+      taskIds: NonNullable<SourceFilterWire["taskIds"]>;
+      worksetIds: NonNullable<SourceFilterWire["worksetIds"]>;
+    }
+  | null;
 
 export type WorksetMemberTask = {
   id: string;

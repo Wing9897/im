@@ -16,9 +16,22 @@ async def test_items_change_category_keeps_attributes(client):
     cats = await client.get("/api/v1/items/categories")
     assert cats.status_code == 200
     seed = cats.json()
-    assert any(c.get("slug") == "passport_docs" for c in seed)
-    assert any(c.get("slug") == "medicine" for c in seed)
-    assert any(c.get("slug") == "vehicle" for c in seed)
+    expected_slugs = {
+        "passport_docs",
+        "food",
+        "credit_card",
+        "warranty",
+        "contract",
+        "household",
+        "medicine",
+        "subscription",
+        "membership",
+        "insurance",
+        "vehicle",
+        "other",
+    }
+    assert {c.get("slug") for c in seed} >= expected_slugs
+    assert len(expected_slugs) == 12
     passport_seed = next(c for c in seed if c["slug"] == "passport_docs")
     assert passport_seed.get("emoji")
     passport = next(c for c in seed if c["slug"] == "passport_docs")
@@ -203,7 +216,7 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
     assert f"item:{item_id}:remind" in ids
     assert not any(row.get("itemId") == archived.json()["id"] for row in item_rows)
 
-    purchased_row = next(row for row in item_rows if row["id"].endswith(":purchased"))
+    purchased_row = next(row for row in item_rows if row["id"] == f"item:{item_id}:purchased")
     # Floating all-day wall date — not UTC-converted …Z (East-8 day shift).
     assert purchased_row["startTime"] == f"{purchased}T00:00:00"
     assert purchased_row["endTime"] == f"{purchased}T23:59:59"
@@ -212,7 +225,7 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
     assert purchased_row["title"] == "Milk"
     assert purchased_row["itemDateKind"] == "purchased"
 
-    remind_row = next(row for row in item_rows if row["id"].endswith(":remind"))
+    remind_row = next(row for row in item_rows if row["id"] == f"item:{item_id}:remind")
     assert remind_row["startTime"] == f"{remind_day}T00:00:00"
     assert remind_row["endTime"] == f"{remind_day}T23:59:59"
     assert remind_row["timezone"] == "floating"
@@ -228,9 +241,7 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
     remind_day_5 = (today + timedelta(days=10 - 5)).isoformat()
     result2 = await query_window(app.state.db, start=start, end=end, limit=100)
     remind_rows = [
-        row
-        for row in result2["items"]
-        if row.get("source") == "item" and row["id"] == f"item:{item_id}:remind"
+        row for row in result2["items"] if row.get("source") == "item" and row["id"] == f"item:{item_id}:remind"
     ]
     assert len(remind_rows) == 1
     assert remind_rows[0]["startTime"] == f"{remind_day_5}T00:00:00"
@@ -250,7 +261,7 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
         f"item:{item_id}:expires",
         f"item:{item_id}:remind",
     }
-    api_purchased = next(row for row in api_items if row["id"].endswith(":purchased"))
+    api_purchased = next(row for row in api_items if row["id"] == f"item:{item_id}:purchased")
     assert api_purchased["startTime"] == f"{purchased}T00:00:00"
     assert api_purchased["dismissed"] is False
     api_remind = next(row for row in api_items if row["id"] == f"item:{item_id}:remind")

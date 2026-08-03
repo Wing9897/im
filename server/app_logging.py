@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
+import re
+from typing import Any, Optional
 
 from server.db.database import Database
 from server.prompts.locale import normalize_ui_locale
@@ -11,6 +12,28 @@ from server.util import new_id, utc_now_iso
 
 _ALLOWED_LEVELS = frozenset({"info", "success", "warning", "error"})
 _ALLOWED_CATEGORIES = frozenset({"analysis", "collector", "account", "system", "frontend"})
+
+#: Cap for response bodies stored in ``app_logs.details`` (failure forensics).
+_RESPONSE_BODY_LOG_CAP = 4000
+
+#: Keys owned by ``write_batch_failure_log``; not overwritten by ``failure_details``.
+_BATCH_FAILURE_OWNED_KEYS = frozenset(
+    {
+        "taskId",
+        "taskName",
+        "batchId",
+        "retriesExhausted",
+        "currentRetry",
+        "maxRetries",
+        "error",
+        "messageKey",
+        "messageParams",
+    }
+)
+
+_API_KEY_ASSIGN_RE = re.compile(r"(?i)((?:api[_-]?key)\s*[=:]\s*)(\S+)")
+_BEARER_RE = re.compile(r"(?i)\b(bearer\s+)(\S+)")
+_SK_TOKEN_RE = re.compile(r"\bsk-[A-Za-z0-9_\-]{8,}\b")
 
 # UI-facing batch failure lines follow system_config ui_locale.
 _BATCH_FAILURE_MESSAGES: dict[str, dict[str, str]] = {
@@ -40,6 +63,50 @@ def summarize_error_message(error_message: str, *, limit: int = 160) -> str:
     if len(line) <= limit:
         return line
     return f"{line[: limit - 1]}…"
+
+
+def _cap_response_body(text: str, *, limit: int = _RESPONSE_BODY_LOG_CAP) -> str:
+    if len(text) <= limit:
+        return text
+    return text[:limit]
+
+
+def _redact_secrets(text: str) -> str:
+    """Strip common API-key / bearer fragments before persisting log details."""
+    redacted = _API_KEY_ASSIGN_RE.sub(r"\1[REDACTED]", text)
+    redacted = _BEARER_RE.sub(r"\1[REDACTED]", redacted)
+    return _SK_TOKEN_RE.sub("sk-[REDACTED]", redacted)
+
+
+def failure_details_from_exc(exc: BaseException) -> dict[str, Any]:
+    """Build structured failure forensics for Settings→Logs ``details`` JSON."""
+    # Local imports avoid app_logging ↔ analyzer import cycles at module load.
+    from server.analyzer.llm_json import LlmParseError
+    from server.analyzer.llm_providers import LlmClientError
+
+    summary = summarize_error_message(str(exc))
+    details: dict[str, Any] = {"error": summary, "failureKind": "other"}
+
+    if isinstance(exc, LlmClientError):
+        if exc.status_code is not None:
+            details["failureKind"] = "http"
+            details["httpStatus"] = int(exc.status_code)
+        if exc.response_body:
+            details["responseBody"] = _cap_response_body(_redact_secrets(exc.response_body))
+        if exc.provider:
+            details["provider"] = exc.provider
+        return details
+
+    if isinstance(exc, LlmParseError):
+        details["failureKind"] = "parse"
+        details["responseBody"] = _cap_response_body(_redact_secrets(exc.raw_response))
+        return details
+
+    if isinstance(exc, TimeoutError):
+        details["failureKind"] = "timeout"
+        return details
+
+    return details
 
 
 def format_batch_failure_message(
@@ -95,6 +162,7 @@ async def write_batch_failure_log(
     current_retry: int,
     max_retries: int,
     ui_locale: str | None = None,
+    failure_details: dict[str, Any] | None = None,
 ) -> None:
     message = format_batch_failure_message(
         locale=ui_locale,
@@ -109,27 +177,33 @@ async def write_batch_failure_log(
     summary = summarize_error_message(error_message)
     short_batch = f"{batch_id[:8]}…" if len(batch_id) > 8 else batch_id
 
-    details = json.dumps(
-        {
-            "taskId": task_id,
+    details_obj: dict[str, Any] = {
+        "taskId": task_id,
+        "taskName": task_name,
+        "batchId": batch_id,
+        "retriesExhausted": retries_exhausted,
+        "currentRetry": current_retry,
+        "maxRetries": max_retries,
+        "error": error_message,
+        # Display-time i18n: Logs UI re-resolves with current locale when present.
+        "messageKey": ("logs:templates.batchExhausted" if retries_exhausted else "logs:templates.batchRetrying"),
+        "messageParams": {
             "taskName": task_name,
-            "batchId": batch_id,
-            "retriesExhausted": retries_exhausted,
-            "currentRetry": current_retry,
+            "shortBatch": short_batch,
+            "summary": summary,
             "maxRetries": max_retries,
-            "error": error_message,
-            # Display-time i18n: Logs UI re-resolves with current locale when present.
-            "messageKey": ("logs:templates.batchExhausted" if retries_exhausted else "logs:templates.batchRetrying"),
-            "messageParams": {
-                "taskName": task_name,
-                "shortBatch": short_batch,
-                "summary": summary,
-                "maxRetries": max_retries,
-                "currentRetry": current_retry,
-            },
+            "currentRetry": current_retry,
         },
-        ensure_ascii=False,
-    )
+    }
+    if failure_details:
+        for key, value in failure_details.items():
+            if key in _BATCH_FAILURE_OWNED_KEYS:
+                continue
+            if key in {"responseBody", "responseSnippet"} and isinstance(value, str):
+                details_obj[key] = _cap_response_body(_redact_secrets(value))
+            else:
+                details_obj[key] = value
+    details = json.dumps(details_obj, ensure_ascii=False)
     await write_app_log(
         db,
         level=level,

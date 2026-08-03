@@ -92,8 +92,13 @@ export function AssistantLiveToolSteps({
   );
 }
 
+/** Wire/UI tool row: session prefs use AssistantToolCallSchema; live chat uses AgentToolCallSummary. */
+type ToolSummaryCall = Pick<AgentToolCallSummary, "name"> & {
+  resultSummary?: string | null;
+};
+
 interface AssistantToolSummaryProps {
-  toolCalls: readonly AgentToolCallSummary[];
+  toolCalls: readonly ToolSummaryCall[];
   testId?: string;
   /** Attribute ``tasks.consult_advisor`` steps to the task advisor avatar/name. */
   attributeTaskAdvisor?: boolean;

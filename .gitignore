@@ -77,3 +77,7 @@ desktop/dist/
 desktop/release/
 desktop/server-runtime/
 
+
+# Local operational eval runtime (tokens, scratch DB, helper scripts)
+.eval-runtime/
+
