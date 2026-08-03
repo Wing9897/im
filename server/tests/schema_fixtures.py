@@ -1,4 +1,4 @@
-"""Shared SQLite fixtures for schema lifecycle and migration tests."""
+"""Shared SQLite fixtures for schema lifecycle tests (wipe-floor + fingerprint)."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ from typing import Any
 import aiosqlite
 
 from server.db.schema import DDL
+
+_DEFAULT_LOG = ("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test")
 
 
 async def logical_snapshot(path: str) -> dict[str, Any]:
@@ -39,8 +41,18 @@ def file_snapshot(path: str) -> dict[str, bytes]:
     }
 
 
+async def stamp_user_version(path: str, version: int) -> None:
+    """Set ``PRAGMA user_version`` on an existing DB file."""
+    conn = await aiosqlite.connect(path)
+    try:
+        await conn.execute(f"PRAGMA user_version={version}")
+        await conn.commit()
+    finally:
+        await conn.close()
+
+
 async def make_existing_db(path: str, *, log_rows: list[tuple[str, str, str, str]]) -> None:
-    """Create a schema-compatible database file with app_logs rows."""
+    """Create a schema-compatible database file with app_logs rows (unstamped)."""
     conn = await aiosqlite.connect(path)
     try:
         await conn.execute("PRAGMA journal_mode=WAL")
@@ -55,12 +67,20 @@ async def make_existing_db(path: str, *, log_rows: list[tuple[str, str, str, str
         await conn.close()
 
 
+async def make_stamped_db(
+    path: str,
+    *,
+    version: int,
+    log_rows: list[tuple[str, str, str, str]] | None = None,
+) -> None:
+    """DDL + log rows + stamped ``user_version`` (shared by wipe-floor / newer-reject)."""
+    await make_existing_db(path, log_rows=log_rows or [_DEFAULT_LOG])
+    await stamp_user_version(path, version)
+
+
 async def make_lookalike_db(path: str, *, version: int, defect: str) -> None:
     """Create all application tables while removing one required structure."""
-    await make_existing_db(
-        path,
-        log_rows=[("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test")],
-    )
+    await make_existing_db(path, log_rows=[_DEFAULT_LOG])
     conn = await aiosqlite.connect(path)
     try:
         if defect == "column":

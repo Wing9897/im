@@ -89,8 +89,8 @@ function accentWash(accentHex: string, amountPct: number): string {
 
 /**
  * Retired localStorage theme IDs → current catalog IDs.
- * Keep while users may still hold old ids under the current prefs schema;
- * drop on the next prefs-schema bump that already wipes `im:*` (see clearLegacyPrefsIfNeeded).
+ * TODO: delete on next prefs-schema bump (＞v5) — that wipe clears `im:*` via clearLegacyPrefsIfNeeded.
+ * Do not bump schema solely to drop this map.
  */
 export const LEGACY_THEME_REMAP: Readonly<Record<string, string>> = {
   mocha: "moss",

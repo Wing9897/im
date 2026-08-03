@@ -6,7 +6,6 @@ This module covers fingerprint validation, unstamped current, and newer-than-sup
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Literal
 
 import aiosqlite
@@ -25,6 +24,7 @@ from server.tests.schema_fixtures import (
     logical_snapshot,
     make_existing_db,
     make_lookalike_db,
+    make_stamped_db,
 )
 
 _REQUIRED_TABLE_COUNT = 27
@@ -97,13 +97,11 @@ async def test_exact_unstamped_current_schema_is_stamped_without_data_loss(tmp_p
 
 async def test_exact_current_schema_is_fully_validated_without_changes(tmp_path):
     path = str(tmp_path / "current.db")
-    await make_existing_db(path, log_rows=[("log-1", "2026-01-01T00:00:00Z", "info", "collector")])
-    conn = await aiosqlite.connect(path)
-    try:
-        await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
-        await conn.commit()
-    finally:
-        await conn.close()
+    await make_stamped_db(
+        path,
+        version=CURRENT_SCHEMA_VERSION,
+        log_rows=[("log-1", "2026-01-01T00:00:00Z", "info", "collector")],
+    )
     before_logical = await logical_snapshot(path)
     before_file = file_snapshot(path)
 
@@ -243,33 +241,25 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
     assert file_snapshot(path) == before_file
 
 
-# Pre-restart product stamps above CURRENT hard-reject as "newer than supported".
-# Prior-stamp wipe-floor hard-reject lives in ``test_schema_wipe_floor``.
-_LEGACY_HARD_REJECT_VERSIONS = tuple(version for version in (16, 23, 24) if version > CURRENT_SCHEMA_VERSION)
+# Stamps above CURRENT (pre-restart leftovers) → "newer than supported".
+# Prior wipe-floor hard-reject + lifespan reset log: ``test_schema_wipe_floor``.
+_NEWER_THAN_SUPPORTED = tuple(v for v in (16, 23, 24) if v > CURRENT_SCHEMA_VERSION)
 
 
 @pytest.mark.parametrize(
     "version",
-    _LEGACY_HARD_REJECT_VERSIONS,
-    ids=[f"legacy-stamped-v{version}" for version in _LEGACY_HARD_REJECT_VERSIONS],
+    _NEWER_THAN_SUPPORTED,
+    ids=[f"newer-stamped-v{version}" for version in _NEWER_THAN_SUPPORTED],
 )
-async def test_legacy_pre_restart_stamps_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
-    """Legacy stamps above CURRENT (pre SemVer baseline restart) hard-reject as newer."""
-    path = str(tmp_path / f"legacy-v{version}.db")
-    await make_existing_db(
+async def test_stamps_above_current_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
+    path = str(tmp_path / f"newer-v{version}.db")
+    await make_stamped_db(
         path,
+        version=version,
         log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
     )
-    conn = await aiosqlite.connect(path)
-    try:
-        await conn.execute(f"PRAGMA user_version={version}")
-        await conn.commit()
-    finally:
-        await conn.close()
-
     before_logical = await logical_snapshot(path)
     before_file = file_snapshot(path)
-    assert before_logical["version"] == version
 
     db = Database(path)
     await db.connect()
@@ -282,35 +272,6 @@ async def test_legacy_pre_restart_stamps_are_hard_rejected_without_changes(tmp_p
 
     assert await logical_snapshot(path) == before_logical
     assert file_snapshot(path) == before_file
-
-
-async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog) -> None:
-    """Wipe-only prior stamps (e.g. v16) must name the reset recovery path.
-
-    Without it the operator sees only a traceback: the reset script is the sole
-    way forward and nothing else in the CLI output mentions it.
-    """
-    from server.main import create_app
-
-    wipe_only_version = 16  # any legacy stamp (e.g. 16/23/24); empty registry rejects all non-current
-    path = tmp_path / "startup-reject.db"
-    await make_existing_db(str(path), log_rows=[("log-startup-reject", "2026-01-01T00:00:00Z", "info", "schema-test")])
-    conn = await aiosqlite.connect(path)
-    try:
-        await conn.execute(f"PRAGMA user_version={wipe_only_version}")
-        await conn.commit()
-    finally:
-        await conn.close()
-
-    app = create_app(db_path=str(path), start_collector=False, start_scheduler=False, serve_static=False)
-    with caplog.at_level(logging.ERROR, logger="server.main"), pytest.raises(SchemaBaselineError):
-        async with app.router.lifespan_context(app):
-            pass
-
-    message = "\n".join(record.getMessage() for record in caplog.records)
-    assert "scripts/reset_local_databases.py --apply" in message
-    assert str(wipe_only_version) in message
-    assert str(path) in message
 
 
 async def test_ddl_derived_fingerprint_matches_live_introspection():
