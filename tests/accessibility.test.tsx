@@ -1,12 +1,6 @@
-// NOTE: This test imports React components from web/src/ and requires
-// web/node_modules to be installed (npm install in web/).
 import { describe, it, expect } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-
-/* ------------------------------------------------------------------ */
-/*  Toast Accessibility (Requirements 7.1, 7.2)                        */
-/* ------------------------------------------------------------------ */
 
 describe("Toast accessibility attributes", () => {
   it('has role="alert" on the toast container', async () => {
@@ -78,9 +72,6 @@ describe("Toast accessibility attributes", () => {
   });
 });
 
-/* ------------------------------------------------------------------ */
-/*  MessageListItem Accessibility (Requirements 9.1, 9.2)              */
-/* ------------------------------------------------------------------ */
 
 describe("MessageListItem accessibility attributes", () => {
   async function renderMessageItem() {

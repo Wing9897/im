@@ -207,7 +207,7 @@ describe("Token Adoption Compliance - src/pages/", () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  it("should not have hardcoded spacing values (Requirement 7.1)", () => {
+  it("should not have hardcoded spacing values", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -224,7 +224,7 @@ describe("Token Adoption Compliance - src/pages/", () => {
     ).toBeLessThanOrEqual(VIOLATION_LIMITS.spacing);
   });
 
-  it("should not have hardcoded borderRadius values (Requirement 7.2)", () => {
+  it("should not have hardcoded borderRadius values", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -241,7 +241,7 @@ describe("Token Adoption Compliance - src/pages/", () => {
     ).toBeLessThanOrEqual(VIOLATION_LIMITS.borderRadius);
   });
 
-  it("should not have hardcoded maxWidth values (Requirement 7.3)", () => {
+  it("should not have hardcoded maxWidth values", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {
@@ -258,7 +258,7 @@ describe("Token Adoption Compliance - src/pages/", () => {
     ).toBeLessThanOrEqual(VIOLATION_LIMITS.maxWidth);
   });
 
-  it("should not have hardcoded typography values (Requirement 7.4)", () => {
+  it("should not have hardcoded typography values", () => {
     const allViolations: Violation[] = [];
 
     for (const file of files) {

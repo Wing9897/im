@@ -49,7 +49,6 @@ async def _registered_job_observation(db: Any, task_id: str) -> tuple[int, Any, 
     return len(jobs), type(trigger), _normalized_trigger_configuration(trigger), next_fire
 
 
-# Feature: technical-debt-simplification, Property 5
 @property_trace(5)
 @settings(
     max_examples=MIN_PROPERTY_EXAMPLES,
@@ -61,7 +60,6 @@ async def _registered_job_observation(db: Any, task_id: str) -> tuple[int, Any, 
 @example(mode="leaderboard", schedule=("weekly", "6:23:59"), legacy_rrule=None)
 @given(mode=analysis_task_modes, schedule=supported_schedules, legacy_rrule=_legacy_rrules)
 async def test_legacy_rrule_does_not_interfere_with_scheduler(app, mode, schedule, legacy_rrule):
-    """Feature: technical-debt-simplification, Property 5."""
     db = app.state.db
     legacy_id, control_id = "property-5-legacy", "property-5-null-control"
     await db.execute("DELETE FROM analysis_tasks WHERE id IN (?, ?)", (legacy_id, control_id))

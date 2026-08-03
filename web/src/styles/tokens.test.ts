@@ -11,13 +11,7 @@ import {
   MULTI_LINE_LEVELS,
 } from "./tokens";
 
-/**
- * Unit tests for Design Token System.
- * Verifies the invariant: spacing aliases and SPACING_VALUES
- * form a bijective (one-to-one) mapping.
- *
- * Requirements: 3.1, 3.2, 3.4
- */
+/** Spacing aliases ↔ SPACING_VALUES bijectivity and typography/token invariants. */
 
 describe("Spacing scale alias ↔ value bijectivity", () => {
   const spacingKeys = Object.keys(spacing) as SpacingKey[];

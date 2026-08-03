@@ -1,15 +1,6 @@
 /**
- * Feature: comprehensive-refinement, Property 19: No hardcoded hex colors in component files
- *
- * Static analysis test that scans all .tsx/.ts files in src/components/ and src/pages/
- * and asserts that no hardcoded hexadecimal color literals exist outside of Style_System modules.
- *
- * Excluded files:
- * - Files in src/styles/ (the Style_System itself)
- * - Files ending in Layout.ts (viz layout modules with canvas fallbacks)
- * - Files ending in Styles.ts (controlStyles, segmentedTabStyles)
- * - Test files (.test.ts, .test.tsx)
- *
+ * Static scan: no hardcoded hex colors in components/pages
+ * (excludes styles/, *Layout.ts, *Styles.ts, and *.test.*).
  */
 import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
@@ -51,7 +42,7 @@ function collectSourceFiles(dir: string): string[] {
       results.push(...collectSourceFiles(fullPath));
     } else if (entry.isFile() && /\.(tsx?|ts)$/.test(entry.name)) {
       // Exclude test files
-      if (/\.(test|spec|prop\.test)\.(ts|tsx)$/.test(entry.name)) continue;
+      if (/\.(test|spec)\.(ts|tsx)$/.test(entry.name)) continue;
       // Exclude layout/style helper modules (canvas fallbacks may use hex)
       if (/Layout\.ts$/.test(entry.name)) continue;
       if (/Styles\.ts$/.test(entry.name)) continue;
@@ -109,7 +100,7 @@ function scanFileForHexColors(filePath: string): HexViolation[] {
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
-describe("Feature: comprehensive-refinement, Property 19: No hardcoded hex colors in component files", () => {
+describe("no hardcoded hex colors in components/pages", () => {
   const componentFiles = collectSourceFiles(COMPONENTS_DIR);
   const pageFiles = collectSourceFiles(PAGES_DIR);
   const allFiles = [...componentFiles, ...pageFiles];

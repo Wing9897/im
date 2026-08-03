@@ -1,24 +1,6 @@
 /**
- * XSS Demonstration & URL Protocol Allowlist Tests
- *
- * Validates: Requirement 11 (Frontend XSS Protection)
- *
- * NOTE: This test imports React components from web/src/ and requires
- * web/node_modules to be installed (npm install in web/).
- *
- * These tests demonstrate that the codebase neutralizes the following
- * XSS attack vectors:
- *   1. `<script>` tags injected via user content render as text, not as
- *      executable script.
- *   2. HTML event-handler payloads (such as `<img onerror=...>`) render
- *      as text, not as DOM with handlers.
- *   3. HTML-entity-encoded payloads (`&lt;script&gt;`) render literally.
- *   4. URL validation (`isSafeHttpUrl` and the action
- *      config validators) rejects `javascript:`, `data:`, `vbscript:`,
- *      and other unsafe schemes.
- *
- * The test approach is functional: render real components with malicious
- * inputs, then assert the resulting DOM contains no executable artifacts.
+ * XSS / URL allowlist: render web/src components with hostile payloads
+ * and assert no executable DOM artifacts (needs web deps installed).
  */
 import React from "react";
 import { describe, it, expect } from "vitest";

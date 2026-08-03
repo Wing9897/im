@@ -1,15 +1,10 @@
 # 内置助手（Agent + 浏览器语音）
 
-本机「文字 Agent + tools」；语音只做可替换 IO。可查消息／情报、读写用户事件，管理 recurring＋RRULE；可选联网（非 RAG）。**不做**双向外部日历（Desktop 一次性 ICS／deep-link 除外，见 ARCHITECTURE）、Whisper／云 STT、FTS5。不创建／改 leaderboard／event／AI 任务。
+本机文字 Agent＋tools；语音仅为可替换 IO。可查消息／情报、读写用户事件与 recurring＋RRULE；可选联网（非 RAG）。**不做**双向外部日历（Desktop 一次性 ICS／deep-link 除外）、云 STT、FTS5；不创建／改分析任务。
 
 ## 怎么用
 
-1. 侧栏 **助手**（`/assistant`）或命令面板；自然语言提问。
-2. 麦克风／空白键 PTT（浏览器 Web Speech）→ 松开送出识别文字；或文字送出。可选 TTS 朗读。
-3. **紀錄**：`GET/PUT …/ui-prefs/assistant/sessions`（SQLite）。语音：`/ai/voice`；联网：`/ai` AI 供應商。目标工作集可随 chat `worksetId` 覆盖（默认 `__user__`）。
-4. 花名册 `/ai/staff`；A2A：`POST /api/v1/a2a/agent`（见 [`a2a.md`](a2a.md)）。项目管理见 [`project.md`](project.md)。
-
-前提：AI Provider 已配置。鉴权同其它 API；A2A 另需 access key。浏览器 STT 不可用时文字路径仍完整。**Electron 不跑浏览器 STT**——用浏览器分頁语音，桌面保持采集；会话经 ui-prefs 共用。
+侧栏 **助手**／命令面板：文字或浏览器 PTT；可选 TTS。纪录：`ui-prefs/assistant/sessions`。语音 `/ai/voice`；联网走 AI 供應商；默认工作集 `__user__`。花名册 `/ai/staff`；A2A／项目见 [`a2a.md`](a2a.md)、[`project.md`](project.md)。需已配置 AI Provider；**Electron 不跑浏览器 STT**（用浏览器分頁；会话经 ui-prefs 共用）。
 
 ## 架构原则
 

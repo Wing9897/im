@@ -11,7 +11,6 @@ from hypothesis import strategies as st
 from server.collector.manager_retry import CollectorRetryOrchestrator
 
 
-# Feature: codebase-simplification-round-2, Property 5
 @pytest.mark.traceability("Feature: codebase-simplification-round-2, Property 5")
 @settings(max_examples=100)
 @given(

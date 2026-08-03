@@ -29,8 +29,7 @@ Then pick a dev mode:
 | `npm run dev:web` | Server + Vite only (no Electron window) |
 | `npm run dev:server` | Python server only (port 18820) |
 
-To start from an empty database, stop dev and run
-`python scripts/reset_local_databases.py --apply`.
+Empty DB reset: see [README §開發](./README.md)（`scripts/reset_local_databases.py --apply`）.
 
 ## The gate: `npm run check`
 
@@ -55,24 +54,7 @@ The short post-deploy live check (`npm run verify:deploy`) is **not** part of th
 needs a running server on `127.0.0.1:18820` and, on a database that already has an admin, a
 bearer token in `VERIFY_BEARER` or `IM_ACCESS_TOKEN`. Everyday PR／main CI always runs **`quality`** (Ubuntu).
 
-**Release:** merge／push to **`main`** (or **`workflow_dispatch`**) runs a fully automatic
-pipeline: after `quality`, CI computes the release SemVer from the latest git tag `v*`
-(`scripts/bump_version.py --from-tags --print-only`). When **no** `v*` tags exist, the repo
-`VERSION` file is used **as-is** (first release, no bump); afterwards each push bumps from
-the latest tag. The version is injected into the build workspace only (no bot commit to
-`main`), packages Desktop + CLI on Windows／macOS／Linux (`dist:*` + `verify:desktop:full` +
-`package:cli`), pushes **only** the tag `v$RELEASE_VERSION`, and creates a GitHub Release
-(plus optional GHCR). `verify:desktop:full` is packaging/`desktop_verify` only — desktop
-vitest already ran in `quality`. Incomplete assets fail the job. No manual tag or VERSION
-bump on `main` is required — everyday `git push` is not rewritten by CI.
-
-**Version authorities (do not conflate):**
-- **Product SemVer** = git tags (`v*`) / GitHub Release
-- **Schema stamp** (`PRAGMA user_version`) + public **`SCHEMA_SEMVER`** = DB wipe-only
-  contract (independent of the product tag)
-- Repo **`VERSION`** = local／display packaging fallback; may lag tags. To align the file
-  locally: `python scripts/bump_version.py --from-tags --write` then `npm run sync:version`
-  (default `bump_version.py` never writes)
+**Release / version authorities:** see [README §版本控制](./README.md).
 
 ## Generated files are committed — regenerate, never hand-edit
 

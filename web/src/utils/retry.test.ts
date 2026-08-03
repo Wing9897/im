@@ -92,7 +92,6 @@ describe("retry utils", () => {
   });
 });
 
-// Feature: project-audit-optimization, Property 10: 重試次數上界
 describe("withRetry execution count upper bound", () => {
   it.each([
     [[]],

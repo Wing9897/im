@@ -41,7 +41,6 @@ _unrelated_metadata = st.fixed_dictionaries(
 )
 
 
-# Feature: technical-debt-simplification, Property 1
 @property_trace(1)
 @settings(max_examples=MIN_PROPERTY_EXAMPLES)
 @example(
@@ -134,7 +133,6 @@ _unrelated_metadata = st.fixed_dictionaries(
 )
 @given(schedule=supported_schedules, metadata=_unrelated_metadata)
 def test_supported_schedule_totality_and_determinism(schedule, metadata):
-    """Feature: technical-debt-simplification, Property 1."""
     schedule_type, schedule_value = schedule
     first_task = {**metadata, "schedule_type": schedule_type, "schedule_value": schedule_value}
     varied_task = {

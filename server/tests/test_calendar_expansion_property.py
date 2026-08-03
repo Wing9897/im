@@ -220,7 +220,6 @@ def _calendar_expansion_cases(draw: st.DrawFn):
 def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     case, interval, occurrence_index, boundary_span, boundary_time
 ):
-    """Feature: technical-debt-simplification, Property 3."""
     tasks, (range_start, range_end) = case
     for task in tasks:
         validate_rrule(task["rrule"])

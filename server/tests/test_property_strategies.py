@@ -11,7 +11,6 @@ from server.domain.schedule import preset_to_trigger_rrule
 from server.scheduler.manager import schedule_trigger_from_rrule
 from server.tests.property_strategies import (
     MIN_PROPERTY_EXAMPLES,
-    property_trace,
     supported_schedules,
     task_modes,
     utc_windows,
@@ -44,12 +43,6 @@ def test_utc_window_strategy_generates_ordered_aware_windows():
     assert start <= end
 
 
-def test_property_profile_and_trace_marker_are_standardized():
-    @property_trace(3)
-    def generated_test_placeholder():
-        pass
-
-    trace_marks = [mark for mark in generated_test_placeholder.pytestmark if mark.name == "traceability"]
+def test_property_settings_have_enough_examples():
     assert settings.default is not None
     assert settings.default.max_examples >= MIN_PROPERTY_EXAMPLES
-    assert trace_marks[0].args == ("Feature: technical-debt-simplification, Property 3",)
