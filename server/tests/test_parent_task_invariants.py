@@ -72,7 +72,7 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
             "name": "Child Standup",
             "promptTemplate": "",
             "analysisMode": "event",
-            "analysisTimeRange": "12h",
+            "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",
         },
@@ -128,7 +128,7 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
             "name": "Leaving Project",
             "promptTemplate": "x",
             "analysisMode": "event",
-            "analysisTimeRange": "12h",
+            "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",
         },
@@ -151,32 +151,36 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
 
 
 async def test_rest_create_recurring_requires_start_clock(client) -> None:
-    """Shell create succeeds; schedule PUT requires start clock unless all-day."""
-    created = await client.post(
+    """Atomic create / schedule PUT require start clock unless all-day."""
+    missing = await client.post(
+        "/api/v1/tasks/recurring",
+        json={"name": "No Clock", "rrule": "FREQ=DAILY"},
+    )
+    assert missing.status_code == 422
+    assert "eventStartTime" in missing.json()["message"]
+
+    # Shell path on POST /tasks is hard-cut.
+    shell = await client.post(
         "/api/v1/tasks",
         json={
-            "name": "No Clock",
+            "name": "No Clock Shell",
             "promptTemplate": "",
             "analysisMode": "recurring",
             "channelIds": [],
         },
     )
-    assert created.status_code == 201
-    task_id = created.json()["id"]
+    assert shell.status_code == 422
+    assert "POST /tasks/recurring" in shell.json()["message"]
 
-    missing = await client.put(
-        f"/api/v1/tasks/{task_id}/schedule",
-        json={"rrule": "FREQ=DAILY"},
+    ok = await client.post(
+        "/api/v1/tasks/recurring",
+        json={"name": "With Clock", "rrule": "FREQ=DAILY", "eventStartTime": "09:30"},
     )
-    assert missing.status_code == 422
-    assert "eventStartTime" in missing.json()["message"]
-
-    ok = await client.put(
-        f"/api/v1/tasks/{task_id}/schedule",
-        json={"rrule": "FREQ=DAILY", "eventStartTime": "09:30"},
-    )
-    assert ok.status_code == 200
-    body = ok.json()
+    assert ok.status_code == 201, ok.text
+    task_id = ok.json()["id"]
+    schedule = await client.get(f"/api/v1/tasks/{task_id}/schedule")
+    assert schedule.status_code == 200
+    body = schedule.json()
     assert body["rrule"] == "FREQ=DAILY"
     assert body["eventStartTime"] == "09:30"
     assert body["taskId"] == task_id

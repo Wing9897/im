@@ -121,7 +121,7 @@ vi.mock("../api/tasks", () => ({
       taskId: "task-1",
       taskName: "任務",
       description: null,
-      analysisTimeRange: "24h",
+      analysisTimeRange: "1d",
       isActive: true,
       earliestBatchStart: "2026-01-01T00:00:00.000Z",
       latestBatchEnd: "2026-01-02T00:00:00.000Z",

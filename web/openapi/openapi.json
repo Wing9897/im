@@ -13328,7 +13328,7 @@
             ],
             "title": "Lastanalysisat"
           },
-          "cronExpression": {
+          "scheduleRrule": {
             "anyOf": [
               {
                 "type": "string"
@@ -13337,7 +13337,7 @@
                 "type": "null"
               }
             ],
-            "title": "Cronexpression"
+            "title": "Schedulerrule"
           }
         },
         "type": "object",

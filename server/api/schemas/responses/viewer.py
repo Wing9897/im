@@ -25,4 +25,4 @@ class ViewerTaskResponse(BaseModel):
     name: str
     isActive: bool
     lastAnalysisAt: str | None = None
-    cronExpression: str | None = None
+    scheduleRrule: str | None = None

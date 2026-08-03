@@ -1,4 +1,4 @@
-/** Theme catalog entries, remaps, and lookup helpers. */
+/** Theme catalog entries and lookup helpers. */
 
 import type { ThemeDefinition, ThemeMotion } from "./themeTypes.ts";
 export type { ThemeDefinition } from "./themeTypes.ts";
@@ -86,41 +86,6 @@ function solidGradient(cardHex: string, rgb: string): string {
 function accentWash(accentHex: string, amountPct: number): string {
   return `color-mix(in srgb, ${accentHex} ${amountPct}%, transparent)`;
 }
-
-/**
- * Retired localStorage theme IDs → current catalog IDs.
- * TODO: delete on next prefs-schema bump (＞v5) — that wipe clears `im:*` via clearLegacyPrefsIfNeeded.
- * Do not bump schema solely to drop this map.
- */
-export const LEGACY_THEME_REMAP: Readonly<Record<string, string>> = {
-  mocha: "moss",
-  macchiato: "moss",
-  frappe: "moss",
-  "rose-pine": "moss",
-  midnight: "nord",
-  "one-dark": "nord",
-  dracula: "nord",
-  "tokyo-night": "nord",
-  kanagawa: "sumi",
-  gruvbox: "sumi",
-  "ayu-dark": "sumi",
-  "solarized-dark": "sumi",
-  "solarized-light": "washi",
-  miku: "sakura",
-  ghibli: "moss",
-  evangelion: "sakura",
-  sunset: "ember",
-  ocean: "harbor",
-  aurora: "moss",
-  "neon-city": "cyberpunk",
-  charcoal: "slate",
-  graphite: "slate",
-  gold: "obsidian",
-  teal: "reef",
-  forest: "cedar",
-  ice: "porcelain",
-  neon: "volt",
-};
 
 /**
  * Mixed-hue catalogs: near-black / paper bases with non-matching accents.
@@ -857,11 +822,10 @@ export const LIGHT_THEME_IDS = new Set(
   THEME_CATALOG.filter((t) => t.light).map((t) => t.id),
 );
 
-/** Resolve stored / requested id through legacy remap, then validate. */
+/** Validate against the catalog; unknown / empty → default. */
 export function resolveThemeId(themeId: string | null | undefined): string {
   if (!themeId) return DEFAULT_THEME_ID;
-  const remapped = LEGACY_THEME_REMAP[themeId] ?? themeId;
-  return THEME_IDS.has(remapped) ? remapped : DEFAULT_THEME_ID;
+  return THEME_IDS.has(themeId) ? themeId : DEFAULT_THEME_ID;
 }
 
 export function getThemeDefinition(themeId: string): ThemeDefinition {

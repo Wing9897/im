@@ -169,7 +169,7 @@ async def seed_database(db: Any) -> None:
             TASK_LEADERBOARD,
             "熱門話題排行",
             "leaderboard",
-            "24h",
+            "1d",
             "FREQ=SECONDLY;INTERVAL=10",
             None,
             None,
@@ -179,7 +179,7 @@ async def seed_database(db: Any) -> None:
             None,
             "",
         ),
-        (TASK_EVENT, "關鍵情報", "event", "24h", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
+        (TASK_EVENT, "關鍵情報", "event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
         (
             TASK_EVENT_TIMED,
             "行程提取",

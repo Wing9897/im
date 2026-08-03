@@ -10,7 +10,6 @@ import {
   applyBgImage,
   loadBgForTheme,
   resolveThemeId,
-  LEGACY_THEME_REMAP,
 } from "./themeData";
 import { THEME_CATALOG, SPECIAL_THEME_IDS } from "./themeCatalog";
 
@@ -136,9 +135,9 @@ describe("applyTheme sets DOM attribute and localStorage", () => {
     expect(document.documentElement.getAttribute("data-theme-family")).toBe("special");
   });
 
-  it("remaps legacy ids and falls back to default for unknown", () => {
+  it("falls back to default for unknown theme ids", () => {
     applyTheme("mocha");
-    expect(document.documentElement.getAttribute("data-theme")).toBe("moss");
+    expect(document.documentElement.getAttribute("data-theme")).toBe(DEFAULT_THEME_ID);
     applyTheme("nonexistent-theme");
     expect(document.documentElement.getAttribute("data-theme")).toBe(DEFAULT_THEME_ID);
     expect(localStorage.getItem(STORAGE_KEY_THEME)).toBe(DEFAULT_THEME_ID);
@@ -155,24 +154,16 @@ describe("applyTheme sets DOM attribute and localStorage", () => {
   });
 });
 
-describe("legacy theme remap", () => {
-  it("maps catppuccin / dark / anime legacy ids as specified", () => {
-    expect(resolveThemeId("mocha")).toBe("moss");
-    expect(resolveThemeId("macchiato")).toBe("moss");
-    expect(resolveThemeId("frappe")).toBe("moss");
-    expect(resolveThemeId("rose-pine")).toBe("moss");
-    expect(resolveThemeId("midnight")).toBe("nord");
-    expect(resolveThemeId("dracula")).toBe("nord");
-    expect(resolveThemeId("tokyo-night")).toBe("nord");
-    expect(resolveThemeId("gruvbox")).toBe("sumi");
-    expect(resolveThemeId("ayu-dark")).toBe("sumi");
-    expect(resolveThemeId("solarized-dark")).toBe("sumi");
-    expect(resolveThemeId("solarized-light")).toBe("washi");
-    expect(resolveThemeId("sunset")).toBe("ember");
-    expect(resolveThemeId("ocean")).toBe("harbor");
-    expect(resolveThemeId("miku")).toBe("sakura");
-    expect(resolveThemeId("neon-city")).toBe("cyberpunk");
-    expect(Object.keys(LEGACY_THEME_REMAP).length).toBeGreaterThan(10);
+describe("resolveThemeId unknown → default", () => {
+  it("returns catalog ids unchanged and unknown ids as default", () => {
+    expect(resolveThemeId("nord")).toBe("nord");
+    expect(resolveThemeId("sakura")).toBe("sakura");
+    expect(resolveThemeId("mocha")).toBe(DEFAULT_THEME_ID);
+    expect(resolveThemeId("dracula")).toBe(DEFAULT_THEME_ID);
+    expect(resolveThemeId("invalid-theme")).toBe(DEFAULT_THEME_ID);
+    expect(resolveThemeId("")).toBe(DEFAULT_THEME_ID);
+    expect(resolveThemeId(null)).toBe(DEFAULT_THEME_ID);
+    expect(resolveThemeId(undefined)).toBe(DEFAULT_THEME_ID);
   });
 });
 
@@ -193,13 +184,11 @@ describe("getStoredThemeId fallback mechanism", () => {
     expect(getStoredThemeId()).toBe("sakura");
   });
 
-  it("remaps legacy stored values and persists the new id", () => {
+  it("returns default for unknown stored values without rewriting storage", () => {
     localStorage.setItem(STORAGE_KEY_THEME, "dracula");
-    expect(getStoredThemeId()).toBe("nord");
-    expect(localStorage.getItem(STORAGE_KEY_THEME)).toBe("nord");
-  });
+    expect(getStoredThemeId()).toBe(DEFAULT_THEME_ID);
+    expect(localStorage.getItem(STORAGE_KEY_THEME)).toBe("dracula");
 
-  it("returns default theme for invalid stored values", () => {
     localStorage.setItem(STORAGE_KEY_THEME, "invalid-theme");
     expect(getStoredThemeId()).toBe(DEFAULT_THEME_ID);
 

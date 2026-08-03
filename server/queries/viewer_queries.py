@@ -64,6 +64,6 @@ async def fetch_viewer_tasks(db: Database) -> list[dict[str, Any]]:
         if row.get("last_analysis_at"):
             entry["lastAnalysisAt"] = row["last_analysis_at"]
         if row.get("schedule_rrule"):
-            entry["cronExpression"] = str(row["schedule_rrule"])
+            entry["scheduleRrule"] = str(row["schedule_rrule"])
         result.append(entry)
     return result

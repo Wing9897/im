@@ -8,7 +8,7 @@
 /** One-time wipe marker written after legacy `im:*` keys are cleared. */
 export const PREFS_SCHEMA_VERSION_KEY = "im:prefs-schema-version";
 /** Bump when first-launch wipe of prior-generation local prefs is required. */
-export const PREFS_SCHEMA_VERSION = "5";
+export const PREFS_SCHEMA_VERSION = "6";
 
 // ── Chrome / shell ──────────────────────────────────────────────────────────
 

@@ -95,7 +95,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v10** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v11** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -288,7 +288,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-10 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-11 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
 | `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
@@ -371,7 +371,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
 
-**Current stamp is 10.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-10 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 10.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-11 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -379,7 +379,7 @@ Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **10** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.11`) |
+| **11** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.12`) |
 | **9** (prior) | Hard-reject → reset |
 | **8** (prior) | Hard-reject → reset |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
@@ -387,11 +387,11 @@ Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 10. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 11. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 10 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 11 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v10 explicit reset
+#### Schema v11 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -399,7 +399,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v10-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v11-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -412,9 +412,9 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v10 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v11 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 10** splits `project_message_cursors` into `last_message_at` (ISO only) + nullable `last_message_id` (same-second tie-break). Prior stamps remain wipe-only. AI timer storage stays on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Trackable items (categories, emoji marks, remind projections) are part of the current stamp-10 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
+**Stamp 11** splits `project_message_cursors` into `last_message_at` (ISO only) + nullable `last_message_id` (same-second tie-break). Prior stamps remain wipe-only. AI timer storage stays on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded). Calendar series remain on `recurring_schedules.rrule` (purpose=calendar). Trackable items (categories, emoji marks, remind projections) are part of the current stamp-11 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 
@@ -436,14 +436,14 @@ Stamp-10 wipe-only behavior is documented under [Schema baseline (wipe-only)](#s
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v10 DDL, validate its full fingerprint, then stamp 10 | Schema creation and v10 stamp |
-| Unstamped current, version 0 | Require the exact v10 fingerprint and stamp 10 | Stamp only |
-| Current, version 10 | Validate the exact v10 fingerprint on every startup | None |
+| Empty, version 0 | Create v11 DDL, validate its full fingerprint, then stamp 11 | Schema creation and v11 stamp |
+| Unstamped current, version 0 | Require the exact v11 fingerprint and stamp 11 | Stamp only |
+| Current, version 11 | Validate the exact v11 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
 | Incomplete/lookalike version 0 or 9 | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 10. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 11. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -606,7 +606,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-10 / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-11 / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/ui-prefs/*`).
 

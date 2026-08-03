@@ -24,7 +24,6 @@ export {
 };
 export {
   DEFAULT_THEME_ID,
-  LEGACY_THEME_REMAP,
   resolveThemeId,
   getThemeDefinition,
   THEME_CATALOG,
@@ -109,15 +108,9 @@ export function applyTheme(themeId: string): void {
   applyThemePersonalization(id);
 }
 
-/** Read stored theme ID from localStorage; remaps legacy IDs; falls back to default. */
+/** Read stored theme ID from localStorage; unknown → default (no remap persist). */
 export function getStoredThemeId(): string {
-  const stored = localStorage.getItem(STORAGE_KEY_THEME);
-  const resolved = resolveThemeId(stored);
-  // Persist remap so subsequent reads stay on the new id
-  if (stored && stored !== resolved) {
-    localStorage.setItem(STORAGE_KEY_THEME, resolved);
-  }
-  return resolved;
+  return resolveThemeId(localStorage.getItem(STORAGE_KEY_THEME));
 }
 
 /** Apply background image + opacity to the DOM */

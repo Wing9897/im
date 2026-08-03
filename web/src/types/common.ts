@@ -59,15 +59,13 @@ export type AnalysisTimeRange =
   | "today"
   | "1h"
   | "6h"
-  | "12h"
-  | "24h"
   | "48h"
   | "1d"
   | "7d"
   | "30d";
 
-/** Message-query windows (same canonical tokens as analysis tasks). */
-export type MessageTimeRange = AnalysisTimeRange;
+/** Message-query windows (task windows plus monitor ``12h``／``24h`` tokens). */
+export type MessageTimeRange = AnalysisTimeRange | "12h" | "24h";
 
 /** 時間窗口（毫秒精度），用於定義起訖時間範圍 */
 export interface TimeWindow {

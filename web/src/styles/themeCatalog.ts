@@ -18,7 +18,6 @@ export type {
 export { THEME_MOTIFS } from "./themeTypes.ts";
 
 export {
-  LEGACY_THEME_REMAP,
   THEME_CATALOG,
   DEFAULT_THEME_ID,
   THEME_BY_ID,

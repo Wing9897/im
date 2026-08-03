@@ -118,7 +118,7 @@ vi.mock("../../api/tasks", () => ({
         taskId: "task-1",
         taskName: "任務活動",
         description: null,
-        analysisTimeRange: "24h",
+        analysisTimeRange: "1d",
         isActive: true,
         earliestBatchStart: start.toISOString(),
         latestBatchEnd: end.toISOString(),
@@ -127,7 +127,7 @@ vi.mock("../../api/tasks", () => ({
     ];
   }),
   listTasks: vi.fn(async () => [
-    { id: "task-1", name: "任務活動", description: null, promptTemplate: "", analysisMode: "event", analysisTimeRange: "24h", version: 1, isActive: true, channelIds: [], createdAt: "", updatedAt: "" },
+    { id: "task-1", name: "任務活動", description: null, promptTemplate: "", analysisMode: "event", analysisTimeRange: "1d", version: 1, isActive: true, channelIds: [], createdAt: "", updatedAt: "" },
   ]),
 }));
 

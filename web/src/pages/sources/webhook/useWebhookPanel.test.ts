@@ -13,9 +13,9 @@ function key(partial: Partial<AccessKeyPublic> & { id: string }): AccessKeyPubli
 }
 
 describe("isFullAccessKey / countFullAccessKeys", () => {
-  it("treats missing or empty scopes as full (*)", () => {
-    expect(isFullAccessKey({ scopes: undefined as unknown as string[] })).toBe(true);
-    expect(isFullAccessKey({ scopes: [] })).toBe(true);
+  it("treats missing or empty scopes as not full", () => {
+    expect(isFullAccessKey({ scopes: undefined as unknown as string[] })).toBe(false);
+    expect(isFullAccessKey({ scopes: [] })).toBe(false);
   });
 
   it("counts only keys with * for webhook configured state", () => {
@@ -24,7 +24,7 @@ describe("isFullAccessKey / countFullAccessKeys", () => {
       key({ id: "full", scopes: ["*"] }),
       key({ id: "legacy", scopes: [] }),
     ];
-    expect(countFullAccessKeys(keys)).toBe(2);
+    expect(countFullAccessKeys(keys)).toBe(1);
     expect(countFullAccessKeys([key({ id: "only-read", scopes: ["read"] })])).toBe(0);
     expect(countFullAccessKeys([])).toBe(0);
     expect(countFullAccessKeys(null)).toBe(0);

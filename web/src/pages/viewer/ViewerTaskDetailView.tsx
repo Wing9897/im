@@ -44,9 +44,9 @@ export function ViewerTaskDetailView({
               ? formatOsDateTime(task.lastAnalysisAt)
               : t("viewer.neverRun")}
           </div>
-          {task.cronExpression ? (
+          {task.scheduleRrule ? (
             <div className="mt-1.5 font-mono">
-              {t("viewer.schedule", { cron: task.cronExpression })}
+              {t("viewer.schedule", { cron: task.scheduleRrule })}
             </div>
           ) : null}
         </div>

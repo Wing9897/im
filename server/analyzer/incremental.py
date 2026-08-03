@@ -33,9 +33,9 @@ MESSAGE_COLUMNS: tuple[str, ...] = (
 )
 
 #: time_range token -> SQLite datetime offset. Unknown tokens = no filter.
-#: Server still accepts historical tokens (`1h`/`12h`/`24h`); the web UI may
-#: display mapped labels such as `1d` for the last day. Monitor／agent message
-#: filters use the canonical ``7d``／``30d`` spellings only (no ``7days``／``30days``).
+#: Task ``analysis_time_range`` CHECK no longer includes ``12h``／``24h`` (use
+#: ``1d``／``48h``). Those tokens remain here for monitor／agent message filters.
+#: Monitor／agent use canonical ``7d``／``30d`` only (no ``7days``／``30days``).
 _TIME_RANGE_OFFSETS: dict[str, str] = {
     "1h": "-1 hours",
     "6h": "-6 hours",

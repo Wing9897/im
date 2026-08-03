@@ -60,7 +60,7 @@ describe("tasks API", () => {
         promptTemplate: "Analyze",
         webSearchQuery: "",
         analysisMode: "leaderboard",
-        analysisTimeRange: "24h",
+        analysisTimeRange: "1d",
         version: 3,
         isActive: true,
         channelIds: [{ platform: "telegram", platformId: "42", id: "telegram:42" }],
