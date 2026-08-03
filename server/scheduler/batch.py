@@ -11,6 +11,7 @@ Invariants:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from typing import Any, Optional, Protocol
 
@@ -18,7 +19,7 @@ from server.analyzer.incremental import fetch_unanalyzed_messages
 from server.analyzer.leaderboard import load_leaderboard_context
 from server.analyzer.overlap import fetch_overlap_context
 from server.analyzer.prompt import build_analysis_prompt
-from server.app_logging import failure_details_from_exc
+from server.app_logging import failure_details_from_exc, write_app_log
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import EVENT_MODE, LEADERBOARD_MODE, MESSAGE_BATCH_ANALYSIS_MODES
@@ -151,6 +152,7 @@ async def _process_batch(
     )
 
     if await get_config_bool(db, "analysis_trace_verbose"):
+        short_batch = f"{batch_id[:8]}…" if len(batch_id) > 8 else batch_id
         logger.info(
             "analysis trace task=%s batch=%s mode=%s strategy=%s "
             "rules=%s messages=%s tokens=%s overlap_used=%s primary_used=%s",
@@ -163,6 +165,32 @@ async def _process_batch(
             prompt.estimated_tokens,
             prompt.overlap_used_count,
             prompt.primary_used_count,
+        )
+        await write_app_log(
+            db,
+            level="info",
+            category="analysis",
+            message=(
+                f"分析追蹤：{task_name}（{short_batch}）"
+                f" mode={analysis_mode} strategy={strategy_mode or 'standard'}"
+                f" rules={rules_version or 'default'} messages={len(messages)}"
+                f" tokens≈{prompt.estimated_tokens}"
+            ),
+            details=json.dumps(
+                {
+                    "taskId": task_id,
+                    "taskName": task_name,
+                    "batchId": batch_id,
+                    "analysisMode": analysis_mode,
+                    "strategyMode": strategy_mode or "standard",
+                    "rulesVersion": rules_version or "default",
+                    "messageCount": len(messages),
+                    "estimatedTokens": prompt.estimated_tokens,
+                    "overlapUsedCount": prompt.overlap_used_count,
+                    "primaryUsedCount": prompt.primary_used_count,
+                },
+                ensure_ascii=False,
+            ),
         )
 
     now = utc_now_iso()

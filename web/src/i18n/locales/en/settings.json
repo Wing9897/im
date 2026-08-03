@@ -72,7 +72,7 @@
       "rulesVersionPlaceholder": "v2",
       "rulesVersionHelp": "Version string written into message-batch prompts (event / leaderboard system prompts), e.g. v2, so you can correlate prompt revisions. Does not change evidence style, scheduling, or analysis rules. Leave empty to omit the tag. Unused by web intel / project / recurring. Saves on blur or Enter.",
       "traceVerboseLabel": "Server analysis trace",
-      "traceVerboseHelp": "Write more detailed analysis tracing to server logs (not the Settings → Logs page). Takes effect immediately when toggled.",
+      "traceVerboseHelp": "When on, each message-batch analysis (event / leaderboard) writes an info line to Settings → Logs (task / batch / strategy / message count / estimated tokens) and to the server process log. Does not record full LLM request/response. Unused by web intel / project / recurring. Saves immediately on toggle; new lines appear only after an analysis run.",
       "saved": "Debug settings saved"
     }
   },

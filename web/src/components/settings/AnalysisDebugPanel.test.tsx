@@ -35,20 +35,27 @@ describe("AnalysisDebugPanel", () => {
     expect(container.textContent).toContain("分析規則版本標記");
     expect(container.textContent).toContain("伺服器分析 Trace");
     expect(container.textContent).toContain("不會切換證據風格");
-    expect(container.textContent).toContain("不是設定→系統日誌頁");
-    expect(container.textContent).toContain("切換後立即生效");
-    expect(container.textContent).not.toContain("記錄完整 request/response");
+    expect(container.textContent).toContain("設定→日誌");
+    expect(container.textContent).toContain("已關閉");
+    expect(container.textContent).toContain("不會記錄完整 LLM request/response");
   });
 
   it("notifies when the trace switch changes", () => {
     const container = document.createElement("div");
     const props = renderPanel(container);
+    expect(container.textContent).toContain("已關閉");
     const switchEl = container.querySelector<HTMLElement>('[role="switch"]')!;
     expect(switchEl.getAttribute("aria-checked")).toBe("false");
     act(() => {
       switchEl.click();
     });
     expect(props.onAnalysisTraceVerboseChange).toHaveBeenCalledWith(true);
+  });
+
+  it("shows enabled status text when trace is on", () => {
+    const container = document.createElement("div");
+    renderPanel(container, { analysisTraceVerbose: true });
+    expect(container.textContent).toContain("已啟用");
   });
 
   it("commits rules version on blur", () => {
