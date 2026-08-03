@@ -2,7 +2,7 @@
  * Render + property tests for the shared ReconnectButton extracted from
  * RssFeedCard / MqttBrokerCard / DiscordBotCard.
  *
- * Validates: Requirement F2.2 (確認重連按鈕行為不變).
+ * Confirms reconnect button behavior is unchanged after extraction.
  *
  * ReconnectButton is a pure structural extraction of the reconnect control
  * previously inlined (identically) in the `actions` slot of each source card:

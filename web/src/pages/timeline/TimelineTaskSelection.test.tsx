@@ -1,11 +1,10 @@
 /**
  * Unit tests for TimelinePage task selection behavior.
  *
- * Validates:
- * - Requirement 3.1: Selecting a task filters displayed events
- * - Requirement 3.2: Default "all tasks" displays all events
- * - Requirement 3.3: Selected task ID is passed to Gantt view for filtering
- * - Requirement 3.4: If selected task no longer exists, selection resets
+ * - Selecting a task filters displayed events
+ * - Default "all tasks" displays all events
+ * - Selected task ID is passed to Gantt view for filtering
+ * - If selected task no longer exists, selection resets
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";

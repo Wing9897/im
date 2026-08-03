@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTaskPersistence } from "./useTaskPersistence";
-import type { TaskFormState } from "./useTaskEditorState";
+import { DEFAULT_FORM_STATE, type TaskFormState } from "./useTaskEditorState";
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -50,30 +50,14 @@ const mockUpdateTask = updateTask as ReturnType<typeof vi.fn>;
 
 let latestResult: ReturnType<typeof useTaskPersistence> | null = null;
 
-const DEFAULT_FORM_STATE: TaskFormState = {
+/** Filled create payload on top of editor SoT (keeps scheduleRrule in sync). */
+const FILLED_FORM_STATE: TaskFormState = {
+  ...DEFAULT_FORM_STATE,
   name: "My Task",
   description: "A test task",
   promptTemplate: "Analyze this",
-  webSearchQuery: "",
-  scheduleType: "seconds_10",
-  scheduleValue: null,
-  scheduleRrule: null,
   analysisMode: "leaderboard",
-  analysisTimeRange: "1d",
   channelIds: ["ch-1"],
-  rrule: "",
-  eventStartTime: "",
-  eventEndTime: "",
-  eventIsAllDay: false,
-  eventLocation: "",
-  eventDescription: "",
-  includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
-  worksetId: null,
 };
 
 function Harness({
@@ -101,7 +85,7 @@ function renderHarness(props?: Partial<{ formState: TaskFormState; onError: (msg
   const root = createRoot(container);
   const onError = props?.onError ?? vi.fn();
   act(() => {
-    root.render(<Harness formState={props?.formState ?? DEFAULT_FORM_STATE} onError={onError} />);
+    root.render(<Harness formState={props?.formState ?? FILLED_FORM_STATE} onError={onError} />);
   });
   return { container, root, onError };
 }
@@ -176,7 +160,7 @@ describe("useTaskPersistence", () => {
     mockCreateRecurringTask.mockResolvedValue({ id: "rec-1" });
 
     const recurringForm: TaskFormState = {
-      ...DEFAULT_FORM_STATE,
+      ...FILLED_FORM_STATE,
       analysisMode: "recurring",
       promptTemplate: "",
       webSearchQuery: "",
@@ -214,7 +198,7 @@ describe("useTaskPersistence", () => {
     mockCreateRecurringTask.mockRejectedValue(new Error("schedule invalid"));
     const onError = vi.fn();
     const recurringForm: TaskFormState = {
-      ...DEFAULT_FORM_STATE,
+      ...FILLED_FORM_STATE,
       analysisMode: "recurring",
       rrule: "FREQ=DAILY",
       eventStartTime: "09:00",

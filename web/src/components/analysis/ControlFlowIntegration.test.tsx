@@ -143,8 +143,6 @@ describe("Control flow integration tests", () => {
 
   describe("Pause flow: handleAnalysisPausedChange → API call → UI state update", () => {
     /**
-     * Validates: Requirement 4.4, 5.1
-     *
      * Full pause cycle:
      * 1. Call handleAnalysisPausedChange(true)
      * 2. Verify setAnalysisPaused API is called with correct payload
@@ -191,8 +189,6 @@ describe("Control flow integration tests", () => {
     });
 
     /**
-     * Validates: Requirement 5.1
-     *
      * Full resume cycle:
      * 1. Start from paused state
      * 2. Call handleAnalysisPausedChange(false) to resume
@@ -237,8 +233,6 @@ describe("Control flow integration tests", () => {
 
   describe("Abort flow: handleEmergencyAbort → API call → state update", () => {
     /**
-     * Validates: Requirement 5.2
-     *
      * Full abort cycle:
      * 1. Call handleEmergencyAbort()
      * 2. Verify emergencyAbortAnalysis API is called
@@ -283,8 +277,6 @@ describe("Control flow integration tests", () => {
     });
 
     /**
-     * Validates: Requirement 5.2
-     *
      * Abort flow error handling:
      * When the API call fails, state should still be cleaned up.
      */

@@ -1,12 +1,11 @@
 /**
  * Component tests for timeline calendar rendering (Task 13.3).
  *
- * Validates:
- * - Requirement 9.1: Calendar occurrences render in Calendar and Gantt views
- * - Requirement 9.2: Calendar occurrences have a distinct visual indicator
- * - Requirement 9.3: Calendar tasks appear in filter options
- * - Requirement 9.4: Navigation re-requests occurrences
- * - Requirement 9.5: All-day calendar occurrences appear in the all-day section
+ * - Calendar occurrences render in Calendar and Gantt views
+ * - Calendar occurrences have a distinct visual indicator
+ * - Calendar tasks appear in filter options
+ * - Navigation re-requests occurrences
+ * - All-day calendar occurrences appear in the all-day section
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";

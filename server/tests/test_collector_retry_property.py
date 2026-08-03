@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from server.collector.manager_retry import CollectorRetryOrchestrator
+from server.tests.property_strategies import property_trace
 
 
-@pytest.mark.traceability("Feature: codebase-simplification-round-2, Property 5")
+@property_trace(5)
 @settings(max_examples=100)
 @given(
     account_id=st.text(min_size=1, max_size=24),

@@ -5,10 +5,9 @@ import { subscribeBoardPoll } from "./boardPollBus";
 /**
  * Board widget poll intervals.
  * Queue widget does not use this — it reads shared AppRuntime `queueStatus`
- * (`QUEUE_STATUS_REFRESH_INTERVAL_MS`). `queue` remains for tests / legacy.
+ * (`QUEUE_STATUS_REFRESH_INTERVAL_MS`).
  */
 export const BOARD_POLL_MS = {
-  queue: 15_000,
   standard: 45_000,
 } as const;
 

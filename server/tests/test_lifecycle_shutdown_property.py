@@ -5,11 +5,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any, cast
 
-import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from server.collector.manager_retry import CollectorRetryOrchestrator
+from server.tests.property_strategies import property_trace
 
 _OWNER_TYPES = ("lifespan", "scheduler", "collector")
 _TASK_MODES = ("immediate", "blocked", "cancelled", "failing")
@@ -32,7 +32,7 @@ async def _owned_task(index: int, mode: str, events: list[str], blocker: asyncio
         events.append(f"task:{index}:done")
 
 
-@pytest.mark.traceability("Feature: codebase-simplification-round-2, Property 4")
+@property_trace(4)
 @settings(max_examples=100, deadline=None)
 @given(
     owner_type=st.sampled_from(_OWNER_TYPES),

@@ -1,8 +1,8 @@
 /**
  * Rendering variant tests for AccountListSection.
  *
- * Validates: Requirement 8.5 (rendering variant tests for components that
- * render differently based on data size: empty list, single item, many items).
+ * Rendering variant tests for components that render differently based on
+ * data size: empty list, single item, many items.
  *
  * AccountListSection has multiple data-driven rendering branches:
  *   - Loading state (spinner only)
