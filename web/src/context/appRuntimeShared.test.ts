@@ -101,7 +101,6 @@ describe("appRuntimeShared", () => {
 });
 
 
-// Feature: project-audit-optimization, Property 6: 日誌合併不變量
 describe("mergeLogs invariants", () => {
   const existing: AppLogEntry[] = [
     {

@@ -32,7 +32,6 @@ async def _owned_task(index: int, mode: str, events: list[str], blocker: asyncio
         events.append(f"task:{index}:done")
 
 
-# Feature: codebase-simplification-round-2, Property 4
 @pytest.mark.traceability("Feature: codebase-simplification-round-2, Property 4")
 @settings(max_examples=100, deadline=None)
 @given(

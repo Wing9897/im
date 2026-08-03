@@ -1,9 +1,4 @@
-/**
- * Unit tests for Null Guard Utilities
- *
- * Feature: api-null-safety-audit, Property 3: Null guard transparency and safety
- *
- */
+/** Unit tests for null guard utilities. */
 import { describe, it, expect } from "vitest";
 import { safeArray } from "./nullGuards";
 

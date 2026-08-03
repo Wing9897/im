@@ -86,7 +86,6 @@ describe("getOsTimeMs", () => {
   });
 });
 
-// Feature: project-audit-optimization, Property 7: 時間戳格式化有效性
 describe("formatOsDateTime — validity", () => {
   /**
    *
