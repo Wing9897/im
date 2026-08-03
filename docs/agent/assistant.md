@@ -1,23 +1,15 @@
 # 内置助手（Agent + 浏览器语音）
 
-IntelligenceMonitor 本机「文字 Agent + tools」；语音只做可替换 IO，不进入 Agent 核心。助手可查本机已采集消息、**分析关键事件／情报**、读写用户事件日程，并在设定启用时可选联网检索（OpenAI／Gemini 原生或自研 `web.search`，非 RAG／向量库）。本阶段**不做** webcal 订阅／CalDAV／Google OAuth／双向外部日历同步（**例外：** Desktop 一次性 `.ics` 档案关联 + `intelligencemonitor://calendar/import` deep link → 确认弹窗写入 `user_events`，见 [`ARCHITECTURE.md` Desktop Shell](../ARCHITECTURE.md)）、本机 Whisper、豆包云 STT/TTS、FTS5／RAG。助手可通过 `calendar.create_event` 写入单次「用户事件」（`user_events`：归属用 `worksetId`，默认 builtin `__user__`「一般」；可选 `taskId` 仅作 event／recurring 溯源，不得传 `__user__`），也可通过 `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` 管理 `analysisMode=recurring` 循环任务＋RRULE（停用／软删除优先 `delete_recurring_task`＝`isActive=false`；`update_recurring_task(isActive=…)` 主要用于再启用）；**不会**创建／修改／删除 leaderboard／event／AI 分析任务。
+本机「文字 Agent + tools」；语音只做可替换 IO。可查消息／情报、读写用户事件，管理 recurring＋RRULE；可选联网（非 RAG）。**不做**双向外部日历（Desktop 一次性 ICS／deep-link 除外，见 ARCHITECTURE）、Whisper／云 STT、FTS5。不创建／改 leaderboard／event／AI 任务。
 
 ## 怎么用
 
-1. 打开侧栏 **助手**（路由 `/assistant`），或命令面板搜「助手」。
-2. 在输入框用自然语言提问，例如：「最近有没有提到某某？」「未来 7 天有什么日程？」
-3. 可选：按住麦克风或空白键（浏览器 Web Speech；手势随语音设定 hold／toggle）→ **松开／再按即送出识别文字**（无识别则不送出草稿）；也可用文字输入后点送出。识别稿会同步进输入框，但 PTT 释放不会用草稿兜底。
-4. 回答结束后若设置里开启朗读，会用浏览器 TTS 读出；可随时停止。
-5. 侧栏顶部切到 **紀錄**：会话列表经 `GET/PUT /api/v1/ui-prefs/assistant/sessions` 存 SQLite（新建／切换／删除）。清空对话或「新對話」会开新会话；有内容的旧会话仍留在纪录里。服务端未配置时为空列表（不再从 localStorage 迁移）。
-6. 语音设置在 **AI → 語音**（`/ai/voice`）：`sttProvider` / `ttsProvider`（v1 仅 `browser`）、`ttsEnabled`、识别语言、以及 **`defaultWorksetId`**（纯语音／无输入框时助手写入日程的默认归属工作集；默认 `__user__`「一般」）。助手主页／快捷对话输入区也可临时覆盖目标工作集（随 chat 请求 `worksetId`）。联网搜索开关／供应商在 **AI → AI 供應商**「助手联网」小节。
-7. **AI 员工介绍**（`/ai/staff`）：只读花名册页，说明助手／任务编辑／排行榜／事件情报／**项目管理**／**客户经理**各自职责；客户经理是对外接待席（非独立 runtime）。项目管理为排程闭环节拍，见 [`project.md`](project.md)。见 [`docs/ARCHITECTURE.md`](../ARCHITECTURE.md)「AI Staff」与 `web/src/domain/aiStaff/`。
-8. **外部 agent（A2A / 客户经理）**：`POST /api/v1/a2a/agent` 与本页共用 `AgentRuntime`＋工具（不同 system prompt；不存 session；单次返回结果）。见 [`a2a.md`](a2a.md)。站内说明：系统设定 → API（`/settings/api`）。
+1. 侧栏 **助手**（`/assistant`）或命令面板；自然语言提问。
+2. 麦克风／空白键 PTT（浏览器 Web Speech）→ 松开送出识别文字；或文字送出。可选 TTS 朗读。
+3. **紀錄**：`GET/PUT …/ui-prefs/assistant/sessions`（SQLite）。语音：`/ai/voice`；联网：`/ai` AI 供應商。目标工作集可随 chat `worksetId` 覆盖（默认 `__user__`）。
+4. 花名册 `/ai/staff`；A2A：`POST /api/v1/a2a/agent`（见 [`a2a.md`](a2a.md)）。项目管理见 [`project.md`](project.md)。
 
-前提：AI Provider（Ollama / OpenAI-style / Gemini 等）已在现有设置页配置可用。人类通道鉴权与其它 API 相同（Bearer / 本机绕过）；A2A 另需带 scope 的 access key。
-
-浏览器 STT 不可用时（非 HTTPS、无 Speech API、麦克风被拒）：麦克风隐藏或禁用，**文字路径仍完整**。部分浏览器 STT 会走厂商云（如 Chrome），注意隐私。**Electron 桌面版不支援瀏覽器語音辨識**（雲端 STT 會失敗）；麥克風隱藏、直接交互停用，請用文字輸入——本階段不做本機 Whisper。
-
-**桌面 + Web 並存（建議工作流）：** 桌面版可保持開著（採集／本機服務）；語音請在 **瀏覽器分頁**（Chrome／Edge 開本機 UI）按住說話。兩邊連同一 API 時**對話紀錄共用**（伺服器 ui-prefs），但 STT 只在瀏覽器進程；桌面殼不再建構 Web Speech／不佔用麥克風辨識。
+前提：AI Provider 已配置。鉴权同其它 API；A2A 另需 access key。浏览器 STT 不可用时文字路径仍完整。**Electron 不跑浏览器 STT**——用浏览器分頁语音，桌面保持采集；会话经 ui-prefs 共用。
 
 ## 架构原则
 

@@ -606,7 +606,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. `test_schema_wipe_floor.py` and `test_db_schema.py` cover stamp-10 creation, exact fingerprint validation, non-current rejection, no mutation, and explicit reset guidance.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-10 / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Removed endpoints** (404/405 guard): `server/tests/test_dead_endpoints.py` — see [Removed endpoints](#removed-endpoints).
 
