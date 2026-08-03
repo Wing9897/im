@@ -43,7 +43,7 @@ function isStringArray(value: unknown): value is string[] {
 
 /**
  * Normalize filter values: `null` | `{taskIds,worksetIds}`.
- * Legacy flat `string[]` and unknown shapes → `null` (all sources).
+ * Flat `string[]` and unknown shapes → `null` (all sources; hard-cut, no upgrade).
  */
 export function parseSourceFilterValue(raw: unknown): SourceFilterSelection {
   if (raw === null || raw === undefined) return null;

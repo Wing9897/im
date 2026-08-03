@@ -16,11 +16,11 @@ function getWebhookServicePort(): string {
 
 /**
  * Webhook / general API needs a full household key (`*`).
- * Missing or empty `scopes` (legacy clients) are treated as `*` — same as server upgrade.
+ * Empty scopes are not treated as full — only an explicit `*` grants write access.
  */
 export function isFullAccessKey(key: Pick<AccessKeyPublic, "scopes">): boolean {
   const scopes = key.scopes;
-  if (scopes == null || scopes.length === 0) return true;
+  if (scopes == null || scopes.length === 0) return false;
   return scopes.includes("*");
 }
 

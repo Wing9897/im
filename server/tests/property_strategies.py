@@ -10,7 +10,7 @@ from hypothesis.strategies import SearchStrategy
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
 
 MIN_PROPERTY_EXAMPLES = 100
-PROPERTY_FEATURE = "technical-debt-simplification"
+PROPERTY_FEATURE = "property-invariants"
 SupportedSchedule: TypeAlias = tuple[str, str | None]
 UtcWindow: TypeAlias = tuple[datetime, datetime]
 

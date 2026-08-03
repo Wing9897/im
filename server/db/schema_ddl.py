@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 10 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 11 (single schema source).
 
 ``server.db.schema_bootstrap`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -25,15 +25,13 @@ ANALYSIS_MODE_CHECK_SQL = "CHECK (analysis_mode IN ({}))".format(
 
 # Canonical task analysis windows. Every value must be a key of
 # ``server.analyzer.incremental._TIME_RANGE_OFFSETS`` (or ``all`` / ``today``).
-# Message filters share the same canonical offset keys (``7d``／``30d`` only —
-# no ``7days``／``30days`` aliases).
+# Message filters may still accept ``12h``／``24h`` as query tokens; those are
+# not valid ``analysis_tasks.analysis_time_range`` values (use ``1d``／``48h``).
 ANALYSIS_TIME_RANGE_VALUES = (
     "all",
     "today",
     "1h",
     "6h",
-    "12h",
-    "24h",
     "48h",
     "1d",
     "7d",

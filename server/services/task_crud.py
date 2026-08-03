@@ -42,7 +42,6 @@ from server.queries.tasks_queries import (
 )
 from server.services.recurring_task_writes import (
     create_recurring_task,
-    create_recurring_task_shell,
     patch_recurring_task,
 )
 from server.services.task_writes import (
@@ -167,21 +166,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
     effective_mode = body.analysisMode or LEADERBOARD_MODE
 
     if effective_mode == CHILD_RECURRING_MODE:
-        row = await create_recurring_task_shell(
-            db,
-            name=body.name.strip(),
-            description=body.description,
-            workset_id=await resolve_workset_id(db, supplied=body.worksetId),
-        )
-        task_id = str(row["id"])
-        if body.isActive is not None and not body.isActive:
-            await set_task_active(db, task_id, 0, utc_now_iso())
-        row = await _require_task_row(db, task_id)
-        return TaskMutationResult(
-            task_id=task_id,
-            payload=task_response(row, await channel_refs_for(db, task_id), deleted=0),
-            register=True,
-        )
+        raise TaskWriteError("POST /tasks with analysisMode=recurring is removed; use POST /tasks/recurring")
 
     task_id = new_id()
     now = utc_now_iso()

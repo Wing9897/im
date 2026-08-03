@@ -10,7 +10,7 @@ const sample: TaskTemplatePreset = {
   description: "fallback zh",
   promptTemplate: "fallback prompt",
   analysisMode: "event",
-  defaultAnalysisTimeRange: "24h",
+  defaultAnalysisTimeRange: "1d",
   badge: "📅",
 };
 
@@ -20,10 +20,11 @@ describe("localizeTaskPreset", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
-  it("normalizes historical window tokens 12h/24h to 1d", () => {
-    expect(normalizePresetTimeRange("24h")).toBe("1d");
-    expect(normalizePresetTimeRange("12h")).toBe("1d");
+  it("keeps known editor windows and defaults unknown to 1d", () => {
+    expect(normalizePresetTimeRange("1d")).toBe("1d");
     expect(normalizePresetTimeRange("7d")).toBe("7d");
+    expect(normalizePresetTimeRange("12h")).toBe("1d");
+    expect(normalizePresetTimeRange("bogus")).toBe("1d");
   });
 
   it("localizes builtin presets under en", async () => {

@@ -4201,8 +4201,8 @@ export interface components {
             isActive: boolean;
             /** Lastanalysisat */
             lastAnalysisAt?: string | null;
-            /** Cronexpression */
-            cronExpression?: string | null;
+            /** Schedulerrule */
+            scheduleRrule?: string | null;
         };
         /** VoiceFiredBody */
         VoiceFiredBody: {

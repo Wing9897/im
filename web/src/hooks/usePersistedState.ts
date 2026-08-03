@@ -28,9 +28,6 @@ function readStoredValue<T>(
   try {
     return { value: JSON.parse(stored) as T, shouldReset: false };
   } catch (error) {
-    if (typeof fallback === "string") {
-      return { value: stored as T, shouldReset: true };
-    }
     logWarn(`[persisted-state] invalid JSON for key "${storageKey}"`, error);
     return { value: fallback, shouldReset: true };
   }

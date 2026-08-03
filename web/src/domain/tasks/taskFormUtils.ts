@@ -284,7 +284,7 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     promptTemplate: config.promptTemplate,
     webSearchQuery: config.webSearchQuery ?? "",
     analysisMode: config.analysisMode ?? "leaderboard",
-    analysisTimeRange: config.analysisTimeRange ?? "24h",
+    analysisTimeRange: config.analysisTimeRange ?? "1d",
     version: 1,
     isActive: true,
     scheduleRrule: schedule.scheduleRrule,

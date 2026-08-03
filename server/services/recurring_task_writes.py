@@ -261,45 +261,6 @@ async def patch_recurring_task(
     return updated
 
 
-async def create_recurring_task_shell(
-    db: Database,
-    *,
-    name: str,
-    description: str | None = None,
-    workset_id: str | None = None,
-) -> dict[str, Any]:
-    """Deprecated: prefer ``create_recurring_task`` / ``POST /tasks/recurring``.
-
-    Creates a recurring ``analysis_tasks`` row without a schedule (caller must
-    ``PUT /tasks/{id}/schedule``). Kept for ``POST /tasks`` + ``analysisMode=recurring``
-    compatibility and existing contract tests — do not use for new web/timeline creates.
-    """
-    cleaned_name = (name or "").strip()
-    if not cleaned_name:
-        raise TaskWriteError("name is required")
-    task_id = new_id()
-    now = utc_now_iso()
-    async with db.transaction() as conn:
-        tx = TransactionDb(conn)
-        await insert_analysis_task(
-            tx,
-            task_id=task_id,
-            name=cleaned_name,
-            description=description,
-            prompt_template="",
-            analysis_mode=CHILD_RECURRING_MODE,
-            analysis_time_range="all",
-            schedule_rrule=None,
-            include_in_timeline=1,
-            workset_id=workset_id,
-            now=now,
-        )
-    row = await fetch_task_row(db, task_id)
-    if row is None:
-        raise TaskWriteError("failed to create recurring task")
-    return row
-
-
 async def upsert_task_schedule(
     db: Database,
     *,

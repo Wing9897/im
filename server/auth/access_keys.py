@@ -13,7 +13,7 @@ from server.util import new_id, utc_now_iso
 DEFAULT_SCOPES: list[str] = ["*"]
 FULL_SCOPE = "*"
 READ_SCOPE = "read"
-#: Retired A2A-only scopes — rejected on create; dropped on row read.
+#: Retired A2A-only scopes — rejected on create/write; stripped on read (no silent upgrade to ``*``).
 _RETIRED_SCOPES = frozenset({"a2a:agent", "a2a:events"})
 _ALLOWED_SCOPES = frozenset({FULL_SCOPE, READ_SCOPE})
 
@@ -32,6 +32,7 @@ def _normalize_scopes(
     scopes: list[str] | None,
     *,
     reject_retired: bool = True,
+    default_on_empty: bool = True,
 ) -> list[str]:
     if scopes is None:
         return list(DEFAULT_SCOPES)
@@ -53,7 +54,9 @@ def _normalize_scopes(
         cleaned.append(value)
     if FULL_SCOPE in cleaned:
         return [FULL_SCOPE]
-    return cleaned or list(DEFAULT_SCOPES)
+    if cleaned:
+        return cleaned
+    return list(DEFAULT_SCOPES) if default_on_empty else []
 
 
 def _scopes_from_row(raw: Any) -> list[str]:
@@ -68,7 +71,12 @@ def _scopes_from_row(raw: Any) -> list[str]:
         return list(DEFAULT_SCOPES)
     if not isinstance(parsed, list):
         return list(DEFAULT_SCOPES)
-    return _normalize_scopes([str(item) for item in parsed], reject_retired=False)
+    # Strip retired scopes; empty after strip stays empty (no silent ``*`` upgrade).
+    return _normalize_scopes(
+        [str(item) for item in parsed],
+        reject_retired=False,
+        default_on_empty=False,
+    )
 
 
 def scopes_allow(scopes: list[str], capability: str) -> bool:

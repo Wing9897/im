@@ -72,16 +72,16 @@ describe("usePersistedState", () => {
     cleanupRender(root, container);
   });
 
-  it("keeps legacy plain strings but rewrites them to normalized JSON storage", () => {
+  it("resets corrupted JSON (including plain strings) back to the fallback", () => {
     window.localStorage.setItem("im:test:string", "legacy-value");
 
     const { container, root } = render(
-      <Harness storageKey="im:test:string" fallback="" />,
+      <Harness storageKey="im:test:string" fallback="safe-default" />,
     );
 
-    expect(latestValue).toBe("legacy-value");
+    expect(latestValue).toBe("safe-default");
     expect(window.localStorage.getItem("im:test:string")).toBe(
-      JSON.stringify("legacy-value"),
+      JSON.stringify("safe-default"),
     );
 
     cleanupRender(root, container);

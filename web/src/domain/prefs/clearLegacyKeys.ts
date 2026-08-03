@@ -14,7 +14,7 @@ function removeImPrefixedKeys(storage: Storage): void {
 }
 
 /**
- * On first launch of prefs schema v5, clear prior-generation `im:*` keys from
+ * On first launch of prefs schema v6, clear prior-generation `im:*` keys from
  * localStorage and sessionStorage. Board layout is unaffected (server ui_prefs).
  *
  * Idempotent: subsequent boots see the version marker and skip.

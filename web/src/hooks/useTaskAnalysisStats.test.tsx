@@ -66,7 +66,7 @@ function Harness({ timeRange }: { timeRange: string }) {
   return null;
 }
 
-function renderHarness(timeRange = "24h") {
+function renderHarness(timeRange = "1d") {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -226,7 +226,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
     const staleStats = [makeStats(42)];
     mockFetchTaskAnalysisStats.mockResolvedValue(staleStats);
 
-    const { container, root } = renderHarness("24h");
+    const { container, root } = renderHarness("1d");
     await flushHookMicrotasks();
     expect(mockFetchTaskAnalysisStats).toHaveBeenCalledTimes(1);
 
@@ -235,7 +235,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
       payload: { taskId: "task-1" },
     };
     act(() => {
-      root.render(<Harness timeRange="24h" />);
+      root.render(<Harness timeRange="1d" />);
     });
     await flushHookMicrotasks();
     expect(mockFetchTaskAnalysisStats).toHaveBeenCalledTimes(2);
@@ -260,17 +260,17 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
       .mockResolvedValueOnce(staleStats)
       .mockResolvedValue(freshStats);
 
-    const { container, root } = renderHarness("24h");
+    const { container, root } = renderHarness("1d");
     await flushHookMicrotasks();
 
     runtimeState.lastAnalysisEvent = { type: "analysis_completed", payload: { taskId: "task-1" } };
     act(() => {
-      root.render(<Harness timeRange="24h" />);
+      root.render(<Harness timeRange="1d" />);
     });
     await flushHookMicrotasks();
     runtimeState.lastAnalysisEvent = null;
     act(() => {
-      root.render(<Harness timeRange="24h" />);
+      root.render(<Harness timeRange="1d" />);
     });
     await flushHookMicrotasks();
 
@@ -308,12 +308,12 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
     const latestB = { current: null as ReturnType<typeof useTaskAnalysisStats> | null };
 
     mockFetchTaskAnalysisStats.mockImplementation((timeRange: string) => {
-      if (timeRange === "24h") return Promise.resolve([makeStats(10, "task-a")]);
+      if (timeRange === "1d") return Promise.resolve([makeStats(10, "task-a")]);
       return Promise.resolve([makeStats(20, "task-b")]);
     });
 
     function HarnessA() {
-      latestA.current = useTaskAnalysisStats({ timeRange: "24h", logPrefix: "[a]" });
+      latestA.current = useTaskAnalysisStats({ timeRange: "1d", logPrefix: "[a]" });
       return null;
     }
     function HarnessB() {
@@ -341,7 +341,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
     const calledRanges = mockFetchTaskAnalysisStats.mock.calls.map(
       (c) => c[0] as string,
     );
-    expect(calledRanges).toContain("24h");
+    expect(calledRanges).toContain("1d");
     expect(calledRanges).toContain("7d");
 
     act(() => {
@@ -361,7 +361,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
       .mockResolvedValueOnce(staleStats)
       .mockResolvedValue(freshStats);
 
-    const { container, root } = renderHarness("24h");
+    const { container, root } = renderHarness("1d");
     await flushHookMicrotasks();
     expect(latest!.taskStats).toEqual(staleStats);
 
@@ -370,7 +370,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
       payload: { taskId: "task-1", analysisMode: "leaderboard" },
     };
     act(() => {
-      root.render(<Harness timeRange="24h" />);
+      root.render(<Harness timeRange="1d" />);
     });
     await flushHookMicrotasks();
     expect(mockFetchTaskAnalysisStats).toHaveBeenCalledTimes(2);
@@ -389,7 +389,7 @@ describe("useTaskAnalysisStats — retry and refresh", () => {
       .mockResolvedValueOnce([makeStats(10)])
       .mockResolvedValue([makeStats(5)]);
 
-    const { container, root } = renderHarness("24h");
+    const { container, root } = renderHarness("1d");
     act(() => {
       vi.runAllTimers();
     });
@@ -421,7 +421,7 @@ describe("useTaskAnalysisStats messages_updated refresh", () => {
   });
 
   it("refetches when lastMessagesUpdate changes", async () => {
-    const { container, root } = renderHarness("24h");
+    const { container, root } = renderHarness("1d");
     await flushHookMicrotasks();
     mockFetchTaskAnalysisStats.mockClear();
 
@@ -439,7 +439,7 @@ describe("useTaskAnalysisStats messages_updated refresh", () => {
       receivedAt: Date.now(),
     };
     act(() => {
-      root.render(<Harness timeRange="24h" />);
+      root.render(<Harness timeRange="1d" />);
     });
     act(() => {
       vi.advanceTimersByTime(5000);

@@ -49,14 +49,9 @@ describe("boardPrefsStore hydrate / save", () => {
     const loaded = await hydrateBoardPrefs();
     expect(loaded.widgets).toHaveLength(8);
     expect(loadBoardMapViewFromCache("w-map")).toEqual({ center: [25, 121], zoom: 7 });
+    // Flat legacy sourceFilters are dropped (hard-cut; no soft-upgrade write-back).
     expect(loadSourceFilterFromCache("w-gantt")).toEqual(null);
-    await vi.waitFor(() => {
-      expect(putBoardPrefs).toHaveBeenCalledWith({
-        widgetState: expect.objectContaining({
-          sourceFilters: { "w-gantt": null },
-        }),
-      });
-    });
+    expect(putBoardPrefs).not.toHaveBeenCalled();
     expect(window.localStorage.getItem(LEGACY_BOARD_STORAGE_KEY)).toBeNull();
   });
 
@@ -148,16 +143,7 @@ describe("boardPrefsStore hydrate / save", () => {
       worksetIds: ["__user__"],
     });
     expect(loadSourceFilterFromCache("w-legacy")).toBeNull();
-    await vi.waitFor(() => {
-      expect(putBoardPrefs).toHaveBeenCalledWith({
-        widgetState: expect.objectContaining({
-          sourceFilters: {
-            "w-events": { taskIds: ["t1"], worksetIds: ["__user__"] },
-            "w-legacy": null,
-          },
-        }),
-      });
-    });
+    expect(putBoardPrefs).not.toHaveBeenCalled();
   });
 
   it("persists gantt view mode per widget in widgetState", async () => {

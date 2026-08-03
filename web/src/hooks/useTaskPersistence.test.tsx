@@ -59,7 +59,7 @@ const DEFAULT_FORM_STATE: TaskFormState = {
   scheduleValue: null,
   scheduleRrule: null,
   analysisMode: "leaderboard",
-  analysisTimeRange: "24h",
+  analysisTimeRange: "1d",
   channelIds: ["ch-1"],
   rrule: "",
   eventStartTime: "",

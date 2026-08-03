@@ -62,7 +62,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("PATCH", "/api/v1/user-events", {}),
         ("PUT", "/api/v1/user-events", {}),
         ("DELETE", "/api/v1/user-events", None),
-        # Schema upgrade gate retired (wipe-only stamp 10).
+        # Schema upgrade gate retired (wipe-only stamp 11).
         ("GET", "/api/v1/system/schema/status", None),
         ("POST", "/api/v1/system/schema/upgrade", {}),
     ]

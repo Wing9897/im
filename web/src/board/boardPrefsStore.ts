@@ -66,17 +66,13 @@ function normalizeWidgetState(raw: {
   mapViews?: BoardWidgetStatePref["mapViews"];
   sourceFilters?: Record<string, unknown>;
   ganttViewModes?: BoardWidgetStatePref["ganttViewModes"];
-} | null | undefined): {
-  state: BoardWidgetStatePref;
-  didMigrateLegacyFilters: boolean;
-} {
+} | null | undefined): BoardWidgetStatePref {
   if (!raw || typeof raw !== "object") {
-    return { state: emptyWidgetState(), didMigrateLegacyFilters: false };
+    return emptyWidgetState();
   }
   const mapViews: Record<string, BoardMapViewPref> = {};
   const sourceFilters: Record<string, BoardSourceFilterPref> = {};
   const ganttViewModes: Record<string, BoardGanttViewMode> = {};
-  let didMigrateLegacyFilters = false;
   const viewsIn = raw.mapViews ?? {};
   for (const [id, view] of Object.entries(viewsIn)) {
     if (!id || !view) continue;
@@ -100,10 +96,8 @@ function normalizeWidgetState(raw: {
       sourceFilters[id] = null;
       continue;
     }
-    // Legacy flat string[] is no longer accepted — drop to "all" (null) and write back.
+    // Hard-cut: flat string[] / unknown shapes are dropped (no soft-upgrade).
     if (Array.isArray(ids)) {
-      sourceFilters[id] = null;
-      didMigrateLegacyFilters = true;
       continue;
     }
     const parsed = parseSourceFilterValue(ids);
@@ -117,10 +111,7 @@ function normalizeWidgetState(raw: {
       ganttViewModes[id] = mode;
     }
   }
-  return {
-    state: { mapViews, sourceFilters, ganttViewModes },
-    didMigrateLegacyFilters,
-  };
+  return { mapViews, sourceFilters, ganttViewModes };
 }
 
 function applyCaches(layout: BoardConfig, widgetState: BoardWidgetStatePref): BoardConfig {
@@ -166,14 +157,8 @@ export async function hydrateBoardPrefs(): Promise<BoardConfig> {
         const layout = remote.layout
           ? parseBoardConfig(remote.layout)
           : createDefaultBoardConfig();
-        const { state: widgetState, didMigrateLegacyFilters } = normalizeWidgetState(
-          remote.widgetState,
-        );
-        const applied = applyCaches(layout, widgetState);
-        if (didMigrateLegacyFilters) {
-          schedulePersist({ widgetState: cloneWidgetState(widgetState) });
-        }
-        return applied;
+        const widgetState = normalizeWidgetState(remote.widgetState);
+        return applyCaches(layout, widgetState);
       }
 
       const layout = createDefaultBoardConfig();

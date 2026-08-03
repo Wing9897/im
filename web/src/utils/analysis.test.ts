@@ -62,11 +62,8 @@ describe("formatAnalysisTimeRange", () => {
   it('returns "不限時間" for unknown values including "all"', () => {
     expect(formatAnalysisTimeRange("all")).toBe("不限時間");
     expect(formatAnalysisTimeRange("unknown")).toBe("不限時間");
-  });
-
-  it("normalizes historical window tokens 12h/24h onto last-1-day label", () => {
-    expect(formatAnalysisTimeRange("24h")).toBe("最近 1 天");
-    expect(formatAnalysisTimeRange("12h")).toBe("最近 1 天");
+    expect(formatAnalysisTimeRange("12h")).toBe("不限時間");
+    expect(formatAnalysisTimeRange("24h")).toBe("不限時間");
   });
 
   it("handles Object.prototype property names without prototype pollution", () => {

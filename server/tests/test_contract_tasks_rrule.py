@@ -33,15 +33,14 @@ async def test_non_calendar_create_rejects_legacy_rrule_fields(client, app):
 async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(client, app):
     db = app.state.db
     created = await client.post(
-        "/api/v1/tasks",
+        "/api/v1/tasks/recurring",
         json={
             "name": "schedule-validation-shell",
-            "promptTemplate": "",
-            "analysisMode": "recurring",
-            "channelIds": [],
+            "rrule": "FREQ=DAILY",
+            "eventStartTime": "09:00",
         },
     )
-    assert created.status_code == 201
+    assert created.status_code == 201, created.text
     task_id = created.json()["id"]
     before_schedules = await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
 
@@ -70,6 +69,23 @@ async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(c
         assert_validation_error(resp, expected_detail)
 
     assert await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules") == before_schedules
+
+
+async def test_post_tasks_rejects_recurring_shell(client, app):
+    """Hard-cut: analysisMode=recurring on POST /tasks must use /tasks/recurring."""
+    before = await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
+    resp = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "shell-blocked",
+            "promptTemplate": "",
+            "analysisMode": "recurring",
+            "channelIds": [],
+        },
+    )
+    assert resp.status_code == 422
+    assert "POST /tasks/recurring" in resp.json()["message"]
+    assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before
 
 
 async def test_calendar_schedule_update_validates_rrule(client, app):

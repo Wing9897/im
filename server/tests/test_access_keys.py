@@ -65,6 +65,37 @@ async def test_create_rejects_retired_a2a_scopes(app) -> None:
     assert await list_access_keys_public(db) == []
 
 
+@pytest.mark.asyncio
+async def test_read_strips_retired_scopes_without_upgrading_to_full(app) -> None:
+    """Legacy rows with only retired scopes → empty scopes (no silent ``*``)."""
+    db = app.state.db
+    import json
+
+    from server.util import new_id, utc_now_iso
+
+    key_id = new_id()
+    await db.execute(
+        """
+        INSERT INTO access_api_keys
+            (id, label, secret_hash, preview, created_at, revoked_at, scopes, last_used_at)
+        VALUES (?, ?, ?, ?, ?, NULL, ?, NULL)
+        """,
+        (
+            key_id,
+            "Retired",
+            "0" * 64,
+            "xxxx…yyyy",
+            utc_now_iso(),
+            json.dumps(["a2a:agent", "a2a:events"]),
+        ),
+    )
+    listed = await list_access_keys_public(db)
+    match = next(row for row in listed if row["id"] == key_id)
+    assert match["scopes"] == []
+    assert access_key_allows_method("GET", match["scopes"]) is False
+    assert access_key_allows_method("POST", match["scopes"]) is False
+
+
 def test_access_key_method_and_path_helpers() -> None:
     assert access_key_allows_method("GET", ["*"]) is True
     assert access_key_allows_method("POST", ["*"]) is True
