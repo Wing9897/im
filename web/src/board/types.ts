@@ -49,7 +49,7 @@ export interface BoardWidgetItem {
   z?: number;
 }
 
-/** Persisted board configuration (current = v14: same mosaic as v13; storage key bump). */
+/** Persisted board configuration (current = v15; same mosaic as v14). */
 export interface BoardConfig {
   version: typeof BOARD_LAYOUT_VERSION;
   widgets: BoardWidgetItem[];
@@ -58,4 +58,4 @@ export interface BoardConfig {
 export type BoardEditMode = "view" | "edit";
 
 /** Current layout schema version written to server ui-prefs. */
-export const BOARD_LAYOUT_VERSION = 14 as const;
+export const BOARD_LAYOUT_VERSION = 15 as const;

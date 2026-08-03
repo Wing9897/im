@@ -7,8 +7,6 @@
  * - Time window management (handleTimeWindowChange updates timeWindow)
  * - Fullscreen toggle (toggleFullscreen updates isFullscreen)
  * - Analysis event trigger (lastAnalysisEvent "completed" recenters live timeWindow)
- *
- * _Requirements: 9.1_
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act, memo, useState, useCallback } from "react";

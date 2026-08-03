@@ -5,8 +5,6 @@
  * Intended primarily for collector SSE / opt-in structured emits. Ordinary
  * list-load and command failures use the shared ToastProvider. Do not broaden
  * this structured path beyond collector SSE / opt-in emits.
- *
- * Requirements: 10.2, 11.1
  */
 
 import {

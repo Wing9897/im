@@ -191,7 +191,7 @@ describe("boardLayoutStore", () => {
     }
   });
 
-  it("parseBoardConfig resets sparse v13 layouts to v14 defaults", () => {
+  it("parseBoardConfig resets sparse older layouts to current defaults", () => {
     const parsed = parseBoardConfig({
       version: 13,
       widgets: [
@@ -212,7 +212,7 @@ describe("boardLayoutStore", () => {
     });
   });
 
-  it("parseBoardConfig resets older version layouts to v14 defaults", () => {
+  it("parseBoardConfig resets older version layouts to current defaults", () => {
     const parsed = parseBoardConfig({
       version: 12,
       widgets: createDefaultBoardConfig().widgets.map((widget) =>

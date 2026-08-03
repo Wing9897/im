@@ -12,7 +12,7 @@ import {
   type DanmakuMode, type OverlayDisplayMode, ONE_HOUR,
   EVENT_PANEL_MIN_HEIGHT, EVENT_PANEL_MAX_HEIGHT,
   LIVE_INFO_PANEL_MIN_HEIGHT, LIVE_INFO_PANEL_MAX_HEIGHT,
-  clampHeight, migrateSharedDanmakuModeStorage,
+  clampHeight, readSharedDanmakuMode,
   cycleDanmakuMode, cycleOverlayDisplayMode,
   SHARED_DANMAKU_MODE_KEY,
   MAP_LIVE_MODE_STORAGE_KEY,
@@ -76,7 +76,7 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sharedDanmakuMode, setSharedDanmakuMode] = usePersistedState<DanmakuMode>(
     SHARED_DANMAKU_MODE_KEY,
-    migrateSharedDanmakuModeStorage(),
+    readSharedDanmakuMode(),
   );
   const [overlayDisplayMode, setOverlayDisplayMode] = usePersistedState<OverlayDisplayMode>(
     MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY,

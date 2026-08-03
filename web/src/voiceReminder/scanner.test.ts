@@ -178,6 +178,31 @@ describe("voiceReminder scanner", () => {
       const items = [makeEvent({ id: "a", taskId: "t1" })];
       expect(filterEventsBySourceFilter(items, { taskIds: [], worksetIds: [] })).toEqual([]);
     });
+
+    it("workset-only selection does not match user events via expanded provenance", () => {
+      const catalogTasks = [{ id: "member-a", worksetId: "ws-a" }];
+      const items = [
+        makeEvent({
+          id: "ue-leak",
+          kind: "user",
+          taskId: "member-a",
+          worksetId: "ws-b",
+        }),
+        makeEvent({
+          id: "analysis-ok",
+          kind: "event",
+          taskId: "member-a",
+          worksetId: null,
+        }),
+      ];
+      expect(
+        filterEventsBySourceFilter(
+          items,
+          { taskIds: [], worksetIds: ["ws-a"] },
+          catalogTasks,
+        ).map((e) => e.id),
+      ).toEqual(["analysis-ok"]);
+    });
   });
 
   describe("toTimedKeyEvents", () => {

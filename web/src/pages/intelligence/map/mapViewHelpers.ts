@@ -88,7 +88,8 @@ function isDanmakuMode(value: string | null): value is DanmakuMode {
   return value === "off" || value === "persistent" || value === "transient";
 }
 
-export function migrateSharedDanmakuModeStorage(): DanmakuMode {
+/** Read shared danmaku mode from localStorage (device chrome; not a migrate path). */
+export function readSharedDanmakuMode(): DanmakuMode {
   if (typeof window === "undefined") return "persistent";
   const stored = window.localStorage.getItem(SHARED_DANMAKU_MODE_KEY);
   if (isDanmakuMode(stored)) return stored;

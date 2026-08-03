@@ -2352,7 +2352,7 @@ export interface components {
         };
         /**
          * BoardLayoutSchema
-         * @description Layout blob stored under ``ops_board_layout`` (v14 widgets mosaic).
+         * @description Layout blob stored under ``ops_board_layout`` (v15 widgets mosaic).
          */
         BoardLayoutSchema: {
             /** Version */

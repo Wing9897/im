@@ -55,7 +55,7 @@ export function exportBoardConfig(config: BoardConfig): string {
 }
 
 /**
- * Validate and migrate a pasted/imported layout without silently accepting
+ * Validate and normalize a pasted/imported layout without silently accepting
  * malformed input. Successful imports are immediately made the local source
  * of truth, just like a drag or resize.
  */

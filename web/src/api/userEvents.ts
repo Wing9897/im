@@ -4,6 +4,7 @@
 
 import { apiClient } from "./client";
 import type { components } from "./generated/schema";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
 export type UserEvent = Omit<
   components["schemas"]["UserEventResponse"],
@@ -23,10 +24,19 @@ interface UserEventWriteParams {
   location?: string;
   /** All-day uses ICS DATE semantics (wire end exclusive). */
   isAllDay?: boolean;
-  /** Analysis-task provenance; `""` / omit → null. `"__user__"` rejected by API. */
+  /** Analysis-task provenance; `""` / omit → null. `"__user__"` stripped client-side. */
   taskId?: string | null;
-  /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset. */
+  /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset (LIVE). */
   worksetId?: string | null;
+}
+
+/** Strip fake `__user__` / blank provenance so it never hits the API as taskId. */
+function normalizeWriteTaskId(taskId: string | null | undefined): string | null | undefined {
+  if (taskId === undefined) return undefined;
+  if (taskId === null) return null;
+  const trimmed = taskId.trim();
+  if (!trimmed || trimmed === SYSTEM_WORKSET_ID) return null;
+  return trimmed;
 }
 
 export function listUserEvents(params?: {
@@ -54,7 +64,8 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
     location: params.location ?? "",
     isAllDay: Boolean(params.isAllDay),
   };
-  if (params.taskId !== undefined) body.taskId = params.taskId;
+  const taskId = normalizeWriteTaskId(params.taskId);
+  if (taskId !== undefined) body.taskId = taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
   return apiClient.post<UserEvent>("/api/v1/calendar/user-events", body);
 }
@@ -70,7 +81,9 @@ export function updateUserEvent(
   if (params.body !== undefined) body.body = params.body;
   if (params.location !== undefined) body.location = params.location;
   if (params.isAllDay !== undefined) body.isAllDay = params.isAllDay;
-  if (params.taskId !== undefined) body.taskId = params.taskId;
+  if (params.taskId !== undefined) {
+    body.taskId = normalizeWriteTaskId(params.taskId) ?? null;
+  }
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
   return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
 }

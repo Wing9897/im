@@ -31,7 +31,7 @@ describe("UserEventDialog", () => {
     root = null;
   });
 
-  it("renders create title and submits trimmed values with default __user__ task", async () => {
+  it("renders create title and submits trimmed values with default __user__ workset", async () => {
     const onSubmit = vi.fn();
     const onClose = vi.fn();
     const host = document.createElement("div");

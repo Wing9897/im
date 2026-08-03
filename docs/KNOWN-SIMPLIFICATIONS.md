@@ -81,7 +81,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v10 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v10-explicit-reset) (wipe-only, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
+| Schema stamp v11 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v11-explicit-reset) (wipe-only, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
@@ -90,6 +90,8 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Desktop STT / no Whisper | Electron hides mic and disables browser STT direct mode; use text input. Local Whisper / Doubao cloud STT-TTS remain unimplemented adapters only — see [`agent/assistant.md`](./agent/assistant.md) |
 
 ## Intelligence / Events time semantics
+
+**Time-range tokens:** task / analysis windows use `AnalysisTimeRange` (`1d`／`7d`／`30d`／`all`／…). Monitor message-query filters may also use **`12h`／`24h`** (`MessageTimeRange`) — query-only tokens, **not** `analysis_time_range` DB/API values. FE preset helpers (`normalizePresetTimeRange`) map unknown preset strings (including `12h`) onto editor vocabulary; they do not invent analysis windows.
 
 The intelligence UI treats **event time** as the user-facing clock. Preference order matches map filters: structured `startTime` → `sourceMessageTime` → `createdAt` (`getEventTimestamp` / `mapFilters`).
 

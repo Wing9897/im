@@ -18,7 +18,7 @@ import {
 const MIN_MOSAIC_WIDGETS = 6;
 
 export function createDefaultBoardConfig(): BoardConfig {
-  // Dense non-overlapping mosaic (16×10) v14 (same layout as v13):
+  // Dense non-overlapping mosaic (16×10) v15 (same layout as v14):
   //  top: full-width dual gantt; left: clock/system/actions/leaderboard/logs
   //  right: month calendar + day schedule (locked); mid/bottom: map/wall/weather/…
   return {

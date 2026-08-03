@@ -452,14 +452,8 @@ describe("monitor mode + board smoke", () => {
 
   it("reset layout restores full mosaic after sparse cache", async () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
-    window.localStorage.setItem(
-      "im:ops-board:v13",
-      JSON.stringify({
-        version: 13,
-        widgets: [{ i: "w-map", type: "map", col: 0, row: 0, sizeId: "8x6", z: 1 }],
-      }),
-    );
-    // Sparse prior-key (v13) cache upgrades into the current v14 mosaic on load.
+    // Hydrate seeds the default mosaic from server prefs (configured:false mock);
+    // leftover LS board keys are not a migrate path.
     renderShell();
     await flushEffects();
     expect(

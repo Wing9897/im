@@ -135,7 +135,7 @@ class AnalysisEngine:
         current_task: dict[str, Any] | None = None,
         locale: str | None = None,
     ) -> dict[str, Any]:
-        """Returns {message, taskConfig} (taskConfig may be None)."""
+        """Product surface: agent tool ``tasks.consult_advisor``. Returns {message, taskConfig}."""
         resolved_locale = (
             normalize_ui_locale(locale)
             if locale is not None and str(locale).strip()

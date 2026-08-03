@@ -142,8 +142,14 @@ function schedulePersist(body: {
   });
 }
 
+function prefsJsonEqual(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 /**
  * Load board prefs from API; when `configured: false`, seed defaults and PUT.
+ * When normalize (`parseBoardConfig` / `normalizeWidgetState`) changes the blob
+ * vs server, write back so memory and ui-prefs stay aligned.
  * Does not read legacy localStorage (hard-cut — server SoT only).
  */
 export async function hydrateBoardPrefs(): Promise<BoardConfig> {
@@ -158,6 +164,18 @@ export async function hydrateBoardPrefs(): Promise<BoardConfig> {
           ? parseBoardConfig(remote.layout)
           : createDefaultBoardConfig();
         const widgetState = normalizeWidgetState(remote.widgetState);
+        const layoutDirty = !prefsJsonEqual(layout, remote.layout);
+        const widgetDirty = !prefsJsonEqual(
+          widgetState,
+          remote.widgetState ?? emptyWidgetState(),
+        );
+        if (layoutDirty || widgetDirty) {
+          try {
+            await putBoardPrefs({ layout, widgetState });
+          } catch {
+            // Offline / 422: still serve normalized memory.
+          }
+        }
         return applyCaches(layout, widgetState);
       }
 
