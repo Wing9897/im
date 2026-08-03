@@ -154,7 +154,7 @@ def main() -> int:
             "name": "smoke task",
             "promptTemplate": "分析",
             "analysisMode": "leaderboard",
-            "analysisTimeRange": "24h",
+            "analysisTimeRange": "1d",
             "channelIds": ["telegram:smoke-channel"],
             "scheduleRrule": "FREQ=HOURLY",
         },
