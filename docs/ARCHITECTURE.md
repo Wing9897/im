@@ -89,7 +89,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, accounts, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`items`／`imports`／`dismissals`／`user-events`), worksets, setup, task_assistant, events SSE) |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, accounts, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`items`／`imports`／`dismissals`／`user-events`), worksets, setup, events SSE) |
 | `wire/serializers.py` | Neutral snake_case → camelCase wire builders matching the frontend contract (tasks, analysis events, user events, queue, …); shared by HTTP and non-HTTP callers |
 | `api/routes/weather.py` | Open-Meteo／fallback weather proxy (`GET /api/v1/weather/*`) — avoids renderer CORS |
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |

@@ -410,14 +410,7 @@ async def test_structural_lookalike_is_rejected_without_closed_snapshot_mutation
     old_ddl: str,
     new_ddl: str,
 ) -> None:
-    """Exercise category rejection through the real Database startup path.
-
-    Deterministic pre-fix reproduction: a current-version database whose
-    ``app_logs.details`` declaration is changed from ``TEXT`` to ``INTEGER`` is
-    accepted even though its required column definition is not equivalent.
-
-    **Validates: Requirements 2.1, 2.2, 2.3, 2.4**
-    """
+    """Structural DDL lookalike (wrong column/index/FK shape) hard-rejects; DB unchanged."""
     path = str(tmp_path / f"structural-{version}-{dimension}.db")
     await _make_structural_lookalike_db(path, version=version, old_ddl=old_ddl, new_ddl=new_ddl)
     before_logical = await _complete_logical_snapshot(path)

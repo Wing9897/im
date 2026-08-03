@@ -33,6 +33,7 @@ __pycache__/
 # Local build / test debug output (agent or manual redirects)
 /build-log*.txt
 /repair-out.txt
+/tmp-check*.txt
 /web/*.txt
 !/web/**/*.md
 /scripts/*-out.txt
