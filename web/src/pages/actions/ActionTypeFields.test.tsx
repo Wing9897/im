@@ -1,9 +1,8 @@
 /**
  * Unit tests for ActionTypeFields.
  *
- * Validates: Requirement 8.1 — coverage for components with conditional
- * rendering and routing. ActionTypeFields is a router that renders
- * different field sections based on form.actionType.
+ * Coverage for conditional rendering and routing. ActionTypeFields is a
+ * router that renders different field sections based on form.actionType.
  *
  * Covers: null, unknown type, and each of the four supported action types
  * (telegram_bot, discord_webhook, http_webhook, mqtt).

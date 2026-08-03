@@ -2,7 +2,6 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TaskFormState, UseChatEditorReturn } from "./useChatEditor";
 
 const { listTaskTemplatePresetsMock, mockUseChatEditor } = vi.hoisted(() => ({
   listTaskTemplatePresetsMock: vi.fn(),
@@ -54,36 +53,18 @@ vi.mock("../../../components/task/TaskTemplatePresetDialog", () => ({
 }));
 
 import { ChatEditorPage } from "./ChatEditorPage";
+import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskEditorState";
+import type { TaskFormState, UseChatEditorReturn } from "./useChatEditor";
 
-const DEFAULT_FORM_STATE: TaskFormState = {
-  name: "",
-  description: "",
-  promptTemplate: "",
-  webSearchQuery: "",
-  scheduleType: "seconds_10",
-  scheduleValue: null,
-  scheduleRrule: null,
+/** Leaderboard surface for channel/preset UI (SoT default is recurring). */
+const ANALYSIS_FORM_STATE: TaskFormState = {
+  ...DEFAULT_FORM_STATE,
   analysisMode: "leaderboard",
-  analysisTimeRange: "1d",
-  channelIds: [],
-  rrule: "",
-  eventStartTime: "",
-  eventEndTime: "",
-  eventIsAllDay: false,
-  eventLocation: "",
-  eventDescription: "",
-  includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
-  worksetId: null,
 };
 
 function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): UseChatEditorReturn {
   return {
-    formState: DEFAULT_FORM_STATE,
+    formState: ANALYSIS_FORM_STATE,
     updateField: vi.fn(),
     error: null,
     save: vi.fn().mockResolvedValue(undefined),
@@ -260,7 +241,7 @@ describe("ChatEditorPage integration tests", () => {
       mockUseChatEditor.mockReturnValue(
         createMockHookReturn({
           formState: {
-            ...DEFAULT_FORM_STATE,
+            ...ANALYSIS_FORM_STATE,
             channelIds: ["ch-1", "ch-2"],
           },
           channels: [
@@ -459,28 +440,16 @@ describe("ChatEditorPage integration tests", () => {
   describe("edit mode pre-populates form from existing task", () => {
     it("loads existing task data and populates form fields", async () => {
       const existingTaskFormState: TaskFormState = {
+        ...DEFAULT_FORM_STATE,
         name: "Existing Task",
         description: "Existing description",
         promptTemplate: "Existing prompt template",
-        webSearchQuery: "",
         scheduleType: "daily",
         scheduleValue: "09:00",
-        scheduleRrule: null,
+        scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
         analysisMode: "event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1", "ch-2"],
-        rrule: "",
-        eventStartTime: "",
-        eventEndTime: "",
-        eventIsAllDay: false,
-        eventLocation: "",
-        eventDescription: "",
-        includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
       };
 
       mockUseChatEditor.mockReturnValue(
@@ -519,28 +488,14 @@ describe("ChatEditorPage integration tests", () => {
 
     it("shows schedule type as daily with time value in edit mode", async () => {
       const dailyTaskFormState: TaskFormState = {
+        ...DEFAULT_FORM_STATE,
         name: "Daily Task",
-        description: "",
         promptTemplate: "Daily prompt",
-        webSearchQuery: "",
         scheduleType: "daily",
         scheduleValue: "14:30",
-        scheduleRrule: null,
+        scheduleRrule: "FREQ=DAILY;BYHOUR=14;BYMINUTE=30",
         analysisMode: "leaderboard",
-        analysisTimeRange: "1d",
         channelIds: ["ch-1"],
-        rrule: "",
-        eventStartTime: "",
-        eventEndTime: "",
-        eventIsAllDay: false,
-        eventLocation: "",
-        eventDescription: "",
-        includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
       };
 
       mockUseChatEditor.mockReturnValue(
@@ -572,28 +527,12 @@ describe("ChatEditorPage integration tests", () => {
 
     it("shows analysis mode correctly for existing task", async () => {
       const eventTaskFormState: TaskFormState = {
+        ...DEFAULT_FORM_STATE,
         name: "Event Task",
-        description: "",
         promptTemplate: "Some prompt",
-        webSearchQuery: "",
-        scheduleType: "seconds_10",
-        scheduleValue: null,
-        scheduleRrule: null,
         analysisMode: "event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1"],
-        rrule: "",
-        eventStartTime: "",
-        eventEndTime: "",
-        eventIsAllDay: false,
-        eventLocation: "",
-        eventDescription: "",
-        includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
       };
 
       mockUseChatEditor.mockReturnValue(

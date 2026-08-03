@@ -1,9 +1,8 @@
 /**
  * Rendering variant tests for LogList.
  *
- * Validates: Requirement 8.5 (rendering variant tests for components that
- * behave differently based on data size: empty list, single item, many
- * items, pagination boundary).
+ * Rendering variant tests for components that behave differently based on
+ * data size: empty list, single item, many items, pagination boundary.
  *
  * LogList renders a list of AppLogEntry rows with a load-more sentinel
  * underneath. Its rendering changes by:

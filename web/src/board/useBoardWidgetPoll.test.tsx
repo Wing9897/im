@@ -6,7 +6,10 @@ import {
   useMonitorMode,
 } from "../context/MonitorModeContext";
 import { wrapBoardProviders } from "./boardTestHarness";
-import { BOARD_POLL_MS, useBoardWidgetPoll } from "./useBoardWidgetPoll";
+import { useBoardWidgetPoll } from "./useBoardWidgetPoll";
+
+/** Fast interval for poll-hook tests (production widgets use BOARD_POLL_MS.standard). */
+const TEST_POLL_MS = 15_000;
 
 function PollProbe({
   fetcher,
@@ -63,7 +66,7 @@ describe("useBoardWidgetPoll", () => {
         wrapBoardProviders(
           createElement(PollProbe, {
             fetcher,
-            intervalMs: BOARD_POLL_MS.queue,
+            intervalMs: TEST_POLL_MS,
           }),
         ),
       );
@@ -87,7 +90,7 @@ describe("useBoardWidgetPoll", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      vi.advanceTimersByTime(BOARD_POLL_MS.queue);
+      vi.advanceTimersByTime(TEST_POLL_MS);
       await Promise.resolve();
     });
     expect(fetcher).toHaveBeenCalledTimes(2);
@@ -102,7 +105,7 @@ describe("useBoardWidgetPoll", () => {
     // Flip mode via localStorage + remount provider path: use setMonitorMode through a button.
     function ModeFlipper() {
       const { setMonitorMode } = useMonitorMode();
-      const { data } = useBoardWidgetPoll(fetcher, BOARD_POLL_MS.queue);
+      const { data } = useBoardWidgetPoll(fetcher, TEST_POLL_MS);
       return createElement(
         "div",
         null,
@@ -131,7 +134,7 @@ describe("useBoardWidgetPoll", () => {
     await flushMicrotasks();
 
     await act(async () => {
-      vi.advanceTimersByTime(BOARD_POLL_MS.queue * 3);
+      vi.advanceTimersByTime(TEST_POLL_MS * 3);
       await Promise.resolve();
     });
     expect(fetcher.mock.calls.length).toBe(callsAfterMount);
@@ -142,7 +145,7 @@ describe("useBoardWidgetPoll", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
 
     function InactiveProbe() {
-      const { data } = useBoardWidgetPoll(fetcher, BOARD_POLL_MS.queue, { active: false });
+      const { data } = useBoardWidgetPoll(fetcher, TEST_POLL_MS, { active: false });
       return createElement("span", { "data-testid": "inactive" }, data ?? "");
     }
 

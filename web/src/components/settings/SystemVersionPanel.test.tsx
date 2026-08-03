@@ -24,7 +24,7 @@ describe("SystemVersionPanel", () => {
       version: __APP_VERSION__,
       runtimeReady: true,
       secretsReady: true,
-      schemaVersion: 8,
+      schemaVersion: 11,
       schemaSemver: SCHEMA_SEMVER,
       bindHost: "127.0.0.1",
       lanAccessEnabled: false,

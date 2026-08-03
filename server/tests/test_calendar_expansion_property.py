@@ -327,7 +327,7 @@ def _legacy_preservation_cases(draw: st.DrawFn):
     return task, mixed_tasks, first, last, budget, interval, complete_count
 
 
-@pytest.mark.traceability("Feature: correctness-hardening-round-3, Property 5")
+@property_trace(5)
 @settings(max_examples=100, deadline=None)
 @given(case=_legacy_preservation_cases())
 def test_property_5_preserves_legacy_calendar_semantics_when_sequence_fits_budget(case):
@@ -376,7 +376,7 @@ def _shared_allocation_cases(draw: st.DrawFn):
     return tasks, range_start, range_end, counts
 
 
-@pytest.mark.traceability("Feature: correctness-hardening-round-3, Property 6")
+@property_trace(6)
 @settings(max_examples=100, deadline=None)
 @given(case=_shared_allocation_cases())
 def test_property_6_preserves_shared_allocation_final_order_and_exact_contract(case):
@@ -466,7 +466,7 @@ def _calendar_bug_condition_cases(draw: st.DrawFn):
     return task, range_start, range_end, budget
 
 
-@pytest.mark.traceability("Feature: correctness-hardening-round-3, Property 2")
+@property_trace(2)
 @settings(max_examples=100, deadline=None)
 @given(case=_calendar_bug_condition_cases())
 def test_property_2_bounded_calendar_reference_prefix_for_generated_bug_conditions(case):

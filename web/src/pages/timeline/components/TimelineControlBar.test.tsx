@@ -1,10 +1,9 @@
 /**
  * Unit tests for TimelineControlBar.
  *
- * Validates: Requirement 8.1 — coverage for components with complex
- * conditional rendering (scale list varies by view mode) and many user
- * interaction handlers (task selector, view mode buttons, scale buttons,
- * cursor navigation).
+ * Coverage for complex conditional rendering (scale list varies by view mode)
+ * and many user interaction handlers (task selector, view mode buttons, scale
+ * buttons, cursor navigation).
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";

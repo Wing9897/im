@@ -1,9 +1,8 @@
 /**
  * Unit tests for ActionTypeSelector.
  *
- * Validates: Requirement 8.1 — coverage for components with conditional
- * rendering and user interaction handlers (tile selection,
- * disabled state, prompt visibility based on null value).
+ * Coverage for conditional rendering and user interaction handlers
+ * (tile selection, disabled state, prompt visibility based on null value).
  */
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";

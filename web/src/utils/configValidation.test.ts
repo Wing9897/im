@@ -1,8 +1,8 @@
 /**
  * Boundary condition unit tests for action channel configuration validators.
  *
- * Validates: Requirement 8.3 (boundary conditions for form validation:
- * empty input, max length, special characters, Unicode).
+ * Boundary conditions for form validation: empty input, max length,
+ * special characters, Unicode.
  *
  * Fixed-case tests below also cover universal validation rules (prefix, length,
  * credential pairs) alongside these boundary pins.

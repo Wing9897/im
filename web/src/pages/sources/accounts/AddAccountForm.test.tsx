@@ -1,8 +1,8 @@
 /**
  * Boundary condition tests for AddAccountForm.
  *
- * Validates: Requirement 8.3 (boundary tests for form components with
- * validation: empty input, max length, special characters, Unicode).
+ * Boundary tests for form components with validation: empty input, max
+ * length, special characters, Unicode.
  *
  * AddAccountForm is the inline form rendered inside the Sources page that
  * captures Telegram API credentials. The submit button is disabled when
