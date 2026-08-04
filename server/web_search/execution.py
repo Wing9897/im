@@ -1,14 +1,16 @@
-"""Shared web-search execution for assistant tools and ``web_intel`` ticks.
+"""Shared web-search execution for assistant ``web.search`` tools.
+
+Also retains a legacy ``extract_web_intel_items`` oneshot helper (no longer the
+scheduled ``web_intel`` tick main path — ticks use ``AgentRuntime`` instead).
 
 Callers pass count caps and whether search is enabled:
 
 - Assistant / ``web.search`` tool: respect master switch (``enabled=False`` short-circuits).
-- ``web_intel`` ticks: force ``enabled=True``; only provider/native routing is shared.
+- Scheduled ticks force ``enabled=True`` at route resolve time when still needed.
 """
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Protocol
 
 from server.agent.web_search_routing import WebSearchRoute
@@ -20,8 +22,6 @@ from server.prompts.web_intel import (
     format_search_results_for_prompt,
 )
 from server.web_search.providers import DEFAULT_COUNT, MAX_COUNT, search_web
-
-logger = logging.getLogger(__name__)
 
 #: Scheduled web_intel tick result cap (tool path).
 WEB_INTEL_SEARCH_COUNT = 8
@@ -109,34 +109,27 @@ class WebSearchExecutionService:
         ui_locale: str | None,
         count: int = WEB_INTEL_SEARCH_COUNT,
     ) -> tuple[list[dict[str, Any]], int, int, str]:
-        """Native one-step when routed; on failure fall back to tool search → JSON.
+        """One extract path per fire: native **or** tool — no same-fire fallback.
 
         Callers force-enable search at route resolve time; if ``route.enabled`` is
         still false after that, this raises.
         """
+        if not route.enabled:
+            raise RuntimeError("web_intel search route resolved to disabled")
+
         system = build_web_intel_system_prompt(ui_locale=ui_locale)
         native_kind = route.native_web_search
 
-        if route.enabled and native_kind in {"openai", "gemini"}:
-            try:
-                items, pt, ct = await self._native_one_step(
-                    client,
-                    system=system,
-                    search_query=search_query,
-                    prompt_template=prompt_template,
-                    native_kind=native_kind,
-                    ui_locale=ui_locale,
-                )
-                return items, pt, ct, f"{native_kind}_native"
-            except Exception as exc:  # noqa: BLE001 — fall back to tool search
-                logger.warning(
-                    "web_intel native search failed (%s); falling back to tool path: %s",
-                    native_kind,
-                    exc,
-                )
-
-        if not route.enabled:
-            raise RuntimeError("web_intel search route resolved to disabled")
+        if native_kind in {"openai", "gemini"}:
+            items, pt, ct = await self._native_one_step(
+                client,
+                system=system,
+                search_query=search_query,
+                prompt_template=prompt_template,
+                native_kind=native_kind,
+                ui_locale=ui_locale,
+            )
+            return items, pt, ct, f"{native_kind}_native"
 
         items, pt, ct = await self._tool_two_step(
             client,

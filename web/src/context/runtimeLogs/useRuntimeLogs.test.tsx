@@ -142,6 +142,7 @@ describe("useRuntimeLogs", () => {
       latestState!.addLog({
         level: "info",
         category: "system",
+        kind: "event",
         message: "new persisted log",
       });
       await flushUpdates();
@@ -171,6 +172,7 @@ describe("useRuntimeLogs", () => {
       latestState!.addLog({
         level: "info",
         category: "system",
+        kind: "event",
         message: "late append",
       });
     });
@@ -205,11 +207,13 @@ describe("useRuntimeLogs", () => {
       latestState!.addLog({
         level: "info",
         category: "system",
+        kind: "event",
         message: "first",
       });
       latestState!.addLog({
         level: "warning",
         category: "system",
+        kind: "event",
         message: "second",
       });
       await flushUpdates();
@@ -559,12 +563,16 @@ describe("useRuntimeLogs cleanup", () => {
       latestState!.addLog({
         level: "info",
         category: "system",
+        kind: "event",
         message: "test log after unmount",
       });
     });
 
     expect(mockAppendAppLog).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "test log after unmount" }),
+      expect.objectContaining({
+        message: "test log after unmount",
+        kind: "event",
+      }),
     );
 
     // Unmount before appendAppLog resolves

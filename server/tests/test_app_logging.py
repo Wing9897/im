@@ -10,9 +10,10 @@ from server.analyzer.llm_json import LlmParseError
 from server.analyzer.llm_providers import LlmClientError
 from server.app_logging import (
     failure_details_from_exc,
-    format_batch_failure_message,
+    format_batch_failure_message_en,
+    record,
+    record_batch_failure,
     summarize_error_message,
-    write_batch_failure_log,
 )
 
 
@@ -27,9 +28,8 @@ def test_summarize_error_message_uses_first_line_only():
     assert summarize_error_message(raw) == "LLM request failed with status 429"
 
 
-def test_format_batch_failure_message_follows_ui_locale():
-    zh = format_batch_failure_message(
-        locale="zh-Hant",
+def test_format_batch_failure_message_en_is_english_fallback():
+    exhausted = format_batch_failure_message_en(
         task_name="Task A",
         batch_id="batch-abcdef12",
         error_message="LLM timeout",
@@ -37,24 +37,48 @@ def test_format_batch_failure_message_follows_ui_locale():
         current_retry=3,
         max_retries=3,
     )
-    en = format_batch_failure_message(
-        locale="en",
+    retrying = format_batch_failure_message_en(
         task_name="Task A",
         batch_id="batch-abcdef12",
         error_message="LLM timeout",
-        retries_exhausted=True,
-        current_retry=3,
+        retries_exhausted=False,
+        current_retry=1,
         max_retries=3,
     )
-    assert "重試用盡" in zh
-    assert "retries exhausted" in en
-    assert "LLM timeout" in en
+    assert "retries exhausted" in exhausted
+    assert "will retry" in retrying
+    assert "LLM timeout" in exhausted
 
 
 @pytest.mark.asyncio
-async def test_write_batch_failure_log_persists_details(app):
+async def test_record_persists_envelope_v1(app):
     db = app.state.db
-    await write_batch_failure_log(
+    log_id = await record(
+        db,
+        level="info",
+        category="system",
+        kind="runtime.ai_status",
+        message="AI ready",
+        message_key="logs:templates.runtimeAiReady",
+        message_params={"status": "ready"},
+        source="server.test",
+        payload={"ok": True},
+    )
+    row = await db.fetch_one("SELECT * FROM app_logs WHERE id = ?", (log_id,))
+    assert row is not None
+    assert row["kind"] == "runtime.ai_status"
+    details = json.loads(row["details"])
+    assert details["v"] == 1
+    assert details["messageKey"] == "logs:templates.runtimeAiReady"
+    assert details["messageParams"]["status"] == "ready"
+    assert details["source"] == "server.test"
+    assert details["payload"] == {"ok": True}
+
+
+@pytest.mark.asyncio
+async def test_record_batch_failure_persists_kind_and_envelope(app):
+    db = app.state.db
+    await record_batch_failure(
         db,
         task_id="task-1",
         task_name="測試任務",
@@ -63,19 +87,22 @@ async def test_write_batch_failure_log_persists_details(app):
         retries_exhausted=True,
         current_retry=3,
         max_retries=3,
-        ui_locale="zh-Hant",
     )
     row = await db.fetch_one("SELECT * FROM app_logs ORDER BY time DESC LIMIT 1")
     assert row is not None
     assert row["level"] == "error"
     assert row["category"] == "analysis"
-    assert "重試用盡" in row["message"]
-    assert "LLM timeout" in row["details"]
+    assert row["kind"] == "batch.failure"
+    assert "retries exhausted" in row["message"]
 
     details = json.loads(row["details"])
+    assert details["v"] == 1
     assert details["messageKey"] == "logs:templates.batchExhausted"
     assert details["messageParams"]["taskName"] == "測試任務"
     assert details["messageParams"]["summary"] == "LLM timeout"
+    assert details["source"] == "server.scheduler.batch_failure"
+    assert details["payload"]["batchId"] == "batch-abcdef12"
+    assert details["payload"]["error"] == "LLM timeout"
 
 
 def test_failure_details_from_exc_http_429():
@@ -109,10 +136,10 @@ def test_failure_details_from_exc_timeout():
 
 
 @pytest.mark.asyncio
-async def test_write_batch_failure_log_merges_http_forensics(app):
+async def test_record_batch_failure_merges_http_forensics(app):
     db = app.state.db
     body = '{"error":{"code":429,"message":"Too Many Requests"}}'
-    await write_batch_failure_log(
+    await record_batch_failure(
         db,
         task_id="task-1",
         task_name="AI Task",
@@ -121,7 +148,6 @@ async def test_write_batch_failure_log_merges_http_forensics(app):
         retries_exhausted=False,
         current_retry=1,
         max_retries=3,
-        ui_locale="en",
         failure_details={
             "failureKind": "http",
             "httpStatus": 429,
@@ -131,18 +157,19 @@ async def test_write_batch_failure_log_merges_http_forensics(app):
     )
     row = await db.fetch_one("SELECT * FROM app_logs ORDER BY time DESC LIMIT 1")
     assert row is not None
+    assert row["kind"] == "batch.failure"
     details = json.loads(row["details"])
-    assert details["failureKind"] == "http"
-    assert details["httpStatus"] == 429
-    assert details["responseBody"] == body
-    assert details["error"].startswith("LLM request failed with status 429")
     assert details["messageKey"] == "logs:templates.batchRetrying"
+    assert details["payload"]["failureKind"] == "http"
+    assert details["payload"]["httpStatus"] == 429
+    assert details["payload"]["responseBody"] == body
+    assert details["payload"]["error"].startswith("LLM request failed with status 429")
 
 
 @pytest.mark.asyncio
-async def test_write_batch_failure_log_redacts_secrets_in_body(app):
+async def test_record_batch_failure_redacts_secrets_in_body(app):
     db = app.state.db
-    await write_batch_failure_log(
+    await record_batch_failure(
         db,
         task_id="task-1",
         task_name="AI Task",
@@ -151,7 +178,6 @@ async def test_write_batch_failure_log_redacts_secrets_in_body(app):
         retries_exhausted=True,
         current_retry=3,
         max_retries=3,
-        ui_locale="en",
         failure_details={
             "failureKind": "http",
             "httpStatus": 401,
@@ -160,6 +186,60 @@ async def test_write_batch_failure_log_redacts_secrets_in_body(app):
     )
     row = await db.fetch_one("SELECT * FROM app_logs ORDER BY time DESC LIMIT 1")
     details = json.loads(row["details"])
-    assert "sk-abcdefghijklmnop" not in details["responseBody"]
-    assert "secret-token" not in details["responseBody"]
-    assert "[REDACTED]" in details["responseBody"]
+    body = details["payload"]["responseBody"]
+    assert "sk-abcdefghijklmnop" not in body
+    assert "secret-token" not in body
+    assert "[REDACTED]" in body
+
+
+@pytest.mark.asyncio
+async def test_record_analysis_trace_kind(app):
+    db = app.state.db
+    await record(
+        db,
+        level="info",
+        category="analysis",
+        kind="analysis.trace",
+        message="Analysis trace: Task (batch-01)",
+        message_key="logs:templates.analysisTrace",
+        source="server.scheduler.batch",
+        payload={"batchId": "batch-01"},
+    )
+    row = await db.fetch_one("SELECT * FROM app_logs WHERE kind = 'analysis.trace' LIMIT 1")
+    assert row is not None
+    details = json.loads(row["details"])
+    assert details["v"] == 1
+    assert details["messageKey"] == "logs:templates.analysisTrace"
+
+
+@pytest.mark.asyncio
+async def test_set_analysis_paused_records_app_log_once(app):
+    from server.analysis_control import set_analysis_paused
+
+    db = app.state.db
+    await set_analysis_paused(db, None, paused=True)
+    await set_analysis_paused(db, None, paused=True)  # no-op when already paused
+    rows = await db.fetch_all("SELECT * FROM app_logs WHERE kind = 'scheduler.paused'")
+    assert len(rows) == 1
+    details = json.loads(rows[0]["details"])
+    assert details["messageKey"] == "logs:templates.schedulerPaused"
+
+    await set_analysis_paused(db, None, paused=False)
+    resumed = await db.fetch_all("SELECT * FROM app_logs WHERE kind = 'scheduler.resumed'")
+    assert len(resumed) == 1
+    assert json.loads(resumed[0]["details"])["messageKey"] == "logs:templates.schedulerResumed"
+
+
+@pytest.mark.asyncio
+async def test_set_account_error_records_account_category(app):
+    from server.account_status import set_account_error
+    from server.tests import seed
+
+    db = app.state.db
+    await set_account_error(db, seed.RSS_ACCOUNT, "token revoked")
+    row = await db.fetch_one("SELECT * FROM app_logs WHERE kind = 'account.error' LIMIT 1")
+    assert row is not None
+    assert row["category"] == "account"
+    details = json.loads(row["details"])
+    assert details["messageKey"] == "logs:templates.accountError"
+    assert details["payload"]["accountId"] == seed.RSS_ACCOUNT

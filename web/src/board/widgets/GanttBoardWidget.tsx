@@ -19,6 +19,7 @@ import {
 import { resolveSpanWorksetId, useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
+import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import { useBoardGanttViewMode } from "../useBoardGanttViewMode";
 import { GanttViewModeControls } from "./GanttViewModeControls";
@@ -46,7 +47,15 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
     BOARD_POLL_MS.standard,
     { active },
   );
-  useRefreshOnAnalysisEvent(refresh);
+  const refreshWhenActive = useCallback(() => {
+    if (!active) return;
+    refresh();
+  }, [active, refresh]);
+  useRefreshOnAnalysisEvent(refreshWhenActive, {
+    analysisMode: ANALYSIS_EVENTS_MODES,
+    // Inactive / pages-mode widgets stay mounted — do not match any task.
+    taskIds: active ? null : [],
+  });
   const { tasks, worksets } = useTaskCatalog();
   const userEventsLabel = useGeneralWorksetLabel();
 

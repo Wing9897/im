@@ -164,12 +164,12 @@
     "applySourcesAria": "Apply reminder sources",
     "cancelDraftAria": "Cancel task selection changes",
     "tooltipContent": [
-      "Scans timed Key Events, recurring-task (RRULE) expansions, and General-workset events, then announces them ahead of time.",
+      "Scans timed Intel events, Recurring task (RRULE) expansions, and General-workset events, then announces them ahead of time.",
       "Plays a preamble chime before speaking; settings are stored on this device only, and the app must stay open to scan and announce.",
       "Trigger outcomes are written to “Trigger history.”",
       "Voice engine and language come from AI → Voice; not limited by the “auto-read assistant replies” toggle."
     ],
-    "enableHelp": "Scans roughly once a minute for upcoming Key Events, recurring tasks, and user/assistant events.",
+    "enableHelp": "Scans roughly once a minute for upcoming Intel events, Recurring tasks, and user/assistant events.",
     "leadHelp": "Multi-select allowed; each selected lead time announces separately when reached.",
     "quietEnableHelp": "When enabled, reminders are muted during the configured window; when disabled, reminders play all day.",
     "quietHelp": "Supports spanning midnight, e.g. 22:00 to 07:00. Turning the toggle off does not clear the configured times.",

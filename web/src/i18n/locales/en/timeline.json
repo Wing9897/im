@@ -44,7 +44,7 @@
   },
   "empty": {
     "noUserEvents": "No General-workset events yet. Use “Add event” in the top right, or ask the assistant to create a meeting.",
-    "noTasks": "No timeline tasks to show yet. Add a Key Events or Recurring task under Tasks first.",
+    "noTasks": "No timeline tasks to show yet. Add an Intel task or Recurring task under Tasks first.",
     "needData": "The timeline needs a completed analysis batch, a configured calendar schedule, or user/assistant events before it can show anything.",
     "noEventsDescription": "No events in this filter or date range. You can still change dates or switch to All / General.",
     "filteredTitle": "No events match the current filters",

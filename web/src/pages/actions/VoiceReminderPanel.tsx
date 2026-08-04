@@ -19,7 +19,7 @@ import { useVoiceReminderPanelState } from "./useVoiceReminderPanelState";
 import { VoiceReminderSourcesSection } from "./VoiceReminderSourcesSection";
 
 /**
- * Local voice reminders for timed 關鍵事件、循環任務與手動／助手事件。
+ * Local voice reminders for timed 情報事件、週期任務與手動／助手事件。
  * Full-page tab under `/actions?tab=voice`.
  */
 export function VoiceReminderPanel() {

@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-11 / prior hard-reject): ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-14 / prior hard-reject): ``test_schema_wipe_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -52,7 +52,9 @@ async def test_fresh_database_creates_full_schema(tmp_path):
         assert len(tables) == _REQUIRED_TABLE_COUNT
         assert {"messages", "analysis_tasks"} <= tables
         assert "details" in app_log_columns
+        assert "kind" in app_log_columns
         assert "idx_app_logs_time" in app_log_indexes
+        assert "idx_app_logs_kind_time" in app_log_indexes
         assert account_channel_fks == {
             ("account_id", "accounts", "id", "CASCADE"),
             ("platform", "channels", "platform", "CASCADE"),
@@ -360,8 +362,8 @@ async def _make_structural_lookalike_db(
         await conn.execute("PRAGMA journal_mode=WAL")
         await conn.executescript(DDL.replace(old_ddl, new_ddl, 1))
         await conn.execute(
-            "INSERT INTO app_logs (id, time, level, category, message, details) VALUES (?, ?, ?, ?, ?, ?)",
-            ("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test", "preserved", "{}"),
+            "INSERT INTO app_logs (id, time, level, category, kind, message, details) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            ("sentinel", "2026-01-01T00:00:00Z", "info", "schema-test", "system", "preserved", "{}"),
         )
         await conn.execute(f"PRAGMA user_version={version}")
         await conn.commit()

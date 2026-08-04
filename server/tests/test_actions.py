@@ -229,7 +229,7 @@ async def test_execute_success_records_history_and_last_triggered(db, monkeypatc
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
         "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("t-1", "Task", "prompt", now, now),
     )
     await db.execute(
@@ -376,7 +376,7 @@ async def test_trigger_skips_empty_findings(db, monkeypatch):
         task_id="t-1",
         task_name="Task",
         batch_id="b-1",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         findings_count=0,
         max_score=None,
     )
@@ -393,7 +393,7 @@ async def test_trigger_fires_when_findings_present(db, monkeypatch):
         task_id="t-1",
         task_name="Task",
         batch_id="b-1",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         findings_count=2,
         max_score=None,
     )

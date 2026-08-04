@@ -14,7 +14,7 @@ describe("LoadMoreFooter", () => {
           hasMore: true,
           loadingMore: false,
           onLoadMore,
-          loadMoreAriaLabel: "載入更多關鍵事件",
+          loadMoreAriaLabel: "載入更多情報事件",
           asDataListFooter: false,
         }),
       );
@@ -22,7 +22,7 @@ describe("LoadMoreFooter", () => {
 
     expect(container.textContent).toContain("向下捲動以顯示更多");
     const button = container.querySelector("button");
-    expect(button?.getAttribute("aria-label")).toBe("載入更多關鍵事件");
+    expect(button?.getAttribute("aria-label")).toBe("載入更多情報事件");
     act(() => {
       button?.click();
     });

@@ -86,9 +86,9 @@ describe("SettingsAiStaffPage", () => {
     expect(container.querySelector('[data-testid="ai-staff-card-liaison"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-card-taskEditor"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-card-leaderboard"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="ai-staff-card-eventIntel"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="ai-staff-card-webIntel"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="ai-staff-card-projectManager"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="ai-staff-card-intel_event"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="ai-staff-card-web_intel"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="ai-staff-card-project"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-avatar-assistant"]')).not.toBeNull();
     expect(
       container.querySelector('[data-testid="ai-staff-avatar-assistant"]')?.getAttribute("data-staff-kind"),

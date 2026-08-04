@@ -71,7 +71,7 @@ describe("intelligenceFeedConfig", () => {
         hasMoreRemote: false,
         hasIntelligenceItems: true,
       }),
-    ).toBe("已載入全部關鍵事件");
+    ).toBe("已載入全部情報事件");
 
     expect(
       getLoadMoreHint({

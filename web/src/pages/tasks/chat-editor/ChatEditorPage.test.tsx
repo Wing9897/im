@@ -80,7 +80,7 @@ function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): Use
   };
 }
 
-function renderPage(route = "/tasks/chat") {
+function renderPage(route = "/tasks/new") {
   const container = document.createElement("div");
   document.body.appendChild(container);
   let root: Root;
@@ -95,14 +95,6 @@ function renderPage(route = "/tasks/chat") {
           null,
           createElement(Route, {
             path: "/tasks/new",
-            element: createElement(ChatEditorPage),
-          }),
-          createElement(Route, {
-            path: "/tasks/chat",
-            element: createElement(ChatEditorPage),
-          }),
-          createElement(Route, {
-            path: "/tasks/chat/:taskId",
             element: createElement(ChatEditorPage),
           }),
           createElement(Route, {
@@ -426,7 +418,7 @@ describe("ChatEditorPage integration tests", () => {
 
       let result: ReturnType<typeof renderPage>;
       await act(async () => {
-        result = renderPage("/tasks/chat/task-123");
+        result = renderPage("/tasks/task-123/edit");
         await Promise.resolve();
       });
       const { container, cleanup } = result!;
@@ -447,7 +439,7 @@ describe("ChatEditorPage integration tests", () => {
         scheduleType: "daily",
         scheduleValue: "09:00",
         scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1", "ch-2"],
       };
@@ -460,7 +452,7 @@ describe("ChatEditorPage integration tests", () => {
 
       let result: ReturnType<typeof renderPage>;
       await act(async () => {
-        result = renderPage("/tasks/chat/task-123");
+        result = renderPage("/tasks/task-123/edit");
         await Promise.resolve();
       });
       const { container, cleanup } = result!;
@@ -506,7 +498,7 @@ describe("ChatEditorPage integration tests", () => {
 
       let result: ReturnType<typeof renderPage>;
       await act(async () => {
-        result = renderPage("/tasks/chat/task-456");
+        result = renderPage("/tasks/task-456/edit");
         await Promise.resolve();
       });
       const { container, cleanup } = result!;
@@ -530,7 +522,7 @@ describe("ChatEditorPage integration tests", () => {
         ...DEFAULT_FORM_STATE,
         name: "Event Task",
         promptTemplate: "Some prompt",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         analysisTimeRange: "7d",
         channelIds: ["ch-1"],
       };
@@ -543,7 +535,7 @@ describe("ChatEditorPage integration tests", () => {
 
       let result: ReturnType<typeof renderPage>;
       await act(async () => {
-        result = renderPage("/tasks/chat/task-789");
+        result = renderPage("/tasks/task-789/edit");
         await Promise.resolve();
       });
       const { container, cleanup } = result!;
@@ -551,7 +543,7 @@ describe("ChatEditorPage integration tests", () => {
       const picker = container.querySelector('[data-testid="task-employee-picker"]');
       expect(picker).not.toBeNull();
       const activeTile = picker!.querySelector('[aria-pressed="true"]');
-      expect(activeTile?.textContent).toContain("關鍵事件");
+      expect(activeTile?.textContent).toContain("情報任務");
 
       cleanup();
     });

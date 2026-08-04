@@ -1,20 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import type { MessageFilters, MessageTimeRange } from "../../types";
+import { MESSAGE_TIME_RANGE_VALUES } from "../../domain/messages/messageTimeRange";
 import { useDeepLinkFingerprint } from "../../hooks/useDeepLinkFingerprint";
 import { useReplaceSearchParams } from "../../hooks/useReplaceSearchParams";
 
-const TIME_RANGES = new Set<string>([
-  "1h",
-  "6h",
-  "12h",
-  "24h",
-  "48h",
-  "7d",
-  "30d",
-  "all",
-  "today",
-]);
+/** Full {@link MessageTimeRange} set (task windows + monitor-only ``12h``／``24h``). */
+const TIME_RANGES = new Set<string>(MESSAGE_TIME_RANGE_VALUES);
 
 function parseCsv(value: string | null): string[] | undefined {
   if (!value?.trim()) return undefined;

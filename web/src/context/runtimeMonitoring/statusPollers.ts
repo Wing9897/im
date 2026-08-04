@@ -10,6 +10,7 @@ import {
   buildAiHealthStatusLog,
   normalizeAiStatus,
 } from "../appRuntimeShared";
+import { APP_LOG_KIND } from "../../logging/appLogClient";
 import type { RuntimeStateBundle } from "./stateManagement";
 import {
   buildAiHealthSignature,
@@ -102,8 +103,11 @@ export function createCollectorStatusPoller(
       addLog({
         level: "error",
         category: "collector",
+        kind: APP_LOG_KIND.RUNTIME_COLLECTOR,
         message: String(i18n.t("common:runtime.collectorReadFailed")),
-        details: toErrorMessage(error),
+        messageKey: "logs:templates.runtimeCollectorReadFailed",
+        source: "frontend.runtime.collector",
+        payload: { error: toErrorMessage(error) },
       });
     }
   };
@@ -131,7 +135,7 @@ export function createQueueStatusPoller(
   options: RuntimeMonitoringOptions,
   isMounted: () => boolean,
 ): { refreshQueueStatusAsync: (logPauseChanges: boolean) => Promise<void> } {
-  const { addLog, warnNonFatal } = options;
+  const { warnNonFatal, refreshStoredLogs } = options;
 
   const { run: refreshQueueStatusAsync } = createSerializedAsyncRunner<
     [boolean]
@@ -145,14 +149,14 @@ export function createQueueStatusPoller(
         state.setQueueStatus(queue);
         const previousPaused = state.analysisPausedRef.current;
         state.setAnalysisPaused(queue.analysisPaused);
-        if (logPauseChanges && queue.analysisPaused !== previousPaused) {
-          addLog({
-            level: queue.analysisPaused ? "warning" : "success",
-            category: "analysis",
-            message: queue.analysisPaused
-              ? String(i18n.t("common:runtime.analysisPaused"))
-              : String(i18n.t("common:runtime.analysisResumed")),
-          });
+        // Pause/resume AppLog is server-owned (scheduler.paused / .resumed).
+        // When callers ask to observe pause flips, refresh stored logs instead
+        // of double-writing a frontend runtime.analysis_pause row.
+        if (
+          logPauseChanges &&
+          queue.analysisPaused !== previousPaused
+        ) {
+          void refreshStoredLogs().catch(() => {});
         }
         if ((queue.processingBatches ?? []).length === 0) {
           state.setActiveAnalyses(new Map());

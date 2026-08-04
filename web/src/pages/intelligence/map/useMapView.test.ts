@@ -460,7 +460,7 @@ describe("useMapView", () => {
 
       mockLastAnalysisEvent = {
         type: "completed",
-        payload: { taskId: "task-1", analysisMode: "event" },
+        payload: { taskId: "task-1", analysisMode: "intel_event" },
       };
 
       act(() => {
@@ -569,7 +569,7 @@ describe("useMapView", () => {
 
       mockLastAnalysisEvent = {
         type: "completed",
-        payload: { taskId: "task-1", analysisMode: "event" },
+        payload: { taskId: "task-1", analysisMode: "intel_event" },
       };
 
       act(() => {
@@ -730,6 +730,7 @@ describe("useMapView context isolation", () => {
               time: "2026-01-01T00:00:00.000Z",
               level: "warning",
               category: "system",
+              kind: "event",
               message: "test log",
             },
           ],

@@ -5,7 +5,7 @@ import { resolveTimelineFilterPlan } from "./shared";
 
 describe("resolveTimelineFilterPlan", () => {
   const tasks = [
-    { id: "evt-1", analysisMode: "event", worksetId: "ws-a" },
+    { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-a" },
     { id: "web-1", analysisMode: "web_intel", worksetId: "ws-a" },
     { id: "lb-1", analysisMode: "leaderboard", worksetId: "ws-a" },
     { id: "cal-1", analysisMode: "recurring", worksetId: null },

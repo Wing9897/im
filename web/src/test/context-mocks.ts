@@ -47,7 +47,7 @@ export function makeAnalysisTask(overrides: Partial<AnalysisTask> = {}): Analysi
     description: "Task 1",
     promptTemplate: "prompt",
     webSearchQuery: "",
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "7d",
     version: 1,
     isActive: true,

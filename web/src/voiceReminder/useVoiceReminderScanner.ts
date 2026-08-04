@@ -69,7 +69,7 @@ async function recordDueTrigger(
 }
 
 /**
- * Background voice-reminder scanner for timed 關鍵事件、循環任務 RRULE 展開、
+ * Background voice-reminder scanner for timed 情報事件、週期任務 RRULE 展開、
  * 以及用戶／助手事件。Mount once near the app root.
  */
 export function useVoiceReminderScanner(): void {

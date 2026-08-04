@@ -9,7 +9,7 @@ const sample: TaskTemplatePreset = {
   name: "行程事件提取",
   description: "fallback zh",
   promptTemplate: "fallback prompt",
-  analysisMode: "event",
+  analysisMode: "intel_event",
   defaultAnalysisTimeRange: "1d",
   badge: "📅",
 };
@@ -23,7 +23,11 @@ describe("localizeTaskPreset", () => {
   it("keeps known editor windows and defaults unknown to 1d", () => {
     expect(normalizePresetTimeRange("1d")).toBe("1d");
     expect(normalizePresetTimeRange("7d")).toBe("7d");
+    expect(normalizePresetTimeRange("48h")).toBe("48h");
+    expect(normalizePresetTimeRange("today")).toBe("today");
+    expect(normalizePresetTimeRange("1h")).toBe("1h");
     expect(normalizePresetTimeRange("12h")).toBe("1d");
+    expect(normalizePresetTimeRange("24h")).toBe("1d");
     expect(normalizePresetTimeRange("bogus")).toBe("1d");
   });
 

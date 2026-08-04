@@ -42,4 +42,19 @@ describe("resolveLogDisplayMessage", () => {
     });
     expect(zh).toContain("重試用盡");
   });
+
+  it("resolves analysisTrace template from the v1 envelope", async () => {
+    setAppLocale("en");
+    await i18n.changeLanguage("en");
+    const message = resolveLogDisplayMessage({
+      message: "Analysis trace fallback",
+      details: JSON.stringify({
+        v: 1,
+        messageKey: "logs:templates.analysisTrace",
+        messageParams: { summary: "prompt assembled" },
+      }),
+    });
+    expect(message).toContain("Analysis trace");
+    expect(message).toContain("prompt assembled");
+  });
 });

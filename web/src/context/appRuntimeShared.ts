@@ -10,6 +10,7 @@ import type {
   ActiveAnalysisInput,
 } from "../types";
 import i18n from "../i18n";
+import { APP_LOG_KIND } from "../logging/appLogClient";
 import { getOsTimeMs } from "../utils/time";
 
 export type { LogLevel, LogCategory, AppLogEntry, AppLogInput, ActiveAnalysisState, ActiveAnalysisInput };
@@ -34,7 +35,10 @@ const VALID_LOG_CATEGORIES: readonly LogCategory[] = [
   "collector",
   "account",
   "system",
+  "frontend",
 ];
+
+const DEFAULT_LOG_KIND = "event";
 
 function isLogLevel(value: string): value is LogLevel {
   return (VALID_LOG_LEVELS as readonly string[]).includes(value);
@@ -45,15 +49,28 @@ function isLogCategory(value: string): value is LogCategory {
 
 export function toAppLogEntry(entry: AppLogEntryPayload): AppLogEntry {
   if (!entry) {
-    return { id: makeLogId(), time: new Date().toISOString(), level: "info", category: "system", message: "", details: undefined };
+    return {
+      id: makeLogId(),
+      time: new Date().toISOString(),
+      level: "info",
+      category: "system",
+      kind: DEFAULT_LOG_KIND,
+      message: "",
+      details: undefined,
+    };
   }
   const level = entry.level ?? "";
   const category = entry.category ?? "";
+  const kind =
+    typeof entry.kind === "string" && entry.kind.trim()
+      ? entry.kind
+      : DEFAULT_LOG_KIND;
   return {
     id: entry.id ?? makeLogId(),
     time: entry.time ?? new Date().toISOString(),
     level: isLogLevel(level) ? level : "info",
     category: isLogCategory(category) ? category : "system",
+    kind,
     message: entry.message ?? "",
     details: entry.details ?? undefined,
   };
@@ -139,13 +156,15 @@ export function toActiveAnalysisState(
   };
 }
 
-function formatAiHealthDetails(
+function aiHealthPayload(
   health: AiEngineHealthStatus,
-): string | undefined {
+): Record<string, unknown> | undefined {
   if (!health) return undefined;
-  return health.reason
-    ? `${health.provider ? `provider=${health.provider}\n` : ""}${health.reason}`
-    : (health.provider ?? undefined);
+  if (!health.reason && !health.provider) return undefined;
+  return {
+    reason: health.reason ?? null,
+    provider: health.provider ?? null,
+  };
 }
 
 export function buildAiHealthStatusLog(
@@ -153,6 +172,12 @@ export function buildAiHealthStatusLog(
   health: AiEngineHealthStatus,
 ): AppLogInput {
   const safeHealth = health ?? ({} as AiEngineHealthStatus);
+  const messageKey =
+    status === "available"
+      ? "logs:templates.runtimeAiConnected"
+      : status === "unavailable"
+        ? "logs:templates.runtimeAiUnavailable"
+        : "logs:templates.runtimeAiUnknown";
   return {
     level:
       status === "available"
@@ -161,13 +186,16 @@ export function buildAiHealthStatusLog(
           ? "error"
           : "info",
     category: "collector",
+    kind: APP_LOG_KIND.RUNTIME_AI_STATUS,
     message:
       status === "available"
         ? String(i18n.t("common:runtime.aiConnected"))
         : status === "unavailable"
           ? String(i18n.t("common:runtime.aiUnavailable"))
           : String(i18n.t("common:runtime.aiUnknown")),
-    details: formatAiHealthDetails(safeHealth),
+    messageKey,
+    source: "frontend.runtime.ai_status",
+    payload: aiHealthPayload(safeHealth),
   };
 }
 

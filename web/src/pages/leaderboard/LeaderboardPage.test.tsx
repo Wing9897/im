@@ -11,7 +11,7 @@ const { mockFetchTrendingTopics, mockListChannelsWithAccounts, runtimeState } = 
       payload: {
         taskId: string;
         batchId: string;
-        analysisMode: "leaderboard" | "event";
+        analysisMode: "leaderboard" | "intel_event";
         findingsCount: number;
         hasFindings: boolean;
       };
@@ -149,7 +149,7 @@ describe("LeaderboardPage", () => {
       payload: {
         taskId: "task-1",
         batchId: "batch-2",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         findingsCount: 1,
         hasFindings: true,
       },

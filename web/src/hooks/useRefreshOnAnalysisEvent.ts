@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useAnalysisStatus } from "../context/AnalysisStatusContext";
 import type { RuntimeAnalysisEvent } from "../context/runtimeMonitoring";
@@ -68,7 +68,12 @@ export function shouldRefreshForEvent(
   return true;
 }
 
-/** Calls `onRefresh` whenever a matching analysis event is emitted by AnalysisStatusContext. */
+/**
+ * Calls `onRefresh` once per matching analysis event (`receivedAt`).
+ *
+ * `onRefresh` is read from a ref so identity churn (e.g. after stats state
+ * updates) cannot re-fire the same SSE event in a tight loop.
+ */
 export function useRefreshOnAnalysisEvent(
   onRefresh: () => void | Promise<void>,
   options: UseRefreshOnAnalysisEventOptions = {},
@@ -82,6 +87,11 @@ export function useRefreshOnAnalysisEvent(
   const analysisModeKey = Array.isArray(analysisMode)
     ? analysisMode.join("|")
     : (analysisMode ?? "");
+
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
+
+  const lastHandledReceivedAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (
@@ -98,6 +108,11 @@ export function useRefreshOnAnalysisEvent(
       return;
     }
 
+    if (lastHandledReceivedAtRef.current === lastAnalysisEvent.receivedAt) {
+      return;
+    }
+    lastHandledReceivedAtRef.current = lastAnalysisEvent.receivedAt;
+
     // Defense-in-depth: `onRefresh` is typed `() => void | Promise<void>`
     // but in practice is often async and may reject (e.g. the REST
     // analyze-batch endpoint surfacing `LLM_ERROR`). Wrap in
@@ -107,13 +122,12 @@ export function useRefreshOnAnalysisEvent(
     // Without this guard the rejection would reach the global
     // `window.unhandledrejection` listener and be logged as
     // `未處理的非同步錯誤`.
-    void Promise.resolve(onRefresh()).catch((e) => {
+    void Promise.resolve(onRefreshRef.current()).catch((e) => {
       logWarn("[useRefreshOnAnalysisEvent] onRefresh rejected", e);
     });
     // taskIds / analysisMode mirrored by *Key so inline literals don't retrigger every render
   }, [
     lastAnalysisEvent,
-    onRefresh,
     analysisMode,
     analysisModeKey,
     includeCompleted,

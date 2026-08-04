@@ -11,7 +11,9 @@
     "refreshingAria": "Refreshing",
     "refreshTitle": "Refresh",
     "clearAria": "Clear all log records",
-    "clearTitle": "Clear"
+    "clearTitle": "Clear",
+    "showAnalysisTrace": "Show analysis traces",
+    "showAnalysisTraceTitle": "Include verbose analysis.trace events in the list"
   },
   "level": {
     "all": "All levels",
@@ -31,6 +33,7 @@
   "summary": {
     "status": "Status",
     "analyzing": "Analyzing: {task}",
+    "analyzingConcurrent": "Analyzing: {task} · ×{count}",
     "unnamedTask": "Untitled task",
     "idle": "No analysis running",
     "totalEvents": "Total events",
@@ -51,7 +54,21 @@
   },
   "templates": {
     "batchExhausted": "Analysis batch retries exhausted ({maxRetries}); resume analysis to retry: {taskName} ({shortBatch}) — {summary}",
-    "batchRetrying": "Analysis batch will retry ({currentRetry}/{maxRetries}): {taskName} ({shortBatch}) — {summary}"
+    "batchRetrying": "Analysis batch will retry ({currentRetry}/{maxRetries}): {taskName} ({shortBatch}) — {summary}",
+    "analysisTrace": "Analysis trace: {summary}",
+    "schedulerPaused": "Analysis scheduler paused",
+    "schedulerResumed": "Analysis scheduler resumed",
+    "accountError": "Account error ({platform}): {accountName} — {summary}",
+    "retentionCleanup": "Retention cleanup removed {deletedTotal} row(s)",
+    "runtimeAiConnected": "AI engine available",
+    "runtimeAiUnavailable": "AI engine unavailable",
+    "runtimeAiUnknown": "AI engine status unknown",
+    "runtimeAiCheckFailed": "AI engine status check failed",
+    "runtimeCollectorReadFailed": "Failed to read collector status",
+    "frontendWindowError": "Frontend window error",
+    "frontendUnhandledRejection": "Unhandled promise rejection",
+    "frontendReact": "React render error",
+    "frontendCritical": "Critical frontend error"
   },
   "section": {
     "loadingTitle": "Loading system logs",
@@ -84,6 +101,7 @@
   "detail": {
     "messageLabel": "Event message",
     "detailsLabel": "Details",
+    "payloadLabel": "Payload",
     "close": "Close",
     "ariaLabel": "Log detail: {message}"
   },

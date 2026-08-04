@@ -11,7 +11,6 @@ Invariants:
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from typing import Any, Optional, Protocol
 
@@ -19,10 +18,10 @@ from server.analyzer.incremental import fetch_unanalyzed_messages
 from server.analyzer.leaderboard import load_leaderboard_context
 from server.analyzer.overlap import fetch_overlap_context
 from server.analyzer.prompt import build_analysis_prompt
-from server.app_logging import failure_details_from_exc, write_app_log
+from server.app_logging import failure_details_from_exc, record
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import EVENT_MODE, LEADERBOARD_MODE, MESSAGE_BATCH_ANALYSIS_MODES
+from server.domain.analysis_modes import INTEL_EVENT_MODE, LEADERBOARD_MODE, MESSAGE_BATCH_ANALYSIS_MODES
 from server.scheduler.batch_claim import (
     batch_channel_names,
     create_batch_with_markers,
@@ -116,7 +115,7 @@ async def _process_batch(
 ) -> None:
     task_id = str(task["id"])
     task_name = str(task.get("name") or "")
-    analysis_mode = str(task.get("analysis_mode") or EVENT_MODE)
+    analysis_mode = str(task.get("analysis_mode") or INTEL_EVENT_MODE)
 
     messages = await fetch_batch_messages(db, batch_id)
     if not messages:
@@ -134,7 +133,6 @@ async def _process_batch(
 
     max_tokens = await get_config_int(db, "analysis_max_estimated_input_tokens")
     max_total_chars = await get_config_int(db, "analysis_max_total_chars")
-    rules_version = (await get_config(db, "intelligence_rules_version")).strip()
     strategy_mode = await resolve_strategy_mode(db, task)
     ui_locale = await get_config(db, "ui_locale")
 
@@ -146,51 +144,59 @@ async def _process_batch(
         leaderboard_context=leaderboard_context,
         max_tokens=max_tokens,
         max_total_chars=max_total_chars,
-        intelligence_rules_version=rules_version or None,
         strategy_mode=strategy_mode or None,
         ui_locale=ui_locale,
     )
 
     if await get_config_bool(db, "analysis_trace_verbose"):
         short_batch = f"{batch_id[:8]}…" if len(batch_id) > 8 else batch_id
+        strategy = strategy_mode or "standard"
+        trace_summary = (
+            f"{task_name} ({short_batch})"
+            f" mode={analysis_mode} strategy={strategy}"
+            f" messages={len(messages)}"
+            f" tokens≈{prompt.estimated_tokens}"
+        )
         logger.info(
             "analysis trace task=%s batch=%s mode=%s strategy=%s "
-            "rules=%s messages=%s tokens=%s overlap_used=%s primary_used=%s",
+            "messages=%s tokens=%s overlap_used=%s primary_used=%s",
             task_id,
             batch_id,
             analysis_mode,
-            strategy_mode or "standard",
-            rules_version or "default",
+            strategy,
             len(messages),
             prompt.estimated_tokens,
             prompt.overlap_used_count,
             prompt.primary_used_count,
         )
-        await write_app_log(
+        await record(
             db,
             level="info",
             category="analysis",
-            message=(
-                f"分析追蹤：{task_name}（{short_batch}）"
-                f" mode={analysis_mode} strategy={strategy_mode or 'standard'}"
-                f" rules={rules_version or 'default'} messages={len(messages)}"
-                f" tokens≈{prompt.estimated_tokens}"
-            ),
-            details=json.dumps(
-                {
-                    "taskId": task_id,
-                    "taskName": task_name,
-                    "batchId": batch_id,
-                    "analysisMode": analysis_mode,
-                    "strategyMode": strategy_mode or "standard",
-                    "rulesVersion": rules_version or "default",
-                    "messageCount": len(messages),
-                    "estimatedTokens": prompt.estimated_tokens,
-                    "overlapUsedCount": prompt.overlap_used_count,
-                    "primaryUsedCount": prompt.primary_used_count,
-                },
-                ensure_ascii=False,
-            ),
+            kind="analysis.trace",
+            message=f"Analysis trace: {trace_summary}",
+            message_key="logs:templates.analysisTrace",
+            message_params={
+                "summary": trace_summary,
+                "taskName": task_name,
+                "shortBatch": short_batch,
+                "analysisMode": analysis_mode,
+                "strategyMode": strategy,
+                "messageCount": len(messages),
+                "estimatedTokens": prompt.estimated_tokens,
+            },
+            source="server.scheduler.batch",
+            payload={
+                "taskId": task_id,
+                "taskName": task_name,
+                "batchId": batch_id,
+                "analysisMode": analysis_mode,
+                "strategyMode": strategy,
+                "messageCount": len(messages),
+                "estimatedTokens": prompt.estimated_tokens,
+                "overlapUsedCount": prompt.overlap_used_count,
+                "primaryUsedCount": prompt.primary_used_count,
+            },
         )
 
     now = utc_now_iso()

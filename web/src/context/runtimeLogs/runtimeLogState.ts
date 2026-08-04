@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { appendAppLog, clearAppLogs } from "../../api/logs";
+import { clearAppLogs } from "../../api/logs";
 import i18n from "../../i18n";
+import {
+  buildAppLogDetailsEnvelope,
+  recordAppLog,
+} from "../../logging/appLogClient";
 import { logWarn } from "../../utils/logger";
 import type { AppLogCursorPayload } from "../../types";
 import { toErrorMessage } from "../../utils/errors";
@@ -80,11 +84,15 @@ export function useRuntimeLogState(): RuntimeLogsState {
       const requestedClearVersion = clearVersionRef.current;
       const persistLog = async () => {
         try {
-          const created = await appendAppLog({
+          const created = await recordAppLog({
             level: entry.level,
             category: entry.category,
+            kind: entry.kind,
             message: entry.message,
-            details: entry.details ?? null,
+            messageKey: entry.messageKey,
+            messageParams: entry.messageParams,
+            source: entry.source,
+            payload: entry.payload,
           });
           if (
             !mountedRef.current ||
@@ -107,7 +115,11 @@ export function useRuntimeLogState(): RuntimeLogsState {
               {
                 id: makeLogId(),
                 time: new Date().toISOString(),
-                ...entry,
+                level: entry.level,
+                category: entry.category,
+                kind: entry.kind,
+                message: entry.message,
+                details: buildAppLogDetailsEnvelope(entry) ?? undefined,
               },
             ]),
           );

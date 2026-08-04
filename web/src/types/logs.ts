@@ -18,14 +18,28 @@ export type AppLogEntryPayload = components["schemas"]["AppLogEntryResponse"];
  * UI-narrowed {@link AppLogEntryPayload} (`level` / `category` as closed unions).
  * Runtime conversion: `toAppLogEntry` in `context/appRuntimeShared`.
  */
-export type AppLogEntry = Omit<AppLogEntryPayload, "level" | "category" | "details"> & {
+export type AppLogEntry = Omit<AppLogEntryPayload, "level" | "category" | "details" | "kind"> & {
   level: LogLevel;
   category: LogCategory;
+  /** Stable event kind from the API (defaults to `"event"` if missing). */
+  kind: string;
   details?: string;
 };
 
-/** Input type for creating a new log entry (id and time are auto-generated) */
-export type AppLogInput = Omit<AppLogEntry, "id" | "time">;
+/**
+ * Input for creating a runtime / frontend log via `recordAppLog` /
+ * `RuntimeLogsState.addLog`. Prefer `messageKey` + `payload` over baked details.
+ */
+export type AppLogInput = {
+  level: LogLevel;
+  category: LogCategory;
+  kind: string;
+  message: string;
+  messageKey?: string;
+  messageParams?: Record<string, unknown>;
+  source?: string;
+  payload?: unknown;
+};
 
 export type AppLogCursorPayload = components["schemas"]["AppLogCursorResponse"];
 

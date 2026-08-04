@@ -1,4 +1,4 @@
-"""Local analysis-event (intelligence / key-event) search tools for the Agent."""
+"""Local analysis-event (intelligence / intel-event) search tools for the Agent."""
 
 from __future__ import annotations
 
@@ -168,13 +168,13 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "boolean",
                     "description": (
                         "If true, do not auto-apply the last-7-days window when dates "
-                        "are omitted (full library + limit). Equivalent: timeRange=all."
+                        "are omitted (full library + limit)."
                     ),
                 },
                 "timeRange": {
                     "type": "string",
                     "enum": ["all"],
-                    "description": "Pass all as an alias for allTime=true",
+                    "description": "Same effect as allTime=true when set to all",
                 },
                 "hasTime": {
                     "type": "boolean",

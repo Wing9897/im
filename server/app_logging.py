@@ -1,22 +1,27 @@
-"""Persist structured events to the app_logs table (UI log page)."""
+"""Persist structured events to the app_logs table (UI log page).
+
+All Settings→Logs writes go through :func:`record`. Stdlib loggers stay on
+stdout only.
+"""
 
 from __future__ import annotations
 
 import json
 import re
-from typing import Any, Optional
+from typing import Any
 
 from server.db.database import Database
-from server.prompts.locale import normalize_ui_locale
+from server.queries.logs_queries import fetch_app_log
 from server.util import new_id, utc_now_iso
 
 _ALLOWED_LEVELS = frozenset({"info", "success", "warning", "error"})
-_ALLOWED_CATEGORIES = frozenset({"analysis", "collector", "account", "system", "frontend"})
+ALLOWED_LOG_CATEGORIES = frozenset({"analysis", "collector", "account", "system", "frontend"})
+_ALLOWED_CATEGORIES = ALLOWED_LOG_CATEGORIES
 
-#: Cap for response bodies stored in ``app_logs.details`` (failure forensics).
+#: Cap for response bodies stored in envelope ``payload`` (failure forensics).
 _RESPONSE_BODY_LOG_CAP = 4000
 
-#: Keys owned by ``write_batch_failure_log``; not overwritten by ``failure_details``.
+#: Keys owned by batch.failure composition; not overwritten by ``failure_details``.
 _BATCH_FAILURE_OWNED_KEYS = frozenset(
     {
         "taskId",
@@ -26,8 +31,6 @@ _BATCH_FAILURE_OWNED_KEYS = frozenset(
         "currentRetry",
         "maxRetries",
         "error",
-        "messageKey",
-        "messageParams",
     }
 )
 
@@ -35,25 +38,17 @@ _API_KEY_ASSIGN_RE = re.compile(r"(?i)((?:api[_-]?key)\s*[=:]\s*)(\S+)")
 _BEARER_RE = re.compile(r"(?i)\b(bearer\s+)(\S+)")
 _SK_TOKEN_RE = re.compile(r"\bsk-[A-Za-z0-9_\-]{8,}\b")
 
-# UI-facing batch failure lines follow system_config ui_locale.
-_BATCH_FAILURE_MESSAGES: dict[str, dict[str, str]] = {
-    "zh-Hant": {
-        "exhausted": "分析批次重試用盡（{max_retries} 次），待恢復分析後再試：{task_name}（{short_batch}）— {summary}",
-        "retrying": "分析批次將重試（{current_retry}/{max_retries}）：{task_name}（{short_batch}）— {summary}",
-    },
-    "zh-Hans": {
-        "exhausted": "分析批次重试用尽（{max_retries} 次），待恢复分析后再试：{task_name}（{short_batch}）— {summary}",
-        "retrying": "分析批次将重试（{current_retry}/{max_retries}）：{task_name}（{short_batch}）— {summary}",
-    },
-    "en": {
-        "exhausted": (
-            "Analysis batch retries exhausted ({max_retries}); "
-            "resume analysis to retry: {task_name} ({short_batch}) — {summary}"
-        ),
-        "retrying": (
-            "Analysis batch will retry ({current_retry}/{max_retries}): {task_name} ({short_batch}) — {summary}"
-        ),
-    },
+_KIND_RE = re.compile(r"^[a-z][a-z0-9._-]{0,63}$")
+
+_BATCH_FAILURE_MESSAGE_EN = {
+    "exhausted": (
+        "Analysis batch retries exhausted ({max_retries}); "
+        "resume analysis to retry: {task_name} ({short_batch}) — {summary}"
+    ),
+    "retrying": (
+        "Analysis batch will retry ({current_retry}/{max_retries}): "
+        "{task_name} ({short_batch}) — {summary}"
+    ),
 }
 
 
@@ -78,8 +73,32 @@ def _redact_secrets(text: str) -> str:
     return _SK_TOKEN_RE.sub("sk-[REDACTED]", redacted)
 
 
+def _sanitize_payload(payload: dict[str, Any] | None) -> dict[str, Any]:
+    if not payload:
+        return {}
+    out: dict[str, Any] = {}
+    for key, value in payload.items():
+        if key in {"responseBody", "responseSnippet"} and isinstance(value, str):
+            out[key] = _cap_response_body(_redact_secrets(value))
+        else:
+            out[key] = value
+    return out
+
+
+def normalize_log_level(level: str) -> str:
+    return level if level in _ALLOWED_LEVELS else "info"
+
+
+def normalize_log_category(category: str) -> str:
+    return category if category in _ALLOWED_CATEGORIES else "system"
+
+
+def is_valid_log_kind(kind: str) -> bool:
+    return bool(kind and _KIND_RE.fullmatch(kind))
+
+
 def failure_details_from_exc(exc: BaseException) -> dict[str, Any]:
-    """Build structured failure forensics for Settings→Logs ``details`` JSON."""
+    """Build structured failure forensics for Settings→Logs ``payload``."""
     # Local imports avoid app_logging ↔ analyzer import cycles at module load.
     from server.analyzer.llm_json import LlmParseError
     from server.analyzer.llm_providers import LlmClientError
@@ -109,9 +128,8 @@ def failure_details_from_exc(exc: BaseException) -> dict[str, Any]:
     return details
 
 
-def format_batch_failure_message(
+def format_batch_failure_message_en(
     *,
-    locale: str | None,
     task_name: str,
     batch_id: str,
     error_message: str,
@@ -119,12 +137,11 @@ def format_batch_failure_message(
     current_retry: int,
     max_retries: int,
 ) -> str:
-    """Localize the user-facing batch failure log line."""
-    templates = _BATCH_FAILURE_MESSAGES[normalize_ui_locale(locale)]
+    """English fallback line for ``app_logs.message`` (FE re-resolves via messageKey)."""
     summary = summarize_error_message(error_message)
     short_batch = f"{batch_id[:8]}…" if len(batch_id) > 8 else batch_id
     key = "exhausted" if retries_exhausted else "retrying"
-    return templates[key].format(
+    return _BATCH_FAILURE_MESSAGE_EN[key].format(
         max_retries=max_retries,
         current_retry=current_retry,
         task_name=task_name,
@@ -133,25 +150,104 @@ def format_batch_failure_message(
     )
 
 
-async def write_app_log(
+def _build_envelope(
+    *,
+    message_key: str | None,
+    message_params: dict[str, Any] | None,
+    source: str | None,
+    payload: dict[str, Any] | None,
+) -> str:
+    return json.dumps(
+        {
+            "v": 1,
+            "messageKey": message_key,
+            "messageParams": message_params or {},
+            "source": source,
+            "payload": _sanitize_payload(payload),
+        },
+        ensure_ascii=False,
+    )
+
+
+async def record(
     db: Database,
     *,
     level: str,
     category: str,
-    message: str,
-    details: Optional[str] = None,
-) -> None:
-    if level not in _ALLOWED_LEVELS:
-        level = "info"
-    if category not in _ALLOWED_CATEGORIES:
-        category = "system"
+    kind: str,
+    message: str | None = None,
+    message_key: str | None = None,
+    message_params: dict[str, Any] | None = None,
+    source: str | None = None,
+    payload: dict[str, Any] | None = None,
+) -> str:
+    """Insert one app log row. Returns the new row id.
+
+    ``details`` is always envelope v1 JSON. ``message`` is an English (or
+    caller-provided) fallback for search / older clients; FE prefers
+    ``messageKey`` when present.
+    """
+    level = normalize_log_level(level)
+    category = normalize_log_category(category)
+    if not is_valid_log_kind(kind):
+        kind = "system"
+    resolved_message = (message or "").strip() or message_key or kind
+    log_id = new_id()
     await db.execute(
-        "INSERT INTO app_logs (id, time, level, category, message, details) VALUES (?, ?, ?, ?, ?, ?)",
-        (new_id(), utc_now_iso(), level, category, message, details),
+        "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            log_id,
+            utc_now_iso(),
+            level,
+            category,
+            kind,
+            resolved_message,
+            _build_envelope(
+                message_key=message_key,
+                message_params=message_params,
+                source=source,
+                payload=payload,
+            ),
+        ),
     )
+    return log_id
 
 
-async def write_batch_failure_log(
+async def record_and_fetch(
+    db: Database,
+    *,
+    level: str,
+    category: str,
+    kind: str,
+    message: str | None = None,
+    message_key: str | None = None,
+    message_params: dict[str, Any] | None = None,
+    source: str | None = None,
+    payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Like :func:`record`, then return the persisted row (HTTP POST)."""
+    log_id = await record(
+        db,
+        level=level,
+        category=category,
+        kind=kind,
+        message=message,
+        message_key=message_key,
+        message_params=message_params,
+        source=source,
+        payload=payload,
+    )
+    row = await fetch_app_log(db, log_id)
+    assert row is not None
+    return row
+
+
+async def clear_app_logs(db: Database) -> None:
+    await db.execute("DELETE FROM app_logs")
+
+
+async def record_batch_failure(
     db: Database,
     *,
     task_id: str,
@@ -161,23 +257,20 @@ async def write_batch_failure_log(
     retries_exhausted: bool,
     current_retry: int,
     max_retries: int,
-    ui_locale: str | None = None,
     failure_details: dict[str, Any] | None = None,
-) -> None:
-    message = format_batch_failure_message(
-        locale=ui_locale,
-        task_name=task_name,
-        batch_id=batch_id,
-        error_message=error_message,
-        retries_exhausted=retries_exhausted,
-        current_retry=current_retry,
-        max_retries=max_retries,
-    )
-    level = "error" if retries_exhausted else "warning"
+) -> str:
+    """Compose a ``batch.failure`` event and persist via :func:`record`."""
     summary = summarize_error_message(error_message)
     short_batch = f"{batch_id[:8]}…" if len(batch_id) > 8 else batch_id
-
-    details_obj: dict[str, Any] = {
+    message_key = "logs:templates.batchExhausted" if retries_exhausted else "logs:templates.batchRetrying"
+    message_params = {
+        "taskName": task_name,
+        "shortBatch": short_batch,
+        "summary": summary,
+        "maxRetries": max_retries,
+        "currentRetry": current_retry,
+    }
+    payload: dict[str, Any] = {
         "taskId": task_id,
         "taskName": task_name,
         "batchId": batch_id,
@@ -185,29 +278,27 @@ async def write_batch_failure_log(
         "currentRetry": current_retry,
         "maxRetries": max_retries,
         "error": error_message,
-        # Display-time i18n: Logs UI re-resolves with current locale when present.
-        "messageKey": ("logs:templates.batchExhausted" if retries_exhausted else "logs:templates.batchRetrying"),
-        "messageParams": {
-            "taskName": task_name,
-            "shortBatch": short_batch,
-            "summary": summary,
-            "maxRetries": max_retries,
-            "currentRetry": current_retry,
-        },
     }
     if failure_details:
         for key, value in failure_details.items():
             if key in _BATCH_FAILURE_OWNED_KEYS:
                 continue
-            if key in {"responseBody", "responseSnippet"} and isinstance(value, str):
-                details_obj[key] = _cap_response_body(_redact_secrets(value))
-            else:
-                details_obj[key] = value
-    details = json.dumps(details_obj, ensure_ascii=False)
-    await write_app_log(
+            payload[key] = value
+    return await record(
         db,
-        level=level,
+        level="error" if retries_exhausted else "warning",
         category="analysis",
-        message=message,
-        details=details,
+        kind="batch.failure",
+        message=format_batch_failure_message_en(
+            task_name=task_name,
+            batch_id=batch_id,
+            error_message=error_message,
+            retries_exhausted=retries_exhausted,
+            current_retry=current_retry,
+            max_retries=max_retries,
+        ),
+        message_key=message_key,
+        message_params=message_params,
+        source="server.scheduler.batch_failure",
+        payload=payload,
     )

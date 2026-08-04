@@ -5,11 +5,14 @@ import { useLogPageContext } from "./LogPageContext";
 export function LogSummaryCards() {
   const { t } = useTranslation("logs");
   const {
-    activeAnalysis,
+    activeAnalyses,
     totalLogCount,
     analysisCount,
     errorCount,
   } = useLogPageContext();
+  const concurrentCount = activeAnalyses?.size ?? 0;
+  const leadAnalysis =
+    concurrentCount > 0 ? activeAnalyses!.values().next().value ?? null : null;
 
   return (
     <StatsStrip
@@ -20,13 +23,18 @@ export function LogSummaryCards() {
           value: (
             <span
               className={`block truncate text-section-title ${
-                activeAnalysis ? "text-info" : "text-text-secondary"
+                leadAnalysis ? "text-info" : "text-text-secondary"
               }`}
             >
-              {activeAnalysis
-                ? t("summary.analyzing", {
-                    task: activeAnalysis.taskName || t("summary.unnamedTask"),
-                  })
+              {leadAnalysis
+                ? concurrentCount > 1
+                  ? t("summary.analyzingConcurrent", {
+                      task: leadAnalysis.taskName || t("summary.unnamedTask"),
+                      count: concurrentCount,
+                    })
+                  : t("summary.analyzing", {
+                      task: leadAnalysis.taskName || t("summary.unnamedTask"),
+                    })
                 : t("summary.idle")}
             </span>
           ),

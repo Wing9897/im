@@ -16,6 +16,8 @@ const mockContext = {
   setLevelFilter: vi.fn(),
   normalizedCategoryFilter: "all",
   setCategoryFilter: vi.fn(),
+  showAnalysisTrace: false,
+  setShowAnalysisTrace: vi.fn(),
   hasActiveFilters: false,
   resetFilters: vi.fn(),
   manuallyRefreshing: false,
@@ -34,6 +36,8 @@ interface RenderOpts {
   setLevelFilter?: (v: string) => void;
   normalizedCategoryFilter?: string;
   setCategoryFilter?: (v: string) => void;
+  showAnalysisTrace?: boolean;
+  setShowAnalysisTrace?: (v: boolean) => void;
   hasActiveFilters?: boolean;
   resetFilters?: () => void;
   manuallyRefreshing?: boolean;
@@ -48,6 +52,8 @@ function renderToolbar(opts: RenderOpts = {}) {
   mockContext.setLevelFilter = opts.setLevelFilter ?? vi.fn();
   mockContext.normalizedCategoryFilter = opts.normalizedCategoryFilter ?? "all";
   mockContext.setCategoryFilter = opts.setCategoryFilter ?? vi.fn();
+  mockContext.showAnalysisTrace = opts.showAnalysisTrace ?? false;
+  mockContext.setShowAnalysisTrace = opts.setShowAnalysisTrace ?? vi.fn();
   mockContext.hasActiveFilters = opts.hasActiveFilters ?? false;
   mockContext.resetFilters = opts.resetFilters ?? vi.fn();
   mockContext.manuallyRefreshing = opts.manuallyRefreshing ?? false;
@@ -178,5 +184,19 @@ describe("LogFilterToolbar", () => {
       clearBtn.click();
     });
     expect(clearLogs).toHaveBeenCalledTimes(1);
+  });
+
+  it("toggles show analysis trace checkbox", () => {
+    const setShowAnalysisTrace = vi.fn();
+    const container = renderToolbar({ setShowAnalysisTrace });
+    const checkbox = container.querySelector<HTMLInputElement>(
+      '[data-testid="log-show-analysis-trace"]',
+    )!;
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.checked).toBe(false);
+    act(() => {
+      checkbox.click();
+    });
+    expect(setShowAnalysisTrace).toHaveBeenCalledWith(true);
   });
 });

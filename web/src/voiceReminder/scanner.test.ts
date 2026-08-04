@@ -81,16 +81,16 @@ describe("voiceReminder scanner", () => {
       expect(formatLeadSpeakPhrase(240)).toBe("約四小時");
       expect(formatLeadSpeakPhrase(1440)).toBe("約一天");
       expect(buildSpeakText("情資任務", "會議", 60)).toBe(
-        "任務「情資任務」，關鍵事件「會議」，還有約一小時",
+        "任務「情資任務」，情報事件「會議」，還有約一小時",
       );
       expect(buildSpeakText("", "會議", 60)).toBe(
-        "關鍵事件「會議」，還有約一小時",
+        "情報事件「會議」，還有約一小時",
       );
       expect(buildSpeakText(getGeneralWorksetLabel(), "用戶提醒", 15, "user")).toBe(
         `工作集「${getGeneralWorksetLabel()}」，提醒「用戶提醒」，還有約十五分鐘`,
       );
       expect(buildSpeakText("週會", "站立會議", 15, "recurring")).toBe(
-        "任務「週會」，循環任務「站立會議」，還有約十五分鐘",
+        "任務「週會」，週期任務「站立會議」，還有約十五分鐘",
       );
     });
 

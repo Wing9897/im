@@ -10,6 +10,7 @@ const SAMPLE_LOG: AppLogEntry = {
   id: "log-1",
   level: "warning",
   category: "analysis",
+  kind: "event",
   message: "分析批次完成",
   details: "3 findings",
   time: "2025-06-01T12:00:00.000Z",

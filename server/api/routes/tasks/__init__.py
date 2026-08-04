@@ -2,7 +2,7 @@
 
 Fixed-path routes (templates / activity-spans) register before ``/{task_id}``
 routes so they are never captured as ids. Task advisor runs via agent tool
-``tasks.consult_advisor`` (engine ``handle_chat_assistant``), not a REST path.
+``tasks.consult_advisor`` (engine ``consult_task_advisor``), not a REST path.
 
 Side-effect import order below is intentional (isort disabled for this block).
 """

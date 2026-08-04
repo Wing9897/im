@@ -33,7 +33,7 @@ supported_schedules: SearchStrategy[SupportedSchedule] = st.one_of(
 
 task_modes = st.sampled_from(tuple(ALL_ANALYSIS_MODES))
 
-analysis_task_modes = st.sampled_from(("leaderboard", "event", "project"))
+analysis_task_modes = st.sampled_from(("leaderboard", "intel_event", "project"))
 
 _WEEKDAYS = ("MO", "TU", "WE", "TH", "FR", "SA", "SU")
 _rrule_bodies = st.one_of(

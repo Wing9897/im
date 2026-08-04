@@ -17,6 +17,8 @@ export function LogFilterToolbar() {
     setLevelFilter,
     normalizedCategoryFilter,
     setCategoryFilter,
+    showAnalysisTrace,
+    setShowAnalysisTrace,
     hasActiveFilters,
     resetFilters,
     manuallyRefreshing,
@@ -65,6 +67,20 @@ export function LogFilterToolbar() {
         <option value="system">{t("category.system")}</option>
         <option value="frontend">{t("category.frontend")}</option>
       </SelectField>
+      <label
+        className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-caption text-text-secondary"
+        title={t("toolbar.showAnalysisTraceTitle")}
+      >
+        <input
+          type="checkbox"
+          className="h-3.5 w-3.5 cursor-pointer accent-[var(--accent)]"
+          checked={showAnalysisTrace}
+          onChange={(e) => setShowAnalysisTrace(e.target.checked)}
+          data-testid="log-show-analysis-trace"
+          aria-label={t("toolbar.showAnalysisTrace")}
+        />
+        <span className="whitespace-nowrap">{t("toolbar.showAnalysisTrace")}</span>
+      </label>
       {hasActiveFilters ? (
         <Button
           variant="ghost"

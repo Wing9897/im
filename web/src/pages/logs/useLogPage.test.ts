@@ -10,7 +10,7 @@ const runtimeState = {
   logsLoading: false,
   logsLoadingMore: false,
   logLoadError: null as string | null,
-  activeAnalysis: null,
+  activeAnalyses: new Map(),
   lastMessagesUpdate: null,
   clearLogs: vi.fn(),
   refreshLogs: vi.fn(async () => {}),
@@ -33,7 +33,7 @@ vi.mock("../../context/runtimeLogs/RuntimeLogsContext", () => ({
 
 vi.mock("../../context/AnalysisStatusContext", () => ({
   useAnalysisStatus: () => ({
-    activeAnalysis: runtimeState.activeAnalysis,
+    activeAnalyses: runtimeState.activeAnalyses,
     lastMessagesUpdate: runtimeState.lastMessagesUpdate,
   }),
 }));
@@ -50,8 +50,9 @@ function makeLog(overrides: Partial<AppLogEntry> = {}): AppLogEntry {
     time: "2026-04-17T03:00:00.000Z",
     level: "info",
     category: "system",
+    kind: "event",
     message: "hello world",
-    details: null,
+    details: undefined,
     ...overrides,
   };
 }
@@ -78,10 +79,18 @@ describe("useLogPage", () => {
         id: "log-fe",
         level: "error",
         category: "frontend",
+        kind: "frontend.critical",
         message: "Frontend runtime error",
       }),
+      makeLog({
+        id: "log-trace",
+        level: "info",
+        category: "analysis",
+        kind: "analysis.trace",
+        message: "trace step",
+      }),
     ];
-    runtimeState.totalLogCount = 4;
+    runtimeState.totalLogCount = 5;
     runtimeState.hasMoreLogs = true;
     runtimeState.logsLoading = false;
     runtimeState.logsLoadingMore = false;
@@ -150,12 +159,27 @@ describe("useLogPage", () => {
     expect(latest!.hasActiveFilters).toBe(false);
   });
 
+  it("hides analysis.trace by default and shows them when toggled", async () => {
+    await renderHook();
+
+    expect(latest!.showAnalysisTrace).toBe(false);
+    expect(latest!.filteredLogs.map((entry) => entry.id)).not.toContain("log-trace");
+    expect(latest!.analysisCount).toBe(1);
+
+    act(() => {
+      latest!.setShowAnalysisTrace(true);
+    });
+
+    expect(latest!.filteredLogs.map((entry) => entry.id)).toContain("log-trace");
+    expect(latest!.analysisCount).toBe(2);
+  });
+
   it("computes summary counts from the loaded log buffer", async () => {
     await renderHook();
 
     expect(latest!.errorCount).toBe(2);
     expect(latest!.analysisCount).toBe(1);
-    expect(latest!.loadedLogsSummary).toBe("4 / 4");
+    expect(latest!.loadedLogsSummary).toBe("4 / 5");
   });
 
   it("persists selected log id across remount", async () => {

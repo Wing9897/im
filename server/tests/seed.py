@@ -179,11 +179,11 @@ async def seed_database(db: Any) -> None:
             None,
             "",
         ),
-        (TASK_EVENT, "關鍵情報", "event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
+        (TASK_EVENT, "關鍵情報", "intel_event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
         (
             TASK_EVENT_TIMED,
             "行程提取",
-            "event",
+            "intel_event",
             "7d",
             "FREQ=DAILY;BYHOUR=9;BYMINUTE=0",
             None,
@@ -299,7 +299,7 @@ async def seed_database(db: Any) -> None:
             "completed",
             0,
             None,
-            "skipped: empty web_search_query",
+            "skipped: empty prompt_template",
         ),
     ]
     for batch_id, task_id, status, count, error, agent_message in batches:
@@ -417,7 +417,7 @@ async def seed_database(db: Any) -> None:
     # ── app logs ──────────────────────────────────────────────────────
     for i in (1, 2, 3):
         await db.execute(
-            "INSERT INTO app_logs (id, time, level, category, message, details) "
-            "VALUES (?, ?, 'info', 'system', ?, NULL)",
+            "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
+            "VALUES (?, ?, 'info', 'system', 'system', ?, NULL)",
             (f"log-{i}", f"2026-07-01T1{i}:00:00+00:00", f"log entry {i}"),
         )

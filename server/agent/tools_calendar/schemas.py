@@ -303,7 +303,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Soft-dismiss a timeline event by id (user event, analysis event, or "
             "single RRULE occurrence id). The source row is kept; restore only via "
             "the timeline UI (「顯示已移除」). Agent list/get hide dismissed items. "
-            "Affects timeline only (intelligence/key-events still show analysis)."
+            "Affects timeline only (intelligence feed still shows analysis events)."
         ),
         "parameters": {
             "type": "object",

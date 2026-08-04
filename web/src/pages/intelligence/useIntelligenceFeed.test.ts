@@ -352,7 +352,7 @@ describe("useIntelligenceFeed", () => {
 
   it("includes web_intel tasks in the intelligence source catalog", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "t-event", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-event", analysisMode: "intel_event", worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
     ]);
@@ -376,8 +376,8 @@ describe("useIntelligenceFeed", () => {
 
   it("passes flat resolvedApiTaskIds (string[]|null) to useRefreshOnAnalysisEvent", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "t-a", analysisMode: "event", worksetId: "ws-1" }),
-      makeAnalysisTask({ id: "t-b", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-a", analysisMode: "intel_event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-b", analysisMode: "intel_event", worksetId: "ws-1" }),
     ]);
     localStorage.setItem(
       INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY,
@@ -400,12 +400,12 @@ describe("useIntelligenceFeed", () => {
     expect(options.taskIds).not.toEqual(
       expect.objectContaining({ taskIds: expect.any(Array), worksetIds: expect.any(Array) }),
     );
-    expect(options.analysisMode).toEqual(["event", "web_intel"]);
+    expect(options.analysisMode).toEqual(["intel_event", "web_intel"]);
   });
 
-  it("scopes all-sources fetch to event/web_intel task ids (not null)", async () => {
+  it("scopes all-sources fetch to intel_event/web_intel task ids (not null)", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "t-event", analysisMode: "event", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-event", analysisMode: "intel_event", worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
     ]);

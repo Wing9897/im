@@ -121,7 +121,7 @@ describe("App shell navigation", () => {
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/tasks");
     expect(container.querySelector("[data-testid='stub-page-tasks']")).toBeTruthy();
 
-    clickSidebarLink("關鍵事件");
+    clickSidebarLink("情報事件");
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe(
       "/intelligence",
     );

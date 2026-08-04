@@ -48,7 +48,7 @@ async def test_worksets_crud_and_task_workset_id(client):
         "/api/v1/tasks",
         json={
             "name": "Owned event",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "promptTemplate": "x",
             "worksetId": workset_id,
         },
@@ -65,7 +65,7 @@ async def test_worksets_crud_and_task_workset_id(client):
         f"/api/v1/tasks/{task_body['id']}",
         json={
             "name": "Owned event",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "promptTemplate": "x",
             "worksetId": None,
         },
@@ -78,7 +78,7 @@ async def test_worksets_crud_and_task_workset_id(client):
         f"/api/v1/tasks/{task_body['id']}",
         json={
             "name": "Owned event",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "promptTemplate": "x",
             "worksetId": workset_id,
         },
@@ -168,7 +168,7 @@ async def test_unknown_workset_id_rejected_on_task_create(client):
         "/api/v1/tasks",
         json={
             "name": "Bad ownership",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "promptTemplate": "x",
             "worksetId": "missing-workset",
         },

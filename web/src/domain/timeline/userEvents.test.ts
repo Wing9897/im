@@ -30,7 +30,7 @@ describe("userEvents helpers", () => {
     expect(isTimelineAssignableAnalysisMode("leaderboard")).toBe(false);
 
     const tasks = [
-      { id: "a", name: "A", analysisMode: "event", isActive: true },
+      { id: "a", name: "A", analysisMode: "intel_event", isActive: true },
       { id: "b", name: "B", analysisMode: "recurring", isActive: false },
       { id: "c", name: "C", analysisMode: "summary", isActive: true },
       {

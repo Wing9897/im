@@ -13,7 +13,7 @@ function makeTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     name: overrides.name ?? "Alpha Monitor",
     description: overrides.description ?? "",
     isActive: overrides.isActive ?? true,
-    analysisMode: overrides.analysisMode ?? "event",
+    analysisMode: overrides.analysisMode ?? "intel_event",
     channelIds: overrides.channelIds ?? [],
     createdAt: overrides.createdAt ?? "",
     updatedAt: overrides.updatedAt ?? "",
@@ -32,7 +32,7 @@ describe("commandPaletteCommands", () => {
 
   it("builds task items with edit deep links", () => {
     const items = buildTaskCommandPaletteItems([
-      makeTask({ id: "t1", name: "BTC Watch", analysisMode: "event" }),
+      makeTask({ id: "t1", name: "BTC Watch", analysisMode: "intel_event" }),
     ]);
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({
@@ -40,7 +40,7 @@ describe("commandPaletteCommands", () => {
       label: "BTC Watch",
       to: "/tasks/t1/edit",
       group: "任務",
-      hint: "event",
+      hint: "intel_event",
     });
   });
 
@@ -58,6 +58,15 @@ describe("commandPaletteCommands", () => {
     expect(voice.some((item) => item.to === "/actions?tab=voice")).toBe(true);
     const history = filterCommandPaletteItems("觸發");
     expect(history.some((item) => item.to === "/actions?tab=history")).toBe(true);
+  });
+
+  it("includes Ops Board canvas switch action", () => {
+    const items = filterCommandPaletteItems("ops board");
+    expect(items.some((item) => item.id === "ops-board" && item.action === "open-ops-board")).toBe(
+      true,
+    );
+    const canvas = filterCommandPaletteItems("畫布");
+    expect(canvas.some((item) => item.id === "ops-board")).toBe(true);
   });
 
   it("opens the message wall through the monitor route", () => {
@@ -120,7 +129,7 @@ describe("commandPaletteCommands", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     const items = filterCommandPaletteItems("");
-    expect(items.some((item) => item.label === "Key Events")).toBe(true);
+    expect(items.some((item) => item.label === "Intel events")).toBe(true);
     expect(items.some((item) => item.group === "Navigation")).toBe(true);
   });
 });

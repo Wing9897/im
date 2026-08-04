@@ -1,6 +1,7 @@
 /**
  * Per-task analysis scheduling: event overlap is task-owned; other batch fields
  * optionally override AI Settings defaults (null = follow global).
+ * web_intel shows the same overrides only when channels are bound (message-gate).
  */
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +12,8 @@ import {
 } from "../../../components/settings/AnalysisSchedulingFields";
 import { OverlapSlider } from "../../../components/ui/OverlapSlider";
 import { formHelpClass } from "../../../components/ui/pageTypography";
+import { webIntelMessageGateActive } from "../../../domain/tasks/analysisModeCapabilities";
+import { taskShowsMessageBatchOverrides } from "../../../domain/tasks/taskFormUtils";
 import type { TaskFormState } from "./useChatEditor";
 
 interface ChatScheduleOverrideFieldsProps {
@@ -23,11 +26,15 @@ export function ChatScheduleOverrideFields({
   updateField,
 }: ChatScheduleOverrideFieldsProps) {
   const { t } = useTranslation(["common", "settings"]);
-  const showEventOverlap = formState.analysisMode === "event";
-  const showBatchOverrides =
-    formState.analysisMode === "event" || formState.analysisMode === "leaderboard";
+  const showBatchOverrides = taskShowsMessageBatchOverrides(
+    formState.analysisMode,
+    formState.channelIds,
+  );
+  const showEventOverlap =
+    formState.analysisMode === "intel_event" ||
+    webIntelMessageGateActive(formState.analysisMode, formState.channelIds);
 
-  if (!showBatchOverrides && !showEventOverlap) {
+  if (!showBatchOverrides) {
     return null;
   }
 

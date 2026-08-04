@@ -49,7 +49,7 @@ async def _seed_task_and_batch(db: Database) -> None:
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
         "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("task-1", "Task", "prompt", now, now),
     )
     await db.execute(
@@ -312,13 +312,13 @@ async def test_cleanup_app_logs_and_user_events(db: Database) -> None:
     now = utc_now_iso()
     old = "2020-01-01T00:00:00+00:00"
     await db.execute(
-        "INSERT INTO app_logs (id, time, level, category, message, details) "
-        "VALUES (?, ?, 'info', 'system', 'old', NULL)",
+        "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
+        "VALUES (?, ?, 'info', 'system', 'system', 'old', NULL)",
         ("log-old", old),
     )
     await db.execute(
-        "INSERT INTO app_logs (id, time, level, category, message, details) "
-        "VALUES (?, ?, 'info', 'system', 'new', NULL)",
+        "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
+        "VALUES (?, ?, 'info', 'system', 'system', 'new', NULL)",
         ("log-new", now),
     )
     await db.execute(
@@ -340,6 +340,11 @@ async def test_cleanup_app_logs_and_user_events(db: Database) -> None:
     assert await db.fetch_value("SELECT COUNT(*) FROM app_logs WHERE id = 'log-new'") == 1
     assert await db.fetch_value("SELECT COUNT(*) FROM user_events WHERE id = 'ue-old'") == 0
     assert await db.fetch_value("SELECT COUNT(*) FROM user_events WHERE id = 'ue-new'") == 1
+    summary = await db.fetch_one(
+        "SELECT * FROM app_logs WHERE kind = 'retention.cleanup' LIMIT 1"
+    )
+    assert summary is not None
+    assert "Retention cleanup" in summary["message"]
 
 
 async def test_expired_device_auth_rows_are_cleaned_with_all_retention_days_zero(db: Database) -> None:
@@ -415,7 +420,7 @@ async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
         "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         ("task-batch", "Task", "prompt", now, now),
     )
     await db.execute(

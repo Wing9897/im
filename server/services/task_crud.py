@@ -146,20 +146,19 @@ def _resolve_web_search_query(
     supplied: str | None,
     existing: str | None = None,
 ) -> str:
-    if effective_mode != WEB_INTEL_MODE:
-        return ""
-    if supplied is not None:
-        return supplied.strip()
-    return (existing or "").strip()
+    # Retired for all modes including web_intel: Agent chooses keywords from prompt.
+    del effective_mode, supplied, existing
+    return ""
 
 
-def _validate_web_intel_fields(*, effective_mode: str, prompt: str, search_query: str) -> None:
+def _validate_web_intel_fields(*, effective_mode: str, prompt: str) -> None:
     if effective_mode != WEB_INTEL_MODE:
         return
     if not prompt.strip():
-        raise TaskWriteError("web_intel tasks require a non-empty promptTemplate (how to turn search hits into events)")
-    if not search_query.strip():
-        raise TaskWriteError("web_intel tasks require a non-empty webSearchQuery (keywords used on each schedule tick)")
+        raise TaskWriteError(
+            "web_intel tasks require a non-empty promptTemplate "
+            "(how the Agent should search and turn findings into events)"
+        )
 
 
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:
@@ -170,6 +169,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
 
     task_id = new_id()
     now = utc_now_iso()
+    # web_intel may optionally bind channels (message-threshold gate); omit = timed-only.
     refs = parse_channel_refs(body.channelIds)
     web_search_query = _resolve_web_search_query(
         effective_mode=effective_mode,
@@ -178,7 +178,6 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
     _validate_web_intel_fields(
         effective_mode=effective_mode,
         prompt=body.promptTemplate,
-        search_query=web_search_query,
     )
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,
@@ -260,7 +259,6 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
     _validate_web_intel_fields(
         effective_mode=effective_mode,
         prompt=body.promptTemplate,
-        search_query=web_search_query,
     )
     include_in_timeline = resolve_include_in_timeline(
         effective_mode=effective_mode,

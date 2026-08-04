@@ -71,7 +71,7 @@ export function useRuntimeMonitoringState(): RuntimeStateBundle {
     Map<string, ActiveAnalysisState>
   >(new Map());
 
-  // Top-bar summary: first concurrent batch only (full set lives in activeAnalyses).
+  // Thin summary of the first concurrent batch — prefer activeAnalyses in UI.
   const activeAnalysis =
     activeAnalyses.size > 0
       ? activeAnalyses.values().next().value ?? null

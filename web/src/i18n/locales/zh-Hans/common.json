@@ -10,7 +10,7 @@
   },
   "tasks": {
     "pageLabel": "任务设定",
-    "pageDescription": "建立您的第一个任务，以监控频道、分析情报、设定循环任务或日历任务。",
+    "pageDescription": "建立您的第一个任务，以监控频道、分析情报、设定周期任务或日历任务。",
     "emptyTitle": "尚无任务",
     "createLabel": "新增任务",
     "editLabel": "编辑任务",
@@ -20,7 +20,7 @@
     "systemSectionSubtitle": "这些不是可编辑的分析任务，仅帮助理解数据来源与背景机制。",
     "card": {
       "viewDetailAria": "查看任务详情：{name}",
-      "recurring": "周期性活动",
+      "recurring": "周期任务",
       "channelsRange": "{count} 个频道 · 范围 {range}",
       "unanalyzed": "待分析",
       "queued": "排队中",
@@ -38,11 +38,10 @@
       "openProjectAria": "打开项目：{name}",
       "project": "项目",
       "projectProgressHint": "进度按消息游标推进（非标记统计）",
-      "recurringProgressHint": "循环日程（无消息分析统计）",
+      "recurringProgressHint": "周期任务（无消息分析统计）",
       "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
-      "webIntel": "网页搜索 · {query}",
-      "webIntelQueryEmpty": "（尚未设置查询）",
-      "webIntelProgressHint": "排程触发网页搜索后写入情报事件（非本地消息批次统计）",
+      "web_intel": "网络情报任务 · Agent 多轮搜索",
+      "web_intelProgressHint": "Agent 多轮网页搜索写入情报事件（可选来源消息核实）",
       "retryCount": "重试 {count}",
       "analysisPausedHint": "分析已自动或手动暂停"
     },
@@ -50,7 +49,7 @@
       "timeRange": "时间范围：{range}",
       "location": "地点：{location}",
       "rrule": "重复规则：{rrule}",
-      "calendarNoChannels": "（循环任务模式，不绑定频道）",
+      "calendarNoChannels": "（周期任务模式，不绑定频道）",
       "channelCount": "共 {count} 个频道",
       "channelsMore": "…及其他 {count} 个频道",
       "noChannels": "尚未绑定频道",
@@ -67,9 +66,9 @@
       "noDescription": "暂无描述",
       "schedule": "排程：{schedule}",
       "sourcesTitle": "绑定来源",
-      "childrenTitle": "子循环任务",
-      "childrenEmptyTitle": "暂无子循环任务",
-      "childrenEmptyDescription": "项目管理员会在每次 tick 视需要创建子循环任务。",
+      "childrenTitle": "子周期任务",
+      "childrenEmptyTitle": "暂无子周期任务",
+      "childrenEmptyDescription": "项目管理员会在每次 tick 视需要创建子周期任务。",
       "eventsTitle": "所属单次事件",
       "eventsEmptyTitle": "暂无所属事件",
       "eventsEmptyDescription": "项目创建的单次时程事件会显示在这里。",
@@ -124,19 +123,23 @@
       "scheduleHydrateRetry": "重试",
       "timeRangeLabel": "分析时间范围",
       "timeAll": "不限时间",
+      "timeToday": "今天",
+      "time1h": "最近 1 小时",
+      "time6h": "最近 6 小时",
+      "time48h": "最近 48 小时",
       "time30d": "最近 30 天",
       "time7d": "最近 7 天",
       "time1d": "最近 1 天",
       "includeInTimelineLabel": "显示于时间规划",
       "includeInTimelineAria": "显示于时间规划",
-      "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在关键事件与地图，但不会进入日历／甘特／时间轴。",
-      "rruleHint": "RRULE 仅用于循环任务重复事件，不会触发 AI 分析。",
+      "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在情报事件与地图，但不会进入日历／甘特／时间轴。",
+      "rruleHint": "RRULE 仅用于周期任务重复事件，不会触发 AI 分析。",
       "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与专案波次间隔仅本任务有效。",
       "followGlobal": "跟随全局",
       "followGlobalPlaceholder": "空＝跟随全局",
       "batchOverlapLabel": "批次重叠",
       "batchOverlapAria": "批次重叠消息数量",
-      "batchOverlapHelp": "下一批带入上批末尾消息以接上下文；0＝不重叠。仅关键事件任务使用（排行榜改注入 Top 10）。",
+      "batchOverlapHelp": "下一批带入上批末尾消息以接上下文；0＝不重叠。情报任务与「网络情报任务＋来源频道」可用；排行榜改注入 Top 10。",
       "triggerThresholdHelp": "留空则跟随全局触发门槛。",
       "batchLimitHelp": "留空则跟随全局批次上限。",
       "evidenceStyleHelp": "留空则跟随全局证据风格。",
@@ -159,7 +162,6 @@
         "saving": "正在保存…",
         "name": "请填写任务名称",
         "prompt": "请填写任务 Prompt",
-        "webSearchQuery": "请填写搜索查询／关键词",
         "channels": "请至少选择一个来源频道",
         "rrule": "请设置重复规则",
         "eventStart": "请设置开始时间，或改为全天活动"
@@ -167,68 +169,62 @@
       "pickChannels": "点击选择频道",
       "channelsSelected": "已选 {selected} / {total} 个频道",
       "channelsLabel": "分析来源频道",
+      "channelsLabelOptional": "来源频道（选填）",
       "channelsAria": "选择分析来源频道",
       "channelsPreview": "已选频道预览",
       "channelsMore": "还有 {count} 个频道…"
     },
     "employees": {
-      "scheduleClerk": {
-        "name": "循环日程",
-        "blurb": "RRULE 周期日程，无 AI 处理"
+      "recurring": {
+        "name": "周期任务",
+        "blurb": "RRULE 周期任务，无 AI 处理"
       },
-      "eventIntel": {
-        "name": "关键事件",
-        "blurb": "从消息抽取关键事件与行程"
+      "intel_event": {
+        "name": "情报任务",
+        "blurb": "从消息抽取情报事件与行程"
       },
-      "webIntel": {
-        "name": "网络情报",
-        "blurb": "排程网页搜索并抽成情报事件"
+      "web_intel": {
+        "name": "网络情报任务",
+        "blurb": "Agent 多轮网页搜索抽成情报事件；可选来源核实"
       },
       "leaderboard": {
-        "name": "排行榜",
+        "name": "排行榜任务",
         "blurb": "比较与追踪热门消息排名"
       },
-      "projectManager": {
-        "name": "项目",
+      "project": {
+        "name": "项目任务",
         "blurb": "闭环 reconcile 项目日程与子任务"
       }
     },
     "modes": {
       "leaderboard": {
-        "modeOptionLabel": "排行榜 - 比较排名",
         "modeDescription": "比较与追踪热门消息排名",
         "promptLabel": "任务 Task Prompt（告诉 AI 要比较什么）",
         "promptPlaceholder": "例：新产品发布、政策变化、合作进展、风险信号",
         "promptHint": "💡 例如：只在内容明确提及官方公告、产品更新、合作进展或风险信号时命中"
       },
-      "event": {
-        "modeOptionLabel": "关键事件 - 情报 / 行程",
-        "modeDescription": "从消息抽取关键事件与行程",
+      "intel_event": {
+        "modeDescription": "从消息抽取情报事件与行程",
         "promptLabel": "任务 Task Prompt（告诉 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、会议、截止日；有明确时间填 start_time，有地点填 location",
         "promptHint": "💡 时间与地点无法确定时请省略对应栏位，禁止猜测；可同时出现在情报页与时间规划页"
       },
       "web_intel": {
-        "modeOptionLabel": "网络情报 - 网页搜索",
-        "modeDescription": "按排程搜索网页，再抽成情报事件",
-        "promptLabel": "任务 Prompt（如何把搜索结果抽成事件）",
+        "modeDescription": "Agent 多轮网页搜索抽成情报事件；可选来源消息核实",
+        "promptLabel": "任务 Prompt（要搜集哪些情报、如何写成事件）",
         "promptPlaceholder": "例：只保留官方公告与监管动态；有明确时间填 start_time，有地点填 location；忽略广告与无关论坛闲聊",
-        "promptHint": "💡 Prompt 描述「从搜索结果抽出哪些事件、如何写 title／body」；搜索查询栏位决定要搜什么",
-        "searchQueryLabel": "搜索查询／关键词",
-        "searchQueryPlaceholder": "例：OpenAI API 定价 更新 OR 监管",
-        "searchQueryHint": "每次排程触发会用此查询做网页搜索；可与上方 Prompt 搭配",
-        "scheduleDefaultHint": "默认建议「每小时」触发；切换到此类型时若仍是每 10 秒会自动改为每小时。",
-        "noChannelsHint": "此类型以网页搜索为输入，无需绑定本地消息频道；搜索供应商与助手设定共用（不受助手联网总开关影响）"
+        "promptHint": "Agent 依 Prompt 决定关键词并多轮搜索，最后输出事件。请写清要保留什么、如何写 title／body。",
+        "scheduleDefaultHint": "建议「每小时」；切换至此类型时若仍是每 10 秒会改为每小时。",
+        "timedModeHint": "未绑频道＝纯定时到点搜索。绑定来源频道后改为「有新消息达门槛才跑」，并注入消息供核实。",
+        "messageGateHint": "已绑频道＝来源消息门槛：达门槛才跑；消息注入 Agent，供搜索核实／补充。进阶设定可覆写门槛。"
       },
       "recurring": {
-        "modeOptionLabel": "循环任务（无处理）",
-        "modeDescription": "RRULE 周期日程，无 AI 处理",
+        "modeDescription": "RRULE 周期任务，无 AI 处理",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "modeOptionLabel": "项目 - 闭环日程",
         "modeDescription": "闭环 reconcile 项目日程与子任务",
         "promptLabel": "项目目标／规则",
         "promptPlaceholder": "例如：依 Telegram 更新站会与 demo 日期；偏好上午时段；已取消的系列请软删",
@@ -293,7 +289,7 @@
     },
     "calendarFields": {
       "section": "活动详情",
-      "tooltip": "设定循环任务活动的标题、时间、地点与描述",
+      "tooltip": "设定周期任务活动的标题、时间、地点与描述",
       "title": "活动标题",
       "titlePlaceholder": "例：周会、生日提醒",
       "allDay": "整天活动",
@@ -387,8 +383,8 @@
       },
       "key-insights": {
         "name": "关键情报摘要",
-        "description": "提取具有情报价值的关键事件与机会",
-        "promptTemplate": "从消息中提取具有情报价值的关键事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
+        "description": "提取具有情报价值的情报事件与机会",
+        "promptTemplate": "从消息中提取具有情报价值的情报事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
       },
       "schedule-events": {
         "name": "行程事件提取",
@@ -498,17 +494,17 @@
       "project-work-shift": {
         "name": "工作轮更表",
         "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
-        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子循环或单次事件就更新，对不上才新建；2) 固定轮更用 recurring 子任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子周期任务或单次事件就更新，对不上才新建；2) 固定轮更用周期任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
       },
       "web-intel-pricing-watch": {
         "name": "定价监管情报",
-        "description": "定期搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
-        "promptTemplate": "从搜索结果抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
+        "description": "Agent 多轮搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
+        "promptTemplate": "以多轮网页搜索核实后，抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
       },
       "web-intel-geopolitics-hotspots": {
         "name": "地缘热点扫描",
-        "description": "定期搜索东亚等地缘／安全热点动态，抽成情报事件",
-        "promptTemplate": "从搜索结果抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
+        "description": "Agent 多轮搜索东亚等地缘／安全热点，抽成情报事件；可选绑定频道做来源核实",
+        "promptTemplate": "以多轮网页搜索核实后，抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
       }
     }
   },
@@ -545,9 +541,9 @@
     "assistant": "助手",
     "taskEditor": "任务顾问",
     "leaderboard": "排行榜分析员",
-    "eventIntel": "关键事件分析员",
-    "webIntel": "情报搜集",
-    "projectManager": "项目管理助手"
+    "intel_event": "情报任务分析员",
+    "web_intel": "网络情报蒐集员",
+    "project": "项目管理助手"
   },
   "ui": {
     "listSep": "、",
@@ -609,9 +605,9 @@
     },
     "unnamedTask": "未命名任务",
     "monitorWall": "监控墙",
-    "keyEventsMap": "关键事件 · 地图",
-    "keyEventsList": "关键事件 · 列表",
-    "keyEventsCard": "关键事件 · 卡片",
+    "keyEventsMap": "情报事件 · 地图",
+    "keyEventsList": "情报事件 · 列表",
+    "keyEventsCard": "情报事件 · 卡片",
     "actionsVoice": "通知 · 语音提醒",
     "actionsHistory": "通知 · 触发纪录",
     "sourcesRss": "来源 · RSS",
@@ -631,7 +627,9 @@
     "newAction": "新增通知",
     "newActionHint": "开启通知页",
     "openViewer": "开启 Viewer 视窗",
-    "openViewerHint": "新分页",
+    "openViewerHint": "只读投影 · 新分页",
+    "openOpsBoard": "Ops Board（画布）",
+    "openOpsBoardHint": "切换到画布／Ops Board",
     "shortcutHelp": "快捷键说明",
     "quickAssistant": "助手",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -663,7 +661,7 @@
     },
     "events": {
       "title": "情报事件",
-      "description": "最新关键事件与网络情报"
+      "description": "最新情报事件"
     },
     "feed": {
       "title": "实时监控",
@@ -734,7 +732,7 @@
     },
     "analysisBatch": {
       "title": "分析批次",
-      "shortDescription": "排程器对排行榜／关键事件等标记型任务分批呼叫 LLM，写入分析结果。项目管理任务不走此路径（由上方可编辑的项目任务排程驱动）。"
+      "shortDescription": "排程器对排行榜／情报事件等标记型任务分批呼叫 LLM，写入分析结果。项目任务不走此路径（由上方可编辑的项目任务排程驱动）。"
     },
     "outboundNotify": {
       "title": "外发通知",
@@ -742,7 +740,7 @@
     },
     "voiceReminder": {
       "title": "语音提醒",
-      "shortDescription": "本机扫描即将发生的关键事件、循环任务（RRULE）展开，以及「一般」工作集事件，并以浏览器语音播报。",
+      "shortDescription": "本机扫描即将发生的情报事件、周期任务（RRULE）展开，以及「一般」工作集事件，并以浏览器语音播报。",
       "linkLabel": "前往语音提醒"
     },
     "retention": {
@@ -787,8 +785,8 @@
     "speakLead240": "约四小时",
     "speakLead1440": "约一天",
     "speakLeadMinutes": "约{minutes}分钟",
-    "speakKindEvent": "关键事件",
-    "speakKindRecurring": "循环任务",
+    "speakKindEvent": "情报事件",
+    "speakKindRecurring": "周期任务",
     "speakKindUser": "提醒",
     "speakPreview": "测试进行中",
     "voiceTriggerReason": "语音提醒 · {lead} · 「{title}」",
@@ -1074,6 +1072,7 @@
   },
   "topBar": {
     "openViewer": "打开新 viewer",
+    "openViewerHint": "只读状态投影",
     "collector": {
       "starting": "收集器启动中…",
       "running": "收集器运行中",
@@ -1092,8 +1091,11 @@
     },
     "unnamedTask": "未命名任务",
     "analyzingLabel": "分析中 · {task}",
+    "analyzingLabelConcurrent": "分析中 · {task} · ×{count}",
     "analyzingTitle": "AI 分析中: {task} ({batch})",
+    "analyzingTitleConcurrent": "AI 并行分析 {count} 批 · 当前: {task} ({batch})",
     "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暂停新批次",
+    "analyzingTitlePausedConcurrent": "AI 并行分析 {count} 批 · 当前: {task} ({batch})，已暂停新批次",
     "aiUnavailable": "AI 无法连线",
     "aiUnavailableTitle": "收集器运行中，但 AI 引擎无法连线",
     "aiUnavailableTitleCollectorDown": "收集器已停止，且 AI 引擎无法连线",
@@ -1130,9 +1132,9 @@
   "monitorMode": {
     "aria": "监控模式",
     "pages": "分页",
-    "canvas": "画布",
+    "canvas": "画布／Ops Board",
     "pagesTitle": "分页监控",
-    "canvasTitle": "沉浸画布监控"
+    "canvasTitle": "沉浸 Ops Board 画布"
   },
   "shortcuts": {
     "title": "快捷键说明",
@@ -1146,7 +1148,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 11／SemVer 0.1.0-beta.12；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 12／SemVer 0.1.0-beta.13；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"
@@ -1217,6 +1219,7 @@
   "viewer": {
     "navAria": "Viewer 导航",
     "brand": "IM Viewer",
+    "brandHint": "只读投影（次要状态视图）",
     "navTasks": "任务",
     "navResults": "结果",
     "navStatus": "状态",
@@ -1233,7 +1236,7 @@
     "taskId": "任务 ID：{id}",
     "lastAnalysis": "最后分析：",
     "neverRun": "尚未执行",
-    "schedule": "排程：{cron}",
+    "schedule": "排程：{schedule}",
     "resultsLoadError": "无法加载结果摘要，请检查连线状态",
     "resultsRefreshing": "正在更新结果摘要",
     "totalTasks": "总任务数",
@@ -1308,7 +1311,7 @@
     "displayNameLabel": "显示名称",
     "displayNameHelp": "留空则使用默认名称。",
     "backgroundLabel": "背景简介",
-    "backgroundHelp": "可描述你的角色或偏好，供未来 AI 参考。",
+    "backgroundHelp": "可描述你的角色或偏好，助手会据此理解上下文。",
     "backgroundPlaceholder": "例如：值班监控、关注东南亚航线…",
     "uploadAvatar": "上传",
     "uploadAvatarAria": "上传个人头像",

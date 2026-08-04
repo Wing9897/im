@@ -192,11 +192,11 @@ describe("LogPage", () => {
     });
 
     expect(document.body.textContent).toContain("事件訊息");
-    expect(document.body.textContent).toContain("詳細內容");
+    expect(document.body.textContent).toContain("負載");
     expect(document.body.textContent).toContain(
       "這是一段很長的事件訊息，用來確認卡片會維持摘要顯示，但點開後仍可看到完整內容與原始訊息。",
     );
-    expect(document.body.textContent).toContain('"status":"subscribed"');
+    expect(document.body.textContent).toContain('"status": "subscribed"');
   });
 
   it("applies SettingsContentCard padding on the page shell", async () => {
@@ -324,7 +324,7 @@ describe("LogPage log list row styling", () => {
     expect(time!.classList.contains("w-[140px]")).toBe(true);
   });
 
-  it("message and details render inside the ellipsis main span", async () => {
+  it("list row shows i18n message only without raw details dump", async () => {
     await renderPage();
 
     const firstItem = container.querySelector(
@@ -333,7 +333,7 @@ describe("LogPage log list row styling", () => {
     const main = firstItem.querySelector(".text-ellipsis");
     expect(main).toBeTruthy();
     expect(main!.textContent).toContain(LONG_LOG_TEXT);
-    expect(main!.textContent).toContain("Detail");
+    expect(main!.textContent).not.toContain("Detail");
   });
 
   it("no element inside any row uses -webkit-box line clamping", async () => {

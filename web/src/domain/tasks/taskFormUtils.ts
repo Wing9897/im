@@ -9,8 +9,11 @@ import type {
 } from "../../types";
 import {
   analysisModeHidesPromptAndChannel,
+  analysisModeIsWebIntel,
   analysisModeRequiresChannels,
+  analysisModeShowsOptionalChannels,
   analysisModeShowsRruleFields,
+  webIntelMessageGateActive,
 } from "./analysisModeCapabilities";
 import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
 import { safeArray } from "../../utils/nullGuards";
@@ -149,14 +152,19 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     };
   }
 
+  const messageGate = webIntelMessageGateActive(
+    formState.analysisMode,
+    formState.channelIds,
+  );
+
   return {
     ...commonConfig,
     promptTemplate: formState.promptTemplate,
-    webSearchQuery:
-      formState.analysisMode === "web_intel" ? formState.webSearchQuery.trim() : "",
+    // web_intel Agent picks keywords from the prompt; never persist a seed field.
+    webSearchQuery: "",
     analysisTimeRange: formState.analysisTimeRange,
-    channelIds: formState.analysisMode === "web_intel" ? [] : formState.channelIds,
-    ...(formState.analysisMode === "event" ||
+    channelIds: formState.channelIds,
+    ...(formState.analysisMode === "intel_event" ||
     formState.analysisMode === "project" ||
     formState.analysisMode === "web_intel"
       ? { includeInTimeline: formState.includeInTimeline }
@@ -164,10 +172,12 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     ...(formState.analysisMode === "project"
       ? { projectWaveIntervalSeconds: formState.projectWaveIntervalSeconds }
       : {}),
-    ...(formState.analysisMode === "event" || formState.analysisMode === "leaderboard"
+    ...(formState.analysisMode === "intel_event" ||
+    formState.analysisMode === "leaderboard" ||
+    messageGate
       ? {
           batchOverlapCount:
-            formState.analysisMode === "event"
+            formState.analysisMode === "intel_event" || messageGate
               ? (formState.batchOverlapCount ?? 0)
               : null,
           analysisTriggerThreshold: formState.analysisTriggerThreshold,
@@ -320,7 +330,7 @@ export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayl
     name: formState.name,
     description: formState.description,
     promptTemplate: formState.promptTemplate,
-    webSearchQuery: formState.webSearchQuery,
+    webSearchQuery: "",
     scheduleRrule,
     analysisMode: formState.analysisMode,
     analysisTimeRange: formState.analysisTimeRange,
@@ -333,14 +343,55 @@ export interface TaskModeFieldVisibility {
   rruleFieldsVisible: boolean;
   promptFieldsVisible: boolean;
   channelFieldsVisible: boolean;
+  /** Channels allowed but not required (web_intel timed vs message-gate). */
+  channelsOptional: boolean;
+  channelsRequired: boolean;
+  /** Message analysisTimeRange chips (not used by web_intel Agent search). */
+  analysisTimeRangeVisible: boolean;
+  /** Timeline include toggle (event / project / web_intel). */
+  timelineToggleVisible: boolean;
+  /** Prompt is required to save (all AI modes with a prompt field). */
+  promptRequired: boolean;
+  isWebIntel: boolean;
+  isProject: boolean;
+  isRecurring: boolean;
 }
 
-/** Field visibility rules for ChatEditorForm by analysis mode. */
-export function getTaskModeFieldVisibility(mode: AnalysisMode): TaskModeFieldVisibility {
+/** Field visibility rules for ChatEditorForm by analysis mode (+ channel gate). */
+export function getTaskModeFieldVisibility(
+  mode: AnalysisMode,
+  channelIds: readonly string[] = [],
+): TaskModeFieldVisibility {
   const hidesPromptAndChannel = analysisModeHidesPromptAndChannel(mode);
+  const channelsRequired = analysisModeRequiresChannels(mode);
+  const channelsOptional = analysisModeShowsOptionalChannels(mode);
+  const isWebIntel = analysisModeIsWebIntel(mode);
+  const promptFieldsVisible = !hidesPromptAndChannel;
   return {
     rruleFieldsVisible: analysisModeShowsRruleFields(mode),
-    promptFieldsVisible: !hidesPromptAndChannel,
-    channelFieldsVisible: !hidesPromptAndChannel && analysisModeRequiresChannels(mode),
+    promptFieldsVisible,
+    channelFieldsVisible:
+      !hidesPromptAndChannel && (channelsRequired || channelsOptional),
+    channelsOptional,
+    channelsRequired,
+    analysisTimeRangeVisible: promptFieldsVisible && !isWebIntel,
+    timelineToggleVisible:
+      mode === "intel_event" || mode === "project" || mode === "web_intel",
+    promptRequired: promptFieldsVisible,
+    isWebIntel,
+    isProject: mode === "project",
+    isRecurring: mode === "recurring",
   };
+}
+
+/** Whether web_intel message-gate overrides should show. */
+export function taskShowsMessageBatchOverrides(
+  mode: AnalysisMode,
+  channelIds: readonly string[],
+): boolean {
+  return (
+    mode === "intel_event" ||
+    mode === "leaderboard" ||
+    webIntelMessageGateActive(mode, channelIds)
+  );
 }

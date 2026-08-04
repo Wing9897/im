@@ -69,7 +69,7 @@ _unrelated_metadata = st.fixed_dictionaries(
     schedule=("custom_seconds", "1"),
     metadata={
         "id": "a",
-        "analysis_mode": "event",
+        "analysis_mode": "intel_event",
         "rrule": "FREQ=DAILY",
         "event_title": None,
         "event_description": None,
@@ -80,7 +80,7 @@ _unrelated_metadata = st.fixed_dictionaries(
     schedule=("custom_seconds", "86400"),
     metadata={
         "id": "a",
-        "analysis_mode": "event",
+        "analysis_mode": "intel_event",
         "rrule": None,
         "event_title": "x",
         "event_description": None,
@@ -113,7 +113,7 @@ _unrelated_metadata = st.fixed_dictionaries(
     schedule=("weekly", "0:00:00"),
     metadata={
         "id": "a",
-        "analysis_mode": "event",
+        "analysis_mode": "intel_event",
         "rrule": None,
         "event_title": None,
         "event_description": None,
@@ -124,7 +124,7 @@ _unrelated_metadata = st.fixed_dictionaries(
     schedule=("weekly", "6:23:59"),
     metadata={
         "id": "a",
-        "analysis_mode": "event",
+        "analysis_mode": "intel_event",
         "rrule": "FREQ=WEEKLY",
         "event_title": "x",
         "event_description": "y",

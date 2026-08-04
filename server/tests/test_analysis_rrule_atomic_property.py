@@ -18,7 +18,7 @@ from server.tests.property_strategies import (
 
 _TASK_BY_MODE = {
     "leaderboard": seed.TASK_LEADERBOARD,
-    "event": seed.TASK_EVENT,
+    "intel_event": seed.TASK_EVENT,
 }
 #: Modes that share seeded analysis tasks and reject RRULE writes (not ``project``).
 _ANALYSIS_RRULE_MODES = st.sampled_from(tuple(_TASK_BY_MODE))

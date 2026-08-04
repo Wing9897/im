@@ -4,21 +4,15 @@ import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
+import { TASK_ANALYSIS_TIME_RANGE_I18N_KEYS } from "../../../domain/tasks/taskAnalysisTimeRange";
 import { ChatAnalysisFields, TIME_RANGE_VALUES } from "./ChatAnalysisFields";
-
-const LABEL_KEYS = {
-  all: "tasks.editor.timeAll",
-  "30d": "tasks.editor.time30d",
-  "7d": "tasks.editor.time7d",
-  "1d": "tasks.editor.time1d",
-} as const;
 
 function renderFields(
   container: HTMLElement,
   overrides: Partial<Parameters<typeof ChatAnalysisFields>[0]> = {},
 ) {
   const defaults = {
-    analysisTimeRange: "all",
+    analysisTimeRange: "all" as const,
     onAnalysisTimeRangeChange: vi.fn(),
   };
   const props = { ...defaults, ...overrides };
@@ -48,17 +42,26 @@ describe("ChatAnalysisFields — Analysis Time Range chips", () => {
     expect(chips.length).toBe(TIME_RANGE_VALUES.length);
   });
 
-  it("renders exactly 4 chips with correct labels", () => {
+  it("renders a chip for every task-legal time range with correct labels", () => {
     const container = document.createElement("div");
     renderFields(container);
     const chips = Array.from(container.querySelectorAll("button"));
     expect(chips.map((chip) => chip.textContent)).toEqual(
-      TIME_RANGE_VALUES.map((value) => String(i18n.t(LABEL_KEYS[value]))),
+      TIME_RANGE_VALUES.map((value) => String(i18n.t(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]))),
     );
   });
 
-  it("TIME_RANGE_VALUES includes expected preset values", () => {
-    expect(TIME_RANGE_VALUES).toEqual(["all", "30d", "7d", "1d"]);
+  it("TIME_RANGE_VALUES covers the full task DB allowlist", () => {
+    expect(TIME_RANGE_VALUES).toEqual([
+      "all",
+      "30d",
+      "7d",
+      "48h",
+      "1d",
+      "today",
+      "6h",
+      "1h",
+    ]);
   });
 
   it("invokes onAnalysisTimeRangeChange with the correct value when a chip is clicked", () => {
@@ -80,7 +83,7 @@ describe("ChatAnalysisFields — Analysis Time Range chips", () => {
       const container = document.createElement("div");
       renderFields(container, { analysisTimeRange: value });
       const chips = Array.from(container.querySelectorAll("button"));
-      const expectedLabel = String(i18n.t(LABEL_KEYS[value]));
+      const expectedLabel = String(i18n.t(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]));
       for (const chip of chips) {
         const pressed = chip.getAttribute("aria-pressed") === "true";
         expect(pressed).toBe(chip.textContent === expectedLabel);

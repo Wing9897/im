@@ -193,18 +193,19 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(false);
     });
 
-    it("requires prompt + webSearchQuery for web_intel (no channels)", () => {
+    it("requires prompt only for web_intel (query and channels optional)", () => {
       renderHarness();
       act(() => {
         latest.updateField("analysisMode", "web_intel");
         latest.updateField("name", "Web intel");
-        latest.updateField("promptTemplate", "Extract official notes");
+        latest.updateField("webSearchQuery", "");
+        latest.updateField("channelIds", []);
       });
       expect(latest.canSave).toBe(false);
-      expect(latest.saveBlockReason).toMatch(/搜尋|查询|search/i);
+      expect(latest.saveBlockReason).toMatch(/Prompt|prompt/i);
 
       act(() => {
-        latest.updateField("webSearchQuery", "OpenAI pricing");
+        latest.updateField("promptTemplate", "Extract official notes");
       });
       expect(latest.canSave).toBe(true);
       expect(latest.saveBlockReason).toBeNull();

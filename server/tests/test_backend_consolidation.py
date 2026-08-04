@@ -24,8 +24,8 @@ from server.domain.analysis_modes import (
     AnalysisMode,
 )
 from server.prompts.assistant import TASK_CONFIG_SCHEMA_PROMPT
+from server.app_logging import clear_app_logs, record_and_fetch
 from server.queries.logs_queries import fetch_app_logs_page
-from server.services.log_writes import clear_app_logs, create_app_log
 
 
 def _limit_maximum(schemas: list[dict], name: str) -> int:
@@ -144,11 +144,13 @@ def _parse_ts_capability_booleans(path: Path) -> dict[str, dict[str, bool | str]
 
 
 def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
+    from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
     from server.domain.analysis_modes import ANALYSIS_MODE_SPECS
 
     root = Path(__file__).resolve().parents[2]
     mode_caps_path = root / "web" / "src" / "domain" / "tasks" / "analysisModeCapabilities.ts"
     platform_path = root / "web" / "src" / "domain" / "sources" / "collectorPlatforms.ts"
+    task_range_path = root / "web" / "src" / "domain" / "tasks" / "taskAnalysisTimeRange.ts"
 
     fe_modes = _parse_ts_string_array(mode_caps_path, "ANALYSIS_MODE_ORDER")
     assert fe_modes == ALL_ANALYSIS_MODES
@@ -157,6 +159,13 @@ def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
     assert fe_platforms == tuple(
         __import__("server.domain.collector_platforms", fromlist=["COLLECTOR_PLATFORMS"]).COLLECTOR_PLATFORMS
     )
+
+    fe_task_ranges = _parse_ts_string_array(task_range_path, "TASK_ANALYSIS_TIME_RANGE_VALUES")
+    assert fe_task_ranges == ANALYSIS_TIME_RANGE_VALUES
+    assert "12h" not in fe_task_ranges
+    assert "24h" not in fe_task_ranges
+    for value in ANALYSIS_TIME_RANGE_VALUES:
+        assert repr(value) in TASK_CONFIG_SCHEMA_PROMPT
 
     fe_caps = _parse_ts_capability_booleans(mode_caps_path)
     assert set(fe_caps) == set(ALL_ANALYSIS_MODES)
@@ -181,12 +190,12 @@ def test_agent_tool_schema_caps_share_named_policy_constants() -> None:
 async def test_log_queries_and_write_service_preserve_route_shape(app) -> None:
     db = app.state.db
     await clear_app_logs(db)
-    created = await create_app_log(
+    created = await record_and_fetch(
         db,
         level="info",
-        category="backend-consolidation",
+        category="system",
+        kind="system.test",
         message="query boundary",
-        details=None,
     )
     rows, has_more, total = await fetch_app_logs_page(
         db,
@@ -195,6 +204,7 @@ async def test_log_queries_and_write_service_preserve_route_shape(app) -> None:
         limit=50,
     )
     assert created["id"] == rows[0]["id"]
+    assert created["kind"] == "system.test"
     assert has_more is False
     assert total == 1
 

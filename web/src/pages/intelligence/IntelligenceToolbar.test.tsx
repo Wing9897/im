@@ -141,7 +141,7 @@ describe("IntelligenceToolbar", () => {
     );
     expect(input).not.toBeNull();
     expect(input!.maxLength).toBe(200);
-    expect(document.body.textContent).toContain("搜尋關鍵事件");
+    expect(document.body.textContent).toContain("搜尋情報事件");
   });
 
   it("clears search from the modal footer", () => {
@@ -211,7 +211,7 @@ describe("IntelligenceToolbar", () => {
     await i18n.changeLanguage("en");
     const container = track(renderToolbar());
     expect(
-      container.querySelector('[aria-label="Key Events toolbar"]'),
+      container.querySelector('[aria-label="Intel events toolbar"]'),
     ).not.toBeNull();
     expect(container.querySelector('[data-testid="intelligence-source-filter"]')).not.toBeNull();
   });

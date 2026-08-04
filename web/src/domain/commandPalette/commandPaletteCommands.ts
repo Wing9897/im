@@ -7,6 +7,7 @@ import {
   Gauge,
   History,
   Keyboard,
+  LayoutGrid,
   ListChecks,
   Map,
   MapPin,
@@ -30,6 +31,7 @@ import { openViewerWindow } from "../../utils/openViewerWindow";
 
 type CommandPaletteActionId =
   | "open-viewer"
+  | "open-ops-board"
   | "new-task"
   | "show-shortcuts"
   | "open-assistant-quick";
@@ -63,6 +65,15 @@ interface CommandPaletteItemDef {
 
 const COMMAND_PALETTE_DEFS: readonly CommandPaletteItemDef[] = [
   { id: "monitor", labelKey: "monitor", labelNs: "nav", to: "/monitor", icon: Radio, groupId: "navigation", keywords: ["monitor", "stream"] },
+  {
+    id: "ops-board",
+    labelKey: "commandPalette.openOpsBoard",
+    action: "open-ops-board",
+    icon: LayoutGrid,
+    groupId: "navigation",
+    hintKey: "commandPalette.openOpsBoardHint",
+    keywords: ["ops", "board", "canvas", "畫布", "画布", "ops board"],
+  },
   { id: "monitor-wall", labelKey: "commandPalette.monitorWall", to: "/monitor?view=wall", icon: Radio, groupId: "navigation", keywords: ["wall", "看板"] },
   { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
   { id: "leaderboard", labelKey: "leaderboard", labelNs: "nav", to: "/leaderboard", icon: Trophy, groupId: "navigation" },
@@ -342,6 +353,7 @@ export function runCommandPaletteAction(action: CommandPaletteActionId): void {
     case "open-viewer":
       openViewerWindow();
       break;
+    case "open-ops-board":
     case "new-task":
     case "show-shortcuts":
     case "open-assistant-quick":

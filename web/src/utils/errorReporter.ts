@@ -2,10 +2,10 @@
  * Error Reporter Module
  *
  * Provides production error capture for the IntelligenceMonitor frontend.
- * Critical errors are persisted via appendAppLog.
+ * Critical errors are persisted via recordAppLog.
  */
 
-import { appendAppLog } from "../api/logs";
+import { APP_LOG_KIND, recordAppLog } from "../logging/appLogClient";
 import { toErrorMessage } from "./errors";
 
 // ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ type Severity = "warning" | "error" | "critical";
 
 /**
  * Capture an error, logging it to the console and optionally persisting
- * via appendAppLog for critical severity.
+ * via recordAppLog for critical severity.
  */
 export function captureError(
   error: unknown,
@@ -47,13 +47,18 @@ export function captureError(
     stack ?? "",
   );
 
-  // Persist critical errors via appendAppLog (fire-and-forget)
+  // Persist critical errors via recordAppLog (fire-and-forget)
   if (severity === "critical") {
-    appendAppLog({
+    recordAppLog({
       level: "error",
       category: "frontend",
+      kind: APP_LOG_KIND.FRONTEND_CRITICAL,
       message,
-      details: stack,
+      messageKey: "logs:templates.frontendCritical",
+      source: context?.component
+        ? `frontend.${context.component}`
+        : "frontend.critical",
+      payload: stack ? { stack, message } : { message },
     }).catch(() => {
       // Silently discard persistence failures (Requirement 4.7)
     });

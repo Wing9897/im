@@ -90,7 +90,7 @@ function task(partial: Partial<AnalysisTask> & { id: string; name: string }): An
   return {
     description: null,
     promptTemplate: "",
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "7d",
     version: 1,
     isActive: true,
@@ -211,8 +211,8 @@ describe("WorksetDetailDialog", () => {
     // L2 employee label on the task card — not raw analysisMode enum.
     const taskCardText =
       container.querySelector('[data-testid="workset-detail-task-t1"]')?.textContent ?? "";
-    expect(taskCardText).toContain("關鍵事件");
-    expect(taskCardText).not.toMatch(/(^|[^a-zA-Z])event([^a-zA-Z]|$)/);
+    expect(taskCardText).toContain("情報任務");
+    expect(taskCardText).not.toMatch(/(^|[^a-zA-Z])intel_event([^a-zA-Z]|$)/);
     expect(container.textContent).toContain("Passport");
     expect(container.textContent).not.toContain("Old");
     expect(container.querySelector('[data-testid="workset-summary-item-i1"]')).toBeTruthy();

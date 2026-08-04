@@ -1,4 +1,4 @@
-"""Authoritative SQLite DDL for schema stamp 11 (single schema source).
+"""Authoritative SQLite DDL for schema stamp 14 (single schema source).
 
 ``server.db.schema_bootstrap`` owns classification and version stamping; the
 structural fingerprint is derived from this DDL in
@@ -330,11 +330,13 @@ CREATE TABLE IF NOT EXISTS app_logs (
     level     TEXT NOT NULL
               {APP_LOG_LEVEL_CHECK_SQL},
     category  TEXT NOT NULL,
+    kind      TEXT NOT NULL,
     message   TEXT NOT NULL,
     details   TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_app_logs_time ON app_logs(time DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_app_logs_time_asc ON app_logs(time ASC);
+CREATE INDEX IF NOT EXISTS idx_app_logs_kind_time ON app_logs(kind, time DESC, id DESC);
 
 CREATE TABLE IF NOT EXISTS actions (
     id                  TEXT PRIMARY KEY,

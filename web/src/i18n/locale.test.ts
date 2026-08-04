@@ -178,7 +178,7 @@ describe("locale + i18n", () => {
     // listener is sync fire; changeLanguage may be async
     await i18n.changeLanguage("zh-Hans");
     expect(i18n.language).toBe("zh-Hans");
-    expect(i18n.t("nav:keyEvents")).toBe("关键事件");
+    expect(i18n.t("nav:keyEvents")).toBe("情报事件");
   });
 
   it("auto preference applies resolved locale to document and i18n", async () => {
@@ -202,7 +202,7 @@ describe("P0 shell smoke (en)", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     const items = filterCommandPaletteItems("");
-    expect(items.some((item) => item.label === "Key Events")).toBe(true);
+    expect(items.some((item) => item.label === "Intel events")).toBe(true);
     expect(items.some((item) => item.label === "Live Monitor")).toBe(true);
     expect(getWidgetMeta("events").title).toBe("Intelligence events");
   });

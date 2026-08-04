@@ -106,7 +106,6 @@ describe("JSON serialization round-trip consistency", () => {
       llmGenerationTimeout: "120",
       maxBatchRetries: "3",
       maxConcurrentBatches: "2",
-      intelligenceRulesVersion: "1",
       analysisStrategyMode: "incremental",
       analysisTriggerThreshold: "10",
       retentionMessagesDays: "30",

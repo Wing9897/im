@@ -55,7 +55,7 @@ async def test_create_update_delete_task_roundtrip(client):
             "name": "contract roundtrip",
             "description": None,
             "promptTemplate": "分析",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
             "scheduleRrule": "FREQ=HOURLY",
@@ -71,7 +71,7 @@ async def test_create_update_delete_task_roundtrip(client):
         json={
             "name": "contract roundtrip v2",
             "promptTemplate": "分析 v2",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=DAILY;BYHOUR=8;BYMINUTE=0",
@@ -100,7 +100,7 @@ async def test_put_task_applies_optional_is_active(client, app):
         json={
             "name": "put isActive",
             "promptTemplate": "x",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",
@@ -116,7 +116,7 @@ async def test_put_task_applies_optional_is_active(client, app):
         json={
             "name": "put isActive",
             "promptTemplate": "x",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",

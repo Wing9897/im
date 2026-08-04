@@ -39,13 +39,28 @@ BASE_TOOL_SCHEMAS: list[dict[str, Any]] = [
 
 WEB_TOOL_NAMES = frozenset(WEB_HANDLERS)
 
+#: Calendar mutation tools (web_intel channel omits / blocks these).
+CALENDAR_WRITE_TOOL_NAMES = frozenset(
+    {
+        "calendar.create_event",
+        "calendar.create_recurring_task",
+        "calendar.update_recurring_task",
+        "calendar.delete_recurring_task",
+        "calendar.update_event",
+        "calendar.delete_event",
+    }
+)
+
 
 def build_tool_schemas(
     *,
     web_search_enabled: bool,
     task_advisor_enabled: bool = False,
+    calendar_writes_enabled: bool = True,
 ) -> list[dict[str, Any]]:
     schemas = list(BASE_TOOL_SCHEMAS)
+    if not calendar_writes_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in CALENDAR_WRITE_TOOL_NAMES]
     if web_search_enabled:
         schemas.extend(WEB_SCHEMAS)
     if task_advisor_enabled:
@@ -117,6 +132,8 @@ async def execute_tool(
     """Dispatch by tool name. Web/task tools need context; others only need db."""
     args = dict(arguments or {})
     ctx = context or {}
+    if name in CALENDAR_WRITE_TOOL_NAMES and ctx.get("calendar_writes_enabled") is False:
+        return {"error": "calendar_writes_disabled"}
     project_id = ctx.get("project_scope_task_id")
     if project_id:
         scoped_error = await apply_project_scope(db, name, args, project_id=str(project_id))

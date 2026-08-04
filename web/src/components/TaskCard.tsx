@@ -57,7 +57,6 @@ export const TaskCard = React.memo(function TaskCard({
   const queuedMessageCount = stats.queuedMessageCount;
   const worksetName =
     task.worksetId != null ? worksetNameById.get(task.worksetId) ?? null : null;
-  const webSearchQuery = (task.webSearchQuery ?? "").trim();
 
   const handleToggle = useCallback(() => {
     setToggling(true);
@@ -132,9 +131,7 @@ export const TaskCard = React.memo(function TaskCard({
             : isProjectMode
               ? t("tasks.card.project")
               : isWebIntelMode
-                ? t("tasks.card.webIntel", {
-                    query: webSearchQuery || t("tasks.card.webIntelQueryEmpty"),
-                  })
+                ? t("tasks.card.web_intel")
                 : t("tasks.card.channelsRange", {
                     count: String(task.channelIds.length),
                     range: task.analysisTimeRange,
@@ -147,7 +144,7 @@ export const TaskCard = React.memo(function TaskCard({
             data-testid={`task-card-schedule-hint-${task.id}`}
           >
             {isWebIntelMode
-              ? t("tasks.card.webIntelProgressHint")
+              ? t("tasks.card.web_intelProgressHint")
               : isProjectMode
                 ? t("tasks.card.projectProgressHint")
                 : isRecurringMode

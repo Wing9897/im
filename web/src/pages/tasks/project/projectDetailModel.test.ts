@@ -27,7 +27,7 @@ describe("projectDetailModel", () => {
   const other = makeAnalysisTask({
     id: "event-1",
     name: "Watch",
-    analysisMode: "event",
+    analysisMode: "intel_event",
   });
   const orphanChild = makeAnalysisTask({
     id: "child-2",

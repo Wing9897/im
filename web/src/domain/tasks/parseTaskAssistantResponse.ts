@@ -1,10 +1,10 @@
 import type {
   AnalysisMode,
-  AnalysisTimeRange,
   TaskFormState,
 } from "../../types";
 import i18n from "../../i18n";
 import { ANALYSIS_MODE_ORDER } from "./analysisModeCapabilities";
+import { isTaskAnalysisTimeRange } from "./taskAnalysisTimeRange";
 
 // ============================================================
 // Types
@@ -25,17 +25,6 @@ type ParseResult =
 
 /** Keep in lockstep with ANALYSIS_MODE_ORDER (includes web_intel). */
 const VALID_ANALYSIS_MODES: readonly string[] = ANALYSIS_MODE_ORDER;
-
-const VALID_ANALYSIS_TIME_RANGES: readonly AnalysisTimeRange[] = [
-  "all",
-  "today",
-  "1h",
-  "6h",
-  "48h",
-  "1d",
-  "7d",
-  "30d",
-];
 
 // ============================================================
 // Parser
@@ -172,9 +161,9 @@ export function parseTaskAssistantResponse(raw: unknown): ParseResult {
   if (config.analysisTimeRange !== undefined && config.analysisTimeRange !== null) {
     if (
       typeof config.analysisTimeRange === "string"
-      && VALID_ANALYSIS_TIME_RANGES.includes(config.analysisTimeRange as AnalysisTimeRange)
+      && isTaskAnalysisTimeRange(config.analysisTimeRange)
     ) {
-      taskConfig.analysisTimeRange = config.analysisTimeRange as AnalysisTimeRange;
+      taskConfig.analysisTimeRange = config.analysisTimeRange;
     }
   }
 

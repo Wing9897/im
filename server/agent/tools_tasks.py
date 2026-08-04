@@ -23,7 +23,7 @@ async def _tool_consult_advisor(
         return {"error": "instruction is required", "message": "", "taskConfig": None}
     engine = AnalysisEngine(db)
     try:
-        result = await engine.handle_chat_assistant(
+        result = await engine.consult_task_advisor(
             str(instruction).strip(),
             current_task=context.get("current_task"),
             locale=context.get("locale"),

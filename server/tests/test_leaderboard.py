@@ -260,7 +260,7 @@ def test_leaderboard_context_block_has_no_rank_keys():
 def test_analysis_strategy_mode_changes_system_prompt():
     prompt = build_analysis_prompt(
         prompt_template="Analyze",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         primary_messages=[{"id": "m1", "content": "evidence"}],
         max_tokens=1000,
         strategy_mode="conservative",

@@ -95,11 +95,14 @@ export function useTaskAnalysisStats(
         const safeStats = Array.isArray(newStats) ? newStats : [];
 
         const inEventCycle = preEventCountRef.current !== -1;
+        const newUnanalyzed = totalUnanalyzed(safeStats);
         const stale =
-          inEventCycle &&
-          totalUnanalyzed(safeStats) === preEventCountRef.current;
+          inEventCycle && newUnanalyzed === preEventCountRef.current;
 
-        if (stale && retryCountRef.current < MAX_RETRIES) {
+        // Retry only when there is unanalyzed work that might still be committing.
+        // web_intel (and similar) leave unanalyzed at 0 — retrying only multiplies
+        // /results/stats traffic with no benefit.
+        if (stale && newUnanalyzed > 0 && retryCountRef.current < MAX_RETRIES) {
           // Data unchanged — schedule a retry and leave state as-is.
           retryCountRef.current += 1;
           retryTimerRef.current = setTimeout(() => {
@@ -171,10 +174,12 @@ export function useTaskAnalysisStats(
     onAnalysisEvent();
   }, [onAnalysisEvent, refreshOnAnalysisEvents]);
 
+  // When parent owns SSE (refreshOnAnalysisEvents=false), disable matching so we
+  // neither log-fire nor call the no-op callback on every analysis event.
   useRefreshOnAnalysisEvent(onAnalysisEventWhenEnabled, {
-    includeStarted: true,
-    includeCompleted: true,
-    includeFailed: true,
+    includeStarted: refreshOnAnalysisEvents,
+    includeCompleted: refreshOnAnalysisEvents,
+    includeFailed: refreshOnAnalysisEvents,
   });
 
   // ── Refresh on messages_updated SSE events ──────────────────────────────
@@ -183,9 +188,16 @@ export function useTaskAnalysisStats(
 
   /** Tracks whether a messages_updated refresh is currently in-flight. */
   const messagesRefreshInFlightRef = useRef(false);
+  /** Same receivedAt must not re-fetch when `fetchTaskStats` identity churns. */
+  const lastHandledMessagesAtRef = useRef<number | null>(null);
+  const fetchTaskStatsRef = useRef(fetchTaskStats);
+  fetchTaskStatsRef.current = fetchTaskStats;
 
   useEffect(() => {
     if (!lastMessagesUpdate) return;
+
+    if (lastHandledMessagesAtRef.current === lastMessagesUpdate.receivedAt) return;
+    lastHandledMessagesAtRef.current = lastMessagesUpdate.receivedAt;
 
     // Deduplicate: skip if a messages_updated refresh is already in-flight
     if (messagesRefreshInFlightRef.current) return;
@@ -199,10 +211,10 @@ export function useTaskAnalysisStats(
     );
     retryCountRef.current = 0;
 
-    void fetchTaskStats().finally(() => {
+    void fetchTaskStatsRef.current().finally(() => {
       messagesRefreshInFlightRef.current = false;
     });
-  }, [lastMessagesUpdate, fetchTaskStats]);
+  }, [lastMessagesUpdate]);
 
   return { taskStats, refreshTaskStats, notifyAnalysisEvent: onAnalysisEvent };
 }

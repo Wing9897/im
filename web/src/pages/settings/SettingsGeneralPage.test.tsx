@@ -22,7 +22,6 @@ vi.mock("./SettingsShared", () => ({
   useSettingsPageState: () => ({
     settings: {
       weatherLocation: "system",
-      intelligenceRulesVersion: "v2",
       analysisTraceVerbose: false,
     },
     applyPersistedSnapshot,
@@ -116,14 +115,13 @@ describe("SettingsGeneralPage", () => {
     );
     expect(toggle).toBeTruthy();
     await act(async () => toggle!.click());
-    expect(harness.container.textContent).toContain("分析規則版本標記");
+    expect(harness.container.textContent).toContain("伺服器分析 Trace");
     expect(harness.container.querySelector('[role="switch"]')).toBeTruthy();
   });
 
   it("persists analysis trace immediately when the switch is toggled", async () => {
     saveSystemSettings.mockResolvedValue({
       weatherLocation: "system",
-      intelligenceRulesVersion: "v2",
       analysisTraceVerbose: true,
     });
     await harness.render(SettingsGeneralPageWithProviders);

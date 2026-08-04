@@ -28,7 +28,6 @@ export function SettingsGeneralPage() {
   const [weatherLocation, setWeatherLocation] = useState(SYSTEM_LOCATION);
   const [saving, setSaving] = useState(false);
   const [debugSaving, setDebugSaving] = useState(false);
-  const [intelligenceRulesVersion, setIntelligenceRulesVersion] = useState("v2");
   const [analysisTraceVerbose, setAnalysisTraceVerbose] = useState(false);
   const [restartingCollector, setRestartingCollector] = useState(false);
   const [showCollectorRestartConfirm, setShowCollectorRestartConfirm] = useState(false);
@@ -41,9 +40,8 @@ export function SettingsGeneralPage() {
   }, [settings?.weatherLocation]);
 
   useEffect(() => {
-    setIntelligenceRulesVersion(settings?.intelligenceRulesVersion ?? "v2");
     setAnalysisTraceVerbose(Boolean(settings?.analysisTraceVerbose));
-  }, [settings?.intelligenceRulesVersion, settings?.analysisTraceVerbose]);
+  }, [settings?.analysisTraceVerbose]);
 
   useEffect(() => {
     const api = getElectronConnection();
@@ -104,37 +102,22 @@ export function SettingsGeneralPage() {
     }
   };
 
-  const persistDebugPatch = async (patch: {
-    intelligenceRulesVersion?: string;
-    analysisTraceVerbose?: boolean;
-  }) => {
+  const persistDebugPatch = async (patch: { analysisTraceVerbose?: boolean }) => {
     setDebugSaving(true);
-    const prevVersion = settings?.intelligenceRulesVersion ?? "v2";
     const prevTrace = Boolean(settings?.analysisTraceVerbose);
     if (patch.analysisTraceVerbose !== undefined) {
       setAnalysisTraceVerbose(patch.analysisTraceVerbose);
-    }
-    if (patch.intelligenceRulesVersion !== undefined) {
-      setIntelligenceRulesVersion(patch.intelligenceRulesVersion);
     }
     try {
       const snapshot = await saveSystemSettings(patch);
       applyPersistedSnapshot(snapshot);
       showToast(t("general.debug.saved"), "success");
     } catch (error) {
-      setIntelligenceRulesVersion(prevVersion);
       setAnalysisTraceVerbose(prevTrace);
       showToast(toErrorMessage(error), "error");
     } finally {
       setDebugSaving(false);
     }
-  };
-
-  const commitRulesVersion = (value: string) => {
-    const next = value.trim();
-    const current = (settings?.intelligenceRulesVersion ?? "v2").trim();
-    if (next === current) return;
-    void persistDebugPatch({ intelligenceRulesVersion: next });
   };
 
   const onTraceVerboseChange = (next: boolean) => {
@@ -227,11 +210,8 @@ export function SettingsGeneralPage() {
 
       <SettingsFieldGroup showDivider>
         <AnalysisDebugPanel
-          intelligenceRulesVersion={intelligenceRulesVersion}
           analysisTraceVerbose={analysisTraceVerbose}
           busy={debugSaving}
-          onIntelligenceRulesVersionChange={setIntelligenceRulesVersion}
-          onIntelligenceRulesVersionCommit={commitRulesVersion}
           onAnalysisTraceVerboseChange={onTraceVerboseChange}
         />
       </SettingsFieldGroup>

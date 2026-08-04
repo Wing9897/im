@@ -45,6 +45,8 @@ export function FilterPanel({
   const { t } = useTranslation("monitor");
   const [searchDraft, setSearchDraft] = useState(filters.search ?? "");
 
+  // Product subset of MessageTimeRange for the monitor filter UI.
+  // Full token set (incl. 12h/24h/1h/…) is accepted via URL — see useMonitorFiltersUrl.
   const timeRangeOptions: { value: MessageTimeRange | ""; label: string }[] = [
     { value: "", label: t("filter.timeAll") },
     { value: "today", label: t("filter.timeToday") },

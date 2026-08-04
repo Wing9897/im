@@ -14,9 +14,7 @@ interface ChatPromptFieldsProps {
   promptLabel?: string;
   promptPlaceholder?: string;
   promptHint?: string;
-  /** Optional web-intel search query field rendered above the prompt. */
-  webSearchQuerySlot?: ReactNode;
-  /** Mark prompt as required (web_intel / other AI modes that gate save on it). */
+  /** Mark prompt as required (AI modes that gate save on it). */
   promptRequired?: boolean;
 }
 
@@ -33,7 +31,6 @@ export function ChatPromptFields({
   promptLabel,
   promptPlaceholder,
   promptHint,
-  webSearchQuerySlot,
   promptRequired = false,
 }: ChatPromptFieldsProps) {
   const { t } = useTranslation("common");
@@ -56,8 +53,6 @@ export function ChatPromptFields({
       </SettingsRow>
 
       {scheduleSlot ?? null}
-
-      {webSearchQuerySlot ?? null}
 
       <div className="md:col-span-2">
         <SettingsRow label={label} htmlFor="chat-prompt-template">

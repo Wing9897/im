@@ -42,6 +42,7 @@ from server.prompts.assistant import (
     AGENT_TOOL_ROUNDS_EXHAUSTED,
     AGENT_UNPARSEABLE_REPLY,
     task_advisor_prompt_note,
+    user_background_prompt_note,
     web_search_prompt_note,
 )
 from server.prompts.clock import ASSISTANT_CLOCK_NOTE, current_time_prompt_block
@@ -67,11 +68,17 @@ class LlmCompleter(Protocol):
     async def close(self) -> None: ...
 
 
-def _tools_prompt_block(*, inject_web_search_tool: bool, task_advisor_enabled: bool = False) -> str:
+def _tools_prompt_block(
+    *,
+    inject_web_search_tool: bool,
+    task_advisor_enabled: bool = False,
+    calendar_writes_enabled: bool = True,
+) -> str:
     return json.dumps(
         build_tool_schemas(
             web_search_enabled=inject_web_search_tool,
             task_advisor_enabled=task_advisor_enabled,
+            calendar_writes_enabled=calendar_writes_enabled,
         ),
         ensure_ascii=False,
         indent=2,
@@ -87,12 +94,15 @@ def build_system_prompt(
     web_search_mode: str | None = None,
     inject_web_search_tool: bool | None = None,
     task_advisor_enabled: bool = False,
+    calendar_writes_enabled: bool = True,
+    user_background: str | None = None,
     base_prompt: str | None = None,
 ) -> str:
     inject_tool = web_search_enabled if inject_web_search_tool is None else inject_web_search_tool
     return (
         (base_prompt if base_prompt is not None else AGENT_SYSTEM_PROMPT)
         + current_time_prompt_block(now, authority_note=ASSISTANT_CLOCK_NOTE)
+        + user_background_prompt_note(user_background)
         + web_search_prompt_note(
             web_search_enabled=web_search_enabled,
             provider=web_search_provider,
@@ -102,6 +112,7 @@ def build_system_prompt(
         + _tools_prompt_block(
             inject_web_search_tool=inject_tool,
             task_advisor_enabled=task_advisor_enabled,
+            calendar_writes_enabled=calendar_writes_enabled,
         )
         + "\n\n"
         + output_language_directive(normalize_ui_locale(locale))
@@ -131,8 +142,8 @@ class AgentRuntime:
             return True
         return is_openai_json_mode_enabled(await get_config(self.db, "openai_json_mode"))
 
-    async def _resolve_web_search_route(self) -> WebSearchRoute:
-        web_enabled = await get_config_bool(self.db, "assistant_web_search_enabled")
+    async def _resolve_web_search_route(self, *, force_enabled: bool = False) -> WebSearchRoute:
+        web_enabled = True if force_enabled else await get_config_bool(self.db, "assistant_web_search_enabled")
         setting = await get_config(self.db, "web_search_provider")
         llm_cfg = await load_agent_llm_config(self.db)
         # Prefer live client strings when set; ignore MagicMock auto-attrs.
@@ -154,11 +165,13 @@ class AgentRuntime:
         workset_id: str | None = None,
         project_scope_task_id: str | None = None,
         task_advisor_enabled: bool = False,
+        calendar_writes_enabled: bool = True,
         current_task: dict[str, Any] | None = None,
         locale: str | None = None,
         web_route: WebSearchRoute | None = None,
+        force_web_search: bool = False,
     ) -> dict[str, Any]:
-        route = web_route or await self._resolve_web_search_route()
+        route = web_route or await self._resolve_web_search_route(force_enabled=force_web_search)
         brave_key = await get_config(self.db, "brave_search_api_key")
         return {
             "web_search_enabled": route.enabled and route.inject_web_search_tool,
@@ -171,6 +184,7 @@ class AgentRuntime:
             "project_scope_task_id": project_scope_task_id,
             "broadcaster": self.broadcaster,
             "task_advisor_enabled": task_advisor_enabled,
+            "calendar_writes_enabled": calendar_writes_enabled,
             "current_task": current_task,
             "locale": locale,
         }
@@ -260,15 +274,18 @@ class AgentRuntime:
         )
         # Task advisor is UI-gated (task editor + assistant channel only).
         task_advisor_enabled = policy.id == "assistant" and surface == "task_editor"
-        web_route = await self._resolve_web_search_route()
+        web_route = await self._resolve_web_search_route(force_enabled=policy.force_web_search)
+        user_background = await get_config(self.db, "user_background")
         tool_context = await self._tool_context(
             user_event_origin=policy.user_event_origin,
             workset_id=workset_id,
             project_scope_task_id=project_scope_task_id,
             task_advisor_enabled=task_advisor_enabled,
+            calendar_writes_enabled=policy.calendar_writes_enabled,
             current_task=current_task if task_advisor_enabled else None,
             locale=resolved_locale if task_advisor_enabled else None,
             web_route=web_route,
+            force_web_search=policy.force_web_search,
         )
         native_web_search = web_route.native_web_search
         history: list[dict[str, Any]] = [
@@ -282,6 +299,8 @@ class AgentRuntime:
                     web_search_mode=web_route.mode,
                     inject_web_search_tool=web_route.inject_web_search_tool,
                     task_advisor_enabled=task_advisor_enabled,
+                    calendar_writes_enabled=policy.calendar_writes_enabled,
+                    user_background=user_background,
                     base_prompt=base_prompt if base_prompt is not None else policy.system_prompt,
                 ),
             }

@@ -31,7 +31,6 @@ type SettingsFormFromSnapshot = Pick<
   | "llmGenerationTimeout"
   | "maxBatchRetries"
   | "maxConcurrentBatches"
-  | "intelligenceRulesVersion"
   | "analysisStrategyMode"
   | "analysisTriggerThreshold"
   | "autoPauseOnRetriesExhausted"

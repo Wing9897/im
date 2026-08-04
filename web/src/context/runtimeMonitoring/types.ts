@@ -11,6 +11,7 @@ import type {
 } from "../../types";
 import type { ActiveAnalysisState, AppLogInput } from "../appRuntimeShared";
 import i18n from "../../i18n";
+import { APP_LOG_KIND } from "../../logging/appLogClient";
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -43,6 +44,7 @@ export interface RuntimeMonitoringState {
   aiEngineStatus: AiEngineStatus;
   queueStatus: QueueStatus | null;
   analysisPaused: boolean;
+  /** @deprecated Prefer {@link activeAnalyses}; first concurrent batch only. */
   activeAnalysis: ActiveAnalysisState | null;
   activeAnalyses: Map<string, ActiveAnalysisState>;
   lastAnalysisEvent: RuntimeAnalysisEvent | null;
@@ -73,27 +75,29 @@ export function buildAiStatusCheckFailureLog(message: string): AppLogInput {
   return {
     level: "error",
     category: "collector",
+    kind: APP_LOG_KIND.RUNTIME_AI_CHECK,
     message: String(i18n.t("common:runtime.aiCheckFailed")),
-    details: message,
+    messageKey: "logs:templates.runtimeAiCheckFailed",
+    source: "frontend.runtime.ai_check",
+    payload: { error: message },
   };
 }
 
 export function buildWindowErrorLog(event: ErrorEvent): AppLogInput {
-  const details = [
-    event.message,
-    event.filename ? `file=${event.filename}` : "",
-    event.lineno ? `line=${event.lineno}` : "",
-    event.colno ? `column=${event.colno}` : "",
-    event.error ? `stack=${String(event.error)}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
-
   return {
     level: "error",
-    category: "system",
+    category: "frontend",
+    kind: APP_LOG_KIND.FRONTEND_WINDOW,
     message: String(i18n.t("common:runtime.frontendError")),
-    details,
+    messageKey: "logs:templates.frontendWindowError",
+    source: "frontend.window",
+    payload: {
+      message: event.message,
+      filename: event.filename || null,
+      lineno: event.lineno || null,
+      colno: event.colno || null,
+      stack: event.error ? String(event.error) : null,
+    },
   };
 }
 
@@ -102,12 +106,17 @@ export function buildUnhandledRejectionLog(
 ): AppLogInput {
   return {
     level: "error",
-    category: "system",
+    category: "frontend",
+    kind: APP_LOG_KIND.FRONTEND_REJECTION,
     message: String(i18n.t("common:runtime.unhandledRejection")),
-    details:
-      event.reason instanceof Error
-        ? (event.reason.stack ?? event.reason.message)
-        : String(event.reason),
+    messageKey: "logs:templates.frontendUnhandledRejection",
+    source: "frontend.rejection",
+    payload: {
+      reason:
+        event.reason instanceof Error
+          ? (event.reason.stack ?? event.reason.message)
+          : String(event.reason),
+    },
   };
 }
 

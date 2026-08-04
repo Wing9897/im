@@ -24,14 +24,14 @@
   },
   {
     "id": "key-insights",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "💡",
     "i18n": {
       "zh-Hant": {
         "name": "關鍵情報摘要",
-        "description": "提取具有情報價值的關鍵事件與機會",
-        "promptTemplate": "從訊息中提取具有情報價值的關鍵事件與線索。優先關注：重要事件、商業機會、風險預警、趨勢變化。有明確時間或地點時一併填入；無法確定則只保留標題與內容。"
+        "description": "提取具有情報價值的情報事件與機會",
+        "promptTemplate": "從訊息中提取具有情報價值的情報事件與線索。優先關注：重要事件、商業機會、風險預警、趨勢變化。有明確時間或地點時一併填入；無法確定則只保留標題與內容。"
       },
       "en": {
         "name": "Key intel summary",
@@ -40,14 +40,14 @@
       },
       "zh-Hans": {
         "name": "关键情报摘要",
-        "description": "提取具有情报价值的关键事件与机会",
-        "promptTemplate": "从消息中提取具有情报价值的关键事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
+        "description": "提取具有情报价值的情报事件与机会",
+        "promptTemplate": "从消息中提取具有情报价值的情报事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
       }
     }
   },
   {
     "id": "schedule-events",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "📅",
     "i18n": {
@@ -70,7 +70,7 @@
   },
   {
     "id": "schedule-time-inference",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🗓️",
     "i18n": {
@@ -116,7 +116,7 @@
   },
   {
     "id": "action-items",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "✅",
     "i18n": {
@@ -139,7 +139,7 @@
   },
   {
     "id": "crypto-major-intel",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "₿",
     "i18n": {
@@ -162,7 +162,7 @@
   },
   {
     "id": "crypto-airdrop-deals",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "🎁",
     "i18n": {
@@ -185,7 +185,7 @@
   },
   {
     "id": "iot-device-alerts",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "📡",
     "i18n": {
@@ -208,7 +208,7 @@
   },
   {
     "id": "iot-ops-events",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🔧",
     "i18n": {
@@ -231,7 +231,7 @@
   },
   {
     "id": "risk-crisis-alerts",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "⚠️",
     "i18n": {
@@ -254,7 +254,7 @@
   },
   {
     "id": "people-org-watch",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "👤",
     "i18n": {
@@ -277,7 +277,7 @@
   },
   {
     "id": "competitive-intel",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🏁",
     "i18n": {
@@ -300,7 +300,7 @@
   },
   {
     "id": "security-scam-watch",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "🛡️",
     "i18n": {
@@ -323,7 +323,7 @@
   },
   {
     "id": "geo-field-events",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "📍",
     "i18n": {
@@ -346,7 +346,7 @@
   },
   {
     "id": "policy-regulation",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "30d",
     "badge": "📜",
     "i18n": {
@@ -369,7 +369,7 @@
   },
   {
     "id": "product-release",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🚀",
     "i18n": {
@@ -438,7 +438,7 @@
   },
   {
     "id": "rumor-verify",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "🔍",
     "i18n": {
@@ -461,7 +461,7 @@
   },
   {
     "id": "finance-markets",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "1d",
     "badge": "📈",
     "i18n": {
@@ -484,7 +484,7 @@
   },
   {
     "id": "meeting-decisions",
-    "analysisMode": "event",
+    "analysisMode": "intel_event",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🗒️",
     "i18n": {
@@ -537,7 +537,7 @@
       "zh-Hant": {
         "name": "工作輪更表",
         "description": "依來源訊息建立與維護工作輪更／更份表，含更份變更、對調與取消",
-        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子循環或單次事件就更新，對不上才新建；2) 固定輪更用 recurring 子任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
+        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子週期任務或單次事件就更新，對不上才新建；2) 固定輪更用週期任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
       },
       "en": {
         "name": "Work shift roster",
@@ -547,7 +547,7 @@
       "zh-Hans": {
         "name": "工作轮更表",
         "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
-        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子循环或单次事件就更新，对不上才新建；2) 固定轮更用 recurring 子任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+        "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子周期任务或单次事件就更新，对不上才新建；2) 固定轮更用周期任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
       }
     }
   },
@@ -556,22 +556,22 @@
     "analysisMode": "web_intel",
     "defaultAnalysisTimeRange": "all",
     "badge": "💹",
-    "webSearchQuery": "OpenAI Gemini Anthropic API pricing changes",
+    "webSearchQuery": "",
     "i18n": {
       "zh-Hant": {
         "name": "定價監管情報",
-        "description": "定期搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
-        "promptTemplate": "從搜尋結果抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
+        "description": "Agent 多輪搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
+        "promptTemplate": "以多輪網頁搜尋核實後，抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
       },
       "en": {
         "name": "Pricing watch intel",
-        "description": "Periodically search major LLM/cloud API pricing and plan changes into trackable intel events",
-        "promptTemplate": "From search results, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
+        "description": "Agent multi-round search of major LLM/cloud API pricing and plan changes into trackable intel events",
+        "promptTemplate": "After multi-round web search, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
       },
       "zh-Hans": {
         "name": "定价监管情报",
-        "description": "定期搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
-        "promptTemplate": "从搜索结果抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
+        "description": "Agent 多轮搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
+        "promptTemplate": "以多轮网页搜索核实后，抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
       }
     }
   },
@@ -580,22 +580,22 @@
     "analysisMode": "web_intel",
     "defaultAnalysisTimeRange": "all",
     "badge": "🌐",
-    "webSearchQuery": "East Asia geopolitics security hotspot latest",
+    "webSearchQuery": "",
     "i18n": {
       "zh-Hant": {
         "name": "地緣熱點掃描",
-        "description": "定期搜尋東亞等地緣／安全熱點動態動向，抽成情報事件",
-        "promptTemplate": "從搜尋結果抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
+        "description": "Agent 多輪搜尋東亞等地緣／安全熱點，抽成情報事件；可選綁定頻道做來源核實",
+        "promptTemplate": "以多輪網頁搜尋核實後，抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
       },
       "en": {
         "name": "Geopolitics hotspot scan",
-        "description": "Periodically search East Asia and related security hotspots into intel events",
-        "promptTemplate": "From search results, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
+        "description": "Agent multi-round search of East Asia security hotspots; optional channel bind for source verify",
+        "promptTemplate": "After multi-round web search, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
       },
       "zh-Hans": {
         "name": "地缘热点扫描",
-        "description": "定期搜索东亚等地缘／安全热点动态，抽成情报事件",
-        "promptTemplate": "从搜索结果抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
+        "description": "Agent 多轮搜索东亚等地缘／安全热点，抽成情报事件；可选绑定频道做来源核实",
+        "promptTemplate": "以多轮网页搜索核实后，抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
       }
     }
   }

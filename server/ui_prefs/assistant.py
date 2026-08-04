@@ -16,8 +16,9 @@ from server.ui_prefs.common import (
 )
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-_STT_PROVIDERS = frozenset({"browser", "whisper", "doubao"})
-_TTS_PROVIDERS = frozenset({"browser", "doubao"})
+# Only implemented providers. Legacy reserved ids (whisper / doubao) sanitize to browser.
+_STT_PROVIDERS = frozenset({"browser"})
+_TTS_PROVIDERS = frozenset({"browser"})
 _SPACE_PTT_MODES = frozenset({"hold", "toggle"})
 _DEFAULT_VOICE_IO: dict[str, Any] = {
     "sttProvider": "browser",

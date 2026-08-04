@@ -1,16 +1,16 @@
 {
   "toolbar": {
-    "aria": "关键事件工具列",
-    "taskSelectAria": "关键事件任务",
-    "searchPlaceholder": "搜索关键事件…",
-    "searchAria": "搜索关键事件",
-    "refreshing": "正在更新关键事件",
-    "sortAria": "关键事件排序方式",
+    "aria": "情报事件工具列",
+    "taskSelectAria": "情报事件任务",
+    "searchPlaceholder": "搜索情报事件…",
+    "searchAria": "搜索情报事件",
+    "refreshing": "正在更新情报事件",
+    "sortAria": "情报事件排序方式",
     "viewAria": "检视模式"
   },
   "filter": {
-    "openAria": "搜索关键事件",
-    "title": "搜索关键事件",
+    "openAria": "搜索情报事件",
+    "title": "搜索情报事件",
     "closeAria": "关闭搜索",
     "clear": "清除",
     "clearAria": "清除搜索条件",
@@ -78,7 +78,7 @@
     "ariaLabel": "情报详情：{title}"
   },
   "toast": {
-    "itemNotFound": "找不到指定的关键事件"
+    "itemNotFound": "找不到指定的情报事件"
   },
   "list": {
     "viewDetailAria": "查看情报详情：{title}",
@@ -100,13 +100,13 @@
     "loading": "载入更多…",
     "scrollCached": "向下滚动以显示更多",
     "scrollRemote": "向服务器载入更多资料",
-    "done": "已载入全部关键事件",
-    "aria": "载入更多关键事件"
+    "done": "已载入全部情报事件",
+    "aria": "载入更多情报事件"
   },
   "empty": {
     "noTasksTitle": "尚未建立情报任务",
-    "noTasksDescription": "先建立至少一个「关键事件」或「网络情报」任务，分析完成后，这里才会开始出现整理好的重点内容。",
-    "noTasksHint": "如果你已完成帐号与频道设定，下一步通常是到任务设定新增「关键事件」或「网络情报」类型任务。",
+    "noTasksDescription": "先建立至少一个「情报任务」或「网络情报任务」，分析完成后，这里才会开始出现整理好的重点内容。",
+    "noTasksHint": "如果你已完成帐号与频道设定，下一步通常是到任务设定新增「情报任务」或「网络情报任务」类型任务。",
     "filteredBothTitle": "找不到符合条件的情报",
     "filteredBothDescription": "目前的筛选条件没有对应到任何结果。",
     "filteredSearchTitle": "找不到符合搜索条件的情报",
@@ -118,7 +118,7 @@
     "filteredHint": "清除条件后可以快速确认，是资料真的没有，还是只是被筛选藏起来。",
     "noneTitle": "目前还没有情报",
     "noneDescription": "资料已载入，但还没有任何情报结果可显示。",
-    "noneHint": "情报来自成功完成的「关键事件」消息分析，或「网络情报」排程网页搜索。"
+    "noneHint": "情报来自成功完成的「情报任务」消息分析，或「网络情报任务」排程网页搜索。"
   },
   "cta": {
     "goToTasks": "前往任务设定",

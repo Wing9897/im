@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from server.analysis_control import set_analysis_paused
-from server.app_logging import write_batch_failure_log
-from server.config import get_auto_pause_on_retries_exhausted, get_config, get_config_int
+from server.app_logging import record_batch_failure
+from server.config import get_auto_pause_on_retries_exhausted, get_config_int
 from server.db.database import Database
 from server.sse import Broadcaster
 from server.util import utc_now_iso
@@ -93,8 +93,7 @@ async def apply_retry_outcome(
             error_message,
         )
 
-    ui_locale = await get_config(db, "ui_locale")
-    await write_batch_failure_log(
+    await record_batch_failure(
         db,
         task_id=task_id,
         task_name=task_name,
@@ -103,7 +102,6 @@ async def apply_retry_outcome(
         retries_exhausted=outcome.retries_exhausted,
         current_retry=outcome.next_retry,
         max_retries=max_retries,
-        ui_locale=ui_locale,
         failure_details=failure_details,
     )
 

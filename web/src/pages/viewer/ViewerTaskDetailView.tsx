@@ -46,7 +46,7 @@ export function ViewerTaskDetailView({
           </div>
           {task.scheduleRrule ? (
             <div className="mt-1.5 font-mono">
-              {t("viewer.schedule", { cron: task.scheduleRrule })}
+              {t("viewer.schedule", { schedule: task.scheduleRrule })}
             </div>
           ) : null}
         </div>

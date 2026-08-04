@@ -448,7 +448,7 @@ describe("connectSSE", () => {
         analysis_completed: {
           taskId: "task-1",
           batchId: "batch-1",
-          analysisMode: "event",
+          analysisMode: "intel_event",
           findingsCount: 2,
           hasFindings: true,
           overlapStatistics: {

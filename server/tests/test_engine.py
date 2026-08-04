@@ -122,7 +122,7 @@ async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:
         llm_messages=[{"role": "user", "content": "analyze"}],
         system_prompt="system",
         user_content="user",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         estimated_tokens=4,
         overlap_used_count=0,
         overlap_trimmed_count=0,
@@ -143,7 +143,7 @@ async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:
     )
 
 
-async def test_handle_chat_assistant_extracts_task_config_from_llm_reply(app) -> None:
+async def test_consult_task_advisor_extracts_task_config_from_llm_reply(app) -> None:
     db = app.state.db
     await set_configs(
         db,
@@ -165,7 +165,7 @@ async def test_handle_chat_assistant_extracts_task_config_from_llm_reply(app) ->
     engine = AnalysisEngine(db)
 
     with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
-        result = await engine.handle_chat_assistant("monitor earthquakes")
+        result = await engine.consult_task_advisor("monitor earthquakes")
 
     assert result["message"] == response_text
     assert result["taskConfig"] == {"name": "Alerts", "promptTemplate": "watch quakes"}
@@ -178,7 +178,7 @@ async def test_handle_chat_assistant_extracts_task_config_from_llm_reply(app) ->
     assert messages[1] == {"role": "user", "content": "monitor earthquakes"}
 
 
-async def test_handle_chat_assistant_appends_english_locale_directive(app) -> None:
+async def test_consult_task_advisor_appends_english_locale_directive(app) -> None:
     db = app.state.db
     await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
@@ -189,14 +189,14 @@ async def test_handle_chat_assistant_appends_english_locale_directive(app) -> No
     engine = AnalysisEngine(db)
 
     with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
-        await engine.handle_chat_assistant("hello", locale="en")
+        await engine.consult_task_advisor("hello", locale="en")
 
     system = mock_client.complete.await_args.args[0][0]["content"]
     assert "Write all user-facing text in English." in system
     assert "Traditional Chinese" not in system
 
 
-async def test_handle_chat_assistant_includes_current_task_draft_without_channels(app) -> None:
+async def test_consult_task_advisor_includes_current_task_draft_without_channels(app) -> None:
     db = app.state.db
     await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
@@ -208,13 +208,13 @@ async def test_handle_chat_assistant_includes_current_task_draft_without_channel
     draft = {
         "name": "地震監控",
         "promptTemplate": "找地震相關訊息",
-        "analysisMode": "event",
+        "analysisMode": "intel_event",
         "channelIds": ["should-not-appear"],
         "description": "",
     }
 
     with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
-        await engine.handle_chat_assistant("把提示詞寫清楚一點", current_task=draft)
+        await engine.consult_task_advisor("把提示詞寫清楚一點", current_task=draft)
 
     user_content = mock_client.complete.await_args.args[0][1]["content"]
     assert "地震監控" in user_content
@@ -225,7 +225,7 @@ async def test_handle_chat_assistant_includes_current_task_draft_without_channel
     assert "channelIds" not in user_content
 
 
-async def test_handle_chat_assistant_returns_null_task_config_for_plain_chat(app) -> None:
+async def test_consult_task_advisor_returns_null_task_config_for_plain_chat(app) -> None:
     db = app.state.db
     await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
@@ -236,7 +236,7 @@ async def test_handle_chat_assistant_returns_null_task_config_for_plain_chat(app
     engine = AnalysisEngine(db)
 
     with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
-        result = await engine.handle_chat_assistant("hello")
+        result = await engine.consult_task_advisor("hello")
 
     assert result["taskConfig"] is None
     assert "ask me anything" in result["message"]

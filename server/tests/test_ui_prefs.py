@@ -26,6 +26,7 @@ from server.ui_prefs import (
     MAX_PREF_JSON_CHARS,
     MAX_VOICE_HISTORY_ENTRIES,
     UI_PREF_KEYS,
+    sanitize_assistant_voice_io,
     sanitize_board_layout,
     sanitize_board_widget_state,
     sanitize_fired_keys,
@@ -682,6 +683,19 @@ async def test_assistant_voice_io_roundtrip(client, app) -> None:
     assert put_toggle.status_code == 200
     assert put_toggle.json()["settings"]["spacePttMode"] == "toggle"
     assert put_toggle.json()["settings"]["defaultWorksetId"] == "memo-task-1"
+
+
+def test_sanitize_assistant_voice_io_migrates_reserved_providers() -> None:
+    clean = sanitize_assistant_voice_io(
+        {
+            "sttProvider": "whisper",
+            "ttsProvider": "doubao",
+            "ttsEnabled": True,
+            "speechLanguage": "zh-HK",
+        }
+    )
+    assert clean["sttProvider"] == "browser"
+    assert clean["ttsProvider"] == "browser"
 
 
 def test_sanitize_timeline_annotations_drops_invalid_entries() -> None:

@@ -7,12 +7,13 @@ orchestration stays in ``server.analyzer.engine`` (``tasks.consult_advisor``).
 from __future__ import annotations
 
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
+from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 
 #: Calendar / messages / optional web search agent (POST /assistant); tools JSON appended at runtime.
-AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機已採集訊息、分析關鍵事件／情報、日程／用戶事件，
+AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機已採集訊息、分析情報事件／情報、日程／用戶事件，
 以及（若設定啟用）可選的聯網搜尋。
 查已採集聊天／來源內容必須用 messages.* tools，禁止編造本機訊息。
-查分析產出的關鍵事件／情報必須用 intelligence.search_events（含無時間的事件），禁止編造。
+查分析產出的情報事件／情報必須用 intelligence.search_events（含無時間的事件），禁止編造。
 查日程必須使用 calendar.* tools，不要編造事件。
 查物品到期／過期／即將到期必須用 items.list_expiring，禁止臆造到期日；
 新增物品用 items.create（須帶 workset，預設一般／__user__）。
@@ -21,7 +22,7 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 
 原則（local-first）：
 - 涉及已採集聊天／來源原文 → 先 messages.search。
-- 涉及分析關鍵事件／情報摘要（含無排程時間） → intelligence.search_events。
+- 涉及分析情報事件／情報摘要（含無排程時間） → intelligence.search_events。
 - 涉及行程／會議／用戶事件／時間規劃 → calendar.*。
 - 涉及證件／食物／信用卡等可追蹤物品到期 → items.list_expiring（必查庫，禁止編造）。
 - 新增可追蹤物品 → items.create（確認標題與日期；workset 預設一般）。
@@ -42,7 +43,7 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 建立／修改／刪除「用戶事件」（單次、無循環）用 calendar.create_event / update_event / delete_event。
 循環行程（每週三／每天／每月等）：新建用 calendar.create_recurring_task；改用 calendar.update_recurring_task；
 刪／停用優先用 calendar.delete_recurring_task（軟刪＝isActive=false，系列列保留）。
-三者都硬鎖 analysisMode=recurring，禁止動 leaderboard／event／AI 分析任務。
+三者都硬鎖 analysisMode=recurring，禁止動 leaderboard／intel_event／AI 分析任務。
 update_recurring_task 的 isActive 主要用於再啟用（isActive=true）；不要用 isActive=false 代替 delete。
 建立／修改前用自然語言向用戶確認標題、循環規則與時鐘時間；停用前先確認。成功後可提醒用戶到「時間規劃」查看。
 「今天／明天／下週」等相對日期必須依下方「當前時間」推算，禁止使用訓練資料中的過期年份或日期。
@@ -66,14 +67,14 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 不要寒暄、不要閒聊；以完成請求為優先，回覆簡潔、可機器消費。
 
 查已採集聊天／來源內容必須用 messages.* tools，禁止編造本機訊息。
-查分析產出的關鍵事件／情報必須用 intelligence.search_events，禁止編造。
+查分析產出的情報事件／情報必須用 intelligence.search_events，禁止編造。
 查／建／改／刪日程必須使用 calendar.* tools，不要編造事件。
 查物品到期必須用 items.list_expiring，禁止臆造；新增物品用 items.create（workset 預設一般）。
 回答時清楚區分「本機資料」與「網路來源」。
 
 原則（local-first）：
 - 涉及已採集聊天／來源原文 → 先 messages.search。
-- 涉及分析關鍵事件／情報摘要 → intelligence.search_events。
+- 涉及分析情報事件／情報摘要 → intelligence.search_events。
 - 涉及行程／會議／用戶事件 → calendar.*。
 - 涉及可追蹤物品到期 → items.list_expiring。
 - 新增可追蹤物品 → items.create。
@@ -106,21 +107,25 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 
 #: taskConfig field list embedded in the task-advisor system prompt.
 _ANALYSIS_MODE_PROMPT_VALUES = ", ".join(repr(mode) for mode in ALL_ANALYSIS_MODES)
+_ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(
+    repr(value) for value in ANALYSIS_TIME_RANGE_VALUES
+)
 
 TASK_CONFIG_SCHEMA_PROMPT = (
     "- name: short task name (string)\n"
     "- description: brief description (string)\n"
-    "- promptTemplate: the LLM prompt template (string); for web_intel, how to "
-    "extract events from search results\n"
-    "- webSearchQuery: search query / keywords; required for analysisMode=web_intel\n"
+    "- promptTemplate: the LLM prompt template (string); for web_intel, how the "
+    "Agent should search and turn findings into events (required)\n"
+    "- webSearchQuery: optional search seed / keywords for analysisMode=web_intel "
+    "(Agent may choose other queries)\n"
     f"- analysisMode: one of {_ANALYSIS_MODE_PROMPT_VALUES} (string)\n"
-    "- analysisTimeRange: one of '1d', '7d', '30d', 'all' (string)\n"
+    f"- analysisTimeRange: one of {_ANALYSIS_TIME_RANGE_PROMPT_VALUES} (string)\n"
     "- scheduleRrule: canonical AI trigger RRULE (sole schedule field; "
     "e.g. FREQ=HOURLY or FREQ=SECONDLY;INTERVAL=10) when the user asks to "
     "change schedule\n"
-    "- includeInTimeline: bool; for analysisMode=event or web_intel; default true "
-    "(when false, analysis events stay on Key Events / map but off calendar / "
-    "Gantt / timeline)\n"
+    "- includeInTimeline: bool; for analysisMode=intel_event or web_intel; default true "
+    "(when false, analysis events stay off calendar / "
+    "Gantt / timeline but still appear on the intelligence feed / map)\n"
     "- calendar fields (rrule, eventStartTime, eventEndTime, eventIsAllDay, "
     "eventLocation, eventDescription): only for analysisMode=recurring\n"
     "Do NOT include channelIds — the user picks source channels in the form UI."
@@ -198,3 +203,16 @@ def task_advisor_prompt_note(*, task_advisor_enabled: bool) -> str:
     if not task_advisor_enabled:
         return ""
     return AGENT_TASK_ADVISOR_NOTE
+
+
+def user_background_prompt_note(user_background: str | None) -> str:
+    """Append user profile background when set; empty / whitespace → no-op."""
+    if not isinstance(user_background, str):
+        return ""
+    text = user_background.strip()
+    if not text:
+        return ""
+    # Cap to the same write limit used by the config API.
+    if len(text) > 2000:
+        text = text[:2000]
+    return f"\n（用戶背景：{text}）\n"

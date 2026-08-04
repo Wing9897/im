@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { appendAppLog } from "../../api/logs";
 import i18n from "../../i18n";
+import { APP_LOG_KIND, recordAppLog } from "../../logging/appLogClient";
 import { Button } from "../ui";
 import { logError, logWarn } from "../../utils/logger";
 
@@ -38,15 +38,21 @@ export class ErrorBoundary extends React.Component<
 
     this.setState({ componentStack: info.componentStack ?? null });
 
-    appendAppLog({
+    recordAppLog({
       level: "error",
-      category: "system",
+      category: "frontend",
+      kind: APP_LOG_KIND.FRONTEND_REACT,
       message: String(
         i18n.t("ui.errorBoundary.logMessage", { message: error.message }),
       ),
-      details: info.componentStack ?? null,
+      messageKey: "logs:templates.frontendReact",
+      source: "frontend.ErrorBoundary",
+      payload: {
+        message: error.message,
+        componentStack: info.componentStack ?? null,
+      },
     }).catch((logErr) => {
-      logWarn("[ErrorBoundary] appendAppLog failed:", logErr);
+      logWarn("[ErrorBoundary] recordAppLog failed:", logErr);
     });
   }
 

@@ -124,7 +124,7 @@ async def _start_blocked_scheduler_batch(
 
     async def fake_fetch_one(*_args, **_kwargs):
         # Non-project mode so `_execute_scheduled` routes to execute_batch.
-        return {"analysis_mode": "event"}
+        return {"analysis_mode": "intel_event"}
 
     monkeypatch.setattr(scheduler_module, "execute_batch", blocked_execute_batch)
     manager._db = SimpleNamespace(fetch_one=fake_fetch_one)  # type: ignore[assignment]

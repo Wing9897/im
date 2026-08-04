@@ -17,7 +17,7 @@ type TopBarStatusActionsProps = {
 export function TopBarStatusActions({ variant = "default" }: TopBarStatusActionsProps) {
   const { t } = useTranslation("common");
   const { collectorStatus, aiEngineStatus } = useCollectorStatus();
-  const { activeAnalysis } = useAnalysisStatus();
+  const { activeAnalyses } = useAnalysisStatus();
   const {
     analysisPaused,
     updatingAnalysisPaused,
@@ -31,7 +31,7 @@ export function TopBarStatusActions({ variant = "default" }: TopBarStatusActions
     collectorStatus,
     aiEngineStatus,
     analysisPaused,
-    activeAnalysis,
+    activeAnalyses: activeAnalyses ?? new Map(),
   });
 
   const busy = updatingAnalysisPaused || abortingAnalysis;
@@ -79,7 +79,7 @@ export function TopBarStatusActions({ variant = "default" }: TopBarStatusActions
           type="button"
           className={`im-icon-btn${variant === "titleBar" ? " desktop-title-bar-icon-btn" : ""}`}
           aria-label={t("topBar.openViewer")}
-          title={t("topBar.openViewer")}
+          title={t("topBar.openViewerHint", { defaultValue: t("topBar.openViewer") })}
           data-testid="open-viewer-btn"
           onClick={handleOpenViewer}
         >
