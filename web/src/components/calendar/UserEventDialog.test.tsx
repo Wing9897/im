@@ -128,7 +128,7 @@ describe("UserEventDialog", () => {
     const tabs = Array.from(
       document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
     ) as HTMLButtonElement[];
-    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("週期"));
     const oneOffTab = tabs.find((tab) => tab.textContent?.includes("一般"));
     expect(recurringTab).toBeTruthy();
     expect(oneOffTab).toBeTruthy();
@@ -186,7 +186,7 @@ describe("UserEventDialog", () => {
     const tabs = Array.from(
       document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
     ) as HTMLButtonElement[];
-    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("週期"));
     await act(async () => {
       recurringTab!.click();
     });
@@ -234,7 +234,7 @@ describe("UserEventDialog", () => {
     const tabs = Array.from(
       document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
     ) as HTMLButtonElement[];
-    const recurringTab = tabs.find((tab) => tab.textContent?.includes("循環"));
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("週期"));
     expect(recurringTab).toBeTruthy();
     await act(async () => {
       recurringTab!.click();

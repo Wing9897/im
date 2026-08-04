@@ -24,6 +24,14 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
   }),
 }));
 
+vi.mock("../../context/MonitorModeContext", () => ({
+  useMonitorMode: () => ({
+    monitorMode: "pages" as const,
+    setMonitorMode: vi.fn(),
+    openInPages: vi.fn(),
+  }),
+}));
+
 vi.mock("../../hooks/useTaskAnalysisStats", async () =>
   (await import("../../test/task-analysis-stats-mock")).taskAnalysisStatsModuleMock());
 

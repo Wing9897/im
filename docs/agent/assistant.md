@@ -141,7 +141,7 @@
 | `calendar.window` | 绝对日期窗 `start`+`end`；**勿**用它拼「未來 N 天」（易漏时区） | 默认 50，硬顶 100 |
 | `calendar.get` | 按事件 id 取详情（含用户事件） | 1 条 |
 | `calendar.create_event` | 创建单次用户事件（服务端固定 `origin=assistant`）；必填 `title`+`startTime`；可选 `worksetId`（否则用请求体默认 `worksetId`）；可选 `taskId` 溯源（禁止 `__user__`） | 1 条 |
-| `calendar.create_recurring_task` | **新建** `analysisMode=recurring` 任务＋RRULE（循环行程）；必填 `rrule`＋`name`/`title`；非全日需 `eventStartTime`（系统本地 `HH:MM`）；展开后 wire 为 UTC；不碰其他模式 | 1 条 |
+| `calendar.create_recurring_task` | **新建** `analysisMode=recurring` 任务＋RRULE（周期任务）；必填 `rrule`＋`name`/`title`；非全日需 `eventStartTime`（系统本地 `HH:MM`）；展开后 wire 为 UTC；不碰其他模式 | 1 条 |
 | `calendar.update_recurring_task` | **更新**既有 recurring 任务（name／rrule／时钟／地点／描述／`isActive`）；`isActive` 主要用于再启用；停用优先 `delete_recurring_task`；拒绝非 recurring 模式 | 1 条 |
 | `calendar.delete_recurring_task` | **软删除／停用**既有 recurring 任务（优先入口；`isActive=false`，系列行保留，可再 `update_recurring_task` 设 `isActive=true` 重啟）；拒绝非 recurring 模式 | 1 条 |
 | `calendar.update_event` | 更新用户事件（勿用于 analysis / RRULE）；可选改 `worksetId`（归属）／`taskId`（溯源，禁止 `__user__`） | 1 条 |

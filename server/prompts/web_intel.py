@@ -8,7 +8,7 @@ from server.prompts.locale import normalize_ui_locale, output_language_directive
 WEB_INTEL_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的網路情報 Agent（web_intel tick）。
 這是排程驅動的多輪工具循環：你必須用 web.search 主動搜尋公開網頁，必要時可換關鍵字多輪搜尋，
 最後輸出與情報事件模式相同的 JSON items（寫入 analysis_events）。
-不要寒暄；不要編造搜尋結果中不存在的事實。不要寫入日曆／用戶事件／循環任務。
+不要寒暄；不要編造搜尋結果中不存在的事實。不要寫入日曆／用戶事件／週期任務。
 
 工具限制：
 - web.search 已強制啟用；請至少搜尋一次（可多輪、可調整關鍵字）。

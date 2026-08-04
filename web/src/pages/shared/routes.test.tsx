@@ -50,6 +50,14 @@ vi.mock("../../context/SimpleModeContext", () => ({
   useSimpleMode: () => ({ simpleMode: false, setSimpleMode: vi.fn() }),
 }));
 
+vi.mock("../../context/MonitorModeContext", () => ({
+  useMonitorMode: () => ({
+    monitorMode: "pages" as const,
+    setMonitorMode: vi.fn(),
+    openInPages: vi.fn(),
+  }),
+}));
+
 vi.mock("../../hooks/useAssistantChat", () => ({
   AssistantChatProvider: ({ children }: { children: React.ReactNode }) => children,
   useAssistantChat: () => ({

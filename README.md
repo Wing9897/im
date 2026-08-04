@@ -23,7 +23,7 @@
 | 層 | 角色 | 本專案對應 |
 |----|------|------------|
 | **Input** | 多源訊號進統一訊息平面 | Collectors（Telegram、Discord、RSS…）→ `messages` |
-| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`event`／`recurring`／`project`） |
+| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`intel_event`／`web_intel`／`recurring`／`project`） |
 | **Output** | 結果消費與外發 | Intelligence、Timeline、Board、提醒、Actions |
 
 **任務（`analysis_tasks`）是通用接口：** 下游多半以 `taskId` 訂閱，因此來源與顯示方式可持續加，不必各搞一套管線。完整圖表、模式表與例外見 [`docs/ARCHITECTURE.md` Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
@@ -32,7 +32,7 @@
 
 | 模式 | 執行 | Prompt |
 |------|------|--------|
-| `leaderboard`／`event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
+| `leaderboard`／`intel_event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
 | `project` | `execute_project_tick`（多波 Agent 工具閉環） | 共用 project system + **置頂**該任務目標（`promptTemplate`）；同輪多波連續 session，跨輪排程開新對話 |
 | `recurring` | 不跑 AI 分析 | — |
 

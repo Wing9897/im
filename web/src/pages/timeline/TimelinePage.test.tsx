@@ -373,7 +373,7 @@ describe("TimelinePage user-event CRUD", () => {
     // refreshEvents receives the post-create catalog so workset filters include the new task
     expect(mockRefreshEvents).toHaveBeenCalledWith(refreshedCatalog);
     expect(mockShowToast).toHaveBeenCalledWith(
-      expect.stringMatching(/循環|循环|Recurring/i),
+      expect.stringMatching(/週期|周期|Recurring/i),
       "success",
     );
   });

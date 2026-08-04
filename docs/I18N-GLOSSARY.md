@@ -110,12 +110,13 @@
 
 | 概念 | 定稿（zh-Hant） | en | zh-Hans |
 |------|-----------------|----|---------|
-| 分析 mode `event`／情報頁／側欄／widget | **關鍵事件** | Key Events | 关键事件 |
+| 分析 mode `intel_event`／任務類型徽章 | **情報任務** | Intel task | 情报任务 |
+| 情報頁／側欄／widget／事件結果 | **情報事件** | Intel events | 情报事件 |
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
-| mode `leaderboard` | 排行榜 | Leaderboard | 排行榜 |
-| mode `web_intel` | **網路情報** | Web intel | 网络情报 |
-| mode `project` | 專案（閉環） | Project | 项目（闭环） |
-| mode `recurring` | 循環任務 | Recurring task | 循环任务 |
+| mode `leaderboard` | 排行榜任務 | Leaderboard task | 排行榜任务 |
+| mode `web_intel` | **網路情報任務** | Web intel task | 网络情报任务 |
+| mode `project` | 專案任務（閉環） | Project task | 项目任务（闭环） |
+| mode `recurring` | 週期任務 | Recurring task | 周期任务 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
@@ -129,9 +130,9 @@
 
 | 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
 |----|----------|-------------------|------|
-| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；含助手、任務編輯、排行榜、關鍵事件、**網路情報**、專案管理員 + 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime） |
-| 任務類型徽章／選擇器 | 員工名（循環日程／關鍵事件／網路情報…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`event`／`web_intel`／`leaderboard`／`project`）；**DB／API enum 仍是 analysisMode** |
-| AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的任務類型才顯示頭像；`scheduleClerk`（recurring）無 AI avatar |
+| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；含助手、任務編輯、排行榜、情報任務、**網路情報**、專案 + 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime） |
+| 任務類型徽章／選擇器 | 員工名（週期任務／情報任務／網路情報任務…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`intel_event`／`web_intel`／`leaderboard`／`project`）；員工 id 與 enum token 對齊；**DB／API enum 仍是 analysisMode** |
+| AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的任務類型才顯示頭像；`recurring` 無 AI avatar（staff id 為 null） |
 | 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |
 
 **對照規則：** UI 對用戶說「員工／Staff」；任務表單內部類型 id 可叫 employee；後端與 OpenAPI 繼續用 `analysisMode`／`web_intel` 等既有 id。
