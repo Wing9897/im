@@ -13,7 +13,6 @@ import {
 
 type TaskFormAnalysisModeMeta = {
   displayLabel: string;
-  modeOptionLabel: string;
   modeDescription: string;
   promptLabel: string;
   promptPlaceholder: string;
@@ -41,7 +40,6 @@ export function getTaskFormAnalysisModeMeta(
   return {
     // Cards / filters / badges share task-type product names.
     displayLabel: getTaskEmployeeDisplayName(taskEmployeeForAnalysisMode(analysisMode)),
-    modeOptionLabel: String(i18n.t(`${prefix}.modeOptionLabel`)),
     modeDescription: String(i18n.t(`${prefix}.modeDescription`)),
     promptLabel: String(i18n.t(`${prefix}.promptLabel`)),
     promptPlaceholder: String(i18n.t(`${prefix}.promptPlaceholder`)),

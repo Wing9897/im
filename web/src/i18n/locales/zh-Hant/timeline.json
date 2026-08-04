@@ -143,7 +143,7 @@
     "create": "新增",
     "save": "儲存",
     "closeAria": "關閉",
-    "intro": "單次事件（無循環）。預設歸屬「一般」工作集。",
+    "intro": "單次事件（非週期）。預設歸屬「一般」工作集。",
     "introRecurring": "將建立帶 RRULE 的週期任務，展開後出現在時間規劃中。",
     "kindAria": "事件類型",
     "kind": {
@@ -208,7 +208,7 @@
     },
     "target": {
       "user_event": "單次",
-      "recurring_task": "循環"
+      "recurring_task": "週期"
     },
     "action": {
       "create": "新增",

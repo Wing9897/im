@@ -50,8 +50,8 @@ flowchart LR
 
 | Task field role | Meaning |
 |-----------------|---------|
-| `mode` | **Open-loop:** `leaderboard` / `event`（單次 LLM JSON → 結果表）. **Web intel tick:** `web_intel`（Agent 多輪 + `web.search` → `analysis_events`；可選綁頻道時用訊息門檻；**非**新 `analysis_mode`、無需 schema wipe）. **No LLM:** `recurring`（循環任務 / RRULE）. **Closed-loop:** `project`（專案管理 — 多輪 Agent + 工具改日程） |
-| `task_channels` | Which collected channels feed the task (`leaderboard` / `event` / `project` required; `web_intel` optional — bound channels enable message-threshold gate + source inject) |
+| `mode` | **Open-loop:** `leaderboard` / `intel_event`（單次 LLM JSON → 結果表）. **Web intel tick:** `web_intel`（Agent 多輪 + `web.search` → `analysis_events`；可選綁頻道時用訊息門檻）. **No LLM:** `recurring`（週期任務 / RRULE）. **Closed-loop:** `project`（專案管理 — 多輪 Agent + 工具改日程） |
+| `task_channels` | Which collected channels feed the task (`leaderboard` / `intel_event` / `project` required; `web_intel` optional — bound channels enable message-threshold gate + source inject) |
 | `version` | Invalidation boundary for batches / markers / findings |
 | Schedule / RRULE | Unified RRULE-shaped description; AI modes persist trigger-purpose `schedule_rrule` (APScheduler only); recurring calendar series on `recurring_schedules.rrule` (query-time expand only) |
 | `parent_task_id` | Optional FK on `recurring_schedules` for child `recurring` rows owned by a `project` task (`ON DELETE CASCADE`) |
@@ -68,14 +68,14 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 **In → Task → Out**
 
 1. **In:** Collectors write `messages` for accounts/channels (signal plane).
-2. **Task:** Scheduler runs AI for `leaderboard` / `event` via `execute_batch`, `web_intel` via `web_intel_tick` (Agent multi-round + forced `web.search` → JSON events; optional channel-bound message threshold / inject; `webSearchQuery` optional seed), and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time.
+2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, `web_intel` via `web_intel_tick` (Agent multi-round + forced `web.search` → JSON events; optional channel-bound message threshold / inject; `webSearchQuery` optional seed), and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time.
 3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; `project` writes owned `user_events` + child `recurring` only (no analysis_events).
 
 **Task-scoped UI vs exceptions**
 
 | Surface | Scoped by |
 |---------|-----------|
-| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`event` / `web_intel` / `recurring` / `project`); builtin workset `__user__` for「一般」 |
+| Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`intel_event` / `web_intel` / `recurring` / `project`); builtin workset `__user__` for「一般」 |
 | Voice reminder filter | ui-prefs `sourceFilter: { taskIds, worksetIds } \| null` (not a lone `taskId` / `__user__` sentinel) |
 | Monitor / Sources | Signal plane (accounts/channels), not analysis tasks |
 | Manual / assistant / A2A calendar items | `user_events`: ownership via `workset_id` (builtin `__user__`); optional `task_id` provenance only |
@@ -111,7 +111,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `paths.py` | Unified Desktop／CLI data root (`INTELLIGENCE_MONITOR_DATA_DIR` or product userData); full reset clears sessions, secret.key, and connection.json |
 | `collector/http_poll_helpers.py` | Shared helpers for HTTP poll adapter |
 | `collector/email_imap_fetch.py` | IMAP fetch / UID cursor helpers (public entry remains `email_imap.py`) |
-| `analyzer/` | AnalysisEngine + configurable LLM client (Ollama, OpenAI, Gemini, OpenRouter), incremental markers, analysis modes (`leaderboard` / `event` oneshot LLM; `web_intel` Agent multi-round ticks in `scheduler/web_intel_tick.py` — optional message gate when channels bound; `project` closed-loop Agent ticks in `scheduler/project_tick.py`; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
+| `analyzer/` | AnalysisEngine + configurable LLM client (Ollama, OpenAI, Gemini, OpenRouter), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `web_intel` Agent multi-round ticks in `scheduler/web_intel_tick.py` — optional message gate when channels bound; `project` closed-loop Agent ticks in `scheduler/project_tick.py`; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
 | `prompts/` | **System / schema prompt** string library (`analysis` / `assistant` / `web_intel` / `clock` / …) + `locale.py` (UI locale normalize + output-language directive). Find wording here; assembly lives in `analyzer/prompt.py` / `agent/runtime.py` / `scheduler/web_intel_tick.py`. This is **not** the user-facing task template catalog — that lives in `presets/task_presets.py` and has zh-Hant UI locale as its display-text source of truth ([`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `prompts/clock.py` | `current_time_prompt_block` — injects wall-clock context into analysis / agent prompts (deep-import by design; not re-exported from `prompts/__init__.py`) |
 | `agent/` | Text Agent runtime + tool registry (`calendar.*` / `messages.search` / optional `web.search`; `POST /api/v1/agent/chat`); see [Agent / assistant](#agent--assistant) |
@@ -343,7 +343,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `channels` | Monitored channels/feeds |
 | `account_channels` | Account ↔ channel associations |
 | `messages` | Collected messages from all platforms |
-| `analysis_tasks` | Shared task definitions (`leaderboard` / `event` / `web_intel` / `recurring` / `project`), trigger-purpose `schedule_rrule` for AI timers, optional `web_search_query` for web_intel, and AI scheduling overrides; contains no recurring calendar payload columns |
+| `analysis_tasks` | Shared task definitions (`leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`), trigger-purpose `schedule_rrule` for AI timers, optional `web_search_query` for web_intel, and AI scheduling overrides; contains no recurring calendar payload columns |
 | `recurring_schedules` | One-to-one recurring/event payload for `recurring` tasks: RRULE, DTSTART/DTEND, timezone/all-day/location/description, recurrence dates, ICS identity, and optional project parent |
 | `task_channels` | Task ↔ channel associations |
 | `analysis_batches` | Individual analysis run records |
@@ -472,7 +472,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
-| `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `event` / `leaderboard` / `project` / `web_intel` |
+| `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `intel_event` / `leaderboard` / `project` / `web_intel` |
 | `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/items`, Timeline／Board) | `recurring` only |
 
 - FE editor presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE **locally** in the client (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). They are **not** on the HTTP wire.

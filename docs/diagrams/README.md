@@ -28,13 +28,13 @@ flowchart TB
 
   subgraph TIMER["Schedule timer — big cycle"]
     AP[APScheduler<br/>interval / cron]
-    AP -->|"leaderboard / event / project<br/>(if active & not paused)"| DISPATCH
+    AP -->|"leaderboard / intel_event / web_intel / project<br/>(if active & not paused)"| DISPATCH
   end
 
-  subgraph PROCESS["Process — analysis_tasks × 4"]
+  subgraph PROCESS["Process — analysis_tasks"]
     DISPATCH{Task mode?}
     DISPATCH -->|leaderboard| LB[execute_batch<br/>oneshot JSON]
-    DISPATCH -->|event| EV[execute_batch<br/>oneshot JSON]
+    DISPATCH -->|intel_event| EV[execute_batch<br/>oneshot JSON]
     DISPATCH -->|project| PM[execute_project_tick<br/>closed-loop Agent]
     DISPATCH -.->|recurring| RC[No LLM<br/>RRULE expand at read]
     MSG --> TC[task_channels bind]
@@ -61,7 +61,7 @@ flowchart TB
 flowchart LR
   subgraph AI["AI — schedulable"]
     L[leaderboard<br/>batch LLM]
-    E[event<br/>batch LLM]
+    E[intel_event<br/>batch LLM]
     P[project<br/>Agent tick]
   end
 
@@ -79,7 +79,7 @@ flowchart LR
 | Mode | Scheduler | Reads `messages`? | Typical output |
 |------|-----------|-------------------|----------------|
 | `leaderboard` | Yes (`execute_batch`) | Yes | Leaderboard topics |
-| `event` | Yes (`execute_batch`) | Yes | `analysis_events` |
+| `intel_event` | Yes (`execute_batch`) | Yes | `analysis_events` |
 | `project` | Yes (`execute_project_tick`) | Yes (cursor + drain) | Owned `user_events` + child `recurring` |
 | `recurring` | No | No | RRULE occurrences at read |
 
@@ -94,7 +94,7 @@ flowchart TB
   PAUSE -->|no| ACTIVE{Task still active?}
   ACTIVE -->|no| WAIT
   ACTIVE -->|yes| MODE{analysis_mode}
-  MODE -->|leaderboard / event| BATCH[execute_batch]
+  MODE -->|leaderboard / intel_event| BATCH[execute_batch]
   MODE -->|project| TICK[execute_project_tick]
   BATCH --> DONE[Batch completed / retry]
   TICK --> DONE

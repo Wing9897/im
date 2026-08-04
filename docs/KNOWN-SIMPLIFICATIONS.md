@@ -19,7 +19,7 @@ Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats
 ## Prompt and analysis
 
 - Message blocks: `[id=...][time=...][sender] content`. `analysis_strategy_mode` is evidence guidance (server default `balanced`). Prompt revision correlation is via git / prompt files — not a `system_config` tag.
-- **Event mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
+- **`intel_event` mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
 - **Web intel:** tick uses `webSearchQuery` + `promptTemplate` (no local messages); empty → `skipped:` batch + SSE. Search routing shared with assistant (`WebSearchExecutionService`); tick cap **8** vs assistant tool **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `record_batch_failure` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
 - CJK-aware token heuristic; no `truncated_by_count` in batch metadata.
 
@@ -83,7 +83,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v12 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v12-explicit-reset) (wipe-only, `app_logs.kind`, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
+| Schema stamp v14 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v14-explicit-reset) (wipe-only, `intel_event` enum, `app_logs.kind`, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

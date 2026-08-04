@@ -4,7 +4,7 @@
 
 ## 行為
 
-1. Scheduler 與 `leaderboard`／`event` 一樣註冊 timer（預設 `hourly`；也允許 `daily`／`custom_seconds`）。
+1. Scheduler 與 `leaderboard`／`intel_event` 一樣註冊 timer（預設 `hourly`；也允許 `daily`／`custom_seconds`）。
 2. 到點呼叫 [`server/scheduler/project_tick.py`](../../server/scheduler/project_tick.py)：
    - 讀取自 `project_message_cursors`（`last_message_at` ISO + 可選 `last_message_id`）起、綁定來源的增量訊息（每波最多 40 條）。同秒訊息以 id 排序推進；API `cursorAt` 只回傳時間戳
    - **若 0 條新訊息：不喚醒 LLM**，只寫入 `analysis_batches`（`skipped: no new messages`）後結束——省 token
@@ -34,12 +34,12 @@
 
 **Origin：** 專案 tick 透過 `PROJECT_CHANNEL.user_event_origin="project"` 寫入 `user_events.origin=project`（DDL CHECK：`manual`／`assistant`／`a2a`／`project`）。聊天助手仍寫 `assistant`；A2A 寫 `a2a`。
 
-助手／A2A **不會**自動帶上專案 scope；子循環語意僅專案 tick 強制。
+助手／A2A **不會**自動帶上專案 scope；子週期語意僅專案 tick 強制。
 
 ## 相關
 
 - Prompt：[`server/prompts/project.py`](../../server/prompts/project.py)（`build_project_base_prompt`）
 - Channel：`server/agent/channels.py` → `project`（`stateless=False`，tick 內連續；不持久化跨次排程 UI session）
-- AI 員工：`projectManager`（`/ai/staff`）
+- AI 員工：`project`（`/ai/staff`）
 - Schema：見 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix)
-- UI：任務底下的專案詳情 `/tasks/:taskId/project`（概覽、來源、子循環、所屬事件、最近 tick 訊息與工具步驟）；**不是**與 Sources／Assistant 同層的頂層導航。
+- UI：任務底下的專案詳情 `/tasks/:taskId/project`（概覽、來源、子週期任務、所屬事件、最近 tick 訊息與工具步驟）；**不是**與 Sources／Assistant 同層的頂層導航。
