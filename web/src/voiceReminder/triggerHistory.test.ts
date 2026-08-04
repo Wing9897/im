@@ -88,7 +88,7 @@ describe("voiceReminder triggerHistory", () => {
       "語音提醒 · 約一小時 · 「標題」",
     );
     expect(buildVoiceReminderTriggerReason("   ", "約十五分鐘")).toBe(
-      "語音提醒 · 約十五分鐘 · 「關鍵事件」",
+      "語音提醒 · 約十五分鐘 · 「情報事件」",
     );
   });
 });

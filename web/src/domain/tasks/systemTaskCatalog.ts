@@ -40,7 +40,7 @@ export type TasksModeFilter = AnalysisMode | "all";
 const TASKS_MODE_FILTER_VALUES = new Set<string>([
   "all",
   "leaderboard",
-  "event",
+  "intel_event",
   "recurring",
 ]);
 

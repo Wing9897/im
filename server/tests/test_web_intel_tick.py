@@ -1,56 +1,21 @@
-"""web_intel tick: tool / native paths, skips, dispatch, failure semantics."""
+"""web_intel tick: Agent multi-round path, optional message gate, skips, fuse."""
 
 from __future__ import annotations
 
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
+from server.agent.runtime import AgentRuntime
 from server.config import set_configs
 from server.domain.analysis_modes import WEB_INTEL_MODE
 from server.domain.schedule import default_trigger_rrule, preset_to_trigger_rrule
 from server.scheduler.manager import SchedulerManager
-from server.scheduler.web_intel_tick import execute_web_intel_tick
+from server.scheduler.web_intel_tick import execute_web_intel_tick, parse_web_intel_agent_items
 from server.sse import SseBroadcaster
+from server.tests import seed
 from server.util import utc_now_iso
-from server.web_search.execution import WEB_INTEL_SEARCH_COUNT, WebSearchExecutionService
-
-
-def _route(*, mode: str = "tool", tool_provider: str = "duckduckgo", native: str | None = None):
-    return type(
-        "R",
-        (),
-        {
-            "enabled": True,
-            "mode": mode,
-            "tool_provider": tool_provider,
-            "native_web_search": native,
-            "inject_web_search_tool": native is None,
-        },
-    )()
-
-
-class _FakeClient:
-    provider = "ollama"
-    model = "test"
-
-    def __init__(self, *, text: str | None = None, fail_native: bool = False) -> None:
-        self._text = text or '{"items":[{"title":"Web hit","body":"From search","location":"全球"}]}'
-        self.fail_native = fail_native
-        self.calls: list[dict[str, Any]] = []
-
-    async def complete(self, messages, **kwargs):  # noqa: ANN001, ANN003
-        self.calls.append({"messages": messages, **kwargs})
-        if self.fail_native and kwargs.get("native_web_search"):
-            raise RuntimeError("native search unavailable")
-        return {
-            "text": self._text,
-            "prompt_tokens": 11,
-            "completion_tokens": 7,
-        }
-
-    async def close(self) -> None:
-        return None
 
 
 class _Broadcaster:
@@ -67,13 +32,14 @@ async def _insert_web_intel_task(
     task_id: str,
     query: str = "OpenAI pricing",
     prompt: str = "Extract official announcements only",
+    threshold: int | None = None,
 ) -> None:
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, web_search_query, "
         "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
-        "include_in_timeline, created_at, updated_at) "
-        "VALUES (?, ?, '', ?, ?, ?, 'all', 1, 1, ?, 1, ?, ?)",
+        "include_in_timeline, analysis_trigger_threshold, created_at, updated_at) "
+        "VALUES (?, ?, '', ?, ?, ?, 'all', 1, 1, ?, 1, ?, ?, ?)",
         (
             task_id,
             "Web intel",
@@ -81,10 +47,93 @@ async def _insert_web_intel_task(
             query,
             WEB_INTEL_MODE,
             preset_to_trigger_rrule("hourly", None),
+            threshold,
             now,
             now,
         ),
     )
+
+
+_WI_CHANNEL = ("telegram", "wi-gate-only")
+
+
+async def _ensure_gate_channel(db: Any) -> None:
+    """Isolated channel so seed TG messages do not inflate the gate count."""
+    now = utc_now_iso()
+    existing = await db.fetch_value(
+        "SELECT COUNT(*) FROM channels WHERE platform = ? AND platform_id = ?",
+        _WI_CHANNEL,
+    )
+    if int(existing or 0) == 0:
+        await db.execute(
+            "INSERT INTO channels (platform, platform_id, channel_name, created_at) VALUES (?, ?, ?, ?)",
+            (*_WI_CHANNEL, "Web intel gate", now),
+        )
+
+
+async def _bind_gate_channel(db: Any, *, task_id: str) -> None:
+    await _ensure_gate_channel(db)
+    await db.execute(
+        "INSERT INTO task_channels (task_id, platform, platform_id) VALUES (?, ?, ?)",
+        (task_id, *_WI_CHANNEL),
+    )
+
+
+async def _insert_message(
+    db: Any,
+    *,
+    message_id: str,
+    content: str,
+) -> None:
+    await _ensure_gate_channel(db)
+    now = utc_now_iso()
+    await db.execute(
+        "INSERT INTO messages (id, account_id, platform, platform_id, platform_message_id, "
+        "sender_id, sender_name, content, timestamp, created_at) "
+        "VALUES (?, ?, ?, ?, ?, 's1', 'Sender', ?, ?, ?)",
+        (message_id, seed.TG_ACCOUNT, *_WI_CHANNEL, message_id, content, now, now),
+    )
+
+
+def _patch_agent_chat(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    message: str = '{"items":[{"title":"Web hit","body":"From search","location":"全球"}]}',
+    tool_calls: list[dict[str, Any]] | None = None,
+    side_effect: Exception | None = None,
+    capture: dict[str, Any] | None = None,
+) -> None:
+    async def _fake_from_db(_db):  # noqa: ANN001
+        return type(
+            "C",
+            (),
+            {
+                "provider": "ollama",
+                "model": "test",
+                "close": AsyncMock(),
+            },
+        )()
+
+    async def _fake_chat(self, messages, **kwargs):  # noqa: ANN001, ANN003
+        del self
+        if capture is not None:
+            capture["messages"] = messages
+            capture["kwargs"] = kwargs
+        if side_effect is not None:
+            raise side_effect
+        return {
+            "message": message,
+            "sessionId": None,
+            "toolCalls": tool_calls
+            if tool_calls is not None
+            else [{"name": "web.search", "arguments": {"query": "q"}, "resultSummary": "ok"}],
+        }
+
+    monkeypatch.setattr(
+        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        _fake_from_db,
+    )
+    monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)
 
 
 @pytest.mark.asyncio
@@ -92,39 +141,27 @@ async def test_default_trigger_rrule_for_web_intel_is_hourly() -> None:
     assert default_trigger_rrule(WEB_INTEL_MODE) == preset_to_trigger_rrule("hourly", None)
 
 
+def test_parse_web_intel_agent_items_from_items_json() -> None:
+    items = parse_web_intel_agent_items(
+        '{"items":[{"title":"A","body":"B"}]}',
+    )
+    assert items == [{"title": "A", "body": "B"}]
+
+
+def test_parse_web_intel_agent_items_from_nested_message_json() -> None:
+    items = parse_web_intel_agent_items(
+        '{"message":"{\\"items\\":[{\\"title\\":\\"N\\",\\"body\\":\\"M\\"}]}"}',
+    )
+    assert items[0]["title"] == "N"
+
+
 @pytest.mark.asyncio
-async def test_web_intel_tick_two_step_writes_events(app, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_web_intel_tick_timed_agent_writes_events(app, monkeypatch: pytest.MonkeyPatch) -> None:
     db = app.state.db
     task_id = "web-intel-task-1"
-    await _insert_web_intel_task(db, task_id=task_id)
-
-    async def _fake_search(query: str, **kwargs: Any) -> dict[str, Any]:
-        assert kwargs.get("count") == WEB_INTEL_SEARCH_COUNT
-        assert "OpenAI" in query
-        return {
-            "items": [
-                {
-                    "title": "Pricing update",
-                    "url": "https://example.com/pricing",
-                    "snippet": "New rates",
-                }
-            ],
-            "provider": "duckduckgo",
-            "count": 1,
-        }
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        return _FakeClient()
-
-    monkeypatch.setattr("server.web_search.execution.search_web", _fake_search)
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(),
-    )
+    await _insert_web_intel_task(db, task_id=task_id, query="")
+    capture: dict[str, Any] = {}
+    _patch_agent_chat(monkeypatch, capture=capture)
 
     broadcaster = _Broadcaster()
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
@@ -139,12 +176,20 @@ async def test_web_intel_tick_two_step_writes_events(app, monkeypatch: pytest.Mo
         (task_id,),
     )
     assert title == "Web hit"
+    assert capture["kwargs"]["channel"] == "web_intel"
+    seed = capture["messages"][0]["content"]
+    assert "Choose search keywords yourself" in seed
+    assert "Optional search seed" not in seed
     assert any(name == "analysis_completed" for name, _ in broadcaster.events)
+    completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
+    assert completed[0]["webSearchMode"].startswith("agent:")
 
 
 @pytest.mark.asyncio
-async def test_web_intel_tick_ignores_assistant_web_search_master_switch(app, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Assistant master switch off must not block scheduled web_intel ticks."""
+async def test_web_intel_tick_forces_web_search_via_channel(
+    app, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Assistant master switch off must not block scheduled web_intel Agent ticks."""
     db = app.state.db
     task_id = "web-intel-assistant-off"
     await _insert_web_intel_task(db, task_id=task_id)
@@ -155,57 +200,31 @@ async def test_web_intel_tick_ignores_assistant_web_search_master_switch(app, mo
         ("assistant_web_search_enabled", "false", now),
     )
 
-    captured: dict[str, Any] = {}
-
-    def _capture_route(**kwargs: Any) -> Any:
-        captured.update(kwargs)
-        return _route()
-
-    async def _fake_search(query: str, **kwargs: Any) -> dict[str, Any]:
-        del query, kwargs
-        return {
-            "items": [{"title": "Hit", "url": "https://example.com", "snippet": "s"}],
-            "provider": "duckduckgo",
-            "count": 1,
-        }
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        return _FakeClient()
-
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        _capture_route,
-    )
-    monkeypatch.setattr("server.web_search.execution.search_web", _fake_search)
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-
+    capture: dict[str, Any] = {}
+    _patch_agent_chat(monkeypatch, capture=capture)
     await execute_web_intel_tick(db=db, broadcaster=_Broadcaster(), task_id=task_id)
-    assert captured.get("web_search_enabled") is True
+    assert capture["kwargs"]["channel"] == "web_intel"
 
 
 @pytest.mark.asyncio
-async def test_web_intel_tick_empty_query_records_skipped_batch(app) -> None:
+async def test_web_intel_tick_empty_query_still_runs_agent(app, monkeypatch: pytest.MonkeyPatch) -> None:
     db = app.state.db
-    task_id = "web-intel-empty-query"
+    task_id = "web-intel-empty-query-ok"
     await _insert_web_intel_task(db, task_id=task_id, query="")
+    _patch_agent_chat(monkeypatch)
 
     broadcaster = _Broadcaster()
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     row = await db.fetch_one(
-        "SELECT status, agent_message FROM analysis_batches WHERE task_id = ?",
+        "SELECT status, error_message, agent_message FROM analysis_batches WHERE task_id = ?",
         (task_id,),
     )
     assert row is not None
     assert row["status"] == "completed"
-    assert row["agent_message"] == "skipped: empty web_search_query"
-    completed = [payload for name, payload in broadcaster.events if name == "analysis_completed"]
-    assert completed
-    assert completed[0]["skipped"] is True
-    assert completed[0]["skipReason"] == "skipped: empty web_search_query"
+    assert not row["error_message"]
+    assert not (row["agent_message"] or "").startswith("skipped:")
+    assert any(name == "analysis_completed" for name, _ in broadcaster.events)
 
 
 @pytest.mark.asyncio
@@ -229,115 +248,96 @@ async def test_web_intel_tick_empty_prompt_records_skipped_batch(app) -> None:
     assert completed[0]["skipped"] is True
 
 
-@pytest.mark.parametrize("native_kind", ["openai", "gemini"])
 @pytest.mark.asyncio
-async def test_web_intel_tick_native_success(app, monkeypatch: pytest.MonkeyPatch, native_kind: str) -> None:
+async def test_web_intel_message_gate_under_threshold_skips_quietly(
+    app, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = app.state.db
-    task_id = f"web-intel-native-{native_kind}"
-    await _insert_web_intel_task(db, task_id=task_id)
-    client = _FakeClient(
-        text='{"items":[{"title":"Native hit","body":"From native search"}]}',
+    task_id = "web-intel-under-threshold"
+    await _insert_web_intel_task(db, task_id=task_id, threshold=2)
+    await _bind_gate_channel(db, task_id=task_id)
+    await _insert_message(
+        db,
+        message_id="msg-wi-1",
+        content="only one message",
     )
 
-    async def _fake_from_db(_db):  # noqa: ANN001
-        return client
+    called = {"n": 0}
 
-    search_called = {"n": 0}
+    async def _should_not_run(*_a: Any, **_k: Any) -> dict[str, Any]:
+        called["n"] += 1
+        return {"message": '{"items":[]}', "toolCalls": []}
 
-    async def _fake_search(*_a: Any, **_k: Any) -> dict[str, Any]:
-        search_called["n"] += 1
-        return {"items": [], "provider": "duckduckgo", "count": 0}
-
+    monkeypatch.setattr(AgentRuntime, "chat", _should_not_run)
     monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
+        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        AsyncMock(return_value=type("C", (), {"close": AsyncMock()})()),
     )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(mode="native", native=native_kind),
-    )
-    monkeypatch.setattr("server.web_search.execution.search_web", _fake_search)
 
     broadcaster = _Broadcaster()
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+
+    assert called["n"] == 0
+    batches = await db.fetch_value(
+        "SELECT COUNT(*) FROM analysis_batches WHERE task_id = ?",
+        (task_id,),
+    )
+    assert int(batches or 0) == 0
+    assert broadcaster.events == []
+
+
+@pytest.mark.asyncio
+async def test_web_intel_message_gate_claims_and_injects(
+    app, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = app.state.db
+    task_id = "web-intel-gate-claim"
+    await _insert_web_intel_task(db, task_id=task_id, threshold=1)
+    await _bind_gate_channel(db, task_id=task_id)
+    await _insert_message(
+        db,
+        message_id="msg-wi-2",
+        content="Rumour about OpenAI pricing change",
+    )
+
+    capture: dict[str, Any] = {}
+    _patch_agent_chat(
+        monkeypatch,
+        message='{"items":[{"title":"Verified pricing","body":"Confirmed via search"}]}',
+        capture=capture,
+    )
+
+    broadcaster = _Broadcaster()
+    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+
+    seed = capture["messages"][0]["content"]
+    assert "Rumour about OpenAI pricing change" in seed
+    assert "msg-wi-2" in seed
+
+    markers = await db.fetch_value(
+        "SELECT COUNT(*) FROM analysis_markers WHERE task_id = ? AND message_id = ?",
+        (task_id, "msg-wi-2"),
+    )
+    assert int(markers or 0) == 1
 
     title = await db.fetch_value(
         "SELECT title FROM analysis_events WHERE task_id = ?",
         (task_id,),
     )
-    assert title == "Native hit"
-    assert search_called["n"] == 0
-    assert client.calls
-    assert client.calls[0].get("native_web_search") == native_kind
+    assert title == "Verified pricing"
     completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
     assert completed
-    assert completed[0]["webSearchMode"] == f"{native_kind}_native"
+    assert completed[0]["messageCount"] == 1
 
 
 @pytest.mark.asyncio
-async def test_web_intel_tick_native_falls_back_to_tool(app, monkeypatch: pytest.MonkeyPatch) -> None:
-    db = app.state.db
-    task_id = "web-intel-native-fallback"
-    await _insert_web_intel_task(db, task_id=task_id)
-    client = _FakeClient(
-        text='{"items":[{"title":"Tool fallback","body":"after native fail"}]}',
-        fail_native=True,
-    )
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        return client
-
-    async def _fake_search(query: str, **kwargs: Any) -> dict[str, Any]:
-        del query
-        assert kwargs.get("count") == WEB_INTEL_SEARCH_COUNT
-        return {
-            "items": [{"title": "Hit", "url": "https://example.com", "snippet": "s"}],
-            "provider": "duckduckgo",
-            "count": 1,
-        }
-
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(mode="native", native="openai"),
-    )
-    monkeypatch.setattr("server.web_search.execution.search_web", _fake_search)
-
-    broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
-
-    title = await db.fetch_value(
-        "SELECT title FROM analysis_events WHERE task_id = ?",
-        (task_id,),
-    )
-    assert title == "Tool fallback"
-    completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
-    assert completed
-    assert completed[0]["webSearchMode"] == "tool:duckduckgo"
-    assert any(c.get("native_web_search") == "openai" for c in client.calls)
-    assert any(c.get("native_web_search") in (None, "") for c in client.calls)
-
-
-@pytest.mark.asyncio
-async def test_web_intel_tick_failure_is_completed_with_error_message(app, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_web_intel_tick_failure_is_completed_with_error_message(
+    app, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = app.state.db
     task_id = "web-intel-fail"
     await _insert_web_intel_task(db, task_id=task_id)
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        raise RuntimeError("LLM boom")
-
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(),
-    )
+    _patch_agent_chat(monkeypatch, side_effect=RuntimeError("LLM boom"))
 
     broadcaster = _Broadcaster()
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
@@ -363,64 +363,14 @@ async def test_web_intel_tick_failure_is_completed_with_error_message(app, monke
 
 
 @pytest.mark.asyncio
-async def test_web_intel_tick_in_fire_retry_then_success(app, monkeypatch: pytest.MonkeyPatch) -> None:
-    db = app.state.db
-    task_id = "web-intel-in-fire-retry"
-    await _insert_web_intel_task(db, task_id=task_id)
-    calls = {"n": 0}
-
-    async def _flaky_extract(self, *_a: Any, **_k: Any) -> tuple[list[dict], int, int, str]:  # noqa: ANN001
-        del self
-        calls["n"] += 1
-        if calls["n"] == 1:
-            raise TimeoutError("transient")
-        return (
-            [{"title": "Recovered", "body": "ok", "location": "全球"}],
-            1,
-            1,
-            "tool:duckduckgo",
-        )
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        return _FakeClient()
-
-    monkeypatch.setattr(WebSearchExecutionService, "extract_web_intel_items", _flaky_extract)
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(),
-    )
-
-    broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
-
-    assert calls["n"] == 2
-    title = await db.fetch_value("SELECT title FROM analysis_events WHERE task_id = ?", (task_id,))
-    assert title == "Recovered"
-    assert any(name == "analysis_completed" for name, _ in broadcaster.events)
-
-
-@pytest.mark.asyncio
-async def test_web_intel_consecutive_failures_deactivate_task(app, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_web_intel_consecutive_failures_deactivate_task(
+    app, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     db = app.state.db
     task_id = "web-intel-fuse"
     await _insert_web_intel_task(db, task_id=task_id)
     await set_configs(db, {"max_batch_retries": "2"})
-
-    async def _fake_from_db(_db):  # noqa: ANN001
-        raise RuntimeError("always fail")
-
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _fake_from_db,
-    )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(),
-    )
+    _patch_agent_chat(monkeypatch, side_effect=RuntimeError("always fail"))
 
     class _Sched:
         def __init__(self) -> None:
@@ -456,7 +406,6 @@ async def test_web_intel_consecutive_failures_deactivate_task(app, monkeypatch: 
     assert failed[-1]["retriesExhausted"] is True
     assert failed[-1]["retrying"] is False
     assert failed[-1]["taskDeactivated"] is True
-    assert failed[-1]["analysisMode"] == WEB_INTEL_MODE
 
 
 @pytest.mark.asyncio
@@ -468,35 +417,29 @@ async def test_web_intel_success_clears_failure_streak(app, monkeypatch: pytest.
 
     mode = {"fail": True}
 
-    async def _from_db(_db):  # noqa: ANN001
+    async def _fake_from_db(_db):  # noqa: ANN001
+        return type("C", (), {"provider": "ollama", "model": "t", "close": AsyncMock()})()
+
+    async def _fake_chat(self, messages, **kwargs):  # noqa: ANN001, ANN003
+        del self, messages, kwargs
         if mode["fail"]:
             raise RuntimeError("fail once")
-        return _FakeClient()
-
-    async def _fake_search(query: str, **kwargs: Any) -> dict[str, Any]:
-        del query, kwargs
         return {
-            "items": [{"title": "Hit", "url": "https://example.com", "snippet": "s"}],
-            "provider": "duckduckgo",
-            "count": 1,
+            "message": '{"items":[{"title":"Hit","body":"ok"}]}',
+            "toolCalls": [{"name": "web.search", "arguments": {}}],
         }
 
     monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db",
-        _from_db,
+        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        _fake_from_db,
     )
-    monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.resolve_web_search_route",
-        lambda **_kwargs: _route(),
-    )
-    monkeypatch.setattr("server.web_search.execution.search_web", _fake_search)
+    monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)
 
     broadcaster = _Broadcaster()
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
     mode["fail"] = False
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
-    # After success, two more failures must not deactivate (streak reset).
     mode["fail"] = True
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
     await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)

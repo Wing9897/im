@@ -35,7 +35,7 @@ describe("isScheduleOnlyAnalysisMode", () => {
   it("matches recurring only", () => {
     expect(isScheduleOnlyAnalysisMode("recurring")).toBe(true);
     expect(isScheduleOnlyAnalysisMode("project")).toBe(false);
-    expect(isScheduleOnlyAnalysisMode("event")).toBe(false);
+    expect(isScheduleOnlyAnalysisMode("intel_event")).toBe(false);
     expect(isScheduleOnlyAnalysisMode("leaderboard")).toBe(false);
   });
 });

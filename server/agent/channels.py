@@ -7,8 +7,9 @@ from typing import Literal
 
 from server.prompts.assistant import A2A_AGENT_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT
 from server.prompts.project import PROJECT_AGENT_SYSTEM_PROMPT
+from server.prompts.web_intel import WEB_INTEL_AGENT_SYSTEM_PROMPT
 
-AgentChannelId = Literal["assistant", "a2a", "project"]
+AgentChannelId = Literal["assistant", "a2a", "project", "web_intel"]
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,10 @@ class AgentChannel:
     stateless: bool
     #: ``user_events.origin`` for ``calendar.create_event``.
     user_event_origin: str
+    #: Scheduled web_intel ticks always enable search (ignore assistant master switch).
+    force_web_search: bool = False
+    #: When False, calendar write tools are omitted from schemas and blocked at dispatch.
+    calendar_writes_enabled: bool = True
 
 
 ASSISTANT_CHANNEL = AgentChannel(
@@ -47,10 +52,22 @@ PROJECT_CHANNEL = AgentChannel(
     user_event_origin="project",
 )
 
+WEB_INTEL_CHANNEL = AgentChannel(
+    id="web_intel",
+    system_prompt=WEB_INTEL_AGENT_SYSTEM_PROMPT,
+    # One schedule fire; no sticky UI session across fires.
+    stateless=True,
+    user_event_origin="web_intel",
+    force_web_search=True,
+    calendar_writes_enabled=False,
+)
+
 
 def get_agent_channel(channel_id: AgentChannelId | str | None) -> AgentChannel:
     if channel_id == "a2a":
         return A2A_CHANNEL
     if channel_id == "project":
         return PROJECT_CHANNEL
+    if channel_id == "web_intel":
+        return WEB_INTEL_CHANNEL
     return ASSISTANT_CHANNEL

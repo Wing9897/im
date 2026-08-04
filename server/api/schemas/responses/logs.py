@@ -15,6 +15,7 @@ class AppLogEntryResponse(BaseModel):
     time: str
     level: str
     category: str
+    kind: str
     message: str
     details: str | None
 

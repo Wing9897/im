@@ -19,7 +19,7 @@ async def test_fresh_database_auth_and_representative_routes(tmp_path) -> None:
 
     async with app.router.lifespan_context(app):
         assert db_path.is_file()
-        assert await app.state.db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION == 11
+        assert await app.state.db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION == 14
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:

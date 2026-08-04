@@ -20,7 +20,7 @@
     "systemSectionSubtitle": "These are not editable analysis tasks; they explain data sources and background mechanisms.",
     "card": {
       "viewDetailAria": "View task details: {name}",
-      "recurring": "Recurring activity",
+      "recurring": "Recurring task",
       "channelsRange": "{count} channels · range {range}",
       "unanalyzed": "Pending",
       "queued": "Queued",
@@ -38,11 +38,10 @@
       "openProjectAria": "Open project: {name}",
       "project": "Project",
       "projectProgressHint": "Progress uses a message cursor (not marker stats)",
-      "recurringProgressHint": "Recurring schedule (no message analysis stats)",
+      "recurringProgressHint": "Recurring task (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
-      "webIntel": "Web search · {query}",
-      "webIntelQueryEmpty": "(no query yet)",
-      "webIntelProgressHint": "Scheduled web search writes analysis events (not local message-batch stats)",
+      "web_intel": "Web intel task · Agent multi-round search",
+      "web_intelProgressHint": "Agent multi-round web search writes analysis events (optional source-message verify)",
       "retryCount": "Retry {count}",
       "analysisPausedHint": "Analysis paused (auto or manual)"
     },
@@ -124,19 +123,23 @@
       "scheduleHydrateRetry": "Retry",
       "timeRangeLabel": "Analysis time range",
       "timeAll": "No time limit",
+      "timeToday": "Today",
+      "time1h": "Last 1 hour",
+      "time6h": "Last 6 hours",
+      "time48h": "Last 48 hours",
       "time30d": "Last 30 days",
       "time7d": "Last 7 days",
       "time1d": "Last 1 day",
       "includeInTimelineLabel": "Show in time planning",
       "includeInTimelineAria": "Show in time planning",
-      "includeInTimelineHint": "When off, this task’s analysis events still appear in Key Events and the map, but not in calendar / Gantt / timeline.",
+      "includeInTimelineHint": "When off, this task’s analysis events still appear in Intel events and the map, but not in calendar / Gantt / timeline.",
       "rruleHint": "RRULE is only for recurring-task recurrence and does not trigger AI analysis.",
       "scheduleOverridesHint": "Threshold / batch limit / evidence style can override; leave empty to follow AI Settings → Analysis scheduling. Batch overlap and project wave interval are task-owned only.",
       "followGlobal": "Follow global",
       "followGlobalPlaceholder": "Empty = follow global",
       "batchOverlapLabel": "Batch overlap",
       "batchOverlapAria": "Number of overlapping messages per batch",
-      "batchOverlapHelp": "Next batch carries trailing messages for context; 0 = none. Event tasks only (leaderboard injects Top 10 instead).",
+      "batchOverlapHelp": "Next batch carries trailing messages for context; 0 = none. Used by intel tasks and web-intel tasks with channels; leaderboard injects Top 10 instead.",
       "triggerThresholdHelp": "Leave empty to follow the global trigger threshold.",
       "batchLimitHelp": "Leave empty to follow the global batch limit.",
       "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
@@ -159,7 +162,6 @@
         "saving": "Saving…",
         "name": "Enter a task name",
         "prompt": "Enter the task prompt",
-        "webSearchQuery": "Enter a search query / keywords",
         "channels": "Select at least one source channel",
         "rrule": "Set a recurrence rule",
         "eventStart": "Set a start time, or mark the event as all-day"
@@ -167,68 +169,62 @@
       "pickChannels": "Click to select channels",
       "channelsSelected": "{selected} / {total} channels selected",
       "channelsLabel": "Source channels",
+      "channelsLabelOptional": "Source channels (optional)",
       "channelsAria": "Select analysis source channels",
       "channelsPreview": "Selected channel preview",
       "channelsMore": "{count} more channels…"
     },
     "employees": {
-      "scheduleClerk": {
-        "name": "Recurring",
-        "blurb": "RRULE recurring schedule, no AI"
+      "recurring": {
+        "name": "Recurring task",
+        "blurb": "RRULE recurring task, no AI"
       },
-      "eventIntel": {
-        "name": "Key events",
-        "blurb": "Extract key events and itineraries"
+      "intel_event": {
+        "name": "Intel task",
+        "blurb": "Extract intel events and itineraries"
       },
-      "webIntel": {
-        "name": "Web intel",
-        "blurb": "Scheduled web search into analysis events"
+      "web_intel": {
+        "name": "Web intel task",
+        "blurb": "Agent multi-round web search into analysis events; optional source verify"
       },
       "leaderboard": {
-        "name": "Leaderboard",
+        "name": "Leaderboard task",
         "blurb": "Compare and track top message rankings"
       },
-      "projectManager": {
-        "name": "Project",
+      "project": {
+        "name": "Project task",
         "blurb": "Closed-loop reconcile of project calendar and child tasks"
       }
     },
     "modes": {
       "leaderboard": {
-        "modeOptionLabel": "Leaderboard - compare rankings",
         "modeDescription": "Compare and track top message rankings",
         "promptLabel": "Task prompt (what should AI compare)",
         "promptPlaceholder": "e.g. product launches, policy changes, partnerships, risk signals",
         "promptHint": "e.g. only hit when content clearly mentions official announcements, product updates, partnerships, or risk signals"
       },
-      "event": {
-        "modeOptionLabel": "Key Events - intelligence / schedule",
-        "modeDescription": "Extract key events and itineraries",
+      "intel_event": {
+        "modeDescription": "Extract intel events and itineraries",
         "promptLabel": "Task prompt (which events should AI extract)",
         "promptPlaceholder": "e.g. extract announcements, meetings, deadlines; fill start_time when clear, location when known",
         "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
       },
       "web_intel": {
-        "modeOptionLabel": "Web intel - web search",
-        "modeDescription": "Scheduled web search, then extract analysis events",
-        "promptLabel": "Task prompt (how to turn search hits into events)",
+        "modeDescription": "Agent multi-round web search into analysis events; optional source-message verify",
+        "promptLabel": "Task prompt (what intel to gather and how to write events)",
         "promptPlaceholder": "e.g. keep only official announcements and regulatory moves; fill start_time when clear, location when known; ignore ads and forum chatter",
-        "promptHint": "The prompt describes which events to extract from search results and how to write title/body; the search-query field decides what to search",
-        "searchQueryLabel": "Search query / keywords",
-        "searchQueryPlaceholder": "e.g. OpenAI API pricing update OR regulation",
-        "searchQueryHint": "Each schedule tick runs a web search with this query; combine with the prompt above",
-        "scheduleDefaultHint": "Default recommendation is hourly; switching to this type remaps every-10-seconds to hourly.",
-        "noChannelsHint": "This type uses web search as input — no local message channels required. It shares the assistant search-provider setting (not gated by the assistant master switch)."
+        "promptHint": "The Agent chooses keywords from this prompt, may search multiple rounds, then emits events. Describe what to keep and how to write title/body.",
+        "scheduleDefaultHint": "Hourly recommended; switching here remaps every-10-seconds to hourly.",
+        "timedModeHint": "No channels = timed search on schedule. Bind source channels to require a message threshold first and inject them for verification.",
+        "messageGateHint": "Channels bound = message-gate: runs at threshold; messages are injected for search verify/supplement. Override threshold in Advanced."
       },
       "recurring": {
-        "modeOptionLabel": "Recurring (no AI)",
-        "modeDescription": "RRULE recurring schedule, no AI",
+        "modeDescription": "RRULE recurring task, no AI",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "modeOptionLabel": "Project - closed-loop calendar",
         "modeDescription": "Closed-loop reconcile of project calendar and child tasks",
         "promptLabel": "Project goals / rules",
         "promptPlaceholder": "e.g. keep standup + demo dates current from Telegram; prefer morning slots; soft-delete cancelled series",
@@ -502,13 +498,13 @@
       },
       "web-intel-pricing-watch": {
         "name": "Pricing watch intel",
-        "description": "Periodically search major LLM/cloud API pricing and plan changes into trackable intel events",
-        "promptTemplate": "From search results, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
+        "description": "Agent multi-round search of major LLM/cloud API pricing and plan changes into trackable intel events",
+        "promptTemplate": "After multi-round web search, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
       },
       "web-intel-geopolitics-hotspots": {
         "name": "Geopolitics hotspot scan",
-        "description": "Periodically search East Asia and related security hotspots into intel events",
-        "promptTemplate": "From search results, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
+        "description": "Agent multi-round search of East Asia security hotspots; optional channel bind for source verify",
+        "promptTemplate": "After multi-round web search, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
       }
     }
   },
@@ -545,9 +541,9 @@
     "assistant": "Assistant",
     "taskEditor": "Task advisor",
     "leaderboard": "Leaderboard analyst",
-    "eventIntel": "Key-event analyst",
-    "webIntel": "Intel gatherer",
-    "projectManager": "Project manager"
+    "intel_event": "Intel task analyst",
+    "web_intel": "Web intel scout",
+    "project": "Project manager"
   },
   "ui": {
     "listSep": ", ",
@@ -609,9 +605,9 @@
     },
     "unnamedTask": "Untitled task",
     "monitorWall": "Monitor wall",
-    "keyEventsMap": "Key Events · Map",
-    "keyEventsList": "Key Events · List",
-    "keyEventsCard": "Key Events · Cards",
+    "keyEventsMap": "Intel events · Map",
+    "keyEventsList": "Intel events · List",
+    "keyEventsCard": "Intel events · Cards",
     "actionsVoice": "Notifications · Voice reminders",
     "actionsHistory": "Notifications · Trigger history",
     "sourcesRss": "Sources · RSS",
@@ -631,7 +627,9 @@
     "newAction": "New notification",
     "newActionHint": "Open notifications",
     "openViewer": "Open Viewer window",
-    "openViewerHint": "New tab",
+    "openViewerHint": "Read-only projection · new tab",
+    "openOpsBoard": "Ops Board (canvas)",
+    "openOpsBoardHint": "Switch to canvas / Ops Board",
     "shortcutHelp": "Keyboard shortcuts",
     "quickAssistant": "Assistant",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -663,7 +661,7 @@
     },
     "events": {
       "title": "Intelligence events",
-      "description": "Latest Key Events and Web Intel"
+      "description": "Latest intel events"
     },
     "feed": {
       "title": "Live Monitor",
@@ -734,7 +732,7 @@
     },
     "analysisBatch": {
       "title": "Analysis batch",
-      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, Key Events) in LLM batches and writes analysis results. Project-management tasks do not use this path — they are driven by editable project tasks above."
+      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, intel events) in LLM batches and writes analysis results. Project tasks do not use this path — they are driven by editable project tasks above."
     },
     "outboundNotify": {
       "title": "Outbound notifications",
@@ -742,7 +740,7 @@
     },
     "voiceReminder": {
       "title": "Voice reminders",
-      "shortDescription": "Locally scans upcoming Key Events, recurring-task (RRULE) expansions, and General-workset events, then announces them with browser speech.",
+      "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and General-workset events, then announces them with browser speech.",
       "linkLabel": "Go to voice reminders"
     },
     "retention": {
@@ -787,7 +785,7 @@
     "speakLead240": "about four hours",
     "speakLead1440": "about one day",
     "speakLeadMinutes": "about {minutes} minutes",
-    "speakKindEvent": "key event",
+    "speakKindEvent": "intel event",
     "speakKindRecurring": "recurring task",
     "speakKindUser": "reminder",
     "speakPreview": "Test in progress",
@@ -1074,6 +1072,7 @@
   },
   "topBar": {
     "openViewer": "Open new viewer",
+    "openViewerHint": "Read-only status projection",
     "collector": {
       "starting": "Collector starting…",
       "running": "Collector running",
@@ -1092,8 +1091,11 @@
     },
     "unnamedTask": "Unnamed task",
     "analyzingLabel": "Analyzing · {task}",
+    "analyzingLabelConcurrent": "Analyzing · {task} · ×{count}",
     "analyzingTitle": "AI analyzing: {task} ({batch})",
+    "analyzingTitleConcurrent": "AI analyzing {count} batches · lead: {task} ({batch})",
     "analyzingTitlePaused": "AI analyzing: {task} ({batch}); new batches paused",
+    "analyzingTitlePausedConcurrent": "AI analyzing {count} batches · lead: {task} ({batch}); new batches paused",
     "aiUnavailable": "AI unavailable",
     "aiUnavailableTitle": "Collector running, but AI engine is unreachable",
     "aiUnavailableTitleCollectorDown": "Collector stopped, and AI engine is unreachable",
@@ -1130,9 +1132,9 @@
   "monitorMode": {
     "aria": "Monitor mode",
     "pages": "Pages",
-    "canvas": "Canvas",
+    "canvas": "Canvas / Ops Board",
     "pagesTitle": "Paged monitor",
-    "canvasTitle": "Immersive canvas monitor"
+    "canvasTitle": "Immersive Ops Board canvas"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -1146,7 +1148,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 11 / SemVer 0.1.0-beta.12 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 12 / SemVer 0.1.0-beta.13 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"
@@ -1217,6 +1219,7 @@
   "viewer": {
     "navAria": "Viewer navigation",
     "brand": "IM Viewer",
+    "brandHint": "Read-only projection of live status",
     "navTasks": "Tasks",
     "navResults": "Results",
     "navStatus": "Status",
@@ -1233,7 +1236,7 @@
     "taskId": "Task ID: {id}",
     "lastAnalysis": "Last analysis:",
     "neverRun": "Never run",
-    "schedule": "Schedule: {cron}",
+    "schedule": "Schedule: {schedule}",
     "resultsLoadError": "Could not load results summary — check connection",
     "resultsRefreshing": "Refreshing results summary",
     "totalTasks": "Total tasks",
@@ -1308,7 +1311,7 @@
     "displayNameLabel": "Display name",
     "displayNameHelp": "Leave blank to use the default name.",
     "backgroundLabel": "Background",
-    "backgroundHelp": "Describe your role or preferences for future AI context.",
+    "backgroundHelp": "Describe your role or preferences. The assistant uses this as context.",
     "backgroundPlaceholder": "e.g. On-call monitoring, focus on SE Asia routes…",
     "uploadAvatar": "Upload",
     "uploadAvatarAria": "Upload profile avatar",

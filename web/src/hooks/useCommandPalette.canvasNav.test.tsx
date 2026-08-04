@@ -37,7 +37,7 @@ function PaletteHarness() {
   const { monitorMode } = useMonitorMode();
   const item: CommandPaletteItem = {
     id: "nav-intelligence",
-    label: "關鍵事件",
+    label: "情報事件",
     to: "/intelligence",
     icon: Radio,
     group: "導航",

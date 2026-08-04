@@ -57,7 +57,6 @@ class SystemSettingsSnapshot(BaseModel):
     llmGenerationTimeout: str
     maxBatchRetries: str
     maxConcurrentBatches: str
-    intelligenceRulesVersion: str
     analysisStrategyMode: str
     analysisTriggerThreshold: str
     retentionMessagesDays: str

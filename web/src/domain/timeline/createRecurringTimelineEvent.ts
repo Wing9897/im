@@ -1,7 +1,7 @@
 /**
  * Create a recurring calendar plan from the timeline "Add event" dialog.
  *
- * Product model: 「循環事件」is not a user_event row — it is an
+ * Product model: 「週期任務」is not a user_event row — it is an
  * ``analysisMode=recurring`` task with an RRULE schedule.
  *
  * **Maintenance point**: uses atomic ``POST /api/v1/tasks/recurring``

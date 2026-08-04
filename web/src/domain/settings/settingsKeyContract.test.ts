@@ -39,6 +39,7 @@ const RETIRED_CONFIG_KEYS = new Set([
   "timeline_annotations",
   "batch_overlap_count",
   "agent_project_wave_interval_seconds",
+  "intelligence_rules_version",
 ]);
 
 function linesOf(block: string): string[] {

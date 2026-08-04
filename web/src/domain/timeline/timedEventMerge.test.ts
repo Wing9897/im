@@ -52,7 +52,7 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
   return {
     id: "cal-task:20260722T090000Z",
     taskId: "cal-task",
-    taskName: "循環任務",
+    taskName: "週期任務",
     title: "週會",
     startTime: "2026-07-22T09:00:00.000Z",
     endTime: "2026-07-22T09:30:00.000Z",

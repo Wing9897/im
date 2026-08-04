@@ -65,7 +65,7 @@ vi.mock("../../api/results", () => ({
       id: "cal-1",
       taskId: "cal-task-1",
       title: "會議",
-      taskName: "循環任務",
+      taskName: "週期任務",
       // Distinct from analysis mock startTime so merge dedupe keeps both rows.
       startTime: new Date(Date.now() + 3_600_000).toISOString(),
       endTime: new Date(Date.now() + 7_200_000).toISOString(),
@@ -127,7 +127,7 @@ vi.mock("../../api/tasks", () => ({
     ];
   }),
   listTasks: vi.fn(async () => [
-    { id: "task-1", name: "任務活動", description: null, promptTemplate: "", analysisMode: "event", analysisTimeRange: "1d", version: 1, isActive: true, channelIds: [], createdAt: "", updatedAt: "" },
+    { id: "task-1", name: "任務活動", description: null, promptTemplate: "", analysisMode: "intel_event", analysisTimeRange: "1d", version: 1, isActive: true, channelIds: [], createdAt: "", updatedAt: "" },
   ]),
 }));
 
@@ -225,7 +225,7 @@ describe("board widget in-frame interactions", () => {
   beforeEach(() => {
     openInPages.mockReset();
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "task-1", name: "任務活動", analysisMode: "event" }),
+      makeAnalysisTask({ id: "task-1", name: "任務活動", analysisMode: "intel_event" }),
     ]);
     taskCatalogState.worksets = [
       {

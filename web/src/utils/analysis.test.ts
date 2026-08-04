@@ -15,34 +15,34 @@ describe("formatAnalysisMode", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
-  it('returns task-type name for "event"', () => {
-    expect(formatAnalysisMode("event")).toBe("關鍵事件");
+  it('returns task-type name for "intel_event"', () => {
+    expect(formatAnalysisMode("intel_event")).toBe("情報任務");
   });
 
   it('returns task-type name for "leaderboard"', () => {
-    expect(formatAnalysisMode("leaderboard")).toBe("排行榜");
+    expect(formatAnalysisMode("leaderboard")).toBe("排行榜任務");
   });
 
   it('returns task-type name for "project", "recurring", and "web_intel"', () => {
-    expect(formatAnalysisMode("project")).toBe("專案");
-    expect(formatAnalysisMode("recurring")).toBe("循環日程");
-    expect(formatAnalysisMode("web_intel")).toBe("網路情報");
+    expect(formatAnalysisMode("project")).toBe("專案任務");
+    expect(formatAnalysisMode("recurring")).toBe("週期任務");
+    expect(formatAnalysisMode("web_intel")).toBe("網路情報任務");
   });
 
   it('returns "未知" for unrecognized values', () => {
     expect(formatAnalysisMode("unknown")).toBe("未知");
     expect(formatAnalysisMode("")).toBe("未知");
-    // Legacy mode label — cumulative was rewritten to event in schema v1→v2.
+    // Legacy mode label — cumulative was rewritten to intel_event in schema v1→v2.
     expect(formatAnalysisMode("cumulative")).toBe("未知");
   });
 
   it("switches to English under en locale", async () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
-    expect(formatAnalysisMode("event")).toBe("Key events");
-    expect(formatAnalysisMode("leaderboard")).toBe("Leaderboard");
-    expect(formatAnalysisMode("project")).toBe("Project");
-    expect(formatAnalysisMode("web_intel")).toBe("Web intel");
+    expect(formatAnalysisMode("intel_event")).toBe("Intel task");
+    expect(formatAnalysisMode("leaderboard")).toBe("Leaderboard task");
+    expect(formatAnalysisMode("project")).toBe("Project task");
+    expect(formatAnalysisMode("web_intel")).toBe("Web intel task");
     expect(formatAnalysisMode("unknown")).toBe("Unknown");
   });
 });
@@ -53,27 +53,35 @@ describe("formatAnalysisTimeRange", () => {
     await i18n.changeLanguage("zh-Hant");
   });
 
-  it("returns correct labels for known ranges", () => {
+  it("returns correct labels for every task-legal range", () => {
+    expect(formatAnalysisTimeRange("all")).toBe("不限時間");
+    expect(formatAnalysisTimeRange("today")).toBe("今天");
+    expect(formatAnalysisTimeRange("1h")).toBe("最近 1 小時");
+    expect(formatAnalysisTimeRange("6h")).toBe("最近 6 小時");
+    expect(formatAnalysisTimeRange("48h")).toBe("最近 48 小時");
     expect(formatAnalysisTimeRange("1d")).toBe("最近 1 天");
     expect(formatAnalysisTimeRange("7d")).toBe("最近 7 天");
     expect(formatAnalysisTimeRange("30d")).toBe("最近 30 天");
   });
 
-  it('returns "不限時間" for unknown values including "all"', () => {
-    expect(formatAnalysisTimeRange("all")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("unknown")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("12h")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("24h")).toBe("不限時間");
+  it("does not map unknown or monitor-only tokens to unlimited", () => {
+    expect(formatAnalysisTimeRange("unknown")).toBe("unknown");
+    expect(formatAnalysisTimeRange("12h")).toBe("12h");
+    expect(formatAnalysisTimeRange("24h")).toBe("24h");
+  });
+
+  it("treats empty input as unlimited", () => {
+    expect(formatAnalysisTimeRange("")).toBe("不限時間");
+    expect(formatAnalysisTimeRange(null)).toBe("不限時間");
+    expect(formatAnalysisTimeRange(undefined)).toBe("不限時間");
   });
 
   it("handles Object.prototype property names without prototype pollution", () => {
-    // Regression: these previously returned the inherited prototype function
-    // instead of the fallback string, because the lookup used `value in obj`
-    // which traverses the prototype chain.
-    expect(formatAnalysisTimeRange("toString")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("valueOf")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("constructor")).toBe("不限時間");
-    expect(formatAnalysisTimeRange("hasOwnProperty")).toBe("不限時間");
+    // Regression: inherited Object.prototype keys must not resolve as labels.
+    expect(formatAnalysisTimeRange("toString")).toBe("toString");
+    expect(formatAnalysisTimeRange("valueOf")).toBe("valueOf");
+    expect(formatAnalysisTimeRange("constructor")).toBe("constructor");
+    expect(formatAnalysisTimeRange("hasOwnProperty")).toBe("hasOwnProperty");
   });
 });
 
@@ -94,12 +102,16 @@ describe("formatAnalysisTimeRangeNullable", () => {
   it("returns null for unrecognized values", () => {
     expect(formatAnalysisTimeRangeNullable("2d")).toBeNull();
     expect(formatAnalysisTimeRangeNullable("unknown")).toBeNull();
+    expect(formatAnalysisTimeRangeNullable("12h")).toBeNull();
+    expect(formatAnalysisTimeRangeNullable("24h")).toBeNull();
   });
 
-  it("returns formatted label for valid values", () => {
+  it("returns formatted label for valid task values", () => {
     expect(formatAnalysisTimeRangeNullable("1d")).toBe("最近 1 天");
     expect(formatAnalysisTimeRangeNullable("7d")).toBe("最近 7 天");
     expect(formatAnalysisTimeRangeNullable("30d")).toBe("最近 30 天");
+    expect(formatAnalysisTimeRangeNullable("48h")).toBe("最近 48 小時");
+    expect(formatAnalysisTimeRangeNullable("today")).toBe("今天");
     expect(formatAnalysisTimeRangeNullable("all")).toBe("不限時間");
   });
 });

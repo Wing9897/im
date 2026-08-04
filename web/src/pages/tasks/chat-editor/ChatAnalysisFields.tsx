@@ -4,21 +4,18 @@
 
 import { useTranslation } from "react-i18next";
 import { FieldLabel, FilterChip } from "../../../components/ui";
-import type { AnalysisTimeRange } from "../../../types";
+import {
+  TASK_ANALYSIS_TIME_RANGE_CHIP_ORDER,
+  TASK_ANALYSIS_TIME_RANGE_I18N_KEYS,
+  type TaskAnalysisTimeRange,
+} from "../../../domain/tasks/taskAnalysisTimeRange";
 
-/** Chip option values for the analysis time range field. */
-export const TIME_RANGE_VALUES = ["all", "30d", "7d", "1d"] as const;
-
-const TIME_RANGE_LABEL_KEYS: Record<(typeof TIME_RANGE_VALUES)[number], string> = {
-  all: "tasks.editor.timeAll",
-  "30d": "tasks.editor.time30d",
-  "7d": "tasks.editor.time7d",
-  "1d": "tasks.editor.time1d",
-};
+/** Chip option values for the analysis time range field (full task DB allowlist). */
+export const TIME_RANGE_VALUES = TASK_ANALYSIS_TIME_RANGE_CHIP_ORDER;
 
 interface ChatAnalysisFieldsProps {
-  analysisTimeRange: AnalysisTimeRange;
-  onAnalysisTimeRangeChange: (value: AnalysisTimeRange) => void;
+  analysisTimeRange: TaskAnalysisTimeRange;
+  onAnalysisTimeRangeChange: (value: TaskAnalysisTimeRange) => void;
 }
 
 export function ChatAnalysisFields({
@@ -36,7 +33,7 @@ export function ChatAnalysisFields({
         aria-labelledby="analysis-time-range-label"
       >
         {TIME_RANGE_VALUES.map((value) => {
-          const label = t(TIME_RANGE_LABEL_KEYS[value]);
+          const label = t(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]);
           return (
             <FilterChip
               key={value}

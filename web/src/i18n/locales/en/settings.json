@@ -68,11 +68,8 @@
     "lanAccessRestarting": "Restarting to apply bind address…",
     "debug": {
       "sectionTitle": "Debug & diagnostics",
-      "rulesVersionLabel": "Analysis rules version tag",
-      "rulesVersionPlaceholder": "v2",
-      "rulesVersionHelp": "Version string written into message-batch prompts (event / leaderboard system prompts), e.g. v2, so you can correlate prompt revisions. Does not change evidence style, scheduling, or analysis rules. Leave empty to omit the tag. Unused by web intel / project / recurring. Saves on blur or Enter.",
-      "traceVerboseLabel": "Server analysis trace",
-      "traceVerboseHelp": "When on, each message-batch analysis (event / leaderboard) writes an info line to Settings → Logs (task / batch / strategy / message count / estimated tokens) and to the server process log. Does not record full LLM request/response. Unused by web intel / project / recurring. Saves immediately on toggle; new lines appear only after an analysis run.",
+      "traceVerboseLabel": "Server analysis Trace",
+      "traceVerboseHelp": "When on, each message-batch analysis writes a trace to Settings → Logs (hidden by default — enable “Show analysis traces”). No full LLM bodies; unused by web intel / project / recurring. Saves immediately.",
       "saved": "Debug settings saved"
     }
   },
@@ -132,7 +129,7 @@
       },
       "daysLabel": "{category} retention days",
       "days": "days",
-      "helpAnalysis": "Includes Key Events and calendar (same Event data).",
+      "helpAnalysis": "Includes Intel events and time planning (the same event data).",
       "helpAppLogs": "Shorter by default; set to 0 to disable auto cleanup.",
       "helpUserEvents": "Longer by default; manual/assistant-created events.",
       "invalid": "Retention days must be 0 or a positive integer (0 = disable auto cleanup)",
@@ -267,13 +264,10 @@
       "toggle": "Press to toggle"
     },
     "sttOptions": {
-      "browser": "Browser (Web Speech)",
-      "whisper": "Local Whisper (coming soon)",
-      "doubao": "Doubao (coming soon)"
+      "browser": "Browser (Web Speech)"
     },
     "ttsOptions": {
-      "browser": "Browser (speechSynthesis)",
-      "doubao": "Doubao (coming soon)"
+      "browser": "Browser (speechSynthesis)"
     },
     "languageOptions": {
       "zhHK": "Cantonese / Hong Kong (zh-HK)",
@@ -387,7 +381,7 @@
   },
   "staff": {
     "title": "AI staff",
-    "intro": "Five AI staff: two front-line chats, three back-office (leaderboard / key events / project manager). Plus an Account manager who greets external systems (same team as the assistant; no chat with you).",
+    "intro": "Six AI staff: two front-line chats, four back-office (leaderboard analyst / intel task analyst / web intel scout / project manager). Plus an Account manager who greets external systems (same team as the assistant; no chat with you).",
     "capabilitiesLabel": "What they can do",
     "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
     "openAssistant": "Open assistant chat",
@@ -427,7 +421,7 @@
         "Answer questions about local intel and schedules in natural language",
         "Search collected messages",
         "List / create / update / delete user events (one-off calendar items)",
-        "Create / update / delete recurring schedules (schedule-clerk RRULE tasks)",
+        "Create / update / delete recurring schedules (recurring-task RRULE tasks)",
         "Optionally search the web when enabled in settings",
         "Works in the assistant popup and full assistant page; voice in/out optional"
       ]
@@ -436,7 +430,7 @@
       "summary": "Chats beside new/edit task forms to help fill settings (not an Agent).",
       "capabilities": [
         "Suggest task name and description from what you want to monitor",
-        "Suggest task type (leaderboard / key events / web intel / recurring / project) and prompt direction",
+        "Suggest task type (leaderboard task / intel task / web intel task / recurring task / project task) and prompt direction",
         "Help with time range, search query, and schedule-related fields",
         "Only configures tasks—does not analyze messages or call tools"
       ]
@@ -450,7 +444,7 @@
         "No chat UI; triggered by schedules or manual task runs"
       ]
     },
-    "eventIntel": {
+    "intel_event": {
       "summary": "Back-office: extracts trackable intel and schedule events (including time-inference templates).",
       "capabilities": [
         "Extract intel, meetings, activities, deadlines, and similar events",
@@ -459,16 +453,16 @@
         "No chat UI; triggered by schedules or manual task runs"
       ]
     },
-    "webIntel": {
-      "summary": "Back-office intel gatherer: scheduled web search into analysis events (same store as key events).",
+    "web_intel": {
+      "summary": "Back-office intel gatherer: Agent multi-round web search into analysis events (same store as intel tasks); optional source-message verify.",
       "capabilities": [
-        "Run a short search → JSON tick on the task schedule (default hourly)",
-        "Uses assistant web-search routing (native OpenAI/Gemini or DDG/Brave tools)",
-        "Task prompt describes how to extract events; search query decides what to search",
+        "Agent multi-round web.search on the task schedule (default hourly), then final event JSON",
+        "Optional channel bind = message-gate: wait for unanalyzed messages, inject them for verify / supplement",
+        "Task prompt steers what to gather; the Agent chooses search keywords itself",
         "No chat UI; results appear on intelligence / timeline"
       ]
     },
-    "projectManager": {
+    "project": {
       "summary": "Back-office closed-loop agent: hourly ticks reconcile a project's calendar from sources.",
       "capabilities": [
         "Read this project's one-off events and child recurring tasks",

@@ -24,6 +24,7 @@ function makeLog(overrides: Partial<AppLogEntry> = {}): AppLogEntry {
     time: "2026-01-01T00:00:00.000Z",
     level: "info",
     category: "system",
+    kind: "event",
     message: "Default log message",
     details: undefined,
     ...overrides,

@@ -151,8 +151,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "timeRange": {
                     "type": "string",
                     "description": (
-                        "Time window token aligned with server time_range_condition: "
-                        "today, 1d, 7d, 30d, …. Default when omitted: 7d. "
+                        "Time window token: today, 1d, 7d, 30d, …. Default when omitted: 7d. "
                         "Use all for no time filter (full library + limit)."
                     ),
                 },

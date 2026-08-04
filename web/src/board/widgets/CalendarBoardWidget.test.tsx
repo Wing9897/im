@@ -65,8 +65,8 @@ describe("CalendarBoardWidget recurring occurrences", () => {
     vi.setSystemTime(new Date(2026, 6, 22, 12, 0, 0, 0));
     window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "event-task", name: "情報任務", analysisMode: "event" }),
-      makeAnalysisTask({ id: "cal-task", name: "循環任務", analysisMode: "recurring" }),
+      makeAnalysisTask({ id: "event-task", name: "情報任務", analysisMode: "intel_event" }),
+      makeAnalysisTask({ id: "cal-task", name: "週期任務", analysisMode: "recurring" }),
     ]);
     mockFetchEvents.mockReset().mockResolvedValue({
       items: [
@@ -102,7 +102,7 @@ describe("CalendarBoardWidget recurring occurrences", () => {
       {
         id: "cal-task:20260722T100000Z",
         taskId: "cal-task",
-        taskName: "循環任務",
+        taskName: "週期任務",
         title: "RRULE 週會",
         startTime: localIso(2026, 6, 22, 10, 0),
         endTime: localIso(2026, 6, 22, 11, 0),
@@ -191,7 +191,7 @@ describe("CalendarBoardWidget recurring occurrences", () => {
           sourceMessageTime: null,
           analysisTimeRange: null,
           batchSourceChannelNames: [],
-          taskName: "循環任務",
+          taskName: "週期任務",
           createdAt: localIso(2026, 6, 22, 10, 0),
           updatedAt: localIso(2026, 6, 22, 10, 0),
         },

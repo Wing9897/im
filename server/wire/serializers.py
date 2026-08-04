@@ -351,6 +351,7 @@ def serialize_app_log(row: Mapping[str, Any]) -> dict[str, Any]:
         "time": row.get("time"),
         "level": row.get("level"),
         "category": row.get("category"),
+        "kind": row.get("kind"),
         "message": row.get("message"),
         "details": row.get("details"),
     }

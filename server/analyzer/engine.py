@@ -129,7 +129,7 @@ class AnalysisEngine:
 
     # ── task advisor (agent tool tasks.consult_advisor) ─────────────────
 
-    async def handle_chat_assistant(
+    async def consult_task_advisor(
         self,
         message: str,
         current_task: dict[str, Any] | None = None,

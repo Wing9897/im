@@ -14,11 +14,13 @@ SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent:
 
 Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats.ts`（待分析／排隊中／已分析）. Intelligence sort／display／page-by-page timeline／voice: [`ARCHITECTURE.md` Unified event analysis](./ARCHITECTURE.md#unified-event-analysis-pipeline); FE quirks below under [Intelligence](#intelligence--events-time-semantics).
 
+**Viewer** (`/viewer/*`) is a **secondary read-only projection** of live task／batch／status — not a second control plane. Prefer the main app for edits and ops.
+
 ## Prompt and analysis
 
-- Message blocks: `[id=...][time=...][sender] content`. `intelligence_rules_version` is a version marker in the system prompt; `analysis_strategy_mode` is evidence guidance (server default `balanced`).
+- Message blocks: `[id=...][time=...][sender] content`. `analysis_strategy_mode` is evidence guidance (server default `balanced`). Prompt revision correlation is via git / prompt files — not a `system_config` tag.
 - **Event mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
-- **Web intel:** tick uses `webSearchQuery` + `promptTemplate` (no local messages); empty → `skipped:` batch + SSE. Search routing shared with assistant (`WebSearchExecutionService`); tick cap **8** vs assistant tool **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `write_batch_failure_log` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
+- **Web intel:** tick uses `webSearchQuery` + `promptTemplate` (no local messages); empty → `skipped:` batch + SSE. Search routing shared with assistant (`WebSearchExecutionService`); tick cap **8** vs assistant tool **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `record_batch_failure` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
 - CJK-aware token heuristic; no `truncated_by_count` in batch metadata.
 
 ## Leaderboard
@@ -27,7 +29,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-11 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-14 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 ## Sources / accounts
 
@@ -81,7 +83,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
 | Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v11 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v11-explicit-reset) (wipe-only, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
+| Schema stamp v12 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v12-explicit-reset) (wipe-only, `app_logs.kind`, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
@@ -121,7 +123,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
-- Analysis batch failures → `app_logs` (category `analysis`) with error JSON in `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps)
+- Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `account.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
 - GitHub Actions: Ubuntu `quality` on PR／main; on **main** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI; `desktop_verify` only — vitest already in `quality`) → push tag + GitHub Release → GHCR.
 
 ## Security (outbound requests)

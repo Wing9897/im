@@ -15,7 +15,7 @@ export const SCAN_GRACE_MS = SCAN_INTERVAL_MS;
 /** Keep fired keys until this long after the event start. */
 export const FIRED_RETAIN_AFTER_START_MS = 2 * 24 * 60 * 60_000;
 
-/** Source kind for speak-text wording (default: analysis 關鍵事件). */
+/** Source kind for speak-text wording (default: analysis 情報事件). */
 export type TimedKeyEventKind = "event" | "recurring" | "user";
 
 /** Timed items used by the reminder scanner (analysis / calendar / user events). */

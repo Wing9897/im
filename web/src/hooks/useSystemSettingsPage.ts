@@ -31,7 +31,6 @@ const DIRECT_STRING_SETTINGS_KEYS: ReadonlySet<SettingsKey> = new Set([
   "llmGenerationTimeout",
   "maxBatchRetries",
   "maxConcurrentBatches",
-  "intelligenceRulesVersion",
   "analysisStrategyMode",
   "analysisTriggerThreshold",
 ] as SettingsKey[]);

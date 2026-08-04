@@ -68,7 +68,7 @@ function HookHarness({ resultRef }: { resultRef: React.MutableRefObject<HookResu
 }
 
 function makeTimelineTask(id: string, name: string) {
-  return makeAnalysisTask({ id, name, analysisMode: "event" });
+  return makeAnalysisTask({ id, name, analysisMode: "intel_event" });
 }
 
 describe("TimelinePage task selection (Req 3.1, 3.2, 3.3, 3.4)", () => {

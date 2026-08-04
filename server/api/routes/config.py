@@ -50,7 +50,6 @@ _SETTINGS_KEYS: dict[str, str] = {
     "llmGenerationTimeout": "llm_generation_timeout",
     "maxBatchRetries": "max_batch_retries",
     "maxConcurrentBatches": "max_concurrent_batches",
-    "intelligenceRulesVersion": "intelligence_rules_version",
     "analysisStrategyMode": "analysis_strategy_mode",
     "analysisTriggerThreshold": "analysis_trigger_threshold",
     "retentionMessagesDays": "retention_messages_days",

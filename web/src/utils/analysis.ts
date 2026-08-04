@@ -1,6 +1,10 @@
 /** Returns the task-type product name for an analysis mode (locale-aware). */
 import i18n from "../i18n";
 import { isAnalysisMode } from "../domain/tasks/analysisModeCapabilities";
+import {
+  isTaskAnalysisTimeRange,
+  TASK_ANALYSIS_TIME_RANGE_I18N_KEYS,
+} from "../domain/tasks/taskAnalysisTimeRange";
 import { taskEmployeeForAnalysisMode } from "../domain/tasks/taskEmployee";
 
 export function formatAnalysisMode(value: string | null | undefined): string {
@@ -11,19 +15,26 @@ export function formatAnalysisMode(value: string | null | undefined): string {
   return String(i18n.t("ui.unknownMode"));
 }
 
-/** Returns the label for an analysis time range value (e.g. "1d" → localized “last 1 day”). */
+/**
+ * Label for a **task** analysis time range (``analysis_time_range``).
+ *
+ * Unknown tokens (including monitor-only ``12h``／``24h``) are returned as-is —
+ * never mapped to “unlimited”.
+ */
 export function formatAnalysisTimeRange(value: string | null | undefined): string {
-  if (value === "1d") return String(i18n.t("tasks.editor.time1d"));
-  if (value === "7d") return String(i18n.t("tasks.editor.time7d"));
-  if (value === "30d") return String(i18n.t("tasks.editor.time30d"));
-  if (value === "all") return String(i18n.t("tasks.editor.timeAll"));
-  return String(i18n.t("tasks.editor.timeAll"));
+  if (value == null || value === "") {
+    return String(i18n.t("tasks.editor.timeAll"));
+  }
+  if (isTaskAnalysisTimeRange(value)) {
+    return String(i18n.t(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]));
+  }
+  return value;
 }
 
 /** Like `formatAnalysisTimeRange` but returns null for invalid or empty values. */
 export function formatAnalysisTimeRangeNullable(value: string | null): string | null {
   if (!value) return null;
-  if (!["1d", "7d", "30d", "all"].includes(value)) return null;
+  if (!isTaskAnalysisTimeRange(value)) return null;
   return formatAnalysisTimeRange(value);
 }
 

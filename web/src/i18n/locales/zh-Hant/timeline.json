@@ -44,8 +44,8 @@
   },
   "empty": {
     "noUserEvents": "目前沒有「一般」工作集事件。可用右上角「新增事件」，或請助手建立會議。",
-    "noTasks": "目前還沒有可顯示在時間線的任務。你可以先到任務設定新增「關鍵事件」或「循環任務」類型任務。",
-    "needData": "需要先有成功完成的分析批次、已設定的循環任務排程，或用戶／助手事件，時間線才會顯示。",
+    "noTasks": "目前還沒有可顯示在時間線的任務。你可以先到任務設定新增「情報任務」或「週期任務」。",
+    "needData": "需要先有成功完成的分析批次、已設定的週期任務排程，或用戶／助手事件，時間線才會顯示。",
     "noEventsDescription": "目前這個篩選／日期範圍沒有事件；仍可切換日期或改選「全部」「一般」查看。",
     "filteredTitle": "目前篩選條件沒有對應事件",
     "filteredDescription": "可清除篩選或切換其他任務 / 日期範圍，日曆框架仍會保留。"
@@ -124,7 +124,7 @@
   },
   "messages": {
     "saveFailed": "儲存失敗",
-    "recurringCreated": "已建立循環事件；月曆會依重複規則展開多次。",
+    "recurringCreated": "已建立週期任務；月曆會依重複規則展開多次。",
     "dismissFailed": "從時間規劃移除失敗",
     "restoreFailed": "還原到時間規劃失敗",
     "dismissConfirm": "將「{title}」從時間規劃移除？之後可以還原。",
@@ -144,11 +144,11 @@
     "save": "儲存",
     "closeAria": "關閉",
     "intro": "單次事件（無循環）。預設歸屬「一般」工作集。",
-    "introRecurring": "將建立帶 RRULE 的循環任務，展開後出現在時間規劃中。",
+    "introRecurring": "將建立帶 RRULE 的週期任務，展開後出現在時間規劃中。",
     "kindAria": "事件類型",
     "kind": {
       "oneOff": "一般事件",
-      "recurring": "循環事件"
+      "recurring": "週期任務"
     },
     "titleAria": "標題",
     "titlePlaceholder": "標題",

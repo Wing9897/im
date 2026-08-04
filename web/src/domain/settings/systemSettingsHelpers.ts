@@ -47,7 +47,6 @@ export function buildSettingsObject(
     llmGenerationTimeout: snapshot.llmGenerationTimeout,
     maxBatchRetries: snapshot.maxBatchRetries,
     maxConcurrentBatches: snapshot.maxConcurrentBatches,
-    intelligenceRulesVersion: snapshot.intelligenceRulesVersion,
     analysisStrategyMode: snapshot.analysisStrategyMode,
     analysisTriggerThreshold: snapshot.analysisTriggerThreshold,
     autoPauseOnRetriesExhausted: snapshot.autoPauseOnRetriesExhausted,

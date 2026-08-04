@@ -12,12 +12,15 @@ interface ChatChannelSelectorProps {
   channelIds: string[];
   channels: ChannelWithAccount[];
   onOpenChannelDialog: () => void;
+  /** When true, label shows optional (web_intel timed vs message-gate). */
+  optional?: boolean;
 }
 
 export function ChatChannelSelector({
   channelIds,
   channels,
   onOpenChannelDialog,
+  optional = false,
 }: ChatChannelSelectorProps) {
   const { t } = useTranslation("common");
   const selectedChannels = useMemo(
@@ -38,7 +41,9 @@ export function ChatChannelSelector({
   return (
     <div className="flex flex-col gap-sm">
       <div className="col-span-full flex w-full flex-col gap-xs">
-        <FieldLabel>{t("tasks.editor.channelsLabel")}</FieldLabel>
+        <FieldLabel>
+          {optional ? t("tasks.editor.channelsLabelOptional") : t("tasks.editor.channelsLabel")}
+        </FieldLabel>
         <FilterTrigger
           label={
             <span className="inline-flex items-center gap-1.5">

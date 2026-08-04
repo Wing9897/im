@@ -12,7 +12,7 @@ const { mockFetchEvents, runtimeState } = vi.hoisted(() => ({
       type: "started" | "completed" | "failed";
       payload: {
         taskId: string;
-        analysisMode: "event" | "single";
+        analysisMode: "intel_event" | "single";
       };
       receivedAt: number;
     } | null,
@@ -170,7 +170,7 @@ describe("IntelligencePage", () => {
       type: "completed",
       payload: {
         taskId: "task-1",
-        analysisMode: "event",
+        analysisMode: "intel_event",
       },
       receivedAt: 1,
     };
@@ -195,7 +195,7 @@ describe("IntelligencePage", () => {
           id: "intel-1",
           taskId: "task-1",
           batchId: "batch-1",
-          title: "關鍵事件 1",
+          title: "情報事件 1",
           body: "內容 1",
           sourceMessageId: "msg-1",
           sourcePlatform: "telegram",

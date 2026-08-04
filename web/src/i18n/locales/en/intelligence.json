@@ -1,16 +1,16 @@
 {
   "toolbar": {
-    "aria": "Key Events toolbar",
-    "taskSelectAria": "Key Events tasks",
-    "searchPlaceholder": "Search Key Events…",
-    "searchAria": "Search Key Events",
-    "refreshing": "Refreshing Key Events",
-    "sortAria": "Key Events sort order",
+    "aria": "Intel events toolbar",
+    "taskSelectAria": "Intel events tasks",
+    "searchPlaceholder": "Search intel events…",
+    "searchAria": "Search intel events",
+    "refreshing": "Refreshing intel events",
+    "sortAria": "Intel events sort order",
     "viewAria": "View mode"
   },
   "filter": {
-    "openAria": "Search Key Events",
-    "title": "Search Key Events",
+    "openAria": "Search intel events",
+    "title": "Search intel events",
     "closeAria": "Close search",
     "clear": "Clear",
     "clearAria": "Clear search",
@@ -78,7 +78,7 @@
     "ariaLabel": "Intelligence detail: {title}"
   },
   "toast": {
-    "itemNotFound": "Could not find the specified Key Event"
+    "itemNotFound": "Could not find the specified intel event"
   },
   "list": {
     "viewDetailAria": "View intelligence detail: {title}",
@@ -100,13 +100,13 @@
     "loading": "Loading more…",
     "scrollCached": "Scroll to show more",
     "scrollRemote": "Load more from server",
-    "done": "All Key Events loaded",
-    "aria": "Load more Key Events"
+    "done": "All intel events loaded",
+    "aria": "Load more intel events"
   },
   "empty": {
     "noTasksTitle": "No intelligence tasks yet",
-    "noTasksDescription": "Create at least one Key Events or Web Intel task. After analysis finishes, curated highlights will appear here.",
-    "noTasksHint": "If accounts and channels are ready, add a Key Events or Web Intel task under Tasks next.",
+    "noTasksDescription": "Create at least one Intel task or Web intel task. After analysis finishes, curated highlights will appear here.",
+    "noTasksHint": "If accounts and channels are ready, add an Intel task or Web intel task under Tasks next.",
     "filteredBothTitle": "No intelligence matches",
     "filteredBothDescription": "Your current filters do not match any results.",
     "filteredSearchTitle": "No intelligence matches your search",
@@ -118,7 +118,7 @@
     "filteredHint": "Clear filters to see whether there is no data, or it is just filtered out.",
     "noneTitle": "No intelligence yet",
     "noneDescription": "Data loaded, but there are no intelligence results to show.",
-    "noneHint": "Results appear after a successful Key Events message batch or Web Intel scheduled search."
+    "noneHint": "Results appear after a successful Intel task message batch or Web intel task scheduled search."
   },
   "cta": {
     "goToTasks": "Go to Tasks",

@@ -33,7 +33,7 @@ afterEach(() => {
 });
 
 describe("ChatEditorForm recurring-only contract", () => {
-  it.each(["leaderboard", "event"] as const)(
+  it.each(["leaderboard", "intel_event"] as const)(
     "shows recurrence controls/helper copy only in recurring mode, not %s mode",
     (analysisMode) => {
       const helperCopy = String(i18n.t("tasks.editor.rruleHint"));
@@ -68,7 +68,7 @@ describe("ChatEditorForm recurring-only contract", () => {
     },
   );
 
-  it("shows web_intel search query, required hints, and default schedule copy", async () => {
+  it("shows web_intel optional channels and timed-mode hint (no seed query)", async () => {
     await act(async () => {
       root.render(
         createElement(
@@ -81,6 +81,7 @@ describe("ChatEditorForm recurring-only contract", () => {
               scheduleType: "hourly",
               promptTemplate: "",
               webSearchQuery: "",
+              channelIds: [],
             },
             updateField: () => undefined,
             channels: [],
@@ -89,12 +90,43 @@ describe("ChatEditorForm recurring-only contract", () => {
         ),
       );
     });
-    expect(container.querySelector('[data-testid="task-web-search-query"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-web-search-query"]')).toBeNull();
     expect(container.querySelector('[data-testid="task-web-intel-schedule-hint"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="task-web-search-query-required"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-prompt-required"]')).not.toBeNull();
-    expect(container.textContent).toContain("無需綁定本地訊息頻道");
-    expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-web-intel-trigger-hint"]')).not.toBeNull();
+    expect(container.textContent).toContain("純定時");
+    expect(container.textContent).toContain("來源頻道（選填）");
+    expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-schedule-overrides"]')).toBeNull();
+  });
+
+  it("shows web_intel message-gate overrides when channels are bound", async () => {
+    await act(async () => {
+      root.render(
+        createElement(
+          I18nextProvider,
+          { i18n },
+          createElement(ChatEditorForm, {
+            formState: {
+              ...DEFAULT_FORM_STATE,
+              analysisMode: "web_intel",
+              scheduleType: "hourly",
+              promptTemplate: "Gather intel",
+              webSearchQuery: "",
+              channelIds: ["ch-1"],
+            },
+            updateField: () => undefined,
+            channels: [],
+            onOpenChannelDialog: () => undefined,
+          }),
+        ),
+      );
+    });
+    expect(container.querySelector('[data-testid="task-web-intel-trigger-hint"]')?.textContent).toContain(
+      "來源訊息門檻",
+    );
+    // Message-gate auto-expands Advanced so threshold overrides are reachable.
+    expect(container.querySelector('[data-testid="task-schedule-overrides"]')).not.toBeNull();
   });
 
   it("shows project wave interval after schedule type in project mode", async () => {

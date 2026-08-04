@@ -1,18 +1,15 @@
 /**
  * Task form for create/edit — L1 foundation + L2 employee + L3 skills.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
-import { CollapsePanel, FormGrid, SettingsRow, SurfaceCard, TextField } from "../../../components/ui";
+import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import { ChatCalendarFields } from "./ChatCalendarFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
-import {
-  analysisModeRequiresChannels,
-  analysisModeShowsWebSearchQuery,
-} from "../../../domain/tasks/analysisModeCapabilities";
+import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
 import { ScheduleInput } from "../ScheduleInput";
 import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
@@ -37,17 +34,13 @@ export function ChatEditorForm({
 }: ChatEditorFormProps) {
   const { t } = useTranslation("common");
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
-  const isRecurringMode = Boolean(modeMeta.isRecurringMode);
-  const hidePromptAndChannel = Boolean(modeMeta.hidesPromptAndChannel);
-  const showChannels = !hidePromptAndChannel && analysisModeRequiresChannels(formState.analysisMode);
-  const showWebSearchQuery = analysisModeShowsWebSearchQuery(formState.analysisMode);
-  const isProjectMode = formState.analysisMode === "project";
-  const showTimelineToggle =
-    formState.analysisMode === "event" ||
-    formState.analysisMode === "project" ||
-    formState.analysisMode === "web_intel";
-  const showAnalysisTimeRange = !hidePromptAndChannel && !showWebSearchQuery;
-  const [optionalOpen, setOptionalOpen] = useState(true);
+  const vis = getTaskModeFieldVisibility(formState.analysisMode, formState.channelIds);
+  // Keep advanced collapsed by default; open when web_intel message-gate turns on.
+  const webIntelGate = vis.isWebIntel && formState.channelIds.length > 0;
+  const [optionalOpen, setOptionalOpen] = useState(webIntelGate);
+  useEffect(() => {
+    if (webIntelGate) setOptionalOpen(true);
+  }, [webIntelGate]);
 
   const projectWaveIntervalSeconds = String(
     formState.projectWaveIntervalSeconds ?? DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
@@ -103,17 +96,16 @@ export function ChatEditorForm({
         role="region"
         data-testid="task-skills-section"
       >
-        <h2 className="mb-xs mt-0 text-xs font-semibold tracking-wide text-text-secondary">
+        <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
           {t("tasks.editor.skillsTitle")}
         </h2>
-        <p className={`mb-sm mt-0 ${formHelpClass}`}>{t("tasks.editor.skillsHint")}</p>
 
         <FormGrid className="gap-lg">
-          {isRecurringMode ? (
+          {vis.isRecurring ? (
             <div className="md:col-span-2">
               <ChatCalendarFields formState={formState} updateField={updateField} />
             </div>
-          ) : hidePromptAndChannel ? (
+          ) : !vis.promptFieldsVisible ? (
             <p className="m-0 text-caption text-text-muted md:col-span-2">
               {modeMeta.modeDescription}
             </p>
@@ -135,7 +127,7 @@ export function ChatEditorForm({
                       scheduleRrule={formState.scheduleRrule}
                       onScheduleTypeChange={(type) => updateField("scheduleType", type)}
                       onScheduleValueChange={(value) => updateField("scheduleValue", value)}
-                      showProjectWaveInterval={isProjectMode}
+                      showProjectWaveInterval={vis.isProject}
                       projectWaveIntervalSeconds={projectWaveIntervalSeconds}
                       onProjectWaveIntervalSecondsChange={(value) => {
                         const trimmed = value.trim();
@@ -169,7 +161,7 @@ export function ChatEditorForm({
                         updateField("projectWaveIntervalSeconds", Math.min(num, 600));
                       }}
                     />
-                    {showWebSearchQuery ? (
+                    {vis.isWebIntel ? (
                       <p
                         className={`m-0 ${formHelpClass}`}
                         data-testid="task-web-intel-schedule-hint"
@@ -179,60 +171,35 @@ export function ChatEditorForm({
                     ) : null}
                   </div>
                 }
-                webSearchQuerySlot={
-                  showWebSearchQuery ? (
-                    <div className="md:col-span-2">
-                      <SettingsRow
-                        label={`${t("tasks.modes.web_intel.searchQueryLabel")}${t("tasks.editor.requiredSuffix")}`}
-                        htmlFor="chat-web-search-query"
-                      >
-                        <TextField
-                          id="chat-web-search-query"
-                          type="text"
-                          required
-                          aria-required="true"
-                          placeholder={t("tasks.modes.web_intel.searchQueryPlaceholder")}
-                          value={formState.webSearchQuery}
-                          onChange={(e) => updateField("webSearchQuery", e.target.value)}
-                          data-testid="task-web-search-query"
-                        />
-                        <p className={`mt-xs mb-0 ${formHelpClass}`}>
-                          {t("tasks.modes.web_intel.searchQueryHint")}
-                        </p>
-                        {!formState.webSearchQuery.trim() ? (
-                          <p
-                            className={`mt-xs mb-0 ${formHelpClass} text-error`}
-                            data-testid="task-web-search-query-required"
-                          >
-                            {t("tasks.editor.saveNeeds.webSearchQuery")}
-                          </p>
-                        ) : null}
-                      </SettingsRow>
-                    </div>
-                  ) : null
-                }
-                promptRequired={showWebSearchQuery}
+                promptRequired={vis.promptRequired}
               />
 
-              {showChannels ? (
-                <div className="md:col-span-2">
+              {vis.channelFieldsVisible ? (
+                <div className="md:col-span-2 flex flex-col gap-xs">
                   <ChatChannelSelector
                     channelIds={formState.channelIds}
                     channels={channels}
                     onOpenChannelDialog={onOpenChannelDialog}
+                    optional={vis.channelsOptional}
                   />
+                  {vis.channelsOptional ? (
+                    <p
+                      className={`m-0 ${formHelpClass}`}
+                      data-testid="task-web-intel-trigger-hint"
+                    >
+                      {formState.channelIds.length > 0
+                        ? t("tasks.modes.web_intel.messageGateHint")
+                        : t("tasks.modes.web_intel.timedModeHint")}
+                    </p>
+                  ) : null}
                 </div>
-              ) : showWebSearchQuery ? (
-                <p className={`m-0 text-caption text-text-muted md:col-span-2`}>
-                  {t("tasks.modes.web_intel.noChannelsHint")}
-                </p>
               ) : null}
             </>
           )}
         </FormGrid>
       </SurfaceCard>
 
-      {!hidePromptAndChannel && (
+      {vis.promptFieldsVisible && (
         <div role="region" aria-label={t("tasks.editor.optionalAria")}>
           <CollapsePanel
             title={t("tasks.editor.optionalTitle")}
@@ -240,7 +207,7 @@ export function ChatEditorForm({
             onToggle={() => setOptionalOpen((v) => !v)}
           >
             <FormGrid className="gap-lg">
-              {showAnalysisTimeRange ? (
+              {vis.analysisTimeRangeVisible ? (
                 <ChatAnalysisFields
                   analysisTimeRange={formState.analysisTimeRange}
                   onAnalysisTimeRangeChange={(v) => updateField("analysisTimeRange", v)}
@@ -249,7 +216,7 @@ export function ChatEditorForm({
                 <div className="hidden md:block" aria-hidden="true" />
               )}
 
-              {showTimelineToggle ? (
+              {vis.timelineToggleVisible ? (
                 <label className="flex items-start gap-sm">
                   <input
                     type="checkbox"

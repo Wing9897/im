@@ -25,7 +25,7 @@ async def _seed_overlap_fixture(
     *,
     task_id: str,
     batch_id: str,
-    analysis_mode: str = "event",
+    analysis_mode: str = "intel_event",
 ) -> list[str]:
     now = utc_now_iso()
     await db.execute(
@@ -97,7 +97,7 @@ async def test_fetch_overlap_context_returns_empty_without_completed_batch(db: D
     task_id = new_id()
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, 'event', "
+        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, 'intel_event', "
         "'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
         (task_id, "No Batch", "prompt", now, now),
     )

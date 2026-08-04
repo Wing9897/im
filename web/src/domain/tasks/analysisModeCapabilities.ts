@@ -8,7 +8,7 @@
 
 export const ANALYSIS_MODE_ORDER = [
   "leaderboard",
-  "event",
+  "intel_event",
   "web_intel",
   "recurring",
   "project",
@@ -38,7 +38,7 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     timelineOwning: false,
     pipeline: "message_batch",
   },
-  event: {
+  intel_event: {
     ai: true,
     schedulable: true,
     messageBatch: true,
@@ -95,9 +95,25 @@ export function analysisModeRequiresChannels(mode: AnalysisMode): boolean {
   return caps.messageBatch || caps.pipeline === "project_tick";
 }
 
-/** Modes that collect web search queries in L3. */
-export function analysisModeShowsWebSearchQuery(mode: AnalysisMode): boolean {
+/**
+ * web_intel may optionally bind channels (message-gate + source verify).
+ * Do not fold this into ``messageBatch`` — tick stays on ``web_intel_tick``.
+ */
+export function analysisModeShowsOptionalChannels(mode: AnalysisMode): boolean {
   return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "web_intel_tick";
+}
+
+/** web_intel pipeline (Agent multi-round; no dedicated search-query field). */
+export function analysisModeIsWebIntel(mode: AnalysisMode): boolean {
+  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "web_intel_tick";
+}
+
+/** web_intel with bound channels → message-gate threshold / batch overrides. */
+export function webIntelMessageGateActive(
+  mode: AnalysisMode,
+  channelIds: readonly string[],
+): boolean {
+  return analysisModeShowsOptionalChannels(mode) && channelIds.length > 0;
 }
 
 export function isTimelineAssignableAnalysisMode(mode: string | null | undefined): boolean {
@@ -117,11 +133,11 @@ export function analysisModeSupportsTaskPresets(mode: AnalysisMode): boolean {
  * Modes that persist findings into ``analysis_events`` (Intelligence feed /
  * Timeline analysis layer / Board event widgets).
  */
-export const ANALYSIS_EVENTS_MODES = ["event", "web_intel"] as const;
+export const ANALYSIS_EVENTS_MODES = ["intel_event", "web_intel"] as const;
 export type AnalysisEventsMode = (typeof ANALYSIS_EVENTS_MODES)[number];
 
 export function isAnalysisEventsMode(
   mode: string | null | undefined,
 ): mode is AnalysisEventsMode {
-  return mode === "event" || mode === "web_intel";
+  return mode === "intel_event" || mode === "web_intel";
 }

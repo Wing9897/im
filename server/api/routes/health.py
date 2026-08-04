@@ -51,3 +51,4 @@ async def health_v1(request: Request) -> dict[str, Any]:
     if secrets_error:
         payload["secretsError"] = str(secrets_error)
     return payload
+

@@ -91,12 +91,13 @@ class RateLimitMiddleware:
         return tuple(keys)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or not str(scope.get("path") or "").startswith("/api/v1/"):
+        path = str(scope.get("path") or "")
+        if scope["type"] != "http" or not path.startswith("/api/v1/"):
             await self._app(scope, receive, send)
             return
 
         now = time.monotonic()
-        limit = self._limit_for(str(scope["path"]))
+        limit = self._limit_for(path)
         cutoff = now - _RATE_WINDOW_SECONDS
         if now - self._last_cleanup >= _RATE_WINDOW_SECONDS:
             stale = [key for key, bucket in self._requests.items() if not bucket or bucket[-1] <= cutoff]

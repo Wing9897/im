@@ -10,7 +10,7 @@
   },
   "tasks": {
     "pageLabel": "任務設定",
-    "pageDescription": "建立您的第一個任務，以監控頻道、分析情報、設定循環任務或日曆任務。",
+    "pageDescription": "建立您的第一個任務，以監控頻道、分析情報、設定週期任務或日曆任務。",
     "emptyTitle": "尚無任務",
     "createLabel": "新增任務",
     "editLabel": "編輯任務",
@@ -20,7 +20,7 @@
     "systemSectionSubtitle": "這些不是可編輯的分析任務，僅幫助理解資料來源與背景機制。",
     "card": {
       "viewDetailAria": "查看任務詳情：{name}",
-      "recurring": "週期性活動",
+      "recurring": "週期任務",
       "channelsRange": "{count} 個頻道 · 範圍 {range}",
       "unanalyzed": "待分析",
       "queued": "排隊中",
@@ -38,11 +38,10 @@
       "openProjectAria": "開啟專案：{name}",
       "project": "專案",
       "projectProgressHint": "進度以訊息游標推進（非標記統計）",
-      "recurringProgressHint": "循環日程（無訊息分析統計）",
+      "recurringProgressHint": "週期任務（無訊息分析統計）",
       "calendarTaskProgressHint": "日曆任務桶（顯示關聯時間事件）",
-      "webIntel": "網頁搜尋 · {query}",
-      "webIntelQueryEmpty": "（尚未設定查詢）",
-      "webIntelProgressHint": "排程觸發網頁搜尋後寫入情報事件（非本地訊息批次統計）",
+      "web_intel": "網路情報任務 · Agent 多輪搜尋",
+      "web_intelProgressHint": "Agent 多輪網頁搜尋寫入情報事件（可選來源訊息核實）",
       "retryCount": "重試 {count}",
       "analysisPausedHint": "分析已自動或手動暫停"
     },
@@ -50,7 +49,7 @@
       "timeRange": "時間範圍：{range}",
       "location": "地點：{location}",
       "rrule": "重複規則：{rrule}",
-      "calendarNoChannels": "（循環任務模式，不綁定頻道）",
+      "calendarNoChannels": "（週期任務模式，不綁定頻道）",
       "channelCount": "共 {count} 個頻道",
       "channelsMore": "…及其他 {count} 個頻道",
       "noChannels": "尚未綁定頻道",
@@ -67,9 +66,9 @@
       "noDescription": "尚無描述",
       "schedule": "排程：{schedule}",
       "sourcesTitle": "綁定來源",
-      "childrenTitle": "子循環任務",
-      "childrenEmptyTitle": "尚無子循環任務",
-      "childrenEmptyDescription": "專案管理員會在每次 tick 視需要建立子循環任務。",
+      "childrenTitle": "子週期任務",
+      "childrenEmptyTitle": "尚無子週期任務",
+      "childrenEmptyDescription": "專案管理員會在每次 tick 視需要建立子週期任務。",
       "eventsTitle": "所屬單次事件",
       "eventsEmptyTitle": "尚無所屬事件",
       "eventsEmptyDescription": "專案建立的單次時程事件會顯示在這裡。",
@@ -124,19 +123,23 @@
       "scheduleHydrateRetry": "重試",
       "timeRangeLabel": "分析時間範圍",
       "timeAll": "不限時間",
+      "timeToday": "今天",
+      "time1h": "最近 1 小時",
+      "time6h": "最近 6 小時",
+      "time48h": "最近 48 小時",
       "time30d": "最近 30 天",
       "time7d": "最近 7 天",
       "time1d": "最近 1 天",
       "includeInTimelineLabel": "顯示於時間規劃",
       "includeInTimelineAria": "顯示於時間規劃",
-      "includeInTimelineHint": "關閉後，此任務的分析事件仍會出現在關鍵事件與地圖，但不會進入日曆／甘特／時間軸。",
-      "rruleHint": "RRULE 僅用於循環任務重複事件，不會觸發 AI 分析。",
+      "includeInTimelineHint": "關閉後，此任務的分析事件仍會出現在情報事件與地圖，但不會進入日曆／甘特／時間軸。",
+      "rruleHint": "RRULE 僅用於週期任務重複事件，不會觸發 AI 分析。",
       "scheduleOverridesHint": "門檻／批上限／證據風格可覆寫；留空跟隨「AI 設定 → 分析調度」。批次重疊與專案波次間隔僅本任務有效。",
       "followGlobal": "跟隨全域",
       "followGlobalPlaceholder": "空＝跟隨全域",
       "batchOverlapLabel": "批次重疊",
       "batchOverlapAria": "批次重疊訊息數量",
-      "batchOverlapHelp": "下一批帶入上批末尾訊息以接上下文；0＝不重疊。僅關鍵事件任務使用（排行榜改注入 Top 10）。",
+      "batchOverlapHelp": "下一批帶入上批末尾訊息以接上下文；0＝不重疊。情報任務與「網路情報任務＋來源頻道」可用；排行榜改注入 Top 10。",
       "triggerThresholdHelp": "留空則跟隨全域觸發門檻。",
       "batchLimitHelp": "留空則跟隨全域批次上限。",
       "evidenceStyleHelp": "留空則跟隨全域證據風格。",
@@ -159,7 +162,6 @@
         "saving": "正在儲存…",
         "name": "請填寫任務名稱",
         "prompt": "請填寫任務 Prompt",
-        "webSearchQuery": "請填寫搜尋查詢／關鍵詞",
         "channels": "請至少選擇一個來源頻道",
         "rrule": "請設定重複規則",
         "eventStart": "請設定開始時間，或改為整天活動"
@@ -167,68 +169,62 @@
       "pickChannels": "點擊選擇頻道",
       "channelsSelected": "已選 {selected} / {total} 個頻道",
       "channelsLabel": "分析來源頻道",
+      "channelsLabelOptional": "來源頻道（選填）",
       "channelsAria": "選擇分析來源頻道",
       "channelsPreview": "已選頻道預覽",
       "channelsMore": "還有 {count} 個頻道…"
     },
     "employees": {
-      "scheduleClerk": {
-        "name": "循環日程",
-        "blurb": "RRULE 週期日程，無 AI 處理"
+      "recurring": {
+        "name": "週期任務",
+        "blurb": "RRULE 週期任務，無 AI 處理"
       },
-      "eventIntel": {
-        "name": "關鍵事件",
-        "blurb": "從訊息抽取關鍵事件與行程"
+      "intel_event": {
+        "name": "情報任務",
+        "blurb": "從訊息抽取情報事件與行程"
       },
-      "webIntel": {
-        "name": "網路情報",
-        "blurb": "排程網頁搜尋並抽成情報事件"
+      "web_intel": {
+        "name": "網路情報任務",
+        "blurb": "Agent 多輪網頁搜尋抽成情報事件；可選來源核實"
       },
       "leaderboard": {
-        "name": "排行榜",
+        "name": "排行榜任務",
         "blurb": "比較與追蹤熱門訊息排名"
       },
-      "projectManager": {
-        "name": "專案",
+      "project": {
+        "name": "專案任務",
         "blurb": "閉環 reconcile 專案日程與子任務"
       }
     },
     "modes": {
       "leaderboard": {
-        "modeOptionLabel": "排行榜 - 比較排名",
         "modeDescription": "比較與追蹤熱門訊息排名",
         "promptLabel": "任務 Task Prompt（告訴 AI 要比較什麼）",
         "promptPlaceholder": "例：新產品發布、政策變化、合作進展、風險信號",
         "promptHint": "💡 例如：只在內容明確提及官方公告、產品更新、合作進展或風險信號時命中"
       },
-      "event": {
-        "modeOptionLabel": "關鍵事件 - 情報 / 行程",
-        "modeDescription": "從訊息抽取關鍵事件與行程",
+      "intel_event": {
+        "modeDescription": "從訊息抽取情報事件與行程",
         "promptLabel": "任務 Task Prompt（告訴 AI 要抽取哪些事件）",
         "promptPlaceholder": "例：提取重要公告、會議、截止日；有明確時間填 start_time，有地點填 location",
         "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
       },
       "web_intel": {
-        "modeOptionLabel": "網路情報 - 網頁搜尋",
-        "modeDescription": "依排程搜尋網頁，再抽成情報事件",
-        "promptLabel": "任務 Prompt（如何把搜尋結果抽成事件）",
+        "modeDescription": "Agent 多輪網頁搜尋抽成情報事件；可選來源訊息核實",
+        "promptLabel": "任務 Prompt（要搜集哪些情報、如何寫成事件）",
         "promptPlaceholder": "例：只保留官方公告與監管動態；有明確時間填 start_time，有地點填 location；忽略廣告與無關論壇閒聊",
-        "promptHint": "💡 Prompt 描述「從搜尋結果抽出哪些事件、如何寫 title／body」；搜尋查詢欄位決定要搜什麼",
-        "searchQueryLabel": "搜尋查詢／關鍵詞",
-        "searchQueryPlaceholder": "例：OpenAI API 定價 更新 OR 監管",
-        "searchQueryHint": "每次排程觸發會用此查詢做網頁搜尋；可與上方 Prompt 搭配",
-        "scheduleDefaultHint": "預設建議「每小時」觸發；切換到此類型時若仍是每 10 秒會自動改為每小時。",
-        "noChannelsHint": "此類型以網頁搜尋為輸入，無需綁定本地訊息頻道；搜尋供應商與助手設定共用（不受助手聯網總開關影響）"
+        "promptHint": "Agent 依 Prompt 決定關鍵字並多輪搜尋，最後輸出事件。請寫清要保留什麼、如何寫 title／body。",
+        "scheduleDefaultHint": "建議「每小時」；切換至此類型時若仍是每 10 秒會改為每小時。",
+        "timedModeHint": "未綁頻道＝純定時到點搜尋。綁定來源頻道後改為「有新訊息達門檻才跑」，並注入訊息供核實。",
+        "messageGateHint": "已綁頻道＝來源訊息門檻：達門檻才跑；訊息注入 Agent，供搜尋核實／補充。進階設定可覆寫門檻。"
       },
       "recurring": {
-        "modeOptionLabel": "循環任務（無處理）",
-        "modeDescription": "RRULE 週期日程，無 AI 處理",
+        "modeDescription": "RRULE 週期任務，無 AI 處理",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
       "project": {
-        "modeOptionLabel": "專案 - 閉環日程",
         "modeDescription": "閉環 reconcile 專案日程與子任務",
         "promptLabel": "專案目標／規則",
         "promptPlaceholder": "例如：依 Telegram 更新站會與 demo 日期；偏好上午時段；已取消的系列請軟刪",
@@ -293,7 +289,7 @@
     },
     "calendarFields": {
       "section": "活動詳情",
-      "tooltip": "設定循環任務活動的標題、時間、地點與描述",
+      "tooltip": "設定週期任務活動的標題、時間、地點與描述",
       "title": "活動標題",
       "titlePlaceholder": "例：週會、生日提醒",
       "allDay": "整天活動",
@@ -387,8 +383,8 @@
       },
       "key-insights": {
         "name": "關鍵情報摘要",
-        "description": "提取具有情報價值的關鍵事件與機會",
-        "promptTemplate": "從訊息中提取具有情報價值的關鍵事件與線索。優先關注：重要事件、商業機會、風險預警、趨勢變化。有明確時間或地點時一併填入；無法確定則只保留標題與內容。"
+        "description": "提取具有情報價值的情報事件與機會",
+        "promptTemplate": "從訊息中提取具有情報價值的情報事件與線索。優先關注：重要事件、商業機會、風險預警、趨勢變化。有明確時間或地點時一併填入；無法確定則只保留標題與內容。"
       },
       "schedule-events": {
         "name": "行程事件提取",
@@ -498,17 +494,17 @@
       "project-work-shift": {
         "name": "工作輪更表",
         "description": "依來源訊息建立與維護工作輪更／更份表，含更份變更、對調與取消",
-        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子循環或單次事件就更新，對不上才新建；2) 固定輪更用 recurring 子任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
+        "promptTemplate": "你是工作輪更表管理員。目標：從來源訊息建立並持續維護工作輪更／更份表。優先：各人更份（早更／中更／夜更等）、更份對調、加班、休假、取消更份。規則：1) 能對上現有子週期任務或單次事件就更新，對不上才新建；2) 固定輪更用週期任務，臨時更動用單次事件；3) 來源說取消／休假就停用或刪除對應項；4) 寫清人名、更份、日期／星期與時間；5) 無新訊息時也要對帳並修正衝突。完成後用簡短 JSON message 總結。"
       },
       "web-intel-pricing-watch": {
         "name": "定價監管情報",
-        "description": "定期搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
-        "promptTemplate": "從搜尋結果抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
+        "description": "Agent 多輪搜尋主要 LLM／雲端 API 定價與方案變更，抽成可追蹤情報事件",
+        "promptTemplate": "以多輪網頁搜尋核實後，抽出官方或可信來源的定價／方案／額度變更。優先：價目表更新、免費額度調整、區域定價、棄用時程。每則事件填標題、摘要、來源線索；有明確生效日再填 start_time。忽略行銷空話與無關論壇臆測。"
       },
       "web-intel-geopolitics-hotspots": {
         "name": "地緣熱點掃描",
-        "description": "定期搜尋東亞等地緣／安全熱點動態動向，抽成情報事件",
-        "promptTemplate": "從搜尋結果抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
+        "description": "Agent 多輪搜尋東亞等地緣／安全熱點，抽成情報事件；可選綁定頻道做來源核實",
+        "promptTemplate": "以多輪網頁搜尋核實後，抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
       }
     }
   },
@@ -545,9 +541,9 @@
     "assistant": "助手",
     "taskEditor": "任務顧問",
     "leaderboard": "排行榜分析員",
-    "eventIntel": "關鍵事件分析員",
-    "webIntel": "情報蒐集",
-    "projectManager": "專案管理助手"
+    "intel_event": "情報任務分析員",
+    "web_intel": "網路情報蒐集員",
+    "project": "專案管理助手"
   },
   "ui": {
     "listSep": "、",
@@ -609,9 +605,9 @@
     },
     "unnamedTask": "未命名任務",
     "monitorWall": "監控牆",
-    "keyEventsMap": "關鍵事件 · 地圖",
-    "keyEventsList": "關鍵事件 · 清單",
-    "keyEventsCard": "關鍵事件 · 卡片",
+    "keyEventsMap": "情報事件 · 地圖",
+    "keyEventsList": "情報事件 · 清單",
+    "keyEventsCard": "情報事件 · 卡片",
     "actionsVoice": "通知 · 語音提醒",
     "actionsHistory": "通知 · 觸發紀錄",
     "sourcesRss": "來源 · RSS",
@@ -631,7 +627,9 @@
     "newAction": "新增通知",
     "newActionHint": "開啟通知頁",
     "openViewer": "開啟 Viewer 視窗",
-    "openViewerHint": "新分頁",
+    "openViewerHint": "唯讀投影 · 新分頁",
+    "openOpsBoard": "Ops Board（畫布）",
+    "openOpsBoardHint": "切換到畫布／Ops Board",
     "shortcutHelp": "快捷鍵說明",
     "quickAssistant": "助手",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -663,7 +661,7 @@
     },
     "events": {
       "title": "情報事件",
-      "description": "最新關鍵事件與網路情報"
+      "description": "最新情報事件"
     },
     "feed": {
       "title": "實時監控",
@@ -734,7 +732,7 @@
     },
     "analysisBatch": {
       "title": "分析批次",
-      "shortDescription": "排程器對排行榜／關鍵事件等標記型任務分批呼叫 LLM，寫入分析結果。專案管理任務不走此路徑（由上方可編輯的專案任務排程驅動）。"
+      "shortDescription": "排程器對排行榜／情報事件等標記型任務分批呼叫 LLM，寫入分析結果。專案任務不走此路徑（由上方可編輯的專案任務排程驅動）。"
     },
     "outboundNotify": {
       "title": "外發通知",
@@ -742,7 +740,7 @@
     },
     "voiceReminder": {
       "title": "語音提醒",
-      "shortDescription": "本機掃描即將發生的關鍵事件、循環任務（RRULE）展開，以及「一般」工作集事件，並以瀏覽器語音播報。",
+      "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及「一般」工作集事件，並以瀏覽器語音播報。",
       "linkLabel": "前往語音提醒"
     },
     "retention": {
@@ -787,8 +785,8 @@
     "speakLead240": "約四小時",
     "speakLead1440": "約一天",
     "speakLeadMinutes": "約{minutes}分鐘",
-    "speakKindEvent": "關鍵事件",
-    "speakKindRecurring": "循環任務",
+    "speakKindEvent": "情報事件",
+    "speakKindRecurring": "週期任務",
     "speakKindUser": "提醒",
     "speakPreview": "測試進行中",
     "voiceTriggerReason": "語音提醒 · {lead} · 「{title}」",
@@ -1074,6 +1072,7 @@
   },
   "topBar": {
     "openViewer": "開啟新 viewer",
+    "openViewerHint": "唯讀狀態投影",
     "collector": {
       "starting": "收集器啟動中…",
       "running": "收集器運行中",
@@ -1092,8 +1091,11 @@
     },
     "unnamedTask": "未命名任務",
     "analyzingLabel": "分析中 · {task}",
+    "analyzingLabelConcurrent": "分析中 · {task} · ×{count}",
     "analyzingTitle": "AI 分析中: {task} ({batch})",
+    "analyzingTitleConcurrent": "AI 並行分析 {count} 批 · 目前: {task} ({batch})",
     "analyzingTitlePaused": "AI 分析中: {task} ({batch})，已暫停新批次",
+    "analyzingTitlePausedConcurrent": "AI 並行分析 {count} 批 · 目前: {task} ({batch})，已暫停新批次",
     "aiUnavailable": "AI 無法連線",
     "aiUnavailableTitle": "收集器運行中，但 AI 引擎無法連線",
     "aiUnavailableTitleCollectorDown": "收集器已停止，且 AI 引擎無法連線",
@@ -1130,9 +1132,9 @@
   "monitorMode": {
     "aria": "監控模式",
     "pages": "分頁",
-    "canvas": "畫布",
+    "canvas": "畫布／Ops Board",
     "pagesTitle": "分頁監控",
-    "canvasTitle": "沉浸畫布監控"
+    "canvasTitle": "沉浸 Ops Board 畫布"
   },
   "shortcuts": {
     "title": "快捷鍵說明",
@@ -1146,7 +1148,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 11／SemVer 0.1.0-beta.12；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 12／SemVer 0.1.0-beta.13；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"
@@ -1217,6 +1219,7 @@
   "viewer": {
     "navAria": "Viewer 導航",
     "brand": "IM Viewer",
+    "brandHint": "唯讀投影（次要狀態視圖）",
     "navTasks": "任務",
     "navResults": "結果",
     "navStatus": "狀態",
@@ -1233,7 +1236,7 @@
     "taskId": "任務 ID：{id}",
     "lastAnalysis": "最後分析：",
     "neverRun": "尚未執行",
-    "schedule": "排程：{cron}",
+    "schedule": "排程：{schedule}",
     "resultsLoadError": "無法載入結果摘要，請檢查連線狀態",
     "resultsRefreshing": "正在更新結果摘要",
     "totalTasks": "總任務數",
@@ -1308,7 +1311,7 @@
     "displayNameLabel": "顯示名稱",
     "displayNameHelp": "留空則使用預設名稱。",
     "backgroundLabel": "背景簡介",
-    "backgroundHelp": "可描述你的角色或偏好，供未來 AI 參考。",
+    "backgroundHelp": "可描述你的角色或偏好，助手會據此理解上下文。",
     "backgroundPlaceholder": "例如：值班監控、關注東南亞航線…",
     "uploadAvatar": "上傳",
     "uploadAvatarAria": "上傳個人頭像",

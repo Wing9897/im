@@ -6,9 +6,9 @@ export type AiStaffId =
   | "assistant"
   | "taskEditor"
   | "leaderboard"
-  | "eventIntel"
-  | "webIntel"
-  | "projectManager";
+  | "intel_event"
+  | "web_intel"
+  | "project";
 
 /** Agent = multi-turn tool loop; oneshot = dedicated single-purpose LLM pass / form chat. */
 export type AiStaffKind = "agent" | "oneshot";
@@ -43,19 +43,19 @@ export const AI_STAFF_ROSTER: readonly AiStaffDefinition[] = [
     accent: "oklch(0.68 0.14 290)",
   },
   {
-    id: "eventIntel",
+    id: "intel_event",
     kind: "oneshot",
     surface: "backoffice",
     accent: "oklch(0.68 0.14 25)",
   },
   {
-    id: "webIntel",
-    kind: "oneshot",
+    id: "web_intel",
+    kind: "agent",
     surface: "backoffice",
     accent: "oklch(0.70 0.12 200)",
   },
   {
-    id: "projectManager",
+    id: "project",
     kind: "agent",
     surface: "backoffice",
     accent: "oklch(0.70 0.11 155)",
@@ -70,9 +70,6 @@ export function getAiStaff(id: AiStaffId): AiStaffDefinition {
 
 /** Analysis task mode → back-office staff (calendar has no LLM staff). */
 export function staffIdForAnalysisMode(mode: AnalysisMode): AiStaffId | null {
-  if (mode === "leaderboard") return "leaderboard";
-  if (mode === "event") return "eventIntel";
-  if (mode === "web_intel") return "webIntel";
-  if (mode === "project") return "projectManager";
-  return null;
+  if (mode === "recurring") return null;
+  return mode;
 }

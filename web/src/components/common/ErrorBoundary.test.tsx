@@ -5,14 +5,19 @@ import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { flushMicrotasks } from "../../test/async-helpers";
 
-// Mock appendAppLog
-vi.mock("../../api/logs", () => ({
-  appendAppLog: vi.fn(() => Promise.resolve({ id: "mock-id" })),
-}));
+vi.mock("../../logging/appLogClient", async () => {
+  const actual = await vi.importActual<typeof import("../../logging/appLogClient")>(
+    "../../logging/appLogClient",
+  );
+  return {
+    ...actual,
+    recordAppLog: vi.fn(() => Promise.resolve({ id: "mock-id" })),
+  };
+});
 
-import { appendAppLog } from "../../api/logs";
+import { APP_LOG_KIND, recordAppLog } from "../../logging/appLogClient";
 
-const mockedAppendAppLog = vi.mocked(appendAppLog);
+const mockedRecordAppLog = vi.mocked(recordAppLog);
 
 // A component that throws an error on render
 function ThrowingChild({ message }: { message: string }): React.ReactNode {
@@ -38,7 +43,7 @@ describe("ErrorBoundary", () => {
   beforeEach(async () => {
     await ensureZhHantLocale();
     consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    mockedAppendAppLog.mockClear();
+    mockedRecordAppLog.mockClear();
   });
 
   it("renders children normally when no error occurs", () => {
@@ -89,15 +94,21 @@ describe("ErrorBoundary", () => {
     expect(stackPre!.textContent!.length).toBeGreaterThan(0);
   });
 
-  it("calls appendAppLog with correct params when error is caught", () => {
+  it("calls recordAppLog with frontend.react kind when error is caught", () => {
     renderBoundary(createElement(ThrowingChild, { message: "Log this error" }));
 
-    expect(mockedAppendAppLog).toHaveBeenCalledTimes(1);
-    expect(mockedAppendAppLog).toHaveBeenCalledWith({
+    expect(mockedRecordAppLog).toHaveBeenCalledTimes(1);
+    expect(mockedRecordAppLog).toHaveBeenCalledWith({
       level: "error",
-      category: "system",
+      category: "frontend",
+      kind: APP_LOG_KIND.FRONTEND_REACT,
       message: "未捕獲的元件錯誤: Log this error",
-      details: expect.any(String),
+      messageKey: "logs:templates.frontendReact",
+      source: "frontend.ErrorBoundary",
+      payload: {
+        message: "Log this error",
+        componentStack: expect.any(String),
+      },
     });
   });
 
@@ -111,9 +122,9 @@ describe("ErrorBoundary", () => {
     );
   });
 
-  it("calls console.warn when appendAppLog rejects", async () => {
+  it("calls console.warn when recordAppLog rejects", async () => {
     const logError = new Error("log write failed");
-    mockedAppendAppLog.mockRejectedValueOnce(logError);
+    mockedRecordAppLog.mockRejectedValueOnce(logError);
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     renderBoundary(createElement(ThrowingChild, { message: "Warn test" }));
@@ -124,7 +135,7 @@ describe("ErrorBoundary", () => {
     });
 
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      "[ErrorBoundary] appendAppLog failed:",
+      "[ErrorBoundary] recordAppLog failed:",
       logError,
     );
     consoleWarnSpy.mockRestore();

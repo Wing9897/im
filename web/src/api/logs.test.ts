@@ -51,6 +51,22 @@ describe("logs API", () => {
       });
     });
 
+    it("passes kind filter params when provided", async () => {
+      const page = { entries: [], nextCursor: null };
+      vi.mocked(apiClient.get).mockResolvedValue(page);
+
+      await queryAppLogsPage({
+        cursor: null,
+        limit: 20,
+        excludeKind: "analysis.trace",
+      });
+
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/logs", {
+        limit: "20",
+        excludeKind: "analysis.trace",
+      });
+    });
+
     it("propagates errors", async () => {
       vi.mocked(apiClient.get).mockRejectedValue(new Error("Database error"));
 

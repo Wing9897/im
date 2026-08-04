@@ -100,6 +100,7 @@ Serializer = Callable[[], dict[str, Any]]
                     "time": "2026-07-28T09:00:00Z",
                     "level": "info",
                     "category": "system",
+                    "kind": "system",
                     "message": "Ready",
                     "details": None,
                 }
@@ -165,7 +166,7 @@ Serializer = Callable[[], dict[str, Any]]
                     "name": "Contract task",
                     "description": None,
                     "prompt_template": "Analyze",
-                    "analysis_mode": "event",
+                    "analysis_mode": "intel_event",
                     "analysis_time_range": "7d",
                     "version": 3,
                     "is_active": 1,

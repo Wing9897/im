@@ -232,7 +232,7 @@ describe("useRuntimeMonitoring", () => {
       fireSseEvent("analysis_completed", {
         taskId: "task-1",
         batchId: "batch-1",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         findingsCount: 2,
         hasFindings: true,
       });
@@ -283,7 +283,7 @@ describe("useRuntimeMonitoring", () => {
       fireSseEvent("analysis_completed", {
         taskId: "task-1",
         batchId: "batch-1",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         findingsCount: 2,
         hasFindings: true,
       });

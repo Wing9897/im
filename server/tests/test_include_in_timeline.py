@@ -9,10 +9,10 @@ from server.tests import seed
 
 def test_resolve_include_in_timeline_modes() -> None:
     assert resolve_include_in_timeline(effective_mode="recurring", supplied=False) == 1
-    assert resolve_include_in_timeline(effective_mode="event", supplied=False) == 0
-    assert resolve_include_in_timeline(effective_mode="event", supplied=True) == 1
-    assert resolve_include_in_timeline(effective_mode="event", supplied=None, existing=0) == 0
-    assert resolve_include_in_timeline(effective_mode="event", supplied=None) == 1
+    assert resolve_include_in_timeline(effective_mode="intel_event", supplied=False) == 0
+    assert resolve_include_in_timeline(effective_mode="intel_event", supplied=True) == 1
+    assert resolve_include_in_timeline(effective_mode="intel_event", supplied=None, existing=0) == 0
+    assert resolve_include_in_timeline(effective_mode="intel_event", supplied=None) == 1
 
 
 async def test_include_in_timeline_false_excluded_from_calendar_still_on_events(app, client) -> None:

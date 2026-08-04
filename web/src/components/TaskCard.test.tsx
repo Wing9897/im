@@ -17,7 +17,7 @@ function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     description: null,
     promptTemplate: "test prompt",
     webSearchQuery: "",
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "7d",
     version: 1,
     isActive: true,
@@ -125,27 +125,27 @@ describe("TaskCard", () => {
   it("shows recurring task-type badge without avatar for recurring mode tasks", () => {
     renderCard({ task: createMockTask({ analysisMode: "recurring" }) });
 
-    expect(container.textContent).toContain("循環日程");
+    expect(container.textContent).toContain("週期任務");
     expect(container.querySelector('[data-testid="task-type-icon-recurring"]')).toBeNull();
-    expect(container.querySelector('[data-testid="task-employee-avatar-scheduleClerk"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-employee-avatar-recurring"]')).toBeNull();
     expect(container.querySelector('[data-testid^="ai-staff-avatar-"]')).toBeNull();
   });
 
   it("does not show recurring badge for non-recurring mode tasks", () => {
-    renderCard({ task: createMockTask({ analysisMode: "event" }) });
+    renderCard({ task: createMockTask({ analysisMode: "intel_event" }) });
 
     const allText = container.textContent ?? "";
-    expect(allText).not.toContain("循環日程");
+    expect(allText).not.toContain("週期任務");
   });
 
   it("shows the employee badge for every mode", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
-    expect(container.textContent).toContain("排行榜");
+    expect(container.textContent).toContain("排行榜任務");
   });
 
   it("shows the matching AI staff avatar for analysis modes", () => {
-    renderCard({ task: createMockTask({ analysisMode: "event" }) });
-    expect(container.querySelector('[data-testid="ai-staff-avatar-eventIntel"]')).not.toBeNull();
+    renderCard({ task: createMockTask({ analysisMode: "intel_event" }) });
+    expect(container.querySelector('[data-testid="ai-staff-avatar-intel_event"]')).not.toBeNull();
   });
 
   it("shows leaderboard staff avatar for leaderboard tasks", () => {
@@ -153,7 +153,7 @@ describe("TaskCard", () => {
     expect(container.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
   });
 
-  it("shows web_intel avatar and search meta without message-batch stats", () => {
+  it("shows web_intel avatar and card meta without message-batch stats", () => {
     renderCard({
       task: createMockTask({
         analysisMode: "web_intel",
@@ -163,10 +163,11 @@ describe("TaskCard", () => {
       stats: createMockStats({ unanalyzedCount: 9, analyzedCount: 3 }),
     });
 
-    expect(container.querySelector('[data-testid="ai-staff-avatar-webIntel"]')).not.toBeNull();
-    expect(container.textContent).toContain("網路情報");
-    expect(container.textContent).toContain("OpenAI pricing");
-    expect(container.textContent).toContain("排程觸發網頁搜尋");
+    expect(container.querySelector('[data-testid="ai-staff-avatar-web_intel"]')).not.toBeNull();
+    expect(container.textContent).toContain("網路情報任務");
+    // webSearchQuery is editor/seed metadata only — TaskCard does not surface it.
+    expect(container.textContent).not.toContain("OpenAI pricing");
+    expect(container.textContent).toContain("Agent 多輪網頁搜尋");
     expect(container.textContent).not.toContain("待分析");
     expect(container.textContent).not.toContain("個頻道");
   });
@@ -276,7 +277,7 @@ describe("TaskCard", () => {
       }),
     });
     expect(container.querySelector('[data-testid="task-card-schedule-hint-task-1"]')).not.toBeNull();
-    expect(container.textContent).toContain("循環日程");
+    expect(container.textContent).toContain("週期任務");
     expect(container.textContent).not.toContain("FREQ=DAILY");
     expect(container.textContent).not.toContain("待分析");
 

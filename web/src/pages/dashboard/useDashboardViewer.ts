@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteTask, toggleTaskActive } from "../../api/tasks";
 import { mapActiveAnalysesToTasks } from "../../components/analysis/analysisStatusModel";
 import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
+import { useMonitorMode } from "../../context/MonitorModeContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
 import { TASKS_SEARCH_STORAGE_KEY } from "../../domain/tasks/systemTaskCatalog";
@@ -28,6 +29,9 @@ import { selectTopLevelTasks } from "../tasks/project/projectDetailModel";
 export function useDashboardViewer() {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { monitorMode } = useMonitorMode();
+  // Dual keep-mount (App shell): pages stay mounted under canvas — gate SSE refresh.
+  const pageActive = monitorMode === "pages";
   const { tasks, tasksLoading, taskLoadError, refreshTasks } = useTaskCatalog();
   const { activeAnalyses, queueStatus, analysisPaused } = useAnalysisStatus();
 
@@ -38,9 +42,10 @@ export function useDashboardViewer() {
   });
 
   const refreshAll = useCallback(() => {
+    if (!pageActive) return;
     void refreshTasks();
     notifyAnalysisEvent();
-  }, [notifyAnalysisEvent, refreshTasks]);
+  }, [pageActive, notifyAnalysisEvent, refreshTasks]);
 
   useRefreshOnAnalysisEvent(refreshAll, {
     // Started events already update live "執行中" via AnalysisStatusContext;
@@ -48,6 +53,8 @@ export function useDashboardViewer() {
     includeStarted: false,
     includeCompleted: true,
     includeFailed: true,
+    // `[]` = match nothing while canvas is visible (same pattern as Timeline).
+    taskIds: pageActive ? null : [],
   });
 
   const activeAnalysesByTaskId = useMemo(

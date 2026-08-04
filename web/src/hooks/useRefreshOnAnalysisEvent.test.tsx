@@ -153,6 +153,26 @@ describe("useRefreshOnAnalysisEvent", () => {
     cleanupHarness(root, container);
   });
 
+  it("does not re-fire the same event when onRefresh identity changes", async () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { container, root } = renderHarness(<Harness onRefresh={first} />);
+
+    runtimeState.lastAnalysisEvent = {
+      ...completedEvent,
+      payload: { ...completedEvent.payload, taskId: "task-1", batchId: "batch-1" },
+      receivedAt: 42,
+    };
+    await rerenderHarness(root, <Harness onRefresh={first} />);
+    expect(first).toHaveBeenCalledTimes(1);
+
+    await rerenderHarness(root, <Harness onRefresh={second} />);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+
+    cleanupHarness(root, container);
+  });
+
   it("honors includeStarted / includeFailed when opted in", async () => {
     const onRefresh = vi.fn();
     const options = {
@@ -277,29 +297,29 @@ describe("shouldRefreshForEvent", () => {
   it("filters completed events by analysisMode when specified", () => {
     const options: UseRefreshOnAnalysisEventOptions = {
       includeCompleted: true,
-      analysisMode: "event",
+      analysisMode: "intel_event",
       taskId: null,
     };
     expect(shouldRefreshForEvent(completedEvent, options)).toBe(false);
 
     const matching = {
       ...completedEvent,
-      payload: { ...completedEvent.payload, analysisMode: "event" as const },
+      payload: { ...completedEvent.payload, analysisMode: "intel_event" as const },
     };
     expect(shouldRefreshForEvent(matching, options)).toBe(true);
   });
 
-  it("accepts analysisMode as any-of list (event + web_intel)", () => {
+  it("accepts analysisMode as any-of list (intel_event + web_intel)", () => {
     const options: UseRefreshOnAnalysisEventOptions = {
       includeCompleted: true,
-      analysisMode: ["event", "web_intel"],
+      analysisMode: ["intel_event", "web_intel"],
       taskId: null,
     };
     expect(shouldRefreshForEvent(completedEvent, options)).toBe(false);
 
     const eventMode = {
       ...completedEvent,
-      payload: { ...completedEvent.payload, analysisMode: "event" as const },
+      payload: { ...completedEvent.payload, analysisMode: "intel_event" as const },
     };
     const webIntelMode = {
       ...completedEvent,
@@ -334,7 +354,8 @@ describe("useRefreshOnAnalysisEvent — preservation", () => {
     } as unknown as PromiseRejectionEvent);
 
     expect(logEntry.level).toBe("error");
-    expect(logEntry.category).toBe("system");
+    expect(logEntry.category).toBe("frontend");
+    expect(logEntry.kind).toBe("frontend.rejection");
     expect(logEntry.message).toBe("未處理的非同步錯誤");
   });
 });

@@ -11,7 +11,9 @@
     "refreshingAria": "重新載入中",
     "refreshTitle": "重新載入",
     "clearAria": "清空所有日誌記錄",
-    "clearTitle": "清空"
+    "clearTitle": "清空",
+    "showAnalysisTrace": "顯示分析追蹤",
+    "showAnalysisTraceTitle": "在列表中包含詳細的 analysis.trace 事件"
   },
   "level": {
     "all": "全部層級",
@@ -31,6 +33,7 @@
   "summary": {
     "status": "處理狀態",
     "analyzing": "分析中: {task}",
+    "analyzingConcurrent": "分析中: {task} · ×{count}",
     "unnamedTask": "未命名任務",
     "idle": "無進行中分析",
     "totalEvents": "總事件數",
@@ -51,7 +54,21 @@
   },
   "templates": {
     "batchExhausted": "分析批次重試用盡（{maxRetries} 次），待恢復分析後再試：{taskName}（{shortBatch}）— {summary}",
-    "batchRetrying": "分析批次將重試（{currentRetry}/{maxRetries}）：{taskName}（{shortBatch}）— {summary}"
+    "batchRetrying": "分析批次將重試（{currentRetry}/{maxRetries}）：{taskName}（{shortBatch}）— {summary}",
+    "analysisTrace": "分析追蹤：{summary}",
+    "schedulerPaused": "分析排程已暫停",
+    "schedulerResumed": "分析排程已恢復",
+    "accountError": "帳號錯誤（{platform}）：{accountName} — {summary}",
+    "retentionCleanup": "保留清理已刪除 {deletedTotal} 筆",
+    "runtimeAiConnected": "AI 引擎可用",
+    "runtimeAiUnavailable": "AI 引擎不可用",
+    "runtimeAiUnknown": "AI 引擎狀態未知",
+    "runtimeAiCheckFailed": "AI 引擎狀態檢查失敗",
+    "runtimeCollectorReadFailed": "讀取收集器狀態失敗",
+    "frontendWindowError": "前端視窗錯誤",
+    "frontendUnhandledRejection": "未處理的 Promise 拒絕",
+    "frontendReact": "React 渲染錯誤",
+    "frontendCritical": "前端嚴重錯誤"
   },
   "section": {
     "loadingTitle": "正在載入系統日誌",
@@ -84,6 +101,7 @@
   "detail": {
     "messageLabel": "事件訊息",
     "detailsLabel": "詳細內容",
+    "payloadLabel": "負載",
     "close": "關閉",
     "ariaLabel": "日誌詳情：{message}"
   },

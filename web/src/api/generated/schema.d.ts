@@ -2218,6 +2218,8 @@ export interface components {
             level: string;
             /** Category */
             category: string;
+            /** Kind */
+            kind: string;
             /** Message */
             message: string;
             /** Details */
@@ -3232,10 +3234,22 @@ export interface components {
             level: string;
             /** Category */
             category: string;
+            /** Kind */
+            kind: string;
             /** Message */
-            message: string;
-            /** Details */
-            details?: string | null;
+            message?: string | null;
+            /** Messagekey */
+            messageKey?: string | null;
+            /** Messageparams */
+            messageParams?: {
+                [key: string]: unknown;
+            } | null;
+            /** Source */
+            source?: string | null;
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            } | null;
         };
         /** LoginBody */
         LoginBody: {
@@ -3623,8 +3637,6 @@ export interface components {
             maxBatchRetries: string;
             /** Maxconcurrentbatches */
             maxConcurrentBatches: string;
-            /** Intelligencerulesversion */
-            intelligenceRulesVersion: string;
             /** Analysisstrategymode */
             analysisStrategyMode: string;
             /** Analysistriggerthreshold */
@@ -3734,7 +3746,7 @@ export interface components {
             /** Websearchquery */
             webSearchQuery?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "web_intel" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "web_intel" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3789,7 +3801,7 @@ export interface components {
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "event" | "web_intel" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "web_intel" | "recurring" | "project") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3821,7 +3833,7 @@ export interface components {
              * Analysismode
              * @enum {string}
              */
-            analysisMode: "leaderboard" | "event" | "web_intel" | "recurring" | "project";
+            analysisMode: "leaderboard" | "intel_event" | "web_intel" | "recurring" | "project";
             /** Analysistimerange */
             analysisTimeRange: string;
             /** Version */
@@ -8048,6 +8060,8 @@ export interface operations {
                 cursor_time?: string | null;
                 cursor_id?: string | null;
                 limit?: number;
+                kind?: string | null;
+                excludeKind?: string | null;
             };
             header?: never;
             path?: never;

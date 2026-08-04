@@ -1,16 +1,16 @@
 {
   "toolbar": {
-    "aria": "關鍵事件工具列",
-    "taskSelectAria": "關鍵事件任務",
-    "searchPlaceholder": "搜尋關鍵事件…",
-    "searchAria": "搜尋關鍵事件",
-    "refreshing": "正在更新關鍵事件",
-    "sortAria": "關鍵事件排序方式",
+    "aria": "情報事件工具列",
+    "taskSelectAria": "情報事件任務",
+    "searchPlaceholder": "搜尋情報事件…",
+    "searchAria": "搜尋情報事件",
+    "refreshing": "正在更新情報事件",
+    "sortAria": "情報事件排序方式",
     "viewAria": "檢視模式"
   },
   "filter": {
-    "openAria": "搜尋關鍵事件",
-    "title": "搜尋關鍵事件",
+    "openAria": "搜尋情報事件",
+    "title": "搜尋情報事件",
     "closeAria": "關閉搜尋",
     "clear": "清除",
     "clearAria": "清除搜尋條件",
@@ -78,7 +78,7 @@
     "ariaLabel": "情報詳情：{title}"
   },
   "toast": {
-    "itemNotFound": "找不到指定的關鍵事件"
+    "itemNotFound": "找不到指定的情報事件"
   },
   "list": {
     "viewDetailAria": "查看情報詳情：{title}",
@@ -100,13 +100,13 @@
     "loading": "載入更多…",
     "scrollCached": "向下捲動以顯示更多",
     "scrollRemote": "向伺服器載入更多資料",
-    "done": "已載入全部關鍵事件",
-    "aria": "載入更多關鍵事件"
+    "done": "已載入全部情報事件",
+    "aria": "載入更多情報事件"
   },
   "empty": {
     "noTasksTitle": "尚未建立情報任務",
-    "noTasksDescription": "先建立至少一個「關鍵事件」或「網路情報」任務，分析完成後，這裡才會開始出現整理好的重點內容。",
-    "noTasksHint": "如果你已完成帳號與頻道設定，下一步通常是到任務設定新增「關鍵事件」或「網路情報」類型任務。",
+    "noTasksDescription": "先建立至少一個「情報任務」或「網路情報任務」，分析完成後，這裡才會開始出現整理好的重點內容。",
+    "noTasksHint": "如果你已完成帳號與頻道設定，下一步通常是到任務設定新增「情報任務」或「網路情報任務」類型任務。",
     "filteredBothTitle": "找不到符合條件的情報",
     "filteredBothDescription": "目前的篩選條件沒有對應到任何結果。",
     "filteredSearchTitle": "找不到符合搜尋條件的情報",
@@ -118,7 +118,7 @@
     "filteredHint": "清除條件後可以快速確認，是資料真的沒有，還是只是被篩選藏起來。",
     "noneTitle": "目前還沒有情報",
     "noneDescription": "資料已載入，但還沒有任何情報結果可顯示。",
-    "noneHint": "情報來自成功完成的「關鍵事件」訊息分析，或「網路情報」排程網頁搜尋。"
+    "noneHint": "情報來自成功完成的「情報任務」訊息分析，或「網路情報任務」排程網頁搜尋。"
   },
   "cta": {
     "goToTasks": "前往任務設定",

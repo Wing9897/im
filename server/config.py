@@ -35,7 +35,6 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "llm_generation_timeout": "120",
     "max_batch_retries": "3",
     "max_concurrent_batches": "2",
-    "intelligence_rules_version": "v2",
     "analysis_strategy_mode": "balanced",
     "analysis_trigger_threshold": "50",
     "localhost_auth_exempt": "true",
@@ -79,7 +78,7 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "user_display_name": "",
     # JPEG/PNG data URL (capped on write); empty → default user icon.
     "user_avatar": "",
-    # Free-text background / bio for future AI context; empty = unset.
+    # Free-text user background / bio injected into agent system prompts; empty = unset.
     "user_background": "",
     # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }

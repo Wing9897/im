@@ -3,9 +3,20 @@ import { describe, expect, it, vi } from "vitest";
 import {
   mergeLogs,
   toActiveAnalysisState,
+  toAppLogEntry,
   MAX_LOG_ENTRIES,
   type AppLogEntry,
 } from "./appRuntimeShared";
+
+function log(partial: Partial<AppLogEntry> & Pick<AppLogEntry, "id" | "message">): AppLogEntry {
+  return {
+    time: "2026-04-15T03:10:00.000Z",
+    level: "info",
+    category: "analysis",
+    kind: "event",
+    ...partial,
+  };
+}
 
 describe("appRuntimeShared", () => {
   it("preserves startedAt when updating the same active batch", () => {
@@ -43,29 +54,26 @@ describe("appRuntimeShared", () => {
   it("deduplicates logs by id and keeps newest entries first", () => {
     const merged = mergeLogs(
       [
-        {
+        log({
           id: "1",
           time: "2026-04-15T03:10:00.000Z",
-          level: "info",
-          category: "analysis",
           message: "old",
-        },
+        }),
       ],
       [
-        {
+        log({
           id: "1",
           time: "2026-04-15T03:11:00.000Z",
           level: "success",
-          category: "analysis",
           message: "updated",
-        },
-        {
+        }),
+        log({
           id: "2",
           time: "2026-04-15T03:12:00.000Z",
           level: "warning",
           category: "collector",
           message: "newest",
-        },
+        }),
       ],
     );
 
@@ -76,64 +84,99 @@ describe("appRuntimeShared", () => {
   it("deduplicates near-identical log entries from local and persisted sources", () => {
     const merged = mergeLogs(
       [
-        {
+        log({
           id: "local-1",
           time: "2026-04-15T03:10:00.000Z",
           level: "success",
           category: "collector",
           message: "收集器已運行",
-        },
+        }),
       ],
       [
-        {
+        log({
           id: "db-1",
           time: "2026-04-15T03:10:02.000Z",
           level: "success",
           category: "collector",
           message: "收集器已運行",
-        },
+        }),
       ],
     );
 
     expect(merged).toHaveLength(1);
     expect(merged[0].id).toBe("db-1");
   });
+
+  it("maps frontend category and defaults missing kind to event", () => {
+    const entry = toAppLogEntry({
+      id: "fe-1",
+      time: "2026-04-15T03:10:00.000Z",
+      level: "error",
+      category: "frontend",
+      message: "boom",
+      details: null,
+    });
+    expect(entry.category).toBe("frontend");
+    expect(entry.kind).toBe("event");
+  });
+
+  it("preserves kind from the wire payload", () => {
+    const entry = toAppLogEntry({
+      id: "fe-2",
+      time: "2026-04-15T03:10:00.000Z",
+      level: "error",
+      category: "frontend",
+      kind: "frontend.critical",
+      message: "boom",
+      details: null,
+    });
+    expect(entry.kind).toBe("frontend.critical");
+  });
+
+  it("buildAiHealthStatusLog includes messageKey for re-translate", async () => {
+    const { buildAiHealthStatusLog } = await import("./appRuntimeShared");
+    const entry = buildAiHealthStatusLog("available", {
+      status: "available",
+      reason: null,
+      provider: "ollama",
+    });
+    expect(entry.kind).toBe("runtime.ai_status");
+    expect(entry.messageKey).toBe("logs:templates.runtimeAiConnected");
+  });
 });
 
 
 describe("mergeLogs invariants", () => {
   const existing: AppLogEntry[] = [
-    {
+    log({
       id: "entry-0",
       time: new Date(Date.UTC(2026, 0, 1)).toISOString(),
-      level: "info",
-      category: "analysis",
       message: "msg-0-abc",
-    },
-    {
+    }),
+    log({
       id: "entry-1",
       time: new Date(Date.UTC(2026, 0, 1) + 10_000).toISOString(),
       level: "success",
       category: "collector",
       message: "msg-1-def",
-    },
+    }),
   ];
 
   const incoming: AppLogEntry[] = [
-    {
+    log({
       id: "entry-1",
       time: new Date(Date.UTC(2026, 0, 1) + 20_000).toISOString(),
       level: "warning",
       category: "collector",
       message: "msg-1-updated",
-    },
-    {
+    }),
+    log({
       id: "entry-2",
       time: new Date(Date.UTC(2026, 0, 1) + 30_000).toISOString(),
       level: "error",
       category: "system",
       message: "msg-2-ghi",
-    },
+    }),
   ];
 
   it("(a) no duplicate IDs in merged result", () => {

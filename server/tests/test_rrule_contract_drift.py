@@ -95,11 +95,11 @@ _CALENDAR_ONLY_REQUIREMENTS = {
     ),
     "web/src/pages/tasks/chat-editor/ChatCalendarFields.tsx": (r"tasks\.editor\.rruleHint",),
     "web/src/i18n/locales/zh-Hant/common.json": (
-        r"RRULE 僅用於循環任務重複事件",
+        r"RRULE 僅用於週期任務重複事件",
         r"不會觸發 AI 分析",
     ),
     "README.md": (
-        r"循環任務",
+        r"週期任務",
         r"RRULE 僅於查詢時展開",
         r"不會觸發 AI 分析",
     ),

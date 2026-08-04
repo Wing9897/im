@@ -225,7 +225,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       makeAnalysisTask({
         id: "memberOfA",
         name: "A member",
-        analysisMode: "event",
+        analysisMode: "intel_event",
         worksetId: "ws-A",
       }),
     ]);
@@ -333,7 +333,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("does not merge calendar occurrences when an event-mode task is selected", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "intel_event" }),
       makeAnalysisTask({ id: "cal-1", name: "Weekly Standup", analysisMode: "recurring" }),
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
@@ -344,7 +344,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("merges tagged user events when an event-mode task is selected", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "intel_event" }),
     ]);
     mockFetchTimelineEvents.mockResolvedValue([
       {
@@ -468,9 +468,9 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });
 
-  it("includes event, web_intel, recurring, and project modes in timelineTasks", async () => {
+  it("includes intel_event, web_intel, recurring, and project modes in timelineTasks", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "intel_event" }),
       makeAnalysisTask({ id: "web-1", name: "Web Intel", analysisMode: "web_intel" }),
       makeAnalysisTask({ id: "cal-1", name: "Calendar Task", analysisMode: "recurring" }),
       makeAnalysisTask({ id: "proj-1", name: "Project Alpha", analysisMode: "project" }),
@@ -483,7 +483,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("wires SSE refresh to event + web_intel analysis modes", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "event" }),
+      makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "intel_event" }),
       makeAnalysisTask({ id: "web-1", name: "Web Intel", analysisMode: "web_intel" }),
     ]);
     await renderHook(null);
@@ -492,7 +492,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
       taskIds?: unknown;
     };
     expect(options.analysisMode).toEqual(ANALYSIS_EVENTS_MODES);
-    expect(options.analysisMode).toEqual(["event", "web_intel"]);
+    expect(options.analysisMode).toEqual(["intel_event", "web_intel"]);
     expect(options.taskIds).toBeNull();
   });
 

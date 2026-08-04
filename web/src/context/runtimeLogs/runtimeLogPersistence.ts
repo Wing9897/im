@@ -1,4 +1,8 @@
 import { queryAppLogsPage } from "../../api/logs";
+import {
+  ANALYSIS_TRACE_KIND,
+  readShowAnalysisTracePref,
+} from "../../domain/logs/analysisTraceFilter";
 import i18n from "../../i18n";
 import type { AppLogCursorPayload, AppLogPagePayload } from "../../types";
 import { withRetry } from "../../utils/retry";
@@ -67,7 +71,16 @@ export function readCachedStoredLogs(): AppLogEntry[] {
       window.localStorage.removeItem(LOG_CACHE_STORAGE_KEY);
       return [];
     }
-    return parsed.filter(isLogEntry).slice(0, MAX_CACHED_LOG_ENTRIES);
+    return parsed
+      .filter(isLogEntry)
+      .map((entry) => ({
+        ...entry,
+        kind:
+          typeof entry.kind === "string" && entry.kind.trim()
+            ? entry.kind
+            : "event",
+      }))
+      .slice(0, MAX_CACHED_LOG_ENTRIES);
   } catch {
     window.localStorage.removeItem(LOG_CACHE_STORAGE_KEY);
     return [];
@@ -104,12 +117,17 @@ export function toLogCursor(
 export async function loadStoredLogPageWithRetry(
   cursor: AppLogCursorPayload | null,
 ): Promise<AppLogPagePayload> {
+  // Prefer server-side exclusion; Logs UI keeps a client filter as safety.
+  const excludeKind = readShowAnalysisTracePref()
+    ? undefined
+    : ANALYSIS_TRACE_KIND;
   return withRetry(
     () =>
       withTimeout(
         queryAppLogsPage({
           cursor,
           limit: LOG_PAGE_SIZE,
+          excludeKind,
         }),
         LOG_LOAD_TIMEOUT_MS,
         String(i18n.t("logs:section.loadTimeout")),

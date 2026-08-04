@@ -134,11 +134,12 @@ async def test_event_batch_and_failure_retry(db):
     assert failed_payload["retrying"] is True
 
     log_row = await db.fetch_one(
-        "SELECT level, category, message, details FROM app_logs WHERE category = 'analysis' ORDER BY time DESC LIMIT 1"
+        "SELECT level, category, kind, message, details FROM app_logs WHERE category = 'analysis' ORDER BY time DESC LIMIT 1"
     )
     assert log_row is not None
     assert log_row["level"] == "warning"
-    assert "將重試" in log_row["message"]
+    assert log_row["kind"] == "batch.failure"
+    assert "will retry" in log_row["message"]
     assert seed.TASK_EVENT in log_row["details"]
 
     pending = await db.fetch_one(

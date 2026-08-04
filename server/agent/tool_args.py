@@ -73,7 +73,13 @@ def as_optional_str(value: Any) -> str | None:
 
 
 def arg(args: dict[str, Any], *names: str) -> Any:
-    """First present key among ``names`` (camelCase / snake_case aliases)."""
+    """First present key among ``names`` (camelCase / snake_case / legacy aliases).
+
+    Keep all tool-argument spelling aliases here (or at the call site via this
+    helper). Do not re-implement key fallbacks inside individual ``tools_*``
+    handlers, and do not duplicate alias lists in OpenAI schema descriptions —
+    schemas expose the canonical camelCase keys only.
+    """
     for name in names:
         if name in args:
             return args[name]

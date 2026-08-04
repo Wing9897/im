@@ -223,6 +223,21 @@ def test_build_system_prompt_appends_english_output_directive() -> None:
     assert "Traditional Chinese" not in prompt
 
 
+def test_build_system_prompt_injects_user_background_when_set() -> None:
+    from datetime import datetime, timezone
+
+    now = datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc)
+    with_bg = build_system_prompt(now=now, user_background="  Ops lead, SE Asia routes  ")
+    assert "（用戶背景：Ops lead, SE Asia routes）" in with_bg
+
+    empty = build_system_prompt(now=now, user_background="")
+    whitespace = build_system_prompt(now=now, user_background="   ")
+    omitted = build_system_prompt(now=now)
+    assert "用戶背景" not in empty
+    assert "用戶背景" not in whitespace
+    assert "用戶背景" not in omitted
+
+
 async def test_agent_chat_uses_request_locale_for_system_prompt(app) -> None:
     clear_session_clocks()
     db = app.state.db

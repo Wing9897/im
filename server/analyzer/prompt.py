@@ -103,7 +103,6 @@ def build_analysis_prompt(
     leaderboard_context: Sequence[Mapping[str, Any]] | None = None,
     max_tokens: int,
     max_total_chars: int | None = None,
-    intelligence_rules_version: str | None = None,
     strategy_mode: str | None = None,
     ui_locale: str | None = None,
     now: datetime | None = None,
@@ -155,8 +154,6 @@ def build_analysis_prompt(
     system_prompt += current_time_prompt_block(now, authority_note=ANALYSIS_CLOCK_NOTE)
     if strategy_mode:
         system_prompt += STRATEGY_INSTRUCTIONS.get(strategy_mode, "")
-    if intelligence_rules_version:
-        system_prompt += f"\n\n[Analysis rules version: {intelligence_rules_version}]\n"
     if analysis_mode == LEADERBOARD_MODE:
         system_prompt += build_leaderboard_context_block(leaderboard_context)
     system_prompt += build_json_instruction(analysis_mode)

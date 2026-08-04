@@ -5313,6 +5313,38 @@
               "default": 50,
               "title": "Limit"
             }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "excludeKind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Excludekind"
+            }
           }
         ],
         "responses": {
@@ -7010,6 +7042,10 @@
             "type": "string",
             "title": "Category"
           },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
           "message": {
             "type": "string",
             "title": "Message"
@@ -7032,6 +7068,7 @@
           "time",
           "level",
           "category",
+          "kind",
           "message",
           "details"
         ],
@@ -10169,11 +10206,11 @@
             "type": "string",
             "title": "Category"
           },
-          "message": {
+          "kind": {
             "type": "string",
-            "title": "Message"
+            "title": "Kind"
           },
-          "details": {
+          "message": {
             "anyOf": [
               {
                 "type": "string"
@@ -10182,14 +10219,60 @@
                 "type": "null"
               }
             ],
-            "title": "Details"
+            "title": "Message"
+          },
+          "messageKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messagekey"
+          },
+          "messageParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messageparams"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payload"
           }
         },
         "type": "object",
         "required": [
           "level",
           "category",
-          "message"
+          "kind"
         ],
         "title": "LogCreate"
       },
@@ -11393,10 +11476,6 @@
             "type": "string",
             "title": "Maxconcurrentbatches"
           },
-          "intelligenceRulesVersion": {
-            "type": "string",
-            "title": "Intelligencerulesversion"
-          },
           "analysisStrategyMode": {
             "type": "string",
             "title": "Analysisstrategymode"
@@ -11519,7 +11598,6 @@
           "llmGenerationTimeout",
           "maxBatchRetries",
           "maxConcurrentBatches",
-          "intelligenceRulesVersion",
           "analysisStrategyMode",
           "analysisTriggerThreshold",
           "retentionMessagesDays",
@@ -11747,7 +11825,7 @@
                 "type": "string",
                 "enum": [
                   "leaderboard",
-                  "event",
+                  "intel_event",
                   "web_intel",
                   "recurring",
                   "project"
@@ -11989,7 +12067,7 @@
                 "type": "string",
                 "enum": [
                   "leaderboard",
-                  "event",
+                  "intel_event",
                   "web_intel",
                   "recurring",
                   "project"
@@ -12085,7 +12163,7 @@
             "type": "string",
             "enum": [
               "leaderboard",
-              "event",
+              "intel_event",
               "web_intel",
               "recurring",
               "project"

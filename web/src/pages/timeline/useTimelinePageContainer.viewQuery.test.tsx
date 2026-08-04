@@ -64,7 +64,7 @@ describe("useTimelinePageContainer URL view query", () => {
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "task-a", name: "任務 A", analysisMode: "event" }),
+      makeAnalysisTask({ id: "task-a", name: "任務 A", analysisMode: "intel_event" }),
     ]);
     resultRef = { current: null };
   });

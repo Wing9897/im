@@ -20,6 +20,7 @@ import asyncio
 import logging
 from typing import TypedDict
 
+from server.app_logging import record
 from server.config import get_config_int
 from server.db.database import Database
 from server.queries.retention_queries import (
@@ -156,7 +157,8 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             break
         await asyncio.sleep(0)
 
-    if any(counts.values()):
+    deleted_total = sum(counts.values())
+    if deleted_total:
         logger.info(
             "Retention cleanup removed messages=%d analysis=%d leaderboard=%d "
             "action_trigger_history=%d app_logs=%d user_events=%d "
@@ -172,6 +174,21 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             counts["device_access_tokens"],
             counts["device_sessions"],
         )
+        # One Settings→Logs summary (stdout logger.info stays for ops).
+        try:
+            await record(
+                db,
+                level="info",
+                category="system",
+                kind="retention.cleanup",
+                message=f"Retention cleanup removed {deleted_total} row(s)",
+                message_key="logs:templates.retentionCleanup",
+                message_params={"deletedTotal": deleted_total},
+                source="server.scheduler.retention",
+                payload=dict(counts),
+            )
+        except Exception:  # noqa: BLE001 — logging must never fail cleanup
+            logger.exception("Failed to record retention.cleanup app log")
     return counts
 
 

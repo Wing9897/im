@@ -124,6 +124,7 @@ export const LOGS_LEVEL_FILTER_STORAGE_KEY = "im:logs:level-filter";
 export const LOGS_CATEGORY_FILTER_STORAGE_KEY = "im:logs:category-filter";
 export const LOGS_SEARCH_STORAGE_KEY = "im:logs:search";
 export const LOGS_SELECTED_ID_STORAGE_KEY = "im:logs:selected-id";
+export const LOGS_SHOW_ANALYSIS_TRACE_STORAGE_KEY = "im:logs:show-analysis-trace";
 export const VIEWER_TASKS_SELECTED_ID_STORAGE_KEY = "im:viewer:tasks:selected-id";
 export const DISCORD_CHANNELS_EXPANDED_STORAGE_KEY =
   "im:sources:discord:channels-expanded";

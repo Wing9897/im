@@ -1,14 +1,18 @@
 import type { TFunction } from "i18next";
-import type { AnalysisTimeRange, TaskTemplatePreset } from "../../types";
+import type { TaskTemplatePreset } from "../../types";
+import {
+  isTaskAnalysisTimeRange,
+  type TaskAnalysisTimeRange,
+} from "./taskAnalysisTimeRange";
 
 /**
- * Map preset windows onto editor vocabulary (`1d` | `7d` | `30d` | `all`).
+ * Map preset windows onto task editor vocabulary (full DB allowlist).
  * Monitor query-only tokens (`12h`／`24h`) are not analysis windows — fall back to `1d`.
  */
 export function normalizePresetTimeRange(
   value: string | null | undefined,
-): AnalysisTimeRange {
-  if (value === "7d" || value === "30d" || value === "all" || value === "1d") {
+): TaskAnalysisTimeRange {
+  if (isTaskAnalysisTimeRange(value)) {
     return value;
   }
   return "1d";

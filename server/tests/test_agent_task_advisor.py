@@ -47,7 +47,7 @@ async def test_execute_tool_task_advisor_unavailable_when_disabled(app) -> None:
 async def test_execute_tool_task_advisor_happy_path(app) -> None:
     draft = {"name": "Quakes", "promptTemplate": "watch quakes"}
     with patch(
-        "server.agent.tools_tasks.AnalysisEngine.handle_chat_assistant",
+        "server.agent.tools_tasks.AnalysisEngine.consult_task_advisor",
         new=AsyncMock(
             return_value={
                 "message": "已建議任務設定。",
@@ -100,7 +100,7 @@ async def test_agent_surface_task_editor_injects_tool_and_final_task_config(app)
     mock_llm.close = AsyncMock()
 
     with patch(
-        "server.agent.tools_tasks.AnalysisEngine.handle_chat_assistant",
+        "server.agent.tools_tasks.AnalysisEngine.consult_task_advisor",
         new=AsyncMock(return_value={"message": "顧問建議", "taskConfig": draft}),
     ):
         runtime = AgentRuntime(db, mock_llm)

@@ -26,7 +26,12 @@ export function ViewerLayout() {
         className="flex items-center gap-lg border-b border-surface-border bg-surface-card px-2xl py-md"
         aria-label={t("viewer.navAria")}
       >
-        <span className="mr-lg text-body text-text-primary">{t("viewer.brand")}</span>
+        <span className="mr-lg flex min-w-0 flex-col leading-tight">
+          <span className="text-body text-text-primary">{t("viewer.brand")}</span>
+          <span className="text-[10px] font-normal text-text-muted">
+            {t("viewer.brandHint")}
+          </span>
+        </span>
         <div className="flex flex-1 gap-sm">
           <NavLink to="/viewer/tasks" className={({ isActive }) => navLinkClass(isActive)}>
             {t("viewer.navTasks")}

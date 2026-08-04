@@ -65,7 +65,7 @@
 仅在路由 `/tasks/new`、`/tasks/:taskId/edit`：
 
 1. **请求闸道**：系统栏快捷对话／空白键语音仍走全局助手 `sendContent`；前端挂载 `taskEditorDraftBridge` 时附带 `surface=task_editor` + `currentTask`。
-2. **工具**：仅此时向模型注入 `tasks.consult_advisor`（args：`instruction`）。handler 复用 `AnalysisEngine.handle_chat_assistant`；成功则把最后非空 `taskConfig` 挂到 final（非流式与 NDJSON `final` 相同）。未带闸道却调用 → `task_advisor_unavailable`。
+2. **工具**：仅此时向模型注入 `tasks.consult_advisor`（args：`instruction`）。handler 复用 `AnalysisEngine.consult_task_advisor`；成功则把最后非空 `taskConfig` 挂到 final（非流式与 NDJSON `final` 相同）。未带闸道却调用 → `task_advisor_unavailable`。
 3. **写回表单**：`final.taskConfig` → bridge `applyTaskConfig`（与页内右侧任务顾问同一套字段规则）。
 4. **UI**：快捷对话 chrome 并排显示助手 + 任务顾问头像；`tasks.consult_advisor` 步骤归因顾问；最终回复泡泡仍是助手。非任务页零改动（仅助手头像）。
 5. **不做**：系统栏手动切「以顾问身分发送」、顾问历史并入助手 session、A2A 通道注入顾问工具。页内右侧任务顾问聊天面板入口不变。
@@ -184,7 +184,7 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 
 ## 语音是 IO，不是 Agent
 
-Agent／日历只处理文字。STT→草稿；PTT 松开送出识别文字（空识别不送）。TTS 读最终 `message`。v1 provider＝`browser`（`whisper`／`doubao` 枚举未实现）。Electron 桌面壳不跑浏览器 STT。
+Agent／日历只处理文字。STT→草稿；PTT 松开送出识别文字（空识别不送）。TTS 读最终 `message`。v1 provider＝`browser`。Electron 桌面壳不跑浏览器 STT（`UnavailableStt`）。
 
 ## 明确不做（本阶段）
 

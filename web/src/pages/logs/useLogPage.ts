@@ -1,7 +1,8 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
 import { acquireRuntimeInterest } from "../../context/runtimeMonitoring/consumerInterest";
 import { useRuntimeLogs } from "../../context/runtimeLogs/RuntimeLogsContext";
+import { filterAnalysisTraceLogs } from "../../domain/logs/analysisTraceFilter";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import {
@@ -9,6 +10,7 @@ import {
   LOGS_LEVEL_FILTER_STORAGE_KEY,
   LOGS_SEARCH_STORAGE_KEY,
   LOGS_SELECTED_ID_STORAGE_KEY,
+  LOGS_SHOW_ANALYSIS_TRACE_STORAGE_KEY,
 } from "../../domain/prefs";
 
 const validLogLevels = new Set(["all", "info", "success", "warning", "error"]);
@@ -33,7 +35,7 @@ export function useLogPage() {
     refreshLogs,
     loadMoreLogs,
   } = useRuntimeLogs();
-  const { activeAnalysis } = useAnalysisStatus();
+  const { activeAnalyses } = useAnalysisStatus();
 
   // Gate global stored-log polling / event sync to the Logs page consumer.
   useEffect(() => {
@@ -60,6 +62,20 @@ export function useLogPage() {
     persistDebounceMs: 400,
     storage: "session",
   });
+  const [showAnalysisTrace, setShowAnalysisTrace] = usePersistedState(
+    LOGS_SHOW_ANALYSIS_TRACE_STORAGE_KEY,
+    false,
+  );
+  // Skip the initial mount (interest effect already refreshes); refetch when
+  // the trace toggle changes so server excludeKind stays in sync.
+  const skipTraceToggleRefreshRef = useRef(true);
+  useEffect(() => {
+    if (skipTraceToggleRefreshRef.current) {
+      skipTraceToggleRefreshRef.current = false;
+      return;
+    }
+    void refreshLogs().catch(() => {});
+  }, [showAnalysisTrace, refreshLogs]);
   const [showLoadingHint, setShowLoadingHint] = useState(false);
   const [showStuckLoadingHint, setShowStuckLoadingHint] = useState(false);
   const [manuallyRefreshing, setManuallyRefreshing] = useState(false);
@@ -124,9 +140,14 @@ export function useLogPage() {
 
   const deferredSearch = useDeferredValue(search);
 
+  const visibleLogs = useMemo(
+    () => filterAnalysisTraceLogs(logs, showAnalysisTrace),
+    [logs, showAnalysisTrace],
+  );
+
   const filteredLogs = useMemo(() => {
     const query = deferredSearch.trim().toLowerCase();
-    return logs.filter((entry) => {
+    return visibleLogs.filter((entry) => {
       if (
         normalizedLevelFilter !== "all" &&
         entry.level !== normalizedLevelFilter
@@ -142,21 +163,21 @@ export function useLogPage() {
       if (!query) {
         return true;
       }
-      return `${entry.message}\n${entry.details ?? ""}`
+      return `${entry.message}\n${entry.details ?? ""}\n${entry.kind ?? ""}`
         .toLowerCase()
         .includes(query);
     });
-  }, [logs, normalizedCategoryFilter, normalizedLevelFilter, deferredSearch]);
+  }, [visibleLogs, normalizedCategoryFilter, normalizedLevelFilter, deferredSearch]);
 
   const errorCount = useMemo(
-    () => logs.filter((entry) => entry.level === "error").length,
-    [logs],
+    () => visibleLogs.filter((entry) => entry.level === "error").length,
+    [visibleLogs],
   );
   const analysisCount = useMemo(
-    () => logs.filter((entry) => entry.category === "analysis").length,
-    [logs],
+    () => visibleLogs.filter((entry) => entry.category === "analysis").length,
+    [visibleLogs],
   );
-  const loadedLogsSummary = `${logs.length} / ${totalLogCount}`;
+  const loadedLogsSummary = `${visibleLogs.length} / ${totalLogCount}`;
   const hasActiveFilters =
     normalizedLevelFilter !== "all" ||
     normalizedCategoryFilter !== "all" ||
@@ -187,7 +208,7 @@ export function useLogPage() {
     hasMoreLogs,
     logsLoadingMore,
     logLoadError,
-    activeAnalysis,
+    activeAnalyses,
     clearLogs,
     selectedLogId,
     setSelectedLogId,
@@ -199,6 +220,8 @@ export function useLogPage() {
     setLevelFilter,
     normalizedCategoryFilter,
     setCategoryFilter,
+    showAnalysisTrace,
+    setShowAnalysisTrace,
     manuallyRefreshing,
     handleRefreshLogs,
     handleLoadMoreLogs,

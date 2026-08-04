@@ -36,7 +36,7 @@ const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(n
 export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
-  const { monitorMode, openInPages } = useMonitorMode();
+  const { monitorMode, setMonitorMode, openInPages } = useMonitorMode();
   const { tasks } = useTaskCatalog();
   const { openCaption } = useAssistantQuick();
   const [open, setOpen] = useState(false);
@@ -77,6 +77,10 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         openCaption();
         return;
       }
+      if (item.action === "open-ops-board") {
+        setMonitorMode("canvas");
+        return;
+      }
       if (item.action) {
         runCommandPaletteAction(item.action);
       }
@@ -90,7 +94,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [closePalette, monitorMode, navigate, openInPages, openCaption],
+    [closePalette, monitorMode, navigate, openInPages, openCaption, setMonitorMode],
   );
 
   useEffect(() => {

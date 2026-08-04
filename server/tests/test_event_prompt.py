@@ -11,7 +11,7 @@ from server.presets.task_presets import BUILTIN_PRESETS
 
 
 def test_event_json_instruction_covers_optional_time_location_rules():
-    instruction = build_json_instruction("event")
+    instruction = build_json_instruction("intel_event")
     assert "title" in instruction and "body" in instruction
     assert "禁止自造 JSON key" in instruction
     assert "寫進 body" in instruction
@@ -46,7 +46,7 @@ def test_event_prompt_assembly_appends_schema_after_template():
 
     prompt = build_analysis_prompt(
         prompt_template="提取關鍵情報。",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         primary_messages=[
             {
                 "id": "m1",
@@ -73,7 +73,7 @@ def test_event_prompt_assembly_appends_schema_after_template():
 def test_event_prompt_appends_english_output_locale_directive():
     prompt = build_analysis_prompt(
         prompt_template="提取關鍵情報。",
-        analysis_mode="event",
+        analysis_mode="intel_event",
         primary_messages=[{"id": "m1", "content": "hello", "timestamp": "2026-07-18T08:00:00Z"}],
         max_tokens=1000,
         ui_locale="en",
@@ -83,7 +83,7 @@ def test_event_prompt_appends_english_output_locale_directive():
 
 
 def test_event_presets_are_intent_only_not_schema_duplicates():
-    event_presets = [p for p in BUILTIN_PRESETS if p["analysisMode"] == "event"]
+    event_presets = [p for p in BUILTIN_PRESETS if p["analysisMode"] == "intel_event"]
     assert event_presets
     for preset in event_presets:
         text = preset["promptTemplate"]
@@ -103,5 +103,5 @@ def test_event_presets_expected_ids():
         "crypto-major-intel",
         "crypto-airdrop-deals",
     ):
-        assert by_id[preset_id]["analysisMode"] == "event"
+        assert by_id[preset_id]["analysisMode"] == "intel_event"
     assert by_id["schedule-time-inference"]["name"] == "時間行程推理"

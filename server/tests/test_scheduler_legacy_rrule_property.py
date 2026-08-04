@@ -56,7 +56,7 @@ async def _registered_job_observation(db: Any, task_id: str) -> tuple[int, Any, 
     suppress_health_check=[HealthCheck.function_scoped_fixture],
 )
 @example(mode="leaderboard", schedule=("daily", "00:00"), legacy_rrule="FREQ=DAILY")
-@example(mode="event", schedule=("hourly", None), legacy_rrule="not-an-rrule")
+@example(mode="intel_event", schedule=("hourly", None), legacy_rrule="not-an-rrule")
 @example(mode="leaderboard", schedule=("weekly", "6:23:59"), legacy_rrule=None)
 @given(mode=analysis_task_modes, schedule=supported_schedules, legacy_rrule=_legacy_rrules)
 async def test_legacy_rrule_does_not_interfere_with_scheduler(app, mode, schedule, legacy_rrule):

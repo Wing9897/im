@@ -14,7 +14,7 @@ export function useAnalysisControls() {
     analysisPaused: analysisPausedFromContext,
     requestQueueStatusRefresh,
     queueStatus,
-    activeAnalysis,
+    activeAnalyses,
   } = useAnalysisStatus();
 
   const { collectorStatus, aiEngineStatus, requestAiStatusRefresh } = useCollectorStatus();
@@ -99,15 +99,16 @@ export function useAnalysisControls() {
   }, [abortingAnalysis, updatingAnalysisPaused, requestQueueStatusRefresh, requestAiStatusRefresh, showToast]);
 
   const analysisPaused = optimisticPaused ?? (queueStatus?.analysisPaused ?? false);
+  const resolvedAnalyses = activeAnalyses ?? new Map();
   const systemStatus = useMemo(
     () =>
       buildSystemStatus({
         collectorStatus,
         aiEngineStatus,
         analysisPaused,
-        activeAnalysis,
+        activeAnalyses: resolvedAnalyses,
       }),
-    [collectorStatus, aiEngineStatus, analysisPaused, activeAnalysis],
+    [collectorStatus, aiEngineStatus, analysisPaused, resolvedAnalyses],
   );
 
   return {

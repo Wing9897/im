@@ -126,8 +126,8 @@ async def test_retention_run_returns_delete_summary(client, app):
 
     db = app.state.db
     await db.execute(
-        "INSERT INTO app_logs (id, time, level, category, message, details) "
-        "VALUES (?, ?, 'info', 'system', 'old', NULL)",
+        "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
+        "VALUES (?, ?, 'info', 'system', 'system', 'old', NULL)",
         ("log-retention-run", "2020-01-01T00:00:00+00:00"),
     )
     await set_configs(
@@ -177,7 +177,7 @@ async def test_logs_page_and_cursor(client):
     for entry in body["logs"]:
         assert_keys(
             entry,
-            ["id", "time", "level", "category", "message", "details"],
+            ["id", "time", "level", "category", "kind", "message", "details"],
             "AppLogEntry",
         )
 
@@ -202,27 +202,30 @@ async def test_append_log_accepts_frontend_category(client):
         json={
             "level": "error",
             "category": "frontend",
+            "kind": "frontend.critical",
             "message": "Uncaught TypeError",
-            "details": "stack...",
+            "payload": {"stack": "stack..."},
         },
     )
     assert resp.status_code == 201
     body = resp.json()
     assert body["category"] == "frontend"
+    assert body["kind"] == "frontend.critical"
     assert_keys(
         body,
-        ["id", "time", "level", "category", "message", "details"],
+        ["id", "time", "level", "category", "kind", "message", "details"],
         "created AppLogEntry",
     )
 
 
 async def test_append_log_rejects_invalid_level(client):
-    """v12 CHECK on app_logs.level must map to 422, not an unhandled 500."""
+    """CHECK on app_logs.level must map to 422, not an unhandled 500."""
     resp = await client.post(
         "/api/v1/logs",
         json={
             "level": "DEBUG",
             "category": "system",
+            "kind": "system",
             "message": "should fail validation",
         },
     )
@@ -230,6 +233,23 @@ async def test_append_log_rejects_invalid_level(client):
     body = resp.json()
     assert body["error_code"] == "VALIDATION_ERROR"
     assert "level" in body["message"]
+
+
+async def test_logs_page_supports_kind_filters(client, app):
+    from server.app_logging import clear_app_logs, record
+
+    db = app.state.db
+    await clear_app_logs(db)
+    await record(db, level="info", category="analysis", kind="batch.failure", message="fail")
+    await record(db, level="info", category="analysis", kind="analysis.trace", message="trace")
+
+    only_fail = (await client.get("/api/v1/logs", params={"kind": "batch.failure"})).json()
+    assert only_fail["totalCount"] == 1
+    assert only_fail["logs"][0]["kind"] == "batch.failure"
+
+    no_trace = (await client.get("/api/v1/logs", params={"excludeKind": "analysis.trace"})).json()
+    assert no_trace["totalCount"] == 1
+    assert no_trace["logs"][0]["kind"] == "batch.failure"
 
 
 async def test_clear_logs(client):

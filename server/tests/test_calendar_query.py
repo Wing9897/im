@@ -19,7 +19,7 @@ async def test_list_calendars_includes_event_and_recurring_tasks(app) -> None:
     modes = {c["analysisMode"] for c in calendars}
     ids = {c["id"] for c in calendars}
     assert "recurring" in modes
-    assert "event" in modes
+    assert "intel_event" in modes
     assert seed.TASK_CALENDAR in ids
     assert seed.TASK_EVENT in ids
     # Metadata only — no event body payload.

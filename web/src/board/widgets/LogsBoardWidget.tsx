@@ -1,8 +1,13 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { queryAppLogsPage } from "../../api/logs";
 import { Badge } from "../../components/ui";
 import { getDateTimeLocale } from "../../i18n/locale";
+import {
+  ANALYSIS_TRACE_KIND,
+  filterAnalysisTraceLogs,
+  readShowAnalysisTracePref,
+} from "../../domain/logs/analysisTraceFilter";
 import { resolveLogDisplayMessage } from "../../domain/logs/resolveLogDisplayMessage";
 import type { AppLogEntryPayload } from "../../types";
 import { levelTone } from "../../utils/logLevelTone";
@@ -23,15 +28,25 @@ function formatLogTime(value: string): string {
 /** Compact recent application logs for the ops board. */
 export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
+  const showAnalysisTrace = readShowAnalysisTracePref();
   const fetcher = useCallback(
     () =>
-      queryAppLogsPage({ cursor: null, limit: 20 }).then((page) => page.logs),
-    [],
+      queryAppLogsPage({
+        cursor: null,
+        limit: 20,
+        // Prefer server-side exclusion (`?excludeKind=`); client filter is safety.
+        excludeKind: showAnalysisTrace ? undefined : ANALYSIS_TRACE_KIND,
+      }).then((page) => page.logs),
+    [showAnalysisTrace],
   );
   const { data: logs, error, loading, refresh } = useBoardWidgetPoll<AppLogEntryPayload[]>(
     fetcher,
     BOARD_POLL_MS.standard,
     { active },
+  );
+  const visibleLogs = useMemo(
+    () => filterAnalysisTraceLogs(logs ?? [], showAnalysisTrace),
+    [logs, showAnalysisTrace],
   );
 
   return (
@@ -40,12 +55,12 @@ export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
         loading={loading && !logs}
         error={!logs ? error : null}
         onRetry={refresh}
-        empty={Array.isArray(logs) && logs.length === 0}
+        empty={Array.isArray(logs) && visibleLogs.length === 0}
         emptyLabel={t("board.logs.empty")}
       >
-        {logs && logs.length > 0 ? (
+        {visibleLogs.length > 0 ? (
           <ul className="board-widget-list">
-            {logs.map((entry) => (
+            {visibleLogs.map((entry) => (
               <li key={entry.id} className="board-widget-list__item">
                 <button
                   type="button"

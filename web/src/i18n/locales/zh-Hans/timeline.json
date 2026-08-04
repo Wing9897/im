@@ -44,8 +44,8 @@
   },
   "empty": {
     "noUserEvents": "目前没有「一般」工作集事件。可用右上角「新增事件」，或请助手建立会议。",
-    "noTasks": "目前还没有可显示在时间线的任务。你可以先到任务设定新增「关键事件」或「循环任务」类型任务。",
-    "needData": "需要先有成功完成的分析批次、已设定的循环任务排程，或用户／助手事件，时间线才会显示。",
+    "noTasks": "目前还没有可显示在时间线的任务。你可以先到任务设定新增「情报任务」或「周期任务」。",
+    "needData": "需要先有成功完成的分析批次、已设定的周期任务排程，或用户／助手事件，时间线才会显示。",
     "noEventsDescription": "目前这个筛选／日期范围没有事件；仍可切换日期或改选「全部」「一般」查看。",
     "filteredTitle": "目前筛选条件没有对应事件",
     "filteredDescription": "可清除筛选或切换其他任务 / 日期范围，日历框架仍会保留。"
@@ -124,7 +124,7 @@
   },
   "messages": {
     "saveFailed": "储存失败",
-    "recurringCreated": "已建立循环事件；月历会按重复规则展开多次。",
+    "recurringCreated": "已建立周期任务；月历会按重复规则展开多次。",
     "dismissFailed": "从时间规划移除失败",
     "restoreFailed": "还原到时间规划失败",
     "dismissConfirm": "将「{title}」从时间规划移除？之后可以还原。",
@@ -144,11 +144,11 @@
     "save": "储存",
     "closeAria": "关闭",
     "intro": "单次事件（无循环）。默认归属「一般」工作集。",
-    "introRecurring": "将创建带 RRULE 的循环任务，展开后出现在时间规划中。",
+    "introRecurring": "将创建带 RRULE 的周期任务，展开后出现在时间规划中。",
     "kindAria": "事件类型",
     "kind": {
       "oneOff": "一般事件",
-      "recurring": "循环事件"
+      "recurring": "周期任务"
     },
     "titleAria": "标题",
     "titlePlaceholder": "标题",

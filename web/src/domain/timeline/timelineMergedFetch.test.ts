@@ -109,7 +109,7 @@ describe("paddedTimelineFetchWindow", () => {
 
 describe("mergeTimelineFilterSources", () => {
   const catalog = [
-    { id: "evt-1", analysisMode: "event", worksetId: "ws-A" },
+    { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" },
     { id: "web-1", analysisMode: "web_intel", worksetId: "ws-A" },
     { id: "cal-1", analysisMode: "recurring", worksetId: "ws-A" },
   ];
@@ -210,7 +210,7 @@ describe("fetchMergedTimelineEvents", () => {
   });
 
   it("skips sources the filter plan does not need", async () => {
-    const catalog = [{ id: "evt-1", analysisMode: "event", worksetId: "ws-A" }];
+    const catalog = [{ id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" }];
     const selection = { taskIds: ["evt-1"], worksetIds: [] as string[] };
     const plan = resolveTimelineFilterPlan(selection, catalog);
     mockFetchSharedTimelineEvents.mockResolvedValue([makeAnalysis()]);

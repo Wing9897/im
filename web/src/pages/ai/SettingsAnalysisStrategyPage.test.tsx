@@ -28,7 +28,6 @@ const mockSettingsObject = vi.hoisted(() =>
     llmGenerationTimeout: string;
     maxConcurrentBatches: string;
     maxBatchRetries: string;
-    intelligenceRulesVersion: string;
     analysisStrategyMode: string;
     analysisTriggerThreshold: string;
     autoPauseOnRetriesExhausted: boolean;
@@ -41,7 +40,6 @@ const mockSettingsObject = vi.hoisted(() =>
     llmGenerationTimeout: "120",
     maxConcurrentBatches: "1",
     maxBatchRetries: "3",
-    intelligenceRulesVersion: "v2",
     analysisStrategyMode: "balanced",
     analysisTriggerThreshold: "50",
     autoPauseOnRetriesExhausted: true,
@@ -88,7 +86,6 @@ describe("SettingsAnalysisStrategyPage", () => {
       llmGenerationTimeout: "120",
       maxConcurrentBatches: "1",
       maxBatchRetries: "3",
-      intelligenceRulesVersion: "v2",
       analysisStrategyMode: "balanced",
       analysisTriggerThreshold: "50",
       autoPauseOnRetriesExhausted: true,

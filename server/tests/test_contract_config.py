@@ -43,6 +43,8 @@ _RETIRED_CONFIG_KEYS = frozenset(
         # Per-task scheduling columns are task-owned; no longer system_config globals.
         "batch_overlap_count",
         "agent_project_wave_interval_seconds",
+        # Prompt revision tag removed — correlate via git / prompt files, not system_config.
+        "intelligence_rules_version",
     }
 )
 

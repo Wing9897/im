@@ -27,22 +27,41 @@ export function buildSystemStatus(input: {
   collectorStatus: CollectorStatus;
   aiEngineStatus: AiEngineStatus;
   analysisPaused: boolean;
-  activeAnalysis: ActiveAnalysisState | null;
+  activeAnalyses?: Map<string, ActiveAnalysisState> | null;
 }): SystemStatusView {
-  const { collectorStatus, aiEngineStatus, analysisPaused, activeAnalysis } = input;
-  const t = (key: string, opts?: Record<string, string>) =>
+  const { collectorStatus, aiEngineStatus, analysisPaused, activeAnalyses } = input;
+  const t = (key: string, opts?: Record<string, string | number>) =>
     String(i18n.t(`topBar.${key}`, opts));
   const collectorRunning = collectorStatus === "running";
+  const analyses = activeAnalyses ?? new Map<string, ActiveAnalysisState>();
+  const concurrentCount = analyses.size;
+  const activeAnalysis =
+    concurrentCount > 0 ? analyses.values().next().value ?? null : null;
 
   if (activeAnalysis) {
     const taskLabel = activeAnalysis.taskName || t("unnamedTask");
     const batchLabel = formatBatchMessageCount(activeAnalysis.messageCount);
+    const concurrent = concurrentCount > 1;
     return {
       color: "var(--info)",
-      label: t("analyzingLabel", { task: taskLabel }),
+      label: concurrent
+        ? t("analyzingLabelConcurrent", { task: taskLabel, count: concurrentCount })
+        : t("analyzingLabel", { task: taskLabel }),
       title: analysisPaused
-        ? t("analyzingTitlePaused", { task: taskLabel, batch: batchLabel })
-        : t("analyzingTitle", { task: taskLabel, batch: batchLabel }),
+        ? concurrent
+          ? t("analyzingTitlePausedConcurrent", {
+              task: taskLabel,
+              batch: batchLabel,
+              count: concurrentCount,
+            })
+          : t("analyzingTitlePaused", { task: taskLabel, batch: batchLabel })
+        : concurrent
+          ? t("analyzingTitleConcurrent", {
+              task: taskLabel,
+              batch: batchLabel,
+              count: concurrentCount,
+            })
+          : t("analyzingTitle", { task: taskLabel, batch: batchLabel }),
       pulse: true,
     };
   }

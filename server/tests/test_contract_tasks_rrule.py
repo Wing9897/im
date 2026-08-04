@@ -12,7 +12,7 @@ async def test_non_calendar_create_rejects_legacy_rrule_fields(client, app):
     before_count = await db.fetch_value("SELECT COUNT(*) FROM analysis_tasks")
 
     for name, extra_fields in (
-        ("analysis rrule", {"analysisMode": "event", "rrule": "FREQ=DAILY"}),
+        ("analysis rrule", {"analysisMode": "intel_event", "rrule": "FREQ=DAILY"}),
         ("empty default-mode rrule", {"rrule": ""}),
     ):
         resp = await client.post(

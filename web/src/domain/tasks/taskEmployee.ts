@@ -1,41 +1,39 @@
 /**
- * Task-type identity mapped from analysis_mode (DB enum unchanged).
- * Recurring is a calendar task type (no AI avatar); other modes may show AI
+ * Task-type identity aligned 1:1 with analysis_mode enum token.
+ * `recurring` is a calendar task type (no AI avatar); other modes may show AI
  * staff avatars, but task-type labels use `tasks.employees.*.name` (not aiStaff titles).
+ *
+ * `TaskEmployeeId` is now a direct alias of `AnalysisMode` — the mapping functions
+ * are kept as an abstraction boundary so call sites stay stable if the two diverge.
  */
 import type { AnalysisMode } from "../../types/common";
 import type { AiStaffId } from "../aiStaff/aiStaff";
 
-export type TaskEmployeeId =
-  | "scheduleClerk"
-  | "eventIntel"
-  | "webIntel"
-  | "leaderboard"
-  | "projectManager";
+export type TaskEmployeeId = AnalysisMode;
 
 /** Picker / badge order: recurring first, then AI modes. */
 export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
-  "scheduleClerk",
-  "eventIntel",
-  "webIntel",
+  "recurring",
+  "intel_event",
+  "web_intel",
   "leaderboard",
-  "projectManager",
+  "project",
 ] as const;
 
 const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
-  scheduleClerk: "recurring",
-  eventIntel: "event",
-  webIntel: "web_intel",
+  recurring: "recurring",
+  intel_event: "intel_event",
+  web_intel: "web_intel",
   leaderboard: "leaderboard",
-  projectManager: "project",
+  project: "project",
 };
 
 const EMPLOYEE_BY_MODE: Record<AnalysisMode, TaskEmployeeId> = {
-  recurring: "scheduleClerk",
-  event: "eventIntel",
-  web_intel: "webIntel",
+  recurring: "recurring",
+  intel_event: "intel_event",
+  web_intel: "web_intel",
   leaderboard: "leaderboard",
-  project: "projectManager",
+  project: "project",
 };
 
 export function taskEmployeeForAnalysisMode(mode: AnalysisMode): TaskEmployeeId {
@@ -48,11 +46,11 @@ export function analysisModeForTaskEmployee(employeeId: TaskEmployeeId): Analysi
 
 /** True when the task type uses AI staff (avatar + AI roster). */
 export function taskEmployeeUsesAi(employeeId: TaskEmployeeId): boolean {
-  return employeeId !== "scheduleClerk";
+  return employeeId !== "recurring";
 }
 
 /** AI roster id when the type has an AiStaffAvatar; null for recurring. */
 export function aiStaffIdForTaskEmployee(employeeId: TaskEmployeeId): AiStaffId | null {
-  if (employeeId === "scheduleClerk") return null;
+  if (employeeId === "recurring") return null;
   return employeeId;
 }

@@ -24,7 +24,7 @@ async def test_concurrent_transactions_do_not_nested_begin(db: Database) -> None
         "INSERT INTO analysis_tasks "
         "(id, name, prompt_template, analysis_mode, analysis_time_range, "
         "schedule_rrule, version, is_active, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'event', 'all', 'FREQ=SECONDLY;INTERVAL=60', 1, 1, ?, ?)",
+        "VALUES (?, ?, ?, 'intel_event', 'all', 'FREQ=SECONDLY;INTERVAL=60', 1, 1, ?, ?)",
         (task_id, "lock-test", "prompt", now, now),
     )
 
@@ -87,7 +87,7 @@ async def test_concurrent_ingest_and_transaction_serialize(db: Database) -> None
         async with db.transaction() as conn:
             await asyncio.sleep(0.02)
             await conn.execute(
-                "INSERT INTO app_logs (id, time, level, category, message) VALUES (?, ?, 'info', 'system', 'tx')",
+                "INSERT INTO app_logs (id, time, level, category, kind, message) VALUES (?, ?, 'info', 'system', 'system', 'tx')",
                 (new_id(), now),
             )
 
@@ -112,8 +112,8 @@ async def test_transaction_rolls_back_when_commit_fails(db: Database, monkeypatc
     with pytest.raises(RuntimeError, match="commit failed"):
         async with db.transaction() as conn:
             await conn.execute(
-                "INSERT INTO app_logs (id, time, level, category, message) "
-                "VALUES (?, ?, 'info', 'system', 'commit failure')",
+                "INSERT INTO app_logs (id, time, level, category, kind, message) "
+                "VALUES (?, ?, 'info', 'system', 'system', 'commit failure')",
                 (new_id(), utc_now_iso()),
             )
 

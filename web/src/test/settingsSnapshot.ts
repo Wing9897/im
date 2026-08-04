@@ -24,7 +24,6 @@ export const defaultSettingsSnapshot: SystemSettingsSnapshot = {
   llmGenerationTimeout: "120",
   maxBatchRetries: "3",
   maxConcurrentBatches: "1",
-  intelligenceRulesVersion: "1",
   analysisStrategyMode: "balanced",
   analysisTriggerThreshold: "50",
   retentionMessagesDays: "90",

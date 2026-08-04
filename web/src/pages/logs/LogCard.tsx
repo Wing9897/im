@@ -3,7 +3,7 @@ import type { AppLogEntry } from "../../context/appRuntimeShared";
 import { formatOsDateTime } from "../../utils/time";
 import { levelTone } from "../../utils/logLevelTone";
 import { SelectableSurface } from "../../components/detail";
-import { Badge, ListRowDetail, ListRowMain, ListRowMeta, ListRowTime } from "../../components/ui";
+import { Badge, ListRowMain, ListRowMeta, ListRowTime } from "../../components/ui";
 import { resolveLogDisplayMessage } from "../../domain/logs/resolveLogDisplayMessage";
 
 export function LogCard({
@@ -30,10 +30,7 @@ export function LogCard({
       <ListRowMeta>
         {t(`category.${entry.category}`, { defaultValue: entry.category })}
       </ListRowMeta>
-      <ListRowMain>
-        {displayMessage}
-        {entry.details ? <ListRowDetail>{entry.details}</ListRowDetail> : null}
-      </ListRowMain>
+      <ListRowMain>{displayMessage}</ListRowMain>
     </SelectableSurface>
   );
 }

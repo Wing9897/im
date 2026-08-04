@@ -21,6 +21,14 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
   }),
 }));
 
+vi.mock("../../context/MonitorModeContext", () => ({
+  useMonitorMode: () => ({
+    monitorMode: "pages" as const,
+    setMonitorMode: vi.fn(),
+    openInPages: vi.fn(),
+  }),
+}));
+
 vi.mock("../../hooks/useTaskAnalysisStats", async () =>
   (await import("../../test/task-analysis-stats-mock")).taskAnalysisStatsModuleMock());
 
@@ -154,7 +162,7 @@ describe("useDashboardViewer", () => {
         analysisMode: "recurring",
         parentTaskId: "proj-1",
       }),
-      makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "event" }),
+      makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "intel_event" }),
     ]);
     await renderHook();
 

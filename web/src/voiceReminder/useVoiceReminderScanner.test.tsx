@@ -233,7 +233,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     );
     expect(mockAnnounce).toHaveBeenCalledTimes(1);
     expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("站立會議");
-    expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("循環任務");
+    expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("週期任務");
   });
 
   it("includes manual and assistant events when their reminder source is selected", async () => {

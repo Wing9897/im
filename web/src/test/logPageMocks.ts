@@ -14,6 +14,7 @@ export interface MockLogEntry {
   time: string;
   level: string;
   category: string;
+  kind?: string;
   message: string;
   details?: string;
 }
@@ -25,7 +26,7 @@ export interface MockRuntimeLogPageState {
   logsLoading: boolean;
   logsLoadingMore: boolean;
   logLoadError: string | null;
-  activeAnalysis: null;
+  activeAnalyses: Map<string, never>;
   lastMessagesUpdate: null;
   clearLogs: ReturnType<typeof vi.fn>;
   refreshLogs: ReturnType<typeof vi.fn>;
@@ -41,6 +42,7 @@ export const runtimeLogPageState: MockRuntimeLogPageState = {
       time: "2026-04-17T03:00:00.000Z",
       level: "info",
       category: "system",
+      kind: "event",
       message: "Persisted log entry",
     },
   ],
@@ -49,7 +51,7 @@ export const runtimeLogPageState: MockRuntimeLogPageState = {
   logsLoading: false,
   logsLoadingMore: false,
   logLoadError: null,
-  activeAnalysis: null,
+  activeAnalyses: new Map(),
   lastMessagesUpdate: null,
   clearLogs: vi.fn(),
   refreshLogs: vi.fn(async () => {}),
@@ -81,7 +83,7 @@ export function runtimeLogsModuleMock() {
 export function analysisStatusLogPageModuleMock() {
   return {
     useAnalysisStatus: () => ({
-      activeAnalysis: runtimeLogPageState.activeAnalysis,
+      activeAnalyses: runtimeLogPageState.activeAnalyses,
       lastMessagesUpdate: runtimeLogPageState.lastMessagesUpdate,
     }),
   };

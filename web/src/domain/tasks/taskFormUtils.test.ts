@@ -47,7 +47,7 @@ const fullConfig: Partial<TaskFormState> = {
   scheduleType: "weekly",
   scheduleValue: "1:10:30",
   scheduleRrule: null,
-  analysisMode: "event",
+  analysisMode: "intel_event",
   analysisTimeRange: "48h",
   channelIds: ["ch-3"],
 };
@@ -90,7 +90,7 @@ const validFormStates: TaskFormState[] = [
     scheduleType: "daily",
     scheduleValue: "14:30",
     scheduleRrule: null,
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "48h",
     channelIds: ["ch-1", "ch-2"],
     rrule: "",
@@ -115,7 +115,7 @@ const validFormStates: TaskFormState[] = [
     scheduleType: "weekly",
     scheduleValue: "3:09:00",
     scheduleRrule: null,
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "7d",
     channelIds: ["weekly-ch"],
     rrule: "",
@@ -204,11 +204,11 @@ describe("applyConfigToFormState", () => {
   });
 
   it("applying a sparse config reflects only provided fields", () => {
-    const sparse = { name: "Only Name", analysisMode: "event" as const };
+    const sparse = { name: "Only Name", analysisMode: "intel_event" as const };
     const result = applyConfigToFormState(sampleBase, sparse);
 
     expect(result.name).toBe("Only Name");
-    expect(result.analysisMode).toBe("event");
+    expect(result.analysisMode).toBe("intel_event");
     expect(result.description).toBe(sampleBase.description);
     expect(result.promptTemplate).toBe(sampleBase.promptTemplate);
     expect(result.scheduleType).toBe(sampleBase.scheduleType);
@@ -227,7 +227,46 @@ describe("applyConfigToFormState", () => {
 });
 
 describe("formStateToTaskConfig calendar contract", () => {
-  it.each(["leaderboard", "event"] as const)(
+  it("keeps optional channelIds for web_intel and emits message-gate overrides when bound", () => {
+    const payload = formStateToTaskConfig({
+      ...sampleBase,
+      analysisMode: "web_intel",
+      webSearchQuery: "OpenAI pricing",
+      promptTemplate: "Extract pricing notes",
+      channelIds: ["ch-1", "ch-2"],
+      scheduleType: "hourly",
+      scheduleValue: null,
+      batchOverlapCount: 2,
+      analysisTriggerThreshold: 5,
+      analysisBatchMessageLimit: 40,
+      analysisStrategyMode: "balanced",
+    });
+    expect(payload.channelIds).toEqual(["ch-1", "ch-2"]);
+    expect(payload.webSearchQuery).toBe("");
+    expect(payload.batchOverlapCount).toBe(2);
+    expect(payload.analysisTriggerThreshold).toBe(5);
+    expect(payload.analysisBatchMessageLimit).toBe(40);
+    expect(payload.analysisStrategyMode).toBe("balanced");
+  });
+
+  it("omits message-gate overrides for web_intel when no channels are bound", () => {
+    const payload = formStateToTaskConfig({
+      ...sampleBase,
+      analysisMode: "web_intel",
+      webSearchQuery: "",
+      promptTemplate: "Extract pricing notes",
+      channelIds: [],
+      scheduleType: "hourly",
+      scheduleValue: null,
+      batchOverlapCount: 2,
+      analysisTriggerThreshold: 5,
+    });
+    expect(payload.channelIds).toEqual([]);
+    expect(payload.webSearchQuery).toBe("");
+    expect(payload).not.toHaveProperty("batchOverlapCount");
+    expect(payload).not.toHaveProperty("analysisTriggerThreshold");
+  });
+  it.each(["leaderboard", "intel_event"] as const)(
     "omits stale calendar fields after switching to %s mode",
     (analysisMode) => {
       const payload = formStateToTaskConfig({
@@ -348,7 +387,7 @@ describe("formStateToTaskConfig calendar contract", () => {
   it("includes includeInTimeline for event mode payloads", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
-      analysisMode: "event",
+      analysisMode: "intel_event",
       includeInTimeline: false,
     });
     expect(payload.includeInTimeline).toBe(false);
@@ -411,7 +450,7 @@ describe("scheduleFieldsFromTask", () => {
       description: null,
       promptTemplate: "p",
       webSearchQuery: "",
-      analysisMode: "event",
+      analysisMode: "intel_event",
       analysisTimeRange: "1d",
       version: 1,
       isActive: true,
@@ -480,7 +519,7 @@ describe("buildCurrentTaskPayload", () => {
   it("forwards includeInTimeline false for event-mode drafts", () => {
     const payload = buildCurrentTaskPayload({
       ...sampleFormState,
-      analysisMode: "event",
+      analysisMode: "intel_event",
       includeInTimeline: false,
   projectWaveIntervalSeconds: null,
   batchOverlapCount: null,
@@ -497,7 +536,7 @@ describe("buildCurrentTaskPayload", () => {
       scheduleType: "weekly",
       scheduleValue: "1:12:00",
       scheduleRrule: null,
-      analysisMode: "event",
+      analysisMode: "intel_event",
       analysisTimeRange: "7d",
     };
     const custom: TaskFormState = {

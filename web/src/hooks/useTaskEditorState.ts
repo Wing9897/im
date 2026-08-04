@@ -78,11 +78,9 @@ export function getTaskSaveBlockReason(
   }
 
   if (fields.analysisMode === "web_intel") {
+    // Channels optional (timed Agent tick vs message-gate); no search-seed field.
     if (!fields.promptTemplate.trim()) {
       return String(i18n.t("tasks.editor.saveNeeds.prompt"));
-    }
-    if (!fields.webSearchQuery.trim()) {
-      return String(i18n.t("tasks.editor.saveNeeds.webSearchQuery"));
     }
     return null;
   }
@@ -150,10 +148,7 @@ export function useTaskEditorState(
           promptTemplate: localized.promptTemplate,
           analysisMode: nextMode,
           analysisTimeRange: localized.defaultAnalysisTimeRange,
-          webSearchQuery:
-            nextMode === "web_intel"
-              ? (localized.webSearchQuery ?? prev.webSearchQuery)
-              : "",
+          webSearchQuery: "",
         };
         if (
           (nextMode === "project" || nextMode === "web_intel") &&

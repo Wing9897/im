@@ -18,27 +18,27 @@ describe("taskEmployee", () => {
 
   it("covers all task types in picker order", () => {
     expect(TASK_EMPLOYEE_ORDER).toEqual([
-      "scheduleClerk",
-      "eventIntel",
-      "webIntel",
+      "recurring",
+      "intel_event",
+      "web_intel",
       "leaderboard",
-      "projectManager",
+      "project",
     ]);
   });
 
   it("maps AI task types to AiStaff ids and recurring to null", () => {
-    expect(aiStaffIdForTaskEmployee("scheduleClerk")).toBeNull();
-    expect(aiStaffIdForTaskEmployee("eventIntel")).toBe("eventIntel");
-    expect(aiStaffIdForTaskEmployee("webIntel")).toBe("webIntel");
+    expect(aiStaffIdForTaskEmployee("recurring")).toBeNull();
+    expect(aiStaffIdForTaskEmployee("intel_event")).toBe("intel_event");
+    expect(aiStaffIdForTaskEmployee("web_intel")).toBe("web_intel");
     expect(aiStaffIdForTaskEmployee("leaderboard")).toBe("leaderboard");
-    expect(aiStaffIdForTaskEmployee("projectManager")).toBe("projectManager");
+    expect(aiStaffIdForTaskEmployee("project")).toBe("project");
   });
 
   it("marks only non-recurring types as AI", () => {
-    expect(taskEmployeeUsesAi("scheduleClerk")).toBe(false);
-    expect(taskEmployeeUsesAi("eventIntel")).toBe(true);
-    expect(taskEmployeeUsesAi("webIntel")).toBe(true);
+    expect(taskEmployeeUsesAi("recurring")).toBe(false);
+    expect(taskEmployeeUsesAi("intel_event")).toBe(true);
+    expect(taskEmployeeUsesAi("web_intel")).toBe(true);
     expect(taskEmployeeUsesAi("leaderboard")).toBe(true);
-    expect(taskEmployeeUsesAi("projectManager")).toBe(true);
+    expect(taskEmployeeUsesAi("project")).toBe(true);
   });
 });

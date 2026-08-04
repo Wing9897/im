@@ -12,7 +12,7 @@ def test_resolve_parent_clears_for_non_recurring() -> None:
     assert (
         resolve_parent_task_id(
             task_id="child",
-            effective_mode="event",
+            effective_mode="intel_event",
             supplied_parent_task_id="proj",
             existing_parent_task_id="proj",
         )
@@ -35,7 +35,7 @@ def test_resolve_parent_rejects_non_project_parent_mode() -> None:
             task_id="child",
             effective_mode="recurring",
             supplied_parent_task_id="not-proj",
-            parent_mode="event",
+            parent_mode="intel_event",
         )
 
 
@@ -71,7 +71,7 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
         json={
             "name": "Child Standup",
             "promptTemplate": "",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",
@@ -79,13 +79,13 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
     )
     assert update.status_code == 200
     assert update.json()["parentTaskId"] is None
-    assert update.json()["analysisMode"] == "event"
+    assert update.json()["analysisMode"] == "intel_event"
 
     db_row = await app.state.db.fetch_one(
         "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
         (child_id,),
     )
-    assert db_row["analysis_mode"] == "event"
+    assert db_row["analysis_mode"] == "intel_event"
     assert (
         await app.state.db.fetch_one(
             "SELECT task_id FROM recurring_schedules WHERE task_id = ?",
@@ -127,14 +127,14 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
         json={
             "name": "Leaving Project",
             "promptTemplate": "x",
-            "analysisMode": "event",
+            "analysisMode": "intel_event",
             "analysisTimeRange": "1d",
             "channelIds": [],
             "scheduleRrule": "FREQ=HOURLY",
         },
     )
     assert update.status_code == 200
-    assert update.json()["analysisMode"] == "event"
+    assert update.json()["analysisMode"] == "intel_event"
     assert update.json()["parentTaskId"] is None
 
     child_row = await app.state.db.fetch_one(

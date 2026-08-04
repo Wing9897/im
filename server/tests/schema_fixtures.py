@@ -59,8 +59,8 @@ async def make_existing_db(path: str, *, log_rows: list[tuple[str, str, str, str
         await conn.executescript(DDL)
         for row_id, time, level, category in log_rows:
             await conn.execute(
-                "INSERT INTO app_logs (id, time, level, category, message) VALUES (?, ?, ?, ?, ?)",
-                (row_id, time, level, category, f"message for {row_id}"),
+                "INSERT INTO app_logs (id, time, level, category, kind, message) VALUES (?, ?, ?, ?, ?, ?)",
+                (row_id, time, level, category, "system", f"message for {row_id}"),
             )
         await conn.commit()
     finally:

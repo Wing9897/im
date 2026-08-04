@@ -13,14 +13,14 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 LEADERBOARD_MODE: Final = "leaderboard"
-EVENT_MODE: Final = "event"
+INTEL_EVENT_MODE: Final = "intel_event"
 WEB_INTEL_MODE: Final = "web_intel"
 CHILD_RECURRING_MODE: Final = "recurring"
 PARENT_PROJECT_MODE: Final = "project"
 
 AnalysisMode = Literal[
     "leaderboard",
-    "event",
+    "intel_event",
     "web_intel",
     "recurring",
     "project",
@@ -57,7 +57,7 @@ ANALYSIS_MODE_SPECS: Final[tuple[AnalysisModeSpec, ...]] = (
         pipeline="message_batch",
     ),
     AnalysisModeSpec(
-        mode=EVENT_MODE,
+        mode=INTEL_EVENT_MODE,
         ai=True,
         schedulable=True,
         message_batch=True,

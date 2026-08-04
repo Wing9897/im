@@ -9,6 +9,7 @@ import type { RuntimeMessagesUpdateEvent } from "./runtimeMonitoring/types";
 export interface AnalysisStatusContextValue {
   queueStatus: QueueStatus | null;
   analysisPaused: boolean;
+  /** @deprecated Prefer {@link activeAnalyses}; first concurrent batch only. */
   activeAnalysis: ActiveAnalysisState | null;
   activeAnalyses: Map<string, ActiveAnalysisState>;
   lastAnalysisEvent: RuntimeAnalysisEvent | null;

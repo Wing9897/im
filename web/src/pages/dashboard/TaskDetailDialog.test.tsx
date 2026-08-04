@@ -64,7 +64,7 @@ function makeTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     id: "task-1",
     name: "Test Task",
     description: "",
-    analysisMode: "event",
+    analysisMode: "intel_event",
     analysisTimeRange: "7d",
     channelIds: [
       { id: "ch-1", platform: "telegram", platformId: "123" },

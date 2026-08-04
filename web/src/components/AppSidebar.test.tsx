@@ -155,7 +155,7 @@ describe("AppSidebar", () => {
       "物品",
       "來源",
       "排行榜",
-      "關鍵事件",
+      "情報事件",
       "時間規劃",
       "通知",
       "助手",
@@ -172,7 +172,7 @@ describe("AppSidebar", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     renderSidebar();
-    expect(container.textContent).toContain("Key Events");
+    expect(container.textContent).toContain("Intel events");
     expect(container.textContent).toContain("Live Monitor");
     expect(container.textContent).toContain("Tasks");
     expect(container.textContent).toContain("Account");

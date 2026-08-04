@@ -181,7 +181,7 @@ describe("ProjectDetailPage", () => {
 
   it("redirects when task is not a project", async () => {
     taskCatalogState.tasks = [
-      makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "event" }),
+      makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "intel_event" }),
     ];
 
     await act(async () => {

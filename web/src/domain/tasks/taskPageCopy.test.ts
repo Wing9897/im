@@ -29,7 +29,7 @@ describe("taskPageCopy", () => {
 
   it("empty state does not imply all tasks are analysis", () => {
     expect(getTasksEmptyTitle()).toBe("尚無任務");
-    expect(getTasksEmptyDescription()).toContain("循環任務");
+    expect(getTasksEmptyDescription()).toContain("週期任務");
     expect(getTasksEmptyDescription()).not.toContain("分析任務");
   });
 
@@ -67,7 +67,7 @@ describe("systemTaskCatalog", () => {
     const voice = catalog.find((item) => item.id === "voice-reminder");
     expect(voice?.kind).toBe("system");
     expect(voice?.staffId).toBeUndefined();
-    expect(voice?.shortDescription).toContain("循環任務");
+    expect(voice?.shortDescription).toContain("週期任務");
     expect(voice?.shortDescription).toContain("RRULE");
     expect(voice?.linkTo).toBe("/actions?tab=voice");
 
@@ -84,7 +84,7 @@ describe("systemTaskCatalog", () => {
     expect(batch?.title).toBe("分析批次");
     expect(batch?.staffId).toBeUndefined();
     expect(batch?.shortDescription).toContain("標記型");
-    expect(batch?.shortDescription).toContain("專案管理");
+    expect(batch?.shortDescription).toContain("專案任務");
     expect(catalog.find((item) => item.id === "project-manager")).toBeUndefined();
     expect(catalog.find((item) => item.id === "project-tick")).toBeUndefined();
   });
@@ -97,7 +97,7 @@ describe("systemTaskCatalog", () => {
       "User or Assistant",
     );
     expect(catalog.find((item) => item.id === "analysis-batch")?.shortDescription).toContain(
-      "Key Events",
+      "intel events",
     );
     expect(catalog.find((item) => item.id === "client-manager")?.title).toBe("Account manager");
   });
