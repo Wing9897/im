@@ -1,4 +1,8 @@
-"""IMAP email platform adapter (imap-tools polling with UID cursors)."""
+"""IMAP email platform adapter (imap-tools polling with UID cursors).
+
+Mailbox open/verify/fetch: ``email_imap_mailbox``. Poll cycle / cursor
+persist: ``email_imap_poll``. Fetch/parse helpers: ``email_imap_fetch``.
+"""
 
 from __future__ import annotations
 
@@ -30,9 +34,15 @@ from server.collector.email_imap_fetch import (
     parse_imap_message,
     sender_allowed,
 )
+from server.collector.email_imap_mailbox import (
+    fetch_all_folders,
+    mark_uids_seen,
+    open_mailbox,
+    verify_login_and_folders,
+)
+from server.collector.email_imap_poll import persist_folder_state, poll_once
 from server.db.database import Database
 from server.outbound import validate_imap_host
-from server.source_credentials import mutate_source_credentials
 from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
@@ -46,8 +56,6 @@ __all__ = [
     "html_to_text",
 ]
 
-_MAX_AUTH_FAILURES = 3
-_IMAP_IO_TIMEOUT_SECONDS = 5
 _IMAP_DRAIN_TIMEOUT_SECONDS = 6
 
 
@@ -174,105 +182,50 @@ class EmailImapAdapter(BasePlatformAdapter):
                 await asyncio.sleep(self._poll_interval)
 
     async def _poll_once(self) -> None:
-        from imap_tools.errors import MailboxLoginError
-
-        try:
-            results = await self._run_blocking(
-                self._fetch_all_folders,
-                dict(self._folder_cursors),
-                dict(self._folder_uidvalidities),
-            )
-        except MailboxLoginError as exc:
-            self._auth_failures += 1
-            friendly = format_imap_error(exc, host=self._imap_host, username=self._username)
-            logger.warning(
-                "Email IMAP auth failed for source %s (attempt %d): %s",
-                self._source_id,
-                self._auth_failures,
-                exc,
-            )
-            if self._auth_failures >= _MAX_AUTH_FAILURES:
-                self._state.status = "error"
-                self._state.last_error = friendly
-                await self._update_source_status("error", friendly)
-                self._broadcast_status_change("error", friendly)
-            return
-
-        self._auth_failures = 0
-        if self._state.status == "error":
-            self._state.status = "connected"
-            self._state.last_error = None
-            await self._update_source_status("connected")
-            self._broadcast_status_change("connected")
-
-        cursor_updates: dict[str, int] = {}
-        uid_validity_updates: dict[str, int] = {}
-        cursor_resets: set[str] = set()
-        for folder_result in results:
-            for fetched in folder_result.messages:
-                await self._ingest_fetched(fetched)
-            uid_validity_updates[folder_result.folder] = folder_result.uid_validity
-            if folder_result.cursor_reset:
-                cursor_resets.add(folder_result.folder)
-            if folder_result.max_uid is not None:
-                cursor_updates[folder_result.folder] = folder_result.max_uid
-            if self._mark_as_read and folder_result.seen_uids:
-                await self._run_blocking(self._mark_uids_seen, folder_result.folder, folder_result.seen_uids)
-
-        if cursor_updates or uid_validity_updates or cursor_resets:
-            await self._persist_folder_state(cursor_updates, uid_validity_updates, cursor_resets)
+        self._auth_failures = await poll_once(
+            source_id=self._source_id,
+            imap_host=self._imap_host,
+            username=self._username,
+            run_blocking=self._run_blocking,
+            fetch_all_folders=self._fetch_all_folders,
+            folder_cursors=self._folder_cursors,
+            folder_uidvalidities=self._folder_uidvalidities,
+            mark_as_read=self._mark_as_read,
+            mark_uids_seen=self._mark_uids_seen,
+            ingest_fetched=self._ingest_fetched,
+            persist_folder_state=self._persist_folder_state,
+            format_imap_error=format_imap_error,
+            state=self._state,
+            update_source_status=self._update_source_status,
+            broadcast_status_change=self._broadcast_status_change,
+            auth_failures=self._auth_failures,
+        )
 
     def _verify_login_and_folders(self) -> None:
-        with self._open_mailbox() as mailbox:
-            available = {info.name for info in mailbox.folder.list()}
-            missing = [folder for folder in self._folders if folder not in available]
-            if missing:
-                raise ValueError(f"IMAP folder(s) not found: {', '.join(missing)}")
+        verify_login_and_folders(open_mailbox_fn=self._open_mailbox, folders=self._folders)
 
     def _open_mailbox(self):
-        from imap_tools import MailBox, MailBoxUnencrypted
-
-        if self._use_ssl:
-            return MailBox(
-                self._imap_host,
-                port=self._imap_port,
-                timeout=_IMAP_IO_TIMEOUT_SECONDS,
-            ).login(self._username, self._password)
-        return MailBoxUnencrypted(
-            self._imap_host,
-            port=self._imap_port,
-            timeout=_IMAP_IO_TIMEOUT_SECONDS,
-        ).login(self._username, self._password)
+        return open_mailbox(
+            imap_host=self._imap_host,
+            imap_port=self._imap_port,
+            username=self._username,
+            password=self._password,
+            use_ssl=self._use_ssl,
+        )
 
     def _fetch_all_folders(
         self,
         folder_cursors: dict[str, int],
         folder_uidvalidities: dict[str, int],
     ) -> list[FolderPollResult]:
-        from imap_tools.errors import MailboxLoginError
-
-        results: list[FolderPollResult] = []
-        with self._open_mailbox() as mailbox:
-            for folder in self._folders:
-                try:
-                    results.append(
-                        self._fetch_folder(
-                            mailbox,
-                            folder,
-                            folder_cursors.get(folder),
-                            folder_uidvalidities.get(folder),
-                        )
-                    )
-                except MailboxLoginError:
-                    raise
-                except Exception as exc:  # noqa: BLE001 — isolate non-auth per-folder failures
-                    logger.warning(
-                        "Email poll folder failed for source %s folder=%s: %s",
-                        self._source_id,
-                        folder,
-                        exc,
-                    )
-        return results
+        return fetch_all_folders(
+            open_mailbox_fn=self._open_mailbox,
+            folders=self._folders,
+            folder_cursors=folder_cursors,
+            folder_uidvalidities=folder_uidvalidities,
+            source_id=self._source_id,
+            fetch_one=self._fetch_folder,
+        )
 
     def _fetch_folder(
         self,
@@ -324,11 +277,7 @@ class EmailImapAdapter(BasePlatformAdapter):
         )
 
     def _mark_uids_seen(self, folder: str, uids: list[int]) -> None:
-        from imap_tools import MailMessageFlags
-
-        with self._open_mailbox() as mailbox:
-            mailbox.folder.set(folder)
-            mailbox.flag([str(uid) for uid in uids], MailMessageFlags.SEEN, True)
+        mark_uids_seen(open_mailbox_fn=self._open_mailbox, folder=folder, uids=uids)
 
     async def _persist_folder_state(
         self,
@@ -336,33 +285,12 @@ class EmailImapAdapter(BasePlatformAdapter):
         uid_validity_updates: dict[str, int],
         cursor_resets: set[str],
     ) -> None:
-        normalized_cursors = {str(key): int(value) for key, value in cursor_updates.items()}
-        normalized_validities = {str(key): int(value) for key, value in uid_validity_updates.items()}
-
-        def _merge(current: dict[str, Any]) -> dict[str, Any]:
-            raw_cursors = current.get("folder_cursors")
-            cursors = dict(raw_cursors) if isinstance(raw_cursors, dict) else {}
-            for folder in cursor_resets:
-                cursors.pop(folder, None)
-            for folder, uid in normalized_cursors.items():
-                if folder in cursor_resets:
-                    cursors[folder] = uid
-                else:
-                    cursors[folder] = max(int(cursors.get(folder, 0)), uid)
-
-            raw_validities = current.get("folder_uidvalidities")
-            validities = dict(raw_validities) if isinstance(raw_validities, dict) else {}
-            validities.update(normalized_validities)
-            current["folder_cursors"] = cursors
-            current["folder_uidvalidities"] = validities
-            return current
-
-        persisted = await mutate_source_credentials(self._db, self._source_id, _merge)
-        if persisted is None:
-            return
-        raw_cursors = persisted.get("folder_cursors")
-        if isinstance(raw_cursors, dict):
-            self._folder_cursors = {str(key): int(value) for key, value in raw_cursors.items()}
-        raw_validities = persisted.get("folder_uidvalidities")
-        if isinstance(raw_validities, dict):
-            self._folder_uidvalidities = {str(key): int(value) for key, value in raw_validities.items()}
+        self._folder_cursors, self._folder_uidvalidities = await persist_folder_state(
+            db=self._db,
+            source_id=self._source_id,
+            cursor_updates=cursor_updates,
+            uid_validity_updates=uid_validity_updates,
+            cursor_resets=cursor_resets,
+            folder_cursors=self._folder_cursors,
+            folder_uidvalidities=self._folder_uidvalidities,
+        )

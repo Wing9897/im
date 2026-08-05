@@ -101,7 +101,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
-| `collector/` | Platform adapters — Telegram, Discord, RSS, HTTP poll, MQTT, Email (IMAP poll + UID cursors; fetch/parse helpers in `email_imap_fetch.py`) — with automatic reconnect/backoff |
+| `collector/` | Platform adapters — Telegram, Discord, RSS, HTTP poll, MQTT, Email (IMAP poll + UID cursors; helpers in `email_imap_fetch.py` / `email_imap_mailbox.py` / `email_imap_poll.py`) — with automatic reconnect/backoff |
 | `collector/adapter_factory.py` | **Input registry:** `ADAPTER_BUILDERS` keyed by `domain/collector_platforms.COLLECTOR_PLATFORMS` → `build_adapter` |
 | `domain/collector_platforms.py` | Leaf platform vocabulary (DDL + factory + FE mirror) |
 | `domain/analysis_modes.py` | **Process registry:** `AnalysisModeSpec` / derived frozensets (DDL + FE mirror) |
@@ -113,15 +113,17 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `paths.py` | Unified Desktop／CLI data root (`INTELLIGENCE_MONITOR_DATA_DIR` or product userData); full reset clears sessions, secret.key, and connection.json |
 | `collector/http_poll_helpers.py` | Shared helpers for HTTP poll adapter |
 | `collector/email_imap_fetch.py` | IMAP fetch / UID cursor helpers (public entry remains `email_imap.py`) |
+| `collector/email_imap_mailbox.py` | IMAP mailbox open／verify／multi-folder fetch／mark-seen helpers |
+| `collector/email_imap_poll.py` | IMAP poll-once cycle + folder cursor／UIDVALIDITY persistence |
 | `analyzer/` | AnalysisEngine + configurable LLM client (Ollama, OpenAI, Gemini, OpenRouter), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `web_intel` Agent multi-round ticks in `scheduler/web_intel_tick.py` — optional message gate when channels bound; `project` closed-loop Agent ticks in `scheduler/project_tick.py`; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
-| `prompts/` | **System / schema prompt** string library (`analysis` / `assistant` / `web_intel` / `clock` / …) + `locale.py` (UI locale normalize + output-language directive). Find wording here; assembly lives in `analyzer/prompt.py` / `agent/runtime.py` / `scheduler/web_intel_tick.py`. This is **not** the user-facing task template catalog — that lives in `presets/task_presets.py` and has zh-Hant UI locale as its display-text source of truth ([`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
+| `prompts/` | **System / schema prompt** string library (`analysis` / `assistant` / `web_intel` / `clock` / …) + `locale.py` (UI locale normalize + output-language directive). Find wording here; assembly lives in `analyzer/prompt.py` / `agent/runtime_prompt.py` (facade `agent/runtime.py`) / `scheduler/web_intel_tick.py`. This is **not** the user-facing task template catalog — that lives in `presets/task_presets.py` and has zh-Hant UI locale as its display-text source of truth ([`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `prompts/clock.py` | `current_time_prompt_block` — injects wall-clock context into analysis / agent prompts (deep-import by design; not re-exported from `prompts/__init__.py`) |
-| `agent/` | Text Agent runtime + tool registry (`calendar.*` / `messages.search` / optional `web.search`; `POST /api/v1/agent/chat`); see [Agent / assistant](#agent--assistant) |
+| `agent/` | Text Agent runtime + tool registry (`calendar.*` / `messages.search` / optional `web.search`; `POST /api/v1/agent/chat`); orchestration façade `runtime.py` with `runtime_prompt`／`runtime_complete`／`runtime_parse`／`runtime_tool_round`; see [Agent / assistant](#agent--assistant) |
 | `agent/project_scope.py` | Project-tick tool argument scoping (`project_scope_task_id`); calendar event writes use `origin=project` via `PROJECT_CHANNEL` |
 | `agent/tool_args.py` | Coercion for LLM-supplied tool arguments (int / bool / optional / camelCase-or-snake_case key aliases) — the one implementation every `tools_*` module uses |
 | `web_search/` | Multi-provider clients (DuckDuckGo default, Brave optional) + shared `WebSearchExecutionService` (`execution.py`) used by assistant / agent `web.search` tool (and by `web_intel` ticks via AgentRuntime; count / master-switch as params) |
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
-| `calendar/` | Shared calendar package: `query` (read／merge), `rrule` (validate／expand), `normalize` (wire-shape builder), `ics` (RFC 5545 parse／normalize), `imports` (preview／atomic UID upsert), plus write／dismiss services `user_events.py` + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`items`／`imports`／`dismissals`／`user-events`). |
+| `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus write／dismiss services `user_events.py` + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`items`／`imports`／`dismissals`／`user-events`). |
 | `services/task_writes.py` | Task-write rules shared by `POST/PUT /api/v1/tasks` and the calendar agent tools: RRULE validation + canonical storage (no `RRULE:` prefix), recurring-only recurrence gate, `HH:MM` clock normalize |
 | `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
 | `calendar/user_events.py` | Shared CRUD for manual UI + assistant calendar tools (wire shape via `wire/serializers.serialize_user_event`) |
