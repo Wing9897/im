@@ -99,16 +99,15 @@ export function useAnalysisControls() {
   }, [abortingAnalysis, updatingAnalysisPaused, requestQueueStatusRefresh, requestAiStatusRefresh, showToast]);
 
   const analysisPaused = optimisticPaused ?? (queueStatus?.analysisPaused ?? false);
-  const resolvedAnalyses = activeAnalyses ?? new Map();
   const systemStatus = useMemo(
     () =>
       buildSystemStatus({
         collectorStatus,
         aiEngineStatus,
         analysisPaused,
-        activeAnalyses: resolvedAnalyses,
+        activeAnalyses: activeAnalyses ?? new Map(),
       }),
-    [collectorStatus, aiEngineStatus, analysisPaused, resolvedAnalyses],
+    [collectorStatus, aiEngineStatus, analysisPaused, activeAnalyses],
   );
 
   return {

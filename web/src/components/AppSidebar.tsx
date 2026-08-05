@@ -22,77 +22,34 @@ import { useAnalysisStatus } from "../context/AnalysisStatusContext";
 import { useSidebarCollapsed } from "../hooks/useSidebarCollapsed";
 import { useSidebarRailMode } from "../hooks/useSidebarRailMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
-import { isSimpleModeHiddenPath } from "../domain/ui/simpleMode";
+import {
+  isSidebarItemActive,
+  MAIN_SIDEBAR_PREFETCH_PATHS,
+  SIDEBAR_BOTTOM_ITEMS,
+  visibleSidebarGroups,
+  type SidebarIconKey,
+} from "../domain/ui/sidebarNavigation";
 import { prefetchRoute } from "../routing/prefetchRoute";
 import { formatAppVersionLabel } from "../utils/appVersion";
 import { CountBadge } from "./ui/CountBadge";
 import { AssistantHistoryRail } from "./AssistantHistoryRail";
 
-interface SidebarNavItem {
-  to: string;
-  labelKey: string;
-  icon: LucideIcon;
-  /** Route prefix that marks this item active (defaults to exact match on `to`). */
-  activePrefix?: string;
-}
+export { MAIN_SIDEBAR_PREFETCH_PATHS };
 
-interface SidebarNavGroup {
-  /** i18n key under `nav` for the section label; null = no label (first cluster). */
-  labelKey: string | null;
-  items: readonly SidebarNavItem[];
-}
-
-/**
- * Visual grouping only — routes/paths unchanged.
- * Live → Management → Intelligence → Time → Interact.
- */
-const mainNavGroups: readonly SidebarNavGroup[] = [
-  {
-    labelKey: null,
-    items: [{ to: "/monitor", labelKey: "monitor", icon: Radio }],
-  },
-  {
-    labelKey: "groupManage",
-    items: [
-      { to: "/tasks", labelKey: "tasks", icon: ListChecks, activePrefix: "/tasks" },
-      { to: "/items", labelKey: "items", icon: Package },
-      { to: "/accounts", labelKey: "sources", icon: Database, activePrefix: "/accounts" },
-    ],
-  },
-  {
-    labelKey: "groupIntelligence",
-    items: [
-      { to: "/leaderboard", labelKey: "leaderboard", icon: Trophy },
-      { to: "/intelligence", labelKey: "keyEvents", icon: MapPin },
-    ],
-  },
-  {
-    labelKey: "groupTime",
-    items: [{ to: "/timeline", labelKey: "timeline", icon: CalendarDays }],
-  },
-  {
-    labelKey: "groupInteract",
-    items: [
-      { to: "/actions", labelKey: "actions", icon: BellRing },
-      { to: "/assistant", labelKey: "assistant", icon: MessageSquare },
-    ],
-  },
-];
-
-const bottomNavItems: readonly SidebarNavItem[] = [
-  { to: "/ai/provider", labelKey: "aiSettings", icon: Bot, activePrefix: "/ai" },
-  { to: "/settings", labelKey: "systemSettings", icon: Settings, activePrefix: "/settings" },
-  { to: "/account/identity", labelKey: "account", icon: User },
-];
-
-const mainNavItems: readonly SidebarNavItem[] = mainNavGroups.flatMap(
-  (group) => group.items,
-);
-
-/** Primary sidebar paths for idle prefetch after App ready. */
-export const MAIN_SIDEBAR_PREFETCH_PATHS: readonly string[] = mainNavItems.map(
-  (item) => item.to,
-);
+const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
+  monitor: Radio,
+  tasks: ListChecks,
+  items: Package,
+  sources: Database,
+  leaderboard: Trophy,
+  intelligence: MapPin,
+  timeline: CalendarDays,
+  actions: BellRing,
+  assistant: MessageSquare,
+  ai: Bot,
+  settings: Settings,
+  account: User,
+};
 
 const sidebarNavLinkClass = (isActive: boolean, collapsed: boolean) =>
   [
@@ -215,14 +172,7 @@ export function AppSidebar() {
   const { mode, setMode } = useSidebarRailMode();
   const { simpleMode } = useSimpleMode();
 
-  const visibleGroups = mainNavGroups
-    .map((group) => ({
-      ...group,
-      items: simpleMode
-        ? group.items.filter((item) => !isSimpleModeHiddenPath(item.to))
-        : group.items,
-    }))
-    .filter((group) => group.items.length > 0);
+  const visibleGroups = visibleSidebarGroups(simpleMode);
 
   useEffect(() => {
     if (location.pathname.startsWith("/tasks")) {
@@ -235,17 +185,6 @@ export function AppSidebar() {
       document.documentElement.style.removeProperty("--app-sidebar-width");
     };
   }, []);
-
-  const isItemActive = (item: SidebarNavItem) => {
-    if (item.activePrefix) {
-      // AI settings: only /ai/* (assistant is a top-level /assistant page).
-      if (item.activePrefix === "/ai") {
-        return location.pathname.startsWith("/ai");
-      }
-      return location.pathname.startsWith(item.activePrefix);
-    }
-    return location.pathname === item.to;
-  };
 
   const hideLabel = collapsed;
 
@@ -306,8 +245,8 @@ export function AppSidebar() {
                 <SidebarSectionLabel label={t(group.labelKey)} collapsed={hideLabel} />
               ) : null}
               {group.items.map((item) => {
-                const Icon = item.icon;
-                const isActive = isItemActive(item);
+                const Icon = SIDEBAR_ICONS[item.icon];
+                const isActive = isSidebarItemActive(item, location.pathname);
                 const label = t(item.labelKey);
                 if (item.to === "/tasks") {
                   return (
@@ -359,9 +298,9 @@ export function AppSidebar() {
               {t("settingsSection")}
             </div>
           ) : null}
-          {bottomNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isItemActive(item);
+          {SIDEBAR_BOTTOM_ITEMS.map((item) => {
+            const Icon = SIDEBAR_ICONS[item.icon];
+            const isActive = isSidebarItemActive(item, location.pathname);
             const label = t(item.labelKey);
             return (
               <NavLink

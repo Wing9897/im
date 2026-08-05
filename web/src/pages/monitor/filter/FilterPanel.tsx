@@ -2,23 +2,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type React from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AccountChannelPickerContent } from "../../../components/channels/AccountChannelPickerContent";
+import { SourceChannelPickerContent } from "../../../components/channels/SourceChannelPickerContent";
 import { PlatformFilterChips } from "../../../components/channels/PlatformFilterChips";
 import { SelectField, TextField } from "../../../components/ui";
 import type {
-  Account,
-  ChannelWithAccount,
+  Source,
+  ChannelWithSource,
   MessageFilters,
   MessageTimeRange,
 } from "../../../types";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { uniquePlatformsFrom } from "../../../utils/platformFilter";
 
 interface FilterPanelProps {
   filters: MessageFilters;
   onFiltersChange: (filters: MessageFilters) => void;
-  accounts: Account[];
-  channels: ChannelWithAccount[];
+  sources: Source[];
+  channels: ChannelWithSource[];
 }
 
 const SEARCH_DEBOUNCE_MS = 400;
@@ -39,7 +39,7 @@ function filterIdsByPlatform<T extends { id: string; platform: string }>(
 export function FilterPanel({
   filters,
   onFiltersChange,
-  accounts,
+  sources,
   channels,
 }: FilterPanelProps) {
   const { t } = useTranslation("monitor");
@@ -73,9 +73,9 @@ export function FilterPanel({
     return () => clearTimeout(timer);
   }, [searchDraft]);
 
-  const handleAccountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    onFiltersChange({ ...filters, accountIds: value ? [value] : undefined });
+    onFiltersChange({ ...filters, sourceIds: value ? [value] : undefined });
   };
 
   const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -89,26 +89,26 @@ export function FilterPanel({
       ...filters,
       platform: nextPlatform,
       channelIds: filterIdsByPlatform(filters.channelIds, channels, nextPlatform),
-      accountIds: filterIdsByPlatform(filters.accountIds, accounts, nextPlatform),
+      sourceIds: filterIdsByPlatform(filters.sourceIds, sources, nextPlatform),
     });
   };
 
   const selectedChannels = filters.channelIds ?? [];
   const selectedTimeRange = filters.timeRange ?? "";
   const selectedPlatform = filters.platform ?? "";
-  const selectedAccounts = filters.accountIds ?? [];
+  const selectedSources = filters.sourceIds ?? [];
 
   const uniquePlatforms = useMemo(
-    () => uniquePlatformsFrom(accounts, channels),
-    [accounts, channels],
+    () => uniquePlatformsFrom(sources, channels),
+    [sources, channels],
   );
 
-  const visibleAccounts = useMemo(
+  const visibleSources = useMemo(
     () =>
       selectedPlatform
-        ? accounts.filter((account) => account.platform === selectedPlatform)
-        : accounts,
-    [accounts, selectedPlatform],
+        ? sources.filter((source) => source.platform === selectedPlatform)
+        : sources,
+    [sources, selectedPlatform],
   );
 
   const visibleChannels = useMemo(
@@ -150,14 +150,14 @@ export function FilterPanel({
         <div className="im-filter-panel-row im-filter-panel-meta-row">
           <div className="im-filter-panel-field">
             <SelectField
-              value={selectedAccounts[0] ?? ""}
-              onChange={handleAccountChange}
-              aria-label={t("filter.accountAria")}
+              value={selectedSources[0] ?? ""}
+              onChange={handleSourceChange}
+              aria-label={t("filter.sourceAria")}
             >
-              <option value="">{t("filter.accountAll")}</option>
-              {visibleAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {formatAccountLabel(account)}
+              <option value="">{t("filter.sourceAll")}</option>
+              {visibleSources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {formatSourceLabel(source)}
                 </option>
               ))}
             </SelectField>
@@ -179,7 +179,7 @@ export function FilterPanel({
       </div>
 
       <div className="im-filter-panel-channels im-channel-picker-dialog">
-        <AccountChannelPickerContent
+        <SourceChannelPickerContent
           channels={visibleChannels}
           selectedIds={selectedChannels}
           onChange={(channelIds) =>

@@ -33,7 +33,7 @@ const VALID_LOG_LEVELS: readonly LogLevel[] = [
 const VALID_LOG_CATEGORIES: readonly LogCategory[] = [
   "analysis",
   "collector",
-  "account",
+  "source",
   "system",
   "frontend",
 ];

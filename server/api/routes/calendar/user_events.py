@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, Response
-from pydantic import BaseModel, Field
 
 from server.api.deps import get_db, publish_resource_modified
+from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
 from server.api.schemas.responses import UserEventResponse
 from server.calendar.user_events import (
     UserEventTaskIdError,
@@ -22,33 +22,6 @@ from server.calendar.user_events import (
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/user-events", tags=["calendar"])
-
-
-class UserEventCreateBody(BaseModel):
-    title: str
-    startTime: str
-    endTime: str | None = None
-    body: str = ""
-    location: str = ""
-    #: All-day events use ICS DATE semantics (wire end exclusive).
-    isAllDay: bool = False
-    #: Optional analysis-task provenance; omit / null / "" → NULL. ``__user__`` rejected.
-    taskId: str | None = None
-    #: Ownership workset; omit / null / "" / "__user__" → builtin system workset.
-    worksetId: str | None = None
-    model_config = {"extra": "forbid"}
-
-
-class UserEventPatchBody(BaseModel):
-    title: str | None = None
-    startTime: str | None = None
-    endTime: str | None = Field(default=None)
-    body: str | None = None
-    location: str | None = None
-    isAllDay: bool | None = None
-    taskId: str | None = None
-    worksetId: str | None = None
-    model_config = {"extra": "forbid"}
 
 
 def _http_from_validation(exc: UserEventValidationError) -> HTTPException:

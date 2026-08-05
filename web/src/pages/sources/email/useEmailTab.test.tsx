@@ -2,22 +2,22 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Account, EmailMailboxInfo } from "../../../types";
+import type { Source, EmailMailboxInfo } from "../../../types";
 import { useEmailTab } from "./useEmailTab";
 
-vi.mock("../../../api/accounts", () => ({
+vi.mock("../../../api/sources", () => ({
   createEmailMailbox: vi.fn(),
-  deleteAccount: vi.fn(),
+  deleteSource: vi.fn(),
   listEmailMailboxes: vi.fn(),
   updateEmailMailbox: vi.fn(),
 }));
 
 import {
   createEmailMailbox,
-  deleteAccount,
+  deleteSource,
   listEmailMailboxes,
   updateEmailMailbox,
-} from "../../../api/accounts";
+} from "../../../api/sources";
 
 let latest: ReturnType<typeof useEmailTab> | null = null;
 
@@ -26,7 +26,7 @@ function Harness() {
   return null;
 }
 
-function makeAccount(overrides: Partial<Account> = {}): Account {
+function makeSource(overrides: Partial<Source> = {}): Source {
   return {
     id: "email-1",
     platform: "email",
@@ -42,7 +42,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
 
 function makeMailbox(overrides: Partial<EmailMailboxInfo> = {}): EmailMailboxInfo {
   return {
-    account: makeAccount(),
+    source: makeSource(),
     imapHost: "imap.gmail.com",
     imapPort: 993,
     useSsl: true,
@@ -98,7 +98,7 @@ describe("useEmailTab", () => {
 
   it("creates a mailbox and refreshes the list", async () => {
     vi.mocked(createEmailMailbox).mockResolvedValue({
-      account: makeAccount(),
+      source: makeSource(),
       status: "connected",
       errorMessage: null,
       channels: [],
@@ -141,7 +141,7 @@ describe("useEmailTab", () => {
       .mockResolvedValueOnce([mailbox])
       .mockResolvedValueOnce([mailbox]);
     vi.mocked(updateEmailMailbox).mockResolvedValue({
-      account: mailbox.account,
+      source: mailbox.source,
       status: "connected",
       errorMessage: null,
       channels: [],
@@ -173,16 +173,16 @@ describe("useEmailTab", () => {
     });
 
     expect(updateEmailMailbox).toHaveBeenCalledWith(
-      mailbox.account.id,
+      mailbox.source.id,
       expect.objectContaining({ pollIntervalSeconds: 600 }),
     );
     expect(latest!.editTarget).toBeNull();
   });
 
-  it("removes a mailbox via deleteAccount", async () => {
+  it("removes a mailbox via deleteSource", async () => {
     const mailbox = makeMailbox();
     vi.mocked(listEmailMailboxes).mockResolvedValue([mailbox]);
-    vi.mocked(deleteAccount).mockResolvedValue(undefined);
+    vi.mocked(deleteSource).mockResolvedValue(undefined);
 
     act(() => {
       root.render(<Harness />);
@@ -200,7 +200,7 @@ describe("useEmailTab", () => {
       await latest!.handleRemoveMailbox();
     });
 
-    expect(deleteAccount).toHaveBeenCalledWith(mailbox.account.id);
+    expect(deleteSource).toHaveBeenCalledWith(mailbox.source.id);
     expect(latest!.removeTarget).toBeNull();
   });
 });

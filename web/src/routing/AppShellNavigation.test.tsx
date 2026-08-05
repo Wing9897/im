@@ -22,10 +22,9 @@ function StubPage({ label }: { label: string }) {
 const stubAnalysisValue: AnalysisStatusContextValue = {
   queueStatus: null,
   analysisPaused: false,
-  activeAnalysis: null,
   activeAnalyses: new Map(),
   lastAnalysisEvent: null,
-  lastAccountStatusChange: null,
+  lastSourceStatusChange: null,
   lastMessagesUpdate: null,
   requestQueueStatusRefresh: () => {},
 };
@@ -84,8 +83,8 @@ describe("App shell navigation", () => {
                     element: createElement(StubPage, { label: "intelligence" }),
                   }),
                   createElement(Route, {
-                    path: "/accounts",
-                    element: createElement(StubPage, { label: "accounts" }),
+                    path: "/sources",
+                    element: createElement(StubPage, { label: "sources" }),
                   }),
                   createElement(Route, {
                     path: "/ai/*",
@@ -128,8 +127,8 @@ describe("App shell navigation", () => {
     expect(container.querySelector("[data-testid='stub-page-intelligence']")).toBeTruthy();
 
     clickSidebarLink("來源");
-    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/accounts");
-    expect(container.querySelector("[data-testid='stub-page-accounts']")).toBeTruthy();
+    expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/sources");
+    expect(container.querySelector("[data-testid='stub-page-sources']")).toBeTruthy();
 
     clickSidebarLink("AI 設定");
     expect(container.querySelector("[data-testid='pathname']")?.textContent).toBe("/ai/provider");

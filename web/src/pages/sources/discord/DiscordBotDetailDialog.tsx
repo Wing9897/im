@@ -5,7 +5,7 @@ import {
   SourceDetailDialogLayout,
   buildDiscordBotDetailFields,
 } from "../../../components/detail";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
   discordDetailChannelListClass,
@@ -31,19 +31,19 @@ export function DiscordBotDetailDialog({ bot, onClose }: DiscordBotDetailDialogP
   return (
     <SourceDetailDialogLayout
       ariaLabel={t("discord.detailAria", {
-        name: formatAccountLabel(bot.account) || fallback,
+        name: formatSourceLabel(bot.source) || fallback,
       })}
       title={
         <>
-          <span style={statusDotStyle(bot.account.status)} aria-hidden="true" />
-          {formatAccountLabel(bot.account) || fallback}
+          <span style={statusDotStyle(bot.source.status)} aria-hidden="true" />
+          {formatSourceLabel(bot.source) || fallback}
         </>
       }
       subtitle={t("discord.subtitle", {
-        status: formatStatusLabel(bot.account.status),
+        status: formatStatusLabel(bot.source.status),
         channels: t("discord.channelsCount", { count: bot.channels.length }),
       })}
-      error={bot.account.lastError}
+      error={bot.source.lastError}
       onClose={onClose}
     >
       {Object.keys(channelsByGuild).length > 0 ? (

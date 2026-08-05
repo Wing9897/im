@@ -17,7 +17,7 @@ def assert_keys(obj: dict[str, Any], required: Iterable[str], where: str) -> Non
 
 MESSAGE_KEYS = [
     "id",
-    "accountId",
+    "sourceId",
     "platform",
     "platformId",
     "channelName",

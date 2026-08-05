@@ -18,7 +18,7 @@ import { isMonitorViewMode } from "../../domain/monitor/monitorViewMode";
 function makeMessage(overrides: Partial<Message> = {}): Message {
   return {
     id: overrides.id ?? "m1",
-    accountId: overrides.accountId ?? "a1",
+    sourceId: overrides.sourceId ?? "a1",
     channelId: overrides.channelId ?? "c1",
     channelName: overrides.channelName ?? "News",
     platform: overrides.platform ?? "telegram",
@@ -33,11 +33,11 @@ function makeMessage(overrides: Partial<Message> = {}): Message {
 }
 
 describe("monitorPageModel", () => {
-  it("prunes stale channelIds and accountIds once the catalog is known", () => {
+  it("prunes stale channelIds and sourceIds once the catalog is known", () => {
     const result = normalizeMonitorFilters(
       {
         channelIds: ["telegram:gone", "telegram:keep"],
-        accountIds: ["acct-gone", "acct-keep"],
+        sourceIds: ["acct-gone", "acct-keep"],
         search: "btc",
       },
       [{ id: "acct-keep" }] as Parameters<typeof normalizeMonitorFilters>[1],
@@ -46,7 +46,7 @@ describe("monitorPageModel", () => {
     expect(result.changed).toBe(true);
     expect(result.filters).toEqual({
       channelIds: ["telegram:keep"],
-      accountIds: ["acct-keep"],
+      sourceIds: ["acct-keep"],
       search: "btc",
     });
   });
@@ -182,14 +182,14 @@ describe("monitorStatusLabel", () => {
       search: "btc",
       platform: "telegram",
       timeRange: "today",
-      accountIds: ["a1", "a2"],
+      sourceIds: ["a1", "a2"],
       channelIds: ["telegram:1"],
     });
     expect(chips.map((chip) => chip.key)).toEqual([
       "search",
       "platform",
       "timeRange",
-      "accounts",
+      "sources",
       "channels",
     ]);
     expect(clearMessageFilterKey({ search: "btc", platform: "telegram" }, "search")).toEqual({

@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import type { ChannelWithAccount } from "../types";
+import type { ChannelWithSource } from "../types";
 import {
   channelDisplayHint,
   channelDisplayLabel,
   filterChannelsByQuery,
 } from "./channelPickerModel";
 
-function makeChannel(overrides: Partial<ChannelWithAccount> = {}): ChannelWithAccount {
+function makeChannel(overrides: Partial<ChannelWithSource> = {}): ChannelWithSource {
   return {
     id: "rss:https://example.com/feed.xml",
     platform: "rss",
     platformId: "https://example.com/feed.xml",
     channelName: "Example",
-    accountIds: ["acc-1"],
-    accountId: "acc-1",
-    accountName: "Example Feed",
+    sourceIds: ["acc-1"],
+    sourceId: "acc-1",
+    sourceName: "Example Feed",
     ...overrides,
   };
 }
 
 describe("channelPickerModel", () => {
-  it("filters channels by name, platform id, and account", () => {
+  it("filters channels by name, platform id, and source", () => {
     const channels = [
       makeChannel(),
       makeChannel({
@@ -29,7 +29,7 @@ describe("channelPickerModel", () => {
         platform: "telegram",
         platformId: "1",
         channelName: "News",
-        accountName: "Bot",
+        sourceName: "Bot",
       }),
     ];
     expect(filterChannelsByQuery(channels, "news")).toHaveLength(1);
@@ -41,6 +41,6 @@ describe("channelPickerModel", () => {
     const channel = makeChannel();
     expect(channelDisplayLabel(channel)).toBe("Example");
     expect(channelDisplayHint(channel, "flat")).toBe("example.com/feed.xml");
-    expect(channelDisplayHint(channel, "account-tree")).toBe("");
+    expect(channelDisplayHint(channel, "source-tree")).toBe("");
   });
 });

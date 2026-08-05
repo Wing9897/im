@@ -16,8 +16,7 @@ from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
 from server.wire.serializers import serialize_analysis_event
 
-# Compatibility aliases retained for tests and external imports.
-DEFAULT_LIMIT = INTELLIGENCE_DEFAULT_RESULT_LIMIT
+# Alias retained for tests and external imports.
 HARD_CAP = INTELLIGENCE_RESULT_HARD_CAP
 MAX_SEARCH_LENGTH = 500
 BODY_TRUNCATE = 400

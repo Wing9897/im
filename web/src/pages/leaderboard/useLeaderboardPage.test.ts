@@ -16,8 +16,8 @@ vi.mock("../../context/TaskCatalogContext", () => ({
   }),
 }));
 
-vi.mock("../../hooks/useChannelsWithAccounts", () => ({
-  useChannelsWithAccounts: () => ({ channels: [] }),
+vi.mock("../../hooks/useChannelsWithSources", () => ({
+  useChannelsWithSources: () => ({ channels: [] }),
 }));
 
 vi.mock("../../hooks/useRefreshOnAnalysisEvent", () => ({

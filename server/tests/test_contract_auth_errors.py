@@ -27,7 +27,7 @@ def assert_structured_error(body: dict) -> None:
 
 
 async def test_404_error_body(client):
-    resp = await client.delete("/api/v1/accounts/no-such-account")
+    resp = await client.delete("/api/v1/sources/no-such-account")
     assert resp.status_code == 404
     body = resp.json()
     assert_structured_error(body)
@@ -129,7 +129,7 @@ async def test_remote_read_only_key_forbidden_on_messages_and_agent_chat(app, re
         headers=headers,
         json={
             "platform": "webhook",
-            "channel_id": "scope-neg",
+            "channelId": "scope-neg",
             "content": "should be forbidden",
         },
     )

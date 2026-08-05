@@ -15,38 +15,21 @@
  *   `useTimelineFiltering.test.ts`.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useEffect, useMemo, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppPageShell } from "../../components/ui";
-import {
-  createUserEvent,
-  updateUserEvent,
-} from "../../api/userEvents";
-import {
-  dismissTimelineEvent,
-  restoreTimelineEvent,
-  timelineItemDismissalSource,
-} from "../../api/timelineDismissals";
-import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
-import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
 import { startOfDay } from "../../domain/timeline/dateUtils";
-import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import type { TimelineItem } from "../../types";
 import { getOsTimeMs } from "../../utils/time";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
-import {
-  UserEventDialog,
-  type UserEventFormValues,
-} from "../../components/calendar/UserEventDialog";
 import { TimelinePageProvider, type TimelinePageContextValue } from "./TimelinePageContext";
+import { TimelinePageDialogs } from "./TimelinePageDialogs";
 import { useTimelineFullscreen } from "./useTimelineFullscreen";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
+import { useTimelinePageDialogs } from "./useTimelinePageDialogs";
 
 /** Fill main canvas height; do not use 100vh (that overflows titlebar/topbar and scrolls the whole page). */
 const timelinePageShellClass =
@@ -57,40 +40,20 @@ const timelineFullscreenShellClass =
 
 const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
-type PendingTimelineConfirm =
-  | { kind: "dismiss"; event: TimelineItem }
-  | { kind: "restore"; event: TimelineItem };
-
 export function TimelinePage() {
-  const { t } = useTranslation("timeline");
-  const { t: tc } = useTranslation("common");
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
-  const { worksets, tasks, refreshTasks } = useTaskCatalog();
-  const { showToast } = useToast();
+  const { worksets, tasks } = useTaskCatalog();
   useErrorToast(data.pageError);
   const { containerRef, isFullscreen, toggleFullscreen } = useTimelineFullscreen();
-
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
-  const [editingEvent, setEditingEvent] = useState<TimelineItem | null>(null);
-  const [createWorksetId, setCreateWorksetId] = useState<string | null>(null);
-  const [dialogBusy, setDialogBusy] = useState(false);
-  const [dialogError, setDialogError] = useState<string | null>(null);
-  const [userEventActionBusy, setUserEventActionBusy] = useState(false);
-  const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
+  const dialogs = useTimelinePageDialogs({
+    refreshEvents: data.refreshEvents,
+    selectedEvent: selection.selectedEvent,
+    setSelectedEvent: selection.setSelectedEvent,
+  });
   const createLinkHandled = useRef(false);
   const eventLinkHandled = useRef<string | null>(null);
   const eventDayJumped = useRef<string | null>(null);
-
-  const openCreateDialog = useCallback((worksetId?: string | null) => {
-    setDialogMode("create");
-    setEditingEvent(null);
-    setCreateWorksetId(worksetId?.trim() || null);
-    setDialogError(null);
-    setDialogOpen(true);
-  }, []);
 
   // Deep-link from workset detail: /timeline?newEvent=1&worksetId=…
   useEffect(() => {
@@ -102,12 +65,12 @@ export function TimelinePage() {
     if (createLinkHandled.current) return;
     createLinkHandled.current = true;
     const wid = searchParams.get("worksetId")?.trim() || null;
-    openCreateDialog(wid);
+    dialogs.openCreateDialog(wid);
     const next = new URLSearchParams(searchParams);
     next.delete("newEvent");
     next.delete("worksetId");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, openCreateDialog]);
+  }, [searchParams, setSearchParams, dialogs]);
 
   // Deep-link from workset summary: /timeline?eventId=…&at=…
   useEffect(() => {
@@ -156,122 +119,6 @@ export function TimelinePage() {
     selection,
   ]);
 
-  const openEditDialog = useCallback((event: TimelineItem) => {
-    setDialogMode("edit");
-    setEditingEvent(event);
-    setDialogError(null);
-    setDialogOpen(true);
-  }, []);
-
-  const openEditItem = useCallback(
-    (event: TimelineItem) => {
-      const itemId = event.itemId?.trim();
-      if (!itemId) return;
-      const params = new URLSearchParams({ itemId });
-      if (event.itemDateKind) params.set("itemDateKind", event.itemDateKind);
-      void navigate(`/items?${params.toString()}`);
-    },
-    [navigate],
-  );
-
-  const closeDialog = useCallback(() => {
-    if (dialogBusy) return;
-    setDialogOpen(false);
-    setEditingEvent(null);
-    setCreateWorksetId(null);
-    setDialogError(null);
-  }, [dialogBusy]);
-
-  const handleDialogSubmit = useCallback(
-    async (values: UserEventFormValues) => {
-      setDialogBusy(true);
-      setDialogError(null);
-      try {
-        const worksetId = toUserEventFormWorksetId(values.worksetId);
-        let catalogForRefresh: Awaited<ReturnType<typeof refreshTasks>> | undefined;
-        if (dialogMode === "create" && values.kind === "recurring") {
-          const created = await createRecurringTimelineEvent({
-            title: values.title,
-            worksetId,
-            isAllDay: values.isAllDay,
-            eventStartTime: values.eventStartTime,
-            eventEndTime: values.eventEndTime,
-            location: values.location,
-            body: values.body,
-            rrule: values.rrule,
-          });
-          // Await the refreshed catalog so the filter plan includes the new
-          // recurring task (workset-only filters otherwise skip calendar fetch).
-          // If catalog refresh fails, stitch the created task into the current
-          // snapshot so the same race does not resurface.
-          catalogForRefresh =
-            (await refreshTasks().catch(() => undefined)) ?? [...tasks, created];
-          showToast(t("messages.recurringCreated"), "success");
-        } else if (dialogMode === "create") {
-          await createUserEvent({
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            worksetId,
-          });
-        } else if (editingEvent) {
-          await updateUserEvent(editingEvent.id, {
-            title: values.title,
-            startTime: values.startTime,
-            endTime: values.endTime || null,
-            body: values.body,
-            location: values.location,
-            isAllDay: values.isAllDay,
-            worksetId,
-          });
-        }
-        setDialogOpen(false);
-        setEditingEvent(null);
-        await data.refreshEvents(catalogForRefresh);
-      } catch (error) {
-        setDialogError(error instanceof Error ? error.message : t("messages.saveFailed"));
-      } finally {
-        setDialogBusy(false);
-      }
-    },
-    [dialogMode, editingEvent, data, refreshTasks, showToast, t, tasks],
-  );
-
-  const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {
-    setPendingConfirm({ kind: "dismiss", event });
-  }, []);
-
-  const handleRestoreTimelineEvent = useCallback((event: TimelineItem) => {
-    setPendingConfirm({ kind: "restore", event });
-  }, []);
-
-  const confirmPendingAction = useCallback(async () => {
-    if (!pendingConfirm) return;
-    const { kind, event } = pendingConfirm;
-    setUserEventActionBusy(true);
-    try {
-      if (kind === "dismiss") {
-        await dismissTimelineEvent(timelineItemDismissalSource(event.source), event.id);
-        if (selection.selectedEvent?.id === event.id) {
-          selection.setSelectedEvent(null);
-        }
-      } else {
-        await restoreTimelineEvent(timelineItemDismissalSource(event.source), event.id);
-      }
-      setPendingConfirm(null);
-      await data.refreshEvents();
-    } catch (error) {
-      const fallback =
-        kind === "dismiss" ? t("messages.dismissFailed") : t("messages.restoreFailed");
-      showToast(error instanceof Error ? error.message : fallback, "error");
-    } finally {
-      setUserEventActionBusy(false);
-    }
-  }, [pendingConfirm, data, selection, showToast, t]);
-
   const contextValue: TimelinePageContextValue = useMemo(
     () => ({
       selectedEvent: selection.selectedEvent,
@@ -284,11 +131,11 @@ export function TimelinePage() {
       onResetTimeOverride: selection.resetTimeOverride,
       onSetEventStatus: sources.setEventStatus,
       eventStatuses: sources.eventStatuses,
-      onEditUserEvent: openEditDialog,
-      onEditItemEvent: openEditItem,
-      onDismissTimelineEvent: handleDismissTimelineEvent,
-      onRestoreTimelineEvent: handleRestoreTimelineEvent,
-      userEventActionBusy,
+      onEditUserEvent: dialogs.openEditDialog,
+      onEditItemEvent: dialogs.openEditItem,
+      onDismissTimelineEvent: dialogs.handleDismissTimelineEvent,
+      onRestoreTimelineEvent: dialogs.handleRestoreTimelineEvent,
+      userEventActionBusy: dialogs.userEventActionBusy,
       showDismissed: filters.showDismissed,
       showOngoing: filters.showOngoing,
       showEnding: filters.showEnding,
@@ -316,11 +163,11 @@ export function TimelinePage() {
       navigation.ganttColumns,
       gantt,
       selection,
-      openEditDialog,
-      openEditItem,
-      handleDismissTimelineEvent,
-      handleRestoreTimelineEvent,
-      userEventActionBusy,
+      dialogs.openEditDialog,
+      dialogs.openEditItem,
+      dialogs.handleDismissTimelineEvent,
+      dialogs.handleRestoreTimelineEvent,
+      dialogs.userEventActionBusy,
       filters.showDismissed,
       filters.showOngoing,
       filters.showEnding,
@@ -356,7 +203,7 @@ export function TimelinePage() {
               onJumpTo={navigation.jumpTo}
               onMoveCursor={navigation.moveCursor}
               visibleRangeLabel={navigation.visibleRangeLabel}
-              onAddEvent={openCreateDialog}
+              onAddEvent={dialogs.openCreateDialog}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => {
                 void toggleFullscreen();
@@ -397,58 +244,25 @@ export function TimelinePage() {
         </AppPageShell>
       </div>
 
-      <UserEventDialog
-        open={dialogOpen}
-        mode={dialogMode}
-        worksetOptions={worksets.map((ws) => ({
-          id: ws.id,
-          name: ws.name,
-        }))}
-        initial={
-          editingEvent
-            ? {
-                title: editingEvent.title,
-                startTime: editingEvent.startTime,
-                endTime: editingEvent.endTime ?? "",
-                location: editingEvent.location ?? "",
-                body: editingEvent.body ?? "",
-                worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
-                isAllDay: Boolean(editingEvent.isAllDay),
-              }
-            : {
-                worksetId: toUserEventFormWorksetId(createWorksetId),
-                isAllDay: false,
-              }
-        }
-        busy={dialogBusy}
-        error={dialogError}
-        onClose={closeDialog}
-        onSubmit={(values) => {
-          void handleDialogSubmit(values);
+      <TimelinePageDialogs
+        dialogOpen={dialogs.dialogOpen}
+        dialogMode={dialogs.dialogMode}
+        editingEvent={dialogs.editingEvent}
+        createWorksetId={dialogs.createWorksetId}
+        dialogBusy={dialogs.dialogBusy}
+        dialogError={dialogs.dialogError}
+        worksetOptions={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}
+        pendingConfirm={dialogs.pendingConfirm}
+        userEventActionBusy={dialogs.userEventActionBusy}
+        onCloseDialog={dialogs.closeDialog}
+        onSubmitDialog={(values) => {
+          void dialogs.handleDialogSubmit(values);
+        }}
+        onCancelConfirm={dialogs.cancelPendingConfirm}
+        onConfirmPending={() => {
+          void dialogs.confirmPendingAction();
         }}
       />
-
-      {pendingConfirm ? (
-        <ConfirmDialog
-          title={
-            pendingConfirm.kind === "dismiss"
-              ? t("detail.dismiss")
-              : t("detail.restore")
-          }
-          body={
-            pendingConfirm.kind === "dismiss"
-              ? t("messages.dismissConfirm", { title: pendingConfirm.event.title })
-              : t("messages.restoreConfirm", { title: pendingConfirm.event.title })
-          }
-          confirmLabel={tc("dialog.confirm")}
-          confirmBusyLabel={tc("dialog.confirm")}
-          busy={userEventActionBusy}
-          onCancel={() => {
-            if (!userEventActionBusy) setPendingConfirm(null);
-          }}
-          onConfirm={confirmPendingAction}
-        />
-      ) : null}
     </TimelinePageProvider>
   );
 }

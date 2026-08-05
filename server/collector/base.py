@@ -1,6 +1,6 @@
 """Base platform adapter: shared insertion, status broadcast, and reconnect.
 
-Message insertion targets the v3 ``messages`` schema (account_id,
+Message insertion targets the v3 ``messages`` schema (source_id,
 platform_message_id, sender_id, raw_data, created_at) with dedup via the
 ``(platform, platform_id, platform_message_id)`` unique index, and publishes a
 ``messages_updated`` SSE event carrying the full camelCase ``Message`` object
@@ -15,10 +15,10 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from server.account_status import update_account_status
 from server.collector.backoff import BASE_DELAY_SECONDS, MAX_DELAY_SECONDS, next_delay
 from server.db.database import Database
 from server.ingestion import insert_message
+from server.source_status import update_source_status
 from server.sse import SseBroadcaster
 from server.util import new_id
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class AdapterState:
     """Runtime state for a platform adapter instance."""
 
-    account_id: str
+    source_id: str
     platform: str
     status: str  # "connected" | "disconnected" | "error" | "connecting"
     retry_count: int = 0
@@ -42,7 +42,7 @@ class AdapterStatus:
     """Per-adapter snapshot for the collector status endpoint."""
 
     name: str
-    account_id: str
+    source_id: str
     connected: bool
     last_error: str | None
     last_connected_at: str | None
@@ -51,12 +51,12 @@ class AdapterStatus:
 class BasePlatformAdapter(ABC):
     """Abstract base for all platform adapters."""
 
-    def __init__(self, account_id: str, db: Database, broadcaster: SseBroadcaster) -> None:
-        self._account_id = account_id
+    def __init__(self, source_id: str, db: Database, broadcaster: SseBroadcaster) -> None:
+        self._source_id = source_id
         self._db = db
         self._broadcaster = broadcaster
         self._state = AdapterState(
-            account_id=account_id,
+            source_id=source_id,
             platform=self._platform_name(),
             status="disconnected",
         )
@@ -74,15 +74,15 @@ class BasePlatformAdapter(ABC):
         self._state.connected_since = datetime.now(timezone.utc)
 
     def _broadcast_status_change(self, status: str, last_error: str | None = None) -> None:
-        """Publish per-account connection changes.
+        """Publish per-source connection changes.
 
         Aggregate collector status (running/stopped/error) is published by
         ``CollectorManager`` so ``collector_status_changed`` stays consistent.
         """
-        account_payload: dict = {"accountId": self._account_id, "status": status}
+        source_payload: dict = {"sourceId": self._source_id, "status": status}
         if last_error is not None:
-            account_payload["lastError"] = last_error
-        self._broadcaster.publish("account_status_changed", account_payload)
+            source_payload["lastError"] = last_error
+        self._broadcaster.publish("source_status_changed", source_payload)
 
     @abstractmethod
     async def connect(self) -> None: ...
@@ -120,7 +120,7 @@ class BasePlatformAdapter(ABC):
         message = await insert_message(
             self._db,
             message_id=new_id(),
-            account_id=self._account_id,
+            source_id=self._source_id,
             platform=platform,
             platform_id=platform_id,
             content=content,
@@ -137,10 +137,10 @@ class BasePlatformAdapter(ABC):
 
     # ── reconnection ────────────────────────────────────────────────────
 
-    async def _account_disabled(self) -> bool:
-        """True when the account row is gone or explicitly disconnected."""
+    async def _source_disabled(self) -> bool:
+        """True when the source row is gone or explicitly disconnected."""
         try:
-            row = await self._db.fetch_one("SELECT status FROM accounts WHERE id = ?", (self._account_id,))
+            row = await self._db.fetch_one("SELECT status FROM sources WHERE id = ?", (self._source_id,))
         except Exception:  # noqa: BLE001 — a read error must not abort retries
             return False
         if row is None:
@@ -159,20 +159,20 @@ class BasePlatformAdapter(ABC):
 
         delay: float | None = None
         while True:
-            if await self._account_disabled():
+            if await self._source_disabled():
                 self._state.status = "disconnected"
                 logger.info(
-                    "Account %s disabled during reconnect; stopping retries",
-                    self._account_id,
+                    "Source %s disabled during reconnect; stopping retries",
+                    self._source_id,
                 )
                 self._broadcast_status_change("disconnected", self._state.last_error)
                 return False
 
             delay = next_delay(delay, base=base_delay, cap=max_delay)
             logger.info(
-                "Reconnect attempt %d for account %s (delay=%.1fs)",
+                "Reconnect attempt %d for source %s (delay=%.1fs)",
                 self._state.retry_count + 1,
-                self._account_id,
+                self._source_id,
                 delay,
             )
             await asyncio.sleep(delay)
@@ -185,27 +185,27 @@ class BasePlatformAdapter(ABC):
                 self._state.retry_count += 1
                 self._state.last_error = str(exc)
                 logger.warning(
-                    "Reconnect attempt %d failed for account %s: %s",
+                    "Reconnect attempt %d failed for source %s: %s",
                     self._state.retry_count,
-                    self._account_id,
+                    self._source_id,
                     exc,
                 )
                 continue
 
             self._mark_connected()
-            await self._update_account_status("connected")
+            await self._update_source_status("connected")
             self._broadcast_status_change("connected")
-            logger.info("Reconnected account %s", self._account_id)
+            logger.info("Reconnected source %s", self._source_id)
             return True
 
-    async def _update_account_status(self, status: str, last_error: str | None = None) -> None:
-        """Best-effort persist of the account status (and optional error)."""
+    async def _update_source_status(self, status: str, last_error: str | None = None) -> None:
+        """Best-effort persist of the source status (and optional error)."""
         try:
-            await update_account_status(self._db, self._account_id, status, last_error=last_error)
+            await update_source_status(self._db, self._source_id, status, last_error=last_error)
         except Exception as exc:  # noqa: BLE001 — status persistence is best-effort
             logger.warning(
-                "Failed to persist account %s status=%s: %s",
-                self._account_id,
+                "Failed to persist source %s status=%s: %s",
+                self._source_id,
                 status,
                 exc,
             )

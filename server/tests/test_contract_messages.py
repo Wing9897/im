@@ -92,25 +92,25 @@ async def test_messages_page_searches_sender_id_and_channel_name(client):
     assert by_channel_name.json()["totalCount"] == 2
 
 
-async def test_channels_with_accounts(client):
-    resp = await client.get("/api/v1/channels/with-accounts")
+async def test_channels_with_sources(client):
+    resp = await client.get("/api/v1/channels/with-sources")
     body = resp.json()
     assert len(body) == 5
     for channel in body:
         assert_keys(
             channel,
-            ["id", "platform", "channelName", "accountName"],
-            "ChannelWithAccount",
+            ["id", "platform", "channelName", "sourceName"],
+            "ChannelWithSource",
         )
         # Quirk #9: id must be the synthetic "platform:platformId" string.
         assert channel["id"].startswith(f"{channel['platform']}:")
     tg = next(c for c in body if c["platform"] == "telegram")
-    assert tg["accountName"]
+    assert tg["sourceName"]
 
 
 async def test_channel_id_matches_message_synthesis(client):
     """Monitor filter compares channel.id to `${platform}:${platformId}`."""
-    channels = (await client.get("/api/v1/channels/with-accounts")).json()
+    channels = (await client.get("/api/v1/channels/with-sources")).json()
     messages = (await client.get("/api/v1/messages/page")).json()["messages"]
     channel_ids = {c["id"] for c in channels}
     for message in messages:
@@ -121,10 +121,10 @@ async def test_ingest_message(client):
     resp = await client.post(
         "/api/v1/messages",
         json={
-            "account_id": seed.TG_ACCOUNT,
-            "channel_id": seed.TG_CHANNEL[1],
+            "sourceId": seed.TG_SOURCE,
+            "channelId": seed.TG_CHANNEL[1],
             "platform": "telegram",
-            "platform_message_id": "9001",
+            "platformMessageId": "9001",
             "content": "external ingest test",
             "timestamp": "2026-07-01T12:30:00+00:00",
             "metadata": {"group": "news", "tags": ["test"]},
@@ -137,9 +137,9 @@ async def test_ingest_message(client):
     dup = await client.post(
         "/api/v1/messages",
         json={
-            "channel_id": seed.TG_CHANNEL[1],
+            "channelId": seed.TG_CHANNEL[1],
             "platform": "telegram",
-            "platform_message_id": "9001",
+            "platformMessageId": "9001",
             "content": "duplicate",
         },
     )
@@ -151,7 +151,7 @@ async def test_ingest_limits_reject_oversized_payloads(client):
         "/api/v1/messages",
         json={
             "platform": "rss",
-            "channel_id": "feed",
+            "channelId": "feed",
             "content": "x" * 100_001,
         },
     )
@@ -159,7 +159,7 @@ async def test_ingest_limits_reject_oversized_payloads(client):
 
     oversized_batch = await client.post(
         "/api/v1/messages/batch",
-        json={"messages": [{"platform": "rss", "channel_id": "feed", "content": str(index)} for index in range(501)]},
+        json={"messages": [{"platform": "rss", "channelId": "feed", "content": str(index)} for index in range(501)]},
     )
     assert oversized_batch.status_code == 422
 

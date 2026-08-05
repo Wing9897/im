@@ -88,10 +88,10 @@ async def _insert_message(
     await _ensure_gate_channel(db)
     now = utc_now_iso()
     await db.execute(
-        "INSERT INTO messages (id, account_id, platform, platform_id, platform_message_id, "
+        "INSERT INTO messages (id, source_id, platform, platform_id, platform_message_id, "
         "sender_id, sender_name, content, timestamp, created_at) "
         "VALUES (?, ?, ?, ?, ?, 's1', 'Sender', ?, ?, ?)",
-        (message_id, seed.TG_ACCOUNT, *_WI_CHANNEL, message_id, content, now, now),
+        (message_id, seed.TG_SOURCE, *_WI_CHANNEL, message_id, content, now, now),
     )
 
 
@@ -187,7 +187,8 @@ async def test_web_intel_tick_timed_agent_writes_events(app, monkeypatch: pytest
 
 @pytest.mark.asyncio
 async def test_web_intel_tick_forces_web_search_via_channel(
-    app, monkeypatch: pytest.MonkeyPatch,
+    app,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Assistant master switch off must not block scheduled web_intel Agent ticks."""
     db = app.state.db
@@ -250,7 +251,8 @@ async def test_web_intel_tick_empty_prompt_records_skipped_batch(app) -> None:
 
 @pytest.mark.asyncio
 async def test_web_intel_message_gate_under_threshold_skips_quietly(
-    app, monkeypatch: pytest.MonkeyPatch,
+    app,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     db = app.state.db
     task_id = "web-intel-under-threshold"
@@ -288,7 +290,8 @@ async def test_web_intel_message_gate_under_threshold_skips_quietly(
 
 @pytest.mark.asyncio
 async def test_web_intel_message_gate_claims_and_injects(
-    app, monkeypatch: pytest.MonkeyPatch,
+    app,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     db = app.state.db
     task_id = "web-intel-gate-claim"
@@ -332,7 +335,8 @@ async def test_web_intel_message_gate_claims_and_injects(
 
 @pytest.mark.asyncio
 async def test_web_intel_tick_failure_is_completed_with_error_message(
-    app, monkeypatch: pytest.MonkeyPatch,
+    app,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     db = app.state.db
     task_id = "web-intel-fail"
@@ -364,7 +368,8 @@ async def test_web_intel_tick_failure_is_completed_with_error_message(
 
 @pytest.mark.asyncio
 async def test_web_intel_consecutive_failures_deactivate_task(
-    app, monkeypatch: pytest.MonkeyPatch,
+    app,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     db = app.state.db
     task_id = "web-intel-fuse"

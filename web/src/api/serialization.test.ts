@@ -18,24 +18,24 @@ describe("JSON serialization round-trip consistency", () => {
     expect(JSON.parse(JSON.stringify(task))).toEqual(task);
   });
 
-  it("Account survives JSON round-trip", () => {
-    const account = {
+  it("Source survives JSON round-trip", () => {
+    const source = {
       id: "acc-1",
       platform: "telegram",
-      name: "Main Account",
+      name: "Main Source",
       status: "connected",
       lastError: null,
       lastConnectedAt: "2026-01-10T12:00:00.000Z",
       createdAt: "2026-01-01T00:00:00.000Z",
       updatedAt: "2026-01-10T12:00:00.000Z",
     };
-    expect(JSON.parse(JSON.stringify(account))).toEqual(account);
+    expect(JSON.parse(JSON.stringify(source))).toEqual(source);
   });
 
   it("Message survives JSON round-trip", () => {
     const message = {
       id: "msg-1",
-      accountId: "acc-1",
+      sourceId: "acc-1",
       channelId: "ch-1",
       channelName: "general",
       platform: "discord",

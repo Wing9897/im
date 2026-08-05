@@ -357,11 +357,8 @@ export interface TaskModeFieldVisibility {
   isRecurring: boolean;
 }
 
-/** Field visibility rules for ChatEditorForm by analysis mode (+ channel gate). */
-export function getTaskModeFieldVisibility(
-  mode: AnalysisMode,
-  channelIds: readonly string[] = [],
-): TaskModeFieldVisibility {
+/** Field visibility rules for ChatEditorForm by analysis mode. */
+export function getTaskModeFieldVisibility(mode: AnalysisMode): TaskModeFieldVisibility {
   const hidesPromptAndChannel = analysisModeHidesPromptAndChannel(mode);
   const channelsRequired = analysisModeRequiresChannels(mode);
   const channelsOptional = analysisModeShowsOptionalChannels(mode);

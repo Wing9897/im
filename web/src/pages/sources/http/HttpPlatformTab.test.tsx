@@ -67,7 +67,7 @@ describe("HttpPlatformTab", () => {
           { i18n },
           createElement(
             MemoryRouter,
-            { initialEntries: ["/accounts?tab=http"] },
+            { initialEntries: ["/sources?tab=http"] },
             createElement(HttpPlatformTab),
           ),
         ),
@@ -91,7 +91,7 @@ describe("HttpPlatformTab", () => {
           { i18n },
           createElement(
             MemoryRouter,
-            { initialEntries: ["/accounts?tab=http&mode=webhook"] },
+            { initialEntries: ["/sources?tab=http&mode=webhook"] },
             createElement(HttpPlatformTab),
           ),
         ),
@@ -115,7 +115,7 @@ describe("HttpPlatformTab", () => {
           { i18n },
           createElement(
             MemoryRouter,
-            { initialEntries: ["/accounts?tab=http&mode=webhook"] },
+            { initialEntries: ["/sources?tab=http&mode=webhook"] },
             createElement(
               "div",
               null,

@@ -31,19 +31,19 @@ class RssAdapter(BasePlatformAdapter):
     """Polls RSS feeds and inserts new entries as messages.
 
     Transient HTTP/parse errors are logged and retried. After
-    ``_MAX_POLL_FAILURES`` consecutive failures the account escalates to
+    ``_MAX_POLL_FAILURES`` consecutive failures the source escalates to
     ``error`` + SSE; a successful poll clears the counter and recovers.
     """
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         feed_url: str,
         poll_interval: float = DEFAULT_POLL_INTERVAL,
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._feed_url = feed_url
         self._poll_interval = clamp_poll_interval(poll_interval)
         self._seen_entries: set[str] = set()
@@ -91,8 +91,8 @@ class RssAdapter(BasePlatformAdapter):
             self._mark_connected()
             self._broadcast_status_change("connected")
             logger.info(
-                "RSS adapter connected for account %s (feed: %s, title: %s)",
-                self._account_id,
+                "RSS adapter connected for source %s (feed: %s, title: %s)",
+                self._source_id,
                 self._feed_url,
                 self._feed_title,
             )
@@ -117,7 +117,7 @@ class RssAdapter(BasePlatformAdapter):
             self._session = None
 
         self._state.status = "disconnected"
-        logger.info("RSS adapter disconnected for account %s", self._account_id)
+        logger.info("RSS adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._poll_task is not None and not self._poll_task.done()
@@ -126,9 +126,9 @@ class RssAdapter(BasePlatformAdapter):
         self._poll_failures += 1
         message = f"RSS poll {kind} error: {exc}"
         logger.warning(
-            "RSS poll %s error for account %s (%s) attempt %d/%d: %s",
+            "RSS poll %s error for source %s (%s) attempt %d/%d: %s",
             kind,
-            self._account_id,
+            self._source_id,
             self._feed_url,
             self._poll_failures,
             _MAX_POLL_FAILURES,
@@ -137,7 +137,7 @@ class RssAdapter(BasePlatformAdapter):
         if self._poll_failures >= _MAX_POLL_FAILURES:
             self._state.status = "error"
             self._state.last_error = message
-            await self._update_account_status("error", message)
+            await self._update_source_status("error", message)
             self._broadcast_status_change("error", message)
 
     async def _record_poll_success(self) -> None:
@@ -145,7 +145,7 @@ class RssAdapter(BasePlatformAdapter):
         if self._state.status == "error":
             self._state.status = "connected"
             self._state.last_error = None
-            await self._update_account_status("connected")
+            await self._update_source_status("connected")
             self._broadcast_status_change("connected")
 
     async def _poll_loop(self) -> None:
@@ -198,9 +198,9 @@ class RssAdapter(BasePlatformAdapter):
                     self._remember_entry(entry_id)
                 except (OSError, ValueError) as exc:
                     logger.warning(
-                        "RSS poll: failed to insert entry %s for account %s: %s",
+                        "RSS poll: failed to insert entry %s for source %s: %s",
                         entry_id,
-                        self._account_id,
+                        self._source_id,
                         exc,
                     )
 
@@ -264,8 +264,8 @@ class RssAdapter(BasePlatformAdapter):
     async def _load_subscribed_channels(self) -> None:
         platform = self._platform_name()
         rows = await self._db.fetch_all(
-            "SELECT platform_id FROM account_channels WHERE account_id = ? AND platform = ?",
-            (self._account_id, platform),
+            "SELECT platform_id FROM source_channels WHERE source_id = ? AND platform = ?",
+            (self._source_id, platform),
         )
         self._subscribed_platform_ids = [row["platform_id"] for row in rows]
         if not self._subscribed_platform_ids:

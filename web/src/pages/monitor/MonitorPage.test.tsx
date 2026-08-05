@@ -6,10 +6,10 @@ import i18n from "../../i18n";
 
 import type { Message } from "../../types";
 
-// REST API mocks for monitor page account/channel/message queries
-const { mockListAccounts, mockListChannelsWithAccounts, mockQueryMessagesPage, runtimeState } = vi.hoisted(() => ({
-  mockListAccounts: vi.fn(),
-  mockListChannelsWithAccounts: vi.fn(),
+// REST API mocks for monitor page source/channel/message queries
+const { mockListSources, mockListChannelsWithSources, mockQueryMessagesPage, runtimeState } = vi.hoisted(() => ({
+  mockListSources: vi.fn(),
+  mockListChannelsWithSources: vi.fn(),
   mockQueryMessagesPage: vi.fn(),
   runtimeState: {
     lastMessagesUpdate: null as {
@@ -21,8 +21,8 @@ const { mockListAccounts, mockListChannelsWithAccounts, mockQueryMessagesPage, r
   },
 }));
 
-vi.mock("../../api/accounts", () => ({
-  listAccounts: mockListAccounts,
+vi.mock("../../api/sources", () => ({
+  listSources: mockListSources,
 }));
 
 vi.mock("../../api/messages", () => ({
@@ -30,7 +30,7 @@ vi.mock("../../api/messages", () => ({
 }));
 
 vi.mock("../../api/channels", () => ({
-  listChannelsWithAccounts: mockListChannelsWithAccounts,
+  listChannelsWithSources: mockListChannelsWithSources,
 }));
 
 vi.mock("../../context/AnalysisStatusContext", () => ({
@@ -114,8 +114,8 @@ describe("MonitorPage", () => {
     document.body.appendChild(container);
     window.localStorage.clear();
     runtimeState.lastMessagesUpdate = null;
-    mockListAccounts.mockReset();
-    mockListChannelsWithAccounts.mockReset();
+    mockListSources.mockReset();
+    mockListChannelsWithSources.mockReset();
     mockQueryMessagesPage.mockReset();
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
   });
@@ -133,17 +133,17 @@ describe("MonitorPage", () => {
 
   it("renders SkeletonScreen during loading state instead of messages", async () => {
     // Make queryMessagesPage never resolve to keep loading state
-    mockListAccounts.mockResolvedValue([
+    mockListSources.mockResolvedValue([
       {
-        id: "account-1",
+        id: "source-1",
         platform: "telegram",
-        name: "Account 1",
+        name: "Source 1",
         status: "connected",
         createdAt: "2026-04-17T03:00:00.000Z",
         updatedAt: "2026-04-17T03:00:00.000Z",
       },
     ]);
-    mockListChannelsWithAccounts.mockResolvedValue([]);
+    mockListChannelsWithSources.mockResolvedValue([]);
     mockQueryMessagesPage.mockReturnValue(new Promise(() => {}));
 
     await act(async () => {
@@ -169,33 +169,33 @@ describe("MonitorPage", () => {
   it("prepends only novel runtime messages that match the current filters", async () => {
     window.localStorage.setItem(
       "im:monitor:filters",
-      JSON.stringify({ accountIds: ["account-1"] }),
+      JSON.stringify({ sourceIds: ["source-1"] }),
     );
 
-    const existingMessage = makeMessage({ id: "message-existing", accountId: "account-1" });
+    const existingMessage = makeMessage({ id: "message-existing", sourceId: "source-1" });
     const novelMatchingMessage = makeMessage({
       id: "message-new",
-      accountId: "account-1",
+      sourceId: "source-1",
       platformMessageId: "platform-message-2",
       content: "new content",
     });
-    const otherAccountMessage = makeMessage({
-      id: "message-other-account",
-      accountId: "account-2",
+    const otherSourceMessage = makeMessage({
+      id: "message-other-source",
+      sourceId: "source-2",
       platformMessageId: "platform-message-3",
     });
 
-    mockListAccounts.mockResolvedValue([
+    mockListSources.mockResolvedValue([
       {
-        id: "account-1",
+        id: "source-1",
         platform: "telegram",
-        name: "Account 1",
+        name: "Source 1",
         status: "connected",
         createdAt: "2026-04-17T03:00:00.000Z",
         updatedAt: "2026-04-17T03:00:00.000Z",
       },
     ]);
-    mockListChannelsWithAccounts.mockResolvedValue([
+    mockListChannelsWithSources.mockResolvedValue([
       {
         id: "channel-1",
         platform: "telegram",
@@ -222,7 +222,7 @@ describe("MonitorPage", () => {
 
     runtimeState.lastMessagesUpdate = {
       payload: {
-        messages: [existingMessage, otherAccountMessage, novelMatchingMessage],
+        messages: [existingMessage, otherSourceMessage, novelMatchingMessage],
       },
       receivedAt: 1,
     };
@@ -250,17 +250,17 @@ describe("MonitorPage", () => {
       platformMessageId: "platform-message-2",
     });
 
-    mockListAccounts.mockResolvedValue([
+    mockListSources.mockResolvedValue([
       {
-        id: "account-1",
+        id: "source-1",
         platform: "telegram",
-        name: "Account 1",
+        name: "Source 1",
         status: "connected",
         createdAt: "2026-04-17T03:00:00.000Z",
         updatedAt: "2026-04-17T03:00:00.000Z",
       },
     ]);
-    mockListChannelsWithAccounts.mockResolvedValue([
+    mockListChannelsWithSources.mockResolvedValue([
       {
         id: "channel-1",
         platform: "telegram",

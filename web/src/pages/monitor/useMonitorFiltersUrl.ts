@@ -29,7 +29,7 @@ export function parseMonitorFiltersFromSearchParams(
     params.has("q") ||
     params.has("platform") ||
     params.has("time") ||
-    params.has("accounts") ||
+    params.has("sources") ||
     params.has("channels");
   if (!hasAny) return null;
 
@@ -40,8 +40,8 @@ export function parseMonitorFiltersFromSearchParams(
   const platform = params.get("platform");
   if (platform?.trim()) filters.platform = platform.trim();
   if (time && TIME_RANGES.has(time)) filters.timeRange = time as MessageTimeRange;
-  const accounts = parseCsv(params.get("accounts"));
-  if (accounts) filters.accountIds = accounts;
+  const sources = parseCsv(params.get("sources"));
+  if (sources) filters.sourceIds = sources;
   const channels = parseCsv(params.get("channels"));
   if (channels) filters.channelIds = channels;
   return filters;
@@ -61,9 +61,9 @@ export function writeMonitorFiltersToSearchParams(
   if (filters.timeRange) params.set("time", filters.timeRange);
   else params.delete("time");
 
-  const accounts = serializeCsv(filters.accountIds);
-  if (accounts) params.set("accounts", accounts);
-  else params.delete("accounts");
+  const sources = serializeCsv(filters.sourceIds);
+  if (sources) params.set("sources", sources);
+  else params.delete("sources");
 
   const channels = serializeCsv(filters.channelIds);
   if (channels) params.set("channels", channels);
@@ -83,7 +83,7 @@ interface UseMonitorFiltersUrlOptions {
 
 /**
  * Syncs monitor filters with URL query params:
- * `?q=&platform=&time=&accounts=&channels=`
+ * `?q=&platform=&time=&sources=&channels=`
  * Preserves unrelated keys such as `id`.
  * Re-applies per `location.key` fingerprint so keep-mount second deep-links work.
  */

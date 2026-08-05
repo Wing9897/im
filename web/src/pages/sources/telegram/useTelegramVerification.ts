@@ -3,9 +3,9 @@ import {
   submitTelegram2fa,
   submitTelegramCode,
   waitTelegramQrLogin,
-} from "../../../api/accounts";
+} from "../../../api/sources";
 import { toErrorMessage } from "../../../utils/errors";
-import type { VerificationStart, VerifyStep } from "../accounts/accountsPageModel";
+import type { VerificationStart, VerifyStep } from "./telegramSourcePageModel";
 import i18n from "../../../i18n";
 
 interface TelegramVerificationState {
@@ -27,15 +27,15 @@ interface TelegramVerificationState {
 
 /**
  * Sub-hook managing the Telegram verification flow (code / QR / 2FA).
- * Extracted from useTelegramAccounts for single-responsibility.
+ * Extracted from useTelegramSources for single-responsibility.
  */
 export function useTelegramVerification(deps: {
-  clearAddAccountForm: () => void;
-  fetchAccounts: () => Promise<void>;
+  clearAddTelegramSourceForm: () => void;
+  fetchSources: () => Promise<void>;
 }): TelegramVerificationState {
-  const { clearAddAccountForm, fetchAccounts } = deps;
+  const { clearAddTelegramSourceForm, fetchSources } = deps;
 
-  const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
+  const [pendingSourceId, setPendingSourceId] = useState<string | null>(null);
   const [verifyStep, setVerifyStep] = useState<VerifyStep>(null);
   const [verifyCode, setVerifyCode] = useState("");
   const [verifyPassword, setVerifyPassword] = useState("");
@@ -47,11 +47,11 @@ export function useTelegramVerification(deps: {
   const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
   const [qrWaiting, setQrWaiting] = useState(false);
   const qrPollGeneration = useRef(0);
-  const fetchAccountsRef = useRef(fetchAccounts);
-  fetchAccountsRef.current = fetchAccounts;
+  const fetchSourcesRef = useRef(fetchSources);
+  fetchSourcesRef.current = fetchSources;
 
   const startVerification = useCallback((params: VerificationStart) => {
-    setPendingAccountId(params.accountId);
+    setPendingSourceId(params.sourceId);
     setVerifyStep(params.step);
     setPendingLoginStage(params.pendingLoginStage ?? params.step);
     setPendingPhoneCodeHash(params.phoneCodeHash ?? null);
@@ -62,7 +62,7 @@ export function useTelegramVerification(deps: {
 
   const closeVerifyDialog = useCallback(() => {
     qrPollGeneration.current += 1;
-    setPendingAccountId(null);
+    setPendingSourceId(null);
     setVerifyStep(null);
     setVerifyCode("");
     setVerifyPassword("");
@@ -72,14 +72,14 @@ export function useTelegramVerification(deps: {
     setQrUrl(null);
     setQrExpiresAt(null);
     setQrWaiting(false);
-    clearAddAccountForm();
-  }, [clearAddAccountForm]);
+    clearAddTelegramSourceForm();
+  }, [clearAddTelegramSourceForm]);
 
   const closeVerifyDialogRef = useRef(closeVerifyDialog);
   closeVerifyDialogRef.current = closeVerifyDialog;
 
   useEffect(() => {
-    if (verifyStep !== "qr_required" || !pendingAccountId) {
+    if (verifyStep !== "qr_required" || !pendingSourceId) {
       return;
     }
 
@@ -90,7 +90,7 @@ export function useTelegramVerification(deps: {
     const poll = async () => {
       while (!cancelled && qrPollGeneration.current === generation) {
         try {
-          const resp = await waitTelegramQrLogin(pendingAccountId, {
+          const resp = await waitTelegramQrLogin(pendingSourceId, {
             // Keep under the 90s HTTP budget so post-scan login work still fits.
             timeoutSeconds: 20,
           });
@@ -114,7 +114,7 @@ export function useTelegramVerification(deps: {
           }
           if (resp.nextStep === "connected") {
             closeVerifyDialogRef.current();
-            await fetchAccountsRef.current();
+            await fetchSourcesRef.current();
             return;
           }
           setVerifyError(String(i18n.t("sources:verify.verifyFailed")));
@@ -143,11 +143,11 @@ export function useTelegramVerification(deps: {
       qrPollGeneration.current += 1;
       setQrWaiting(false);
     };
-  }, [verifyStep, pendingAccountId]);
+  }, [verifyStep, pendingSourceId]);
 
   const handleSubmitCode = async () => {
     const normalizedCode = verifyCode.trim();
-    if (!pendingAccountId) return;
+    if (!pendingSourceId) return;
     if (!normalizedCode) {
       setVerifyError(String(i18n.t("sources:verify.codeRequired")));
       return;
@@ -155,7 +155,7 @@ export function useTelegramVerification(deps: {
     setVerifySubmitting(true);
     setVerifyError(null);
     try {
-      const resp = await submitTelegramCode(pendingAccountId, {
+      const resp = await submitTelegramCode(pendingSourceId, {
         code: normalizedCode,
         pendingLoginStage,
         phoneCodeHash: pendingPhoneCodeHash,
@@ -172,7 +172,7 @@ export function useTelegramVerification(deps: {
         setPendingPhoneCodeHash(resp.phoneCodeHash ?? null);
       } else if (resp.nextStep === "connected") {
         closeVerifyDialog();
-        await fetchAccounts();
+        await fetchSources();
       } else {
         setVerifyError(String(i18n.t("sources:verify.verifyFailed")));
       }
@@ -185,7 +185,7 @@ export function useTelegramVerification(deps: {
 
   const handleSubmit2fa = async () => {
     const normalizedPassword = verifyPassword.trim();
-    if (!pendingAccountId) return;
+    if (!pendingSourceId) return;
     if (!normalizedPassword) {
       setVerifyError(String(i18n.t("sources:verify.passwordRequired")));
       return;
@@ -193,14 +193,14 @@ export function useTelegramVerification(deps: {
     setVerifySubmitting(true);
     setVerifyError(null);
     try {
-      const resp = await submitTelegram2fa(pendingAccountId, {
+      const resp = await submitTelegram2fa(pendingSourceId, {
         password: normalizedPassword,
         pendingLoginStage,
         phoneCodeHash: pendingPhoneCodeHash,
       });
       if (resp.nextStep === "connected") {
         closeVerifyDialog();
-        await fetchAccounts();
+        await fetchSources();
       } else {
         setVerifyError(String(i18n.t("sources:verify.twoFaFailed")));
       }

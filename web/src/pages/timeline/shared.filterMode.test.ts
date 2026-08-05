@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { resolveTimelineFilterPlan } from "./shared";
+import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
 
 describe("resolveTimelineFilterPlan", () => {
   const tasks = [

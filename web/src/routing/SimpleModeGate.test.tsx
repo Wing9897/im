@@ -111,8 +111,8 @@ describe("SimpleModeGate", () => {
     });
 
     it("redirects deep links under a hidden prefix", async () => {
-      // Prefix matching, not equality — /accounts/tg-1 is just as hidden.
-      await renderAt("/accounts/tg-1");
+      // Prefix matching, not equality — /sources/tg-1 is just as hidden.
+      await renderAt("/sources/tg-1");
 
       expect(home()).toBeTruthy();
       expect(gated()).toBeNull();

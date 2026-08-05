@@ -16,7 +16,6 @@ vi.mock("../context/CollectorStatusContext", () => ({
 vi.mock("../context/AnalysisStatusContext", () => ({
   useAnalysisStatus: () => ({
     analysisPaused: false,
-    activeAnalysis: null,
     queueStatus: { analysisPaused: false, pendingCount: 0, processingBatches: [] },
     activeAnalyses: new Map(),
     requestQueueStatusRefresh: () => {},

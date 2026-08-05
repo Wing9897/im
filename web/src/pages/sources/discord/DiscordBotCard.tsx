@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { SourceCard, SourceCardErrorLines } from "../SourceCard";
 import { ReconnectButton } from "../ReconnectButton";
-import { subscribeDiscordChannels } from "../../../api/accounts";
+import { subscribeDiscordChannels } from "../../../api/sources";
 import { Button } from "../../../components/ui";
 import type { DiscordBotInfo, DiscordChannelInfo } from "../../../types";
 import { toErrorMessage } from "../../../utils/errors";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { useToast } from "../../../context/ToastContext";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import { useReconnectCard } from "../useReconnectCard";
@@ -29,12 +29,12 @@ export function DiscordBotCard({
   onReconnectSuccess,
 }: DiscordBotCardProps) {
   const { t } = useTranslation("sources");
-  const status = bot.account.status;
-  const name = formatAccountLabel(bot.account) || t("discord.fallbackName");
+  const status = bot.source.status;
+  const name = formatSourceLabel(bot.source) || t("discord.fallbackName");
   const showError = status === "error" || status === "disconnected";
 
   const { reconnecting, reconnectError, handleReconnect } = useReconnectCard({
-    accountId: bot.account.id,
+    sourceId: bot.source.id,
     onReconnectSuccess,
   });
   const { showToast } = useToast();
@@ -47,17 +47,17 @@ export function DiscordBotCard({
     DISCORD_CHANNELS_EXPANDED_STORAGE_KEY,
     {},
   );
-  const channelsExpanded = expandedByBot[bot.account.id] ?? false;
+  const channelsExpanded = expandedByBot[bot.source.id] ?? false;
   const setChannelsExpanded = useCallback(
     (next: boolean | ((prev: boolean) => boolean)) => {
       setExpandedByBot((prev) => {
-        const current = prev[bot.account.id] ?? false;
+        const current = prev[bot.source.id] ?? false;
         const value = typeof next === "function" ? next(current) : next;
         if (value === current) return prev;
-        return { ...prev, [bot.account.id]: value };
+        return { ...prev, [bot.source.id]: value };
       });
     },
-    [bot.account.id, setExpandedByBot],
+    [bot.source.id, setExpandedByBot],
   );
 
   const handleChannelToggle = useCallback(
@@ -71,7 +71,7 @@ export function DiscordBotCard({
       setSelectedChannels(next);
       setSubscribing(true);
       try {
-        await subscribeDiscordChannels(bot.account.id, Array.from(next));
+        await subscribeDiscordChannels(bot.source.id, Array.from(next));
       } catch (e) {
         setSelectedChannels(selectedChannels);
         showToast(toErrorMessage(e), "error");
@@ -79,7 +79,7 @@ export function DiscordBotCard({
         setSubscribing(false);
       }
     },
-    [bot.account.id, selectedChannels, showToast],
+    [bot.source.id, selectedChannels, showToast],
   );
 
   const channelsByGuild = bot.channels.reduce<Record<string, DiscordChannelInfo[]>>(
@@ -128,7 +128,7 @@ export function DiscordBotCard({
     >
       <SourceCardErrorLines
         status={status}
-        accountLastError={bot.account.lastError}
+        sourceLastError={bot.source.lastError}
         reconnectError={reconnectError}
       />
 

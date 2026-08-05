@@ -3,14 +3,14 @@ import { LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { ChannelPickerDialogShell } from "../../../components/channels/ChannelPickerDialogShell";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import { FilterTrigger } from "../../../components/ui";
 
 interface WallChannelPickerProps {
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   selectedChannelIds: string[];
   onChange: (channelIds: string[]) => void;
-  /** Compact icon control for ops-board frame header. */
+  /** Compact icon control for a board frame header. */
   compact?: boolean;
 }
 

@@ -41,10 +41,9 @@ const { useRealAnalysisStatus, mockAnalysisStatusValue } = vi.hoisted(() => {
   const value = {
     queueStatus: null as null,
     analysisPaused: false,
-    activeAnalysis: null as null,
     activeAnalyses: new Map(),
     lastAnalysisEvent: null as any,
-    lastAccountStatusChange: null as null,
+    lastSourceStatusChange: null as null,
     lastMessagesUpdate: null as any,
     requestQueueStatusRefresh: () => {},
   };
@@ -86,7 +85,7 @@ const { useMapView } = await import("./useMapView");
 function createMessage(id: string, timestamp: string): Message {
   return {
     id,
-    accountId: "acc-1",
+    sourceId: "acc-1",
     channelId: "ch-1",
     channelName: "test-channel",
     platform: "discord",
@@ -645,10 +644,9 @@ const MapViewIsolationConsumer = memo(function MapViewIsolationConsumer() {
 const fixedAnalysisValue: AnalysisStatusContextValue = {
   queueStatus: null,
   analysisPaused: false,
-  activeAnalysis: null,
   activeAnalyses: new Map(),
   lastAnalysisEvent: null,
-  lastAccountStatusChange: null,
+  lastSourceStatusChange: null,
   lastMessagesUpdate: null,
   requestQueueStatusRefresh: () => {},
 };

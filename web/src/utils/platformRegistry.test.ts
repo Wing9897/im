@@ -27,7 +27,7 @@ describe("getPlatformSpec", () => {
     expect(getPlatformSpec("telegram")).toEqual({
       id: "telegram",
       label: "Telegram",
-      pickerLayout: "account-tree",
+      pickerLayout: "source-tree",
       scopeLabelKey: "channel",
     });
     expect(getPlatformSpec("rss")).toEqual({

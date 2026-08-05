@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Optional, Union
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
-from server.domain.analysis_modes import ALL_ANALYSIS_MODES, AnalysisMode
+from server.api.schemas.requests import TaskConfigBody
+from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
+from server.domain.analysis_modes import ALL_ANALYSIS_MODES
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.errors import VALIDATION_ERROR, http_error
-from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row
+from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row, fetch_task_workset_id
 from server.queries.worksets_queries import workset_exists
 from server.scheduler.task_schedule_overrides import (
     ALLOWED_STRATEGY_MODES,
@@ -33,41 +32,6 @@ ALLOWED_MODES = ALL_ANALYSIS_MODES
 # Recurring-only recurrence expanded at query time — never an AI analysis trigger.
 # AI trigger schedules use RRULE-shaped strings (purpose=trigger) for APScheduler
 # only and must never calendar-expand.
-
-
-class TaskConfigBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str
-    description: Optional[str] = None
-    promptTemplate: str = ""
-    #: Optional search seed / keywords for ``analysisMode=web_intel`` (ignored otherwise).
-    webSearchQuery: Optional[str] = None
-    analysisMode: Optional[AnalysisMode] = None
-    analysisTimeRange: Optional[str] = None
-    channelIds: Optional[list[Union[str, dict[str, Any]]]] = None
-    scheduleRrule: Optional[str] = Field(
-        default=None,
-        description=(
-            "Canonical trigger-purpose RRULE for AI modes (APScheduler next-run only). "
-            "Never calendar-expanded. Sole create/update schedule write SoT on the HTTP wire."
-        ),
-    )
-    includeInTimeline: Optional[bool] = None
-    isActive: Optional[bool] = None
-    #: Task-owned (project): null/omit → resolve to 20; not a global config fallback.
-    projectWaveIntervalSeconds: Optional[int] = Field(
-        default=None, ge=PROJECT_WAVE_INTERVAL_MIN, le=PROJECT_WAVE_INTERVAL_MAX
-    )
-    #: Task-owned (event): null/omit → resolve to 0; not a global config fallback.
-    batchOverlapCount: Optional[int] = Field(default=None, ge=BATCH_OVERLAP_MIN, le=BATCH_OVERLAP_MAX)
-    #: Follow AI Settings when null/omit (event/leaderboard overrides).
-    analysisTriggerThreshold: Optional[int] = Field(default=None, ge=ANALYSIS_THRESHOLD_MIN, le=ANALYSIS_THRESHOLD_MAX)
-    analysisBatchMessageLimit: Optional[int] = Field(
-        default=None, ge=ANALYSIS_BATCH_LIMIT_MIN, le=ANALYSIS_BATCH_LIMIT_MAX
-    )
-    analysisStrategyMode: Optional[str] = None
-    worksetId: Optional[str] = None
 
 
 def _validate_optional_int_in_range(
@@ -178,12 +142,9 @@ async def resolve_workset_id(
         return workset_id
 
     if inherit_from_parent_id:
-        parent = await db.fetch_one(
-            "SELECT workset_id FROM analysis_tasks WHERE id = ?",
-            (inherit_from_parent_id,),
-        )
-        if parent and parent.get("workset_id"):
-            return str(parent["workset_id"])
+        parent_workset_id = await fetch_task_workset_id(db, inherit_from_parent_id)
+        if parent_workset_id:
+            return parent_workset_id
 
     return existing or None
 

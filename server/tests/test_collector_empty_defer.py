@@ -1,4 +1,4 @@
-"""Empty-account installs should skip collector settle/auto-connect startup work."""
+"""Empty-source installs should skip collector settle/auto-connect startup work."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from server.collector.manager_retry import CollectorRetryOrchestrator
 
 
 @pytest.mark.asyncio
-async def test_start_background_skips_when_no_accounts(monkeypatch):
+async def test_start_background_skips_when_no_sources(monkeypatch):
     created: list[object] = []
 
     def fake_create_task(coro):

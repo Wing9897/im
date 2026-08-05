@@ -36,12 +36,12 @@ class DiscordAdapter(BasePlatformAdapter):
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         bot_token: str,
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._bot_token = bot_token
         self._subscribed_channel_ids: set[str] = set()
         self._session: aiohttp.ClientSession | None = None
@@ -97,13 +97,13 @@ class DiscordAdapter(BasePlatformAdapter):
 
         self._mark_connected()
         self._broadcast_status_change("connected")
-        logger.info("Discord adapter connected for account %s", self._account_id)
+        logger.info("Discord adapter connected for source %s", self._source_id)
 
     async def disconnect(self) -> None:
         await self._cleanup()
         self._state.status = "disconnected"
         self._state.connected_since = None
-        logger.info("Discord adapter disconnected for account %s", self._account_id)
+        logger.info("Discord adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._ws is not None and not self._ws.closed
@@ -150,16 +150,16 @@ class DiscordAdapter(BasePlatformAdapter):
     async def set_subscriptions(self, channel_ids: list[str]) -> None:
         self._subscribed_channel_ids = set(channel_ids)
         logger.info(
-            "Discord subscriptions updated for account %s: %d channels",
-            self._account_id,
+            "Discord subscriptions updated for source %s: %d channels",
+            self._source_id,
             len(self._subscribed_channel_ids),
         )
 
     async def _load_subscriptions(self) -> None:
-        """Restore subscribed channel ids from ``account_channels``."""
+        """Restore subscribed channel ids from ``source_channels``."""
         rows = await self._db.fetch_all(
-            "SELECT platform_id FROM account_channels WHERE account_id = ? AND platform = 'discord'",
-            (self._account_id,),
+            "SELECT platform_id FROM source_channels WHERE source_id = ? AND platform = 'discord'",
+            (self._source_id,),
         )
         self._subscribed_channel_ids = {str(row["platform_id"]) for row in rows}
 
@@ -175,16 +175,16 @@ class DiscordAdapter(BasePlatformAdapter):
                     await self._handle_gateway_event(data)
                 elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                     logger.warning(
-                        "Discord WebSocket closed/errored for account %s",
-                        self._account_id,
+                        "Discord WebSocket closed/errored for source %s",
+                        self._source_id,
                     )
                     break
         except asyncio.CancelledError:
             return
         except (aiohttp.ClientError, OSError) as exc:
             logger.error(
-                "Discord gateway listener error for account %s: %s",
-                self._account_id,
+                "Discord gateway listener error for source %s: %s",
+                self._source_id,
                 exc,
             )
 
@@ -199,8 +199,8 @@ class DiscordAdapter(BasePlatformAdapter):
         exc = task.exception()
         if exc is not None:
             logger.error(
-                "Discord reconnect task failed for account %s: %s",
-                self._account_id,
+                "Discord reconnect task failed for source %s: %s",
+                self._source_id,
                 exc,
                 exc_info=exc,
             )
@@ -246,7 +246,7 @@ class DiscordAdapter(BasePlatformAdapter):
         except asyncio.CancelledError:
             return
         except (aiohttp.ClientError, OSError) as exc:
-            logger.error("Discord heartbeat error for account %s: %s", self._account_id, exc)
+            logger.error("Discord heartbeat error for source %s: %s", self._source_id, exc)
 
     async def _cleanup(self) -> None:
         for attr in ("_heartbeat_task", "_gateway_task"):

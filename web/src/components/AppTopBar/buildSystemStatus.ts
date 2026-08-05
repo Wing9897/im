@@ -35,12 +35,12 @@ export function buildSystemStatus(input: {
   const collectorRunning = collectorStatus === "running";
   const analyses = activeAnalyses ?? new Map<string, ActiveAnalysisState>();
   const concurrentCount = analyses.size;
-  const activeAnalysis =
+  const primaryAnalysis =
     concurrentCount > 0 ? analyses.values().next().value ?? null : null;
 
-  if (activeAnalysis) {
-    const taskLabel = activeAnalysis.taskName || t("unnamedTask");
-    const batchLabel = formatBatchMessageCount(activeAnalysis.messageCount);
+  if (primaryAnalysis) {
+    const taskLabel = primaryAnalysis.taskName || t("unnamedTask");
+    const batchLabel = formatBatchMessageCount(primaryAnalysis.messageCount);
     const concurrent = concurrentCount > 1;
     return {
       color: "var(--info)",

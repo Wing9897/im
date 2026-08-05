@@ -50,18 +50,18 @@ async def sync_dialog_channels(adapter: Any) -> int:
                 refresh_name=bool(channel_name),
             )
             await conn.execute(
-                "INSERT OR IGNORE INTO account_channels (account_id, platform, platform_id) VALUES (?, 'telegram', ?)",
-                (adapter._account_id, platform_id),
+                "INSERT OR IGNORE INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', ?)",
+                (adapter._source_id, platform_id),
             )
     synced = len(entries)
-    logger.info("Synced %d Telegram dialog(s) for account %s", synced, adapter._account_id)
+    logger.info("Synced %d Telegram dialog(s) for source %s", synced, adapter._source_id)
     return synced
 
 
 async def load_subscribed_channels(adapter: Any) -> list[int]:
     rows = await adapter._db.fetch_all(
-        "SELECT platform_id FROM account_channels WHERE account_id = ? AND platform = 'telegram'",
-        (adapter._account_id,),
+        "SELECT platform_id FROM source_channels WHERE source_id = ? AND platform = 'telegram'",
+        (adapter._source_id,),
     )
     channel_ids: list[int] = []
     for row in rows:
@@ -69,9 +69,9 @@ async def load_subscribed_channels(adapter: Any) -> list[int]:
             channel_ids.append(int(row["platform_id"]))
         except (ValueError, TypeError):
             logger.warning(
-                "Skipping non-integer platform_id %r for account %s",
+                "Skipping non-integer platform_id %r for source %s",
                 row["platform_id"],
-                adapter._account_id,
+                adapter._source_id,
             )
     return channel_ids
 
@@ -84,8 +84,8 @@ async def resolve_channel_name(adapter: Any, event: Any) -> str:
         raise
     except Exception as exc:
         logger.warning(
-            "Failed to resolve Telegram channel name for account %s: %s",
-            adapter._account_id,
+            "Failed to resolve Telegram channel name for source %s: %s",
+            adapter._source_id,
             exc,
         )
         return ""
@@ -150,10 +150,10 @@ async def handle_message(adapter: Any, event: Any) -> None:
 async def _channel_name_map(adapter: Any) -> dict[int, str]:
     rows = await adapter._db.fetch_all(
         "SELECT ac.platform_id, c.channel_name "
-        "FROM account_channels ac "
+        "FROM source_channels ac "
         "LEFT JOIN channels c ON c.platform = ac.platform AND c.platform_id = ac.platform_id "
-        "WHERE ac.account_id = ? AND ac.platform = 'telegram'",
-        (adapter._account_id,),
+        "WHERE ac.source_id = ? AND ac.platform = 'telegram'",
+        (adapter._source_id,),
     )
     out: dict[int, str] = {}
     for row in rows:
@@ -201,9 +201,9 @@ async def _backfill_one_dialog(
                 raise
             jitter = random.uniform(0.5, 1.5)
             logger.warning(
-                "Telegram FloodWait %ss during backfill for account %s dialog %s; sleeping %.1fs",
+                "Telegram FloodWait %ss during backfill for source %s dialog %s; sleeping %.1fs",
                 wait,
-                adapter._account_id,
+                adapter._source_id,
                 chat_id,
                 wait + jitter,
             )
@@ -240,10 +240,10 @@ async def backfill_recent_messages(
             wait = int(getattr(exc, "seconds", 0) or 0)
             logger.warning(
                 "Telegram FloodWait %ss exceeds abort threshold (%ss); "
-                "stopping remaining backfill for account %s (done %d/%d dialogs)",
+                "stopping remaining backfill for source %s (done %d/%d dialogs)",
                 wait,
                 FLOOD_WAIT_ABORT_SECONDS,
-                adapter._account_id,
+                adapter._source_id,
                 index,
                 len(channel_ids),
             )
@@ -252,16 +252,16 @@ async def backfill_recent_messages(
             raise
         except Exception as exc:  # noqa: BLE001 — one dialog must not abort the rest
             logger.warning(
-                "Telegram backfill failed for account %s dialog %s: %s",
-                adapter._account_id,
+                "Telegram backfill failed for source %s dialog %s: %s",
+                adapter._source_id,
                 chat_id,
                 exc,
             )
         if index + 1 < len(channel_ids):
             await asyncio.sleep(BACKFILL_DIALOG_SLEEP_SECONDS)
     logger.info(
-        "Telegram history backfill finished for account %s: %d message(s) across %d dialog(s)",
-        adapter._account_id,
+        "Telegram history backfill finished for source %s: %d message(s) across %d dialog(s)",
+        adapter._source_id,
         total,
         len(channel_ids),
     )

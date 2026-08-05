@@ -3,7 +3,7 @@ import { SourceCard, SourceCardErrorLines } from "../SourceCard";
 import { SourceCardActions } from "../SourceCardActions";
 import { Button } from "../../../components/ui";
 import type { RssFeedItem } from "./providers/types";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { formatOsDateTime } from "../../../utils/time";
 import { useReconnectCard } from "../useReconnectCard";
 
@@ -23,13 +23,13 @@ export function RssFeedCard({
   onReconnectSuccess,
 }: RssFeedCardProps) {
   const { t } = useTranslation("sources");
-  const status = feed.account.status;
-  const name = formatAccountLabel(feed.account) || feed.feedUrl;
+  const status = feed.source.status;
+  const name = formatSourceLabel(feed.source) || feed.feedUrl;
   const showError = status === "error" || status === "disconnected";
   const minutes = Math.round(feed.pollIntervalSeconds / 60);
 
   const { reconnecting, reconnectError, handleReconnect } = useReconnectCard({
-    accountId: feed.account.id,
+    sourceId: feed.source.id,
     onReconnectSuccess,
   });
 
@@ -44,14 +44,14 @@ export function RssFeedCard({
       <SourceCardErrorLines
         status={status}
         lastError={feed.lastError}
-        accountLastError={feed.account.lastError}
+        sourceLastError={feed.source.lastError}
         reconnectError={reconnectError}
         lastSuccessAt={feed.lastSuccessAt}
         showLastSuccessOnError
       />
       <div className="mt-0.5 text-[10px] text-text-muted">
-        {feed.account.updatedAt
-          ? t("card.lastPoll", { time: formatOsDateTime(feed.account.updatedAt) })
+        {feed.source.updatedAt
+          ? t("card.lastPoll", { time: formatOsDateTime(feed.source.updatedAt) })
           : t("card.neverPolled")}
       </div>
     </>
@@ -73,7 +73,7 @@ export function RssFeedCard({
 
   return (
     <SourceCard
-      platform={feed.account.platform}
+      platform={feed.source.platform}
       status={status}
       title={name}
       subtitle={subtitle}

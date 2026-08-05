@@ -33,12 +33,12 @@ function formatDetailPayload(
     try {
       return {
         labelKey: "detail.payloadLabel",
-        text: JSON.stringify(envelope.payload, null, 2),
+        text: JSON.stringify(envelope.payload, null, 2) ?? "[empty payload]",
       };
     } catch {
       return {
         labelKey: "detail.payloadLabel",
-        text: String(envelope.payload),
+        text: "[unserializable payload]",
       };
     }
   }

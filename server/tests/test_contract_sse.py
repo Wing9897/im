@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import cast
+from typing import Any, cast
 
 import pytest
 from fastapi import Request
 
 from server.api.routes.events import events
-from server.sse import _MAX_SUBSCRIBERS, EVENT_TYPES, SseBroadcaster, SseCapacityError
+from server.sse import _MAX_SUBSCRIBERS, EVENT_TYPES, SseBroadcaster, SseCapacityError, event_stream
 
 FRONTEND_EVENT_TYPES = {
     "messages_updated",
     "collector_status_changed",
-    "account_status_changed",
+    "source_status_changed",
     "analysis_started",
     "analysis_completed",
     "analysis_failed",
@@ -97,6 +97,22 @@ async def test_broadcast_envelope_shape():
     assert data["payload"]["batchId"] == "b1"
 
 
+async def test_stream_disconnect_releases_subscriber_slot():
+    class DisconnectedRequest:
+        async def is_disconnected(self) -> bool:
+            return True
+
+    broadcaster = SseBroadcaster()
+    queue = broadcaster.subscribe()
+    response = event_stream(broadcaster, cast(Request, DisconnectedRequest()), queue)
+
+    body_iterator = cast(Any, response.body_iterator)
+    with pytest.raises(StopAsyncIteration):
+        await anext(body_iterator)
+
+    assert broadcaster.subscriber_count() == 0
+
+
 async def test_collector_status_payload_shape():
     """Aggregate collector_status_changed uses snake_case optional adapter fields."""
     broadcaster = SseBroadcaster()
@@ -127,8 +143,8 @@ async def test_collector_status_payload_shape():
             },
         ),
         (
-            "account_status_changed",
-            {"accountId": "account-1", "status": "connecting", "lastError": "retrying"},
+            "source_status_changed",
+            {"sourceId": "source-1", "status": "connecting", "lastError": "retrying"},
         ),
     ],
 )

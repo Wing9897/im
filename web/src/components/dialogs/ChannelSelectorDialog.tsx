@@ -1,4 +1,4 @@
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import { useTranslation } from "react-i18next";
 import { formatMessage } from "../../i18n/formatMessage";
 import {
@@ -9,7 +9,7 @@ import { ChannelPickerDialogShell } from "../channels/ChannelPickerDialogShell";
 
 interface ChannelSelectorDialogProps {
   open: boolean;
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   selectedChannelIds: string[];
   onConfirm: (channelIds: string[]) => void;
   onClose: () => void;

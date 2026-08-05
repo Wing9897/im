@@ -33,6 +33,7 @@
 | 模式 | 執行 | Prompt |
 |------|------|--------|
 | `leaderboard`／`intel_event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
+| `web_intel` | `web_intel_tick`（Agent 多輪 + `web.search`） | 共用 web_intel system + **置頂**該任務抽取規則（`promptTemplate`）；可選綁定頻道作訊息門檻／注入 |
 | `project` | `execute_project_tick`（多波 Agent 工具閉環） | 共用 project system + **置頂**該任務目標（`promptTemplate`）；同輪多波連續 session，跨輪排程開新對話 |
 | `recurring` | 不跑 AI 分析 | — |
 
@@ -80,7 +81,7 @@ npm run dev
 >
 > 腳本**只**刪已知的 `intelligence_monitor.db` 及其 `-wal`／`-shm`（專案根、Electron userData、`INTELLIGENCE_MONITOR_*` 覆寫路徑等）；**不動** Telegram sessions、`secret.key`、`connection.json`。詳見 [`scripts/reset_local_databases.py`](scripts/reset_local_databases.py) 與下方「資料庫」。
 
-Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.session.txt`）。Desktop 與 CLI **共用同一預設資料根**（Windows：`%APPDATA%\Intelligence Monitor`；對齊 Electron `productName`）。可用 `INTELLIGENCE_MONITOR_DATA_DIR` 覆寫。Settings「完全重置」／`POST /system/reset/database` 另會清 sessions、`secret.key`、`connection.json`（比上述腳本更徹底）。
+Telegram 來源使用 **StringSession**（`{DATA_DIR}/sessions/{source_id}.session.txt`）。Desktop 與 CLI **共用同一預設資料根**（Windows：`%APPDATA%\Intelligence Monitor`；對齊 Electron `productName`）。可用 `INTELLIGENCE_MONITOR_DATA_DIR` 覆寫。Settings「完全重置」／`POST /system/reset/database` 另會清 sessions、`secret.key`、`connection.json`（比上述腳本更徹底）。
 
 ## 指令
 
@@ -113,7 +114,7 @@ Telegram 帳號使用 **StringSession**（`{DATA_DIR}/sessions/{account_id}.sess
 
 **CLI** = 無 Electron 的 headless server，與 `python -m server`／`intelligence-monitor`（`pyproject.toml` console script）同一入口；發佈物為各平台 PyInstaller zip（內含 `intelligence-monitor-server`）。
 
-公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：合併到 `main` 即自動打包三平台 Desktop + CLI、打 tag、發 GitHub Release（並可選推 GHCR）——**不** bot 回寫 `VERSION` 到 `main`。無任何 `v*` tag 時以倉庫 `VERSION` 原樣作為首發（例如 `1.0.0` → `v1.0.0`）；之後每次 push 再依最新 tag 遞增。`workflow_dispatch` 走同一條路徑。
+公開商店／企業發佈的 Desktop 建置需對應平台簽章（Windows Authenticode、macOS 公证等）；未簽章建置僅供開發／測試。**發版**：只能由 CI 的 `workflow_dispatch` 明確啟動，才會打包三平台 Desktop + CLI、打 tag、發 GitHub Release 並推 GHCR；PR／`main` push 只跑 quality + build，避免一般合併誤發版。發版流程**不** bot 回寫 `VERSION` 到 `main`。無任何 `v*` tag 時以倉庫 `VERSION` 原樣作為首發（例如 `1.0.0` → `v1.0.0`）；之後依最新 tag 遞增。
 
 ### 容器（GHCR）
 
@@ -126,7 +127,7 @@ docker run --rm -p 18820:18820 -v im-data:/data intelligence-monitor:local
 docker compose up --build
 ```
 
-CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
+CI 只在明確執行 **`workflow_dispatch`** 發版時推送到 `ghcr.io/<owner>/<repo>`（需 packages:write）。`Dockerfile` 含 healthcheck；發佈 job 另做一次 deploy smoke。
 
 ### 測試
 
@@ -136,7 +137,7 @@ CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<
 | `npm run test:server` | Python 測試（pytest） |
 | `npm run test:web` | 前端測試（vitest） |
 | `npm run test:desktop` | Desktop 測試（vitest） |
-| `npm run test:all` | 平行執行所有測試套件 |
+| `npm run test:all` | 依序執行所有測試套件，避免跨套件資源爭用 |
 
 ### 驗證腳本對照（日常 CI／部署後／發行）
 
@@ -144,12 +145,12 @@ CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<
 |------|------|------|
 | **日常 CI**（PR／main） | `npm run check` + `npm run build` | GitHub 上 **`quality`**（Ubuntu）：lint、漂移檢查、型別、`test:all`、web／desktop 建置 |
 | **部署後 live**（需運行中 server） | `npm run verify:deploy` | 短 live 檢查（`scripts/smoke.py`）；已註冊 admin 時需 `VERIFY_BEARER`／`IM_ACCESS_TOKEN` |
-| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | **main push** 或 **`workflow_dispatch`**：三平台 Desktop + CLI → tag + GitHub Release + GHCR |
+| **發行／打包** | `dist:*` + `verify:desktop:full` + `package:cli` | 僅 **`workflow_dispatch`**：三平台 Desktop + CLI → tag + GitHub Release + GHCR |
 
 | 指令 | 說明 | 典型耗時 |
 |------|------|----------|
 | `npm run verify:deploy` | 對 `127.0.0.1:18820` 的短部署後驗證（`smoke` 為別名） | ~3s |
-| `npm run verify:desktop:fast` | Desktop vitest + 建置路徑檢查；先執行 `npm run build` | ~5–15s |
+| `npm run verify:desktop:fast` | 自動 build，再跑 Desktop vitest + 建置路徑檢查 | ~40–90s |
 | `npm run verify:desktop:full` | 發佈產物檢查（`desktop_verify` full；**不含** vitest）；先執行對應 `dist:*` | ~5–15s（不含打包） |
 
 ### 營運與報表
@@ -163,7 +164,7 @@ CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<
 | 指令 | 說明 |
 |------|------|
 | `npm run check` | 完整本機關卡，依序執行並在第一個失敗處停下：lint → `sync:presets:check` → `i18n:check` → `openapi:check` → 型別檢查 → 所有測試（server、web、desktop、根目錄） |
-| `npm run lint` | Ruff（server）+ ESLint（web） |
+| `npm run lint` | Ruff（server／Python scripts）+ ESLint（web／desktop／`scripts/*.mjs`） |
 | `npm run lint:server` | Python lint + 格式檢查 |
 | `npm run lint:web` | 前端 ESLint |
 | `npm run typecheck` | Web、Desktop、Python server 與 `scripts/` 型別檢查 |
@@ -184,16 +185,17 @@ CI 在 **main push** 或 **`workflow_dispatch`** 時推送到 `ghcr.io/<owner>/<
 | 觸發 | 行為 |
 |------|------|
 | **PR** | 只跑 `quality` |
-| **push `main`** 或 **`workflow_dispatch`** | `quality` → `version`（from tags；無 tag 用 `VERSION` 原樣）→ 三平台 `package`（Desktop+CLI；`desktop_verify` only）→ **只 push tag** + GitHub Release → GHCR |
+| **push `main`** | 只跑 `quality`（含 build），不打包、不推 tag、不發 Release |
+| **`workflow_dispatch`** | `quality` → `version`（from tags；無 tag 用 `VERSION` 原樣）→ 三平台 `package`（Desktop+CLI；`desktop_verify` only）→ **只 push tag** + GitHub Release → GHCR |
 
 **版本權威（勿混用）：**
 - **產品 SemVer** = **git tags**（`v*`）／GitHub Release
 - **schema stamp**（`PRAGMA user_version`）與公開 **`SCHEMA_SEMVER`** = SQLite wipe-only 契約，**不必**等於產品 tag
 - 根目錄 **`VERSION`** = 本機／展示／打包注入用，可能落後 tag；CI **不會** bot commit／push 回寫到 main
 
-每次 bump（已有 `v*` tag 時）：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）。**無任何 `v*` tag 時不 bump**，直接用 `VERSION` 原樣作為首發。打包時把算出的版本注入工作區（不改分支歷史）。本機若要對齊檔案：`python scripts/bump_version.py --from-tags --write` 再 `npm run sync:version`（預設不寫盤）。
+每次手動發版 bump（已有 `v*` tag 時）：`X.Y.Z-beta.N` → `N+1`；`X.Y.Z` → patch +1（`scripts/bump_version.py --from-tags --print-only`）。**無任何 `v*` tag 時不 bump**，直接用 `VERSION` 原樣作為首發。打包時把算出的版本注入工作區（不改分支歷史）。本機若要對齊檔案：`python scripts/bump_version.py --from-tags --write` 再 `npm run sync:version`（預設不寫盤）。
 
-一句話：**合併到 main 即自動發版（首發用 VERSION；之後依 tag 遞增）、打包三平台 Desktop+CLI、打 tag、發 Release——不改 main 歷史；stamp／SCHEMA_SEMVER 另軌。**
+一句話：**PR／main 只做 quality + build；明確執行 `workflow_dispatch` 才會按 tag 版本打包三平台 Desktop+CLI、打 tag、發 Release——不改 main 歷史；stamp／SCHEMA_SEMVER 另軌。**
 
 本機關卡：`npm run check`；Desktop 改動可另跑 `npm run build && npm run verify:desktop:fast`。
 
@@ -273,15 +275,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v14**（`server/db/schema_ddl.py`；公開 `schemaSemver` = `0.1.0-beta.15`）——含 `intel_event` 分析模式（原 `event`）、`app_logs.kind`、`project_message_cursors` 拆欄、`web_intel` 任務類型、`schedule_rrule`（trigger 用途；不上日曆 expand）+ 可追蹤物品。新安裝直接建 stamp-14 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v15**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.16`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-15 庫。
 
-**Wipe-only：** v1–v13 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v14 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v14 explicit reset](docs/ARCHITECTURE.md#schema-v14-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v15 explicit reset](docs/ARCHITECTURE.md#schema-v15-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 ### 連接埠
 

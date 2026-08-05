@@ -22,11 +22,11 @@ export function EmailMailboxCard({
   onReconnectSuccess,
 }: EmailMailboxCardProps) {
   const { t } = useTranslation("sources");
-  const status = mailbox.account.status;
+  const status = mailbox.source.status;
   const showError = status === "error" || status === "disconnected";
 
   const { reconnecting, reconnectError, handleReconnect } = useReconnectCard({
-    accountId: mailbox.account.id,
+    sourceId: mailbox.source.id,
     onReconnectSuccess,
   });
 
@@ -51,7 +51,7 @@ export function EmailMailboxCard({
       <SourceCardErrorLines
         status={status}
         lastError={mailbox.lastError}
-        accountLastError={mailbox.account.lastError}
+        sourceLastError={mailbox.source.lastError}
         reconnectError={reconnectError}
       />
     </>
@@ -75,7 +75,7 @@ export function EmailMailboxCard({
     <SourceCard
       platform="email"
       status={status}
-      title={mailbox.username || mailbox.account.name || t("email.fallbackName")}
+      title={mailbox.username || mailbox.source.name || t("email.fallbackName")}
       subtitle={subtitle}
       actions={actions}
       onSelect={onSelectClick}

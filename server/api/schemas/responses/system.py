@@ -7,6 +7,18 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    runtimeReady: bool
+    secretsReady: bool
+    secretsError: str | None = None
+    schemaVersion: int
+    schemaSemver: str
+    bindHost: str
+    lanAccessEnabled: bool
+
+
 class RetentionDeletedCounts(BaseModel):
     """Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.
 

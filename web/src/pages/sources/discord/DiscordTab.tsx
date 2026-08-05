@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { SourceTabLayout } from "../SourceTabLayout";
 import { DiscordBotDetailDialog } from "./DiscordBotDetailDialog";
 import { DiscordBotCard } from "./DiscordBotCard";
 import { DiscordBotForm } from "./DiscordBotForm";
 import { DiscordEditDialog } from "./DiscordEditDialog";
 import { useDiscordTab } from "./useDiscordTab";
+import { useSourceDetailTarget } from "../useSourceDetailTarget";
 
 export function DiscordTab() {
   const { t } = useTranslation("sources");
@@ -38,7 +38,8 @@ export function DiscordTab() {
     closeEditDialog,
     handleSaveEdit,
   } = useDiscordTab();
-  const [detailTarget, setDetailTarget] = useState<(typeof bots)[number] | null>(null);
+  const { detailTarget, setDetailTarget, closeDetail } =
+    useSourceDetailTarget<(typeof bots)[number]>();
 
   const addForm = (
     <DiscordBotForm
@@ -74,7 +75,7 @@ export function DiscordTab() {
       removeMessage={
         removeTarget
           ? t("discord.removeMessage", {
-              name: formatAccountLabel(removeTarget.account) || "Discord Bot",
+              name: formatSourceLabel(removeTarget.source) || "Discord Bot",
             })
           : null
       }
@@ -83,7 +84,7 @@ export function DiscordTab() {
     >
       {bots.map((bot) => (
         <DiscordBotCard
-          key={bot.account.id}
+          key={bot.source.id}
           bot={bot}
           onRemoveClick={() => setRemoveTarget(bot)}
           onEditClick={() => openEditDialog(bot)}
@@ -96,7 +97,7 @@ export function DiscordTab() {
       {detailTarget ? (
         <DiscordBotDetailDialog
           bot={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={closeDetail}
         />
       ) : null}
 

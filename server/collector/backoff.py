@@ -1,7 +1,7 @@
 """Exponential reconnect backoff policy for the collector layer.
 
 Strategy: start at 1s, double after every failed attempt, cap at 60s, no
-maximum retry count — keep retrying until reconnected or the account is
+maximum retry count — keep retrying until reconnected or the source is
 disabled. On success the sequence resets to 1s.
 """
 

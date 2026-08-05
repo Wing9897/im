@@ -1,6 +1,6 @@
 /**
  * Collector platform ids — FE mirror of `server/domain/collector_platforms.py`.
- * Drift-tested against `COLLECTOR_PLATFORMS` / OpenAPI AccountPlatform.
+ * Drift-tested against `COLLECTOR_PLATFORMS` / OpenAPI SourcePlatform.
  */
 
 export const COLLECTOR_PLATFORM_ORDER = [

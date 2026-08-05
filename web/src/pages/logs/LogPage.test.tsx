@@ -166,11 +166,11 @@ describe("LogPage", () => {
         id: "log-long",
         time: "2026-04-17T03:00:00.000Z",
         level: "success",
-        category: "account",
+        category: "source",
         message:
           "這是一段很長的事件訊息，用來確認卡片會維持摘要顯示，但點開後仍可看到完整內容與原始訊息。",
         details:
-          '{"account_id":"acct-1","channel_ids":["-1001","-1002","-1003"],"status":"subscribed"}',
+          '{"source_id":"acct-1","channel_ids":["-1001","-1002","-1003"],"status":"subscribed"}',
       },
     ];
     runtimeLogPageState.totalLogCount = 1;

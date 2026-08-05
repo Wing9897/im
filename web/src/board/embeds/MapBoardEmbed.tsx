@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AnalysisEvent } from "../../types";
-import { groupByCoordinate } from "../../domain/intelligence/groupByCoordinate";
 import { MapMarkers } from "../../components/map/MapMarkers";
 import { CARTO_ATTR, CARTO_URL } from "../../domain/intelligence/mapTiles";
 
@@ -14,14 +13,16 @@ import { loadBoardMapViewFromCache } from "../boardPrefsStore";
 import {
   BOARD_MAP_DEFAULT_CENTER,
   BOARD_MAP_DEFAULT_ZOOM,
-} from "./mapBoardDefaults";
+  SHARED_MAP_CONTAINER_OPTIONS,
+  buildMapMarkerGroups,
+} from "../../domain/intelligence/mapPresentation";
 
 const EMPTY_NEW = new Set<string>();
 
 export {
   BOARD_MAP_DEFAULT_CENTER,
   BOARD_MAP_DEFAULT_ZOOM,
-} from "./mapBoardDefaults";
+} from "../../domain/intelligence/mapPresentation";
 
 
 type BoardMapViewState = {
@@ -130,7 +131,7 @@ export function MapBoardEmbed({
     () => items.filter((item) => isMappableCoordinate(item.latitude, item.longitude)),
     [items],
   );
-  const coordGroups = useMemo(() => groupByCoordinate(withCoords), [withCoords]);
+  const coordGroups = useMemo(() => buildMapMarkerGroups(withCoords), [withCoords]);
   // MapContainer only applies center/zoom on mount. BoardWidgetShell unmounts this
   // embed when `active` is false (maximize sibling / leave canvas), so re-read
   // storage here — do not rely on a parent useState captured at first paint.
@@ -152,9 +153,7 @@ export function MapBoardEmbed({
       <MapContainer
         center={center}
         zoom={zoom}
-        minZoom={1}
-        scrollWheelZoom
-        zoomControl={false}
+        {...SHARED_MAP_CONTAINER_OPTIONS}
         attributionControl={false}
         className="board-widget-map__leaflet"
         style={{ width: "100%", height: "100%" }}

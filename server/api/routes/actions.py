@@ -6,7 +6,6 @@ import json
 from typing import Any, Optional
 
 from fastapi import APIRouter, Request, Response
-from pydantic import BaseModel
 
 from server.action_config import (
     merge_masked_action_configuration,
@@ -19,6 +18,7 @@ from server.api.deps import (
     publish_resource_modified,
     require_row,
 )
+from server.api.schemas.requests import ActionBody
 from server.api.schemas.responses import (
     ActionResponse,
     ActionTestResponse,
@@ -47,13 +47,6 @@ _UNKNOWN_ERRORS: dict[str, str] = {
     "zh-Hans": "未知错误",
     "en": "Unknown error",
 }
-
-
-class ActionBody(BaseModel):
-    name: str
-    actionType: str
-    configuration: str
-    triggerConditions: Optional[str] = None
 
 
 def _validate_body(body: ActionBody) -> None:

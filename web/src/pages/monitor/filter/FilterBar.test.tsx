@@ -5,9 +5,9 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
 import { FilterBar } from "./FilterBar";
-import type { Account, ChannelWithAccount, MessageFilters } from "../../../types";
+import type { Source, ChannelWithSource, MessageFilters } from "../../../types";
 
-const accounts: Account[] = [
+const sources: Source[] = [
   {
     id: "a1",
     platform: "telegram",
@@ -20,24 +20,24 @@ const accounts: Account[] = [
   },
 ];
 
-const channels: ChannelWithAccount[] = [
+const channels: ChannelWithSource[] = [
   {
     id: "c1",
     platform: "telegram",
     platformId: "pc1",
     channelName: "News",
-    accountIds: ["a1"],
-    accountId: "a1",
-    accountName: "Alice",
+    sourceIds: ["a1"],
+    sourceId: "a1",
+    sourceName: "Alice",
   },
   {
     id: "c2",
     platform: "telegram",
     platformId: "pc2",
     channelName: "Alerts",
-    accountIds: ["a1"],
-    accountId: "a1",
-    accountName: "Alice",
+    sourceIds: ["a1"],
+    sourceId: "a1",
+    sourceName: "Alice",
   },
 ];
 
@@ -51,7 +51,7 @@ function renderFilterBar(
       createElement(
         I18nextProvider,
         { i18n },
-        createElement(FilterBar, { filters, onFiltersChange, accounts, channels }),
+        createElement(FilterBar, { filters, onFiltersChange, sources, channels }),
       ),
     );
   });
@@ -110,7 +110,7 @@ describe("FilterBar", () => {
     );
   });
 
-  it("renders account and time-range selects plus keyword search in the dialog", () => {
+  it("renders source and time-range selects plus keyword search in the dialog", () => {
     const container = document.createElement("div");
     renderFilterBar(container, {}, () => {});
     openFilterDialog(container);
@@ -144,24 +144,24 @@ describe("FilterBar", () => {
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ platform: "telegram" }));
   });
 
-  it("calls onFiltersChange when account selection changes", () => {
+  it("calls onFiltersChange when source selection changes", () => {
     const onChange = vi.fn();
     const container = document.createElement("div");
     renderFilterBar(container, {}, onChange);
     openFilterDialog(container);
-    const accountSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
+    const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
     act(() => {
-      accountSelect.value = "a1";
-      accountSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      sourceSelect.value = "a1";
+      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ accountIds: ["a1"] }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: ["a1"] }));
   });
 
-  it("uses single-select account filters", () => {
+  it("uses single-select source filters", () => {
     const onChange = vi.fn();
     const container = document.createElement("div");
-    const multiAccounts: Account[] = [
-      ...accounts,
+    const multiSources: Source[] = [
+      ...sources,
       {
         id: "a2",
         platform: "telegram",
@@ -179,34 +179,34 @@ describe("FilterBar", () => {
         createElement(FilterBar, {
           filters: {},
           onFiltersChange: onChange,
-          accounts: multiAccounts,
+          sources: multiSources,
           channels,
         }),
       );
     });
     openFilterDialog(container);
 
-    const accountSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
-    expect(accountSelect.multiple).toBe(false);
+    const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
+    expect(sourceSelect.multiple).toBe(false);
     act(() => {
-      accountSelect.value = "a2";
-      accountSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      sourceSelect.value = "a2";
+      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
     });
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ accountIds: ["a2"] }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: ["a2"] }));
   });
 
-  it("supports clearing account filters via the default option", () => {
+  it("supports clearing source filters via the default option", () => {
     const onChange = vi.fn();
     const container = document.createElement("div");
-    renderFilterBar(container, { accountIds: ["a1"] }, onChange);
+    renderFilterBar(container, { sourceIds: ["a1"] }, onChange);
     openFilterDialog(container);
     act(() => {
-      const accountSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
-      accountSelect.value = "";
-      accountSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
+      sourceSelect.value = "";
+      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ accountIds: undefined }));
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: undefined }));
   });
 
   it("toggles a channel via its checkbox", () => {
@@ -304,7 +304,7 @@ describe("FilterBar — search debounce uses latest filters (regression)", () =>
           createElement(FilterBar, {
             filters: currentFilters,
             onFiltersChange: onChange,
-            accounts,
+            sources,
             channels,
           }),
         );
@@ -322,7 +322,7 @@ describe("FilterBar — search debounce uses latest filters (regression)", () =>
         createElement(FilterBar, {
           filters: currentFilters,
           onFiltersChange: onChange,
-          accounts,
+          sources,
           channels,
         }),
       );

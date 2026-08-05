@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Query, Request, Response
-from pydantic import BaseModel
 
 from server.api.deps import API_DEPS, get_db
+from server.api.schemas.requests import LogCreate
 from server.api.schemas.responses import AppLogEntryResponse, AppLogPageResponse
 from server.app_logging import (
     ALLOWED_LOG_CATEGORIES,
@@ -15,23 +15,12 @@ from server.app_logging import (
     is_valid_log_kind,
     record_and_fetch,
 )
-from server.db.schema_ddl import APP_LOG_LEVEL_VALUES
+from server.db.schema_domains.vocabulary import APP_LOG_LEVEL_VALUES
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.logs_queries import fetch_app_logs_page
 from server.wire.serializers import serialize_app_log
 
 router = APIRouter(prefix="/api/v1/logs", tags=["logs"], dependencies=API_DEPS)
-
-
-class LogCreate(BaseModel):
-    level: str
-    category: str
-    kind: str
-    message: Optional[str] = None
-    messageKey: Optional[str] = None
-    messageParams: Optional[dict[str, Any]] = None
-    source: Optional[str] = None
-    payload: Optional[dict[str, Any]] = None
 
 
 @router.get("", response_model=AppLogPageResponse)

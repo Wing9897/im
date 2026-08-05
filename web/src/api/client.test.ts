@@ -185,7 +185,7 @@ describe("ApiClient", () => {
     it("sends POST without body when no body provided", async () => {
       const fetchMock = mockFetch({ ok: true, status: 200, json: () => Promise.resolve({}) });
 
-      await client.post("/api/v1/accounts/refresh-all");
+      await client.post("/api/v1/sources/refresh-all");
 
       const init = fetchMock.mock.calls[0][1] as RequestInit;
       expect(init.body).toBeUndefined();
@@ -297,6 +297,30 @@ describe("ApiClient", () => {
       );
     });
 
+    it("forwards external aborts and reports cancellation without retrying", async () => {
+      const controller = new AbortController();
+      const fetchMock = vi.fn((_url: RequestInfo | URL, init?: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("Aborted", "AbortError"));
+          });
+        });
+      });
+      globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+      const request = client.get("/api/v1/tasks", undefined, {
+        signal: controller.signal,
+        timeoutMs: 0,
+      });
+      controller.abort();
+
+      await expect(request).rejects.toSatisfy(
+        (error: unknown) =>
+          error instanceof NetworkError && error.message === "Request cancelled",
+      );
+      expect(fetchMock).toHaveBeenCalledOnce();
+    });
+
     it("does not emit structured ErrorToast by default (list GET path)", async () => {
       const emitSpy = vi.spyOn(errorToastEmitter, "emit");
       mockFetch({
@@ -330,7 +354,7 @@ describe("ApiClient", () => {
       });
 
       await expect(
-        client.post("/api/v1/accounts", {}, { emitErrorToast: true, timeoutMs: 0 }),
+        client.post("/api/v1/sources", {}, { emitErrorToast: true, timeoutMs: 0 }),
       ).rejects.toThrow(ApiRequestError);
       expect(emitSpy).toHaveBeenCalledOnce();
       expect(emitSpy).toHaveBeenCalledWith(

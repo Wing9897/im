@@ -30,11 +30,11 @@ def _tg_message(msg_id: int, text: str = "hello") -> SimpleNamespace:
     )
 
 
-async def _setup_account(db: Database, account_id: str, channel_ids: list[str]) -> TelegramAdapter:
+async def _setup_source(db: Database, source_id: str, channel_ids: list[str]) -> TelegramAdapter:
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (account_id,),
+        (source_id,),
     )
     for cid in channel_ids:
         await db.execute(
@@ -43,11 +43,11 @@ async def _setup_account(db: Database, account_id: str, channel_ids: list[str]) 
             (cid, f"Channel {cid}"),
         )
         await db.execute(
-            "INSERT INTO account_channels (account_id, platform, platform_id) VALUES (?, 'telegram', ?)",
-            (account_id, cid),
+            "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', ?)",
+            (source_id, cid),
         )
     adapter = TelegramAdapter(
-        account_id,
+        source_id,
         db,
         SseBroadcaster(),
         api_id=1,
@@ -65,7 +65,7 @@ async def test_backfill_recent_messages_ingests_per_dialog(tmp_path, monkeypatch
     db = Database(str(tmp_path / "tg-backfill.db"))
     await db.connect()
     await db.ensure_schema()
-    adapter = await _setup_account(db, "acc-bf-1", ["-1001", "-1002"])
+    adapter = await _setup_source(db, "acc-bf-1", ["-1001", "-1002"])
 
     calls: list[int] = []
 
@@ -82,7 +82,7 @@ async def test_backfill_recent_messages_ingests_per_dialog(tmp_path, monkeypatch
     assert total == 4
     assert calls == [-1001, -1002]
 
-    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE account_id = ?", ("acc-bf-1",))
+    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE source_id = ?", ("acc-bf-1",))
     assert int(count or 0) == 4
     await db.close()
 
@@ -92,7 +92,7 @@ async def test_backfill_aborts_remaining_on_long_flood_wait(tmp_path, monkeypatc
     db = Database(str(tmp_path / "tg-flood.db"))
     await db.connect()
     await db.ensure_schema()
-    adapter = await _setup_account(db, "acc-bf-flood", ["-2001", "-2002"])
+    adapter = await _setup_source(db, "acc-bf-flood", ["-2001", "-2002"])
 
     seen: list[int] = []
 
@@ -117,7 +117,7 @@ async def test_backfill_sleeps_and_retries_short_flood_wait(tmp_path, monkeypatc
     db = Database(str(tmp_path / "tg-flood-short.db"))
     await db.connect()
     await db.ensure_schema()
-    adapter = await _setup_account(db, "acc-bf-short", ["-3001"])
+    adapter = await _setup_source(db, "acc-bf-short", ["-3001"])
 
     attempts = {"n": 0}
     slept: list[float] = []
@@ -141,7 +141,7 @@ async def test_backfill_sleeps_and_retries_short_flood_wait(tmp_path, monkeypatc
     assert total == 1
     assert attempts["n"] == 2
     assert slept and slept[0] == pytest.approx(2.5)
-    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE account_id = ?", ("acc-bf-short",))
+    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE source_id = ?", ("acc-bf-short",))
     assert int(count or 0) == 1
     await db.close()
 
@@ -151,7 +151,7 @@ async def test_finish_startup_runs_backfill_once_after_handlers(tmp_path, monkey
     db = Database(str(tmp_path / "tg-startup-bf.db"))
     await db.connect()
     await db.ensure_schema()
-    adapter = await _setup_account(db, "acc-startup-bf", ["-4001"])
+    adapter = await _setup_source(db, "acc-startup-bf", ["-4001"])
 
     order: list[str] = []
 
@@ -191,7 +191,7 @@ async def test_ingest_telethon_message_dedups(tmp_path) -> None:
     db = Database(str(tmp_path / "tg-ingest.db"))
     await db.connect()
     await db.ensure_schema()
-    adapter = await _setup_account(db, "acc-ingest", ["-5001"])
+    adapter = await _setup_source(db, "acc-ingest", ["-5001"])
     msg = _tg_message(7, "once")
     # Avoid TgMessage isinstance gate by calling ingest directly
     await telegram_ingest.ingest_telethon_message(
@@ -210,6 +210,6 @@ async def test_ingest_telethon_message_dedups(tmp_path) -> None:
         sender_id="42",
         sender_name="alice",
     )
-    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE account_id = ?", ("acc-ingest",))
+    count = await db.fetch_value("SELECT COUNT(*) FROM messages WHERE source_id = ?", ("acc-ingest",))
     assert int(count or 0) == 1
     await db.close()

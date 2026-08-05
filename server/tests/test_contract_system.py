@@ -19,7 +19,7 @@ async def test_collector_status(client):
     assert body["status"] == "stopped"  # no collector in tests
 
 
-async def test_collector_status_adapter_account_id(client, app):
+async def test_collector_status_adapter_source_id(client, app):
     async def _get_status() -> str:
         return "running"
 
@@ -28,7 +28,7 @@ async def test_collector_status_adapter_account_id(client, app):
         get_adapter_statuses=lambda: [
             AdapterStatus(
                 name="discord",
-                account_id=seed.DISCORD_ACCOUNT,
+                source_id=seed.DISCORD_SOURCE,
                 connected=True,
                 last_error=None,
                 last_connected_at="2026-07-01T12:00:00Z",
@@ -43,10 +43,10 @@ async def test_collector_status_adapter_account_id(client, app):
     adapter = body["adapters"][0]
     assert_keys(
         adapter,
-        ["name", "accountId", "connected", "lastError", "lastConnectedAt"],
+        ["name", "sourceId", "connected", "lastError", "lastConnectedAt"],
         "collector status adapter",
     )
-    assert adapter["accountId"] == seed.DISCORD_ACCOUNT
+    assert adapter["sourceId"] == seed.DISCORD_SOURCE
 
 
 async def test_ai_engine_status(client):

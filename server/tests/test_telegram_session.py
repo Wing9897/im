@@ -12,19 +12,19 @@ from server.collector.telegram_session import (
 
 
 def test_load_string_session_returns_empty_session_when_missing(tmp_path) -> None:
-    session = load_string_session(str(tmp_path), "missing-account")
+    session = load_string_session(str(tmp_path), "missing-source")
 
     assert isinstance(session, StringSession)
     assert session.save() == ""
 
 
 def test_persist_string_session_token_writes_file(tmp_path) -> None:
-    account_id = "acc-1"
+    source_id = "acc-1"
     token = "1sample-token"
 
-    path = persist_string_session_token(str(tmp_path), account_id, token)
+    path = persist_string_session_token(str(tmp_path), source_id, token)
 
-    assert path == string_session_path(str(tmp_path), account_id)
+    assert path == string_session_path(str(tmp_path), source_id)
     assert path.read_text(encoding="utf-8") == token
 
 

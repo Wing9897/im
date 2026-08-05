@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { SectionErrorBoundary } from "../../components/common/SectionErrorBoundary";
 import { EmptyState } from "../../components/common/EmptyState";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import {
   WallCard,
   WallChannelPicker,
@@ -14,7 +14,7 @@ import { MONITOR_WALL_SKELETON_CLASS } from "../../domain/monitor/wall/wallConst
 import { useBoardWidgetHeaderActions } from "../BoardWidgetFrame";
 
 interface WallBoardEmbedProps {
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
 }
 
 /** Compact message-wall grid for ops board (reuses monitor wall data + cards). */

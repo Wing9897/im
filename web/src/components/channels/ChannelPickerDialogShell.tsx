@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import { Button, FieldLabel } from "../../components/ui";
 import { ModalDialog } from "../ModalDialog";
-import { AccountChannelPickerContent } from "./AccountChannelPickerContent";
+import { SourceChannelPickerContent } from "./SourceChannelPickerContent";
 import { PlatformFilterChips } from "./PlatformFilterChips";
 import { useChannelPickerDialogState } from "./useChannelPickerDialogState";
 
@@ -14,7 +14,7 @@ interface ChannelPickerDialogShellProps {
   ariaLabel?: string;
   size?: "wide" | "xl";
   testId: string;
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   selectedChannelIds: string[];
   onConfirm: (channelIds: string[]) => void;
   onClose: () => void;
@@ -150,7 +150,7 @@ export function ChannelPickerDialogShell({
           </div>
         )}
 
-        <AccountChannelPickerContent
+        <SourceChannelPickerContent
           channels={visibleChannels}
           selectedIds={draftIds}
           onChange={setDraftIds}

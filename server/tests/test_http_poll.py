@@ -22,7 +22,7 @@ from server.collector.http_poll import (
 from server.collector.poll_config import clamp_poll_interval
 from server.db.database import Database
 from server.sse import SseBroadcaster
-from server.tests.db_helpers import insert_minimal_account
+from server.tests.db_helpers import insert_minimal_source
 
 
 @pytest.fixture
@@ -196,7 +196,7 @@ class _FakeHttpSession:
 
 @pytest.mark.asyncio
 async def test_http_adapter_connect_ingest_dedupe_disconnect(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-http", "http")
+    await insert_minimal_source(db, "a-http", "http")
     fake_session = _FakeHttpSession([b"hello-world"])
 
     async def allow_url(*_args, **_kwargs):
@@ -247,7 +247,7 @@ async def test_http_adapter_connect_ingest_dedupe_disconnect(db, broadcaster, mo
 
 @pytest.mark.asyncio
 async def test_http_adapter_json_oversize_marks_error(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-http-json", "http")
+    await insert_minimal_source(db, "a-http-json", "http")
     oversized = ('{"data":"' + ("x" * 200) + '"}').encode("utf-8")
 
     async def allow_url(*_args, **_kwargs):

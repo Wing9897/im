@@ -18,7 +18,7 @@ from server.collector.mqtt import MqttAdapter
 from server.collector.rss import RssAdapter
 from server.db.database import Database
 from server.sse import SseBroadcaster
-from server.tests.db_helpers import insert_minimal_account
+from server.tests.db_helpers import insert_minimal_source
 
 
 @pytest.fixture
@@ -135,8 +135,8 @@ def test_factory_builds_discord_adapter(db, broadcaster, tmp_path):
 class _FakeAdapter(BasePlatformAdapter):
     """Deterministic adapter for exercising BasePlatformAdapter behavior."""
 
-    def __init__(self, account_id: str, db: Database, broadcaster: SseBroadcaster, fail_times: int = 0) -> None:
-        super().__init__(account_id, db, broadcaster)
+    def __init__(self, source_id: str, db: Database, broadcaster: SseBroadcaster, fail_times: int = 0) -> None:
+        super().__init__(source_id, db, broadcaster)
         self.connect_attempts = 0
         self._fail_times = fail_times
 
@@ -156,7 +156,7 @@ class _FakeAdapter(BasePlatformAdapter):
 
 
 async def test_base_insert_message_publishes_and_dedups(db, broadcaster):
-    await insert_minimal_account(db, "a-1", "http")
+    await insert_minimal_source(db, "a-1", "http")
     adapter = _FakeAdapter("a-1", db, broadcaster)
     queue = broadcaster.subscribe()
     try:
@@ -182,7 +182,7 @@ async def test_base_insert_message_publishes_and_dedups(db, broadcaster):
 
 
 async def test_reconnect_loop_recovers_after_failures(db, broadcaster):
-    await insert_minimal_account(db, "a-1", "http")
+    await insert_minimal_source(db, "a-1", "http")
     adapter = _FakeAdapter("a-1", db, broadcaster, fail_times=2)
     queue = broadcaster.subscribe()
     try:
@@ -196,16 +196,16 @@ async def test_reconnect_loop_recovers_after_failures(db, broadcaster):
     assert adapter.state.last_error is None
 
     events = _drain_events(queue)
-    statuses = [e["payload"]["status"] for e in events if e["event"] == "account_status_changed"]
+    statuses = [e["payload"]["status"] for e in events if e["event"] == "source_status_changed"]
     assert statuses[0] == "connecting"
     assert statuses[-1] == "connected"
 
-    persisted = await db.fetch_value("SELECT status FROM accounts WHERE id = 'a-1'")
+    persisted = await db.fetch_value("SELECT status FROM sources WHERE id = 'a-1'")
     assert persisted == "connected"
 
 
-async def test_reconnect_loop_stops_when_account_disabled(db, broadcaster):
-    await insert_minimal_account(db, "a-1", "http", status="disconnected")
+async def test_reconnect_loop_stops_when_source_disabled(db, broadcaster):
+    await insert_minimal_source(db, "a-1", "http", status="disconnected")
     adapter = _FakeAdapter("a-1", db, broadcaster, fail_times=99)
 
     reconnected = await adapter._reconnect_loop(base_delay=0.001, max_delay=0.004)
@@ -215,8 +215,8 @@ async def test_reconnect_loop_stops_when_account_disabled(db, broadcaster):
     assert adapter.state.status == "disconnected"
 
 
-async def test_reconnect_loop_stops_when_account_deleted(db, broadcaster):
-    adapter = _FakeAdapter("missing-account", db, broadcaster, fail_times=99)
+async def test_reconnect_loop_stops_when_source_deleted(db, broadcaster):
+    adapter = _FakeAdapter("missing-source", db, broadcaster, fail_times=99)
     reconnected = await adapter._reconnect_loop(base_delay=0.001, max_delay=0.004)
     assert reconnected is False
 
@@ -276,7 +276,7 @@ class _FakeHttpSession:
 
 
 async def test_rss_adapter_connect_ingest_disconnect(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-rss", "rss")
+    await insert_minimal_source(db, "a-rss", "rss")
     fake_session = _FakeHttpSession([_RSS_XML_ONE_ENTRY, _RSS_XML_TWO_ENTRIES])
     session_options = {}
 
@@ -359,7 +359,7 @@ class _FakeMqttClient:
 
 
 async def test_mqtt_adapter_connect_ingest_disconnect(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-mqtt", "mqtt")
+    await insert_minimal_source(db, "a-mqtt", "mqtt")
     fake_client = _FakeMqttClient([_FakeMqttMessage("news/alpha", b"mqtt payload")])
 
     async def allow_host(*_args, **_kwargs):
@@ -408,7 +408,7 @@ class _FailingWsSession:
 async def test_discord_adapter_connect_failure_sets_error_state(db, broadcaster, monkeypatch):
     from server.collector.discord import DiscordAdapter
 
-    await insert_minimal_account(db, "a-dc", "discord")
+    await insert_minimal_source(db, "a-dc", "discord")
     failing_session = _FailingWsSession()
     monkeypatch.setattr("server.collector.discord.aiohttp.ClientSession", lambda: failing_session)
 
@@ -461,7 +461,7 @@ class _HappyDiscordSession:
 async def test_discord_adapter_connect_success(db, broadcaster, monkeypatch):
     from server.collector.discord import DiscordAdapter
 
-    await insert_minimal_account(db, "a-dc", "discord")
+    await insert_minimal_source(db, "a-dc", "discord")
     happy_session = _HappyDiscordSession()
     monkeypatch.setattr("server.collector.discord.aiohttp.ClientSession", lambda: happy_session)
 
@@ -482,8 +482,8 @@ async def test_discord_adapter_connect_success(db, broadcaster, monkeypatch):
 
 
 class _LockThenConnectAdapter(BasePlatformAdapter):
-    def __init__(self, account_id: str, db: Database, broadcaster: SseBroadcaster) -> None:
-        super().__init__(account_id, db, broadcaster)
+    def __init__(self, source_id: str, db: Database, broadcaster: SseBroadcaster) -> None:
+        super().__init__(source_id, db, broadcaster)
         self.attempts = 0
 
     def _platform_name(self) -> str:
@@ -512,11 +512,11 @@ async def test_manager_retries_auto_connect_on_database_lock(db, broadcaster, mo
     )
 
     manager = CollectorManager(db, broadcaster)
-    accounts = [
+    sources = [
         {"id": "a-lock", "name": "test", "platform": "telegram", "credentials": {}},
     ]
 
-    await manager._retry_orchestrator.auto_connect(accounts)  # noqa: SLF001 — owner integration
+    await manager._retry_orchestrator.auto_connect(sources)  # noqa: SLF001 — owner integration
 
     assert adapter.attempts == 3
     assert "a-lock" in manager._adapters
@@ -540,18 +540,18 @@ class _UnauthorizedConnectAdapter(BasePlatformAdapter):
 async def test_auto_connect_persists_error_when_session_unauthorized(db, broadcaster, monkeypatch):
     """Sticky DB `connected` must flip to `error` so the Sources UI stops lying."""
     from server.collector.manager import CollectorManager
-    from server.tests.db_helpers import insert_minimal_account
+    from server.tests.db_helpers import insert_minimal_source
 
-    account_id = "tg-unauth"
-    await insert_minimal_account(
+    source_id = "tg-unauth"
+    await insert_minimal_source(
         db,
-        account_id,
+        source_id,
         "telegram",
         name="+100",
         status="connected",
     )
 
-    adapter = _UnauthorizedConnectAdapter(account_id, db, broadcaster)
+    adapter = _UnauthorizedConnectAdapter(source_id, db, broadcaster)
     monkeypatch.setattr(
         "server.collector.manager_retry.build_adapter",
         lambda *args, **kwargs: adapter,
@@ -559,10 +559,10 @@ async def test_auto_connect_persists_error_when_session_unauthorized(db, broadca
 
     manager = CollectorManager(db, broadcaster)
     await manager._retry_orchestrator.auto_connect(  # noqa: SLF001
-        [{"id": account_id, "name": "+100", "platform": "telegram", "credentials": {}}],
+        [{"id": source_id, "name": "+100", "platform": "telegram", "credentials": {}}],
     )
 
-    row = await db.fetch_one("SELECT status, last_error FROM accounts WHERE id = ?", (account_id,))
+    row = await db.fetch_one("SELECT status, last_error FROM sources WHERE id = ?", (source_id,))
     assert row is not None
     assert row["status"] == "error"
     assert "not authorized" in str(row["last_error"])

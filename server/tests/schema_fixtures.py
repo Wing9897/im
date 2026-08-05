@@ -88,15 +88,15 @@ async def make_lookalike_db(path: str, *, version: int, defect: str) -> None:
         elif defect == "index":
             await conn.execute("DROP INDEX idx_app_logs_time")
         elif defect == "foreign_key":
-            await conn.execute("DROP TABLE account_channels")
+            await conn.execute("DROP TABLE source_channels")
             await conn.execute(
                 """
-                CREATE TABLE account_channels (
-                    account_id TEXT NOT NULL,
+                CREATE TABLE source_channels (
+                    source_id TEXT NOT NULL,
                     platform TEXT NOT NULL,
                     platform_id TEXT NOT NULL,
-                    PRIMARY KEY (account_id, platform, platform_id),
-                    FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+                    PRIMARY KEY (source_id, platform, platform_id),
+                    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
                 )
                 """
             )

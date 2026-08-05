@@ -89,10 +89,9 @@ function TestHarness({ analysisPaused = false }: { analysisPaused?: boolean }) {
   const analysisValue: AnalysisStatusContextValue = {
     queueStatus: { analysisPaused } as any,
     analysisPaused,
-    activeAnalysis: null,
     activeAnalyses: new Map(),
     lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: stableRequestQueueStatusRefresh,
   };

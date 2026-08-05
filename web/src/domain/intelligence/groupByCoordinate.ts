@@ -8,7 +8,7 @@ export interface CoordGroup {
 }
 
 /** Bucket intelligence items by exact lat/lng coordinate. */
-export function groupByCoordinate(items: AnalysisEvent[]): CoordGroup[] {
+export function groupByCoordinate(items: readonly AnalysisEvent[]): CoordGroup[] {
   const map = new Map<string, CoordGroup>();
   for (const item of items) {
     const key = `${item.latitude},${item.longitude}`;

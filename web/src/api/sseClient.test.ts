@@ -14,7 +14,7 @@ import {
   type SseEventPayloadMap,
 } from "./sseClient";
 import type {
-  AccountStatusChangedPayload,
+  SourceStatusChangedPayload,
   AnalysisPausedChangedPayload,
 } from "../types";
 
@@ -415,7 +415,7 @@ describe("connectSSE", () => {
           messages: [
             {
               id: "message-1",
-              accountId: "account-1",
+              sourceId: "source-1",
               platform: "telegram",
               platformId: "channel-1",
               channelName: "Announcements",
@@ -431,8 +431,8 @@ describe("connectSSE", () => {
           ],
         },
         collector_status_changed: { status: "running" },
-        account_status_changed: {
-          accountId: "account-1",
+        source_status_changed: {
+          sourceId: "source-1",
           status: "connecting",
           lastError: null,
         },
@@ -522,21 +522,21 @@ describe("connectSSE", () => {
         batchId: "batch-1",
       } satisfies AnalysisPausedChangedPayload;
       const connecting = {
-        accountId: "account-1",
+        sourceId: "source-1",
         status: "connecting",
         lastError: "retrying",
-      } satisfies AccountStatusChangedPayload;
+      } satisfies SourceStatusChangedPayload;
 
       instances[0].listeners.analysis_paused_changed?.({
         data: JSON.stringify({ type: "analysis_paused_changed", payload: paused }),
       } as MessageEvent);
-      instances[0].listeners.account_status_changed?.({
-        data: JSON.stringify({ type: "account_status_changed", payload: connecting }),
+      instances[0].listeners.source_status_changed?.({
+        data: JSON.stringify({ type: "source_status_changed", payload: connecting }),
       } as MessageEvent);
 
       expect(received).toEqual([
         { event: "analysis_paused_changed", data: paused },
-        { event: "account_status_changed", data: connecting },
+        { event: "source_status_changed", data: connecting },
       ]);
     });
   });

@@ -44,9 +44,9 @@ async def test_fresh_database_creates_full_schema(tmp_path):
         }
         app_log_columns = {row["name"] for row in await db.fetch_all("PRAGMA table_info(app_logs)")}
         app_log_indexes = {row["name"] for row in await db.fetch_all("PRAGMA index_list(app_logs)")}
-        account_channel_fks = {
+        source_channel_fks = {
             (row["from"], row["table"], row["to"], row["on_delete"])
-            for row in await db.fetch_all("PRAGMA foreign_key_list(account_channels)")
+            for row in await db.fetch_all("PRAGMA foreign_key_list(source_channels)")
         }
 
         assert len(tables) == _REQUIRED_TABLE_COUNT
@@ -55,8 +55,8 @@ async def test_fresh_database_creates_full_schema(tmp_path):
         assert "kind" in app_log_columns
         assert "idx_app_logs_time" in app_log_indexes
         assert "idx_app_logs_kind_time" in app_log_indexes
-        assert account_channel_fks == {
-            ("account_id", "accounts", "id", "CASCADE"),
+        assert source_channel_fks == {
+            ("source_id", "sources", "id", "CASCADE"),
             ("platform", "channels", "platform", "CASCADE"),
             ("platform_id", "channels", "platform_id", "CASCADE"),
         }
@@ -186,7 +186,7 @@ def test_analysis_time_range_values_are_canonical_offset_keys() -> None:
     ``_TIME_RANGE_OFFSETS`` (monitor／agent send ``7d``／``30d`` only).
     """
     from server.analyzer.incremental import _TIME_RANGE_OFFSETS
-    from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
+    from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
 
     values = set(ANALYSIS_TIME_RANGE_VALUES)
     assert values - {"all", "today"} <= set(_TIME_RANGE_OFFSETS)
@@ -315,7 +315,7 @@ def test_schema_fingerprint_is_immutable_and_order_independent():
     assert hash(permuted) == hash(expected)
     columns: Any = permuted.columns
     with pytest.raises(TypeError):
-        columns["accounts"] = frozenset()
+        columns["sources"] = frozenset()
 
 
 _STRUCTURAL_LOOKALIKE_CASES = (

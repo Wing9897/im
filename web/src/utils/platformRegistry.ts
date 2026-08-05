@@ -2,7 +2,7 @@
 
 import i18n from "../i18n";
 
-export type PickerLayout = "account-tree" | "flat";
+export type PickerLayout = "source-tree" | "flat";
 
 /** i18n key under `common:platformScope.*` for the monitor scope noun. */
 type PlatformScopeKey =
@@ -47,13 +47,13 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
   telegram: {
     id: "telegram",
     label: "Telegram",
-    pickerLayout: "account-tree",
+    pickerLayout: "source-tree",
     scopeLabelKey: "channel",
   },
   discord: {
     id: "discord",
     label: "Discord",
-    pickerLayout: "account-tree",
+    pickerLayout: "source-tree",
     scopeLabelKey: "channel",
   },
   rss: {
@@ -77,7 +77,7 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
   email: {
     id: "email",
     label: "Email",
-    pickerLayout: "account-tree",
+    pickerLayout: "source-tree",
     scopeLabelKey: "folder",
   },
   api: {

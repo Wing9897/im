@@ -134,7 +134,8 @@ async def test_event_batch_and_failure_retry(db):
     assert failed_payload["retrying"] is True
 
     log_row = await db.fetch_one(
-        "SELECT level, category, kind, message, details FROM app_logs WHERE category = 'analysis' ORDER BY time DESC LIMIT 1"
+        "SELECT level, category, kind, message, details "
+        "FROM app_logs WHERE category = 'analysis' ORDER BY time DESC LIMIT 1"
     )
     assert log_row is not None
     assert log_row["level"] == "warning"
@@ -279,12 +280,12 @@ async def test_batch_limit_caps_messages_per_batch(db):
     now = "2026-07-01T12:30:00+00:00"
     for idx, message_id in enumerate(("msg-4", "msg-5", "msg-6"), start=4):
         await db.execute(
-            "INSERT INTO messages (id, account_id, platform, platform_id, "
+            "INSERT INTO messages (id, source_id, platform, platform_id, "
             "platform_message_id, sender_id, sender_name, content, timestamp, "
             "raw_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)",
             (
                 message_id,
-                seed.TG_ACCOUNT,
+                seed.TG_SOURCE,
                 *seed.TG_CHANNEL,
                 f"10{idx}",
                 f"sender-{idx}",

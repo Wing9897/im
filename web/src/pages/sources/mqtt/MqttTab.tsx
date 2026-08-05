@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SourceTabLayout } from "../SourceTabLayout";
 import { MqttBrokerDetailDialog } from "./MqttBrokerDetailDialog";
@@ -6,11 +5,12 @@ import { MqttBrokerCard } from "./MqttBrokerCard";
 import { MqttBrokerForm } from "./MqttBrokerForm";
 import { MqttEditDialog } from "./mqttFormModel";
 import { useMqttTab } from "./useMqttTab";
+import { useSourceDetailTarget } from "../useSourceDetailTarget";
 
 export function MqttTab() {
   const { t } = useTranslation("sources");
   const {
-    accounts,
+    sources,
     initialLoading,
     isRefreshing,
     error,
@@ -21,11 +21,11 @@ export function MqttTab() {
     removeTarget,
     setRemoveTarget,
     removing,
-    fetchMqttAccounts,
+    fetchMqttSources,
     handleRetry,
     retrying,
-    handleAddMqttAccount,
-    handleRemoveMqttAccount,
+    handleAddMqttSource,
+    handleRemoveMqttSource,
     editTarget,
     editForm,
     setEditForm,
@@ -35,7 +35,8 @@ export function MqttTab() {
     closeEditDialog,
     handleSaveEdit,
   } = useMqttTab();
-  const [detailTarget, setDetailTarget] = useState<(typeof accounts)[number] | null>(null);
+  const { detailTarget, setDetailTarget, closeDetail } =
+    useSourceDetailTarget<(typeof sources)[number]>();
 
   const addForm = (
     <MqttBrokerForm
@@ -43,7 +44,7 @@ export function MqttTab() {
       setForm={setForm}
       submitting={submitting}
       formError={formError}
-      onSubmit={() => void handleAddMqttAccount().catch(() => {})}
+      onSubmit={() => void handleAddMqttSource().catch(() => {})}
     />
   );
 
@@ -57,7 +58,7 @@ export function MqttTab() {
         formDescription={t("mqtt.formDescription")}
         addForm={addForm}
         listTitle={t("mqtt.listTitle")}
-        itemCount={accounts.length}
+        itemCount={sources.length}
         initialLoading={initialLoading}
         isRefreshing={isRefreshing}
         emptyState={{
@@ -71,17 +72,17 @@ export function MqttTab() {
         removeMessage={
           removeTarget ? t("mqtt.removeMessage", { name: removeTarget.brokerUrl }) : null
         }
-        onRemoveConfirm={() => void handleRemoveMqttAccount().catch(() => {})}
+        onRemoveConfirm={() => void handleRemoveMqttSource().catch(() => {})}
         onRemoveCancel={() => setRemoveTarget(null)}
       >
-        {accounts.map((broker) => (
+        {sources.map((broker) => (
           <MqttBrokerCard
-            key={broker.account.id}
+            key={broker.source.id}
             broker={broker}
             onEditClick={() => openEditDialog(broker)}
             onRemoveClick={() => setRemoveTarget(broker)}
             onSelectClick={() => setDetailTarget(broker)}
-            onReconnectSuccess={() => void fetchMqttAccounts().catch(() => {})}
+            onReconnectSuccess={() => void fetchMqttSources().catch(() => {})}
           />
         ))}
       </SourceTabLayout>
@@ -89,10 +90,10 @@ export function MqttTab() {
       {detailTarget ? (
         <MqttBrokerDetailDialog
           broker={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={closeDetail}
           onEdit={() => {
             const target = detailTarget;
-            setDetailTarget(null);
+            closeDetail();
             openEditDialog(target);
           }}
         />

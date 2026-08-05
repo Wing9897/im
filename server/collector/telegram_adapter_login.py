@@ -31,7 +31,7 @@ async def start_login(adapter: Any, api_id: int, api_hash: str, phone: str) -> d
         await adapter._on_login_success()
         return {"next_step": "connected"}
     sent_code = await adapter._client.send_code_request(phone)
-    logger.info("Telegram login code sent for account %s", adapter._account_id)
+    logger.info("Telegram login code sent for source %s", adapter._source_id)
     return {
         "next_step": "code_required",
         "phone_code_hash": sent_code.phone_code_hash,
@@ -49,7 +49,7 @@ async def verify_code(adapter: Any, code: str, phone_code_hash: str | None) -> d
             phone_code_hash=phone_code_hash,
         )
     except errors.SessionPasswordNeededError:
-        logger.info("2FA required for account %s", adapter._account_id)
+        logger.info("2FA required for source %s", adapter._source_id)
         return {"next_step": "2fa_required"}
     await adapter._on_login_success()
     return {"next_step": "connected"}
@@ -74,7 +74,7 @@ async def start_qr_login(adapter: Any, api_id: int, api_hash: str) -> dict:
         await adapter._on_login_success()
         return {"next_step": "connected"}
     adapter._qr_login = await adapter._client.qr_login()
-    logger.info("Telegram QR login started for account %s", adapter._account_id)
+    logger.info("Telegram QR login started for source %s", adapter._source_id)
     return qr_login_payload(adapter)
 
 
@@ -89,12 +89,12 @@ async def wait_qr_login(adapter: Any, timeout: float | None = None) -> dict:
         try:
             await adapter._qr_login.wait(timeout=wait_seconds)
         except errors.SessionPasswordNeededError:
-            logger.info("2FA required after QR login for account %s", adapter._account_id)
+            logger.info("2FA required after QR login for source %s", adapter._source_id)
             return {"next_step": "2fa_required"}
         except asyncio.TimeoutError:
             if qr_expires_in_seconds(adapter) <= 1.0:
                 await adapter._qr_login.recreate()
-                logger.info("Telegram QR login token refreshed for account %s", adapter._account_id)
+                logger.info("Telegram QR login token refreshed for source %s", adapter._source_id)
             return qr_login_payload(adapter)
         await adapter._on_login_success()
         return {"next_step": "connected"}
@@ -131,7 +131,7 @@ def persist_string_session(adapter: Any) -> None:
     token = session.save()
     if not isinstance(token, str) or not token.strip():
         raise RuntimeError("Telegram session.save() returned an empty token")
-    path = persist_string_session_token(adapter._session_dir, adapter._account_id, token)
+    path = persist_string_session_token(adapter._session_dir, adapter._source_id, token)
     if not path.is_file() or not path.read_text(encoding="utf-8").strip():
         raise RuntimeError(f"Telegram session file missing after write: {path}")
 
@@ -143,12 +143,12 @@ async def on_login_success(adapter: Any) -> None:
     await adapter._apply_logged_in_profile()
     adapter._persist_string_session()
     logger.info(
-        "Persisted Telegram session for account %s → %s",
-        adapter._account_id,
-        string_session_path(adapter._session_dir, adapter._account_id),
+        "Persisted Telegram session for source %s → %s",
+        adapter._source_id,
+        string_session_path(adapter._session_dir, adapter._source_id),
     )
     adapter._mark_connected()
-    await adapter._update_account_status("connected")
+    await adapter._update_source_status("connected")
     adapter._broadcast_status_change("connected")
     if adapter._startup_task is not None:
         adapter._startup_task.cancel()
@@ -159,7 +159,7 @@ async def on_login_success(adapter: Any) -> None:
         adapter._startup_task = None
     adapter._history_backfill_done = False
     adapter._startup_task = asyncio.create_task(adapter._finish_startup())
-    logger.info("Telegram login successful for account %s", adapter._account_id)
+    logger.info("Telegram login successful for source %s", adapter._source_id)
 
 
 async def apply_logged_in_profile(adapter: Any) -> None:
@@ -168,7 +168,7 @@ async def apply_logged_in_profile(adapter: Any) -> None:
     try:
         me = await adapter._client.get_me()
     except Exception:
-        logger.exception("Failed to fetch Telegram profile for account %s", adapter._account_id)
+        logger.exception("Failed to fetch Telegram profile for source %s", adapter._source_id)
         return
     phone = getattr(me, "phone", None)
     username = getattr(me, "username", None)
@@ -184,9 +184,9 @@ async def apply_logged_in_profile(adapter: Any) -> None:
         return
     try:
         await adapter._db.execute(
-            "UPDATE accounts SET name = ?, updated_at = ? "
+            "UPDATE sources SET name = ?, updated_at = ? "
             "WHERE id = ? AND (name IS NULL OR name = '' OR name = 'Telegram')",
-            (label, utc_now_iso(), adapter._account_id),
+            (label, utc_now_iso(), adapter._source_id),
         )
     except Exception:
-        logger.exception("Failed to update Telegram display name for account %s", adapter._account_id)
+        logger.exception("Failed to update Telegram display name for source %s", adapter._source_id)

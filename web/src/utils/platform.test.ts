@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { platformColor, groupChannelsByPlatform } from "./platform";
-import type { ChannelWithAccount } from "../types";
+import type { ChannelWithSource } from "../types";
 
 describe("platformColor", () => {
   it("returns CSS variables for known platforms", () => {
@@ -21,15 +21,15 @@ describe("platformColor", () => {
 });
 
 describe("groupChannelsByPlatform", () => {
-  function makeChannel(platform: string, id: string): ChannelWithAccount {
+  function makeChannel(platform: string, id: string): ChannelWithSource {
     return {
       id,
-      platform: platform as ChannelWithAccount["platform"],
+      platform: platform as ChannelWithSource["platform"],
       platformId: `ch-${id}`,
       channelName: `Channel ${id}`,
-      accountIds: [`acc-${id}`],
-      accountId: `acc-${id}`,
-      accountName: `Account ${id}`,
+      sourceIds: [`acc-${id}`],
+      sourceId: `acc-${id}`,
+      sourceName: `Source ${id}`,
     };
   }
 

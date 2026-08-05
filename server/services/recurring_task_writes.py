@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 from types import EllipsisType
 from typing import Any
 
-from server.calendar.occurrence_span import roll_end_if_overnight
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import CHILD_RECURRING_MODE
 from server.queries.tasks_queries import (
@@ -15,6 +13,7 @@ from server.queries.tasks_queries import (
     set_task_active,
     update_analysis_task,
 )
+from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
 from server.services.task_writes import (
     TaskWriteError,
     assert_parent_project_row,
@@ -23,27 +22,6 @@ from server.services.task_writes import (
     resolve_parent_task_id,
 )
 from server.util import new_id, utc_now_iso
-
-
-def _manual_anchor(clock: str | None, *, is_all_day: bool) -> str:
-    local_now = datetime.now().astimezone()
-    if is_all_day:
-        return local_now.date().isoformat()
-    assert clock is not None
-    hour, minute = (int(part) for part in clock.split(":", 1))
-    return local_now.replace(hour=hour, minute=minute, second=0, microsecond=0, tzinfo=None).isoformat()
-
-
-def _manual_end_anchor(dtstart: str, end_clock: str | None, *, is_all_day: bool) -> str | None:
-    """Build dtend; overnight clocks share ``roll_end_if_overnight`` with expand."""
-    if is_all_day:
-        return (datetime.fromisoformat(dtstart) + timedelta(days=1)).date().isoformat()
-    if end_clock is None:
-        return None
-    start = datetime.fromisoformat(dtstart)
-    hour, minute = (int(part) for part in end_clock.split(":", 1))
-    end = roll_end_if_overnight(start, start.replace(hour=hour, minute=minute))
-    return end.isoformat()
 
 
 async def create_recurring_task(
@@ -90,8 +68,8 @@ async def create_recurring_task(
     )
     task_id = new_id()
     now = utc_now_iso()
-    dtstart = _manual_anchor(start_clock, is_all_day=is_all_day)
-    dtend = _manual_end_anchor(dtstart, end_clock, is_all_day=is_all_day)
+    dtstart = manual_anchor(start_clock, is_all_day=is_all_day)
+    dtend = manual_end_anchor(dtstart, end_clock, is_all_day=is_all_day)
 
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
@@ -210,11 +188,11 @@ async def patch_recurring_task(
         if event_start_time is ... and event_is_all_day is None:
             dtstart = existing_start
         else:
-            dtstart = _manual_anchor(start_clock, is_all_day=all_day)
+            dtstart = manual_anchor(start_clock, is_all_day=all_day)
         dtend = (
             existing_end
             if event_end_time is ... and event_start_time is ... and event_is_all_day is None
-            else _manual_end_anchor(dtstart, end_clock, is_all_day=all_day)
+            else manual_end_anchor(dtstart, end_clock, is_all_day=all_day)
         )
         location = row.get("event_location") if event_location is ... else (str(event_location).strip() or None)
         event_desc = (
@@ -313,8 +291,8 @@ async def upsert_task_schedule(
     elif row.get("parent_task_id"):
         parent = str(row["parent_task_id"])
 
-    dtstart = _manual_anchor(start_clock, is_all_day=is_all_day)
-    dtend = _manual_end_anchor(dtstart, end_clock, is_all_day=is_all_day)
+    dtstart = manual_anchor(start_clock, is_all_day=is_all_day)
+    dtend = manual_end_anchor(dtstart, end_clock, is_all_day=is_all_day)
     now = utc_now_iso()
     async with db.transaction() as conn:
         tx = TransactionDb(conn)

@@ -3,34 +3,34 @@ import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import i18n from "../../../i18n";
 import { setAppLocale } from "../../../i18n/locale";
 import { WallChannelPicker } from "./WallChannelPicker";
 
-const channels: ChannelWithAccount[] = [
+const channels: ChannelWithSource[] = [
   {
     id: "telegram:10001",
     platform: "telegram",
     platformId: "10001",
     channelName: "News",
-    accountIds: ["acc-1"],
-    accountId: "acc-1",
-    accountName: "My Telegram",
+    sourceIds: ["acc-1"],
+    sourceId: "acc-1",
+    sourceName: "My Telegram",
   },
   {
     id: "telegram:10002",
     platform: "telegram",
     platformId: "10002",
     channelName: "Alerts",
-    accountIds: ["acc-1"],
-    accountId: "acc-1",
-    accountName: "My Telegram",
+    sourceIds: ["acc-1"],
+    sourceId: "acc-1",
+    sourceName: "My Telegram",
   },
 ];
 
 function renderPicker(props: {
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   selectedChannelIds: string[];
   onChange: (ids: string[]) => void;
 }) {
@@ -114,16 +114,16 @@ describe("WallChannelPicker", () => {
   });
 
   it("shows platform filter chips when multiple platforms exist", () => {
-    const multiPlatformChannels: ChannelWithAccount[] = [
+    const multiPlatformChannels: ChannelWithSource[] = [
       ...channels,
       {
         id: "email:INBOX",
         platform: "email",
         platformId: "INBOX",
         channelName: "INBOX",
-        accountIds: ["acc-email"],
-        accountId: "acc-email",
-        accountName: "user@gmail.com",
+        sourceIds: ["acc-email"],
+        sourceId: "acc-email",
+        sourceName: "user@gmail.com",
       },
     ];
     const container = renderPicker({

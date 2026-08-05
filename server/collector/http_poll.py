@@ -55,17 +55,17 @@ class HttpPollAdapter(BasePlatformAdapter):
     """Polls an HTTP endpoint and inserts each successful response as one message.
 
     Transient HTTP errors are logged and retried on the next cycle. Oversized
-    JSON responses fail that poll round (account error + log) without insert.
+    JSON responses fail that poll round (source error + log) without insert.
     """
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         credentials: dict[str, Any],
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._creds = normalize_http_credentials(credentials)
         self._poll_interval = float(self._creds["poll_interval_seconds"])
         self._seen_hashes: set[str] = set()
@@ -96,8 +96,8 @@ class HttpPollAdapter(BasePlatformAdapter):
             self._mark_connected()
             self._broadcast_status_change("connected")
             logger.info(
-                "HTTP poll adapter connected for account %s (%s %s)",
-                self._account_id,
+                "HTTP poll adapter connected for source %s (%s %s)",
+                self._source_id,
                 self._creds["method"],
                 self._creds["url"],
             )
@@ -122,7 +122,7 @@ class HttpPollAdapter(BasePlatformAdapter):
             self._session = None
 
         self._state.status = "disconnected"
-        logger.info("HTTP poll adapter disconnected for account %s", self._account_id)
+        logger.info("HTTP poll adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._poll_task is not None and not self._poll_task.done()
@@ -134,7 +134,7 @@ class HttpPollAdapter(BasePlatformAdapter):
                 await self._poll_once()
                 if self._state.status == "error":
                     self._mark_connected()
-                    await self._update_account_status("connected")
+                    await self._update_source_status("connected")
                     self._broadcast_status_change("connected")
             except asyncio.CancelledError:
                 raise
@@ -142,13 +142,13 @@ class HttpPollAdapter(BasePlatformAdapter):
                 await self._mark_content_error(exc)
             except aiohttp.ClientError as exc:
                 logger.warning(
-                    "HTTP poll HTTP error for account %s (%s): %s",
-                    self._account_id,
+                    "HTTP poll HTTP error for source %s (%s): %s",
+                    self._source_id,
                     self._creds["url"],
                     exc,
                 )
             except (OSError, asyncio.TimeoutError, OutboundUrlError, ValueError, json.JSONDecodeError) as exc:
-                logger.warning("HTTP poll fetch error for account %s: %s", self._account_id, exc)
+                logger.warning("HTTP poll fetch error for source %s: %s", self._source_id, exc)
 
     async def _poll_once(self) -> None:
         assert self._session is not None, "HTTP session not initialized"
@@ -162,14 +162,14 @@ class HttpPollAdapter(BasePlatformAdapter):
 
     async def _mark_content_error(self, exc: HttpPollContentError) -> None:
         logger.warning(
-            "HTTP poll content error for account %s (%s): %s",
-            self._account_id,
+            "HTTP poll content error for source %s (%s): %s",
+            self._source_id,
             self._creds["url"],
             exc,
         )
         self._state.status = "error"
         self._state.last_error = str(exc)
-        await self._update_account_status("error", last_error=str(exc))
+        await self._update_source_status("error", last_error=str(exc))
         self._broadcast_status_change("error", last_error=str(exc))
 
     async def _ingest_response(self, body_bytes: bytes, content: str) -> None:
@@ -240,8 +240,8 @@ class HttpPollAdapter(BasePlatformAdapter):
     async def _load_subscribed_channels(self) -> None:
         platform = self._platform_name()
         rows = await self._db.fetch_all(
-            "SELECT platform_id FROM account_channels WHERE account_id = ? AND platform = ?",
-            (self._account_id, platform),
+            "SELECT platform_id FROM source_channels WHERE source_id = ? AND platform = ?",
+            (self._source_id, platform),
         )
         self._subscribed_platform_ids = [row["platform_id"] for row in rows]
         if not self._subscribed_platform_ids:

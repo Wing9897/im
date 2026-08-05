@@ -15,7 +15,7 @@ from server.queries.logs_queries import fetch_app_log
 from server.util import new_id, utc_now_iso
 
 _ALLOWED_LEVELS = frozenset({"info", "success", "warning", "error"})
-ALLOWED_LOG_CATEGORIES = frozenset({"analysis", "collector", "account", "system", "frontend"})
+ALLOWED_LOG_CATEGORIES = frozenset({"analysis", "collector", "source", "system", "frontend"})
 _ALLOWED_CATEGORIES = ALLOWED_LOG_CATEGORIES
 
 #: Cap for response bodies stored in envelope ``payload`` (failure forensics).
@@ -45,10 +45,7 @@ _BATCH_FAILURE_MESSAGE_EN = {
         "Analysis batch retries exhausted ({max_retries}); "
         "resume analysis to retry: {task_name} ({short_batch}) — {summary}"
     ),
-    "retrying": (
-        "Analysis batch will retry ({current_retry}/{max_retries}): "
-        "{task_name} ({short_batch}) — {summary}"
-    ),
+    "retrying": ("Analysis batch will retry ({current_retry}/{max_retries}): {task_name} ({short_batch}) — {summary}"),
 }
 
 
@@ -194,8 +191,7 @@ async def record(
     resolved_message = (message or "").strip() or message_key or kind
     log_id = new_id()
     await db.execute(
-        "INSERT INTO app_logs (id, time, level, category, kind, message, details) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO app_logs (id, time, level, category, kind, message, details) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             log_id,
             utc_now_iso(),

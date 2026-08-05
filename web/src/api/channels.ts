@@ -1,11 +1,11 @@
 /** REST API client functions for channel-oriented data. */
 
 import { apiClient } from "./client";
-import type { ChannelWithAccount, Message } from "../types";
+import type { ChannelWithSource, Message } from "../types";
 
-/** Fetches all channels with their associated account metadata. */
-export function listChannelsWithAccounts(): Promise<ChannelWithAccount[]> {
-  return apiClient.get<ChannelWithAccount[]>("/api/v1/channels/with-accounts");
+/** Fetches all channels with their associated source metadata. */
+export function listChannelsWithSources(): Promise<ChannelWithSource[]> {
+  return apiClient.get<ChannelWithSource[]>("/api/v1/channels/with-sources");
 }
 
 /** Bootstraps the newest messages per channel for the wall page. */

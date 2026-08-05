@@ -16,8 +16,7 @@ from server.queries.messages_queries import (
     fetch_messages_page,
 )
 
-# Compatibility aliases retained for tests and external imports.
-DEFAULT_LIMIT = MESSAGES_DEFAULT_RESULT_LIMIT
+# Alias retained for tests and external imports.
 HARD_CAP = MESSAGES_RESULT_HARD_CAP
 CONTENT_TRUNCATE = 400
 DEFAULT_TIME_RANGE = "7d"
@@ -92,7 +91,7 @@ async def _tool_messages_search(db: Database, args: dict[str, Any]) -> dict[str,
     except MessagesQueryError as exc:
         return {"error": str(exc), "items": [], "count": 0}
     platform = args.get("platform")
-    account_ids = _as_csv(arg(args, "accountIds", "account_ids"))
+    source_ids = _as_csv(arg(args, "sourceIds", "source_ids", "accountIds", "account_ids"))
     channel_ids = _as_csv(arg(args, "channelIds", "channel_ids"))
 
     try:
@@ -101,7 +100,7 @@ async def _tool_messages_search(db: Database, args: dict[str, Any]) -> dict[str,
             search=query_text,
             time_range=query_range,
             platform=str(platform) if platform not in (None, "") else None,
-            account_ids=account_ids,
+            source_ids=source_ids,
             channel_ids=channel_ids,
             limit=limit,
             include_total=False,
@@ -160,10 +159,15 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "minimum": 1,
                     "maximum": MESSAGES_RESULT_HARD_CAP,
                 },
+                "sourceIds": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional source id filter",
+                },
                 "accountIds": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Optional account id filter",
+                    "description": "Legacy LLM spelling accepted as sourceIds",
                 },
                 "channelIds": {
                     "type": "array",

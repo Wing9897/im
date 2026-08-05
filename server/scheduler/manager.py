@@ -22,9 +22,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from server.config import get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import (
-    PARENT_PROJECT_MODE,
     SCHEDULABLE_ANALYSIS_MODES,
-    WEB_INTEL_MODE,
     get_analysis_mode_spec,
 )
 from server.domain.schedule import (
@@ -32,15 +30,12 @@ from server.domain.schedule import (
     may_register_trigger,
     trigger_from_rrule,
 )
-from server.queries.batch_housekeeping import purge_all_superseded_version_data
-from server.queries.project_tick_queries import complete_project_batch
 from server.scheduler.batch import execute_batch
-from server.scheduler.batch_failure import apply_retry_outcome, decide_batch_error_outcome
 from server.scheduler.project_tick import execute_project_tick
+from server.scheduler.recovery import recover_orphan_batches
 from server.scheduler.retention import retention_timer
 from server.scheduler.web_intel_tick import execute_web_intel_tick
 from server.sse import SseBroadcaster
-from server.util import utc_now_iso
 
 logger = logging.getLogger(__name__)
 
@@ -95,80 +90,7 @@ class SchedulerManager:
     # ── startup / recovery ──────────────────────────────────────────────
 
     async def recover_orphan_batches(self) -> None:
-        """Reset batches stranded by a previous process.
-
-        Project-tick batches are not marker-claim retries: complete interrupted
-        ``processing`` rows and never stall-sweep them into auto-pause.
-        """
-        now = utc_now_iso()
-
-        # Project / web_intel fires left mid-run: close as completed(error).
-        # These modes have no marker-claim retry path.
-        tick_orphans = await self._db.fetch_all(
-            "SELECT b.id, b.message_count, t.analysis_mode FROM analysis_batches b "
-            "JOIN analysis_tasks t ON t.id = b.task_id "
-            "WHERE b.status = 'processing' AND t.analysis_mode IN (?, ?)",
-            (PARENT_PROJECT_MODE, WEB_INTEL_MODE),
-        )
-        for row in tick_orphans:
-            await complete_project_batch(
-                self._db,
-                str(row["id"]),
-                error_message="interrupted: process restart",
-                message_count=int(row["message_count"] or 0),
-            )
-        if tick_orphans:
-            logger.info(
-                "Closed %d interrupted tick batch(es) on recovery",
-                len(tick_orphans),
-            )
-
-        # Marker-batch crash recovery — everything left in 'processing' → 'pending'.
-        await self._db.execute(
-            "UPDATE analysis_batches SET status = 'pending', updated_at = ? WHERE status = 'processing'",
-            (now,),
-        )
-
-        # Threshold-based orphan handling for long-stalled marker batches.
-        # Skip while analysis is paused — pending stalls are expected (capacity /
-        # pause), not crash orphans; sweeping them can false-positive auto-pause.
-        # Project pending rows (if any) must not enter retry/auto-pause either.
-        if await get_config_bool(self._db, "analysis_paused"):
-            logger.info("Skipping stale-pending orphan sweep while analysis is paused")
-        else:
-            timeout = await get_config_int(self._db, "llm_generation_timeout")
-            max_retries = await get_config_int(self._db, "max_batch_retries")
-            stall_seconds = timeout * 2
-            stalled = await self._db.fetch_all(
-                "SELECT b.id, b.retry_count, b.task_id, t.name AS task_name "
-                "FROM analysis_batches b "
-                "JOIN analysis_tasks t ON t.id = b.task_id "
-                "WHERE b.status = 'pending' "
-                "AND t.analysis_mode NOT IN (?, ?) "
-                "AND datetime(b.updated_at) < datetime('now', ?)",
-                (PARENT_PROJECT_MODE, WEB_INTEL_MODE, f"-{stall_seconds} seconds"),
-            )
-            for row in stalled:
-                batch_id = str(row["id"])
-                retry_count = int(row["retry_count"] or 0)
-                task_id = str(row["task_id"])
-                task_name = str(row["task_name"])
-                outcome = decide_batch_error_outcome("orphan batch recovery", retry_count, max_retries)
-                await apply_retry_outcome(
-                    db=self._db,
-                    broadcaster=self._broadcaster,
-                    task_id=task_id,
-                    task_name=task_name,
-                    batch_id=batch_id,
-                    error_message="orphan batch recovery",
-                    outcome=outcome,
-                    max_retries=max_retries,
-                    scheduler=self,
-                )
-
-        pruned_batches = await purge_all_superseded_version_data(self._db)
-        if pruned_batches:
-            logger.info("Pruned %d superseded-version batch rows (and matching results)", pruned_batches)
+        await recover_orphan_batches(self._db, self._broadcaster, self)
 
     async def start(self) -> None:
         self._max_concurrent = await self._load_max_concurrent()

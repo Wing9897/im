@@ -11,11 +11,11 @@ from server.secrets import protect_text
 NOW = "2026-07-01T12:00:00+00:00"
 EARLIER = "2026-07-01T11:00:00+00:00"
 
-TG_ACCOUNT = "acc-tg"
-DISCORD_ACCOUNT = "acc-dc"
-RSS_ACCOUNT = "acc-rss"
-MQTT_ACCOUNT = "acc-mqtt"
-EMAIL_ACCOUNT = "acc-email"
+TG_SOURCE = "acc-tg"
+DISCORD_SOURCE = "acc-dc"
+RSS_SOURCE = "acc-rss"
+MQTT_SOURCE = "acc-mqtt"
+EMAIL_SOURCE = "acc-email"
 EMAIL_USERNAME = "user@example.com"
 
 TG_CHANNEL = ("telegram", "10001")
@@ -52,7 +52,7 @@ ACTION_1 = "act-1"
 async def seed_database(db: Any) -> None:
     now = NOW
 
-    # ── accounts ──────────────────────────────────────────────────────
+    # ── sources ──────────────────────────────────────────────────────
     email_creds = build_email_credentials(
         imap_host="imap.example.com",
         imap_port=993,
@@ -67,42 +67,42 @@ async def seed_database(db: Any) -> None:
         mark_as_read=False,
         folder_cursors={"INBOX": 5},
     )
-    accounts = [
+    sources = [
         (
-            TG_ACCOUNT,
+            TG_SOURCE,
             "telegram",
             "+886912345678",
             "connected",
             json.dumps({"api_id": 12345, "api_hash": "hash", "phone": "+886912345678"}),
         ),
-        (DISCORD_ACCOUNT, "discord", "My Discord Bot", "connected", json.dumps({"bot_token": "token"})),
+        (DISCORD_SOURCE, "discord", "My Discord Bot", "connected", json.dumps({"bot_token": "token"})),
         (
-            RSS_ACCOUNT,
+            RSS_SOURCE,
             "rss",
             "Example Feed",
             "connected",
             json.dumps({"feed_url": RSS_CHANNEL[1], "poll_interval_seconds": 300}),
         ),
         (
-            MQTT_ACCOUNT,
+            MQTT_SOURCE,
             "mqtt",
             MQTT_CHANNEL[1],
             "connected",
             json.dumps({"broker_url": MQTT_CHANNEL[1], "topics": ["news/#", "alerts/hk"]}),
         ),
         (
-            EMAIL_ACCOUNT,
+            EMAIL_SOURCE,
             "email",
             EMAIL_USERNAME,
             "connected",
             protect_text(json.dumps(email_creds, ensure_ascii=False)),
         ),
     ]
-    for account_id, platform, name, status, credentials in accounts:
+    for source_id, platform, name, status, credentials in sources:
         await db.execute(
-            "INSERT INTO accounts (id, platform, name, status, credentials, "
+            "INSERT INTO sources (id, platform, name, status, credentials, "
             "last_connected_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (account_id, platform, name, status, credentials, now, now, now),
+            (source_id, platform, name, status, credentials, now, now, now),
         )
 
     # ── channels + account links ──────────────────────────────────────
@@ -119,23 +119,23 @@ async def seed_database(db: Any) -> None:
             (platform, platform_id, channel_name, now),
         )
     links = [
-        (TG_ACCOUNT, *TG_CHANNEL),
-        (DISCORD_ACCOUNT, *DISCORD_CHANNEL),
-        (RSS_ACCOUNT, *RSS_CHANNEL),
-        (MQTT_ACCOUNT, *MQTT_CHANNEL),
-        (EMAIL_ACCOUNT, *EMAIL_CHANNEL),
+        (TG_SOURCE, *TG_CHANNEL),
+        (DISCORD_SOURCE, *DISCORD_CHANNEL),
+        (RSS_SOURCE, *RSS_CHANNEL),
+        (MQTT_SOURCE, *MQTT_CHANNEL),
+        (EMAIL_SOURCE, *EMAIL_CHANNEL),
     ]
-    for account_id, platform, platform_id in links:
+    for source_id, platform, platform_id in links:
         await db.execute(
-            "INSERT INTO account_channels (account_id, platform, platform_id) VALUES (?, ?, ?)",
-            (account_id, platform, platform_id),
+            "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, ?, ?)",
+            (source_id, platform, platform_id),
         )
 
     # ── messages ──────────────────────────────────────────────────────
     messages = [
         (
             MESSAGE_1,
-            TG_ACCOUNT,
+            TG_SOURCE,
             *TG_CHANNEL,
             "1001",
             "sender-1",
@@ -143,10 +143,10 @@ async def seed_database(db: Any) -> None:
             "地震速報:規模5.1",
             "2026-07-01T10:00:00+00:00",
         ),
-        ("msg-2", TG_ACCOUNT, *TG_CHANNEL, "1002", "sender-2", "Bob", "演唱會門票開賣", "2026-07-01T10:05:00+00:00"),
+        ("msg-2", TG_SOURCE, *TG_CHANNEL, "1002", "sender-2", "Bob", "演唱會門票開賣", "2026-07-01T10:05:00+00:00"),
         (
             "msg-3",
-            DISCORD_ACCOUNT,
+            DISCORD_SOURCE,
             *DISCORD_CHANNEL,
             "2001",
             "sender-3",
@@ -155,12 +155,12 @@ async def seed_database(db: Any) -> None:
             "2026-07-01T10:10:00+00:00",
         ),
     ]
-    for message_id, account_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp in messages:
+    for message_id, source_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp in messages:
         await db.execute(
-            "INSERT INTO messages (id, account_id, platform, platform_id, "
+            "INSERT INTO messages (id, source_id, platform, platform_id, "
             "platform_message_id, sender_id, sender_name, content, timestamp, "
             "raw_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)",
-            (message_id, account_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp, now),
+            (message_id, source_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp, now),
         )
 
     # ── analysis tasks (leaderboard / event / calendar / web_intel / project) ─

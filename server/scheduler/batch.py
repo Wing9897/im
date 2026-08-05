@@ -158,8 +158,7 @@ async def _process_batch(
             f" tokens≈{prompt.estimated_tokens}"
         )
         logger.info(
-            "analysis trace task=%s batch=%s mode=%s strategy=%s "
-            "messages=%s tokens=%s overlap_used=%s primary_used=%s",
+            "analysis trace task=%s batch=%s mode=%s strategy=%s messages=%s tokens=%s overlap_used=%s primary_used=%s",
             task_id,
             batch_id,
             analysis_mode,

@@ -1,13 +1,22 @@
 /**
  * Propagate repo-root VERSION to npm/pyproject manifests and workspace lock entries.
- * Usage: node scripts/sync-version.mjs
+ * Usage: node scripts/sync-version.mjs [--root <repository-root>]
+ * ``--root`` exists for isolated verification; normal callers use this repository.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(__dirname, "..");
+const rootArgIndex = process.argv.indexOf("--root");
+if (rootArgIndex >= 0 && !process.argv[rootArgIndex + 1]) {
+  console.error("[sync-version] --root requires a path");
+  process.exit(2);
+}
+const root =
+  rootArgIndex >= 0
+    ? path.resolve(process.argv[rootArgIndex + 1])
+    : path.resolve(__dirname, "..");
 const version = readFileSync(path.join(root, "VERSION"), "utf8").trim();
 
 if (!/^\d+\.\d+\.\d+(-[\w.-]+)?(\+[\w.-]+)?$/.test(version)) {

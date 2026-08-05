@@ -29,7 +29,7 @@ function entriesToHeaders(entries: HeaderEntry[]): Record<string, string> {
 export function sourceToForm(source: HttpSourceInfo): HttpFormFields {
   return {
     url: source.url,
-    name: source.account.name || "",
+    name: source.source.name || "",
     method: source.method === "POST" ? "POST" : "GET",
     authType:
       source.authType === "bearer" || source.authType === "basic" ? source.authType : "none",

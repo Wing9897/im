@@ -18,8 +18,8 @@ vi.mock("../../../context/AnalysisStatusContext", () => ({
   }),
 }));
 
-vi.mock("../../../hooks/useChannelsWithAccounts", () => ({
-  useChannelsWithAccounts: () => ({ channels: [] }),
+vi.mock("../../../hooks/useChannelsWithSources", () => ({
+  useChannelsWithSources: () => ({ channels: [] }),
 }));
 
 vi.mock("../../../api/userEvents", () => ({

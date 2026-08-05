@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /* ------------------------------------------------------------------ */
 
 const {
-  mockListTelegramAccounts,
+  mockListTelegramSources,
   mockListDiscordBots,
   mockListRssFeeds,
   mockListHttpSources,
@@ -24,7 +24,7 @@ const {
   mockFetchAccessKeys,
   mockFetchSystemSettings,
 } = vi.hoisted(() => ({
-  mockListTelegramAccounts: vi.fn(),
+  mockListTelegramSources: vi.fn(),
   mockListDiscordBots: vi.fn(),
   mockListRssFeeds: vi.fn(),
   mockListHttpSources: vi.fn(),
@@ -34,11 +34,11 @@ const {
   mockFetchSystemSettings: vi.fn(),
 }));
 
-vi.mock("../../api/accounts", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../api/accounts")>();
+vi.mock("../../api/sources", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../api/sources")>();
   return {
     ...actual,
-    listTelegramAccounts: mockListTelegramAccounts,
+    listTelegramSources: mockListTelegramSources,
     listDiscordBots: mockListDiscordBots,
     listRssFeeds: mockListRssFeeds,
     listHttpSources: mockListHttpSources,
@@ -73,10 +73,9 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
   useAnalysisStatus: () => ({
     queueStatus: null,
     analysisPaused: false,
-    activeAnalysis: null,
     activeAnalyses: new Map(),
     lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: vi.fn(),
   }),
@@ -108,7 +107,7 @@ import { SourceManagementPage } from "./SourceManagementPage";
 /* ------------------------------------------------------------------ */
 
 function setupDefaultMocks() {
-  mockListTelegramAccounts.mockResolvedValue([]);
+  mockListTelegramSources.mockResolvedValue([]);
   mockListDiscordBots.mockResolvedValue([]);
   mockListRssFeeds.mockResolvedValue([]);
   mockListHttpSources.mockResolvedValue([]);
@@ -129,7 +128,7 @@ describe("SourceManagementPage smoke test", () => {
   beforeEach(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
-    mockListTelegramAccounts.mockReset();
+    mockListTelegramSources.mockReset();
     mockListDiscordBots.mockReset();
     mockListRssFeeds.mockReset();
     mockListHttpSources.mockReset();
@@ -156,7 +155,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -186,7 +185,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts?tab=http&mode=webhook"] },
+          { initialEntries: ["/sources?tab=http&mode=webhook"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -205,7 +204,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts?tab=not-a-real-tab"] },
+          { initialEntries: ["/sources?tab=not-a-real-tab"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -224,7 +223,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -253,7 +252,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -285,7 +284,7 @@ describe("SourceManagementPage smoke test", () => {
       root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -320,7 +319,7 @@ describe("SourceManagementPage visual updates", () => {
   beforeEach(() => {
     container = document.createElement("div");
     document.body.appendChild(container);
-    mockListTelegramAccounts.mockReset();
+    mockListTelegramSources.mockReset();
     mockListDiscordBots.mockReset();
     mockListRssFeeds.mockReset();
     mockListHttpSources.mockReset();
@@ -354,7 +353,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -374,7 +373,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -396,13 +395,13 @@ describe("SourceManagementPage visual updates", () => {
     });
   });
 
-  describe("account card layout", () => {
-    it("account cards use sources-card-grid and sources-card classes", async () => {
-      mockListTelegramAccounts.mockResolvedValue([
+  describe("source card layout", () => {
+    it("source cards use sources-card-grid and sources-card classes", async () => {
+      mockListTelegramSources.mockResolvedValue([
         {
           id: "acc-1",
           platform: "telegram",
-          name: "Test Account",
+          name: "Test Source",
           status: "connected",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
@@ -414,7 +413,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -425,18 +424,18 @@ describe("SourceManagementPage visual updates", () => {
       const cardGrid = container.querySelector(".sources-card-grid");
       expect(cardGrid).toBeTruthy();
 
-      const accountCard = cardGrid!.firstElementChild as HTMLElement;
-      expect(accountCard.classList.contains("sources-card")).toBe(true);
+      const sourceCard = cardGrid!.firstElementChild as HTMLElement;
+      expect(sourceCard.classList.contains("sources-card")).toBe(true);
       // Hover chrome lives on the inner AccentBarCard surface, not the wrapper.
-      expect(accountCard.querySelector(".im-card-hover")).toBeTruthy();
+      expect(sourceCard.querySelector(".im-card-hover")).toBeTruthy();
     });
 
-    it("account card keeps base styles without JS hover state", async () => {
-      mockListTelegramAccounts.mockResolvedValue([
+    it("source card keeps base styles without JS hover state", async () => {
+      mockListTelegramSources.mockResolvedValue([
         {
           id: "acc-1",
           platform: "telegram",
-          name: "Test Account",
+          name: "Test Source",
           status: "connected",
           createdAt: "2026-01-01T00:00:00.000Z",
           updatedAt: "2026-01-01T00:00:00.000Z",
@@ -448,7 +447,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -457,20 +456,20 @@ describe("SourceManagementPage visual updates", () => {
       });
 
       const cardGrid = container.querySelector(".sources-card-grid");
-      const accountCard = cardGrid!.firstElementChild as HTMLElement;
+      const sourceCard = cardGrid!.firstElementChild as HTMLElement;
 
-      expect(accountCard.style.transform).not.toBe("translateY(-2px)");
+      expect(sourceCard.style.transform).not.toBe("translateY(-2px)");
     });
   });
 
   describe("form input styling consistency (Req 12.4, 7.5)", () => {
-    it("AddAccountForm inputs use polished form input styles", async () => {
+    it("AddTelegramSourceForm inputs use polished form input styles", async () => {
       await act(async () => {
         root = createRoot(container);
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -478,7 +477,7 @@ describe("SourceManagementPage visual updates", () => {
         await Promise.resolve();
       });
 
-      // The Telegram tab is active by default, which shows AddAccountForm
+      // The Telegram tab is active by default, which shows AddTelegramSourceForm
       const inputs = container.querySelectorAll(
         "input[type='text']",
       ) as NodeListOf<HTMLInputElement>;
@@ -500,7 +499,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -530,7 +529,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );
@@ -564,7 +563,7 @@ describe("SourceManagementPage visual updates", () => {
         root.render(
         createElement(
           MemoryRouter,
-          { initialEntries: ["/accounts"] },
+          { initialEntries: ["/sources"] },
           createElement(SourceManagementPage),
         ),
       );

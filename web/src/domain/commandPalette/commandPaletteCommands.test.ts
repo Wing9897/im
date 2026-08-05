@@ -60,13 +60,13 @@ describe("commandPaletteCommands", () => {
     expect(history.some((item) => item.to === "/actions?tab=history")).toBe(true);
   });
 
-  it("includes Ops Board canvas switch action", () => {
+  it("includes the Board canvas switch action", () => {
     const items = filterCommandPaletteItems("ops board");
-    expect(items.some((item) => item.id === "ops-board" && item.action === "open-ops-board")).toBe(
+    expect(items.some((item) => item.id === "board" && item.action === "open-board")).toBe(
       true,
     );
     const canvas = filterCommandPaletteItems("畫布");
-    expect(canvas.some((item) => item.id === "ops-board")).toBe(true);
+    expect(canvas.some((item) => item.id === "board")).toBe(true);
   });
 
   it("opens the message wall through the monitor route", () => {
@@ -93,9 +93,9 @@ describe("commandPaletteCommands", () => {
 
   it("includes MQTT and Email source shortcuts", () => {
     const mqtt = filterCommandPaletteItems("MQTT");
-    expect(mqtt.some((item) => item.to === "/accounts?tab=mqtt")).toBe(true);
+    expect(mqtt.some((item) => item.to === "/sources?tab=mqtt")).toBe(true);
     const email = filterCommandPaletteItems("Email");
-    expect(email.some((item) => item.to === "/accounts?tab=email")).toBe(true);
+    expect(email.some((item) => item.to === "/sources?tab=email")).toBe(true);
   });
 
   it("includes the shortcut help action", () => {

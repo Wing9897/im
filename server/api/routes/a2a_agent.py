@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.api.a2a_auth import require_a2a_agent
 from server.api.deps import get_db
+from server.api.schemas.requests import A2aAgentBody
 from server.api.schemas.responses import AgentChatResponse
 from server.config import get_config_int
 
@@ -24,17 +24,6 @@ router = APIRouter(
     tags=["a2a"],
     dependencies=[Depends(require_a2a_agent)],
 )
-
-
-class A2aAgentBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    #: Natural-language task (preferred for OpenClaw / Hermes-style callers).
-    input: str = Field(default="", max_length=8000)
-    #: Optional prior turns **held by the caller** for this request only.
-    #: This API does not store or resume sessions.
-    messages: list[dict[str, Any]] = Field(default_factory=list)
-    locale: Optional[str] = None
 
 
 def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:

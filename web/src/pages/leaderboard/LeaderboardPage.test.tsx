@@ -2,9 +2,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFetchTrendingTopics, mockListChannelsWithAccounts, runtimeState } = vi.hoisted(() => ({
+const { mockFetchTrendingTopics, mockListChannelsWithSources, runtimeState } = vi.hoisted(() => ({
   mockFetchTrendingTopics: vi.fn(),
-  mockListChannelsWithAccounts: vi.fn(),
+  mockListChannelsWithSources: vi.fn(),
   runtimeState: {
     lastAnalysisEvent: null as {
       type: "completed";
@@ -26,7 +26,7 @@ vi.mock("../../api/results", () => ({
 }));
 
 vi.mock("../../api/channels", () => ({
-  listChannelsWithAccounts: (...args: unknown[]) => mockListChannelsWithAccounts(...args),
+  listChannelsWithSources: (...args: unknown[]) => mockListChannelsWithSources(...args),
 }));
 
 vi.mock("../../context/AnalysisStatusContext", () => ({
@@ -34,9 +34,8 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
     lastAnalysisEvent: runtimeState.lastAnalysisEvent,
     queueStatus: null,
     analysisPaused: false,
-    activeAnalysis: null,
     activeAnalyses: new Map(),
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: () => {},
   }),
@@ -79,10 +78,10 @@ describe("LeaderboardPage", () => {
     document.body.appendChild(container);
     window.localStorage.clear();
     mockFetchTrendingTopics.mockReset();
-    mockListChannelsWithAccounts.mockReset();
+    mockListChannelsWithSources.mockReset();
     runtimeState.lastAnalysisEvent = null;
     mockFetchTrendingTopics.mockResolvedValue([]);
-    mockListChannelsWithAccounts.mockResolvedValue([]);
+    mockListChannelsWithSources.mockResolvedValue([]);
     resetTaskCatalogState([
       makeAnalysisTask({
         name: "Leaderboard Task",

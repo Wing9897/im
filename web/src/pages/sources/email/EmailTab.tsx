@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { SourceTabLayout } from "../SourceTabLayout";
 import { EmailMailboxDetailDialog } from "./EmailMailboxDetailDialog";
 import { EmailEditDialog } from "./EmailEditDialog";
 import { EmailMailboxCard } from "./EmailMailboxCard";
 import { EmailMailboxForm } from "./EmailMailboxForm";
 import { useEmailTab } from "./useEmailTab";
+import { useSourceDetailTarget } from "../useSourceDetailTarget";
 
 export function EmailTab() {
   const { t } = useTranslation("sources");
@@ -39,7 +39,8 @@ export function EmailTab() {
     closeEditDialog,
     handleSaveEdit,
   } = useEmailTab();
-  const [detailTarget, setDetailTarget] = useState<(typeof mailboxes)[number] | null>(null);
+  const { detailTarget, setDetailTarget, closeDetail } =
+    useSourceDetailTarget<(typeof mailboxes)[number]>();
 
   const addForm = (
     <EmailMailboxForm
@@ -76,7 +77,7 @@ export function EmailTab() {
         removeMessage={
           removeTarget
             ? t("email.removeMessage", {
-                name: formatAccountLabel(removeTarget.account) || removeTarget.username,
+                name: formatSourceLabel(removeTarget.source) || removeTarget.username,
               })
             : null
         }
@@ -85,7 +86,7 @@ export function EmailTab() {
       >
         {mailboxes.map((mailbox) => (
           <EmailMailboxCard
-            key={mailbox.account.id}
+            key={mailbox.source.id}
             mailbox={mailbox}
             onRemoveClick={() => setRemoveTarget(mailbox)}
             onEditClick={() => openEditDialog(mailbox)}
@@ -98,10 +99,10 @@ export function EmailTab() {
       {detailTarget ? (
         <EmailMailboxDetailDialog
           mailbox={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={closeDetail}
           onEdit={() => {
             const target = detailTarget;
-            setDetailTarget(null);
+            closeDetail();
             openEditDialog(target);
           }}
         />

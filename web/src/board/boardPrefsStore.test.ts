@@ -18,8 +18,8 @@ import {
 } from "./boardPrefsStore";
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 
-/** Leftover historical LS key — hydrate must ignore it (no LS→server bridge). */
-const LEFTOVER_BOARD_LS_KEY = "im:ops-board:v14";
+/** A client-only LS key — hydrate must ignore it (no LS→server bridge). */
+const CLIENT_BOARD_LS_KEY = "im:board:v14";
 
 vi.mock("../api/uiPrefs", () => ({
   fetchBoardPrefs: vi.fn(),
@@ -64,13 +64,13 @@ describe("boardPrefsStore hydrate / save", () => {
         ganttViewModes: {},
       },
     });
-    expect(window.localStorage.getItem(LEFTOVER_BOARD_LS_KEY)).toBeNull();
+    expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeNull();
   });
 
   it("seeds default layout when server empty (ignores leftover localStorage)", async () => {
     const leftover = createDefaultBoardConfig();
     leftover.widgets = leftover.widgets.slice(0, 8);
-    window.localStorage.setItem(LEFTOVER_BOARD_LS_KEY, JSON.stringify(leftover));
+    window.localStorage.setItem(CLIENT_BOARD_LS_KEY, JSON.stringify(leftover));
     vi.mocked(fetchBoardPrefs).mockResolvedValue({
       configured: false,
       layout: null,
@@ -90,7 +90,7 @@ describe("boardPrefsStore hydrate / save", () => {
       widgetState: { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
     });
     // Hard-cut: leftover LS is not cleared and not used as SoT.
-    expect(window.localStorage.getItem(LEFTOVER_BOARD_LS_KEY)).toBeTruthy();
+    expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeTruthy();
   });
 
   it("saveBoardLayoutToApi PUTs layout only", async () => {
@@ -133,7 +133,7 @@ describe("boardPrefsStore hydrate / save", () => {
         },
       });
     });
-    expect(window.localStorage.getItem(LEFTOVER_BOARD_LS_KEY)).toBeNull();
+    expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeNull();
   });
 
   it("hydrates hierarchical sourceFilters and write-backs dropped flat entries", async () => {
@@ -266,12 +266,12 @@ describe("boardPrefsStore hydrate / save", () => {
   it("falls back to defaults when GET fails (ignores localStorage)", async () => {
     const layout = createDefaultBoardConfig();
     layout.widgets = layout.widgets.slice(0, 8);
-    window.localStorage.setItem(LEFTOVER_BOARD_LS_KEY, JSON.stringify(layout));
+    window.localStorage.setItem(CLIENT_BOARD_LS_KEY, JSON.stringify(layout));
     vi.mocked(fetchBoardPrefs).mockRejectedValue(new Error("offline"));
 
     const loaded = await hydrateBoardPrefs();
     expect(loaded.widgets.length).toBe(createDefaultBoardConfig().widgets.length);
     expect(putBoardPrefs).not.toHaveBeenCalled();
-    expect(window.localStorage.getItem(LEFTOVER_BOARD_LS_KEY)).toBeTruthy();
+    expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeTruthy();
   });
 });

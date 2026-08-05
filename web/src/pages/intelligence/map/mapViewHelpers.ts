@@ -6,8 +6,6 @@ export { CARTO_URL, CARTO_ATTR } from "../../../domain/intelligence/mapTiles";
 export type DanmakuMode = "off" | "persistent" | "transient";
 export type OverlayDisplayMode = "both" | "live-only" | "event-only";
 
-export const DEFAULT_CENTER: [number, number] = [20, 0];
-export const DEFAULT_ZOOM = 2;
 export const ONE_HOUR = 3600_000;
 export const LIVE_WINDOW_OPTIONS = [1, 3, 6, 12, 24, 72] as const;
 export const MAX_RUNTIME_MESSAGES = 240;

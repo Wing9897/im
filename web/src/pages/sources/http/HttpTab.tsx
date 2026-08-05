@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SourceTabLayout } from "../SourceTabLayout";
 import { HttpSourceDetailDialog } from "./HttpSourceDetailDialog";
@@ -6,7 +6,8 @@ import { HttpSourceCard } from "./HttpSourceCard";
 import { HttpSourceForm } from "./HttpSourceForm";
 import { HttpEditDialog } from "./HttpEditDialog";
 import { useHttpTab } from "./useHttpTab";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
+import { useSourceDetailTarget } from "../useSourceDetailTarget";
 
 export function HttpTab({ modeToggle }: { modeToggle?: ReactNode }) {
   const { t } = useTranslation("sources");
@@ -36,7 +37,8 @@ export function HttpTab({ modeToggle }: { modeToggle?: ReactNode }) {
     closeEditDialog,
     handleSaveEdit,
   } = useHttpTab();
-  const [detailTarget, setDetailTarget] = useState<(typeof sources)[number] | null>(null);
+  const { detailTarget, setDetailTarget, closeDetail } =
+    useSourceDetailTarget<(typeof sources)[number]>();
 
   const addForm = (
     <HttpSourceForm
@@ -73,7 +75,7 @@ export function HttpTab({ modeToggle }: { modeToggle?: ReactNode }) {
         removeMessage={
           removeTarget
             ? t("http.removeMessage", {
-                name: formatAccountLabel(removeTarget.account) || removeTarget.url,
+                name: formatSourceLabel(removeTarget.source) || removeTarget.url,
               })
             : null
         }
@@ -82,7 +84,7 @@ export function HttpTab({ modeToggle }: { modeToggle?: ReactNode }) {
       >
         {sources.map((source) => (
           <HttpSourceCard
-            key={source.account.id}
+            key={source.source.id}
             source={source}
             onEditClick={() => openEditDialog(source)}
             onRemoveClick={() => setRemoveTarget(source)}
@@ -95,10 +97,10 @@ export function HttpTab({ modeToggle }: { modeToggle?: ReactNode }) {
       {detailTarget ? (
         <HttpSourceDetailDialog
           source={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={closeDetail}
           onEdit={() => {
             const target = detailTarget;
-            setDetailTarget(null);
+            closeDetail();
             openEditDialog(target);
           }}
         />

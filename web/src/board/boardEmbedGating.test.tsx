@@ -139,15 +139,15 @@ vi.mock("../context/TaskCatalogContext", async () =>
 );
 
 vi.mock("../api/channels", () => ({
-  listChannelsWithAccounts: vi.fn(async () => [
+  listChannelsWithSources: vi.fn(async () => [
     {
       id: "ch-1",
       name: "頻道",
       platform: "telegram",
       platformId: "p1",
-      accountId: "a1",
-      accountName: "Acc",
-      accountStatus: "connected",
+      sourceId: "a1",
+      sourceName: "Acc",
+      sourceStatus: "connected",
     },
   ]),
   fetchLatestByChannels: vi.fn(async () => ({})),

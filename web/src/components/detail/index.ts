@@ -18,7 +18,7 @@ export type { DetailMetaItem } from "./atoms/DetailMetaGrid";
 export { DetailTagList } from "./atoms/DetailTagList";
 
 export {
-  buildAccountDetailFields,
+  buildSourceDetailFields,
   buildDiscordBotDetailFields,
   buildEmailMailboxDetailFields,
   buildHttpSourceDetailFields,

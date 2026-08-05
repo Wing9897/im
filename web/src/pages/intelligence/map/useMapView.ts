@@ -4,9 +4,13 @@ import { useAnalysisStatus } from "../../../context/AnalysisStatusContext";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import {
   computeDataRange,
-  getEventTimestamp,
   partitionByCoordinates,
 } from "../../../domain/intelligence/mapFilters";
+import {
+  buildMapMarkerGroups,
+  filterTimedMapEvents,
+  sortTimedMapEvents,
+} from "../../../domain/intelligence/mapPresentation";
 import { captureError } from "../../../utils/errorReporter";
 import {
   type DanmakuMode, type OverlayDisplayMode, ONE_HOUR,
@@ -26,27 +30,11 @@ import {
   MAP_LIVE_WINDOW_HOURS_STORAGE_KEY,
   MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY,
 } from "../../../domain/prefs";
-import { groupByCoordinate } from "../../../domain/intelligence/groupByCoordinate";
 import { useMapLiveMessages } from "./useMapLiveMessages";
 
 interface UseMapViewOptions {
   items: AnalysisEvent[];
   onFetchWindowChange?: (window: TimeWindow) => void;
-}
-
-interface TimedItem {
-  item: AnalysisEvent;
-  timestamp: number;
-}
-
-function filterTimedItems(items: TimedItem[], window: TimeWindow): AnalysisEvent[] {
-  const start = window.start.getTime();
-  const end = window.end.getTime();
-  const filtered: AnalysisEvent[] = [];
-  for (const { item, timestamp } of items) {
-    if (timestamp >= start && timestamp <= end) filtered.push(item);
-  }
-  return filtered;
 }
 
 /**
@@ -65,13 +53,7 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
   const { lastAnalysisEvent } = useAnalysisStatus();
   const { withCoords } = useMemo(() => partitionByCoordinates(items), [items]);
   // Pre-parse timestamps + sort once; scrub filters this list without re-sorting.
-  const timedItemsDesc = useMemo<TimedItem[]>(
-    () =>
-      withCoords
-        .map((item) => ({ item, timestamp: new Date(getEventTimestamp(item)).getTime() }))
-        .sort((a, b) => b.timestamp - a.timestamp),
-    [withCoords],
-  );
+  const timedItemsDesc = useMemo(() => sortTimedMapEvents(withCoords), [withCoords]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [sharedDanmakuMode, setSharedDanmakuMode] = usePersistedState<DanmakuMode>(
@@ -235,7 +217,7 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
 
   // One filter pass over the pre-sorted source — markers, danmaku, and event list share it.
   const filteredEventItems = useMemo(
-    () => filterTimedItems(timedItemsDesc, timeWindow),
+    () => filterTimedMapEvents(timedItemsDesc, timeWindow),
     [timeWindow, timedItemsDesc],
   );
   const filteredItems = filteredEventItems;
@@ -261,7 +243,7 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
     newItemIds.clear();
   }, [newItemIds, sourceItemIds]);
 
-  const coordGroups = useMemo(() => groupByCoordinate(filteredItems), [filteredItems]);
+  const coordGroups = useMemo(() => buildMapMarkerGroups(filteredItems), [filteredItems]);
   const eventOverlayMode = overlayDisplayMode === "live-only" ? "off" : sharedDanmakuMode;
   const liveInfoOverlayMode = overlayDisplayMode === "event-only" ? "off" : sharedDanmakuMode;
   const resolvedEventPanelHeight = clampHeight(eventPanelHeight, EVENT_PANEL_MIN_HEIGHT, EVENT_PANEL_MAX_HEIGHT);

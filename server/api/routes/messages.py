@@ -12,9 +12,9 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
 
 from server.api.deps import API_DEPS, get_broadcaster, get_collector, get_db
+from server.api.schemas.requests import IngestBatchBody, IngestMessageBody
 from server.api.schemas.responses import (
     MessageResponse,
     MessagesIngestBatchResponse,
@@ -27,16 +27,13 @@ from server.message_media import MediaServiceError, MessageMediaService
 from server.queries.messages_queries import (
     MessagesQueryError,
     fetch_messages_page,
-    message_account_exists,
+    message_source_exists,
 )
 from server.util import new_id, utc_now_iso
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/messages", tags=["messages"], dependencies=API_DEPS)
-
-_MAX_INGEST_CONTENT_LENGTH = 100_000
-_MAX_INGEST_BATCH_SIZE = 500
 
 
 @router.get("/{message_id}/media")
@@ -55,7 +52,7 @@ async def get_message_media(request: Request, message_id: str) -> Response:
 @router.get("/page", response_model=MessagesPageResponse)
 async def get_messages_page(
     request: Request,
-    account_ids: Optional[str] = None,
+    source_ids: Optional[str] = None,
     time_range: Optional[str] = None,
     search: Optional[str] = None,
     platform: Optional[str] = None,
@@ -69,7 +66,7 @@ async def get_messages_page(
     try:
         return await fetch_messages_page(
             db,
-            account_ids=account_ids,
+            source_ids=source_ids,
             time_range=time_range,
             search=search,
             platform=platform,
@@ -83,61 +80,42 @@ async def get_messages_page(
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
 
 
-# ── external ingestion (documented under 來源 → HTTP → Webhook /accounts?tab=http&mode=webhook) ──
+# ── external ingestion (documented under 來源 → HTTP → Webhook /sources?tab=http&mode=webhook) ──
 
 
-class IngestMessage(BaseModel):
-    id: Optional[str] = Field(default=None, max_length=128)
-    account_id: Optional[str] = Field(default=None, max_length=128)
-    channel_id: Optional[str] = Field(default=None, max_length=2_048)
-    platform_id: Optional[str] = Field(default=None, max_length=2_048)
-    platform: str = Field(min_length=1, max_length=64)
-    platform_message_id: Optional[str] = Field(default=None, max_length=2_048)
-    sender_id: Optional[str] = Field(default=None, max_length=512)
-    sender_name: Optional[str] = Field(default=None, max_length=512)
-    content: str = Field(default="", max_length=_MAX_INGEST_CONTENT_LENGTH)
-    timestamp: Optional[str] = Field(default=None, max_length=64)
-    message_time: Optional[str] = Field(default=None, max_length=64)
-    metadata: Optional[dict[str, Any]] = None
-
-
-class IngestBatchBody(BaseModel):
-    messages: list[IngestMessage] = Field(min_length=1, max_length=_MAX_INGEST_BATCH_SIZE)
-
-
-async def _insert_ingested(db: Any, body: IngestMessage) -> Optional[dict]:
-    platform_id = body.channel_id or body.platform_id
+async def _insert_ingested(db: Any, body: IngestMessageBody) -> Optional[dict]:
+    platform_id = body.channelId or body.platformId
     if not platform_id:
         raise http_error(
             422,
-            "channel_id (or platform_id) is required",
+            "channelId (or platformId) is required",
             error_code=VALIDATION_ERROR,
         )
-    timestamp = body.timestamp or body.message_time or utc_now_iso()
+    timestamp = body.timestamp or body.messageTime or utc_now_iso()
 
-    # A hallucinated/unknown account_id must not violate the FK.
-    account_id = body.account_id
-    if account_id and not await message_account_exists(db, account_id):
-        account_id = None
+    # An unknown sourceId must not violate the FK.
+    source_id = body.sourceId
+    if source_id and not await message_source_exists(db, source_id):
+        source_id = None
 
     raw_data = json.dumps({"metadata": body.metadata}, ensure_ascii=False) if body.metadata else None
     return await insert_message(
         db,
         message_id=body.id or new_id(),
-        account_id=account_id,
+        source_id=source_id,
         platform=body.platform,
         platform_id=platform_id,
         content=body.content,
         timestamp=timestamp,
-        sender_id=body.sender_id,
-        sender_name=body.sender_name,
-        platform_message_id=body.platform_message_id,
+        sender_id=body.senderId,
+        sender_name=body.senderName,
+        platform_message_id=body.platformMessageId,
         raw_data=raw_data,
     )
 
 
 @router.post("", status_code=201, response_model=MessageResponse)
-async def ingest_message(request: Request, body: IngestMessage) -> dict:
+async def ingest_message(request: Request, body: IngestMessageBody) -> dict:
     db = get_db(request)
     message = await _insert_ingested(db, body)
     if message is None:

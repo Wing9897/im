@@ -1,5 +1,5 @@
 import type {
-  AccountStatusChangedPayload,
+  SourceStatusChangedPayload,
   AiEngineStatus,
   AiEngineHealthStatus,
   AnalysisCompletedPayload,
@@ -44,11 +44,9 @@ export interface RuntimeMonitoringState {
   aiEngineStatus: AiEngineStatus;
   queueStatus: QueueStatus | null;
   analysisPaused: boolean;
-  /** @deprecated Prefer {@link activeAnalyses}; first concurrent batch only. */
-  activeAnalysis: ActiveAnalysisState | null;
   activeAnalyses: Map<string, ActiveAnalysisState>;
   lastAnalysisEvent: RuntimeAnalysisEvent | null;
-  lastAccountStatusChange: AccountStatusChangedPayload | null;
+  lastSourceStatusChange: SourceStatusChangedPayload | null;
   lastMessagesUpdate: RuntimeMessagesUpdateEvent | null;
   requestAiStatusRefresh: (logOnChange?: boolean) => void;
   requestQueueStatusRefresh: (logPauseChanges?: boolean) => void;

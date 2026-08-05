@@ -1,4 +1,4 @@
-import type { AnalysisMode, AnalysisTimeRange } from "./common";
+import type { AnalysisMode, TaskAnalysisTimeRange } from "./common";
 
 /** Schedule type options for task scheduling */
 export type ScheduleType = "seconds_10" | "hourly" | "daily" | "weekly" | "custom_seconds";
@@ -12,7 +12,7 @@ export interface BaseTaskFormFields {
   taskDescription: string;
   promptTemplate: string;
   analysisMode: AnalysisMode;
-  analysisTimeRange: AnalysisTimeRange;
+  analysisTimeRange: TaskAnalysisTimeRange;
   channelIds: string[];
   rrule: string;
   eventStartTime: string;

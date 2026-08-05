@@ -8,7 +8,7 @@ import {
   discordState,
   emailState,
   httpState,
-  makeAccount,
+  makeSource,
   makeBot,
   makeBroker,
   makeFeed,
@@ -94,13 +94,13 @@ const TAB_CASES: TabCase[] = [
     twoItemsState: () =>
       rssState({
         feeds: [
-          makeFeed({ account: makeAccount({ id: "f1", name: "Feed One" }) }),
-          makeFeed({ account: makeAccount({ id: "f2", name: "Feed Two" }) }),
+          makeFeed({ source: makeSource({ id: "f1", name: "Feed One" }) }),
+          makeFeed({ source: makeSource({ id: "f2", name: "Feed Two" }) }),
         ],
       }),
     twoItemLabels: ["Feed One", "Feed Two"],
     removeState: () => {
-      const feed = makeFeed({ account: makeAccount({ id: "f1", name: "Feed One" }) });
+      const feed = makeFeed({ source: makeSource({ id: "f1", name: "Feed One" }) });
       return rssState({ feeds: [feed], removeTarget: feed });
     },
     removeTitle: "確認移除 RSS Feed",
@@ -121,7 +121,7 @@ const TAB_CASES: TabCase[] = [
         mailboxes: [
           makeMailbox({ username: "one@gmail.com" }),
           makeMailbox({
-            account: makeAccount({ id: "email-2", platform: "email", name: "two@gmail.com" }),
+            source: makeSource({ id: "email-2", platform: "email", name: "two@gmail.com" }),
             username: "two@gmail.com",
           }),
         ],
@@ -149,11 +149,11 @@ const TAB_CASES: TabCase[] = [
       httpState({
         sources: [
           makeHttpSource({
-            account: makeAccount({ id: "h1", platform: "http", name: "HTTP 1" }),
+            source: makeSource({ id: "h1", platform: "http", name: "HTTP 1" }),
             url: "https://one.example.com",
           }),
           makeHttpSource({
-            account: makeAccount({ id: "h2", platform: "http", name: "HTTP 2" }),
+            source: makeSource({ id: "h2", platform: "http", name: "HTTP 2" }),
             url: "https://two.example.com",
           }),
         ],
@@ -161,7 +161,7 @@ const TAB_CASES: TabCase[] = [
     twoItemLabels: ["HTTP 1", "HTTP 2"],
     removeState: () => {
       const source = makeHttpSource({
-        account: makeAccount({ id: "h1", platform: "http", name: "HTTP 1" }),
+        source: makeSource({ id: "h1", platform: "http", name: "HTTP 1" }),
         url: "https://one.example.com",
       });
       return httpState({ sources: [source], removeTarget: source });
@@ -181,13 +181,13 @@ const TAB_CASES: TabCase[] = [
     },
     twoItemsState: () =>
       mqttState({
-        accounts: [
+        sources: [
           makeBroker({
-            account: makeAccount({ id: "m1", platform: "mqtt", name: "MQTT 1" }),
+            source: makeSource({ id: "m1", platform: "mqtt", name: "MQTT 1" }),
             brokerUrl: "mqtt://one.example.com:1883",
           }),
           makeBroker({
-            account: makeAccount({ id: "m2", platform: "mqtt", name: "MQTT 2" }),
+            source: makeSource({ id: "m2", platform: "mqtt", name: "MQTT 2" }),
             brokerUrl: "mqtt://two.example.com:1883",
           }),
         ],
@@ -195,10 +195,10 @@ const TAB_CASES: TabCase[] = [
     twoItemLabels: ["mqtt://one.example.com:1883", "mqtt://two.example.com:1883"],
     removeState: () => {
       const broker = makeBroker({
-        account: makeAccount({ id: "m1", platform: "mqtt", name: "MQTT 1" }),
+        source: makeSource({ id: "m1", platform: "mqtt", name: "MQTT 1" }),
         brokerUrl: "mqtt://one.example.com:1883",
       });
-      return mqttState({ accounts: [broker], removeTarget: broker });
+      return mqttState({ sources: [broker], removeTarget: broker });
     },
     removeTitle: "確認移除 MQTT Broker",
     removeBody: "確定要移除「mqtt://one.example.com:1883」嗎？移除後將停止訂閱此 Broker。",
@@ -216,13 +216,13 @@ const TAB_CASES: TabCase[] = [
     twoItemsState: () =>
       discordState({
         bots: [
-          makeBot({ account: makeAccount({ id: "b1", name: "Bot One" }) }),
-          makeBot({ account: makeAccount({ id: "b2", name: "Bot Two" }) }),
+          makeBot({ source: makeSource({ id: "b1", name: "Bot One" }) }),
+          makeBot({ source: makeSource({ id: "b2", name: "Bot Two" }) }),
         ],
       }),
     twoItemLabels: ["Bot One", "Bot Two"],
     removeState: () => {
-      const bot = makeBot({ account: makeAccount({ id: "b1", name: "Bot One" }) });
+      const bot = makeBot({ source: makeSource({ id: "b1", name: "Bot One" }) });
       return discordState({ bots: [bot], removeTarget: bot });
     },
     removeTitle: "確認移除 Discord Bot",
@@ -320,7 +320,7 @@ describe("RssTab layout specifics", () => {
   it.each([0, 1, 2, 5])("renders exactly N cards and the (N) count suffix for feed count %i", (n) => {
     const feeds = Array.from({ length: n }, (_, i) =>
       makeFeed({
-        account: makeAccount({ id: `f-${i}`, name: `Feed ${i}` }),
+        source: makeSource({ id: `f-${i}`, name: `Feed ${i}` }),
         feedUrl: `https://example.com/feed-${i}.xml`,
       }),
     );

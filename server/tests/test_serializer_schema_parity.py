@@ -9,24 +9,33 @@ import pytest
 from pydantic import BaseModel
 
 from server.api.schemas.responses import (
-    AccountResponse,
     ActionResponse,
     AnalysisEventResponse,
     AppLogEntryResponse,
     MessageResponse,
+    QueueBatchResponse,
+    SourceResponse,
     TaskResponse,
+    TaskScheduleResponse,
     TrendingTopicResponse,
     UserEventResponse,
+    WorksetResponse,
 )
+from server.api.schemas.responses.items import ItemCategoryResponse, ItemResponse
 from server.wire.serializers import (
-    serialize_account,
     serialize_action,
     serialize_analysis_event,
     serialize_app_log,
+    serialize_item,
+    serialize_item_category,
     serialize_message,
+    serialize_queue_batch,
+    serialize_source,
     serialize_task,
+    serialize_task_schedule,
     serialize_trending_topic,
     serialize_user_event,
+    serialize_workset,
 )
 
 Serializer = Callable[[], dict[str, Any]]
@@ -37,8 +46,8 @@ Serializer = Callable[[], dict[str, Any]]
     [
         (
             "account",
-            AccountResponse,
-            lambda: serialize_account(
+            SourceResponse,
+            lambda: serialize_source(
                 {
                     "id": "account-1",
                     "platform": "telegram",
@@ -76,7 +85,7 @@ Serializer = Callable[[], dict[str, Any]]
             lambda: serialize_message(
                 {
                     "id": "message-1",
-                    "account_id": "account-1",
+                    "source_id": "account-1",
                     "platform": "telegram",
                     "platform_id": "channel-1",
                     "channel_name": "Announcements",
@@ -191,6 +200,105 @@ Serializer = Callable[[], dict[str, Any]]
                 [{"id": "telegram:news", "platform": "telegram", "platformId": "news"}],
             ),
             frozenset({"deletedBatchCount"}),
+        ),
+        (
+            "workset",
+            WorksetResponse,
+            lambda: serialize_workset(
+                {
+                    "id": "workset-1",
+                    "name": "Research",
+                    "is_system": 0,
+                    "created_at": "2026-07-28T09:00:00Z",
+                    "updated_at": "2026-07-28T09:01:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "item category",
+            ItemCategoryResponse,
+            lambda: serialize_item_category(
+                {
+                    "id": "category-1",
+                    "name": "Subscription",
+                    "slug": "subscription",
+                    "sort_order": 2,
+                    "color": "#112233",
+                    "emoji": "📦",
+                    "field_schema": '[{"key":"vendor","label":"Vendor"}]',
+                    "default_remind_before_days": 7,
+                    "created_at": "2026-07-28T09:00:00Z",
+                    "updated_at": "2026-07-28T09:01:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "item",
+            ItemResponse,
+            lambda: serialize_item(
+                {
+                    "id": "item-1",
+                    "title": "Cursor",
+                    "category_id": "category-1",
+                    "workset_id": "workset-1",
+                    "purchased_at": "2026-07-01",
+                    "expires_at": "2027-07-01",
+                    "remind_before_days": 14,
+                    "notes": "Renew annually",
+                    "status": "active",
+                    "emoji": "🧠",
+                    "attributes_json": '{"vendor":"Anysphere"}',
+                    "created_at": "2026-07-28T09:00:00Z",
+                    "updated_at": "2026-07-28T09:01:00Z",
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "calendar schedule",
+            TaskScheduleResponse,
+            lambda: serialize_task_schedule(
+                {
+                    "id": "task-recurring",
+                    "rrule": "FREQ=WEEKLY;BYDAY=MO",
+                    "event_start_time": "2026-07-28T09:00:00",
+                    "event_end_time": "2026-07-28T10:00:00",
+                    "event_is_all_day": 0,
+                    "event_location": "Taipei",
+                    "event_description": "Weekly review",
+                    "event_timezone": "floating",
+                    "event_start_local": None,
+                    "event_end_local": None,
+                    "event_exdates_json": "[]",
+                    "event_rdates_json": "[]",
+                    "ics_uid": None,
+                    "ics_source": None,
+                    "parent_task_id": None,
+                }
+            ),
+            frozenset(),
+        ),
+        (
+            "queue batch",
+            QueueBatchResponse,
+            lambda: serialize_queue_batch(
+                {
+                    "id": "batch-1",
+                    "task_id": "task-1",
+                    "task_name": "Queue task",
+                    "message_count": 12,
+                    "status": "pending",
+                    "retry_count": 1,
+                    "error_message": None,
+                    "prompt_tokens": 40,
+                    "completion_tokens": 10,
+                    "created_at": "2026-07-28T09:00:00Z",
+                    "updated_at": "2026-07-28T09:01:00Z",
+                }
+            ),
+            frozenset(),
         ),
         (
             "user event",

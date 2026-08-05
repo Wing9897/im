@@ -22,11 +22,11 @@ export function MqttBrokerCard({
   onReconnectSuccess,
 }: MqttBrokerCardProps) {
   const { t } = useTranslation("sources");
-  const status = broker.account.status;
+  const status = broker.source.status;
   const showError = status === "error" || status === "disconnected";
 
   const { reconnecting, reconnectError, handleReconnect } = useReconnectCard({
-    accountId: broker.account.id,
+    sourceId: broker.source.id,
     onReconnectSuccess,
   });
 
@@ -50,7 +50,7 @@ export function MqttBrokerCard({
       <SourceCardErrorLines
         status={status}
         lastError={broker.lastError}
-        accountLastError={broker.account.lastError}
+        sourceLastError={broker.source.lastError}
         reconnectError={reconnectError}
       />
     </>

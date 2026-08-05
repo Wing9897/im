@@ -10,7 +10,7 @@ import {
   sourceDetailMonoHeroClass,
   sourceDetailSubtitleClass,
 } from "../../../components/detail/classes";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { formatOsDateTime } from "../../../utils/time";
 
@@ -32,11 +32,11 @@ export function HttpSourceDetailDialog({
       ariaLabel={t("http.detailAria", { url: source.url })}
       title={
         <>
-          <span style={statusDotStyle(source.account.status)} aria-hidden="true" />
-          {formatAccountLabel(source.account) || t("http.fallbackName")}
+          <span style={statusDotStyle(source.source.status)} aria-hidden="true" />
+          {formatSourceLabel(source.source) || t("http.fallbackName")}
         </>
       }
-      subtitle={`${platformDisplayLabel(source.account.platform)} · ${formatStatusLabel(source.account.status)}`}
+      subtitle={`${platformDisplayLabel(source.source.platform)} · ${formatStatusLabel(source.source.status)}`}
       error={source.lastError}
       onClose={onClose}
       onEdit={onEdit}

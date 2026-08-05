@@ -52,7 +52,7 @@ function messageContentEl(container: HTMLElement): HTMLElement {
 function makeMessage(content: string): Message {
   return {
     id: "msg-xss-1",
-    accountId: "acc-1",
+    sourceId: "acc-1",
     platform: "telegram",
     platformMessageId: "1",
     platformId: "ch-1",

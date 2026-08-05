@@ -7,7 +7,7 @@
  */
 
 import type {
-  AccountStatusChangedPayload,
+  SourceStatusChangedPayload,
   AnalysisCompletedPayload,
   AnalysisFailedPayload,
   AnalysisPausedChangedPayload,
@@ -34,7 +34,7 @@ export interface SseEvent<TData = unknown, TEvent extends string = string> {
 export interface SseEventPayloadMap {
   messages_updated: MessagesUpdatedPayload;
   collector_status_changed: CollectorStatusChangedPayload;
-  account_status_changed: AccountStatusChangedPayload;
+  source_status_changed: SourceStatusChangedPayload;
   analysis_started: AnalysisStartedPayload;
   analysis_completed: AnalysisCompletedPayload;
   analysis_failed: AnalysisFailedPayload;
@@ -193,7 +193,7 @@ export function connectSSE(
     const eventTypes = [
       "messages_updated",
       "collector_status_changed",
-      "account_status_changed",
+      "source_status_changed",
       "analysis_started",
       "analysis_completed",
       "analysis_failed",

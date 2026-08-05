@@ -12,7 +12,7 @@ class MessageMediaResponse(BaseModel):
 
 class MessageResponse(BaseModel):
     id: str
-    accountId: str | None
+    sourceId: str | None
     platform: str
     platformId: str
     channelName: str | None
@@ -50,12 +50,12 @@ class ChannelResponse(BaseModel):
     createdAt: str
 
 
-class ChannelWithAccountResponse(BaseModel):
+class ChannelWithSourceResponse(BaseModel):
     id: str
     platform: str
     platformId: str
     channelName: str
     createdAt: str
-    accountIds: list[str]
-    accountId: str | None
-    accountName: str | None
+    sourceIds: list[str]
+    sourceId: str | None
+    sourceName: str | None

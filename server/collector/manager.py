@@ -1,8 +1,8 @@
 """Collector lifecycle manager.
 
 Owns all platform adapter instances: startup auto-reconnect of stored
-``connected`` accounts, graceful shutdown, restart, and the interactive
-account creation flows the accounts routes call into. The Telegram
+``connected`` sources, graceful shutdown, restart, and the interactive
+source creation flows the sources routes call into. The Telegram
 interactive login steps live in ``server/collector/telegram_login.py``.
 """
 
@@ -33,7 +33,7 @@ class CollectorManager:
         self._db = db
         self._broadcaster = broadcaster
         self._adapters: dict[str, BasePlatformAdapter] = {}
-        self._accounts: list[dict] = []
+        self._sources: list[dict] = []
         self._retry_orchestrator = CollectorRetryOrchestrator(
             db,
             broadcaster,
@@ -61,10 +61,10 @@ class CollectorManager:
 
     @classmethod
     async def create(cls, db: Database, broadcaster: SseBroadcaster) -> "CollectorManager":
-        """Load stored accounts; connect adapters in the background."""
+        """Load stored sources; connect adapters in the background."""
         manager = cls(db, broadcaster)
-        await manager._load_connected_accounts()
-        await manager._retry_orchestrator.start_background(manager._accounts)
+        await manager._load_connected_sources()
+        await manager._retry_orchestrator.start_background(manager._sources)
         return manager
 
     async def shutdown(self) -> None:
@@ -76,7 +76,7 @@ class CollectorManager:
 
         async def _disconnect_all() -> None:
             await asyncio.gather(
-                *(self._safe_disconnect(account_id, adapter) for account_id, adapter in self._adapters.items()),
+                *(self._safe_disconnect(source_id, adapter) for source_id, adapter in self._adapters.items()),
                 return_exceptions=True,
             )
 
@@ -90,8 +90,8 @@ class CollectorManager:
     async def start(self) -> None:
         """(Re)connect adapters from the current database state."""
         self._retry_orchestrator.resume()
-        await self._load_connected_accounts()
-        await self._retry_orchestrator.auto_connect(self._accounts)
+        await self._load_connected_sources()
+        await self._retry_orchestrator.auto_connect(self._sources)
         logger.info("Collector started, %d adapter(s) active", len(self._adapters))
 
     async def restart(self) -> None:
@@ -151,7 +151,7 @@ class CollectorManager:
             statuses.append(
                 AdapterStatus(
                     name=state.platform,
-                    account_id=state.account_id,
+                    source_id=state.source_id,
                     connected=state.status == "connected",
                     last_error=state.last_error,
                     last_connected_at=last_connected_at,
@@ -161,28 +161,28 @@ class CollectorManager:
 
     # ── per-adapter operations ──────────────────────────────────────────
 
-    async def stop_adapter(self, account_id: str) -> None:
-        adapter = self._adapters.get(account_id)
+    async def stop_adapter(self, source_id: str) -> None:
+        adapter = self._adapters.get(source_id)
         if adapter is None:
             return
-        logger.info("Stopping adapter for account %s", account_id)
+        logger.info("Stopping adapter for source %s", source_id)
         await adapter.disconnect()
-        if self._adapters.get(account_id) is adapter:
-            del self._adapters[account_id]
+        if self._adapters.get(source_id) is adapter:
+            del self._adapters[source_id]
 
-    async def reconnect_account(self, account_id: str) -> dict:
-        """Reconnect an account; builds the adapter from stored credentials if needed."""
-        adapter = self._adapters.get(account_id)
+    async def reconnect_source(self, source_id: str) -> dict:
+        """Reconnect an source; builds the adapter from stored credentials if needed."""
+        adapter = self._adapters.get(source_id)
         if adapter is None:
             row = await self._db.fetch_one(
-                "SELECT id, platform, credentials FROM accounts WHERE id = ?",
-                (account_id,),
+                "SELECT id, platform, credentials FROM sources WHERE id = ?",
+                (source_id,),
             )
             if row is None:
-                raise KeyError(f"No account {account_id}")
+                raise KeyError(f"No source {source_id}")
             creds = parse_json_dict(unprotect_text(row["credentials"]))
             adapter = build_adapter(
-                account_id,
+                source_id,
                 str(row["platform"]),
                 creds,
                 db=self._db,
@@ -190,56 +190,56 @@ class CollectorManager:
                 session_dir=self._default_session_dir(),
             )
             if adapter is None:
-                return {"account_id": account_id, "connected": False, "status": "error"}
-            self._adapters[account_id] = adapter
+                return {"source_id": source_id, "connected": False, "status": "error"}
+            self._adapters[source_id] = adapter
 
-        logger.info("Attempting reconnect for account %s", account_id)
+        logger.info("Attempting reconnect for source %s", source_id)
         try:
             await adapter.connect()
             success = True
         except Exception as exc:  # noqa: BLE001 — surface as status, not a crash
-            logger.warning("Direct reconnect failed for %s: %s", account_id, exc)
+            logger.warning("Direct reconnect failed for %s: %s", source_id, exc)
             adapter.state.last_error = str(exc)
             adapter.state.status = "error"
             success = False
         return {
-            "account_id": account_id,
+            "source_id": source_id,
             "connected": success,
             "status": adapter.state.status,
         }
 
-    async def check_connection(self, account_id: str) -> dict:
-        adapter = self._adapters.get(account_id)
+    async def check_connection(self, source_id: str) -> dict:
+        adapter = self._adapters.get(source_id)
         if adapter is None:
-            raise KeyError(f"No active adapter for account {account_id}")
+            raise KeyError(f"No active adapter for source {source_id}")
         connected = await adapter.is_connected()
         return {
-            "account_id": account_id,
+            "source_id": source_id,
             "connected": connected,
             "status": adapter.state.status if not connected else "connected",
         }
 
-    # ── interactive account flows (Telegram login / Discord / RSS / MQTT / Email) ─
+    # ── interactive source flows (Telegram login / Discord / RSS / MQTT / Email) ─
 
-    async def start_telegram_login(self, account_id: str, api_id: int, api_hash: str, phone: str) -> dict:
-        return await telegram_login.start_telegram_login(self, account_id, api_id, api_hash, phone)
+    async def start_telegram_login(self, source_id: str, api_id: int, api_hash: str, phone: str) -> dict:
+        return await telegram_login.start_telegram_login(self, source_id, api_id, api_hash, phone)
 
-    async def start_telegram_qr_login(self, account_id: str, api_id: int, api_hash: str) -> dict:
-        return await telegram_login.start_telegram_qr_login(self, account_id, api_id, api_hash)
+    async def start_telegram_qr_login(self, source_id: str, api_id: int, api_hash: str) -> dict:
+        return await telegram_login.start_telegram_qr_login(self, source_id, api_id, api_hash)
 
-    async def wait_telegram_qr_login(self, account_id: str, timeout: float | None = None) -> dict:
-        return await telegram_login.wait_telegram_qr_login(self, account_id, timeout)
+    async def wait_telegram_qr_login(self, source_id: str, timeout: float | None = None) -> dict:
+        return await telegram_login.wait_telegram_qr_login(self, source_id, timeout)
 
-    async def verify_telegram_code(self, account_id: str, code: str, phone_code_hash: str | None) -> dict:
-        return await telegram_login.verify_telegram_code(self, account_id, code, phone_code_hash)
+    async def verify_telegram_code(self, source_id: str, code: str, phone_code_hash: str | None) -> dict:
+        return await telegram_login.verify_telegram_code(self, source_id, code, phone_code_hash)
 
-    async def verify_telegram_2fa(self, account_id: str, password: str, phone_code_hash: str | None = None) -> dict:
-        return await telegram_login.verify_telegram_2fa(self, account_id, password)
+    async def verify_telegram_2fa(self, source_id: str, password: str, phone_code_hash: str | None = None) -> dict:
+        return await telegram_login.verify_telegram_2fa(self, source_id, password)
 
-    async def _build_and_connect(self, account_id: str, platform: str, creds: dict) -> BasePlatformAdapter:
+    async def _build_and_connect(self, source_id: str, platform: str, creds: dict) -> BasePlatformAdapter:
         """Factory-build, connect, and register an adapter with compensation."""
         adapter = build_adapter(
-            account_id,
+            source_id,
             platform,
             creds,
             db=self._db,
@@ -247,46 +247,46 @@ class CollectorManager:
             session_dir=self._default_session_dir(),
         )
         if adapter is None:
-            raise ValueError(f"Cannot build {platform} adapter for account {account_id}")
+            raise ValueError(f"Cannot build {platform} adapter for source {source_id}")
         try:
             await adapter.connect()
-            registered = self._adapters.get(account_id)
+            registered = self._adapters.get(source_id)
             if registered is not None and registered is not adapter:
-                raise RuntimeError(f"Adapter for account {account_id} was replaced concurrently")
-            self._adapters[account_id] = adapter
+                raise RuntimeError(f"Adapter for source {source_id} was replaced concurrently")
+            self._adapters[source_id] = adapter
         except BaseException:
             try:
                 await adapter.disconnect()
             except Exception:  # noqa: BLE001 — preserve the build/connect failure
-                logger.exception("Failed to clean up new adapter for account %s", account_id)
-            if self._adapters.get(account_id) is adapter:
-                del self._adapters[account_id]
+                logger.exception("Failed to clean up new adapter for source %s", source_id)
+            if self._adapters.get(source_id) is adapter:
+                del self._adapters[source_id]
             raise
         return adapter
 
     async def _replace_adapter(
         self,
-        account_id: str,
+        source_id: str,
         build_fn: Callable[[], Awaitable[dict]],
     ) -> dict:
         """Tear down an existing adapter, then run *build_fn* to recreate it."""
-        adapter = self._adapters.get(account_id)
+        adapter = self._adapters.get(source_id)
         if adapter is not None:
             await adapter.disconnect()
-            if self._adapters.get(account_id) is not adapter:
-                raise RuntimeError(f"Adapter for account {account_id} was replaced concurrently")
-            del self._adapters[account_id]
+            if self._adapters.get(source_id) is not adapter:
+                raise RuntimeError(f"Adapter for source {source_id} was replaced concurrently")
+            del self._adapters[source_id]
         return await build_fn()
 
     # ── internal helpers ────────────────────────────────────────────────
-    async def _load_connected_accounts(self) -> None:
+    async def _load_connected_sources(self) -> None:
         rows = await self._db.fetch_all(
-            "SELECT id, name, platform, status, credentials FROM accounts WHERE status = 'connected'"
+            "SELECT id, name, platform, status, credentials FROM sources WHERE status = 'connected'"
         )
-        self._accounts = []
+        self._sources = []
         for row in rows:
             creds = parse_json_dict(unprotect_text(row["credentials"]))
-            self._accounts.append(
+            self._sources.append(
                 {
                     "id": row["id"],
                     "name": row["name"],
@@ -294,15 +294,15 @@ class CollectorManager:
                     "credentials": creds,
                 }
             )
-        logger.info("Loaded %d connected account(s) from database", len(self._accounts))
+        logger.info("Loaded %d connected source(s) from database", len(self._sources))
 
     @staticmethod
     def _default_session_dir() -> str:
         # Unified {DATA_DIR}/sessions (Desktop userData / CLI product data root).
         return str(ensure_sessions_dir())
 
-    async def _safe_disconnect(self, account_id: str, adapter: BasePlatformAdapter) -> None:
+    async def _safe_disconnect(self, source_id: str, adapter: BasePlatformAdapter) -> None:
         try:
             await adapter.disconnect()
         except Exception as exc:  # noqa: BLE001 — shutdown must not raise
-            logger.error("Error disconnecting adapter %s: %s", account_id, exc)
+            logger.error("Error disconnecting adapter %s: %s", source_id, exc)

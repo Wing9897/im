@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
-
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import get_db, publish_resource_modified
+from server.api.schemas.requests import CalendarImportCommitBody, CalendarImportInput
+from server.api.schemas.responses import CalendarImportCommitResponse, CalendarImportPreviewResponse
 from server.calendar.ics import IcsParseError, normalize_ics_source
 from server.calendar.imports import (
     CalendarImportError,
@@ -18,79 +17,6 @@ from server.calendar.imports import (
 from server.errors import VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/imports", tags=["calendar"])
-
-
-class CalendarImportInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    content: str
-    sourceId: str = "ics"
-
-
-class CalendarImportSelectionBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    uid: str
-    fingerprint: str
-
-
-class CalendarImportCommitBody(CalendarImportInput):
-    selections: list[CalendarImportSelectionBody] = Field(min_length=1, max_length=2_000)
-
-
-class CalendarImportWarningResponse(BaseModel):
-    code: str
-    message: str
-
-
-class CalendarImportChangeResponse(BaseModel):
-    field: str
-    before: Any = None
-    after: Any = None
-
-
-class CalendarImportPreviewItemResponse(BaseModel):
-    uid: str
-    title: str
-    targetType: Literal["user_event", "recurring_task"]
-    action: Literal["create", "update", "unchanged", "unsupported"]
-    supported: bool
-    existingId: str | None
-    fingerprint: str
-    startTime: str
-    endTime: str | None
-    isAllDay: bool
-    timezone: str | None
-    rrule: str | None
-    exdates: list[str]
-    rdates: list[str]
-    changes: list[CalendarImportChangeResponse]
-    warnings: list[CalendarImportWarningResponse]
-
-
-class CalendarImportPreviewResponse(BaseModel):
-    sourceId: str
-    calendarName: str | None
-    eventCount: int
-    importableCount: int
-    items: list[CalendarImportPreviewItemResponse]
-    warnings: list[CalendarImportWarningResponse]
-
-
-class CalendarImportCommitItemResponse(BaseModel):
-    uid: str
-    targetType: Literal["user_event", "recurring_task"]
-    targetId: str
-    action: Literal["created", "updated", "unchanged"]
-
-
-class CalendarImportCommitResponse(BaseModel):
-    sourceId: str
-    committedCount: int
-    createdCount: int
-    updatedCount: int
-    unchangedCount: int
-    results: list[CalendarImportCommitItemResponse]
 
 
 def _validation_error(exc: ValueError) -> HTTPException:

@@ -34,11 +34,11 @@ class TelegramLoginCapable(Protocol):
 
 def as_discord(adapter: BasePlatformAdapter) -> DiscordCapable:
     if not isinstance(adapter, DiscordCapable):
-        raise TypeError(f"Account adapter is not Discord-capable (platform={adapter.state.platform})")
+        raise TypeError(f"Source adapter is not Discord-capable (platform={adapter.state.platform})")
     return cast(DiscordCapable, adapter)
 
 
 def as_telegram_login(adapter: BasePlatformAdapter) -> TelegramLoginCapable:
     if not isinstance(adapter, TelegramLoginCapable):
-        raise TypeError(f"Account adapter is not Telegram-login-capable (platform={adapter.state.platform})")
+        raise TypeError(f"Source adapter is not Telegram-login-capable (platform={adapter.state.platform})")
     return cast(TelegramLoginCapable, adapter)

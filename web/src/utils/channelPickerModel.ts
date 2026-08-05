@@ -1,16 +1,16 @@
-import type { ChannelWithAccount } from "../types";
+import type { ChannelWithSource } from "../types";
 import type { PickerLayout } from "./platformRegistry";
 
-export function sortChannelsByName(channels: ChannelWithAccount[]): ChannelWithAccount[] {
+export function sortChannelsByName(channels: ChannelWithSource[]): ChannelWithSource[] {
   return channels.slice().sort((a, b) =>
     (a.channelName || a.platformId).localeCompare(b.channelName || b.platformId),
   );
 }
 
 export function filterChannelsByQuery(
-  channels: ChannelWithAccount[],
+  channels: ChannelWithSource[],
   query: string,
-): ChannelWithAccount[] {
+): ChannelWithSource[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return channels;
   return channels.filter((channel) => {
@@ -18,7 +18,7 @@ export function filterChannelsByQuery(
       channel.channelName,
       channel.platformId,
       channel.platform,
-      channel.accountName ?? "",
+      channel.sourceName ?? "",
     ]
       .join(" ")
       .toLowerCase();
@@ -26,7 +26,7 @@ export function filterChannelsByQuery(
   });
 }
 
-export function channelDisplayLabel(channel: ChannelWithAccount): string {
+export function channelDisplayLabel(channel: ChannelWithSource): string {
   return channel.channelName?.trim() || channel.platformId;
 }
 
@@ -47,25 +47,25 @@ function formatPickerHint(text: string): string {
   }
 }
 
-/** Secondary line under a picker row (URL for flat feeds, empty for account-tree rows). */
+/** Secondary line under a picker row (URL for flat feeds, empty for source-tree rows). */
 export function channelDisplayHint(
-  channel: ChannelWithAccount,
+  channel: ChannelWithSource,
   pickerLayout: PickerLayout,
 ): string {
-  if (pickerLayout === "account-tree") return "";
+  if (pickerLayout === "source-tree") return "";
   if (channel.platform === "rss" || channel.platform === "mqtt") {
     return formatPickerHint(channel.platformId);
   }
-  const account = channel.accountName?.trim();
+  const account = channel.sourceName?.trim();
   return account && account !== channelDisplayLabel(channel) ? account : "";
 }
 
-export const PICKER_ACCOUNT_COLLAPSE_THRESHOLD = 8;
+export const PICKER_SOURCE_COLLAPSE_THRESHOLD = 8;
 export const PICKER_PLATFORM_AUTO_EXPAND_MAX = 6;
 
 export function countSelectedInChannels(
   channelIds: string[],
-  channels: ChannelWithAccount[],
+  channels: ChannelWithSource[],
 ): number {
   const selected = new Set(channelIds);
   return channels.filter((ch) => selected.has(ch.id)).length;

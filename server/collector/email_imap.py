@@ -8,7 +8,6 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from server.account_credentials import mutate_account_credentials
 from server.collector.base import BasePlatformAdapter
 from server.collector.email_config import (
     DEFAULT_FOLDERS,
@@ -33,6 +32,7 @@ from server.collector.email_imap_fetch import (
 )
 from server.db.database import Database
 from server.outbound import validate_imap_host
+from server.source_credentials import mutate_source_credentials
 from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class EmailImapAdapter(BasePlatformAdapter):
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         *,
@@ -74,7 +74,7 @@ class EmailImapAdapter(BasePlatformAdapter):
         folder_cursors: dict[str, int] | None = None,
         folder_uidvalidities: dict[str, int] | None = None,
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._imap_host = imap_host
         self._imap_port = int(imap_port or default_imap_port(use_ssl=use_ssl))
         self._username = username
@@ -118,9 +118,9 @@ class EmailImapAdapter(BasePlatformAdapter):
             )
         except asyncio.TimeoutError:
             logger.warning(
-                "Timed out draining %d IMAP operation(s) for account %s",
+                "Timed out draining %d IMAP operation(s) for source %s",
                 len(pending),
-                self._account_id,
+                self._source_id,
             )
 
     async def connect(self) -> None:
@@ -133,14 +133,14 @@ class EmailImapAdapter(BasePlatformAdapter):
             await self._run_blocking(self._verify_login_and_folders)
         except MailboxLoginError as exc:
             friendly = format_imap_error(exc, host=self._imap_host, username=self._username)
-            logger.warning("Email IMAP auth failed for account %s: %s", self._account_id, exc)
+            logger.warning("Email IMAP auth failed for source %s: %s", self._source_id, exc)
             raise ValueError(friendly) from exc
-        self._poll_task = asyncio.create_task(self._poll_loop(), name=f"email-poll-{self._account_id}")
+        self._poll_task = asyncio.create_task(self._poll_loop(), name=f"email-poll-{self._source_id}")
         self._mark_connected()
         self._broadcast_status_change("connected")
         logger.info(
-            "Email IMAP adapter connected for account %s (host=%s, folders=%s)",
-            self._account_id,
+            "Email IMAP adapter connected for source %s (host=%s, folders=%s)",
+            self._source_id,
             self._imap_host,
             self._folders,
         )
@@ -156,7 +156,7 @@ class EmailImapAdapter(BasePlatformAdapter):
                 pass
         await self._drain_blocking_tasks()
         self._state.status = "disconnected"
-        logger.info("Email IMAP adapter disconnected for account %s", self._account_id)
+        logger.info("Email IMAP adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._poll_task is not None and not self._poll_task.done()
@@ -170,7 +170,7 @@ class EmailImapAdapter(BasePlatformAdapter):
             except asyncio.CancelledError:
                 raise
             except Exception as exc:  # noqa: BLE001 — one poll cycle must not kill the loop
-                logger.warning("Email poll cycle failed for account %s: %s", self._account_id, exc)
+                logger.warning("Email poll cycle failed for source %s: %s", self._source_id, exc)
                 await asyncio.sleep(self._poll_interval)
 
     async def _poll_once(self) -> None:
@@ -186,15 +186,15 @@ class EmailImapAdapter(BasePlatformAdapter):
             self._auth_failures += 1
             friendly = format_imap_error(exc, host=self._imap_host, username=self._username)
             logger.warning(
-                "Email IMAP auth failed for account %s (attempt %d): %s",
-                self._account_id,
+                "Email IMAP auth failed for source %s (attempt %d): %s",
+                self._source_id,
                 self._auth_failures,
                 exc,
             )
             if self._auth_failures >= _MAX_AUTH_FAILURES:
                 self._state.status = "error"
                 self._state.last_error = friendly
-                await self._update_account_status("error", friendly)
+                await self._update_source_status("error", friendly)
                 self._broadcast_status_change("error", friendly)
             return
 
@@ -202,7 +202,7 @@ class EmailImapAdapter(BasePlatformAdapter):
         if self._state.status == "error":
             self._state.status = "connected"
             self._state.last_error = None
-            await self._update_account_status("connected")
+            await self._update_source_status("connected")
             self._broadcast_status_change("connected")
 
         cursor_updates: dict[str, int] = {}
@@ -267,8 +267,8 @@ class EmailImapAdapter(BasePlatformAdapter):
                     raise
                 except Exception as exc:  # noqa: BLE001 — isolate non-auth per-folder failures
                     logger.warning(
-                        "Email poll folder failed for account %s folder=%s: %s",
-                        self._account_id,
+                        "Email poll folder failed for source %s folder=%s: %s",
+                        self._source_id,
                         folder,
                         exc,
                     )
@@ -286,7 +286,7 @@ class EmailImapAdapter(BasePlatformAdapter):
             folder,
             last_uid,
             expected_uid_validity,
-            account_id=self._account_id,
+            source_id=self._source_id,
             initial_sync_days=self._initial_sync_days,
             initial_sync_max=self._initial_sync_max,
             sender_allowlist=self._sender_allowlist,
@@ -357,7 +357,7 @@ class EmailImapAdapter(BasePlatformAdapter):
             current["folder_uidvalidities"] = validities
             return current
 
-        persisted = await mutate_account_credentials(self._db, self._account_id, _merge)
+        persisted = await mutate_source_credentials(self._db, self._source_id, _merge)
         if persisted is None:
             return
         raw_cursors = persisted.get("folder_cursors")

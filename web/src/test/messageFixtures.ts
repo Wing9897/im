@@ -4,7 +4,7 @@ import type { Message } from "../types";
 export function makeMessage(overrides: Partial<Message> = {}): Message {
   return {
     id: "m1",
-    accountId: "a1",
+    sourceId: "a1",
     platformId: "c1",
     channelName: "Test Channel",
     platform: "telegram",

@@ -11,7 +11,7 @@ import { useMonitorHandlers } from "./useMonitorHandlers";
 export function useMonitorPage() {
   const {
     messages,
-    accounts,
+    sources,
     channels,
     channelsReady,
     filters,
@@ -66,7 +66,7 @@ export function useMonitorPage() {
 
   return {
     messages,
-    accounts,
+    sources,
     channels,
     channelsReady,
     filters,

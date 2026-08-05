@@ -13,7 +13,7 @@ export type Message = components["schemas"]["MessageResponse"];
 
 /** Filters for querying messages */
 export interface MessageFilters {
-  accountIds?: string[];
+  sourceIds?: string[];
   /** Synthetic channel ids ("platform:platformId"). */
   channelIds?: string[];
   timeRange?: MessageTimeRange;

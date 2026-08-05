@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { listChannelsWithAccounts } from "../../api/channels";
-import type { ChannelWithAccount } from "../../types";
+import { listChannelsWithSources } from "../../api/channels";
+import type { ChannelWithSource } from "../../types";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
@@ -10,8 +10,8 @@ import { WallBoardEmbed } from "../embeds/WallBoardEmbed";
 /** Message wall compact embed — mounts heavy wall UI only while active. */
 export function WallBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
-  const fetcher = useCallback(() => listChannelsWithAccounts(), []);
-  const { data: channels, error, loading, refresh } = useBoardWidgetPoll<ChannelWithAccount[]>(
+  const fetcher = useCallback(() => listChannelsWithSources(), []);
+  const { data: channels, error, loading, refresh } = useBoardWidgetPoll<ChannelWithSource[]>(
     fetcher,
     BOARD_POLL_MS.standard,
     { active },

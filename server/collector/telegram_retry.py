@@ -22,7 +22,7 @@ T = TypeVar("T")
 async def run_with_sqlite_busy_retry(
     *,
     label: str,
-    account_id: str,
+    source_id: str,
     action: Callable[[], Awaitable[T]],
     retries: int = BACKGROUND_RETRIES,
     delays_s: tuple[float, ...] = BACKGROUND_DELAYS_S,
@@ -40,9 +40,9 @@ async def run_with_sqlite_busy_retry(
                 raise
             delay = delays_s[min(attempt, len(delays_s) - 1)]
             logger.info(
-                "Database locked during Telegram %s for account %s; retrying in %.1fs (attempt %d/%d)",
+                "Database locked during Telegram %s for source %s; retrying in %.1fs (attempt %d/%d)",
                 label,
-                account_id,
+                source_id,
                 delay,
                 attempt + 1,
                 retries,
@@ -54,7 +54,7 @@ async def run_with_sqlite_busy_retry(
 
 async def connect_telethon_with_retry(
     *,
-    account_id: str,
+    source_id: str,
     create_client: Callable[[], object],
     disconnect: Callable[[], Awaitable[None]],
     retries: int = TELETHON_CONNECT_RETRIES,
@@ -84,8 +84,8 @@ async def connect_telethon_with_retry(
                 raise
             delay = delays_s[min(attempt, len(delays_s) - 1)]
             logger.info(
-                "Telegram session busy for account %s; retrying connect in %.1fs (attempt %d/%d)",
-                account_id,
+                "Telegram session busy for source %s; retrying connect in %.1fs (attempt %d/%d)",
+                source_id,
                 delay,
                 attempt + 1,
                 retries,

@@ -12,35 +12,18 @@ const counts: Record<RuntimeInterestKind, number> = {
   ai: 0,
 };
 
-const listeners = new Set<() => void>();
-
-function notify(): void {
-  for (const listener of listeners) {
-    listener();
-  }
-}
-
 export function acquireRuntimeInterest(kind: RuntimeInterestKind): () => void {
   counts[kind] += 1;
-  notify();
   let released = false;
   return () => {
     if (released) return;
     released = true;
     counts[kind] = Math.max(0, counts[kind] - 1);
-    notify();
   };
 }
 
 export function hasRuntimeInterest(kind: RuntimeInterestKind): boolean {
   return counts[kind] > 0;
-}
-
-export function subscribeRuntimeInterest(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
 }
 
 /** Test helper. */
@@ -49,5 +32,4 @@ export function resetRuntimeInterestForTests(): void {
   counts.queue = 0;
   counts.collector = 0;
   counts.ai = 0;
-  listeners.clear();
 }

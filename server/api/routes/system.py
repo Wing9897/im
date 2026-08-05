@@ -12,7 +12,6 @@ import signal
 import time
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field
 
 from server.analysis_control import emergency_abort, set_analysis_paused
 from server.api.collector_status import resolve_collector_status
@@ -24,6 +23,7 @@ from server.api.deps import (
     get_db,
     get_scheduler,
 )
+from server.api.schemas.requests import AiEngineTestBody, AnalysisPauseBody, RotateSecretsBody
 from server.api.schemas.responses import RetentionDeletedCounts, RetentionRunResponse
 from server.auth import verify_auth, verify_write_access
 from server.auth.admin_auth import verify_admin_credentials
@@ -73,7 +73,7 @@ async def collector_status(request: Request) -> dict:
             adapters.append(
                 {
                     "name": adapter.name,
-                    "accountId": adapter.account_id,
+                    "sourceId": adapter.source_id,
                     "connected": adapter.connected,
                     "lastError": adapter.last_error,
                     "lastConnectedAt": adapter.last_connected_at,
@@ -119,14 +119,6 @@ async def ai_engine_status(request: Request) -> dict:
     }
 
 
-class AiEngineTestBody(BaseModel):
-    llmProvider: str | None = None
-    llmBaseUrl: str | None = None
-    llmModel: str | None = None
-    llmApiKey: str | None = None
-    ollamaThinkingEnabled: bool | None = None
-
-
 @router.post("/ai-engine/test")
 async def ai_engine_test(request: Request, body: AiEngineTestBody | None = None) -> dict:
     """Run a minimal-token generation probe against saved or draft LLM settings."""
@@ -158,10 +150,6 @@ async def analysis_abort(request: Request) -> dict:
     return result
 
 
-class AnalysisPauseBody(BaseModel):
-    paused: bool
-
-
 @router.post("/analysis/pause")
 async def analysis_pause(request: Request, body: AnalysisPauseBody) -> dict:
     """Pause or resume the analysis scheduler (runtime control)."""
@@ -187,17 +175,12 @@ async def retention_run(request: Request) -> RetentionRunResponse:
     )
 
 
-class RotateSecretsBody(BaseModel):
-    username: str = Field(min_length=1, max_length=64)
-    password: str = Field(min_length=1)
-
-
 @public_reset_router.post("/rotate-secrets")
 async def rotate_secrets(request: Request, body: RotateSecretsBody) -> dict:
     """Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.
 
     Only allowed while ``secrets_ready`` is False. Requires admin username +
-    password. Does not wipe the database, connection.json, or admin accounts.
+    password. Does not wipe the database, connection.json, or admin sources.
     """
     secrets_ready = bool(getattr(request.app.state, "secrets_ready", True))
     if secrets_ready:

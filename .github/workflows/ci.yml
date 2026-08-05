@@ -6,7 +6,7 @@ on:
   pull_request:
   workflow_dispatch:
 
-# One release pipeline per branch; do not cancel in-flight packaging.
+# Quality runs for PRs and main pushes. Release packaging is manual-only.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -47,9 +47,7 @@ jobs:
 
   # SemVer from tags (no tags → VERSION as-is). No commit/push to main.
   version:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch'
     needs: [quality]
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -72,9 +70,7 @@ jobs:
           echo "RELEASE_VERSION=${version} (tag v${version}) @ ${{ github.sha }}"
 
   package:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch'
     needs: [quality, version]
     strategy:
       fail-fast: false
@@ -185,9 +181,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch'
     needs: [package, version]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -282,9 +276,7 @@ jobs:
             staged/*
 
   container:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch'
     needs: [quality, version]
     runs-on: ubuntu-latest
     timeout-minutes: 45

@@ -9,12 +9,10 @@ import type { RuntimeMessagesUpdateEvent } from "./runtimeMonitoring/types";
 export interface AnalysisStatusContextValue {
   queueStatus: QueueStatus | null;
   analysisPaused: boolean;
-  /** @deprecated Prefer {@link activeAnalyses}; first concurrent batch only. */
-  activeAnalysis: ActiveAnalysisState | null;
   activeAnalyses: Map<string, ActiveAnalysisState>;
   lastAnalysisEvent: RuntimeAnalysisEvent | null;
-  lastAccountStatusChange: {
-    accountId: string;
+  lastSourceStatusChange: {
+    sourceId: string;
     status: ConnectionStatus;
   } | null;
   lastMessagesUpdate: RuntimeMessagesUpdateEvent | null;
@@ -37,10 +35,9 @@ export function AnalysisStatusProvider({
   const {
     queueStatus,
     analysisPaused,
-    activeAnalysis,
     activeAnalyses,
     lastAnalysisEvent,
-    lastAccountStatusChange,
+    lastSourceStatusChange,
     lastMessagesUpdate,
     requestQueueStatusRefresh,
   } = value;
@@ -48,20 +45,18 @@ export function AnalysisStatusProvider({
     () => ({
       queueStatus,
       analysisPaused,
-      activeAnalysis,
       activeAnalyses,
       lastAnalysisEvent,
-      lastAccountStatusChange,
+      lastSourceStatusChange,
       lastMessagesUpdate,
       requestQueueStatusRefresh,
     }),
     [
       queueStatus,
       analysisPaused,
-      activeAnalysis,
       activeAnalyses,
       lastAnalysisEvent,
-      lastAccountStatusChange,
+      lastSourceStatusChange,
       lastMessagesUpdate,
       requestQueueStatusRefresh,
     ],

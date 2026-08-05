@@ -1,5 +1,5 @@
 import type { MonitorViewMode } from "../../domain/monitor/monitorViewMode";
-import type { Account, Channel, Message, MessageFilters } from "../../types";
+import type { Source, Channel, Message, MessageFilters } from "../../types";
 import i18n from "../../i18n";
 import { getOsTimeMs } from "../../utils/time";
 import { getScrollViewportRangeInContainer } from "../../utils/scrollParent";
@@ -32,22 +32,22 @@ export function mergeUniqueMessages(
 
 export function normalizeMonitorFilters(
   filters: MessageFilters,
-  accounts: Account[],
+  sources: Source[],
   channels: Array<Pick<Channel, "id">>,
 ): { filters: MessageFilters; changed: boolean } {
-  const validAccountIds = new Set(accounts.map((account) => account.id));
+  const validSourceIds = new Set(sources.map((source) => source.id));
   const validChannelIds = new Set(channels.map((channel) => channel.id));
 
-  const nextAccountIds = filters.accountIds?.filter((accountId) =>
-    validAccountIds.has(accountId),
+  const nextSourceIds = filters.sourceIds?.filter((sourceId) =>
+    validSourceIds.has(sourceId),
   );
   const nextChannelIds = filters.channelIds?.filter((channelId) =>
     validChannelIds.has(channelId),
   );
   const normalizedFilters: MessageFilters = {
     ...filters,
-    accountIds:
-      nextAccountIds && nextAccountIds.length > 0 ? nextAccountIds : undefined,
+    sourceIds:
+      nextSourceIds && nextSourceIds.length > 0 ? nextSourceIds : undefined,
     channelIds:
       nextChannelIds && nextChannelIds.length > 0 ? nextChannelIds : undefined,
   };
@@ -55,8 +55,8 @@ export function normalizeMonitorFilters(
   return {
     filters: normalizedFilters,
     changed:
-      (filters.accountIds?.length ?? 0) !==
-        (normalizedFilters.accountIds?.length ?? 0) ||
+      (filters.sourceIds?.length ?? 0) !==
+        (normalizedFilters.sourceIds?.length ?? 0) ||
       (filters.channelIds?.length ?? 0) !==
         (normalizedFilters.channelIds?.length ?? 0),
   };
@@ -123,7 +123,7 @@ export function countActiveMessageFilters(filters: MessageFilters): number {
   let count = 0;
   if (filters.search?.trim()) count += 1;
   if (filters.platform) count += 1;
-  if (filters.accountIds && filters.accountIds.length > 0) count += 1;
+  if (filters.sourceIds && filters.sourceIds.length > 0) count += 1;
   if (filters.timeRange) count += 1;
   if (filters.channelIds && filters.channelIds.length > 0) count += 1;
   return count;
@@ -133,7 +133,7 @@ export type ActiveMessageFilterChipKey =
   | "search"
   | "platform"
   | "timeRange"
-  | "accounts"
+  | "sources"
   | "channels";
 
 export interface ActiveMessageFilterChip {
@@ -176,12 +176,12 @@ export function describeActiveMessageFilters(
         : filters.timeRange,
     });
   }
-  if (filters.accountIds && filters.accountIds.length > 0) {
+  if (filters.sourceIds && filters.sourceIds.length > 0) {
     chips.push({
-      key: "accounts",
+      key: "sources",
       label: String(
-        i18n.t("monitor:filterChip.accounts", {
-          count: filters.accountIds.length,
+        i18n.t("monitor:filterChip.sources", {
+          count: filters.sourceIds.length,
         }),
       ),
     });
@@ -210,8 +210,8 @@ export function clearMessageFilterKey(
       return { ...filters, platform: undefined };
     case "timeRange":
       return { ...filters, timeRange: undefined };
-    case "accounts":
-      return { ...filters, accountIds: undefined };
+    case "sources":
+      return { ...filters, sourceIds: undefined };
     case "channels":
       return { ...filters, channelIds: undefined };
     default:
@@ -223,8 +223,8 @@ export function matchesFilters(message: Message, filters: MessageFilters): boole
   if (filters.platform) {
     if (message.platform !== filters.platform) return false;
   }
-  if (filters.accountIds && filters.accountIds.length > 0) {
-    if (message.accountId === null || !filters.accountIds.includes(message.accountId))
+  if (filters.sourceIds && filters.sourceIds.length > 0) {
+    if (message.sourceId === null || !filters.sourceIds.includes(message.sourceId))
       return false;
   }
   if (filters.channelIds && filters.channelIds.length > 0) {

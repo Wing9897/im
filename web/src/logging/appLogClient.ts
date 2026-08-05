@@ -6,7 +6,7 @@
  */
 
 import { appendAppLog } from "../api/logs";
-import type { AppLogEntryPayload, LogCategory, LogLevel } from "../types";
+import type { AppLogEntryPayload } from "../types";
 
 /** Well-known app log kinds (keep in sync with server AppLog.record callers). */
 export const APP_LOG_KIND = {
@@ -21,13 +21,13 @@ export const APP_LOG_KIND = {
   RUNTIME_COLLECTOR: "runtime.collector",
   SCHEDULER_PAUSED: "scheduler.paused",
   SCHEDULER_RESUMED: "scheduler.resumed",
-  ACCOUNT_ERROR: "account.error",
+  SOURCE_ERROR: "source.error",
   RETENTION_CLEANUP: "retention.cleanup",
 } as const;
 
 export type RecordAppLogInput = {
-  level: LogLevel | string;
-  category: LogCategory | string;
+  level: string;
+  category: string;
   kind: string;
   message?: string;
   messageKey?: string;

@@ -19,7 +19,7 @@ from server.sse import SseBroadcaster
 class _StubAdapter(BasePlatformAdapter):
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         platform: str,
         db: Database,
         broadcaster: SseBroadcaster,
@@ -32,7 +32,7 @@ class _StubAdapter(BasePlatformAdapter):
         self._connect_error = connect_error
         self._disconnect_error = disconnect_error
         self.disconnect_calls = 0
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._state.status = status
 
     def _platform_name(self) -> str:
@@ -152,11 +152,11 @@ def test_public_facade_signatures_remain_compatible() -> None:
         "start": ("self",),
         "shutdown": ("self",),
         "restart": ("self",),
-        "start_telegram_login": ("self", "account_id", "api_id", "api_hash", "phone"),
-        "start_telegram_qr_login": ("self", "account_id", "api_id", "api_hash"),
-        "wait_telegram_qr_login": ("self", "account_id", "timeout"),
-        "verify_telegram_code": ("self", "account_id", "code", "phone_code_hash"),
-        "verify_telegram_2fa": ("self", "account_id", "password", "phone_code_hash"),
+        "start_telegram_login": ("self", "source_id", "api_id", "api_hash", "phone"),
+        "start_telegram_qr_login": ("self", "source_id", "api_id", "api_hash"),
+        "wait_telegram_qr_login": ("self", "source_id", "timeout"),
+        "verify_telegram_code": ("self", "source_id", "code", "phone_code_hash"),
+        "verify_telegram_2fa": ("self", "source_id", "password", "phone_code_hash"),
     }
     for method_name, expected in expected_parameters.items():
         parameters = inspect.signature(getattr(CollectorManager, method_name)).parameters
@@ -166,18 +166,18 @@ def test_public_facade_signatures_remain_compatible() -> None:
 
     # Platform create/update/subscribe live on manager_sources (no thin CollectorManager wrappers).
     source_expected = {
-        "create_discord_bot": ("host", "account_id", "bot_token"),
-        "create_rss_feed": ("host", "account_id", "feed_url", "poll_interval_seconds"),
+        "create_discord_bot": ("host", "source_id", "bot_token"),
+        "create_rss_feed": ("host", "source_id", "feed_url", "poll_interval_seconds"),
         "create_mqtt_broker": (
             "host",
-            "account_id",
+            "source_id",
             "broker_url",
             "topics",
             "username",
             "password",
             "client_id",
         ),
-        "create_email_mailbox": ("host", "account_id", "credentials"),
+        "create_email_mailbox": ("host", "source_id", "credentials"),
     }
     for method_name, expected in source_expected.items():
         parameters = inspect.signature(getattr(manager_sources, method_name)).parameters

@@ -1,49 +1,49 @@
 import { describe, expect, it } from "vitest";
 
-import type { ChannelWithAccount } from "../types";
+import type { ChannelWithSource } from "../types";
 import { groupChannelsForPicker } from "./groupChannelsForPicker";
 
 function makeChannel(
   platform: string,
   id: string,
-  opts: Partial<ChannelWithAccount> = {},
-): ChannelWithAccount {
+  opts: Partial<ChannelWithSource> = {},
+): ChannelWithSource {
   return {
     id: `${platform}:${id}`,
     platform,
     platformId: id,
     channelName: opts.channelName ?? `Channel ${id}`,
-    accountIds: opts.accountIds ?? [opts.accountId ?? `acc-${id}`],
-    accountId: opts.accountId ?? `acc-${id}`,
-    accountName: opts.accountName ?? `Account ${id}`,
+    sourceIds: opts.sourceIds ?? [opts.sourceId ?? `acc-${id}`],
+    sourceId: opts.sourceId ?? `acc-${id}`,
+    sourceName: opts.sourceName ?? `Source ${id}`,
   };
 }
 
 describe("groupChannelsForPicker", () => {
-  it("groups telegram channels by account under platform", () => {
+  it("groups telegram channels by source under platform", () => {
     const grouped = groupChannelsForPicker([
-      makeChannel("telegram", "10001", { accountId: "acc-a", accountName: "Bot A", channelName: "News" }),
-      makeChannel("telegram", "10002", { accountId: "acc-a", accountName: "Bot A", channelName: "Alerts" }),
-      makeChannel("telegram", "20001", { accountId: "acc-b", accountName: "Bot B", channelName: "Dev" }),
+      makeChannel("telegram", "10001", { sourceId: "acc-a", sourceName: "Bot A", channelName: "News" }),
+      makeChannel("telegram", "10002", { sourceId: "acc-a", sourceName: "Bot A", channelName: "Alerts" }),
+      makeChannel("telegram", "20001", { sourceId: "acc-b", sourceName: "Bot B", channelName: "Dev" }),
     ]);
 
     expect(grouped).toHaveLength(1);
-    expect(grouped[0].pickerLayout).toBe("account-tree");
-    expect(grouped[0].accounts).toHaveLength(2);
-    expect(grouped[0].accounts[0].channels).toHaveLength(2);
+    expect(grouped[0].pickerLayout).toBe("source-tree");
+    expect(grouped[0].sources).toHaveLength(2);
+    expect(grouped[0].sources[0].channels).toHaveLength(2);
   });
 
-  it("lists rss feeds flat under platform without account headers", () => {
+  it("lists rss feeds flat under platform without source headers", () => {
     const grouped = groupChannelsForPicker([
       makeChannel("rss", "https://example.com/feed.xml", {
-        accountId: "feed-1",
-        accountName: "Example Feed",
+        sourceId: "feed-1",
+        sourceName: "Example Feed",
         channelName: "Example Feed",
       }),
     ]);
 
     expect(grouped[0].pickerLayout).toBe("flat");
-    expect(grouped[0].accounts).toHaveLength(1);
-    expect(grouped[0].accounts[0].channels[0].platformId).toBe("https://example.com/feed.xml");
+    expect(grouped[0].sources).toHaveLength(1);
+    expect(grouped[0].sources[0].channels[0].platformId).toBe("https://example.com/feed.xml");
   });
 });

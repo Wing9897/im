@@ -26,9 +26,9 @@
     "all": "All categories",
     "analysis": "Analysis",
     "collector": "Collector",
-    "account": "Account",
     "system": "System",
-    "frontend": "Frontend"
+    "frontend": "Frontend",
+    "source": "Source"
   },
   "summary": {
     "status": "Status",
@@ -58,7 +58,6 @@
     "analysisTrace": "Analysis trace: {summary}",
     "schedulerPaused": "Analysis scheduler paused",
     "schedulerResumed": "Analysis scheduler resumed",
-    "accountError": "Account error ({platform}): {accountName} — {summary}",
     "retentionCleanup": "Retention cleanup removed {deletedTotal} row(s)",
     "runtimeAiConnected": "AI engine available",
     "runtimeAiUnavailable": "AI engine unavailable",
@@ -68,7 +67,8 @@
     "frontendWindowError": "Frontend window error",
     "frontendUnhandledRejection": "Unhandled promise rejection",
     "frontendReact": "React render error",
-    "frontendCritical": "Critical frontend error"
+    "frontendCritical": "Critical frontend error",
+    "sourceError": "Source error ({platform}): {sourceName} — {summary}"
   },
   "section": {
     "loadingTitle": "Loading system logs",

@@ -15,9 +15,13 @@ from server.sse import publish_resource_modified as sse_publish_resource_modifie
 #: verify_write_access is method-aware, so applying it to GET routes is a no-op.
 API_DEPS = [Depends(verify_auth), Depends(verify_write_access)]
 
+_ROW_LOOKUP_TABLES = frozenset({"actions", "sources", "worksets"})
+
 
 async def require_row(db: Database, table: str, kind: str, row_id: str) -> dict[str, Any]:
     """Fetch a row by primary key or raise 404 with a "<Kind> <id> not found" detail."""
+    if table not in _ROW_LOOKUP_TABLES:
+        raise ValueError(f"Unsupported row lookup table: {table}")
     row = await db.fetch_one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
     if row is None:
         raise http_error(404, f"{kind} {row_id} not found", error_code=NOT_FOUND)

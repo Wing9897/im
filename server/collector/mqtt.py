@@ -21,7 +21,7 @@ class MqttAdapter(BasePlatformAdapter):
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         broker_url: str,
@@ -31,7 +31,7 @@ class MqttAdapter(BasePlatformAdapter):
         client_id: str | None = None,
         platform_id: str | None = None,
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._broker_url = broker_url
         self._topics = topics
         self._username = username
@@ -62,15 +62,15 @@ class MqttAdapter(BasePlatformAdapter):
         for topic in self._topics:
             await self._client.subscribe(topic)
 
-        self._listen_task = asyncio.create_task(self._listen_loop(), name=f"mqtt-listen-{self._account_id}")
+        self._listen_task = asyncio.create_task(self._listen_loop(), name=f"mqtt-listen-{self._source_id}")
 
         self._mark_connected()
         self._broadcast_status_change("connected")
         logger.info(
-            "MQTT adapter connected to %s:%d for account %s (topics: %s)",
+            "MQTT adapter connected to %s:%d for source %s (topics: %s)",
             hostname,
             port,
-            self._account_id,
+            self._source_id,
             self._topics,
         )
 
@@ -88,15 +88,15 @@ class MqttAdapter(BasePlatformAdapter):
                 await self._client.__aexit__(None, None, None)
             except (aiomqtt.MqttError, OSError) as exc:
                 logger.warning(
-                    "Error disconnecting MQTT client for account %s: %s",
-                    self._account_id,
+                    "Error disconnecting MQTT client for source %s: %s",
+                    self._source_id,
                     exc,
                 )
             self._client = None
 
         self._state.status = "disconnected"
         self._state.connected_since = None
-        logger.info("MQTT adapter disconnected for account %s", self._account_id)
+        logger.info("MQTT adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._client is not None and self._listen_task is not None and not self._listen_task.done()
@@ -130,15 +130,15 @@ class MqttAdapter(BasePlatformAdapter):
                     )
                 except (OSError, RuntimeError) as exc:
                     logger.error(
-                        "Failed to insert MQTT message for account %s, topic %s: %s",
-                        self._account_id,
+                        "Failed to insert MQTT message for source %s, topic %s: %s",
+                        self._source_id,
                         topic,
                         exc,
                     )
         except aiomqtt.MqttError as exc:
             logger.warning(
-                "MQTT connection lost for account %s: %s. Reconnecting.",
-                self._account_id,
+                "MQTT connection lost for source %s: %s. Reconnecting.",
+                self._source_id,
                 exc,
             )
             self._state.status = "connecting"

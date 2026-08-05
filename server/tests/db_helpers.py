@@ -1,4 +1,4 @@
-"""Minimal account row insertion for collector unit tests."""
+"""Minimal source row insertion for collector unit tests."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from server.db.database import Database
 from server.util import utc_now_iso
 
 
-async def insert_minimal_account(
+async def insert_minimal_source(
     db: Database,
-    account_id: str,
+    source_id: str,
     platform: str,
     *,
     name: str | None = None,
@@ -17,8 +17,8 @@ async def insert_minimal_account(
     now = utc_now_iso()
     display_name = name or f"{platform} test"
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (account_id, platform, display_name, status, now, now),
+        "INSERT INTO sources (id, platform, name, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+        (source_id, platform, display_name, status, now, now),
     )
 
 

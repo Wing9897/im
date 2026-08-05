@@ -18,9 +18,9 @@ from server.calendar.normalize import (
     build_occurrence_item,
     build_user_item,
     clamp_limit,
-    matches_search,
     parse_cursor,
 )
+from server.calendar.query_merge import merge_calendar_items, source_policy
 from server.calendar.rrule import expand_calendar_occurrences
 from server.calendar.timeline_dismissals import attach_dismissed_flag, is_timeline_event_dismissed
 from server.calendar.user_events import list_user_events
@@ -35,7 +35,6 @@ from server.queries.calendar_queries import (
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import parse_iso, to_iso_z
 from server.wire.serializers import serialize_user_event
-from server.worksets_const import SYSTEM_WORKSET_ID
 
 # Look-ahead / look-back cap for upcoming/recent (also calendar.upcoming days max).
 HORIZON_DAYS = 365
@@ -52,13 +51,6 @@ __all__ = [
     "query_upcoming",
     "query_window",
 ]
-
-
-def _is_system_workset_only_filter(workset_id: str | None) -> bool:
-    """True when the caller asked only for system-workset user events (no analysis/RRULE)."""
-    if workset_id is None:
-        return False
-    return str(workset_id).strip() == SYSTEM_WORKSET_ID
 
 
 async def _fetch_user_in_range(
@@ -213,25 +205,6 @@ async def _fetch_items_in_range(
     return items
 
 
-def _merge_sort_slice(
-    items: list[dict[str, Any]],
-    *,
-    search: str | None,
-    limit: int,
-    offset: int,
-    ascending: bool,
-) -> tuple[list[dict[str, Any]], str | None]:
-    filtered = [item for item in items if matches_search(item, search)]
-    filtered.sort(
-        key=lambda item: (item.get("startTime") or "", item.get("id") or ""),
-        reverse=not ascending,
-    )
-    page = filtered[offset : offset + limit]
-    next_offset = offset + len(page)
-    next_cursor = str(next_offset) if next_offset < len(filtered) else None
-    return page, next_cursor
-
-
 async def query_window(
     db: Database,
     *,
@@ -254,8 +227,8 @@ async def query_window(
 
     capped = clamp_limit(limit, default=50, hard_cap=hard_cap)
     offset = parse_cursor(cursor)
-    # System-workset-only filter never matches analysis/RRULE.
-    if _is_system_workset_only_filter(workset_id):
+    policy = source_policy(task_id=task_id, workset_id=workset_id)
+    if not policy.include_analysis_and_recurrence:
         analysis: list[dict[str, Any]] = []
         rrule_items: list[dict[str, Any]] = []
     else:
@@ -283,7 +256,7 @@ async def query_window(
     )
     # Items are ownership-scoped by workset only (no task provenance).
     # When filtering by task_id alone with no workset, skip item projections.
-    if task_id is not None and workset_id is None:
+    if not policy.include_items:
         item_items: list[dict[str, Any]] = []
     else:
         item_items = await _fetch_items_in_range(
@@ -292,8 +265,8 @@ async def query_window(
             range_end=range_end,
             workset_id=workset_id,
         )
-    items, next_cursor = _merge_sort_slice(
-        analysis + rrule_items + user_items + item_items,
+    items, next_cursor = merge_calendar_items(
+        (analysis, rrule_items, user_items, item_items),
         search=search,
         limit=capped,
         offset=offset,
@@ -360,7 +333,8 @@ async def query_recent(
     capped = clamp_limit(limit, default=20, hard_cap=hard_cap)
     range_start = moment - timedelta(days=HORIZON_DAYS)
     range_end = moment - timedelta(seconds=1)
-    if _is_system_workset_only_filter(workset_id):
+    policy = source_policy(task_id=task_id, workset_id=workset_id)
+    if not policy.include_analysis_and_recurrence:
         analysis: list[dict[str, Any]] = []
         rrule_items: list[dict[str, Any]] = []
     else:
@@ -387,7 +361,7 @@ async def query_recent(
         task_id=task_id,
         workset_id=workset_id,
     )
-    if task_id is not None and workset_id is None:
+    if not policy.include_items:
         item_items: list[dict[str, Any]] = []
     else:
         item_items = await _fetch_items_in_range(
@@ -396,8 +370,8 @@ async def query_recent(
             range_end=range_end,
             workset_id=workset_id,
         )
-    items, _ = _merge_sort_slice(
-        analysis + rrule_items + user_items + item_items,
+    items, _ = merge_calendar_items(
+        (analysis, rrule_items, user_items, item_items),
         search=search,
         limit=capped,
         offset=0,

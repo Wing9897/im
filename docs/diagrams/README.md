@@ -1,6 +1,6 @@
 # System structure diagrams
 
-High-level Mermaid views of Intelligence Monitor: **Input → Process → Output**, the five task modes, the schedule timer, and the project-manager feedback loop.
+High-level Mermaid views of Intelligence Monitor: **Input → Process → Output**, the five task modes (including `web_intel`), the schedule timer, and the project-manager feedback loop.
 
 Contract detail stays in [`ARCHITECTURE.md`](../ARCHITECTURE.md) and [`agent/project.md`](../agent/project.md).
 
@@ -14,7 +14,8 @@ flowchart TB
     RSS[RSS]
     MQTT[MQTT]
     EM[Email IMAP]
-    TG & DC & RSS & MQTT & EM --> MSG[(messages)]
+    HTTP[HTTP poll]
+    TG & DC & RSS & MQTT & EM & HTTP --> MSG[(messages)]
   end
 
   subgraph SIDE["Not source Input — calendar writes"]
@@ -35,15 +36,18 @@ flowchart TB
     DISPATCH{Task mode?}
     DISPATCH -->|leaderboard| LB[execute_batch<br/>oneshot JSON]
     DISPATCH -->|intel_event| EV[execute_batch<br/>oneshot JSON]
+    DISPATCH -->|web_intel| WI[web_intel_tick<br/>Agent + web.search]
     DISPATCH -->|project| PM[execute_project_tick<br/>closed-loop Agent]
     DISPATCH -.->|recurring| RC[No LLM<br/>RRULE expand at read]
     MSG --> TC[task_channels bind]
     TC --> LB & EV & PM
+    TC -.->|"optional message gate / inject"| WI
   end
 
   subgraph OUTPUT["Output — consume & act"]
     LB --> TOP[(leaderboard topics)]
     EV --> AE[(analysis_events)]
+    WI --> AE
     PM --> UE
     PM --> CHILD[child recurring rows]
     RC --> OCC[RRULE occurrences]
@@ -55,13 +59,14 @@ flowchart TB
   SIDE -.-> UI
 ```
 
-## 2. Four task modes (who schedules, who reads messages)
+## 2. Five task modes (who schedules, who reads messages)
 
 ```mermaid
 flowchart LR
   subgraph AI["AI — schedulable"]
     L[leaderboard<br/>batch LLM]
     E[intel_event<br/>batch LLM]
+    W[web_intel<br/>Agent + web.search]
     P[project<br/>Agent tick]
   end
 
@@ -70,9 +75,11 @@ flowchart LR
   end
 
   MSG[(messages via task_channels)] --> L & E & P
+  MSG -.->|"optional gate / inject"| W
   R -.->|"query-time expand"| CAL[Timeline calendar / gantt]
   L --> OUT1[topics]
   E --> OUT2[analysis_events]
+  W --> OUT2
   P --> OUT3[user_events + child recurring]
 ```
 
@@ -80,6 +87,7 @@ flowchart LR
 |------|-----------|-------------------|----------------|
 | `leaderboard` | Yes (`execute_batch`) | Yes | Leaderboard topics |
 | `intel_event` | Yes (`execute_batch`) | Yes | `analysis_events` |
+| `web_intel` | Yes (`web_intel_tick` / Agent) | Optional (bound channels → threshold + inject) | `analysis_events` |
 | `project` | Yes (`execute_project_tick`) | Yes (cursor + drain) | Owned `user_events` + child `recurring` |
 | `recurring` | No | No | RRULE occurrences at read |
 
@@ -95,8 +103,10 @@ flowchart TB
   ACTIVE -->|no| WAIT
   ACTIVE -->|yes| MODE{analysis_mode}
   MODE -->|leaderboard / intel_event| BATCH[execute_batch]
+  MODE -->|web_intel| WEB[web_intel_tick]
   MODE -->|project| TICK[execute_project_tick]
   BATCH --> DONE[Batch completed / retry]
+  WEB --> DONE
   TICK --> DONE
   DONE --> WAIT
 ```
@@ -105,7 +115,7 @@ Global pause / emergency stop and per-task disable stop **new** work; project dr
 
 ## 4. Project manager feedback loop (closed-loop)
 
-Only `analysis_mode=project`. Other AI modes stay open-loop (batch → results, no tool writes back into the calendar).
+Only `analysis_mode=project`. Other AI modes stay open-loop (batch／web_intel → results, no tool writes back into the calendar).
 
 ```mermaid
 flowchart TB

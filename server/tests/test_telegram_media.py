@@ -45,7 +45,7 @@ def test_build_raw_data_json():
 def test_serialize_message_exposes_media():
     row = {
         "id": "m1",
-        "account_id": "a1",
+        "source_id": "a1",
         "platform": "telegram",
         "platform_id": "123",
         "platform_message_id": "99",

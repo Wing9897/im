@@ -41,7 +41,15 @@ configure_stdout()
 
 def main() -> int:
     # 1. Health
-    status, body = api("GET", "/api/v1/health", timeout=15)
+    try:
+        status, body = api("GET", "/api/v1/health", timeout=15)
+    except urllib.error.URLError as exc:
+        print(
+            f"[FATAL] Cannot reach verification target {BASE}: {exc.reason}",
+            file=sys.stderr,
+        )
+        print("Start the server or set VERIFY_BASE, then retry.", file=sys.stderr)
+        return 2
     check("health /api/v1/health", status == 200 and body["status"] == "ok")
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)
@@ -116,7 +124,7 @@ def main() -> int:
     )
 
     # 6. Channels reflect the auto-created channel
-    status, channels = api("GET", "/api/v1/channels/with-accounts", timeout=15)
+    status, channels = api("GET", "/api/v1/channels/with-sources", timeout=15)
     check("channels auto-created", any(c["id"] == "telegram:smoke-channel" for c in channels))
 
     # 7. Settings roundtrip (with teardown)
@@ -171,7 +179,7 @@ def main() -> int:
     check("task delete", status == 200)
 
     # 9. Accounts list (empty but shaped)
-    status, accounts = api("GET", "/api/v1/accounts", timeout=15)
+    status, accounts = api("GET", "/api/v1/sources", timeout=15)
     check("accounts list", status == 200 and isinstance(accounts, list))
 
     # 10. Viewer + queue + collector status
@@ -203,7 +211,7 @@ def main() -> int:
     )
 
     # 11. Structured error body
-    status, err = api("DELETE", "/api/v1/accounts/nope", timeout=15)
+    status, err = api("DELETE", "/api/v1/sources/nope", timeout=15)
     check(
         "structured 404 error",
         status == 404 and err["error_code"] == "NOT_FOUND" and "correlation_id" in err,

@@ -71,7 +71,7 @@ async def test_insert_message_returns_camel_case_shape(db: Database):
     message = await insert_message(
         db,
         message_id="msg-1",
-        account_id=None,
+        source_id=None,
         platform="rss",
         platform_id="feed-1",
         content="hello",
@@ -83,7 +83,7 @@ async def test_insert_message_returns_camel_case_shape(db: Database):
     )
     assert message is not None
     assert message["id"] == "msg-1"
-    assert message["accountId"] is None
+    assert message["sourceId"] is None
     assert message["platform"] == "rss"
     assert message["platformId"] == "feed-1"
     assert message["channelName"] == "My Feed"
@@ -99,7 +99,7 @@ async def test_insert_message_persists_row(db: Database):
     await insert_message(
         db,
         message_id="msg-1",
-        account_id=None,
+        source_id=None,
         platform="rss",
         platform_id="feed-1",
         content="hello",
@@ -113,7 +113,7 @@ async def test_insert_message_persists_row(db: Database):
 
 async def test_insert_message_dedup_returns_none(db: Database):
     kwargs: dict[str, Any] = dict(
-        account_id=None,
+        source_id=None,
         platform="rss",
         platform_id="feed-1",
         content="hello",
@@ -131,7 +131,7 @@ async def test_insert_message_dedup_returns_none(db: Database):
 async def test_insert_message_null_platform_message_ids_are_distinct(db: Database):
     """SQLite unique index treats NULLs as distinct; both rows must insert."""
     kwargs: dict[str, Any] = dict(
-        account_id=None,
+        source_id=None,
         platform="mqtt",
         platform_id="broker-1",
         content="payload",
@@ -150,7 +150,7 @@ async def test_insert_message_channel_name_falls_back_to_stored(db: Database):
     message = await insert_message(
         db,
         message_id="msg-1",
-        account_id=None,
+        source_id=None,
         platform="rss",
         platform_id="feed-1",
         content="hello",
@@ -166,7 +166,7 @@ async def test_insert_message_unknown_channel_name_is_none(db: Database):
     message = await insert_message(
         db,
         message_id="msg-1",
-        account_id=None,
+        source_id=None,
         platform="rss",
         platform_id="brand-new-feed",
         content="hello",

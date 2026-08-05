@@ -114,10 +114,9 @@ export const analysisStatusState = {
     analysisPaused: false,
   },
   analysisPaused: false,
-  activeAnalysis: null as null,
   activeAnalyses: new Map<string, unknown>(),
   lastAnalysisEvent: null as null,
-  lastAccountStatusChange: null as null,
+  lastSourceStatusChange: null as null,
   lastMessagesUpdate: null as null,
   requestQueueStatusRefresh: vi.fn(),
 };
@@ -130,10 +129,9 @@ export function resetAnalysisStatusState() {
     analysisPaused: false,
   };
   analysisStatusState.analysisPaused = false;
-  analysisStatusState.activeAnalysis = null;
   analysisStatusState.activeAnalyses = new Map();
   analysisStatusState.lastAnalysisEvent = null;
-  analysisStatusState.lastAccountStatusChange = null;
+  analysisStatusState.lastSourceStatusChange = null;
   analysisStatusState.lastMessagesUpdate = null;
   analysisStatusState.requestQueueStatusRefresh.mockReset();
 }

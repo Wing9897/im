@@ -86,10 +86,9 @@ function TestHarness({
       processingBatches: Array.from(activeAnalyses.keys()).map((id) => ({ batchId: id })),
     } as AnalysisStatusContextValue["queueStatus"],
     analysisPaused,
-    activeAnalysis: activeAnalyses.size > 0 ? activeAnalyses.values().next().value! : null,
     activeAnalyses,
     lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: stableRequestQueueStatusRefresh,
   };

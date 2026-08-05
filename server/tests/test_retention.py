@@ -340,9 +340,7 @@ async def test_cleanup_app_logs_and_user_events(db: Database) -> None:
     assert await db.fetch_value("SELECT COUNT(*) FROM app_logs WHERE id = 'log-new'") == 1
     assert await db.fetch_value("SELECT COUNT(*) FROM user_events WHERE id = 'ue-old'") == 0
     assert await db.fetch_value("SELECT COUNT(*) FROM user_events WHERE id = 'ue-new'") == 1
-    summary = await db.fetch_one(
-        "SELECT * FROM app_logs WHERE kind = 'retention.cleanup' LIMIT 1"
-    )
+    summary = await db.fetch_one("SELECT * FROM app_logs WHERE kind = 'retention.cleanup' LIMIT 1")
     assert summary is not None
     assert "Retention cleanup" in summary["message"]
 

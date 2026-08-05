@@ -20,7 +20,7 @@ from server.util import new_id, task_value, utc_now_iso
 #: Explicit column projection — no SELECT *.
 MESSAGE_COLUMNS: tuple[str, ...] = (
     "id",
-    "account_id",
+    "source_id",
     "platform",
     "platform_id",
     "platform_message_id",

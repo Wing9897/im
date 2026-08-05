@@ -1,6 +1,6 @@
 import type { BoardSizePresetId } from "./boardSizePresets";
 
-/** Built-in ops-board widget kinds. */
+/** Built-in board widget kinds. */
 export type BoardWidgetType =
   | "map"
   | "calendar"

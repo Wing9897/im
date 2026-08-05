@@ -9,8 +9,8 @@ import {
 import { createDefaultBoardConfig } from "./boardLayoutParse";
 import { putBoardPrefs } from "../api/uiPrefs";
 
-/** Leftover historical LS key — assert map saves do not write LS (server SoT). */
-const LEFTOVER_BOARD_LS_KEY = "im:ops-board:v14";
+/** Client-only LS key — assert map saves do not write LS (server SoT). */
+const CLIENT_BOARD_LS_KEY = "im:board:v14";
 
 vi.mock("../api/uiPrefs", () => ({
   fetchBoardPrefs: vi.fn(),
@@ -35,7 +35,7 @@ describe("board map view persistence", () => {
     saveBoardMapViewToApi("map-a", { center: [25.0, 121.5], zoom: 6 });
     expect(loadBoardMapViewFromCache("map-a")).toEqual({ center: [25.0, 121.5], zoom: 6 });
     // Server ui-prefs is SoT — no localStorage write path for map views.
-    expect(window.localStorage.getItem(LEFTOVER_BOARD_LS_KEY)).toBeNull();
+    expect(window.localStorage.getItem(CLIENT_BOARD_LS_KEY)).toBeNull();
     expect(loadBoardMapViewFromCache("map-b")).toBeNull();
     expect(putBoardPrefs).toHaveBeenCalled();
   });

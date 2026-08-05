@@ -7,7 +7,7 @@ import { RssFeedFields } from "./RssFeedFields";
 export function feedToForm(feed: RssFeedInfo): RssFormFields {
   return {
     feedUrl: feed.feedUrl,
-    name: feed.account.name || "",
+    name: feed.source.name || "",
     pollIntervalMinutes: Math.max(1, Math.round(feed.pollIntervalSeconds / 60)),
   };
 }

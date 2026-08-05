@@ -83,7 +83,7 @@ describe("formToPatch", () => {
 describe("mailboxToForm", () => {
   it("maps mailbox info back to editable form fields", () => {
     const mailbox: EmailMailboxInfo = {
-      account: {
+      source: {
         id: "email-1",
         platform: "email",
         name: "Alerts",

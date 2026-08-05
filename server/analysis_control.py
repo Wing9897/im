@@ -39,16 +39,8 @@ async def set_analysis_paused(
             level="warning" if paused else "success",
             category="analysis",
             kind="scheduler.paused" if paused else "scheduler.resumed",
-            message=(
-                "Analysis scheduler paused"
-                if paused
-                else "Analysis scheduler resumed"
-            ),
-            message_key=(
-                "logs:templates.schedulerPaused"
-                if paused
-                else "logs:templates.schedulerResumed"
-            ),
+            message=("Analysis scheduler paused" if paused else "Analysis scheduler resumed"),
+            message_key=("logs:templates.schedulerPaused" if paused else "logs:templates.schedulerResumed"),
             source="server.analysis_control",
             payload={"analysisPaused": paused},
         )

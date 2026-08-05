@@ -27,7 +27,7 @@ def broadcaster():
 @pytest.mark.asyncio
 async def test_rss_poll_escalates_after_consecutive_failures(db: Database, broadcaster: SseBroadcaster):
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES ('acc-rss', 'rss', 'Feed', 'connected', '{}', '2026-07-01T00:00:00+00:00', "
         "'2026-07-01T00:00:00+00:00')",
     )
@@ -44,16 +44,16 @@ async def test_rss_poll_escalates_after_consecutive_failures(db: Database, broad
 
     await adapter._record_poll_failure("HTTP", aiohttp.ClientError("boom"))
     assert adapter.state.status == "error"
-    row = await db.fetch_one("SELECT status, last_error FROM accounts WHERE id = 'acc-rss'")
+    row = await db.fetch_one("SELECT status, last_error FROM sources WHERE id = 'acc-rss'")
     assert row is not None
     assert row["status"] == "error"
     assert row["last_error"]
-    assert any(event == "account_status_changed" and payload.get("status") == "error" for event, payload in events)
+    assert any(event == "source_status_changed" and payload.get("status") == "error" for event, payload in events)
 
     # Successful poll recovers.
     await adapter._record_poll_success()
     assert adapter.state.status == "connected"
     assert adapter._poll_failures == 0
-    row = await db.fetch_one("SELECT status FROM accounts WHERE id = 'acc-rss'")
+    row = await db.fetch_one("SELECT status FROM sources WHERE id = 'acc-rss'")
     assert row is not None
     assert row["status"] == "connected"

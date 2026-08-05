@@ -1,14 +1,15 @@
 import { useCallback, useState } from "react";
 import {
   createEmailMailbox,
-  deleteAccount,
+  deleteSource,
   listEmailMailboxes,
   updateEmailMailbox,
-} from "../../../api/accounts";
+} from "../../../api/sources";
 import i18n from "../../../i18n";
 import type { EmailMailboxInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../useSourceListTab";
+import { useSourceEditController } from "../useSourceEditController";
 import { validateEmailImapConfig } from "../../../utils/configValidation";
 import {
   applyEmailPreset,
@@ -21,7 +22,9 @@ import {
   type EmailProviderPreset,
 } from "./emailFormModel";
 
-const removeEmailMailbox = (target: EmailMailboxInfo) => deleteAccount(target.account.id);
+const removeEmailMailbox = (target: EmailMailboxInfo) => deleteSource(target.source.id);
+const formatEditError = (error: unknown) =>
+  error instanceof Error ? error.message : String(i18n.t("sources:email.updateFailed"));
 
 export function useEmailTab() {
   const {
@@ -45,11 +48,7 @@ export function useEmailTab() {
   const [formError, setFormError] = useState<string | null>(null);
   const { submitting, error: submitError, handleSubmit } = useFormSubmit();
 
-  const [editTarget, setEditTarget] = useState<EmailMailboxInfo | null>(null);
-  const [editForm, setEditForm] = useState<EmailFormFields | null>(null);
   const [editResetCursors, setEditResetCursors] = useState(false);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
 
   const setPreset = useCallback((preset: EmailProviderPreset) => {
     setForm((current) => applyEmailPreset(current, preset));
@@ -62,6 +61,27 @@ export function useEmailTab() {
     }
     return null;
   }, []);
+
+  const saveEdit = useCallback(
+    async (target: EmailMailboxInfo, fields: EmailFormFields) => {
+      const response = await updateEmailMailbox(
+        target.source.id,
+        formToPatch(fields, editResetCursors),
+      );
+      if (response.status === "error" && response.errorMessage) {
+        throw new Error(response.errorMessage);
+      }
+    },
+    [editResetCursors],
+  );
+
+  const edit = useSourceEditController<EmailMailboxInfo, EmailFormFields>({
+    toForm: mailboxToForm,
+    validate: (fields) => validateForm(fields, true),
+    save: saveEdit,
+    refresh: fetchMailboxes,
+    formatError: formatEditError,
+  });
 
   const handleAddMailbox = useCallback(async () => {
     setFormError(null);
@@ -84,47 +104,14 @@ export function useEmailTab() {
   }, [form, fetchMailboxes, handleSubmit, validateForm]);
 
   const openEditDialog = useCallback((mailbox: EmailMailboxInfo) => {
-    setEditTarget(mailbox);
-    setEditForm(mailboxToForm(mailbox));
     setEditResetCursors(false);
-    setEditError(null);
-  }, []);
+    edit.openEditDialog(mailbox);
+  }, [edit]);
 
   const closeEditDialog = useCallback(() => {
-    setEditTarget(null);
-    setEditForm(null);
     setEditResetCursors(false);
-    setEditError(null);
-  }, []);
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!editTarget || !editForm) return;
-    setEditError(null);
-    const validationError = validateForm(editForm, true);
-    if (validationError) {
-      setEditError(validationError);
-      return;
-    }
-
-    setEditSubmitting(true);
-    try {
-      const resp = await updateEmailMailbox(
-        editTarget.account.id,
-        formToPatch(editForm, editResetCursors),
-      );
-      if (resp.status === "error" && resp.errorMessage) {
-        throw new Error(resp.errorMessage);
-      }
-      closeEditDialog();
-      await fetchMailboxes();
-    } catch (err) {
-      setEditError(
-        err instanceof Error ? err.message : String(i18n.t("sources:email.updateFailed")),
-      );
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [closeEditDialog, editForm, editResetCursors, editTarget, fetchMailboxes, validateForm]);
+    edit.closeEditDialog();
+  }, [edit]);
 
   return {
     mailboxes,
@@ -144,15 +131,15 @@ export function useEmailTab() {
     removing,
     handleAddMailbox,
     handleRemoveMailbox,
-    editTarget,
-    editForm,
-    setEditForm,
+    editTarget: edit.editTarget,
+    editForm: edit.editForm,
+    setEditForm: edit.setEditForm,
     editResetCursors,
     setEditResetCursors,
-    editSubmitting,
-    editError,
+    editSubmitting: edit.editSubmitting,
+    editError: edit.editError,
     openEditDialog,
     closeEditDialog,
-    handleSaveEdit,
+    handleSaveEdit: edit.handleSaveEdit,
   };
 }

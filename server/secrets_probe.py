@@ -25,7 +25,7 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
 
     Preserves non-secret business rows. Returns per-category scrub counts.
 
-    Accounts that lose credentials are marked ``disconnected`` so the UI does not
+    Sources that lose credentials are marked ``disconnected`` so the UI does not
     keep a stale ``connected`` status (session files are cleared separately).
     """
     from server.util import utc_now_iso
@@ -39,14 +39,13 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
             (*SECRET_CONFIG_KEYS, _CIPHER_LIKE),
         )
 
-    accounts_count = await db.execute(
-        "UPDATE accounts SET credentials = NULL, status = 'disconnected', updated_at = ? WHERE credentials LIKE ?",
+    sources_count = await db.execute(
+        "UPDATE sources SET credentials = NULL, status = 'disconnected', updated_at = ? WHERE credentials LIKE ?",
         (now, _CIPHER_LIKE),
     )
     # Heal rows already scrubbed earlier (or empty) but still labeled connected.
     stale_connected = await db.execute(
-        "UPDATE accounts SET status = 'disconnected', updated_at = ? "
-        "WHERE credentials IS NULL AND status = 'connected'",
+        "UPDATE sources SET status = 'disconnected', updated_at = ? WHERE credentials IS NULL AND status = 'connected'",
         (now,),
     )
     actions_count = await db.execute(
@@ -54,15 +53,15 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
         (_CIPHER_LIKE,),
     )
     logger.info(
-        "Scrubbed undecryptable secrets: system_config=%d accounts=%d stale_connected=%d actions=%d",
+        "Scrubbed undecryptable secrets: system_config=%d sources=%d stale_connected=%d actions=%d",
         config_count,
-        accounts_count,
+        sources_count,
         stale_connected,
         actions_count,
     )
     return {
         "system_config": config_count,
-        "accounts": accounts_count,
+        "sources": sources_count,
         "stale_connected": stale_connected,
         "actions": actions_count,
     }
@@ -88,11 +87,11 @@ async def probe_stored_secrets(db: Any) -> tuple[bool, str | None]:
             if cipher is not None:
                 samples.append(cipher)
 
-    account_rows = await db.fetch_all(
-        "SELECT credentials FROM accounts WHERE credentials IS NOT NULL AND credentials LIKE ? LIMIT 8",
+    source_rows = await db.fetch_all(
+        "SELECT credentials FROM sources WHERE credentials IS NOT NULL AND credentials LIKE ? LIMIT 8",
         (_CIPHER_LIKE,),
     )
-    for row in account_rows:
+    for row in source_rows:
         cipher = _ciphertext(row.get("credentials"))
         if cipher is not None:
             samples.append(cipher)

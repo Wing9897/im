@@ -41,6 +41,11 @@ async def test_require_row_raises_structured_not_found_error(app):
     assert detail["message"] == "Workset missing-workset not found"
 
 
+async def test_require_row_rejects_dynamic_table_names(app):
+    with pytest.raises(ValueError, match="Unsupported row lookup table"):
+        await require_row(app.state.db, "worksets; DROP TABLE worksets", "Workset", "any")
+
+
 async def test_shared_helper_errors_keep_public_response_contract(client):
     invalid_channel = await client.get(
         "/api/v1/channels/latest-messages",

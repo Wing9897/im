@@ -83,7 +83,7 @@ describe("map time window persistence", () => {
 function makeMessage(id: string, timestamp: string): Message {
   return {
     id,
-    accountId: "acc-1",
+    sourceId: "acc-1",
     channelId: "ch-1",
     channelName: "general",
     platform: "discord",

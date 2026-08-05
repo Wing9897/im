@@ -31,7 +31,7 @@ describe("simpleMode", () => {
 
   it("hides collect/analyze paths", () => {
     expect(isSimpleModeHiddenPath("/monitor")).toBe(true);
-    expect(isSimpleModeHiddenPath("/accounts")).toBe(true);
+    expect(isSimpleModeHiddenPath("/sources")).toBe(true);
     expect(isSimpleModeHiddenPath("/actions")).toBe(false);
     expect(isSimpleModeHiddenPath("/intelligence")).toBe(true);
     expect(isSimpleModeHiddenPath("/leaderboard")).toBe(true);

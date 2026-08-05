@@ -1,17 +1,17 @@
 import { useRetryAction } from "../../../hooks/useRetryAction";
 import { useTranslation } from "react-i18next";
-import { AccountListSection } from "../accounts/AccountListSection";
-import { AddAccountForm } from "../accounts/AddAccountForm";
-import { QrLoginDialog } from "../accounts/QrLoginDialog";
-import { VerificationDialog } from "../accounts/AccountDialogs";
-import { TelegramEditDialog } from "../accounts/TelegramEditDialog";
+import { TelegramSourceListSection } from "./TelegramSourceListSection";
+import { AddTelegramSourceForm } from "./AddTelegramSourceForm";
+import { QrLoginDialog } from "./QrLoginDialog";
+import { VerificationDialog } from "./TelegramSourceDialogs";
+import { TelegramSourceEditDialog } from "./TelegramSourceEditDialog";
 import { SourceTabLayout } from "../SourceTabLayout";
-import { useTelegramAccounts } from "./useTelegramAccounts";
+import { useTelegramSources } from "./useTelegramSources";
 
 export function TelegramTab() {
   const { t } = useTranslation("sources");
   const {
-    accounts,
+    sources,
     initialLoading,
     isRefreshing,
     error,
@@ -40,7 +40,7 @@ export function TelegramTab() {
     reconnecting,
     reconnectError,
     reconnectErrorTarget,
-    refreshingAllAccounts,
+    refreshingAllSources,
     refreshAllNotice,
     editTarget,
     editName,
@@ -51,16 +51,16 @@ export function TelegramTab() {
     closeEditDialog,
     handleSaveEdit,
     closeVerifyDialog,
-    handleAddAccount,
+    handleAddSource,
     handleSubmitCode,
     handleSubmit2fa,
-    handleRemoveAccount,
+    handleRemoveSource,
     handleReconnect,
-    handleRefreshAllAccounts,
-    fetchAccounts,
-  } = useTelegramAccounts();
+    handleRefreshAllSources,
+    fetchSources,
+  } = useTelegramSources();
 
-  const { retrying, handleRetry } = useRetryAction(fetchAccounts);
+  const { retrying, handleRetry } = useRetryAction(fetchSources);
   const showCodeOr2fa =
     verifyStep === "code_required" || verifyStep === "2fa_required";
 
@@ -73,7 +73,7 @@ export function TelegramTab() {
         formTitle={t("telegram.formTitle")}
         formDescription={t("telegram.formDescription")}
         addForm={
-          <AddAccountForm
+          <AddTelegramSourceForm
             loginMethod={loginMethod}
             setLoginMethod={setLoginMethod}
             apiId={apiId}
@@ -83,11 +83,11 @@ export function TelegramTab() {
             phone={phone}
             setPhone={setPhone}
             submitting={submitting}
-            onSubmit={handleAddAccount}
+            onSubmit={handleAddSource}
           />
         }
         listTitle=""
-        itemCount={accounts.length}
+        itemCount={sources.length}
         initialLoading={initialLoading}
         isRefreshing={isRefreshing}
         emptyState={{ title: "", description: "" }}
@@ -95,19 +95,19 @@ export function TelegramTab() {
         removeTitle={t("telegram.removeTitle")}
         removing={removing}
         removeMessage={t("telegram.removeMessage")}
-        onRemoveConfirm={() => void handleRemoveAccount(removeTarget!).catch(() => {})}
+        onRemoveConfirm={() => void handleRemoveSource(removeTarget!).catch(() => {})}
         onRemoveCancel={() => setRemoveTarget(null)}
         listContent={
-          <AccountListSection
-            accounts={accounts}
+          <TelegramSourceListSection
+            sources={sources}
             initialLoading={initialLoading}
             isRefreshing={isRefreshing}
-            refreshingAllAccounts={refreshingAllAccounts}
+            refreshingAllSources={refreshingAllSources}
             refreshAllNotice={refreshAllNotice}
             reconnecting={reconnecting}
             reconnectError={reconnectError}
             reconnectErrorTarget={reconnectErrorTarget}
-            onRefreshAll={handleRefreshAllAccounts}
+            onRefreshAll={handleRefreshAllSources}
             onReconnect={handleReconnect}
             onRemoveClick={setRemoveTarget}
             onEditClick={openEditDialog}
@@ -143,8 +143,8 @@ export function TelegramTab() {
       ) : null}
 
       {editTarget ? (
-        <TelegramEditDialog
-          account={editTarget}
+        <TelegramSourceEditDialog
+          source={editTarget}
           name={editName}
           setName={setEditName}
           submitting={editSubmitting}
