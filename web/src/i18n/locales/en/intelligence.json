@@ -106,7 +106,7 @@
   "empty": {
     "noTasksTitle": "No intelligence tasks yet",
     "noTasksDescription": "Create at least one Intel task or Web intel task. After analysis finishes, curated highlights will appear here.",
-    "noTasksHint": "If accounts and channels are ready, add an Intel task or Web intel task under Tasks next.",
+    "noTasksHint": "If sources and channels are ready, add an Intel task or Web intel task under Tasks next.",
     "filteredBothTitle": "No intelligence matches",
     "filteredBothDescription": "Your current filters do not match any results.",
     "filteredSearchTitle": "No intelligence matches your search",

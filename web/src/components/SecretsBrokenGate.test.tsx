@@ -34,7 +34,7 @@ describe("SecretsBrokenGate", () => {
     rotateSecretsPublic.mockResolvedValue({
       message: "Secrets rotated",
       secretsReady: true,
-      scrubbed: { system_config: 1, accounts: 0, actions: 0 },
+      scrubbed: { system_config: 1, sources: 0, actions: 0 },
     });
   });
 

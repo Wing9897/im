@@ -3,8 +3,8 @@
 After admin register, loopback is no longer auth-exempt — set VERIFY_BEARER
 or IM_ACCESS_TOKEN (device access token / full-scope API key).
 
-Covers: health, SPA static, accounts, messages, settings, tasks/analysis,
-sources, and SSE realtime.
+Covers: health, SPA static, sources, messages, settings, tasks/analysis,
+and SSE realtime.
 
 SPA static: skipped (not failed) when ``web/dist`` is absent / static is not
 mounted. For a full SPA check run ``npm run build:web`` or hit Vite directly.
@@ -178,9 +178,9 @@ def main() -> int:
     status, _ = api("DELETE", f"/api/v1/tasks/{task_id}", timeout=15)
     check("task delete", status == 200)
 
-    # 9. Accounts list (empty but shaped)
-    status, accounts = api("GET", "/api/v1/sources", timeout=15)
-    check("accounts list", status == 200 and isinstance(accounts, list))
+    # 9. Sources list (empty but shaped)
+    status, sources = api("GET", "/api/v1/sources", timeout=15)
+    check("sources list", status == 200 and isinstance(sources, list))
 
     # 10. Viewer + queue + collector status
     status, viewer = api("GET", "/api/v1/viewer/status", timeout=15)

@@ -106,7 +106,7 @@
   "empty": {
     "noTasksTitle": "尚未建立情報任務",
     "noTasksDescription": "先建立至少一個「情報任務」或「網路情報任務」，分析完成後，這裡才會開始出現整理好的重點內容。",
-    "noTasksHint": "如果你已完成帳號與頻道設定，下一步通常是到任務設定新增「情報任務」或「網路情報任務」類型任務。",
+    "noTasksHint": "如果你已完成來源與頻道設定，下一步通常是到任務設定新增「情報任務」或「網路情報任務」類型任務。",
     "filteredBothTitle": "找不到符合條件的情報",
     "filteredBothDescription": "目前的篩選條件沒有對應到任何結果。",
     "filteredSearchTitle": "找不到符合搜尋條件的情報",

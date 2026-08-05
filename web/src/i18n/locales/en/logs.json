@@ -86,7 +86,7 @@
   "empty": {
     "noneTitle": "No system logs yet",
     "filteredTitle": "No logs match the current filters",
-    "noneDescription": "Records will accumulate here once analysis, account connections, collector status changes, or frontend errors occur.",
+    "noneDescription": "Records will accumulate here once analysis, source connections, collector status changes, or frontend errors occur.",
     "filteredDescriptionMore": "Loaded {summary} logs, but the search or filters haven't matched this batch yet.",
     "filteredDescriptionAll": "Loaded {count} logs, but the search or filters are hiding all of them.",
     "filteredDescriptionNone": "No logs to show under the current conditions.",

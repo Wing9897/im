@@ -520,7 +520,7 @@
     "emptyNoTasksDescription": "先建立至少一個排行榜型任務，系統完成分析後，這裡才會出現主題排行。",
     "emptyFilteredDescription": "目前選取的任務尚未產生排行榜資料，或已被篩選到沒有結果。",
     "emptyNoResultsDescription": "等分析批次完成後，這裡會整理出最熱門的主題與分數。",
-    "emptyNoTasksHint": "如果你已經有帳號和頻道，下一步通常是到任務設定新增排行榜任務。",
+    "emptyNoTasksHint": "如果你已經有來源和頻道，下一步通常是到任務設定新增排行榜任務。",
     "emptyFilteredHint": "你可以先切回全部排行榜，確認是否只有目前任務暫時沒有資料。",
     "emptyNoResultsHint": "排行榜需要先有成功完成的 leaderboard 分析批次。",
     "goToTasks": "前往任務設定",
@@ -702,7 +702,7 @@
     },
     "sources": {
       "title": "來源狀態",
-      "description": "帳號連線"
+      "description": "來源連線"
     },
     "logs": {
       "title": "系統日誌",
@@ -729,7 +729,7 @@
     },
     "collector": {
       "title": "收集器",
-      "shortDescription": "各平台帳號的訊息收集與連線重試，將原始訊息寫入資料庫，供監控牆與後續分析使用。"
+      "shortDescription": "各平台來源的訊息收集與連線重試，將原始訊息寫入資料庫，供監控牆與後續分析使用。"
     },
     "analysisBatch": {
       "title": "分析批次",
@@ -820,7 +820,7 @@
     "platformFilterAria": "平台過濾",
     "platformLabel": "平台",
     "platformHelper": "先選平台縮小範圍；大型列表可點 ▶ 展開。",
-    "searchPlaceholder": "搜尋平台、帳號或頻道…",
+    "searchPlaceholder": "搜尋平台、來源或頻道…",
     "searchAria": "搜尋頻道",
     "selectAll": "全選",
     "clear": "清空",
@@ -830,7 +830,7 @@
     "noMatch": "找不到符合的頻道",
     "emptyDefault": "尚無可用頻道",
     "emptyForPlatform": "此平台尚無可用頻道",
-    "emptyNeedSources": "尚無可用頻道，請先到來源管理新增帳號",
+    "emptyNeedSources": "尚無可用頻道，請先到來源管理新增來源",
     "summaryMonitorScope": "監控範圍",
     "taskTitle": "選擇分析來源頻道",
     "taskSummary": "分析來源",
@@ -1157,9 +1157,9 @@
   "secretsBroken": {
     "dialogAria": "加密金鑰不相符",
     "title": "加密金鑰不相符",
-    "body": "本機加密金鑰無法解密已儲存的 API 金鑰與帳號憑證。請輸入管理員密碼以輪換金鑰並繼續；任務與訊息將保留。",
+    "body": "本機加密金鑰無法解密已儲存的 API 金鑰與訊源憑證。請輸入管理員密碼以輪換金鑰並繼續；任務與訊息將保留。",
     "infoTitle": "將如何恢復",
-    "infoBody": "任務、訊息與管理員帳號會保留。無法解密的機密（LLM API 金鑰、訊源憑證、動作金鑰）會被清空，需重新填寫。Telegram 工作階段檔案會一併清除，帳號需重新登入。",
+    "infoBody": "任務、訊息與管理員帳號會保留。無法解密的機密（LLM API 金鑰、訊源憑證、動作金鑰）會被清空，需重新填寫。Telegram 工作階段檔案會一併清除，來源需重新登入。",
     "fullResetHint": "若需要徹底清空全部資料：恢復並登入後，請到「設定 → 資料」執行完全重設。",
     "techDetails": "技術錯誤詳情（展開）",
     "recover": "恢復並進入",

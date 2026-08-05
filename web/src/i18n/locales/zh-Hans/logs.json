@@ -86,7 +86,7 @@
   "empty": {
     "noneTitle": "目前还没有系统日志",
     "filteredTitle": "没有符合条件的日志",
-    "noneDescription": "启动分析、帐号连线、收集器状态变化或前端错误发生后，这里就会开始累积纪录。",
+    "noneDescription": "启动分析、来源连线、收集器状态变化或前端错误发生后，这里就会开始累积纪录。",
     "filteredDescriptionMore": "已载入 {summary} 笔日志，但目前搜索或筛选尚未命中这批资料。",
     "filteredDescriptionAll": "已载入 {count} 笔日志，但目前搜索或筛选把它们全部隐藏了。",
     "filteredDescriptionNone": "目前条件下没有可显示的日志纪录。",

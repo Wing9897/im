@@ -520,7 +520,7 @@
     "emptyNoTasksDescription": "Create at least one leaderboard task. After analysis finishes, topic rankings appear here.",
     "emptyFilteredDescription": "The selected task has no leaderboard data yet, or filters removed every result.",
     "emptyNoResultsDescription": "After analysis batches complete, the hottest topics and scores show up here.",
-    "emptyNoTasksHint": "If you already have accounts and channels, add a leaderboard task under Tasks next.",
+    "emptyNoTasksHint": "If you already have sources and channels, add a leaderboard task under Tasks next.",
     "emptyFilteredHint": "Switch back to all leaderboards to check whether only this task is empty for now.",
     "emptyNoResultsHint": "Leaderboards need a completed leaderboard analysis batch first.",
     "goToTasks": "Go to Tasks",
@@ -702,7 +702,7 @@
     },
     "sources": {
       "title": "Source status",
-      "description": "Account connections"
+      "description": "Source connections"
     },
     "logs": {
       "title": "System logs",
@@ -820,7 +820,7 @@
     "platformFilterAria": "Platform filter",
     "platformLabel": "Platform",
     "platformHelper": "Filter by platform first; expand large lists with ▶.",
-    "searchPlaceholder": "Search platforms, accounts, or channels…",
+    "searchPlaceholder": "Search platforms, sources, or channels…",
     "searchAria": "Search channels",
     "selectAll": "Select all",
     "clear": "Clear",
@@ -830,7 +830,7 @@
     "noMatch": "No matching channels",
     "emptyDefault": "No channels available",
     "emptyForPlatform": "No channels for this platform",
-    "emptyNeedSources": "No channels yet — add accounts in Sources first",
+    "emptyNeedSources": "No channels yet — add sources in Sources first",
     "summaryMonitorScope": "Monitor scope",
     "taskTitle": "Select analysis source channels",
     "taskSummary": "Analysis sources",
@@ -1157,9 +1157,9 @@
   "secretsBroken": {
     "dialogAria": "Encryption key mismatch",
     "title": "Encryption key mismatch",
-    "body": "The local encryption key cannot decrypt stored API keys and account credentials. Enter the admin password to rotate the key and continue; tasks and messages are kept.",
+    "body": "The local encryption key cannot decrypt stored API keys and source credentials. Enter the admin password to rotate the key and continue; tasks and messages are kept.",
     "infoTitle": "What recovery does",
-    "infoBody": "Tasks, messages, and the admin account are kept. Undecryptable secrets (LLM API keys, source credentials, action secrets) are cleared and must be re-entered. Telegram session files are removed; accounts need to sign in again.",
+    "infoBody": "Tasks, messages, and the admin account are kept. Undecryptable secrets (LLM API keys, source credentials, action secrets) are cleared and must be re-entered. Telegram session files are removed; sources need to sign in again.",
     "fullResetHint": "To wipe all data instead: after recovery and sign-in, use Settings → Data → full reset.",
     "techDetails": "Technical details (expand)",
     "recover": "Recover and continue",

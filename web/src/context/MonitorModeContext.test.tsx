@@ -55,10 +55,10 @@ function ModeControls() {
       "button",
       {
         type: "button",
-        "data-testid": "nav-accounts",
+        "data-testid": "nav-sources",
         onClick: () => navigate("/sources"),
       },
-      "accounts",
+      "sources",
     ),
     createElement(
       "button",
@@ -230,7 +230,7 @@ describe("MonitorModeContext", () => {
     const first = identities[identities.length - 1];
     expect(first).toBeTypeOf("function");
 
-    for (const testId of ["nav-accounts", "nav-timeline", "nav-settings"] as const) {
+    for (const testId of ["nav-sources", "nav-timeline", "nav-settings"] as const) {
       act(() => {
         (container.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement).click();
       });
@@ -273,7 +273,7 @@ describe("MonitorModeContext", () => {
     const first = identities[identities.length - 1];
     expect(first).toBeTypeOf("function");
 
-    for (const testId of ["nav-accounts", "nav-timeline", "nav-settings"] as const) {
+    for (const testId of ["nav-sources", "nav-timeline", "nav-settings"] as const) {
       act(() => {
         (container.querySelector(`[data-testid="${testId}"]`) as HTMLButtonElement).click();
       });
@@ -315,7 +315,7 @@ describe("MonitorModeContext", () => {
       // act so the location-match effect never sees the pending target.
       act(() => {
         (container.querySelector('[data-testid="open-intelligence"]') as HTMLButtonElement).click();
-        (container.querySelector('[data-testid="nav-accounts"]') as HTMLButtonElement).click();
+        (container.querySelector('[data-testid="nav-sources"]') as HTMLButtonElement).click();
       });
       await flush();
 

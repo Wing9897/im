@@ -106,7 +106,7 @@
   "empty": {
     "noTasksTitle": "尚未建立情报任务",
     "noTasksDescription": "先建立至少一个「情报任务」或「网络情报任务」，分析完成后，这里才会开始出现整理好的重点内容。",
-    "noTasksHint": "如果你已完成帐号与频道设定，下一步通常是到任务设定新增「情报任务」或「网络情报任务」类型任务。",
+    "noTasksHint": "如果你已完成来源与频道设定，下一步通常是到任务设定新增「情报任务」或「网络情报任务」类型任务。",
     "filteredBothTitle": "找不到符合条件的情报",
     "filteredBothDescription": "目前的筛选条件没有对应到任何结果。",
     "filteredSearchTitle": "找不到符合搜索条件的情报",

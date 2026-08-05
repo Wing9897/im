@@ -29,18 +29,18 @@
     "filteredTitle": "目前没有符合条件的讯息",
     "noSourcesTitle": "尚未开始接收实时讯息",
     "noneTitle": "目前还没有讯息",
-    "filteredDescription": "目前的帐号、频道、时段或搜索条件把讯息全部筛掉了。",
+    "filteredDescription": "目前的来源、频道、时段或搜索条件把讯息全部筛掉了。",
     "noSourcesDescription": "先到来源管理新增并连接来源，之后这里才会开始显示收到的讯息。",
     "noneDescription": "监控已就绪，但目前资料库里还没有可显示的讯息。等待新讯息进来后，列表会自动更新。",
     "filteredHint": "清除筛选后可以快速确认是不是条件太严格，而不是系统没有在收讯。",
     "noSourcesHint": "如果已经有来源但仍没有讯息，也请确认任务与频道设定是否已完成。",
-    "noneHint": "若长时间没有新资料，可检查帐号连线状态与频道设定。"
+    "noneHint": "若长时间没有新资料，可检查来源连线状态与频道设定。"
   },
   "cta": {
     "clearFilters": "清除筛选",
-    "goToSources": "前往帐号管理",
+    "goToSources": "前往来源管理",
     "viewTasks": "查看任务设定",
-    "viewSourceStatus": "查看帐号状态"
+    "viewSourceStatus": "查看来源状态"
   },
   "sections": {
     "wall": "讯息墙",
