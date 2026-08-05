@@ -18,6 +18,7 @@ const generatedDirectories = [
   ".vitest",
   ".coverage",
   "coverage",
+  ".eval-runtime",
   "web/build-final.log",
   "node_modules/.vite",
   "node_modules/.vitest",
