@@ -7,39 +7,35 @@ The configured ``base_url`` is always honoured — the previous generation
 hard-coded the OpenAI/Gemini endpoints, breaking every "-compatible" deployment.
 
 Wire implementations live in ``server/analyzer/llm_providers.py``; JSON reply
-parsing in ``server/analyzer/llm_json.py``.
+parsing in ``server/analyzer/llm_json.py``; factory helpers in
+``llm_client_factory.py``; bound handlers in ``llm_client_handlers.py``.
 """
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, ClassVar
 
 import aiohttp
 
-from server.analyzer.llm_config import (
-    LlmConfig,
-    canonical_provider,
-    load_agent_llm_config,
-    load_llm_config,
+from server.analyzer.llm_client_factory import (
+    client_from_db,
+    client_from_db_for_agent,
+    client_from_draft,
+    client_from_resolved_config,
 )
-from server.analyzer.llm_providers import (
-    LlmClientError,
-    complete_gemini,
-    complete_ollama,
-    complete_openai_responses_web_search,
-    complete_openai_style,
-    probe_gemini,
-    probe_ollama,
-    probe_openai_style,
+from server.analyzer.llm_client_handlers import (
+    complete_gemini_bound,
+    complete_ollama_bound,
+    complete_openai_style_bound,
+    probe_gemini_bound,
+    probe_ollama_bound,
+    probe_openai_style_bound,
 )
-from server.config import CONFIG_DEFAULTS, get_config_int
+from server.analyzer.llm_config import load_agent_llm_config, load_llm_config
+from server.analyzer.llm_providers import LlmClientError
 from server.db.database import Database
 from server.outbound import validate_outbound_url
-from server.secrets import MASKED_SECRET
-
-logger = logging.getLogger(__name__)
 
 #: llm_provider value -> canonical name. The canonical name doubles as the
 #: system_config key prefix ({prefix}_base_url / {prefix}_model / {prefix}_api_key)
@@ -96,60 +92,22 @@ class ConfigurableLlmClient:
         self._session: aiohttp.ClientSession | None = None
 
     @classmethod
-    def _from_resolved_config(cls, config: LlmConfig, timeout_seconds: int) -> "ConfigurableLlmClient":
-        base_url = config["base_url"]
-        if not base_url:
-            base_url = CONFIG_DEFAULTS.get(f"{config['provider']}_base_url", "")
-        return cls(
-            provider=config["provider"],
-            model=config["model"],
-            api_key=config["api_key"],
-            base_url=base_url,
-            timeout_seconds=timeout_seconds,
-            allow_loopback=config["provider_raw"] in ("ollama", "openai_compatible"),
-            ollama_thinking_enabled=config["ollama_thinking_enabled"],
-        )
+    def _from_resolved_config(cls, config, timeout_seconds: int) -> "ConfigurableLlmClient":
+        return client_from_resolved_config(cls, config, timeout_seconds)
 
     @classmethod
     async def from_db(cls, db: Database) -> "ConfigurableLlmClient":
-        config = await load_llm_config(db)
-        timeout = await get_config_int(db, "llm_generation_timeout")
-        return cls._from_resolved_config(config, timeout)
+        return await client_from_db(cls, db)
 
     @classmethod
     async def from_db_for_agent(cls, db: Database) -> "ConfigurableLlmClient":
         """Build a client using ``assistant_llm_provider`` (follow / override)."""
-        config = await load_agent_llm_config(db)
-        timeout = await get_config_int(db, "llm_generation_timeout")
-        return cls._from_resolved_config(config, timeout)
+        return await client_from_db_for_agent(cls, db)
 
     @classmethod
     async def from_draft(cls, db: Database, draft: dict[str, Any]) -> "ConfigurableLlmClient":
         """Build a one-off client from unsaved UI draft values."""
-        saved = await load_llm_config(db)
-        raw_provider = str(draft.get("llmProvider") or saved["provider_raw"] or "ollama").strip()
-        canonical = canonical_provider(raw_provider)
-        base_url = str(draft.get("llmBaseUrl") or saved["base_url"] or "").strip()
-        if not base_url:
-            base_url = CONFIG_DEFAULTS.get(f"{canonical}_base_url", "")
-        model = str(draft.get("llmModel") or saved["model"] or "").strip()
-        draft_api_key = draft.get("llmApiKey")
-        api_key = str(saved["api_key"] if draft_api_key in (None, MASKED_SECRET) else draft_api_key)
-        draft_thinking = draft.get("ollamaThinkingEnabled")
-        if draft_thinking is None:
-            ollama_thinking_enabled = saved["ollama_thinking_enabled"]
-        else:
-            ollama_thinking_enabled = bool(draft_thinking)
-        timeout = await get_config_int(db, "llm_generation_timeout")
-        return cls(
-            provider=canonical,
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
-            timeout_seconds=timeout,
-            allow_loopback=raw_provider in ("ollama", "openai_compatible"),
-            ollama_thinking_enabled=ollama_thinking_enabled,
-        )
+        return await client_from_draft(cls, db, draft)
 
     def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
@@ -163,87 +121,14 @@ class ConfigurableLlmClient:
     def _wire_key(self) -> str | None:
         return _PROVIDER_WIRE_KEY.get(self.provider)
 
-    async def _complete_ollama(
-        self,
-        session: aiohttp.ClientSession,
-        messages: list[dict],
-        temperature: float,
-        json_mode: bool,
-        max_output_tokens: int | None,
-        native_web_search: str | None = None,
-    ) -> dict:
-        del native_web_search  # Ollama has no hosted web search.
-        return await complete_ollama(
-            session,
-            base_url=self.base_url,
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            json_mode=json_mode,
-            think=self.ollama_thinking_enabled,
-            max_output_tokens=max_output_tokens,
-        )
-
-    async def _complete_openai_style(
-        self,
-        session: aiohttp.ClientSession,
-        messages: list[dict],
-        temperature: float,
-        json_mode: bool,
-        max_output_tokens: int | None,
-        native_web_search: str | None = None,
-    ) -> dict:
-        if native_web_search == "openai":
-            return await complete_openai_responses_web_search(
-                session,
-                base_url=self.base_url,
-                api_key=self.api_key,
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                json_mode=json_mode,
-                max_output_tokens=max_output_tokens,
-            )
-        return await complete_openai_style(
-            session,
-            base_url=self.base_url,
-            api_key=self.api_key,
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            json_mode=json_mode,
-            max_output_tokens=max_output_tokens,
-        )
-
-    async def _complete_gemini(
-        self,
-        session: aiohttp.ClientSession,
-        messages: list[dict],
-        temperature: float,
-        json_mode: bool,
-        max_output_tokens: int | None,
-        native_web_search: str | None = None,
-    ) -> dict:
-        return await complete_gemini(
-            session,
-            base_url=self.base_url,
-            api_key=self.api_key,
-            model=self.model,
-            messages=messages,
-            temperature=temperature,
-            json_mode=json_mode,
-            max_output_tokens=max_output_tokens,
-            google_search=native_web_search == "gemini",
-        )
-
-    async def _probe_ollama(self, session: aiohttp.ClientSession) -> None:
-        await probe_ollama(session, base_url=self.base_url)
-
-    async def _probe_openai_style(self, session: aiohttp.ClientSession) -> None:
-        await probe_openai_style(session, base_url=self.base_url, api_key=self.api_key)
-
-    async def _probe_gemini(self, session: aiohttp.ClientSession) -> None:
-        await probe_gemini(session, base_url=self.base_url, api_key=self.api_key)
+    # Bound names retained for tests that patch ``_COMPLETE_HANDLERS`` entries
+    # keyed to these callables via the class attribute map below.
+    _complete_ollama = complete_ollama_bound
+    _complete_openai_style = complete_openai_style_bound
+    _complete_gemini = complete_gemini_bound
+    _probe_ollama = probe_ollama_bound
+    _probe_openai_style = probe_openai_style_bound
+    _probe_gemini = probe_gemini_bound
 
     async def complete(
         self,
@@ -340,3 +225,10 @@ ConfigurableLlmClient._PROBE_HANDLERS = {
     "openai_style": ConfigurableLlmClient._probe_openai_style,
     "gemini": ConfigurableLlmClient._probe_gemini,
 }
+
+# Stable re-exports used by callers / tests.
+__all__ = [
+    "ConfigurableLlmClient",
+    "load_agent_llm_config",
+    "load_llm_config",
+]

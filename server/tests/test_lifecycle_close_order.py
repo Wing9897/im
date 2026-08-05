@@ -15,6 +15,7 @@ import server.analysis_control as analysis_control
 import server.analyzer.geocoding as geocoding
 import server.main as main_module
 import server.scheduler.manager as scheduler_module
+import server.scheduler.manager_pipelines as manager_pipelines
 from server.collector.manager import CollectorManager
 from server.db.database import Database
 from server.scheduler.manager import SchedulerManager
@@ -126,7 +127,7 @@ async def _start_blocked_scheduler_batch(
         # Non-project mode so `_execute_scheduled` routes to execute_batch.
         return {"analysis_mode": "intel_event"}
 
-    monkeypatch.setattr(scheduler_module, "execute_batch", blocked_execute_batch)
+    monkeypatch.setattr(manager_pipelines, "execute_batch", blocked_execute_batch)
     manager._db = SimpleNamespace(fetch_one=fake_fetch_one)  # type: ignore[assignment]
     assert manager._try_acquire()
     manager._spawn_batch("blocked-task")

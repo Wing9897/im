@@ -93,14 +93,14 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
 | `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
 | `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; shared by HTTP and non-HTTP callers) |
-| `api/routes/weather.py` | Thin route over `services/weather.py` — Open-Meteo／fallback proxy (`GET /api/v1/weather/*`) |
+| `api/routes/weather.py` | Thin route over `services/weather.py` façade — providers in `weather_providers.py`, HTTP pool in `weather_http.py` (`GET /api/v1/weather/*`) |
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
 | `db/` | SQLite persistence via aiosqlite — current baseline **v15** (`SCHEMA_SEMVER` `0.1.0-beta.16`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
-| `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
+| `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), project drain/wave (`project_tick_drain` / `project_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
 | `collector/` | Platform adapters — Telegram, Discord, RSS, HTTP poll, MQTT, Email (IMAP poll + UID cursors; helpers in `email_imap_fetch.py` / `email_imap_mailbox.py` / `email_imap_poll.py`) — with automatic reconnect/backoff |
 | `collector/adapter_factory.py` | **Input registry:** `ADAPTER_BUILDERS` keyed by `domain/collector_platforms.COLLECTOR_PLATFORMS` → `build_adapter` |
 | `domain/collector_platforms.py` | Leaf platform vocabulary (DDL + factory + FE mirror) |
@@ -115,7 +115,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `collector/email_imap_fetch.py` | IMAP fetch / UID cursor helpers (public entry remains `email_imap.py`) |
 | `collector/email_imap_mailbox.py` | IMAP mailbox open／verify／multi-folder fetch／mark-seen helpers |
 | `collector/email_imap_poll.py` | IMAP poll-once cycle + folder cursor／UIDVALIDITY persistence |
-| `analyzer/` | AnalysisEngine + configurable LLM client (Ollama, OpenAI, Gemini, OpenRouter), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `web_intel` Agent multi-round ticks in `scheduler/web_intel_tick.py` — optional message gate when channels bound; `project` closed-loop Agent ticks in `scheduler/project_tick.py`; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
+| `analyzer/` | AnalysisEngine + configurable LLM client façade (`llm_client.py` + `llm_client_factory` / `llm_client_handlers` / `llm_providers`), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `web_intel` Agent multi-round ticks in `scheduler/web_intel_tick.py` — optional message gate when channels bound; `project` closed-loop Agent ticks in `scheduler/project_tick.py`; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
 | `prompts/` | **System / schema prompt** string library (`analysis` / `assistant` / `web_intel` / `clock` / …) + `locale.py` (UI locale normalize + output-language directive). Find wording here; assembly lives in `analyzer/prompt.py` / `agent/runtime_prompt.py` (facade `agent/runtime.py`) / `scheduler/web_intel_tick.py`. This is **not** the user-facing task template catalog — that lives in `presets/task_presets.py` and has zh-Hant UI locale as its display-text source of truth ([`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `prompts/clock.py` | `current_time_prompt_block` — injects wall-clock context into analysis / agent prompts (deep-import by design; not re-exported from `prompts/__init__.py`) |
 | `agent/` | Text Agent runtime + tool registry (`calendar.*` / `messages.search` / optional `web.search`; `POST /api/v1/agent/chat`); orchestration façade `runtime.py` with `runtime_prompt`／`runtime_complete`／`runtime_parse`／`runtime_tool_round`; see [Agent / assistant](#agent--assistant) |
@@ -125,13 +125,15 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
 | `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus write／dismiss services `user_events.py` + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`items`／`imports`／`dismissals`／`user-events`). |
 | `services/task_writes.py` | Task-write rules shared by `POST/PUT /api/v1/tasks` and the calendar agent tools: RRULE validation + canonical storage (no `RRULE:` prefix), recurring-only recurrence gate, `HH:MM` clock normalize |
+| `services/task_crud.py` | Task CRUD façade (`task_crud_list` / `task_crud_mutate`) for REST catalog + mutations |
+| `services/recurring_task_writes.py` | Recurring-task write façade (`recurring_task_create` / `recurring_task_patch` / `recurring_task_schedule`) |
 | `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
 | `calendar/user_events.py` | Shared CRUD for manual UI + assistant calendar tools (wire shape via `wire/serializers.serialize_user_event`) |
 | `actions/` | Automated responses — Telegram send, Discord send, HTTP webhook, MQTT publish |
 | `outbound.py` | Outbound notify dispatch helpers used by actions |
 | `ingestion.py` | Shared message ingestion (channel upsert + dedup insert) |
 | `auth.py` | Bearer auth: API key **or** device access token; localhost bypass; remote write gate |
-| `device_auth.py` | Device sessions, opaque token hashing |
+| `device_auth.py` | Device-session façade — token issue (`device_token_issue`) + session verify/list (`device_session_ops`) |
 | `admin_auth.py` | Singleton admin account (argon2 hash / verify) |
 | `sse.py` | SSE event broadcaster (`/api/v1/events`; route module in `api/routes/events.py`); `publish_resource_modified` is the only place the `resource_modified` payload is built (REST routes via `api/deps.py`, agent writes via `agent/tools_registry.py`) |
 | `errors.py` | Global exception handlers producing structured error responses |
