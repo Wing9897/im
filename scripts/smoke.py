@@ -99,11 +99,11 @@ def main() -> int:
     # 4. External ingestion (single + duplicate)
     message_id = f"smoke-{uuid.uuid4().hex[:12]}"
     message = {
-        "channel_id": "smoke-channel",
+        "channelId": "smoke-channel",
         "platform": "telegram",
-        "platform_message_id": message_id,
+        "platformMessageId": message_id,
         "content": "smoke test message",
-        "sender_name": "SmokeBot",
+        "senderName": "SmokeBot",
         "metadata": {"group": "smoke"},
     }
     status, body = api("POST", "/api/v1/messages", message, timeout=15)
