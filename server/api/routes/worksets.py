@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified, require_row
+from server.api.schemas.requests import WorksetCreateBody, WorksetUpdateBody
 from server.api.schemas.responses.worksets import WorksetDeleteResponse, WorksetResponse
 from server.db.database import TransactionDb
 from server.errors import FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, http_error
@@ -24,18 +24,6 @@ from server.wire.serializers import serialize_workset
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 router = APIRouter(prefix="/api/v1/worksets", tags=["worksets"], dependencies=API_DEPS)
-
-
-class WorksetCreateBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str = Field(min_length=1, max_length=120)
-
-
-class WorksetUpdateBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    name: str = Field(min_length=1, max_length=120)
 
 
 def _notify(request: Request, workset_id: str, action: str) -> None:

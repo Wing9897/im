@@ -54,7 +54,7 @@ export function SettingsApiPage() {
             <Link to="/account/keys" className={linkClass}>
               {t("apiDocs.webhook.linkKeys")}
             </Link>
-            <Link to="/accounts?tab=http&mode=webhook" className={linkClass}>
+            <Link to="/sources?tab=http&mode=webhook" className={linkClass}>
               {t("apiDocs.webhook.linkSources")}
             </Link>
           </div>

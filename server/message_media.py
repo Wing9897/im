@@ -35,16 +35,16 @@ class MessageMediaService:
         if str(row["platform"]) != "telegram":
             raise MediaServiceError(404, "Media proxy only supports Telegram in v1")
 
-        account_id = row.get("account_id")
-        if not account_id:
-            raise MediaServiceError(503, "Message has no linked account")
+        source_id = row.get("source_id")
+        if not source_id:
+            raise MediaServiceError(503, "Message has no linked source")
         if self._collector is None:
             raise MediaServiceError(503, "Collector is not running")
 
-        adapter = self._collector.adapters.get(str(account_id))
+        adapter = self._collector.adapters.get(str(source_id))
         fetch_media = getattr(adapter, "fetch_media_bytes", None)
         if fetch_media is None:
-            raise MediaServiceError(503, "Telegram account is not connected")
+            raise MediaServiceError(503, "Telegram source is not connected")
 
         platform_message_id = row.get("platform_message_id")
         if not platform_message_id:

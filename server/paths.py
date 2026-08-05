@@ -65,7 +65,7 @@ def default_db_path() -> Path:
 
 
 def sessions_dir() -> Path:
-    """Directory for Telegram ``{account_id}.session.txt`` tokens."""
+    """Directory for Telegram ``{source_id}.session.txt`` tokens."""
     configured = os.environ.get(SESSIONS_DIR_ENV, "").strip()
     if configured:
         return Path(configured).expanduser()

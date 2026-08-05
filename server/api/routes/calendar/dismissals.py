@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Query, Request, Response
-from pydantic import BaseModel
 
 from server.api.deps import get_db, publish_resource_modified
+from server.api.schemas.requests import TimelineDismissalBody
 from server.api.schemas.responses import TimelineDismissalResponse
 from server.calendar.timeline_dismissals import (
     TimelineDismissalValidationError,
@@ -24,12 +24,6 @@ _DISMISS_RESOURCE_TYPE: dict[str, str] = {
     "user": "user_event",
     "item": "item",
 }
-
-
-class TimelineDismissalBody(BaseModel):
-    source: str
-    eventId: str
-    model_config = {"extra": "forbid"}
 
 
 def _http_from_validation(exc: TimelineDismissalValidationError):

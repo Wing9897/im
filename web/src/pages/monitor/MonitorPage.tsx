@@ -47,7 +47,7 @@ export function MonitorPage() {
   const { t } = useTranslation("monitor");
   const {
     messages,
-    accounts,
+    sources,
     channels,
     channelsReady,
     filters,
@@ -167,7 +167,7 @@ export function MonitorPage() {
           <FilterBar
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            accounts={accounts}
+            sources={sources}
             channels={channels}
             onReset={resetFilters}
             showChips={false}
@@ -195,26 +195,26 @@ export function MonitorPage() {
           title={
             hasActiveFilters
               ? t("empty.filteredTitle")
-              : accounts.length === 0
-                ? t("empty.noAccountsTitle")
+              : sources.length === 0
+                ? t("empty.noSourcesTitle")
                 : t("empty.noneTitle")
           }
           description={
             hasActiveFilters
               ? t("empty.filteredDescription")
-              : accounts.length === 0
-                ? t("empty.noAccountsDescription")
+              : sources.length === 0
+                ? t("empty.noSourcesDescription")
                 : t("empty.noneDescription")
           }
           hint={
             hasActiveFilters
               ? t("empty.filteredHint")
-              : accounts.length === 0
-                ? t("empty.noAccountsHint")
+              : sources.length === 0
+                ? t("empty.noSourcesHint")
                 : t("empty.noneHint")
           }
           illustration={
-            accounts.length === 0 ? (
+            sources.length === 0 ? (
               <Radio size={48} color="var(--accent)" strokeWidth={1.5} aria-hidden="true" />
             ) : undefined
           }
@@ -227,13 +227,13 @@ export function MonitorPage() {
               >
                 {t("cta.clearFilters")}
               </Button>
-            ) : accounts.length === 0 ? (
+            ) : sources.length === 0 ? (
               <>
-                <EmptyStateLink to="/accounts">{t("cta.goToAccounts")}</EmptyStateLink>
+                <EmptyStateLink to="/sources">{t("cta.goToAccounts")}</EmptyStateLink>
                 <EmptyStateLink to="/tasks">{t("cta.viewTasks")}</EmptyStateLink>
               </>
             ) : (
-              <EmptyStateLink to="/accounts">{t("cta.viewAccountStatus")}</EmptyStateLink>
+              <EmptyStateLink to="/sources">{t("cta.viewSourceStatus")}</EmptyStateLink>
             )
           }
         />

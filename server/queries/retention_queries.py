@@ -5,11 +5,25 @@ from __future__ import annotations
 from server.db.database import Database
 
 BATCH_SIZE = 1000
+_DELETE_BY_ID_TABLES = frozenset(
+    {
+        "action_trigger_history",
+        "analysis_batches",
+        "analysis_events",
+        "app_logs",
+        "device_access_tokens",
+        "device_sessions",
+        "trending_topics",
+        "user_events",
+    }
+)
 
 
 async def _delete_ids(db: Database, table: str, ids: list[str]) -> int:
     if not ids:
         return 0
+    if table not in _DELETE_BY_ID_TABLES:
+        raise ValueError(f"Unsupported retention table: {table}")
     placeholders = ",".join("?" for _ in ids)
     async with db.transaction() as conn:
         await conn.execute(f"DELETE FROM {table} WHERE id IN ({placeholders})", ids)

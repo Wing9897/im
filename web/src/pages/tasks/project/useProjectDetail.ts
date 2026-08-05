@@ -19,7 +19,7 @@ import { useAnalysisStatus } from "../../../context/AnalysisStatusContext";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import { pickLatestBatchAttention } from "../../../domain/analysis/batchAttention";
 import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
-import { useChannelsWithAccounts } from "../../../hooks/useChannelsWithAccounts";
+import { useChannelsWithSources } from "../../../hooks/useChannelsWithSources";
 import { toErrorMessage } from "../../../utils/errors";
 import { logWarn } from "../../../utils/logger";
 import type { ProjectTickStatus, TaskActivitySpan } from "../../../types/analysis";
@@ -36,7 +36,7 @@ export function useProjectDetail() {
   const navigate = useNavigate();
   const { taskId = "" } = useParams<{ taskId: string }>();
   const { tasks, tasksLoading, taskLoadError, refreshTasks } = useTaskCatalog();
-  const { channels } = useChannelsWithAccounts();
+  const { channels } = useChannelsWithSources();
   const { activeAnalyses, queueStatus, analysisPaused } = useAnalysisStatus();
 
   const project = useMemo(

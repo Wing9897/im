@@ -59,9 +59,6 @@ export type { AnalysisMode } from "../domain/tasks/analysisModeCapabilities";
  */
 export type { TaskAnalysisTimeRange } from "../domain/tasks/taskAnalysisTimeRange";
 
-/** @deprecated Prefer {@link TaskAnalysisTimeRange} — alias kept for existing call sites. */
-export type { TaskAnalysisTimeRange as AnalysisTimeRange } from "../domain/tasks/taskAnalysisTimeRange";
-
 /**
  * Monitor／agent message-query windows — task windows plus ``12h``／``24h``.
  * Never persist ``12h``／``24h`` on tasks (use ``1d``／``48h``).

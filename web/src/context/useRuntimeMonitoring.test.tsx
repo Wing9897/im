@@ -181,7 +181,6 @@ describe("useRuntimeMonitoring", () => {
 
     expect(latestState!.collectorStatus).toBe("stopped");
     expect(latestState!.aiEngineStatus).toBe("unknown");
-    expect(latestState!.activeAnalysis).toBeNull();
 
     cleanupHarness(root, container);
   });
@@ -259,7 +258,6 @@ describe("useRuntimeMonitoring", () => {
     await flushAsyncWork();
 
     expect(latestState!.queueStatus).toEqual(queue);
-    expect(latestState!.activeAnalysis).toBeNull();
     cleanupHarness(root, container);
   });
 
@@ -392,7 +390,7 @@ describe("useRuntimeMonitoring", () => {
     cleanupHarness(root, container);
   });
 
-  it("captures the latest account status change from the shared runtime listener", async () => {
+  it("captures the latest source status change from the shared runtime listener", async () => {
     mockFetchCollectorStatus.mockResolvedValue("running");
     mockFetchQueueStatus.mockResolvedValue(emptyQueue());
     mockCheckAiEngineStatus.mockResolvedValue({
@@ -405,16 +403,16 @@ describe("useRuntimeMonitoring", () => {
     await flushAsyncWork();
 
     act(() => {
-      fireSseEvent("account_status_changed", {
-        accountId: "acct-1",
+      fireSseEvent("source_status_changed", {
+        sourceId: "acct-1",
         status: "connected",
       });
     });
 
     await flushAsyncWork();
 
-    expect(latestState!.lastAccountStatusChange).toEqual({
-      accountId: "acct-1",
+    expect(latestState!.lastSourceStatusChange).toEqual({
+      sourceId: "acct-1",
       status: "connected",
     });
     expect(mockFetchCollectorStatus.mock.calls.length).toBeGreaterThan(1);
@@ -459,7 +457,7 @@ describe("useRuntimeMonitoring", () => {
 
     const message: Message = {
       id: "message-1",
-      accountId: "acct-1",
+      sourceId: "acct-1",
       channelId: "channel-1",
       channelName: "Channel 1",
       platform: "telegram",
@@ -549,7 +547,7 @@ describe("useRuntimeMonitoring", () => {
       batchId: "b1",
       messageCount: 10,
     }});
-    onEvent!({ event: "account_status_changed", data: { accountId: "a1", status: "connected" } });
+    onEvent!({ event: "source_status_changed", data: { sourceId: "a1", status: "connected" } });
     onEvent!({ event: "messages_updated", data: { messages: [] } });
     onEvent!({ event: "analysis_completed", data: {
       taskId: "t1",

@@ -13,16 +13,16 @@ async def fetch_channel_rows(db: Database) -> list[dict[str, Any]]:
     )
 
 
-async def fetch_account_channel_rows(db: Database) -> list[dict[str, Any]]:
+async def fetch_source_channel_rows(db: Database) -> list[dict[str, Any]]:
     return await db.fetch_all(
-        "SELECT ac.account_id, ac.platform, ac.platform_id "
-        "FROM account_channels ac JOIN accounts a ON a.id = ac.account_id "
-        "ORDER BY a.created_at ASC"
+        "SELECT sc.source_id, sc.platform, sc.platform_id "
+        "FROM source_channels sc JOIN sources s ON s.id = sc.source_id "
+        "ORDER BY s.created_at ASC"
     )
 
 
-async def fetch_account_rows(db: Database) -> list[dict[str, Any]]:
-    return await db.fetch_all("SELECT * FROM accounts")
+async def fetch_source_rows(db: Database) -> list[dict[str, Any]]:
+    return await db.fetch_all("SELECT * FROM sources")
 
 
 async def fetch_latest_message_rows(

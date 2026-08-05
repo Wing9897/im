@@ -76,7 +76,7 @@ describe("activeAnalyses state machine correctness", () => {
       state = applyEvent(state, event);
     }
 
-    const activeAnalysis = state.size > 0 ? state.values().next().value ?? null : null;
-    expect(activeAnalysis).toBeNull();
+    const firstRunningBatch = state.size > 0 ? state.values().next().value ?? null : null;
+    expect(firstRunningBatch).toBeNull();
   });
 });

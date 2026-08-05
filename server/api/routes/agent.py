@@ -5,17 +5,17 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, AsyncIterator, Literal, Optional
+from typing import Any, AsyncIterator, Optional
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, Field
 from starlette.responses import StreamingResponse
 
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.api.deps import API_DEPS, get_db
-from server.api.schemas.responses import AgentChatResponse, TaskDraftPayload
+from server.api.schemas.requests import AgentChatBody
+from server.api.schemas.responses import AgentChatResponse
 from server.config import get_config_int
 
 logger = logging.getLogger(__name__)
@@ -35,20 +35,6 @@ _UNREACHABLE_MARKERS = (
     "遠端電腦拒絕",
     "远程计算机拒绝",
 )
-
-
-class AgentChatBody(BaseModel):
-    messages: list[dict[str, Any]] = Field(default_factory=list)
-    sessionId: Optional[str] = None
-    #: Optional UI locale (`zh-Hant` | `zh-Hans` | `en`); falls back to server ``ui_locale``.
-    locale: Optional[str] = None
-    #: Default target workset for calendar.create_event when the tool omits worksetId.
-    #: ``__user__`` / empty / omit → builtin system workset.
-    worksetId: Optional[str] = None
-    #: Page gate: only ``task_editor`` enables ``tasks.consult_advisor``.
-    surface: Optional[Literal["task_editor"]] = None
-    #: Live task form draft for the advisor (``tasks.consult_advisor``).
-    currentTask: Optional[TaskDraftPayload] = None
 
 
 def _agent_error_payload(exc: BaseException, *, session_id: Optional[str]) -> dict[str, Any]:

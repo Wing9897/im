@@ -87,7 +87,8 @@ async def test_concurrent_ingest_and_transaction_serialize(db: Database) -> None
         async with db.transaction() as conn:
             await asyncio.sleep(0.02)
             await conn.execute(
-                "INSERT INTO app_logs (id, time, level, category, kind, message) VALUES (?, ?, 'info', 'system', 'system', 'tx')",
+                "INSERT INTO app_logs (id, time, level, category, kind, message) "
+                "VALUES (?, ?, 'info', 'system', 'system', 'tx')",
                 (new_id(), now),
             )
 

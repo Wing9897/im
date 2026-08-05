@@ -24,7 +24,7 @@ describe("taskDetailFields", () => {
         platform: "telegram",
         platformId: "-1001",
         channelName: "Alpha 群",
-        accountIds: [],
+        sourceIds: [],
       },
     ]);
 

@@ -4,7 +4,7 @@ Interactive ``create_*`` flows and auto-connect share ``build_adapter``.
 Heavy client libraries stay lazy-imported inside each builder.
 
 To add a platform: append ``COLLECTOR_PLATFORMS``, implement the adapter,
-register a builder here, then align accounts routes and FE source plugins.
+register a builder here, then align sources routes and FE source plugins.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ AdapterBuilder = Callable[..., BasePlatformAdapter | None]
 
 
 def _build_telegram(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -40,17 +40,17 @@ def _build_telegram(
     api_hash = creds.get("api_hash")
     if not api_id or not api_hash:
         logger.warning(
-            "Telegram account %s missing api_id/api_hash in credentials",
-            account_id,
+            "Telegram source %s missing api_id/api_hash in credentials",
+            source_id,
         )
         return None
     from server.collector.telegram import TelegramAdapter
 
-    return TelegramAdapter(account_id, db, broadcaster, int(api_id), api_hash, session_dir)
+    return TelegramAdapter(source_id, db, broadcaster, int(api_id), api_hash, session_dir)
 
 
 def _build_discord(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -60,15 +60,15 @@ def _build_discord(
     del session_dir  # unused for discord
     bot_token = creds.get("bot_token")
     if not bot_token:
-        logger.warning("Discord account %s missing bot_token in credentials", account_id)
+        logger.warning("Discord source %s missing bot_token in credentials", source_id)
         return None
     from server.collector.discord import DiscordAdapter
 
-    return DiscordAdapter(account_id, db, broadcaster, bot_token)
+    return DiscordAdapter(source_id, db, broadcaster, bot_token)
 
 
 def _build_rss(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -78,16 +78,16 @@ def _build_rss(
     del session_dir
     feed_url = creds.get("feed_url")
     if not feed_url:
-        logger.warning("RSS account %s missing feed_url in credentials", account_id)
+        logger.warning("RSS source %s missing feed_url in credentials", source_id)
         return None
     from server.collector.rss import RssAdapter
 
     poll_raw = creds.get("poll_interval_seconds", DEFAULT_POLL_INTERVAL)
-    return RssAdapter(account_id, db, broadcaster, feed_url, clamp_poll_interval(poll_raw))
+    return RssAdapter(source_id, db, broadcaster, feed_url, clamp_poll_interval(poll_raw))
 
 
 def _build_http(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -97,20 +97,20 @@ def _build_http(
     del session_dir
     url = creds.get("url")
     if not url:
-        logger.warning("HTTP account %s missing url in credentials", account_id)
+        logger.warning("HTTP source %s missing url in credentials", source_id)
         return None
     from server.collector.http_poll import HttpPollAdapter, normalize_http_credentials
 
     try:
         normalized = normalize_http_credentials(creds)
     except ValueError as exc:
-        logger.warning("HTTP account %s invalid credentials: %s", account_id, exc)
+        logger.warning("HTTP source %s invalid credentials: %s", source_id, exc)
         return None
-    return HttpPollAdapter(account_id, db, broadcaster, normalized)
+    return HttpPollAdapter(source_id, db, broadcaster, normalized)
 
 
 def _build_mqtt(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -120,7 +120,7 @@ def _build_mqtt(
     del session_dir
     broker_url = creds.get("broker_url")
     if not broker_url:
-        logger.warning("MQTT account %s missing broker_url in credentials", account_id)
+        logger.warning("MQTT source %s missing broker_url in credentials", source_id)
         return None
     topics_raw = creds.get("topics") or []
     if isinstance(topics_raw, str):
@@ -130,7 +130,7 @@ def _build_mqtt(
     from server.collector.mqtt import MqttAdapter
 
     return MqttAdapter(
-        account_id,
+        source_id,
         db,
         broadcaster,
         broker_url,
@@ -142,7 +142,7 @@ def _build_mqtt(
 
 
 def _build_email(
-    account_id: str,
+    source_id: str,
     creds: dict,
     *,
     db: Database,
@@ -155,8 +155,8 @@ def _build_email(
     password = creds.get("password")
     if not imap_host or not username or not password:
         logger.warning(
-            "Email account %s missing imap_host/username/password in credentials",
-            account_id,
+            "Email source %s missing imap_host/username/password in credentials",
+            source_id,
         )
         return None
     from server.collector.email_imap import EmailImapAdapter
@@ -184,7 +184,7 @@ def _build_email(
         folder_uidvalidities={str(k): int(v) for k, v in folder_uidvalidities.items()},
     )
     return EmailImapAdapter(
-        account_id,
+        source_id,
         db,
         broadcaster,
         imap_host=normalized["imap_host"],
@@ -224,7 +224,7 @@ if REGISTERED_COLLECTOR_PLATFORMS != COLLECTOR_PLATFORMS:
 
 
 def build_adapter(
-    account_id: str,
+    source_id: str,
     platform: str,
     creds: dict,
     *,
@@ -232,7 +232,7 @@ def build_adapter(
     broadcaster: SseBroadcaster,
     session_dir: str,
 ) -> BasePlatformAdapter | None:
-    """Construct the adapter for an account (not yet connected).
+    """Construct the adapter for an source (not yet connected).
 
     Returns None when the platform is unsupported or credentials are missing.
     """
@@ -240,7 +240,7 @@ def build_adapter(
     if builder is None:
         return None
     return builder(
-        account_id,
+        source_id,
         creds,
         db=db,
         broadcaster=broadcaster,

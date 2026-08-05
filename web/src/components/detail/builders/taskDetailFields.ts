@@ -1,9 +1,9 @@
 import type { AnalysisTask } from "../../../types/tasks";
-import type { ChannelWithAccount } from "../../../types/channels";
+import type { ChannelWithSource } from "../../../types/channels";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 
 export function buildChannelNameById(
-  channels: readonly ChannelWithAccount[],
+  channels: readonly ChannelWithSource[],
 ): Map<string, string> {
   const map = new Map<string, string>();
   for (const channel of channels) {

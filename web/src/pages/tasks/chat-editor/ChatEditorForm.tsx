@@ -16,13 +16,13 @@ import { ChatAnalysisFields } from "./ChatAnalysisFields";
 import { ChatChannelSelector } from "./ChatChannelSelector";
 import { ChatScheduleOverrideFields } from "./ChatScheduleOverrideFields";
 import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../../../domain/tasks/scheduleDefaults";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import type { TaskFormState } from "./useChatEditor";
 
 interface ChatEditorFormProps {
   formState: TaskFormState;
   updateField: <K extends keyof TaskFormState>(field: K, value: TaskFormState[K]) => void;
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   onOpenChannelDialog: () => void;
 }
 
@@ -34,7 +34,7 @@ export function ChatEditorForm({
 }: ChatEditorFormProps) {
   const { t } = useTranslation("common");
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
-  const vis = getTaskModeFieldVisibility(formState.analysisMode, formState.channelIds);
+  const vis = getTaskModeFieldVisibility(formState.analysisMode);
   // Keep advanced collapsed by default; open when web_intel message-gate turns on.
   const webIntelGate = vis.isWebIntel && formState.channelIds.length > 0;
   const [optionalOpen, setOptionalOpen] = useState(webIntelGate);

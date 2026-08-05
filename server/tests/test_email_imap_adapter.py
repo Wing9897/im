@@ -11,13 +11,13 @@ from typing import AsyncIterator
 
 import pytest
 
-from server.account_credentials import mutate_account_credentials
 from server.collector.adapter_factory import build_adapter
 from server.collector.email_imap import EmailImapAdapter, from_addresses, html_to_text
 from server.db.database import Database
 from server.secrets import protect_text, unprotect_text
+from server.source_credentials import mutate_source_credentials
 from server.sse import SseBroadcaster
-from server.tests.db_helpers import insert_minimal_account
+from server.tests.db_helpers import insert_minimal_source
 
 
 @pytest.fixture
@@ -160,7 +160,7 @@ def _make_message(*, uid: int, subject: str = "Subject", body: str = "Body", msg
 
 
 async def test_email_adapter_initial_sync_and_cursor_persist(db, broadcaster, monkeypatch, tmp_path):
-    await insert_minimal_account(db, "a-email", "email")
+    await insert_minimal_source(db, "a-email", "email")
     messages = [_make_message(uid=10), _make_message(uid=11, subject="Second")]
     fake_mailbox = _FakeMailbox({"INBOX": messages})
 
@@ -192,7 +192,7 @@ async def test_email_adapter_initial_sync_and_cursor_persist(db, broadcaster, mo
         count = await db.fetch_value("SELECT COUNT(*) FROM messages")
         assert count == 2
 
-        row = await db.fetch_one("SELECT credentials FROM accounts WHERE id = 'a-email'")
+        row = await db.fetch_one("SELECT credentials FROM sources WHERE id = 'a-email'")
         assert row is not None
         creds = json.loads(unprotect_text(row["credentials"]))
         assert creds["folder_cursors"]["INBOX"] == 11
@@ -201,7 +201,7 @@ async def test_email_adapter_initial_sync_and_cursor_persist(db, broadcaster, mo
 
 
 async def test_email_adapter_connect_auth_failure_raises_friendly_value_error(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-email", "email")
+    await insert_minimal_source(db, "a-email", "email")
 
     async def allow_host(*_args, **_kwargs):
         return None
@@ -240,7 +240,7 @@ async def test_email_adapter_connect_auth_failure_raises_friendly_value_error(db
 
 
 async def test_email_adapter_incremental_uid_skips_old(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-email", "email")
+    await insert_minimal_source(db, "a-email", "email")
     messages = [_make_message(uid=12, subject="New only")]
     fake_mailbox = _FakeMailbox({"INBOX": messages})
 
@@ -340,14 +340,14 @@ async def test_folder_level_auth_failure_is_not_swallowed(db, broadcaster, monke
 
 
 async def test_atomic_credential_mutations_preserve_concurrent_patch_and_cursor(db):
-    await insert_minimal_account(db, "a-email", "email")
+    await insert_minimal_source(db, "a-email", "email")
     initial = {
         "password": "old-secret",
         "poll_interval_seconds": 60,
         "folder_cursors": {"INBOX": 5},
     }
     await db.execute(
-        "UPDATE accounts SET credentials = ? WHERE id = ?",
+        "UPDATE sources SET credentials = ? WHERE id = ?",
         (protect_text(json.dumps(initial)), "a-email"),
     )
 
@@ -363,11 +363,11 @@ async def test_atomic_credential_mutations_preserve_concurrent_patch_and_cursor(
         return current
 
     await asyncio.gather(
-        mutate_account_credentials(db, "a-email", patch_password),
-        mutate_account_credentials(db, "a-email", advance_cursor),
+        mutate_source_credentials(db, "a-email", patch_password),
+        mutate_source_credentials(db, "a-email", advance_cursor),
     )
 
-    row = await db.fetch_one("SELECT credentials FROM accounts WHERE id = ?", ("a-email",))
+    row = await db.fetch_one("SELECT credentials FROM sources WHERE id = ?", ("a-email",))
     assert row is not None
     credentials = json.loads(unprotect_text(row["credentials"]))
     assert credentials["password"] == "new-secret"
@@ -376,9 +376,9 @@ async def test_atomic_credential_mutations_preserve_concurrent_patch_and_cursor(
 
 
 async def test_uidvalidity_change_resets_stale_folder_cursor(db, broadcaster, monkeypatch):
-    await insert_minimal_account(db, "a-email-uid", "email")
+    await insert_minimal_source(db, "a-email-uid", "email")
     await db.execute(
-        "UPDATE accounts SET credentials = ? WHERE id = ?",
+        "UPDATE sources SET credentials = ? WHERE id = ?",
         (
             protect_text(
                 json.dumps(
@@ -408,7 +408,7 @@ async def test_uidvalidity_change_resets_stale_folder_cursor(db, broadcaster, mo
 
     await adapter._poll_once()
 
-    row = await db.fetch_one("SELECT credentials FROM accounts WHERE id = ?", ("a-email-uid",))
+    row = await db.fetch_one("SELECT credentials FROM sources WHERE id = ?", ("a-email-uid",))
     assert row is not None
     credentials = json.loads(unprotect_text(row["credentials"]))
     assert credentials["folder_cursors"] == {"INBOX": 2}

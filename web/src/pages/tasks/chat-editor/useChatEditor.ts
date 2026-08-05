@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChannelWithAccount, TaskTemplatePreset } from "../../../types";
-import { useChannelsWithAccounts } from "../../../hooks/useChannelsWithAccounts";
+import type { ChannelWithSource, TaskTemplatePreset } from "../../../types";
+import { useChannelsWithSources } from "../../../hooks/useChannelsWithSources";
 import {
   useTaskEditorState,
   type TaskFormState,
@@ -27,7 +27,7 @@ export interface UseChatEditorReturn {
   scheduleHydrateError: string | null;
   retryScheduleHydrate: () => void;
   applyPreset: (preset: TaskTemplatePreset) => void;
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
 }
 
 /**
@@ -38,7 +38,7 @@ export function useChatEditor(): UseChatEditorReturn {
   const {
     channels,
     error: channelsError,
-  } = useChannelsWithAccounts({ toastOnError: false });
+  } = useChannelsWithSources({ toastOnError: false });
 
   const isMountedRef = useRef(true);
   useEffect(() => {

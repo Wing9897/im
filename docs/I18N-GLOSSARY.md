@@ -69,7 +69,7 @@
 
 | 名稱／路徑 | 實際職責 |
 |------------|----------|
-| `components/channels/AccountChannelPickerContent`（+ `ChannelPickerDialogShell`／`ChannelSelectorDialog`） | **帳號／頻道** picker（選要監聽的來源頻道） |
+| `components/channels/SourceChannelPickerContent`（+ `ChannelPickerDialogShell`／`ChannelSelectorDialog`） | **帳號／頻道** picker（選要監聽的來源頻道） |
 | `pages/actions/ActionTypeSelector.tsx` | **ActionType** 瓦片選擇器（通知外發類型：Telegram Bot／Discord／HTTP／MQTT） |
 | `pages/actions/ActionTypeFields.tsx` | 依已選 ActionType 渲染對應表單欄位 |
 
@@ -96,7 +96,7 @@
 - UI chrome（篩選、分頁）跟隨當前 locale。
 - **新批次失敗日誌**在 `details` 存 `messageKey` + `messageParams`；Logs 列表／詳情／board widget 顯示時以 `domain/logs/resolveLogDisplayMessage` 再 `t()`，切語系可重翻。AI／LLM 失敗另保留 `failureKind`／`httpStatus`／`responseBody`（截斷片段，供 Settings→Logs 除錯）。
 - **舊日誌**仍是寫入時已翻成字串的 `message`（fallback）；前端 runtime 多數同時帶 `messageKey` 與 write-time `message`。
-- 後端英文 fallback SoT：`server/app_logging.py` `_BATCH_FAILURE_MESSAGE_EN`（落庫 `message` 預覽）與 `logs:templates.*`（顯示重翻）需保持語意對齊。其他高價值伺服器事件（`scheduler.*`／`account.error`／`retention.cleanup`）同樣走 `AppLog.record` + `messageKey`。
+- 後端英文 fallback SoT：`server/app_logging.py` `_BATCH_FAILURE_MESSAGE_EN`（落庫 `message` 預覽）與 `logs:templates.*`（顯示重翻）需保持語意對齊。其他高價值伺服器事件（`scheduler.*`／`source.error`／`retention.cleanup`）同樣走 `AppLog.record` + `messageKey`。
 
 ## 任務模板 Presets（顯示文案 SoT）
 

@@ -87,13 +87,13 @@ def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
 def test_overnight_imported_and_synthetic_paths_agree(monkeypatch) -> None:
     """Write-path dtend overnight + imported expand must match synthetic expand."""
     from server.calendar.occurrence_span import roll_end_if_overnight
-    from server.services.recurring_task_writes import _manual_end_anchor
+    from server.services.recurring_schedule_values import manual_end_anchor
 
     offset = timezone(timedelta(hours=8))
     monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
 
     dtstart = "2026-07-01T22:00:00"
-    dtend = _manual_end_anchor(dtstart, "06:00", is_all_day=False)
+    dtend = manual_end_anchor(dtstart, "06:00", is_all_day=False)
     assert dtend == "2026-07-02T06:00:00"
     assert roll_end_if_overnight(
         datetime.fromisoformat(dtstart),

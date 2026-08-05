@@ -1,10 +1,10 @@
 import { useMemo } from "react";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import { groupChannelsForPicker } from "../../../utils/groupChannelsForPicker";
 import { filterChannelsByQuery } from "../../../utils/channelPickerModel";
 
 export function useChannelPickerGroups(
-  channels: ChannelWithAccount[],
+  channels: ChannelWithSource[],
   query: string,
   hidePlatformHeaders: boolean,
 ) {

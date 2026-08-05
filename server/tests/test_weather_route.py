@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from server.api.routes import weather
+from server.services import weather
 from server.tests.contract_helpers import assert_keys
 
 WEATHER_DAILY_KEYS = ["time", "weather_code", "temperature_2m_max", "temperature_2m_min"]

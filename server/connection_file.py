@@ -2,7 +2,7 @@
 
 Lives under ``INTELLIGENCE_MONITOR_DATA_DIR`` (Electron userData). The
 ``resetPasswordForLocal`` flag defaults to false — arming it requires write
-access to this file (typically the OS account that owns the Desktop data dir).
+access to this file (typically the OS source that owns the Desktop data dir).
 """
 
 from __future__ import annotations

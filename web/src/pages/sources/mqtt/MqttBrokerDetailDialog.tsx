@@ -32,11 +32,11 @@ export function MqttBrokerDetailDialog({
       ariaLabel={t("mqtt.detailAria", { url: broker.brokerUrl })}
       title={
         <>
-          <span style={statusDotStyle(broker.account.status)} aria-hidden="true" />
+          <span style={statusDotStyle(broker.source.status)} aria-hidden="true" />
           {t("mqtt.fallbackName")}
         </>
       }
-      subtitle={formatStatusLabel(broker.account.status)}
+      subtitle={formatStatusLabel(broker.source.status)}
       error={broker.lastError}
       onClose={onClose}
       onEdit={onEdit}

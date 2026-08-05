@@ -115,7 +115,7 @@ def fetch_folder(
     last_uid: int | None,
     expected_uid_validity: int | None,
     *,
-    account_id: str,
+    source_id: str,
     initial_sync_days: int,
     initial_sync_max: int,
     sender_allowlist: list[str],
@@ -131,8 +131,8 @@ def fetch_folder(
     cursor_reset = last_uid is not None and expected_uid_validity != uid_validity
     if cursor_reset:
         logger.info(
-            "Resetting email cursor for account %s folder=%s (UIDVALIDITY %s -> %s)",
-            account_id,
+            "Resetting email cursor for source %s folder=%s (UIDVALIDITY %s -> %s)",
+            source_id,
             folder,
             expected_uid_validity,
             uid_validity,

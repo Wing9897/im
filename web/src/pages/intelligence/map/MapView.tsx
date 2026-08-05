@@ -16,9 +16,12 @@ import {
 import {
   CARTO_URL,
   CARTO_ATTR,
-  DEFAULT_CENTER,
-  DEFAULT_ZOOM,
 } from "./mapViewHelpers";
+import {
+  INTELLIGENCE_MAP_DEFAULT_CENTER,
+  INTELLIGENCE_MAP_DEFAULT_ZOOM,
+  SHARED_MAP_CONTAINER_OPTIONS,
+} from "../../../domain/intelligence/mapPresentation";
 import { ResetViewController } from "./ResetViewController";
 import { DetailCard } from "./DetailCard";
 import { ClusterList } from "./ClusterList";
@@ -101,10 +104,9 @@ function MapViewComponent({
       {/* Map area */}
       <div className={isFullscreen ? mapStageFullscreenClass : mapStageClass}>
         <MapContainer
-          center={DEFAULT_CENTER}
-          zoom={DEFAULT_ZOOM}
-          scrollWheelZoom={true}
-          zoomControl={false}
+          center={INTELLIGENCE_MAP_DEFAULT_CENTER}
+          zoom={INTELLIGENCE_MAP_DEFAULT_ZOOM}
+          {...SHARED_MAP_CONTAINER_OPTIONS}
           className={mapLeafletFillClass}
           style={{ width: "100%", height: "100%" }}
           maxBoundsViscosity={0}

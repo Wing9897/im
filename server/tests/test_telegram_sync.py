@@ -1,4 +1,4 @@
-"""Telegram dialog sync — iter_dialogs populates channels + account_channels."""
+"""Telegram dialog sync — iter_dialogs populates channels + source_channels."""
 
 from __future__ import annotations
 
@@ -46,15 +46,15 @@ async def test_sync_dialog_channels_persists_groups_and_links(tmp_path) -> None:
     await db.connect()
     await db.ensure_schema()
 
-    account_id = "acc-telegram-1"
+    source_id = "acc-telegram-1"
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (account_id,),
+        (source_id,),
     )
 
     adapter = TelegramAdapter(
-        account_id,
+        source_id,
         db,
         SseBroadcaster(),
         api_id=1,
@@ -77,8 +77,8 @@ async def test_sync_dialog_channels_persists_groups_and_links(tmp_path) -> None:
     assert channels[1]["channel_name"] == "Beta Channel"
 
     links = await db.fetch_all(
-        "SELECT platform_id FROM account_channels WHERE account_id = ? AND platform = 'telegram'",
-        (account_id,),
+        "SELECT platform_id FROM source_channels WHERE source_id = ? AND platform = 'telegram'",
+        (source_id,),
     )
     assert len(links) == 2
 
@@ -113,23 +113,23 @@ async def test_register_message_handlers_clears_before_reregister(tmp_path) -> N
     await db.connect()
     await db.ensure_schema()
 
-    account_id = "acc-telegram-handlers"
+    source_id = "acc-telegram-handlers"
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (account_id,),
+        (source_id,),
     )
     await db.execute(
         "INSERT INTO channels (platform, platform_id, channel_name, created_at) "
         "VALUES ('telegram', '-1001', 'Alpha', '2026-01-01T00:00:00Z')",
     )
     await db.execute(
-        "INSERT INTO account_channels (account_id, platform, platform_id) VALUES (?, 'telegram', '-1001')",
-        (account_id,),
+        "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', '-1001')",
+        (source_id,),
     )
 
     adapter = TelegramAdapter(
-        account_id,
+        source_id,
         db,
         SseBroadcaster(),
         api_id=1,
@@ -153,23 +153,23 @@ async def test_disconnect_clears_message_handlers(tmp_path) -> None:
     await db.connect()
     await db.ensure_schema()
 
-    account_id = "acc-telegram-disconnect"
+    source_id = "acc-telegram-disconnect"
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (account_id,),
+        (source_id,),
     )
     await db.execute(
         "INSERT INTO channels (platform, platform_id, channel_name, created_at) "
         "VALUES ('telegram', '-1002', 'Beta', '2026-01-01T00:00:00Z')",
     )
     await db.execute(
-        "INSERT INTO account_channels (account_id, platform, platform_id) VALUES (?, 'telegram', '-1002')",
-        (account_id,),
+        "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', '-1002')",
+        (source_id,),
     )
 
     adapter = TelegramAdapter(
-        account_id,
+        source_id,
         db,
         SseBroadcaster(),
         api_id=1,
@@ -221,15 +221,15 @@ async def test_connect_succeeds_when_background_dialog_sync_is_locked(tmp_path, 
     await db.connect()
     await db.ensure_schema()
 
-    account_id = "acc-telegram-connect"
+    source_id = "acc-telegram-connect"
     await db.execute(
-        "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
         "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (account_id,),
+        (source_id,),
     )
 
     adapter = TelegramAdapter(
-        account_id,
+        source_id,
         db,
         SseBroadcaster(),
         api_id=1,

@@ -4,7 +4,7 @@
 // ============================================================
 
 export * from "./common";
-export * from "./accounts";
+export * from "./sources";
 export * from "./channels";
 export * from "./messages";
 export * from "./tasks";
@@ -12,7 +12,6 @@ export * from "./analysis";
 export * from "./events";
 export * from "./settings";
 export * from "./logs";
-export * from "./sources";
 export * from "./actions";
 export * from "./calendar";
 export * from "./taskFormFields";

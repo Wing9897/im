@@ -88,7 +88,7 @@ vi.mock("../../api/messages", () => ({
     messages: [
       {
         id: "msg-1",
-        accountId: null,
+        sourceId: null,
         platform: "telegram",
         platformId: "c1",
         channelName: "頻道",
@@ -144,14 +144,14 @@ vi.mock("../../context/AnalysisStatusContext", async () =>
 );
 
 vi.mock("../../api/channels", () => ({
-  listChannelsWithAccounts: vi.fn(async () => [
+  listChannelsWithSources: vi.fn(async () => [
     {
       id: "ch-1",
       platform: "telegram",
       platformId: "p1",
       name: "頻道一",
-      accountId: "acc-1",
-      accountName: "帳號",
+      sourceId: "acc-1",
+      sourceName: "帳號",
     },
   ]),
 }));

@@ -77,7 +77,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
         openCaption();
         return;
       }
-      if (item.action === "open-ops-board") {
+      if (item.action === "open-board") {
         setMonitorMode("canvas");
         return;
       }

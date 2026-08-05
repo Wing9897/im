@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import type { Account } from "../types";
+import type { Source } from "../types";
 import type {
   DiscordBotInfo,
   HttpSourceInfo,
@@ -13,11 +13,11 @@ import { INITIAL_RSS_FORM } from "../pages/sources/rss/providers/types";
 import { INITIAL_EMAIL_FORM } from "../pages/sources/email/emailFormModel";
 import { INITIAL_HTTP_FORM } from "../pages/sources/http/httpFormTypes";
 
-export function makeAccount(overrides: Partial<Account> = {}): Account {
+export function makeSource(overrides: Partial<Source> = {}): Source {
   return {
     id: "acc-1",
     platform: "rss",
-    name: "Account",
+    name: "Source",
     status: "connected",
     lastError: null,
     lastConnectedAt: null,
@@ -29,7 +29,7 @@ export function makeAccount(overrides: Partial<Account> = {}): Account {
 
 export function makeFeed(overrides: Partial<RssFeedItem> = {}): RssFeedItem {
   return {
-    account: makeAccount({ id: "rss-1", platform: "rss", name: "My Feed" }),
+    source: makeSource({ id: "rss-1", platform: "rss", name: "My Feed" }),
     channel: null,
     feedUrl: "https://example.com/feed.xml",
     pollIntervalSeconds: 300,
@@ -42,7 +42,7 @@ export function makeFeed(overrides: Partial<RssFeedItem> = {}): RssFeedItem {
 
 export function makeBot(overrides: Partial<DiscordBotInfo> = {}): DiscordBotInfo {
   return {
-    account: makeAccount({ id: "discord-1", platform: "discord", name: "My Bot" }),
+    source: makeSource({ id: "discord-1", platform: "discord", name: "My Bot" }),
     channels: [],
     ...overrides,
   };
@@ -50,7 +50,7 @@ export function makeBot(overrides: Partial<DiscordBotInfo> = {}): DiscordBotInfo
 
 export function makeBroker(overrides: Partial<MqttBrokerInfo> = {}): MqttBrokerInfo {
   return {
-    account: makeAccount({ id: "mqtt-1", platform: "mqtt", name: "MQTT Broker" }),
+    source: makeSource({ id: "mqtt-1", platform: "mqtt", name: "MQTT Broker" }),
     brokerUrl: "mqtt://broker.example.com:1883",
     topics: ["sensors/+/data"],
     lastError: null,
@@ -61,7 +61,7 @@ export function makeBroker(overrides: Partial<MqttBrokerInfo> = {}): MqttBrokerI
 
 export function makeHttpSource(overrides: Partial<HttpSourceInfo> = {}): HttpSourceInfo {
   return {
-    account: makeAccount({ id: "http-1", platform: "http", name: "HTTP Source" }),
+    source: makeSource({ id: "http-1", platform: "http", name: "HTTP Source" }),
     channel: null,
     url: "https://example.com/api",
     method: "GET",
@@ -83,7 +83,7 @@ export function makeHttpSource(overrides: Partial<HttpSourceInfo> = {}): HttpSou
 
 export function makeMailbox(overrides: Partial<EmailMailboxInfo> = {}): EmailMailboxInfo {
   return {
-    account: makeAccount({ id: "email-1", platform: "email", name: "user@gmail.com" }),
+    source: makeSource({ id: "email-1", platform: "email", name: "user@gmail.com" }),
     imapHost: "imap.gmail.com",
     imapPort: 993,
     useSsl: true,
@@ -174,7 +174,7 @@ export function discordState(overrides: Record<string, unknown> = {}) {
 export function mqttState(overrides: Record<string, unknown> = {}) {
   const initialLoading = (overrides.initialLoading ?? overrides.loading ?? false) as boolean;
   return {
-    accounts: [],
+    sources: [],
     initialLoading,
     isRefreshing: (overrides.isRefreshing ?? false) as boolean,
     error: null,
@@ -192,10 +192,10 @@ export function mqttState(overrides: Record<string, unknown> = {}) {
     setRemoveTarget: vi.fn(),
     removing: false,
     retrying: false,
-    fetchMqttAccounts: vi.fn(),
+    fetchMqttSources: vi.fn(),
     handleRetry: vi.fn(),
-    handleAddMqttAccount: vi.fn(async () => {}),
-    handleRemoveMqttAccount: vi.fn(async () => {}),
+    handleAddMqttSource: vi.fn(async () => {}),
+    handleRemoveMqttSource: vi.fn(async () => {}),
     editTarget: null,
     editForm: null,
     setEditForm: vi.fn(),

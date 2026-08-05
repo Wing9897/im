@@ -9,7 +9,7 @@ export type LogLevel = "info" | "success" | "warning" | "error";
 
 /** Log category for classification ("frontend" = browser-originated logs
     accepted by POST /api/v1/logs). */
-export type LogCategory = "analysis" | "collector" | "account" | "system" | "frontend";
+export type LogCategory = "analysis" | "collector" | "source" | "system" | "frontend";
 
 /** OpenAPI wire shape for a stored / listed app log. */
 export type AppLogEntryPayload = components["schemas"]["AppLogEntryResponse"];

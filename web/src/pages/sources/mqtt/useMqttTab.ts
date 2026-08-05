@@ -1,13 +1,14 @@
 import { useCallback, useState } from "react";
 import {
   listMqttBrokers,
-  deleteAccount,
+  deleteSource,
   createMqttBroker,
   updateMqttBroker,
-} from "../../../api/accounts";
+} from "../../../api/sources";
 import type { MqttBrokerInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../useSourceListTab";
+import { useSourceEditController } from "../useSourceEditController";
 import { validateMqttBrokerUrl, validateMqttTopicList } from "../../../utils/configValidation";
 import i18n from "../../../i18n";
 import {
@@ -21,6 +22,18 @@ function validateMqttSourceForm(brokerUrl: string, topics: string[]): string | n
   return validateMqttBrokerUrl(brokerUrl) ?? validateMqttTopicList(topics);
 }
 
+const validateMqttEditForm = (form: MqttFormFields) =>
+  validateMqttSourceForm(form.brokerUrl, form.topics);
+const formatEditError = (error: unknown) =>
+  error instanceof Error ? error.message : String(i18n.t("sources:errors.updateFailed"));
+
+async function saveMqttSource(target: MqttBrokerInfo, form: MqttFormFields) {
+  const response = await updateMqttBroker(target.source.id, formToPatch(form));
+  if (response.status === "error" && response.errorMessage) {
+    throw new Error(response.errorMessage);
+  }
+}
+
 const INITIAL_MQTT_FORM: MqttFormFields = {
   brokerUrl: "",
   topics: [""],
@@ -29,33 +42,36 @@ const INITIAL_MQTT_FORM: MqttFormFields = {
   clientId: "",
 };
 
-const removeMqttBroker = (target: MqttBrokerInfo) => deleteAccount(target.account.id);
+const removeMqttBroker = (target: MqttBrokerInfo) => deleteSource(target.source.id);
 
 export function useMqttTab() {
   const {
-    items: accounts,
+    items: sources,
     initialLoading,
     isRefreshing,
     error,
     retrying,
-    fetchItems: fetchMqttAccounts,
+    fetchItems: fetchMqttSources,
     handleRetry,
     removeTarget,
     setRemoveTarget,
     removing,
-    confirmRemove: handleRemoveMqttAccount,
+    confirmRemove: handleRemoveMqttSource,
   } = useSourceListTab<MqttBrokerInfo>({ listFn: listMqttBrokers, removeFn: removeMqttBroker });
 
   const [form, setForm] = useState<MqttFormFields>(INITIAL_MQTT_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const { submitting, error: submitError, handleSubmit } = useFormSubmit();
 
-  const [editTarget, setEditTarget] = useState<MqttBrokerInfo | null>(null);
-  const [editForm, setEditForm] = useState<MqttFormFields | null>(null);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  const edit = useSourceEditController<MqttBrokerInfo, MqttFormFields>({
+    toForm: brokerToForm,
+    validate: validateMqttEditForm,
+    save: saveMqttSource,
+    refresh: fetchMqttSources,
+    formatError: formatEditError,
+  });
 
-  const handleAddMqttAccount = useCallback(async () => {
+  const handleAddMqttSource = useCallback(async () => {
     setFormError(null);
 
     const validationError = validateMqttSourceForm(form.brokerUrl, form.topics);
@@ -71,50 +87,14 @@ export function useMqttTab() {
       }
       setForm(INITIAL_MQTT_FORM);
       setFormError(null);
-      await fetchMqttAccounts();
+      await fetchMqttSources();
     });
-  }, [form, fetchMqttAccounts, handleSubmit]);
-
-  const openEditDialog = useCallback((broker: MqttBrokerInfo) => {
-    setEditTarget(broker);
-    setEditForm(brokerToForm(broker));
-    setEditError(null);
-  }, []);
-
-  const closeEditDialog = useCallback(() => {
-    setEditTarget(null);
-    setEditForm(null);
-    setEditError(null);
-  }, []);
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!editTarget || !editForm) return;
-    setEditError(null);
-    const validationError = validateMqttSourceForm(editForm.brokerUrl, editForm.topics);
-    if (validationError) {
-      setEditError(validationError);
-      return;
-    }
-
-    setEditSubmitting(true);
-    try {
-      const resp = await updateMqttBroker(editTarget.account.id, formToPatch(editForm));
-      if (resp.status === "error" && resp.errorMessage) {
-        throw new Error(resp.errorMessage);
-      }
-      closeEditDialog();
-      await fetchMqttAccounts();
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : String(i18n.t("sources:errors.updateFailed")));
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [closeEditDialog, editForm, editTarget, fetchMqttAccounts]);
+  }, [form, fetchMqttSources, handleSubmit]);
 
   const displayFormError = formError || submitError;
 
   return {
-    accounts,
+    sources,
     initialLoading,
     isRefreshing,
     error,
@@ -126,17 +106,10 @@ export function useMqttTab() {
     setRemoveTarget,
     removing,
     retrying,
-    fetchMqttAccounts,
+    fetchMqttSources,
     handleRetry,
-    handleAddMqttAccount,
-    handleRemoveMqttAccount,
-    editTarget,
-    editForm,
-    setEditForm,
-    editSubmitting,
-    editError,
-    openEditDialog,
-    closeEditDialog,
-    handleSaveEdit,
+    handleAddMqttSource,
+    handleRemoveMqttSource,
+    ...edit,
   };
 }

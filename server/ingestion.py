@@ -52,7 +52,7 @@ async def insert_message(
     db: Any,
     *,
     message_id: str,
-    account_id: Optional[str],
+    source_id: Optional[str],
     platform: str,
     platform_id: str,
     content: str,
@@ -72,12 +72,12 @@ async def insert_message(
 
     inserted = await db.execute(
         "INSERT OR IGNORE INTO messages "
-        "(id, account_id, platform, platform_id, platform_message_id, "
+        "(id, source_id, platform, platform_id, platform_message_id, "
         " sender_id, sender_name, content, timestamp, raw_data, created_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             message_id,
-            account_id,
+            source_id,
             platform,
             platform_id,
             platform_message_id,
@@ -107,7 +107,7 @@ async def insert_message(
     return serialize_message(
         {
             "id": message_id,
-            "account_id": account_id,
+            "source_id": source_id,
             "platform": platform,
             "platform_id": platform_id,
             "channel_name": effective_name,

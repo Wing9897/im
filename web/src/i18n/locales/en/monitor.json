@@ -27,20 +27,20 @@
   },
   "empty": {
     "filteredTitle": "No messages match your filters",
-    "noAccountsTitle": "Not receiving live messages yet",
+    "noSourcesTitle": "Not receiving live messages yet",
     "noneTitle": "No messages yet",
-    "filteredDescription": "Account, channel, time, or search filters excluded every message.",
-    "noAccountsDescription": "Add and connect an account under Accounts first — live messages will show up here.",
+    "filteredDescription": "Source, channel, time, or search filters excluded every message.",
+    "noSourcesDescription": "Add and connect a source under Sources first — live messages will show up here.",
     "noneDescription": "Monitor is ready, but the database has nothing to show yet. The list updates when new messages arrive.",
     "filteredHint": "Clear filters to check whether conditions are too strict, not that nothing is being received.",
-    "noAccountsHint": "If you already have accounts but no messages, also check tasks and channel setup.",
-    "noneHint": "If nothing arrives for a long time, check account connection status and channel settings."
+    "noSourcesHint": "If you already have sources but no messages, also check tasks and channel setup.",
+    "noneHint": "If nothing arrives for a long time, check source connection status and channel settings."
   },
   "cta": {
     "clearFilters": "Clear filters",
-    "goToAccounts": "Go to Accounts",
+    "goToSources": "Go to Sources",
     "viewTasks": "View Tasks",
-    "viewAccountStatus": "View account status"
+    "viewSourceStatus": "View source status"
   },
   "sections": {
     "wall": "Message wall",
@@ -60,8 +60,8 @@
     "time30d": "Last 30 days",
     "searchPlaceholder": "Search sender / channel / content",
     "searchAria": "Search messages",
-    "accountAria": "Filter by account",
-    "accountAll": "All accounts",
+    "sourceAria": "Filter by source",
+    "sourceAll": "All sources",
     "timeAria": "Filter by time",
     "channelSummary": "Channels",
     "channelEmpty": "No matching channels",
@@ -107,7 +107,7 @@
     "hideTech": "Hide technical info",
     "showTech": "Technical info",
     "platformMessageId": "Platform message ID: {id}",
-    "accountId": "Account ID: {id}",
+    "sourceId": "Source ID: {id}",
     "platformId": "Platform ID: {id}",
     "createdAt": "Created at: {time}",
     "rawDataLabel": "Raw Data: ",
@@ -118,11 +118,11 @@
     "notFound": "Could not find the specified message"
   },
   "metadata": {
-    "loadError": "Could not load account or channel filter data. Reload the page and try again."
+    "loadError": "Could not load source or channel filter data. Reload the page and try again."
   },
   "filterChip": {
     "search": "Search: {query}",
-    "accounts": "Accounts ×{count}",
+    "sources": "Sources ×{count}",
     "channels": "Channels ×{count}"
   }
 }

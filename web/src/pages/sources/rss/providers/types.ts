@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-import type { Account, Channel } from "../../../../types";
+import type { Source, Channel } from "../../../../types";
 
 /** Known RSS sub-providers under the RSS sources tab. */
 export type RssProviderId = "generic" | "github" | "hackernews" | "linuxdo" | "v2ex";
@@ -15,7 +15,7 @@ export interface RssFormFields {
 
 /** Unified feed row for the RSS tab list (generic RSS + curated providers). */
 export interface RssFeedItem {
-  account: Account;
+  source: Source;
   channel: Channel | null;
   feedUrl: string;
   pollIntervalSeconds: number;

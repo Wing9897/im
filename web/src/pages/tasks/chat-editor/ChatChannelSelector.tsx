@@ -6,11 +6,11 @@ import { ChevronDown, LayoutGrid } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PlatformTag } from "../../../components/common/PlatformTag";
 import { FieldLabel, FilterTrigger } from "../../../components/ui";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 
 interface ChatChannelSelectorProps {
   channelIds: string[];
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   onOpenChannelDialog: () => void;
   /** When true, label shows optional (web_intel timed vs message-gate). */
   optional?: boolean;

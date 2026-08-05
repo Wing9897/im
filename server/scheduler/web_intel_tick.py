@@ -26,12 +26,11 @@ from server.analyzer.incremental import fetch_unanalyzed_messages
 from server.analyzer.llm_client import ConfigurableLlmClient, load_llm_config
 from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.analyzer.prompt import format_messages
-from server.app_logging import failure_details_from_exc, record_batch_failure
+from server.app_logging import failure_details_from_exc
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import WEB_INTEL_MODE
 from server.prompts.web_intel import build_web_intel_base_prompt, build_web_intel_seed_message
-from server.queries.tasks_queries import set_task_active
 from server.scheduler.batch_claim import (
     batch_channel_names,
     create_batch_with_markers,
@@ -44,8 +43,13 @@ from server.scheduler.task_schedule_overrides import (
     resolve_batch_message_limit,
     resolve_trigger_threshold,
 )
+from server.scheduler.web_intel_batches import (
+    complete_web_intel_failure,
+    open_processing_batch,
+    record_web_intel_skip,
+)
 from server.sse import Broadcaster
-from server.util import new_id, utc_now_iso
+from server.util import utc_now_iso
 
 if TYPE_CHECKING:
     from server.scheduler.manager import SchedulerManager
@@ -54,62 +58,6 @@ logger = logging.getLogger(__name__)
 
 _SKIP_EMPTY_PROMPT = "skipped: empty prompt_template"
 DEFAULT_WEB_INTEL_MAX_TOOL_ROUNDS = 8
-
-
-async def _record_web_intel_skip(
-    *,
-    db: Database,
-    broadcaster: Broadcaster,
-    task: dict[str, Any],
-    task_id: str,
-    reason: str,
-) -> None:
-    """Persist a completed skip batch + SSE so empty fires are observable."""
-    batch_id = new_id()
-    now = utc_now_iso()
-    version = int(task.get("version") or 1)
-    await db.execute(
-        "INSERT INTO analysis_batches "
-        "(id, task_id, version, status, message_count, agent_message, "
-        "created_at, updated_at, completed_at) "
-        "VALUES (?, ?, ?, 'completed', 0, ?, ?, ?, ?)",
-        (batch_id, task_id, version, reason, now, now, now),
-    )
-    logger.info("web_intel tick skipped task=%s batch=%s: %s", task_id, batch_id, reason)
-    broadcaster.publish(
-        "analysis_completed",
-        {
-            "taskId": task_id,
-            "batchId": batch_id,
-            "analysisMode": WEB_INTEL_MODE,
-            "findingsCount": 0,
-            "hasFindings": False,
-            "skipped": True,
-            "skipReason": reason,
-        },
-    )
-
-
-async def _count_consecutive_failures(db: Database, *, task_id: str, version: int) -> int:
-    """Count trailing completed batches with ``error_message`` (skips break the streak)."""
-    rows = await db.fetch_all(
-        "SELECT error_message, agent_message FROM analysis_batches "
-        "WHERE task_id = ? AND version = ? AND status = 'completed' "
-        # rowid is insertion-monotonic; UUID id order is not reliable within the same second.
-        "ORDER BY COALESCE(completed_at, updated_at) DESC, rowid DESC "
-        "LIMIT 50",
-        (task_id, version),
-    )
-    count = 0
-    for row in rows:
-        agent = str(row.get("agent_message") or "")
-        if agent.startswith("skipped:"):
-            break
-        if row.get("error_message"):
-            count += 1
-        else:
-            break
-    return count
 
 
 def parse_web_intel_agent_items(final_message: str) -> list[dict[str, Any]]:
@@ -128,89 +76,6 @@ def parse_web_intel_agent_items(final_message: str) -> list[dict[str, Any]]:
             except ValueError:
                 pass
     return [item for item in normalize_items(parsed) if isinstance(item, dict)]
-
-
-async def _complete_web_intel_failure(
-    *,
-    db: Database,
-    broadcaster: Broadcaster,
-    task_id: str,
-    task_name: str,
-    batch_id: str,
-    version: int,
-    error_message: str,
-    scheduler: SchedulerManager | None,
-    failure_details: dict[str, Any] | None = None,
-) -> None:
-    """Mark batch completed+error, log, SSE, and optionally fuse the task."""
-    err_now = utc_now_iso()
-    await db.execute(
-        "UPDATE analysis_batches SET status = 'completed', error_message = ?, "
-        "updated_at = ?, completed_at = ? WHERE id = ?",
-        (error_message[:2000], err_now, err_now, batch_id),
-    )
-
-    max_retries = await get_config_int(db, "max_batch_retries")
-    consecutive = await _count_consecutive_failures(db, task_id=task_id, version=version)
-    retries_exhausted = consecutive >= max_retries
-
-    await record_batch_failure(
-        db,
-        task_id=task_id,
-        task_name=task_name,
-        batch_id=batch_id,
-        error_message=error_message,
-        retries_exhausted=retries_exhausted,
-        current_retry=consecutive,
-        max_retries=max_retries,
-        failure_details=failure_details,
-    )
-
-    if retries_exhausted:
-        await set_task_active(db, task_id, 0, err_now)
-        if scheduler is not None:
-            await scheduler.unregister_task(task_id)
-        logger.warning(
-            "web_intel task %s deactivated after %d consecutive failure(s) (max_batch_retries=%d)",
-            task_id,
-            consecutive,
-            max_retries,
-        )
-
-    broadcaster.publish(
-        "analysis_failed",
-        {
-            "taskId": task_id,
-            "taskName": task_name,
-            "batchId": batch_id,
-            "error": error_message[:500],
-            "analysisMode": WEB_INTEL_MODE,
-            # True means wait for the next schedule fire (not message-batch pending).
-            "retrying": not retries_exhausted,
-            "currentRetry": consecutive,
-            "maxRetries": max_retries,
-            "retriesExhausted": retries_exhausted,
-            "taskDeactivated": retries_exhausted,
-        },
-    )
-
-
-async def _open_processing_batch(
-    db: Database,
-    *,
-    task: dict[str, Any],
-    message_count: int,
-) -> str:
-    batch_id = new_id()
-    now = utc_now_iso()
-    version = int(task.get("version") or 1)
-    await db.execute(
-        "INSERT INTO analysis_batches "
-        "(id, task_id, version, status, message_count, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'processing', ?, ?, ?)",
-        (batch_id, str(task["id"]), version, message_count, now, now),
-    )
-    return batch_id
 
 
 async def _claim_messages_for_gate(
@@ -258,7 +123,7 @@ async def execute_web_intel_tick(
     version = int(task.get("version") or 1)
 
     if not prompt_template:
-        await _record_web_intel_skip(
+        await record_web_intel_skip(
             db=db,
             broadcaster=broadcaster,
             task=task,
@@ -278,7 +143,7 @@ async def execute_web_intel_tick(
             return
         batch_id, claimed_messages = claimed
     else:
-        batch_id = await _open_processing_batch(db, task=task, message_count=0)
+        batch_id = await open_processing_batch(db, task=task, message_count=0)
 
     llm_cfg = await load_llm_config(db)
     # Scheduled web_intel always searches; only the provider/native path is shared
@@ -347,7 +212,7 @@ async def execute_web_intel_tick(
             used_mode = f"agent:{route.mode}:no_web_tool"
     except Exception as exc:  # noqa: BLE001 — complete batch as error; next fire retries
         logger.exception("web_intel tick failed task=%s batch=%s", task_id, batch_id)
-        await _complete_web_intel_failure(
+        await complete_web_intel_failure(
             db=db,
             broadcaster=broadcaster,
             task_id=task_id,

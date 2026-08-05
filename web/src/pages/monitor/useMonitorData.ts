@@ -38,7 +38,7 @@ const fetchMessagesPage = (
  */
 export function useMonitorData() {
   const {
-    accounts,
+    sources,
     channels,
     channelsReady,
     filters,
@@ -181,7 +181,7 @@ export function useMonitorData() {
 
   return {
     messages,
-    accounts,
+    sources,
     channels,
     channelsReady,
     filters,

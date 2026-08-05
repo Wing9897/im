@@ -157,7 +157,19 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             break
         await asyncio.sleep(0)
 
-    deleted_total = sum(counts.values())
+    deleted_total = sum(
+        (
+            counts["messages"],
+            counts["analysis"],
+            counts["leaderboard"],
+            counts["action_trigger_history"],
+            counts["app_logs"],
+            counts["user_events"],
+            counts["timeline_dismissals"],
+            counts["device_access_tokens"],
+            counts["device_sessions"],
+        )
+    )
     if deleted_total:
         logger.info(
             "Retention cleanup removed messages=%d analysis=%d leaderboard=%d "

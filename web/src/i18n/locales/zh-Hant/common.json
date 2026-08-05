@@ -589,7 +589,7 @@
     "previewPanel": "詳情預覽",
     "itemsCount": "{count} 項",
     "filterActiveCount": "{count} 項已選",
-    "unnamedAccount": "未命名帳號",
+    "unnamedSource": "未命名來源",
     "virtual": "虛擬",
     "system": "系統",
     "agent": "Agent 級",
@@ -1148,7 +1148,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 12／SemVer 0.1.0-beta.13；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 15／SemVer 0.1.0-beta.16；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

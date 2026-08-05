@@ -10,16 +10,12 @@ export const SIMPLE_MODE_HOME = "/timeline";
 /** Full-product default home (monitor wall). */
 export const FULL_MODE_HOME = "/monitor";
 
-/**
- * Sidebar / deep-link prefixes that disappear in simple mode.
- * `/wall` redirects to monitor and is treated the same.
- */
+/** Sidebar / deep-link prefixes that disappear in simple mode. */
 export const SIMPLE_MODE_HIDDEN_PREFIXES = [
   "/monitor",
-  "/wall",
   "/leaderboard",
   "/intelligence",
-  "/accounts",
+  "/sources",
 ] as const;
 
 /** AI workspace tabs that only matter for analysis pipelines. */

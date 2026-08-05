@@ -81,7 +81,7 @@ describe("MessageListItem accessibility attributes", () => {
 
     const msg = {
       id: "m1",
-      accountId: "a1",
+      sourceId: "a1",
       platformId: "c1",
       channelName: "Test Channel",
       platform: "telegram",

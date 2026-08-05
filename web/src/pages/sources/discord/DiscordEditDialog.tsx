@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { SourceEditDialogShell } from "../SourceEditDialogShell";
 import { PasswordField, SettingsRow, TextField } from "../../../components/ui";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { MASKED_SECRET } from "../../../utils/configValidation";
 import type { DiscordBotInfo } from "../../../types";
 
@@ -33,7 +33,7 @@ export function DiscordEditDialog({
   return (
     <SourceEditDialogShell
       title={t("discord.editTitle", {
-        name: formatAccountLabel(bot.account) || fallback,
+        name: formatSourceLabel(bot.source) || fallback,
       })}
       submitting={submitting}
       error={error}

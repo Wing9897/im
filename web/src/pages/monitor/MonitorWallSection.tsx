@@ -2,7 +2,7 @@ import { useCallback, useMemo, type CSSProperties } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import { EmptyState } from "../../components/common/EmptyState";
 import { SectionErrorBoundary } from "../../components/common/SectionErrorBoundary";
 import {
@@ -24,7 +24,7 @@ interface MonitorWallSectionProps {
   viewMode: MonitorViewMode;
   onViewModeChange: (mode: MonitorViewMode) => void;
   /** Shared channel list from useMonitorData (avoids a duplicate channel fetch). */
-  channels: ChannelWithAccount[];
+  channels: ChannelWithSource[];
   /** False while the shared channel catalog is still loading. */
   channelsReady?: boolean;
   totalCount: number;

@@ -46,13 +46,13 @@ describe("useMonitorFiltersUrl helpers", () => {
 
   it("parses filter query keys", () => {
     const params = new URLSearchParams(
-      "q=btc&platform=telegram&time=today&accounts=a1,a2&channels=telegram:1",
+      "q=btc&platform=telegram&time=today&sources=a1,a2&channels=telegram:1",
     );
     expect(parseMonitorFiltersFromSearchParams(params)).toEqual({
       search: "btc",
       platform: "telegram",
       timeRange: "today",
-      accountIds: ["a1", "a2"],
+      sourceIds: ["a1", "a2"],
       channelIds: ["telegram:1"],
     });
   });

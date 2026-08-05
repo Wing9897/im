@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { RssFeedItem } from "./providers/types";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
@@ -28,11 +28,11 @@ export function RssFeedDetailDialog({ feed, onClose, onEdit }: RssFeedDetailDial
       ariaLabel={t("rss.detailAria", { url: feed.feedUrl })}
       title={
         <>
-          <span style={statusDotStyle(feed.account.status)} aria-hidden="true" />
-          {formatAccountLabel(feed.account) || t("rss.fallbackName")}
+          <span style={statusDotStyle(feed.source.status)} aria-hidden="true" />
+          {formatSourceLabel(feed.source) || t("rss.fallbackName")}
         </>
       }
-      subtitle={`${platformDisplayLabel(feed.account.platform)} · ${formatStatusLabel(feed.account.status)}`}
+      subtitle={`${platformDisplayLabel(feed.source.platform)} · ${formatStatusLabel(feed.source.status)}`}
       error={feed.lastError}
       onClose={onClose}
       onEdit={onEdit}
@@ -50,8 +50,8 @@ export function RssFeedDetailDialog({ feed, onClose, onEdit }: RssFeedDetailDial
         </span>
         <span>
           {t("rss.lastPollLabel", {
-            time: feed.account.updatedAt
-              ? formatOsDateTime(feed.account.updatedAt)
+            time: feed.source.updatedAt
+              ? formatOsDateTime(feed.source.updatedAt)
               : t("detail.neverPolled"),
           })}
         </span>

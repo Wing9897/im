@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 const SRC_DIR = resolve(__dirname, "..");
 
 const RETIRED_SOURCE_PATHS = [
-  "css/ops-board.css",
   "pages/actions/NotificationUI.test.tsx",
   "components/common/ViewToggle.tsx",
   "components/settings/OverlapSlider.tsx",

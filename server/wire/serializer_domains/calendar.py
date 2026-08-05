@@ -1,0 +1,79 @@
+"""Analysis and calendar wire serializers."""
+
+from __future__ import annotations
+
+from typing import Any, Mapping
+
+from server.util import parse_json_list
+from server.worksets_const import SYSTEM_WORKSET_ID
+
+
+def serialize_trending_topic(row: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "taskId": row.get("task_id"),
+        "batchId": row.get("batch_id"),
+        "rank": row.get("rank"),
+        "topicName": row.get("topic_name") or "",
+        "score": float(row.get("score") or 0.0),
+        "summary": row.get("summary"),
+        "taskName": row.get("task_name"),
+        "createdAt": row.get("created_at"),
+        "messageCount": row.get("message_count"),
+    }
+
+
+def serialize_analysis_event(row: Mapping[str, Any], *, dismissed: bool = False) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "taskId": row.get("task_id"),
+        "version": int(row.get("version") or 1),
+        "batchId": row.get("batch_id"),
+        "title": row.get("title") or "",
+        "body": row.get("body") or "",
+        "startTime": row.get("start_time"),
+        "endTime": row.get("end_time"),
+        "location": row.get("location"),
+        "latitude": row.get("latitude"),
+        "longitude": row.get("longitude"),
+        "participants": parse_json_list(row.get("participants_json")),
+        "sourceMessageId": row.get("source_message_id"),
+        "sourcePlatform": row.get("source_platform"),
+        "sourceChannelName": row.get("source_channel_name"),
+        "sourceMessageTime": row.get("source_message_time"),
+        "analysisTimeRange": row.get("analysis_time_range"),
+        "batchSourceChannelNames": parse_json_list(row.get("batch_source_channel_names")),
+        "taskName": row.get("task_name"),
+        "createdAt": row.get("created_at"),
+        "updatedAt": row.get("updated_at"),
+        "dismissed": bool(dismissed),
+    }
+
+
+def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> dict[str, Any]:
+    location = row.get("location")
+    raw_task_id = row.get("task_id")
+    task_id = str(raw_task_id).strip() if isinstance(raw_task_id, str) and raw_task_id.strip() else ""
+    raw_workset_id = row.get("workset_id")
+    workset_id = (
+        str(raw_workset_id).strip() if isinstance(raw_workset_id, str) and raw_workset_id.strip() else SYSTEM_WORKSET_ID
+    )
+    return {
+        "id": str(row["id"]),
+        "title": str(row.get("title") or ""),
+        "body": str(row.get("body") or ""),
+        "startTime": row.get("start_time"),
+        "endTime": row.get("end_time") if row.get("end_time") else None,
+        "location": location if isinstance(location, str) and location.strip() else None,
+        "origin": str(row.get("origin") or ""),
+        "isAllDay": bool(row.get("event_is_all_day")),
+        "timezone": row.get("event_timezone") or None,
+        "icsUid": row.get("ics_uid") or None,
+        "icsSource": row.get("ics_source") or None,
+        "taskId": task_id,
+        "worksetId": workset_id,
+        "source": "user",
+        "dismissed": bool(dismissed),
+        "createdAt": row.get("created_at"),
+        "updatedAt": row.get("updated_at"),
+    }

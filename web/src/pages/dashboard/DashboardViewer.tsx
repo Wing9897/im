@@ -24,7 +24,7 @@ import { useDashboardViewerShell } from "./useDashboardViewerShell";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useMemo, useState, useCallback } from "react";
 import { buildChannelNameById, useDetailSelection } from "../../components/detail";
-import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
+import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
 import { DashboardViewerDialogs } from "./DashboardViewerDialogs";
 import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
 import { WorksetDetailDialog } from "./WorksetDetailDialog";
@@ -53,7 +53,7 @@ export function DashboardViewer() {
     navigate,
   } = useDashboardViewer();
   useErrorToast(error);
-  const { channels } = useChannelsWithAccounts();
+  const { channels } = useChannelsWithSources();
   const channelNameById = useMemo(() => buildChannelNameById(channels), [channels]);
 
   const [modeFilter, setModeFilter] = usePersistedEnum<TasksModeFilter>(

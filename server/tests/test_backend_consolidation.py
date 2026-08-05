@@ -16,6 +16,7 @@ from server.agent.tools_intelligence import TOOL_SCHEMAS as INTELLIGENCE_SCHEMAS
 from server.agent.tools_messages import TOOL_SCHEMAS as MESSAGE_SCHEMAS
 from server.api.routes.tasks import TaskConfigBody
 from server.api.schemas.responses.tasks import TaskResponse
+from server.app_logging import clear_app_logs, record_and_fetch
 from server.domain.analysis_modes import (
     AI_ANALYSIS_MODES,
     ALL_ANALYSIS_MODES,
@@ -24,7 +25,6 @@ from server.domain.analysis_modes import (
     AnalysisMode,
 )
 from server.prompts.assistant import TASK_CONFIG_SCHEMA_PROMPT
-from server.app_logging import clear_app_logs, record_and_fetch
 from server.queries.logs_queries import fetch_app_logs_page
 
 
@@ -83,12 +83,12 @@ def test_analysis_mode_specs_drive_capability_sets() -> None:
 def test_collector_adapter_registry_matches_schema_platforms() -> None:
     from typing import get_args as typing_get_args
 
-    from server.api.schemas.responses.accounts import AccountPlatform
+    from server.api.schemas.responses.sources import SourcePlatform
     from server.collector.adapter_factory import (
         ADAPTER_BUILDERS,
         REGISTERED_COLLECTOR_PLATFORMS,
     )
-    from server.db.schema_ddl import (
+    from server.db.schema_domains.vocabulary import (
         ANALYSIS_MODE_CHECK_VALUES,
         PLATFORM_CHECK_VALUES,
     )
@@ -100,7 +100,7 @@ def test_collector_adapter_registry_matches_schema_platforms() -> None:
     assert COLLECTOR_PLATFORMS == PLATFORM_CHECK_VALUES == REGISTERED_COLLECTOR_PLATFORMS
     assert tuple(ADAPTER_BUILDERS) == COLLECTOR_PLATFORMS
     assert ANALYSIS_MODE_CHECK_VALUES == ALL_ANALYSIS_MODES
-    assert tuple(typing_get_args(AccountPlatform)) == COLLECTOR_PLATFORMS
+    assert tuple(typing_get_args(SourcePlatform)) == COLLECTOR_PLATFORMS
     assert COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT == frozenset(COLLECTOR_PLATFORMS) - {"telegram"}
 
 
@@ -144,7 +144,7 @@ def _parse_ts_capability_booleans(path: Path) -> dict[str, dict[str, bool | str]
 
 
 def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
-    from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
+    from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
     from server.domain.analysis_modes import ANALYSIS_MODE_SPECS
 
     root = Path(__file__).resolve().parents[2]

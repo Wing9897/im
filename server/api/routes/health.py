@@ -9,27 +9,13 @@ import os
 from typing import Any
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
 
 from server import __version__
+from server.api.schemas.responses import HealthResponse
 from server.constants import HOST_ENV
 from server.db.schema_bootstrap import CURRENT_SCHEMA_VERSION, SCHEMA_SEMVER
 
 router = APIRouter(tags=["health"])
-
-
-class HealthResponse(BaseModel):
-    status: str
-    version: str
-    runtimeReady: bool
-    secretsReady: bool
-    secretsError: str | None = None
-    schemaVersion: int
-    schemaSemver: str
-    #: Effective uvicorn bind host (default ``127.0.0.1``; LAN uses ``0.0.0.0``).
-    bindHost: str
-    #: True when bound beyond loopback (LAN / all-interfaces).
-    lanAccessEnabled: bool
 
 
 @router.get("/api/v1/health", response_model=HealthResponse)
@@ -51,4 +37,3 @@ async def health_v1(request: Request) -> dict[str, Any]:
     if secrets_error:
         payload["secretsError"] = str(secrets_error)
     return payload
-

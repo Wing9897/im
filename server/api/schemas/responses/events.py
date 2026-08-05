@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 
@@ -99,3 +99,58 @@ class CalendarOccurrenceResponse(BaseModel):
     worksetId: str | None = None
     itemId: str | None = None
     itemDateKind: Literal["purchased", "expires", "remind"] | None = None
+
+
+class CalendarImportWarningResponse(BaseModel):
+    code: str
+    message: str
+
+
+class CalendarImportChangeResponse(BaseModel):
+    field: str
+    before: Any = None
+    after: Any = None
+
+
+class CalendarImportPreviewItemResponse(BaseModel):
+    uid: str
+    title: str
+    targetType: Literal["user_event", "recurring_task"]
+    action: Literal["create", "update", "unchanged", "unsupported"]
+    supported: bool
+    existingId: str | None
+    fingerprint: str
+    startTime: str
+    endTime: str | None
+    isAllDay: bool
+    timezone: str | None
+    rrule: str | None
+    exdates: list[str]
+    rdates: list[str]
+    changes: list[CalendarImportChangeResponse]
+    warnings: list[CalendarImportWarningResponse]
+
+
+class CalendarImportPreviewResponse(BaseModel):
+    sourceId: str
+    calendarName: str | None
+    eventCount: int
+    importableCount: int
+    items: list[CalendarImportPreviewItemResponse]
+    warnings: list[CalendarImportWarningResponse]
+
+
+class CalendarImportCommitItemResponse(BaseModel):
+    uid: str
+    targetType: Literal["user_event", "recurring_task"]
+    targetId: str
+    action: Literal["created", "updated", "unchanged"]
+
+
+class CalendarImportCommitResponse(BaseModel):
+    sourceId: str
+    committedCount: int
+    createdCount: int
+    updatedCount: int
+    unchangedCount: int
+    results: list[CalendarImportCommitItemResponse]

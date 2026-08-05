@@ -26,9 +26,9 @@
     "all": "全部类别",
     "analysis": "分析",
     "collector": "收集器",
-    "account": "帐号",
     "system": "系统",
-    "frontend": "前端"
+    "frontend": "前端",
+    "source": "来源"
   },
   "summary": {
     "status": "处理状态",
@@ -58,7 +58,6 @@
     "analysisTrace": "分析追踪：{summary}",
     "schedulerPaused": "分析调度已暂停",
     "schedulerResumed": "分析调度已恢复",
-    "accountError": "帐号错误（{platform}）：{accountName} — {summary}",
     "retentionCleanup": "保留清理已删除 {deletedTotal} 行",
     "runtimeAiConnected": "AI 引擎可用",
     "runtimeAiUnavailable": "AI 引擎不可用",
@@ -68,7 +67,8 @@
     "frontendWindowError": "前端窗口错误",
     "frontendUnhandledRejection": "未处理的 Promise 拒绝",
     "frontendReact": "React 渲染错误",
-    "frontendCritical": "前端严重错误"
+    "frontendCritical": "前端严重错误",
+    "sourceError": "来源错误（{platform}）：{sourceName} — {summary}"
   },
   "section": {
     "loadingTitle": "正在载入系统日志",

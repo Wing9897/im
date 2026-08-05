@@ -1,4 +1,4 @@
-import { listRssFeeds } from "../../../../api/accounts";
+import { listRssFeeds } from "../../../../api/sources";
 import { githubRssProvider } from "./github/githubProvider";
 import { genericRssProvider } from "./genericProvider";
 import { hackernewsRssProvider } from "./hackernews/hackernewsProvider";
@@ -69,6 +69,6 @@ export async function listAllRssTabFeeds(): Promise<RssFeedItem[]> {
     })
     .sort(
       (a, b) =>
-        new Date(b.account.createdAt).getTime() - new Date(a.account.createdAt).getTime(),
+        new Date(b.source.createdAt).getTime() - new Date(a.source.createdAt).getTime(),
     );
 }

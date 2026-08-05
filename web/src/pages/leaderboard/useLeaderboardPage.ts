@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchTopicMessages, fetchTrendingTopics } from "../../api/results";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
-import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
+import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import i18n from "../../i18n";
@@ -44,7 +44,7 @@ export function useLeaderboardPage() {
   useEffect(() => {
     topicMessagesRef.current = topicMessages;
   }, [topicMessages]);
-  const { channels } = useChannelsWithAccounts();
+  const { channels } = useChannelsWithSources();
   const [selectedTaskId, setSelectedTaskId] = usePersistedState<string>(
     LEADERBOARD_SELECTED_TASK_ID_STORAGE_KEY,
     "",

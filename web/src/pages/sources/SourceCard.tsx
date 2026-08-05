@@ -11,7 +11,7 @@ import { SelectableSurface, stopSelectableActivation } from "../../components/de
 interface SourceCardErrorLinesProps {
   status: ConnectionStatus;
   lastError?: string | null;
-  accountLastError?: string | null;
+  sourceLastError?: string | null;
   reconnectError?: string | null;
   lastSuccessAt?: string | null;
   showLastSuccessOnError?: boolean;
@@ -20,14 +20,14 @@ interface SourceCardErrorLinesProps {
 export function SourceCardErrorLines({
   status,
   lastError,
-  accountLastError,
+  sourceLastError,
   reconnectError,
   lastSuccessAt,
   showLastSuccessOnError = false,
 }: SourceCardErrorLinesProps) {
   const { t } = useTranslation("sources");
   const showError = status === "error" || status === "disconnected";
-  const errorText = lastError ?? accountLastError;
+  const errorText = lastError ?? sourceLastError;
   const displayError = showError
     ? errorText || (status === "error" ? t("card.unknownError") : null)
     : null;

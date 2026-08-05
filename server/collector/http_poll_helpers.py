@@ -56,7 +56,7 @@ def normalize_headers(raw: Any) -> dict[str, str]:
 
 
 def normalize_http_credentials(creds: dict[str, Any]) -> dict[str, Any]:
-    """Normalize/validate credentials stored on an HTTP poll account."""
+    """Normalize/validate credentials stored on an HTTP poll source."""
     url = str(creds.get("url") or "").strip()
     if not url:
         raise ValueError("URL is required")

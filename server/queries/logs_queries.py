@@ -34,9 +34,7 @@ async def fetch_app_logs_page(
     exclude_kind: str | None = None,
 ) -> tuple[list[dict[str, Any]], bool, int]:
     where, params = _kind_filters(kind=kind, exclude_kind=exclude_kind)
-    total_count = int(
-        await db.fetch_value(f"SELECT COUNT(*) FROM app_logs{where}", tuple(params)) or 0
-    )
+    total_count = int(await db.fetch_value(f"SELECT COUNT(*) FROM app_logs{where}", tuple(params)) or 0)
     rows, has_more = await fetch_cursor_page(
         db,
         select_sql="SELECT * FROM app_logs",

@@ -4,6 +4,7 @@ import {
   calculateAxisBarLayout,
   cellSpanToCssGridColumns,
   cellSpanToPercent,
+  clipCellSpanToAxis,
   clipIntervalToAxis,
   GANTT_HOUR_MS,
   msRangeToCellSpan,
@@ -23,6 +24,14 @@ describe("ganttTimeGeometry", () => {
   it("maps ms ranges to at least one cell", () => {
     const span = msRangeToCellSpan(axisStart + 9 * GANTT_HOUR_MS, axisStart + 9 * GANTT_HOUR_MS, axisStart, GANTT_HOUR_MS, 24);
     expect(span).toEqual({ startCell: 9, endCell: 10 });
+  });
+
+  it("shares cell clipping between grid and percentage renderers", () => {
+    expect(clipCellSpanToAxis(-3, 2, 24)).toEqual({
+      startCell: 0,
+      endCell: 2,
+    });
+    expect(clipCellSpanToAxis(24, 25, 24)).toBeNull();
   });
 
   it("builds percent layout for board bars", () => {

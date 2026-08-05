@@ -231,15 +231,15 @@ async def test_set_analysis_paused_records_app_log_once(app):
 
 
 @pytest.mark.asyncio
-async def test_set_account_error_records_account_category(app):
-    from server.account_status import set_account_error
+async def test_set_source_error_records_source_category(app):
+    from server.source_status import set_source_error
     from server.tests import seed
 
     db = app.state.db
-    await set_account_error(db, seed.RSS_ACCOUNT, "token revoked")
-    row = await db.fetch_one("SELECT * FROM app_logs WHERE kind = 'account.error' LIMIT 1")
+    await set_source_error(db, seed.RSS_SOURCE, "token revoked")
+    row = await db.fetch_one("SELECT * FROM app_logs WHERE kind = 'source.error' LIMIT 1")
     assert row is not None
-    assert row["category"] == "account"
+    assert row["category"] == "source"
     details = json.loads(row["details"])
-    assert details["messageKey"] == "logs:templates.accountError"
-    assert details["payload"]["accountId"] == seed.RSS_ACCOUNT
+    assert details["messageKey"] == "logs:templates.sourceError"
+    assert details["payload"]["sourceId"] == seed.RSS_SOURCE

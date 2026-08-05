@@ -63,7 +63,7 @@ export function LogFilterToolbar() {
         <option value="all">{t("category.all")}</option>
         <option value="analysis">{t("category.analysis")}</option>
         <option value="collector">{t("category.collector")}</option>
-        <option value="account">{t("category.account")}</option>
+        <option value="source">{t("category.source")}</option>
         <option value="system">{t("category.system")}</option>
         <option value="frontend">{t("category.frontend")}</option>
       </SelectField>

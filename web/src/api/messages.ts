@@ -13,8 +13,8 @@ export function queryMessagesPage(query: {
   includeTotal?: boolean;
 }): Promise<MessagePage> {
   const params: Record<string, string> = {};
-  if (query.filters.accountIds?.length)
-    params.account_ids = query.filters.accountIds.join(",");
+  if (query.filters.sourceIds?.length)
+    params.source_ids = query.filters.sourceIds.join(",");
   if (query.filters.channelIds?.length)
     params.channel_ids = query.filters.channelIds.join(",");
   if (query.filters.timeRange) params.time_range = query.filters.timeRange;

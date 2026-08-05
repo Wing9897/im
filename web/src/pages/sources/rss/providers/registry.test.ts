@@ -6,7 +6,7 @@ const { mockListRssFeeds } = vi.hoisted(() => ({
   mockListRssFeeds: vi.fn(),
 }));
 
-vi.mock("../../../../api/accounts", () => ({
+vi.mock("../../../../api/sources", () => ({
   listRssFeeds: mockListRssFeeds,
 }));
 
@@ -38,7 +38,7 @@ import type { RssFeedItem } from "./types";
 
 function makeFeed(platform: string, feedUrl: string, providerId: RssFeedItem["providerId"]): RssFeedItem {
   return {
-    account: {
+    source: {
       id: "acc-1",
       platform,
       name: "Feed",
@@ -121,14 +121,14 @@ describe("RSS provider registry", () => {
       generic,
       {
         ...github,
-        account: { ...github.account, id: "acc-2", createdAt: "2026-02-01T00:00:00.000Z" },
+        source: { ...github.source, id: "acc-2", createdAt: "2026-02-01T00:00:00.000Z" },
       },
     ]);
 
     const feeds = await listAllRssTabFeeds();
 
     expect(mockListRssFeeds).toHaveBeenCalledTimes(1);
-    expect(feeds.map((feed) => [feed.account.id, feed.providerId])).toEqual([
+    expect(feeds.map((feed) => [feed.source.id, feed.providerId])).toEqual([
       ["acc-2", "github"],
       ["acc-1", "generic"],
     ]);

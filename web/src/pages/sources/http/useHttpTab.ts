@@ -1,13 +1,14 @@
 import { useCallback, useState } from "react";
 import {
   listHttpSources,
-  deleteAccount,
+  deleteSource,
   createHttpSource,
   updateHttpSource,
-} from "../../../api/accounts";
+} from "../../../api/sources";
 import type { HttpSourceInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../useSourceListTab";
+import { useSourceEditController } from "../useSourceEditController";
 import { INITIAL_HTTP_FORM, type HttpFormFields } from "./httpFormTypes";
 import i18n from "../../../i18n";
 import {
@@ -17,7 +18,16 @@ import {
   validateHttpSourceForm,
 } from "./httpFormConvert";
 
-const removeHttpSource = (target: HttpSourceInfo) => deleteAccount(target.account.id);
+const removeHttpSource = (target: HttpSourceInfo) => deleteSource(target.source.id);
+const formatEditError = (error: unknown) =>
+  error instanceof Error ? error.message : String(i18n.t("sources:errors.updateFailed"));
+
+async function saveHttpSource(target: HttpSourceInfo, form: HttpFormFields) {
+  const response = await updateHttpSource(target.source.id, formToPatch(form));
+  if (response.status === "error" && response.errorMessage) {
+    throw new Error(response.errorMessage);
+  }
+}
 
 export function useHttpTab() {
   const {
@@ -38,10 +48,13 @@ export function useHttpTab() {
   const [formError, setFormError] = useState<string | null>(null);
   const { submitting, error: submitError, handleSubmit } = useFormSubmit();
 
-  const [editTarget, setEditTarget] = useState<HttpSourceInfo | null>(null);
-  const [editForm, setEditForm] = useState<HttpFormFields | null>(null);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  const edit = useSourceEditController<HttpSourceInfo, HttpFormFields>({
+    toForm: sourceToForm,
+    validate: validateHttpSourceForm,
+    save: saveHttpSource,
+    refresh: fetchHttpSources,
+    formatError: formatEditError,
+  });
 
   const handleAddHttpSource = useCallback(async () => {
     setFormError(null);
@@ -62,42 +75,6 @@ export function useHttpTab() {
     });
   }, [form, fetchHttpSources, handleSubmit]);
 
-  const openEditDialog = useCallback((source: HttpSourceInfo) => {
-    setEditTarget(source);
-    setEditForm(sourceToForm(source));
-    setEditError(null);
-  }, []);
-
-  const closeEditDialog = useCallback(() => {
-    setEditTarget(null);
-    setEditForm(null);
-    setEditError(null);
-  }, []);
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!editTarget || !editForm) return;
-    setEditError(null);
-    const validationError = validateHttpSourceForm(editForm);
-    if (validationError) {
-      setEditError(validationError);
-      return;
-    }
-
-    setEditSubmitting(true);
-    try {
-      const resp = await updateHttpSource(editTarget.account.id, formToPatch(editForm));
-      if (resp.status === "error" && resp.errorMessage) {
-        throw new Error(resp.errorMessage);
-      }
-      closeEditDialog();
-      await fetchHttpSources();
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : String(i18n.t("sources:errors.updateFailed")));
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [closeEditDialog, editForm, editTarget, fetchHttpSources]);
-
   return {
     sources,
     initialLoading,
@@ -115,13 +92,6 @@ export function useHttpTab() {
     handleRetry,
     handleAddHttpSource,
     handleRemoveHttpSource,
-    editTarget,
-    editForm,
-    setEditForm,
-    editSubmitting,
-    editError,
-    openEditDialog,
-    closeEditDialog,
-    handleSaveEdit,
+    ...edit,
   };
 }

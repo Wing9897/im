@@ -1,7 +1,7 @@
 import {
   createRssFeed,
   updateRssFeed,
-} from "../../../../../api/accounts";
+} from "../../../../../api/sources";
 import { feedToForm, formToCreatePayload, formToPatch, RssEditDialog } from "../../rssFormModel";
 import type {
   RssFormFields,
@@ -44,7 +44,7 @@ export function createCuratedGenericRssProvider(
       return { status: resp.status, errorMessage: resp.errorMessage };
     },
     updateFeed: async (feed, fields) => {
-      const resp = await updateRssFeed(feed.account.id, formToPatch(fields));
+      const resp = await updateRssFeed(feed.source.id, formToPatch(fields));
       return { status: resp.status, errorMessage: resp.errorMessage };
     },
     feedToForm: (feed) => feedToForm(feed),

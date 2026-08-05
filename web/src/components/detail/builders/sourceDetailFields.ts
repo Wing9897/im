@@ -1,4 +1,4 @@
-import type { Account } from "../../../types";
+import type { Source } from "../../../types";
 import type {
   DiscordBotInfo,
   EmailMailboxInfo,
@@ -6,7 +6,7 @@ import type {
   MqttBrokerInfo,
   RssFeedInfo,
 } from "../../../types/sources";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { formatStatusLabel } from "../../../styles/statusDot";
 import { formatOsDateTime } from "../../../utils/time";
@@ -17,30 +17,30 @@ function t(key: string, vars?: Record<string, string | number>): string {
   return String(i18n.t(`sources:${key}`, vars));
 }
 
-function accountMetaFields(account: Account): DetailField[] {
+function sourceMetaFields(source: Source): DetailField[] {
   return [
-    { label: t("detail.status"), value: formatStatusLabel(account.status), standalone: true },
-    { label: t("detail.platform"), value: platformDisplayLabel(account.platform), standalone: true },
+    { label: t("detail.status"), value: formatStatusLabel(source.status), standalone: true },
+    { label: t("detail.platform"), value: platformDisplayLabel(source.platform), standalone: true },
     {
       label: t("detail.lastConnected"),
-      value: account.lastConnectedAt
-        ? formatOsDateTime(account.lastConnectedAt)
+      value: source.lastConnectedAt
+        ? formatOsDateTime(source.lastConnectedAt)
         : t("detail.neverConnected"),
     },
     {
       label: t("detail.lastError"),
-      value: account.lastError ?? t("detail.emDash"),
+      value: source.lastError ?? t("detail.emDash"),
       standalone: true,
     },
-    { label: t("detail.createdAt"), value: formatOsDateTime(account.createdAt) },
-    { label: t("detail.updatedAt"), value: formatOsDateTime(account.updatedAt) },
+    { label: t("detail.createdAt"), value: formatOsDateTime(source.createdAt) },
+    { label: t("detail.updatedAt"), value: formatOsDateTime(source.updatedAt) },
   ];
 }
 
-export function buildAccountDetailFields(account: Account): DetailField[] {
+export function buildSourceDetailFields(source: Source): DetailField[] {
   return [
-    { label: t("detail.displayName"), value: formatAccountLabel(account), standalone: true },
-    ...accountMetaFields(account),
+    { label: t("detail.displayName"), value: formatSourceLabel(source), standalone: true },
+    ...sourceMetaFields(source),
   ];
 }
 
@@ -69,7 +69,7 @@ export function buildEmailMailboxDetailFields(mailbox: EmailMailboxInfo): Detail
 
   return [
     { label: t("detail.username"), value: mailbox.username, standalone: true },
-    ...accountMetaFields(mailbox.account),
+    ...sourceMetaFields(mailbox.source),
     { label: t("detail.imapHost"), value: mailbox.imapHost, standalone: true },
     { label: t("detail.imapPort"), value: String(mailbox.imapPort), standalone: true },
     {
@@ -110,9 +110,9 @@ export function buildRssFeedDetailFields(feed: RssFeedInfo): DetailField[] {
   return [
     {
       label: t("detail.name"),
-      value: formatAccountLabel(feed.account) || feed.feedUrl,
+      value: formatSourceLabel(feed.source) || feed.feedUrl,
     },
-    ...accountMetaFields(feed.account),
+    ...sourceMetaFields(feed.source),
     { label: t("detail.feedUrl"), value: feed.feedUrl },
     {
       label: t("detail.pollInterval"),
@@ -128,8 +128,8 @@ export function buildRssFeedDetailFields(feed: RssFeedInfo): DetailField[] {
     },
     {
       label: t("detail.lastPoll"),
-      value: feed.account.updatedAt
-        ? formatOsDateTime(feed.account.updatedAt)
+      value: feed.source.updatedAt
+        ? formatOsDateTime(feed.source.updatedAt)
         : t("detail.neverPolled"),
     },
     { label: t("detail.pollError"), value: feed.lastError ?? t("detail.emDash") },
@@ -147,9 +147,9 @@ export function buildHttpSourceDetailFields(source: HttpSourceInfo): DetailField
   return [
     {
       label: t("detail.name"),
-      value: formatAccountLabel(source.account) || source.url,
+      value: formatSourceLabel(source.source) || source.url,
     },
-    ...accountMetaFields(source.account),
+    ...sourceMetaFields(source.source),
     { label: t("detail.url"), value: source.url, standalone: true },
     { label: t("detail.method"), value: source.method },
     { label: t("detail.auth"), value: source.authType },
@@ -170,8 +170,8 @@ export function buildHttpSourceDetailFields(source: HttpSourceInfo): DetailField
     },
     {
       label: t("detail.lastPoll"),
-      value: source.account.updatedAt
-        ? formatOsDateTime(source.account.updatedAt)
+      value: source.source.updatedAt
+        ? formatOsDateTime(source.source.updatedAt)
         : t("detail.neverPolled"),
     },
     {
@@ -185,7 +185,7 @@ export function buildHttpSourceDetailFields(source: HttpSourceInfo): DetailField
 export function buildMqttBrokerDetailFields(broker: MqttBrokerInfo): DetailField[] {
   return [
     { label: t("detail.brokerUrl"), value: broker.brokerUrl, standalone: true },
-    ...accountMetaFields(broker.account),
+    ...sourceMetaFields(broker.source),
     {
       label: t("detail.subscribeTopics"),
       value: broker.topics.length > 0 ? broker.topics.join("\n") : t("detail.notSet"),
@@ -225,10 +225,10 @@ export function buildDiscordBotDetailFields(bot: DiscordBotInfo): DetailField[] 
   return [
     {
       label: t("detail.botName"),
-      value: formatAccountLabel(bot.account) || t("discord.fallbackName"),
+      value: formatSourceLabel(bot.source) || t("discord.fallbackName"),
       standalone: true,
     },
-    ...accountMetaFields(bot.account),
+    ...sourceMetaFields(bot.source),
     { label: t("detail.channelCount"), value: String(bot.channels.length), standalone: true },
     { label: t("detail.channelList"), value: channelLines, standalone: true },
   ];

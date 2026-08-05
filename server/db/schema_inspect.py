@@ -13,18 +13,18 @@ from typing import Any, Iterable, Mapping, TypeVar
 
 import aiosqlite
 
-from server.db.schema import (
+from server.db.schema_fingerprint import (
     REQUIRED_COLUMNS,
     REQUIRED_FOREIGN_KEYS,
     REQUIRED_INDEXES,
     REQUIRED_TABLES,
+    _quoted_identifier,
 )
-from server.db.schema_fingerprint import _quoted_identifier
 
-CURRENT_SCHEMA_VERSION = 14
+CURRENT_SCHEMA_VERSION = 15
 #: Public SemVer for this schema baseline (same shape as product VERSION).
 #: PRAGMA user_version stays the integer stamp above — never a SemVer string.
-SCHEMA_SEMVER = "0.1.0-beta.15"
+SCHEMA_SEMVER = "0.1.0-beta.16"
 
 
 class SchemaEvolutionError(RuntimeError):

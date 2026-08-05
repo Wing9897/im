@@ -47,11 +47,11 @@ describe("SourceCardErrorLines", () => {
     expect(container.textContent).toContain("Connection timed out");
   });
 
-  it("renders accountLastError when status is disconnected", () => {
+  it("renders sourceLastError when status is disconnected", () => {
     render(() =>
       createElement(SourceCardErrorLines, {
         status: "disconnected",
-        accountLastError: "Session expired",
+        sourceLastError: "Session expired",
       }),
     );
 

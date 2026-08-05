@@ -41,10 +41,9 @@ vi.mock("../context/AnalysisStatusContext", () => ({
   useAnalysisStatus: () => ({
     queueStatus: { pendingCount: 0 },
     analysisPaused: false,
-    activeAnalysis: null,
     activeAnalyses: new Map(),
     lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: () => {},
   }),
@@ -114,7 +113,7 @@ describe("AppSidebar", () => {
       "/monitor",
       "/tasks",
       "/items",
-      "/accounts",
+      "/sources",
       "/leaderboard",
       "/intelligence",
       "/timeline",
@@ -256,7 +255,7 @@ describe("AppSidebar", () => {
       "/account/identity",
     ]);
     expect(hrefs).not.toContain("/monitor");
-    expect(hrefs).not.toContain("/accounts");
+    expect(hrefs).not.toContain("/sources");
     expect(hrefs).not.toContain("/leaderboard");
     expect(hrefs).toContain("/actions");
     expect(hrefs).toContain("/items");

@@ -3,7 +3,6 @@
  * Ownership dimension only — not an analysisMode.
  */
 
-import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ModalDialog } from "../../components/ModalDialog";
@@ -26,24 +25,11 @@ import {
   getTaskEmployeeDisplayName,
   getTaskEmployeeIdForMode,
 } from "../../components/task/taskFormAnalysisModeMeta";
-import {
-  listItemCategories,
-  listItems,
-  type ItemCategory,
-  type TrackableItem,
-} from "../../api/items";
-import { listUserEvents, type UserEvent } from "../../api/userEvents";
+import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types/tasks";
-import { formatItemsError } from "../../domain/items/itemErrors";
-import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
-import { subscribeResourceModified } from "../../domain/sse/resourceModified";
-import {
-  selectSummaryExpiringItems,
-  selectSummaryUserEvents,
-  worksetEventsQueryWindow,
-} from "../../domain/worksets/worksetDetailSummary";
 import { formatOsDateTime } from "../../utils/time";
 import { ItemsEntryCard } from "../items/ItemsEntryCard";
+import { useWorksetDetailData } from "./useWorksetDetailData";
 
 export type WorksetDetailTarget = {
   id: string;
@@ -68,94 +54,17 @@ export function WorksetDetailDialog({
   onDelete,
 }: Props) {
   const { t } = useTranslation();
-  const { t: tItems } = useTranslation("items");
   const navigate = useNavigate();
-  const [items, setItems] = useState<TrackableItem[]>([]);
-  const [categories, setCategories] = useState<ItemCategory[]>([]);
-  const [events, setEvents] = useState<UserEvent[]>([]);
-  const [loadingItems, setLoadingItems] = useState(true);
-  const [loadingEvents, setLoadingEvents] = useState(true);
-  const [itemsError, setItemsError] = useState<string | null>(null);
-  const [eventsError, setEventsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadItems = () => {
-      setLoadingItems(true);
-      setItemsError(null);
-      void Promise.all([listItems({ worksetId: workset.id }), listItemCategories()])
-        .then(([rows, cats]) => {
-          if (!cancelled) {
-            setItems(rows);
-            setCategories(cats);
-          }
-        })
-        .catch((err) => {
-          if (!cancelled) setItemsError(formatItemsError(err, tItems));
-        })
-        .finally(() => {
-          if (!cancelled) setLoadingItems(false);
-        });
-    };
-    loadItems();
-    const unsubscribe = subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "item" && detail.resourceType !== "item_category") {
-        return;
-      }
-      loadItems();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-    // tItems is stable under real i18n; omit to avoid mock/re-render loops.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- workset.id is the load key
-  }, [workset.id]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadEvents = () => {
-      setLoadingEvents(true);
-      setEventsError(null);
-      const { start, end } = worksetEventsQueryWindow();
-      void listUserEvents({ worksetId: workset.id, start, end })
-        .then((rows) => {
-          if (!cancelled) setEvents(rows);
-        })
-        .catch(() => {
-          if (!cancelled) setEventsError(t("workset.detailSummaryEventsError"));
-        })
-        .finally(() => {
-          if (!cancelled) setLoadingEvents(false);
-        });
-    };
-    loadEvents();
-    const unsubscribe = subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "user_event") return;
-      loadEvents();
-    });
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- workset.id is the load key
-  }, [workset.id]);
-
-  const categoryById = useMemo(() => {
-    const map = new Map<string, ItemCategory>();
-    for (const cat of categories) map.set(cat.id, cat);
-    return map;
-  }, [categories]);
-
-  const activeItems = items.filter((row) => row.status !== "archived");
-  const expiringSummary = useMemo(() => selectSummaryExpiringItems(items), [items]);
-  const eventsSummary = useMemo(() => selectSummaryUserEvents(events), [events]);
-
-  const itemEmoji = (item: TrackableItem) =>
-    resolveItemEmoji(
-      item,
-      item.categoryId ? categoryById.get(item.categoryId) ?? null : null,
-    );
+  const {
+    loadingItems,
+    loadingEvents,
+    itemsError,
+    eventsError,
+    activeItems,
+    expiringSummary,
+    eventsSummary,
+    itemEmoji,
+  } = useWorksetDetailData(workset.id);
 
   const goCreateItem = () => {
     onClose();

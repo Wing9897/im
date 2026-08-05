@@ -36,7 +36,7 @@ const channel: Channel = {
 
 const message: Message = {
   id: "msg-1",
-  accountId: "acc-1",
+  sourceId: "acc-1",
   platform: "telegram",
   platformId: "10001",
   channelName: "TG News Channel",

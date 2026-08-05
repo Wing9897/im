@@ -31,7 +31,7 @@ import { openViewerWindow } from "../../utils/openViewerWindow";
 
 type CommandPaletteActionId =
   | "open-viewer"
-  | "open-ops-board"
+  | "open-board"
   | "new-task"
   | "show-shortcuts"
   | "open-assistant-quick";
@@ -66,9 +66,9 @@ interface CommandPaletteItemDef {
 const COMMAND_PALETTE_DEFS: readonly CommandPaletteItemDef[] = [
   { id: "monitor", labelKey: "monitor", labelNs: "nav", to: "/monitor", icon: Radio, groupId: "navigation", keywords: ["monitor", "stream"] },
   {
-    id: "ops-board",
+    id: "board",
     labelKey: "commandPalette.openOpsBoard",
-    action: "open-ops-board",
+    action: "open-board",
     icon: LayoutGrid,
     groupId: "navigation",
     hintKey: "commandPalette.openOpsBoardHint",
@@ -120,7 +120,7 @@ const COMMAND_PALETTE_DEFS: readonly CommandPaletteItemDef[] = [
     groupId: "navigation",
     keywords: ["history", "紀錄", "觸發"],
   },
-  { id: "accounts", labelKey: "sources", labelNs: "nav", to: "/accounts", icon: Database, groupId: "navigation", keywords: ["source"] },
+  { id: "sources", labelKey: "sources", labelNs: "nav", to: "/sources", icon: Database, groupId: "navigation", keywords: ["source"] },
   {
     id: "assistant",
     labelKey: "assistant",
@@ -131,57 +131,57 @@ const COMMAND_PALETTE_DEFS: readonly CommandPaletteItemDef[] = [
     keywords: ["assistant", "語音", "chat", "日程", "AI 助手"],
   },
   {
-    id: "accounts-rss",
+    id: "sources-rss",
     labelKey: "commandPalette.sourcesRss",
-    to: "/accounts?tab=rss",
+    to: "/sources?tab=rss",
     icon: Rss,
     groupId: "navigation",
     keywords: ["rss", "folo"],
   },
   {
-    id: "accounts-telegram",
+    id: "sources-telegram",
     labelKey: "commandPalette.sourcesTelegram",
-    to: "/accounts?tab=telegram",
+    to: "/sources?tab=telegram",
     icon: Database,
     groupId: "navigation",
     keywords: ["telegram"],
   },
   {
-    id: "accounts-discord",
+    id: "sources-discord",
     labelKey: "commandPalette.sourcesDiscord",
-    to: "/accounts?tab=discord",
+    to: "/sources?tab=discord",
     icon: Database,
     groupId: "navigation",
     keywords: ["discord"],
   },
   {
-    id: "accounts-http",
+    id: "sources-http",
     labelKey: "commandPalette.sourcesHttp",
-    to: "/accounts?tab=http",
+    to: "/sources?tab=http",
     icon: Database,
     groupId: "navigation",
     keywords: ["http", "抓取", "poll"],
   },
   {
-    id: "accounts-http-webhook",
+    id: "sources-http-webhook",
     labelKey: "commandPalette.sourcesHttpWebhook",
-    to: "/accounts?tab=http&mode=webhook",
+    to: "/sources?tab=http&mode=webhook",
     icon: Database,
     groupId: "navigation",
     keywords: ["webhook", "api key", "ingestion"],
   },
   {
-    id: "accounts-mqtt",
+    id: "sources-mqtt",
     labelKey: "commandPalette.sourcesMqtt",
-    to: "/accounts?tab=mqtt",
+    to: "/sources?tab=mqtt",
     icon: Database,
     groupId: "navigation",
     keywords: ["mqtt", "broker"],
   },
   {
-    id: "accounts-email",
+    id: "sources-email",
     labelKey: "commandPalette.sourcesEmail",
-    to: "/accounts?tab=email",
+    to: "/sources?tab=email",
     icon: Database,
     groupId: "navigation",
     keywords: ["email", "imap", "郵件"],
@@ -353,7 +353,7 @@ export function runCommandPaletteAction(action: CommandPaletteActionId): void {
     case "open-viewer":
       openViewerWindow();
       break;
-    case "open-ops-board":
+    case "open-board":
     case "new-task":
     case "show-shortcuts":
     case "open-assistant-quick":

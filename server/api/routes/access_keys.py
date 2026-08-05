@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import API_DEPS, get_db
+from server.api.schemas.requests import AccessKeyCreateBody
 from server.api.schemas.responses import (
     AccessKeyCreatedResponse,
     AccessKeyDeleteResponse,
@@ -17,27 +17,6 @@ from server.auth.access_keys import READ_SCOPE, create_access_key, list_access_k
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 
 router = APIRouter(prefix="/api/v1/access-keys", tags=["access-keys"], dependencies=API_DEPS)
-
-
-class AccessKeyCreateBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    label: str = Field(default="Access key", max_length=80)
-    readOnly: bool = Field(
-        default=False,
-        description=(
-            'When true, create a read-only key (`["read"]`) for GET-only remote access. '
-            'Leave false for a full household key (`["*"]`) usable for writes, Webhook, '
-            "agent/chat, and A2A."
-        ),
-    )
-    scopes: list[str] | None = Field(
-        default=None,
-        description=(
-            "Optional explicit scopes. When set, overrides `readOnly`. "
-            'Use `["*"]` for full access or `["read"]` for read-only.'
-        ),
-    )
 
 
 @router.get("", response_model=AccessKeyListResponse)

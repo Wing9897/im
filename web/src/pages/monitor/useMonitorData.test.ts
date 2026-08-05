@@ -2,9 +2,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockListAccounts, mockListChannelsWithAccounts, mockQueryMessagesPage, runtimeState } = vi.hoisted(() => ({
-  mockListAccounts: vi.fn(),
-  mockListChannelsWithAccounts: vi.fn(),
+const { mockListSources, mockListChannelsWithSources, mockQueryMessagesPage, runtimeState } = vi.hoisted(() => ({
+  mockListSources: vi.fn(),
+  mockListChannelsWithSources: vi.fn(),
   mockQueryMessagesPage: vi.fn(),
   runtimeState: {
     lastMessagesUpdate: null as {
@@ -14,8 +14,8 @@ const { mockListAccounts, mockListChannelsWithAccounts, mockQueryMessagesPage, r
   },
 }));
 
-vi.mock("../../api/accounts", () => ({
-  listAccounts: (...args: unknown[]) => mockListAccounts(...args),
+vi.mock("../../api/sources", () => ({
+  listSources: (...args: unknown[]) => mockListSources(...args),
 }));
 
 vi.mock("../../api/messages", () => ({
@@ -23,7 +23,7 @@ vi.mock("../../api/messages", () => ({
 }));
 
 vi.mock("../../api/channels", () => ({
-  listChannelsWithAccounts: (...args: unknown[]) => mockListChannelsWithAccounts(...args),
+  listChannelsWithSources: (...args: unknown[]) => mockListChannelsWithSources(...args),
 }));
 
 vi.mock("../../context/AnalysisStatusContext", () => ({
@@ -52,11 +52,11 @@ describe("useMonitorData", () => {
     latest = null;
     localStorage.clear();
     runtimeState.lastMessagesUpdate = null;
-    mockListAccounts.mockReset();
-    mockListChannelsWithAccounts.mockReset();
+    mockListSources.mockReset();
+    mockListChannelsWithSources.mockReset();
     mockQueryMessagesPage.mockReset();
-    mockListAccounts.mockResolvedValue([]);
-    mockListChannelsWithAccounts.mockResolvedValue([]);
+    mockListSources.mockResolvedValue([]);
+    mockListChannelsWithSources.mockResolvedValue([]);
     mockQueryMessagesPage.mockResolvedValue({
       messages: [makeMessage({ id: "msg-1" })],
       nextCursor: { timestamp: "2024-06-01T12:00:00Z", id: "msg-1" },
@@ -106,16 +106,16 @@ describe("useMonitorData", () => {
       await Promise.resolve();
     });
 
-    expect(mockListChannelsWithAccounts).toHaveBeenCalled();
-    expect(mockListAccounts).toHaveBeenCalled();
+    expect(mockListChannelsWithSources).toHaveBeenCalled();
+    expect(mockListSources).toHaveBeenCalled();
     expect(mockQueryMessagesPage).toHaveBeenCalled();
     expect(latest!.viewMode).toBe("wall");
     expect(latest!.totalCount).toBe(42);
     expect(latest!.messages).toHaveLength(0);
   });
 
-  it("exposes account or channel metadata loading failures", async () => {
-    mockListChannelsWithAccounts.mockRejectedValue(new Error("channels unavailable"));
+  it("exposes source or channel metadata loading failures", async () => {
+    mockListChannelsWithSources.mockRejectedValue(new Error("channels unavailable"));
     await renderHook();
     await act(async () => {
       await Promise.resolve();
@@ -126,7 +126,7 @@ describe("useMonitorData", () => {
 
   it("retries metadata loading after retryMetadataLoad", async () => {
     let shouldFail = true;
-    mockListChannelsWithAccounts.mockImplementation(() => {
+    mockListChannelsWithSources.mockImplementation(() => {
       if (shouldFail) {
         return Promise.reject(new Error("channels unavailable"));
       }

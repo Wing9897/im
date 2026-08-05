@@ -5,7 +5,7 @@ import {
   SourceDetailDialogLayout,
   buildEmailMailboxDetailFields,
 } from "../../../components/detail";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
   emailDetailFolderCursorClass,
@@ -33,17 +33,17 @@ export function EmailMailboxDetailDialog({
   const fields = buildEmailMailboxDetailFields(mailbox);
   const metaFields = fields.filter((field) => !field.standalone);
   const titleName =
-    mailbox.username || formatAccountLabel(mailbox.account) || t("email.fallbackName");
+    mailbox.username || formatSourceLabel(mailbox.source) || t("email.fallbackName");
   return (
     <SourceDetailDialogLayout
       ariaLabel={t("email.detailAria", { name: mailbox.username })}
       title={
         <>
-          <span style={statusDotStyle(mailbox.account.status)} aria-hidden="true" />
+          <span style={statusDotStyle(mailbox.source.status)} aria-hidden="true" />
           {titleName}
         </>
       }
-      subtitle={`Email · ${formatStatusLabel(mailbox.account.status)}`}
+      subtitle={`Email · ${formatStatusLabel(mailbox.source.status)}`}
       error={mailbox.lastError}
       onClose={onClose}
       onEdit={onEdit}

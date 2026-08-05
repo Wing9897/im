@@ -2,24 +2,24 @@ import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { PlatformIcon } from "../../common/PlatformIcon";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import type {
-  PickerAccountGroup,
+  PickerSourceGroup,
   PickerPlatformGroup,
 } from "../../../utils/groupChannelsForPicker";
 import {
   channelDisplayHint,
   channelDisplayLabel,
   countSelectedInChannels,
-  PICKER_ACCOUNT_COLLAPSE_THRESHOLD,
+  PICKER_SOURCE_COLLAPSE_THRESHOLD,
 } from "../../../utils/channelPickerModel";
 
 function platformChannelCount(group: PickerPlatformGroup): number {
-  return group.accounts.reduce((sum, account) => sum + account.channels.length, 0);
+  return group.sources.reduce((sum, source) => sum + source.channels.length, 0);
 }
 
-function accountKey(platform: string, account: PickerAccountGroup): string {
-  return `${platform}:${account.accountId ?? account.accountLabel}`;
+function sourceKey(platform: string, source: PickerSourceGroup): string {
+  return `${platform}:${source.sourceId ?? source.sourceLabel}`;
 }
 
 interface ChannelPickerGroupListProps {
@@ -31,9 +31,9 @@ interface ChannelPickerGroupListProps {
   useFillHeight: boolean;
   listMaxHeight: number;
   expandedPlatforms: Set<string>;
-  expandedAccounts: Set<string>;
+  expandedSources: Set<string>;
   onTogglePlatform: (platform: string) => void;
-  onToggleAccount: (key: string) => void;
+  onToggleSource: (key: string) => void;
   onToggleChannel: (channelId: string) => void;
   emptyMessage: string;
 }
@@ -47,9 +47,9 @@ export function ChannelPickerGroupList({
   useFillHeight,
   listMaxHeight,
   expandedPlatforms,
-  expandedAccounts,
+  expandedSources,
   onTogglePlatform,
-  onToggleAccount,
+  onToggleSource,
   onToggleChannel,
   emptyMessage,
 }: ChannelPickerGroupListProps) {
@@ -63,52 +63,52 @@ export function ChannelPickerGroupList({
     );
   }
 
-  const renderAccountBlock = (platformGroup: PickerPlatformGroup, accountGroup: PickerAccountGroup) => {
-    const key = accountKey(platformGroup.platform, accountGroup);
-    const accountExpanded = expandedAccounts.has(key) || searching;
-    const accountSelected = countSelectedInChannels(selectedIds, accountGroup.channels);
-    const collapsibleAccount =
-      platformGroup.pickerLayout === "account-tree" &&
-      accountGroup.channels.length > PICKER_ACCOUNT_COLLAPSE_THRESHOLD;
+  const renderSourceBlock = (platformGroup: PickerPlatformGroup, sourceGroup: PickerSourceGroup) => {
+    const key = sourceKey(platformGroup.platform, sourceGroup);
+    const sourceExpanded = expandedSources.has(key) || searching;
+    const sourceSelected = countSelectedInChannels(selectedIds, sourceGroup.channels);
+    const collapsibleSource =
+      platformGroup.pickerLayout === "source-tree" &&
+      sourceGroup.channels.length > PICKER_SOURCE_COLLAPSE_THRESHOLD;
 
     return (
-      <div key={key} className="im-picker-account-block">
-        {platformGroup.pickerLayout === "account-tree" &&
-          (collapsibleAccount ? (
+      <div key={key} className="im-picker-source-block">
+        {platformGroup.pickerLayout === "source-tree" &&
+          (collapsibleSource ? (
             <button
               type="button"
-              className="im-picker-account-toggle"
-              aria-expanded={accountExpanded}
-              onClick={() => onToggleAccount(key)}
+              className="im-picker-source-toggle"
+              aria-expanded={sourceExpanded}
+              onClick={() => onToggleSource(key)}
             >
               <ChevronRight
                 size={14}
                 aria-hidden="true"
-                className={`im-picker-chevron${accountExpanded ? " is-open" : ""}`}
+                className={`im-picker-chevron${sourceExpanded ? " is-open" : ""}`}
               />
               {!usePlatformGroups ? (
                 <PlatformIcon platform={platformGroup.platform} size={14} />
               ) : null}
-              <span className="im-picker-account-name">{accountGroup.accountLabel}</span>
-              <span className="im-picker-account-count">{accountGroup.channels.length}</span>
-              {accountSelected > 0 && (
+              <span className="im-picker-source-name">{sourceGroup.sourceLabel}</span>
+              <span className="im-picker-source-count">{sourceGroup.channels.length}</span>
+              {sourceSelected > 0 && (
                 <span className="im-picker-selected-badge">
-                  {t("channelPicker.selectedBadge", { count: accountSelected })}
+                  {t("channelPicker.selectedBadge", { count: sourceSelected })}
                 </span>
               )}
             </button>
           ) : (
-            <div className="im-picker-account-label">
+            <div className="im-picker-source-label">
               {!usePlatformGroups ? (
                 <PlatformIcon platform={platformGroup.platform} size={14} />
               ) : null}
-              <span className="im-picker-account-name">{accountGroup.accountLabel}</span>
-              <span className="im-picker-account-count">{accountGroup.channels.length}</span>
+              <span className="im-picker-source-name">{sourceGroup.sourceLabel}</span>
+              <span className="im-picker-source-count">{sourceGroup.channels.length}</span>
             </div>
           ))}
-        {(!collapsibleAccount || accountExpanded) && (
+        {(!collapsibleSource || sourceExpanded) && (
           <div className="im-picker-rows">
-            {accountGroup.channels.map((channel: ChannelWithAccount) => {
+            {sourceGroup.channels.map((channel: ChannelWithSource) => {
               const isSelected = selected.has(channel.id);
               const label = channelDisplayLabel(channel);
               const hint = channelDisplayHint(channel, platformGroup.pickerLayout);
@@ -144,7 +144,7 @@ export function ChannelPickerGroupList({
 
   const renderPlatformBody = (platformGroup: PickerPlatformGroup) => (
     <div className="im-picker-platform-body">
-      {platformGroup.accounts.map((accountGroup) => renderAccountBlock(platformGroup, accountGroup))}
+      {platformGroup.sources.map((sourceGroup) => renderSourceBlock(platformGroup, sourceGroup))}
     </div>
   );
 
@@ -159,7 +159,7 @@ export function ChannelPickerGroupList({
         const channelCount = platformChannelCount(platformGroup);
         const platformSelected = countSelectedInChannels(
           selectedIds,
-          platformGroup.accounts.flatMap((account) => account.channels),
+          platformGroup.sources.flatMap((source) => source.channels),
         );
         const platformExpanded = expandedPlatforms.has(platformGroup.platform) || searching;
 
@@ -204,4 +204,4 @@ export function ChannelPickerGroupList({
   );
 }
 
-export { accountKey, platformChannelCount };
+export { sourceKey, platformChannelCount };

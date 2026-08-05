@@ -1,6 +1,6 @@
 /**
  * Task ``analysis_time_range`` vocabulary — FE mirror of
- * ``server.db.schema_ddl.ANALYSIS_TIME_RANGE_VALUES`` (drift-tested in
+ * ``server.db.schema_domains.vocabulary.ANALYSIS_TIME_RANGE_VALUES`` (drift-tested in
  * ``server/tests/test_backend_consolidation.py``).
  *
  * Do **not** add monitor／agent-only tokens ``12h``／``24h`` here — those belong on

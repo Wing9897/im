@@ -3,32 +3,17 @@
 from __future__ import annotations
 
 from fastapi import Request, Response
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import get_db
 from server.api.routes.task_helpers import get_task_row
 from server.api.routes.tasks._common import notify, register_task
 from server.api.routes.tasks._router import router
+from server.api.schemas.requests import TaskScheduleBody
 from server.api.schemas.responses import TaskScheduleResponse
 from server.errors import VALIDATION_ERROR, http_error
 from server.services.recurring_task_writes import delete_task_schedule, upsert_task_schedule
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_task_schedule
-
-
-class TaskScheduleBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    rrule: str
-    eventStartTime: str | None = None
-    eventEndTime: str | None = None
-    eventIsAllDay: bool = False
-    eventLocation: str | None = None
-    eventDescription: str | None = None
-    parentTaskId: str | None = Field(
-        default=None,
-        description="Optional project parent for nested recurring children",
-    )
 
 
 @router.get("/{task_id}/schedule", response_model=TaskScheduleResponse)

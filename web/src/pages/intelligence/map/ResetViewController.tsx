@@ -1,6 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
-import { DEFAULT_CENTER, DEFAULT_ZOOM } from "./mapViewHelpers";
+import {
+  INTELLIGENCE_MAP_DEFAULT_CENTER,
+  INTELLIGENCE_MAP_DEFAULT_ZOOM,
+} from "../../../domain/intelligence/mapPresentation";
 
 interface ResetViewControllerProps {
   trigger: number;
@@ -12,7 +15,7 @@ export function ResetViewController({ trigger }: ResetViewControllerProps) {
   useEffect(() => {
     if (trigger !== prev.current) {
       prev.current = trigger;
-      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      map.setView(INTELLIGENCE_MAP_DEFAULT_CENTER, INTELLIGENCE_MAP_DEFAULT_ZOOM);
     }
   }, [trigger, map]);
   return null;

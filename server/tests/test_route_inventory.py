@@ -58,6 +58,7 @@ _REQUIRED_OPENAPI_PREFIXES = (
     "/api/v1/access-keys",
     "/api/v1/a2a/",
     "/api/v1/calendar/imports/",
+    "/api/v1/sources",
     "/api/v1/ui-prefs/",
 )
 
@@ -172,7 +173,7 @@ def test_server_paths_have_an_in_repo_caller(app: FastAPI):
     by the suite that covers it is dead code with a green checkmark.
     """
     called = _called_paths()
-    assert "/api/v1/channels/with-accounts" in called, "caller scan is broken — it found no known frontend call"
+    assert "/api/v1/channels/with-sources" in called, "caller scan is broken — it found no known frontend call"
 
     uncalled = sorted(
         path
@@ -188,7 +189,7 @@ def test_server_paths_have_an_in_repo_caller(app: FastAPI):
 def test_frontend_api_paths_exist_on_server(app: FastAPI):
     frontend_paths = _collect_frontend_paths()
     assert "/api/v1/messages/{id}/media" in frontend_paths
-    # Nested modules under web/src/api/** (e.g. accounts/) must be scanned.
+    # Nested modules under web/src/api/** (e.g. sources/) must be scanned.
     assert any(p.startswith("/api/v1/") for p in frontend_paths)
     server_paths = _collect_server_paths(app)
     missing = sorted(p for p in frontend_paths if not _path_matches(server_paths, p))
@@ -201,6 +202,8 @@ def test_live_openapi_paths_contain_committed(app: FastAPI):
     committed = json.loads(_OPENAPI_PATH.read_text(encoding="utf-8"))
     committed_paths = set(committed.get("paths", {}))
     live_paths = set(app.openapi().get("paths", {}))
+    assert not any(path.startswith("/api/v1/accounts") for path in live_paths)
+    assert not any(path.startswith("/api/v1/accounts") for path in committed_paths)
 
     missing_from_live = sorted(committed_paths - live_paths)
     assert not missing_from_live, "Committed OpenAPI paths missing from live FastAPI:\n" + "\n".join(missing_from_live)

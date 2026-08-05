@@ -5,7 +5,7 @@ import { useAnalysisStatus } from "../../../context/AnalysisStatusContext";
 import { useLatestRequest } from "../../../hooks/useLatestRequest";
 import { loadPhase } from "../../../hooks/loadPhase";
 import { usePersistedState } from "../../../hooks/usePersistedState";
-import type { ChannelWithAccount } from "../../../types";
+import type { ChannelWithSource } from "../../../types";
 import { toErrorMessage } from "../../../utils/errors";
 import {
   advanceCarousel,
@@ -40,7 +40,7 @@ function retainedMessageIds(slots: WallSlotsState): Set<string> {
 
 /** Channel selection, per-slot queues, SSE + periodic sync for the monitor wall view. */
 export function useWallData(
-  channels: ChannelWithAccount[],
+  channels: ChannelWithSource[],
   onRetainedIdsChange?: (ids: Set<string>) => void,
   /** When false, skip pruning — catalog may still be loading as ``[]``. */
   channelsReady = true,

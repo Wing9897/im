@@ -6,8 +6,8 @@ orchestration stays in ``server.analyzer.engine`` (``tasks.consult_advisor``).
 
 from __future__ import annotations
 
+from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
-from server.db.schema_ddl import ANALYSIS_TIME_RANGE_VALUES
 
 #: Calendar / messages / optional web search agent (POST /assistant); tools JSON appended at runtime.
 AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機已採集訊息、分析情報事件／情報、日程／用戶事件，
@@ -92,7 +92,8 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 週期任務：新建 calendar.create_recurring_task；改 calendar.update_recurring_task；
 刪／停用優先 calendar.delete_recurring_task（軟刪＝isActive=false）；
 再啟用用 update_recurring_task(isActive=true)。皆硬鎖 recurring 模式，不碰其他任務類型。
-欄位已足夠清晰時直接執行；缺關鍵欄位（標題、開始時間，或週期任務的 id／rrule／時鐘時間）時用一句話指出缺什麼，不要反覆確認。
+欄位已足夠清晰時直接執行；
+缺關鍵欄位（標題、開始時間，或週期任務的 id／rrule／時鐘時間）時用一句話指出缺什麼，不要反覆確認。
 「今天／明天／下週」依下方「當前時間」推算。
 用戶事件時間用完整 ISO-8601（含時區）；週期任務時鐘用系統本地 HH:MM（展開為 UTC ISO）。
 
@@ -107,9 +108,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 
 #: taskConfig field list embedded in the task-advisor system prompt.
 _ANALYSIS_MODE_PROMPT_VALUES = ", ".join(repr(mode) for mode in ALL_ANALYSIS_MODES)
-_ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(
-    repr(value) for value in ANALYSIS_TIME_RANGE_VALUES
-)
+_ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(repr(value) for value in ANALYSIS_TIME_RANGE_VALUES)
 
 TASK_CONFIG_SCHEMA_PROMPT = (
     "- name: short task name (string)\n"

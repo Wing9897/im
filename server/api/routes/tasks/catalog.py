@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import Query, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import get_db
 from server.api.routes.task_helpers import TaskConfigBody, validate_task_body
 from server.api.routes.tasks._common import notify, register_task
 from server.api.routes.tasks._router import router
+from server.api.schemas.requests import CreateRecurringTaskBody
 from server.api.schemas.responses import TaskActivitySpanResponse, TaskResponse
 from server.errors import VALIDATION_ERROR, http_error
 from server.presets.task_presets import BUILTIN_PRESETS
@@ -22,30 +22,6 @@ from server.services.task_crud import (
 )
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_activity_span
-
-
-class CreateRecurringTaskBody(BaseModel):
-    """Atomic recurring create: analysis task + ``recurring_schedules`` in one call.
-
-    Prefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for
-    web/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    name: str
-    rrule: str
-    eventStartTime: str | None = None
-    eventEndTime: str | None = None
-    eventIsAllDay: bool = False
-    eventLocation: str | None = None
-    eventDescription: str | None = None
-    description: str | None = None
-    worksetId: str | None = None
-    parentTaskId: str | None = Field(
-        default=None,
-        description="Optional project parent for nested recurring children",
-    )
 
 
 @router.get("/templates")

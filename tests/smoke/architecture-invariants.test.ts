@@ -468,6 +468,10 @@ describe("Generated artifacts are gitignored and untracked", () => {
       "**/coverage/",
       "*.egg-info/",
       "*.tsbuildinfo",
+      "__pycache__/",
+      ".pytest_cache/",
+      ".hypothesis/",
+      ".ruff_cache/",
     ]) {
       expect(gitignoreLines).toContain(pattern);
     }
@@ -499,6 +503,10 @@ describe("Generated artifacts are gitignored and untracked", () => {
       ".vitest/results.json",
       "web/coverage/index.html",
       "server/__pycache__/module.pyc",
+      "server/tests/__pycache__/test_db_schema.cpython-312.pyc",
+      ".pytest_cache/v/cache/lastfailed",
+      ".hypothesis/constants/tmp",
+      ".ruff_cache/0.14.0/cache.db",
       "web/tsconfig.app.tsbuildinfo",
     ];
     let ignored: string[] = [];
@@ -510,5 +518,81 @@ describe("Generated artifacts are gitignored and untracked", () => {
     for (const probe of probes) {
       expect(ignored, `${probe} should be git-ignored`).toContain(probe);
     }
+  });
+});
+
+describe("Source tree integrity: no 0-byte product source files", () => {
+  const PRODUCT_TREES: Array<{ dir: string; extensions: string[] }> = [
+    { dir: path.resolve(ROOT_DIR, "server"), extensions: [".py"] },
+    { dir: path.resolve(ROOT_DIR, "web", "src"), extensions: [".ts", ".tsx", ".css", ".json"] },
+    { dir: path.resolve(ROOT_DIR, "desktop"), extensions: [".ts", ".tsx", ".js", ".mjs", ".cjs"] },
+    { dir: path.resolve(ROOT_DIR, "scripts"), extensions: [".py", ".mjs", ".ts"] },
+    { dir: path.resolve(ROOT_DIR, "docs"), extensions: [".md"] },
+    { dir: path.resolve(ROOT_DIR, "tests"), extensions: [".ts", ".tsx"] },
+  ];
+  const SKIP = new Set([
+    "node_modules",
+    "dist",
+    "release",
+    "server-runtime",
+    "coverage",
+    "__pycache__",
+    ".vite",
+    ".vitest",
+    ".hypothesis",
+    ".pytest_cache",
+  ]);
+
+  function collectNonEmptyCandidates(dir: string, extensions: string[]): string[] {
+    const out: string[] = [];
+    if (!fs.existsSync(dir)) return out;
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (SKIP.has(entry.name) || entry.name.startsWith(".")) continue;
+        out.push(...collectNonEmptyCandidates(full, extensions));
+      } else if (extensions.some((ext) => entry.name.endsWith(ext))) {
+        out.push(full);
+      }
+    }
+    return out;
+  }
+
+  it("server/web/desktop/scripts/docs/tests have no empty tracked-source-shaped files", () => {
+    const empty: string[] = [];
+    for (const tree of PRODUCT_TREES) {
+      for (const file of collectNonEmptyCandidates(tree.dir, tree.extensions)) {
+        // CHANGELOG may be filled separately; still forbid accidental 0-byte wipe.
+        if (fs.statSync(file).size === 0) {
+          empty.push(relFromRoot(file));
+        }
+      }
+    }
+    if (empty.length > 0) {
+      const report = empty.map((f) => `  - ${f}`).join("\n");
+      expect(empty, `Found 0-byte source files (agent writeback class bug):\n${report}`).toEqual([]);
+    }
+  });
+});
+
+describe("Retired dual-track paths stay absent", () => {
+  it("web/src/api/accounts and pages/sources/accounts directories do not exist", () => {
+    expect(fs.existsSync(path.join(SRC_DIR, "api", "accounts"))).toBe(false);
+    expect(fs.existsSync(path.join(SRC_DIR, "pages", "sources", "accounts"))).toBe(false);
+  });
+
+  it("server/api/routes/accounts and schema_ddl.py do not exist", () => {
+    expect(fs.existsSync(path.resolve(ROOT_DIR, "server", "api", "routes", "accounts"))).toBe(
+      false,
+    );
+    expect(fs.existsSync(path.resolve(ROOT_DIR, "server", "db", "schema_ddl.py"))).toBe(false);
+    expect(fs.existsSync(path.resolve(ROOT_DIR, "server", "db", "schema_domains"))).toBe(true);
+  });
+
+  it("no product web/desktop file calls /api/v1/accounts", () => {
+    scanWebDesktopForPatterns(
+      [/\/api\/v1\/accounts\b/],
+      "Retired /api/v1/accounts paths must not reappear in product code",
+    );
   });
 });

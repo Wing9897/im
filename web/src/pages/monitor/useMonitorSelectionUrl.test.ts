@@ -13,7 +13,7 @@ vi.mock("../../context/ToastContext", async () =>
 const MESSAGES: Message[] = [
   {
     id: "msg-1",
-    accountId: "a1",
+    sourceId: "a1",
     platform: "telegram",
     platformId: "1",
     channelName: "ch",
@@ -27,7 +27,7 @@ const MESSAGES: Message[] = [
   },
   {
     id: "msg-2",
-    accountId: "a1",
+    sourceId: "a1",
     platform: "telegram",
     platformId: "1",
     channelName: "ch",

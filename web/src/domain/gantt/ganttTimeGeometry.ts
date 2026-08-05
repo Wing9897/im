@@ -36,6 +36,27 @@ export type CellSpan = {
 };
 
 /**
+ * Clip a raw 0-based/exclusive cell span to the visible axis.
+ * This is the shared render boundary used by both Timeline's CSS grid and
+ * Board's percentage bars.
+ */
+export function clipCellSpanToAxis(
+  startCell: number,
+  endCell: number,
+  tickCount: number,
+): CellSpan | null {
+  if (tickCount <= 0 || endCell <= 0 || startCell >= tickCount) {
+    return null;
+  }
+  const clippedStart = Math.max(0, Math.min(tickCount - 1, startCell));
+  const clippedEnd = Math.max(
+    clippedStart + 1,
+    Math.min(tickCount, Math.max(endCell, startCell + 1)),
+  );
+  return { startCell: clippedStart, endCell: clippedEnd };
+}
+
+/**
  * Map a clipped ms interval onto discrete axis cells.
  * Point / sub-cell spans still occupy at least one full cell.
  */
@@ -50,16 +71,10 @@ export function msRangeToCellSpan(
     return null;
   }
 
-  let startCell = Math.floor((clippedStart - axisStart) / cellMs);
-  let endCell = Math.ceil((clippedEnd - axisStart) / cellMs);
+  const startCell = Math.floor((clippedStart - axisStart) / cellMs);
+  const endCell = Math.ceil((clippedEnd - axisStart) / cellMs);
 
-  if (endCell <= startCell) {
-    endCell = startCell + 1;
-  }
-
-  startCell = Math.max(0, Math.min(tickCount - 1, startCell));
-  endCell = Math.max(startCell + 1, Math.min(tickCount, endCell));
-  return { startCell, endCell };
+  return clipCellSpanToAxis(startCell, endCell, tickCount);
 }
 
 /** Percent left/width for board-style absolute bars. */

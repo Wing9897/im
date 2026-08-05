@@ -12,7 +12,7 @@ from server.db.database import Database
 from server.queries.pagination import fetch_cursor_page
 from server.wire.serializers import serialize_message
 
-MAX_FILTER_ACCOUNT_IDS = 100
+MAX_FILTER_SOURCE_IDS = 100
 MAX_FILTER_CHANNEL_IDS = 100
 MAX_SEARCH_LENGTH = 500
 
@@ -24,13 +24,13 @@ class MessagesQueryError(ValueError):
     """Invalid filter inputs; API routes map this to HTTP 422."""
 
 
-async def message_account_exists(db: Database, account_id: str) -> bool:
-    """Whether an optional ingest account FK is valid."""
-    return await db.fetch_one("SELECT 1 FROM accounts WHERE id = ?", (account_id,)) is not None
+async def message_source_exists(db: Database, source_id: str) -> bool:
+    """Whether an optional ingest source FK is valid."""
+    return await db.fetch_one("SELECT 1 FROM sources WHERE id = ?", (source_id,)) is not None
 
 
 def build_message_filters(
-    account_ids: Optional[str],
+    source_ids: Optional[str],
     time_range: Optional[str],
     search: Optional[str],
     platform: Optional[str],
@@ -38,12 +38,12 @@ def build_message_filters(
 ) -> tuple[str, list[Any]]:
     clauses: list[str] = []
     params: list[Any] = []
-    if account_ids:
-        ids = [a.strip() for a in account_ids.split(",") if a.strip()]
+    if source_ids:
+        ids = [a.strip() for a in source_ids.split(",") if a.strip()]
         if ids:
-            if len(ids) > MAX_FILTER_ACCOUNT_IDS:
-                raise MessagesQueryError(f"A maximum of {MAX_FILTER_ACCOUNT_IDS} account ids may be filtered")
-            clauses.append(f"m.account_id IN ({','.join('?' for _ in ids)})")
+            if len(ids) > MAX_FILTER_SOURCE_IDS:
+                raise MessagesQueryError(f"A maximum of {MAX_FILTER_SOURCE_IDS} source ids may be filtered")
+            clauses.append(f"m.source_id IN ({','.join('?' for _ in ids)})")
             params.extend(ids)
     time_sql, time_params = time_range_condition(time_range)
     if time_sql:
@@ -75,7 +75,7 @@ def build_message_filters(
 async def fetch_messages_page(
     db: Database,
     *,
-    account_ids: Optional[str] = None,
+    source_ids: Optional[str] = None,
     time_range: Optional[str] = None,
     search: Optional[str] = None,
     platform: Optional[str] = None,
@@ -85,7 +85,7 @@ async def fetch_messages_page(
     limit: int = 50,
     include_total: bool = True,
 ) -> dict[str, Any]:
-    where, params = build_message_filters(account_ids, time_range, search, platform, channel_ids)
+    where, params = build_message_filters(source_ids, time_range, search, platform, channel_ids)
 
     total_count = None
     if include_total:

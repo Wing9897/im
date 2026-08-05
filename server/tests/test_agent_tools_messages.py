@@ -70,12 +70,12 @@ async def test_messages_search_rejects_removed_full_history_alias(app) -> None:
 async def test_messages_search_7d_finds_recent_message(app) -> None:
     recent_ts = to_iso_z(datetime.now(timezone.utc) - timedelta(days=1))
     await app.state.db.execute(
-        "INSERT INTO messages (id, account_id, platform, platform_id, "
+        "INSERT INTO messages (id, source_id, platform, platform_id, "
         "platform_message_id, sender_id, sender_name, content, timestamp, "
         "raw_data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)",
         (
             "msg-recent-agent",
-            seed.TG_ACCOUNT,
+            seed.TG_SOURCE,
             *seed.TG_CHANNEL,
             "9001",
             "sender-recent",

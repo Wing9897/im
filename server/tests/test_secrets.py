@@ -32,7 +32,7 @@ async def test_config_secrets_are_encrypted_transparently(tmp_path):
 
 async def test_email_credentials_are_encrypted_on_create(client, app):
     resp = await client.post(
-        "/api/v1/accounts/email",
+        "/api/v1/sources/email",
         json={
             "imapHost": "imap.gmail.com",
             "username": "user@gmail.com",
@@ -41,8 +41,8 @@ async def test_email_credentials_are_encrypted_on_create(client, app):
         },
     )
     assert resp.status_code == 200
-    account_id = resp.json()["account"]["id"]
-    raw = await app.state.db.fetch_value("SELECT credentials FROM accounts WHERE id = ?", (account_id,))
+    source_id = resp.json()["source"]["id"]
+    raw = await app.state.db.fetch_value("SELECT credentials FROM sources WHERE id = ?", (source_id,))
     assert str(raw).startswith("enc:v1:")
     assert "imap-app-password" not in str(raw)
     creds = json.loads(secret_store.unprotect_text(raw))

@@ -1,7 +1,8 @@
 """Structural fingerprint derived from the authoritative schema DDL.
 
 Instead of maintaining a hand-written manifest beside the DDL, the required
-structure is derived once at import time by executing ``schema_ddl.DDL`` in an
+structure is derived once at import time by executing the aggregated
+``server.db.schema.DDL`` in an
 in-memory ``sqlite3`` database and introspecting it. The introspection mirrors
     ``server.db.schema_inspect.inspect_schema`` (same PRAGMA sources and normalization)
 so "DDL-derived fingerprint" and "live-connection fingerprint" are directly
@@ -12,7 +13,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from server.db.schema_ddl import DDL
+from server.db.schema import DDL
 
 # Spec tuple shapes consumed by ``server.db.schema_inspect`` signature dataclasses.
 ColumnSpec = tuple[str, str, bool, bool, str | None, int]

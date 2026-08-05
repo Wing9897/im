@@ -26,9 +26,9 @@
     "all": "全部類別",
     "analysis": "分析",
     "collector": "收集器",
-    "account": "帳號",
     "system": "系統",
-    "frontend": "前端"
+    "frontend": "前端",
+    "source": "來源"
   },
   "summary": {
     "status": "處理狀態",
@@ -58,7 +58,6 @@
     "analysisTrace": "分析追蹤：{summary}",
     "schedulerPaused": "分析排程已暫停",
     "schedulerResumed": "分析排程已恢復",
-    "accountError": "帳號錯誤（{platform}）：{accountName} — {summary}",
     "retentionCleanup": "保留清理已刪除 {deletedTotal} 筆",
     "runtimeAiConnected": "AI 引擎可用",
     "runtimeAiUnavailable": "AI 引擎不可用",
@@ -68,7 +67,8 @@
     "frontendWindowError": "前端視窗錯誤",
     "frontendUnhandledRejection": "未處理的 Promise 拒絕",
     "frontendReact": "React 渲染錯誤",
-    "frontendCritical": "前端嚴重錯誤"
+    "frontendCritical": "前端嚴重錯誤",
+    "sourceError": "來源錯誤（{platform}）：{sourceName} — {summary}"
   },
   "section": {
     "loadingTitle": "正在載入系統日誌",

@@ -93,10 +93,6 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultHomeRedirect />} />
         <Route path="/monitor" element={<LazyPage Page={MonitorPage} />} />
-        <Route
-          path="/wall"
-          element={<Navigate to="/monitor" replace state={{ monitorViewMode: "wall" }} />}
-        />
         <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/worksets/:worksetId" element={<LazyPage Page={DashboardViewer} />} />
@@ -107,7 +103,7 @@ export function AppRoutes() {
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
         <Route path="/items/category/:categoryId" element={<LazyPage Page={ItemsPage} />} />
-        <Route path="/accounts" element={<LazyPage Page={SourceManagementPage} />} />
+        <Route path="/sources" element={<LazyPage Page={SourceManagementPage} />} />
         <Route path="/actions" element={<LazyPage Page={ActionsPage} />} />
         <Route path="/assistant" element={<LazyPage Page={AssistantPage} />} />
         <Route path="/account" element={<LazyPage Page={AccountShell} />}>
@@ -133,7 +129,6 @@ export function AppRoutes() {
             <Route path="logs" element={<LazyPage Page={LogPage} />} />
           </Route>
         </Route>
-        <Route path="/logs" element={<Navigate to="/settings/logs" replace />} />
         <Route path="/viewer" element={<LazyPage Page={ViewerLayout} />}>
           <Route index element={<Navigate to="/viewer/tasks" replace />} />
           <Route path="tasks" element={<LazyPage Page={ViewerTasksPage} />} />

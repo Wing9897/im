@@ -16,7 +16,7 @@ import {
 function wallMessage(id: string, content = "hello") {
   return makeMessage({
     id,
-    accountId: "acc-1",
+    sourceId: "acc-1",
     platformId: "10001",
     channelName: "News",
     platformMessageId: `pm-${id}`,

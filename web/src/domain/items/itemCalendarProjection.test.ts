@@ -16,7 +16,7 @@ import {
 } from "./itemCalendarProjection";
 import { ALL_CATEGORIES_ID, UNCATEGORIZED_CATEGORY_ID } from "./categoryAggregates";
 
-/** Canonical seed emojis from `server/db/schema_ddl.py` INSERT OR IGNORE rows. */
+/** Canonical seed emojis from `server/db/schema_domains/items.py` INSERT OR IGNORE rows. */
 const DDL_SEED_CATEGORY_EMOJIS: Readonly<Record<string, string>> = {
   passport_docs: "🪪",
   food: "🍎",

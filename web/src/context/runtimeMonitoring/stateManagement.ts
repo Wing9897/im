@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
 import type {
-  AccountStatusChangedPayload,
+  SourceStatusChangedPayload,
   AiEngineStatus,
   QueueStatus,
   CollectorStatus,
@@ -31,14 +31,13 @@ export interface RuntimeStateBundle {
   setActiveAnalyses: React.Dispatch<
     React.SetStateAction<Map<string, ActiveAnalysisState>>
   >;
-  activeAnalysis: ActiveAnalysisState | null;
   lastAnalysisEvent: RuntimeAnalysisEvent | null;
   setLastAnalysisEvent: React.Dispatch<
     React.SetStateAction<RuntimeAnalysisEvent | null>
   >;
-  lastAccountStatusChange: AccountStatusChangedPayload | null;
-  setLastAccountStatusChange: React.Dispatch<
-    React.SetStateAction<AccountStatusChangedPayload | null>
+  lastSourceStatusChange: SourceStatusChangedPayload | null;
+  setLastSourceStatusChange: React.Dispatch<
+    React.SetStateAction<SourceStatusChangedPayload | null>
   >;
   lastMessagesUpdate: RuntimeMessagesUpdateEvent | null;
   setLastMessagesUpdate: React.Dispatch<
@@ -71,16 +70,10 @@ export function useRuntimeMonitoringState(): RuntimeStateBundle {
     Map<string, ActiveAnalysisState>
   >(new Map());
 
-  // Thin summary of the first concurrent batch — prefer activeAnalyses in UI.
-  const activeAnalysis =
-    activeAnalyses.size > 0
-      ? activeAnalyses.values().next().value ?? null
-      : null;
-
   const [lastAnalysisEvent, setLastAnalysisEvent] =
     useState<RuntimeAnalysisEvent | null>(null);
-  const [lastAccountStatusChange, setLastAccountStatusChange] =
-    useState<AccountStatusChangedPayload | null>(null);
+  const [lastSourceStatusChange, setLastSourceStatusChange] =
+    useState<SourceStatusChangedPayload | null>(null);
   const [lastMessagesUpdate, setLastMessagesUpdate] =
     useState<RuntimeMessagesUpdateEvent | null>(null);
 
@@ -107,11 +100,10 @@ export function useRuntimeMonitoringState(): RuntimeStateBundle {
     setAnalysisPaused,
     activeAnalyses,
     setActiveAnalyses,
-    activeAnalysis,
     lastAnalysisEvent,
     setLastAnalysisEvent,
-    lastAccountStatusChange,
-    setLastAccountStatusChange,
+    lastSourceStatusChange,
+    setLastSourceStatusChange,
     lastMessagesUpdate,
     setLastMessagesUpdate,
     collectorStatusRef,
@@ -138,10 +130,9 @@ export function buildMonitoringReturnValue(
     aiEngineStatus: state.aiEngineStatus,
     queueStatus: state.queueStatus,
     analysisPaused: state.analysisPaused,
-    activeAnalysis: state.activeAnalysis,
     activeAnalyses: state.activeAnalyses,
     lastAnalysisEvent: state.lastAnalysisEvent,
-    lastAccountStatusChange: state.lastAccountStatusChange,
+    lastSourceStatusChange: state.lastSourceStatusChange,
     lastMessagesUpdate: state.lastMessagesUpdate,
     requestAiStatusRefresh,
     requestQueueStatusRefresh,

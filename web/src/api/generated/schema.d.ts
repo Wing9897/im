@@ -437,7 +437,7 @@ export interface paths {
         patch: operations["patch_item_route_api_v1_items__item_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts": {
+    "/api/v1/sources": {
         parameters: {
             query?: never;
             header?: never;
@@ -445,13 +445,13 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Accounts
-         * @description Return Account[] for all accounts.
+         * List Sources
+         * @description Return Source[] for all sources.
          *
-         *     Platform-scoped lists use typed paths: GET /accounts/{telegram,discord,rss,http,mqtt,email}.
+         *     Platform-scoped lists use typed paths: GET /sources/{telegram,discord,rss,http,mqtt,email}.
          *     Query parameter ``platform`` is rejected with 400 (hard-cut; use typed aliases).
          */
-        get: operations["list_accounts_api_v1_accounts_get"];
+        get: operations["list_sources_api_v1_sources_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -460,115 +460,115 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/telegram": {
+    "/api/v1/sources/telegram": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Telegram Accounts */
-        get: operations["list_telegram_accounts_api_v1_accounts_telegram_get"];
+        /** List Telegram Sources */
+        get: operations["list_telegram_sources_api_v1_sources_telegram_get"];
         put?: never;
-        /** Create Telegram Account */
-        post: operations["create_telegram_account_api_v1_accounts_telegram_post"];
+        /** Create Telegram Source */
+        post: operations["create_telegram_source_api_v1_sources_telegram_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/discord": {
+    "/api/v1/sources/discord": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Discord Accounts */
-        get: operations["list_discord_accounts_api_v1_accounts_discord_get"];
+        /** List Discord Sources */
+        get: operations["list_discord_sources_api_v1_sources_discord_get"];
         put?: never;
         /** Create Discord Bot */
-        post: operations["create_discord_bot_api_v1_accounts_discord_post"];
+        post: operations["create_discord_bot_api_v1_sources_discord_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/rss": {
+    "/api/v1/sources/rss": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Rss Accounts */
-        get: operations["list_rss_accounts_api_v1_accounts_rss_get"];
+        /** List Rss Sources */
+        get: operations["list_rss_sources_api_v1_sources_rss_get"];
         put?: never;
         /** Create Rss Feed */
-        post: operations["create_rss_feed_api_v1_accounts_rss_post"];
+        post: operations["create_rss_feed_api_v1_sources_rss_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/http": {
+    "/api/v1/sources/http": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Http Accounts */
-        get: operations["list_http_accounts_api_v1_accounts_http_get"];
+        /** List Http Sources */
+        get: operations["list_http_sources_api_v1_sources_http_get"];
         put?: never;
         /** Create Http Source */
-        post: operations["create_http_source_api_v1_accounts_http_post"];
+        post: operations["create_http_source_api_v1_sources_http_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/mqtt": {
+    "/api/v1/sources/mqtt": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Mqtt Accounts */
-        get: operations["list_mqtt_accounts_api_v1_accounts_mqtt_get"];
+        /** List Mqtt Sources */
+        get: operations["list_mqtt_sources_api_v1_sources_mqtt_get"];
         put?: never;
         /** Create Mqtt Broker */
-        post: operations["create_mqtt_broker_api_v1_accounts_mqtt_post"];
+        post: operations["create_mqtt_broker_api_v1_sources_mqtt_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/email": {
+    "/api/v1/sources/email": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Email Accounts */
-        get: operations["list_email_accounts_api_v1_accounts_email_get"];
+        /** List Email Sources */
+        get: operations["list_email_sources_api_v1_sources_email_get"];
         put?: never;
         /** Create Email Mailbox */
-        post: operations["create_email_mailbox_api_v1_accounts_email_post"];
+        post: operations["create_email_mailbox_api_v1_sources_email_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/{account_id}": {
+    "/api/v1/sources/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -578,14 +578,14 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete Account */
-        delete: operations["delete_account_api_v1_accounts__account_id__delete"];
+        /** Delete Source */
+        delete: operations["delete_source_api_v1_sources__source_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/{account_id}/reconnect": {
+    "/api/v1/sources/{source_id}/reconnect": {
         parameters: {
             query?: never;
             header?: never;
@@ -594,15 +594,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reconnect Account */
-        post: operations["reconnect_account_api_v1_accounts__account_id__reconnect_post"];
+        /** Reconnect Source */
+        post: operations["reconnect_source_api_v1_sources__source_id__reconnect_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/refresh-all": {
+    "/api/v1/sources/refresh-all": {
         parameters: {
             query?: never;
             header?: never;
@@ -611,15 +611,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Refresh All Accounts */
-        post: operations["refresh_all_accounts_api_v1_accounts_refresh_all_post"];
+        /** Refresh All Sources */
+        post: operations["refresh_all_sources_api_v1_sources_refresh_all_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/discord/{account_id}": {
+    "/api/v1/sources/discord/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -633,10 +633,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Discord Bot */
-        patch: operations["update_discord_bot_api_v1_accounts_discord__account_id__patch"];
+        patch: operations["update_discord_bot_api_v1_sources_discord__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/discord/{account_id}/subscribe": {
+    "/api/v1/sources/discord/{source_id}/subscribe": {
         parameters: {
             query?: never;
             header?: never;
@@ -646,14 +646,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Subscribe Discord Channels */
-        post: operations["subscribe_discord_channels_api_v1_accounts_discord__account_id__subscribe_post"];
+        post: operations["subscribe_discord_channels_api_v1_sources_discord__source_id__subscribe_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/email/{account_id}": {
+    "/api/v1/sources/email/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -667,10 +667,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Email Mailbox */
-        patch: operations["update_email_mailbox_api_v1_accounts_email__account_id__patch"];
+        patch: operations["update_email_mailbox_api_v1_sources_email__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/mqtt/{account_id}": {
+    "/api/v1/sources/mqtt/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -684,10 +684,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Mqtt Broker */
-        patch: operations["update_mqtt_broker_api_v1_accounts_mqtt__account_id__patch"];
+        patch: operations["update_mqtt_broker_api_v1_sources_mqtt__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/rss/{account_id}": {
+    "/api/v1/sources/rss/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -701,10 +701,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Rss Feed */
-        patch: operations["update_rss_feed_api_v1_accounts_rss__account_id__patch"];
+        patch: operations["update_rss_feed_api_v1_sources_rss__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/http/{account_id}": {
+    "/api/v1/sources/http/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -718,10 +718,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Update Http Source */
-        patch: operations["update_http_source_api_v1_accounts_http__account_id__patch"];
+        patch: operations["update_http_source_api_v1_sources_http__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/telegram/qr": {
+    "/api/v1/sources/telegram/qr": {
         parameters: {
             query?: never;
             header?: never;
@@ -730,15 +730,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create Telegram Account Qr */
-        post: operations["create_telegram_account_qr_api_v1_accounts_telegram_qr_post"];
+        /** Create Telegram Source Qr */
+        post: operations["create_telegram_source_qr_api_v1_sources_telegram_qr_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/telegram/{account_id}/qr-wait": {
+    "/api/v1/sources/telegram/{source_id}/qr-wait": {
         parameters: {
             query?: never;
             header?: never;
@@ -748,14 +748,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Wait Telegram Qr Login */
-        post: operations["wait_telegram_qr_login_api_v1_accounts_telegram__account_id__qr_wait_post"];
+        post: operations["wait_telegram_qr_login_api_v1_sources_telegram__source_id__qr_wait_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/telegram/{account_id}": {
+    "/api/v1/sources/telegram/{source_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -768,11 +768,11 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update Telegram Account */
-        patch: operations["update_telegram_account_api_v1_accounts_telegram__account_id__patch"];
+        /** Update Telegram Source */
+        patch: operations["update_telegram_source_api_v1_sources_telegram__source_id__patch"];
         trace?: never;
     };
-    "/api/v1/accounts/telegram/{account_id}/verify-code": {
+    "/api/v1/sources/telegram/{source_id}/verify-code": {
         parameters: {
             query?: never;
             header?: never;
@@ -782,14 +782,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Telegram Code */
-        post: operations["verify_telegram_code_api_v1_accounts_telegram__account_id__verify_code_post"];
+        post: operations["verify_telegram_code_api_v1_sources_telegram__source_id__verify_code_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/accounts/telegram/{account_id}/verify-2fa": {
+    "/api/v1/sources/telegram/{source_id}/verify-2fa": {
         parameters: {
             query?: never;
             header?: never;
@@ -799,7 +799,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Verify Telegram 2Fa */
-        post: operations["verify_telegram_2fa_api_v1_accounts_telegram__account_id__verify_2fa_post"];
+        post: operations["verify_telegram_2fa_api_v1_sources_telegram__source_id__verify_2fa_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -962,7 +962,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/channels/with-accounts": {
+    "/api/v1/channels/with-sources": {
         parameters: {
             query?: never;
             header?: never;
@@ -970,10 +970,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List Channels With Accounts
-         * @description ChannelWithAccount[] — accountName populated server-side.
+         * List Channels With Sources
+         * @description ChannelWithSource[] — sourceName populated server-side.
          */
-        get: operations["list_channels_with_accounts_api_v1_channels_with_accounts_get"];
+        get: operations["list_channels_with_sources_api_v1_channels_with_sources_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1089,7 +1089,7 @@ export interface paths {
          * @description Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.
          *
          *     Only allowed while ``secrets_ready`` is False. Requires admin username +
-         *     password. Does not wipe the database, connection.json, or admin accounts.
+         *     password. Does not wipe the database, connection.json, or admin sources.
          */
         post: operations["rotate_secrets_api_v1_system_rotate_secrets_post"];
         delete?: never;
@@ -1771,10 +1771,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Forecast
-         * @description Return the available intersection; valid out-of-window ranges are empty.
-         */
+        /** Forecast */
         get: operations["forecast_api_v1_weather_forecast_get"];
         put?: never;
         post?: never;
@@ -1875,31 +1872,6 @@ export interface components {
             /** Lastusedat */
             lastUsedAt?: string | null;
         };
-        /** AccountResponse */
-        AccountResponse: {
-            /** Id */
-            id: string;
-            /**
-             * Platform
-             * @enum {string}
-             */
-            platform: "telegram" | "discord" | "rss" | "http" | "mqtt" | "email";
-            /** Name */
-            name: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "connected" | "disconnected" | "error";
-            /** Lasterror */
-            lastError: string | null;
-            /** Lastconnectedat */
-            lastConnectedAt: string | null;
-            /** Createdat */
-            createdAt: string;
-            /** Updatedat */
-            updatedAt: string;
-        };
         /** ActionBody */
         ActionBody: {
             /** Name */
@@ -1980,26 +1952,9 @@ export interface components {
             /** Hasmore */
             hasMore: boolean;
         };
-        /** AddAccountResponse */
-        AddAccountResponse: {
-            account: components["schemas"]["AccountResponse"];
-            /**
-             * Nextstep
-             * @enum {string}
-             */
-            nextStep: "connected" | "code_required" | "2fa_required" | "qr_required" | "error";
-            /** Pendingloginstage */
-            pendingLoginStage?: ("code_required" | "2fa_required" | "qr_required") | null;
-            /** Phonecodehash */
-            phoneCodeHash?: string | null;
-            /** Qrurl */
-            qrUrl?: string | null;
-            /** Qrexpiresat */
-            qrExpiresAt?: string | null;
-        };
         /** AddDiscordBotResponse */
         AddDiscordBotResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Channels */
             channels: components["schemas"]["DiscordChannelInfoResponse"][];
             /** Status */
@@ -2009,7 +1964,7 @@ export interface components {
         };
         /** AddEmailMailboxResponse */
         AddEmailMailboxResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Status */
             status: string;
             /** Errormessage */
@@ -2019,7 +1974,7 @@ export interface components {
         };
         /** AddHttpSourceResponse */
         AddHttpSourceResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             channel: components["schemas"]["ChannelResponse"] | null;
             /** Url */
             url: string;
@@ -2058,7 +2013,7 @@ export interface components {
         };
         /** AddMqttBrokerResponse */
         AddMqttBrokerResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Status */
             status: string;
             /** Errormessage */
@@ -2066,7 +2021,7 @@ export interface components {
         };
         /** AddRssFeedResponse */
         AddRssFeedResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             channel: components["schemas"]["ChannelResponse"] | null;
             /** Feedtitle */
             feedTitle: string;
@@ -2074,6 +2029,23 @@ export interface components {
             status: string;
             /** Errormessage */
             errorMessage: string | null;
+        };
+        /** AddSourceResponse */
+        AddSourceResponse: {
+            source: components["schemas"]["SourceResponse"];
+            /**
+             * Nextstep
+             * @enum {string}
+             */
+            nextStep: "connected" | "code_required" | "2fa_required" | "qr_required" | "error";
+            /** Pendingloginstage */
+            pendingLoginStage?: ("code_required" | "2fa_required" | "qr_required") | null;
+            /** Phonecodehash */
+            phoneCodeHash?: string | null;
+            /** Qrurl */
+            qrUrl?: string | null;
+            /** Qrexpiresat */
+            qrExpiresAt?: string | null;
         };
         /** AgentChatBody */
         AgentChatBody: {
@@ -2677,8 +2649,8 @@ export interface components {
             /** Createdat */
             createdAt: string;
         };
-        /** ChannelWithAccountResponse */
-        ChannelWithAccountResponse: {
+        /** ChannelWithSourceResponse */
+        ChannelWithSourceResponse: {
             /** Id */
             id: string;
             /** Platform */
@@ -2689,20 +2661,14 @@ export interface components {
             channelName: string;
             /** Createdat */
             createdAt: string;
-            /** Accountids */
-            accountIds: string[];
-            /** Accountid */
-            accountId: string | null;
-            /** Accountname */
-            accountName: string | null;
+            /** Sourceids */
+            sourceIds: string[];
+            /** Sourceid */
+            sourceId: string | null;
+            /** Sourcename */
+            sourceName: string | null;
         };
-        /**
-         * CreateRecurringTaskBody
-         * @description Atomic recurring create: analysis task + ``recurring_schedules`` in one call.
-         *
-         *     Prefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for
-         *     web/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool.
-         */
+        /** CreateRecurringTaskBody */
         CreateRecurringTaskBody: {
             /** Name */
             name: string;
@@ -2765,7 +2731,7 @@ export interface components {
         };
         /** DiscordBotInfoResponse */
         DiscordBotInfoResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Channels */
             channels: components["schemas"]["DiscordChannelInfoResponse"][];
         };
@@ -2844,7 +2810,7 @@ export interface components {
         };
         /** EmailMailboxInfoResponse */
         EmailMailboxInfoResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Imaphost */
             imapHost: string;
             /** Imapport */
@@ -2985,7 +2951,7 @@ export interface components {
         };
         /** HttpSourceInfoResponse */
         HttpSourceInfoResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             channel: components["schemas"]["ChannelResponse"] | null;
             /** Url */
             url: string;
@@ -3052,26 +3018,26 @@ export interface components {
         /** IngestBatchBody */
         IngestBatchBody: {
             /** Messages */
-            messages: components["schemas"]["IngestMessage"][];
+            messages: components["schemas"]["IngestMessageBody"][];
         };
-        /** IngestMessage */
-        IngestMessage: {
+        /** IngestMessageBody */
+        IngestMessageBody: {
             /** Id */
             id?: string | null;
-            /** Account Id */
-            account_id?: string | null;
-            /** Channel Id */
-            channel_id?: string | null;
-            /** Platform Id */
-            platform_id?: string | null;
+            /** Sourceid */
+            sourceId?: string | null;
+            /** Channelid */
+            channelId?: string | null;
+            /** Platformid */
+            platformId?: string | null;
             /** Platform */
             platform: string;
-            /** Platform Message Id */
-            platform_message_id?: string | null;
-            /** Sender Id */
-            sender_id?: string | null;
-            /** Sender Name */
-            sender_name?: string | null;
+            /** Platformmessageid */
+            platformMessageId?: string | null;
+            /** Senderid */
+            senderId?: string | null;
+            /** Sendername */
+            senderName?: string | null;
             /**
              * Content
              * @default
@@ -3079,8 +3045,8 @@ export interface components {
             content: string;
             /** Timestamp */
             timestamp?: string | null;
-            /** Message Time */
-            message_time?: string | null;
+            /** Messagetime */
+            messageTime?: string | null;
             /** Metadata */
             metadata?: {
                 [key: string]: unknown;
@@ -3281,8 +3247,8 @@ export interface components {
         MessageResponse: {
             /** Id */
             id: string;
-            /** Accountid */
-            accountId: string | null;
+            /** Sourceid */
+            sourceId: string | null;
             /** Platform */
             platform: string;
             /** Platformid */
@@ -3335,7 +3301,7 @@ export interface components {
         };
         /** MqttBrokerInfoResponse */
         MqttBrokerInfoResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             /** Brokerurl */
             brokerUrl: string;
             /** Topics */
@@ -3436,20 +3402,20 @@ export interface components {
             /** Updatedat */
             updatedAt?: string | null;
         };
-        /** RefreshAllAccountsResponse */
-        RefreshAllAccountsResponse: {
-            /** Totalaccounts */
-            totalAccounts: number;
+        /** RefreshAllSourcesResponse */
+        RefreshAllSourcesResponse: {
+            /** Totalsources */
+            totalSources: number;
             /** Connectedcount */
             connectedCount: number;
             /** Verificationrequiredcount */
             verificationRequiredCount: number;
             /** Errorcount */
             errorCount: number;
-            /** Verificationrequiredaccountids */
-            verificationRequiredAccountIds: string[];
-            /** Erroraccountids */
-            errorAccountIds: string[];
+            /** Verificationrequiredsourceids */
+            verificationRequiredSourceIds: string[];
+            /** Errorsourceids */
+            errorSourceIds: string[];
         };
         /** RefreshBody */
         RefreshBody: {
@@ -3540,7 +3506,7 @@ export interface components {
         };
         /** RssFeedInfoResponse */
         RssFeedInfoResponse: {
-            account: components["schemas"]["AccountResponse"];
+            source: components["schemas"]["SourceResponse"];
             channel: components["schemas"]["ChannelResponse"] | null;
             /** Feedurl */
             feedUrl: string;
@@ -3584,6 +3550,31 @@ export interface components {
             taskIds?: string[];
             /** Worksetids */
             worksetIds?: string[];
+        };
+        /** SourceResponse */
+        SourceResponse: {
+            /** Id */
+            id: string;
+            /**
+             * Platform
+             * @enum {string}
+             */
+            platform: "telegram" | "discord" | "rss" | "http" | "mqtt" | "email";
+            /** Name */
+            name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connected" | "disconnected" | "error";
+            /** Lasterror */
+            lastError: string | null;
+            /** Lastconnectedat */
+            lastConnectedAt: string | null;
+            /** Createdat */
+            createdAt: string;
+            /** Updatedat */
+            updatedAt: string;
         };
         /**
          * SystemSettingsSnapshot
@@ -3961,10 +3952,7 @@ export interface components {
         };
         /**
          * TelegramPatchBody
-         * @description Safe in-place edits: display name and optional stored credential fields.
-         *
-         *     Changing apiId / apiHash / phone updates encrypted credentials only — the
-         *     live StringSession is not rewritten here; reconnect / re-login may be required.
+         * @description Safe display-name and stored-credential edits.
          */
         TelegramPatchBody: {
             /** Name */
@@ -4061,9 +4049,9 @@ export interface components {
             /** Messagecount */
             messageCount: number;
         };
-        /** UpdateTelegramAccountResponse */
-        UpdateTelegramAccountResponse: {
-            account: components["schemas"]["AccountResponse"];
+        /** UpdateTelegramSourceResponse */
+        UpdateTelegramSourceResponse: {
+            source: components["schemas"]["SourceResponse"];
             /**
              * Status
              * @enum {string}
@@ -5493,7 +5481,7 @@ export interface operations {
             };
         };
     };
-    list_accounts_api_v1_accounts_get: {
+    list_sources_api_v1_sources_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5508,12 +5496,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"][];
+                    "application/json": components["schemas"]["SourceResponse"][];
                 };
             };
         };
     };
-    list_telegram_accounts_api_v1_accounts_telegram_get: {
+    list_telegram_sources_api_v1_sources_telegram_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5528,12 +5516,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AccountResponse"][];
+                    "application/json": components["schemas"]["SourceResponse"][];
                 };
             };
         };
     };
-    create_telegram_account_api_v1_accounts_telegram_post: {
+    create_telegram_source_api_v1_sources_telegram_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5552,7 +5540,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5566,7 +5554,7 @@ export interface operations {
             };
         };
     };
-    list_discord_accounts_api_v1_accounts_discord_get: {
+    list_discord_sources_api_v1_sources_discord_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5586,7 +5574,7 @@ export interface operations {
             };
         };
     };
-    create_discord_bot_api_v1_accounts_discord_post: {
+    create_discord_bot_api_v1_sources_discord_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5619,7 +5607,7 @@ export interface operations {
             };
         };
     };
-    list_rss_accounts_api_v1_accounts_rss_get: {
+    list_rss_sources_api_v1_sources_rss_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5639,7 +5627,7 @@ export interface operations {
             };
         };
     };
-    create_rss_feed_api_v1_accounts_rss_post: {
+    create_rss_feed_api_v1_sources_rss_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5672,7 +5660,7 @@ export interface operations {
             };
         };
     };
-    list_http_accounts_api_v1_accounts_http_get: {
+    list_http_sources_api_v1_sources_http_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5692,7 +5680,7 @@ export interface operations {
             };
         };
     };
-    create_http_source_api_v1_accounts_http_post: {
+    create_http_source_api_v1_sources_http_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5725,7 +5713,7 @@ export interface operations {
             };
         };
     };
-    list_mqtt_accounts_api_v1_accounts_mqtt_get: {
+    list_mqtt_sources_api_v1_sources_mqtt_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5745,7 +5733,7 @@ export interface operations {
             };
         };
     };
-    create_mqtt_broker_api_v1_accounts_mqtt_post: {
+    create_mqtt_broker_api_v1_sources_mqtt_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5778,7 +5766,7 @@ export interface operations {
             };
         };
     };
-    list_email_accounts_api_v1_accounts_email_get: {
+    list_email_sources_api_v1_sources_email_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5798,7 +5786,7 @@ export interface operations {
             };
         };
     };
-    create_email_mailbox_api_v1_accounts_email_post: {
+    create_email_mailbox_api_v1_sources_email_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5831,12 +5819,12 @@ export interface operations {
             };
         };
     };
-    delete_account_api_v1_accounts__account_id__delete: {
+    delete_source_api_v1_sources__source_id__delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -5860,12 +5848,12 @@ export interface operations {
             };
         };
     };
-    reconnect_account_api_v1_accounts__account_id__reconnect_post: {
+    reconnect_source_api_v1_sources__source_id__reconnect_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -5877,7 +5865,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5891,7 +5879,7 @@ export interface operations {
             };
         };
     };
-    refresh_all_accounts_api_v1_accounts_refresh_all_post: {
+    refresh_all_sources_api_v1_sources_refresh_all_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5906,17 +5894,17 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RefreshAllAccountsResponse"];
+                    "application/json": components["schemas"]["RefreshAllSourcesResponse"];
                 };
             };
         };
     };
-    update_discord_bot_api_v1_accounts_discord__account_id__patch: {
+    update_discord_bot_api_v1_sources_discord__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -5946,12 +5934,12 @@ export interface operations {
             };
         };
     };
-    subscribe_discord_channels_api_v1_accounts_discord__account_id__subscribe_post: {
+    subscribe_discord_channels_api_v1_sources_discord__source_id__subscribe_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -5981,12 +5969,12 @@ export interface operations {
             };
         };
     };
-    update_email_mailbox_api_v1_accounts_email__account_id__patch: {
+    update_email_mailbox_api_v1_sources_email__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6016,12 +6004,12 @@ export interface operations {
             };
         };
     };
-    update_mqtt_broker_api_v1_accounts_mqtt__account_id__patch: {
+    update_mqtt_broker_api_v1_sources_mqtt__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6051,12 +6039,12 @@ export interface operations {
             };
         };
     };
-    update_rss_feed_api_v1_accounts_rss__account_id__patch: {
+    update_rss_feed_api_v1_sources_rss__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6086,12 +6074,12 @@ export interface operations {
             };
         };
     };
-    update_http_source_api_v1_accounts_http__account_id__patch: {
+    update_http_source_api_v1_sources_http__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6121,7 +6109,7 @@ export interface operations {
             };
         };
     };
-    create_telegram_account_qr_api_v1_accounts_telegram_qr_post: {
+    create_telegram_source_qr_api_v1_sources_telegram_qr_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -6140,7 +6128,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6154,12 +6142,12 @@ export interface operations {
             };
         };
     };
-    wait_telegram_qr_login_api_v1_accounts_telegram__account_id__qr_wait_post: {
+    wait_telegram_qr_login_api_v1_sources_telegram__source_id__qr_wait_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6175,7 +6163,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6189,12 +6177,12 @@ export interface operations {
             };
         };
     };
-    update_telegram_account_api_v1_accounts_telegram__account_id__patch: {
+    update_telegram_source_api_v1_sources_telegram__source_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6210,7 +6198,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UpdateTelegramAccountResponse"];
+                    "application/json": components["schemas"]["UpdateTelegramSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6224,12 +6212,12 @@ export interface operations {
             };
         };
     };
-    verify_telegram_code_api_v1_accounts_telegram__account_id__verify_code_post: {
+    verify_telegram_code_api_v1_sources_telegram__source_id__verify_code_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6245,7 +6233,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6259,12 +6247,12 @@ export interface operations {
             };
         };
     };
-    verify_telegram_2fa_api_v1_accounts_telegram__account_id__verify_2fa_post: {
+    verify_telegram_2fa_api_v1_sources_telegram__source_id__verify_2fa_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                account_id: string;
+                source_id: string;
             };
             cookie?: never;
         };
@@ -6280,7 +6268,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AddAccountResponse"];
+                    "application/json": components["schemas"]["AddSourceResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6484,7 +6472,7 @@ export interface operations {
     get_messages_page_api_v1_messages_page_get: {
         parameters: {
             query?: {
-                account_ids?: string | null;
+                source_ids?: string | null;
                 time_range?: string | null;
                 search?: string | null;
                 platform?: string | null;
@@ -6529,7 +6517,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IngestMessage"];
+                "application/json": components["schemas"]["IngestMessageBody"];
             };
         };
         responses: {
@@ -6586,7 +6574,7 @@ export interface operations {
             };
         };
     };
-    list_channels_with_accounts_api_v1_channels_with_accounts_get: {
+    list_channels_with_sources_api_v1_channels_with_sources_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -6601,7 +6589,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChannelWithAccountResponse"][];
+                    "application/json": components["schemas"]["ChannelWithSourceResponse"][];
                 };
             };
         };

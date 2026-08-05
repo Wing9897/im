@@ -9,9 +9,15 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Request
-from pydantic import BaseModel, ConfigDict, Field
 
 from server.api.deps import API_DEPS, get_db
+from server.api.schemas.requests import (
+    ChangePasswordBody,
+    LoginBody,
+    RefreshBody,
+    RegisterBody,
+    ResetPasswordBody,
+)
 from server.api.schemas.responses import DeviceSessionTokensResponse, SetupStatusResponse
 from server.auth import is_loopback, presented_token
 from server.auth.access_keys import is_valid_access_token
@@ -56,42 +62,6 @@ from server.errors import (
 )
 
 router = APIRouter(prefix="/api/v1/setup", tags=["setup"])
-
-
-class RegisterBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    username: str = Field(min_length=1, max_length=64)
-    password: str = Field(min_length=1)
-    label: str = Field(default="Host", max_length=80)
-
-
-class LoginBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    username: str = Field(min_length=1, max_length=64)
-    password: str = Field(min_length=1)
-    label: str = Field(default="Device", max_length=80)
-
-
-class ChangePasswordBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    currentPassword: str = Field(min_length=1)
-    newPassword: str = Field(min_length=1)
-
-
-class ResetPasswordBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    username: str = Field(min_length=1, max_length=64)
-    newPassword: str = Field(min_length=1)
-
-
-class RefreshBody(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    refreshToken: str = Field(min_length=1, max_length=512)
 
 
 def _validation_error(exc: AdminAuthError) -> Exception:

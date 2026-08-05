@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { apiClient } from "./client";
-import { listChannelsWithAccounts, fetchLatestByChannels } from "./channels";
+import { listChannelsWithSources, fetchLatestByChannels } from "./channels";
 
 vi.mock("./client", () => ({
   apiClient: {
@@ -22,21 +22,21 @@ describe("channels API", () => {
     vi.clearAllMocks();
   });
 
-  describe("listChannelsWithAccounts", () => {
-    it("fetches channels with account metadata", async () => {
-      const data = [{ id: "ch-1", name: "General", accountName: "Bot1" }];
+  describe("listChannelsWithSources", () => {
+    it("fetches channels with source metadata", async () => {
+      const data = [{ id: "ch-1", name: "General", sourceName: "Bot1" }];
       vi.mocked(apiClient.get).mockResolvedValue(data);
 
-      const result = await listChannelsWithAccounts();
+      const result = await listChannelsWithSources();
 
-      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/channels/with-accounts");
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/channels/with-sources");
       expect(result).toEqual(data);
     });
 
     it("propagates errors", async () => {
       vi.mocked(apiClient.get).mockRejectedValue(new Error("Network error"));
 
-      await expect(listChannelsWithAccounts()).rejects.toThrow("Network error");
+      await expect(listChannelsWithSources()).rejects.toThrow("Network error");
     });
   });
 

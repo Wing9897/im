@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { listAccounts } from "../../api/accounts";
-import { useChannelsWithAccounts } from "../../hooks/useChannelsWithAccounts";
+import { listSources } from "../../api/sources";
+import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
 import { usePersistedMonitorViewMode, usePersistedState } from "../../hooks/usePersistedState";
-import type { Account, MessageFilters } from "../../types";
+import type { Source, MessageFilters } from "../../types";
 import i18n from "../../i18n";
 import { captureError } from "../../utils/errorReporter";
 import { MONITOR_VIEW_MODE_STORAGE_KEY } from "../../domain/monitor/monitorViewMode";
@@ -10,18 +10,18 @@ import { MONITOR_FILTERS_STORAGE_KEY } from "../../domain/prefs";
 import { normalizeMonitorFilters } from "./monitorPageModel";
 
 /**
- * Accounts / channels metadata, filters, and view-mode state for Monitor.
+ * Sources / channels metadata, filters, and view-mode state for Monitor.
  */
 export function useMonitorInitialLoad() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [sources, setSources] = useState<Source[]>([]);
   const {
     channels,
     loaded: channelsReady,
     error: channelsError,
     refresh: refreshChannels,
-  } = useChannelsWithAccounts({ toastOnError: false });
-  const [accountsReady, setAccountsReady] = useState(false);
-  const [accountsLoadFailed, setAccountsLoadFailed] = useState(false);
+  } = useChannelsWithSources({ toastOnError: false });
+  const [sourcesReady, setSourcesReady] = useState(false);
+  const [sourcesLoadFailed, setSourcesLoadFailed] = useState(false);
   const [filters, setFilters] = usePersistedState<MessageFilters>(
     MONITOR_FILTERS_STORAGE_KEY,
     {},
@@ -33,9 +33,9 @@ export function useMonitorInitialLoad() {
 
   const retryMetadataLoad = useCallback(() => {
     setMetadataError(null);
-    setAccountsLoadFailed(false);
+    setSourcesLoadFailed(false);
     refreshChannels();
-    setAccountsReady(false);
+    setSourcesReady(false);
     setMetadataRetryKey((current) => current + 1);
   }, [refreshChannels]);
 
@@ -48,51 +48,51 @@ export function useMonitorInitialLoad() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadAccounts = async () => {
-      if (accountsReady) return;
+    const loadSources = async () => {
+      if (sourcesReady) return;
 
-      const accountsResult = await listAccounts().catch((e) => {
+      const sourcesResult = await listSources().catch((e) => {
         captureError(e, { component: "MonitorPage", severity: "error" });
         return null;
       });
       if (cancelled) return;
-      if (accountsResult !== null) {
-        setAccounts(accountsResult);
-        setAccountsReady(true);
-        setAccountsLoadFailed(false);
+      if (sourcesResult !== null) {
+        setSources(sourcesResult);
+        setSourcesReady(true);
+        setSourcesLoadFailed(false);
       } else {
-        setAccountsLoadFailed(true);
+        setSourcesLoadFailed(true);
       }
     };
 
-    void loadAccounts();
+    void loadSources();
     return () => {
       cancelled = true;
     };
-  }, [accountsReady, metadataRetryKey]);
+  }, [sourcesReady, metadataRetryKey]);
 
   useEffect(() => {
-    if (channelsError || (viewMode !== "wall" && accountsLoadFailed && channelsReady)) {
+    if (channelsError || (viewMode !== "wall" && sourcesLoadFailed && channelsReady)) {
       setMetadataError(String(i18n.t("monitor:metadata.loadError")));
       return;
     }
     if (!channelsReady) return;
-    if (viewMode === "wall" || accountsReady) {
+    if (viewMode === "wall" || sourcesReady) {
       setMetadataError(null);
     }
-  }, [accountsLoadFailed, accountsReady, channelsError, channelsReady, viewMode]);
+  }, [sourcesLoadFailed, sourcesReady, channelsError, channelsReady, viewMode]);
 
   useEffect(() => {
-    if (!accountsReady || !channelsReady) return;
-    const normalized = normalizeMonitorFilters(filters, accounts, channels);
+    if (!sourcesReady || !channelsReady) return;
+    const normalized = normalizeMonitorFilters(filters, sources, channels);
     if (normalized.changed) setFilters(normalized.filters);
-  }, [accounts, accountsReady, channels, channelsReady, filters, setFilters]);
+  }, [sources, sourcesReady, channels, channelsReady, filters, setFilters]);
 
   return {
-    accounts,
+    sources,
     channels,
     channelsReady,
-    accountsReady,
+    sourcesReady,
     filters,
     setFilters,
     viewMode,

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import { useDraftSelection } from "../../hooks/useDraftSelection";
 import { uniquePlatformsFromChannels } from "../../utils/platformFilter";
 
 /** Shared draft + platform-filter state for channel picker modals. */
 export function useChannelPickerDialogState(
-  channels: ChannelWithAccount[],
+  channels: ChannelWithSource[],
   selectedChannelIds: string[],
   open: boolean,
 ) {

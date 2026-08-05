@@ -3,7 +3,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ModalDialog } from "../../../components/ModalDialog";
 import { Button, FilterChip, FilterTrigger } from "../../../components/ui";
-import type { Account, ChannelWithAccount, MessageFilters } from "../../../types";
+import type { Source, ChannelWithSource, MessageFilters } from "../../../types";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import {
@@ -18,8 +18,8 @@ import { FilterPanel } from "./FilterPanel";
 interface FilterBarProps {
   filters: MessageFilters;
   onFiltersChange: (filters: MessageFilters) => void;
-  accounts: Account[];
-  channels: ChannelWithAccount[];
+  sources: Source[];
+  channels: ChannelWithSource[];
   onReset?: () => void;
   /**
    * When false, only the trigger + dialog render (chips go to `FilterActiveChips`
@@ -79,7 +79,7 @@ export function FilterActiveChips({
 export function FilterBar({
   filters,
   onFiltersChange,
-  accounts,
+  sources,
   channels,
   onReset,
   showChips = true,
@@ -156,7 +156,7 @@ export function FilterBar({
         <FilterPanel
           filters={filters}
           onFiltersChange={onFiltersChange}
-          accounts={accounts}
+          sources={sources}
           channels={channels}
         />
       </ModalDialog>

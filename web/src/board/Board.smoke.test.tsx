@@ -69,12 +69,12 @@ vi.mock("../api/logs", () => ({
 }));
 
 vi.mock("../api/channels", () => ({
-  listChannelsWithAccounts: vi.fn(async () => []),
+  listChannelsWithSources: vi.fn(async () => []),
   fetchLatestByChannels: vi.fn(async () => ({})),
 }));
 
-vi.mock("../api/accounts", () => ({
-  listAccounts: vi.fn(async () => []),
+vi.mock("../api/sources", () => ({
+  listSources: vi.fn(async () => []),
 }));
 
 vi.mock("../api/config", () => ({

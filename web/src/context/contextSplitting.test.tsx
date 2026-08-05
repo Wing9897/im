@@ -51,10 +51,9 @@ let harnessUpdate: HarnessUpdater | null = null;
 const baseAnalysisValue: AnalysisStatusContextValue = {
   queueStatus: null,
   analysisPaused: false,
-  activeAnalysis: null,
   activeAnalyses: new Map(),
   lastAnalysisEvent: null,
-  lastAccountStatusChange: null,
+  lastSourceStatusChange: null,
   lastMessagesUpdate: null,
   requestQueueStatusRefresh: () => {},
 };

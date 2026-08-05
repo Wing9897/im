@@ -2,19 +2,19 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 
-import type { ChannelWithAccount } from "../../types";
+import type { ChannelWithSource } from "../../types";
 import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { ChannelSelectorDialog } from "./ChannelSelectorDialog";
 
-const channels: ChannelWithAccount[] = Array.from({ length: 7 }, (_, index) => ({
+const channels: ChannelWithSource[] = Array.from({ length: 7 }, (_, index) => ({
   id: index === 0 ? "telegram:10001" : `email:INBOX-${index}`,
   platform: index === 0 ? "telegram" : "email",
   platformId: index === 0 ? "10001" : `INBOX-${index}`,
   channelName: index === 0 ? "News" : `Folder ${index}`,
-  accountIds: [`acc-${index}`],
-  accountId: `acc-${index}`,
-  accountName: index === 0 ? "My Telegram" : `user${index}@gmail.com`,
-})) as ChannelWithAccount[];
+  sourceIds: [`acc-${index}`],
+  sourceId: `acc-${index}`,
+  sourceName: index === 0 ? "My Telegram" : `user${index}@gmail.com`,
+})) as ChannelWithSource[];
 
 describe("ChannelSelectorDialog", () => {
   beforeEach(async () => {

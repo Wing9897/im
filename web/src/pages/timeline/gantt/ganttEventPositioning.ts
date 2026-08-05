@@ -6,6 +6,7 @@ import {
   startOfDay,
   startOfWeek,
 } from "../../../domain/timeline/dateUtils";
+import { clipCellSpanToAxis } from "../../../domain/gantt/ganttTimeGeometry";
 
 export interface EventBarPosition {
   startColumn: number;
@@ -30,33 +31,20 @@ export function computeEventBarPosition(
   rangeStart: Date,
   columnCount: number,
 ): EventBarPosition {
-  if (endTime === null) {
-    // Point event: startColumn = endColumn, isPoint = true
-    const col = dateToColumn(startTime, timeScale, rangeStart);
-    const clipped = Math.max(1, Math.min(columnCount, col));
-    const visible = col >= 1 && col <= columnCount;
-    return {
-      startColumn: clipped,
-      endColumn: clipped,
-      visible,
-      isPoint: true,
-    };
-  }
-
   const startCol = dateToColumn(startTime, timeScale, rangeStart);
-  const endCol = dateToColumn(endTime, timeScale, rangeStart);
-
-  const clippedStart = Math.max(1, Math.min(columnCount, startCol));
-  const clippedEnd = Math.max(clippedStart, Math.min(columnCount, endCol));
-
-  // The bar is visible if it overlaps the visible range [1, columnCount]
-  const visible = startCol <= columnCount && endCol >= 1;
+  const isPoint = endTime === null;
+  const endCol = isPoint ? startCol : dateToColumn(endTime, timeScale, rangeStart);
+  const span = clipCellSpanToAxis(
+    startCol - 1,
+    isPoint ? startCol : endCol,
+    columnCount,
+  );
 
   return {
-    startColumn: clippedStart,
-    endColumn: clippedEnd,
-    visible,
-    isPoint: false,
+    startColumn: span ? span.startCell + 1 : Math.max(1, Math.min(columnCount, startCol)),
+    endColumn: span ? span.endCell : Math.max(1, Math.min(columnCount, endCol)),
+    visible: span !== null,
+    isPoint,
   };
 }
 

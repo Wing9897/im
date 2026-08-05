@@ -3,17 +3,17 @@ import {
   createDiscordBot,
   updateDiscordBot,
   listDiscordBots,
-  deleteAccount,
-} from "../../../api/accounts";
+  deleteSource,
+} from "../../../api/sources";
 import type { DiscordBotInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../useSourceListTab";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { toErrorMessage } from "../../../utils/errors";
 import { MASKED_SECRET } from "../../../utils/configValidation";
 import i18n from "../../../i18n";
 
-const removeDiscordBot = (target: DiscordBotInfo) => deleteAccount(target.account.id);
+const removeDiscordBot = (target: DiscordBotInfo) => deleteSource(target.source.id);
 
 export function useDiscordTab() {
   const {
@@ -59,7 +59,7 @@ export function useDiscordTab() {
 
   const openEditDialog = useCallback((bot: DiscordBotInfo) => {
     setEditTarget(bot);
-    setEditName(formatAccountLabel(bot.account) || String(i18n.t("sources:discord.fallbackName")));
+    setEditName(formatSourceLabel(bot.source) || String(i18n.t("sources:discord.fallbackName")));
     setEditToken(MASKED_SECRET);
     setEditError(null);
   }, []);
@@ -85,7 +85,7 @@ export function useDiscordTab() {
       if (editToken && editToken !== MASKED_SECRET) {
         patch.botToken = editToken.trim();
       }
-      const resp = await updateDiscordBot(editTarget.account.id, patch);
+      const resp = await updateDiscordBot(editTarget.source.id, patch);
       if (resp.status === "error" && resp.errorMessage) {
         throw new Error(resp.errorMessage);
       }

@@ -40,14 +40,17 @@ export async function withRetry<T>(
     try {
       return await operation();
     } catch (error) {
+      const normalizedError = toError(error);
       if (shouldAbort?.()) {
         if (abortValue) {
           return abortValue();
         }
-        throw new Error("retry aborted");
+        // Preserve the operation's typed cancellation error (for example
+        // NetworkError from the HTTP client) instead of replacing it with an
+        // untyped retry sentinel.
+        throw normalizedError;
       }
 
-      const normalizedError = toError(error);
       lastError = normalizedError;
       onError?.(normalizedError, attempt);
 

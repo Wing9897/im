@@ -13,11 +13,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /*  Shared mock setup                                                  */
 /* ================================================================== */
 
-const { mockListAccounts, mockQueryMessagesPage, mockFetchTrendingTopics, mockListChannelsWithAccounts, mockFetchEvents, mockFetchTaskAnalysisStats, runtimeState } = vi.hoisted(() => ({
-  mockListAccounts: vi.fn(),
+const { mockListSources, mockQueryMessagesPage, mockFetchTrendingTopics, mockListChannelsWithSources, mockFetchEvents, mockFetchTaskAnalysisStats, runtimeState } = vi.hoisted(() => ({
+  mockListSources: vi.fn(),
   mockQueryMessagesPage: vi.fn(),
   mockFetchTrendingTopics: vi.fn(),
-  mockListChannelsWithAccounts: vi.fn(),
+  mockListChannelsWithSources: vi.fn(),
   mockFetchEvents: vi.fn(),
   mockFetchTaskAnalysisStats: vi.fn(),
   runtimeState: {
@@ -33,8 +33,8 @@ const { mockListAccounts, mockQueryMessagesPage, mockFetchTrendingTopics, mockLi
   },
 }));
 
-vi.mock("../../api/accounts", () => ({
-  listAccounts: (...args: unknown[]) => mockListAccounts(...args),
+vi.mock("../../api/sources", () => ({
+  listSources: (...args: unknown[]) => mockListSources(...args),
 }));
 
 vi.mock("../../api/messages", () => ({
@@ -42,7 +42,7 @@ vi.mock("../../api/messages", () => ({
 }));
 
 vi.mock("../../api/channels", () => ({
-  listChannelsWithAccounts: (...args: unknown[]) => mockListChannelsWithAccounts(...args),
+  listChannelsWithSources: (...args: unknown[]) => mockListChannelsWithSources(...args),
 }));
 
 vi.mock("../../api/results", () => ({
@@ -66,9 +66,8 @@ vi.mock("../../context/AnalysisStatusContext", () => ({
     lastMessagesUpdate: runtimeState.lastMessagesUpdate,
     queueStatus: runtimeState.queueStatus,
     analysisPaused: false,
-    activeAnalysis: null,
     activeAnalyses: new Map(),
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     requestQueueStatusRefresh: runtimeState.requestQueueStatusRefresh,
   }),
 }));
@@ -168,10 +167,10 @@ describe("Empty state rendering for list components", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();
-    mockListAccounts.mockReset();
+    mockListSources.mockReset();
     mockQueryMessagesPage.mockReset();
     mockFetchTrendingTopics.mockReset();
-    mockListChannelsWithAccounts.mockReset();
+    mockListChannelsWithSources.mockReset();
     mockFetchEvents.mockReset();
     mockFetchTaskAnalysisStats.mockReset();
     runtimeState.lastMessagesUpdate = null;
@@ -193,8 +192,8 @@ describe("Empty state rendering for list components", () => {
 
   describe("MonitorPage — empty messages", () => {
     it("renders empty state without errors when messages array is empty", async () => {
-      mockListAccounts.mockResolvedValue([]);
-      mockListChannelsWithAccounts.mockResolvedValue([]);
+      mockListSources.mockResolvedValue([]);
+      mockListChannelsWithSources.mockResolvedValue([]);
       mockQueryMessagesPage.mockResolvedValue({
         messages: [],
         nextCursor: null,
@@ -213,7 +212,7 @@ describe("Empty state rendering for list components", () => {
         await Promise.resolve();
       });
 
-      // Should show empty state message (no accounts scenario)
+      // Should show empty state message (no sources scenario)
       expect(container.textContent).toContain("尚未開始接收實時訊息");
       // Should not throw — page renders successfully
       expect(container.querySelector('[role="status"]')).not.toBeNull();
@@ -225,17 +224,17 @@ describe("Empty state rendering for list components", () => {
         JSON.stringify({ search: "找不到的關鍵字" }),
       );
 
-      mockListAccounts.mockResolvedValue([
+      mockListSources.mockResolvedValue([
         {
-          id: "account-1",
+          id: "source-1",
           platform: "telegram",
-          name: "Account 1",
+          name: "Source 1",
           status: "connected",
           createdAt: "2026-04-17T03:00:00.000Z",
           updatedAt: "2026-04-17T03:00:00.000Z",
         },
       ]);
-      mockListChannelsWithAccounts.mockResolvedValue([]);
+      mockListChannelsWithSources.mockResolvedValue([]);
       mockQueryMessagesPage.mockResolvedValue({
         messages: [],
         nextCursor: null,
@@ -263,7 +262,7 @@ describe("Empty state rendering for list components", () => {
   describe("LeaderboardPage — empty topics", () => {
     it("renders empty state without errors when topics array is empty", async () => {
       mockFetchTrendingTopics.mockResolvedValue([]);
-      mockListChannelsWithAccounts.mockResolvedValue([]);
+      mockListChannelsWithSources.mockResolvedValue([]);
 
       const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
 
@@ -291,7 +290,7 @@ describe("Empty state rendering for list components", () => {
       ];
 
       mockFetchTrendingTopics.mockResolvedValue([]);
-      mockListChannelsWithAccounts.mockResolvedValue([]);
+      mockListChannelsWithSources.mockResolvedValue([]);
 
       const { LeaderboardPage } = await import("../leaderboard/LeaderboardPage");
 

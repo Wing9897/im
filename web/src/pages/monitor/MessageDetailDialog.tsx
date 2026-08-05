@@ -82,7 +82,7 @@ export function MessageDetailView({
               })}
             </div>
             <div>
-              {t("message.accountId", { id: message.accountId ?? emDash })}
+              {t("message.sourceId", { id: message.sourceId ?? emDash })}
             </div>
             <div>{t("message.platformId", { id: message.platformId })}</div>
             <div>

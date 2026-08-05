@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import type { ChannelWithAccount } from "../types";
+import type { ChannelWithSource } from "../types";
 import { PLATFORM_ORDER } from "./platformRegistry";
 
 const KNOWN_CSS_VARS: Record<string, string> = {
@@ -21,9 +21,9 @@ export function platformColor(platform: string | null | undefined): string {
 }
 
 export function groupChannelsByPlatform(
-  channels: ChannelWithAccount[],
-): [string, ChannelWithAccount[]][] {
-  const map = new Map<string, ChannelWithAccount[]>();
+  channels: ChannelWithSource[],
+): [string, ChannelWithSource[]][] {
+  const map = new Map<string, ChannelWithSource[]>();
   for (const channel of channels) {
     const group = map.get(channel.platform);
     if (group) group.push(channel);
@@ -31,8 +31,8 @@ export function groupChannelsByPlatform(
   }
 
   const knownSet = new Set<string>(PLATFORM_ORDER);
-  const knownEntries: [string, ChannelWithAccount[]][] = [];
-  const unknownEntries: [string, ChannelWithAccount[]][] = [];
+  const knownEntries: [string, ChannelWithSource[]][] = [];
+  const unknownEntries: [string, ChannelWithSource[]][] = [];
 
   for (const [platform, bucket] of map) {
     if (knownSet.has(platform)) knownEntries.push([platform, bucket]);

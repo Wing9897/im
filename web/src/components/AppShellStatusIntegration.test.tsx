@@ -10,7 +10,6 @@ const collectorState = vi.hoisted(() => ({
 
 const analysisState = vi.hoisted(() => ({
   analysisPaused: true,
-  activeAnalysis: null as null,
   queueStatus: { analysisPaused: true, pendingCount: 0, processingBatches: [] as [] },
 }));
 
@@ -25,11 +24,10 @@ vi.mock("../context/CollectorStatusContext", () => ({
 vi.mock("../context/AnalysisStatusContext", () => ({
   useAnalysisStatus: () => ({
     analysisPaused: analysisState.analysisPaused,
-    activeAnalysis: analysisState.activeAnalysis,
     queueStatus: analysisState.queueStatus,
     activeAnalyses: new Map(),
     lastAnalysisEvent: null,
-    lastAccountStatusChange: null,
+    lastSourceStatusChange: null,
     lastMessagesUpdate: null,
     requestQueueStatusRefresh: () => {},
   }),

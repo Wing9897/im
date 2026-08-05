@@ -1,7 +1,7 @@
 import {
   createRssFeed,
   updateRssFeed,
-} from "../../../../api/accounts";
+} from "../../../../api/sources";
 import i18n from "../../../../i18n";
 import { RssFeedForm } from "../RssFeedForm";
 import { feedToForm, formToCreatePayload, formToPatch, RssEditDialog } from "../rssFormModel";
@@ -31,7 +31,7 @@ export const genericRssProvider: RssProviderDefinition = {
     return { status: resp.status, errorMessage: resp.errorMessage };
   },
   updateFeed: async (feed, fields) => {
-    const resp = await updateRssFeed(feed.account.id, formToPatch(fields));
+    const resp = await updateRssFeed(feed.source.id, formToPatch(fields));
     return { status: resp.status, errorMessage: resp.errorMessage };
   },
   feedToForm: (feed) => feedToForm(feed),

@@ -20,7 +20,7 @@ Dashboard maps `useTaskAnalysisStats` → `web/src/pages/dashboard/taskCardStats
 
 - Message blocks: `[id=...][time=...][sender] content`. `analysis_strategy_mode` is evidence guidance (server default `balanced`). Prompt revision correlation is via git / prompt files — not a `system_config` tag.
 - **`intel_event` mode:** task `promptTemplate` = domain intent only; JSON field rules live in `EVENT_SCHEMA_INSTRUCTION` (`server/prompts/analysis.py`).
-- **Web intel:** tick uses `webSearchQuery` + `promptTemplate` (no local messages); empty → `skipped:` batch + SSE. Search routing shared with assistant (`WebSearchExecutionService`); tick cap **8** vs assistant tool **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `record_batch_failure` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
+- **Web intel:** tick is Agent multi-round (`web_intel_tick` → `AgentRuntime` + `build_web_intel_base_prompt`); optional channel-bound message gate／inject. Search routing shared with assistant (`WebSearchExecutionService.tool_search`／native); provider result cap **8** (`MAX_COUNT`) vs assistant tool default **5**. Assistant master switch does **not** gate ticks. Failures: one in-fire retry → `completed`+`error_message` + `record_batch_failure` + SSE (`retrying: true`); streak to `max_batch_retries` deactivates **that** task (not global pause). Details: `server/scheduler/web_intel_tick.py`.
 - CJK-aware token heuristic; no `truncated_by_count` in batch metadata.
 
 ## Leaderboard
@@ -29,16 +29,16 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-14 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-15 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
-## Sources / accounts
+## Sources
 
-Platform-first `PATCH /api/v1/accounts/{email|rss|mqtt|telegram|discord}/{account_id}`. List: unfiltered `GET /accounts` or typed `GET /accounts/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/calendar/items`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
+Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/calendar/items`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
 
 **Input／Process registries (in-repo, not a plugin SDK):**
 - Platforms: leaf `server/domain/collector_platforms.py` → DDL CHECK + `ADAPTER_BUILDERS` + FE `domain/sources/collectorPlatforms.ts` (drift-tested).
 - Modes: `AnalysisModeSpec` in `server/domain/analysis_modes.py` → derived frozensets + DDL CHECK + FE `domain/tasks/analysisModeCapabilities.ts` (drift-tested).
-Still update accounts routes／OpenAPI／pipeline／UI when adding — registry is the vocabulary／capability SoT, not zero-touch hot-plug.
+Still update sources routes／OpenAPI／pipeline／UI when adding — registry is the vocabulary／capability SoT, not zero-touch hot-plug.
 
 ## Schema baseline
 
@@ -81,9 +81,9 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Error bodies | `error_code`, `correlation_id` (snake_case) |
 | `GET /config/settings` | settings snapshot (camelCase); use `PUT /config/settings` to update |
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
-| Account URL styles | All platforms use `/{platform}/{id}/...` for platform-scoped mutations |
-| Account list | `GET /accounts` → `Account[]`; typed `GET /accounts/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v14 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v14-explicit-reset) (wipe-only, `intel_event` enum, `app_logs.kind`, `project_message_cursors` split columns, `schedule_rrule` trigger-only, `recurring_schedules`, `__user__`, `user_events.workset_id`, items) |
+| Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
+| Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
+| Schema stamp v15 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v15-explicit-reset) (wipe-only, domain DDL aggregate, `sources`, `source_channels`, `messages.source_id`) |
 | Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so project detail can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
@@ -93,7 +93,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 
 ## Intelligence / Events time semantics
 
-**Time-range tokens:** task / analysis windows use `AnalysisTimeRange` (`1d`／`7d`／`30d`／`all`／…). Monitor message-query filters may also use **`12h`／`24h`** (`MessageTimeRange`) — query-only tokens, **not** `analysis_time_range` DB/API values. FE preset helpers (`normalizePresetTimeRange`) map unknown preset strings (including `12h`) onto editor vocabulary; they do not invent analysis windows.
+**Time-range tokens:** task / analysis windows use `TaskAnalysisTimeRange` (`1d`／`7d`／`30d`／`all`／…). Monitor message-query filters may also use **`12h`／`24h`** (`MessageTimeRange`) — query-only tokens, **not** `analysis_time_range` DB/API values. FE preset helpers (`normalizePresetTimeRange`) map unknown preset strings (including `12h`) onto editor vocabulary; they do not invent analysis windows.
 
 The intelligence UI treats **event time** as the user-facing clock. Preference order matches map filters: structured `startTime` → `sourceMessageTime` → `createdAt` (`getEventTimestamp` / `mapFilters`).
 
@@ -123,8 +123,8 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
-- Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `account.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
-- GitHub Actions: Ubuntu `quality` on PR／main; on **main** push or **`workflow_dispatch`**: next SemVer from latest `v*` tag (no bot commit to main) → win／mac／linux `package` (Desktop+CLI; `desktop_verify` only — vitest already in `quality`) → push tag + GitHub Release → GHCR.
+- Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
+- GitHub Actions: Ubuntu `quality` + build on PR／main；只有明確執行 **`workflow_dispatch`** 才會從最新 `v*` tag 算下一版（不 bot commit main）→ win／mac／linux `package`（Desktop+CLI；`desktop_verify` only — vitest already in `quality`）→ push tag + GitHub Release → GHCR。
 
 ## Security (outbound requests)
 
@@ -134,14 +134,14 @@ Action handlers, RSS fetches, MQTT brokers, and LLM clients call `server/outboun
 
 ## Release checklist (Desktop + CLI + container)
 
-1. Merge／push to `main` — no manual tag or VERSION commit required
-2. CI: `quality` → `version` (`bump_version.py --from-tags --print-only`; no tags → `VERSION` as-is) → package×3 → release tag + GitHub Release (does **not** push commits to main)
+1. Merge／push to `main` and confirm `quality` + build pass; this never publishes
+2. Explicitly run `workflow_dispatch`: `quality` → `version` (`bump_version.py --from-tags --print-only`; no tags → `VERSION` as-is) → package×3 → release tag + GitHub Release (does **not** push commits to main)
 3. Sign installers for public／store distribution (unsigned CI builds are for QA only)
 4. Container: same path → `ghcr.io/<owner>/<repo>`, or locally `npm run docker:build` + `npm run verify:deploy`
 
 ## Email IMAP outbound policy
 
-Email collectors validate `imap_host` with the same public-IP DNS policy as HTTP/MQTT outbound via `server.outbound.validate_imap_host` (default ports 993/143). Poll uses synchronous `imap-tools` inside `asyncio.to_thread`; UID cursors live in encrypted `accounts.credentials.folder_cursors`, with matching per-folder UIDVALIDITY in `folder_uidvalidities`. A missing or changed UIDVALIDITY resets only that folder's cursor.
+Email collectors validate `imap_host` with the same public-IP DNS policy as HTTP/MQTT outbound via `server.outbound.validate_imap_host` (default ports 993/143). Poll uses synchronous `imap-tools` inside `asyncio.to_thread`; UID cursors live in encrypted `sources.credentials.folder_cursors`, with matching per-folder UIDVALIDITY in `folder_uidvalidities`. A missing or changed UIDVALIDITY resets only that folder's cursor.
 
 Email channel IDs use the host-qualified shape `host:port/username/folder` (`email_channel_platform_id`). The one-shot data migration that remapped legacy `username/folder` keys was retired with a pre-wipe-floor / prior stamp; fresh installs write host-qualified keys from the start.
 
@@ -149,8 +149,8 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 | Kind | Platforms | Initial connect failure | Runtime / poll errors |
 |------|-----------|-------------------------|-------------------------|
-| **Long-lived session** | Telegram, Discord, MQTT | Account → `error` / disconnected; SSE `account_status_changed` | Connect/disconnect and reconnect failures update status and broadcast SSE. **Telegram:** after handler registration, one bounded serial `iter_messages` backfill (100/dialog); `FloodWait` sleeps with jitter, wait >120s aborts remaining dialogs; no full history / edit-delete sync |
-| **Poll loop** | RSS, Email (IMAP) | Validation/login failure → account `error` | **RSS:** consecutive failures (default 3) escalate to `error` + SSE. **Email:** transient poll errors retry; repeated IMAP auth failures escalate to `error` + SSE |
+| **Long-lived session** | Telegram, Discord, MQTT | Source → `error` / disconnected; SSE `source_status_changed` | Connect/disconnect and reconnect failures update status and broadcast SSE. **Telegram:** after handler registration, one bounded serial `iter_messages` backfill (100/dialog); `FloodWait` sleeps with jitter, wait >120s aborts remaining dialogs; no full history / edit-delete sync |
+| **Poll loop** | RSS, Email (IMAP) | Validation/login failure → source `error` | **RSS:** consecutive failures (default 3) escalate to `error` + SSE. **Email:** transient poll errors retry; repeated IMAP auth failures escalate to `error` + SSE |
 
 ## Deploy verify
 

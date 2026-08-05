@@ -72,9 +72,9 @@ export interface CollectorStatusChangedPayload {
   correlation_id?: string;
 }
 
-/** Payload for the `account_status_changed` event */
-export interface AccountStatusChangedPayload {
-  accountId: string;
+/** Payload for the `source_status_changed` event */
+export interface SourceStatusChangedPayload {
+  sourceId: string;
   /** Adapter reconnect emits this transient state before persisted connection settles. */
   status: ConnectionStatus;
   lastError?: string | null;

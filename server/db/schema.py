@@ -1,17 +1,28 @@
-"""Compatibility exports for the authoritative schema declaration."""
+"""Stable aggregation point for the wipe-only SQLite baseline."""
 
-from server.db.schema_ddl import DDL
-from server.db.schema_fingerprint import (
-    REQUIRED_COLUMNS,
-    REQUIRED_FOREIGN_KEYS,
-    REQUIRED_INDEXES,
-    REQUIRED_TABLES,
+from server.db.schema_domains import (
+    actions,
+    analysis,
+    auth,
+    calendar,
+    items,
+    sources,
+    system,
+    tasks,
+    ui,
 )
 
-__all__ = [
-    "DDL",
-    "REQUIRED_COLUMNS",
-    "REQUIRED_FOREIGN_KEYS",
-    "REQUIRED_INDEXES",
-    "REQUIRED_TABLES",
-]
+DDL_PARTS = (
+    sources.DDL,
+    tasks.DDL,
+    analysis.DDL,
+    system.DDL,
+    actions.DDL,
+    calendar.DDL,
+    items.DDL,
+    auth.DDL,
+    ui.DDL,
+)
+DDL = "\n\n".join(DDL_PARTS)
+
+__all__ = ["DDL", "DDL_PARTS"]

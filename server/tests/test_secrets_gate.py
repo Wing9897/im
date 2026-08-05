@@ -83,12 +83,12 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
     try:
         await set_configs(db, {"openai_api_key": "sk-real", "ui_locale": "zh-Hans"})
         await db.execute(
-            "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
             "VALUES ('a1', 'email', 'L', 'connected', ?, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
             (protect_text('{"password":"x"}'),),
         )
         await db.execute(
-            "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
             "VALUES ('a2', 'telegram', 'stale', 'connected', NULL, "
             "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
         )
@@ -106,15 +106,15 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
 
         counts = await scrub_undecryptable_secrets(db)
         assert counts["system_config"] == 1
-        assert counts["accounts"] == 1
+        assert counts["sources"] == 1
         assert counts["stale_connected"] == 1
         assert counts["actions"] == 1
 
         assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'") is None
         assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'ui_locale'") == "zh-Hans"
-        assert await db.fetch_value("SELECT credentials FROM accounts WHERE id = 'a1'") is None
-        assert await db.fetch_value("SELECT status FROM accounts WHERE id = 'a1'") == "disconnected"
-        assert await db.fetch_value("SELECT status FROM accounts WHERE id = 'a2'") == "disconnected"
+        assert await db.fetch_value("SELECT credentials FROM sources WHERE id = 'a1'") is None
+        assert await db.fetch_value("SELECT status FROM sources WHERE id = 'a1'") == "disconnected"
+        assert await db.fetch_value("SELECT status FROM sources WHERE id = 'a2'") == "disconnected"
         assert await db.fetch_value("SELECT configuration FROM actions WHERE id = 'act1'") == "{}"
         assert await db.fetch_value("SELECT name FROM analysis_tasks WHERE id = 't1'") == "Keep me"
 
@@ -289,18 +289,18 @@ async def test_health_includes_secrets_ready_on_fresh_app(client, app):
 
 
 @pytest.mark.asyncio
-async def test_probe_accounts_ciphertext(tmp_path, monkeypatch):
+async def test_probe_sources_ciphertext(tmp_path, monkeypatch):
     key_path = tmp_path / "secret.key"
     monkeypatch.setenv("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", str(key_path))
     _fernet.cache_clear()
 
-    db = Database(str(tmp_path / "accounts.db"))
+    db = Database(str(tmp_path / "sources.db"))
     await db.connect()
     await db.ensure_schema()
     try:
         cipher = protect_text('{"password":"x"}')
         await db.execute(
-            "INSERT INTO accounts (id, platform, name, status, credentials, created_at, updated_at) "
+            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
             "VALUES ('a1', 'email', 'L', 'disconnected', ?, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
             (cipher,),
         )

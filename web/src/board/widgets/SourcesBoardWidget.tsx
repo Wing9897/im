@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { listAccounts } from "../../api/accounts";
+import { listSources } from "../../api/sources";
 import { Badge } from "../../components/ui";
 import { formatStatusLabel } from "../../styles/statusDot";
-import type { Account, ConnectionStatus } from "../../types";
+import type { Source, ConnectionStatus } from "../../types";
 import { platformDisplayLabel } from "../../utils/platformRegistry";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
@@ -15,11 +15,11 @@ function statusTone(status: ConnectionStatus): "success" | "danger" | "neutral" 
   return "neutral";
 }
 
-/** Compact source-account status list for ops board. */
+/** Compact source status list for ops board. */
 export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
-  const fetcher = useCallback(() => listAccounts(), []);
-  const { data: accounts, error, loading, refresh } = useBoardWidgetPoll<Account[]>(
+  const fetcher = useCallback(() => listSources(), []);
+  const { data: sources, error, loading, refresh } = useBoardWidgetPoll<Source[]>(
     fetcher,
     BOARD_POLL_MS.standard,
     { active },
@@ -28,31 +28,31 @@ export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
   return (
     <div className="board-widget-body board-widget-sources" data-testid="board-sources-widget">
       <BoardWidgetShell
-        loading={loading && !accounts}
-        error={!accounts ? error : null}
+        loading={loading && !sources}
+        error={!sources ? error : null}
         onRetry={refresh}
-        empty={Array.isArray(accounts) && accounts.length === 0}
+        empty={Array.isArray(sources) && sources.length === 0}
         emptyLabel={t("board.sources.empty")}
       >
-        {accounts && accounts.length > 0 ? (
+        {sources && sources.length > 0 ? (
           <ul className="board-widget-list">
-            {accounts.map((account) => (
-              <li key={account.id} className="board-widget-list__item">
+            {sources.map((source) => (
+              <li key={source.id} className="board-widget-list__item">
                 <button
                   type="button"
                   className="board-widget-list__row board-sources-row"
-                  data-testid={`board-sources-row-${account.id}`}
+                  data-testid={`board-sources-row-${source.id}`}
                 >
                   <span className="board-sources-row__title">
                     <span className="board-widget-list__primary">
-                      {account.name || account.id}
+                      {source.name || source.id}
                     </span>
                     <Badge tone="neutral" className="board-sources-row__platform">
-                      {platformDisplayLabel(account.platform)}
+                      {platformDisplayLabel(source.platform)}
                     </Badge>
                   </span>
-                  <Badge tone={statusTone(account.status)}>
-                    {formatStatusLabel(account.status)}
+                  <Badge tone={statusTone(source.status)}>
+                    {formatStatusLabel(source.status)}
                   </Badge>
                 </button>
               </li>

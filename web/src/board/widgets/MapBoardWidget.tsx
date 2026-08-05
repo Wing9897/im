@@ -21,7 +21,7 @@ import type { BoardWidgetProps } from "../types";
 import {
   BOARD_MAP_DEFAULT_CENTER,
   BOARD_MAP_DEFAULT_ZOOM,
-} from "../embeds/mapBoardDefaults";
+} from "../../domain/intelligence/mapPresentation";
 import {
   clearBoardMapViewInApi,
   saveBoardMapViewToApi,

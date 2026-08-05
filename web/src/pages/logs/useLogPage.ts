@@ -18,7 +18,7 @@ const validLogCategories = new Set([
   "all",
   "analysis",
   "collector",
-  "account",
+  "source",
   "system",
   "frontend",
 ]);

@@ -56,7 +56,7 @@ function ModeControls() {
       {
         type: "button",
         "data-testid": "nav-accounts",
-        onClick: () => navigate("/accounts"),
+        onClick: () => navigate("/sources"),
       },
       "accounts",
     ),
@@ -188,7 +188,7 @@ describe("MonitorModeContext", () => {
   });
 
   it("remembers current path when entering canvas", async () => {
-    renderAt("/accounts");
+    renderAt("/sources");
     await flush();
 
     act(() => {
@@ -197,7 +197,7 @@ describe("MonitorModeContext", () => {
     await flush();
 
     expect(window.localStorage.getItem(MONITOR_MODE_KEY)).toBe("canvas");
-    expect(window.localStorage.getItem(PAGES_LAST_PATH_KEY)).toBe("/accounts");
+    expect(window.localStorage.getItem(PAGES_LAST_PATH_KEY)).toBe("/sources");
   });
 
   it("keeps setMonitorMode identity across pathname-only navigations", async () => {
@@ -320,7 +320,7 @@ describe("MonitorModeContext", () => {
       await flush();
 
       expect(container.querySelector('[data-testid="mode"]')?.textContent).toBe("canvas");
-      expect(lastPath).toBe("/accounts");
+      expect(lastPath).toBe("/sources");
 
       await act(async () => {
         vi.advanceTimersByTime(1500);

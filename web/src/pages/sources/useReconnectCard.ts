@@ -1,10 +1,10 @@
 import { useCallback, useRef, useState } from "react";
-import { reconnectAccount } from "../../api/accounts";
+import { reconnectSource } from "../../api/sources";
 import i18n from "../../i18n";
 import { toErrorMessage } from "../../utils/errors";
 
 interface UseReconnectCardOptions {
-  accountId: string;
+  sourceId: string;
   onReconnectSuccess: () => void;
 }
 
@@ -15,7 +15,7 @@ interface UseReconnectCardReturn {
 }
 
 export function useReconnectCard({
-  accountId,
+  sourceId,
   onReconnectSuccess,
 }: UseReconnectCardOptions): UseReconnectCardReturn {
   const [reconnecting, setReconnecting] = useState(false);
@@ -29,7 +29,7 @@ export function useReconnectCard({
     setReconnectError(null);
     void (async () => {
       try {
-        const resp = await reconnectAccount(accountId);
+        const resp = await reconnectSource(sourceId);
         if (resp.nextStep === "connected") {
           onReconnectSuccess();
         } else {
@@ -42,7 +42,7 @@ export function useReconnectCard({
         setReconnecting(false);
       }
     })();
-  }, [accountId, onReconnectSuccess]);
+  }, [sourceId, onReconnectSuccess]);
 
   return { reconnecting, reconnectError, handleReconnect };
 }

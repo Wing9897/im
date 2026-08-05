@@ -1,6 +1,6 @@
 import type { SseEvent } from "../../api/client";
 import { emitResourceModified } from "../../domain/sse/resourceModified";
-import { handleAccountStatusChanged } from "./sseHandlers/accountStatus";
+import { handleSourceStatusChanged } from "./sseHandlers/sourceStatus";
 import {
   handleAnalysisCompleted,
   handleAnalysisFailed,
@@ -15,7 +15,7 @@ type SseHandler = (data: unknown, deps: EventListenerDeps) => void;
 
 const SSE_HANDLERS: Record<string, SseHandler> = {
   collector_status_changed: handleCollectorStatusChanged,
-  account_status_changed: handleAccountStatusChanged,
+  source_status_changed: handleSourceStatusChanged,
   messages_updated: handleMessagesUpdated,
   analysis_started: handleAnalysisStarted,
   analysis_completed: handleAnalysisCompleted,

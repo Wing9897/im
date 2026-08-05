@@ -1,7 +1,8 @@
 import { useCallback, useState } from "react";
-import { deleteAccount } from "../../../api/accounts";
+import { deleteSource } from "../../../api/sources";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
 import { useSourceListTab } from "../useSourceListTab";
+import { useSourceEditController } from "../useSourceEditController";
 import {
   DEFAULT_RSS_PROVIDER_ID,
   getRssProvider,
@@ -13,7 +14,19 @@ import type { RssFeedItem, RssFormFields, RssProviderId } from "./providers/type
 import { INITIAL_RSS_FORM } from "./providers/types";
 import i18n from "../../../i18n";
 
-const removeFeed = (target: RssFeedItem) => deleteAccount(target.account.id);
+const removeFeed = (target: RssFeedItem) => deleteSource(target.source.id);
+const feedToEditForm = (target: RssFeedItem) => resolveProviderForFeed(target).feedToForm(target);
+const validateEditForm = (form: RssFormFields, target: RssFeedItem) =>
+  resolveProviderForFeed(target).validateForm(form);
+const formatEditError = (error: unknown) =>
+  error instanceof Error ? error.message : String(i18n.t("sources:errors.updateFailed"));
+
+async function saveFeed(target: RssFeedItem, form: RssFormFields) {
+  const response = await resolveProviderForFeed(target).updateFeed(target, form);
+  if (response.status === "error" && response.errorMessage) {
+    throw new Error(response.errorMessage);
+  }
+}
 
 export function useRssTab() {
   const {
@@ -36,10 +49,13 @@ export function useRssTab() {
   const [form, setForm] = useState<RssFormFields>(INITIAL_RSS_FORM);
   const { submitting, error: formError, handleSubmit } = useFormSubmit();
 
-  const [editTarget, setEditTarget] = useState<RssFeedItem | null>(null);
-  const [editForm, setEditForm] = useState<RssFormFields | null>(null);
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
+  const edit = useSourceEditController<RssFeedItem, RssFormFields>({
+    toForm: feedToEditForm,
+    validate: validateEditForm,
+    save: saveFeed,
+    refresh: fetchFeeds,
+    formatError: formatEditError,
+  });
 
   const handleProviderChange = useCallback((providerId: RssProviderId) => {
     setActiveProviderId(providerId);
@@ -62,46 +78,7 @@ export function useRssTab() {
     });
   }, [activeProvider, form, fetchFeeds, handleSubmit]);
 
-  const openEditDialog = useCallback((feed: RssFeedItem) => {
-    const provider = resolveProviderForFeed(feed);
-    setEditTarget(feed);
-    setEditForm(provider.feedToForm(feed));
-    setEditError(null);
-  }, []);
-
-  const closeEditDialog = useCallback(() => {
-    setEditTarget(null);
-    setEditForm(null);
-    setEditError(null);
-  }, []);
-
-  const handleSaveEdit = useCallback(async () => {
-    if (!editTarget || !editForm) return;
-    const provider = resolveProviderForFeed(editTarget);
-    setEditError(null);
-
-    const validationError = provider.validateForm(editForm);
-    if (validationError) {
-      setEditError(validationError);
-      return;
-    }
-
-    setEditSubmitting(true);
-    try {
-      const resp = await provider.updateFeed(editTarget, editForm);
-      if (resp.status === "error" && resp.errorMessage) {
-        throw new Error(resp.errorMessage);
-      }
-      closeEditDialog();
-      await fetchFeeds();
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : String(i18n.t("sources:errors.updateFailed")));
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [closeEditDialog, editForm, editTarget, fetchFeeds]);
-
-  const editProvider = editTarget ? resolveProviderForFeed(editTarget) : null;
+  const editProvider = edit.editTarget ? resolveProviderForFeed(edit.editTarget) : null;
 
   return {
     feeds,
@@ -124,14 +101,7 @@ export function useRssTab() {
     handleRetry,
     handleAddFeed,
     handleRemoveFeed,
-    editTarget,
-    editForm,
-    setEditForm,
+    ...edit,
     editProvider,
-    editSubmitting,
-    editError,
-    openEditDialog,
-    closeEditDialog,
-    handleSaveEdit,
   };
 }

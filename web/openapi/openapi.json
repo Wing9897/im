@@ -1545,14 +1545,14 @@
         }
       }
     },
-    "/api/v1/accounts": {
+    "/api/v1/sources": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Accounts",
-        "description": "Return Account[] for all accounts.\n\nPlatform-scoped lists use typed paths: GET /accounts/{telegram,discord,rss,http,mqtt,email}.\nQuery parameter ``platform`` is rejected with 400 (hard-cut; use typed aliases).",
-        "operationId": "list_accounts_api_v1_accounts_get",
+        "summary": "List Sources",
+        "description": "Return Source[] for all sources.\n\nPlatform-scoped lists use typed paths: GET /sources/{telegram,discord,rss,http,mqtt,email}.\nQuery parameter ``platform`` is rejected with 400 (hard-cut; use typed aliases).",
+        "operationId": "list_sources_api_v1_sources_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1560,10 +1560,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/AccountResponse"
+                    "$ref": "#/components/schemas/SourceResponse"
                   },
                   "type": "array",
-                  "title": "Response List Accounts Api V1 Accounts Get"
+                  "title": "Response List Sources Api V1 Sources Get"
                 }
               }
             }
@@ -1571,13 +1571,13 @@
         }
       }
     },
-    "/api/v1/accounts/telegram": {
+    "/api/v1/sources/telegram": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Telegram Accounts",
-        "operationId": "list_telegram_accounts_api_v1_accounts_telegram_get",
+        "summary": "List Telegram Sources",
+        "operationId": "list_telegram_sources_api_v1_sources_telegram_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1585,10 +1585,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/AccountResponse"
+                    "$ref": "#/components/schemas/SourceResponse"
                   },
                   "type": "array",
-                  "title": "Response List Telegram Accounts Api V1 Accounts Telegram Get"
+                  "title": "Response List Telegram Sources Api V1 Sources Telegram Get"
                 }
               }
             }
@@ -1597,10 +1597,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Create Telegram Account",
-        "operationId": "create_telegram_account_api_v1_accounts_telegram_post",
+        "summary": "Create Telegram Source",
+        "operationId": "create_telegram_source_api_v1_sources_telegram_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1617,7 +1617,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -1635,13 +1635,13 @@
         }
       }
     },
-    "/api/v1/accounts/discord": {
+    "/api/v1/sources/discord": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Discord Accounts",
-        "operationId": "list_discord_accounts_api_v1_accounts_discord_get",
+        "summary": "List Discord Sources",
+        "operationId": "list_discord_sources_api_v1_sources_discord_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1652,7 +1652,7 @@
                     "$ref": "#/components/schemas/DiscordBotInfoResponse"
                   },
                   "type": "array",
-                  "title": "Response List Discord Accounts Api V1 Accounts Discord Get"
+                  "title": "Response List Discord Sources Api V1 Sources Discord Get"
                 }
               }
             }
@@ -1661,10 +1661,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Create Discord Bot",
-        "operationId": "create_discord_bot_api_v1_accounts_discord_post",
+        "operationId": "create_discord_bot_api_v1_sources_discord_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1699,13 +1699,13 @@
         }
       }
     },
-    "/api/v1/accounts/rss": {
+    "/api/v1/sources/rss": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Rss Accounts",
-        "operationId": "list_rss_accounts_api_v1_accounts_rss_get",
+        "summary": "List Rss Sources",
+        "operationId": "list_rss_sources_api_v1_sources_rss_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1716,7 +1716,7 @@
                     "$ref": "#/components/schemas/RssFeedInfoResponse"
                   },
                   "type": "array",
-                  "title": "Response List Rss Accounts Api V1 Accounts Rss Get"
+                  "title": "Response List Rss Sources Api V1 Sources Rss Get"
                 }
               }
             }
@@ -1725,10 +1725,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Create Rss Feed",
-        "operationId": "create_rss_feed_api_v1_accounts_rss_post",
+        "operationId": "create_rss_feed_api_v1_sources_rss_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1763,13 +1763,13 @@
         }
       }
     },
-    "/api/v1/accounts/http": {
+    "/api/v1/sources/http": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Http Accounts",
-        "operationId": "list_http_accounts_api_v1_accounts_http_get",
+        "summary": "List Http Sources",
+        "operationId": "list_http_sources_api_v1_sources_http_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1780,7 +1780,7 @@
                     "$ref": "#/components/schemas/HttpSourceInfoResponse"
                   },
                   "type": "array",
-                  "title": "Response List Http Accounts Api V1 Accounts Http Get"
+                  "title": "Response List Http Sources Api V1 Sources Http Get"
                 }
               }
             }
@@ -1789,10 +1789,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Create Http Source",
-        "operationId": "create_http_source_api_v1_accounts_http_post",
+        "operationId": "create_http_source_api_v1_sources_http_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1827,13 +1827,13 @@
         }
       }
     },
-    "/api/v1/accounts/mqtt": {
+    "/api/v1/sources/mqtt": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Mqtt Accounts",
-        "operationId": "list_mqtt_accounts_api_v1_accounts_mqtt_get",
+        "summary": "List Mqtt Sources",
+        "operationId": "list_mqtt_sources_api_v1_sources_mqtt_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1844,7 +1844,7 @@
                     "$ref": "#/components/schemas/MqttBrokerInfoResponse"
                   },
                   "type": "array",
-                  "title": "Response List Mqtt Accounts Api V1 Accounts Mqtt Get"
+                  "title": "Response List Mqtt Sources Api V1 Sources Mqtt Get"
                 }
               }
             }
@@ -1853,10 +1853,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Create Mqtt Broker",
-        "operationId": "create_mqtt_broker_api_v1_accounts_mqtt_post",
+        "operationId": "create_mqtt_broker_api_v1_sources_mqtt_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1891,13 +1891,13 @@
         }
       }
     },
-    "/api/v1/accounts/email": {
+    "/api/v1/sources/email": {
       "get": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "List Email Accounts",
-        "operationId": "list_email_accounts_api_v1_accounts_email_get",
+        "summary": "List Email Sources",
+        "operationId": "list_email_sources_api_v1_sources_email_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1908,7 +1908,7 @@
                     "$ref": "#/components/schemas/EmailMailboxInfoResponse"
                   },
                   "type": "array",
-                  "title": "Response List Email Accounts Api V1 Accounts Email Get"
+                  "title": "Response List Email Sources Api V1 Sources Email Get"
                 }
               }
             }
@@ -1917,10 +1917,10 @@
       },
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Create Email Mailbox",
-        "operationId": "create_email_mailbox_api_v1_accounts_email_post",
+        "operationId": "create_email_mailbox_api_v1_sources_email_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1955,21 +1955,21 @@
         }
       }
     },
-    "/api/v1/accounts/{account_id}": {
+    "/api/v1/sources/{source_id}": {
       "delete": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Delete Account",
-        "operationId": "delete_account_api_v1_accounts__account_id__delete",
+        "summary": "Delete Source",
+        "operationId": "delete_source_api_v1_sources__source_id__delete",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -1990,21 +1990,21 @@
         }
       }
     },
-    "/api/v1/accounts/{account_id}/reconnect": {
+    "/api/v1/sources/{source_id}/reconnect": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Reconnect Account",
-        "operationId": "reconnect_account_api_v1_accounts__account_id__reconnect_post",
+        "summary": "Reconnect Source",
+        "operationId": "reconnect_source_api_v1_sources__source_id__reconnect_post",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2014,7 +2014,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -2032,20 +2032,20 @@
         }
       }
     },
-    "/api/v1/accounts/refresh-all": {
+    "/api/v1/sources/refresh-all": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Refresh All Accounts",
-        "operationId": "refresh_all_accounts_api_v1_accounts_refresh_all_post",
+        "summary": "Refresh All Sources",
+        "operationId": "refresh_all_sources_api_v1_sources_refresh_all_post",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RefreshAllAccountsResponse"
+                  "$ref": "#/components/schemas/RefreshAllSourcesResponse"
                 }
               }
             }
@@ -2053,21 +2053,21 @@
         }
       }
     },
-    "/api/v1/accounts/discord/{account_id}": {
+    "/api/v1/sources/discord/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Update Discord Bot",
-        "operationId": "update_discord_bot_api_v1_accounts_discord__account_id__patch",
+        "operationId": "update_discord_bot_api_v1_sources_discord__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2105,21 +2105,21 @@
         }
       }
     },
-    "/api/v1/accounts/discord/{account_id}/subscribe": {
+    "/api/v1/sources/discord/{source_id}/subscribe": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Subscribe Discord Channels",
-        "operationId": "subscribe_discord_channels_api_v1_accounts_discord__account_id__subscribe_post",
+        "operationId": "subscribe_discord_channels_api_v1_sources_discord__source_id__subscribe_post",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2157,21 +2157,21 @@
         }
       }
     },
-    "/api/v1/accounts/email/{account_id}": {
+    "/api/v1/sources/email/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Update Email Mailbox",
-        "operationId": "update_email_mailbox_api_v1_accounts_email__account_id__patch",
+        "operationId": "update_email_mailbox_api_v1_sources_email__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2209,21 +2209,21 @@
         }
       }
     },
-    "/api/v1/accounts/mqtt/{account_id}": {
+    "/api/v1/sources/mqtt/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Update Mqtt Broker",
-        "operationId": "update_mqtt_broker_api_v1_accounts_mqtt__account_id__patch",
+        "operationId": "update_mqtt_broker_api_v1_sources_mqtt__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2261,21 +2261,21 @@
         }
       }
     },
-    "/api/v1/accounts/rss/{account_id}": {
+    "/api/v1/sources/rss/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Update Rss Feed",
-        "operationId": "update_rss_feed_api_v1_accounts_rss__account_id__patch",
+        "operationId": "update_rss_feed_api_v1_sources_rss__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2313,21 +2313,21 @@
         }
       }
     },
-    "/api/v1/accounts/http/{account_id}": {
+    "/api/v1/sources/http/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Update Http Source",
-        "operationId": "update_http_source_api_v1_accounts_http__account_id__patch",
+        "operationId": "update_http_source_api_v1_sources_http__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2365,13 +2365,13 @@
         }
       }
     },
-    "/api/v1/accounts/telegram/qr": {
+    "/api/v1/sources/telegram/qr": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Create Telegram Account Qr",
-        "operationId": "create_telegram_account_qr_api_v1_accounts_telegram_qr_post",
+        "summary": "Create Telegram Source Qr",
+        "operationId": "create_telegram_source_qr_api_v1_sources_telegram_qr_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2388,7 +2388,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -2406,21 +2406,21 @@
         }
       }
     },
-    "/api/v1/accounts/telegram/{account_id}/qr-wait": {
+    "/api/v1/sources/telegram/{source_id}/qr-wait": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Wait Telegram Qr Login",
-        "operationId": "wait_telegram_qr_login_api_v1_accounts_telegram__account_id__qr_wait_post",
+        "operationId": "wait_telegram_qr_login_api_v1_sources_telegram__source_id__qr_wait_post",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2447,7 +2447,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -2465,21 +2465,21 @@
         }
       }
     },
-    "/api/v1/accounts/telegram/{account_id}": {
+    "/api/v1/sources/telegram/{source_id}": {
       "patch": {
         "tags": [
-          "accounts"
+          "sources"
         ],
-        "summary": "Update Telegram Account",
-        "operationId": "update_telegram_account_api_v1_accounts_telegram__account_id__patch",
+        "summary": "Update Telegram Source",
+        "operationId": "update_telegram_source_api_v1_sources_telegram__source_id__patch",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2499,7 +2499,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UpdateTelegramAccountResponse"
+                  "$ref": "#/components/schemas/UpdateTelegramSourceResponse"
                 }
               }
             }
@@ -2517,21 +2517,21 @@
         }
       }
     },
-    "/api/v1/accounts/telegram/{account_id}/verify-code": {
+    "/api/v1/sources/telegram/{source_id}/verify-code": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Verify Telegram Code",
-        "operationId": "verify_telegram_code_api_v1_accounts_telegram__account_id__verify_code_post",
+        "operationId": "verify_telegram_code_api_v1_sources_telegram__source_id__verify_code_post",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2551,7 +2551,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -2569,21 +2569,21 @@
         }
       }
     },
-    "/api/v1/accounts/telegram/{account_id}/verify-2fa": {
+    "/api/v1/sources/telegram/{source_id}/verify-2fa": {
       "post": {
         "tags": [
-          "accounts"
+          "sources"
         ],
         "summary": "Verify Telegram 2Fa",
-        "operationId": "verify_telegram_2fa_api_v1_accounts_telegram__account_id__verify_2fa_post",
+        "operationId": "verify_telegram_2fa_api_v1_sources_telegram__source_id__verify_2fa_post",
         "parameters": [
           {
-            "name": "account_id",
+            "name": "source_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
-              "title": "Account Id"
+              "title": "Source Id"
             }
           }
         ],
@@ -2603,7 +2603,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AddAccountResponse"
+                  "$ref": "#/components/schemas/AddSourceResponse"
                 }
               }
             }
@@ -3050,7 +3050,7 @@
         "operationId": "get_messages_page_api_v1_messages_page_get",
         "parameters": [
           {
-            "name": "account_ids",
+            "name": "source_ids",
             "in": "query",
             "required": false,
             "schema": {
@@ -3062,7 +3062,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Account Ids"
+              "title": "Source Ids"
             }
           },
           {
@@ -3217,7 +3217,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestMessage"
+                "$ref": "#/components/schemas/IngestMessageBody"
               }
             }
           },
@@ -3288,14 +3288,14 @@
         }
       }
     },
-    "/api/v1/channels/with-accounts": {
+    "/api/v1/channels/with-sources": {
       "get": {
         "tags": [
           "channels"
         ],
-        "summary": "List Channels With Accounts",
-        "description": "ChannelWithAccount[] — accountName populated server-side.",
-        "operationId": "list_channels_with_accounts_api_v1_channels_with_accounts_get",
+        "summary": "List Channels With Sources",
+        "description": "ChannelWithSource[] — sourceName populated server-side.",
+        "operationId": "list_channels_with_sources_api_v1_channels_with_sources_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3303,10 +3303,10 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/ChannelWithAccountResponse"
+                    "$ref": "#/components/schemas/ChannelWithSourceResponse"
                   },
                   "type": "array",
-                  "title": "Response List Channels With Accounts Api V1 Channels With Accounts Get"
+                  "title": "Response List Channels With Sources Api V1 Channels With Sources Get"
                 }
               }
             }
@@ -3586,7 +3586,7 @@
           "system"
         ],
         "summary": "Rotate Secrets",
-        "description": "Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.\n\nOnly allowed while ``secrets_ready`` is False. Requires admin username +\npassword. Does not wipe the database, connection.json, or admin accounts.",
+        "description": "Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.\n\nOnly allowed while ``secrets_ready`` is False. Requires admin username +\npassword. Does not wipe the database, connection.json, or admin sources.",
         "operationId": "rotate_secrets_api_v1_system_rotate_secrets_post",
         "requestBody": {
           "content": {
@@ -5599,7 +5599,6 @@
           "weather"
         ],
         "summary": "Forecast",
-        "description": "Return the available intersection; valid out-of-window ranges are empty.",
         "operationId": "forecast_api_v1_weather_forecast_get",
         "parameters": [
           {
@@ -5861,81 +5860,6 @@
         ],
         "title": "AccessKeyPublicResponse"
       },
-      "AccountResponse": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "platform": {
-            "type": "string",
-            "enum": [
-              "telegram",
-              "discord",
-              "rss",
-              "http",
-              "mqtt",
-              "email"
-            ],
-            "title": "Platform"
-          },
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "connected",
-              "disconnected",
-              "error"
-            ],
-            "title": "Status"
-          },
-          "lastError": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lasterror"
-          },
-          "lastConnectedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lastconnectedat"
-          },
-          "createdAt": {
-            "type": "string",
-            "title": "Createdat"
-          },
-          "updatedAt": {
-            "type": "string",
-            "title": "Updatedat"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "platform",
-          "name",
-          "status",
-          "lastError",
-          "lastConnectedAt",
-          "createdAt",
-          "updatedAt"
-        ],
-        "title": "AccountResponse"
-      },
       "ActionBody": {
         "properties": {
           "name": {
@@ -5962,6 +5886,7 @@
             "title": "Triggerconditions"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "name",
@@ -6184,83 +6109,10 @@
         ],
         "title": "ActionTriggerHistoryPageResponse"
       },
-      "AddAccountResponse": {
-        "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
-          },
-          "nextStep": {
-            "type": "string",
-            "enum": [
-              "connected",
-              "code_required",
-              "2fa_required",
-              "qr_required",
-              "error"
-            ],
-            "title": "Nextstep"
-          },
-          "pendingLoginStage": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "code_required",
-                  "2fa_required",
-                  "qr_required"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Pendingloginstage"
-          },
-          "phoneCodeHash": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Phonecodehash"
-          },
-          "qrUrl": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qrurl"
-          },
-          "qrExpiresAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Qrexpiresat"
-          }
-        },
-        "type": "object",
-        "required": [
-          "account",
-          "nextStep"
-        ],
-        "title": "AddAccountResponse"
-      },
       "AddDiscordBotResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channels": {
             "items": {
@@ -6287,7 +6139,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channels",
           "status",
           "errorMessage"
@@ -6296,8 +6148,8 @@
       },
       "AddEmailMailboxResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "status": {
             "type": "string",
@@ -6324,7 +6176,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "status",
           "errorMessage",
           "channels"
@@ -6333,8 +6185,8 @@
       },
       "AddHttpSourceResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channel": {
             "anyOf": [
@@ -6465,7 +6317,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channel",
           "url",
           "method",
@@ -6488,8 +6340,8 @@
       },
       "AddMqttBrokerResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "status": {
             "type": "string",
@@ -6509,7 +6361,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "status",
           "errorMessage"
         ],
@@ -6517,8 +6369,8 @@
       },
       "AddRssFeedResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channel": {
             "anyOf": [
@@ -6552,13 +6404,86 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channel",
           "feedTitle",
           "status",
           "errorMessage"
         ],
         "title": "AddRssFeedResponse"
+      },
+      "AddSourceResponse": {
+        "properties": {
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
+          },
+          "nextStep": {
+            "type": "string",
+            "enum": [
+              "connected",
+              "code_required",
+              "2fa_required",
+              "qr_required",
+              "error"
+            ],
+            "title": "Nextstep"
+          },
+          "pendingLoginStage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "code_required",
+                  "2fa_required",
+                  "qr_required"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingloginstage"
+          },
+          "phoneCodeHash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phonecodehash"
+          },
+          "qrUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qrurl"
+          },
+          "qrExpiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qrexpiresat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "nextStep"
+        ],
+        "title": "AddSourceResponse"
       },
       "AgentChatBody": {
         "properties": {
@@ -6626,6 +6551,7 @@
             ]
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "AgentChatBody"
       },
@@ -6775,6 +6701,7 @@
             "title": "Ollamathinkingenabled"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "AiEngineTestBody"
       },
@@ -7000,6 +6927,7 @@
             "title": "Paused"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "paused"
@@ -8378,7 +8306,7 @@
         ],
         "title": "ChannelResponse"
       },
-      "ChannelWithAccountResponse": {
+      "ChannelWithSourceResponse": {
         "properties": {
           "id": {
             "type": "string",
@@ -8400,14 +8328,14 @@
             "type": "string",
             "title": "Createdat"
           },
-          "accountIds": {
+          "sourceIds": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Accountids"
+            "title": "Sourceids"
           },
-          "accountId": {
+          "sourceId": {
             "anyOf": [
               {
                 "type": "string"
@@ -8416,9 +8344,9 @@
                 "type": "null"
               }
             ],
-            "title": "Accountid"
+            "title": "Sourceid"
           },
-          "accountName": {
+          "sourceName": {
             "anyOf": [
               {
                 "type": "string"
@@ -8427,7 +8355,7 @@
                 "type": "null"
               }
             ],
-            "title": "Accountname"
+            "title": "Sourcename"
           }
         },
         "type": "object",
@@ -8437,11 +8365,11 @@
           "platformId",
           "channelName",
           "createdAt",
-          "accountIds",
-          "accountId",
-          "accountName"
+          "sourceIds",
+          "sourceId",
+          "sourceName"
         ],
-        "title": "ChannelWithAccountResponse"
+        "title": "ChannelWithSourceResponse"
       },
       "CreateRecurringTaskBody": {
         "properties": {
@@ -8543,8 +8471,7 @@
           "name",
           "rrule"
         ],
-        "title": "CreateRecurringTaskBody",
-        "description": "Atomic recurring create: analysis task + ``recurring_schedules`` in one call.\n\nPrefer this over ``POST /tasks`` (shell) + ``PUT /tasks/{id}/schedule`` for\nweb/timeline creates. Same writer as the agent ``calendar.create_recurring_task`` tool."
+        "title": "CreateRecurringTaskBody"
       },
       "DeviceInfoResponse": {
         "properties": {
@@ -8629,6 +8556,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "botToken"
@@ -8637,8 +8565,8 @@
       },
       "DiscordBotInfoResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channels": {
             "items": {
@@ -8650,7 +8578,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channels"
         ],
         "title": "DiscordBotInfoResponse"
@@ -8680,6 +8608,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "DiscordBotPatchBody"
       },
@@ -8721,6 +8650,7 @@
             "title": "Channelids"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "channelIds"
@@ -8810,6 +8740,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "imapHost",
@@ -8820,8 +8751,8 @@
       },
       "EmailMailboxInfoResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "imapHost": {
             "type": "string",
@@ -8908,7 +8839,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "imapHost",
           "imapPort",
           "useSsl",
@@ -9072,6 +9003,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "EmailMailboxPatchBody"
       },
@@ -9246,6 +9178,7 @@
             "default": 30
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "url"
@@ -9254,8 +9187,8 @@
       },
       "HttpSourceInfoResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channel": {
             "anyOf": [
@@ -9371,7 +9304,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channel",
           "url",
           "method",
@@ -9539,6 +9472,7 @@
             "title": "Timeoutseconds"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "HttpSourcePatchBody"
       },
@@ -9546,7 +9480,7 @@
         "properties": {
           "messages": {
             "items": {
-              "$ref": "#/components/schemas/IngestMessage"
+              "$ref": "#/components/schemas/IngestMessageBody"
             },
             "type": "array",
             "maxItems": 500,
@@ -9554,13 +9488,14 @@
             "title": "Messages"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "messages"
         ],
         "title": "IngestBatchBody"
       },
-      "IngestMessage": {
+      "IngestMessageBody": {
         "properties": {
           "id": {
             "anyOf": [
@@ -9574,7 +9509,7 @@
             ],
             "title": "Id"
           },
-          "account_id": {
+          "sourceId": {
             "anyOf": [
               {
                 "type": "string",
@@ -9584,9 +9519,9 @@
                 "type": "null"
               }
             ],
-            "title": "Account Id"
+            "title": "Sourceid"
           },
-          "channel_id": {
+          "channelId": {
             "anyOf": [
               {
                 "type": "string",
@@ -9596,9 +9531,9 @@
                 "type": "null"
               }
             ],
-            "title": "Channel Id"
+            "title": "Channelid"
           },
-          "platform_id": {
+          "platformId": {
             "anyOf": [
               {
                 "type": "string",
@@ -9608,7 +9543,7 @@
                 "type": "null"
               }
             ],
-            "title": "Platform Id"
+            "title": "Platformid"
           },
           "platform": {
             "type": "string",
@@ -9616,7 +9551,7 @@
             "minLength": 1,
             "title": "Platform"
           },
-          "platform_message_id": {
+          "platformMessageId": {
             "anyOf": [
               {
                 "type": "string",
@@ -9626,9 +9561,9 @@
                 "type": "null"
               }
             ],
-            "title": "Platform Message Id"
+            "title": "Platformmessageid"
           },
-          "sender_id": {
+          "senderId": {
             "anyOf": [
               {
                 "type": "string",
@@ -9638,9 +9573,9 @@
                 "type": "null"
               }
             ],
-            "title": "Sender Id"
+            "title": "Senderid"
           },
-          "sender_name": {
+          "senderName": {
             "anyOf": [
               {
                 "type": "string",
@@ -9650,7 +9585,7 @@
                 "type": "null"
               }
             ],
-            "title": "Sender Name"
+            "title": "Sendername"
           },
           "content": {
             "type": "string",
@@ -9670,7 +9605,7 @@
             ],
             "title": "Timestamp"
           },
-          "message_time": {
+          "messageTime": {
             "anyOf": [
               {
                 "type": "string",
@@ -9680,7 +9615,7 @@
                 "type": "null"
               }
             ],
-            "title": "Message Time"
+            "title": "Messagetime"
           },
           "metadata": {
             "anyOf": [
@@ -9695,11 +9630,12 @@
             "title": "Metadata"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "platform"
         ],
-        "title": "IngestMessage"
+        "title": "IngestMessageBody"
       },
       "ItemCategoryDeleteResponse": {
         "properties": {
@@ -10268,6 +10204,7 @@
             "title": "Payload"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "level",
@@ -10352,7 +10289,7 @@
             "type": "string",
             "title": "Id"
           },
-          "accountId": {
+          "sourceId": {
             "anyOf": [
               {
                 "type": "string"
@@ -10361,7 +10298,7 @@
                 "type": "null"
               }
             ],
-            "title": "Accountid"
+            "title": "Sourceid"
           },
           "platform": {
             "type": "string",
@@ -10452,7 +10389,7 @@
         "type": "object",
         "required": [
           "id",
-          "accountId",
+          "sourceId",
           "platform",
           "platformId",
           "channelName",
@@ -10571,6 +10508,7 @@
             "title": "Clientid"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "brokerUrl",
@@ -10580,8 +10518,8 @@
       },
       "MqttBrokerInfoResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "brokerUrl": {
             "type": "string",
@@ -10623,7 +10561,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "brokerUrl",
           "topics",
           "clientId",
@@ -10704,6 +10642,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "MqttBrokerPatchBody"
       },
@@ -10959,11 +10898,11 @@
         ],
         "title": "QueueBatchResponse"
       },
-      "RefreshAllAccountsResponse": {
+      "RefreshAllSourcesResponse": {
         "properties": {
-          "totalAccounts": {
+          "totalSources": {
             "type": "integer",
-            "title": "Totalaccounts"
+            "title": "Totalsources"
           },
           "connectedCount": {
             "type": "integer",
@@ -10977,31 +10916,31 @@
             "type": "integer",
             "title": "Errorcount"
           },
-          "verificationRequiredAccountIds": {
+          "verificationRequiredSourceIds": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Verificationrequiredaccountids"
+            "title": "Verificationrequiredsourceids"
           },
-          "errorAccountIds": {
+          "errorSourceIds": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Erroraccountids"
+            "title": "Errorsourceids"
           }
         },
         "type": "object",
         "required": [
-          "totalAccounts",
+          "totalSources",
           "connectedCount",
           "verificationRequiredCount",
           "errorCount",
-          "verificationRequiredAccountIds",
-          "errorAccountIds"
+          "verificationRequiredSourceIds",
+          "errorSourceIds"
         ],
-        "title": "RefreshAllAccountsResponse"
+        "title": "RefreshAllSourcesResponse"
       },
       "RefreshBody": {
         "properties": {
@@ -11188,6 +11127,7 @@
             "title": "Password"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "username",
@@ -11218,6 +11158,7 @@
             "default": 300
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "feedUrl"
@@ -11226,8 +11167,8 @@
       },
       "RssFeedInfoResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "channel": {
             "anyOf": [
@@ -11272,7 +11213,7 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "channel",
           "feedUrl",
           "pollIntervalSeconds",
@@ -11317,6 +11258,7 @@
             "title": "Name"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "RssFeedPatchBody"
       },
@@ -11379,6 +11321,81 @@
         "type": "object",
         "title": "SourceFilterSelectionSchema",
         "description": "Hierarchical source multi-select (``null`` at parent = all sources)."
+      },
+      "SourceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "telegram",
+              "discord",
+              "rss",
+              "http",
+              "mqtt",
+              "email"
+            ],
+            "title": "Platform"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "connected",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "lastConnectedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastconnectedat"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "platform",
+          "name",
+          "status",
+          "lastError",
+          "lastConnectedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "SourceResponse"
       },
       "SystemSettingsSnapshot": {
         "properties": {
@@ -12586,6 +12603,7 @@
             "title": "Phonecodehash"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "password"
@@ -12621,6 +12639,7 @@
             "title": "Phonecodehash"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "code"
@@ -12642,6 +12661,7 @@
             "title": "Phone"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "apiId",
@@ -12697,9 +12717,10 @@
             "title": "Phone"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "TelegramPatchBody",
-        "description": "Safe in-place edits: display name and optional stored credential fields.\n\nChanging apiId / apiHash / phone updates encrypted credentials only — the\nlive StringSession is not rewritten here; reconnect / re-login may be required."
+        "description": "Safe display-name and stored-credential edits."
       },
       "TelegramQrCredentials": {
         "properties": {
@@ -12712,6 +12733,7 @@
             "title": "Apihash"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
           "apiId",
@@ -12735,6 +12757,7 @@
             "title": "Timeoutseconds"
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "title": "TelegramQrWaitBody"
       },
@@ -12953,10 +12976,10 @@
         ],
         "title": "TrendingTopicResponse"
       },
-      "UpdateTelegramAccountResponse": {
+      "UpdateTelegramSourceResponse": {
         "properties": {
-          "account": {
-            "$ref": "#/components/schemas/AccountResponse"
+          "source": {
+            "$ref": "#/components/schemas/SourceResponse"
           },
           "status": {
             "type": "string",
@@ -12985,12 +13008,12 @@
         },
         "type": "object",
         "required": [
-          "account",
+          "source",
           "status",
           "errorMessage",
           "credentialsUpdated"
         ],
-        "title": "UpdateTelegramAccountResponse"
+        "title": "UpdateTelegramSourceResponse"
       },
       "UserEventCreateBody": {
         "properties": {

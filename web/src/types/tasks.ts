@@ -3,7 +3,7 @@
 // ============================================================
 
 import type { components } from "../api/generated/schema";
-import type { AnalysisMode, AnalysisTimeRange } from "./common";
+import type { AnalysisMode, TaskAnalysisTimeRange } from "./common";
 
 /** Wire shape for task-advisor ``currentTask`` / ``taskConfig`` (OpenAPI). */
 export type TaskDraftPayload = components["schemas"]["TaskDraftPayload"];
@@ -29,7 +29,7 @@ export type AnalysisTask = Omit<
   | "updatedAt"
 > & {
   description: string | null;
-  analysisTimeRange: AnalysisTimeRange;
+  analysisTimeRange: TaskAnalysisTimeRange;
   channelIds: ChannelRef[];
   includeInTimeline?: boolean | null;
   createdAt: string;
@@ -44,7 +44,7 @@ export type TaskConfig = Omit<
   "analysisMode" | "analysisTimeRange" | "channelIds"
 > & {
   analysisMode?: AnalysisMode | null;
-  analysisTimeRange?: AnalysisTimeRange | null;
+  analysisTimeRange?: TaskAnalysisTimeRange | null;
   channelIds?: string[] | ChannelRef[];
 };
 
@@ -58,7 +58,7 @@ export interface TaskTemplatePreset {
   description: string;
   analysisMode: AnalysisMode;
   promptTemplate: string;
-  defaultAnalysisTimeRange: AnalysisTimeRange;
+  defaultAnalysisTimeRange: TaskAnalysisTimeRange;
   badge: string;
   /** Language-neutral search keywords for web_intel presets (optional). */
   webSearchQuery?: string;

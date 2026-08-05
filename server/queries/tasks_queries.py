@@ -50,6 +50,13 @@ async def fetch_task_row(db: Any, task_id: str) -> dict[str, Any] | None:
     return await db.fetch_one(f"{_TASK_WITH_SCHEDULE_SELECT} WHERE t.id = ?", (task_id,))
 
 
+async def fetch_task_workset_id(db: Any, task_id: str) -> str | None:
+    row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (task_id,))
+    if row is None or not row.get("workset_id"):
+        return None
+    return str(row["workset_id"])
+
+
 async def fetch_all_task_channel_rows(db: Any) -> list[dict[str, Any]]:
     return await db.fetch_all("SELECT task_id, platform, platform_id FROM task_channels")
 

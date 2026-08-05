@@ -1,7 +1,7 @@
 # Build context: repository root.
 # Image: server + built SPA (no Electron). Push target: ghcr.io/<owner>/<repo>
 
-ARG NODE_VERSION=22
+ARG NODE_VERSION=20.19.0
 ARG PYTHON_VERSION=3.11
 
 # ── Web SPA ──────────────────────────────────────────────────────────

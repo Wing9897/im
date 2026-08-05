@@ -1,7 +1,7 @@
 """Telegram platform adapter using Telethon for real-time message reception.
 
-Subscribed channels are read from ``account_channels`` via the composite key
-``(account_id, platform, platform_id)``. Telethon is imported at module scope
+Subscribed channels are read from ``source_channels`` via the composite key
+``(source_id, platform, platform_id)``. Telethon is imported at module scope
 but this module is only imported lazily via the factory/manager.
 """
 
@@ -33,14 +33,14 @@ class TelegramAdapter(BasePlatformAdapter):
 
     def __init__(
         self,
-        account_id: str,
+        source_id: str,
         db: Database,
         broadcaster: SseBroadcaster,
         api_id: int,
         api_hash: str,
         session_dir: str,
     ) -> None:
-        super().__init__(account_id, db, broadcaster)
+        super().__init__(source_id, db, broadcaster)
         self._api_id = api_id
         self._api_hash = api_hash
         self._session_dir = session_dir
@@ -58,12 +58,12 @@ class TelegramAdapter(BasePlatformAdapter):
         return "telegram"
 
     def _create_client(self) -> TelegramClient:
-        session = load_string_session(self._session_dir, self._account_id)
+        session = load_string_session(self._session_dir, self._source_id)
         return TelegramClient(session, self._api_id, self._api_hash)
 
     async def _connect_telethon_with_retry(self) -> None:
         self._client = await connect_telethon_with_retry(  # type: ignore[assignment]
-            account_id=self._account_id,
+            source_id=self._source_id,
             create_client=self._create_client,
             disconnect=self.disconnect,
         )
@@ -80,14 +80,14 @@ class TelegramAdapter(BasePlatformAdapter):
             try:
                 await self.disconnect()
             except Exception:  # noqa: BLE001 — preserve the connect/cancellation failure
-                logger.exception("Failed to clean up Telegram client for account %s", self._account_id)
+                logger.exception("Failed to clean up Telegram client for source %s", self._source_id)
             self._state.status = "disconnected"
             if isinstance(exc, Exception):
                 self._state.last_error = str(exc)
             raise
         self._mark_connected()
         self._history_backfill_done = False
-        logger.info("Telegram adapter connected for account %s", self._account_id)
+        logger.info("Telegram adapter connected for source %s", self._source_id)
         self._startup_task = asyncio.create_task(self._finish_startup())
 
     async def disconnect(self) -> None:
@@ -106,7 +106,7 @@ class TelegramAdapter(BasePlatformAdapter):
             if result is not None:
                 await result
             self._client = None
-            logger.info("Telegram adapter disconnected for account %s", self._account_id)
+            logger.info("Telegram adapter disconnected for source %s", self._source_id)
 
     async def is_connected(self) -> bool:
         return self._client is not None and bool(self._client.is_connected())
@@ -146,7 +146,7 @@ class TelegramAdapter(BasePlatformAdapter):
     async def _run_with_busy_retry(self, label: str, action) -> None:
         await run_with_sqlite_busy_retry(
             label=label,
-            account_id=self._account_id,
+            source_id=self._source_id,
             action=action,
         )
 
@@ -166,8 +166,8 @@ class TelegramAdapter(BasePlatformAdapter):
             raise
         except Exception as exc:
             logger.warning(
-                "Deferred Telegram startup work failed for account %s: %s",
-                self._account_id,
+                "Deferred Telegram startup work failed for source %s: %s",
+                self._source_id,
                 exc,
             )
 
@@ -189,8 +189,8 @@ class TelegramAdapter(BasePlatformAdapter):
         channel_ids = await self._load_subscribed_channels()
         if not channel_ids:
             logger.info(
-                "Telegram account %s has no subscribed channels; message collection is disabled",
-                self._account_id,
+                "Telegram source %s has no subscribed channels; message collection is disabled",
+                self._source_id,
             )
             self._clear_message_handlers()
             return
@@ -219,7 +219,7 @@ class TelegramAdapter(BasePlatformAdapter):
         await telegram_adapter_login.apply_logged_in_profile(self)
 
     async def _load_subscribed_channels(self) -> list[int]:
-        """Integer platform_ids from ``account_channels`` for Telethon's filter."""
+        """Integer platform_ids from ``source_channels`` for Telethon's filter."""
         return await telegram_ingest.load_subscribed_channels(self)
 
     async def _resolve_channel_name(self, event: events.NewMessage.Event) -> str:

@@ -11,5 +11,5 @@ import type { components } from "../api/generated/schema";
 export type Channel = components["schemas"]["ChannelResponse"];
 
 /** A channel with its associated account info */
-export type ChannelWithAccount =
-  components["schemas"]["ChannelWithAccountResponse"];
+export type ChannelWithSource =
+  components["schemas"]["ChannelWithSourceResponse"];

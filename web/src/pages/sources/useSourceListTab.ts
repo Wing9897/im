@@ -6,7 +6,7 @@ import { useRemoveItem } from "./useRemoveItem";
 interface UseSourceListTabOptions<T> {
   /** Fetches the tab's item list. Must be referentially stable (e.g. a module-level API function). */
   listFn: () => Promise<T[]>;
-  /** Removes one item (e.g. deletes its account). */
+  /** Removes one item (e.g. deletes its source). */
   removeFn: (target: T) => Promise<void>;
 }
 

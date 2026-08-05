@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FormStack } from "../../../components/ui";
 import { SourceTabLayout } from "../SourceTabLayout";
-import { formatAccountLabel } from "../../../utils/accountDisplay";
+import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { RssFeedDetailDialog } from "./RssFeedDetailDialog";
 import { RssFeedCard } from "./RssFeedCard";
 import { RssProviderPicker } from "./providers/RssProviderPicker";
 import { useRssTab } from "./useRssTab";
+import { useSourceDetailTarget } from "../useSourceDetailTarget";
 
 export function RssTab() {
   const { t } = useTranslation("sources");
@@ -41,7 +41,8 @@ export function RssTab() {
     closeEditDialog,
     handleSaveEdit,
   } = useRssTab();
-  const [detailTarget, setDetailTarget] = useState<(typeof feeds)[number] | null>(null);
+  const { detailTarget, setDetailTarget, closeDetail } =
+    useSourceDetailTarget<(typeof feeds)[number]>();
 
   const AddForm = activeProvider.AddForm;
 
@@ -89,7 +90,7 @@ export function RssTab() {
         removeMessage={
           removeTarget
             ? t("rss.removeMessage", {
-                name: formatAccountLabel(removeTarget.account) || removeTarget.feedUrl,
+                name: formatSourceLabel(removeTarget.source) || removeTarget.feedUrl,
               })
             : null
         }
@@ -98,7 +99,7 @@ export function RssTab() {
       >
         {feeds.map((feed) => (
           <RssFeedCard
-            key={feed.account.id}
+            key={feed.source.id}
             feed={feed}
             onEditClick={() => openEditDialog(feed)}
             onRemoveClick={() => setRemoveTarget(feed)}
@@ -111,10 +112,10 @@ export function RssTab() {
       {detailTarget ? (
         <RssFeedDetailDialog
           feed={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={closeDetail}
           onEdit={() => {
             const target = detailTarget;
-            setDetailTarget(null);
+            closeDetail();
             openEditDialog(target);
           }}
         />

@@ -180,15 +180,15 @@ async def test_execute_web_search_uses_provider(app) -> None:
 async def test_web_search_execution_service_respects_enabled_and_count() -> None:
     from server.web_search.execution import (
         ASSISTANT_TOOL_DEFAULT_COUNT,
-        WEB_INTEL_SEARCH_COUNT,
         WebSearchExecutionService,
     )
+    from server.web_search.providers import MAX_COUNT
 
     service = WebSearchExecutionService()
     disabled = await service.tool_search("q", provider="duckduckgo", enabled=False)
     assert disabled["error"] == "web search is disabled"
     assert ASSISTANT_TOOL_DEFAULT_COUNT == 5
-    assert WEB_INTEL_SEARCH_COUNT == 8
+    assert MAX_COUNT == 8
 
     with patch(
         "server.web_search.execution.search_web",
@@ -197,8 +197,8 @@ async def test_web_search_execution_service_respects_enabled_and_count() -> None
         await service.tool_search(
             "hello",
             provider="duckduckgo",
-            count=WEB_INTEL_SEARCH_COUNT,
+            count=MAX_COUNT,
             enabled=True,
         )
     assert mocked.await_args is not None
-    assert mocked.await_args.kwargs["count"] == WEB_INTEL_SEARCH_COUNT
+    assert mocked.await_args.kwargs["count"] == MAX_COUNT

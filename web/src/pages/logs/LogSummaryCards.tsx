@@ -12,7 +12,9 @@ export function LogSummaryCards() {
   } = useLogPageContext();
   const concurrentCount = activeAnalyses?.size ?? 0;
   const leadAnalysis =
-    concurrentCount > 0 ? activeAnalyses!.values().next().value ?? null : null;
+    activeAnalyses && concurrentCount > 0
+      ? activeAnalyses.values().next().value ?? null
+      : null;
 
   return (
     <StatsStrip

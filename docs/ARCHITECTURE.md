@@ -67,7 +67,7 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 
 **In → Task → Out**
 
-1. **In:** Collectors write `messages` for accounts/channels (signal plane).
+1. **In:** Collectors write `messages` for sources/channels (signal plane).
 2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, `web_intel` via `web_intel_tick` (Agent multi-round + forced `web.search` → JSON events; optional channel-bound message threshold / inject; `webSearchQuery` optional seed), and `project` via `project_tick` (`AgentRuntime`); `recurring` RRULEs expand only at read time.
 3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; `project` writes owned `user_events` + child `recurring` only (no analysis_events).
 
@@ -77,7 +77,7 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 |---------|-----------|
 | Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`intel_event` / `web_intel` / `recurring` / `project`); builtin workset `__user__` for「一般」 |
 | Voice reminder filter | ui-prefs `sourceFilter: { taskIds, worksetIds } \| null` (not a lone `taskId` / `__user__` sentinel) |
-| Monitor / Sources | Signal plane (accounts/channels), not analysis tasks |
+| Monitor / Sources | Signal plane (sources/channels), not analysis tasks |
 | Manual / assistant / A2A calendar items | `user_events`: ownership via `workset_id` (builtin `__user__`); optional `task_id` provenance only |
 | Shell prefs (board layout, assistant sessions, voice reminder state, voice IO defaults) | SQLite via `/api/v1/ui-prefs/*` — not task rows |
 
@@ -89,13 +89,15 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, accounts, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`items`／`imports`／`dismissals`／`user-events`), worksets, setup, events SSE) |
-| `wire/serializers.py` | Neutral snake_case → camelCase wire builders matching the frontend contract (tasks, analysis events, user events, queue, …); shared by HTTP and non-HTTP callers |
-| `api/routes/weather.py` | Open-Meteo／fallback weather proxy (`GET /api/v1/weather/*`) — avoids renderer CORS |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`items`／`imports`／`dismissals`／`user-events`), worksets, setup, access-keys, a2a, events SSE) |
+| `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
+| `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
+| `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; shared by HTTP and non-HTTP callers) |
+| `api/routes/weather.py` | Thin route over `services/weather.py` — Open-Meteo／fallback proxy (`GET /api/v1/weather/*`) |
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
-| `queries/` | Shared SQL helpers (`accounts_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
+| `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v14** DDL in `db/schema_ddl.py` (fingerprint derived from the DDL in `db/schema_fingerprint.py`; thin re-export in `db/schema.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → reset）, public SemVer `SCHEMA_SEMVER`／connection/reset wrapper in `db/database.py` |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v15** (`SCHEMA_SEMVER` `0.1.0-beta.16`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling, batch execution, result persistence, multi-category data retention (`server/scheduler/retention.py`) |
@@ -103,11 +105,11 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `collector/adapter_factory.py` | **Input registry:** `ADAPTER_BUILDERS` keyed by `domain/collector_platforms.COLLECTOR_PLATFORMS` → `build_adapter` |
 | `domain/collector_platforms.py` | Leaf platform vocabulary (DDL + factory + FE mirror) |
 | `domain/analysis_modes.py` | **Process registry:** `AnalysisModeSpec` / derived frozensets (DDL + FE mirror) |
-| `collector/manager.py` | Public collector façade — account lifecycle, shared adapter registry, aggregate SSE status, and platform delegate entry points |
+| `collector/manager.py` | Public collector façade — source lifecycle, shared adapter registry, aggregate SSE status, and platform delegate entry points |
 | `collector/manager_retry.py` | Internal `CollectorRetryOrchestrator` — owns auto-connect, SQLite-busy retry, deferred retry handles, and shutdown drain |
 | `collector/manager_sources.py` | Per-platform collector connect/disconnect delegates (Discord / RSS / MQTT / Email); Telegram login/session flows live in `telegram_login.py` |
 | `collector/capabilities.py` | Shared adapter capability wiring and platform feature flags |
-| `collector/telegram_session.py` | Telegram auth persisted as Telethon `StringSession` in `{DATA_DIR}/sessions/{account_id}.session.txt` |
+| `collector/telegram_session.py` | Telegram auth persisted as Telethon `StringSession` in `{DATA_DIR}/sessions/{source_id}.session.txt` |
 | `paths.py` | Unified Desktop／CLI data root (`INTELLIGENCE_MONITOR_DATA_DIR` or product userData); full reset clears sessions, secret.key, and connection.json |
 | `collector/http_poll_helpers.py` | Shared helpers for HTTP poll adapter |
 | `collector/email_imap_fetch.py` | IMAP fetch / UID cursor helpers (public entry remains `email_imap.py`) |
@@ -141,7 +143,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | FastAPI lifespan (`server/main.py`) | Startup geocode backfill handle | Cancels/awaits backfill before scheduler, collector, engine, executor, and database close |
 | `SchedulerManager` (`server/scheduler/manager.py`) | Dispatch, retention, and in-flight batch tasks | Stops producers, allows bounded grace, then cancels/gathers batches before processing-row invalidation |
 | `CollectorManager` façade (`server/collector/manager.py`) | Shared adapter registry, aggregate status, and disconnect coordination | Awaits its retry delegate before disconnecting adapters |
-| `CollectorRetryOrchestrator` (`server/collector/manager_retry.py`) | Auto-connect and per-account deferred retry handles | Sets shutdown guard, snapshots, cancels/gathers, then identity-clears handles |
+| `CollectorRetryOrchestrator` (`server/collector/manager_retry.py`) | Auto-connect and per-source deferred retry handles | Sets shutdown guard, snapshots, cancels/gathers, then identity-clears handles |
 
 The collector manager delegates in `collector/manager_sources.py` and `collector/manager_retry.py` retain platform-specific entry points and retry orchestration; they do not own a second adapter registry.
 
@@ -163,7 +165,7 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **Communication**: HTTP REST for commands/queries, SSE for real-time server-pushed events
 - **Scrolling**: `body` / `#root` use `overflow: hidden`; page scroll happens on `.app-shell-main`. Infinite-scroll hooks and the monitor list virtualizer must use `getVerticalScrollParent` / `useScrollContainerState` (`web/src/utils/scrollParent.ts`) — not `window.scrollY`.
 - **Notifications workspace** (`/actions`): UI label **通知**; tabs `types` / `voice` / `history` (外發通知 / 語音提醒 / 觸發紀錄). Backend automation APIs remain under `/api/v1/actions*` — UI name ≠ API resource name.
-- **Naming:** `pages/actions/ActionTypeSelector.tsx` is the **ActionType** tile picker (Telegram Bot / Discord / HTTP / MQTT). Per-type field sections render via `ActionTypeFields`; form helpers use `validateActionTypeFields` / `applyActionTypeSwitch`. The default notifications tab component is `ActionTypesTab` — wire tab id is `"types"` (URL `?tab=` / i18n `tabs.types` / `types.*` keys). Real account↔channel picking lives under `components/channels/` (`AccountChannelPickerContent`, `ChannelPickerDialogShell`) and dialogs like `ChannelSelectorDialog` (not the retired dead `pages/actions/ChannelSelector`).
+- **Naming:** `pages/actions/ActionTypeSelector.tsx` is the **ActionType** tile picker (Telegram Bot / Discord / HTTP / MQTT). Per-type field sections render via `ActionTypeFields`; form helpers use `validateActionTypeFields` / `applyActionTypeSwitch`. The default notifications tab component is `ActionTypesTab` — wire tab id is `"types"` (URL `?tab=` / i18n `tabs.types` / `types.*` keys). Real account↔channel picking lives under `components/channels/` (`SourceChannelPickerContent`, `ChannelPickerDialogShell`) and dialogs like `ChannelSelectorDialog` (not the retired dead `pages/actions/ChannelSelector`).
 - **Voice reminders**: frontend-local scanner (`web/src/voiceReminder/`); route `/actions?tab=voice`. It page-loads timed key events + RRULE occurrences inside the reminder window and overlapping **user events**. Ownership matches timeline: filter via hierarchical `sourceFilter` (`{ taskIds, worksetIds } | null`) through the shared `SourceFilterDialog` tree; builtin `__user__` (`SYSTEM_WORKSET_ID`) workset covers「一般」events. Default is `{ taskIds: [], worksetIds: ["__user__"] }`; `null` = all sources. Flat legacy `taskIds` arrays are hard-rejected (missing → default). Browser TTS/scanning stays in the frontend; reminder settings/history/fired dedupe are SQLite-backed and unrelated to Agent STT/TTS on `/ai/voice`.
 - **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session lists persist as device-scoped JSON values in SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring schedules use `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` (recurring-mode only; delete is soft `isActive=false`).
 - **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
@@ -248,9 +250,9 @@ A thin **Electron** wrapper that provides the native desktop experience:
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
 6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
-7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). CI on **main** (or `workflow_dispatch`): next SemVer from latest git tag `v*` (inject into build workspace only — **no** bot commit to main) → `package` matrix (win／mac／linux: `dist:*` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`] + `package:cli`) → push tag `v$RELEASE_VERSION` + GitHub Release (Desktop **and** CLI; missing assets fail) → optional GHCR. PRs run Ubuntu `quality` only. **Product version authority is git tags**; repo `VERSION` may lag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
+7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). PRs and `main` pushes run Ubuntu `quality` + build only. An explicit `workflow_dispatch` resolves the next SemVer from the latest git tag `v*` (inject into build workspace only — **no** bot commit to main), then runs the `package` matrix (win／mac／linux: `dist:*` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`] + `package:cli`), pushes tag `v$RELEASE_VERSION`, creates the GitHub Release (Desktop **and** CLI; missing assets fail), and publishes GHCR. **Product version authority is git tags**; repo `VERSION` may lag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
 
-**Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push follows the same main／dispatch release path. Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
+**Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push follows the manual `workflow_dispatch` release path; `main` pushes never publish an image. Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
 
 The desktop shell still contains no calendar business parser. RFC 5545 interpretation, preview diffs, UID idempotency, and the transaction live in the Python server.
 
@@ -288,7 +290,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-14 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-15 start |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
 | `sync-version.mjs` | `npm run sync:version` | Propagate root `VERSION` into package.json／pyproject／package-lock workspace entries |
 | `bump_version.py` | — | Next SemVer (`X.Y.Z-beta.N` → `N+1`; `X.Y.Z` → patch+1). With `--from-tags` and no `v*` tags, returns `VERSION` as-is (first release). Default／`--print-only` never write; explicit `--write` updates `VERSION`. CI uses `--from-tags --print-only` (tag authority). |
@@ -326,7 +328,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 |-------|---------|
 | `messages_updated` | New messages collected from a platform |
 | `collector_status_changed` | Collector subsystem status change |
-| `account_status_changed` | Account connection/disconnection |
+| `source_status_changed` | Source connection/disconnection |
 | `analysis_started` | Analysis batch begins processing |
 | `analysis_completed` | Analysis batch finished successfully |
 | `analysis_failed` | Analysis batch encountered an error |
@@ -339,9 +341,9 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 | Table | Purpose |
 |-------|---------|
-| `accounts` | Platform account credentials and status |
+| `sources` | Collector connection credentials and status |
 | `channels` | Monitored channels/feeds |
-| `account_channels` | Account ↔ channel associations |
+| `source_channels` | Source ↔ channel associations |
 | `messages` | Collected messages from all platforms |
 | `analysis_tasks` | Shared task definitions (`leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`), trigger-purpose `schedule_rrule` for AI timers, optional `web_search_query` for web_intel, and AI scheduling overrides; contains no recurring calendar payload columns |
 | `recurring_schedules` | One-to-one recurring/event payload for `recurring` tasks: RRULE, DTSTART/DTEND, timezone/all-day/location/description, recurrence dates, ICS identity, and optional project parent |
@@ -359,7 +361,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `access_api_keys` | Household API keys (secret hash only; plaintext once on create; `scopes` / `last_used_at`) |
 | `ui_prefs` | UI-pref JSON blobs (`key` PK; board / voice / timeline / assistant voice-io and device-scoped assistant sessions) |
 | `system_config` | Key-value scalars / small secrets only (not multi-row entities or large blobs) |
-| `app_logs` | Application log entries (Settings→Logs). Write only via `server.app_logging.record` / FE `recordAppLog`. Soft categories include `account` (wired for connect/runtime failures as kind `account.error`). |
+| `app_logs` | Application log entries (Settings→Logs). Write only via `server.app_logging.record` / FE `recordAppLog`. Soft categories include `source` (wired for connect/runtime failures as kind `source.error`). |
 | `actions` | Automation action definitions |
 | `action_trigger_history` | Action execution audit trail; read via `GET /api/v1/actions/trigger-history` |
 | `project_message_cursors` | Per-project last-seen message cursor for `project_tick` (`last_message_at` ISO + optional `last_message_id` same-second tie-break; replaces `system_config` keys `project_last_message_at:*`) |
@@ -369,9 +371,9 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 
 ### Schema baseline (wipe-only)
 
-Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
+Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
 
-**Current stamp is 14.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-14 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 15.** Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-15 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -379,18 +381,18 @@ Authority: `server/db/schema_ddl.py`. Live inspection: `server/db/schema_inspect
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **14** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.15`) |
-| **13** and earlier (prior) | Hard-reject → reset |
+| **15** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.16`) |
+| **14** and earlier (prior) | Hard-reject → reset |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other non-empty schema** | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 14. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 15. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 14 is the wipe-only floor.** A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 15 is the wipe-only floor** (vocabulary cut: collector connections are `sources` / `source_channels` / `messages.source_id`; prior stamps including v14 hard-reject). A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v14 explicit reset
+#### Schema v15 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -398,7 +400,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v14-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v15-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -411,9 +413,9 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v14 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v15 database. Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 14** renames analysis mode enum `event` → `intel_event` (CHECK + domain SoT). Prior stamps remain wipe-only. `app_logs.kind` (+ `idx_app_logs_kind_time`), cursor split (`project_message_cursors.last_message_at` / `last_message_id`), AI timer storage on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded), calendar series on `recurring_schedules.rrule` (purpose=calendar), and trackable items remain part of the current stamp-14 schema. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
+**Stamp 15** keeps analysis mode vocabulary (`leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`), renames the collector plane to `sources`／`source_channels`／`messages.source_id`, and aggregates DDL under `db/schema_domains/`. Also in the baseline: `app_logs.kind` (+ `idx_app_logs_kind_time`), cursor split (`project_message_cursors.last_message_at` / `last_message_id`), AI timer storage on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded), calendar series on `recurring_schedules.rrule` (purpose=calendar), and trackable items. Categories remain **soft templates**. Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 
@@ -431,18 +433,18 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 
 ### Schema support matrix
 
-Stamp-14 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-15 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v14 DDL, validate its full fingerprint, then stamp 14 | Schema creation and v14 stamp |
-| Unstamped current, version 0 | Require the exact v14 fingerprint and stamp 14 | Stamp only |
-| Current, version 14 | Validate the exact v14 fingerprint on every startup | None |
+| Empty, version 0 | Create v15 DDL, validate its full fingerprint, then stamp 15 | Schema creation and v15 stamp |
+| Unstamped current, version 0 | Require the exact v15 fingerprint and stamp 15 | Stamp only |
+| Current, version 15 | Validate the exact v15 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
 | Incomplete/lookalike version 0 or prior | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 14. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 15. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -455,14 +457,14 @@ Desktop and CLI share one writable data root (Electron `productName` / `server.p
   intelligence_monitor.db
   secret.key
   connection.json          # Desktop shell (host/client) + optional resetPasswordForLocal
-  sessions/{account_id}.session.txt
+  sessions/{source_id}.session.txt
 ```
 
 Desktop host sidecar sets `INTELLIGENCE_MONITOR_DATA_DIR` to Electron `userData` (same folder when packaged). CLI／`npm run dev:server` without env use the same default. Optional `INTELLIGENCE_MONITOR_SESSIONS_DIR`／`INTELLIGENCE_MONITOR_DB` override individual paths. Pre-beta `~/.intelligence-monitor` is only scanned on full reset wipe.
 
 ### Telegram session storage
 
-Telegram accounts do not use Telethon's default SQLite session files (`.session`), which could report `database is locked` when a stale process held the file open. Auth is stored as a `StringSession` token under the data-root `sessions/` directory (see above). The one-time legacy `.session` SQLite migration shim was removed in 2026-07; full／database reset (and `scripts/reset_local_databases.py --apply`) deletes both `*.session.txt` and leftover `*.session`. An account without a token simply re-authenticates.
+Telegram sources do not use Telethon's default SQLite session files (`.session`), which could report `database is locked` when a stale process held the file open. Auth is stored as a `StringSession` token under the data-root `sessions/` directory (see above). The one-time legacy `.session` SQLite migration shim was removed; full／database reset (and `scripts/reset_local_databases.py --apply`) deletes both `*.session.txt` and leftover `*.session`. A source without a token simply re-authenticates.
 
 ## Scheduler
 
@@ -582,15 +584,15 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 
 | Module | Routes covered |
 |--------|----------------|
-| `test_contract_accounts.py` | accounts CRUD |
+| `test_contract_sources.py` | sources CRUD |
 | `test_contract_actions.py` | actions |
 | `test_contract_auth_errors.py` | auth error shape |
 | `test_contract_access_keys.py` | access-keys list / create / revoke |
 | `test_a2a_agent.py` | A2A natural-language agent channel |
 | `test_contract_setup.py` | setup / register / login / change-password / reset-password / refresh / logout |
 | `test_contract_config.py` | config |
-| `test_contract_email_accounts.py` | email accounts |
-| `test_contract_feed_accounts.py` | feed accounts |
+| `test_contract_email_sources.py` | email sources |
+| `test_contract_feed_sources.py` | feed sources |
 | `test_contract_messages.py` | messages page |
 | `test_contract_results.py` | results / events |
 | `test_contract_sse.py` | SSE events stream |
@@ -605,20 +607,20 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-14 / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-15 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
-**Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/ui-prefs/*`).
+**Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 
 ### Wire conventions
 
-- **JSON keys:** camelCase on the wire. Canonical builders live in `server/wire/serializers.py` (import directly; no `api/serializers` re-export).
+- **JSON keys:** camelCase on the wire. Canonical builders live in `server/wire/serializers.py` (facade over `wire/serializer_domains/*`; import the facade; no `api/serializers` re-export).
 - **Errors:** structured body with `message`, optional `error_code`, `details`, `correlation_id`.
-- **URLs:** stable under `/api/v1/*`.
-- **OpenAPI:** `npm run openapi:generate` refreshes `web/openapi/openapi.json` + `web/src/api/generated/schema.d.ts` (must include setup / access-keys / a2a / ui-prefs).
+- **URLs:** stable under `/api/v1/*`. Collector connections are `/api/v1/sources*`; household identity stays under `/account/*` UI + `/api/v1/setup/*`／`/api/v1/access-keys`.
+- **OpenAPI:** `npm run openapi:generate` refreshes `web/openapi/openapi.json` + `web/src/api/generated/schema.d.ts` (must include setup / access-keys / a2a / sources / ui-prefs).
 
-### Pydantic response models
+### Pydantic request / response models
 
-Drift-prone routes use `response_model` from `server/api/schemas/responses/` (one module per domain; the package re-exports every model, so callers keep a flat import).
+Drift-prone routes use bodies from `server/api/schemas/requests/` and `response_model` from `server/api/schemas/responses/` (one module per domain; packages re-export flat names).
 
 ### Removed endpoints
 
@@ -645,4 +647,4 @@ Built-in Agent + browser voice: [`docs/agent/assistant.md`](agent/assistant.md).
 
 ## Directory Structure
 
-Top-level: `server/` (FastAPI business logic), `web/` (React SPA), `desktop/` (Electron shell), `docs/`, `shared/task_presets.json`. Server packages of note: `api/`, `agent/`, `analyzer/`, `scheduler/`, `collector/`, `calendar/`, `db/` (wipe-only `schema_ddl` / bootstrap / fingerprint — no migrations), `wire/`, `domain/`, `web_search/`. Desktop process manager is split across `process-manager*.ts`. Details belong in code; this tree is intentionally thin.
+Top-level: `server/` (FastAPI business logic), `web/` (React SPA), `desktop/` (Electron shell), `docs/`, `shared/task_presets.json`, `tests/smoke/`. Server packages of note: `api/` (+ `schemas/requests`／`responses`), `agent/`, `analyzer/`, `scheduler/` (incl. `web_intel_tick`／`project_tick`), `collector/`, `calendar/`, `services/`, `db/schema_domains/` (wipe-only DDL fragments aggregated by `db/schema.py` — no migrations), `wire/serializer_domains/`, `domain/`, `web_search/`, `queries/`. Frontend: `web/src/api/sources/` (not retired `api/accounts`), `domain/`, `board/`, `pages/`. Desktop process manager is split across `process-manager*.ts`. Details belong in code; this tree is intentionally thin.

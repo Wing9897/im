@@ -14,10 +14,16 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Awaitable, Callable
-from typing import Any, ClassVar, NotRequired, TypedDict
+from typing import Any, ClassVar
 
 import aiohttp
 
+from server.analyzer.llm_config import (
+    LlmConfig,
+    canonical_provider,
+    load_agent_llm_config,
+    load_llm_config,
+)
 from server.analyzer.llm_providers import (
     LlmClientError,
     complete_gemini,
@@ -28,26 +34,16 @@ from server.analyzer.llm_providers import (
     probe_ollama,
     probe_openai_style,
 )
-from server.config import CONFIG_DEFAULTS, get_config, get_config_int
+from server.config import CONFIG_DEFAULTS, get_config_int
 from server.db.database import Database
 from server.outbound import validate_outbound_url
 from server.secrets import MASKED_SECRET
-from server.util import parse_bool
 
 logger = logging.getLogger(__name__)
 
 #: llm_provider value -> canonical name. The canonical name doubles as the
 #: system_config key prefix ({prefix}_base_url / {prefix}_model / {prefix}_api_key)
 #: and the wire protocol selector.
-_PROVIDER_ALIASES: dict[str, str] = {
-    "ollama": "ollama",
-    "openai": "openai",
-    "openai_compatible": "openai",
-    "gemini": "gemini",
-    "gemini_compatible": "gemini",
-    "openrouter": "openrouter",
-}
-
 # Canonical provider -> wire handler key (openai and openrouter share openai-style HTTP).
 _PROVIDER_WIRE_KEY: dict[str, str] = {
     "ollama": "ollama",
@@ -69,63 +65,6 @@ CompleteHandler = Callable[
     Awaitable[dict],
 ]
 ProbeHandler = Callable[["ConfigurableLlmClient", aiohttp.ClientSession], Awaitable[None]]
-
-
-class LlmConfig(TypedDict):
-    provider: str
-    provider_raw: str
-    model: str
-    api_key: str
-    base_url: str
-    ollama_thinking_enabled: bool
-    timeout: NotRequired[str]
-
-
-def _canonical_provider(raw_provider: str) -> str:
-    return _PROVIDER_ALIASES.get(raw_provider, raw_provider)
-
-
-async def _llm_config_for_raw_provider(db: Database, raw_provider: str) -> LlmConfig:
-    canonical = _canonical_provider(raw_provider)
-    return {
-        "provider": canonical,
-        "provider_raw": raw_provider,
-        "model": await get_config(db, f"{canonical}_model"),
-        "api_key": await get_config(db, f"{canonical}_api_key"),
-        "base_url": await get_config(db, f"{canonical}_base_url"),
-        "ollama_thinking_enabled": parse_bool(await get_config(db, "ollama_thinking_enabled")),
-    }
-
-
-async def load_llm_config(db: Database) -> LlmConfig:
-    """Resolve the active provider's connection config from ``system_config``."""
-    raw_provider = (await get_config(db, "llm_provider")).strip() or "ollama"
-    return await _llm_config_for_raw_provider(db, raw_provider)
-
-
-async def load_agent_llm_config(db: Database) -> LlmConfig:
-    """Resolve LLM config for the assistant/agent.
-
-    ``assistant_llm_provider`` empty / ``follow`` / unknown → global ``llm_provider``.
-    Otherwise use that provider id; ``assistant_llm_{base_url,model,api_key}``
-    override when non-empty, else fall back to the provider's ``{canonical}_*`` keys.
-    """
-    override = (await get_config(db, "assistant_llm_provider")).strip()
-    global_raw = (await get_config(db, "llm_provider")).strip() or "ollama"
-    if not override or override.lower() == "follow" or override not in _PROVIDER_ALIASES:
-        return await _llm_config_for_raw_provider(db, global_raw)
-
-    config = await _llm_config_for_raw_provider(db, override)
-    assistant_base_url = (await get_config(db, "assistant_llm_base_url")).strip()
-    assistant_model = (await get_config(db, "assistant_llm_model")).strip()
-    assistant_api_key = (await get_config(db, "assistant_llm_api_key")).strip()
-    if assistant_base_url:
-        config["base_url"] = assistant_base_url
-    if assistant_model:
-        config["model"] = assistant_model
-    if assistant_api_key:
-        config["api_key"] = assistant_api_key
-    return config
 
 
 class ConfigurableLlmClient:
@@ -189,7 +128,7 @@ class ConfigurableLlmClient:
         """Build a one-off client from unsaved UI draft values."""
         saved = await load_llm_config(db)
         raw_provider = str(draft.get("llmProvider") or saved["provider_raw"] or "ollama").strip()
-        canonical = _PROVIDER_ALIASES.get(raw_provider, raw_provider)
+        canonical = canonical_provider(raw_provider)
         base_url = str(draft.get("llmBaseUrl") or saved["base_url"] or "").strip()
         if not base_url:
             base_url = CONFIG_DEFAULTS.get(f"{canonical}_base_url", "")

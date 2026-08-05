@@ -29,7 +29,7 @@ class Broadcaster(Protocol):
 EVENT_TYPES = (
     "messages_updated",
     "collector_status_changed",
-    "account_status_changed",
+    "source_status_changed",
     "analysis_started",
     "analysis_completed",
     "analysis_failed",

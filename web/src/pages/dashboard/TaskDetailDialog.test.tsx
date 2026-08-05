@@ -173,7 +173,7 @@ describe("MessageDetailDialog", () => {
               platform: "telegram",
               platformId: "chan-1",
               platformMessageId: "pm-1",
-              accountId: "acc-1",
+              sourceId: "acc-1",
               channelName: "General",
               senderId: "user-1",
               senderName: "Alice",

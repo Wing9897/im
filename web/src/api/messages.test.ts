@@ -37,14 +37,14 @@ describe("messages API", () => {
 
       const result = await queryMessagesPage({
         filters: {
-          accountIds: ["acc-1"],
+          sourceIds: ["acc-1"],
           channelIds: ["telegram:10001", "rss:https://example.com/feed"],
         },
         limit: 20,
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/messages/page", {
-        account_ids: "acc-1",
+        source_ids: "acc-1",
         channel_ids: "telegram:10001,rss:https://example.com/feed",
         limit: "20",
       });
