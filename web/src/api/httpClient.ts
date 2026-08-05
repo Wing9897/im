@@ -12,16 +12,7 @@ import {
   saveDeviceSession,
 } from "../domain/connection/connectionStore";
 import { resolveBaseUrl } from "./baseUrl";
-import { errorToastEmitter } from "./errorToastEmitter";
-import {
-  ApiRequestError,
-  parseErrorResponse as parseApiErrorResponse,
-} from "./parseApiError";
-import {
-  isSetupAuthPath,
-  isStoredAccessExpired,
-  refreshAccessTokenOnce,
-} from "./authRefresh";
+import { refreshAccessTokenOnce } from "./authRefresh";
 import {
   connectSSE as openSseConnection,
   type SseConnection,
@@ -29,28 +20,22 @@ import {
 } from "./sseClient";
 import { withRetry } from "../utils/retry";
 import { NetworkError } from "./httpErrors";
+import {
+  createSseReconnectAuthGate,
+  shouldAttemptAuthRefresh,
+} from "./httpAuthRefresh";
+import {
+  buildApiHeaders,
+  buildApiUrl,
+  fetchWithMappedNetworkErrors,
+  readJsonBodyOrUndefined,
+  throwForFailedResponse,
+  type ApiRequestOptions,
+} from "./httpRequestCore";
+import { GET_RETRY_DELAYS_MS, shouldRetryGet } from "./httpRetry";
 
 export { NetworkError };
-
-const DEFAULT_TIMEOUT_MS = 30_000;
-const GET_RETRY_DELAYS_MS = [400, 1_000] as const;
-
-/** Optional per-request controls for REST methods. */
-interface ApiRequestOptions {
-  signal?: AbortSignal;
-  /** Override default 30s timeout. Use 0 to disable. */
-  timeoutMs?: number;
-  /**
-   * When true, structured API errors are pushed to `errorToastEmitter`
-   * (ErrorToast UI). Default false so typical list GETs only surface via
-   * ErrorRetryBanner / local error state; command failures should use
-   * `handleCommandError` → ToastProvider. Collector SSE failures still emit
-   * directly on the emitter.
-   */
-  emitErrorToast?: boolean;
-  /** Skip single-flight 401 refresh (used by refresh itself / public setup). */
-  skipAuthRefresh?: boolean;
-}
+export type { ApiRequestOptions };
 
 /**
  * Lifecycle callbacks for `connectSSE`. The token-refresh gate is supplied by
@@ -60,24 +45,6 @@ interface ApiSseOptions {
   /** Fires on every successful open, including after each reconnect. */
   onOpen?: () => void;
   onError?: (error: Event) => void;
-}
-
-function isAbortError(error: unknown): boolean {
-  return (
-    (error instanceof DOMException && error.name === "AbortError") ||
-    (error instanceof Error && error.name === "AbortError")
-  );
-}
-
-function shouldRetryGet(error: unknown): boolean {
-  if (error instanceof NetworkError) {
-    // Timeouts / explicit cancel should not hammer the server.
-    return error.message === "Backend unreachable";
-  }
-  if (error instanceof ApiRequestError) {
-    return error.status === 502 || error.status === 503 || error.status === 504;
-  }
-  return false;
 }
 
 /**
@@ -256,67 +223,17 @@ export class ApiClient {
     options: ApiSseOptions = {},
   ): SseConnection {
     // Factory: reconnect must not reuse a stale access token in ?token=.
-    // On drop: probe auth (EventSource cannot surface 401); refresh only when
-    // needed; abort if still no access token — stops bare /events storms.
     return openSseConnection(() => this.buildSseUrl(), onEvent, {
       onOpen: options.onOpen,
       onError: options.onError,
-      onBeforeReconnect: async (signal) => {
-        if (signal.aborted) return false;
-        const refresh = getRefreshToken();
-        let access = getAccessToken();
-
-        if (!access && refresh) {
-          await refreshAccessTokenOnce();
-          access = getAccessToken();
-        }
-        if (signal.aborted) return false;
-        if (!access) return false;
-
-        let needsRefresh = isStoredAccessExpired();
-        if (!needsRefresh) {
-          try {
-            const probeUrl = new URL("/api/v1/setup/devices", this.getBaseUrl()).toString();
-            const res = await fetch(probeUrl, {
-              method: "GET",
-              headers: { Authorization: `Bearer ${access}` },
-              signal,
-            });
-            if (res.status === 401) needsRefresh = true;
-          } catch {
-            if (signal.aborted) return false;
-          }
-        }
-
-        if (needsRefresh && refresh) {
-          const ok = await refreshAccessTokenOnce();
-          if (!ok) return false;
-        }
-        if (signal.aborted) return false;
-        return Boolean(getAccessToken());
-      },
+      onBeforeReconnect: createSseReconnectAuthGate(() => this.getBaseUrl()),
     });
   }
 
   // ─── Private Helpers ────────────────────────────────────────────────
 
   private buildUrl(path: string, params?: Record<string, string | string[]>): string {
-    const url = new URL(path, this.getBaseUrl());
-    if (params) {
-      for (const [key, value] of Object.entries(params)) {
-        if (value === undefined) continue;
-        if (Array.isArray(value)) {
-          for (const item of value) {
-            if (item !== "") url.searchParams.append(key, item);
-          }
-          continue;
-        }
-        if (value !== "") {
-          url.searchParams.set(key, value);
-        }
-      }
-    }
-    return url.toString();
+    return buildApiUrl(this.getBaseUrl(), path, params);
   }
 
   private buildSseUrl(): string {
@@ -329,66 +246,13 @@ export class ApiClient {
     return url.toString();
   }
 
-  private buildHeaders(hasBody: boolean): Record<string, string> {
-    const headers: Record<string, string> = {
-      Accept: "application/json",
-    };
-
-    if (hasBody) {
-      headers["Content-Type"] = "application/json";
-    }
-
-    const token = this.getToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    return headers;
-  }
-
-  private createAbortSignal(
-    external: AbortSignal | undefined,
-    timeoutMs: number,
-  ): { signal: AbortSignal | undefined; cleanup: () => void } {
-    if (timeoutMs <= 0 && !external) {
-      return { signal: undefined, cleanup: () => {} };
-    }
-
-    const controller = new AbortController();
-    const onExternalAbort = () => controller.abort();
-    external?.addEventListener("abort", onExternalAbort);
-
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    if (timeoutMs > 0) {
-      timer = setTimeout(() => controller.abort(), timeoutMs);
-    }
-
-    if (external?.aborted) {
-      controller.abort();
-    }
-
-    return {
-      signal: controller.signal,
-      cleanup: () => {
-        if (timer !== undefined) clearTimeout(timer);
-        external?.removeEventListener("abort", onExternalAbort);
-      },
-    };
-  }
-
   private async request<T>(
     url: string,
     init: RequestInit,
     options?: ApiRequestOptions,
   ): Promise<T> {
     const response = await this.fetchResponse(url, init, options);
-
-    // HTTP 204 No Content — return undefined (cast as T for delete operations)
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
+    return readJsonBodyOrUndefined<T>(response);
   }
 
   private async fetchResponse(
@@ -397,42 +261,27 @@ export class ApiClient {
     options?: ApiRequestOptions,
     retried = false,
   ): Promise<Response> {
-    const headers = this.buildHeaders(init.body !== undefined && init.body !== null);
-    const timeoutMs = options?.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    const { signal, cleanup } = this.createAbortSignal(options?.signal, timeoutMs);
-
-    let response: Response;
-    try {
-      response = await fetch(url, {
+    const headers = buildApiHeaders(
+      this.getToken(),
+      init.body !== undefined && init.body !== null,
+    );
+    const response = await fetchWithMappedNetworkErrors(
+      url,
+      {
         ...init,
-        signal,
         headers: {
           ...headers,
           ...(init.headers as Record<string, string> | undefined),
         },
-      });
-    } catch (error) {
-      if (isAbortError(error)) {
-        if (options?.signal?.aborted) {
-          throw new NetworkError("Request cancelled");
-        }
-        throw new NetworkError("Request timed out");
-      }
-      if (error instanceof TypeError) {
-        // Network-level failure (DNS, connection refused, offline, etc.)
-        throw new NetworkError("Backend unreachable");
-      }
-      throw error;
-    } finally {
-      cleanup();
-    }
+      },
+      options,
+    );
 
     if (
-      response.status === 401 &&
-      !retried &&
-      !options?.skipAuthRefresh &&
-      !isSetupAuthPath(url) &&
-      getRefreshToken()
+      shouldAttemptAuthRefresh(url, response.status, {
+        skipAuthRefresh: options?.skipAuthRefresh,
+        retried,
+      })
     ) {
       const refreshed = await refreshAccessTokenOnce();
       if (refreshed) {
@@ -441,17 +290,7 @@ export class ApiClient {
     }
 
     if (!response.ok) {
-      const { apiError, structured } = await parseApiErrorResponse(response);
-      // Opt-in only — default suppress avoids double toast with ErrorRetryBanner.
-      if (structured && options?.emitErrorToast) {
-        errorToastEmitter.emit({
-          errorCode: structured.error_code,
-          message: structured.message,
-          correlationId: structured.correlation_id,
-          details: structured.details,
-        });
-      }
-      throw new ApiRequestError(response.status, apiError, structured);
+      await throwForFailedResponse(response, options);
     }
 
     return response;

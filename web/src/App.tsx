@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useReducer, useRef, useState, type HTMLAttributes } from "react";
+import { useEffect, useRef, useState, type HTMLAttributes } from "react";
 import { BrowserRouter } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { AppSidebar, MAIN_SIDEBAR_PREFETCH_PATHS } from "./components/AppSidebar";
 import { AppTopBar } from "./components/AppTopBar";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
 import { ShellChromeCore } from "./components/ShellChromeCore";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
-import { SecretsBrokenGate } from "./components/SecretsBrokenGate";
+import { AppBootGate } from "./components/AppBootGate";
 import { AppRuntimeProvider } from "./context/AppRuntimeContext";
 import { MonitorModeProvider, useMonitorMode } from "./context/MonitorModeContext";
 import { SimpleModeProvider } from "./context/SimpleModeContext";
@@ -21,21 +20,6 @@ import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
 import { CommandPaletteProvider } from "./hooks/useCommandPalette";
 import { AssistantQuickProvider } from "./hooks/useAssistantQuick";
 import { AssistantChatProvider } from "./hooks/useAssistantChat";
-import { fetchHealth } from "./api/system";
-import { FirstRunWizard } from "./components/FirstRunWizard";
-import { SessionReauthWizard } from "./components/SessionReauthWizard";
-import { resolveAuthGate } from "./domain/connection/authGate";
-import {
-  bootReduce,
-  initialBootState,
-  shouldReenterAuthOnSessionChange,
-} from "./domain/connection/bootMachine";
-import {
-  clearDeviceSession,
-  hasDeviceSession,
-  subscribeConnection,
-} from "./domain/connection/connectionStore";
-import { syncDesktopConnectionOnBoot } from "./electron/electronConnection";
 import { isElectronDesktop } from "./electron/electronWindow";
 import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
 import { prefetchRoute } from "./routing/prefetchRoute";
@@ -209,155 +193,12 @@ function AppShell() {
   );
 }
 
-function BootUnavailable({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
-  const { t } = useTranslation("common");
-  return (
-    <div className="min-h-screen max-w-[480px] bg-surface-base p-6 text-text-primary">
-      <h1 className="mt-0 text-xl">{t("boot.unavailableTitle")}</h1>
-      <p className="leading-normal text-text-secondary">{message}</p>
-      <p className="leading-normal text-text-secondary">
-        {t("boot.unavailableHint", {
-          script: "scripts/reset_local_databases.py --apply",
-        })}
-      </p>
-      <button type="button" onClick={onRetry} className="mt-lg min-h-9">
-        {t("boot.retry")}
-      </button>
-    </div>
-  );
-}
-
 function App() {
-  const { t } = useTranslation("common");
-  const [boot, dispatchBoot] = useReducer(bootReduce, initialBootState);
-
-  const runAuthGate = useCallback(async (opts?: { fromSessionLoss?: boolean }) => {
-    dispatchBoot({ type: "check_started" });
-    try {
-      const decision = await resolveAuthGate(opts);
-      if (decision.kind === "ready") {
-        dispatchBoot({ type: "auth_ready" });
-        return;
-      }
-      dispatchBoot({
-        type: "auth_setup",
-        status: decision.status,
-        reason: decision.reason,
-      });
-    } catch (error) {
-      dispatchBoot({
-        type: "failed",
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }, []);
-
-  const checkBoot = useCallback(async () => {
-    dispatchBoot({ type: "check_started" });
-    try {
-      const health = await fetchHealth();
-      if (health.secretsReady === false) {
-        clearDeviceSession();
-        dispatchBoot({ type: "secrets_blocked", error: health.secretsError ?? null });
-        return;
-      }
-      dispatchBoot({ type: "schema_ok" });
-      await runAuthGate();
-    } catch (error) {
-      dispatchBoot({
-        type: "failed",
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }, [runAuthGate]);
-
-  const markSecretsRecovered = useCallback(() => {
-    dispatchBoot({ type: "secrets_gate_complete" });
-    void checkBoot();
-  }, [checkBoot]);
-
-  // Desktop host: await connection sync before schema/auth so a stale remote
-  // baseUrl cannot poison the first checkBoot (false "unavailable").
-  useEffect(() => {
-    let cancelled = false;
-    const boot = async () => {
-      try {
-        if (isElectronDesktop()) {
-          await syncDesktopConnectionOnBoot();
-        }
-        if (!cancelled) {
-          await checkBoot();
-        }
-      } catch (error) {
-        if (!cancelled) {
-          dispatchBoot({
-            type: "failed",
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
-    };
-    void boot();
-    return () => {
-      cancelled = true;
-    };
-  }, [checkBoot]);
-
-  // Session cleared (refresh failure / revoke-all / logout) → reauth / first-run by reason.
-  useEffect(() => {
-    return subscribeConnection(() => {
-      if (!shouldReenterAuthOnSessionChange(boot.phase, hasDeviceSession())) return;
-      dispatchBoot({ type: "session_lost" });
-      void runAuthGate({ fromSessionLoss: true });
-    });
-  }, [boot.phase, runAuthGate]);
-
-  const onSetupComplete = () => {
-    dispatchBoot({ type: "setup_complete" });
-    void runAuthGate();
-  };
-
   return (
     <ErrorBoundary>
-      {boot.phase === "loading" ? (
-        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.starting")}</div>
-      ) : boot.phase === "unavailable" ? (
-        <BootUnavailable
-          message={boot.error || t("boot.serviceUnavailable")}
-          onRetry={() => {
-            void checkBoot();
-          }}
-        />
-      ) : boot.phase === "secrets_blocked" ? (
-        <SecretsBrokenGate
-          onRecoverComplete={markSecretsRecovered}
-          secretsError={boot.secretsError}
-        />
-      ) : boot.phase === "setup" && boot.setupStatus ? (
-        boot.setupStatus.bootstrapped ? (
-          // Admin exists: one login card (expired vs cold login only changes copy).
-          <SessionReauthWizard
-            onComplete={onSetupComplete}
-            tone={boot.setupReason === "session_expired" ? "expired" : "login"}
-            hasActiveDevice={boot.setupStatus.hasActiveDevice}
-            allowLocalPasswordReset={boot.setupStatus.resetPasswordForLocal}
-          />
-        ) : (
-          // No admin yet: create-system (Desktop may still choose remote login).
-          <FirstRunWizard status={boot.setupStatus} onComplete={onSetupComplete} />
-        )
-      ) : boot.phase === "ready" ? (
+      <AppBootGate>
         <AppShell />
-      ) : (
-        // setup without status, or unexpected phase — never mount shell (avoids SSE 401 storms)
-        <div className="min-h-screen bg-surface-base p-6 text-text-primary">{t("boot.starting")}</div>
-      )}
+      </AppBootGate>
     </ErrorBoundary>
   );
 }

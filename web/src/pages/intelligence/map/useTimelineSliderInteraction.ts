@@ -3,8 +3,17 @@ import type React from "react";
 import type { TimeWindow } from "../../../types";
 import { formatDateOnly } from "../../../utils/dateFormat";
 import {
+  applyDragMove,
+  calendarNoonMs,
+  clampHandleCommit,
+  dragDeltaMs,
+  handleKeyNextMs,
+  liveViewportSpanMs,
+  wheelZoomViewport,
+  type DragGestureState,
+} from "../../../domain/intelligence/timelineSliderGestureGeometry";
+import {
   CANVAS_H,
-  ONE_DAY,
   ONE_HOUR,
   clamp,
   draw,
@@ -12,6 +21,8 @@ import {
   hitTest,
   type HitZone,
 } from "./timelineSliderLayout";
+
+export { liveViewportSpanMs };
 
 interface Options {
   dataRange: TimeWindow;
@@ -25,12 +36,6 @@ interface Options {
   onCommitFetchWindow?: (window: TimeWindow) => void;
   /** Exit live mode once (idempotent) — must NOT toggle. */
   onExitLiveMode: () => void;
-}
-
-/** Viewport span while Live — slightly wider than the ±Nh selection. */
-export function liveViewportSpanMs(selectionHalfMs: number): number {
-  const selection = Math.max(selectionHalfMs, ONE_HOUR) * 2;
-  return Math.max(selection * 1.5, selection + 6 * ONE_HOUR);
 }
 
 export function useTimelineSliderInteraction({
@@ -63,15 +68,7 @@ export function useTimelineSliderInteraction({
   );
   const [viewSpan, setViewSpan] = useState(initialSpan);
   const dragZone = useRef<HitZone | null>(null);
-  const dragState = useRef<{
-    zone: HitZone;
-    startX: number;
-    origWS: number;
-    origWE: number;
-    origViewStart: number;
-    /** Freeze span for the whole gesture so mid-drag rescale cannot warp delta. */
-    origViewSpan: number;
-  } | null>(null);
+  const dragState = useRef<DragGestureState | null>(null);
   const [focusedHandle, setFocusedHandle] = useState<"left" | "right" | null>(null);
 
   const liveModeRef = useRef(liveMode);
@@ -247,21 +244,15 @@ export function useTimelineSliderInteraction({
     const move = (event: MouseEvent) => {
       const state = dragState.current;
       if (!state) return;
-      const delta = ((event.clientX - state.startX) / canvasW) * state.origViewSpan;
-      if (state.zone === "bg") {
+      const delta = dragDeltaMs(event.clientX, state, canvasW);
+      const result = applyDragMove(state, delta);
+      if (result.kind === "pan") {
         // Panning away from Live is browsing history — leave Live once.
         exitLiveIfNeeded();
-        setViewStart(state.origViewStart - delta);
+        setViewStart(result.viewStart);
         return;
       }
-      if (state.zone === "left") {
-        emitDraft(Math.min(state.origWS + delta, state.origWE - ONE_HOUR), state.origWE);
-      } else if (state.zone === "right") {
-        emitDraft(state.origWS, Math.max(state.origWE + delta, state.origWS + ONE_HOUR));
-      } else {
-        const start = state.origWS + delta;
-        emitDraft(start, start + state.origWE - state.origWS);
-      }
+      emitDraft(result.start, result.end);
     };
     const up = () => {
       if (!dragState.current) return;
@@ -294,14 +285,9 @@ export function useTimelineSliderInteraction({
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
       const x = event.clientX - rect.left;
-      const timestamp = viewStart + (x / canvasW) * viewSpan;
-      const span = clamp(
-        viewSpan * (event.deltaY > 0 ? 1.2 : 1 / 1.2),
-        ONE_HOUR,
-        365 * ONE_DAY,
-      );
-      setViewSpan(span);
-      setViewStart(timestamp - (x / canvasW) * span);
+      const next = wheelZoomViewport(viewStart, viewSpan, canvasW, x, event.deltaY);
+      setViewSpan(next.viewSpan);
+      setViewStart(next.viewStart);
     },
     [canvasW, exitLiveIfNeeded, viewSpan, viewStart],
   );
@@ -319,9 +305,8 @@ export function useTimelineSliderInteraction({
 
   const onCalendarChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.value) return;
-      const [year, month, day] = event.target.value.split("-");
-      const noon = new Date(Number(year), Number(month) - 1, Number(day), 12).getTime();
+      const noon = calendarNoonMs(event.target.value);
+      if (noon == null) return;
       const half = Math.max(selectionHalfMsRef.current, ONE_HOUR);
       setViewStart(noon - viewSpan / 2);
       commitWindow(noon - half, noon + half);
@@ -335,34 +320,20 @@ export function useTimelineSliderInteraction({
   const onHandleKeyDown = useCallback(
     (handle: "start" | "end", event: React.KeyboardEvent<HTMLDivElement>) => {
       const current = handle === "start" ? wS : wE;
-      const step = event.shiftKey ? ONE_DAY : ONE_HOUR;
-      const delta: Record<string, number> = {
-        ArrowLeft: -step,
-        ArrowDown: -step,
-        ArrowRight: step,
-        ArrowUp: step,
-        PageDown: -ONE_DAY,
-        PageUp: ONE_DAY,
-      };
-      const next =
-        event.key === "Home"
-          ? handle === "start"
-            ? sliderMin
-            : wS + ONE_HOUR
-          : event.key === "End"
-            ? handle === "start"
-              ? wE - ONE_HOUR
-              : sliderMax
-            : delta[event.key] == null
-              ? null
-              : current + delta[event.key];
+      const next = handleKeyNextMs(
+        handle,
+        event.key,
+        event.shiftKey,
+        current,
+        wS,
+        wE,
+        sliderMin,
+        sliderMax,
+      );
       if (next == null) return;
       event.preventDefault();
-      if (handle === "start") {
-        commitWindow(clamp(next, sliderMin, wE - ONE_HOUR), wE);
-      } else {
-        commitWindow(wS, clamp(next, wS + ONE_HOUR, sliderMax));
-      }
+      const committed = clampHandleCommit(handle, next, wS, wE, sliderMin, sliderMax);
+      commitWindow(committed.start, committed.end);
     },
     [commitWindow, sliderMax, sliderMin, wE, wS],
   );
