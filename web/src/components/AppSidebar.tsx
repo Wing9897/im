@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   BellRing,
@@ -18,7 +18,6 @@ import {
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useAnalysisStatus } from "../context/AnalysisStatusContext";
 import { useSidebarCollapsed } from "../hooks/useSidebarCollapsed";
 import { useSidebarRailMode } from "../hooks/useSidebarRailMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
@@ -29,10 +28,14 @@ import {
   visibleSidebarGroups,
   type SidebarIconKey,
 } from "../domain/ui/sidebarNavigation";
-import { prefetchRoute } from "../routing/prefetchRoute";
 import { formatAppVersionLabel } from "../utils/appVersion";
-import { CountBadge } from "./ui/CountBadge";
 import { AssistantHistoryRail } from "./AssistantHistoryRail";
+import { railModeButtonClass } from "./sidebar/sidebarNavStyles";
+import {
+  SidebarNavLink,
+  SidebarSectionLabel,
+  TasksNavLink,
+} from "./sidebar/SidebarNavItems";
 
 export { MAIN_SIDEBAR_PREFETCH_PATHS };
 
@@ -50,115 +53,6 @@ const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   settings: Settings,
   account: User,
 };
-
-const sidebarNavLinkClass = (isActive: boolean, collapsed: boolean) =>
-  [
-    "group relative flex min-h-8 cursor-pointer flex-row items-center rounded-md border border-transparent text-[12px] font-medium leading-tight text-text-secondary no-underline transition-[background,color] duration-150 ease-out [-webkit-app-region:no-drag] [pointer-events:auto]",
-    collapsed ? "justify-center px-0 py-1.5" : "gap-2.5 px-2.5 py-1.5",
-    isActive
-      ? "bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] text-text-primary [&_svg]:text-accent"
-      : "hover:bg-[color-mix(in_srgb,var(--text-primary)_4%,transparent)] hover:text-text-primary",
-  ].join(" ");
-
-const railModeButtonClass = (active: boolean, collapsed: boolean) =>
-  [
-    "inline-flex min-h-7 flex-1 items-center justify-center gap-1 rounded-md border-none text-[11px] font-medium transition-[background,color] duration-150",
-    collapsed ? "px-0" : "px-1.5",
-    active
-      ? "bg-[color-mix(in_srgb,var(--text-primary)_8%,transparent)] text-text-primary"
-      : "bg-transparent text-text-muted hover:bg-[color-mix(in_srgb,var(--text-primary)_4%,transparent)] hover:text-text-primary",
-  ].join(" ");
-
-function SidebarSectionLabel({
-  label,
-  collapsed,
-}: {
-  label: string;
-  collapsed: boolean;
-}) {
-  if (collapsed) {
-    return (
-      <div
-        className="mx-1 my-1.5 h-px shrink-0 bg-[var(--surface-border-alpha,var(--surface-border))]"
-        aria-hidden="true"
-      />
-    );
-  }
-  return (
-    <div
-      className="mx-1 mb-1 mt-2 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted max-[780px]:hidden"
-      aria-hidden="true"
-      data-testid="sidebar-nav-group"
-    >
-      {label}
-    </div>
-  );
-}
-
-/** Isolated so SSE queue updates re-render only this nav item, not the whole rail. */
-function TasksNavLink({
-  to,
-  collapsed,
-  isActive,
-}: {
-  to: string;
-  collapsed: boolean;
-  isActive: boolean;
-}) {
-  const { t } = useTranslation("nav");
-  const { queueStatus } = useAnalysisStatus();
-  const pendingCount = queueStatus?.pendingCount ?? 0;
-  const showPendingBadge = pendingCount > 0;
-  const badgeLabel = pendingCount > 99 ? "99+" : String(pendingCount);
-  const Icon = ListChecks;
-  const tasksLabel = t("tasks");
-
-  return (
-    <NavLink
-      to={to}
-      className={sidebarNavLinkClass(isActive, collapsed)}
-      onMouseEnter={() => prefetchRoute(to)}
-      onFocus={() => prefetchRoute(to)}
-      aria-label={
-        showPendingBadge ? t("tasksPendingAria", { count: pendingCount }) : tasksLabel
-      }
-      title={
-        showPendingBadge
-          ? t("tasksPendingTitle", { count: pendingCount })
-          : tasksLabel
-      }
-      data-testid="sidebar-link"
-    >
-      {isActive ? (
-        <span
-          className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
-          aria-hidden="true"
-        />
-      ) : null}
-      <span className="relative inline-flex shrink-0">
-        <Icon size={16} strokeWidth={2} aria-hidden="true" />
-        {showPendingBadge && collapsed ? (
-          <span
-            className="absolute -right-1 -top-1 h-1.5 w-1.5 rounded-full bg-accent"
-            aria-hidden="true"
-          />
-        ) : null}
-      </span>
-      {!collapsed ? (
-        <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-          <span className="truncate">{tasksLabel}</span>
-          {showPendingBadge ? (
-            <CountBadge
-              count={pendingCount > 99 ? 99 : pendingCount}
-              aria-label={t("pendingAnalysisBadge", { count: badgeLabel })}
-              className="min-w-[18px] px-1 text-[9px]"
-            />
-          ) : null}
-        </span>
-      ) : null}
-    </NavLink>
-  );
-}
 
 /**
  * Global left navigation rail — collapsible icon+label / icon-only.
@@ -259,31 +153,14 @@ export function AppSidebar() {
                   );
                 }
                 return (
-                  <NavLink
+                  <SidebarNavLink
                     key={item.to}
                     to={item.to}
-                    className={sidebarNavLinkClass(isActive, hideLabel)}
-                    onMouseEnter={() => prefetchRoute(item.to)}
-                    onFocus={() => prefetchRoute(item.to)}
-                    aria-label={label}
-                    title={label}
-                    data-testid="sidebar-link"
-                  >
-                    {isActive ? (
-                      <span
-                        className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
-                        aria-hidden="true"
-                      />
-                    ) : null}
-                    <span className="relative inline-flex shrink-0">
-                      <Icon size={16} strokeWidth={2} aria-hidden="true" />
-                    </span>
-                    {!hideLabel ? (
-                      <span className="flex min-w-0 flex-1 items-center justify-between gap-1 max-[780px]:hidden">
-                        <span className="truncate">{label}</span>
-                      </span>
-                    ) : null}
-                  </NavLink>
+                    label={label}
+                    collapsed={hideLabel}
+                    isActive={isActive}
+                    Icon={Icon}
+                  />
                 );
               })}
             </div>
@@ -303,27 +180,15 @@ export function AppSidebar() {
             const isActive = isSidebarItemActive(item, location.pathname);
             const label = t(item.labelKey);
             return (
-              <NavLink
+              <SidebarNavLink
                 key={item.to}
                 to={item.to}
-                className={sidebarNavLinkClass(isActive, hideLabel)}
-                onMouseEnter={() => prefetchRoute(item.to)}
-                onFocus={() => prefetchRoute(item.to)}
-                aria-label={label}
-                title={label}
-                data-testid="sidebar-link"
-              >
-                {isActive ? (
-                  <span
-                    className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent max-[780px]:hidden"
-                    aria-hidden="true"
-                  />
-                ) : null}
-                <Icon size={16} strokeWidth={2} aria-hidden="true" />
-                {!hideLabel ? (
-                  <span className="max-[780px]:hidden">{label}</span>
-                ) : null}
-              </NavLink>
+                label={label}
+                collapsed={hideLabel}
+                isActive={isActive}
+                Icon={Icon}
+                compactLabel
+              />
             );
           })}
           {!hideLabel ? (
