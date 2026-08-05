@@ -43,7 +43,8 @@
       "web_intel": "Web intel task · Agent multi-round search",
       "web_intelProgressHint": "Agent multi-round web search writes analysis events (optional source-message verify)",
       "retryCount": "Retry {count}",
-      "analysisPausedHint": "Analysis paused (auto or manual)"
+      "analysisPausedHint": "Analysis paused (auto or manual)",
+      "waitingForThreshold": "Waiting for threshold: {count}/{threshold}"
     },
     "detail": {
       "timeRange": "Time range: {range}",

@@ -4,6 +4,8 @@ export interface TaskCardStats {
   unanalyzedCount: number;
   queuedMessageCount: number;
   analyzedCount: number;
+  /** Resolved trigger threshold (task override or global). */
+  triggerThreshold: number;
   isRunning: boolean;
   /** Latest batch error for this task (from queue attention / processing). */
   lastErrorMessage?: string | null;

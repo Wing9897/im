@@ -108,7 +108,13 @@ describe("TaskDetailDialog", () => {
     renderDialog(
       createElement(TaskDetailDialog, {
         task: makeTask(),
-        stats: { unanalyzedCount: 3, queuedMessageCount: 1, analyzedCount: 9 },
+        stats: {
+          unanalyzedCount: 3,
+          queuedMessageCount: 1,
+          analyzedCount: 9,
+          triggerThreshold: 50,
+          isRunning: false,
+        },
         onClose: vi.fn(),
         onEdit: vi.fn(),
       }),
@@ -131,7 +137,13 @@ describe("TaskDetailDialog", () => {
             analysisMode: "recurring",
             channelIds: [],
           }),
-          stats: { unanalyzedCount: 9, queuedMessageCount: 0, analyzedCount: 0 },
+          stats: {
+            unanalyzedCount: 9,
+            queuedMessageCount: 0,
+            analyzedCount: 0,
+            triggerThreshold: 50,
+            isRunning: false,
+          },
           onClose: vi.fn(),
           onEdit: vi.fn(),
         }),

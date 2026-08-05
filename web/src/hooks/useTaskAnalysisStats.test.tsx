@@ -44,6 +44,7 @@ function makeStats(unanalyzedCount: number, taskId = "task-1"): TaskAnalysisStat
     analyzedCount: 0,
     unanalyzedCount,
     queuedMessageCount: 0,
+    triggerThreshold: 50,
   };
 }
 
@@ -97,6 +98,7 @@ const SAMPLE_STATS: TaskAnalysisStats[] = [
     analyzedCount: 3,
     unanalyzedCount: 0,
     queuedMessageCount: 0,
+    triggerThreshold: 50,
   },
 ];
 

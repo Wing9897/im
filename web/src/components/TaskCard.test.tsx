@@ -33,6 +33,7 @@ function createMockStats(overrides: Partial<TaskCardStats> = {}): TaskCardStats 
     unanalyzedCount: 5,
     queuedMessageCount: 0,
     analyzedCount: 10,
+    triggerThreshold: 50,
     isRunning: false,
     ...overrides,
   };
@@ -255,6 +256,26 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("已分析");
     expect(container.textContent).not.toContain("失敗");
     expect(container.textContent).not.toContain("重試中");
+  });
+
+  it("shows waiting-for-threshold tip when pending under trigger", () => {
+    renderCard({
+      task: createMockTask({ isActive: true }),
+      stats: createMockStats({ unanalyzedCount: 12, triggerThreshold: 50, isRunning: false }),
+    });
+    const tip = container.querySelector('[data-testid="task-card-waiting-threshold-task-1"]');
+    expect(tip).not.toBeNull();
+    expect(tip?.textContent).toMatch(/12/);
+    expect(tip?.textContent).toMatch(/50/);
+  });
+
+  it("hides waiting-for-threshold tip when at or above trigger", () => {
+    renderCard({
+      stats: createMockStats({ unanalyzedCount: 50, triggerThreshold: 50 }),
+    });
+    expect(
+      container.querySelector('[data-testid="task-card-waiting-threshold-task-1"]'),
+    ).toBeNull();
   });
 
   it("hides marker stats for project mode", () => {

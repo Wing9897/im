@@ -9,6 +9,7 @@ from server.db.database import Database
 from server.domain.analysis_modes import PARENT_PROJECT_MODE
 from server.queries.batch_stats import sum_queued_message_count
 from server.queries.version_sql import task_version_join
+from server.scheduler.task_schedule_overrides import resolve_trigger_threshold
 
 # Wire serializer ignores hash/key columns; keep them out of list SELECT payloads.
 _EVENT_LIST_COLUMNS = (
@@ -227,6 +228,7 @@ async def fetch_task_analysis_stats(
                 "analyzedCount": analyzed,
                 "unanalyzedCount": unanalyzed,
                 "queuedMessageCount": queued_message_count,
+                "triggerThreshold": await resolve_trigger_threshold(db, task),
             }
         )
     return stats

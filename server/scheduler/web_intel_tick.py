@@ -43,6 +43,7 @@ from server.scheduler.task_schedule_overrides import (
     resolve_batch_message_limit,
     resolve_trigger_threshold,
 )
+from server.scheduler.under_threshold_skip import note_under_threshold_skip
 from server.scheduler.web_intel_batches import (
     complete_web_intel_failure,
     open_processing_batch,
@@ -87,6 +88,14 @@ async def _claim_messages_for_gate(
     effective_threshold = await resolve_trigger_threshold(db, task)
     messages = await fetch_unanalyzed_messages(db, task, limit_override=effective_limit)
     if not messages or len(messages) < effective_threshold:
+        await note_under_threshold_skip(
+            db,
+            task_id=str(task.get("id") or ""),
+            task_name=str(task.get("name") or ""),
+            message_count=len(messages or []),
+            threshold=effective_threshold,
+            source="server.scheduler.web_intel_tick",
+        )
         return None
     batch_id = await create_batch_with_markers(db, task, messages)
     now = utc_now_iso()

@@ -43,7 +43,8 @@
       "web_intel": "网络情报任务 · Agent 多轮搜索",
       "web_intelProgressHint": "Agent 多轮网页搜索写入情报事件（可选来源消息核实）",
       "retryCount": "重试 {count}",
-      "analysisPausedHint": "分析已自动或手动暂停"
+      "analysisPausedHint": "分析已自动或手动暂停",
+      "waitingForThreshold": "等待触发阈值：{count}/{threshold}"
     },
     "detail": {
       "timeRange": "时间范围：{range}",

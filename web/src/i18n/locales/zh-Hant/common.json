@@ -43,7 +43,8 @@
       "web_intel": "網路情報任務 · Agent 多輪搜尋",
       "web_intelProgressHint": "Agent 多輪網頁搜尋寫入情報事件（可選來源訊息核實）",
       "retryCount": "重試 {count}",
-      "analysisPausedHint": "分析已自動或手動暫停"
+      "analysisPausedHint": "分析已自動或手動暫停",
+      "waitingForThreshold": "等待觸發閾值：{count}/{threshold}"
     },
     "detail": {
       "timeRange": "時間範圍：{range}",

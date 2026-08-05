@@ -157,32 +157,48 @@ export const TaskCard = React.memo(function TaskCard({
             ) : null}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-sm text-[11px]">
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-text-muted">{t("tasks.card.unanalyzed")}</span>
-              <span className="tabular-nums font-medium text-text-primary">
-                {stats.unanalyzedCount.toLocaleString()}
-              </span>
+          <>
+            <div className="grid grid-cols-3 gap-sm text-[11px]">
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="text-text-muted">{t("tasks.card.unanalyzed")}</span>
+                <span className="tabular-nums font-medium text-text-primary">
+                  {stats.unanalyzedCount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="text-text-muted" title={t("tasks.card.queuedTitle")}>
+                  {t("tasks.card.queued")}
+                </span>
+                <span
+                  className={`tabular-nums font-medium ${
+                    queuedMessageCount > 0 ? "text-warning" : "text-text-primary"
+                  }`}
+                >
+                  {queuedMessageCount.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="text-text-muted">{t("tasks.card.analyzed")}</span>
+                <span className="tabular-nums font-medium text-text-primary">
+                  {stats.analyzedCount.toLocaleString()}
+                </span>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-text-muted" title={t("tasks.card.queuedTitle")}>
-                {t("tasks.card.queued")}
-              </span>
-              <span
-                className={`tabular-nums font-medium ${
-                  queuedMessageCount > 0 ? "text-warning" : "text-text-primary"
-                }`}
+            {task.isActive &&
+            !stats.isRunning &&
+            stats.unanalyzedCount > 0 &&
+            stats.unanalyzedCount < stats.triggerThreshold ? (
+              <div
+                className="text-[11px] leading-snug text-text-muted"
+                data-testid={`task-card-waiting-threshold-${task.id}`}
               >
-                {queuedMessageCount.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-text-muted">{t("tasks.card.analyzed")}</span>
-              <span className="tabular-nums font-medium text-text-primary">
-                {stats.analyzedCount.toLocaleString()}
-              </span>
-            </div>
-          </div>
+                {t("tasks.card.waitingForThreshold", {
+                  count: stats.unanalyzedCount,
+                  threshold: stats.triggerThreshold,
+                })}
+              </div>
+            ) : null}
+          </>
         )}
 
         {!hideAnalysisStats &&

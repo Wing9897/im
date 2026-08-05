@@ -224,6 +224,9 @@ async def test_paused_analysis_skips_batches(db):
 
 async def test_trigger_threshold_blocks_batch_when_insufficient_messages(db):
     """Threshold and batch limit are independent: high threshold must not fire early."""
+    from server.scheduler.under_threshold_skip import reset_under_threshold_skip_debounce_for_tests
+
+    reset_under_threshold_skip_debounce_for_tests()
     await set_configs(
         db,
         {"analysis_trigger_threshold": "50", "analysis_batch_message_limit": "50"},
@@ -242,6 +245,13 @@ async def test_trigger_threshold_blocks_batch_when_insufficient_messages(db):
         (seed.TASK_LEADERBOARD,),
     )
     assert pending is None
+    skip_log = await db.fetch_one(
+        "SELECT kind, message FROM app_logs WHERE kind = 'analysis.skipped' "
+        "AND message LIKE ? ORDER BY time DESC LIMIT 1",
+        ("%under threshold%",),
+    )
+    assert skip_log is not None
+    assert "analysis.skipped" == skip_log["kind"]
 
 
 async def test_batch_already_claimed_is_not_processed_again(db):
