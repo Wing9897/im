@@ -89,7 +89,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
 | Device-local browser state | UI-only state that must remain per browser／Electron profile stays in localStorage or sessionStorage: locale/theme/background, shell chrome and last path, drafts, view/filter/read state, runtime-log cache, and the stable assistant client-instance id. These are active stores, not migration bridges |
-| Desktop STT / no Whisper | Electron hides mic and disables browser STT direct mode; use text input. Local Whisper / Doubao cloud STT-TTS remain unimplemented adapters only — see [`agent/assistant.md`](./agent/assistant.md) |
+| Desktop STT / browser-only IO | Electron hides mic and disables browser STT direct mode; use text input. Provider ids are hard-cut to `browser` only (no Whisper/Doubao reserved ids); local Whisper / cloud STT-TTS stay out of scope — see [`agent/assistant.md`](./agent/assistant.md) |
 
 ## Intelligence / Events time semantics
 

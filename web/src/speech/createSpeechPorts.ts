@@ -23,8 +23,7 @@ export interface CreateSpeechPortsOptions {
  * Desktop shell can stay running for collectors while the user speaks in a
  * normal browser tab against the same local API.
  *
- * Unimplemented whisper/doubao ids fall back to BrowserStt in the browser only
- * — that fallback is NOT a working Whisper/Doubao path.
+ * Only the browser provider is implemented; unknown / legacy ids use browser adapters.
  */
 export function createSpeechPorts(opts?: CreateSpeechPortsOptions): SpeechPorts {
   const settings = loadVoiceSettings();
@@ -37,29 +36,13 @@ export function createSpeechPorts(opts?: CreateSpeechPortsOptions): SpeechPorts 
   };
 }
 
-function createSttPort(providerId: SttProviderId): SttPort {
+function createSttPort(_providerId: SttProviderId): SttPort {
   if (isElectronDesktop()) {
     return new UnavailableStt();
   }
-  switch (providerId) {
-    case "whisper":
-    case "doubao":
-      // NOT IMPLEMENTED — reserved ids only. Fall back to BrowserStt so callers
-      // do not crash; still unavailable on Electron (handled above).
-      return new BrowserStt();
-    case "browser":
-    default:
-      return new BrowserStt();
-  }
+  return new BrowserStt();
 }
 
-function createTtsPort(providerId: TtsProviderId): TtsPort {
-  switch (providerId) {
-    case "doubao":
-      // NOT IMPLEMENTED — reserved id; fall back to BrowserTts (not a Doubao adapter).
-      return new BrowserTts();
-    case "browser":
-    default:
-      return new BrowserTts();
-  }
+function createTtsPort(_providerId: TtsProviderId): TtsPort {
+  return new BrowserTts();
 }

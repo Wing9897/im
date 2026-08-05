@@ -1,5 +1,5 @@
-/** Reserved TTS providers — only `browser` is implemented in v1. */
-export type TtsProviderId = "browser" | "doubao";
+/** TTS provider ids. Only `browser` is implemented. */
+export type TtsProviderId = "browser";
 
 export interface TtsSpeakOptions {
   lang?: string;

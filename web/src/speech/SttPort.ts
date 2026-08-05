@@ -1,10 +1,7 @@
 /**
- * Reserved STT provider ids.
- * Only `browser` is implemented in v1.
- * `whisper` / `doubao` are type-level placeholders — no adapters yet; do not
- * treat selecting them as a working STT path.
+ * STT provider ids. Only `browser` is implemented.
  */
-export type SttProviderId = "browser" | "whisper" | "doubao";
+export type SttProviderId = "browser";
 
 export type SttEvent =
   | { type: "partial"; text: string }
@@ -16,9 +13,8 @@ export interface SttStartOptions {
 }
 
 /**
- * Speech-to-text port. Agent / chat UI depends only on this surface —
- * a future Whisper/Doubao adapter would plug in here without touching Agent Runtime.
- * Until then, only `BrowserStt` exists; reserved ids must not pretend to be available.
+ * Speech-to-text port. Agent / chat UI depends only on this surface.
+ * Desktop Electron uses ``UnavailableStt`` (honest no-op); browser uses ``BrowserStt``.
  */
 export interface SttPort {
   readonly providerId: SttProviderId;
