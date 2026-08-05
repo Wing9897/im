@@ -3722,6 +3722,8 @@ export interface components {
             unanalyzedCount: number;
             /** Queuedmessagecount */
             queuedMessageCount: number;
+            /** Triggerthreshold */
+            triggerThreshold: number;
         };
         /** TaskConfigBody */
         TaskConfigBody: {

@@ -65,6 +65,24 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         # Schema upgrade gate retired (wipe-only stamp 15).
         ("GET", "/api/v1/system/schema/status", None),
         ("POST", "/api/v1/system/schema/upgrade", {}),
+        # Retired collector accounts surface (sources hard-cut; stay 404).
+        ("GET", "/api/v1/accounts", None),
+        ("GET", "/api/v1/accounts/telegram", None),
+        ("GET", "/api/v1/accounts/discord", None),
+        ("GET", "/api/v1/accounts/rss", None),
+        ("GET", "/api/v1/accounts/http", None),
+        ("GET", "/api/v1/accounts/mqtt", None),
+        ("GET", "/api/v1/accounts/email", None),
+        ("POST", "/api/v1/accounts/refresh-all", {}),
+        ("POST", "/api/v1/accounts/telegram", {}),
+        ("POST", "/api/v1/accounts/discord", {}),
+        ("POST", "/api/v1/accounts/rss", {}),
+        ("POST", "/api/v1/accounts/http", {}),
+        ("POST", "/api/v1/accounts/mqtt", {}),
+        ("POST", "/api/v1/accounts/email", {}),
+        ("GET", "/api/v1/accounts/dead-endpoint-probe", None),
+        ("DELETE", "/api/v1/accounts/dead-endpoint-probe", None),
+        ("POST", "/api/v1/accounts/dead-endpoint-probe/reconnect", {}),
     ]
 
 

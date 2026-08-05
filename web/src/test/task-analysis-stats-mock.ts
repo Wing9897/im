@@ -23,6 +23,7 @@ export function makeTaskAnalysisStats(
     analyzedCount: 0,
     unanalyzedCount: 0,
     queuedMessageCount: 0,
+    triggerThreshold: 50,
     ...overrides,
   };
 }

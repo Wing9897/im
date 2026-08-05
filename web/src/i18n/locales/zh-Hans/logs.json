@@ -56,6 +56,7 @@
     "batchExhausted": "分析批次重试用尽（{maxRetries} 次），待恢复分析后再试：{taskName}（{shortBatch}）— {summary}",
     "batchRetrying": "分析批次将重试（{currentRetry}/{maxRetries}）：{taskName}（{shortBatch}）— {summary}",
     "analysisTrace": "分析追踪：{summary}",
+    "analysisSkippedUnderThreshold": "分析已跳过（未达阈值）：{taskName}（{messageCount}/{threshold}）",
     "schedulerPaused": "分析调度已暂停",
     "schedulerResumed": "分析调度已恢复",
     "retentionCleanup": "保留清理已删除 {deletedTotal} 行",

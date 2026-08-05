@@ -9,6 +9,7 @@ function makeStat(overrides: Partial<TaskAnalysisStats> = {}): TaskAnalysisStats
     unanalyzedCount: 3,
     queuedMessageCount: 2,
     analyzedCount: 10,
+    triggerThreshold: 50,
     ...overrides,
   };
 }
@@ -25,6 +26,7 @@ describe("taskCardStats", () => {
       unanalyzedCount: 3,
       queuedMessageCount: 2,
       analyzedCount: 10,
+      triggerThreshold: 50,
       isRunning: true,
       lastErrorMessage: "LLM timeout",
       retryCount: 2,
@@ -37,6 +39,7 @@ describe("taskCardStats", () => {
       unanalyzedCount: 0,
       queuedMessageCount: 0,
       analyzedCount: 0,
+      triggerThreshold: 50,
       isRunning: false,
       lastErrorMessage: null,
       retryCount: 0,

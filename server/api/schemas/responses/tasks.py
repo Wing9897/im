@@ -190,3 +190,5 @@ class TaskAnalysisStatsResponse(BaseModel):
     analyzedCount: int
     unanalyzedCount: int
     queuedMessageCount: int
+    #: Resolved trigger threshold (task override or global). UI tip when pending < threshold.
+    triggerThreshold: int

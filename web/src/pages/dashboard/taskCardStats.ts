@@ -5,6 +5,7 @@ export const EMPTY_TASK_CARD_STATS: TaskCardStats = {
   unanalyzedCount: 0,
   queuedMessageCount: 0,
   analyzedCount: 0,
+  triggerThreshold: 50,
   isRunning: false,
   lastErrorMessage: null,
   retryCount: 0,
@@ -27,7 +28,8 @@ function statsFieldsEqual(a: TaskAnalysisStats, b: TaskAnalysisStats): boolean {
   return (
     a.unanalyzedCount === b.unanalyzedCount &&
     a.queuedMessageCount === b.queuedMessageCount &&
-    a.analyzedCount === b.analyzedCount
+    a.analyzedCount === b.analyzedCount &&
+    a.triggerThreshold === b.triggerThreshold
   );
 }
 
@@ -59,6 +61,7 @@ export function toTaskCardStats(
     unanalyzedCount: stat.unanalyzedCount,
     queuedMessageCount: stat.queuedMessageCount,
     analyzedCount: stat.analyzedCount,
+    triggerThreshold: stat.triggerThreshold,
     isRunning,
     lastErrorMessage,
     retryCount,

@@ -598,6 +598,9 @@ async def test_stats(client):
                 "unanalyzedCount",
                 "analyzedCount",
                 "queuedMessageCount",
+                "triggerThreshold",
             ],
             "TaskAnalysisStats",
         )
+        assert isinstance(entry["triggerThreshold"], int)
+        assert entry["triggerThreshold"] >= 1

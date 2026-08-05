@@ -11792,6 +11792,10 @@
           "queuedMessageCount": {
             "type": "integer",
             "title": "Queuedmessagecount"
+          },
+          "triggerThreshold": {
+            "type": "integer",
+            "title": "Triggerthreshold"
           }
         },
         "type": "object",
@@ -11799,7 +11803,8 @@
           "taskId",
           "analyzedCount",
           "unanalyzedCount",
-          "queuedMessageCount"
+          "queuedMessageCount",
+          "triggerThreshold"
         ],
         "title": "TaskAnalysisStatsResponse"
       },

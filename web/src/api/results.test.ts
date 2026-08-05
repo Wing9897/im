@@ -300,6 +300,7 @@ describe("results API", () => {
           analyzedCount: 10,
           unanalyzedCount: 3,
           queuedMessageCount: 2,
+          triggerThreshold: 50,
         },
       ];
       vi.mocked(apiClient.get).mockResolvedValue(stats);
