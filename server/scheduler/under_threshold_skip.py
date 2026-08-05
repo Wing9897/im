@@ -44,10 +44,7 @@ async def note_under_threshold_skip(
         level="info",
         category="analysis",
         kind="analysis.skipped",
-        message=(
-            f"Analysis skipped (under threshold): {task_name or task_id} "
-            f"({message_count}/{threshold})"
-        ),
+        message=(f"Analysis skipped (under threshold): {task_name or task_id} ({message_count}/{threshold})"),
         message_key="logs:templates.analysisSkippedUnderThreshold",
         message_params={
             "taskName": task_name or task_id,
