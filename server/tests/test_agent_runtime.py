@@ -323,7 +323,7 @@ async def test_agent_retries_without_json_mode_when_provider_rejects_it(app) -> 
     )
 
     runtime = AgentRuntime(db, mock_llm)
-    with patch("server.agent.runtime.get_config", AsyncMock(return_value="true")):
+    with patch("server.agent.runtime_complete.get_config", AsyncMock(return_value="true")):
         result = await runtime.chat([{"role": "user", "content": "你好"}])
 
     assert "回答" in result["message"] or result["message"]

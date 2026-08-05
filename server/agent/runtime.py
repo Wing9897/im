@@ -2,15 +2,15 @@
 
 Uses a single project-wide JSON protocol (not native provider tools) so Ollama /
 OpenAI-style / Gemini all share one path via ``ConfigurableLlmClient.complete``.
+
+Prompt assembly: ``runtime_prompt``. Completion + json_mode fallback:
+``runtime_complete``. Parse / tool-round helpers remain in sibling modules.
 """
 
 from __future__ import annotations
 
-import json
-import logging
 from collections.abc import AsyncIterator
-from datetime import datetime
-from typing import Any, Protocol
+from typing import Any
 
 from server.agent.channels import AgentChannelId, get_agent_channel
 from server.agent.context_compact import (
@@ -22,101 +22,40 @@ from server.agent.context_compact import (
 from server.agent.context_compact import (
     compact_agent_history,
 )
+from server.agent.runtime_complete import (
+    LlmCompleter,
+    complete_for_agent,
+    resolve_web_search_route_for_runtime,
+)
 from server.agent.runtime_parse import (
     final_event as _final_event,
 )
 from server.agent.runtime_parse import (
     messages_for_channel as _messages_for_channel,
 )
+from server.agent.runtime_prompt import build_system_prompt
 from server.agent.runtime_tool_round import run_tool_round
 from server.agent.session_clock import resolve_conversation_clock
-from server.agent.tools_registry import build_tool_schemas
-from server.agent.web_search_routing import WebSearchRoute, resolve_web_search_route
-from server.analyzer.llm_client import load_agent_llm_config
-from server.config import get_config, get_config_bool, get_config_int
+from server.agent.web_search_routing import WebSearchRoute
+from server.config import get_config, get_config_int
 from server.db.database import Database
 from server.prompts.assistant import (
     AGENT_EMPTY_USER_MESSAGE,
     AGENT_HISTORY_OMIT_NOTICE,
-    AGENT_SYSTEM_PROMPT,
     AGENT_TOOL_ROUNDS_EXHAUSTED,
     AGENT_UNPARSEABLE_REPLY,
-    task_advisor_prompt_note,
-    user_background_prompt_note,
-    web_search_prompt_note,
 )
-from server.prompts.clock import ASSISTANT_CLOCK_NOTE, current_time_prompt_block
-from server.prompts.locale import normalize_ui_locale, output_language_directive
-from server.util import is_openai_json_mode_enabled, new_id
-
-logger = logging.getLogger(__name__)
+from server.prompts.locale import normalize_ui_locale
+from server.util import new_id
 
 MAX_TOOL_ROUNDS = 8
 
-
-class LlmCompleter(Protocol):
-    async def complete(
-        self,
-        messages: list[dict],
-        temperature: float = 0.7,
-        json_mode: bool = False,
-        max_output_tokens: int | None = None,
-        *,
-        native_web_search: str | None = None,
-    ) -> dict: ...
-
-    async def close(self) -> None: ...
-
-
-def _tools_prompt_block(
-    *,
-    inject_web_search_tool: bool,
-    task_advisor_enabled: bool = False,
-    calendar_writes_enabled: bool = True,
-) -> str:
-    return json.dumps(
-        build_tool_schemas(
-            web_search_enabled=inject_web_search_tool,
-            task_advisor_enabled=task_advisor_enabled,
-            calendar_writes_enabled=calendar_writes_enabled,
-        ),
-        ensure_ascii=False,
-        indent=2,
-    )
-
-
-def build_system_prompt(
-    *,
-    now: datetime | None = None,
-    locale: str | None = None,
-    web_search_enabled: bool = True,
-    web_search_provider: str = "duckduckgo",
-    web_search_mode: str | None = None,
-    inject_web_search_tool: bool | None = None,
-    task_advisor_enabled: bool = False,
-    calendar_writes_enabled: bool = True,
-    user_background: str | None = None,
-    base_prompt: str | None = None,
-) -> str:
-    inject_tool = web_search_enabled if inject_web_search_tool is None else inject_web_search_tool
-    return (
-        (base_prompt if base_prompt is not None else AGENT_SYSTEM_PROMPT)
-        + current_time_prompt_block(now, authority_note=ASSISTANT_CLOCK_NOTE)
-        + user_background_prompt_note(user_background)
-        + web_search_prompt_note(
-            web_search_enabled=web_search_enabled,
-            provider=web_search_provider,
-            mode=web_search_mode,
-        )
-        + task_advisor_prompt_note(task_advisor_enabled=task_advisor_enabled)
-        + _tools_prompt_block(
-            inject_web_search_tool=inject_tool,
-            task_advisor_enabled=task_advisor_enabled,
-            calendar_writes_enabled=calendar_writes_enabled,
-        )
-        + "\n\n"
-        + output_language_directive(normalize_ui_locale(locale))
-    )
+__all__ = [
+    "AgentRuntime",
+    "LlmCompleter",
+    "MAX_TOOL_ROUNDS",
+    "build_system_prompt",
+]
 
 
 class AgentRuntime:
@@ -135,27 +74,11 @@ class AgentRuntime:
         self.max_tool_rounds = max_tool_rounds
         self.broadcaster = broadcaster
 
-    async def _prefer_json_mode(self) -> bool:
-        """Match analysis engine: Ollama always uses format=json; others follow openai_json_mode."""
-        provider = getattr(self.llm, "provider", None)
-        if provider == "ollama":
-            return True
-        return is_openai_json_mode_enabled(await get_config(self.db, "openai_json_mode"))
-
     async def _resolve_web_search_route(self, *, force_enabled: bool = False) -> WebSearchRoute:
-        web_enabled = True if force_enabled else await get_config_bool(self.db, "assistant_web_search_enabled")
-        setting = await get_config(self.db, "web_search_provider")
-        llm_cfg = await load_agent_llm_config(self.db)
-        # Prefer live client strings when set; ignore MagicMock auto-attrs.
-        live_provider = getattr(self.llm, "provider", None)
-        live_base = getattr(self.llm, "base_url", None)
-        llm_provider = live_provider if isinstance(live_provider, str) and live_provider else llm_cfg["provider"]
-        llm_base_url = live_base if isinstance(live_base, str) and live_base else llm_cfg["base_url"]
-        return resolve_web_search_route(
-            web_search_enabled=web_enabled,
-            web_search_provider=setting,
-            llm_provider=str(llm_provider),
-            llm_base_url=str(llm_base_url or ""),
+        return await resolve_web_search_route_for_runtime(
+            self.db,
+            self.llm,
+            force_enabled=force_enabled,
         )
 
     async def _tool_context(
@@ -195,51 +118,12 @@ class AgentRuntime:
         *,
         native_web_search: str | None = None,
     ) -> dict[str, Any]:
-        """Complete with optional API json_mode; fall back if the provider rejects it.
-
-        Settings 「AI 測試」uses json_mode=False. Forcing json_mode=True breaks many
-        OpenAI-compatible endpoints that do not support response_format=json_object.
-        """
-        from server.web_search.execution import WebSearchExecutionService
-
-        prefer = await self._prefer_json_mode()
-        service = WebSearchExecutionService()
-        try:
-            if native_web_search in {"openai", "gemini"}:
-                return await service.native_complete(
-                    self.llm,
-                    history,
-                    native_kind=native_web_search,
-                    json_mode=prefer,
-                    temperature=0.2,
-                )
-            return await self.llm.complete(
-                history,
-                temperature=0.2,
-                json_mode=prefer,
-                native_web_search=None,
-            )
-        except Exception as exc:  # noqa: BLE001 — retry path for provider capability gaps
-            if not prefer:
-                raise
-            logger.warning(
-                "Agent LLM json_mode failed (%s); retrying without response_format/format=json",
-                exc,
-            )
-            if native_web_search in {"openai", "gemini"}:
-                return await service.native_complete(
-                    self.llm,
-                    history,
-                    native_kind=native_web_search,
-                    json_mode=False,
-                    temperature=0.2,
-                )
-            return await self.llm.complete(
-                history,
-                temperature=0.2,
-                json_mode=False,
-                native_web_search=None,
-            )
+        return await complete_for_agent(
+            self.db,
+            self.llm,
+            history,
+            native_web_search=native_web_search,
+        )
 
     async def iter_chat_events(
         self,
