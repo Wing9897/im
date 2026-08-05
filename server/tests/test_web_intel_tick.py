@@ -462,7 +462,10 @@ async def test_scheduler_dispatch_calls_web_intel_tick(app, monkeypatch: pytest.
     async def _fake_tick(**kwargs: Any) -> None:
         called.append(str(kwargs.get("task_id")))
 
-    monkeypatch.setattr("server.scheduler.manager.execute_web_intel_tick", _fake_tick)
+    monkeypatch.setattr(
+        "server.scheduler.manager_pipelines.execute_web_intel_tick",
+        _fake_tick,
+    )
 
     manager = SchedulerManager(db, analysis_engine=None, broadcaster=SseBroadcaster())
     await manager._execute_scheduled(task_id)

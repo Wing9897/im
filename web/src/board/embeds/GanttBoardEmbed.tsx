@@ -10,7 +10,6 @@ import {
   normalizeGanttActivities,
   normalizeGanttEventActivities,
   type GanttActivity,
-  type GanttEventActivityRow,
 } from "./ganttBoardModel";
 
 export type { GanttActivity, GanttEventActivityRow, GanttAxis, GanttBarLayout } from "./ganttBoardModel";
