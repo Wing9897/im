@@ -61,8 +61,8 @@ function notifyVoiceSettingsChanged(): void {
   window.dispatchEvent(new Event(VOICE_SETTINGS_CHANGED_EVENT));
 }
 
-const STT_PROVIDERS: readonly SttProviderId[] = ["browser", "whisper", "doubao"];
-const TTS_PROVIDERS: readonly TtsProviderId[] = ["browser", "doubao"];
+const STT_PROVIDERS: readonly SttProviderId[] = ["browser"];
+const TTS_PROVIDERS: readonly TtsProviderId[] = ["browser"];
 
 let cachedSettings: VoiceSettings | null = null;
 let hydratePromise: Promise<VoiceSettings> | null = null;
@@ -184,8 +184,6 @@ export function getSttProviderOptions(
   t: Translate = i18n.t.bind(i18n),
 ): ReadonlyArray<{ id: SttProviderId; label: string; available: boolean }> {
   // Electron shell cannot use browser cloud STT; keep the option visible but disabled.
-  // Unimplemented providers (whisper / doubao) stay in the type union but are omitted
-  // from settings options so users never see unfinished choices.
   const browserAvailable = !isElectronDesktop();
   return [
     {
@@ -199,7 +197,6 @@ export function getSttProviderOptions(
 export function getTtsProviderOptions(
   t: Translate = i18n.t.bind(i18n),
 ): ReadonlyArray<{ id: TtsProviderId; label: string; available: boolean }> {
-  // Unimplemented providers (doubao) stay in the type union but are omitted from UI.
   return [
     { id: "browser", label: String(t("settings:voice.ttsOptions.browser")), available: true },
   ];

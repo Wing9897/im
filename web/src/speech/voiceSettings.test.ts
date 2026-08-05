@@ -39,15 +39,12 @@ describe("voiceSettings", () => {
     expect(browser?.available).toBe(false);
   });
 
-  it("hides unimplemented STT/TTS providers from settings options", () => {
+  it("exposes only the implemented browser STT/TTS providers", () => {
     const sttIds = getSttProviderOptions().map((o) => o.id);
     expect(sttIds).toEqual(["browser"]);
-    expect(sttIds).not.toContain("whisper");
-    expect(sttIds).not.toContain("doubao");
 
     const ttsIds = getTtsProviderOptions().map((o) => o.id);
     expect(ttsIds).toEqual(["browser"]);
-    expect(ttsIds).not.toContain("doubao");
   });
 
   it("returns defaults before hydration", () => {
@@ -84,7 +81,17 @@ describe("voiceSettings", () => {
     expect(DEFAULT_VOICE_SETTINGS.defaultWorksetId).toBe("__user__");
   });
 
-  it("falls back to defaults for unknown provider ids", () => {
+  it("falls back to defaults for unknown / legacy reserved provider ids", () => {
+    expect(
+      normalizeVoiceSettings({
+        sttProvider: "whisper",
+        ttsProvider: "doubao",
+        ttsEnabled: true,
+      } as never),
+    ).toMatchObject({
+      sttProvider: "browser",
+      ttsProvider: "browser",
+    });
     expect(
       normalizeVoiceSettings({
         sttProvider: "not-real",

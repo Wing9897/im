@@ -19,17 +19,6 @@ describe("createSpeechPorts", () => {
     expect(ports.tts.providerId).toBe("browser");
   });
 
-  it("falls back to browser for reserved providers", () => {
-    isElectronDesktop.mockReturnValue(false);
-    const ports = createSpeechPorts({
-      sttProvider: "whisper",
-      ttsProvider: "doubao",
-    });
-    // Reserved ids are unimplemented — fallback is BrowserStt/BrowserTts, not a real adapter.
-    expect(ports.stt.providerId).toBe("browser");
-    expect(ports.tts.providerId).toBe("browser");
-  });
-
   it("uses UnavailableStt on Electron so desktop never opens Web Speech", async () => {
     isElectronDesktop.mockReturnValue(true);
     const ports = createSpeechPorts({

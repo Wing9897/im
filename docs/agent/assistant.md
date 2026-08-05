@@ -184,7 +184,7 @@ Runtime 最多约 8 轮 tool 调用；模型协议为统一 JSON（非各厂商�
 
 ## 语音是 IO，不是 Agent
 
-Agent／日历只处理文字。STT→草稿；PTT 松开送出识别文字（空识别不送）。TTS 读最终 `message`。v1 provider＝`browser`。Electron 桌面壳不跑浏览器 STT（`UnavailableStt`）。
+Agent／日历只处理文字。STT→草稿；PTT 松开送出识别文字（空识别不送）。TTS 读最终 `message`。Provider id hard-cut 为 `browser`（无 Whisper／Doubao 占位 id；legacy 存储值归一为 browser）。Electron 桌面壳不跑浏览器 STT（`UnavailableStt`）。
 
 ## 明确不做（本阶段）
 

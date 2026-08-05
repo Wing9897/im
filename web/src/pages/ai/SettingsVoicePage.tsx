@@ -30,7 +30,7 @@ import { SettingsContentCard, SettingsFieldGroup } from "../settings/SettingsSha
 
 /**
  * Voice IO settings for the assistant (SQLite via /api/v1/ui-prefs/assistant/voice-io).
- * Only browser STT/TTS are wired in v1; reserved providers are omitted from the selects.
+ * Only the browser STT/TTS provider is available.
  */
 export function SettingsVoicePage() {
   const { t } = useTranslation(["settings", "common"]);
