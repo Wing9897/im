@@ -60,7 +60,7 @@ export interface RotateSecretsResult {
   secretsReady: boolean;
   scrubbed: {
     system_config: number;
-    accounts: number;
+    sources: number;
     stale_connected?: number;
     actions: number;
   };

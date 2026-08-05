@@ -520,7 +520,7 @@
     "emptyNoTasksDescription": "先建立至少一个排行榜型任务，系统完成分析后，这里才会出现主题排行。",
     "emptyFilteredDescription": "目前选取的任务尚未产生排行榜资料，或已被筛选到没有结果。",
     "emptyNoResultsDescription": "等分析批次完成后，这里会整理出最热门的主题与分数。",
-    "emptyNoTasksHint": "如果你已经有账号和频道，下一步通常是到任务设定新增排行榜任务。",
+    "emptyNoTasksHint": "如果你已经有来源和频道，下一步通常是到任务设定新增排行榜任务。",
     "emptyFilteredHint": "你可以先切回全部排行榜，确认是否只有目前任务暂时没有资料。",
     "emptyNoResultsHint": "排行榜需要先有成功完成的 leaderboard 分析批次。",
     "goToTasks": "前往任务设定",
@@ -702,7 +702,7 @@
     },
     "sources": {
       "title": "来源状态",
-      "description": "帐号连线"
+      "description": "来源连线"
     },
     "logs": {
       "title": "系统日志",
@@ -729,7 +729,7 @@
     },
     "collector": {
       "title": "收集器",
-      "shortDescription": "各平台帐号的讯息收集与连线重试，将原始讯息写入数据库，供监控墙与后续分析使用。"
+      "shortDescription": "各平台来源的讯息收集与连线重试，将原始讯息写入数据库，供监控墙与后续分析使用。"
     },
     "analysisBatch": {
       "title": "分析批次",
@@ -820,7 +820,7 @@
     "platformFilterAria": "平台过滤",
     "platformLabel": "平台",
     "platformHelper": "先选平台缩小范围；大型列表可点 ▶ 展开。",
-    "searchPlaceholder": "搜索平台、账号或频道…",
+    "searchPlaceholder": "搜索平台、来源或频道…",
     "searchAria": "搜索频道",
     "selectAll": "全选",
     "clear": "清空",
@@ -830,7 +830,7 @@
     "noMatch": "找不到符合的频道",
     "emptyDefault": "尚无可用频道",
     "emptyForPlatform": "此平台尚无可用频道",
-    "emptyNeedSources": "尚无可用频道，请先到来源管理新增账号",
+    "emptyNeedSources": "尚无可用频道，请先到来源管理新增来源",
     "summaryMonitorScope": "监控范围",
     "taskTitle": "选择分析来源频道",
     "taskSummary": "分析来源",
@@ -1157,9 +1157,9 @@
   "secretsBroken": {
     "dialogAria": "加密密钥不匹配",
     "title": "加密密钥不匹配",
-    "body": "本机加密密钥无法解密已存储的 API 密钥与账号凭据。请输入管理员密码以轮换密钥并继续；任务与消息将保留。",
+    "body": "本机加密密钥无法解密已存储的 API 密钥与信源凭据。请输入管理员密码以轮换密钥并继续；任务与消息将保留。",
     "infoTitle": "将如何恢复",
-    "infoBody": "任务、消息与管理员账号会保留。无法解密的机密（LLM API 密钥、信源凭据、动作密钥）会被清空，需重新填写。Telegram 会话文件会一并清除，账号需重新登录。",
+    "infoBody": "任务、消息与管理员账号会保留。无法解密的机密（LLM API 密钥、信源凭据、动作密钥）会被清空，需重新填写。Telegram 会话文件会一并清除，来源需重新登录。",
     "fullResetHint": "若需要彻底清空全部数据：恢复并登录后，请到「设置 → 数据」执行完全重置。",
     "techDetails": "技术错误详情（展开）",
     "recover": "恢复并进入",

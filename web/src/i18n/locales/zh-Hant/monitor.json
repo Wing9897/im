@@ -29,18 +29,18 @@
     "filteredTitle": "目前沒有符合條件的訊息",
     "noSourcesTitle": "尚未開始接收實時訊息",
     "noneTitle": "目前還沒有訊息",
-    "filteredDescription": "目前的帳號、頻道、時段或搜尋條件把訊息全部篩掉了。",
+    "filteredDescription": "目前的來源、頻道、時段或搜尋條件把訊息全部篩掉了。",
     "noSourcesDescription": "先到來源管理新增並連線來源，之後這裡才會開始顯示收到的訊息。",
     "noneDescription": "監控已就緒，但目前資料庫裡還沒有可顯示的訊息。等待新訊息進來後，列表會自動更新。",
     "filteredHint": "清除篩選後可以快速確認是不是條件太嚴格，而不是系統沒有在收訊。",
     "noSourcesHint": "如果已經有來源但仍沒有訊息，也請確認任務與頻道設定是否已完成。",
-    "noneHint": "若長時間沒有新資料，可檢查帳號連線狀態與頻道設定。"
+    "noneHint": "若長時間沒有新資料，可檢查來源連線狀態與頻道設定。"
   },
   "cta": {
     "clearFilters": "清除篩選",
-    "goToSources": "前往帳號管理",
+    "goToSources": "前往來源管理",
     "viewTasks": "查看任務設定",
-    "viewSourceStatus": "查看帳號狀態"
+    "viewSourceStatus": "查看來源狀態"
   },
   "sections": {
     "wall": "訊息牆",

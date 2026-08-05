@@ -86,7 +86,7 @@
   "empty": {
     "noneTitle": "目前還沒有系統日誌",
     "filteredTitle": "沒有符合條件的日誌",
-    "noneDescription": "啟動分析、帳號連線、收集器狀態變化或前端錯誤發生後，這裡就會開始累積紀錄。",
+    "noneDescription": "啟動分析、來源連線、收集器狀態變化或前端錯誤發生後，這裡就會開始累積紀錄。",
     "filteredDescriptionMore": "已載入 {summary} 筆日誌，但目前搜尋或篩選尚未命中這批資料。",
     "filteredDescriptionAll": "已載入 {count} 筆日誌，但目前搜尋或篩選把它們全部隱藏了。",
     "filteredDescriptionNone": "目前條件下沒有可顯示的日誌紀錄。",
