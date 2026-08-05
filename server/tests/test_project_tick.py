@@ -431,7 +431,7 @@ async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> N
             AsyncMock(return_value=mock_llm),
         ),
         patch.object(AgentRuntime, "chat", _hang_chat),
-        patch("server.scheduler.project_tick_drain.get_config_int", side_effect=_config_int),
+        patch("server.scheduler.project_tick_wave.get_config_int", side_effect=_config_int),
     ):
         await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-timeout")
 

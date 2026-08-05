@@ -21,20 +21,15 @@ from apscheduler.triggers.interval import IntervalTrigger
 
 from server.config import get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import (
-    SCHEDULABLE_ANALYSIS_MODES,
-    get_analysis_mode_spec,
-)
+from server.domain.analysis_modes import SCHEDULABLE_ANALYSIS_MODES
 from server.domain.schedule import (
     ScheduleValidationError,
     may_register_trigger,
     trigger_from_rrule,
 )
-from server.scheduler.batch import execute_batch
-from server.scheduler.project_tick import execute_project_tick
+from server.scheduler.manager_pipelines import run_scheduled_pipeline
 from server.scheduler.recovery import recover_orphan_batches
 from server.scheduler.retention import retention_timer
-from server.scheduler.web_intel_tick import execute_web_intel_tick
 from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
@@ -208,37 +203,15 @@ class SchedulerManager:
 
     async def _execute_scheduled(self, task_id: str) -> None:
         try:
-            row = await self._db.fetch_one(
-                "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
-                (task_id,),
+            await run_scheduled_pipeline(
+                db=self._db,
+                broadcaster=self._broadcaster,
+                task_id=task_id,
+                analysis_engine=self._analysis_engine,
+                action_executor=self._action_executor,
+                analysis_paused=self._paused,
+                scheduler=self,
             )
-            mode = str((row or {}).get("analysis_mode") or "")
-            spec = get_analysis_mode_spec(mode)
-            if spec is not None and spec.pipeline == "project_tick":
-                await execute_project_tick(
-                    db=self._db,
-                    broadcaster=self._broadcaster,
-                    task_id=task_id,
-                    analysis_paused=self._paused,
-                )
-            elif spec is not None and spec.pipeline == "web_intel_tick":
-                await execute_web_intel_tick(
-                    db=self._db,
-                    broadcaster=self._broadcaster,
-                    task_id=task_id,
-                    analysis_paused=self._paused,
-                    scheduler=self,
-                )
-            else:
-                await execute_batch(
-                    db=self._db,
-                    broadcaster=self._broadcaster,
-                    task_id=task_id,
-                    analysis_engine=self._analysis_engine,
-                    action_executor=self._action_executor,
-                    analysis_paused=self._paused,
-                    scheduler=self,
-                )
         except asyncio.CancelledError:
             raise
         except Exception:  # noqa: BLE001 — capacity must always be released
