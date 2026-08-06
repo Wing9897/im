@@ -1,38 +1,30 @@
-import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import type { TrackableItem } from "../../api/items";
 import { UNCATEGORIZED_CATEGORY_ID } from "../../domain/items/categoryAggregates";
+import { buildItemsEditPath, buildItemsNewPath } from "./itemsNavigation";
 
 type UseItemsDeepLinksArgs = {
   loading: boolean;
   items: readonly TrackableItem[];
   listLayer: boolean;
-  setEditing: Dispatch<SetStateAction<TrackableItem | null | "new">>;
-  setCreateWorksetId: Dispatch<SetStateAction<string | null>>;
 };
 
 /**
- * ItemsPage URL deep-links:
+ * ItemsPage URL deep-links (legacy query params → route pages):
  * - `?category=` → category list route
- * - `?itemId=` → open item editor (optionally via category first)
- * - `?new=1&worksetId=` → open create dialog
+ * - `?itemId=` → `/items/:id/edit` (legacy `itemDateKind` ignored / stripped)
+ * - `?new=1&worksetId=` → `/items/new?worksetId=`
  */
-export function useItemsDeepLinks({
-  loading,
-  items,
-  listLayer,
-  setEditing,
-  setCreateWorksetId,
-}: UseItemsDeepLinksArgs) {
+export function useItemsDeepLinks({ loading, items, listLayer }: UseItemsDeepLinksArgs) {
   const navigate = useNavigate();
+  const { categoryId: routeCategoryId } = useParams<{ categoryId?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const deepLinkHandled = useRef<string | null>(null);
   const createLinkHandled = useRef(false);
 
-  // Support /items?category=… → list layer
   useEffect(() => {
-    // listLayer implies a routeCategoryId already; skip query rewrite when nested.
     if (listLayer) return;
     const q = searchParams.get("category")?.trim();
     if (!q) return;
@@ -44,7 +36,6 @@ export function useItemsDeepLinks({
     });
   }, [listLayer, searchParams, navigate]);
 
-  // Deep-link from Timeline: /items?itemId=…&itemDateKind=purchased|expires|remind
   useEffect(() => {
     if (loading) return;
     const itemId = searchParams.get("itemId")?.trim();
@@ -56,23 +47,28 @@ export function useItemsDeepLinks({
     const match = items.find((row) => row.id === itemId);
     if (!match) return;
     deepLinkHandled.current = itemId;
-    // If on type layer, jump into the item's category list first.
     if (!listLayer) {
       const catId = match.categoryId ?? UNCATEGORIZED_CATEGORY_ID;
       const next = new URLSearchParams(searchParams);
+      // Legacy Timeline bookmarks may still carry itemDateKind; drop it early.
+      next.delete("itemDateKind");
       navigate(`/items/category/${encodeURIComponent(catId)}?${next.toString()}`, {
         replace: true,
       });
       return;
     }
-    setEditing(match);
     const next = new URLSearchParams(searchParams);
     next.delete("itemId");
     next.delete("itemDateKind");
     setSearchParams(next, { replace: true });
-  }, [loading, items, searchParams, setSearchParams, listLayer, navigate, setEditing]);
+    navigate(
+      buildItemsEditPath(itemId, {
+        categoryId: routeCategoryId ?? match.categoryId ?? UNCATEGORIZED_CATEGORY_ID,
+      }),
+      { replace: true },
+    );
+  }, [loading, items, searchParams, setSearchParams, listLayer, navigate, routeCategoryId]);
 
-  // Deep-link from workset detail: /items?new=1&worksetId=…
   useEffect(() => {
     if (loading) return;
     const wantsNew = searchParams.get("new") === "1";
@@ -82,12 +78,12 @@ export function useItemsDeepLinks({
     }
     if (createLinkHandled.current) return;
     createLinkHandled.current = true;
-    const wid = searchParams.get("worksetId")?.trim() || null;
-    setCreateWorksetId(wid);
-    setEditing("new");
-    const next = new URLSearchParams(searchParams);
-    next.delete("new");
-    next.delete("worksetId");
-    setSearchParams(next, { replace: true });
-  }, [loading, searchParams, setSearchParams, setCreateWorksetId, setEditing]);
+    const wid = searchParams.get("worksetId")?.trim();
+    const cat =
+      searchParams.get("categoryId")?.trim() ||
+      (listLayer ? routeCategoryId?.trim() : null) ||
+      null;
+    setSearchParams(new URLSearchParams(), { replace: true });
+    navigate(buildItemsNewPath({ categoryId: cat, worksetId: wid }), { replace: true });
+  }, [loading, searchParams, setSearchParams, navigate, listLayer, routeCategoryId]);
 }

@@ -456,6 +456,22 @@
               ],
               "title": "Workset Id"
             }
+          },
+          {
+            "name": "item_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
+            }
           }
         ],
         "responses": {
@@ -8643,6 +8659,18 @@
             ],
             "title": "Parenttaskid",
             "description": "Optional project parent for nested recurring children"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid",
+            "description": "Optional parent trackable item: this recurring calendar belongs to the inventory item (not a sub-event of another event)"
           }
         },
         "additionalProperties": false,
@@ -12028,9 +12056,8 @@
                 "enum": [
                   "leaderboard",
                   "intel_event",
-                  "web_intel",
                   "recurring",
-                  "project"
+                  "agent"
                 ]
               },
               {
@@ -12179,6 +12206,110 @@
               }
             ],
             "title": "Worksetid"
+          },
+          "triggerMode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "schedule",
+                  "message_cursor",
+                  "message_threshold"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggermode"
+          },
+          "capCalendarRead": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capcalendarread"
+          },
+          "capCalendarWrites": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capcalendarwrites"
+          },
+          "capWebSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capwebsearch"
+          },
+          "capForceWebSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capforcewebsearch"
+          },
+          "capReadAnalysisEvents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capreadanalysisevents"
+          },
+          "capReadItems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capreaditems"
+          },
+          "outputCalendar": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputcalendar"
+          },
+          "outputAnalysisEvents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputanalysisevents"
           }
         },
         "additionalProperties": false,
@@ -12270,9 +12401,8 @@
                 "enum": [
                   "leaderboard",
                   "intel_event",
-                  "web_intel",
                   "recurring",
-                  "project"
+                  "agent"
                 ]
               },
               {
@@ -12324,6 +12454,105 @@
               }
             ],
             "title": "Includeintimeline"
+          },
+          "triggerMode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Triggermode"
+          },
+          "capCalendarRead": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capcalendarread"
+          },
+          "capCalendarWrites": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capcalendarwrites"
+          },
+          "capWebSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capwebsearch"
+          },
+          "capForceWebSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capforcewebsearch"
+          },
+          "capReadAnalysisEvents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capreadanalysisevents"
+          },
+          "capReadItems": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capreaditems"
+          },
+          "outputCalendar": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputcalendar"
+          },
+          "outputAnalysisEvents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outputanalysisevents"
           }
         },
         "type": "object",
@@ -12366,9 +12595,8 @@
             "enum": [
               "leaderboard",
               "intel_event",
-              "web_intel",
               "recurring",
-              "project"
+              "agent"
             ],
             "title": "Analysismode"
           },
@@ -12421,6 +12649,17 @@
               }
             ],
             "title": "Worksetid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
           },
           "projectWaveIntervalSeconds": {
             "anyOf": [
@@ -12476,6 +12715,51 @@
               }
             ],
             "title": "Analysisstrategymode"
+          },
+          "triggerMode": {
+            "type": "string",
+            "title": "Triggermode",
+            "default": "schedule"
+          },
+          "capCalendarRead": {
+            "type": "boolean",
+            "title": "Capcalendarread",
+            "default": true
+          },
+          "capCalendarWrites": {
+            "type": "boolean",
+            "title": "Capcalendarwrites",
+            "default": false
+          },
+          "capWebSearch": {
+            "type": "boolean",
+            "title": "Capwebsearch",
+            "default": false
+          },
+          "capForceWebSearch": {
+            "type": "boolean",
+            "title": "Capforcewebsearch",
+            "default": false
+          },
+          "capReadAnalysisEvents": {
+            "type": "boolean",
+            "title": "Capreadanalysisevents",
+            "default": true
+          },
+          "capReadItems": {
+            "type": "boolean",
+            "title": "Capreaditems",
+            "default": true
+          },
+          "outputCalendar": {
+            "type": "boolean",
+            "title": "Outputcalendar",
+            "default": false
+          },
+          "outputAnalysisEvents": {
+            "type": "boolean",
+            "title": "Outputanalysisevents",
+            "default": false
           },
           "createdAt": {
             "anyOf": [
@@ -12749,6 +13033,17 @@
               }
             ],
             "title": "Parenttaskid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
           }
         },
         "type": "object",

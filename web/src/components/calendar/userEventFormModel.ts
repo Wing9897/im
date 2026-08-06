@@ -25,7 +25,7 @@ export type UserEventFormValues = {
   isAllDay: boolean;
   /** Optional remind-N-days-before-start; empty string = unset. */
   remindBeforeDays: string;
-  /** Optional parent trackable item id (child calendar). */
+  /** Optional parent trackable item id (linked calendar). */
   itemId: string;
   /** RRULE when ``kind === "recurring"``. */
   rrule: string;

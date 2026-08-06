@@ -100,7 +100,7 @@ export function useTaskAnalysisStats(
           inEventCycle && newUnanalyzed === preEventCountRef.current;
 
         // Retry only when there is unanalyzed work that might still be committing.
-        // web_intel (and similar) leave unanalyzed at 0 — retrying only multiplies
+        // agent ticks leave unanalyzed at 0 — retrying only multiplies
         // /results/stats traffic with no benefit.
         if (stale && newUnanalyzed > 0 && retryCountRef.current < MAX_RETRIES) {
           // Data unchanged — schedule a retry and leave state as-is.

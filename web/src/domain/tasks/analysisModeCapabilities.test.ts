@@ -4,50 +4,53 @@ import {
   ANALYSIS_EVENTS_MODES,
   ANALYSIS_MODE_CAPABILITIES,
   ANALYSIS_MODE_ORDER,
-  analysisModeIsWebIntel,
+  analysisModeIsAgent,
   analysisModeRequiresChannels,
   analysisModeShowsOptionalChannels,
   isAnalysisEventsMode,
   isTimelineAssignableAnalysisMode,
-  webIntelMessageGateActive,
+  taskWritesAnalysisEvents,
 } from "./analysisModeCapabilities";
 
-describe("analysisModeCapabilities — web_intel / finding modes", () => {
-  it("orders web_intel among the five product modes", () => {
+describe("analysisModeCapabilities — agent / finding modes", () => {
+  it("orders agent among the four product modes", () => {
     expect(ANALYSIS_MODE_ORDER).toEqual([
       "leaderboard",
       "intel_event",
-      "web_intel",
       "recurring",
-      "project",
+      "agent",
     ]);
   });
 
-  it("treats intel_event + web_intel as analysis_events (Intelligence / Timeline / Board)", () => {
-    expect(ANALYSIS_EVENTS_MODES).toEqual(["intel_event", "web_intel"]);
+  it("treats intel_event + agent as analysis_events (Intelligence / Timeline / Board)", () => {
+    expect(ANALYSIS_EVENTS_MODES).toEqual(["intel_event", "agent"]);
     expect(isAnalysisEventsMode("intel_event")).toBe(true);
-    expect(isAnalysisEventsMode("web_intel")).toBe(true);
+    expect(isAnalysisEventsMode("agent")).toBe(true);
     expect(isAnalysisEventsMode("leaderboard")).toBe(false);
     expect(isAnalysisEventsMode("recurring")).toBe(false);
   });
 
-  it("marks web_intel as AI + schedulable + timeline-owning without message batches", () => {
-    expect(ANALYSIS_MODE_CAPABILITIES.web_intel).toEqual({
+  it("marks agent as AI + schedulable + timeline-owning without message batches", () => {
+    expect(ANALYSIS_MODE_CAPABILITIES.agent).toEqual({
       ai: true,
       schedulable: true,
       messageBatch: false,
       timelineOwning: true,
-      pipeline: "web_intel_tick",
+      pipeline: "agent_tick",
     });
-    expect(analysisModeIsWebIntel("web_intel")).toBe(true);
-    expect(analysisModeRequiresChannels("web_intel")).toBe(false);
-    expect(analysisModeShowsOptionalChannels("web_intel")).toBe(true);
-    expect(isTimelineAssignableAnalysisMode("web_intel")).toBe(true);
+    expect(analysisModeIsAgent("agent")).toBe(true);
+    expect(analysisModeRequiresChannels("agent")).toBe(false);
+    expect(analysisModeShowsOptionalChannels("agent")).toBe(true);
+    expect(isTimelineAssignableAnalysisMode("agent")).toBe(true);
   });
 
-  it("treats bound channels as web_intel message-gate without flipping messageBatch", () => {
-    expect(webIntelMessageGateActive("web_intel", [])).toBe(false);
-    expect(webIntelMessageGateActive("web_intel", ["ch-1"])).toBe(true);
-    expect(webIntelMessageGateActive("intel_event", ["ch-1"])).toBe(false);
+  it("gates intelligence refresh on agent outputAnalysisEvents", () => {
+    expect(taskWritesAnalysisEvents({ analysisMode: "intel_event" })).toBe(true);
+    expect(
+      taskWritesAnalysisEvents({ analysisMode: "agent", outputAnalysisEvents: true }),
+    ).toBe(true);
+    expect(
+      taskWritesAnalysisEvents({ analysisMode: "agent", outputAnalysisEvents: false }),
+    ).toBe(false);
   });
 });

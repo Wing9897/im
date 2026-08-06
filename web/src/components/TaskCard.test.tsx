@@ -154,21 +154,21 @@ describe("TaskCard", () => {
     expect(container.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
   });
 
-  it("shows web_intel avatar and card meta without message-batch stats", () => {
+  it("shows agent avatar and card meta without message-batch stats", () => {
     renderCard({
       task: createMockTask({
-        analysisMode: "web_intel",
+        analysisMode: "agent",
+        outputAnalysisEvents: true,
         webSearchQuery: "OpenAI pricing",
         channelIds: [],
       }),
       stats: createMockStats({ unanalyzedCount: 9, analyzedCount: 3 }),
     });
 
-    expect(container.querySelector('[data-testid="ai-staff-avatar-web_intel"]')).not.toBeNull();
-    expect(container.textContent).toContain("網路情報任務");
+    expect(container.querySelector('[data-testid="ai-staff-avatar-agent"]')).not.toBeNull();
+    expect(container.textContent).toContain("Agent 任務");
     // webSearchQuery is editor/seed metadata only — TaskCard does not surface it.
     expect(container.textContent).not.toContain("OpenAI pricing");
-    expect(container.textContent).toContain("Agent 多輪網頁搜尋");
     expect(container.textContent).not.toContain("待分析");
     expect(container.textContent).not.toContain("個頻道");
   });
@@ -278,13 +278,13 @@ describe("TaskCard", () => {
     ).toBeNull();
   });
 
-  it("hides marker stats for project mode", () => {
+  it("hides marker stats for agent mode", () => {
     renderCard({
-      task: createMockTask({ analysisMode: "project", name: "Proj" }),
+      task: createMockTask({ analysisMode: "agent", name: "Proj", outputCalendar: true }),
       stats: createMockStats({ unanalyzedCount: 3852, analyzedCount: 0 }),
     });
     expect(container.querySelector('[data-testid="task-card-schedule-hint-task-1"]')).not.toBeNull();
-    expect(container.textContent).toContain("進度以訊息游標推進");
+    expect(container.textContent).toContain("Agent 排程");
     expect(container.textContent).not.toContain("3852");
     expect(container.textContent).not.toContain("待分析");
   });

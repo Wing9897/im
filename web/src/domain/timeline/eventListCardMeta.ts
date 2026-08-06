@@ -206,34 +206,22 @@ export function resolveEventListDayPhaseTag(
 }
 
 /**
- * List / week / day card title: drop kind prefixes when the card already shows
- * the ending phase tag or remind badge, or for purchase (always plain).
+ * List / week / day card title: drop remind prefix when the card already shows
+ * the remind badge. Other item kinds (if any) stay plain.
  */
 export function eventListCardTitle(
   event: Pick<TimelineItem, "title" | "source" | "itemDateKind">,
   opts: {
-    dayPhaseTag?: EventListDayPhaseTag | null;
     showRemindBadge?: boolean;
   } = {},
 ): string {
   const base = event.title.trim();
   if (event.source !== "item") return base;
 
-  if (event.itemDateKind === "purchased") {
-    return stripItemKindTitlePrefix("purchased", base);
-  }
-
   const showRemind =
     opts.showRemindBadge ?? eventShowsRemindBadge(event);
   if (event.itemDateKind === "remind" && showRemind) {
     return stripItemKindTitlePrefix("remind", base);
-  }
-
-  const ending =
-    opts.dayPhaseTag === "endingToday" ||
-    opts.dayPhaseTag === "endingFocused";
-  if (event.itemDateKind === "expires" && ending) {
-    return stripItemKindTitlePrefix("expires", base);
   }
 
   return base;
@@ -272,6 +260,6 @@ export function resolveEventCardDisplay(
     leading: resolveCalendarLeadingGlyph(event),
     showRemindBadge,
     dayPhaseTag,
-    title: eventListCardTitle(event, { dayPhaseTag, showRemindBadge }),
+    title: eventListCardTitle(event, { showRemindBadge }),
   };
 }

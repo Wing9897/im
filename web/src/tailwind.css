@@ -14,6 +14,7 @@
 @import "./css/theme-textures.css" layer(components);
 @import "./css/intelligence-map.css" layer(components);
 @import "./css/channel-picker.css" layer(components);
+@import "./css/emoji-picker.css" layer(components);
 @import "./css/monitor-feed.css" layer(components);
 @import "./css/leaderboard-page.css" layer(components);
 @import "./css/timeline-page.css" layer(components);

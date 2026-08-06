@@ -14,6 +14,8 @@ type AccentBarCardProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   material?: SurfaceCardMaterial;
   interactive?: boolean;
   enter?: SurfaceCardEnter;
+  /** default = 12px pad; compact = tighter Items / list tiles. */
+  density?: "default" | "compact";
 };
 
 /**
@@ -27,9 +29,15 @@ export function AccentBarCard({
   material = "elevated",
   interactive = false,
   enter,
+  density = "default",
   className,
   ...rest
 }: AccentBarCardProps) {
+  const bodyPad =
+    density === "compact"
+      ? "flex min-w-0 flex-1 flex-col gap-xs px-card-inner py-sm"
+      : "flex min-w-0 flex-1 flex-col gap-sm px-card-inner py-md";
+
   return (
     <SurfaceCard
       material={material}
@@ -46,9 +54,7 @@ export function AccentBarCard({
         style={accentStyle}
         aria-hidden="true"
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-sm px-card-inner py-md">
-        {children}
-      </div>
+      <div className={bodyPad}>{children}</div>
     </SurfaceCard>
   );
 }

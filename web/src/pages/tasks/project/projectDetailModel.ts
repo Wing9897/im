@@ -1,5 +1,5 @@
 /**
- * Pure selectors for the project detail page (parent = analysisMode project).
+ * Pure selectors for the project detail page (parent = agent + outputCalendar).
  */
 
 import type { UserEvent } from "../../../api/userEvents";
@@ -7,7 +7,7 @@ import type { AnalysisTask } from "../../../types/tasks";
 import type { TaskActivitySpan } from "../../../types/analysis";
 
 export function isProjectTask(task: AnalysisTask | null | undefined): boolean {
-  return task?.analysisMode === "project";
+  return task?.analysisMode === "agent" && Boolean(task.outputCalendar);
 }
 
 /** Child recurring rows owned by this project (`parent_task_id`). */

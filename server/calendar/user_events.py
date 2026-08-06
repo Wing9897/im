@@ -104,7 +104,7 @@ async def list_user_events(
     ``item_id`` filter:
     - omitted / ``None``: no parent-item filter
     - ``""``: only stand-alone rows (``item_id IS NULL``)
-    - real id: child calendars under that item
+    - real id: linked calendars under that item
     """
     clauses, params = build_user_event_list_filters(
         start=start,

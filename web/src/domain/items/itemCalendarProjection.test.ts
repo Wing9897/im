@@ -46,25 +46,19 @@ describe("itemCalendarProjection helpers", () => {
     expect(itemOccurrenceId("abc", "remind")).toBe("item:abc:remind");
   });
 
-  it("formats titles with i18n prefixes (not hardcoded 購入)", () => {
-    expect(formatItemOccurrenceTitle("purchased", "Milk")).toBe(
-      `${String(i18n.t("items:purchasedPrefix"))} · Milk`,
-    );
-    expect(formatItemOccurrenceTitle("expires", "Milk")).toBe(
-      `${String(i18n.t("items:expiresPrefix"))} · Milk`,
-    );
+  it("formats remind titles with i18n prefix; other kinds stay bare", () => {
     expect(formatItemOccurrenceTitle("remind", "Milk")).toBe(
       `${String(i18n.t("items:remindPrefix"))} · Milk`,
     );
+    expect(formatItemOccurrenceTitle("purchased", "Milk")).toBe("Milk");
+    expect(formatItemOccurrenceTitle("expires", "Milk")).toBe("Milk");
   });
 
-  it("strips remind/expires/purchased prefixes for plain-title surfaces", () => {
+  it("strips remind prefix for plain-title surfaces", () => {
     const remind = `${String(i18n.t("items:remindPrefix"))} · Milk`;
-    const expires = `${String(i18n.t("items:expiresPrefix"))} · Milk`;
-    const purchased = `${String(i18n.t("items:purchasedPrefix"))} · Milk`;
     expect(stripItemKindTitlePrefix("remind", remind)).toBe("Milk");
-    expect(stripItemKindTitlePrefix("expires", expires)).toBe("Milk");
-    expect(stripItemKindTitlePrefix("purchased", purchased)).toBe("Milk");
+    expect(stripItemKindTitlePrefix("expires", "Milk")).toBe("Milk");
+    expect(stripItemKindTitlePrefix("purchased", "Milk")).toBe("Milk");
   });
 
   it("prefers item emoji over category emoji, else clear fallback", () => {
@@ -96,9 +90,10 @@ describe("itemCalendarProjection helpers", () => {
     expect(DEFAULT_ITEM_EMOJI).toBe(DDL_SEED_CATEGORY_EMOJIS.other);
   });
 
-  it("labels distinguish remind vs expires", () => {
+  it("labels remind only", () => {
     expect(itemDateKindLabel("remind")).toBe(String(i18n.t("items:remindPrefix")));
-    expect(itemDateKindLabel("expires")).toBe(String(i18n.t("items:expiresPrefix")));
+    expect(itemDateKindLabel("expires")).toBe("");
+    expect(itemDateKindLabel("purchased")).toBe("");
   });
 
   it("maps item date kinds to tiny calendar glyphs", () => {

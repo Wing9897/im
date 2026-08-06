@@ -7,8 +7,7 @@ export type AiStaffId =
   | "taskEditor"
   | "leaderboard"
   | "intel_event"
-  | "web_intel"
-  | "project";
+  | "agent";
 
 /** Agent = multi-turn tool loop; oneshot = dedicated single-purpose LLM pass / form chat. */
 export type AiStaffKind = "agent" | "oneshot";
@@ -49,13 +48,7 @@ export const AI_STAFF_ROSTER: readonly AiStaffDefinition[] = [
     accent: "oklch(0.68 0.14 25)",
   },
   {
-    id: "web_intel",
-    kind: "agent",
-    surface: "backoffice",
-    accent: "oklch(0.70 0.12 200)",
-  },
-  {
-    id: "project",
+    id: "agent",
     kind: "agent",
     surface: "backoffice",
     accent: "oklch(0.70 0.11 155)",

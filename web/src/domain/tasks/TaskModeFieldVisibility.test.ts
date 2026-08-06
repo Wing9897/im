@@ -6,20 +6,20 @@ import {
   analysisModeShowsOptionalChannels,
 } from "./analysisModeCapabilities";
 import { getTaskModeFieldVisibility } from "./taskFormUtils";
+import { agentPresetPolicy } from "./agentTaskPolicy";
 
 describe("Task mode field visibility", () => {
   it("follows analysisModeCapabilities for every registered mode", () => {
     for (const mode of ANALYSIS_MODE_ORDER) {
       const caps = ANALYSIS_MODE_CAPABILITIES[mode];
-      const visibility = getTaskModeFieldVisibility(mode);
+      const policy = mode === "agent" ? agentPresetPolicy("web_scout") : null;
+      const visibility = getTaskModeFieldVisibility(mode, policy);
       expect(visibility.rruleFieldsVisible).toBe(caps.pipeline === "rrule_expand");
       expect(visibility.promptFieldsVisible).toBe(caps.schedulable);
       expect(visibility.channelFieldsVisible).toBe(
         caps.schedulable &&
-          (analysisModeRequiresChannels(mode) || analysisModeShowsOptionalChannels(mode)),
+          (visibility.channelsRequired || visibility.channelsOptional),
       );
-      expect(visibility.channelsRequired).toBe(analysisModeRequiresChannels(mode));
-      expect(visibility.channelsOptional).toBe(analysisModeShowsOptionalChannels(mode));
       expect(visibility.promptRequired).toBe(caps.schedulable);
     }
   });
@@ -39,11 +39,12 @@ describe("Task mode field visibility", () => {
     }
   });
 
-  it("web_intel shows prompt and optional channels without messageBatch", () => {
-    expect(ANALYSIS_MODE_CAPABILITIES.web_intel.messageBatch).toBe(false);
-    expect(analysisModeRequiresChannels("web_intel")).toBe(false);
-    expect(analysisModeShowsOptionalChannels("web_intel")).toBe(true);
-    expect(getTaskModeFieldVisibility("web_intel")).toEqual({
+  it("agent web_scout shows prompt and optional channels without messageBatch", () => {
+    const policy = agentPresetPolicy("web_scout");
+    expect(ANALYSIS_MODE_CAPABILITIES.agent.messageBatch).toBe(false);
+    expect(analysisModeRequiresChannels("agent")).toBe(false);
+    expect(analysisModeShowsOptionalChannels("agent")).toBe(true);
+    expect(getTaskModeFieldVisibility("agent", policy)).toEqual({
       rruleFieldsVisible: false,
       promptFieldsVisible: true,
       channelFieldsVisible: true,
@@ -52,14 +53,16 @@ describe("Task mode field visibility", () => {
       analysisTimeRangeVisible: false,
       timelineToggleVisible: true,
       promptRequired: true,
-      isWebIntel: true,
-      isProject: false,
+      isAgent: true,
       isRecurring: false,
+      showAgentPolicy: true,
+      showWaveInterval: false,
+      showMessageGateOverrides: false,
     });
   });
 
-  it("hides analysis time range for web_intel but keeps it for intel_event", () => {
-    expect(getTaskModeFieldVisibility("web_intel").analysisTimeRangeVisible).toBe(false);
+  it("hides analysis time range for agent but keeps it for intel_event", () => {
+    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout")).analysisTimeRangeVisible).toBe(false);
     expect(getTaskModeFieldVisibility("intel_event").analysisTimeRangeVisible).toBe(true);
   });
 });

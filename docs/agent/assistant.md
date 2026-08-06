@@ -92,7 +92,7 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；购入／到期／提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`purchased`｜`expires`｜`remind`），勿另开双轨。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind`）；购入／到期留在物品字段，时间线上的其他日期用关联 user-event，勿另开双轨。
 
 | Tool | 行为 | 限额 |
 |------|------|------|

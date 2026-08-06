@@ -1,4 +1,4 @@
-"""Single-wave helpers for closed-loop project ticks."""
+"""Single-wave helpers for agent ``message_cursor`` ticks."""
 
 from __future__ import annotations
 
@@ -8,18 +8,20 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
+from server.agent.channels import AgentChannel
 from server.agent.runtime import AgentRuntime
 from server.calendar.query import query_upcoming
 from server.calendar.timeline_dismissals import active_timeline_items
 from server.config import get_config_int
 from server.db.database import Database
+from server.domain.agent_task_spec import AgentTaskSpec, agent_task_spec_from_row
 from server.domain.analysis_modes import CHILD_RECURRING_MODE
+from server.prompts.agent_task import build_agent_seed_message
 from server.queries.project_tick_queries import (
     ProjectMessageCursor,
     fetch_project_calendar_children,
     store_project_message_cursor,
 )
-from server.scheduler.project_tick import build_project_seed_message
 
 logger = logging.getLogger(__name__)
 
@@ -105,14 +107,27 @@ async def _run_one_wave(
     pinned_base_prompt: str,
     carry_messages: list[dict[str, str]],
     session_id: str | None,
+    spec: AgentTaskSpec | None = None,
+    policy: AgentChannel | None = None,
 ) -> _WaveOutcome:
     """Execute one LLM wave; advance the message cursor only after success."""
-    calendar_summary = await _calendar_summary(db, task_id)
-    seed = build_project_seed_message(
-        task=task,
+    resolved_spec = spec or agent_task_spec_from_row(task, has_channels=True)
+    calendar_summary = (
+        await _calendar_summary(db, task_id)
+        if resolved_spec.cap_calendar_read
+        else "(calendar read disabled)"
+    )
+    if isinstance(cursor, ProjectMessageCursor):
+        cursor_label = cursor.timestamp
+    else:
+        cursor_label = cursor
+    seed = build_agent_seed_message(
+        task_name=str(task.get("name") or task_id),
+        task_id=task_id,
+        spec=resolved_spec,
         calendar_summary=calendar_summary,
         message_lines=[_compact_message_line(row) for row in messages],
-        cursor=cursor,
+        cursor_label=cursor_label,
         wave_index=wave_index,
         wave_total_hint=wave_total_hint,
     )
@@ -124,8 +139,9 @@ async def _run_one_wave(
             runtime.chat(
                 [*carry_messages, wave_user],
                 session_id=session_id,
-                channel="project",
-                project_scope_task_id=task_id,
+                channel="agent",
+                policy=policy,
+                project_scope_task_id=task_id if resolved_spec.output_calendar else None,
                 base_prompt=pinned_base_prompt,
             ),
             timeout=wave_timeout,
@@ -133,7 +149,7 @@ async def _run_one_wave(
     except asyncio.TimeoutError:
         reason = f"wave hard timeout ({wave_timeout}s)"
         logger.warning(
-            "Project tick %s wave %s exceeded hard timeout (%ss)",
+            "Agent tick %s wave %s exceeded hard timeout (%ss)",
             task_id,
             wave_index,
             wave_timeout,
@@ -157,7 +173,6 @@ async def _run_one_wave(
     if not isinstance(tool_calls, list):
         tool_calls = []
 
-    # Continue the same dialogue across drain waves (compacted each chat).
     carry_messages.append(wave_user)
     carry_messages.append(
         {
@@ -182,7 +197,7 @@ async def _run_one_wave(
         next_cursor = ProjectMessageCursor(timestamp=last_ts, message_id=last_id or None)
 
     logger.info(
-        "Project tick %s wave %s: messages=%s tools=%s session=%s",
+        "Agent tick %s wave %s: messages=%s tools=%s session=%s",
         task_id,
         wave_index,
         len(messages),

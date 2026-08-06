@@ -36,15 +36,13 @@
       "editAria": "編輯 {name}",
       "deleteAria": "刪除 {name}",
       "openProjectAria": "開啟專案：{name}",
-      "project": "專案",
-      "projectProgressHint": "進度以訊息游標推進（非標記統計）",
       "recurringProgressHint": "週期任務（無訊息分析統計）",
       "calendarTaskProgressHint": "日曆任務桶（顯示關聯時間事件）",
-      "web_intel": "網路情報任務 · Agent 多輪搜尋",
-      "web_intelProgressHint": "Agent 多輪網頁搜尋寫入情報事件（可選來源訊息核實）",
       "retryCount": "重試 {count}",
       "analysisPausedHint": "分析已自動或手動暫停",
-      "waitingForThreshold": "等待觸發閾值：{count}/{threshold}"
+      "waitingForThreshold": "等待觸發閾值：{count}/{threshold}",
+      "agent": "Agent 任務",
+      "agentProgressHint": "Agent 排程（游標抽乾／閾值／定時）— 非 marker 批處理統計"
     },
     "detail": {
       "timeRange": "時間範圍：{range}",
@@ -69,7 +67,7 @@
       "sourcesTitle": "綁定來源",
       "childrenTitle": "子週期任務",
       "childrenEmptyTitle": "尚無子週期任務",
-      "childrenEmptyDescription": "專案管理助手會在每次 tick 視需要建立子週期任務。",
+      "childrenEmptyDescription": "Agent 會在每次 tick 視需要建立子週期任務。",
       "eventsTitle": "所屬單次事件",
       "eventsEmptyTitle": "尚無所屬事件",
       "eventsEmptyDescription": "專案建立的單次時程事件會顯示在這裡。",
@@ -140,7 +138,7 @@
       "followGlobalPlaceholder": "空＝跟隨全域",
       "batchOverlapLabel": "批次重疊",
       "batchOverlapAria": "批次重疊訊息數量",
-      "batchOverlapHelp": "下一批帶入上批末尾訊息以接上下文；0＝不重疊。情報任務與「網路情報任務＋來源頻道」可用；排行榜改注入 Top 10。",
+      "batchOverlapHelp": "下一批帶入上批末尾訊息以接上下文；0＝不重疊。情報任務與「Agent 訊息閾值＋來源頻道」可用；排行榜改注入 Top 10。",
       "triggerThresholdHelp": "留空則跟隨全域觸發門檻。",
       "batchLimitHelp": "留空則跟隨全域批次上限。",
       "evidenceStyleHelp": "留空則跟隨全域證據風格。",
@@ -165,7 +163,8 @@
         "prompt": "請填寫任務 Prompt",
         "channels": "請至少選擇一個來源頻道",
         "rrule": "請設定重複規則",
-        "eventStart": "請設定開始時間，或改為整天活動"
+        "eventStart": "請設定開始時間，或改為整天活動",
+        "agentOutput": "請至少勾選一項 Agent 輸出"
       },
       "pickChannels": "點擊選擇頻道",
       "channelsSelected": "已選 {selected} / {total} 個頻道",
@@ -184,17 +183,13 @@
         "name": "情報任務",
         "blurb": "從訊息抽取情報事件與行程"
       },
-      "web_intel": {
-        "name": "網路情報任務",
-        "blurb": "Agent 多輪網頁搜尋抽成情報事件；可選來源核實"
-      },
       "leaderboard": {
         "name": "排行榜任務",
         "blurb": "比較與追蹤熱門訊息排名"
       },
-      "project": {
-        "name": "專案任務",
-        "blurb": "閉環 reconcile 專案日程與子任務"
+      "agent": {
+        "name": "Agent 任務",
+        "blurb": "可配置觸發、工具權限與日曆／情報輸出"
       }
     },
     "modes": {
@@ -210,26 +205,21 @@
         "promptPlaceholder": "例：提取重要公告、會議、截止日；有明確時間填 start_time，有地點填 location",
         "promptHint": "💡 時間與地點無法確定時請省略對應欄位，禁止猜測；可同時出現在情報頁與時間規劃頁"
       },
-      "web_intel": {
-        "modeDescription": "Agent 多輪網頁搜尋抽成情報事件；可選來源訊息核實",
-        "promptLabel": "任務 Prompt（要搜集哪些情報、如何寫成事件）",
-        "promptPlaceholder": "例：只保留官方公告與監管動態；有明確時間填 start_time，有地點填 location；忽略廣告與無關論壇閒聊",
-        "promptHint": "Agent 依 Prompt 決定關鍵字並多輪搜尋，最後輸出事件。請寫清要保留什麼、如何寫 title／body。",
-        "scheduleDefaultHint": "建議「每小時」；切換至此類型時若仍是每 10 秒會改為每小時。",
-        "timedModeHint": "未綁頻道＝純定時到點搜尋。綁定來源頻道後改為「有新訊息達門檻才跑」，並注入訊息供核實。",
-        "messageGateHint": "已綁頻道＝來源訊息門檻：達門檻才跑；訊息注入 Agent，供搜尋核實／補充。進階設定可覆寫門檻。"
-      },
       "recurring": {
         "modeDescription": "RRULE 週期任務，無 AI 處理",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
-      "project": {
-        "modeDescription": "閉環 reconcile 專案日程與子任務",
-        "promptLabel": "專案目標／規則",
-        "promptPlaceholder": "例如：依 Telegram 更新站會與 demo 日期；偏好上午時段；已取消的系列請軟刪",
-        "promptHint": "請綁定來源頻道，建議 hourly 排程；即使本小時無新訊息也會跑 reconcile"
+      "agent": {
+        "modeDescription": "可配置 Agent：選擇觸發方式、工具權限與日曆／情報輸出",
+        "promptLabel": "任務提示（目標／搜尋／抽取規則）",
+        "promptPlaceholder": "例如：根據頻道訊息調和日曆，或透過網搜收集官方公告",
+        "promptHint": "描述 Agent 應完成的工作。預設會填充觸發／權限／輸出，仍可微調。",
+        "scheduleDefaultHint": "建議每小時；切換到 Agent 時會把每 10 秒改為每小時。",
+        "timedModeHint": "無頻道＝純定時觸發。綁定頻道可用於閾值門或訊息游標抽乾。",
+        "messageGateHint": "已綁頻道且為訊息閾值：達閾值才跑，並注入訊息供核實／補充。",
+        "cursorChannelHint": "訊息游標抽乾至少需要綁定一個來源頻道。"
       }
     },
     "recurrence": {
@@ -507,6 +497,33 @@
         "description": "Agent 多輪搜尋東亞等地緣／安全熱點，抽成情報事件；可選綁定頻道做來源核實",
         "promptTemplate": "以多輪網頁搜尋核實後，抽出具情報價值的地緣／安全動態。優先：官方聲明、軍事／外交動向、制裁與管制、重大突發事件。填標題、摘要、地點（能確定時）；有明確時間再填 start_time。避免未核實謠言與情緒化標題黨。"
       }
+    },
+    "agent": {
+      "presetsLabel": "預設",
+      "presetsHint": "一鍵填充勾選，之後仍可修改。",
+      "presets": {
+        "project_reconcile": "專案調和",
+        "web_scout": "網蒐"
+      },
+      "triggerLabel": "觸發",
+      "trigger": {
+        "schedule": "純定時（依排程執行）",
+        "message_cursor": "來源訊息積壓抽乾（有新訊息才跑）",
+        "message_threshold": "訊息閾值門檻（達數量才跑；無頻道則等同純定時）"
+      },
+      "capsLabel": "工具權限",
+      "caps": {
+        "calendarRead": "讀日曆（查詢既有日程）",
+        "readAnalysisEvents": "讀事件（搜尋情報／分析事件）",
+        "readItems": "讀物品（查詢到期／庫存物品）",
+        "webSearch": "上網搜尋（啟用時強制可用）"
+      },
+      "outputLabel": "輸出模式",
+      "output": {
+        "calendar": "日曆事件（寫入即含寫日曆權限）",
+        "analysisEvents": "情報事件（寫入 analysis_events）"
+      },
+      "outputHint": "至少勾選一項輸出。"
     }
   },
   "leaderboard": {
@@ -543,8 +560,7 @@
     "taskEditor": "任務顧問",
     "leaderboard": "排行榜分析員",
     "intel_event": "情報任務分析員",
-    "web_intel": "網路情報蒐集員",
-    "project": "專案管理助手"
+    "agent": "Agent"
   },
   "ui": {
     "listSep": "、",

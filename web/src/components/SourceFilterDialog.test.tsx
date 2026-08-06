@@ -272,7 +272,7 @@ describe("SourceFilterDialog", () => {
     });
   });
 
-  it("lists web_intel tasks with mode label and allows selecting them", () => {
+  it("lists agent tasks with mode label and allows selecting them", () => {
     const onChange = vi.fn();
     act(() => {
       root.render(
@@ -287,7 +287,7 @@ describe("SourceFilterDialog", () => {
                 id: "web-1",
                 name: "Pricing watch",
                 worksetId: "ws-1",
-                analysisMode: "web_intel",
+                analysisMode: "agent",
               },
             ],
             selection: { taskIds: [], worksetIds: [] },
@@ -311,7 +311,7 @@ describe("SourceFilterDialog", () => {
       .querySelector('[data-testid="board-source-filter-web-1"]')!
       .closest("label")!;
     expect(row.textContent).toContain("Pricing watch");
-    expect(row.textContent).toMatch(/Web intel|網路情報/i);
+    expect(row.textContent).toMatch(/Agent/i);
 
     act(() => {
       (document.querySelector('[data-testid="board-source-filter-web-1"]') as HTMLInputElement).click();

@@ -44,11 +44,18 @@ describe("tasks API", () => {
     it("serializes list filters as query strings", async () => {
       vi.mocked(apiClient.get).mockResolvedValue([]);
 
-      await listTasks({ topLevelOnly: true, analysisMode: "project" });
+      await listTasks({
+        topLevelOnly: true,
+        analysisMode: "agent",
+        worksetId: "ws-1",
+        itemId: "item-1",
+      });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/tasks", {
         top_level_only: "true",
-        analysis_mode: "project",
+        analysis_mode: "agent",
+        workset_id: "ws-1",
+        item_id: "item-1",
       });
     });
 
@@ -68,6 +75,7 @@ describe("tasks API", () => {
         includeInTimeline: true,
         parentTaskId: null,
         worksetId: null,
+        itemId: null,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-02T00:00:00Z",
       };
@@ -85,6 +93,7 @@ describe("tasks API", () => {
         "id",
         "includeInTimeline",
         "isActive",
+        "itemId",
         "name",
         "parentTaskId",
         "promptTemplate",

@@ -1434,6 +1434,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/calendar/importance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Importance */
+        get: operations["list_importance_api_v1_calendar_importance_get"];
+        /** Put Importance */
+        put: operations["put_importance_api_v1_calendar_importance_put"];
+        post?: never;
+        /** Delete Importance */
+        delete: operations["delete_importance_api_v1_calendar_importance_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar/user-events": {
         parameters: {
             query?: never;
@@ -2153,6 +2172,11 @@ export interface components {
             updatedAt: string;
             /** Dismissed */
             dismissed: boolean;
+            /**
+             * Important
+             * @default false
+             */
+            important: boolean;
         };
         /** AnalysisEventsPageResponse */
         AnalysisEventsPageResponse: {
@@ -2573,7 +2597,6 @@ export interface components {
             important: boolean;
             /**
              * Islastoccurrence
-             * @description True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
              * @default false
              */
             isLastOccurrence: boolean;
@@ -2707,6 +2730,11 @@ export interface components {
              * @description Optional project parent for nested recurring children
              */
             parentTaskId?: string | null;
+            /**
+             * Itemid
+             * @description Optional parent trackable item: this recurring calendar belongs to the inventory item (not a sub-event of another event)
+             */
+            itemId?: string | null;
         };
         /** DeviceInfoResponse */
         DeviceInfoResponse: {
@@ -3750,7 +3778,7 @@ export interface components {
             /** Websearchquery */
             webSearchQuery?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "intel_event" | "web_intel" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "recurring" | "agent") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3778,6 +3806,24 @@ export interface components {
             analysisStrategyMode?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /** Triggermode */
+            triggerMode?: ("schedule" | "message_cursor" | "message_threshold") | null;
+            /** Capcalendarread */
+            capCalendarRead?: boolean | null;
+            /** Capcalendarwrites */
+            capCalendarWrites?: boolean | null;
+            /** Capwebsearch */
+            capWebSearch?: boolean | null;
+            /** Capforcewebsearch */
+            capForceWebSearch?: boolean | null;
+            /** Capreadanalysisevents */
+            capReadAnalysisEvents?: boolean | null;
+            /** Capreaditems */
+            capReadItems?: boolean | null;
+            /** Outputcalendar */
+            outputCalendar?: boolean | null;
+            /** Outputanalysisevents */
+            outputAnalysisEvents?: boolean | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -3805,7 +3851,7 @@ export interface components {
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "intel_event" | "web_intel" | "recurring" | "project") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "recurring" | "agent") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3814,6 +3860,24 @@ export interface components {
             })[] | null;
             /** Includeintimeline */
             includeInTimeline?: boolean | null;
+            /** Triggermode */
+            triggerMode?: string | null;
+            /** Capcalendarread */
+            capCalendarRead?: boolean | null;
+            /** Capcalendarwrites */
+            capCalendarWrites?: boolean | null;
+            /** Capwebsearch */
+            capWebSearch?: boolean | null;
+            /** Capforcewebsearch */
+            capForceWebSearch?: boolean | null;
+            /** Capreadanalysisevents */
+            capReadAnalysisEvents?: boolean | null;
+            /** Capreaditems */
+            capReadItems?: boolean | null;
+            /** Outputcalendar */
+            outputCalendar?: boolean | null;
+            /** Outputanalysisevents */
+            outputAnalysisEvents?: boolean | null;
         };
         /** TaskResponse */
         TaskResponse: {
@@ -3837,7 +3901,7 @@ export interface components {
              * Analysismode
              * @enum {string}
              */
-            analysisMode: "leaderboard" | "intel_event" | "web_intel" | "recurring" | "project";
+            analysisMode: "leaderboard" | "intel_event" | "recurring" | "agent";
             /** Analysistimerange */
             analysisTimeRange: string;
             /** Version */
@@ -3855,6 +3919,8 @@ export interface components {
             parentTaskId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
             /** Projectwaveintervalseconds */
             projectWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
@@ -3865,6 +3931,51 @@ export interface components {
             analysisBatchMessageLimit?: number | null;
             /** Analysisstrategymode */
             analysisStrategyMode?: string | null;
+            /**
+             * Triggermode
+             * @default schedule
+             */
+            triggerMode: string;
+            /**
+             * Capcalendarread
+             * @default true
+             */
+            capCalendarRead: boolean;
+            /**
+             * Capcalendarwrites
+             * @default false
+             */
+            capCalendarWrites: boolean;
+            /**
+             * Capwebsearch
+             * @default false
+             */
+            capWebSearch: boolean;
+            /**
+             * Capforcewebsearch
+             * @default false
+             */
+            capForceWebSearch: boolean;
+            /**
+             * Capreadanalysisevents
+             * @default true
+             */
+            capReadAnalysisEvents: boolean;
+            /**
+             * Capreaditems
+             * @default true
+             */
+            capReadItems: boolean;
+            /**
+             * Outputcalendar
+             * @default false
+             */
+            outputCalendar: boolean;
+            /**
+             * Outputanalysisevents
+             * @default false
+             */
+            outputAnalysisEvents: boolean;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -3935,6 +4046,8 @@ export interface components {
             icsSource?: string | null;
             /** Parenttaskid */
             parentTaskId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
         };
         /** Telegram2faBody */
         Telegram2faBody: {
@@ -4039,6 +4152,25 @@ export interface components {
             /** Endtime */
             endTime: string | null;
         };
+        /** TimelineImportanceBody */
+        TimelineImportanceBody: {
+            /** Source */
+            source: string;
+            /** Eventid */
+            eventId: string;
+        };
+        /** TimelineImportanceResponse */
+        TimelineImportanceResponse: {
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "analysis" | "user" | "recurring" | "item";
+            /** Eventid */
+            eventId: string;
+            /** Markedat */
+            markedAt: string;
+        };
         /** TrendingTopicResponse */
         TrendingTopicResponse: {
             /** Id */
@@ -4098,8 +4230,12 @@ export interface components {
              * @default false
              */
             isAllDay: boolean;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
             /** Taskid */
             taskId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
         };
@@ -4117,8 +4253,12 @@ export interface components {
             location?: string | null;
             /** Isallday */
             isAllDay?: boolean | null;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
             /** Taskid */
             taskId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
         };
@@ -4152,11 +4292,15 @@ export interface components {
             icsUid?: string | null;
             /** Icssource */
             icsSource?: string | null;
+            /** Remindbeforedays */
+            remindBeforeDays?: number | null;
             /**
              * Taskid
              * @default
              */
             taskId: string;
+            /** Itemid */
+            itemId?: string | null;
             /** Worksetid */
             worksetId: string;
             /**
@@ -4166,6 +4310,11 @@ export interface components {
             source: "user";
             /** Dismissed */
             dismissed: boolean;
+            /**
+             * Important
+             * @default false
+             */
+            important: boolean;
             /** Createdat */
             createdAt: string;
             /** Updatedat */
@@ -4712,6 +4861,7 @@ export interface operations {
                 top_level_only?: boolean;
                 analysis_mode?: string | null;
                 workset_id?: string | null;
+                item_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -7478,6 +7628,100 @@ export interface operations {
             };
         };
     };
+    list_importance_api_v1_calendar_importance_get: {
+        parameters: {
+            query?: {
+                source?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineImportanceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_importance_api_v1_calendar_importance_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimelineImportanceBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineImportanceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_importance_api_v1_calendar_importance_delete: {
+        parameters: {
+            query: {
+                source: string;
+                eventId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_events_api_v1_calendar_user_events_get: {
         parameters: {
             query?: {
@@ -7485,6 +7729,7 @@ export interface operations {
                 end?: string | null;
                 task_id?: string | null;
                 workset_id?: string | null;
+                item_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -8293,7 +8538,7 @@ export interface operations {
                 location: string;
                 start_date: string;
                 end_date: string;
-                /** Bypass the successful forecast TTL cache and refetch providers. */
+                /** @description Bypass the successful forecast TTL cache and refetch providers. */
                 force?: boolean;
             };
             header?: never;

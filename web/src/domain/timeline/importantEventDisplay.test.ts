@@ -68,19 +68,12 @@ describe("resolveCalendarLeadingGlyph", () => {
 });
 
 describe("monthPreviewTitle", () => {
-  it("strips purchase / expiry prefixes; keeps remind prefix", () => {
+  it("returns the title as-is (remind keeps its merge prefix)", () => {
     expect(
       monthPreviewTitle({
-        title: "購入 · milk",
+        title: "milk",
         source: "item",
         itemDateKind: "purchased",
-      }),
-    ).toBe("milk");
-    expect(
-      monthPreviewTitle({
-        title: "結束 · milk",
-        source: "item",
-        itemDateKind: "expires",
       }),
     ).toBe("milk");
     expect(

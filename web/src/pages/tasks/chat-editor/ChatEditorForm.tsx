@@ -8,8 +8,10 @@ import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import { ChatCalendarFields } from "./ChatCalendarFields";
+import { ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
+import { DEFAULT_AGENT_POLICY } from "../../../domain/tasks/agentTaskPolicy";
 import { ScheduleInput } from "../ScheduleInput";
 import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
@@ -34,13 +36,27 @@ export function ChatEditorForm({
 }: ChatEditorFormProps) {
   const { t } = useTranslation("common");
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
-  const vis = getTaskModeFieldVisibility(formState.analysisMode);
-  // Keep advanced collapsed by default; open when web_intel message-gate turns on.
-  const webIntelGate = vis.isWebIntel && formState.channelIds.length > 0;
-  const [optionalOpen, setOptionalOpen] = useState(webIntelGate);
+  const agentPolicy = {
+    triggerMode: formState.triggerMode,
+    capCalendarRead: formState.capCalendarRead,
+    capCalendarWrites: formState.capCalendarWrites,
+    capWebSearch: formState.capWebSearch,
+    capForceWebSearch: formState.capForceWebSearch,
+    capReadAnalysisEvents: formState.capReadAnalysisEvents,
+    capReadItems: formState.capReadItems,
+    outputCalendar: formState.outputCalendar,
+    outputAnalysisEvents: formState.outputAnalysisEvents,
+  };
+  const vis = getTaskModeFieldVisibility(
+    formState.analysisMode,
+    agentPolicy,
+    formState.channelIds,
+  );
+  const gateOpen = vis.showMessageGateOverrides;
+  const [optionalOpen, setOptionalOpen] = useState(gateOpen);
   useEffect(() => {
-    if (webIntelGate) setOptionalOpen(true);
-  }, [webIntelGate]);
+    if (gateOpen) setOptionalOpen(true);
+  }, [gateOpen]);
 
   const projectWaveIntervalSeconds = String(
     formState.projectWaveIntervalSeconds ?? DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
@@ -67,9 +83,8 @@ export function ChatEditorForm({
             onNameChange={(v) => updateField("name", v)}
             onAnalysisModeChange={(v) => {
               updateField("analysisMode", v);
-              // Do not remap placeholder seconds_10 when wire RRULE is unmapped/read-only.
               if (
-                (v === "project" || v === "web_intel") &&
+                v === "agent" &&
                 formState.scheduleType === "seconds_10" &&
                 !isUnmappedTriggerSchedule(
                   formState.scheduleType,
@@ -79,8 +94,19 @@ export function ChatEditorForm({
               ) {
                 updateField("scheduleType", "hourly");
               }
-              if (v === "project" && formState.projectWaveIntervalSeconds == null) {
-                updateField("projectWaveIntervalSeconds", DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS);
+              if (v === "agent") {
+                updateField("triggerMode", DEFAULT_AGENT_POLICY.triggerMode);
+                updateField("capCalendarRead", DEFAULT_AGENT_POLICY.capCalendarRead);
+                updateField("capCalendarWrites", DEFAULT_AGENT_POLICY.capCalendarWrites);
+                updateField("capWebSearch", DEFAULT_AGENT_POLICY.capWebSearch);
+                updateField("capForceWebSearch", DEFAULT_AGENT_POLICY.capForceWebSearch);
+                updateField("capReadAnalysisEvents", DEFAULT_AGENT_POLICY.capReadAnalysisEvents);
+                updateField("capReadItems", DEFAULT_AGENT_POLICY.capReadItems);
+                updateField("outputCalendar", DEFAULT_AGENT_POLICY.outputCalendar);
+                updateField("outputAnalysisEvents", DEFAULT_AGENT_POLICY.outputAnalysisEvents);
+                if (formState.projectWaveIntervalSeconds == null) {
+                  updateField("projectWaveIntervalSeconds", DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS);
+                }
               }
             }}
             onWorksetIdChange={(v) => updateField("worksetId", v)}
@@ -111,6 +137,10 @@ export function ChatEditorForm({
             </p>
           ) : (
             <>
+              {vis.showAgentPolicy ? (
+                <ChatAgentPolicyFields formState={formState} updateField={updateField} />
+              ) : null}
+
               <ChatPromptFields
                 description={formState.description}
                 promptTemplate={formState.promptTemplate}
@@ -127,7 +157,7 @@ export function ChatEditorForm({
                       scheduleRrule={formState.scheduleRrule}
                       onScheduleTypeChange={(type) => updateField("scheduleType", type)}
                       onScheduleValueChange={(value) => updateField("scheduleValue", value)}
-                      showProjectWaveInterval={vis.isProject}
+                      showProjectWaveInterval={vis.showWaveInterval}
                       projectWaveIntervalSeconds={projectWaveIntervalSeconds}
                       onProjectWaveIntervalSecondsChange={(value) => {
                         const trimmed = value.trim();
@@ -161,12 +191,12 @@ export function ChatEditorForm({
                         updateField("projectWaveIntervalSeconds", Math.min(num, 600));
                       }}
                     />
-                    {vis.isWebIntel ? (
+                    {vis.isAgent ? (
                       <p
                         className={`m-0 ${formHelpClass}`}
-                        data-testid="task-web-intel-schedule-hint"
+                        data-testid="task-agent-schedule-hint"
                       >
-                        {t("tasks.modes.web_intel.scheduleDefaultHint")}
+                        {t("tasks.modes.agent.scheduleDefaultHint")}
                       </p>
                     ) : null}
                   </div>
@@ -182,14 +212,16 @@ export function ChatEditorForm({
                     onOpenChannelDialog={onOpenChannelDialog}
                     optional={vis.channelsOptional}
                   />
-                  {vis.channelsOptional ? (
+                  {vis.isAgent ? (
                     <p
                       className={`m-0 ${formHelpClass}`}
-                      data-testid="task-web-intel-trigger-hint"
+                      data-testid="task-agent-channel-hint"
                     >
-                      {formState.channelIds.length > 0
-                        ? t("tasks.modes.web_intel.messageGateHint")
-                        : t("tasks.modes.web_intel.timedModeHint")}
+                      {formState.triggerMode === "message_cursor"
+                        ? t("tasks.modes.agent.cursorChannelHint")
+                        : formState.channelIds.length > 0
+                          ? t("tasks.modes.agent.messageGateHint")
+                          : t("tasks.modes.agent.timedModeHint")}
                     </p>
                   ) : null}
                 </div>

@@ -540,4 +540,55 @@ describe("UserEventDialog", () => {
 
     host.remove();
   });
+
+  it("hides parent-item picker by default on generic create", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
+    expect(document.querySelector('[data-testid="user-event-parent-item"]')).toBeNull();
+    expect(document.querySelector('[data-testid="user-event-parent-item-readonly"]')).toBeNull();
+
+    host.remove();
+  });
+
+  it("shows read-only parent item when mode is readonly with itemId", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          parentItemMode: "readonly",
+          initial: { itemId: "item-9" },
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const readonly = document.querySelector(
+      '[data-testid="user-event-parent-item-readonly"]',
+    );
+    expect(readonly).toBeTruthy();
+    expect(readonly!.textContent).toContain("item-9");
+    expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
+
+    host.remove();
+  });
 });

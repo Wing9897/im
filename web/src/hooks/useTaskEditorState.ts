@@ -42,6 +42,15 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "message_cursor",
+  capCalendarRead: true,
+  capCalendarWrites: true,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: true,
+  outputAnalysisEvents: false,
 };
 
 export const DEFAULT_FORM_STATE: TaskFormState = INITIAL_EDITOR_FIELDS;
@@ -55,6 +64,9 @@ type SaveGateFields = {
   analysisMode: AnalysisMode;
   eventIsAllDay: boolean;
   eventStartTime: string;
+  triggerMode?: string;
+  outputCalendar?: boolean;
+  outputAnalysisEvents?: boolean;
 };
 
 function computeCanSave(fields: SaveGateFields, isSaving: boolean): boolean {
@@ -77,10 +89,15 @@ export function getTaskSaveBlockReason(
     return null;
   }
 
-  if (fields.analysisMode === "web_intel") {
-    // Channels optional (timed Agent tick vs message-gate); no search-seed field.
+  if (fields.analysisMode === "agent") {
     if (!fields.promptTemplate.trim()) {
       return String(i18n.t("tasks.editor.saveNeeds.prompt"));
+    }
+    if (!fields.outputCalendar && !fields.outputAnalysisEvents) {
+      return String(i18n.t("tasks.editor.saveNeeds.agentOutput"));
+    }
+    if (fields.triggerMode === "message_cursor" && fields.channelIds.length === 0) {
+      return String(i18n.t("tasks.editor.saveNeeds.channels"));
     }
     return null;
   }
@@ -151,14 +168,14 @@ export function useTaskEditorState(
           webSearchQuery: "",
         };
         if (
-          (nextMode === "project" || nextMode === "web_intel") &&
+          nextMode === "agent" &&
           prev.scheduleType === "seconds_10" &&
           !isUnmappedTriggerSchedule(prev.scheduleType, prev.scheduleValue, prev.scheduleRrule)
         ) {
           next.scheduleType = "hourly";
           next.scheduleRrule = presetToTriggerRrule("hourly", next.scheduleValue);
         }
-        if (nextMode === "project" && next.projectWaveIntervalSeconds == null) {
+        if (nextMode === "agent" && next.projectWaveIntervalSeconds == null) {
           next.projectWaveIntervalSeconds = DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS;
         }
         return next;
@@ -176,6 +193,9 @@ export function useTaskEditorState(
     analysisMode: formState.analysisMode,
     eventIsAllDay: formState.eventIsAllDay,
     eventStartTime: formState.eventStartTime,
+    triggerMode: formState.triggerMode,
+    outputCalendar: formState.outputCalendar,
+    outputAnalysisEvents: formState.outputAnalysisEvents,
   };
   const saveBlockReason = getTaskSaveBlockReason(saveGateFields, isSaving);
   const canSave = computeCanSave(saveGateFields, isSaving);

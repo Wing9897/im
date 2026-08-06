@@ -6,6 +6,8 @@ import pytest
 
 from server.agent.tools_registry import execute_tool
 from server.db.database import Database, TransactionDb
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import insert_analysis_task
 from server.util import utc_now_iso
 
@@ -20,6 +22,10 @@ async def _insert_task(
     rrule: str | None = None,
 ) -> None:
     now = utc_now_iso()
+    policy: dict = {}
+    if mode == AGENT_MODE or mode == "agent":
+        policy = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
+        mode = AGENT_MODE
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await insert_analysis_task(
@@ -30,7 +36,7 @@ async def _insert_task(
             prompt_template="goals",
             analysis_mode=mode,
             analysis_time_range="all",
-            schedule_rrule=("FREQ=HOURLY" if mode == "project" else "FREQ=SECONDLY;INTERVAL=10"),
+            schedule_rrule=("FREQ=HOURLY" if mode == AGENT_MODE else "FREQ=SECONDLY;INTERVAL=10"),
             rrule=rrule,
             event_start_time="10:00" if rrule else None,
             event_end_time=None,
@@ -39,13 +45,14 @@ async def _insert_task(
             event_description=None,
             parent_task_id=parent_task_id,
             now=now,
+            **policy,
         )
 
 
 @pytest.mark.asyncio
 async def test_project_create_recurring_task_sets_parent(app) -> None:
     db: Database = app.state.db
-    await _insert_task(db, task_id="proj-1", mode="project", name="Alpha")
+    await _insert_task(db, task_id="proj-1", mode="agent", name="Alpha")
 
     result = await execute_tool(
         db,
@@ -75,7 +82,7 @@ async def test_project_create_recurring_task_sets_parent(app) -> None:
 @pytest.mark.asyncio
 async def test_project_update_rejects_foreign_recurring(app) -> None:
     db: Database = app.state.db
-    await _insert_task(db, task_id="proj-1", mode="project", name="Alpha")
+    await _insert_task(db, task_id="proj-1", mode="agent", name="Alpha")
     await _insert_task(
         db,
         task_id="orphan-rec",
@@ -97,7 +104,7 @@ async def test_project_update_rejects_foreign_recurring(app) -> None:
 @pytest.mark.asyncio
 async def test_project_delete_allows_owned_child(app) -> None:
     db: Database = app.state.db
-    await _insert_task(db, task_id="proj-1", mode="project", name="Alpha")
+    await _insert_task(db, task_id="proj-1", mode="agent", name="Alpha")
     await _insert_task(
         db,
         task_id="child-rec",
@@ -125,7 +132,7 @@ async def test_project_delete_allows_owned_child(app) -> None:
 @pytest.mark.asyncio
 async def test_user_event_may_own_project_task(app) -> None:
     db: Database = app.state.db
-    await _insert_task(db, task_id="proj-1", mode="project", name="Alpha")
+    await _insert_task(db, task_id="proj-1", mode="agent", name="Alpha")
 
     result = await execute_tool(
         db,

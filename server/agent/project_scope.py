@@ -1,11 +1,11 @@
-"""Project-tick tool scope policy.
+"""Agent calendar-scope tool policy (message_cursor / output_calendar presets).
 
-When ``AgentRuntime`` runs with ``channel=project``, the runtime injects
+When ``AgentRuntime`` runs with a project-scoped task id, the runtime injects
 ``project_scope_task_id`` into the tool-dispatch context. This module mutates
-tool arguments so calendar／messages tools stay inside that project.
+tool arguments so calendar／messages tools stay inside that task.
 
-Project ticks write ``user_events.origin=project`` via
-``PROJECT_CHANNEL.user_event_origin`` (see ``server/agent/channels.py``).
+Calendar-writing agent ticks set ``user_events.origin`` from
+``AgentTaskSpec.user_event_origin()`` (often ``project`` for reconcile presets).
 """
 
 from __future__ import annotations

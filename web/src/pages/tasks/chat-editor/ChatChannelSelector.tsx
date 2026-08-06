@@ -12,7 +12,7 @@ interface ChatChannelSelectorProps {
   channelIds: string[];
   channels: ChannelWithSource[];
   onOpenChannelDialog: () => void;
-  /** When true, label shows optional (web_intel timed vs message-gate). */
+  /** When true, label shows optional (agent schedule / threshold vs required cursor). */
   optional?: boolean;
 }
 

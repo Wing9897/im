@@ -122,9 +122,7 @@ export function useTimelinePageDialogs({
     (event: TimelineItem) => {
       const itemId = event.itemId?.trim();
       if (!itemId) return;
-      const params = new URLSearchParams({ itemId });
-      if (event.itemDateKind) params.set("itemDateKind", event.itemDateKind);
-      void navigate(`/items?${params.toString()}`);
+      void navigate(`/items/${encodeURIComponent(itemId)}/edit`);
     },
     [navigate],
   );
@@ -162,6 +160,7 @@ export function useTimelinePageDialogs({
             location: values.location,
             body: values.body,
             rrule: values.rrule,
+            itemId,
           });
           // Await the refreshed catalog so the filter plan includes the new
           // recurring task (workset-only filters otherwise skip calendar fetch).

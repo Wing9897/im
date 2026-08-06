@@ -10,6 +10,16 @@
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes im-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes im-fade-out-scale {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.97); }
+}
+
 @keyframes im-enter-rise {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -54,6 +64,16 @@
 
 .im-animate-in-scale {
   animation: im-fade-in-scale var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+.im-animate-out {
+  animation: im-fade-out var(--im-duration-fast) var(--im-easing-default) both;
+  pointer-events: none;
+}
+
+.im-animate-out-scale {
+  animation: im-fade-out-scale var(--im-duration-fast) var(--im-easing-default) both;
+  pointer-events: none;
 }
 
 .im-enter-rise {
@@ -144,6 +164,8 @@
 @media (prefers-reduced-motion: reduce) {
   .im-animate-in,
   .im-animate-in-scale,
+  .im-animate-out,
+  .im-animate-out-scale,
   .im-enter-rise,
   .im-enter-rise-soft,
   .im-enter-glow,

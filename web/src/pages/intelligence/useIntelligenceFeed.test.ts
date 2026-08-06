@@ -349,10 +349,10 @@ describe("useIntelligenceFeed", () => {
     expect(latest!.allItems).toHaveLength(4);
   });
 
-  it("includes web_intel tasks in the intelligence source catalog", async () => {
+  it("includes agent finding tasks in the intelligence source catalog", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "t-event", analysisMode: "intel_event", worksetId: "ws-1" }),
-      makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-web", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
     ]);
     localStorage.setItem(
@@ -399,13 +399,13 @@ describe("useIntelligenceFeed", () => {
     expect(options.taskIds).not.toEqual(
       expect.objectContaining({ taskIds: expect.any(Array), worksetIds: expect.any(Array) }),
     );
-    expect(options.analysisMode).toEqual(["intel_event", "web_intel"]);
+    expect(options.analysisMode).toEqual(["intel_event", "agent"]);
   });
 
-  it("scopes all-sources fetch to intel_event/web_intel task ids (not null)", async () => {
+  it("scopes all-sources fetch to intel_event/agent finding task ids (not null)", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "t-event", analysisMode: "intel_event", worksetId: "ws-1" }),
-      makeAnalysisTask({ id: "t-web", analysisMode: "web_intel", worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-web", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-1" }),
       makeAnalysisTask({ id: "t-lb", analysisMode: "leaderboard", worksetId: "ws-1" }),
     ]);
     localStorage.removeItem(INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY);

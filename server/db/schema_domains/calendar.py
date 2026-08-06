@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS user_events (
     ics_source  TEXT DEFAULT NULL,
     ics_import_fingerprint TEXT DEFAULT NULL,
     task_id     TEXT DEFAULT NULL REFERENCES analysis_tasks(id) ON DELETE SET NULL,
-    -- Optional parent trackable item (child calendar under an inventory Thing).
+    -- Optional parent trackable item (linked calendar under an inventory Thing).
     -- No SQL FK: items DDL is applied after calendar in the wipe-only aggregate.
     item_id     TEXT DEFAULT NULL,
     -- Ownership is always a workset; delete_workset reassigns to __user__ first.

@@ -1,0 +1,149 @@
+/* Compact emoji-picker-react chrome — match desk-app control density.
+   Library injects unlayered styles; override with !important on critical paint. */
+
+.EmojiPickerReact.im-emoji-picker,
+.EmojiPickerReact.im-emoji-picker.epr-dark-theme,
+.EmojiPickerReact.im-emoji-picker.epr-auto-theme {
+  --epr-bg-color: transparent !important;
+  --epr-dark-bg-color: transparent !important;
+  --epr-text-color: var(--text-secondary) !important;
+  --epr-dark-text-color: var(--text-secondary) !important;
+  --epr-picker-border-color: transparent !important;
+  --epr-dark-picker-border-color: transparent !important;
+  --epr-picker-border-radius: var(--radius-md);
+  --epr-horizontal-padding: 6px;
+  --epr-header-padding: 4px var(--epr-horizontal-padding);
+
+  /* Light surface search — never near-black pills on cream themes */
+  --epr-search-input-bg-color: var(--surface-card) !important;
+  --epr-dark-search-input-bg-color: var(--surface-card) !important;
+  --epr-search-input-bg-color-active: var(--surface-card) !important;
+  --epr-dark-search-input-bg-color-active: var(--surface-card) !important;
+  --epr-search-input-text-color: var(--text-primary) !important;
+  --epr-search-input-placeholder-color: var(--text-muted) !important;
+  --epr-search-input-height: 28px !important;
+  --epr-search-input-padding: 0 26px;
+  --epr-search-input-border-radius: var(--radius-md);
+  --epr-search-border-color: var(--surface-border) !important;
+  --epr-search-bar-inner-padding: 4px var(--epr-horizontal-padding) !important;
+
+  --epr-category-navigation-button-size: 20px !important;
+  --epr-category-label-height: 20px !important;
+  --epr-category-label-bg-color: color-mix(
+    in srgb,
+    var(--surface-raised) 70%,
+    var(--surface-card)
+  ) !important;
+  --epr-dark-category-label-bg-color: color-mix(
+    in srgb,
+    var(--surface-raised) 70%,
+    var(--surface-card)
+  ) !important;
+  --epr-category-label-text-color: var(--text-muted) !important;
+  --epr-category-padding: 0 var(--epr-horizontal-padding);
+  --epr-category-label-padding: 0 var(--epr-horizontal-padding);
+
+  --epr-emoji-size: 18px !important;
+  --epr-emoji-padding: 1px !important;
+
+  --epr-highlight-color: var(--accent);
+  --epr-dark-highlight-color: var(--accent);
+  --epr-hover-bg-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  --epr-dark-hover-bg-color: color-mix(in srgb, var(--accent) 14%, transparent);
+  --epr-hover-bg-color-reduced-opacity: color-mix(in srgb, var(--accent) 8%, transparent);
+  --epr-dark-hover-bg-color-reduced-opacity: color-mix(in srgb, var(--accent) 10%, transparent);
+  --epr-focus-bg-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  --epr-dark-focus-bg-color: color-mix(in srgb, var(--accent) 18%, transparent);
+  --epr-category-icon-active-color: var(--accent);
+  --epr-dark-category-icon-active-color: var(--accent);
+}
+
+.im-emoji-picker-host .EmojiPickerReact.im-emoji-picker {
+  border: none !important;
+  background: transparent !important;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-header {
+  padding: 4px 6px 2px !important;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-search-container input,
+.EmojiPickerReact.im-emoji-picker.epr-dark-theme .epr-search-container input,
+.EmojiPickerReact.im-emoji-picker.epr-auto-theme .epr-search-container input {
+  height: 28px !important;
+  min-height: 28px !important;
+  font-size: var(--text-caption) !important;
+  line-height: 1.2 !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: var(--radius-md) !important;
+  background-color: var(--surface-card) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-search-container input:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--surface-border)) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 14%, transparent) !important;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-category-nav {
+  padding: 2px 4px !important;
+  gap: 0 !important;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-cat-btn {
+  width: 20px !important;
+  height: 20px !important;
+  opacity: 0.72;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-cat-btn.epr-cat-btn-active,
+.EmojiPickerReact.im-emoji-picker button.epr-cat-btn:hover {
+  opacity: 1;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-emoji-category-label,
+.EmojiPickerReact.im-emoji-picker.epr-dark-theme .epr-emoji-category-label,
+.EmojiPickerReact.im-emoji-picker.epr-auto-theme .epr-emoji-category-label {
+  height: 20px !important;
+  font-size: var(--text-caption) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  text-transform: none !important;
+  color: var(--text-muted) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--surface-raised) 70%,
+    var(--surface-card)
+  ) !important;
+  backdrop-filter: none !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border) 55%, transparent);
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-body {
+  padding: 0 2px 4px !important;
+  overscroll-behavior: contain;
+  /* Limit layout/paint work while scrolling dense emoji grids. */
+  contain: content;
+  content-visibility: auto;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-emoji-list {
+  contain: content;
+}
+
+.EmojiPickerReact.im-emoji-picker button.epr-emoji {
+  /* Avoid filter/transition cost across thousands of cells. */
+  transition: none !important;
+  filter: none !important;
+  will-change: auto;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.EmojiPickerReact.im-emoji-picker .epr-body::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+}

@@ -38,6 +38,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
         "parentTaskId": row.get("parent_task_id") or None,
         "worksetId": row.get("workset_id") or None,
+        "itemId": row.get("item_id") or None,
         "projectWaveIntervalSeconds": (
             int(row["project_wave_interval_seconds"]) if row.get("project_wave_interval_seconds") is not None else None
         ),
@@ -49,6 +50,15 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
             int(row["analysis_batch_message_limit"]) if row.get("analysis_batch_message_limit") is not None else None
         ),
         "analysisStrategyMode": row.get("analysis_strategy_mode") or None,
+        "triggerMode": row.get("trigger_mode") or "schedule",
+        "capCalendarRead": bool(row.get("cap_calendar_read", 1)),
+        "capCalendarWrites": bool(row.get("cap_calendar_writes", 0)),
+        "capWebSearch": bool(row.get("cap_web_search", 0)),
+        "capForceWebSearch": bool(row.get("cap_force_web_search", 0)),
+        "capReadAnalysisEvents": bool(row.get("cap_read_analysis_events", 1)),
+        "capReadItems": bool(row.get("cap_read_items", 1)),
+        "outputCalendar": bool(row.get("output_calendar", 0)),
+        "outputAnalysisEvents": bool(row.get("output_analysis_events", 0)),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }
@@ -76,6 +86,7 @@ def serialize_task_schedule(row: Mapping[str, Any]) -> dict[str, Any] | None:
         "icsUid": row.get("ics_uid"),
         "icsSource": row.get("ics_source"),
         "parentTaskId": row.get("parent_task_id") or None,
+        "itemId": row.get("item_id") or None,
     }
 
 

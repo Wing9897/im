@@ -36,15 +36,13 @@
       "editAria": "Edit {name}",
       "deleteAria": "Delete {name}",
       "openProjectAria": "Open project: {name}",
-      "project": "Project",
-      "projectProgressHint": "Progress uses a message cursor (not marker stats)",
       "recurringProgressHint": "Recurring task (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
-      "web_intel": "Web intel task · Agent multi-round search",
-      "web_intelProgressHint": "Agent multi-round web search writes analysis events (optional source-message verify)",
       "retryCount": "Retry {count}",
       "analysisPausedHint": "Analysis paused (auto or manual)",
-      "waitingForThreshold": "Waiting for threshold: {count}/{threshold}"
+      "waitingForThreshold": "Waiting for threshold: {count}/{threshold}",
+      "agent": "Agent task",
+      "agentProgressHint": "Agent tick (cursor drain / threshold / schedule) — not marker batch stats"
     },
     "detail": {
       "timeRange": "Time range: {range}",
@@ -69,7 +67,7 @@
       "sourcesTitle": "Bound sources",
       "childrenTitle": "Child recurring tasks",
       "childrenEmptyTitle": "No child recurring tasks yet",
-      "childrenEmptyDescription": "The project manager creates child recurring tasks on each tick when needed.",
+      "childrenEmptyDescription": "The Agent creates child recurring tasks on each tick when needed.",
       "eventsTitle": "Owned timed events",
       "eventsEmptyTitle": "No owned events yet",
       "eventsEmptyDescription": "Single events created for this project appear here.",
@@ -140,7 +138,7 @@
       "followGlobalPlaceholder": "Empty = follow global",
       "batchOverlapLabel": "Batch overlap",
       "batchOverlapAria": "Number of overlapping messages per batch",
-      "batchOverlapHelp": "Next batch carries trailing messages for context; 0 = none. Used by intel tasks and web-intel tasks with channels; leaderboard injects Top 10 instead.",
+      "batchOverlapHelp": "Next batch carries trailing messages for context; 0 = none. Used by intel tasks and Agent message-threshold tasks with channels; leaderboard injects Top 10 instead.",
       "triggerThresholdHelp": "Leave empty to follow the global trigger threshold.",
       "batchLimitHelp": "Leave empty to follow the global batch limit.",
       "evidenceStyleHelp": "Leave empty to follow the global evidence style.",
@@ -165,7 +163,8 @@
         "prompt": "Enter the task prompt",
         "channels": "Select at least one source channel",
         "rrule": "Set a recurrence rule",
-        "eventStart": "Set a start time, or mark the event as all-day"
+        "eventStart": "Set a start time, or mark the event as all-day",
+        "agentOutput": "Select at least one Agent output"
       },
       "pickChannels": "Click to select channels",
       "channelsSelected": "{selected} / {total} channels selected",
@@ -184,17 +183,13 @@
         "name": "Intel task",
         "blurb": "Extract intel events and itineraries"
       },
-      "web_intel": {
-        "name": "Web intel task",
-        "blurb": "Agent multi-round web search into analysis events; optional source verify"
-      },
       "leaderboard": {
         "name": "Leaderboard task",
         "blurb": "Compare and track top message rankings"
       },
-      "project": {
-        "name": "Project task",
-        "blurb": "Closed-loop reconcile of project calendar and child tasks"
+      "agent": {
+        "name": "Agent task",
+        "blurb": "Configurable trigger, tools, and calendar / intel outputs"
       }
     },
     "modes": {
@@ -210,26 +205,21 @@
         "promptPlaceholder": "e.g. extract announcements, meetings, deadlines; fill start_time when clear, location when known",
         "promptHint": "Omit uncertain time/place fields — do not guess; can appear on intelligence and timeline pages"
       },
-      "web_intel": {
-        "modeDescription": "Agent multi-round web search into analysis events; optional source-message verify",
-        "promptLabel": "Task prompt (what intel to gather and how to write events)",
-        "promptPlaceholder": "e.g. keep only official announcements and regulatory moves; fill start_time when clear, location when known; ignore ads and forum chatter",
-        "promptHint": "The Agent chooses keywords from this prompt, may search multiple rounds, then emits events. Describe what to keep and how to write title/body.",
-        "scheduleDefaultHint": "Hourly recommended; switching here remaps every-10-seconds to hourly.",
-        "timedModeHint": "No channels = timed search on schedule. Bind source channels to require a message threshold first and inject them for verification.",
-        "messageGateHint": "Channels bound = message-gate: runs at threshold; messages are injected for search verify/supplement. Override threshold in Advanced."
-      },
       "recurring": {
         "modeDescription": "RRULE recurring task, no AI",
         "promptLabel": "",
         "promptPlaceholder": "",
         "promptHint": ""
       },
-      "project": {
-        "modeDescription": "Closed-loop reconcile of project calendar and child tasks",
-        "promptLabel": "Project goals / rules",
-        "promptPlaceholder": "e.g. keep standup + demo dates current from Telegram; prefer morning slots; soft-delete cancelled series",
-        "promptHint": "Bind source channels and prefer hourly schedule; the agent may run even with no new messages to reconcile the calendar"
+      "agent": {
+        "modeDescription": "Configurable Agent: choose trigger, tool permissions, and calendar / analysis outputs",
+        "promptLabel": "Task prompt (goals / search / extraction rules)",
+        "promptPlaceholder": "e.g. reconcile calendar from channel messages, or gather official announcements via web search",
+        "promptHint": "Describe what the Agent should do. Presets fill trigger/permissions/outputs; you can still fine-tune.",
+        "scheduleDefaultHint": "Hourly recommended; switching to Agent remaps every-10-seconds to hourly.",
+        "timedModeHint": "No channels = timed fire on schedule. Bind channels for threshold gate or cursor drain.",
+        "messageGateHint": "Channels bound with message-threshold: runs at threshold; messages are injected for verify/supplement.",
+        "cursorChannelHint": "Message-cursor drain requires at least one bound source channel."
       }
     },
     "recurrence": {
@@ -507,6 +497,33 @@
         "description": "Agent multi-round search of East Asia security hotspots; optional channel bind for source verify",
         "promptTemplate": "After multi-round web search, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
       }
+    },
+    "agent": {
+      "presetsLabel": "Presets",
+      "presetsHint": "One-click fill; you can still change checkboxes afterward.",
+      "presets": {
+        "project_reconcile": "Project reconcile",
+        "web_scout": "Web scout"
+      },
+      "triggerLabel": "Trigger",
+      "trigger": {
+        "schedule": "Schedule only (run on schedule)",
+        "message_cursor": "Drain source backlog (run when new messages exist)",
+        "message_threshold": "Message threshold (run at count; no channels ≈ schedule only)"
+      },
+      "capsLabel": "Tool permissions",
+      "caps": {
+        "calendarRead": "Read calendar (query existing events)",
+        "readAnalysisEvents": "Read events (search intel / analysis events)",
+        "readItems": "Read items (list expiring / inventory items)",
+        "webSearch": "Web search (force-enabled when on)"
+      },
+      "outputLabel": "Output modes",
+      "output": {
+        "calendar": "Calendar events (implies write-calendar)",
+        "analysisEvents": "Intelligence events (write analysis_events)"
+      },
+      "outputHint": "At least one output is required."
     }
   },
   "leaderboard": {
@@ -543,8 +560,7 @@
     "taskEditor": "Task advisor",
     "leaderboard": "Leaderboard analyst",
     "intel_event": "Intel task analyst",
-    "web_intel": "Web intel scout",
-    "project": "Project manager"
+    "agent": "Agent"
   },
   "ui": {
     "listSep": ", ",

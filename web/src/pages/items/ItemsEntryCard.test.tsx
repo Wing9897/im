@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import "./emojiPickerReactMock";
 import type { TrackableItem } from "../../api/items";
 import { ItemsEntryCard } from "./ItemsEntryCard";
 
@@ -8,6 +9,12 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       if (key === "openItemAria") return `Open ${opts?.name ?? ""}`;
+      if (key === "changeEmojiAria") return `Change emoji for ${opts?.name ?? ""}`;
+      if (key === "emojiPickerAria") return "Choose an emoji";
+      if (key === "emojiClear") return "Clear";
+      if (key === "emojiHint") return "hint";
+      if (key === "done") return "Done";
+      if (key === "dialog.close") return "Close";
       if (key === "daysLeft") return `${opts?.count ?? 0}d left`;
       if (key === "daysOverdue") return `${opts?.count ?? 0}d overdue`;
       if (key === "noExpiry") return "No expiry";
@@ -62,7 +69,7 @@ describe("ItemsEntryCard", () => {
     container.remove();
   });
 
-  it("renders emoji, expiry badge, and opens on click", () => {
+  it("renders emoji avatar, expiry badge, and opens on click", () => {
     const onOpen = vi.fn();
     const expiresAt = isoDaysFromNow(2);
 
@@ -83,6 +90,7 @@ describe("ItemsEntryCard", () => {
     expect(container.textContent).toContain("Food");
     expect(container.textContent).toContain("2d left");
     expect(container.textContent).toContain(expiresAt);
+    expect(container.querySelector('[data-testid="item-emoji-avatar"]')).toBeTruthy();
 
     const card = container.querySelector('[data-testid="items-entry-card-i1"]');
     expect(card).toBeTruthy();
@@ -90,6 +98,47 @@ describe("ItemsEntryCard", () => {
       (card as HTMLElement).click();
     });
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("changes emoji from the avatar without opening the item", async () => {
+    const onOpen = vi.fn();
+    const onEmojiChange = vi.fn().mockResolvedValue(undefined);
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <ItemsEntryCard
+          item={item({ id: "i1", title: "Milk" })}
+          emoji="🥛"
+          onOpen={onOpen}
+          onEmojiChange={onEmojiChange}
+        />,
+      );
+    });
+
+    const trigger = container.querySelector(
+      '[data-testid="item-card-emoji-trigger"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      trigger.click();
+    });
+    expect(onOpen).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+    });
+
+    const apple = document.querySelector(
+      '[data-testid="emoji-option-🍎"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      apple.click();
+    });
+
+    expect(onEmojiChange).toHaveBeenCalledWith("🍎");
+    expect(onOpen).not.toHaveBeenCalled();
   });
 
   it("shows overdue tone copy and keeps actions from opening the card", () => {

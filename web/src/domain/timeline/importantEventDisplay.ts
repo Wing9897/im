@@ -1,8 +1,5 @@
 import { IMPORTANT_EVENT_EMOJI } from "../../api/timelineImportance";
-import {
-  itemDateKindEmoji,
-  stripItemKindTitlePrefix,
-} from "../items/itemCalendarProjection";
+import { itemDateKindEmoji } from "../items/itemCalendarProjection";
 
 export type CalendarLeadingGlyph =
   | { type: "important"; emoji: typeof IMPORTANT_EVENT_EMOJI }
@@ -10,7 +7,7 @@ export type CalendarLeadingGlyph =
 
 /**
  * Single leading calendar glyph.
- * Priority: important ❗ > item remind 🔔; purchased / expires use the normal dot.
+ * Priority: important ❗ > item remind 🔔; other item rows use the normal dot.
  */
 export function resolveCalendarLeadingGlyph(event: {
   important?: boolean | null;
@@ -31,17 +28,12 @@ export function resolveCalendarLeadingGlyph(event: {
 }
 
 /**
- * Month-cell preview title: plain for purchased / expires; remind keeps its prefix.
+ * Month-cell preview title (remind keeps its i18n prefix from merge).
  */
 export function monthPreviewTitle(event: {
   title: string;
   source?: string;
   itemDateKind?: string | null;
 }): string {
-  const base = event.title.trim();
-  if (event.source !== "item") return base;
-  if (event.itemDateKind === "purchased" || event.itemDateKind === "expires") {
-    return stripItemKindTitlePrefix(event.itemDateKind, base);
-  }
-  return base;
+  return event.title.trim();
 }

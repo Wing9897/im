@@ -97,7 +97,7 @@ describe("useTaskEditorState", () => {
       description: "desc",
       promptTemplate: "prompt",
       webSearchQuery: "",
-      analysisMode: "project",
+      analysisMode: "agent",
       defaultAnalysisTimeRange: "7d",
       badge: "🚀",
     };
@@ -106,7 +106,7 @@ describe("useTaskEditorState", () => {
       latest.applyPreset(preset);
     });
 
-    expect(latest.formState.analysisMode).toBe("project");
+    expect(latest.formState.analysisMode).toBe("agent");
     expect(latest.formState.scheduleType).toBe("hourly");
   });
 
@@ -193,13 +193,16 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(false);
     });
 
-    it("requires prompt only for web_intel (query and channels optional)", () => {
+    it("requires prompt for agent (channels optional for schedule/threshold)", () => {
       renderHarness();
       act(() => {
-        latest.updateField("analysisMode", "web_intel");
-        latest.updateField("name", "Web intel");
+        latest.updateField("analysisMode", "agent");
+        latest.updateField("name", "Agent scout");
         latest.updateField("webSearchQuery", "");
         latest.updateField("channelIds", []);
+        latest.updateField("outputAnalysisEvents", true);
+        latest.updateField("outputCalendar", false);
+        latest.updateField("triggerMode", "schedule");
       });
       expect(latest.canSave).toBe(false);
       expect(latest.saveBlockReason).toMatch(/Prompt|prompt/i);

@@ -27,7 +27,7 @@ from server.tests.schema_fixtures import (
     make_stamped_db,
 )
 
-_REQUIRED_TABLE_COUNT = 27
+_REQUIRED_TABLE_COUNT = 28
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 

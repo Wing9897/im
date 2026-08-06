@@ -4,7 +4,6 @@ import type {
   TaskDraftPayload,
   TaskFormState,
 } from "../../types";
-import { webIntelMessageGateActive } from "./analysisModeCapabilities";
 import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
 import { safeArray } from "../../utils/nullGuards";
 import {
@@ -75,6 +74,19 @@ export function applyConfigToFormState(
   if (config.analysisStrategyMode !== undefined) {
     updated.analysisStrategyMode = config.analysisStrategyMode;
   }
+  if (config.triggerMode !== undefined) updated.triggerMode = config.triggerMode;
+  if (config.capCalendarRead !== undefined) updated.capCalendarRead = config.capCalendarRead;
+  if (config.capCalendarWrites !== undefined) updated.capCalendarWrites = config.capCalendarWrites;
+  if (config.capWebSearch !== undefined) updated.capWebSearch = config.capWebSearch;
+  if (config.capForceWebSearch !== undefined) updated.capForceWebSearch = config.capForceWebSearch;
+  if (config.capReadAnalysisEvents !== undefined) {
+    updated.capReadAnalysisEvents = config.capReadAnalysisEvents;
+  }
+  if (config.capReadItems !== undefined) updated.capReadItems = config.capReadItems;
+  if (config.outputCalendar !== undefined) updated.outputCalendar = config.outputCalendar;
+  if (config.outputAnalysisEvents !== undefined) {
+    updated.outputAnalysisEvents = config.outputAnalysisEvents;
+  }
 
   return updated;
 }
@@ -115,25 +127,33 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     };
   }
 
-  const messageGate = webIntelMessageGateActive(
-    formState.analysisMode,
-    formState.channelIds,
-  );
+  const messageGate =
+    formState.analysisMode === "agent" &&
+    formState.triggerMode === "message_threshold" &&
+    formState.channelIds.length > 0;
 
   return {
     ...commonConfig,
     promptTemplate: formState.promptTemplate,
-    // web_intel Agent picks keywords from the prompt; never persist a seed field.
     webSearchQuery: "",
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,
-    ...(formState.analysisMode === "intel_event" ||
-    formState.analysisMode === "project" ||
-    formState.analysisMode === "web_intel"
+    ...(formState.analysisMode === "intel_event" || formState.analysisMode === "agent"
       ? { includeInTimeline: formState.includeInTimeline }
       : {}),
-    ...(formState.analysisMode === "project"
-      ? { projectWaveIntervalSeconds: formState.projectWaveIntervalSeconds }
+    ...(formState.analysisMode === "agent"
+      ? {
+          projectWaveIntervalSeconds: formState.projectWaveIntervalSeconds,
+          triggerMode: formState.triggerMode,
+          capCalendarRead: formState.capCalendarRead,
+          capCalendarWrites: formState.capCalendarWrites,
+          capWebSearch: formState.capWebSearch,
+          capForceWebSearch: formState.capForceWebSearch,
+          capReadAnalysisEvents: formState.capReadAnalysisEvents,
+          capReadItems: formState.capReadItems,
+          outputCalendar: formState.outputCalendar,
+          outputAnalysisEvents: formState.outputAnalysisEvents,
+        }
       : {}),
     ...(formState.analysisMode === "intel_event" ||
     formState.analysisMode === "leaderboard" ||
@@ -185,6 +205,20 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
         ? task.analysisStrategyMode
         : null,
     worksetId: task.worksetId ?? null,
+    triggerMode:
+      task.triggerMode === "message_cursor" ||
+      task.triggerMode === "message_threshold" ||
+      task.triggerMode === "schedule"
+        ? task.triggerMode
+        : "schedule",
+    capCalendarRead: task.capCalendarRead ?? true,
+    capCalendarWrites: task.capCalendarWrites ?? false,
+    capWebSearch: task.capWebSearch ?? false,
+    capForceWebSearch: task.capForceWebSearch ?? false,
+    capReadAnalysisEvents: task.capReadAnalysisEvents ?? true,
+    capReadItems: task.capReadItems ?? true,
+    outputCalendar: task.outputCalendar ?? false,
+    outputAnalysisEvents: task.outputAnalysisEvents ?? false,
   };
 }
 
@@ -225,6 +259,15 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     worksetId: config.worksetId ?? null,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
+    triggerMode: config.triggerMode ?? "schedule",
+    capCalendarRead: config.capCalendarRead ?? true,
+    capCalendarWrites: config.capCalendarWrites ?? false,
+    capWebSearch: config.capWebSearch ?? false,
+    capForceWebSearch: config.capForceWebSearch ?? false,
+    capReadAnalysisEvents: config.capReadAnalysisEvents ?? true,
+    capReadItems: config.capReadItems ?? true,
+    outputCalendar: config.outputCalendar ?? false,
+    outputAnalysisEvents: config.outputAnalysisEvents ?? false,
   };
 }
 

@@ -9,6 +9,7 @@ from typing import Any
 from server.api.channel_refs import parse_channel_refs
 from server.api.routes.task_helpers import (
     TaskConfigBody,
+    agent_policy_write_fields,
     channel_refs_for,
     require_task_row,
     resolve_workset_id,
@@ -17,10 +18,9 @@ from server.api.routes.task_helpers import (
 )
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import (
+    AGENT_MODE,
     CHILD_RECURRING_MODE,
     LEADERBOARD_MODE,
-    PARENT_PROJECT_MODE,
-    WEB_INTEL_MODE,
 )
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.batch_housekeeping import purge_superseded_task_version_data
@@ -76,13 +76,23 @@ async def create_recurring_task_record(
     description: str | None = None,
     workset_id: str | None | EllipsisType = ...,
     parent_task_id: str | None = None,
+    item_id: str | None = None,
 ) -> TaskMutationResult:
     """Atomic recurring create (task + schedule) — same path as the agent tool."""
+    from server.calendar.user_events_normalize import (
+        UserEventItemIdError,
+        resolve_user_event_item_id,
+    )
+
     resolved_workset: str | None | EllipsisType
     if workset_id is ...:
         resolved_workset = ...
     else:
         resolved_workset = await resolve_workset_id(db, supplied=workset_id)
+    try:
+        clean_item_id = await resolve_user_event_item_id(db, item_id)
+    except UserEventItemIdError as exc:
+        raise TaskWriteError(str(exc)) from exc
     row = await create_recurring_task(
         db,
         name=name,
@@ -95,6 +105,7 @@ async def create_recurring_task_record(
         description=description,
         workset_id=resolved_workset,
         parent_task_id=parent_task_id,
+        item_id=clean_item_id,
     )
     task_id = str(row["id"])
     return TaskMutationResult(
@@ -110,18 +121,18 @@ def _resolve_web_search_query(
     supplied: str | None,
     existing: str | None = None,
 ) -> str:
-    # Retired for all modes including web_intel: Agent chooses keywords from prompt.
+    # Retired for all modes: Agent chooses keywords from prompt.
     del effective_mode, supplied, existing
     return ""
 
 
-def _validate_web_intel_fields(*, effective_mode: str, prompt: str) -> None:
-    if effective_mode != WEB_INTEL_MODE:
+def _validate_agent_prompt(*, effective_mode: str, prompt: str) -> None:
+    if effective_mode != AGENT_MODE:
         return
     if not prompt.strip():
         raise TaskWriteError(
-            "web_intel tasks require a non-empty promptTemplate "
-            "(how the Agent should search and turn findings into events)"
+            "agent tasks require a non-empty promptTemplate "
+            "(goals / search / extraction rules for the Agent)"
         )
 
 
@@ -133,13 +144,12 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
 
     task_id = new_id()
     now = utc_now_iso()
-    # web_intel may optionally bind channels (message-threshold gate); omit = timed-only.
     refs = parse_channel_refs(body.channelIds)
     web_search_query = _resolve_web_search_query(
         effective_mode=effective_mode,
         supplied=body.webSearchQuery,
     )
-    _validate_web_intel_fields(
+    _validate_agent_prompt(
         effective_mode=effective_mode,
         prompt=body.promptTemplate,
     )
@@ -148,6 +158,11 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
         supplied=body.includeInTimeline,
     )
     workset_id = await resolve_workset_id(db, supplied=body.worksetId)
+    agent_fields = agent_policy_write_fields(
+        effective_mode=effective_mode,
+        body=body,
+        has_channels=bool(refs),
+    )
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         try:
@@ -171,6 +186,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             web_search_query=web_search_query,
             now=now,
             **schedule_override_write_fields(body),
+            **agent_fields,
         )
         await replace_task_channels(tx, task_id, refs)
 
@@ -220,7 +236,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         supplied=body.webSearchQuery if "webSearchQuery" in body.model_fields_set else None,
         existing=str(existing.get("web_search_query") or ""),
     )
-    _validate_web_intel_fields(
+    _validate_agent_prompt(
         effective_mode=effective_mode,
         prompt=body.promptTemplate,
     )
@@ -236,18 +252,41 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         fields_set=body.model_fields_set,
     )
 
-    leaving_project = existing_mode == PARENT_PROJECT_MODE and effective_mode != PARENT_PROJECT_MODE
+    existing_was_agent_parent = existing_mode == AGENT_MODE and bool(
+        existing.get("output_calendar")
+    )
+    leaving_agent_parent = existing_was_agent_parent and (
+        effective_mode != AGENT_MODE
+        or (
+            "outputCalendar" in body.model_fields_set
+            and body.outputCalendar is False
+        )
+    )
 
     channels_changed = False
+    channel_count_for_policy: bool | None = None
     if refs is not None:
         current_channels = await fetch_task_channel_rows(db, task_id)
         current_set = {(str(row["platform"]), str(row["platform_id"])) for row in current_channels}
         new_set = {(platform, platform_id) for platform, platform_id in refs}
         channels_changed = current_set != new_set
+        channel_count_for_policy = bool(refs)
+    else:
+        current_channels = await fetch_task_channel_rows(db, task_id)
+        channel_count_for_policy = bool(current_channels)
+
+    agent_fields = agent_policy_write_fields(
+        effective_mode=effective_mode,
+        body=body,
+        existing=existing,
+        has_channels=channel_count_for_policy,
+    )
 
     reset_project_cursor = should_reset_project_message_cursor(
         existing_mode=existing_mode,
         effective_mode=effective_mode,
+        existing_trigger=str(existing.get("trigger_mode") or ""),
+        effective_trigger=str(agent_fields.get("trigger_mode") or ""),
         existing_prompt=str(existing.get("prompt_template") or ""),
         new_prompt=body.promptTemplate,
         channels_changed=channels_changed,
@@ -279,6 +318,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
             web_search_query=web_search_query,
             now=now,
             **schedule_override_write_fields(body),
+            **agent_fields,
         )
         await purge_superseded_task_version_data(tx, task_id, new_version)
 
@@ -291,7 +331,9 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         if refs is not None:
             await replace_task_channels(tx, task_id, refs)
 
-        if leaving_project:
+        if leaving_agent_parent or (
+            existing_mode == AGENT_MODE and effective_mode != AGENT_MODE
+        ):
             await clear_children_parent_links(tx, task_id, now=now)
         if existing_mode == CHILD_RECURRING_MODE:
             await tx.execute("DELETE FROM recurring_schedules WHERE task_id = ?", (task_id,))

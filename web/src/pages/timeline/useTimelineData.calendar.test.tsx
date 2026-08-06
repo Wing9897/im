@@ -464,12 +464,22 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });
 
-  it("includes intel_event, web_intel, recurring, and project modes in timelineTasks", async () => {
+  it("includes intel_event, agent, and recurring modes in timelineTasks", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "intel_event" }),
-      makeAnalysisTask({ id: "web-1", name: "Web Intel", analysisMode: "web_intel" }),
+      makeAnalysisTask({
+        id: "web-1",
+        name: "Web Intel",
+        analysisMode: "agent",
+        outputAnalysisEvents: true,
+      }),
       makeAnalysisTask({ id: "cal-1", name: "Calendar Task", analysisMode: "recurring" }),
-      makeAnalysisTask({ id: "proj-1", name: "Project Alpha", analysisMode: "project" }),
+      makeAnalysisTask({
+        id: "proj-1",
+        name: "Project Alpha",
+        analysisMode: "agent",
+        outputCalendar: true,
+      }),
       makeAnalysisTask({ id: "lb-1", name: "Leaderboard", analysisMode: "leaderboard" }),
     ]);
     await renderHook(null);

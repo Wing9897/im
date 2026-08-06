@@ -64,6 +64,66 @@ describe("ModalDialog", () => {
     expect(document.body.querySelector('[data-testid="hidden-modal-dialog"]')).toBeNull();
   });
 
+  it("keeps the dialog mounted briefly while exiting", () => {
+    const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
+    );
+    const onClose = vi.fn();
+    try {
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: true,
+              title: "Exit Dialog",
+              onClose,
+              testId: "exit-modal-dialog",
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", null, "Body"),
+          ),
+        );
+      });
+
+      expect(document.body.querySelector('[data-testid="exit-modal-dialog"]')).not.toBeNull();
+
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: false,
+              title: "Exit Dialog",
+              onClose,
+              testId: "exit-modal-dialog",
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", null, "Body"),
+          ),
+        );
+      });
+
+      const overlay = document.body.querySelector(
+        '[data-testid="exit-modal-dialog"]',
+      ) as HTMLElement | null;
+      expect(overlay).not.toBeNull();
+      expect(overlay?.className).toContain("im-animate-out");
+    } finally {
+      matchMediaSpy.mockRestore();
+    }
+  });
+
   it("omits body padding when bodyPadding is none", () => {
     act(() => {
       root.render(
@@ -86,5 +146,68 @@ describe("ModalDialog", () => {
     const body = dialog.querySelector('[role="dialog"]')?.children[1] as HTMLElement;
     expect(body.className).not.toContain("px-lg");
     expect(body.className).not.toContain("py-md");
+  });
+
+  it("keepMounted parks the tree as hidden after close instead of unmounting", () => {
+    const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: true,
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
+    );
+    const onClose = vi.fn();
+    try {
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: true,
+              title: "Keep",
+              onClose,
+              testId: "keep-mounted-modal",
+              keepMounted: true,
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", { "data-testid": "keep-body" }, "Warm child"),
+          ),
+        );
+      });
+
+      expect(document.body.querySelector('[data-testid="keep-mounted-modal"]')).not.toBeNull();
+
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: false,
+              title: "Keep",
+              onClose,
+              testId: "keep-mounted-modal",
+              keepMounted: true,
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", { "data-testid": "keep-body" }, "Warm child"),
+          ),
+        );
+      });
+
+      const overlay = document.body.querySelector(
+        '[data-testid="keep-mounted-modal"]',
+      ) as HTMLElement | null;
+      expect(overlay).not.toBeNull();
+      expect(overlay?.hidden).toBe(true);
+      expect(document.body.querySelector('[data-testid="keep-body"]')).not.toBeNull();
+    } finally {
+      matchMediaSpy.mockRestore();
+    }
   });
 });

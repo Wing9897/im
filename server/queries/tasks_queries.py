@@ -29,7 +29,8 @@ SELECT t.*,
        rs.ics_uid,
        rs.ics_source,
        rs.ics_import_fingerprint,
-       rs.parent_task_id
+       rs.parent_task_id,
+       rs.item_id
 FROM analysis_tasks t
 LEFT JOIN recurring_schedules rs ON rs.task_id = t.id
 """
@@ -183,6 +184,15 @@ async def insert_analysis_task(
     analysis_trigger_threshold: int | None = None,
     analysis_batch_message_limit: int | None = None,
     analysis_strategy_mode: str | None = None,
+    trigger_mode: str = "schedule",
+    cap_calendar_read: int = 1,
+    cap_calendar_writes: int = 0,
+    cap_web_search: int = 0,
+    cap_force_web_search: int = 0,
+    cap_read_analysis_events: int = 1,
+    cap_read_items: int = 1,
+    output_calendar: int = 0,
+    output_analysis_events: int = 0,
     rrule: str | None = None,
     event_start_time: str | None = None,
     event_end_time: str | None = None,
@@ -198,8 +208,12 @@ async def insert_analysis_task(
         "schedule_rrule, include_in_timeline, workset_id, "
         "project_wave_interval_seconds, batch_overlap_count, "
         "analysis_trigger_threshold, analysis_batch_message_limit, "
-        "analysis_strategy_mode, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "analysis_strategy_mode, "
+        "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
+        "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
+        "output_calendar, output_analysis_events, "
+        "created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -216,6 +230,15 @@ async def insert_analysis_task(
             analysis_trigger_threshold,
             analysis_batch_message_limit,
             analysis_strategy_mode,
+            trigger_mode,
+            cap_calendar_read,
+            cap_calendar_writes,
+            cap_web_search,
+            cap_force_web_search,
+            cap_read_analysis_events,
+            cap_read_items,
+            output_calendar,
+            output_analysis_events,
             now,
             now,
         ),
@@ -267,6 +290,15 @@ async def update_analysis_task(
     analysis_trigger_threshold: int | None = None,
     analysis_batch_message_limit: int | None = None,
     analysis_strategy_mode: str | None = None,
+    trigger_mode: str = "schedule",
+    cap_calendar_read: int = 1,
+    cap_calendar_writes: int = 0,
+    cap_web_search: int = 0,
+    cap_force_web_search: int = 0,
+    cap_read_analysis_events: int = 1,
+    cap_read_items: int = 1,
+    output_calendar: int = 0,
+    output_analysis_events: int = 0,
     now: str,
 ) -> None:
     await tx.execute(
@@ -275,7 +307,11 @@ async def update_analysis_task(
         "schedule_rrule = ?, include_in_timeline = ?, workset_id = ?, "
         "project_wave_interval_seconds = ?, batch_overlap_count = ?, "
         "analysis_trigger_threshold = ?, analysis_batch_message_limit = ?, "
-        "analysis_strategy_mode = ?, updated_at = ? WHERE id = ?",
+        "analysis_strategy_mode = ?, "
+        "trigger_mode = ?, cap_calendar_read = ?, cap_calendar_writes = ?, "
+        "cap_web_search = ?, cap_force_web_search = ?, "
+        "cap_read_analysis_events = ?, cap_read_items = ?, "
+        "output_calendar = ?, output_analysis_events = ?, updated_at = ? WHERE id = ?",
         (
             name,
             description,
@@ -292,6 +328,15 @@ async def update_analysis_task(
             analysis_trigger_threshold,
             analysis_batch_message_limit,
             analysis_strategy_mode,
+            trigger_mode,
+            cap_calendar_read,
+            cap_calendar_writes,
+            cap_web_search,
+            cap_force_web_search,
+            cap_read_analysis_events,
+            cap_read_items,
+            output_calendar,
+            output_analysis_events,
             now,
             task_id,
         ),

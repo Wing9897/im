@@ -41,6 +41,7 @@ async def list_tasks(
     top_level_only: bool = Query(False),
     analysis_mode: Optional[str] = Query(None),
     workset_id: Optional[str] = Query(None),
+    item_id: Optional[str] = Query(None),
 ) -> list[dict]:
     try:
         return await list_tasks_payload(
@@ -48,6 +49,7 @@ async def list_tasks(
             top_level_only=top_level_only,
             analysis_mode=analysis_mode,
             workset_id=workset_id,
+            item_id=item_id,
         )
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
@@ -72,6 +74,7 @@ async def create_recurring_task_endpoint(
             description=body.description,
             workset_id=body.worksetId if "worksetId" in body.model_fields_set else ...,
             parent_task_id=body.parentTaskId,
+            item_id=body.itemId,
         )
     except TaskWriteError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc

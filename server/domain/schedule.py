@@ -207,7 +207,7 @@ def trigger_rrule_to_preset(rule: str | None) -> tuple[str | None, str | None]:
 
 def default_trigger_rrule(analysis_mode: str | None) -> str:
     """Default AI timer when the client omits schedule fields."""
-    if analysis_mode in {"project", "web_intel"}:
+    if analysis_mode == "agent":
         return preset_to_trigger_rrule("hourly", None)
     return preset_to_trigger_rrule("seconds_10", None)
 

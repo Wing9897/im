@@ -1,4 +1,4 @@
-"""web_intel tick: Agent multi-round path, optional message gate, skips, fuse."""
+"""Agent tick (web_scout policy): multi-round path, optional message gate, skips, fuse."""
 
 from __future__ import annotations
 
@@ -9,10 +9,11 @@ import pytest
 
 from server.agent.runtime import AgentRuntime
 from server.config import set_configs
-from server.domain.analysis_modes import WEB_INTEL_MODE
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE
 from server.domain.schedule import default_trigger_rrule, preset_to_trigger_rrule
 from server.scheduler.manager import SchedulerManager
-from server.scheduler.web_intel_tick import execute_web_intel_tick, parse_web_intel_agent_items
+from server.scheduler.agent_tick import execute_agent_tick, parse_agent_items
 from server.sse import SseBroadcaster
 from server.tests import seed
 from server.util import utc_now_iso
@@ -33,21 +34,36 @@ async def _insert_web_intel_task(
     query: str = "OpenAI pricing",
     prompt: str = "Extract official announcements only",
     threshold: int | None = None,
+    has_channels: bool = False,
 ) -> None:
     now = utc_now_iso()
+    policy = agent_spec_to_db_kwargs(agent_preset_spec("web_scout", has_channels=has_channels))
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, web_search_query, "
         "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
-        "include_in_timeline, analysis_trigger_threshold, created_at, updated_at) "
-        "VALUES (?, ?, '', ?, ?, ?, 'all', 1, 1, ?, 1, ?, ?, ?)",
+        "include_in_timeline, analysis_trigger_threshold, "
+        "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
+        "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
+        "output_calendar, output_analysis_events, "
+        "created_at, updated_at) "
+        "VALUES (?, ?, '', ?, ?, ?, 'all', 1, 1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             "Web intel",
             prompt,
             query,
-            WEB_INTEL_MODE,
+            AGENT_MODE,
             preset_to_trigger_rrule("hourly", None),
             threshold,
+            policy["trigger_mode"],
+            policy["cap_calendar_read"],
+            policy["cap_calendar_writes"],
+            policy["cap_web_search"],
+            policy["cap_force_web_search"],
+            policy["cap_read_analysis_events"],
+            policy["cap_read_items"],
+            policy["output_calendar"],
+            policy["output_analysis_events"],
             now,
             now,
         ),
@@ -130,26 +146,26 @@ def _patch_agent_chat(
         }
 
     monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick.ConfigurableLlmClient.from_db_for_agent",
         _fake_from_db,
     )
     monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)
 
 
 @pytest.mark.asyncio
-async def test_default_trigger_rrule_for_web_intel_is_hourly() -> None:
-    assert default_trigger_rrule(WEB_INTEL_MODE) == preset_to_trigger_rrule("hourly", None)
+async def test_default_trigger_rrule_for_agent_is_hourly() -> None:
+    assert default_trigger_rrule(AGENT_MODE) == preset_to_trigger_rrule("hourly", None)
 
 
-def test_parse_web_intel_agent_items_from_items_json() -> None:
-    items = parse_web_intel_agent_items(
+def test_parse_agent_items_from_items_json() -> None:
+    items = parse_agent_items(
         '{"items":[{"title":"A","body":"B"}]}',
     )
     assert items == [{"title": "A", "body": "B"}]
 
 
-def test_parse_web_intel_agent_items_from_nested_message_json() -> None:
-    items = parse_web_intel_agent_items(
+def test_parse_agent_items_from_nested_message_json() -> None:
+    items = parse_agent_items(
         '{"message":"{\\"items\\":[{\\"title\\":\\"N\\",\\"body\\":\\"M\\"}]}"}',
     )
     assert items[0]["title"] == "N"
@@ -164,7 +180,7 @@ async def test_web_intel_tick_timed_agent_writes_events(app, monkeypatch: pytest
     _patch_agent_chat(monkeypatch, capture=capture)
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     count = await db.fetch_value(
         "SELECT COUNT(*) FROM analysis_events WHERE task_id = ?",
@@ -176,9 +192,9 @@ async def test_web_intel_tick_timed_agent_writes_events(app, monkeypatch: pytest
         (task_id,),
     )
     assert title == "Web hit"
-    assert capture["kwargs"]["channel"] == "web_intel"
+    assert capture["kwargs"]["channel"] == "agent"
     seed = capture["messages"][0]["content"]
-    assert "Choose search keywords yourself" in seed
+    assert "Choose search keywords from the task prompt" in seed
     assert "Optional search seed" not in seed
     assert any(name == "analysis_completed" for name, _ in broadcaster.events)
     completed = [p for name, p in broadcaster.events if name == "analysis_completed"]
@@ -190,7 +206,7 @@ async def test_web_intel_tick_forces_web_search_via_channel(
     app,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Assistant master switch off must not block scheduled web_intel Agent ticks."""
+    """Assistant master switch off must not block scheduled agent (web_scout) ticks."""
     db = app.state.db
     task_id = "web-intel-assistant-off"
     await _insert_web_intel_task(db, task_id=task_id)
@@ -203,8 +219,8 @@ async def test_web_intel_tick_forces_web_search_via_channel(
 
     capture: dict[str, Any] = {}
     _patch_agent_chat(monkeypatch, capture=capture)
-    await execute_web_intel_tick(db=db, broadcaster=_Broadcaster(), task_id=task_id)
-    assert capture["kwargs"]["channel"] == "web_intel"
+    await execute_agent_tick(db=db, broadcaster=_Broadcaster(), task_id=task_id)
+    assert capture["kwargs"]["channel"] == "agent"
 
 
 @pytest.mark.asyncio
@@ -215,7 +231,7 @@ async def test_web_intel_tick_empty_query_still_runs_agent(app, monkeypatch: pyt
     _patch_agent_chat(monkeypatch)
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     row = await db.fetch_one(
         "SELECT status, error_message, agent_message FROM analysis_batches WHERE task_id = ?",
@@ -235,7 +251,7 @@ async def test_web_intel_tick_empty_prompt_records_skipped_batch(app) -> None:
     await _insert_web_intel_task(db, task_id=task_id, prompt="")
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     row = await db.fetch_one(
         "SELECT status, agent_message FROM analysis_batches WHERE task_id = ?",
@@ -256,7 +272,7 @@ async def test_web_intel_message_gate_under_threshold_skips_quietly(
 ) -> None:
     db = app.state.db
     task_id = "web-intel-under-threshold"
-    await _insert_web_intel_task(db, task_id=task_id, threshold=2)
+    await _insert_web_intel_task(db, task_id=task_id, threshold=2, has_channels=True)
     await _bind_gate_channel(db, task_id=task_id)
     await _insert_message(
         db,
@@ -272,12 +288,12 @@ async def test_web_intel_message_gate_under_threshold_skips_quietly(
 
     monkeypatch.setattr(AgentRuntime, "chat", _should_not_run)
     monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick.ConfigurableLlmClient.from_db_for_agent",
         AsyncMock(return_value=type("C", (), {"close": AsyncMock()})()),
     )
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     assert called["n"] == 0
     batches = await db.fetch_value(
@@ -295,7 +311,7 @@ async def test_web_intel_message_gate_claims_and_injects(
 ) -> None:
     db = app.state.db
     task_id = "web-intel-gate-claim"
-    await _insert_web_intel_task(db, task_id=task_id, threshold=1)
+    await _insert_web_intel_task(db, task_id=task_id, threshold=1, has_channels=True)
     await _bind_gate_channel(db, task_id=task_id)
     await _insert_message(
         db,
@@ -311,7 +327,7 @@ async def test_web_intel_message_gate_claims_and_injects(
     )
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     seed = capture["messages"][0]["content"]
     assert "Rumour about OpenAI pricing change" in seed
@@ -344,7 +360,7 @@ async def test_web_intel_tick_failure_is_completed_with_error_message(
     _patch_agent_chat(monkeypatch, side_effect=RuntimeError("LLM boom"))
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     row = await db.fetch_one(
         "SELECT status, error_message FROM analysis_batches WHERE task_id = ?",
@@ -356,7 +372,7 @@ async def test_web_intel_tick_failure_is_completed_with_error_message(
     failed = [p for name, p in broadcaster.events if name == "analysis_failed"]
     assert failed
     assert "LLM boom" in failed[0]["error"]
-    assert failed[0]["analysisMode"] == WEB_INTEL_MODE
+    assert failed[0]["analysisMode"] == AGENT_MODE
     assert failed[0]["retrying"] is True
     assert failed[0]["taskDeactivated"] is False
 
@@ -387,7 +403,7 @@ async def test_web_intel_consecutive_failures_deactivate_task(
     sched = _Sched()
     broadcaster = _Broadcaster()
 
-    await execute_web_intel_tick(
+    await execute_agent_tick(
         db=db,
         broadcaster=broadcaster,
         task_id=task_id,
@@ -397,7 +413,7 @@ async def test_web_intel_consecutive_failures_deactivate_task(
     assert int(active or 0) == 1
     assert sched.unregistered == []
 
-    await execute_web_intel_tick(
+    await execute_agent_tick(
         db=db,
         broadcaster=broadcaster,
         task_id=task_id,
@@ -435,25 +451,25 @@ async def test_web_intel_success_clears_failure_streak(app, monkeypatch: pytest.
         }
 
     monkeypatch.setattr(
-        "server.scheduler.web_intel_tick.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick.ConfigurableLlmClient.from_db_for_agent",
         _fake_from_db,
     )
     monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)
 
     broadcaster = _Broadcaster()
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
     mode["fail"] = False
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
 
     mode["fail"] = True
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
-    await execute_web_intel_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
+    await execute_agent_tick(db=db, broadcaster=broadcaster, task_id=task_id)
     active = await db.fetch_value("SELECT is_active FROM analysis_tasks WHERE id = ?", (task_id,))
     assert int(active or 0) == 1
 
 
 @pytest.mark.asyncio
-async def test_scheduler_dispatch_calls_web_intel_tick(app, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_scheduler_dispatch_calls_agent_tick(app, monkeypatch: pytest.MonkeyPatch) -> None:
     db = app.state.db
     task_id = "web-intel-dispatch"
     await _insert_web_intel_task(db, task_id=task_id)
@@ -463,7 +479,7 @@ async def test_scheduler_dispatch_calls_web_intel_tick(app, monkeypatch: pytest.
         called.append(str(kwargs.get("task_id")))
 
     monkeypatch.setattr(
-        "server.scheduler.manager_pipelines.execute_web_intel_tick",
+        "server.scheduler.manager_pipelines.execute_agent_tick",
         _fake_tick,
     )
 

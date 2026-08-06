@@ -14,20 +14,18 @@ from typing import Final, Literal
 
 LEADERBOARD_MODE: Final = "leaderboard"
 INTEL_EVENT_MODE: Final = "intel_event"
-WEB_INTEL_MODE: Final = "web_intel"
 CHILD_RECURRING_MODE: Final = "recurring"
-PARENT_PROJECT_MODE: Final = "project"
+AGENT_MODE: Final = "agent"
 
 AnalysisMode = Literal[
     "leaderboard",
     "intel_event",
-    "web_intel",
     "recurring",
-    "project",
+    "agent",
 ]
 
 #: How the mode is executed at runtime (developer-facing; drives which code path owns work).
-AnalysisPipeline = Literal["message_batch", "project_tick", "web_intel_tick", "rrule_expand"]
+AnalysisPipeline = Literal["message_batch", "agent_tick", "rrule_expand"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,14 +63,6 @@ ANALYSIS_MODE_SPECS: Final[tuple[AnalysisModeSpec, ...]] = (
         pipeline="message_batch",
     ),
     AnalysisModeSpec(
-        mode=WEB_INTEL_MODE,
-        ai=True,
-        schedulable=True,
-        message_batch=False,
-        timeline_owning=True,
-        pipeline="web_intel_tick",
-    ),
-    AnalysisModeSpec(
         mode=CHILD_RECURRING_MODE,
         ai=False,
         schedulable=False,
@@ -81,12 +71,12 @@ ANALYSIS_MODE_SPECS: Final[tuple[AnalysisModeSpec, ...]] = (
         pipeline="rrule_expand",
     ),
     AnalysisModeSpec(
-        mode=PARENT_PROJECT_MODE,
+        mode=AGENT_MODE,
         ai=True,
         schedulable=True,
         message_batch=False,
         timeline_owning=True,
-        pipeline="project_tick",
+        pipeline="agent_tick",
     ),
 )
 
@@ -94,7 +84,7 @@ ANALYSIS_MODE_BY_ID: Final[dict[str, AnalysisModeSpec]] = {spec.mode: spec for s
 
 ALL_ANALYSIS_MODES: Final[tuple[AnalysisMode, ...]] = tuple(spec.mode for spec in ANALYSIS_MODE_SPECS)
 
-#: Modes that run AI analysis (scheduler batch or project tick).
+#: Modes that run AI analysis (scheduler batch or agent tick).
 AI_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(spec.mode for spec in ANALYSIS_MODE_SPECS if spec.ai)
 
 #: Modes the scheduler registers for timed runs (excludes RRULE / filter buckets).
@@ -102,7 +92,7 @@ SCHEDULABLE_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if spec.schedulable
 )
 
-#: Modes that use the incremental message-batch pipeline (not project ticks).
+#: Modes that use the incremental message-batch pipeline (not agent ticks).
 MESSAGE_BATCH_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if spec.message_batch
 )
@@ -117,7 +107,7 @@ NON_SCHEDULABLE_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if not spec.schedulable
 )
 
-#: Modes skipped by the incremental message batch pipeline (includes project → tick).
+#: Modes skipped by the incremental message batch pipeline (includes agent → tick).
 SKIP_BATCH_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if not spec.message_batch
 )

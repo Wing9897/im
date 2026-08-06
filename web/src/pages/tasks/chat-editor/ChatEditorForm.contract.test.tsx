@@ -68,7 +68,7 @@ describe("ChatEditorForm recurring-only contract", () => {
     },
   );
 
-  it("shows web_intel optional channels and timed-mode hint (no seed query)", async () => {
+  it("shows agent optional channels and timed-mode hint (no seed query)", async () => {
     await act(async () => {
       root.render(
         createElement(
@@ -77,7 +77,10 @@ describe("ChatEditorForm recurring-only contract", () => {
           createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
-              analysisMode: "web_intel",
+              analysisMode: "agent",
+              triggerMode: "schedule",
+              outputCalendar: false,
+              outputAnalysisEvents: true,
               scheduleType: "hourly",
               promptTemplate: "",
               webSearchQuery: "",
@@ -91,16 +94,16 @@ describe("ChatEditorForm recurring-only contract", () => {
       );
     });
     expect(container.querySelector('[data-testid="task-web-search-query"]')).toBeNull();
-    expect(container.querySelector('[data-testid="task-web-intel-schedule-hint"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-schedule-hint"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-prompt-required"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="task-web-intel-trigger-hint"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-channel-hint"]')).not.toBeNull();
     expect(container.textContent).toContain("純定時");
     expect(container.textContent).toContain("來源頻道（選填）");
     expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-schedule-overrides"]')).toBeNull();
   });
 
-  it("shows web_intel message-gate overrides when channels are bound", async () => {
+  it("shows agent message-gate overrides when channels are bound", async () => {
     await act(async () => {
       root.render(
         createElement(
@@ -109,7 +112,10 @@ describe("ChatEditorForm recurring-only contract", () => {
           createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
-              analysisMode: "web_intel",
+              analysisMode: "agent",
+              triggerMode: "message_threshold",
+              outputCalendar: false,
+              outputAnalysisEvents: true,
               scheduleType: "hourly",
               promptTemplate: "Gather intel",
               webSearchQuery: "",
@@ -122,14 +128,14 @@ describe("ChatEditorForm recurring-only contract", () => {
         ),
       );
     });
-    expect(container.querySelector('[data-testid="task-web-intel-trigger-hint"]')?.textContent).toContain(
-      "來源訊息門檻",
+    expect(container.querySelector('[data-testid="task-agent-channel-hint"]')?.textContent).toContain(
+      "訊息閾值",
     );
     // Message-gate auto-expands Advanced so threshold overrides are reachable.
     expect(container.querySelector('[data-testid="task-schedule-overrides"]')).not.toBeNull();
   });
 
-  it("shows project wave interval after schedule type in project mode", async () => {
+  it("shows project wave interval after schedule type in agent cursor mode", async () => {
     await act(async () => {
       root.render(
         createElement(
@@ -138,9 +144,13 @@ describe("ChatEditorForm recurring-only contract", () => {
           createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
-              analysisMode: "project",
+              analysisMode: "agent",
+              triggerMode: "message_cursor",
+              outputCalendar: true,
+              outputAnalysisEvents: false,
               scheduleType: "hourly",
               projectWaveIntervalSeconds: 20,
+              channelIds: ["ch-1"],
             },
             updateField: () => undefined,
             channels: [],
@@ -163,9 +173,13 @@ describe("ChatEditorForm recurring-only contract", () => {
           createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
-              analysisMode: "project",
+              analysisMode: "agent",
+              triggerMode: "message_cursor",
+              outputCalendar: true,
+              outputAnalysisEvents: false,
               scheduleType: "hourly",
               projectWaveIntervalSeconds: 15,
+              channelIds: ["ch-1"],
             },
             updateField,
             channels: [],

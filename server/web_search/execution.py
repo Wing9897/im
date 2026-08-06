@@ -1,6 +1,6 @@
 """Shared web-search execution for assistant / agent ``web.search`` tools.
 
-Scheduled ``web_intel`` ticks use ``AgentRuntime`` + ``build_web_intel_base_prompt``
+Scheduled agent ticks with web search use ``AgentRuntime`` + ``build_agent_base_prompt``
 (not a oneshot extract path). Callers pass count caps and whether search is enabled:
 
 - Assistant / ``web.search`` tool: respect master switch (``enabled=False`` short-circuits).

@@ -154,13 +154,13 @@ export function calendarOccurrenceToBoardEvent(
     worksetId: isItem
       ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
       : undefined,
-    itemId: isItem ? occurrence.itemId ?? null : undefined,
+    itemId: occurrence.itemId?.trim() || null,
     itemDateKind: isItem
       ? occurrence.itemDateKind === "expires" ||
         occurrence.itemDateKind === "remind" ||
         occurrence.itemDateKind === "purchased"
         ? occurrence.itemDateKind
-        : "purchased"
+        : "remind"
       : undefined,
   };
 }

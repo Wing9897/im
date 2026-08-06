@@ -23,10 +23,13 @@ async def test_list_tasks(client):
         assert_keys(ref, ["id", "platform", "platformId"], "ChannelRef")
     assert lb["parentTaskId"] is None
     wi = next(t for t in body if t["id"] == seed.TASK_WEB_INTEL)
-    assert wi["analysisMode"] == "web_intel"
+    assert wi["analysisMode"] == "agent"
+    assert wi["outputAnalysisEvents"] is True
     assert wi["webSearchQuery"]
     proj = next(t for t in body if t["id"] == seed.TASK_PROJECT)
-    assert proj["analysisMode"] == "project"
+    assert proj["analysisMode"] == "agent"
+    assert proj["outputCalendar"] is True
+    assert proj["triggerMode"] == "message_cursor"
 
 
 async def test_invalid_analysis_time_range_returns_422(client):
@@ -407,7 +410,7 @@ async def test_project_tick_status_log(app, client):
             name="Tick Log Project",
             description=None,
             prompt_template="goals",
-            analysis_mode="project",
+            analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -417,6 +420,11 @@ async def test_project_tick_status_log(app, client):
             event_location=None,
             event_description=None,
             now=now,
+            trigger_mode="message_cursor",
+            cap_calendar_read=1,
+            cap_calendar_writes=1,
+            output_calendar=1,
+            output_analysis_events=0,
         )
     ok_batch = new_id()
     err_batch = new_id()

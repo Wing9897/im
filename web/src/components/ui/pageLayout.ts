@@ -4,5 +4,11 @@ const pageShellLayoutClass =
 
 export const pageShellRootClass = `mx-auto ${pageShellLayoutClass}`;
 
+/**
+ * Desk form column width — do NOT use `max-w-3xl`: @theme `--spacing-3xl` is 32px
+ * and Tailwind v4 maps max-w-* to the spacing scale.
+ */
+export const formPageMaxWidthClass = "max-w-[768px]";
+
 /** Opacity fade-in for content panes (respects reduced-motion via data-allow-opacity-transition). */
 export const contentFadeClass = "im-content-fade opacity-100";

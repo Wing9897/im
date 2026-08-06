@@ -12,7 +12,7 @@ from server.analyzer.prompt import build_analysis_prompt
 from server.app_logging import failure_details_from_exc, record
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import INTEL_EVENT_MODE, LEADERBOARD_MODE, WEB_INTEL_MODE
+from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE, LEADERBOARD_MODE
 from server.scheduler.batch_claim import batch_channel_names, fetch_batch_messages
 from server.scheduler.batch_failure import handle_batch_failure
 from server.scheduler.result_store import store_results
@@ -242,7 +242,7 @@ async def process_batch(
         },
     )
 
-    if analysis_mode in (INTEL_EVENT_MODE, WEB_INTEL_MODE):
+    if analysis_mode in (INTEL_EVENT_MODE, AGENT_MODE):
         publish_resource_modified(
             broadcaster,
             resource_type="task",

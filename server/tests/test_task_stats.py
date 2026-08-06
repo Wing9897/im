@@ -43,7 +43,7 @@ async def test_stats_project_mode_zeros_marker_counts(app, client):
             name="PM stats",
             description=None,
             prompt_template="goals",
-            analysis_mode="project",
+            analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -53,6 +53,11 @@ async def test_stats_project_mode_zeros_marker_counts(app, client):
             event_location=None,
             event_description=None,
             now=now,
+            trigger_mode="message_cursor",
+            cap_calendar_read=1,
+            cap_calendar_writes=1,
+            output_calendar=1,
+            output_analysis_events=0,
         )
     await db.execute(
         "INSERT OR IGNORE INTO channels (platform, platform_id, channel_name, created_at) VALUES (?, ?, ?, ?)",

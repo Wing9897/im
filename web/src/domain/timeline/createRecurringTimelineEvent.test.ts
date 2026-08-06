@@ -41,7 +41,26 @@ describe("createRecurringTimelineEvent", () => {
       eventLocation: "Room A",
       eventDescription: "Daily sync",
       worksetId: SYSTEM_WORKSET_ID,
+      itemId: null,
     });
+  });
+
+  it("forwards parent itemId on recurring create", async () => {
+    await createRecurringTimelineEvent({
+      title: "Renewal",
+      worksetId: SYSTEM_WORKSET_ID,
+      isAllDay: true,
+      eventStartTime: "",
+      rrule: "FREQ=YEARLY",
+      itemId: " item-9 ",
+    });
+
+    expect(mockCreateRecurringTask).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemId: "item-9",
+        eventIsAllDay: true,
+      }),
+    );
   });
 
   it("omits clocks for all-day recurring plans", async () => {

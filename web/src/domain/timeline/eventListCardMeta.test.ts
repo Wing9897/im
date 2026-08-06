@@ -198,7 +198,7 @@ describe("eventListCardMeta", () => {
     ).toBe(false);
   });
 
-  it("suppresses item title prefixes when remind badge or ending tag is shown", () => {
+  it("suppresses remind title prefix when remind badge is shown", () => {
     expect(
       eventListCardTitle(
         makeTimelineItem({
@@ -212,33 +212,23 @@ describe("eventListCardMeta", () => {
     expect(
       eventListCardTitle(
         makeTimelineItem({
-          title: "結束 · milk",
-          source: "item",
-          itemDateKind: "expires",
-        }),
-        { dayPhaseTag: "endingToday" },
-      ),
-    ).toBe("milk");
-    expect(
-      eventListCardTitle(
-        makeTimelineItem({
-          title: "購入 · milk",
+          title: "milk",
           source: "item",
           itemDateKind: "purchased",
         }),
-        { showRemindBadge: false, dayPhaseTag: null },
+        { showRemindBadge: false },
       ),
     ).toBe("milk");
     expect(
       eventListCardTitle(
         makeTimelineItem({
-          title: "結束 · milk",
+          title: "提醒 · milk",
           source: "item",
-          itemDateKind: "expires",
+          itemDateKind: "remind",
         }),
-        { dayPhaseTag: null },
+        { showRemindBadge: false },
       ),
-    ).toBe("結束 · milk");
+    ).toBe("提醒 · milk");
   });
 
   it("calendarLocationDisplay normalizes empty / N/A placeholders", () => {

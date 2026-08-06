@@ -482,7 +482,7 @@ describe("TimelineCalendarView", () => {
       const events = [
         makeEvent({
           id: "item:milk:expires",
-          title: "結束 · milk",
+          title: "milk",
           source: "item",
           itemDateKind: "expires",
           isAllDay: true,
@@ -521,7 +521,7 @@ describe("TimelineCalendarView", () => {
       expect(day16?.textContent).toContain("普通會議");
       expect(day16?.textContent).toContain("+2 結束");
       // Item expiry stays chip-only; recurring final remains a normal preview row.
-      expect(day16?.textContent).not.toContain("結束 · milk");
+      expect(day16?.textContent).not.toContain("milk");
       expect(day16?.textContent).toContain("最後一次週會");
     });
 
@@ -650,7 +650,7 @@ describe("TimelineCalendarView", () => {
     it("month preview uses standard dot and plain title for purchased items", () => {
       const purchased = makeEvent({
         id: "item:milk:purchased",
-        title: "購入 · milk",
+        title: "milk",
         source: "item",
         itemDateKind: "purchased",
         isAllDay: true,
@@ -670,7 +670,6 @@ describe("TimelineCalendarView", () => {
 
       expect(container.querySelector('[data-testid="month-item-marker-purchased"]')).toBeNull();
       expect(container.textContent).toContain("milk");
-      expect(container.textContent).not.toContain("購入 · milk");
       expect(container.textContent).not.toContain("🛒");
     });
 
@@ -715,7 +714,7 @@ describe("TimelineCalendarView", () => {
     });
     const importantItem = makeEvent({
       id: "item-important",
-      title: "結束 · milk",
+      title: "milk",
       source: "item",
       itemDateKind: "expires",
       important: true,
@@ -757,9 +756,7 @@ describe("TimelineCalendarView", () => {
       const chip = container.querySelector('[data-testid="timeline-week-event-chip"]');
       expect(chip?.querySelector('[data-testid="week-important-marker"]')?.textContent).toBe("❗");
       expect(chip?.querySelector('[data-testid="week-item-kind-marker"]')).toBeNull();
-      // Ending tag replaces 结束 · title prefix on week chips.
       expect(chip?.textContent).toContain("milk");
-      expect(chip?.textContent).not.toContain("結束 · milk");
       expect(chip?.textContent).not.toContain("⚠️");
     });
 
@@ -776,7 +773,6 @@ describe("TimelineCalendarView", () => {
       expect(card?.querySelector('[data-testid="day-important-marker"]')?.textContent).toBe("❗");
       expect(card?.querySelector('[data-testid="day-item-kind-marker"]')).toBeNull();
       expect(card?.textContent).toContain("milk");
-      expect(card?.textContent).not.toContain("結束 · milk");
       expect(card?.textContent).not.toContain("⚠️");
     });
   });
@@ -796,7 +792,7 @@ describe("TimelineCalendarView", () => {
       });
       const expires = makeEvent({
         id: "item-expires",
-        title: "結束 · milk",
+        title: "milk",
         source: "item",
         itemDateKind: "expires",
         startTime: "2025-01-15T00:00:00",
@@ -820,7 +816,6 @@ describe("TimelineCalendarView", () => {
         )?.textContent,
       ).toBe("結束於本日");
       expect(container.textContent).not.toContain("提醒 · milk");
-      expect(container.textContent).not.toContain("結束 · milk");
       expect(container.textContent).toContain("milk");
       vi.useRealTimers();
     });

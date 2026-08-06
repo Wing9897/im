@@ -22,8 +22,8 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
-def test_wipe_floor_is_stamp_seventeen() -> None:
-    assert CURRENT_SCHEMA_VERSION == 17
+def test_wipe_floor_is_stamp_nineteen() -> None:
+    assert CURRENT_SCHEMA_VERSION == 19
 
 
 @pytest.mark.asyncio

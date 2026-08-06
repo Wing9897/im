@@ -79,7 +79,7 @@ describe("SettingsAiStaffPage", () => {
     window.localStorage.clear();
   });
 
-  it("renders six runtime staff cards plus page-local liaison intro card", () => {
+  it("renders five runtime staff cards plus page-local liaison intro card", () => {
     renderPage(root);
 
     expect(container.querySelector('[data-testid="ai-staff-card-assistant"]')).not.toBeNull();
@@ -87,8 +87,7 @@ describe("SettingsAiStaffPage", () => {
     expect(container.querySelector('[data-testid="ai-staff-card-taskEditor"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-card-leaderboard"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-card-intel_event"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="ai-staff-card-web_intel"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="ai-staff-card-project"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="ai-staff-card-agent"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-avatar-assistant"]')).not.toBeNull();
     expect(
       container.querySelector('[data-testid="ai-staff-avatar-assistant"]')?.getAttribute("data-staff-kind"),

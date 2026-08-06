@@ -1,18 +1,16 @@
 /**
  * Per-task analysis scheduling: event overlap is task-owned; other batch fields
  * optionally override AI Settings defaults (null = follow global).
- * web_intel shows the same overrides only when channels are bound (message-gate).
+ * Agent message-threshold presets show the same overrides when channels are bound.
  */
 import { useTranslation } from "react-i18next";
-import {
-  AnalysisSchedulingFields,
+import { AnalysisSchedulingFields,
   optionalNumberToInput,
   parseOptionalPositiveInt,
   type EvidenceStyle,
 } from "../../../components/settings/AnalysisSchedulingFields";
 import { OverlapSlider } from "../../../components/ui/OverlapSlider";
 import { formHelpClass } from "../../../components/ui/pageTypography";
-import { webIntelMessageGateActive } from "../../../domain/tasks/analysisModeCapabilities";
 import { taskShowsMessageBatchOverrides } from "../../../domain/tasks/taskFormUtils";
 import type { TaskFormState } from "./useChatEditor";
 
@@ -29,10 +27,23 @@ export function ChatScheduleOverrideFields({
   const showBatchOverrides = taskShowsMessageBatchOverrides(
     formState.analysisMode,
     formState.channelIds,
+    {
+      triggerMode: formState.triggerMode,
+      capCalendarRead: formState.capCalendarRead,
+      capCalendarWrites: formState.capCalendarWrites,
+      capWebSearch: formState.capWebSearch,
+      capForceWebSearch: formState.capForceWebSearch,
+      capReadAnalysisEvents: formState.capReadAnalysisEvents,
+      capReadItems: formState.capReadItems,
+      outputCalendar: formState.outputCalendar,
+      outputAnalysisEvents: formState.outputAnalysisEvents,
+    },
   );
   const showEventOverlap =
     formState.analysisMode === "intel_event" ||
-    webIntelMessageGateActive(formState.analysisMode, formState.channelIds);
+    (formState.analysisMode === "agent" &&
+      formState.triggerMode === "message_threshold" &&
+      formState.channelIds.length > 0);
 
   if (!showBatchOverrides) {
     return null;

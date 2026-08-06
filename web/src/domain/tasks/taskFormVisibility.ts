@@ -1,38 +1,61 @@
 import type { AnalysisMode } from "../../types";
 import {
   analysisModeHidesPromptAndChannel,
-  analysisModeIsWebIntel,
+  analysisModeIsAgent,
   analysisModeRequiresChannels,
   analysisModeShowsOptionalChannels,
   analysisModeShowsRruleFields,
-  webIntelMessageGateActive,
 } from "./analysisModeCapabilities";
+import type { AgentTaskPolicy } from "./agentTaskPolicy";
+import {
+  agentChannelsOptional,
+  agentChannelsRequired,
+  agentShowsMessageGateOverrides,
+  agentShowsWaveInterval,
+} from "./agentTaskPolicy";
 
 export interface TaskModeFieldVisibility {
   rruleFieldsVisible: boolean;
   promptFieldsVisible: boolean;
   channelFieldsVisible: boolean;
-  /** Channels allowed but not required (web_intel timed vs message-gate). */
+  /** Channels allowed but not required. */
   channelsOptional: boolean;
   channelsRequired: boolean;
-  /** Message analysisTimeRange chips (not used by web_intel Agent search). */
+  /** Message analysisTimeRange chips (not used by agent search-oriented presets). */
   analysisTimeRangeVisible: boolean;
-  /** Timeline include toggle (event / project / web_intel). */
+  /** Timeline include toggle (event / agent). */
   timelineToggleVisible: boolean;
   /** Prompt is required to save (all AI modes with a prompt field). */
   promptRequired: boolean;
-  isWebIntel: boolean;
-  isProject: boolean;
+  isAgent: boolean;
   isRecurring: boolean;
+  showAgentPolicy: boolean;
+  showWaveInterval: boolean;
+  showMessageGateOverrides: boolean;
 }
 
-/** Field visibility rules for ChatEditorForm by analysis mode. */
-export function getTaskModeFieldVisibility(mode: AnalysisMode): TaskModeFieldVisibility {
+/** Field visibility rules for ChatEditorForm by analysis mode (+ optional agent policy). */
+export function getTaskModeFieldVisibility(
+  mode: AnalysisMode,
+  policy?: AgentTaskPolicy | null,
+  channelIds: readonly string[] = [],
+): TaskModeFieldVisibility {
   const hidesPromptAndChannel = analysisModeHidesPromptAndChannel(mode);
-  const channelsRequired = analysisModeRequiresChannels(mode);
-  const channelsOptional = analysisModeShowsOptionalChannels(mode);
-  const isWebIntel = analysisModeIsWebIntel(mode);
+  const isAgent = analysisModeIsAgent(mode);
   const promptFieldsVisible = !hidesPromptAndChannel;
+
+  let channelsRequired = analysisModeRequiresChannels(mode);
+  let channelsOptional = analysisModeShowsOptionalChannels(mode);
+  let showWaveInterval = false;
+  let showMessageGateOverrides = false;
+
+  if (isAgent && policy) {
+    channelsRequired = agentChannelsRequired(policy);
+    channelsOptional = agentChannelsOptional(policy) && !channelsRequired;
+    showWaveInterval = agentShowsWaveInterval(policy);
+    showMessageGateOverrides = agentShowsMessageGateOverrides(policy, channelIds.length);
+  }
+
   return {
     rruleFieldsVisible: analysisModeShowsRruleFields(mode),
     promptFieldsVisible,
@@ -40,24 +63,26 @@ export function getTaskModeFieldVisibility(mode: AnalysisMode): TaskModeFieldVis
       !hidesPromptAndChannel && (channelsRequired || channelsOptional),
     channelsOptional,
     channelsRequired,
-    analysisTimeRangeVisible: promptFieldsVisible && !isWebIntel,
-    timelineToggleVisible:
-      mode === "intel_event" || mode === "project" || mode === "web_intel",
+    analysisTimeRangeVisible: promptFieldsVisible && !isAgent,
+    timelineToggleVisible: mode === "intel_event" || isAgent,
     promptRequired: promptFieldsVisible,
-    isWebIntel,
-    isProject: mode === "project",
+    isAgent,
     isRecurring: mode === "recurring",
+    showAgentPolicy: isAgent,
+    showWaveInterval,
+    showMessageGateOverrides,
   };
 }
 
-/** Whether web_intel message-gate overrides should show. */
+/** Whether message-batch / threshold overrides should show. */
 export function taskShowsMessageBatchOverrides(
   mode: AnalysisMode,
   channelIds: readonly string[],
+  policy?: AgentTaskPolicy | null,
 ): boolean {
-  return (
-    mode === "intel_event" ||
-    mode === "leaderboard" ||
-    webIntelMessageGateActive(mode, channelIds)
-  );
+  if (mode === "intel_event" || mode === "leaderboard") return true;
+  if (analysisModeIsAgent(mode) && policy) {
+    return agentShowsMessageGateOverrides(policy, channelIds.length);
+  }
+  return false;
 }

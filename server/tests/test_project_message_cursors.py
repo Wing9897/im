@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from server.db.database import TransactionDb
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.project_tick_queries import (
     ProjectMessageCursor,
     fetch_project_messages_since,
@@ -15,6 +17,7 @@ from server.util import new_id, utc_now_iso
 
 async def _insert_project(db, task_id: str) -> None:
     now = utc_now_iso()
+    policy = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
     async with db.transaction() as conn:
         await insert_analysis_task(
             TransactionDb(conn),
@@ -22,7 +25,7 @@ async def _insert_project(db, task_id: str) -> None:
             name="Cursor Project",
             description=None,
             prompt_template="x",
-            analysis_mode="project",
+            analysis_mode=AGENT_MODE,
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -32,6 +35,7 @@ async def _insert_project(db, task_id: str) -> None:
             event_location=None,
             event_description=None,
             now=now,
+            **policy,
         )
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from server.agent.channels import AgentChannelId, get_agent_channel
+from server.agent.channels import AgentChannel, AgentChannelId, get_agent_channel
 from server.agent.context_compact import (
     DEFAULT_MAX_CHARS as DEFAULT_HISTORY_MAX_CHARS,
 )
@@ -74,11 +74,17 @@ class AgentRuntime:
         self.max_tool_rounds = max_tool_rounds
         self.broadcaster = broadcaster
 
-    async def _resolve_web_search_route(self, *, force_enabled: bool = False) -> WebSearchRoute:
+    async def _resolve_web_search_route(
+        self,
+        *,
+        force_enabled: bool = False,
+        force_disabled: bool = False,
+    ) -> WebSearchRoute:
         return await resolve_web_search_route_for_runtime(
             self.db,
             self.llm,
             force_enabled=force_enabled,
+            force_disabled=force_disabled,
         )
 
     async def _tool_context(
@@ -89,6 +95,9 @@ class AgentRuntime:
         project_scope_task_id: str | None = None,
         task_advisor_enabled: bool = False,
         calendar_writes_enabled: bool = True,
+        calendar_read_enabled: bool = True,
+        analysis_events_read_enabled: bool = True,
+        items_read_enabled: bool = True,
         current_task: dict[str, Any] | None = None,
         locale: str | None = None,
         web_route: WebSearchRoute | None = None,
@@ -108,6 +117,9 @@ class AgentRuntime:
             "broadcaster": self.broadcaster,
             "task_advisor_enabled": task_advisor_enabled,
             "calendar_writes_enabled": calendar_writes_enabled,
+            "calendar_read_enabled": calendar_read_enabled,
+            "analysis_events_read_enabled": analysis_events_read_enabled,
+            "items_read_enabled": items_read_enabled,
             "current_task": current_task,
             "locale": locale,
         }
@@ -137,10 +149,11 @@ class AgentRuntime:
         surface: str | None = None,
         current_task: dict[str, Any] | None = None,
         base_prompt: str | None = None,
+        policy: AgentChannel | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Yield NDJSON/SSE-friendly progress events during the agent tool loop."""
-        policy = get_agent_channel(channel)
-        if policy.stateless:
+        channel_policy = policy if policy is not None else get_agent_channel(channel)
+        if channel_policy.stateless:
             sid = new_id()
             is_new_conversation = True
         else:
@@ -157,19 +170,31 @@ class AgentRuntime:
             else normalize_ui_locale(await get_config(self.db, "ui_locale"))
         )
         # Task advisor is UI-gated (task editor + assistant channel only).
-        task_advisor_enabled = policy.id == "assistant" and surface == "task_editor"
-        web_route = await self._resolve_web_search_route(force_enabled=policy.force_web_search)
+        task_advisor_enabled = channel_policy.id == "assistant" and surface == "task_editor"
+        if channel_policy.id == "agent":
+            search_on = channel_policy.force_web_search or channel_policy.web_search_enabled
+            web_route = await self._resolve_web_search_route(
+                force_enabled=search_on,
+                force_disabled=not search_on,
+            )
+        else:
+            web_route = await self._resolve_web_search_route(
+                force_enabled=channel_policy.force_web_search,
+            )
         user_background = await get_config(self.db, "user_background")
         tool_context = await self._tool_context(
-            user_event_origin=policy.user_event_origin,
+            user_event_origin=channel_policy.user_event_origin,
             workset_id=workset_id,
             project_scope_task_id=project_scope_task_id,
             task_advisor_enabled=task_advisor_enabled,
-            calendar_writes_enabled=policy.calendar_writes_enabled,
+            calendar_writes_enabled=channel_policy.calendar_writes_enabled,
+            calendar_read_enabled=channel_policy.calendar_read_enabled,
+            analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
+            items_read_enabled=channel_policy.items_read_enabled,
             current_task=current_task if task_advisor_enabled else None,
             locale=resolved_locale if task_advisor_enabled else None,
             web_route=web_route,
-            force_web_search=policy.force_web_search,
+            force_web_search=channel_policy.force_web_search,
         )
         native_web_search = web_route.native_web_search
         history: list[dict[str, Any]] = [
@@ -183,9 +208,12 @@ class AgentRuntime:
                     web_search_mode=web_route.mode,
                     inject_web_search_tool=web_route.inject_web_search_tool,
                     task_advisor_enabled=task_advisor_enabled,
-                    calendar_writes_enabled=policy.calendar_writes_enabled,
+                    calendar_writes_enabled=channel_policy.calendar_writes_enabled,
+                    calendar_read_enabled=channel_policy.calendar_read_enabled,
+                    analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
+                    items_read_enabled=channel_policy.items_read_enabled,
                     user_background=user_background,
-                    base_prompt=base_prompt if base_prompt is not None else policy.system_prompt,
+                    base_prompt=base_prompt if base_prompt is not None else channel_policy.system_prompt,
                 ),
             }
         ]
@@ -194,7 +222,7 @@ class AgentRuntime:
         if not any(m["role"] == "user" for m in history):
             yield _final_event(
                 message=AGENT_EMPTY_USER_MESSAGE,
-                session_id=None if policy.stateless else sid,
+                session_id=None if channel_policy.stateless else sid,
                 tool_calls=[],
             )
             return
@@ -220,7 +248,7 @@ class AgentRuntime:
 
         tool_trace: list[dict[str, Any]] = []
         last_task_config: dict[str, Any] | None = None
-        event_session_id = None if policy.stateless else sid
+        event_session_id = None if channel_policy.stateless else sid
         for round_index in range(self.max_tool_rounds + 1):
             round_result = await run_tool_round(
                 db=self.db,
@@ -260,6 +288,7 @@ class AgentRuntime:
         surface: str | None = None,
         current_task: dict[str, Any] | None = None,
         base_prompt: str | None = None,
+        policy: AgentChannel | None = None,
     ) -> dict[str, Any]:
         final: dict[str, Any] | None = None
         async for event in self.iter_chat_events(
@@ -272,12 +301,13 @@ class AgentRuntime:
             surface=surface,
             current_task=current_task,
             base_prompt=base_prompt,
+            policy=policy,
         ):
             if event.get("type") == "final":
                 final = event
         if final is None:
-            policy = get_agent_channel(channel)
-            sid = None if policy.stateless else ((session_id or "").strip() or new_id())
+            channel_policy = policy if policy is not None else get_agent_channel(channel)
+            sid = None if channel_policy.stateless else ((session_id or "").strip() or new_id())
             return {
                 "message": AGENT_UNPARSEABLE_REPLY,
                 "sessionId": sid,

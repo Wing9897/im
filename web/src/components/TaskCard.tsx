@@ -48,10 +48,9 @@ export const TaskCard = React.memo(function TaskCard({
   const worksetNameById = useWorksetNameById();
   const [toggling, setToggling] = useState(false);
   const isRecurringMode = task.analysisMode === "recurring";
-  const isProjectMode = task.analysisMode === "project";
-  const isWebIntelMode = task.analysisMode === "web_intel";
-  // web_intel has no local message claim — hide batch marker stats.
-  const hideAnalysisStats = isProjectMode || isRecurringMode || isWebIntelMode;
+  const isAgentMode = task.analysisMode === "agent";
+  const isProjectMode = isAgentMode && Boolean(task.outputCalendar);
+  const hideAnalysisStats = isAgentMode || isRecurringMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
   const queuedMessageCount = stats.queuedMessageCount;
@@ -128,14 +127,12 @@ export const TaskCard = React.memo(function TaskCard({
           ) : null}
           {isRecurringMode
             ? t("tasks.card.recurring")
-            : isProjectMode
-              ? t("tasks.card.project")
-              : isWebIntelMode
-                ? t("tasks.card.web_intel")
-                : t("tasks.card.channelsRange", {
-                    count: String(task.channelIds.length),
-                    range: task.analysisTimeRange,
-                  })}
+            : isAgentMode
+              ? t("tasks.card.agent")
+              : t("tasks.card.channelsRange", {
+                  count: String(task.channelIds.length),
+                  range: task.analysisTimeRange,
+                })}
         </div>
 
         {hideAnalysisStats ? (
@@ -143,13 +140,11 @@ export const TaskCard = React.memo(function TaskCard({
             className="text-[11px] leading-snug text-text-muted"
             data-testid={`task-card-schedule-hint-${task.id}`}
           >
-            {isWebIntelMode
-              ? t("tasks.card.web_intelProgressHint")
-              : isProjectMode
-                ? t("tasks.card.projectProgressHint")
-                : isRecurringMode
-                  ? t("tasks.card.recurringProgressHint")
-                  : t("tasks.card.calendarTaskProgressHint")}
+            {isAgentMode
+              ? t("tasks.card.agentProgressHint")
+              : isRecurringMode
+                ? t("tasks.card.recurringProgressHint")
+                : t("tasks.card.calendarTaskProgressHint")}
             {isProjectMode && queuedMessageCount > 0 ? (
               <span className="mt-0.5 block tabular-nums text-warning">
                 {t("tasks.card.queued")}: {queuedMessageCount.toLocaleString()}

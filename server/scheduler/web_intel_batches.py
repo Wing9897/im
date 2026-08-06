@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from server.app_logging import record_batch_failure
 from server.config import get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import WEB_INTEL_MODE
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import set_task_active
 from server.sse import Broadcaster
 from server.util import new_id, utc_now_iso
@@ -36,13 +36,13 @@ async def record_web_intel_skip(
         "VALUES (?, ?, ?, 'completed', 0, ?, ?, ?, ?)",
         (batch_id, task_id, int(task.get("version") or 1), reason, now, now, now),
     )
-    logger.info("web_intel tick skipped task=%s batch=%s: %s", task_id, batch_id, reason)
+    logger.info("agent tick skipped task=%s batch=%s: %s", task_id, batch_id, reason)
     broadcaster.publish(
         "analysis_completed",
         {
             "taskId": task_id,
             "batchId": batch_id,
-            "analysisMode": WEB_INTEL_MODE,
+            "analysisMode": AGENT_MODE,
             "findingsCount": 0,
             "hasFindings": False,
             "skipped": True,
@@ -118,7 +118,7 @@ async def complete_web_intel_failure(
             "taskName": task_name,
             "batchId": batch_id,
             "error": error_message[:500],
-            "analysisMode": WEB_INTEL_MODE,
+            "analysisMode": AGENT_MODE,
             "retrying": not retries_exhausted,
             "currentRetry": consecutive,
             "maxRetries": max_retries,

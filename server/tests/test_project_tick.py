@@ -10,15 +10,19 @@ import pytest
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.config import set_configs
 from server.db.database import Database, TransactionDb
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import insert_analysis_task
 from server.scheduler.manager import SchedulerManager
-from server.scheduler.project_tick import (
-    _MESSAGE_SUMMARY_LIMIT,
+from server.scheduler.agent_tick import (
+    MESSAGE_SUMMARY_LIMIT,
     build_project_seed_message,
-    execute_project_tick,
+    execute_agent_tick,
 )
 from server.sse import SseBroadcaster
 from server.util import new_id, utc_now_iso
+
+_MESSAGE_SUMMARY_LIMIT = MESSAGE_SUMMARY_LIMIT
 
 
 async def _insert_project(
@@ -28,6 +32,7 @@ async def _insert_project(
     project_wave_interval_seconds: int | None = 0,
 ) -> None:
     now = utc_now_iso()
+    policy = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await insert_analysis_task(
@@ -36,7 +41,7 @@ async def _insert_project(
             name="PM",
             description=None,
             prompt_template="Keep demos current",
-            analysis_mode="project",
+            analysis_mode=AGENT_MODE,
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -47,6 +52,7 @@ async def _insert_project(
             event_description=None,
             project_wave_interval_seconds=project_wave_interval_seconds,
             now=now,
+            **policy,
         )
 
 
@@ -87,18 +93,23 @@ def test_build_project_seed_includes_prompt_and_empty_messages() -> None:
     assert "Alpha" in seed
     assert "No new messages" in seed
     assert "Drain wave 1" in seed
-    assert "pinned Project goals" in seed
+    assert "pinned Task goals" in seed
     # Goals belong in system prompt, not the user seed.
     assert "Rule A" not in seed
 
 
 def test_build_project_base_prompt_pins_goals() -> None:
-    from server.prompts.project import build_project_base_prompt
+    from server.domain.agent_task_spec import agent_preset_spec
+    from server.prompts.agent_task import build_agent_base_prompt
 
-    base = build_project_base_prompt("Keep demos current")
+    base = build_agent_base_prompt(
+        "Keep demos current",
+        agent_preset_spec("project_reconcile", has_channels=True),
+    )
     assert "Keep demos current" in base
     assert "pinned — always follow" in base
-    assert "專案管理助手" in base
+    assert "Agent" in base
+    assert "calendar.create_event" in base or "calendar" in base.lower()
 
 
 @pytest.mark.asyncio
@@ -111,9 +122,10 @@ async def test_project_task_is_registered_on_scheduler(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_skips_llm_without_messages(app) -> None:
+async def test_execute_agent_tick_skips_llm_without_messages(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-run")
+    await _bind_source_with_messages(db, task_id="proj-run", count=0)
     broadcaster = SseBroadcaster()
 
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
@@ -126,7 +138,7 @@ async def test_execute_project_tick_skips_llm_without_messages(app) -> None:
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ) as from_db:
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-run")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-run")
 
     from_db.assert_not_awaited()
     mock_llm.complete.assert_not_awaited()
@@ -142,7 +154,7 @@ async def test_execute_project_tick_skips_llm_without_messages(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_persists_tool_calls(app) -> None:
+async def test_execute_agent_tick_persists_tool_calls(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-tools")
     await _bind_source_with_messages(db, task_id="proj-tools", count=1)
@@ -163,7 +175,7 @@ async def test_execute_project_tick_persists_tool_calls(app) -> None:
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-tools")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-tools")
 
     batch = await db.fetch_one(
         "SELECT status, agent_message, tool_calls_json, message_count FROM analysis_batches WHERE task_id = ?",
@@ -177,7 +189,7 @@ async def test_execute_project_tick_persists_tool_calls(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_drains_multiple_waves(app) -> None:
+async def test_execute_agent_tick_drains_multiple_waves(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-drain", project_wave_interval_seconds=0)
     # Two full waves (limit + 1) so the second wave is partial and ends the drain.
@@ -203,7 +215,7 @@ async def test_execute_project_tick_drains_multiple_waves(app) -> None:
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-drain")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-drain")
 
     assert mock_llm.complete.await_count == 2
     batch = await db.fetch_one(
@@ -226,7 +238,7 @@ async def test_execute_project_tick_drains_multiple_waves(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_cools_between_waves(app) -> None:
+async def test_execute_agent_tick_cools_between_waves(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-cool", project_wave_interval_seconds=7)
     await _bind_source_with_messages(
@@ -254,14 +266,14 @@ async def test_execute_project_tick_cools_between_waves(app) -> None:
         ),
         patch("server.scheduler.project_tick_drain.asyncio.sleep", new_callable=AsyncMock) as sleep_mock,
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-cool")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-cool")
 
     assert mock_llm.complete.await_count == 2
     sleep_mock.assert_awaited_once_with(7)
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_reuses_session_across_waves(app) -> None:
+async def test_execute_agent_tick_reuses_session_across_waves(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-session", project_wave_interval_seconds=0)
     await _bind_source_with_messages(
@@ -298,7 +310,7 @@ async def test_execute_project_tick_reuses_session_across_waves(app) -> None:
         ),
         patch.object(AgentRuntime, "chat", _tracking_chat),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-session")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-session")
 
     assert len(chat_calls) == 2
     first = chat_calls[0]
@@ -314,7 +326,7 @@ async def test_execute_project_tick_reuses_session_across_waves(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_stops_before_next_wave_when_paused(app) -> None:
+async def test_execute_agent_tick_stops_before_next_wave_when_paused(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-pause", project_wave_interval_seconds=0)
     await _bind_source_with_messages(
@@ -339,7 +351,7 @@ async def test_execute_project_tick_stops_before_next_wave_when_paused(app) -> N
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-pause")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-pause")
 
     assert mock_llm.complete.await_count == 1
     batch = await db.fetch_one(
@@ -355,7 +367,7 @@ async def test_execute_project_tick_stops_before_next_wave_when_paused(app) -> N
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_stops_before_next_wave_when_task_disabled(app) -> None:
+async def test_execute_agent_tick_stops_before_next_wave_when_task_disabled(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-disable", project_wave_interval_seconds=0)
     await _bind_source_with_messages(
@@ -383,7 +395,7 @@ async def test_execute_project_tick_stops_before_next_wave_when_task_disabled(ap
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-disable")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-disable")
 
     assert mock_llm.complete.await_count == 1
     batch = await db.fetch_one(
@@ -397,7 +409,7 @@ async def test_execute_project_tick_stops_before_next_wave_when_task_disabled(ap
 
 
 @pytest.mark.asyncio
-async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> None:
+async def test_execute_agent_tick_wave_hard_timeout_defers_remaining(app) -> None:
     db: Database = app.state.db
     await _insert_project(db, "proj-timeout", project_wave_interval_seconds=0)
     await _bind_source_with_messages(
@@ -433,7 +445,7 @@ async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> N
         patch.object(AgentRuntime, "chat", _hang_chat),
         patch("server.scheduler.project_tick_wave.get_config_int", side_effect=_config_int),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-timeout")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-timeout")
 
     batch = await db.fetch_one(
         "SELECT status, error_message, agent_message FROM analysis_batches WHERE task_id = ?",
@@ -459,7 +471,7 @@ async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> N
         "from_db_for_agent",
         AsyncMock(return_value=mock_llm),
     ):
-        await execute_project_tick(db=db, broadcaster=broadcaster, task_id="proj-fail")
+        await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-fail")
 
     batch = await db.fetch_one(
         "SELECT status, error_message, agent_message, tool_calls_json FROM analysis_batches WHERE task_id = ?",
@@ -473,7 +485,7 @@ async def test_execute_project_tick_wave_hard_timeout_defers_remaining(app) -> N
 
 
 def test_serialize_tick_tool_calls_truncates() -> None:
-    from server.scheduler.project_tick import serialize_tick_tool_calls
+    from server.scheduler.agent_tick import serialize_tick_tool_calls
 
     payload = serialize_tick_tool_calls(
         [

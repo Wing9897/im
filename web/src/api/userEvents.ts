@@ -16,7 +16,7 @@ export type UserEvent = Omit<
   important?: boolean;
   /** Optional remind-N-days-before-start (stamp 17+). */
   remindBeforeDays?: number | null;
-  /** Optional parent trackable item (child calendar; stamp 17+). */
+  /** Optional parent trackable item (this calendar belongs to the item). */
   itemId?: string | null;
 };
 
@@ -34,7 +34,7 @@ interface UserEventWriteParams {
   remindBeforeDays?: number | null;
   /** Analysis-task provenance; `""` / omit → null. `"__user__"` stripped client-side. */
   taskId?: string | null;
-  /** Optional parent trackable item (child calendar). */
+  /** Optional parent inventory item (item owns this calendar entry). */
   itemId?: string | null;
   /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset (LIVE). */
   worksetId?: string | null;
@@ -77,8 +77,10 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
     location: params.location ?? "",
     isAllDay: Boolean(params.isAllDay),
     remindBeforeDays: params.remindBeforeDays ?? null,
-    itemId: params.itemId?.trim() || null,
   };
+  if (params.itemId !== undefined) {
+    body.itemId = params.itemId?.trim() || null;
+  }
   const taskId = normalizeWriteTaskId(params.taskId);
   if (taskId !== undefined) body.taskId = taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;

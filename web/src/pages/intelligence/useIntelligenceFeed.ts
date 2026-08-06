@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { intelligenceSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
-import { ANALYSIS_EVENTS_MODES, isAnalysisEventsMode } from "../../domain/tasks/analysisModeCapabilities";
+import { ANALYSIS_EVENTS_MODES, taskWritesAnalysisEvents } from "../../domain/tasks/analysisModeCapabilities";
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
@@ -73,7 +73,7 @@ export function useIntelligenceFeed() {
   const prevIsMapModeRef = useRef(isMapMode);
 
   const intelligenceTasks = useMemo(
-    () => tasks.filter((task) => isAnalysisEventsMode(task.analysisMode)),
+    () => tasks.filter((task) => taskWritesAnalysisEvents(task)),
     [tasks],
   );
 
@@ -97,7 +97,7 @@ export function useIntelligenceFeed() {
   const resolvedApiTaskIds = useMemo(() => {
     const fromFilter = resolveAnalysisTaskIdsFromFilter(selectedSources, intelligenceTasks);
     if (fromFilter !== null) return fromFilter;
-    // "All sources" on Intelligence = all event/web_intel tasks, not every DB task.
+    // "All sources" on Intelligence = all intel_event / agent(output) tasks, not every DB task.
     // While the catalog is still loading, keep null so we do not flash an empty IN [].
     if (tasksLoading) return null;
     return intelligenceTasks.map((task) => task.id).sort();

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from server.config import get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import PARENT_PROJECT_MODE, WEB_INTEL_MODE
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.batch_housekeeping import purge_all_superseded_version_data
 from server.queries.project_tick_queries import complete_project_batch
 from server.scheduler.batch_failure import apply_retry_outcome, decide_batch_error_outcome
@@ -30,8 +30,8 @@ async def recover_orphan_batches(
     tick_orphans = await db.fetch_all(
         "SELECT b.id, b.message_count, t.analysis_mode FROM analysis_batches b "
         "JOIN analysis_tasks t ON t.id = b.task_id "
-        "WHERE b.status = 'processing' AND t.analysis_mode IN (?, ?)",
-        (PARENT_PROJECT_MODE, WEB_INTEL_MODE),
+        "WHERE b.status = 'processing' AND t.analysis_mode = ?",
+        (AGENT_MODE,),
     )
     for row in tick_orphans:
         await complete_project_batch(
@@ -58,9 +58,9 @@ async def recover_orphan_batches(
             "FROM analysis_batches b "
             "JOIN analysis_tasks t ON t.id = b.task_id "
             "WHERE b.status = 'pending' "
-            "AND t.analysis_mode NOT IN (?, ?) "
+            "AND t.analysis_mode != ? "
             "AND datetime(b.updated_at) < datetime('now', ?)",
-            (PARENT_PROJECT_MODE, WEB_INTEL_MODE, f"-{timeout * 2} seconds"),
+            (AGENT_MODE, f"-{timeout * 2} seconds"),
         )
         for row in stalled:
             retry_count = int(row["retry_count"] or 0)

@@ -59,7 +59,7 @@ export function WorksetDetailDialog({
 
   const goCreateItem = () => {
     onClose();
-    navigate(`/items?new=1&worksetId=${encodeURIComponent(workset.id)}`);
+    navigate(`/items/new?worksetId=${encodeURIComponent(workset.id)}`);
   };
 
   const goCreateEvent = () => {
@@ -69,7 +69,7 @@ export function WorksetDetailDialog({
 
   const openItem = (itemId: string) => {
     onClose();
-    navigate(`/items?itemId=${encodeURIComponent(itemId)}`);
+    navigate(`/items/${encodeURIComponent(itemId)}/edit`);
   };
 
   const openEvent = (row: UserEvent) => {

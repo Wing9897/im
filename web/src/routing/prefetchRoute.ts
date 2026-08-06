@@ -40,6 +40,9 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
 }
 
 function resolveItemsPrefetch(path: string): (() => Promise<unknown>) | undefined {
+  if (path === "/items/new" || /\/items\/[^/]+\/edit$/.test(path)) {
+    return () => import("../pages/items/ItemFormPage");
+  }
   if (path === "/items" || path.startsWith("/items/")) {
     return ROUTE_PREFETCHERS["/items"];
   }

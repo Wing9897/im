@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import "./emojiPickerReactMock";
 import { ItemsCategoryCard } from "./ItemsCategoryCard";
 import type { CategorySummary } from "../../domain/items/categoryAggregates";
 
@@ -11,6 +12,12 @@ vi.mock("react-i18next", () => ({
       if (key === "categoryExpiringCount") return `${opts?.count ?? 0} soon`;
       if (key === "categoryOverdueCount") return `${opts?.count ?? 0} overdue`;
       if (key === "openCategoryAria") return `Open ${opts?.name ?? ""}`;
+      if (key === "changeEmojiAria") return `Change emoji for ${opts?.name ?? ""}`;
+      if (key === "emojiPickerAria") return "Choose an emoji";
+      if (key === "emojiClear") return "Clear";
+      if (key === "emojiHint") return "hint";
+      if (key === "done") return "Done";
+      if (key === "dialog.close") return "Close";
       if (key === "allCategories") return "All types";
       if (key === "categoryEmptyHint") return "empty";
       if (key === "noCategory") return "Uncategorized";
@@ -69,12 +76,98 @@ describe("ItemsCategoryCard", () => {
     expect(container.textContent).toContain("2 soon");
     expect(container.textContent).toContain("1 overdue");
     expect(container.textContent).toContain("🍎");
+    expect(container.querySelector('[data-testid="item-emoji-avatar"]')).toBeTruthy();
     const card = container.querySelector('[data-testid="items-category-card-c1"]');
     expect(card).toBeTruthy();
     act(() => {
       (card as HTMLElement).click();
     });
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it("lets the avatar change emoji without opening the category", async () => {
+    const onOpen = vi.fn();
+    const onEmojiChange = vi.fn().mockResolvedValue(undefined);
+    const summary: CategorySummary = {
+      id: "c1",
+      category: {
+        id: "c1",
+        name: "Food",
+        slug: "food",
+        sortOrder: 1,
+        color: "#22C55E",
+        emoji: "🍎",
+        fieldSchema: [],
+        defaultRemindBeforeDays: 3,
+        createdAt: null,
+        updatedAt: null,
+      },
+      itemCount: 1,
+      expiringCount: 0,
+      overdueCount: 0,
+    };
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <ItemsCategoryCard
+          summary={summary}
+          onOpen={onOpen}
+          onEmojiChange={onEmojiChange}
+        />,
+      );
+    });
+
+    const trigger = container.querySelector(
+      '[data-testid="item-card-emoji-trigger"]',
+    ) as HTMLButtonElement;
+    expect(trigger).toBeTruthy();
+
+    await act(async () => {
+      trigger.click();
+    });
+    expect(onOpen).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+    });
+
+    const milk = document.querySelector(
+      '[data-testid="emoji-option-🥛"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      milk.click();
+    });
+
+    expect(onEmojiChange).toHaveBeenCalledWith("🥛");
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("does not expose emoji editing for synthetic all-types card", () => {
+    const summary: CategorySummary = {
+      id: "all",
+      category: null,
+      itemCount: 3,
+      expiringCount: 0,
+      overdueCount: 0,
+    };
+
+    act(() => {
+      root = createRoot(container);
+      root.render(
+        <ItemsCategoryCard
+          summary={summary}
+          title="All types"
+          onOpen={vi.fn()}
+          onEmojiChange={vi.fn()}
+        />,
+      );
+    });
+
+    expect(container.querySelector('[data-testid="item-card-emoji-trigger"]')).toBeNull();
+    expect(container.textContent).toContain("🗂️");
   });
 
   it("shows package fallback emoji when category has none", () => {

@@ -67,7 +67,7 @@ async def upsert_task_schedule(
             task_id=tid,
             effective_mode=CHILD_RECURRING_MODE,
             supplied_parent_task_id=parent,
-            parent_mode="project",
+            parent_mode="agent",
         )
     elif row.get("parent_task_id"):
         parent = str(row["parent_task_id"])

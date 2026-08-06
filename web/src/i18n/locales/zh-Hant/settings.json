@@ -69,7 +69,7 @@
     "debug": {
       "sectionTitle": "除錯與診斷",
       "traceVerboseLabel": "伺服器分析 Trace",
-      "traceVerboseHelp": "開啟後，每次訊息批次分析會在「設定→日誌」寫入一筆追蹤（預設隱藏，請勾選「顯示分析追蹤」）。不含完整 LLM 內容；網路情報／專案／週期任務不產生。切換即儲存。",
+      "traceVerboseHelp": "開啟後，每次訊息批次分析會在「設定→日誌」寫入一筆追蹤（預設隱藏，請勾選「顯示分析追蹤」）。不含完整 LLM 內容；Agent／週期任務不產生。切換即儲存。",
       "saved": "除錯設定已儲存"
     }
   },
@@ -178,17 +178,17 @@
   },
   "webSearch": {
     "sectionTitle": "助手聯網",
-    "sectionHelp": "關閉後僅停用助手對話搜尋。「網路情報」排程任務仍會搜尋；下方供應商設定與網路情報共用。",
+    "sectionHelp": "關閉後僅停用助手對話搜尋。「Agent 任務」若開啟網搜仍會搜尋；下方供應商設定與 Agent 網搜共用。",
     "enabledLabel": "允許助手聯網搜尋",
     "enabledAria": "允許助手聯網搜尋",
     "providerLabel": "搜尋供應商",
-    "providerHelpNative": "自動＝原生搜尋；DuckDuckGo／Brave＝強制自研工具。助手與網路情報任務共用此設定。",
-    "providerHelpTool": "目前 LLM 無原生搜尋，請選 DuckDuckGo 或 Brave。助手與網路情報任務共用此設定。",
+    "providerHelpNative": "自動＝原生搜尋；DuckDuckGo／Brave＝強制自研工具。助手與 Agent 任務共用此設定。",
+    "providerHelpTool": "目前 LLM 無原生搜尋，請選 DuckDuckGo 或 Brave。助手與 Agent 任務共用此設定。",
     "providerAutoNative": "自動（原生搜尋）",
     "providerAutoTool": "工具路徑（DDG／Brave）",
     "providerDuckDuckGo": "DuckDuckGo",
     "providerBrave": "Brave Search",
-    "statusDisabled": "助手聯網已關閉（網路情報排程不受影響）。",
+    "statusDisabled": "助手聯網已關閉（Agent 排程網搜不受影響）。",
     "statusOpenaiNative": "將使用 OpenAI 原生搜尋。",
     "statusGeminiNative": "將使用 Gemini Google Search。",
     "statusToolDuckDuckGo": "將使用 DuckDuckGo 工具。",
@@ -381,7 +381,7 @@
   },
   "staff": {
     "title": "AI 員工介紹",
-    "intro": "前線兩位：助手、任務顧問。後勤四位：排行榜分析員、情報任務分析員、網路情報蒐集員、專案管理助手（由分析任務自動召喚）。另有「客戶經理」接待外部系統（A2A，與助手同組，不跟你聊天）。",
+    "intro": "前線兩位：助手、任務顧問。後勤三位：排行榜分析員、情報任務分析員、Agent（由分析任務自動召喚）。另有「客戶經理」接待外部系統（A2A，與助手同組，不跟你聊天）。",
     "capabilitiesLabel": "能做什麼",
     "backofficeNote": "後勤員工由分析任務自動召喚，不會出現在對話框。",
     "openAssistant": "開啟助手對話",
@@ -430,7 +430,7 @@
       "summary": "在新增或編輯分析任務時陪你對話，幫你填好左側表單（不是 Agent）。",
       "capabilities": [
         "聽你描述要監控什麼，建議任務名稱與說明",
-        "建議任務類型（排行榜任務／情報任務／網路情報任務／週期任務／專案任務）與 Prompt 方向",
+        "建議任務類型（排行榜任務／情報任務／Agent 任務／週期任務）與 Prompt 方向",
         "協助調整時間範圍、搜尋查詢與排程相關設定",
         "只負責設定任務，不會直接去分析訊息或呼叫工具"
       ]
@@ -453,22 +453,13 @@
         "不會跟你聊天；由排程或手動執行任務觸發"
       ]
     },
-    "web_intel": {
-      "summary": "後勤情報蒐集：Agent 多輪網頁搜尋寫入情報事件（與情報任務同一 analysis_events）；可選來源訊息核實。",
+    "agent": {
+      "summary": "後勤可配置 Agent：依觸發方式與輸出權限調和日程或蒐集情報。",
       "capabilities": [
-        "依任務排程由 Agent 多輪 web.search，再輸出終局事件 JSON（預設 hourly）",
-        "可選綁定頻道＝訊息門檻：未分析訊息達門檻才跑，並注入供核實／補充",
-        "任務 Prompt 指引搜集方向；Agent 自行決定搜尋關鍵字",
-        "不會與你聊天；結果出現在情報／時間規劃頁"
-      ]
-    },
-    "project": {
-      "summary": "後勤閉環 Agent：按小時 tick 根據來源訊息調和專案日程。",
-      "capabilities": [
-        "讀取本專案單次事件與子週期任務",
-        "以工具建立／修改／軟刪所屬日程項目",
-        "有綁定頻道時注入增量來源訊息",
-        "不會跟你聊天；由專案任務排程驅動（建議 hourly）"
+        "可選訊息游標抽乾、訊息閾值或純定時觸發",
+        "依任務授權使用日曆讀寫與／或網頁搜尋",
+        "輸出可寫入專案日程（user_events.origin=project）或情報事件（analysis_events）",
+        "不會跟你聊天；由 Agent 任務排程驅動（建議 hourly）"
       ]
     },
     "liaison": {

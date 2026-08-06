@@ -4,16 +4,14 @@ import assistantSrc from "../../assets/ai-staff/assistant.png";
 import taskEditorSrc from "../../assets/ai-staff/taskEditor.png";
 import leaderboardSrc from "../../assets/ai-staff/leaderboard.png";
 import intelEventSrc from "../../assets/ai-staff/intel_event.png";
-import webIntelTaskSrc from "../../assets/ai-staff/web_intel.png";
-import projectSrc from "../../assets/ai-staff/project.png";
+import agentSrc from "../../assets/ai-staff/project.png";
 
 const AVATAR_SRC: Record<AiStaffId, string> = {
   assistant: assistantSrc,
   taskEditor: taskEditorSrc,
   leaderboard: leaderboardSrc,
   intel_event: intelEventSrc,
-  web_intel: webIntelTaskSrc,
-  project: projectSrc,
+  agent: agentSrc,
 };
 
 const SIZE_PX = {

@@ -5,16 +5,14 @@ import type { AnalysisMode } from "../../types/common";
 export const MODE_BADGE_TONE: Record<AnalysisMode, BadgeTone> = {
   leaderboard: "accent",
   intel_event: "info",
-  web_intel: "info",
   recurring: "success",
-  project: "warning",
+  agent: "warning",
 };
 
 /** Left AccentBar class for analysis-mode entity cards (TaskCard / workset detail). */
 export const MODE_ACCENT_CLASS: Record<AnalysisMode, string> = {
   leaderboard: "bg-accent",
   intel_event: "bg-info",
-  web_intel: "bg-info",
   recurring: "bg-success",
-  project: "bg-warning",
+  agent: "bg-warning",
 };

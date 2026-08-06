@@ -104,7 +104,8 @@ describe("ProjectDetailPage", () => {
       makeAnalysisTask({
         id: "proj-1",
         name: "Launch",
-        analysisMode: "project",
+        analysisMode: "agent",
+        outputCalendar: true,
         description: "Ship the product",
         scheduleRrule: "FREQ=HOURLY",
       }),

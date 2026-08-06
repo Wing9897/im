@@ -43,7 +43,7 @@ describe("useTimelineCalendarRefresh", () => {
     container.remove();
   });
 
-  it("wires analysis refresh for intel_event + web_intel when enabled", () => {
+  it("wires analysis refresh for intel_event + agent when enabled", () => {
     act(() =>
       root.render(
         createElement(Probe, {

@@ -69,9 +69,7 @@ def test_analysis_mode_specs_drive_capability_sets() -> None:
         assert (spec.mode in SKIP_BATCH_ANALYSIS_MODES) is (not spec.message_batch)
         if spec.pipeline == "message_batch":
             assert spec.message_batch and spec.ai and spec.schedulable
-        elif spec.pipeline == "project_tick":
-            assert spec.ai and spec.schedulable and not spec.message_batch
-        elif spec.pipeline == "web_intel_tick":
+        elif spec.pipeline == "agent_tick":
             assert spec.ai and spec.schedulable and not spec.message_batch and spec.timeline_owning
         elif spec.pipeline == "rrule_expand":
             assert not spec.ai and not spec.schedulable and not spec.message_batch

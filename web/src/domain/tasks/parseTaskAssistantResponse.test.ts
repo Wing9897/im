@@ -110,8 +110,8 @@ describe("parseTaskAssistantResponse", () => {
       }
     });
 
-    it("accepts all valid analysis modes including web_intel", () => {
-      expect(ANALYSIS_MODE_ORDER).toContain("web_intel");
+    it("accepts all valid analysis modes including agent", () => {
+      expect(ANALYSIS_MODE_ORDER).toContain("agent");
       for (const analysisMode of ANALYSIS_MODE_ORDER) {
         const result = parseTaskAssistantResponse(validResponse({ analysisMode }));
         expect(result.ok).toBe(true);

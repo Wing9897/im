@@ -41,8 +41,14 @@ async def resolve_web_search_route_for_runtime(
     llm: LlmCompleter,
     *,
     force_enabled: bool = False,
+    force_disabled: bool = False,
 ) -> WebSearchRoute:
-    web_enabled = True if force_enabled else await get_config_bool(db, "assistant_web_search_enabled")
+    if force_disabled:
+        web_enabled = False
+    elif force_enabled:
+        web_enabled = True
+    else:
+        web_enabled = await get_config_bool(db, "assistant_web_search_enabled")
     setting = await get_config(db, "web_search_provider")
     llm_cfg = await load_agent_llm_config(db)
     # Prefer live client strings when set; ignore MagicMock auto-attrs.
