@@ -123,6 +123,7 @@
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
 | 收集子系統 | **收集器**（勿用「採集器」） | Collector | 收集器 |
 | 物品頁／trackable inventory | **物品**（namespace `items`） | Items | 物品 |
+| 監控模式 `canvas`（自由排版儀表） | **畫布** | Ops Board | 画布 | UI 顯示名**單一**（勿再寫「畫布／Ops Board」）；代碼 mode=`canvas`、prefs=`ops_board_*`、目錄 `board/` **勿改** |
 
 ## AI 員工（staff／employees／intro）
 
@@ -130,7 +131,7 @@
 
 | 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
 |----|----------|-------------------|------|
-| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；含助手、任務編輯、排行榜、情報任務、**網路情報**、專案 + 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime） |
+| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、網路情報蒐集員、專案管理助手）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
 | 任務類型徽章／選擇器 | 員工名（週期任務／情報任務／網路情報任務…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`intel_event`／`web_intel`／`leaderboard`／`project`）；員工 id 與 enum token 對齊；**DB／API enum 仍是 analysisMode** |
 | AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的任務類型才顯示頭像；`recurring` 無 AI avatar（staff id 為 null） |
 | 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |

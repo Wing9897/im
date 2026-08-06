@@ -56,6 +56,8 @@ export function useUserEventDialogForm({
   const initialBody = initial?.body ?? "";
   const initialWorksetId = initial?.worksetId;
   const initialIsAllDay = Boolean(initial?.isAllDay);
+  const initialRemindBeforeDays = initial?.remindBeforeDays ?? "";
+  const initialItemId = initial?.itemId ?? "";
   const initialKind = initial?.kind === "recurring" ? "recurring" : "one_off";
   const initialRrule = initial?.rrule ?? "";
   const initialEventStart = initial?.eventStartTime ?? "";
@@ -75,6 +77,8 @@ export function useUserEventDialogForm({
         body: initialBody,
         worksetId: initialWorksetId,
         isAllDay: initialIsAllDay,
+        remindBeforeDays: initialRemindBeforeDays,
+        itemId: initialItemId,
         rrule: initialRrule,
         eventStartTime: initialEventStart,
         eventEndTime: initialEventEnd,
@@ -91,6 +95,8 @@ export function useUserEventDialogForm({
     initialBody,
     initialWorksetId,
     initialIsAllDay,
+    initialRemindBeforeDays,
+    initialItemId,
     initialRrule,
     initialEventStart,
     initialEventEnd,

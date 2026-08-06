@@ -381,11 +381,11 @@
   },
   "staff": {
     "title": "AI staff",
-    "intro": "Six AI staff: two front-line chats, four back-office (leaderboard analyst / intel task analyst / web intel scout / project manager). Plus an Account manager who greets external systems (same team as the assistant; no chat with you).",
+    "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, Web intel scout, and Project manager (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
     "capabilitiesLabel": "What they can do",
     "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
     "openAssistant": "Open assistant chat",
-    "openTaskEditor": "Open task editor chat",
+    "openTaskEditor": "Open task advisor chat",
     "displayNameLabel": "Display name",
     "displayNameHelp": "Leave blank to use the default name.",
     "editNameAria": "Edit assistant display name",

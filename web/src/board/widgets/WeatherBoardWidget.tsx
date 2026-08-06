@@ -89,7 +89,7 @@ export function WeatherBoardWidget({ active = true }: BoardWidgetProps) {
   const fetcher = useCallback(() => loadBoardWeather(), []);
   const { data, error, loading, refresh } = useBoardWidgetPoll<BoardWeatherSnapshot>(
     fetcher,
-    BOARD_POLL_MS.standard,
+    BOARD_POLL_MS.weather,
     { active },
   );
 

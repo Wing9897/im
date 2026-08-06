@@ -5,10 +5,13 @@ import { setAppLocale } from "../../i18n/locale";
 import {
   ALL_CATEGORIES_EMOJI,
   DEFAULT_ITEM_EMOJI,
+  ITEM_DATE_KIND_EMOJI,
   UNCATEGORIZED_EMOJI,
   formatItemOccurrenceTitle,
-  itemDateKindBadgeTone,
+  itemDateKindEmoji,
   itemDateKindLabel,
+  itemDateKindMarkerClass,
+  stripItemKindTitlePrefix,
   itemOccurrenceId,
   resolveCategoryCardEmoji,
   resolveCategoryEmoji,
@@ -55,6 +58,15 @@ describe("itemCalendarProjection helpers", () => {
     );
   });
 
+  it("strips remind/expires/purchased prefixes for plain-title surfaces", () => {
+    const remind = `${String(i18n.t("items:remindPrefix"))} · Milk`;
+    const expires = `${String(i18n.t("items:expiresPrefix"))} · Milk`;
+    const purchased = `${String(i18n.t("items:purchasedPrefix"))} · Milk`;
+    expect(stripItemKindTitlePrefix("remind", remind)).toBe("Milk");
+    expect(stripItemKindTitlePrefix("expires", expires)).toBe("Milk");
+    expect(stripItemKindTitlePrefix("purchased", purchased)).toBe("Milk");
+  });
+
   it("prefers item emoji over category emoji, else clear fallback", () => {
     expect(resolveItemEmoji({ emoji: "🍎" }, { emoji: "📦" })).toBe("🍎");
     expect(resolveItemEmoji({ emoji: null }, { emoji: "🍎" })).toBe("🍎");
@@ -84,10 +96,17 @@ describe("itemCalendarProjection helpers", () => {
     expect(DEFAULT_ITEM_EMOJI).toBe(DDL_SEED_CATEGORY_EMOJIS.other);
   });
 
-  it("labels and tones distinguish remind vs expires", () => {
+  it("labels distinguish remind vs expires", () => {
     expect(itemDateKindLabel("remind")).toBe(String(i18n.t("items:remindPrefix")));
     expect(itemDateKindLabel("expires")).toBe(String(i18n.t("items:expiresPrefix")));
-    expect(itemDateKindBadgeTone("remind")).toBe("warning");
-    expect(itemDateKindBadgeTone("expires")).toBe("danger");
+  });
+
+  it("maps item date kinds to tiny calendar glyphs", () => {
+    expect(itemDateKindEmoji("purchased")).toBe(ITEM_DATE_KIND_EMOJI.purchased);
+    expect(itemDateKindEmoji("remind")).toBe(ITEM_DATE_KIND_EMOJI.remind);
+    expect(itemDateKindEmoji("expires")).toBe(ITEM_DATE_KIND_EMOJI.expires);
+    expect(itemDateKindEmoji("purchased")).toBe("🛒");
+    expect(itemDateKindMarkerClass("purchased")).toContain("text-[8px]");
+    expect(itemDateKindMarkerClass("purchased")).not.toContain("rounded-full");
   });
 });

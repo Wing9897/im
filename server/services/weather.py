@@ -163,7 +163,13 @@ async def _forecast_with_fallbacks(location: str, start_date: date, end_date: da
         ) from exc
 
 
-async def get_forecast(location: str, start_date: date, end_date: date) -> WeatherForecastResponse:
+async def get_forecast(
+    location: str,
+    start_date: date,
+    end_date: date,
+    *,
+    force: bool = False,
+) -> WeatherForecastResponse:
     """Validate, clip, cache, and execute one forecast request."""
     if end_date < start_date or (end_date - start_date).days + 1 > MAX_FORECAST_DAYS:
         raise http_error(422, "Invalid weather forecast date range", error_code="weather_invalid_date_range")
@@ -173,9 +179,12 @@ async def get_forecast(location: str, start_date: date, end_date: date) -> Weath
     clipped_start, clipped_end = intersection
     normalized_location = location.strip()
     cache_key = (normalized_location.casefold(), clipped_start, clipped_end)
-    cached = _cached_forecast(cache_key)
-    if cached is not None:
-        return cached
+    if force:
+        _FORECAST_CACHE.pop(cache_key, None)
+    else:
+        cached = _cached_forecast(cache_key)
+        if cached is not None:
+            return cached
     try:
         payload = await asyncio.wait_for(
             _forecast_with_fallbacks(normalized_location, clipped_start, clipped_end),

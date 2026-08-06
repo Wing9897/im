@@ -5,14 +5,12 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import type { TimelineItem } from "../../../types";
 import { TimelineGrid } from "../calendar/TimelineGrid";
 import { TimelineSidebar } from "./TimelineSidebar";
 import { TaskDetailPanel } from "./TaskDetailPanel";
-import { TimelineSkeleton } from "./TimelineSkeleton";
 import { TimelineEmptyHint } from "./TimelineEmptyHint";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { useTimelineLoadTimeout } from "../useTimelineLoadTimeout";
@@ -21,7 +19,6 @@ import {
   timelineContentRowClass,
   timelineGridColumnClass,
   timelineMainLayoutClass,
-  timelineRefreshRowClass,
   timelineSidebarColumnClass,
 } from "../timelineViewLayout";
 
@@ -48,7 +45,7 @@ interface TimelineViewSwitchProps {
 
 export function TimelineViewSwitch({
   initialLoading,
-  isRefreshing,
+  isRefreshing: _isRefreshing,
   events,
   filteredEvents,
   emptyState,
@@ -84,19 +81,11 @@ export function TimelineViewSwitch({
     [events, filteredEvents, emptyState, t],
   );
 
-  if (initialLoading && !hasEvents && !timedOut) {
-    return <TimelineSkeleton viewMode={viewMode} />;
-  }
-
+  // Keep the grid mounted while loading so the sticky toolbar / layout do not jump.
+  // Loading spinner lives in TimelineControlBar.
   return (
     <div className={timelineMainLayoutClass} data-testid="timeline-main-layout">
       {emptyHint && <TimelineEmptyHint hint={emptyHint} />}
-
-      {isRefreshing && (
-        <div className={`${timelineRefreshRowClass} shrink-0`} data-testid="timeline-refresh-indicator">
-          <RefreshIndicator label={t("view.refreshing")} />
-        </div>
-      )}
 
       <div className={timelineContentRowClass}>
         <div className={timelineGridColumnClass}>
@@ -123,8 +112,6 @@ export function TimelineViewSwitch({
           ) : (
             <TimelineSidebar
               rangeEvents={sidebarEvents}
-              allRangeEvents={rangeEvents}
-              hasDayFocus={sidebarEvents !== rangeEvents}
               focusedDay={focusedDay}
             />
           )}

@@ -15,7 +15,7 @@ type Props = {
   dialogOpen: boolean;
   dialogMode: "create" | "edit";
   editingEvent: TimelineItem | null;
-  createWorksetId: string | null;
+  createInitial: Partial<UserEventFormValues> | null;
   dialogBusy: boolean;
   dialogError: string | null;
   worksetOptions: WorksetOption[];
@@ -32,7 +32,7 @@ export function TimelinePageDialogs({
   dialogOpen,
   dialogMode,
   editingEvent,
-  createWorksetId,
+  createInitial,
   dialogBusy,
   dialogError,
   worksetOptions,
@@ -56,16 +56,25 @@ export function TimelinePageDialogs({
           editingEvent
             ? {
                 title: editingEvent.title,
-                startTime: editingEvent.startTime,
+                startTime: editingEvent.startTime ?? "",
                 endTime: editingEvent.endTime ?? "",
                 location: editingEvent.location ?? "",
                 body: editingEvent.body ?? "",
                 worksetId: toUserEventFormWorksetId(editingEvent.worksetId),
                 isAllDay: Boolean(editingEvent.isAllDay),
+                remindBeforeDays:
+                  editingEvent.remindBeforeDays != null
+                    ? String(editingEvent.remindBeforeDays)
+                    : "",
+                itemId: editingEvent.itemId?.trim() ?? "",
               }
             : {
-                worksetId: toUserEventFormWorksetId(createWorksetId),
-                isAllDay: false,
+                worksetId: toUserEventFormWorksetId(createInitial?.worksetId),
+                isAllDay: Boolean(createInitial?.isAllDay),
+                startTime: createInitial?.startTime ?? "",
+                endTime: createInitial?.endTime ?? "",
+                itemId: createInitial?.itemId ?? "",
+                remindBeforeDays: createInitial?.remindBeforeDays ?? "",
               }
         }
         busy={dialogBusy}

@@ -23,5 +23,9 @@ async def forecast(
     location: str = Query(min_length=1, max_length=120),
     start_date: date = Query(),
     end_date: date = Query(),
+    force: bool = Query(
+        False,
+        description="Bypass the successful forecast TTL cache and refetch providers.",
+    ),
 ) -> WeatherForecastResponse:
-    return await get_forecast(location, start_date, end_date)
+    return await get_forecast(location, start_date, end_date, force=force)

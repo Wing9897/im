@@ -3,7 +3,9 @@
  *
  * Occurrence projection lives on the server (`item_projection` → GET /calendar/items)
  * and includes purchased / expires / remind floating all-day markers. This module
- * only formats titles (i18n), occurrence ids, badge/dot tones, and emoji brand marks.
+ * only formats titles (i18n), occurrence ids, and calendar kind glyphs
+ * (tiny emoji markers — not chromatic dots). Card remind badges live in
+ * `eventShowsRemindBadge` / `resolveEventCardDisplay`.
  */
 
 import i18n from "../../i18n";
@@ -13,6 +15,16 @@ import {
 } from "./categoryAggregates";
 
 export type ItemDateKind = "purchased" | "expires" | "remind";
+
+/**
+ * Calendar-row kind glyphs (distinct from the item's own brand emoji).
+ * Kept tiny in UI via {@link itemDateKindMarkerClass}.
+ */
+export const ITEM_DATE_KIND_EMOJI: Readonly<Record<ItemDateKind, string>> = {
+  purchased: "🛒",
+  remind: "🔔",
+  expires: "⚠️",
+};
 
 /**
  * Visual language for Items / workset item cards:
@@ -55,6 +67,26 @@ export function itemDateKindLabel(
   return String(i18n.t(prefixKeyForKind(kind)));
 }
 
+/**
+ * Strip `{prefix} · ` when the UI already conveys kind (badge / tag) or when
+ * purchase / expiry should read as a normal event (plain title + standard dot).
+ */
+export function stripItemKindTitlePrefix(
+  kind: string | null | undefined,
+  title: string,
+): string {
+  if (kind !== "remind" && kind !== "expires" && kind !== "purchased") {
+    return title.trim();
+  }
+  const prefix = itemDateKindLabel(kind);
+  const trimmed = title.trim();
+  const dotted = `${prefix} · `;
+  if (trimmed.startsWith(dotted)) {
+    return trimmed.slice(dotted.length).trim();
+  }
+  return trimmed;
+}
+
 type EmojiSource = {
   slug?: string | null;
   emoji?: string | null;
@@ -95,28 +127,23 @@ export function resolveItemEmoji(
   return resolveCategoryEmoji(category);
 }
 
-/** Badge tone for remind vs expires vs purchased in list/sidebar. */
-export function itemDateKindBadgeTone(
-  kind: string | null | undefined,
-): "warning" | "danger" | "info" | "neutral" {
-  if (kind === "remind") return "warning";
-  if (kind === "expires") return "danger";
-  if (kind === "purchased") return "info";
-  return "neutral";
+/** Glyph for an item DATE kind (🛒 / 🔔 / ⚠️). Falls back to package for unknown. */
+export function itemDateKindEmoji(kind: string | null | undefined): string {
+  if (kind === "purchased" || kind === "remind" || kind === "expires") {
+    return ITEM_DATE_KIND_EMOJI[kind];
+  }
+  return DEFAULT_ITEM_EMOJI;
 }
 
-/** Month-cell / list accent class for item kind dots (design-system tokens). */
-export function itemDateKindDotClass(
-  kind: string | null | undefined,
+/**
+ * Tiny emoji marker box (~dot visual weight next to month preview text).
+ * Pair with {@link itemDateKindEmoji} as children — not a colored disk.
+ */
+export function itemDateKindMarkerClass(
+  _kind?: string | null,
 ): string {
-  if (kind === "remind") {
-    return "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ending)] opacity-90";
-  }
-  if (kind === "expires") {
-    return "h-1 w-1 shrink-0 rounded-full bg-[var(--error)] opacity-90";
-  }
-  if (kind === "purchased") {
-    return "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ongoing)] opacity-90";
-  }
-  return "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-event)] opacity-80";
+  return (
+    "inline-flex h-2.5 w-2.5 shrink-0 items-center justify-center " +
+    "overflow-hidden text-[8px] leading-none opacity-90"
+  );
 }

@@ -49,7 +49,7 @@ from server.scheduler.web_intel_batches import (
     open_processing_batch,
     record_web_intel_skip,
 )
-from server.sse import Broadcaster
+from server.sse import Broadcaster, publish_resource_modified
 from server.util import utc_now_iso
 
 if TYPE_CHECKING:
@@ -283,4 +283,10 @@ async def execute_web_intel_tick(
             "webSearchMode": used_mode,
             "messageCount": len(claimed_messages),
         },
+    )
+    publish_resource_modified(
+        broadcaster,
+        resource_type="task",
+        resource_id=task_id,
+        action="updated",
     )

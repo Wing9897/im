@@ -157,6 +157,18 @@ export function isSameDay(left: Date, right: Date): boolean {
   );
 }
 
+/**
+ * Calendar end day for span / all-day classification.
+ * Midnight-exact ends are exclusive (last active day = previous day).
+ */
+export function effectiveEndDay(start: Date, end: Date): Date {
+  const endDay = startOfDay(end);
+  if (end.getTime() === endDay.getTime() && end > start) {
+    return addDays(endDay, -1);
+  }
+  return endDay;
+}
+
 export function isToday(date: Date): boolean {
   return isSameDay(date, new Date());
 }
@@ -235,6 +247,38 @@ export function todayDateInput(now: Date = new Date()): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/** Timed create defaults: ``now`` → ``now + 1h`` as ``datetime-local`` values. */
+export function defaultCreateTimedRange(now: Date = new Date()): {
+  startTime: string;
+  endTime: string;
+} {
+  const end = new Date(now.getTime() + 60 * 60 * 1000);
+  return {
+    startTime: toDateTimeLocalInput(now.toISOString()),
+    endTime: toDateTimeLocalInput(end.toISOString()),
+  };
+}
+
+/**
+ * Prefill create on a calendar day: that wall date + current clock,
+ * ending one hour later (same pattern as toolbar "add event").
+ */
+export function createTimedRangeOnDay(
+  day: Date,
+  now: Date = new Date(),
+): { startTime: string; endTime: string } {
+  const start = new Date(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate(),
+    now.getHours(),
+    now.getMinutes(),
+    0,
+    0,
+  );
+  return defaultCreateTimedRange(start);
 }
 
 /** Date part from `datetime-local` / `date` / ISO input values. */

@@ -10,6 +10,7 @@ from server.api.deps import get_db, publish_resource_modified
 from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
 from server.api.schemas.responses import UserEventResponse
 from server.calendar.user_events import (
+    UserEventItemIdError,
     UserEventTaskIdError,
     UserEventValidationError,
     UserEventWorksetIdError,
@@ -25,7 +26,11 @@ router = APIRouter(prefix="/user-events", tags=["calendar"])
 
 
 def _http_from_validation(exc: UserEventValidationError) -> HTTPException:
-    status = 400 if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError)) else 422
+    status = (
+        400
+        if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError, UserEventItemIdError))
+        else 422
+    )
     return http_error(status, str(exc), error_code=VALIDATION_ERROR)
 
 
@@ -44,10 +49,18 @@ async def list_events(
     end: str | None = None,
     task_id: str | None = None,
     workset_id: str | None = None,
+    item_id: str | None = None,
 ) -> list[UserEventResponse]:
     db = get_db(request)
     try:
-        rows = await list_user_events(db, start=start, end=end, task_id=task_id, workset_id=workset_id)
+        rows = await list_user_events(
+            db,
+            start=start,
+            end=end,
+            task_id=task_id,
+            workset_id=workset_id,
+            item_id=item_id,
+        )
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
     return [UserEventResponse.model_validate(row) for row in rows]
@@ -66,7 +79,9 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
             "location": body.location,
             "origin": "manual",
             "is_all_day": bool(body.isAllDay),
+            "remind_before_days": body.remindBeforeDays,
             "task_id": body.taskId,
+            "item_id": body.itemId,
         }
         if "worksetId" in fields_set:
             kwargs["workset_id"] = body.worksetId
@@ -106,7 +121,9 @@ async def patch_event(
         "body": "body",
         "location": "location",
         "isAllDay": "is_all_day",
+        "remindBeforeDays": "remind_before_days",
         "taskId": "task_id",
+        "itemId": "item_id",
         "worksetId": "workset_id",
     }
     kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}

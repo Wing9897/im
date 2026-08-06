@@ -30,4 +30,21 @@ describe("weather API", () => {
       { signal: controller.signal },
     );
   });
+
+  it("passes force=true to bypass the server TTL cache", async () => {
+    mockGet.mockResolvedValue({ daily: {} });
+
+    await fetchWeatherForecast("臺北", "2026-07-01", "2026-07-01", { force: true });
+
+    expect(mockGet).toHaveBeenCalledWith(
+      "/api/v1/weather/forecast",
+      {
+        location: "臺北",
+        start_date: "2026-07-01",
+        end_date: "2026-07-01",
+        force: true,
+      },
+      { signal: undefined },
+    );
+  });
 });

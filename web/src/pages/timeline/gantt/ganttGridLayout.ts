@@ -2,8 +2,8 @@
 export const GANTT_COLUMN_WIDTH_PX = 28;
 
 export function ganttColumnGap(needsScroll: boolean): number {
-  // Wider gaps make day cells easier to count by eye.
-  return needsScroll ? 5 : 4;
+  // Tight gaps so multi-day bars read as continuous Gantt strips, not a habit grid.
+  return needsScroll ? 2 : 1;
 }
 
 /**

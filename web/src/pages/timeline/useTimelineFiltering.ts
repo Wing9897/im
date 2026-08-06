@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 
 import {
-  addMonths,
+  addDays,
+  buildCalendarDays,
   eventOverlapsRange,
-  startOfMonth,
-  timelineEventDateRange,
 } from "../../domain/timeline/dateUtils";
 import type { TimelineEventTimeOverrideMap } from "../../domain/timeline/status";
 import type { TimelineItem } from "../../types";
@@ -47,6 +46,9 @@ interface UseTimelineFilteringReturn {
  * - Client annotations (`eventStatuses`) are separate from soft-dismiss visibility.
  * - Do not replace dismiss partitioning with a single `.filter(!dismissed)` used
  *   everywhere (month preview / showDismissed / prefer-active semantics differ).
+ * - `monthEvents` includes any event overlapping the 42-day month grid (not only
+ *   starts-in-month), so「+N 进行中」／「+N 结束」chips work when navigating away
+ *   from the current month and on leading/trailing adjacent-month cells.
  */
 export function useTimelineFiltering({
   events,
@@ -90,19 +92,16 @@ export function useTimelineFiltering({
     [filteredEvents, rangeEnd, rangeStart],
   );
 
-  const monthEvents = useMemo(
-    () =>
-      filteredEvents.filter((event) => {
-        // All-day rows use wall-date parsing so UTC midnight does not slip into
-        // the previous local month (same contract as eventStartsOnDay).
-        const { start } = timelineEventDateRange(event);
-        return (
-          start >= startOfMonth(monthCursor) &&
-          start < addMonths(startOfMonth(monthCursor), 1)
-        );
-      }),
-    [filteredEvents, monthCursor],
-  );
+  const monthEvents = useMemo(() => {
+    // Overlap the full Sunday-first 42-day grid so cross-month spans that start
+    // before monthCursor still feed ongoing/ending chips (incl. leading cells).
+    const days = buildCalendarDays(monthCursor);
+    const gridStart = days[0]!;
+    const gridEndExclusive = addDays(days[days.length - 1]!, 1);
+    return filteredEvents.filter((event) =>
+      eventOverlapsRange(event, gridStart, gridEndExclusive),
+    );
+  }, [filteredEvents, monthCursor]);
 
   const rangeEvents = useMemo(
     () => sortActiveThenDismissed(visibleEvents),

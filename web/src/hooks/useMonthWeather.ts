@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchSystemSettings } from "../api/config";
 import { fetchWeatherForecast } from "../api/weather";
 import { dateKey } from "../utils/dateFormat";
@@ -32,7 +32,10 @@ type InFlightWeather = {
 };
 
 const FORECAST_WINDOW_DAYS = 16;
-const WEATHER_CACHE_MS = 30 * 60 * 1000;
+/** Successful forecasts stay fresh for one hour (aligned with auto-refresh / board poll). */
+export const WEATHER_CACHE_MS = 60 * 60 * 1000;
+/** Auto-refresh interval for visible calendar weather. */
+export const WEATHER_REFRESH_MS = 60 * 60 * 1000;
 const WEATHER_FAILURE_CACHE_MS = 30 * 1000;
 const weatherCache = new Map<string, CachedWeather>();
 const weatherFailureCache = new Map<string, CachedFailure>();
@@ -49,6 +52,16 @@ const SYSTEM_TIMEZONE_LOCATIONS: Record<string, string> = {
   "Europe/London": "London",
   "Europe/Paris": "Paris",
 };
+
+/** Test-only: clear module-level weather caches between cases. */
+export function resetWeatherCachesForTests(): void {
+  weatherCache.clear();
+  weatherFailureCache.clear();
+  for (const request of inFlightWeather.values()) {
+    request.controller.abort();
+  }
+  inFlightWeather.clear();
+}
 
 export function systemLocationFromTimezone(timezone: string): string {
   const knownLocation = SYSTEM_TIMEZONE_LOCATIONS[timezone];
@@ -84,8 +97,14 @@ async function fetchWeather(
   location: string,
   range: WeatherRange,
   signal: AbortSignal,
+  force = false,
 ): Promise<Record<string, DailyWeather>> {
-  const { daily } = await fetchWeatherForecast(location, range.startDate, range.endDate, signal);
+  const { daily } = await fetchWeatherForecast(
+    location,
+    range.startDate,
+    range.endDate,
+    { signal, force },
+  );
   if (!daily?.time || !daily.weather_code || !daily.temperature_2m_max || !daily.temperature_2m_min) {
     return {};
   }
@@ -105,11 +124,19 @@ function subscribeToWeather(
   cacheKey: string,
   location: string,
   range: WeatherRange,
+  force = false,
 ): { promise: Promise<Record<string, DailyWeather>>; release: () => void } {
+  if (force) {
+    const existing = inFlightWeather.get(cacheKey);
+    if (existing) {
+      existing.controller.abort();
+      inFlightWeather.delete(cacheKey);
+    }
+  }
   let request = inFlightWeather.get(cacheKey);
   if (!request) {
     const controller = new AbortController();
-    const promise = fetchWeather(location, range, controller.signal).finally(() => {
+    const promise = fetchWeather(location, range, controller.signal, force).finally(() => {
       const current = inFlightWeather.get(cacheKey);
       if (current?.promise === promise) inFlightWeather.delete(cacheKey);
     });
@@ -133,10 +160,17 @@ function subscribeToWeather(
   };
 }
 
+type LoadWeatherOptions = {
+  force?: boolean;
+};
+
 /** Fetches the forecastable part of a visible month without disturbing calendar use on failure. */
 export function useMonthWeather(enabled: boolean, monthDays: Date[]) {
   const [weatherByDate, setWeatherByDate] = useState<Record<string, DailyWeather>>({});
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const forceNextLoadRef = useRef(false);
   const requestRange = useMemo(
     () => {
       const intersection = forecastIntersection(monthDays);
@@ -145,27 +179,38 @@ export function useMonthWeather(enabled: boolean, monthDays: Date[]) {
     [monthDays],
   );
 
+  const refresh = useCallback(() => {
+    forceNextLoadRef.current = true;
+    setRefreshTick((tick) => tick + 1);
+  }, []);
+
   useEffect(() => {
     if (!enabled || !requestRange) {
       setWeatherByDate({});
       setError(null);
+      setLoading(false);
       return;
     }
     const [startDate, endDate] = requestRange.split(":");
     const range = { startDate, endDate };
+    const force = forceNextLoadRef.current;
+    forceNextLoadRef.current = false;
     let cancelled = false;
     let releaseRequest: (() => void) | undefined;
-    const load = async () => {
-      setWeatherByDate({});
+    const load = async (opts: LoadWeatherOptions = {}) => {
       setError(null);
       let failureCacheKey = `${requestRange}:settings`;
       try {
-        const settingsFailure = weatherFailureCache.get(failureCacheKey);
-        if (settingsFailure && settingsFailure.expiresAt > Date.now()) {
-          setError(settingsFailure.error);
-          return;
+        if (!opts.force) {
+          const settingsFailure = weatherFailureCache.get(failureCacheKey);
+          if (settingsFailure && settingsFailure.expiresAt > Date.now()) {
+            setError(settingsFailure.error);
+            return;
+          }
+          if (settingsFailure) weatherFailureCache.delete(failureCacheKey);
+        } else {
+          weatherFailureCache.delete(failureCacheKey);
         }
-        if (settingsFailure) weatherFailureCache.delete(failureCacheKey);
 
         const { weatherLocation } = await fetchSystemSettings();
         if (cancelled) return;
@@ -176,21 +221,28 @@ export function useMonthWeather(enabled: boolean, monthDays: Date[]) {
         }
         const cacheKey = `${location}:${requestRange}`;
         failureCacheKey = cacheKey;
-        const cached = weatherCache.get(cacheKey);
-        if (cached && cached.expiresAt > Date.now()) {
-          setWeatherByDate(cached.weatherByDate);
-          return;
-        }
-        if (cached) weatherCache.delete(cacheKey);
 
-        const cachedFailure = weatherFailureCache.get(cacheKey);
-        if (cachedFailure && cachedFailure.expiresAt > Date.now()) {
-          setError(cachedFailure.error);
-          return;
-        }
-        if (cachedFailure) weatherFailureCache.delete(cacheKey);
+        if (opts.force) {
+          weatherCache.delete(cacheKey);
+          weatherFailureCache.delete(cacheKey);
+        } else {
+          const cached = weatherCache.get(cacheKey);
+          if (cached && cached.expiresAt > Date.now()) {
+            setWeatherByDate(cached.weatherByDate);
+            return;
+          }
+          if (cached) weatherCache.delete(cacheKey);
 
-        const subscription = subscribeToWeather(cacheKey, location, range);
+          const cachedFailure = weatherFailureCache.get(cacheKey);
+          if (cachedFailure && cachedFailure.expiresAt > Date.now()) {
+            setError(cachedFailure.error);
+            return;
+          }
+          if (cachedFailure) weatherFailureCache.delete(cacheKey);
+        }
+
+        setLoading(true);
+        const subscription = subscribeToWeather(cacheKey, location, range, Boolean(opts.force));
         releaseRequest = subscription.release;
         let weather: Record<string, DailyWeather>;
         try {
@@ -210,19 +262,27 @@ export function useMonthWeather(enabled: boolean, monthDays: Date[]) {
             error: message,
             expiresAt: Date.now() + WEATHER_FAILURE_CACHE_MS,
           });
-          setWeatherByDate({});
           setError(message);
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-    void load();
+    void load({ force });
+
+    const intervalId = window.setInterval(() => {
+      forceNextLoadRef.current = true;
+      void load({ force: true });
+    }, WEATHER_REFRESH_MS);
+
     return () => {
       cancelled = true;
       releaseRequest?.();
+      window.clearInterval(intervalId);
     };
-  }, [enabled, requestRange]);
+  }, [enabled, requestRange, refreshTick]);
 
-  return { weatherByDate, error };
+  return { weatherByDate, error, loading, refresh };
 }
 
 export function weatherIcon(code: number): string {

@@ -69,7 +69,7 @@
       "sourcesTitle": "绑定来源",
       "childrenTitle": "子周期任务",
       "childrenEmptyTitle": "暂无子周期任务",
-      "childrenEmptyDescription": "项目管理员会在每次 tick 视需要创建子周期任务。",
+      "childrenEmptyDescription": "项目管理助手会在每次 tick 视需要创建子周期任务。",
       "eventsTitle": "所属单次事件",
       "eventsEmptyTitle": "暂无所属事件",
       "eventsEmptyDescription": "项目创建的单次时程事件会显示在这里。",
@@ -543,7 +543,7 @@
     "taskEditor": "任务顾问",
     "leaderboard": "排行榜分析员",
     "intel_event": "情报任务分析员",
-    "web_intel": "网络情报蒐集员",
+    "web_intel": "网络情报搜集员",
     "project": "项目管理助手"
   },
   "ui": {
@@ -629,8 +629,8 @@
     "newActionHint": "开启通知页",
     "openViewer": "开启 Viewer 视窗",
     "openViewerHint": "只读投影 · 新分页",
-    "openOpsBoard": "Ops Board（画布）",
-    "openOpsBoardHint": "切换到画布／Ops Board",
+    "openOpsBoard": "画布",
+    "openOpsBoardHint": "切换到画布",
     "shortcutHelp": "快捷键说明",
     "quickAssistant": "助手",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -1133,9 +1133,9 @@
   "monitorMode": {
     "aria": "监控模式",
     "pages": "分页",
-    "canvas": "画布／Ops Board",
+    "canvas": "画布",
     "pagesTitle": "分页监控",
-    "canvasTitle": "沉浸 Ops Board 画布"
+    "canvasTitle": "沉浸画布"
   },
   "shortcuts": {
     "title": "快捷键说明",

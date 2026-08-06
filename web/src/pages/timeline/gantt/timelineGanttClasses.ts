@@ -9,16 +9,27 @@ export const ganttVerticalScrollClass =
 export const ganttMainFlexContainerClass = "flex min-h-0 min-w-0";
 
 export const ganttLeftColumnClass =
-  "z-[2] flex w-[156px] min-w-[156px] max-w-[156px] shrink-0 flex-col";
+  "z-[2] flex w-[168px] min-w-[168px] max-w-[168px] shrink-0 flex-col border-r border-[color-mix(in_srgb,var(--surface-border)_40%,transparent)] pr-1.5";
 
-export const ganttEventNamesColumnClass = "flex min-w-0 flex-col gap-1.5";
+export const ganttEventNamesColumnClass = "flex min-w-0 flex-col gap-0.5";
 
 export const ganttRightAreaBaseClass = "min-w-0 flex-1";
 
-export const ganttEventBarRowsContainerClass = "flex flex-col gap-1.5";
+export const ganttEventBarRowsContainerClass = "flex flex-col gap-0.5";
 
 export const ganttColumnHeaderTextClass =
   "text-center text-caption text-text-muted";
+
+export function ganttColumnHeaderClass(isToday: boolean): string {
+  return [
+    ganttColumnHeaderTextClass,
+    isToday
+      ? "font-semibold text-[color-mix(in_srgb,var(--info)_88%,var(--text-primary))]"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
 
 export const ganttLegendLabelClass = "text-xs text-text-secondary";
 
@@ -43,56 +54,75 @@ export const ganttLegendItemClass = "flex items-center gap-1.5";
 
 export const ganttLegendDotBaseClass = "h-3.5 w-3.5 rounded-sm";
 
+export const ganttLabelStatusDotClass =
+  "h-1.5 w-1.5 shrink-0 rounded-full";
+
+export const ganttLabelTitleClass = "min-w-0 flex-1 truncate";
+
 export function ganttEventNameClass(isHovered: boolean, dismissed = false): string {
   return [
     // Fixed row height + flex center (avoid h + py + leading fighting each other).
-    "box-border flex h-7 w-full min-w-0 max-w-full shrink-0 cursor-pointer items-center truncate rounded-md px-2 text-caption font-medium leading-none",
+    "box-border flex h-7 w-full min-w-0 max-w-full shrink-0 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-caption font-medium leading-none",
     dismissed
       ? `${dismissedTitleClass} opacity-70`
       : "text-text-primary",
-    // Soft translucent pill — readable without going fully solid.
     isHovered
-      ? "bg-[color-mix(in_srgb,var(--accent-pink)_16%,color-mix(in_srgb,var(--surface-card)_58%,transparent))]"
-      : "bg-[color-mix(in_srgb,var(--surface-card)_52%,transparent)]",
+      ? "bg-[color-mix(in_srgb,var(--accent-pink)_12%,color-mix(in_srgb,var(--surface-card)_42%,transparent))]"
+      : "bg-transparent hover:bg-[color-mix(in_srgb,var(--surface-card)_35%,transparent)]",
   ].join(" ");
 }
 
-/** Continuous event bar spanning grid columns (covers column gaps). */
+/**
+ * Continuous Gantt bar. Color comes from inline status token (or dashed error for dismissed).
+ * Compact = single-column / point events — short inset block, not a full-width capsule.
+ */
 export function ganttBarClass(
   isHovered: boolean,
-  isPoint: boolean,
+  isCompact: boolean,
   dismissed = false,
 ): string {
   return [
-    "relative z-[1] box-border h-[18px] self-center rounded-md border transition-[opacity,box-shadow,background] duration-150",
+    "relative z-[1] box-border h-[13px] self-center rounded-full transition-[opacity,box-shadow,filter] duration-150",
     dismissed
-      ? "border-dashed border-error bg-[color-mix(in_srgb,var(--error)_48%,transparent)]"
-      : "border-accent bg-accent",
-    // Mid opacity: not washed-out ghost, not fully solid.
-    isHovered ? "opacity-100 shadow-sm" : dismissed ? "opacity-60" : "opacity-80",
-    isPoint ? "min-w-1.5" : "min-w-1",
+      ? "border border-dashed border-error bg-[color-mix(in_srgb,var(--error)_48%,transparent)]"
+      : "border-0",
+    isHovered ? "opacity-100 brightness-110 shadow-sm" : dismissed ? "opacity-55" : "opacity-92",
+    isCompact ? "mx-[16%] min-w-[6px]" : "mx-px min-w-1",
   ].join(" ");
 }
 
-/** Row shell — no continuous fill; day cells provide the countable track. */
-export function ganttEventRowClass(_isHovered: boolean): string {
-  return "relative grid h-7 shrink-0 cursor-pointer items-center";
-}
-
-/** Per-day empty cell so users can count columns (days) visually. */
-export function ganttDayCellClass(isHovered: boolean): string {
+/** Row shell — hairline track only; no habit-grid capsules. */
+export function ganttEventRowClass(isHovered: boolean): string {
   return [
-    "box-border h-full min-h-0 min-w-0 rounded-sm border border-[color-mix(in_srgb,var(--surface-border)_45%,transparent)]",
+    "relative grid h-7 shrink-0 cursor-pointer items-center",
+    "border-b border-[color-mix(in_srgb,var(--surface-border)_18%,transparent)]",
     isHovered
-      ? "bg-[color-mix(in_srgb,var(--accent-pink)_14%,color-mix(in_srgb,var(--surface-card)_50%,transparent))]"
-      : "bg-[color-mix(in_srgb,var(--surface-card)_40%,transparent)]",
-  ].join(" ");
+      ? "bg-[color-mix(in_srgb,var(--accent-pink)_8%,transparent)]"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
+ * Per-column slot: thin divider + optional today wash.
+ * Intentionally no rounded capsule borders (those created habit-grid noise).
+ */
+export function ganttDayCellClass(isToday: boolean): string {
+  return [
+    "box-border h-full min-h-0 min-w-0 border-l border-[color-mix(in_srgb,var(--surface-border)_22%,transparent)]",
+    isToday
+      ? "bg-[color-mix(in_srgb,var(--info)_14%,transparent)]"
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export const ganttRefreshRowClass =
   "flex shrink-0 justify-end px-0.5 pb-sm";
 
 export const ganttTimeAxisGridClass =
-  "sticky top-0 z-[3] mb-2.5 grid h-5 items-center bg-[color-mix(in_srgb,var(--surface-page)_96%,transparent)]";
+  "sticky top-0 z-[3] mb-1.5 grid h-5 items-center bg-[color-mix(in_srgb,var(--surface-page)_96%,transparent)]";
 
 export const ganttScrollInnerFullClass = "min-w-0 w-full";

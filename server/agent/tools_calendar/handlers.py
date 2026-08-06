@@ -26,6 +26,12 @@ from server.calendar.timeline_dismissals import (
     active_timeline_items,
     dismiss_timeline_event,
 )
+from server.calendar.timeline_importance import (
+    CALENDAR_ITEM_IMPORTANCE_SOURCE,
+    IMPORTANT_EMOJI,
+    mark_timeline_important,
+    unmark_timeline_important,
+)
 from server.calendar.user_events import (
     UserEventValidationError,
     create_user_event,
@@ -329,3 +335,46 @@ async def _tool_delete_event(db: Database, args: dict[str, Any]) -> dict[str, An
         return {"error": f"unsupported event source for dismiss: {raw_source}", "deleted": False}
     await dismiss_timeline_event(db, source=dismiss_source, event_id=eid)
     return {"deleted": True, "dismissed": True, "id": eid, "source": dismiss_source}
+
+
+async def _tool_mark_important(db: Database, args: dict[str, Any]) -> dict[str, Any]:
+    event_id = arg(args, "id", "eventId", "event_id")
+    if not event_id:
+        return {"error": "id is required"}
+    eid = str(event_id)
+    item = await get_event(db, event_id=eid)
+    if item is None:
+        return {"error": f"event not found: {event_id}", "important": False}
+    raw_source = str(item.get("source") or "")
+    importance_source = CALENDAR_ITEM_IMPORTANCE_SOURCE.get(raw_source)
+    if importance_source is None:
+        return {"error": f"unsupported event source for importance: {raw_source}", "important": False}
+    marker = await mark_timeline_important(db, source=importance_source, event_id=eid)
+    return {
+        "important": True,
+        "emoji": IMPORTANT_EMOJI,
+        "id": eid,
+        "source": importance_source,
+        "markedAt": marker.get("markedAt"),
+    }
+
+
+async def _tool_unmark_important(db: Database, args: dict[str, Any]) -> dict[str, Any]:
+    event_id = arg(args, "id", "eventId", "event_id")
+    if not event_id:
+        return {"error": "id is required"}
+    eid = str(event_id)
+    item = await get_event(db, event_id=eid)
+    if item is None:
+        return {"error": f"event not found: {event_id}", "important": False}
+    raw_source = str(item.get("source") or "")
+    importance_source = CALENDAR_ITEM_IMPORTANCE_SOURCE.get(raw_source)
+    if importance_source is None:
+        return {"error": f"unsupported event source for importance: {raw_source}", "important": False}
+    cleared = await unmark_timeline_important(db, source=importance_source, event_id=eid)
+    return {
+        "important": False,
+        "cleared": cleared,
+        "id": eid,
+        "source": importance_source,
+    }

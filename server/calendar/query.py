@@ -34,6 +34,7 @@ from server.calendar.query_fetch import (
 )
 from server.calendar.query_merge import merge_calendar_items, source_policy
 from server.calendar.timeline_dismissals import is_timeline_event_dismissed
+from server.calendar.timeline_importance import is_timeline_event_important
 from server.db.database import Database
 from server.queries.calendar_queries import (
     fetch_analysis_event_detail,
@@ -241,21 +242,27 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
 
     row = await fetch_analysis_event_detail(db, eid)
     if row is not None:
-        return build_analysis_item(
+        item = build_analysis_item(
             row,
             detail="full",
             dismissed=await is_timeline_event_dismissed(db, source="analysis", event_id=eid),
         )
+        item["important"] = await is_timeline_event_important(db, source="analysis", event_id=eid)
+        return item
 
     user_row = await fetch_user_event(db, eid)
     if user_row is not None:
         dismissed = await is_timeline_event_dismissed(db, source="user", event_id=eid)
-        return build_user_item(serialize_user_event(user_row, dismissed=dismissed), detail="full")
+        important = await is_timeline_event_important(db, source="user", event_id=eid)
+        return build_user_item(
+            serialize_user_event(user_row, dismissed=dismissed, important=important),
+            detail="full",
+        )
 
     item_occ = await get_item_occurrence(db, eid)
     if item_occ is not None:
-        dismissed = await is_timeline_event_dismissed(db, source="item", event_id=eid)
-        item_occ["dismissed"] = dismissed
+        item_occ["dismissed"] = await is_timeline_event_dismissed(db, source="item", event_id=eid)
+        item_occ["important"] = await is_timeline_event_important(db, source="item", event_id=eid)
         return build_item_calendar_item(item_occ, detail="full")
 
     match = OCCURRENCE_ID_RE.match(eid)
@@ -269,9 +276,11 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
     window_end = occurrence_start + timedelta(seconds=1)
     for occ in await expand_active_calendar_occurrences(db, window_start, window_end, task_id=task_id):
         if occ.get("id") == eid:
-            return build_occurrence_item(
+            item = build_occurrence_item(
                 occ,
                 detail="full",
                 dismissed=await is_timeline_event_dismissed(db, source="recurring", event_id=eid),
             )
+            item["important"] = await is_timeline_event_important(db, source="recurring", event_id=eid)
+            return item
     return None

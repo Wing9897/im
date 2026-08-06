@@ -1,5 +1,5 @@
 /**
- * TimelineSidebar ownership label: project-tagged user_events use task name.
+ * TimelineSidebar detail pane: workset + generation provenance (aligned with list cards).
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -10,15 +10,24 @@ import { setAppLocale } from "../../../i18n/locale";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { TimelineItem } from "../../../types";
 import {
+  makeAnalysisTask,
+  resetTaskCatalogState,
+  taskCatalogState,
+} from "../../../test/context-mocks";
+import {
   TimelinePageProvider,
   type TimelinePageContextValue,
 } from "../TimelinePageContext";
 import { TimelineSidebar } from "./TimelineSidebar";
 
+vi.mock("../../../context/TaskCatalogContext", async () =>
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
+);
+
 function makeUserEvent(overrides: Partial<TimelineItem> = {}): TimelineItem {
   return {
     id: "ue-1",
-    taskId: SYSTEM_WORKSET_ID,
+    taskId: null,
     version: 1,
     batchId: "",
     title: "會議",
@@ -40,6 +49,7 @@ function makeUserEvent(overrides: Partial<TimelineItem> = {}): TimelineItem {
     updatedAt: "2026-07-21T00:00:00Z",
     source: "user",
     origin: "assistant",
+    worksetId: SYSTEM_WORKSET_ID,
     ...overrides,
   };
 }
@@ -77,13 +87,18 @@ function makeContext(selectedEvent: TimelineItem | null): TimelinePageContextVal
   };
 }
 
-describe("TimelineSidebar ownership label", () => {
+describe("TimelineSidebar detail provenance", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(async () => {
     setAppLocale("zh-Hant");
     await i18n.changeLanguage("zh-Hant");
+    resetTaskCatalogState([]);
+    taskCatalogState.worksets = [
+      { id: SYSTEM_WORKSET_ID, name: "一般", createdAt: null, updatedAt: null },
+      { id: "ws-ops", name: "營運", createdAt: null, updatedAt: null },
+    ];
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -106,8 +121,6 @@ describe("TimelineSidebar ownership label", () => {
             value: makeContext(selectedEvent),
             children: createElement(TimelineSidebar, {
               rangeEvents: [],
-              allRangeEvents: [],
-              hasDayFocus: false,
               focusedDay: null,
             }),
           }),
@@ -116,21 +129,82 @@ describe("TimelineSidebar ownership label", () => {
     });
   }
 
-  it("labels unassigned user events as 一般 source", () => {
+  it("shows workset + assistant provenance for unassigned user events", () => {
     renderSidebar(makeUserEvent());
-    expect(container.textContent).toContain("工作集：一般");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
+    ).toBe("工作集：一般");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
+    ).toBe("助手");
     expect(container.textContent).not.toContain("任務：");
   });
 
-  it("labels project-owned user events with the project task name", () => {
+  it("shows project provenance (not taskName-as-workset) for project-origin events", () => {
     renderSidebar(
       makeUserEvent({
         taskId: "proj-1",
         taskName: "專案 Alpha",
         origin: "project",
+        worksetId: SYSTEM_WORKSET_ID,
       }),
     );
-    expect(container.textContent).toContain("任務：專案 Alpha");
-    expect(container.textContent).not.toContain("工作集：一般");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
+    ).toBe("工作集：一般");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
+    ).toBe("專案");
+  });
+
+  it("shows task provenance with task name for analysis events", () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "task-ops", name: "Ops Task", worksetId: "ws-ops" }),
+    ]);
+    taskCatalogState.worksets = [
+      { id: SYSTEM_WORKSET_ID, name: "一般", createdAt: null, updatedAt: null },
+      { id: "ws-ops", name: "營運", createdAt: null, updatedAt: null },
+    ];
+    renderSidebar(
+      makeUserEvent({
+        id: "an-1",
+        title: "分析事件",
+        source: "analysis",
+        origin: undefined,
+        taskId: "task-ops",
+        taskName: "Ops Task",
+        worksetId: "ws-ops",
+      }),
+    );
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-workset"]')?.textContent,
+    ).toBe("工作集：營運");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
+    ).toBe("任務：Ops Task");
+  });
+
+  it("shows item provenance and strips remind title prefix when badge shown", () => {
+    renderSidebar(
+      makeUserEvent({
+        id: "item:r",
+        title: "提醒 · milk",
+        source: "item",
+        origin: undefined,
+        itemDateKind: "remind",
+        taskId: null,
+        taskName: null,
+        worksetId: SYSTEM_WORKSET_ID,
+      }),
+    );
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-title"]')?.textContent,
+    ).toBe("milk");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-remind-badge"]')?.textContent,
+    ).toBe("提醒");
+    expect(
+      container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
+    ).toBe("物品");
   });
 });

@@ -108,7 +108,7 @@ export const monthSpanIndicatorRowClass =
 export const monthSpanOngoingDotClass =
   "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ongoing)] opacity-90";
 
-/** 完結 — uses --calendar-dot-ending (default: warning; not success — accent themes often collide). */
+/** 结束 — uses --calendar-dot-ending (default: warning; not success — accent themes often collide). */
 export const monthSpanEndingDotClass =
   "h-1 w-1 shrink-0 rounded-full bg-[var(--calendar-dot-ending)] opacity-90";
 

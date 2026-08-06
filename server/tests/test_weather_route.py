@@ -128,6 +128,34 @@ async def test_weather_forecast_reuses_successful_ttl_cache(client, monkeypatch)
 
 
 @pytest.mark.asyncio
+async def test_weather_forecast_force_bypasses_ttl_cache(client, monkeypatch):
+    provider_calls = 0
+
+    async def fake_forecast(location, start_date, end_date):
+        nonlocal provider_calls
+        provider_calls += 1
+        return {
+            "daily": {
+                "time": ["2026-07-02"],
+                "weather_code": [provider_calls],
+                "temperature_2m_max": [30.0 + provider_calls],
+                "temperature_2m_min": [20.0 + provider_calls],
+            }
+        }
+
+    monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
+    params = {"location": "Taipei", "start_date": "2026-07-02", "end_date": "2026-07-02"}
+
+    first = await client.get("/api/v1/weather/forecast", params=params)
+    forced = await client.get("/api/v1/weather/forecast", params={**params, "force": "true"})
+
+    assert first.status_code == forced.status_code == 200
+    assert provider_calls == 2
+    assert forced.json()["daily"]["weather_code"] == [2]
+    assert forced.json() != first.json()
+
+
+@pytest.mark.asyncio
 async def test_weather_provider_requests_reuse_shared_session(monkeypatch):
     class FakeResponse:
         status = 200

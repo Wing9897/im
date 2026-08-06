@@ -2,6 +2,7 @@ import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minim
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
+import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { OpsControlBar, PillButton, SegmentedControl } from "../../../components/ui";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
@@ -38,6 +39,9 @@ type TimelineControlBarProps = {
   onAddEvent?: () => void;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  /** Show compact spinner in the sticky toolbar (avoids layout jump). */
+  showLoadingIndicator?: boolean;
+  loadingLabel?: string;
   children?: React.ReactNode;
 };
 
@@ -57,6 +61,8 @@ export function TimelineControlBar({
   onAddEvent,
   isFullscreen = false,
   onToggleFullscreen,
+  showLoadingIndicator = false,
+  loadingLabel,
   children,
 }: TimelineControlBarProps) {
   const { t } = useTranslation("timeline");
@@ -127,10 +133,22 @@ export function TimelineControlBar({
       </div>
 
       <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-1">
+        {/* Always reserve the spinner slot so mount/unmount does not shift toolbar controls. */}
+        <span
+          className={`inline-flex h-8 w-8 shrink-0 items-center justify-center${
+            showLoadingIndicator ? "" : " invisible"
+          }`}
+          data-testid="timeline-toolbar-loading"
+          aria-hidden={!showLoadingIndicator}
+        >
+          {showLoadingIndicator ? (
+            <RefreshIndicator label={loadingLabel ?? t("view.refreshing")} />
+          ) : null}
+        </span>
         {onAddEvent ? (
           <PillButton
             type="button"
-            onClick={onAddEvent}
+            onClick={() => onAddEvent()}
             title={t("toolbar.addEvent")}
             aria-label={t("toolbar.addEvent")}
           >

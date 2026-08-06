@@ -25,14 +25,22 @@ export function eventOverlapsLocalDay(event: TimelineItem, day: Date): boolean {
 }
 
 /**
- * Compute sidebar events: if a day is focused, keep events intersecting that
- * local day (including cross-day spans that end or cover it); otherwise all
- * range events.
+ * Resolve the sidebar list day: explicit focus, else today.
+ * The right-hand event list is always day-scoped (never the full view range).
+ */
+export function resolveSidebarDay(focusedDay: Date | null, now = new Date()): Date {
+  return focusedDay ? startOfDay(focusedDay) : startOfDay(now);
+}
+
+/**
+ * Sidebar events for one local day (default today when focus is cleared).
+ * Includes cross-day spans that end or cover that day.
  */
 export function computeSidebarEvents(
   focusedDay: Date | null,
   rangeEvents: TimelineItem[],
+  now = new Date(),
 ): TimelineItem[] {
-  if (!focusedDay) return rangeEvents;
-  return rangeEvents.filter((event) => eventOverlapsLocalDay(event, focusedDay));
+  const day = resolveSidebarDay(focusedDay, now);
+  return rangeEvents.filter((event) => eventOverlapsLocalDay(event, day));
 }

@@ -5,6 +5,7 @@ import type {
   TimelineEventStatus,
   TimelineEventStatusMap,
 } from "../../domain/timeline/status";
+import type { DailyWeather } from "../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../types";
 import type { TaskActivitySpan } from "../../types/analysis";
 
@@ -36,13 +37,19 @@ export interface TimelinePageContextValue {
   onDismissTimelineEvent?: (event: TimelineItem) => void;
   /** Restore a soft-dismissed timeline event. */
   onRestoreTimelineEvent?: (event: TimelineItem) => void;
+  /** Toggle user/agent 「重要事件」 marker (❗). */
+  onToggleImportantEvent?: (event: TimelineItem) => void;
+  /** Month cell right-click → open create dialog prefilled for that day. */
+  onCreateOnDay?: (day: Date) => void;
   userEventActionBusy?: boolean;
   /** When true, dismissed events stay visible in calendar/gantt (product default). */
   showDismissed: boolean;
   /** Month-cell「+N 进行中」span chip (product default on). */
   showOngoing: boolean;
-  /** Month-cell「+N 完结」span chip (product default on). */
+  /** Month-cell「+N 结束」span chip (product default on). */
   showEnding: boolean;
+  /** Month-view daily weather keyed by local YYYY-MM-DD (empty when not month calendar). */
+  weatherByDate?: Record<string, DailyWeather>;
 
   // ── Gantt-specific ──────────────────────────────────────────────────────────
   taskSpans: TaskActivitySpan[];

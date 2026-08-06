@@ -92,7 +92,7 @@
     "other": "其他"
   },
   "purchasedPrefix": "購入",
-  "expiresPrefix": "到期",
+  "expiresPrefix": "結束",
   "remindPrefix": "提醒",
   "statusActive": "使用中",
   "statusArchived": "已封存"

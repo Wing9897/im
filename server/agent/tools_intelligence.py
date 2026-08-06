@@ -11,6 +11,7 @@ from server.agent.tool_limits import (
     INTELLIGENCE_RESULT_HARD_CAP,
 )
 from server.calendar.timeline_dismissals import attach_dismissed_flag
+from server.calendar.timeline_importance import attach_important_flag
 from server.db.database import Database
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
@@ -53,6 +54,7 @@ def _compact_event(item: dict[str, Any]) -> dict[str, Any]:
         "sourcePlatform": item.get("sourcePlatform"),
         "sourceChannelName": item.get("sourceChannelName"),
         "dismissed": bool(item.get("dismissed")),
+        "important": bool(item.get("important")),
     }
 
 
@@ -105,6 +107,7 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
     )
     items = [serialize_analysis_event(row) for row in rows]
     await attach_dismissed_flag(db, source="analysis", items=items)
+    await attach_important_flag(db, source="analysis", items=items)
     compact = [_compact_event(item) for item in items]
     return {
         "items": compact,

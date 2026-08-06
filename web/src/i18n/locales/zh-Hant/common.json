@@ -69,7 +69,7 @@
       "sourcesTitle": "綁定來源",
       "childrenTitle": "子週期任務",
       "childrenEmptyTitle": "尚無子週期任務",
-      "childrenEmptyDescription": "專案管理員會在每次 tick 視需要建立子週期任務。",
+      "childrenEmptyDescription": "專案管理助手會在每次 tick 視需要建立子週期任務。",
       "eventsTitle": "所屬單次事件",
       "eventsEmptyTitle": "尚無所屬事件",
       "eventsEmptyDescription": "專案建立的單次時程事件會顯示在這裡。",
@@ -629,8 +629,8 @@
     "newActionHint": "開啟通知頁",
     "openViewer": "開啟 Viewer 視窗",
     "openViewerHint": "唯讀投影 · 新分頁",
-    "openOpsBoard": "Ops Board（畫布）",
-    "openOpsBoardHint": "切換到畫布／Ops Board",
+    "openOpsBoard": "畫布",
+    "openOpsBoardHint": "切換到畫布",
     "shortcutHelp": "快捷鍵說明",
     "quickAssistant": "助手",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -1133,9 +1133,9 @@
   "monitorMode": {
     "aria": "監控模式",
     "pages": "分頁",
-    "canvas": "畫布／Ops Board",
+    "canvas": "畫布",
     "pagesTitle": "分頁監控",
-    "canvasTitle": "沉浸 Ops Board 畫布"
+    "canvasTitle": "沉浸畫布"
   },
   "shortcuts": {
     "title": "快捷鍵說明",

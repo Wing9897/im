@@ -137,7 +137,7 @@ def _expand_imported_occurrences(
         raw_occurrences = rule_set.xafter(window_start - timedelta(seconds=1), count=budget + 2, inc=False)
         task_id = str(task_value(task, "id") or "")
         task_name = str(task_value(task, "name") or "")
-        results: list[dict[str, Any]] = []
+        built: list[tuple[Any, dict[str, Any]]] = []
         for occurrence in raw_occurrences:
             if occurrence > window_end + timedelta(seconds=1):
                 break
@@ -158,27 +158,34 @@ def _expand_imported_occurrences(
                 end_dt = (occurrence + duration).astimezone(timezone.utc)
             if start_dt < range_start_utc or start_dt > range_end_utc:
                 continue
-            results.append(
-                {
-                    "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
-                    "taskId": task_id,
-                    "taskName": task_name,
-                    "title": task_name,
-                    "startTime": rrule_mod._iso_z(start_dt),
-                    "endTime": rrule_mod._iso_z(end_dt),
-                    "isAllDay": is_all_day,
-                    "timezone": (
-                        None
-                        if task_value(task, "event_timezone") in (None, "", "floating")
-                        else task_value(task, "event_timezone")
-                    ),
-                    "location": task_value(task, "event_location") or None,
-                    "description": task_value(task, "event_description") or None,
-                    "rrule": rule,
-                }
+            built.append(
+                (
+                    occurrence,
+                    {
+                        "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
+                        "taskId": task_id,
+                        "taskName": task_name,
+                        "title": task_name,
+                        "startTime": rrule_mod._iso_z(start_dt),
+                        "endTime": rrule_mod._iso_z(end_dt),
+                        "isAllDay": is_all_day,
+                        "timezone": (
+                            None
+                            if task_value(task, "event_timezone") in (None, "", "floating")
+                            else task_value(task, "event_timezone")
+                        ),
+                        "location": task_value(task, "event_location") or None,
+                        "description": task_value(task, "event_description") or None,
+                        "rrule": rule,
+                    },
+                )
             )
-            if len(results) >= budget:
+            if len(built) >= budget:
                 break
+        results: list[dict[str, Any]] = []
+        for occurrence, item in built:
+            item["isLastOccurrence"] = rule_set.after(occurrence) is None
+            results.append(item)
         return results
     except (ValueError, TypeError, OverflowError) as exc:
         logger.warning("Skipping recurring task %s: RRULE expansion failed (%s)", task_value(task, "id"), exc)

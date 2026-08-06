@@ -126,7 +126,8 @@ describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicat
     {
       name: "calendar occurrence card + status",
       events: () => [makeCalendarEvent()],
-      expectText: ["Weekly Standup", "Team standup meeting", "待確認"],
+      // Week chips are compact: title + time only (body/status label live in day cards).
+      expectText: ["Weekly Standup"],
       expectCardTitle: "Weekly Standup",
     },
     {
@@ -152,11 +153,17 @@ describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicat
       expect(container.textContent).toContain(fragment);
     }
     if (expectCardTitle) {
-      const calendarCard = Array.from(container.querySelectorAll("button")).find((btn) =>
-        btn.textContent?.includes(expectCardTitle),
-      );
+      const calendarCard = Array.from(
+        container.querySelectorAll('[data-testid="timeline-week-event-chip"]'),
+      ).find((btn) => btn.textContent?.includes(expectCardTitle));
       expect(calendarCard).toBeDefined();
-      expect((calendarCard as HTMLElement).className).toContain("bg-surface-card");
+      // Compact week chip uses a translucent surface-card mix (not solid bg-surface-card).
+      expect((calendarCard as HTMLElement).className).toContain(
+        "bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]",
+      );
+      const statusRail = calendarCard!.querySelector('[aria-hidden="true"]') as HTMLElement | null;
+      expect(statusRail).not.toBeNull();
+      expect(statusRail!.style.backgroundColor).toBe("var(--warning)");
     }
   });
 });
@@ -192,17 +199,15 @@ describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicat
     });
     const container = render(createElement(TimelineGanttView, props));
 
-    // Gantt bars use var(--accent) background for all events including calendar.
-    // The event row should exist and contain bar cells.
+    // Gantt bars use status color tokens (default pending) for calendar events.
     const row = container.querySelector('[data-testid="event-row-recurring:cal-task-1"]');
     expect(row).not.toBeNull();
 
-    // Bars are the only accent-filled children; the countable day cells behind
-    // them stay on the neutral surface background.
     const bars = row!.querySelectorAll('[data-testid^="event-bar-"]');
     expect(bars.length).toBeGreaterThan(0);
     for (const bar of bars) {
-      expect((bar as HTMLElement).className).toContain("bg-accent");
+      expect((bar as HTMLElement).getAttribute("data-status")).toBe("pending");
+      expect((bar as HTMLElement).style.backgroundColor).toBeTruthy();
     }
   });
 

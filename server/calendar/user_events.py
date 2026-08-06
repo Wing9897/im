@@ -10,10 +10,12 @@ from __future__ import annotations
 from typing import Any
 
 from server.calendar.timeline_dismissals import attach_dismissed_flag, dismiss_timeline_event
+from server.calendar.timeline_importance import attach_important_flag
 from server.calendar.user_events_normalize import (
     _UNSET,
     ALLOWED_ORIGINS,
     USER_EVENT_TASK_MODES,
+    UserEventItemIdError,
     UserEventTaskIdError,
     UserEventValidationError,
     UserEventWorksetIdError,
@@ -22,8 +24,10 @@ from server.calendar.user_events_normalize import (
     _require_nonempty_title,
     _require_start_time,
     build_user_event_list_filters,
+    normalize_remind_before_days,
     normalize_user_event_task_id_wire,
     normalize_user_event_workset_id_wire,
+    resolve_user_event_item_id,
     resolve_user_event_task_id,
     resolve_user_event_workset_id,
 )
@@ -38,10 +42,13 @@ __all__ = [
     "UserEventValidationError",
     "UserEventTaskIdError",
     "UserEventWorksetIdError",
+    "UserEventItemIdError",
     "normalize_user_event_task_id_wire",
     "normalize_user_event_workset_id_wire",
+    "normalize_remind_before_days",
     "resolve_user_event_task_id",
     "resolve_user_event_workset_id",
+    "resolve_user_event_item_id",
     "build_user_event_list_filters",
     "get_user_event_row",
     "get_user_event",
@@ -62,7 +69,8 @@ async def _serialize_user_event_rows(
 ) -> list[dict[str, Any]]:
     """Apply the one canonical row → wire → dismissal path."""
     items = [serialize_user_event(row) for row in rows]
-    return await attach_dismissed_flag(db, source="user", items=items)
+    await attach_dismissed_flag(db, source="user", items=items)
+    return await attach_important_flag(db, source="user", items=items)
 
 
 async def get_user_event(db: Database, event_id: str) -> dict[str, Any] | None:
@@ -79,6 +87,7 @@ async def list_user_events(
     end: str | None = None,
     task_id: str | None = None,
     workset_id: str | None = None,
+    item_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """List events that overlap the optional inclusive time window.
 
@@ -91,12 +100,18 @@ async def list_user_events(
     ``workset_id`` filter:
     - omitted / ``None``: no workset filter
     - real id (incl. ``__user__``): events with that ``workset_id``
+
+    ``item_id`` filter:
+    - omitted / ``None``: no parent-item filter
+    - ``""``: only stand-alone rows (``item_id IS NULL``)
+    - real id: child calendars under that item
     """
     clauses, params = build_user_event_list_filters(
         start=start,
         end=end,
         task_id=task_id,
         workset_id=workset_id,
+        item_id=item_id,
     )
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     rows = await db.fetch_all(
@@ -116,7 +131,9 @@ async def create_user_event(
     location: str = "",
     origin: str = "manual",
     is_all_day: bool = False,
+    remind_before_days: Any = None,
     task_id: Any = None,
+    item_id: Any = None,
     workset_id: Any = _UNSET,
 ) -> dict[str, Any]:
     clean_title = _require_nonempty_title(title)
@@ -124,7 +141,9 @@ async def create_user_event(
     clean_end = _normalize_optional_end(end_time, clean_start)
     clean_origin = _normalize_origin(origin)
     clean_all_day = bool(is_all_day)
+    clean_remind = normalize_remind_before_days(remind_before_days)
     clean_task_id = await resolve_user_event_task_id(db, task_id)
+    clean_item_id = await resolve_user_event_item_id(db, item_id)
 
     if workset_id is _UNSET:
         # Empty / omitted taskId → system workset; real task → copy task workset if any.
@@ -148,8 +167,8 @@ async def create_user_event(
     await db.execute(
         "INSERT INTO user_events "
         "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
-        "task_id, workset_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "remind_before_days, task_id, item_id, workset_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -159,7 +178,9 @@ async def create_user_event(
             (location or "").strip(),
             clean_origin,
             1 if clean_all_day else 0,
+            clean_remind,
             clean_task_id,
+            clean_item_id,
             clean_workset_id,
             now,
             now,
@@ -180,7 +201,9 @@ async def update_user_event(
     body: Any = _UNSET,
     location: Any = _UNSET,
     is_all_day: Any = _UNSET,
+    remind_before_days: Any = _UNSET,
     task_id: Any = _UNSET,
+    item_id: Any = _UNSET,
     workset_id: Any = _UNSET,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
@@ -207,11 +230,21 @@ async def update_user_event(
         next_all_day = bool(existing.get("event_is_all_day"))
     else:
         next_all_day = bool(is_all_day)
+    if remind_before_days is _UNSET:
+        raw_remind = existing.get("remind_before_days")
+        next_remind = int(raw_remind) if raw_remind is not None else None
+    else:
+        next_remind = normalize_remind_before_days(remind_before_days)
     if task_id is _UNSET:
         raw_tid = existing.get("task_id")
         next_task_id = str(raw_tid).strip() if isinstance(raw_tid, str) and raw_tid.strip() else None
     else:
         next_task_id = await resolve_user_event_task_id(db, task_id)
+    if item_id is _UNSET:
+        raw_iid = existing.get("item_id")
+        next_item_id = str(raw_iid).strip() if isinstance(raw_iid, str) and raw_iid.strip() else None
+    else:
+        next_item_id = await resolve_user_event_item_id(db, item_id)
 
     if workset_id is _UNSET:
         raw_wid = existing.get("workset_id")
@@ -226,8 +259,8 @@ async def update_user_event(
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
-        "location = ?, event_is_all_day = ?, task_id = ?, workset_id = ?, updated_at = ? "
-        "WHERE id = ?",
+        "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
+        "workset_id = ?, updated_at = ? WHERE id = ?",
         (
             next_title,
             next_body,
@@ -235,7 +268,9 @@ async def update_user_event(
             next_end,
             next_location,
             1 if next_all_day else 0,
+            next_remind,
             next_task_id,
+            next_item_id,
             next_workset_id,
             utc_now_iso(),
             event_id,

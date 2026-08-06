@@ -21,6 +21,7 @@ from server.api.schemas.responses import (
     TrendingTopicResponse,
 )
 from server.calendar.timeline_dismissals import attach_dismissed_flag
+from server.calendar.timeline_importance import attach_important_flag
 from server.config import get_config_bool
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.batch_stats import count_pending_current_batches
@@ -120,7 +121,9 @@ async def fetch_events(
         require_include_in_timeline=_parse_bool_flag(include_in_timeline) is True,
     )
     items = [serialize_analysis_event(row) for row in rows]
-    await attach_dismissed_flag(get_db(request), source="analysis", items=items)
+    db = get_db(request)
+    await attach_dismissed_flag(db, source="analysis", items=items)
+    await attach_important_flag(db, source="analysis", items=items)
     return {
         "items": items,
         "totalCount": total_count if include_total else 0,

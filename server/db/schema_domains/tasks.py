@@ -73,11 +73,16 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     ics_import_fingerprint  TEXT DEFAULT NULL,
     parent_task_id          TEXT DEFAULT NULL
                             REFERENCES analysis_tasks(id) ON DELETE CASCADE,
+    -- Optional parent trackable item (child recurring calendar under an inventory Thing).
+    -- No SQL FK: items DDL is applied after tasks in the wipe-only aggregate.
+    item_id                 TEXT DEFAULT NULL,
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_recurring_schedules_parent
     ON recurring_schedules(parent_task_id);
+CREATE INDEX IF NOT EXISTS idx_recurring_schedules_item
+    ON recurring_schedules(item_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_recurring_schedules_ics_source_uid
     ON recurring_schedules(ics_source, ics_uid)
     WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;

@@ -35,11 +35,12 @@
     "showDismissedHelp": "软移除的事件会以删除线显示，可从此还原。",
     "showOngoing": "显示进行中",
     "showOngoingHelp": "月历格子里显示跨日事件的「+N 进行中」提示（仅圆点颜色区分）。",
-    "showEnding": "显示完结",
-    "showEndingHelp": "月历格子里显示跨日事件的「+N 完结」提示（仅圆点颜色区分）。"
+    "showEnding": "显示结束",
+    "showEndingHelp": "月历格子里显示「+N 结束」提示：跨日结束、物品到期，以及循环系列的最后一次（仅圆点颜色区分）。"
   },
   "view": {
     "loadTimeout": "载入逾时，请重试",
+    "loading": "加载中…",
     "refreshing": "正在更新时间轴"
   },
   "empty": {
@@ -61,16 +62,21 @@
       "六"
     ],
     "today": "今天",
+    "createOnDayHint": "右键打开菜单",
+    "dayContextMenuAria": "日期菜单",
+    "addEventOnDay": "新增事件",
     "more": "+{count} 更多",
     "ongoing": "+{count} 进行中",
-    "ending": "+{count} 完结",
+    "ending": "+{count} 结束",
     "weatherAria": "天气 {high} 至 {low} 度",
     "weatherTitle": "天气：{high}°C／{low}°C",
+    "weatherRefresh": "更新天气",
     "dayCellAria": "{date}，{count} 则事件",
     "dayCellAriaEmpty": "{date}，无事件",
     "noEventsToday": "当天没有事件",
     "itemCount": "{count} 则",
-    "noEvents": "无事件"
+    "noEvents": "无事件",
+    "location": "地点：{value}"
   },
   "sidebar": {
     "closeAria": "关闭",
@@ -84,6 +90,9 @@
     "source": "来源：{value}",
     "userEvent": "用户事件",
     "edit": "编辑",
+    "markImportant": "标为重要",
+    "unmarkImportant": "取消重要",
+    "importantBadge": "重要",
     "dismiss": "从时间规划移除",
     "restore": "还原到时间规划",
     "manualTime": "手动调整时间",
@@ -92,19 +101,24 @@
     "overrideHint": "这是人工校正层，会覆盖页面显示时间，但不会改动 AI 原始结果。"
   },
   "eventList": {
-    "day": "该日 ({count})",
-    "allRange": "全范围 ({count})",
-    "rangeEvents": "范围事件 ({count})",
     "empty": "没有事件",
-    "groupUpcoming": "即将到来",
-    "groupOngoing": "进行中",
-    "groupEnded": "完结",
-    "groupUpcomingOnDay": "尚未开始于该日",
-    "groupOngoingOnDay": "该日进行中",
-    "groupCoveringOnDay": "跨日进行中",
-    "groupEndingSpanOnDay": "跨日完结",
-    "groupEndedOnDay": "已结束于该日",
-    "crossDay": "跨日"
+    "filterAll": "全部",
+    "filterOngoing": "进行中",
+    "filterUpcoming": "未开始",
+    "cardTagOngoingMultiDay": "跨日进行中",
+    "cardTagEndingOnDay": "结束于本日",
+    "cardTagEndingOnFocusedDay": "结束于当日",
+    "phaseFilterAria": "按进行状态筛选本日事件",
+    "emptyFiltered": "当前筛选没有对应事件",
+    "provenance": {
+      "task": "任务",
+      "user": "用户",
+      "assistant": "助手",
+      "item": "物品",
+      "ics": "日历导入",
+      "a2a": "A2A",
+      "project": "项目"
+    }
   },
   "taskDetail": {
     "closeAria": "关闭详情面板",
@@ -127,6 +141,7 @@
     "recurringCreated": "已建立周期任务；月历会按重复规则展开多次。",
     "dismissFailed": "从时间规划移除失败",
     "restoreFailed": "还原到时间规划失败",
+    "importantFailed": "更新重要标记失败",
     "dismissConfirm": "将「{title}」从时间规划移除？之后可以还原。",
     "restoreConfirm": "将「{title}」还原到时间规划？",
     "ganttLoadTimeout": "载入任务活动资料逾时，请重试"
@@ -153,6 +168,14 @@
     "titleAria": "标题",
     "titlePlaceholder": "标题",
     "taskLabel": "归属工作集",
+    "parentItem": "关联物品（子日历）",
+    "parentItemAria": "关联物品",
+    "parentItemNone": "无（独立事件）",
+    "parentItemHint": "选填。挂在物品下后，可按物品追溯相关日程。",
+    "remindBeforeDays": "提前提醒（天）",
+    "remindBeforeDaysAria": "开始前几天提醒",
+    "remindBeforeDaysPlaceholder": "例如 1",
+    "remindBeforeDaysHint": "选填。相对开始日提前 N 天；留空表示不提醒。",
     "allDay": "全天",
     "durationPresets": "快速天数",
     "daysPreset": "{count} 天",
@@ -175,6 +198,7 @@
       "startRequired": "请填写开始时间",
       "startInvalid": "开始时间格式无效",
       "endInvalid": "结束时间格式无效",
+      "remindInvalid": "提醒天数须为 0 或正整数",
       "rruleRequired": "请设置重复规则"
     }
   },

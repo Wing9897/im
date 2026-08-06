@@ -11,10 +11,23 @@ import {
   restoreTimelineEvent,
   timelineItemDismissalSource,
 } from "../../api/timelineDismissals";
+import {
+  markTimelineImportant,
+  unmarkTimelineImportant,
+  timelineItemImportanceSource,
+} from "../../api/timelineImportance";
 import { useToast } from "../../context/ToastContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
-import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
+import {
+  createTimedRangeOnDay,
+  defaultCreateTimedRange,
+} from "../../domain/timeline/dateUtils";
+import { parseRemindBeforeDays } from "../../domain/timeline/parseRemindBeforeDays";
+import {
+  normalizeOptionalWorksetId,
+  toUserEventFormWorksetId,
+} from "../../domain/timeline/userEvents";
 import type { TimelineItem } from "../../types";
 import type { AnalysisTask } from "../../types/tasks";
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
@@ -23,11 +36,27 @@ export type PendingTimelineConfirm =
   | { kind: "dismiss"; event: TimelineItem }
   | { kind: "restore"; event: TimelineItem };
 
+export type OpenCreateDialogOptions = {
+  worksetId?: string | null;
+  /** Prefill start on this wall day (month cell right-click). */
+  day?: Date;
+  itemId?: string | null;
+};
+
 type Args = {
   refreshEvents: (catalogOverride?: readonly AnalysisTask[]) => Promise<void>;
   selectedEvent: TimelineItem | null;
   setSelectedEvent: (event: TimelineItem | null) => void;
 };
+
+function isOpenCreateOptions(value: unknown): value is OpenCreateDialogOptions {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !("nativeEvent" in value) &&
+    !(value instanceof Date)
+  );
+}
 
 /** User-event create/edit + dismiss/restore confirm state for TimelinePage. */
 export function useTimelinePageDialogs({
@@ -43,23 +72,48 @@ export function useTimelinePageDialogs({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
   const [editingEvent, setEditingEvent] = useState<TimelineItem | null>(null);
-  const [createWorksetId, setCreateWorksetId] = useState<string | null>(null);
+  const [createInitial, setCreateInitial] = useState<Partial<UserEventFormValues> | null>(
+    null,
+  );
   const [dialogBusy, setDialogBusy] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [userEventActionBusy, setUserEventActionBusy] = useState(false);
   const [pendingConfirm, setPendingConfirm] = useState<PendingTimelineConfirm | null>(null);
 
-  const openCreateDialog = useCallback((worksetId?: string | null) => {
-    setDialogMode("create");
-    setEditingEvent(null);
-    setCreateWorksetId(worksetId?.trim() || null);
-    setDialogError(null);
-    setDialogOpen(true);
-  }, []);
+  const openCreateDialog = useCallback(
+    (worksetIdOrOpts?: string | null | OpenCreateDialogOptions) => {
+      setDialogMode("create");
+      setEditingEvent(null);
+      let worksetId: string | null = null;
+      let day: Date | undefined;
+      let itemId = "";
+      if (isOpenCreateOptions(worksetIdOrOpts)) {
+        worksetId = normalizeOptionalWorksetId(worksetIdOrOpts.worksetId);
+        day = worksetIdOrOpts.day;
+        itemId = (worksetIdOrOpts.itemId ?? "").trim();
+      } else {
+        // Toolbar may pass a React synthetic event if wired as onClick={openCreateDialog}.
+        worksetId = normalizeOptionalWorksetId(worksetIdOrOpts as string | null | undefined);
+      }
+      const range = day ? createTimedRangeOnDay(day) : defaultCreateTimedRange();
+      setCreateInitial({
+        worksetId: toUserEventFormWorksetId(worksetId),
+        startTime: range.startTime,
+        endTime: range.endTime,
+        isAllDay: false,
+        itemId,
+        remindBeforeDays: "",
+      });
+      setDialogError(null);
+      setDialogOpen(true);
+    },
+    [],
+  );
 
   const openEditDialog = useCallback((event: TimelineItem) => {
     setDialogMode("edit");
     setEditingEvent(event);
+    setCreateInitial(null);
     setDialogError(null);
     setDialogOpen(true);
   }, []);
@@ -79,7 +133,7 @@ export function useTimelinePageDialogs({
     if (dialogBusy) return;
     setDialogOpen(false);
     setEditingEvent(null);
-    setCreateWorksetId(null);
+    setCreateInitial(null);
     setDialogError(null);
   }, [dialogBusy]);
 
@@ -89,6 +143,14 @@ export function useTimelinePageDialogs({
       setDialogError(null);
       try {
         const worksetId = toUserEventFormWorksetId(values.worksetId);
+        let remindBeforeDays: number | null = null;
+        try {
+          remindBeforeDays = parseRemindBeforeDays(values.remindBeforeDays);
+        } catch {
+          setDialogError(t("userEvent.errors.remindInvalid"));
+          return;
+        }
+        const itemId = (values.itemId ?? "").trim() || null;
         let catalogForRefresh: Awaited<ReturnType<typeof refreshTasks>> | undefined;
         if (dialogMode === "create" && values.kind === "recurring") {
           const created = await createRecurringTimelineEvent({
@@ -116,6 +178,8 @@ export function useTimelinePageDialogs({
             body: values.body,
             location: values.location,
             isAllDay: values.isAllDay,
+            remindBeforeDays,
+            itemId,
             worksetId,
           });
         } else if (editingEvent) {
@@ -126,11 +190,14 @@ export function useTimelinePageDialogs({
             body: values.body,
             location: values.location,
             isAllDay: values.isAllDay,
+            remindBeforeDays,
+            itemId,
             worksetId,
           });
         }
         setDialogOpen(false);
         setEditingEvent(null);
+        setCreateInitial(null);
         await refreshEvents(catalogForRefresh);
       } catch (error) {
         setDialogError(error instanceof Error ? error.message : t("messages.saveFailed"));
@@ -177,11 +244,37 @@ export function useTimelinePageDialogs({
     if (!userEventActionBusy) setPendingConfirm(null);
   }, [userEventActionBusy]);
 
+  const handleToggleImportantEvent = useCallback(
+    async (event: TimelineItem) => {
+      setUserEventActionBusy(true);
+      try {
+        const source = timelineItemImportanceSource(event.source);
+        if (event.important) {
+          await unmarkTimelineImportant(source, event.id);
+        } else {
+          await markTimelineImportant(source, event.id);
+        }
+        await refreshEvents();
+        if (selectedEvent?.id === event.id) {
+          setSelectedEvent({ ...selectedEvent, important: !event.important });
+        }
+      } catch (error) {
+        showToast(
+          error instanceof Error ? error.message : t("messages.importantFailed"),
+          "error",
+        );
+      } finally {
+        setUserEventActionBusy(false);
+      }
+    },
+    [refreshEvents, selectedEvent, setSelectedEvent, showToast, t],
+  );
+
   return {
     dialogOpen,
     dialogMode,
     editingEvent,
-    createWorksetId,
+    createInitial,
     dialogBusy,
     dialogError,
     userEventActionBusy,
@@ -193,6 +286,7 @@ export function useTimelinePageDialogs({
     handleDialogSubmit,
     handleDismissTimelineEvent,
     handleRestoreTimelineEvent,
+    handleToggleImportantEvent,
     confirmPendingAction,
     cancelPendingConfirm,
   };

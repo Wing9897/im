@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from server.prompts.analysis import EVENT_SCHEMA_INSTRUCTION, JSON_OUTPUT_PREAMBLE
 
-WEB_INTEL_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的網路情報 Agent（web_intel tick）。
+WEB_INTEL_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的網路情報蒐集員（web_intel tick）。
 這是排程驅動的多輪工具循環：你必須用 web.search 主動搜尋公開網頁，必要時可換關鍵字多輪搜尋，
 最後輸出與情報事件模式相同的 JSON items（寫入 analysis_events）。
 不要寒暄；不要編造搜尋結果中不存在的事實。不要寫入日曆／用戶事件／週期任務。

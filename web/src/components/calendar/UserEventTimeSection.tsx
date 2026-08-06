@@ -178,6 +178,28 @@ export function UserEventTimeSection({
           </div>
         </div>
       )}
+
+      <div className="flex flex-col gap-xs">
+        <FieldLabel className="mb-0" htmlFor="user-event-remind-before">
+          {t("userEvent.remindBeforeDays")}
+        </FieldLabel>
+        <TextField
+          id="user-event-remind-before"
+          aria-label={t("userEvent.remindBeforeDaysAria")}
+          type="number"
+          min={0}
+          max={3660}
+          inputMode="numeric"
+          placeholder={t("userEvent.remindBeforeDaysPlaceholder")}
+          value={values.remindBeforeDays}
+          onChange={(event) =>
+            setValues((prev) => ({ ...prev, remindBeforeDays: event.target.value }))
+          }
+          className="w-full"
+          data-testid="user-event-remind-before"
+        />
+        <p className="m-0 text-caption text-text-muted">{t("userEvent.remindBeforeDaysHint")}</p>
+      </div>
     </div>
   );
 }

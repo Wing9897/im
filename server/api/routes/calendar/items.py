@@ -20,6 +20,7 @@ from server.api.schemas.responses import CalendarOccurrenceResponse
 from server.calendar.item_projection import fetch_item_occurrences_in_range
 from server.calendar.query import expand_active_calendar_occurrences
 from server.calendar.timeline_dismissals import attach_dismissed_flag
+from server.calendar.timeline_importance import attach_important_flag
 from server.errors import VALIDATION_ERROR, http_error
 from server.time_iso import parse_iso
 
@@ -70,6 +71,7 @@ async def list_calendar_items(
         task_ids=effective_ids,
     )
     await attach_dismissed_flag(db, source="recurring", items=occurrences)
+    await attach_important_flag(db, source="recurring", items=occurrences)
     rows = [_occurrence_wire(occ, source="recurring") for occ in occurrences]
 
     if include_items:
@@ -81,6 +83,7 @@ async def list_calendar_items(
             workset_id=None,
         )
         await attach_dismissed_flag(db, source="item", items=item_rows)
+        await attach_important_flag(db, source="item", items=item_rows)
         rows.extend(_occurrence_wire(item, source="item") for item in item_rows)
 
     return rows

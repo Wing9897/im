@@ -12,7 +12,7 @@ from server.analyzer.prompt import build_analysis_prompt
 from server.app_logging import failure_details_from_exc, record
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import INTEL_EVENT_MODE, LEADERBOARD_MODE
+from server.domain.analysis_modes import INTEL_EVENT_MODE, LEADERBOARD_MODE, WEB_INTEL_MODE
 from server.scheduler.batch_claim import batch_channel_names, fetch_batch_messages
 from server.scheduler.batch_failure import handle_batch_failure
 from server.scheduler.result_store import store_results
@@ -20,7 +20,7 @@ from server.scheduler.task_schedule_overrides import (
     resolve_batch_overlap_count,
     resolve_strategy_mode,
 )
-from server.sse import Broadcaster
+from server.sse import Broadcaster, publish_resource_modified
 from server.util import utc_now_iso
 
 logger = logging.getLogger(__name__)
@@ -241,6 +241,14 @@ async def process_batch(
             "overlapStatistics": prompt.overlap_statistics,
         },
     )
+
+    if analysis_mode in (INTEL_EVENT_MODE, WEB_INTEL_MODE):
+        publish_resource_modified(
+            broadcaster,
+            resource_type="task",
+            resource_id=task_id,
+            action="updated",
+        )
 
     if action_executor is not None:
         max_score = _max_score(items) if analysis_mode == LEADERBOARD_MODE else None

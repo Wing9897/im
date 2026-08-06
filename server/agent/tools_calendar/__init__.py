@@ -19,7 +19,9 @@ from server.agent.tools_calendar.handlers import (
     _tool_delete_recurring_task,
     _tool_get,
     _tool_list_calendars,
+    _tool_mark_important,
     _tool_recent,
+    _tool_unmark_important,
     _tool_upcoming,
     _tool_update_event,
     _tool_update_recurring_task,
@@ -42,6 +44,8 @@ TOOL_HANDLERS: dict[str, ToolHandler] = {
     "calendar.delete_recurring_task": _tool_delete_recurring_task,
     "calendar.update_event": _tool_update_event,
     "calendar.delete_event": _tool_delete_event,
+    "calendar.mark_important": _tool_mark_important,
+    "calendar.unmark_important": _tool_unmark_important,
 }
 
 TOOL_NAMES = frozenset(TOOL_HANDLERS)

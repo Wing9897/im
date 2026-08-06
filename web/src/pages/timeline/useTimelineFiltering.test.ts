@@ -89,4 +89,50 @@ describe("useTimelineFiltering", () => {
     expect(result.eventLookup.get("d")?.dismissed).toBe(true);
     expect(result.filteredEvents).toEqual([]);
   });
+
+  it("monthEvents includes prior-month starts that overlap the navigated month grid", () => {
+    // Viewing September while today may be August: overnight that starts Aug 31
+    // and ends Sept 1 must still be in monthEvents for「+N 结束」chips.
+    const septemberCursor = new Date(2026, 8, 1);
+    const septemberRangeStart = new Date(2026, 8, 1);
+    const septemberRangeEnd = new Date(2026, 9, 1);
+    const crossMonthOvernight = makeEvent({
+      id: "cross-month-end",
+      title: "月末跨月",
+      startTime: "2026-08-31T20:00:00",
+      endTime: "2026-09-01T02:00:00",
+    });
+    const multiDayIntoSept = makeEvent({
+      id: "multi-into-sept",
+      title: "跨月行程",
+      startTime: "2026-08-30T09:00:00",
+      endTime: "2026-09-03T18:00:00",
+    });
+    const augustOnly = makeEvent({
+      id: "aug-only",
+      title: "八月会议",
+      startTime: "2026-08-15T10:00:00",
+      endTime: "2026-08-15T11:00:00",
+    });
+    const septemberStart = makeEvent({
+      id: "sept-start",
+      title: "九月会议",
+      startTime: "2026-09-10T10:00:00",
+      endTime: "2026-09-10T11:00:00",
+    });
+
+    const getResult = renderHook({
+      events: [crossMonthOvernight, multiDayIntoSept, augustOnly, septemberStart],
+      eventTimeOverrides: {},
+      rangeStart: septemberRangeStart,
+      rangeEnd: septemberRangeEnd,
+      monthCursor: septemberCursor,
+      showDismissed: true,
+      focusedDay: null,
+    });
+
+    const ids = getResult().monthEvents.map((e) => e.id).sort();
+    expect(ids).toEqual(["cross-month-end", "multi-into-sept", "sept-start"]);
+    expect(ids).not.toContain("aug-only");
+  });
 });

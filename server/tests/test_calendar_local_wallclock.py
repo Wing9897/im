@@ -31,6 +31,32 @@ def test_hhmm_expands_in_system_local_timezone(monkeypatch) -> None:
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
     assert items[0]["endTime"] == "2026-07-01T03:00:00Z"
+    assert items[0]["isLastOccurrence"] is False
+
+
+def test_finite_rrule_marks_final_occurrence(monkeypatch) -> None:
+    """COUNT series from synthetic ANCHOR_DATE (2000-01-01); last occ gets isLastOccurrence."""
+    offset = timezone(timedelta(hours=8))
+    monkeypatch.setattr(calendar_module, "_system_tzinfo", lambda: offset)
+
+    task = {
+        "id": "count-cal",
+        "name": "三次",
+        "analysis_mode": "recurring",
+        "is_active": 1,
+        "rrule": "FREQ=DAILY;COUNT=3",
+        "event_is_all_day": 0,
+        "event_start_time": "10:00",
+        "event_end_time": "11:00",
+        "event_location": None,
+        "event_description": None,
+    }
+    # Anchor is 2000-01-01 — query the first few days so COUNT=3 is in-window.
+    range_start = datetime(2000, 1, 1, 0, 0, tzinfo=timezone.utc)
+    range_end = datetime(2000, 1, 5, 23, 59, tzinfo=timezone.utc)
+    items = expand_task_occurrences(task, range_start, range_end, budget=10)
+    assert len(items) == 3
+    assert [item["isLastOccurrence"] for item in items] == [False, False, True]
 
 
 def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:

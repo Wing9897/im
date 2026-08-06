@@ -1,6 +1,7 @@
 import type { TimelineItem } from "../../types";
 import {
-  addDays,
+  effectiveEndDay,
+  eventStartsOnDay,
   isSameDay,
   startOfDay,
   timelineEventDateRange,
@@ -18,22 +19,18 @@ function eventBounds(event: TimelineItem): { start: Date; end: Date } {
   return { start, end: end < start ? start : end };
 }
 
-/**
- * Calendar end day for span classification.
- * Midnight-exact ends are treated as exclusive (last active day = previous day),
- * matching common all-day / range conventions.
- */
-function effectiveEndDay(start: Date, end: Date): Date {
-  const endDay = startOfDay(end);
-  if (end.getTime() === endDay.getTime() && end > start) {
-    return addDays(endDay, -1);
-  }
-  return endDay;
+/** Single-day markers that still feed month-cell「+N 结束」. */
+function isEndingMarkerOnDay(event: TimelineItem, dayStart: Date): boolean {
+  if (!eventStartsOnDay(event, dayStart)) return false;
+  if (event.source === "item" && event.itemDateKind === "expires") return true;
+  if (event.source === "recurring" && event.isLastOccurrence) return true;
+  return false;
 }
 
 /**
  * Classify a multi-day event relative to `day` for month-cell compact counters.
- * Start day and single-day events are excluded (chips already cover the start).
+ * Start day and single-day events are excluded (chips already cover the start),
+ * except item expiry and the final recurring occurrence which count as ending.
  */
 export function classifyMonthDaySpan(
   event: TimelineItem,
@@ -43,6 +40,9 @@ export function classifyMonthDaySpan(
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
 
   const dayStart = startOfDay(day);
+
+  if (isEndingMarkerOnDay(event, dayStart)) return "ending";
+
   const startDay = startOfDay(start);
   const endDay = effectiveEndDay(start, end);
 
@@ -67,4 +67,29 @@ export function countMonthDaySpanIndicators(
     else if (kind === "ending") ending += 1;
   }
   return { ongoing, ending };
+}
+
+/**
+ * Month-cell titled preview rows: events that start on `day` and are NOT already
+ * represented solely by「+N 进行中」／「+N 结束」chips.
+ *
+ * Cross-day middle/end and item expiry stay chip-only. Recurring finals still
+ * appear as normal preview rows while also feeding the ending chip.
+ */
+export function eventShowsInMonthDayPreview(
+  event: TimelineItem,
+  day: Date,
+): boolean {
+  if (!eventStartsOnDay(event, day)) return false;
+  const span = classifyMonthDaySpan(event, day);
+  if (span === null) return true;
+  // Recurring is non-continuous: final occurrence stays in the normal list.
+  if (
+    span === "ending" &&
+    event.source === "recurring" &&
+    event.isLastOccurrence
+  ) {
+    return true;
+  }
+  return false;
 }

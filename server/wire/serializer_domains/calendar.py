@@ -23,7 +23,12 @@ def serialize_trending_topic(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def serialize_analysis_event(row: Mapping[str, Any], *, dismissed: bool = False) -> dict[str, Any]:
+def serialize_analysis_event(
+    row: Mapping[str, Any],
+    *,
+    dismissed: bool = False,
+    important: bool = False,
+) -> dict[str, Any]:
     return {
         "id": row["id"],
         "taskId": row.get("task_id"),
@@ -47,10 +52,16 @@ def serialize_analysis_event(row: Mapping[str, Any], *, dismissed: bool = False)
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
         "dismissed": bool(dismissed),
+        "important": bool(important),
     }
 
 
-def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> dict[str, Any]:
+def serialize_user_event(
+    row: Mapping[str, Any],
+    *,
+    dismissed: bool = False,
+    important: bool = False,
+) -> dict[str, Any]:
     location = row.get("location")
     raw_task_id = row.get("task_id")
     task_id = str(raw_task_id).strip() if isinstance(raw_task_id, str) and raw_task_id.strip() else ""
@@ -70,10 +81,21 @@ def serialize_user_event(row: Mapping[str, Any], *, dismissed: bool = False) -> 
         "timezone": row.get("event_timezone") or None,
         "icsUid": row.get("ics_uid") or None,
         "icsSource": row.get("ics_source") or None,
+        "remindBeforeDays": (
+            int(row["remind_before_days"])
+            if row.get("remind_before_days") is not None
+            else None
+        ),
         "taskId": task_id,
+        "itemId": (
+            str(row["item_id"]).strip()
+            if isinstance(row.get("item_id"), str) and str(row.get("item_id")).strip()
+            else None
+        ),
         "worksetId": workset_id,
         "source": "user",
         "dismissed": bool(dismissed),
+        "important": bool(important),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

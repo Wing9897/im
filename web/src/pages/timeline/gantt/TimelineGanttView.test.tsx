@@ -136,7 +136,9 @@ describe("TimelineGanttView", () => {
         makeProps({ isRefreshing: true, events: [makeEvent({ title: "Refresh Event" })] }),
       );
       expect(container.textContent).toContain("Refresh Event");
-      expect(container.querySelector('[data-testid="gantt-refresh-indicator"]')).not.toBeNull();
+      // Refresh spinner lives in the page toolbar; gantt keeps the chart mounted.
+      expect(container.querySelector('[data-testid="gantt-refresh-indicator"]')).toBeNull();
+      expect(container.querySelector('[data-testid="timeline-gantt-view"]')).not.toBeNull();
     });
 
     it("provides a vertical scroll region for many event rows", () => {
@@ -240,13 +242,16 @@ describe("TimelineGanttView", () => {
       const container = render(
         makeProps({ events: [makeEvent({ title: longTitle })] }),
       );
-      // Full title is available via title attribute for hover tooltip
-      const titleEl = container.querySelector(`[title="${longTitle}"]`);
+      // Full title (+ time) is available via title attribute for hover tooltip
+      const titleEl = container.querySelector(`[title^="${longTitle}"]`);
       expect(titleEl).not.toBeNull();
-      // Visible text is truncated by CSS ellipsis in the fixed-width label column
-      expect(titleEl!.textContent).toBe(longTitle);
-      const className = (titleEl as HTMLElement).className;
-      expect(className).toContain("truncate");
+      expect(titleEl!.textContent).toContain(longTitle);
+      // Title text lives in an inner truncate span within the fixed-width label column
+      const truncated = Array.from(titleEl!.querySelectorAll("span")).find((el) =>
+        el.className.includes("truncate"),
+      );
+      expect(truncated).toBeDefined();
+      expect(truncated!.textContent).toBe(longTitle);
     });
 
     it("shows full title on hover via title attribute (Requirement 3.4)", () => {
@@ -254,9 +259,9 @@ describe("TimelineGanttView", () => {
       const container = render(
         makeProps({ events: [makeEvent({ title: longTitle })] }),
       );
-      // The row label div should have a title attribute with the full title
-      const labelDiv = container.querySelector(`[title="${longTitle}"]`);
+      const labelDiv = container.querySelector(`[title^="${longTitle}"]`);
       expect(labelDiv).not.toBeNull();
+      expect(labelDiv!.getAttribute("title")).toContain(longTitle);
     });
   });
 
@@ -304,7 +309,8 @@ describe("TimelineGanttView", () => {
 
       const bar = eventBar(container, "evt-span");
       expect(bar).not.toBeNull();
-      expect(bar!.className).toContain("bg-accent");
+      expect(bar!.getAttribute("data-status")).toBe("pending");
+      expect(bar!.style.backgroundColor).toBe(EVENT_STATUS_COLORS.pending);
       expect(bar!.style.gridColumn).toBe(
         expectedGridColumn(
           "2025-01-15T09:00:00Z",
@@ -316,7 +322,7 @@ describe("TimelineGanttView", () => {
       );
     });
 
-    it("renders point event (null endTime) as one bar with point min-width", () => {
+    it("renders point event (null endTime) as one compact bar", () => {
       const container = render(
         makeProps({
           events: [makeEvent({ id: "evt-point", endTime: null })],
@@ -324,7 +330,8 @@ describe("TimelineGanttView", () => {
       );
       const bar = eventBar(container, "evt-point");
       expect(bar).not.toBeNull();
-      expect(bar!.className).toContain("min-w-1.5");
+      expect(bar!.className).toContain("min-w-[6px]");
+      expect(bar!.className).toContain("mx-[16%]");
       expect(bar!.style.gridColumn).toBe(
         expectedGridColumn(
           "2025-01-15T09:00:00Z",
@@ -472,17 +479,65 @@ describe("TimelineGanttView", () => {
       }
     });
 
-    it("rendered continuous bar uses accent color and default opacity", () => {
+    it("rendered continuous bar uses event status color", () => {
       const event = makeEvent({
         id: "evt-status",
         startTime: "2025-01-15T09:00:00Z",
         endTime: "2025-01-15T12:00:00Z",
       });
-      const container = render(makeProps({ events: [event] }));
+      const container = render(
+        makeProps({
+          events: [event],
+          eventStatuses: { "evt-status": "confirmed" },
+        }),
+      );
       const bar = eventBar(container, "evt-status");
       expect(bar).not.toBeNull();
-      expect(bar!.className).toContain("bg-accent");
-      expect(bar!.className).toContain("opacity-80");
+      expect(bar!.getAttribute("data-status")).toBe("confirmed");
+      expect(bar!.style.backgroundColor).toBe(EVENT_STATUS_COLORS.confirmed);
+      expect(bar!.className).toContain("opacity-92");
+    });
+
+    it("empty day cells are hairline tracks, not bordered capsules", () => {
+      const container = render(
+        makeProps({
+          events: [
+            makeEvent({
+              id: "evt-track",
+              startTime: "2025-01-15T09:00:00Z",
+              endTime: "2025-01-15T10:00:00Z",
+            }),
+          ],
+        }),
+      );
+      const cell = container.querySelector(
+        '[data-testid="event-cell-evt-track-0"]',
+      ) as HTMLElement | null;
+      expect(cell).not.toBeNull();
+      expect(cell!.className).not.toContain("rounded-sm");
+      expect(cell!.className).toContain("border-l");
+    });
+
+    it("left label shows status dot and truncates long titles", () => {
+      const longTitle = "This is a very long event title that exceeds twenty characters";
+      const container = render(
+        makeProps({
+          events: [makeEvent({ id: "evt-label", title: longTitle })],
+          eventStatuses: { "evt-label": "completed" },
+        }),
+      );
+      const statusDot = container.querySelector(
+        '[data-testid="gantt-label-status-evt-label"]',
+      ) as HTMLElement | null;
+      expect(statusDot).not.toBeNull();
+      expect(statusDot!.style.backgroundColor).toBe(EVENT_STATUS_COLORS.completed);
+      const titleEl = container.querySelector(`[title^="${longTitle}"]`);
+      expect(titleEl).not.toBeNull();
+      const truncated = Array.from(titleEl!.querySelectorAll("span")).find((el) =>
+        el.className.includes("truncate"),
+      );
+      expect(truncated).toBeDefined();
+      expect(truncated!.textContent).toBe(longTitle);
     });
   });
 });

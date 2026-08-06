@@ -3,19 +3,16 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMonitorMode } from "../../context/MonitorModeContext";
 import { useTaskCatalog, useTaskNameById, useWorksetNameById } from "../../context/TaskCatalogContext";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
-import { subscribeResourceModified } from "../../domain/sse/resourceModified";
 import { filterAssignableTimelineTasks } from "../../domain/timeline/userEvents";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 import {
   fetchMergedTimelineEvents,
   paddedTimelineFetchWindow,
 } from "../../domain/timeline/timelineMergedFetch";
-import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";
 import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterPlan";
 import { useAsyncResource } from "../../hooks/useAsyncResource";
-import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
+import { useTimelineCalendarRefresh } from "../../hooks/useTimelineCalendarRefresh";
 import type { AnalysisTask, TimelineItem, TaskActivitySpan } from "../../types";
-import { logWarn } from "../../utils/logger";
 import { useGanttData } from "./useGanttData";
 
 const EMPTY_EVENTS: TimelineItem[] = [];
@@ -107,7 +104,7 @@ export function useTimelineData({
   // Pages shell stays keep-mounted under canvas — pause expensive Timeline
   // fetches/subscriptions while the board is the visible shell.
   const pageActive = monitorMode === "pages";
-  const { tasks, taskLoadError, tasksLoading } = useTaskCatalog();
+  const { tasks, taskLoadError, tasksLoading, refreshTasks } = useTaskCatalog();
 
   // `activeOnly` matches the assistant / voice pickers: a soft-deleted calendar
   // task must not stay assignable in the toolbar or UserEventDialog.
@@ -220,30 +217,11 @@ export function useTimelineData({
     recurringTaskFingerprint,
   ]);
 
-  useRefreshOnAnalysisEvent(
+  useTimelineCalendarRefresh({
+    enabled: pageActive,
     refreshEvents,
-    {
-      taskIds: pageActive && filterPlan.fetchAnalysis ? filterPlan.analysisTaskIds : [],
-      analysisMode: ANALYSIS_EVENTS_MODES,
-    },
-  );
-
-  useEffect(() => {
-    if (!pageActive) return;
-    return subscribeResourceModified((detail) => {
-      if (
-        detail.resourceType !== "task" &&
-        detail.resourceType !== "user_event" &&
-        detail.resourceType !== "item" &&
-        detail.resourceType !== "item_category"
-      ) {
-        return;
-      }
-      void refreshEvents().catch((err) => {
-        logWarn("[timeline] refresh after resource_modified failed", err);
-      });
-    });
-  }, [pageActive, refreshEvents]);
+    refreshTasks,
+  });
 
   // Empty / no-op plans must not keep showing a prior merge (effect skips fetch).
   const events = useMemo(() => {
