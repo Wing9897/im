@@ -45,6 +45,7 @@ const LeaderboardPage = lazyNamed(() => import("../pages/leaderboard/Leaderboard
 const IntelligencePage = lazyNamed(() => import("../pages/intelligence/IntelligencePage"), "IntelligencePage");
 const TimelinePage = lazyNamed(() => import("../pages/timeline/TimelinePage"), "TimelinePage");
 const ItemsPage = lazyNamed(() => import("../pages/items/ItemsPage"), "ItemsPage");
+const ItemFormPage = lazyNamed(() => import("../pages/items/ItemFormPage"), "ItemFormPage");
 const SourceManagementPage = lazyNamed(
   () => import("../pages/sources/SourceManagementPage"),
   "SourceManagementPage",
@@ -102,6 +103,8 @@ export function AppRoutes() {
         <Route path="/intelligence" element={<LazyPage Page={IntelligencePage} />} />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />
         <Route path="/items" element={<LazyPage Page={ItemsPage} />} />
+        <Route path="/items/new" element={<LazyPage Page={ItemFormPage} />} />
+        <Route path="/items/:itemId/edit" element={<LazyPage Page={ItemFormPage} />} />
         <Route path="/items/category/:categoryId" element={<LazyPage Page={ItemsPage} />} />
         <Route path="/sources" element={<LazyPage Page={SourceManagementPage} />} />
         <Route path="/actions" element={<LazyPage Page={ActionsPage} />} />

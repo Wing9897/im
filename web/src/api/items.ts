@@ -49,6 +49,10 @@ export function listItems(params?: {
   return apiClient.get<TrackableItem[]>("/api/v1/items", query);
 }
 
+export function getItem(id: string): Promise<TrackableItem> {
+  return apiClient.get<TrackableItem>(`/api/v1/items/${encodeURIComponent(id)}`);
+}
+
 export function createItem(params: ItemWriteParams): Promise<TrackableItem> {
   return apiClient.post<TrackableItem>("/api/v1/items", params);
 }

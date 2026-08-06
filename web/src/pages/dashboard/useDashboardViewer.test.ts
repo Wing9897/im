@@ -155,7 +155,7 @@ describe("useDashboardViewer", () => {
   it("hides child recurring tasks from the grid", async () => {
     // Catalog still holds the child (parentTaskId); dashboard grid is top-level only.
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "proj-1", name: "Launch", analysisMode: "project" }),
+      makeAnalysisTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true }),
       makeAnalysisTask({
         id: "child-1",
         name: "Standup",

@@ -46,12 +46,20 @@ export function TimelinePageDialogs({
   const { t } = useTranslation("timeline");
   const { t: tc } = useTranslation("common");
 
+  const scopedItemId = (
+    editingEvent
+      ? editingEvent.itemId?.trim()
+      : createInitial?.itemId?.trim()
+  ) || "";
+  const parentItemMode = scopedItemId ? "readonly" : "hidden";
+
   return (
     <>
       <UserEventDialog
         open={dialogOpen}
         mode={dialogMode}
         worksetOptions={worksetOptions}
+        parentItemMode={parentItemMode}
         initial={
           editingEvent
             ? {

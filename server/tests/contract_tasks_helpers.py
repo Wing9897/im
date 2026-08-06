@@ -18,6 +18,7 @@ TASK_KEYS = [
     "includeInTimeline",
     "parentTaskId",
     "worksetId",
+    "itemId",
 ]
 
 SCHEDULE_KEYS = [

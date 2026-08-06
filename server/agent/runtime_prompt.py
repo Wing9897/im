@@ -21,12 +21,18 @@ def _tools_prompt_block(
     inject_web_search_tool: bool,
     task_advisor_enabled: bool = False,
     calendar_writes_enabled: bool = True,
+    calendar_read_enabled: bool = True,
+    analysis_events_read_enabled: bool = True,
+    items_read_enabled: bool = True,
 ) -> str:
     return json.dumps(
         build_tool_schemas(
             web_search_enabled=inject_web_search_tool,
             task_advisor_enabled=task_advisor_enabled,
             calendar_writes_enabled=calendar_writes_enabled,
+            calendar_read_enabled=calendar_read_enabled,
+            analysis_events_read_enabled=analysis_events_read_enabled,
+            items_read_enabled=items_read_enabled,
         ),
         ensure_ascii=False,
         indent=2,
@@ -43,6 +49,9 @@ def build_system_prompt(
     inject_web_search_tool: bool | None = None,
     task_advisor_enabled: bool = False,
     calendar_writes_enabled: bool = True,
+    calendar_read_enabled: bool = True,
+    analysis_events_read_enabled: bool = True,
+    items_read_enabled: bool = True,
     user_background: str | None = None,
     base_prompt: str | None = None,
 ) -> str:
@@ -61,6 +70,9 @@ def build_system_prompt(
             inject_web_search_tool=inject_tool,
             task_advisor_enabled=task_advisor_enabled,
             calendar_writes_enabled=calendar_writes_enabled,
+            calendar_read_enabled=calendar_read_enabled,
+            analysis_events_read_enabled=analysis_events_read_enabled,
+            items_read_enabled=items_read_enabled,
         )
         + "\n\n"
         + output_language_directive(normalize_ui_locale(locale))

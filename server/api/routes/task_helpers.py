@@ -117,6 +117,74 @@ def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
     }
 
 
+def agent_policy_write_fields(
+    *,
+    effective_mode: str,
+    body: TaskConfigBody,
+    existing: dict[str, Any] | None = None,
+    has_channels: bool | None = None,
+) -> dict[str, Any]:
+    """Normalize agent policy for INSERT/UPDATE; inert defaults for non-agent modes."""
+    from server.domain.agent_task_spec import (
+        AgentTaskSpec,
+        AgentTaskSpecError,
+        agent_spec_to_db_kwargs,
+        normalize_agent_task_spec,
+    )
+    from server.domain.analysis_modes import AGENT_MODE
+    from server.services.task_writes import TaskWriteError
+
+    if effective_mode != AGENT_MODE:
+        return agent_spec_to_db_kwargs(
+            AgentTaskSpec(
+                trigger_mode="schedule",
+                cap_calendar_read=True,
+                cap_calendar_writes=False,
+                cap_web_search=False,
+                cap_force_web_search=False,
+                cap_read_analysis_events=True,
+                cap_read_items=True,
+                output_calendar=False,
+                output_analysis_events=False,
+            )
+        )
+
+    existing = existing or {}
+    fields = body.model_fields_set
+
+    def _pick_bool(wire: str, column: str, default: bool) -> bool | None:
+        if wire in fields:
+            return getattr(body, wire)
+        if existing:
+            return bool(existing.get(column, default))
+        return default
+
+    try:
+        spec = normalize_agent_task_spec(
+            trigger_mode=(
+                body.triggerMode
+                if "triggerMode" in fields
+                else (existing.get("trigger_mode") or "schedule")
+            ),
+            cap_calendar_read=_pick_bool("capCalendarRead", "cap_calendar_read", True),
+            cap_calendar_writes=_pick_bool("capCalendarWrites", "cap_calendar_writes", False),
+            cap_web_search=_pick_bool("capWebSearch", "cap_web_search", False),
+            cap_force_web_search=_pick_bool("capForceWebSearch", "cap_force_web_search", False),
+            cap_read_analysis_events=_pick_bool(
+                "capReadAnalysisEvents", "cap_read_analysis_events", True
+            ),
+            cap_read_items=_pick_bool("capReadItems", "cap_read_items", True),
+            output_calendar=_pick_bool("outputCalendar", "output_calendar", False),
+            output_analysis_events=_pick_bool(
+                "outputAnalysisEvents", "output_analysis_events", False
+            ),
+            has_channels=has_channels,
+        )
+    except AgentTaskSpecError as exc:
+        raise TaskWriteError(str(exc)) from exc
+    return agent_spec_to_db_kwargs(spec)
+
+
 async def resolve_workset_id(
     db: Any,
     *,

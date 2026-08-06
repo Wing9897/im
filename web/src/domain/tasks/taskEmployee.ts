@@ -15,25 +15,22 @@ export type TaskEmployeeId = AnalysisMode;
 export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
   "recurring",
   "intel_event",
-  "web_intel",
   "leaderboard",
-  "project",
+  "agent",
 ] as const;
 
 const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
   recurring: "recurring",
   intel_event: "intel_event",
-  web_intel: "web_intel",
   leaderboard: "leaderboard",
-  project: "project",
+  agent: "agent",
 };
 
 const EMPLOYEE_BY_MODE: Record<AnalysisMode, TaskEmployeeId> = {
   recurring: "recurring",
   intel_event: "intel_event",
-  web_intel: "web_intel",
   leaderboard: "leaderboard",
-  project: "project",
+  agent: "agent",
 };
 
 export function taskEmployeeForAnalysisMode(mode: AnalysisMode): TaskEmployeeId {

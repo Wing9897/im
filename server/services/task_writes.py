@@ -14,9 +14,10 @@ from typing import Any
 
 from server.calendar.rrule import RruleValidationError, validate_rrule
 from server.domain.analysis_modes import (
+    AGENT_MODE,
     CHILD_RECURRING_MODE,
-    PARENT_PROJECT_MODE,
 )
+from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR
 from server.time_iso import parse_iso
 
 #: Only ``analysisMode=recurring`` may carry a recurrence; it is never an AI trigger.
@@ -109,17 +110,25 @@ def should_reset_project_message_cursor(
     existing_prompt: str | None,
     new_prompt: str | None,
     channels_changed: bool,
+    existing_trigger: str | None = None,
+    effective_trigger: str | None = None,
 ) -> bool:
     """Whether a task update should wipe ``project_message_cursors``.
 
     Soft policy: keep progress for rename / schedule / description-only edits.
-    Reset when entering/leaving project, changing goals (prompt), or rebinding sources.
+    Reset when leaving message_cursor drain, changing goals (prompt), or rebinding sources.
     """
-    if existing_mode == PARENT_PROJECT_MODE and effective_mode != PARENT_PROJECT_MODE:
+    existing_cursor = (
+        existing_mode == AGENT_MODE and str(existing_trigger or "") == TRIGGER_MESSAGE_CURSOR
+    )
+    effective_cursor = (
+        effective_mode == AGENT_MODE and str(effective_trigger or "") == TRIGGER_MESSAGE_CURSOR
+    )
+    if existing_cursor and not effective_cursor:
         return True
-    if effective_mode != PARENT_PROJECT_MODE:
+    if not effective_cursor:
         return False
-    if existing_mode != PARENT_PROJECT_MODE:
+    if not existing_cursor:
         return True
     if (existing_prompt or "").strip() != (new_prompt or "").strip():
         return True
@@ -138,7 +147,7 @@ def resolve_parent_task_id(
 
     Invariants:
     - Only ``recurring`` children may carry a parent; other modes always clear it.
-    - Parent must be ``analysis_mode=project`` when ``parent_mode`` is provided.
+    - Parent must be ``analysis_mode=agent`` when ``parent_mode`` is provided.
     - Self-reference is forbidden.
     """
     if effective_mode != CHILD_RECURRING_MODE:
@@ -153,13 +162,13 @@ def resolve_parent_task_id(
     parent_id = str(parent).strip()
     if task_id is not None and parent_id == str(task_id):
         raise TaskWriteError("parent_task_id cannot reference the task itself")
-    if parent_mode is not None and parent_mode != PARENT_PROJECT_MODE:
-        raise TaskWriteError(f"parent_task_id must reference a project task (got analysis_mode={parent_mode!r})")
+    if parent_mode is not None and parent_mode != AGENT_MODE:
+        raise TaskWriteError(f"parent_task_id must reference an agent task (got analysis_mode={parent_mode!r})")
     return parent_id
 
 
 async def assert_parent_project_row(db: Any, parent_task_id: str) -> str:
-    """Load parent row and ensure it is ``project`` mode; return its id."""
+    """Load parent row and ensure it is ``agent`` mode; return its id."""
     row = await db.fetch_one(
         "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",
         (parent_task_id,),
@@ -167,15 +176,15 @@ async def assert_parent_project_row(db: Any, parent_task_id: str) -> str:
     if row is None:
         raise TaskWriteError(f"parent_task_id not found: {parent_task_id}")
     mode = str(row.get("analysis_mode") or "")
-    if mode != PARENT_PROJECT_MODE:
-        raise TaskWriteError(f"parent_task_id must reference a project task (got analysis_mode={mode!r})")
+    if mode != AGENT_MODE:
+        raise TaskWriteError(f"parent_task_id must reference an agent task (got analysis_mode={mode!r})")
     return str(row["id"])
 
 
 async def clear_children_parent_links(db: Any, parent_task_id: str, *, now: str) -> int:
-    """Clear ``parent_task_id`` on children when a project leaves project mode.
+    """Clear ``parent_task_id`` on children when an agent parent leaves agent mode.
 
-    Orphan FK pointers at a non-project parent are not allowed; clearing the
+    Orphan FK pointers at a non-agent parent are not allowed; clearing the
     link keeps child recurring rows as top-level instead of rejecting the mode change.
     """
     return int(

@@ -16,7 +16,8 @@ describe("projectDetailModel", () => {
   const project = makeAnalysisTask({
     id: "proj-1",
     name: "Launch",
-    analysisMode: "project",
+    analysisMode: "agent",
+    outputCalendar: true,
   });
   const child = makeAnalysisTask({
     id: "child-1",

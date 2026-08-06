@@ -330,7 +330,7 @@ describe("ChatEditorPage integration tests", () => {
         createMockHookReturn({
           formState: {
             ...createMockHookReturn().formState,
-            analysisMode: "project",
+            analysisMode: "agent",
             scheduleType: "hourly",
           },
         }),

@@ -74,6 +74,14 @@ describe("calendarOccurrenceToBoardEvent", () => {
     expect(event.isAllDay).toBe(false);
     expect(event.timezone).toBe("Asia/Taipei");
   });
+
+  it("keeps parent itemId on recurring linked calendars", () => {
+    const event = calendarOccurrenceToBoardEvent(
+      makeOccurrence({ itemId: "item-9" }),
+    );
+    expect(event.source).toBe("recurring");
+    expect(event.itemId).toBe("item-9");
+  });
 });
 
 describe("mergeWithCalendarOccurrences", () => {

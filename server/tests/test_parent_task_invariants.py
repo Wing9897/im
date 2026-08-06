@@ -29,8 +29,8 @@ def test_resolve_parent_rejects_self_reference() -> None:
         )
 
 
-def test_resolve_parent_rejects_non_project_parent_mode() -> None:
-    with pytest.raises(TaskWriteError, match="project"):
+def test_resolve_parent_rejects_non_agent_parent_mode() -> None:
+    with pytest.raises(TaskWriteError, match="agent"):
         resolve_parent_task_id(
             task_id="child",
             effective_mode="recurring",
@@ -39,16 +39,26 @@ def test_resolve_parent_rejects_non_project_parent_mode() -> None:
         )
 
 
+_AGENT_PARENT = {
+    "analysisMode": "agent",
+    "promptTemplate": "x",
+    "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+    "scheduleRrule": "FREQ=HOURLY",
+    "triggerMode": "message_cursor",
+    "capCalendarRead": True,
+    "capCalendarWrites": True,
+    "outputCalendar": True,
+    "outputAnalysisEvents": False,
+}
+
+
 async def test_put_task_mode_change_clears_parent(client, app) -> None:
     """Changing away from recurring clears parent_task_id on the row."""
     create_proj = await client.post(
         "/api/v1/tasks",
         json={
             "name": "Parent Project",
-            "analysisMode": "project",
-            "promptTemplate": "x",
-            "channelIds": [],
-            "scheduleRrule": "FREQ=HOURLY",
+            **_AGENT_PARENT,
         },
     )
     assert create_proj.status_code == 201
@@ -96,15 +106,12 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
 
 
 async def test_put_project_mode_change_clears_children_parent(client, app) -> None:
-    """Changing a project away from project mode clears children parent_task_id."""
+    """Changing an agent parent away from agent mode clears children parent_task_id."""
     create_proj = await client.post(
         "/api/v1/tasks",
         json={
             "name": "Leaving Project",
-            "analysisMode": "project",
-            "promptTemplate": "x",
-            "channelIds": [],
-            "scheduleRrule": "FREQ=HOURLY",
+            **_AGENT_PARENT,
         },
     )
     assert create_proj.status_code == 201
@@ -191,10 +198,7 @@ async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
         "/api/v1/tasks",
         json={
             "name": "Top Project",
-            "analysisMode": "project",
-            "promptTemplate": "x",
-            "channelIds": [],
-            "scheduleRrule": "FREQ=HOURLY",
+            **_AGENT_PARENT,
         },
     )
     proj_id = create_proj.json()["id"]

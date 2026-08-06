@@ -309,10 +309,10 @@ describe("shouldRefreshForEvent", () => {
     expect(shouldRefreshForEvent(matching, options)).toBe(true);
   });
 
-  it("accepts analysisMode as any-of list (intel_event + web_intel)", () => {
+  it("accepts analysisMode as any-of list (intel_event + agent)", () => {
     const options: UseRefreshOnAnalysisEventOptions = {
       includeCompleted: true,
-      analysisMode: ["intel_event", "web_intel"],
+      analysisMode: ["intel_event", "agent"],
       taskId: null,
     };
     expect(shouldRefreshForEvent(completedEvent, options)).toBe(false);
@@ -323,7 +323,7 @@ describe("shouldRefreshForEvent", () => {
     };
     const webIntelMode = {
       ...completedEvent,
-      payload: { ...completedEvent.payload, analysisMode: "web_intel" as const },
+      payload: { ...completedEvent.payload, analysisMode: "agent" as const },
     };
     expect(shouldRefreshForEvent(eventMode, options)).toBe(true);
     expect(shouldRefreshForEvent(webIntelMode, options)).toBe(true);

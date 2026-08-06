@@ -383,7 +383,7 @@ describe("DashboardViewer", () => {
 
   it("opens project detail route when a project card is selected", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "proj-1", name: "Launch", analysisMode: "project" }),
+      createMockTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true }),
     ];
 
     act(() => {
@@ -402,7 +402,7 @@ describe("DashboardViewer", () => {
 
   it("hides child recurring cards that belong to a project", () => {
     taskCatalogState.tasks = [
-      createMockTask({ id: "proj-1", name: "Launch", analysisMode: "project" }),
+      createMockTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true }),
       createMockTask({
         id: "child-1",
         name: "Hidden child",

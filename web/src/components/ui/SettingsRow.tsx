@@ -11,6 +11,8 @@ interface SettingsRowProps {
   htmlFor?: string;
   /** stack = label above control (default); inline = label/help left, control right */
   layout?: SettingsRowLayout;
+  /** Tighter label→control gap for dense forms (Items). */
+  dense?: boolean;
 }
 
 /**
@@ -23,6 +25,7 @@ export function SettingsRow({
   children,
   htmlFor,
   layout = "stack",
+  dense = false,
 }: SettingsRowProps) {
   if (layout === "inline") {
     return (
@@ -37,7 +40,7 @@ export function SettingsRow({
   }
 
   return (
-    <div className="flex flex-col gap-sm">
+    <div className={dense ? "flex w-full min-w-0 flex-col gap-xs" : "flex w-full min-w-0 flex-col gap-sm"}>
       <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
       {children}
       {help ? <p className={formHelpClass}>{help}</p> : null}

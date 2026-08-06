@@ -17,6 +17,7 @@ async def list_tasks_payload(
     top_level_only: bool = False,
     analysis_mode: Optional[str] = None,
     workset_id: Optional[str] = None,
+    item_id: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     rows = await fetch_all_task_rows(db)
     if top_level_only:
@@ -32,6 +33,13 @@ async def list_tasks_payload(
             rows = [row for row in rows if not row.get("workset_id")]
         else:
             rows = [row for row in rows if str(row.get("workset_id") or "") == wid]
+    if item_id is not None:
+        # ``recurring_schedules.item_id`` (joined); empty string = unbound only.
+        iid = item_id.strip()
+        if not iid:
+            rows = [row for row in rows if not row.get("item_id")]
+        else:
+            rows = [row for row in rows if str(row.get("item_id") or "") == iid]
     links = await fetch_all_task_channel_rows(db)
     by_task: dict[str, list[dict[str, Any]]] = {}
     for link in links:

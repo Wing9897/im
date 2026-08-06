@@ -447,7 +447,7 @@ describe("EventListPanel", () => {
 
     const purchased = makeTimelineItem({
       id: "item:p",
-      title: "購入 · milk",
+      title: "milk",
       source: "item",
       itemDateKind: "purchased",
       worksetId: SYSTEM_WORKSET_ID,
@@ -465,7 +465,7 @@ describe("EventListPanel", () => {
     });
     const expires = makeTimelineItem({
       id: "item:e",
-      title: "結束 · milk",
+      title: "milk",
       source: "item",
       itemDateKind: "expires",
       worksetId: SYSTEM_WORKSET_ID,
@@ -553,10 +553,8 @@ describe("EventListPanel", () => {
       )?.textContent,
     ).toBe("結束於當日");
 
-    // Badge / ending tag already convey 提醒 / 结束 — titles stay bare.
+    // Remind badge already conveys 提醒 — title stays bare.
     expect(container.textContent).not.toContain("提醒 · milk");
-    expect(container.textContent).not.toContain("結束 · milk");
-    expect(container.textContent).not.toContain("購入 · milk");
     expect(container.textContent).toContain("milk");
   });
 
@@ -605,7 +603,7 @@ describe("EventListPanel", () => {
   it("important item rows use ❗ leading marker instead of kind emoji", () => {
     const event = makeTimelineItem({
       id: "item-imp",
-      title: "結束 · milk",
+      title: "milk",
       source: "item",
       itemDateKind: "expires",
       important: true,
@@ -621,9 +619,7 @@ describe("EventListPanel", () => {
       container.querySelector('[data-testid="timeline-important-marker"]')?.textContent,
     ).toBe("❗");
     expect(container.querySelector('[data-testid="timeline-item-kind-marker"]')).toBeNull();
-    // Ending tag present → bare title (no 结束 · prefix).
     expect(container.textContent).toContain("milk");
-    expect(container.textContent).not.toMatch(/結束\s*·\s*milk/);
     expect(container.textContent).not.toContain("⚠️");
   });
 

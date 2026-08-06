@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.user_events import create_user_event
 from server.db.database import Database, TransactionDb
@@ -78,20 +80,52 @@ async def _ensure_workset(db: Database) -> None:
 
 async def _ensure_intel_tasks(db: Database) -> None:
     now = utc_now_iso()
-    for task_id, name, mode in (
-        (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", "intel_event"),
-        (WEB_TASK_ID, f"{PREFIX} 網情報任務", "web_intel"),
-        (PROJECT_TASK_ID, f"{PREFIX} 專案任務", "project"),
-    ):
-        row = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (task_id,))
-        if row:
-            continue
+    intel = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (INTEL_TASK_ID,))
+    if not intel:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
             "analysis_time_range, version, is_active, include_in_timeline, "
             "schedule_rrule, workset_id, created_at, updated_at) "
             "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', ?, ?)",
-            (task_id, name, mode, now, now),
+            (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", INTEL_EVENT_MODE, now, now),
+        )
+
+    for task_id, name, preset in (
+        (WEB_TASK_ID, f"{PREFIX} Agent 網蒐任務", "web_scout"),
+        (PROJECT_TASK_ID, f"{PREFIX} Agent 專案調和任務", "project_reconcile"),
+    ):
+        row = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (task_id,))
+        if row:
+            continue
+        policy = agent_spec_to_db_kwargs(
+            agent_preset_spec(preset, has_channels=preset == "project_reconcile")
+        )
+        await db.execute(
+            "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
+            "analysis_time_range, version, is_active, include_in_timeline, "
+            "schedule_rrule, workset_id, "
+            "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
+            "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
+            "output_calendar, output_analysis_events, "
+            "created_at, updated_at) "
+            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', "
+            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                task_id,
+                name,
+                AGENT_MODE,
+                policy["trigger_mode"],
+                int(policy["cap_calendar_read"]),
+                int(policy["cap_calendar_writes"]),
+                int(policy["cap_web_search"]),
+                int(policy["cap_force_web_search"]),
+                int(policy["cap_read_analysis_events"]),
+                int(policy["cap_read_items"]),
+                int(policy["output_calendar"]),
+                int(policy["output_analysis_events"]),
+                now,
+                now,
+            ),
         )
 
     batch = await db.fetch_one("SELECT id FROM analysis_batches WHERE id = ?", (BATCH_ID,))

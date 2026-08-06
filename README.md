@@ -9,7 +9,7 @@
 - **時間規劃** — Timeline 合併分析事件、週期任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
 - **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期／提醒日投影到日曆（`source=item`）；分類與物品可選 emoji（含 seed logo），歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
-- **專案** — `project` 閉環多波消化來源積壓
+- **專案／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；預設專案調和／網蒐）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描情報事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
@@ -23,7 +23,7 @@
 | 層 | 角色 | 本專案對應 |
 |----|------|------------|
 | **Input** | 多源訊號進統一訊息平面 | Collectors（Telegram、Discord、RSS…）→ `messages` |
-| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`intel_event`／`web_intel`／`recurring`／`project`） |
+| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`intel_event`／`agent`／`recurring`） |
 | **Output** | 結果消費與外發 | Intelligence、Timeline、Board、提醒、Actions |
 
 **任務（`analysis_tasks`）是通用接口：** 下游多半以 `taskId` 訂閱，因此來源與顯示方式可持續加，不必各搞一套管線。完整圖表、模式表與例外見 [`docs/ARCHITECTURE.md` Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
@@ -33,11 +33,10 @@
 | 模式 | 執行 | Prompt |
 |------|------|--------|
 | `leaderboard`／`intel_event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
-| `web_intel` | `web_intel_tick`（Agent 多輪 + `web.search`） | 共用 web_intel system + **置頂**該任務抽取規則（`promptTemplate`）；可選綁定頻道作訊息門檻／注入 |
-| `project` | `execute_project_tick`（多波 Agent 工具閉環） | 共用 project system + **置頂**該任務目標（`promptTemplate`）；同輪多波連續 session，跨輪排程開新對話 |
+| `agent` | `execute_agent_tick`（`AgentTaskSpec`：游標／閾值／定時 + 工具／輸出權限） | 共用 agent system + 政策條款 + **置頂**該任務目標（`promptTemplate`）；cursor 同輪多波連續 session |
 | `recurring` | 不跑 AI 分析 | — |
 
-專案 tick 契約細節：[`docs/agent/project.md`](docs/agent/project.md)。
+Agent／專案調和契約細節：[`docs/agent/project.md`](docs/agent/project.md)。
 
 ## 專案結構
 
@@ -275,9 +274,9 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v15**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.16`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-15 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v19**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.20`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-19 庫。
 
-**Wipe-only：** v1–v14 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v18 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply

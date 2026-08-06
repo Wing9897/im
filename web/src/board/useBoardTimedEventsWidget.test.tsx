@@ -181,14 +181,14 @@ describe("useBoardTimedEventsWidget", () => {
     expect(mocks.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("subscribes to analysis SSE for intel_event + web_intel finding modes", () => {
+  it("subscribes to analysis SSE for intel_event + agent finding modes", () => {
     act(() => root.render(createElement(Probe)));
 
     expect(mocks.refreshOnAnalysis).toHaveBeenCalledWith(
       mocks.refresh,
       expect.objectContaining({ analysisMode: ANALYSIS_EVENTS_MODES }),
     );
-    expect(ANALYSIS_EVENTS_MODES).toEqual(["intel_event", "web_intel"]);
+    expect(ANALYSIS_EVENTS_MODES).toEqual(["intel_event", "agent"]);
   });
 
   it("refreshes when trackable items / categories change via SSE", () => {

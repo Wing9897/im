@@ -118,16 +118,16 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
       size="wide"
       title={t("manageCategories")}
       onClose={handleClose}
-      bodyClassName="flex flex-col gap-md"
+      bodyClassName="flex flex-col gap-sm"
       footer={
         <FormActions inline>
-          <Button variant="secondary" onClick={handleClose} disabled={busy}>
+          <Button variant="secondary" size="sm" onClick={handleClose} disabled={busy}>
             {t("done")}
           </Button>
         </FormActions>
       }
     >
-      <div className="mb-sm flex items-center justify-between gap-sm">
+      <div className="mb-xs flex items-center justify-between gap-sm">
         <p className={`m-0 ${captionClass}`}>{t("categoriesHint")}</p>
         <Button variant="secondary" size="sm" onClick={startCreate} disabled={busy}>
           <Plus size={14} aria-hidden />
@@ -139,15 +139,18 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
         {categories.map((cat) => (
           <li
             key={cat.id}
-            className="flex items-center justify-between gap-sm rounded-lg border border-surface-border/70 px-sm py-xs"
+            className="flex items-center justify-between gap-sm rounded-md border border-surface-border/60 px-sm py-0.5"
           >
             <button
               type="button"
-              className="flex min-w-0 flex-1 items-center gap-sm border-none bg-transparent p-0 text-left text-body text-text-primary hover:text-accent"
+            className="flex min-w-0 flex-1 items-center gap-xs border-none bg-transparent p-0 text-left text-caption font-medium text-text-primary hover:text-accent"
               onClick={() => startEdit(cat)}
               disabled={busy}
             >
-              <ItemEmojiMark emoji={resolveCategoryEmoji(cat)} />
+              <ItemEmojiMark
+                emoji={resolveCategoryEmoji(cat)}
+                backgroundColor={cat.color}
+              />
               <span className="truncate">
                 {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
               </span>

@@ -37,6 +37,15 @@ const sampleBase: TaskFormState = {
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "schedule",
+  capCalendarRead: true,
+  capCalendarWrites: false,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: false,
+  outputAnalysisEvents: false,
 };
 
 const fullConfig: Partial<TaskFormState> = {
@@ -81,6 +90,15 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "schedule",
+  capCalendarRead: true,
+  capCalendarWrites: false,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: false,
+  outputAnalysisEvents: false,
   },
   {
     name: "Daily Task",
@@ -106,6 +124,15 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "schedule",
+  capCalendarRead: true,
+  capCalendarWrites: false,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: false,
+  outputAnalysisEvents: false,
   },
   {
     name: "Weekly Task",
@@ -131,6 +158,15 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "schedule",
+  capCalendarRead: true,
+  capCalendarWrites: false,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: false,
+  outputAnalysisEvents: false,
   },
   {
     name: "Custom Seconds",
@@ -156,6 +192,15 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  triggerMode: "schedule",
+  capCalendarRead: true,
+  capCalendarWrites: false,
+  capWebSearch: false,
+  capForceWebSearch: false,
+  capReadAnalysisEvents: true,
+  capReadItems: true,
+  outputCalendar: false,
+  outputAnalysisEvents: false,
   },
 ];
 
@@ -227,10 +272,17 @@ describe("applyConfigToFormState", () => {
 });
 
 describe("formStateToTaskConfig calendar contract", () => {
-  it("keeps optional channelIds for web_intel and emits message-gate overrides when bound", () => {
+  it("keeps optional channelIds for agent and emits message-gate overrides when bound", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
-      analysisMode: "web_intel",
+      analysisMode: "agent",
+      triggerMode: "message_threshold",
+      outputCalendar: false,
+      outputAnalysisEvents: true,
+      capWebSearch: true,
+      capForceWebSearch: true,
+      capReadAnalysisEvents: true,
+      capReadItems: true,
       webSearchQuery: "OpenAI pricing",
       promptTemplate: "Extract pricing notes",
       channelIds: ["ch-1", "ch-2"],
@@ -249,10 +301,13 @@ describe("formStateToTaskConfig calendar contract", () => {
     expect(payload.analysisStrategyMode).toBe("balanced");
   });
 
-  it("omits message-gate overrides for web_intel when no channels are bound", () => {
+  it("omits message-gate overrides for agent when no channels are bound", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
-      analysisMode: "web_intel",
+      analysisMode: "agent",
+      triggerMode: "schedule",
+      outputCalendar: false,
+      outputAnalysisEvents: true,
       webSearchQuery: "",
       promptTemplate: "Extract pricing notes",
       channelIds: [],

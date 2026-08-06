@@ -18,6 +18,14 @@ logger = logging.getLogger(__name__)
 _TIME_RE = re.compile(r"^(\d{1,2}):(\d{2})$")
 
 
+def _task_item_id(task: Mapping[str, Any]) -> str | None:
+    """Optional parent inventory item id from ``recurring_schedules.item_id``."""
+    raw = task_value(task, "item_id")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
 def _extract_time_of_day(value: Any, *, local_tz: tzinfo | None = None) -> time | None:
     """Time-of-day from bare ``HH:MM`` (system-local wall) or an absolute ISO.
 
@@ -79,6 +87,7 @@ def expand_task_occurrences(
     task_name = str(task_value(task, "name") or "")
     location = task_value(task, "event_location")
     description = task_value(task, "event_description")
+    item_id = _task_item_id(task)
     end_tod = _extract_time_of_day(task_value(task, "event_end_time"), local_tz=local_tz) if not is_all_day else None
 
     occurrences: list[dict[str, Any]] = []
@@ -141,6 +150,7 @@ def expand_task_occurrences(
                         "location": location if location else None,
                         "description": description if description else None,
                         "rrule": rule,
+                        "itemId": item_id,
                     },
                 )
             )

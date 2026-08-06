@@ -10,6 +10,7 @@ import {
 } from "../../components/ui";
 import type { ItemFieldSchemaEntry } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
+import { EmojiPickerField } from "./EmojiPickerField";
 
 type Props = {
   name: string;
@@ -56,9 +57,9 @@ export function CategoryEditForm({
   const { t } = useTranslation("items");
 
   return (
-    <div className="rounded-lg border border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-raised)_40%,transparent)] p-md">
-      <FormStack gap="lg">
-        <SettingsRow label={t("categoryName")} htmlFor="cat-name">
+    <div className="rounded-md border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-raised)_32%,transparent)] px-sm py-xs">
+      <FormStack gap="md">
+        <SettingsRow dense label={t("categoryName")} htmlFor="cat-name">
           <TextField
             id="cat-name"
             value={name}
@@ -67,19 +68,15 @@ export function CategoryEditForm({
             autoFocus
           />
         </SettingsRow>
-        <SettingsRow label={t("emoji")} htmlFor="cat-emoji">
-          <div className="flex flex-col gap-xs">
-            <TextField
-              id="cat-emoji"
-              value={emoji}
-              onChange={(e) => onEmojiChange(e.target.value)}
-              disabled={busy}
-              maxLength={16}
-            />
-            <p className={`m-0 ${captionClass}`}>{t("emojiHint")}</p>
-          </div>
+        <SettingsRow dense label={t("emoji")} htmlFor="cat-emoji">
+          <EmojiPickerField
+            id="cat-emoji"
+            value={emoji}
+            onChange={onEmojiChange}
+            disabled={busy}
+          />
         </SettingsRow>
-        <SettingsRow label={t("categoryColor")} htmlFor="cat-color">
+        <SettingsRow dense label={t("categoryColor")} htmlFor="cat-color">
           <div className="flex flex-col gap-xs">
             <div className="flex flex-wrap gap-xs" role="listbox" aria-label={t("categoryColor")}>
               {CATEGORY_COLOR_PRESETS.map((preset) => {
@@ -92,7 +89,7 @@ export function CategoryEditForm({
                     aria-selected={selected}
                     disabled={busy}
                     className={[
-                      "h-7 w-7 rounded-full border-2",
+                      "h-5 w-5 rounded-full border-2",
                       selected ? "border-accent" : "border-transparent",
                     ].join(" ")}
                     style={{ backgroundColor: preset }}
@@ -123,7 +120,7 @@ export function CategoryEditForm({
             />
           </div>
         </SettingsRow>
-        <SettingsRow label={t("defaultRemind")} htmlFor="cat-remind">
+        <SettingsRow dense label={t("defaultRemind")} htmlFor="cat-remind">
           <TextField
             id="cat-remind"
             type="number"
@@ -136,7 +133,7 @@ export function CategoryEditForm({
           />
         </SettingsRow>
 
-        <div className="flex flex-col gap-sm">
+        <div className="flex flex-col gap-xs">
           <p className="m-0 text-caption font-medium text-text-primary">
             {t("fieldSchema")}
           </p>

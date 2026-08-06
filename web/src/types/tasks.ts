@@ -34,6 +34,18 @@ export type AnalysisTask = Omit<
   includeInTimeline?: boolean | null;
   createdAt: string;
   updatedAt: string;
+  /** Agent policy (stamp 19+); optional until OpenAPI regenerates. */
+  triggerMode?: "schedule" | "message_cursor" | "message_threshold";
+  capCalendarRead?: boolean;
+  capCalendarWrites?: boolean;
+  capWebSearch?: boolean;
+  capForceWebSearch?: boolean;
+  capReadAnalysisEvents?: boolean;
+  capReadItems?: boolean;
+  outputCalendar?: boolean;
+  outputAnalysisEvents?: boolean;
+  /** Parent inventory item for recurring calendars (``recurring_schedules.item_id``). */
+  itemId?: string | null;
 };
 
 /** Configuration payload for creating/updating an analysis task.
@@ -60,6 +72,6 @@ export interface TaskTemplatePreset {
   promptTemplate: string;
   defaultAnalysisTimeRange: TaskAnalysisTimeRange;
   badge: string;
-  /** Language-neutral search keywords for web_intel presets (optional). */
+  /** Language-neutral search keywords for agent web_scout presets (optional). */
   webSearchQuery?: string;
 }

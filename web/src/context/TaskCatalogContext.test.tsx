@@ -177,7 +177,7 @@ describe("TaskCatalogContext", () => {
         name: "Launch",
         description: null,
         promptTemplate: "prompt",
-        analysisMode: "project",
+        analysisMode: "agent",
         analysisTimeRange: "7d",
         version: 1,
         isActive: true,

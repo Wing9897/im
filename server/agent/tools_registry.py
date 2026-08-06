@@ -53,16 +53,38 @@ CALENDAR_WRITE_TOOL_NAMES = frozenset(
     }
 )
 
+CALENDAR_READ_TOOL_NAMES = frozenset(
+    {
+        "calendar.list_calendars",
+        "calendar.upcoming",
+        "calendar.recent",
+        "calendar.window",
+        "calendar.get",
+    }
+)
+
+INTELLIGENCE_READ_TOOL_NAMES = frozenset(INTELLIGENCE_HANDLERS)
+ITEMS_READ_TOOL_NAMES = frozenset({"items.list_expiring"})
+
 
 def build_tool_schemas(
     *,
     web_search_enabled: bool,
     task_advisor_enabled: bool = False,
     calendar_writes_enabled: bool = True,
+    calendar_read_enabled: bool = True,
+    analysis_events_read_enabled: bool = True,
+    items_read_enabled: bool = True,
 ) -> list[dict[str, Any]]:
     schemas = list(BASE_TOOL_SCHEMAS)
     if not calendar_writes_enabled:
         schemas = [s for s in schemas if str(s.get("name") or "") not in CALENDAR_WRITE_TOOL_NAMES]
+    if not calendar_read_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in CALENDAR_READ_TOOL_NAMES]
+    if not analysis_events_read_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in INTELLIGENCE_READ_TOOL_NAMES]
+    if not items_read_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in ITEMS_READ_TOOL_NAMES]
     if web_search_enabled:
         schemas.extend(WEB_SCHEMAS)
     if task_advisor_enabled:
@@ -156,6 +178,12 @@ async def execute_tool(
     ctx = context or {}
     if name in CALENDAR_WRITE_TOOL_NAMES and ctx.get("calendar_writes_enabled") is False:
         return {"error": "calendar_writes_disabled"}
+    if name in CALENDAR_READ_TOOL_NAMES and ctx.get("calendar_read_enabled") is False:
+        return {"error": "calendar_read_disabled"}
+    if name in INTELLIGENCE_READ_TOOL_NAMES and ctx.get("analysis_events_read_enabled") is False:
+        return {"error": "analysis_events_read_disabled"}
+    if name in ITEMS_READ_TOOL_NAMES and ctx.get("items_read_enabled") is False:
+        return {"error": "items_read_disabled"}
     project_id = ctx.get("project_scope_task_id")
     if project_id:
         scoped_error = await apply_project_scope(db, name, args, project_id=str(project_id))

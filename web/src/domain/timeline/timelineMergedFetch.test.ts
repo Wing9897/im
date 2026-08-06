@@ -110,7 +110,7 @@ describe("paddedTimelineFetchWindow", () => {
 describe("mergeTimelineFilterSources", () => {
   const catalog = [
     { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" },
-    { id: "web-1", analysisMode: "web_intel", worksetId: "ws-A" },
+    { id: "web-1", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-A" },
     { id: "cal-1", analysisMode: "recurring", worksetId: "ws-A" },
   ];
 
@@ -130,7 +130,7 @@ describe("mergeTimelineFilterSources", () => {
     expect(merged.map((e) => e.id).sort()).toEqual(["a-1", "cal-1:20250115T090000Z", "ue-1"]);
   });
 
-  it("keeps web_intel analysis events when that task is selected (no items)", () => {
+  it("keeps agent analysis events when that task is selected (no items)", () => {
     const plan = resolveTimelineFilterPlan({ taskIds: ["web-1"], worksetIds: [] }, catalog);
     expect(plan).toMatchObject({
       fetchAnalysis: true,

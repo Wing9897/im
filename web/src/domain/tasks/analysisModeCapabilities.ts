@@ -9,18 +9,13 @@
 export const ANALYSIS_MODE_ORDER = [
   "leaderboard",
   "intel_event",
-  "web_intel",
   "recurring",
-  "project",
+  "agent",
 ] as const;
 
 export type AnalysisMode = (typeof ANALYSIS_MODE_ORDER)[number];
 
-export type AnalysisPipeline =
-  | "message_batch"
-  | "project_tick"
-  | "web_intel_tick"
-  | "rrule_expand";
+export type AnalysisPipeline = "message_batch" | "agent_tick" | "rrule_expand";
 
 export type AnalysisModeCapabilities = {
   ai: boolean;
@@ -45,13 +40,6 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     timelineOwning: true,
     pipeline: "message_batch",
   },
-  web_intel: {
-    ai: true,
-    schedulable: true,
-    messageBatch: false,
-    timelineOwning: true,
-    pipeline: "web_intel_tick",
-  },
   recurring: {
     ai: false,
     schedulable: false,
@@ -59,12 +47,12 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     timelineOwning: true,
     pipeline: "rrule_expand",
   },
-  project: {
+  agent: {
     ai: true,
     schedulable: true,
     messageBatch: false,
     timelineOwning: true,
-    pipeline: "project_tick",
+    pipeline: "agent_tick",
   },
 };
 
@@ -89,31 +77,18 @@ export function analysisModeHidesPromptAndChannel(mode: AnalysisMode): boolean {
   return !ANALYSIS_MODE_CAPABILITIES[mode].schedulable;
 }
 
-/** Modes that bind local collector channels as analysis input. */
+/** Modes that always bind local collector channels as analysis input. */
 export function analysisModeRequiresChannels(mode: AnalysisMode): boolean {
-  const caps = ANALYSIS_MODE_CAPABILITIES[mode];
-  return caps.messageBatch || caps.pipeline === "project_tick";
+  return ANALYSIS_MODE_CAPABILITIES[mode].messageBatch;
 }
 
-/**
- * web_intel may optionally bind channels (message-gate + source verify).
- * Do not fold this into ``messageBatch`` — tick stays on ``web_intel_tick``.
- */
+/** Agent may optionally bind channels (depends on trigger_mode). */
 export function analysisModeShowsOptionalChannels(mode: AnalysisMode): boolean {
-  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "web_intel_tick";
+  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "agent_tick";
 }
 
-/** web_intel pipeline (Agent multi-round; no dedicated search-query field). */
-export function analysisModeIsWebIntel(mode: AnalysisMode): boolean {
-  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "web_intel_tick";
-}
-
-/** web_intel with bound channels → message-gate threshold / batch overrides. */
-export function webIntelMessageGateActive(
-  mode: AnalysisMode,
-  channelIds: readonly string[],
-): boolean {
-  return analysisModeShowsOptionalChannels(mode) && channelIds.length > 0;
+export function analysisModeIsAgent(mode: AnalysisMode): boolean {
+  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "agent_tick";
 }
 
 export function isTimelineAssignableAnalysisMode(mode: string | null | undefined): boolean {
@@ -130,14 +105,23 @@ export function analysisModeSupportsTaskPresets(mode: AnalysisMode): boolean {
 }
 
 /**
- * Modes that persist findings into ``analysis_events`` (Intelligence feed /
- * Timeline analysis layer / Board event widgets).
+ * Modes that may persist findings into ``analysis_events``.
+ * Agent tasks also need ``outputAnalysisEvents`` on the task row (checked by callers).
  */
-export const ANALYSIS_EVENTS_MODES = ["intel_event", "web_intel"] as const;
+export const ANALYSIS_EVENTS_MODES = ["intel_event", "agent"] as const;
 export type AnalysisEventsMode = (typeof ANALYSIS_EVENTS_MODES)[number];
 
 export function isAnalysisEventsMode(
   mode: string | null | undefined,
 ): mode is AnalysisEventsMode {
-  return mode === "intel_event" || mode === "web_intel";
+  return mode === "intel_event" || mode === "agent";
+}
+
+/** Whether an agent task row should refresh intelligence feeds. */
+export function taskWritesAnalysisEvents(task: {
+  analysisMode?: string | null;
+  outputAnalysisEvents?: boolean | null;
+}): boolean {
+  if (task.analysisMode === "intel_event") return true;
+  return task.analysisMode === "agent" && Boolean(task.outputAnalysisEvents);
 }

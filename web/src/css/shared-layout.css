@@ -9,6 +9,25 @@
   animation: im-fade-in var(--im-duration-normal) var(--im-easing-out);
 }
 
+/* Full-height Items browse / form pages — same canvas contract as timeline-page-fill. */
+.im-page-canvas:has(.item-form-page-fill),
+.im-page-canvas:has(.items-page-fill) {
+  overflow-y: hidden;
+}
+
+.app-main-content:has(.item-form-page-fill),
+.app-main-content:has(.items-page-fill) {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-main-content:has(.item-form-page-fill) > *,
+.app-main-content:has(.items-page-fill) > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
 .im-board-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -35,7 +54,11 @@
 }
 
 .im-card-hover {
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background var(--im-duration-fast) var(--im-easing-out),
+    border-color var(--im-duration-fast) var(--im-easing-out),
+    box-shadow var(--im-duration-fast) var(--im-easing-out),
+    transform var(--im-duration-fast) var(--im-easing-out);
 }
 
 .im-card-hover:hover {

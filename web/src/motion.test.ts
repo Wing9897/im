@@ -14,6 +14,10 @@ describe("tailwind motion reduced-motion guard", () => {
     expect(css).toMatch(/\.im-toast-in[\s\S]*animation:\s*none\s*!important/);
     expect(css).not.toContain("::view-transition-old(root)");
     expect(css).toContain("@keyframes im-fade-in");
+    expect(css).toContain("@keyframes im-fade-out");
+    expect(css).toContain("@keyframes im-fade-out-scale");
+    expect(css).toContain(".im-animate-out");
+    expect(css).toContain(".im-animate-out-scale");
     expect(css).toContain("@keyframes im-enter-rise-soft");
     expect(css).toContain("@keyframes im-enter-glow");
     expect(css).toContain('[data-theme="sakura"] .im-enter-rise');

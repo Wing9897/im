@@ -26,8 +26,17 @@ class TaskDraftPayload(BaseModel):
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
     channelIds: list[Union[str, dict[str, Any]]] | None = None
-    #: Event / web_intel time-planning visibility; omitted / null = leave form unchanged.
+    #: Event / agent time-planning visibility; omitted / null = leave form unchanged.
     includeInTimeline: bool | None = None
+    triggerMode: str | None = None
+    capCalendarRead: bool | None = None
+    capCalendarWrites: bool | None = None
+    capWebSearch: bool | None = None
+    capForceWebSearch: bool | None = None
+    capReadAnalysisEvents: bool | None = None
+    capReadItems: bool | None = None
+    outputCalendar: bool | None = None
+    outputAnalysisEvents: bool | None = None
 
 
 class AgentToolCallSummary(BaseModel):
@@ -70,11 +79,22 @@ class TaskResponse(BaseModel):
     includeInTimeline: bool = True
     parentTaskId: str | None = None
     worksetId: str | None = None
+    #: Parent inventory item for ``analysisMode=recurring`` calendars (``recurring_schedules.item_id``).
+    itemId: str | None = None
     projectWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
     analysisTriggerThreshold: int | None = None
     analysisBatchMessageLimit: int | None = None
     analysisStrategyMode: str | None = None
+    triggerMode: str = "schedule"
+    capCalendarRead: bool = True
+    capCalendarWrites: bool = False
+    capWebSearch: bool = False
+    capForceWebSearch: bool = False
+    capReadAnalysisEvents: bool = True
+    capReadItems: bool = True
+    outputCalendar: bool = False
+    outputAnalysisEvents: bool = False
     createdAt: str | None = None
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None
@@ -99,6 +119,7 @@ class TaskScheduleResponse(BaseModel):
     icsUid: str | None = None
     icsSource: str | None = None
     parentTaskId: str | None = None
+    itemId: str | None = None
 
 
 class TaskDeleteResponse(BaseModel):

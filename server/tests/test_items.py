@@ -176,7 +176,7 @@ async def test_workset_delete_reassigns_items(client):
 
 
 @pytest.mark.asyncio
-async def test_calendar_projects_active_item_dates_and_remind(client, app):
+async def test_calendar_projects_remind_only_not_purchased_or_expires(client, app):
     today = date.today()
     expires = (today + timedelta(days=10)).isoformat()
     purchased = (today + timedelta(days=2)).isoformat()
@@ -211,19 +211,10 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
     result = await query_window(app.state.db, start=start, end=end, limit=100)
     item_rows = [row for row in result["items"] if row.get("source") == "item"]
     ids = {row["id"] for row in item_rows}
-    assert f"item:{item_id}:purchased" in ids
-    assert f"item:{item_id}:expires" in ids
+    assert f"item:{item_id}:purchased" not in ids
+    assert f"item:{item_id}:expires" not in ids
     assert f"item:{item_id}:remind" in ids
     assert not any(row.get("itemId") == archived.json()["id"] for row in item_rows)
-
-    purchased_row = next(row for row in item_rows if row["id"] == f"item:{item_id}:purchased")
-    # Floating all-day wall date — not UTC-converted …Z (East-8 day shift).
-    assert purchased_row["startTime"] == f"{purchased}T00:00:00"
-    assert purchased_row["endTime"] == f"{purchased}T23:59:59"
-    assert purchased_row["timezone"] == "floating"
-    assert purchased_row["isAllDay"] is True
-    assert purchased_row["title"] == "Milk"
-    assert purchased_row["itemDateKind"] == "purchased"
 
     remind_row = next(row for row in item_rows if row["id"] == f"item:{item_id}:remind")
     assert remind_row["startTime"] == f"{remind_day}T00:00:00"
@@ -257,13 +248,10 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
     assert api.status_code == 200
     api_items = [row for row in api.json() if row.get("source") == "item"]
     assert {row["id"] for row in api_items} >= {
-        f"item:{item_id}:purchased",
-        f"item:{item_id}:expires",
         f"item:{item_id}:remind",
     }
-    api_purchased = next(row for row in api_items if row["id"] == f"item:{item_id}:purchased")
-    assert api_purchased["startTime"] == f"{purchased}T00:00:00"
-    assert api_purchased["dismissed"] is False
+    assert f"item:{item_id}:purchased" not in {row["id"] for row in api_items}
+    assert f"item:{item_id}:expires" not in {row["id"] for row in api_items}
     api_remind = next(row for row in api_items if row["id"] == f"item:{item_id}:remind")
     assert api_remind["startTime"] == f"{remind_day_5}T00:00:00"
     assert api_remind["itemDateKind"] == "remind"
@@ -272,13 +260,20 @@ async def test_calendar_projects_active_item_dates_and_remind(client, app):
 @pytest.mark.asyncio
 async def test_item_occurrence_dismiss_source_item(client, app):
     day = (date.today() + timedelta(days=5)).isoformat()
+    remind_before = 2
+    remind_day = (date.today() + timedelta(days=5 - remind_before)).isoformat()
     created = await client.post(
         "/api/v1/items",
-        json={"title": "Badge", "expiresAt": day, "status": "active"},
+        json={
+            "title": "Badge",
+            "expiresAt": day,
+            "remindBeforeDays": remind_before,
+            "status": "active",
+        },
     )
     assert created.status_code == 201
     item_id = created.json()["id"]
-    event_id = f"item:{item_id}:expires"
+    event_id = f"item:{item_id}:remind"
 
     dismissed = await client.put(
         "/api/v1/calendar/dismissals",

@@ -22,10 +22,15 @@ export type CreateRecurringTaskConfig = components["schemas"]["CreateRecurringTa
 export function listTasks(opts?: {
   topLevelOnly?: boolean;
   analysisMode?: string;
+  worksetId?: string;
+  /** Filter by ``recurring_schedules.item_id`` (empty string = unbound only). */
+  itemId?: string;
 }): Promise<AnalysisTask[]> {
   const query: Record<string, string> = {};
   if (opts?.topLevelOnly) query.top_level_only = "true";
   if (opts?.analysisMode) query.analysis_mode = opts.analysisMode;
+  if (opts?.worksetId !== undefined) query.workset_id = opts.worksetId;
+  if (opts?.itemId !== undefined) query.item_id = opts.itemId;
   return Object.keys(query).length > 0
     ? apiClient.get<AnalysisTask[]>("/api/v1/tasks", query)
     : apiClient.get<AnalysisTask[]>("/api/v1/tasks");

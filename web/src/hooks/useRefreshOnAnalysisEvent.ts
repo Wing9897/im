@@ -12,7 +12,7 @@ export interface UseRefreshOnAnalysisEventOptions {
   taskId?: string | null;
   /** When set, wins over single `taskId`. `null`/omit = any task; `[]` = none. */
   taskIds?: string[] | null;
-  /** Single mode or any-of list (e.g. Intelligence: event + web_intel). */
+  /** Single mode or any-of list (e.g. Intelligence: intel_event + agent). */
   analysisMode?: AnalysisMode | readonly AnalysisMode[];
 }
 

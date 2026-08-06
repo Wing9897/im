@@ -69,7 +69,7 @@
     "debug": {
       "sectionTitle": "Debug & diagnostics",
       "traceVerboseLabel": "Server analysis Trace",
-      "traceVerboseHelp": "When on, each message-batch analysis writes a trace to Settings → Logs (hidden by default — enable “Show analysis traces”). No full LLM bodies; unused by web intel / project / recurring. Saves immediately.",
+      "traceVerboseHelp": "When on, each message-batch analysis writes a trace to Settings → Logs (hidden by default — enable “Show analysis traces”). No full LLM bodies; unused by agent / recurring. Saves immediately.",
       "saved": "Debug settings saved"
     }
   },
@@ -178,17 +178,17 @@
   },
   "webSearch": {
     "sectionTitle": "Assistant web search",
-    "sectionHelp": "When off, only the assistant chat loses web search. Web Intel scheduled tasks still search; the provider below is shared with Web Intel.",
+    "sectionHelp": "When off, only the assistant chat loses web search. Agent tasks with web search still search; the provider below is shared with Agent.",
     "enabledLabel": "Allow assistant web search",
     "enabledAria": "Allow assistant web search",
     "providerLabel": "Search provider",
-    "providerHelpNative": "Auto uses native search; DuckDuckGo/Brave force the built-in tool. Shared by the assistant and Web Intel tasks.",
-    "providerHelpTool": "This LLM has no native search — pick DuckDuckGo or Brave. Shared by the assistant and Web Intel tasks.",
+    "providerHelpNative": "Auto uses native search; DuckDuckGo/Brave force the built-in tool. Shared by the assistant and Agent tasks.",
+    "providerHelpTool": "This LLM has no native search — pick DuckDuckGo or Brave. Shared by the assistant and Agent tasks.",
     "providerAutoNative": "Auto (native search)",
     "providerAutoTool": "Tool path (DDG / Brave)",
     "providerDuckDuckGo": "DuckDuckGo",
     "providerBrave": "Brave Search",
-    "statusDisabled": "Assistant web search is off (Web Intel schedules are unaffected).",
+    "statusDisabled": "Assistant web search is off (Agent schedule web search is unaffected).",
     "statusOpenaiNative": "Using OpenAI native search.",
     "statusGeminiNative": "Using Gemini Google Search.",
     "statusToolDuckDuckGo": "Using DuckDuckGo tool.",
@@ -381,7 +381,7 @@
   },
   "staff": {
     "title": "AI staff",
-    "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, Web intel scout, and Project manager (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
+    "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, and Agent (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
     "capabilitiesLabel": "What they can do",
     "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
     "openAssistant": "Open assistant chat",
@@ -430,7 +430,7 @@
       "summary": "Chats beside new/edit task forms to help fill settings (not an Agent).",
       "capabilities": [
         "Suggest task name and description from what you want to monitor",
-        "Suggest task type (leaderboard task / intel task / web intel task / recurring task / project task) and prompt direction",
+        "Suggest task type (leaderboard / intel / agent / recurring) and prompt direction",
         "Help with time range, search query, and schedule-related fields",
         "Only configures tasks—does not analyze messages or call tools"
       ]
@@ -453,22 +453,13 @@
         "No chat UI; triggered by schedules or manual task runs"
       ]
     },
-    "web_intel": {
-      "summary": "Back-office intel gatherer: Agent multi-round web search into analysis events (same store as intel tasks); optional source-message verify.",
+    "agent": {
+      "summary": "Configurable back-office Agent: reconcile calendars or gather intel by trigger and output policy.",
       "capabilities": [
-        "Agent multi-round web.search on the task schedule (default hourly), then final event JSON",
-        "Optional channel bind = message-gate: wait for unanalyzed messages, inject them for verify / supplement",
-        "Task prompt steers what to gather; the Agent chooses search keywords itself",
-        "No chat UI; results appear on intelligence / timeline"
-      ]
-    },
-    "project": {
-      "summary": "Back-office closed-loop agent: hourly ticks reconcile a project's calendar from sources.",
-      "capabilities": [
-        "Read this project's one-off events and child recurring tasks",
-        "Create / update / soft-delete owned calendar items via tools",
-        "Ingest incremental messages from bound channels when present",
-        "No chat UI; driven by the project task schedule (prefer hourly)"
+        "Message-cursor drain, message-threshold gate, or pure schedule triggers",
+        "Calendar read/write and/or web search when the task grants them",
+        "Outputs may write project calendar (user_events.origin=project) or analysis events (analysis_events)",
+        "No chat UI; driven by the agent task schedule (prefer hourly)"
       ]
     },
     "liaison": {

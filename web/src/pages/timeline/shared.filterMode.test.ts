@@ -6,7 +6,7 @@ import { resolveTimelineFilterPlan } from "../../domain/timeline/timelineFilterP
 describe("resolveTimelineFilterPlan", () => {
   const tasks = [
     { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-a" },
-    { id: "web-1", analysisMode: "web_intel", worksetId: "ws-a" },
+    { id: "web-1", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-a" },
     { id: "lb-1", analysisMode: "leaderboard", worksetId: "ws-a" },
     { id: "cal-1", analysisMode: "recurring", worksetId: null },
   ];
@@ -59,7 +59,7 @@ describe("resolveTimelineFilterPlan", () => {
     ).not.toEqual(expect.arrayContaining(["lb-1"]));
   });
 
-  it("treats explicit web_intel selection as an analysis_events fetch", () => {
+  it("treats explicit agent (analysis-out) selection as an analysis_events fetch", () => {
     expect(
       resolveTimelineFilterPlan({ taskIds: ["web-1"], worksetIds: [] }, tasks),
     ).toMatchObject({

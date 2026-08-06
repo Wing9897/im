@@ -32,6 +32,7 @@ async def create_recurring_task(
     parent_task_id: str | None = None,
     description: str | None = None,
     workset_id: str | None | EllipsisType = ...,
+    item_id: str | None = None,
 ) -> dict[str, Any]:
     cleaned_name = (name or "").strip()
     if not cleaned_name:
@@ -52,7 +53,7 @@ async def create_recurring_task(
             task_id=None,
             effective_mode=CHILD_RECURRING_MODE,
             supplied_parent_task_id=parent,
-            parent_mode="project",
+            parent_mode="agent",
         )
         parent_row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (parent,))
 
@@ -83,7 +84,8 @@ async def create_recurring_task(
         await tx.execute(
             "INSERT INTO recurring_schedules "
             "(task_id, rrule, dtstart, dtend, is_all_day, location, description, timezone, "
-            "parent_task_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'floating', ?, ?, ?)",
+            "parent_task_id, item_id, created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 'floating', ?, ?, ?, ?)",
             (
                 task_id,
                 rrule_text,
@@ -93,6 +95,7 @@ async def create_recurring_task(
                 str(event_location).strip() if event_location else None,
                 str(event_description).strip() if event_description else None,
                 parent,
+                str(item_id).strip() if item_id else None,
                 now,
                 now,
             ),

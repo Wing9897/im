@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from server.db.database import Database
-from server.domain.analysis_modes import PARENT_PROJECT_MODE
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import fetch_task_channel_rows
 from server.util import new_id, utc_now_iso
 
@@ -219,7 +219,7 @@ async def _project_task_version(db: Database, task_id: str) -> int | None:
     )
     if task is None:
         return None
-    if str(task.get("analysis_mode") or "") != PARENT_PROJECT_MODE:
+    if str(task.get("analysis_mode") or "") != AGENT_MODE:
         return None
     return int(task.get("version") or 1)
 

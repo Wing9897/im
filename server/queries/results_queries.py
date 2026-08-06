@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from server.analyzer.incremental import count_unanalyzed_messages_by_task, time_range_condition
 from server.db.database import Database
-from server.domain.analysis_modes import PARENT_PROJECT_MODE
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.batch_stats import sum_queued_message_count
 from server.queries.version_sql import task_version_join
 from server.scheduler.task_schedule_overrides import resolve_trigger_threshold
@@ -214,8 +214,8 @@ async def fetch_task_analysis_stats(
         task_id = str(task["id"])
         batches = batches_by_task.get(task_id, [])
         queued_message_count = sum_queued_message_count(batches)
-        # Project progress is cursor-based; marker stats are always misleading.
-        if str(task.get("analysis_mode") or "") == PARENT_PROJECT_MODE:
+        # Agent ticks use cursor / threshold / schedule — marker stats are misleading.
+        if str(task.get("analysis_mode") or "") == AGENT_MODE:
             analyzed = 0
             unanalyzed = 0
         else:

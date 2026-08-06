@@ -33,6 +33,23 @@ def test_build_tool_schemas_omits_web_when_disabled() -> None:
     assert "calendar.upcoming" in disabled
 
 
+def test_build_tool_schemas_gates_read_tools() -> None:
+    names = {
+        s["name"]
+        for s in build_tool_schemas(
+            web_search_enabled=False,
+            calendar_read_enabled=False,
+            analysis_events_read_enabled=False,
+            items_read_enabled=False,
+        )
+    }
+    assert "calendar.upcoming" not in names
+    assert "intelligence.search_events" not in names
+    assert "items.list_expiring" not in names
+    assert "messages.search" in names
+    assert "items.create" in names
+
+
 async def test_duckduckgo_parses_instant_answer() -> None:
     payload = {
         "Heading": "Example",

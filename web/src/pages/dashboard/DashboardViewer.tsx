@@ -79,7 +79,7 @@ export function DashboardViewer() {
   const openTask = useCallback(
     (task: AnalysisTask) => {
       setFocusedId(task.id);
-      if (task.analysisMode === "project") {
+      if (task.analysisMode === "agent" && task.outputCalendar) {
         handleOpenProject(task.id);
         return;
       }

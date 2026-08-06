@@ -15,7 +15,20 @@ describe("FormStack", () => {
     const stack = container.firstElementChild as HTMLElement;
     expect(stack.className).toContain("flex");
     expect(stack.className).toContain("flex-col");
+    expect(stack.className).toContain("w-full");
+    expect(stack.className).toContain("min-w-0");
     expect(stack.className).toContain("gap-lg");
+  });
+
+  it("renders md gap when requested", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(FormStack, { gap: "md" }, "child"),
+      );
+    });
+
+    expect((container.firstElementChild as HTMLElement).className).toContain("gap-md");
   });
 
   it("renders 2xl gap when requested", () => {

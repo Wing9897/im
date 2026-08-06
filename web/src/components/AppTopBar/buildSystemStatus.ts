@@ -96,7 +96,7 @@ export function buildSystemStatus(input: {
   }
 
   // Analysis pause is what the pill click toggles — keep it primary even when
-  // the collector is stopped (web_intel / project ticks do not need the collector).
+  // the collector is stopped (agent ticks do not need the collector).
   if (analysisPaused) {
     return {
       color: "var(--warning)",

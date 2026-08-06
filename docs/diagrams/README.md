@@ -1,6 +1,6 @@
 # System structure diagrams
 
-High-level Mermaid views of Intelligence Monitor: **Input → Process → Output**, the five task modes (including `web_intel`), the schedule timer, and the project-manager feedback loop.
+High-level Mermaid views of Intelligence Monitor: **Input → Process → Output**, the four task modes (including unified `agent`), the schedule timer, and the project-reconcile feedback loop.
 
 Contract detail stays in [`ARCHITECTURE.md`](../ARCHITECTURE.md) and [`agent/project.md`](../agent/project.md).
 
@@ -29,27 +29,26 @@ flowchart TB
 
   subgraph TIMER["Schedule timer — big cycle"]
     AP[APScheduler<br/>interval / cron]
-    AP -->|"leaderboard / intel_event / web_intel / project<br/>(if active & not paused)"| DISPATCH
+    AP -->|"leaderboard / intel_event / agent<br/>(if active & not paused)"| DISPATCH
   end
 
   subgraph PROCESS["Process — analysis_tasks"]
     DISPATCH{Task mode?}
     DISPATCH -->|leaderboard| LB[execute_batch<br/>oneshot JSON]
     DISPATCH -->|intel_event| EV[execute_batch<br/>oneshot JSON]
-    DISPATCH -->|web_intel| WI[web_intel_tick<br/>Agent + web.search]
-    DISPATCH -->|project| PM[execute_project_tick<br/>closed-loop Agent]
+    DISPATCH -->|agent| AG[execute_agent_tick<br/>policy-driven Agent]
     DISPATCH -.->|recurring| RC[No LLM<br/>RRULE expand at read]
     MSG --> TC[task_channels bind]
-    TC --> LB & EV & PM
-    TC -.->|"optional message gate / inject"| WI
+    TC --> LB & EV
+    TC -.->|"cursor / threshold / optional"| AG
   end
 
   subgraph OUTPUT["Output — consume & act"]
     LB --> TOP[(leaderboard topics)]
     EV --> AE[(analysis_events)]
-    WI --> AE
-    PM --> UE
-    PM --> CHILD[child recurring rows]
+    AG -->|"output_analysis_events"| AE
+    AG -->|"output_calendar"| UE
+    AG -->|"output_calendar"| CHILD[child recurring rows]
     RC --> OCC[RRULE occurrences]
     TOP & AE --> UI[Intelligence / Timeline / Board]
     UE & OCC & CHILD --> UI
@@ -59,36 +58,34 @@ flowchart TB
   SIDE -.-> UI
 ```
 
-## 2. Five task modes (who schedules, who reads messages)
+## 2. Four task modes (who schedules, who reads messages)
 
 ```mermaid
 flowchart LR
   subgraph AI["AI — schedulable"]
     L[leaderboard<br/>batch LLM]
     E[intel_event<br/>batch LLM]
-    W[web_intel<br/>Agent + web.search]
-    P[project<br/>Agent tick]
+    A[agent<br/>AgentTaskSpec tick]
   end
 
   subgraph NOAI["No LLM — not AI-scheduled"]
     R[recurring<br/>RRULE only]
   end
 
-  MSG[(messages via task_channels)] --> L & E & P
-  MSG -.->|"optional gate / inject"| W
+  MSG[(messages via task_channels)] --> L & E
+  MSG -.->|"cursor required / threshold optional / schedule optional"| A
   R -.->|"query-time expand"| CAL[Timeline calendar / gantt]
   L --> OUT1[topics]
   E --> OUT2[analysis_events]
-  W --> OUT2
-  P --> OUT3[user_events + child recurring]
+  A -->|"web_scout-like"| OUT2
+  A -->|"project_reconcile-like"| OUT3[user_events + child recurring]
 ```
 
 | Mode | Scheduler | Reads `messages`? | Typical output |
 |------|-----------|-------------------|----------------|
 | `leaderboard` | Yes (`execute_batch`) | Yes | Leaderboard topics |
 | `intel_event` | Yes (`execute_batch`) | Yes | `analysis_events` |
-| `web_intel` | Yes (`web_intel_tick` / Agent) | Optional (bound channels → threshold + inject) | `analysis_events` |
-| `project` | Yes (`execute_project_tick`) | Yes (cursor + drain) | Owned `user_events` + child `recurring` |
+| `agent` | Yes (`execute_agent_tick`) | Depends on `trigger_mode` (cursor / threshold / schedule) | `user_events` and/or `analysis_events` per `AgentTaskSpec` |
 | `recurring` | No | No | RRULE occurrences at read |
 
 ## 3. Schedule timer (the big scanner loop)
@@ -103,19 +100,17 @@ flowchart TB
   ACTIVE -->|no| WAIT
   ACTIVE -->|yes| MODE{analysis_mode}
   MODE -->|leaderboard / intel_event| BATCH[execute_batch]
-  MODE -->|web_intel| WEB[web_intel_tick]
-  MODE -->|project| TICK[execute_project_tick]
+  MODE -->|agent| TICK[execute_agent_tick]
   BATCH --> DONE[Batch completed / retry]
-  WEB --> DONE
   TICK --> DONE
   DONE --> WAIT
 ```
 
-Global pause / emergency stop and per-task disable stop **new** work; project drain also re-checks before **each wave**.
+Global pause / emergency stop and per-task disable stop **new** work; agent cursor drain also re-checks before **each wave**.
 
-## 4. Project manager feedback loop (closed-loop)
+## 4. Project reconcile feedback loop (closed-loop)
 
-Only `analysis_mode=project`. Other AI modes stay open-loop (batch／web_intel → results, no tool writes back into the calendar).
+Only `analysis_mode=agent` with calendar output (`output_calendar` / project_reconcile preset). Other AI modes stay open-loop (batch／agent findings → results, no tool writes back into the calendar).
 
 ```mermaid
 flowchart TB
@@ -124,7 +119,7 @@ flowchart TB
   Q -->|0| SKIP[Skip LLM<br/>batch: skipped no new messages]
   SKIP --> NEXT([Wait next schedule])
   Q -->|yes| WAVE[Agent wave<br/>≤40 msgs]
-  WAVE --> SYS[System pinned:<br/>project prompt + task goals]
+  WAVE --> SYS[System pinned:<br/>agent prompt + task goals]
   SYS --> TOOLS[Tools: calendar.* / messages.search<br/>scoped to this project]
   TOOLS --> WRITE[Create / update / soft-delete<br/>user_events + child recurring]
   WRITE --> ADV[Advance cursor]

@@ -23,7 +23,7 @@ class UserEventResponse(BaseModel):
     remindBeforeDays: int | None = None
     #: Analysis-task provenance id, or empty string when unset (NULL in DB).
     taskId: str = ""
-    #: Optional parent trackable item (child calendar); null when stand-alone.
+    #: Optional parent inventory item; null when stand-alone (not an event sub-event).
     itemId: str | None = None
     #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
     worksetId: str

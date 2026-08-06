@@ -254,7 +254,7 @@ describe("WorksetDetailDialog", () => {
         .click();
     });
     expect(onClose).toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith("/items?itemId=i1");
+    expect(navigate).toHaveBeenCalledWith("/items/i1/edit");
 
     onClose.mockClear();
     navigate.mockClear();
@@ -297,7 +297,7 @@ describe("WorksetDetailDialog", () => {
         .click();
     });
     expect(onClose).toHaveBeenCalled();
-    expect(navigate).toHaveBeenCalledWith("/items?new=1&worksetId=ws-1");
+    expect(navigate).toHaveBeenCalledWith("/items/new?worksetId=ws-1");
 
     onClose.mockClear();
     navigate.mockClear();

@@ -10,9 +10,8 @@ from typing import Any
 
 from server.db.database import Database
 from server.domain.analysis_modes import get_analysis_mode_spec
+from server.scheduler.agent_tick import execute_agent_tick
 from server.scheduler.batch import execute_batch
-from server.scheduler.project_tick import execute_project_tick
-from server.scheduler.web_intel_tick import execute_web_intel_tick
 from server.sse import SseBroadcaster
 
 
@@ -33,15 +32,8 @@ async def run_scheduled_pipeline(
     )
     mode = str((row or {}).get("analysis_mode") or "")
     spec = get_analysis_mode_spec(mode)
-    if spec is not None and spec.pipeline == "project_tick":
-        await execute_project_tick(
-            db=db,
-            broadcaster=broadcaster,
-            task_id=task_id,
-            analysis_paused=analysis_paused,
-        )
-    elif spec is not None and spec.pipeline == "web_intel_tick":
-        await execute_web_intel_tick(
+    if spec is not None and spec.pipeline == "agent_tick":
+        await execute_agent_tick(
             db=db,
             broadcaster=broadcaster,
             task_id=task_id,

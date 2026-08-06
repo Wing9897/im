@@ -23,7 +23,7 @@ type ParseResult =
 // Validation constants
 // ============================================================
 
-/** Keep in lockstep with ANALYSIS_MODE_ORDER (includes web_intel). */
+/** Keep in lockstep with ANALYSIS_MODE_ORDER (includes agent). */
 const VALID_ANALYSIS_MODES: readonly string[] = ANALYSIS_MODE_ORDER;
 
 // ============================================================

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import Database
-from server.domain.analysis_modes import PARENT_PROJECT_MODE
+from server.domain.analysis_modes import AGENT_MODE
 from server.queries.project_tick_queries import (
     count_project_messages_since_cursor,
     fetch_project_tick_in_flight_row,
@@ -29,8 +29,8 @@ async def build_project_tick_status(
     row = await fetch_task_row(db, task_id)
     if row is None:
         raise LookupError("Task not found")
-    if str(row.get("analysis_mode") or "") != PARENT_PROJECT_MODE:
-        raise TaskWriteError("Task is not analysis_mode=project")
+    if str(row.get("analysis_mode") or "") != AGENT_MODE:
+        raise TaskWriteError("Task is not analysis_mode=agent")
     cursor = await load_project_message_cursor(db, task_id)
     pending = await count_project_messages_since_cursor(db, task_id)
     ticks = await fetch_project_tick_log_rows(db, task_id=task_id, limit=limit)

@@ -40,7 +40,7 @@ export interface TaskFormState
   extends Omit<BaseTaskFormFields, "taskName" | "taskDescription"> {
   name: string;
   description: string;
-  /** Search query / keywords for ``web_intel`` (empty for other modes). */
+  /** Search query / keywords for agent web_scout presets (empty for other modes). */
   webSearchQuery: string;
   scheduleType: ScheduleType;
   scheduleValue: string | null;
@@ -62,4 +62,14 @@ export interface TaskFormState
   analysisStrategyMode: "conservative" | "balanced" | "aggressive" | null;
   /** Optional workset ownership; null = unassigned. */
   worksetId: string | null;
+  /** Agent-mode policy fields (ignored unless analysisMode=agent). */
+  triggerMode: "schedule" | "message_cursor" | "message_threshold";
+  capCalendarRead: boolean;
+  capCalendarWrites: boolean;
+  capWebSearch: boolean;
+  capForceWebSearch: boolean;
+  capReadAnalysisEvents: boolean;
+  capReadItems: boolean;
+  outputCalendar: boolean;
+  outputAnalysisEvents: boolean;
 }

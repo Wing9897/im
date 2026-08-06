@@ -32,12 +32,12 @@ def test_legacy_preset_round_trip(preset, value, rrule):
 def test_purpose_gates():
     assert may_register_trigger("intel_event")
     assert may_register_trigger("leaderboard")
-    assert may_register_trigger("project")
+    assert may_register_trigger("agent")
     assert not may_register_trigger("recurring")
     assert may_calendar_expand("recurring")
     assert not may_calendar_expand("intel_event")
     assert not may_calendar_expand("leaderboard")
-    assert not may_calendar_expand("project")
+    assert not may_calendar_expand("agent")
 
 
 def test_resolve_recurring_shell_is_null():

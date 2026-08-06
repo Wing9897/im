@@ -6,10 +6,12 @@ import type { TrackableItem } from "../../api/items";
 const navigate = vi.fn();
 const setSearchParams = vi.fn();
 let params = new URLSearchParams();
+let routeCategoryId: string | undefined;
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => navigate,
   useSearchParams: () => [params, setSearchParams],
+  useParams: () => ({ categoryId: routeCategoryId }),
 }));
 
 const { useItemsDeepLinks } = await import("./useItemsDeepLinks");
@@ -29,21 +31,11 @@ const item: TrackableItem = {
   updatedAt: null,
 };
 
-function Harness({
-  listLayer,
-  setEditing,
-  setCreateWorksetId,
-}: {
-  listLayer: boolean;
-  setEditing: React.Dispatch<React.SetStateAction<TrackableItem | null | "new">>;
-  setCreateWorksetId: React.Dispatch<React.SetStateAction<string | null>>;
-}) {
+function Harness({ listLayer }: { listLayer: boolean }) {
   useItemsDeepLinks({
     loading: false,
     items: [item],
     listLayer,
-    setEditing,
-    setCreateWorksetId,
   });
   return null;
 }
@@ -51,12 +43,11 @@ function Harness({
 describe("useItemsDeepLinks", () => {
   let container: HTMLDivElement;
   let root: Root;
-  const setEditing = vi.fn();
-  const setCreateWorksetId = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     params = new URLSearchParams();
+    routeCategoryId = undefined;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -67,39 +58,51 @@ describe("useItemsDeepLinks", () => {
     container.remove();
   });
 
-  it("opens a workset-prefilled create dialog and consumes its query", () => {
+  it("redirects workset-prefilled create query to /items/new", () => {
     params = new URLSearchParams("new=1&worksetId=ws-1");
     act(() => {
-      root.render(
-        <Harness
-          listLayer={false}
-          setEditing={setEditing}
-          setCreateWorksetId={setCreateWorksetId}
-        />,
-      );
+      root.render(<Harness listLayer={false} />);
     });
 
-    expect(setCreateWorksetId).toHaveBeenCalledWith("ws-1");
-    expect(setEditing).toHaveBeenCalledWith("new");
+    expect(navigate).toHaveBeenCalledWith("/items/new?worksetId=ws-1", { replace: true });
     expect(setSearchParams).toHaveBeenCalledWith(new URLSearchParams(), { replace: true });
   });
 
-  it("routes an item link into its category before opening the editor", () => {
+  it("routes an item link into its category and strips legacy itemDateKind", () => {
     params = new URLSearchParams("itemId=item-1&itemDateKind=expires");
     act(() => {
-      root.render(
-        <Harness
-          listLayer={false}
-          setEditing={setEditing}
-          setCreateWorksetId={setCreateWorksetId}
-        />,
-      );
+      root.render(<Harness listLayer={false} />);
     });
 
     expect(navigate).toHaveBeenCalledWith(
-      "/items/category/documents?itemId=item-1&itemDateKind=expires",
+      "/items/category/documents?itemId=item-1",
       { replace: true },
     );
-    expect(setEditing).not.toHaveBeenCalled();
+  });
+
+  it("opens edit page with origin category when itemId is present on list layer", () => {
+    routeCategoryId = "documents";
+    params = new URLSearchParams("itemId=item-1");
+    act(() => {
+      root.render(<Harness listLayer={true} />);
+    });
+
+    expect(navigate).toHaveBeenCalledWith(
+      "/items/item-1/edit?categoryId=documents",
+      { replace: true },
+    );
+  });
+
+  it("falls back to item category when list route id is missing", () => {
+    routeCategoryId = undefined;
+    params = new URLSearchParams("itemId=item-1");
+    act(() => {
+      root.render(<Harness listLayer={true} />);
+    });
+
+    expect(navigate).toHaveBeenCalledWith(
+      "/items/item-1/edit?categoryId=documents",
+      { replace: true },
+    );
   });
 });

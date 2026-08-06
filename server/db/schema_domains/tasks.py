@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     name                 TEXT NOT NULL,
     description          TEXT,
     prompt_template      TEXT NOT NULL DEFAULT '',
-    -- Web-intel search query / keywords (empty for other modes).
+    -- Legacy web-intel seed field (unused; Agent chooses keywords from prompt).
     web_search_query     TEXT NOT NULL DEFAULT '',
     analysis_mode        TEXT NOT NULL DEFAULT 'leaderboard'
                          {ANALYSIS_MODE_CHECK_SQL},
@@ -46,6 +46,17 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     analysis_trigger_threshold    INTEGER DEFAULT NULL,
     analysis_batch_message_limit  INTEGER DEFAULT NULL,
     analysis_strategy_mode        TEXT DEFAULT NULL,
+    -- Agent-mode policy (ignored for non-agent modes; wipe-only stamp 19+).
+    trigger_mode              TEXT NOT NULL DEFAULT 'schedule'
+                              CHECK (trigger_mode IN ('schedule','message_cursor','message_threshold')),
+    cap_calendar_read         INTEGER NOT NULL DEFAULT 1,
+    cap_calendar_writes       INTEGER NOT NULL DEFAULT 0,
+    cap_web_search            INTEGER NOT NULL DEFAULT 0,
+    cap_force_web_search      INTEGER NOT NULL DEFAULT 0,
+    cap_read_analysis_events  INTEGER NOT NULL DEFAULT 1,
+    cap_read_items            INTEGER NOT NULL DEFAULT 1,
+    output_calendar           INTEGER NOT NULL DEFAULT 0,
+    output_analysis_events    INTEGER NOT NULL DEFAULT 0,
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL
 );
@@ -87,7 +98,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_recurring_schedules_ics_source_uid
     ON recurring_schedules(ics_source, ics_uid)
     WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 
--- Project-manager incremental message cursor (not system_config).
+-- Agent message_cursor incremental cursor (not system_config).
 -- last_message_at = ISO timestamp only; last_message_id = same-second tie-break (nullable).
 CREATE TABLE IF NOT EXISTS project_message_cursors (
     task_id          TEXT PRIMARY KEY

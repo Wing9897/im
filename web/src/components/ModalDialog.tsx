@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useEffect, useId, useState, type AnimationEvent, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -25,6 +25,12 @@ interface ModalDialogProps {
   bodyClassName?: string;
   /** Body padding preset. ``none`` for full-bleed filter/picker content. */
   bodyPadding?: "default" | "none";
+  /**
+   * After the first open, keep the React tree mounted while closed (HTML `hidden`).
+   * Use for expensive children (emoji keyboard) so reopen skips remount cost.
+   * Focus trap and body scroll lock stay inactive while parked.
+   */
+  keepMounted?: boolean;
 }
 
 const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
@@ -33,6 +39,13 @@ const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
   xl: "w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
   form: "w-[720px] max-w-[min(94vw,720px)] max-h-[min(86vh,780px)]",
 };
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 /** Shared accessible shell for compact filter and picker dialogs. */
 export function ModalDialog({
@@ -48,18 +61,67 @@ export function ModalDialog({
   size = "default",
   bodyClassName,
   bodyPadding = "default",
+  keepMounted = false,
 }: ModalDialogProps) {
   const { t } = useTranslation("common");
   const resolvedCloseAria = closeAriaLabel ?? t("dialog.close");
   const titleId = useId();
-  const focusTrapRef = useFocusTrap({ active: open, onEscape: onClose });
+  const [present, setPresent] = useState(open);
+  const [exiting, setExiting] = useState(false);
+  const [parked, setParked] = useState(false);
+  const focusTrapRef = useFocusTrap({
+    active: present && !exiting && !parked,
+    onEscape: onClose,
+  });
 
-  if (!open) return null;
+  const parkOrUnmount = () => {
+    setExiting(false);
+    if (keepMounted) {
+      setParked(true);
+      return;
+    }
+    setPresent(false);
+    setParked(false);
+  };
+
+  useEffect(() => {
+    if (open) {
+      setPresent(true);
+      setExiting(false);
+      setParked(false);
+      return;
+    }
+    if (!present || parked) return;
+    if (prefersReducedMotion()) {
+      parkOrUnmount();
+      return;
+    }
+    setExiting(true);
+    // Fallback when animationend is skipped (e.g. CSS reduced-motion overrides).
+    const timeoutId = window.setTimeout(() => {
+      parkOrUnmount();
+    }, 220);
+    return () => window.clearTimeout(timeoutId);
+    // parkOrUnmount closes over keepMounted; listed deps cover state transitions.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional narrow deps
+  }, [open, present, parked, keepMounted]);
+
+  const handleOverlayAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
+    if (!exiting) return;
+    if (event.target !== event.currentTarget) return;
+    if (!event.animationName.includes("im-fade-out")) return;
+    parkOrUnmount();
+  };
+
+  if (!present) return null;
 
   const shellCls = [
     MODAL_SHELL[size],
-    "im-dialog-shell im-material-glass im-animate-in-scale flex flex-col overflow-hidden",
-  ].join(" ");
+    "im-dialog-shell im-material-glass flex flex-col overflow-hidden",
+    parked ? "" : exiting ? "im-animate-out-scale" : "im-animate-in-scale",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   const headerCls = [
     "flex items-center justify-between gap-sm",
@@ -82,14 +144,21 @@ export function ModalDialog({
   };
 
   return (
-    <OverlayPortal testId={testId} onOverlayClick={onClose} lockBodyScroll>
+    <OverlayPortal
+      testId={testId}
+      onOverlayClick={exiting || parked ? undefined : onClose}
+      lockBodyScroll={!parked}
+      hidden={parked}
+      exiting={exiting}
+      onAnimationEnd={handleOverlayAnimationEnd}
+    >
       <div
         ref={focusTrapRef}
         className={shellCls}
         role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? titleId : undefined}
-        aria-label={title ? undefined : ariaLabel}
+        aria-modal={parked ? undefined : "true"}
+        aria-labelledby={title && !parked ? titleId : undefined}
+        aria-label={title || parked ? undefined : ariaLabel}
         onClick={(event) => event.stopPropagation()}
       >
         <div className={headerCls}>
@@ -105,6 +174,7 @@ export function ModalDialog({
             type="button"
             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-text-muted transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
             aria-label={resolvedCloseAria}
+            disabled={exiting || parked}
             onClick={onClose}
           >
             <X size={16} aria-hidden="true" />

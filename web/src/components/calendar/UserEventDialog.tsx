@@ -23,6 +23,8 @@ import type {
 export type { UserEventKind } from "./userEventFormModel";
 export type { UserEventFormValues, UserEventTaskOption };
 
+export type ParentItemMode = "hidden" | "readonly" | "editable";
+
 type UserEventDialogProps = {
   open: boolean;
   mode: "create" | "edit";
@@ -35,6 +37,12 @@ type UserEventDialogProps = {
   titleOverride?: string;
   /** Optional intro line under the title. */
   introOverride?: string;
+  /**
+   * Parent-item association UI.
+   * Default ``hidden`` — Items owns linked-calendar create; Timeline only shows
+   * read-only when ``itemId`` is already scoped (deep-link / edit).
+   */
+  parentItemMode?: ParentItemMode;
   onClose: () => void;
   onSubmit: (values: UserEventFormValues) => void;
 };
@@ -49,6 +57,7 @@ export function UserEventDialog({
   error = null,
   titleOverride,
   introOverride,
+  parentItemMode = "hidden",
   onClose,
   onSubmit,
 }: UserEventDialogProps) {
@@ -78,7 +87,7 @@ export function UserEventDialog({
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || parentItemMode === "hidden") return;
     let cancelled = false;
     void listItems({ status: "active" })
       .then((items) => {
@@ -90,7 +99,15 @@ export function UserEventDialog({
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, parentItemMode]);
+
+  const lockedItemLabel = (() => {
+    const id = values.itemId.trim();
+    if (!id) return "";
+    const match = itemOptions.find((item) => item.id === id);
+    if (!match) return id;
+    return match.emoji ? `${match.emoji} ${match.title}` : match.title;
+  })();
 
   const displayError = error ?? localError;
   const introText =
@@ -148,30 +165,42 @@ export function UserEventDialog({
           data-testid="user-event-workset-select"
         />
 
-        <div className="flex flex-col gap-xs">
-          <FieldLabel className="mb-0" htmlFor="user-event-item">
-            {t("userEvent.parentItem")}
-          </FieldLabel>
-          <SelectField
-            id="user-event-item"
-            aria-label={t("userEvent.parentItemAria")}
-            value={values.itemId}
-            onChange={(event) =>
-              setValues((prev) => ({ ...prev, itemId: event.target.value }))
-            }
-            className="w-full"
-            data-testid="user-event-item-select"
-          >
-            <option value="">{t("userEvent.parentItemNone")}</option>
-            {itemOptions.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.emoji ? `${item.emoji} ` : ""}
-                {item.title}
-              </option>
-            ))}
-          </SelectField>
-          <p className="m-0 text-caption text-text-muted">{t("userEvent.parentItemHint")}</p>
-        </div>
+        {parentItemMode === "editable" ? (
+          <div className="flex flex-col gap-xs" data-testid="user-event-parent-item">
+            <FieldLabel className="mb-0" htmlFor="user-event-item">
+              {t("userEvent.parentItem")}
+            </FieldLabel>
+            <SelectField
+              id="user-event-item"
+              aria-label={t("userEvent.parentItemAria")}
+              value={values.itemId}
+              onChange={(event) =>
+                setValues((prev) => ({ ...prev, itemId: event.target.value }))
+              }
+              className="w-full"
+              data-testid="user-event-item-select"
+            >
+              <option value="">{t("userEvent.parentItemNone")}</option>
+              {itemOptions.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.emoji ? `${item.emoji} ` : ""}
+                  {item.title}
+                </option>
+              ))}
+            </SelectField>
+            <p className="m-0 text-caption text-text-muted">{t("userEvent.parentItemHint")}</p>
+          </div>
+        ) : null}
+
+        {parentItemMode === "readonly" && values.itemId.trim() ? (
+          <div className="flex flex-col gap-xs" data-testid="user-event-parent-item-readonly">
+            <FieldLabel className="mb-0">{t("userEvent.parentItem")}</FieldLabel>
+            <p className="m-0 text-body text-text-primary">{lockedItemLabel}</p>
+            <p className="m-0 text-caption text-text-muted">
+              {t("userEvent.parentItemLockedHint")}
+            </p>
+          </div>
+        ) : null}
 
         <UserEventTimeSection
           values={values}

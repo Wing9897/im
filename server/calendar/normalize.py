@@ -39,8 +39,16 @@ _COMPACT_FIELDS = (
     "isAllDay",
     "timezone",
 )
-#: Compact ``user`` rows additionally carry ownership workset, dismissal, importance.
-_COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed", "important")
+#: Compact ``user`` rows additionally carry ownership workset, parent item, dismissal, importance.
+_COMPACT_USER_FIELDS = _COMPACT_FIELDS + (
+    "worksetId",
+    "itemId",
+    "origin",
+    "dismissed",
+    "important",
+)
+#: Compact RRULE rows may carry optional parent inventory item (linked calendar).
+_COMPACT_OCCURRENCE_FIELDS = _COMPACT_FIELDS + ("itemId",)
 #: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
 _COMPACT_ITEM_FIELDS = _COMPACT_FIELDS + (
     "worksetId",
@@ -110,6 +118,12 @@ def build_occurrence_item(
     dismissed: bool = False,
 ) -> dict[str, Any]:
     """RRULE occurrence as a calendar item (already camelCase from expansion)."""
+    raw_item_id = occ.get("itemId")
+    item_id = (
+        str(raw_item_id).strip()
+        if isinstance(raw_item_id, str) and str(raw_item_id).strip()
+        else None
+    )
     item = {
         "id": str(occ["id"]),
         "taskId": str(occ.get("taskId") or ""),
@@ -123,9 +137,10 @@ def build_occurrence_item(
         "taskName": occ.get("taskName"),
         "isAllDay": bool(occ.get("isAllDay")),
         "rrule": occ.get("rrule"),
+        "itemId": item_id,
         "dismissed": bool(dismissed),
     }
-    return _project(item, detail, _COMPACT_FIELDS)
+    return _project(item, detail, _COMPACT_OCCURRENCE_FIELDS)
 
 
 def build_user_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> dict[str, Any]:
@@ -139,7 +154,7 @@ def build_user_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> d
 
 
 def build_item_calendar_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> dict[str, Any]:
-    """Item purchased/expires projection as a calendar item."""
+    """Item remind projection as a calendar item (``source=item``)."""
     return _project(dict(item), detail, _COMPACT_ITEM_FIELDS)
 
 

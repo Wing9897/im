@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
+from server.domain.agent_task_spec import AgentTaskSpec
 from server.prompts.assistant import A2A_AGENT_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT
-from server.prompts.project import PROJECT_AGENT_SYSTEM_PROMPT
-from server.prompts.web_intel import WEB_INTEL_AGENT_SYSTEM_PROMPT
+from server.prompts.agent_task import AGENT_TASK_SYSTEM_PROMPT_BASE
 
-AgentChannelId = Literal["assistant", "a2a", "project", "web_intel"]
+AgentChannelId = Literal["assistant", "a2a", "agent"]
 
 
 @dataclass(frozen=True)
@@ -23,10 +23,18 @@ class AgentChannel:
     stateless: bool
     #: ``user_events.origin`` for ``calendar.create_event``.
     user_event_origin: str
-    #: Scheduled web_intel ticks always enable search (ignore assistant master switch).
+    #: When True, scheduled ticks always enable search (ignore assistant master switch).
     force_web_search: bool = False
     #: When False, calendar write tools are omitted from schemas and blocked at dispatch.
     calendar_writes_enabled: bool = True
+    #: When False, calendar read tools are omitted / blocked.
+    calendar_read_enabled: bool = True
+    #: When False, ``web.search`` tool is omitted unless force_web_search is set.
+    web_search_enabled: bool = True
+    #: When False, ``intelligence.search_events`` is omitted / blocked.
+    analysis_events_read_enabled: bool = True
+    #: When False, ``items.list_expiring`` is omitted / blocked.
+    items_read_enabled: bool = True
 
 
 ASSISTANT_CHANNEL = AgentChannel(
@@ -43,31 +51,40 @@ A2A_CHANNEL = AgentChannel(
     user_event_origin="a2a",
 )
 
-PROJECT_CHANNEL = AgentChannel(
-    id="project",
-    system_prompt=PROJECT_AGENT_SYSTEM_PROMPT,
-    # Sticky clock + caller-held multi-wave history within one schedule fire.
-    # Tick does not persist a UI session across fires.
-    stateless=False,
+AGENT_CHANNEL = AgentChannel(
+    id="agent",
+    system_prompt=AGENT_TASK_SYSTEM_PROMPT_BASE,
+    # Default; agent_tick overrides via ``channel_from_agent_spec``.
+    stateless=True,
     user_event_origin="project",
+    force_web_search=False,
+    calendar_writes_enabled=False,
+    calendar_read_enabled=True,
+    web_search_enabled=False,
+    analysis_events_read_enabled=True,
+    items_read_enabled=True,
 )
 
-WEB_INTEL_CHANNEL = AgentChannel(
-    id="web_intel",
-    system_prompt=WEB_INTEL_AGENT_SYSTEM_PROMPT,
-    # One schedule fire; no sticky UI session across fires.
-    stateless=True,
-    user_event_origin="web_intel",
-    force_web_search=True,
-    calendar_writes_enabled=False,
-)
+
+def channel_from_agent_spec(spec: AgentTaskSpec, *, stateless: bool) -> AgentChannel:
+    """Build a runtime channel policy from a normalized task AgentTaskSpec."""
+    return replace(
+        AGENT_CHANNEL,
+        system_prompt=AGENT_TASK_SYSTEM_PROMPT_BASE,
+        stateless=stateless,
+        user_event_origin=spec.user_event_origin(),
+        force_web_search=spec.cap_force_web_search,
+        calendar_writes_enabled=spec.cap_calendar_writes,
+        calendar_read_enabled=spec.cap_calendar_read,
+        web_search_enabled=spec.cap_web_search or spec.cap_force_web_search,
+        analysis_events_read_enabled=spec.cap_read_analysis_events,
+        items_read_enabled=spec.cap_read_items,
+    )
 
 
 def get_agent_channel(channel_id: AgentChannelId | str | None) -> AgentChannel:
     if channel_id == "a2a":
         return A2A_CHANNEL
-    if channel_id == "project":
-        return PROJECT_CHANNEL
-    if channel_id == "web_intel":
-        return WEB_INTEL_CHANNEL
+    if channel_id == "agent":
+        return AGENT_CHANNEL
     return ASSISTANT_CHANNEL

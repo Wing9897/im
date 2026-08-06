@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import { formGridClass } from "./pageTypography";
 
-type FormStackGap = "lg" | "xl" | "2xl";
+type FormStackGap = "md" | "lg" | "xl" | "2xl";
 
 interface FormStackProps {
   children: ReactNode;
-  /** xl = 20px field gap (default); lg = 16px; 2xl = 24px for settings section stacks. */
+  /** md = 12px (desk-dense forms); lg = 16px (default); xl = 20px; 2xl = 24px. */
   gap?: FormStackGap;
   className?: string;
 }
@@ -13,8 +13,16 @@ interface FormStackProps {
 /** Vertical form field stack — prefer over ad-hoc `gap-[14px]`. */
 export function FormStack({ children, gap = "lg", className }: FormStackProps) {
   const gapClass =
-    gap === "2xl" ? "gap-2xl" : gap === "xl" ? "gap-xl" : "gap-lg";
-  const cls = ["flex flex-col", gapClass, className ?? ""].filter(Boolean).join(" ");
+    gap === "2xl"
+      ? "gap-2xl"
+      : gap === "xl"
+        ? "gap-xl"
+        : gap === "md"
+          ? "gap-md"
+          : "gap-lg";
+  const cls = ["flex w-full min-w-0 flex-col", gapClass, className ?? ""]
+    .filter(Boolean)
+    .join(" ");
   return <div className={cls}>{children}</div>;
 }
 

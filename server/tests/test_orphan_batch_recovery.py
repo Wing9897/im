@@ -190,7 +190,7 @@ async def test_project_processing_orphan_completes_without_auto_pause(db):
             name="PM orphan",
             description=None,
             prompt_template="goals",
-            analysis_mode="project",
+            analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -200,6 +200,11 @@ async def test_project_processing_orphan_completes_without_auto_pause(db):
             event_location=None,
             event_description=None,
             now=now,
+            trigger_mode="message_cursor",
+            cap_calendar_read=1,
+            cap_calendar_writes=1,
+            output_calendar=1,
+            output_analysis_events=0,
         )
     batch_id = new_id()
     await db.execute(
@@ -251,7 +256,7 @@ async def test_stale_project_pending_does_not_enter_retry_sweep(db):
             name="PM pending",
             description=None,
             prompt_template="goals",
-            analysis_mode="project",
+            analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             rrule=None,
@@ -261,6 +266,11 @@ async def test_stale_project_pending_does_not_enter_retry_sweep(db):
             event_location=None,
             event_description=None,
             now=now,
+            trigger_mode="message_cursor",
+            cap_calendar_read=1,
+            cap_calendar_writes=1,
+            output_calendar=1,
+            output_analysis_events=0,
         )
     batch_id = new_id()
     await db.execute(

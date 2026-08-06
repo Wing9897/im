@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.domain.agent_task_spec import TriggerMode
 from server.domain.analysis_modes import AnalysisMode
 from server.scheduler.task_schedule_overrides import (
     ANALYSIS_BATCH_LIMIT_MAX,
@@ -48,6 +49,16 @@ class TaskConfigBody(BaseModel):
     )
     analysisStrategyMode: str | None = None
     worksetId: str | None = None
+    #: Agent-mode policy (ignored unless analysisMode=agent).
+    triggerMode: TriggerMode | None = None
+    capCalendarRead: bool | None = None
+    capCalendarWrites: bool | None = None
+    capWebSearch: bool | None = None
+    capForceWebSearch: bool | None = None
+    capReadAnalysisEvents: bool | None = None
+    capReadItems: bool | None = None
+    outputCalendar: bool | None = None
+    outputAnalysisEvents: bool | None = None
 
 
 class CreateRecurringTaskBody(BaseModel):
@@ -65,6 +76,13 @@ class CreateRecurringTaskBody(BaseModel):
     parentTaskId: str | None = Field(
         default=None,
         description="Optional project parent for nested recurring children",
+    )
+    itemId: str | None = Field(
+        default=None,
+        description=(
+            "Optional parent trackable item: this recurring calendar belongs to "
+            "the inventory item (not a sub-event of another event)"
+        ),
     )
 
 

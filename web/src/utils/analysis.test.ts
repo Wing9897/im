@@ -23,10 +23,9 @@ describe("formatAnalysisMode", () => {
     expect(formatAnalysisMode("leaderboard")).toBe("排行榜任務");
   });
 
-  it('returns task-type name for "project", "recurring", and "web_intel"', () => {
-    expect(formatAnalysisMode("project")).toBe("專案任務");
+  it('returns task-type name for "agent" and "recurring"', () => {
+    expect(formatAnalysisMode("agent")).toBe("Agent 任務");
     expect(formatAnalysisMode("recurring")).toBe("週期任務");
-    expect(formatAnalysisMode("web_intel")).toBe("網路情報任務");
   });
 
   it('returns "未知" for unrecognized values', () => {
@@ -34,6 +33,8 @@ describe("formatAnalysisMode", () => {
     expect(formatAnalysisMode("")).toBe("未知");
     // Legacy mode label — cumulative was rewritten to intel_event in schema v1→v2.
     expect(formatAnalysisMode("cumulative")).toBe("未知");
+    expect(formatAnalysisMode("project")).toBe("未知");
+    expect(formatAnalysisMode("web_intel")).toBe("未知");
   });
 
   it("switches to English under en locale", async () => {
@@ -41,8 +42,7 @@ describe("formatAnalysisMode", () => {
     await i18n.changeLanguage("en");
     expect(formatAnalysisMode("intel_event")).toBe("Intel task");
     expect(formatAnalysisMode("leaderboard")).toBe("Leaderboard task");
-    expect(formatAnalysisMode("project")).toBe("Project task");
-    expect(formatAnalysisMode("web_intel")).toBe("Web intel task");
+    expect(formatAnalysisMode("agent")).toBe("Agent task");
     expect(formatAnalysisMode("unknown")).toBe("Unknown");
   });
 });

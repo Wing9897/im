@@ -6,7 +6,7 @@
 
 import {
   getAnalysisModeCapabilities,
-  isAnalysisEventsMode,
+  taskWritesAnalysisEvents,
 } from "../tasks/analysisModeCapabilities";
 import {
   expandWorksetIdsToTaskIds,
@@ -14,6 +14,14 @@ import {
   type SourceFilterSelection,
 } from "../tasks/sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+
+type TimelineFilterTask = {
+  id: string;
+  analysisMode: string;
+  worksetId?: string | null;
+  outputAnalysisEvents?: boolean | null;
+  outputCalendar?: boolean | null;
+};
 
 /** Multi-select plan: which sources to fetch and how to client-filter. */
 export type TimelineFilterPlan = {
@@ -49,7 +57,7 @@ export type TimelineFilterPlan = {
  */
 export function resolveTimelineFilterPlan(
   selection: SourceFilterSelection,
-  tasks: ReadonlyArray<{ id: string; analysisMode: string; worksetId?: string | null }>,
+  tasks: ReadonlyArray<TimelineFilterTask>,
 ): TimelineFilterPlan {
   if (selection === null) {
     return {
@@ -95,14 +103,19 @@ export function resolveTimelineFilterPlan(
   let fetchUserForTagged = false;
 
   for (const id of selectedRealTaskIds) {
-    const mode = byId.get(id)?.analysisMode;
+    const task = byId.get(id);
+    if (!task) continue;
+    const mode = task.analysisMode;
     const caps = getAnalysisModeCapabilities(mode);
     if (!caps) continue;
-    if (caps.pipeline === "rrule_expand" || caps.pipeline === "project_tick") {
+    if (caps.pipeline === "rrule_expand") {
       recurringTaskIds.push(id);
       fetchUserForTagged = true;
-    } else if (isAnalysisEventsMode(mode)) {
+    } else if (taskWritesAnalysisEvents(task)) {
       analysisTaskIds.push(id);
+      fetchUserForTagged = true;
+    } else if (mode === "agent" && Boolean(task.outputCalendar)) {
+      // Calendar-output agent: refresh user_events / child provenance, not analysis_events.
       fetchUserForTagged = true;
     }
     // leaderboard (and unknown) — not a timeline analysis_events source

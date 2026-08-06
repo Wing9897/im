@@ -1,10 +1,9 @@
 """Project trackable items into calendar wire rows (source=item).
 
-DATE columns (``purchased_at`` / ``expires_at``) become floating all-day
-occurrences. Active items with ``expires_at`` and ``remind_before_days > 0``
-also emit a **remind** occurrence on ``expires_at - remind_before_days``
-(same floating all-day DATE semantics). List / agent expiring windows still
-use the remind value independently of calendar dots.
+Active items with ``expires_at`` and ``remind_before_days > 0`` emit a
+**remind** occurrence on ``expires_at - remind_before_days`` (floating
+all-day DATE semantics). ``purchased_at`` / ``expires_at`` are kept on the
+item row for list / agent windows but are not auto-projected to the timeline.
 
 All-day times use wall-date ``YYYY-MM-DDT00:00:00`` / ``T23:59:59`` (no ``Z``)
 so FE ``parseAllDayWallDate`` and user_event all-day DATE semantics stay on the
@@ -91,6 +90,7 @@ def build_item_occurrence(
         "itemId": item_id,
         "itemDateKind": kind,
         "dismissed": bool(dismissed),
+        "important": False,
         "origin": None,
     }
     if detail == "full":
@@ -109,21 +109,15 @@ def project_item_row(
     range_start: date,
     range_end: date,
 ) -> list[dict[str, Any]]:
-    """Emit purchased/expires/remind occurrences that fall in the DATE window."""
+    """Emit remind occurrences that fall in the DATE window.
+
+    ``purchased_at`` / ``expires_at`` stay on the item row for list filters;
+    they are no longer projected as special calendar kinds (use linked
+    user-events / recurring tasks for timeline dates instead).
+    """
     if str(row.get("status") or "") != "active":
         return []
     out: list[dict[str, Any]] = []
-    for kind, key in (("purchased", "purchased_at"), ("expires", "expires_at")):
-        raw = row.get(key)
-        if not isinstance(raw, str) or not raw.strip():
-            continue
-        try:
-            day = date.fromisoformat(raw.strip()[:10])
-        except ValueError:
-            continue
-        if day < range_start or day > range_end:
-            continue
-        out.append(build_item_occurrence(row, kind=kind, day=day))  # type: ignore[arg-type]
     remind_day = remind_day_for_item(row)
     if remind_day is not None and range_start <= remind_day <= range_end:
         out.append(build_item_occurrence(row, kind="remind", day=remind_day))
@@ -167,16 +161,11 @@ async def get_item_occurrence(db: Database, event_id: str) -> dict[str, Any] | N
     row = await fetch_item_row(db, item_id)
     if row is None or str(row.get("status") or "") != "active":
         return None
+    if kind in ("purchased", "expires"):
+        return None
     if kind == "remind":
         day = remind_day_for_item(row)
         if day is None:
             return None
         return build_item_occurrence(row, kind=kind, day=day, detail="full")
-    raw = row.get("purchased_at" if kind == "purchased" else "expires_at")
-    if not isinstance(raw, str) or not raw.strip():
-        return None
-    try:
-        day = date.fromisoformat(raw.strip()[:10])
-    except ValueError:
-        return None
-    return build_item_occurrence(row, kind=kind, day=day, detail="full")
+    return None

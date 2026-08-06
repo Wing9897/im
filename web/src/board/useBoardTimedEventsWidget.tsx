@@ -57,7 +57,7 @@ export function useBoardTimedEventsWidget(options: {
     [refresh],
   );
 
-  // Poll alone can lag ~45s after event / web_intel analysis; pages refresh on SSE.
+  // Poll alone can lag ~45s after intel_event / agent analysis; pages refresh on SSE.
   useRefreshOnAnalysisEvent(refresh, { analysisMode: ANALYSIS_EVENTS_MODES });
 
   const events = useMemo(

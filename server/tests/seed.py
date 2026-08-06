@@ -163,7 +163,15 @@ async def seed_database(db: Any) -> None:
             (message_id, source_id, platform, platform_id, pmid, sender_id, sender_name, content, timestamp, now),
         )
 
-    # ── analysis tasks (leaderboard / event / calendar / web_intel / project) ─
+    # ── analysis tasks (leaderboard / event / calendar / agent presets) ─
+    from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+
+    _web_scout = agent_spec_to_db_kwargs(agent_preset_spec("web_scout"))
+    _project_reconcile = agent_spec_to_db_kwargs(
+        agent_preset_spec("project_reconcile", has_channels=True)
+    )
+    # (id, name, mode, time_range, schedule_rrule, rrule, start, end, all_day,
+    #  location, description, web_search_query, agent_policy_or_None)
     tasks = [
         (
             TASK_LEADERBOARD,
@@ -178,8 +186,9 @@ async def seed_database(db: Any) -> None:
             None,
             None,
             "",
+            None,
         ),
-        (TASK_EVENT, "關鍵情報", "intel_event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, ""),
+        (TASK_EVENT, "關鍵情報", "intel_event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, "", None),
         (
             TASK_EVENT_TIMED,
             "行程提取",
@@ -193,6 +202,7 @@ async def seed_database(db: Any) -> None:
             None,
             None,
             "",
+            None,
         ),
         (
             TASK_CALENDAR,
@@ -207,11 +217,12 @@ async def seed_database(db: Any) -> None:
             "會議室A",
             "週會",
             "",
+            None,
         ),
         (
             TASK_WEB_INTEL,
             "定價監管情報",
-            "web_intel",
+            "agent",
             "all",
             "FREQ=HOURLY",
             None,
@@ -221,11 +232,12 @@ async def seed_database(db: Any) -> None:
             None,
             None,
             "OpenAI Gemini Anthropic API pricing changes",
+            _web_scout,
         ),
         (
             TASK_PROJECT,
             "專案殼",
-            "project",
+            "agent",
             "7d",
             "FREQ=HOURLY",
             None,
@@ -235,6 +247,7 @@ async def seed_database(db: Any) -> None:
             None,
             None,
             "",
+            _project_reconcile,
         ),
     ]
     for (
@@ -250,17 +263,32 @@ async def seed_database(db: Any) -> None:
         location,
         description,
         web_search_query,
+        agent_policy,
     ) in tasks:
         prompt = (
             "從搜尋結果抽出官方定價變更"
-            if mode == "web_intel"
-            else ("對帳專案日程" if mode == "project" else "分析以下訊息")
+            if task_id == TASK_WEB_INTEL
+            else ("對帳專案日程" if task_id == TASK_PROJECT else "分析以下訊息")
         )
+        policy = agent_policy or {
+            "trigger_mode": "schedule",
+            "cap_calendar_read": 1,
+            "cap_calendar_writes": 0,
+            "cap_web_search": 0,
+            "cap_force_web_search": 0,
+            "cap_read_analysis_events": 1,
+            "cap_read_items": 1,
+            "output_calendar": 0,
+            "output_analysis_events": 0,
+        }
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
             "web_search_query, analysis_mode, analysis_time_range, version, is_active, "
-            "schedule_rrule, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?)",
+            "schedule_rrule, trigger_mode, cap_calendar_read, cap_calendar_writes, "
+            "cap_web_search, cap_force_web_search, cap_read_analysis_events, cap_read_items, "
+            "output_calendar, output_analysis_events, "
+            "created_at, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task_id,
                 name,
@@ -270,6 +298,15 @@ async def seed_database(db: Any) -> None:
                 mode,
                 time_range,
                 schedule_rrule,
+                policy["trigger_mode"],
+                policy["cap_calendar_read"],
+                policy["cap_calendar_writes"],
+                policy["cap_web_search"],
+                policy["cap_force_web_search"],
+                policy.get("cap_read_analysis_events", 1),
+                policy.get("cap_read_items", 1),
+                policy["output_calendar"],
+                policy["output_analysis_events"],
                 now,
                 now,
             ),

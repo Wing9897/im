@@ -23,6 +23,8 @@ export type CreateRecurringTimelineEventParams = {
   location?: string;
   body?: string;
   rrule: string;
+  /** Optional parent inventory item (item owns this recurring calendar). */
+  itemId?: string | null;
 };
 
 export async function createRecurringTimelineEvent(
@@ -43,6 +45,7 @@ export async function createRecurringTimelineEvent(
   const eventEndTime = isAllDay ? null : params.eventEndTime?.trim() || null;
   const location = params.location?.trim() || null;
   const description = params.body?.trim() || null;
+  const itemId = params.itemId?.trim() || null;
 
   if (!isAllDay && !eventStartTime) {
     throw new Error("eventStartTime is required unless eventIsAllDay is true");
@@ -58,5 +61,6 @@ export async function createRecurringTimelineEvent(
     eventLocation: location,
     eventDescription: description,
     worksetId,
+    itemId,
   });
 }

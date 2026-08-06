@@ -5,10 +5,26 @@ import { daysUntil } from "../../domain/items/itemAttributes";
 
 export type ItemsFilterKey = "all" | "expiring" | "overdue" | "archived";
 
+/** Entry-list sort — applied within each workset group. */
+export type ItemsSortKey = "expiry" | "name" | "updated";
+
 export type ItemsWorksetGroup = {
   worksetId: string;
   rows: TrackableItem[];
 };
+
+/** Lowercased haystack for title / notes / emoji / attribute keys+values. */
+export function itemSearchHaystack(item: TrackableItem): string {
+  const attrs = item.attributes ?? {};
+  const attrParts: string[] = [];
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key) attrParts.push(key);
+    if (value) attrParts.push(String(value));
+  }
+  return [item.title, item.notes, item.emoji ?? "", ...attrParts]
+    .join(" ")
+    .toLowerCase();
+}
 
 /** Apply status / expiring / overdue / text search filters to a scoped item list. */
 export function filterItemsList(
@@ -31,15 +47,45 @@ export function filterItemsList(
       if (!isItemExpiringSoon(item)) return false;
     }
     if (!needle) return true;
-    const hay = `${item.title} ${item.notes} ${JSON.stringify(item.attributes)}`.toLowerCase();
-    return hay.includes(needle);
+    return itemSearchHaystack(item).includes(needle);
   });
+}
+
+function compareItems(a: TrackableItem, b: TrackableItem, sort: ItemsSortKey): number {
+  if (sort === "name") {
+    const byTitle = a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+    if (byTitle !== 0) return byTitle;
+    return a.id.localeCompare(b.id);
+  }
+  if (sort === "updated") {
+    const ua = a.updatedAt ?? a.createdAt ?? "";
+    const ub = b.updatedAt ?? b.createdAt ?? "";
+    if (ua !== ub) return ub.localeCompare(ua);
+    return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+  }
+  // expiry (default): category then expiresAt (nulls last)
+  const ca = a.categoryId ?? "";
+  const cb = b.categoryId ?? "";
+  if (ca !== cb) return ca.localeCompare(cb);
+  const ea = a.expiresAt ?? "\uffff";
+  const eb = b.expiresAt ?? "\uffff";
+  if (ea !== eb) return ea.localeCompare(eb);
+  return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
+}
+
+/** Flat sorted list (no workset sections) — default entry-list layout. */
+export function sortItemsList(
+  filtered: readonly TrackableItem[],
+  sort: ItemsSortKey = "expiry",
+): TrackableItem[] {
+  return filtered.slice().sort((a, b) => compareItems(a, b, sort));
 }
 
 /** Group filtered items by workset, preserving catalog order then leftovers. */
 export function groupItemsByWorkset(
   filtered: readonly TrackableItem[],
   worksetIds: readonly string[],
+  sort: ItemsSortKey = "expiry",
 ): ItemsWorksetGroup[] {
   const byWorkset = new Map<string, TrackableItem[]>();
   for (const item of filtered) {
@@ -53,12 +99,9 @@ export function groupItemsByWorkset(
     ...[...byWorkset.keys()].filter((id) => !worksetIds.includes(id)),
   ];
   return ids.map((worksetId) => {
-    const rows = (byWorkset.get(worksetId) ?? []).slice().sort((a, b) => {
-      const ca = a.categoryId ?? "";
-      const cb = b.categoryId ?? "";
-      if (ca !== cb) return ca.localeCompare(cb);
-      return (a.expiresAt ?? "").localeCompare(b.expiresAt ?? "");
-    });
+    const rows = (byWorkset.get(worksetId) ?? [])
+      .slice()
+      .sort((a, b) => compareItems(a, b, sort));
     return { worksetId, rows };
   });
 }

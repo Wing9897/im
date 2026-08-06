@@ -143,6 +143,78 @@ async def test_atomic_recurring_create_endpoint(client, app):
     assert await app.state.db.fetch_value("SELECT COUNT(*) FROM analysis_tasks") == before_tasks + 1
 
 
+async def test_atomic_recurring_create_persists_item_id(client, app):
+    """Recurring calendar may belong to an inventory item (not event→sub-event)."""
+    item = await client.post(
+        "/api/v1/items",
+        json={"title": "Passport", "worksetId": "__user__"},
+    )
+    assert item.status_code == 201, item.text
+    item_id = item.json()["id"]
+
+    created = await client.post(
+        "/api/v1/tasks/recurring",
+        json={
+            "name": "Renewal check",
+            "rrule": "FREQ=WEEKLY;BYDAY=MO",
+            "eventStartTime": "10:00",
+            "eventIsAllDay": False,
+            "worksetId": "__user__",
+            "itemId": item_id,
+        },
+    )
+    assert created.status_code == 201, created.text
+    task_id = created.json()["id"]
+
+    row = await app.state.db.fetch_one(
+        "SELECT item_id FROM recurring_schedules WHERE task_id = ?",
+        (task_id,),
+    )
+    assert row is not None
+    assert row["item_id"] == item_id
+
+    listed = await client.get(
+        "/api/v1/tasks",
+        params={"item_id": item_id, "analysis_mode": "recurring"},
+    )
+    assert listed.status_code == 200, listed.text
+    listed_body = listed.json()
+    assert len(listed_body) == 1
+    assert listed_body[0]["id"] == task_id
+    assert listed_body[0]["itemId"] == item_id
+    assert listed_body[0]["analysisMode"] == "recurring"
+
+    unbound = await client.get("/api/v1/tasks", params={"item_id": ""})
+    assert unbound.status_code == 200
+    assert all(row.get("itemId") in (None, "") for row in unbound.json())
+
+    # Series anchors at create-time wall clock; query a window after dtstart.
+    cal = await client.get(
+        "/api/v1/calendar/items",
+        params={
+            "range_start": "2026-08-01T00:00:00Z",
+            "range_end": "2026-09-30T23:59:59Z",
+            "task_id": task_id,
+            "include_items": "false",
+        },
+    )
+    assert cal.status_code == 200, cal.text
+    body = cal.json()
+    assert len(body) >= 1
+    assert all(occ.get("itemId") == item_id for occ in body)
+
+    bad = await client.post(
+        "/api/v1/tasks/recurring",
+        json={
+            "name": "orphan",
+            "rrule": "FREQ=DAILY",
+            "eventStartTime": "09:00",
+            "itemId": "missing-item",
+        },
+    )
+    assert bad.status_code == 422
+
+
 async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items(client, app):
     """Dialog-shaped create: atomic recurring + all-day schedule with UI UNTIL=...Z."""
     created = await client.post(

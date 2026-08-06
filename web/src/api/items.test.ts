@@ -9,6 +9,7 @@ import {
   createItemCategory,
   deleteItem,
   deleteItemCategory,
+  getItem,
   listItemCategories,
   listItems,
   updateItem,
@@ -78,6 +79,13 @@ describe("items API", () => {
       status: "active",
       search: "milk",
     });
+  });
+
+  it("fetches a single item by id (encoded)", async () => {
+    const row = { id: "i1", title: "Milk" };
+    vi.mocked(apiClient.get).mockResolvedValue(row);
+    await expect(getItem("i 1")).resolves.toEqual(row);
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/items/i%201");
   });
 
   it("creates / patches / deletes an item (id encoded)", async () => {

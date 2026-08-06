@@ -83,6 +83,7 @@ describe("user events API contract", () => {
       body: "",
       location: "",
       isAllDay: false,
+      remindBeforeDays: null,
     });
   });
 
@@ -102,6 +103,7 @@ describe("user events API contract", () => {
       body: "",
       location: "",
       isAllDay: false,
+      remindBeforeDays: null,
       taskId: "ct-1",
     });
   });
@@ -123,6 +125,7 @@ describe("user events API contract", () => {
       body: "",
       location: "",
       isAllDay: false,
+      remindBeforeDays: null,
       taskId: null,
       worksetId: "__user__",
     });
@@ -145,6 +148,7 @@ describe("user events API contract", () => {
       body: "",
       location: "",
       isAllDay: true,
+      remindBeforeDays: null,
     });
   });
 
@@ -195,5 +199,31 @@ describe("user events API contract", () => {
     await deleteUserEvent("event-1");
 
     expect(apiClient.delete).toHaveBeenCalledWith("/api/v1/calendar/user-events/event-1");
+  });
+
+  it("forwards itemId on create and list", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({});
+    vi.mocked(apiClient.get).mockResolvedValue([]);
+
+    await createUserEvent({
+      title: "Under item",
+      startTime: "2026-07-20T10:00:00Z",
+      itemId: " item-1 ",
+    });
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
+      title: "Under item",
+      startTime: "2026-07-20T10:00:00Z",
+      endTime: null,
+      body: "",
+      location: "",
+      isAllDay: false,
+      remindBeforeDays: null,
+      itemId: "item-1",
+    });
+
+    await listUserEvents({ itemId: "item-1" });
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
+      item_id: "item-1",
+    });
   });
 });
