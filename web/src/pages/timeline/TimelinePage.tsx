@@ -15,12 +15,15 @@
  *   `useTimelineFiltering.test.ts`.
  */
 
+import { RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import { AppPageShell } from "../../components/ui";
+import { AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { startOfDay } from "../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../hooks/useErrorToast";
+import { useMonthWeather } from "../../hooks/useMonthWeather";
 import { getOsTimeMs } from "../../utils/time";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
@@ -41,6 +44,7 @@ const timelineFullscreenShellClass =
 const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
 export function TimelinePage() {
+  const { t } = useTranslation("timeline");
   const [searchParams, setSearchParams] = useSearchParams();
   const { sources, data, navigation, filters, selection, gantt } = useTimelinePageContainer();
   const { worksets, tasks } = useTaskCatalog();
@@ -54,6 +58,24 @@ export function TimelinePage() {
   const createLinkHandled = useRef(false);
   const eventLinkHandled = useRef<string | null>(null);
   const eventDayJumped = useRef<string | null>(null);
+  const weatherEnabled = sources.viewMode === "calendar";
+  const weatherDays = useMemo(() => {
+    if (!weatherEnabled) return [] as Date[];
+    if (navigation.timeScale === "week") return navigation.weekDays;
+    if (navigation.timeScale === "day") return [navigation.rangeStart];
+    return navigation.monthDays;
+  }, [
+    weatherEnabled,
+    navigation.timeScale,
+    navigation.weekDays,
+    navigation.rangeStart,
+    navigation.monthDays,
+  ]);
+  const {
+    weatherByDate,
+    loading: weatherLoading,
+    refresh: refreshWeather,
+  } = useMonthWeather(weatherEnabled, weatherDays);
 
   // Deep-link from workset detail: /timeline?newEvent=1&worksetId=…
   useEffect(() => {
@@ -65,10 +87,12 @@ export function TimelinePage() {
     if (createLinkHandled.current) return;
     createLinkHandled.current = true;
     const wid = searchParams.get("worksetId")?.trim() || null;
-    dialogs.openCreateDialog(wid);
+    const itemId = searchParams.get("itemId")?.trim() || null;
+    dialogs.openCreateDialog({ worksetId: wid, itemId });
     const next = new URLSearchParams(searchParams);
     next.delete("newEvent");
     next.delete("worksetId");
+    next.delete("itemId");
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams, dialogs]);
 
@@ -135,10 +159,13 @@ export function TimelinePage() {
       onEditItemEvent: dialogs.openEditItem,
       onDismissTimelineEvent: dialogs.handleDismissTimelineEvent,
       onRestoreTimelineEvent: dialogs.handleRestoreTimelineEvent,
+      onToggleImportantEvent: dialogs.handleToggleImportantEvent,
+      onCreateOnDay: (day) => dialogs.openCreateDialog({ day }),
       userEventActionBusy: dialogs.userEventActionBusy,
       showDismissed: filters.showDismissed,
       showOngoing: filters.showOngoing,
       showEnding: filters.showEnding,
+      weatherByDate,
       taskSpans: data.taskSpans,
       selectedGanttTaskId: gantt.selectedGanttTaskId,
       onSelectGanttTask: gantt.handleSelectGanttTask,
@@ -171,6 +198,7 @@ export function TimelinePage() {
       filters.showDismissed,
       filters.showOngoing,
       filters.showEnding,
+      weatherByDate,
     ],
   );
 
@@ -203,12 +231,33 @@ export function TimelinePage() {
               onJumpTo={navigation.jumpTo}
               onMoveCursor={navigation.moveCursor}
               visibleRangeLabel={navigation.visibleRangeLabel}
-              onAddEvent={dialogs.openCreateDialog}
+              onAddEvent={() => dialogs.openCreateDialog()}
               isFullscreen={isFullscreen}
               onToggleFullscreen={() => {
                 void toggleFullscreen();
               }}
+              showLoadingIndicator={data.initialLoading || data.isRefreshing}
+              loadingLabel={
+                data.initialLoading ? t("view.loading") : t("view.refreshing")
+              }
             >
+              {weatherEnabled ? (
+                <PillButton
+                  type="button"
+                  onClick={() => void refreshWeather()}
+                  disabled={weatherLoading}
+                  title={t("calendar.weatherRefresh")}
+                  aria-label={t("calendar.weatherRefresh")}
+                  data-testid="timeline-weather-refresh"
+                >
+                  <RefreshCw
+                    size={16}
+                    strokeWidth={2.5}
+                    aria-hidden="true"
+                    className={weatherLoading ? "animate-spin" : undefined}
+                  />
+                </PillButton>
+              ) : null}
               <TimelineShowOptionsControl
                 showDismissed={filters.showDismissed}
                 setShowDismissed={filters.setShowDismissed}
@@ -248,7 +297,7 @@ export function TimelinePage() {
         dialogOpen={dialogs.dialogOpen}
         dialogMode={dialogs.dialogMode}
         editingEvent={dialogs.editingEvent}
-        createWorksetId={dialogs.createWorksetId}
+        createInitial={dialogs.createInitial}
         dialogBusy={dialogs.dialogBusy}
         dialogError={dialogs.dialogError}
         worksetOptions={worksets.map((ws) => ({ id: ws.id, name: ws.name }))}

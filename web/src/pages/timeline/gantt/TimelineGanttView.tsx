@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import type { GanttColumn, TimelineScale } from "../../../domain/timeline/dateUtils";
+import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import { GanttEventLabelsColumn } from "./GanttEventLabelsColumn";
 import { GanttStatusLegend } from "./GanttStatusLegend";
@@ -16,7 +16,6 @@ import {
   ganttErrorContainerClass,
   ganttErrorTextClass,
   ganttMainFlexContainerClass,
-  ganttRefreshRowClass,
   ganttRetryButtonClass,
   ganttRootClass,
   ganttVerticalScrollClass,
@@ -30,6 +29,7 @@ type TimelineGanttViewProps = {
   timeScale: TimelineScale;
   ganttColumns: GanttColumn[];
   rangeStart: Date;
+  eventStatuses?: TimelineEventStatusMap;
   onRetry: () => void;
   onSelectEvent?: (event: TimelineItem) => void;
 };
@@ -42,6 +42,7 @@ export function TimelineGanttView({
   timeScale,
   ganttColumns,
   rangeStart,
+  eventStatuses = {},
   onRetry,
   onSelectEvent,
 }: TimelineGanttViewProps) {
@@ -84,16 +85,12 @@ export function TimelineGanttView({
 
   return (
     <div className={ganttRootClass} data-testid="timeline-gantt-view">
-      {isRefreshing && (
-        <div className={ganttRefreshRowClass} data-testid="gantt-refresh-indicator">
-          <RefreshIndicator label={t("gantt.refreshing")} />
-        </div>
-      )}
       <div className={ganttVerticalScrollClass} data-testid="gantt-vertical-scroll">
         <div className={ganttMainFlexContainerClass}>
           <GanttEventLabelsColumn
             rows={ganttRows}
             hoveredRowId={hoveredRowId}
+            eventStatuses={eventStatuses}
             onSelectEvent={onSelectEvent}
             onHoverStart={setHoveredRowId}
             onHoverEnd={() => setHoveredRowId(null)}
@@ -104,6 +101,7 @@ export function TimelineGanttView({
             rangeStart={rangeStart}
             ganttColumns={ganttColumns}
             needsScroll={needsScroll}
+            eventStatuses={eventStatuses}
             hoveredRowId={hoveredRowId}
             onSelectEvent={onSelectEvent}
             onHoverStart={setHoveredRowId}

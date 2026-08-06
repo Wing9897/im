@@ -1,4 +1,5 @@
 import type { GanttColumn, TimelineScale } from "../../../domain/timeline/dateUtils";
+import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import { GanttEventRow } from "./GanttEventRow";
 import type { GanttEventRowModel } from "../../../domain/gantt/groupRecurringGanttRows";
@@ -7,8 +8,9 @@ import {
   ganttGridTemplateColumns,
   ganttTimelineMinWidth,
 } from "./ganttGridLayout";
+import { findGanttTodayColumnIndex } from "./ganttTodayColumn";
 import {
-  ganttColumnHeaderTextClass,
+  ganttColumnHeaderClass,
   ganttEventBarRowsContainerClass,
   ganttRightAreaBaseClass,
   ganttScrollInnerFullClass,
@@ -21,6 +23,7 @@ interface GanttTimelinePanelProps {
   rangeStart: Date;
   ganttColumns: GanttColumn[];
   needsScroll: boolean;
+  eventStatuses: TimelineEventStatusMap;
   hoveredRowId: string | null;
   onSelectEvent?: (event: TimelineItem) => void;
   onHoverStart: (rowId: string) => void;
@@ -33,6 +36,7 @@ export function GanttTimelinePanel({
   rangeStart,
   ganttColumns,
   needsScroll,
+  eventStatuses,
   hoveredRowId,
   onSelectEvent,
   onHoverStart,
@@ -42,6 +46,11 @@ export function GanttTimelinePanel({
   const gridTemplateColumns = ganttGridTemplateColumns(columnCount, needsScroll);
   const columnGap = ganttColumnGap(needsScroll);
   const scrollMinWidth = ganttTimelineMinWidth(columnCount, needsScroll);
+  const todayColumnIndex = findGanttTodayColumnIndex(
+    ganttColumns,
+    timeScale,
+    rangeStart,
+  );
 
   const rightAreaClassName = [
     ganttRightAreaBaseClass,
@@ -65,8 +74,14 @@ export function GanttTimelinePanel({
         className={scrollMinWidth === undefined ? ganttScrollInnerFullClass : undefined}
       >
         <div className={ganttTimeAxisGridClass} style={timeAxisGridStyle}>
-          {ganttColumns.map((column) => (
-            <div key={column.key} className={ganttColumnHeaderTextClass}>
+          {ganttColumns.map((column, index) => (
+            <div
+              key={column.key}
+              data-testid={
+                todayColumnIndex === index ? "gantt-today-header" : undefined
+              }
+              className={ganttColumnHeaderClass(todayColumnIndex === index)}
+            >
               {column.label}
             </div>
           ))}
@@ -82,6 +97,8 @@ export function GanttTimelinePanel({
               columnCount={columnCount}
               needsScroll={needsScroll}
               gridTemplateColumns={gridTemplateColumns}
+              todayColumnIndex={todayColumnIndex}
+              eventStatuses={eventStatuses}
               isHovered={hoveredRowId === row.rowId}
               onSelect={onSelectEvent}
               onHoverStart={() => onHoverStart(row.rowId)}

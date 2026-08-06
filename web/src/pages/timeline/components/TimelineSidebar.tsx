@@ -1,11 +1,20 @@
+import { useMemo } from "react";
 import { ChevronLeft, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge, PillButton, TextField } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import {
-  itemDateKindBadgeTone,
-  itemDateKindLabel,
-} from "../../../domain/items/itemCalendarProjection";
+  useTaskCatalog,
+  useWorksetNameById,
+} from "../../../context/TaskCatalogContext";
+import { itemDateKindLabel } from "../../../domain/items/itemCalendarProjection";
+import {
+  eventListCardTitle,
+  eventShowsRemindBadge,
+  formatEventListProvenanceLabel,
+  resolveEventListWorksetName,
+  type EventListCardMetaLookups,
+} from "../../../domain/timeline/eventListCardMeta";
 import {
   getEventStatusColor,
   getEventStatusLabel,
@@ -14,26 +23,23 @@ import {
 import type { TimelineItem } from "../../../types";
 import { joinList } from "../../../i18n/formatMessage";
 import { formatOsDateTime } from "../../../utils/time";
-import { isNullProvenanceTaskId } from "../../../domain/timeline/userEvents";
 import { EventListPanel } from "./EventListPanel";
 import { useTimelinePageContext } from "../TimelinePageContext";
 import { dismissedTitleClass } from "../timelineDismissUtils";
+import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
+import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
 
 const asideClass =
   "relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-l border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] pl-lg";
 
 type TimelineSidebarProps = {
   rangeEvents: TimelineItem[];
-  allRangeEvents: TimelineItem[];
-  hasDayFocus: boolean;
   focusedDay: Date | null;
   onClose?: () => void;
 };
 
 export function TimelineSidebar({
   rangeEvents,
-  allRangeEvents,
-  hasDayFocus,
   focusedDay,
   onClose,
 }: TimelineSidebarProps) {
@@ -53,13 +59,37 @@ export function TimelineSidebar({
     onEditItemEvent,
     onDismissTimelineEvent,
     onRestoreTimelineEvent,
+    onToggleImportantEvent,
     userEventActionBusy,
   } = useTimelinePageContext();
   const { t: ti } = useTranslation("items");
+  const { tasks } = useTaskCatalog();
+  const worksetNameById = useWorksetNameById();
+  const generalWorksetLabel = useGeneralWorksetLabel();
+  const taskWorksetById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const task of tasks) {
+      if (typeof task.worksetId === "string" && task.worksetId.trim()) {
+        map.set(task.id, task.worksetId.trim());
+      }
+    }
+    return map;
+  }, [tasks]);
+  const metaLookups = useMemo<EventListCardMetaLookups>(
+    () => ({ generalWorksetLabel, worksetNameById, taskWorksetById }),
+    [generalWorksetLabel, worksetNameById, taskWorksetById],
+  );
 
   const isUserEvent = selectedEvent?.source === "user";
   const isItemEvent = selectedEvent?.source === "item";
   const isDismissed = Boolean(selectedEvent?.dismissed);
+  const isImportant = Boolean(selectedEvent?.important);
+  const showRemindBadge = selectedEvent
+    ? eventShowsRemindBadge(selectedEvent)
+    : false;
+  const detailTitle = selectedEvent
+    ? eventListCardTitle(selectedEvent, { showRemindBadge })
+    : "";
 
   return (
     <aside className={asideClass}>
@@ -91,17 +121,28 @@ export function TimelineSidebar({
             className={`m-0 pr-8 ${cardTitleClass} ${
               isDismissed ? dismissedTitleClass : ""
             }`}
+            data-testid="timeline-sidebar-title"
           >
-            {selectedEvent.title}
+            {detailTitle}
           </h2>
 
-          {isItemEvent && selectedEvent.itemDateKind ? (
+          {isImportant ? (
             <Badge
-              tone={itemDateKindBadgeTone(selectedEvent.itemDateKind)}
+              tone="warning"
               className="normal-case tracking-normal self-start"
-              data-testid="timeline-sidebar-item-kind"
+              data-testid="timeline-sidebar-important"
             >
-              {itemDateKindLabel(selectedEvent.itemDateKind)}
+              {IMPORTANT_EVENT_EMOJI} {t("sidebar.importantBadge")}
+            </Badge>
+          ) : null}
+
+          {showRemindBadge ? (
+            <Badge
+              tone="warning"
+              className="normal-case tracking-normal self-start"
+              data-testid="timeline-sidebar-remind-badge"
+            >
+              {itemDateKindLabel("remind")}
             </Badge>
           ) : null}
 
@@ -130,15 +171,14 @@ export function TimelineSidebar({
                 })}
               </div>
             ) : null}
-            {selectedEvent.taskName ? (
-              isUserEvent && isNullProvenanceTaskId(selectedEvent.taskId) ? (
-                <div>
-                  {t("sidebar.workset", { value: selectedEvent.taskName })}
-                </div>
-              ) : (
-                <div>{t("sidebar.task", { value: selectedEvent.taskName })}</div>
-              )
-            ) : null}
+            <div data-testid="timeline-sidebar-workset">
+              {t("sidebar.workset", {
+                value: resolveEventListWorksetName(selectedEvent, metaLookups),
+              })}
+            </div>
+            <div data-testid="timeline-sidebar-provenance">
+              {formatEventListProvenanceLabel(selectedEvent, t)}
+            </div>
           </dl>
 
           <section className="grid gap-sm border-t border-surface-border pt-md">
@@ -161,6 +201,15 @@ export function TimelineSidebar({
                   {ti("editItem")}
                 </PillButton>
               ) : null}
+              <PillButton
+                type="button"
+                disabled={userEventActionBusy}
+                active={isImportant}
+                onClick={() => onToggleImportantEvent?.(selectedEvent)}
+                data-testid="timeline-toggle-important"
+              >
+                {isImportant ? t("sidebar.unmarkImportant") : t("sidebar.markImportant")}
+              </PillButton>
               {isDismissed ? (
                 <PillButton
                   type="button"
@@ -240,8 +289,6 @@ export function TimelineSidebar({
       ) : (
         <EventListPanel
           rangeEvents={rangeEvents}
-          allRangeEvents={allRangeEvents}
-          hasDayFocus={hasDayFocus}
           focusedDay={focusedDay}
           onSelectEvent={onSelectEvent}
         />

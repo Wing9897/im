@@ -92,7 +92,7 @@
     "other": "Other"
   },
   "purchasedPrefix": "Bought",
-  "expiresPrefix": "Expires",
+  "expiresPrefix": "Ends",
   "remindPrefix": "Remind",
   "statusActive": "Active",
   "statusArchived": "Archived"

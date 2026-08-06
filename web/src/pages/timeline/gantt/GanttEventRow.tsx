@@ -5,6 +5,10 @@ import {
   timelineEventDateRange,
   type TimelineScale,
 } from "../../../domain/timeline/dateUtils";
+import {
+  getEventStatusColor,
+  type TimelineEventStatusMap,
+} from "../../../domain/timeline/status";
 import type { TimelineItem } from "../../../types";
 import {
   buildTooltipContent,
@@ -25,6 +29,8 @@ interface GanttEventRowProps {
   columnCount: number;
   needsScroll: boolean;
   gridTemplateColumns: string;
+  todayColumnIndex: number | null;
+  eventStatuses: TimelineEventStatusMap;
   isHovered: boolean;
   onSelect?: (event: TimelineItem) => void;
   onHoverStart: () => void;
@@ -38,6 +44,8 @@ export function GanttEventRow({
   columnCount,
   needsScroll,
   gridTemplateColumns,
+  todayColumnIndex,
+  eventStatuses,
   isHovered,
   onSelect,
   onHoverStart,
@@ -71,7 +79,8 @@ export function GanttEventRow({
           key={`cell-${index}`}
           aria-hidden="true"
           data-testid={`event-cell-${row.rowId}-${index}`}
-          className={ganttDayCellClass(isHovered)}
+          data-today={todayColumnIndex === index ? "true" : undefined}
+          className={ganttDayCellClass(todayColumnIndex === index)}
           style={{ gridColumn: index + 1, gridRow: 1 }}
         />
       ))}
@@ -93,18 +102,22 @@ export function GanttEventRow({
         );
         if (!position.visible) return null;
 
+        const isCompact =
+          position.isPoint || position.startColumn === position.endColumn;
+        const status = eventStatuses[event.id] ?? "pending";
+        const statusColor = getEventStatusColor(status);
+        const dismissed = Boolean(event.dismissed);
+
         return (
           <div
             key={event.id}
             data-testid={`event-bar-${event.id}`}
-            className={ganttBarClass(
-              isHovered,
-              position.isPoint,
-              Boolean(event.dismissed),
-            )}
+            data-status={status}
+            className={ganttBarClass(isHovered, isCompact, dismissed)}
             style={{
               gridColumn: `${position.startColumn} / ${position.endColumn + 1}`,
               gridRow: 1,
+              ...(dismissed ? {} : { backgroundColor: statusColor }),
             }}
             onMouseEnter={(e) =>
               setTooltip({ event, el: e.currentTarget })

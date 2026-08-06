@@ -12,6 +12,12 @@ export type UserEvent = Omit<
 > & {
   /** Optional only for legacy in-memory fixtures; API responses always include it. */
   dismissed?: boolean;
+  /** User/agent important marker (❗). */
+  important?: boolean;
+  /** Optional remind-N-days-before-start (stamp 17+). */
+  remindBeforeDays?: number | null;
+  /** Optional parent trackable item (child calendar; stamp 17+). */
+  itemId?: string | null;
 };
 
 export type UserEventOrigin = UserEvent["origin"];
@@ -24,8 +30,12 @@ interface UserEventWriteParams {
   location?: string;
   /** All-day uses ICS DATE semantics (wire end exclusive). */
   isAllDay?: boolean;
+  /** Optional remind N days before start; null clears. */
+  remindBeforeDays?: number | null;
   /** Analysis-task provenance; `""` / omit → null. `"__user__"` stripped client-side. */
   taskId?: string | null;
+  /** Optional parent trackable item (child calendar). */
+  itemId?: string | null;
   /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset (LIVE). */
   worksetId?: string | null;
 }
@@ -46,12 +56,15 @@ export function listUserEvents(params?: {
   taskId?: string;
   /** Ownership workset id (incl. builtin `__user__`). */
   worksetId?: string;
+  /** Parent item id; `""` = stand-alone only. */
+  itemId?: string;
 }): Promise<UserEvent[]> {
   const query: Record<string, string> = {};
   if (params?.start) query.start = params.start;
   if (params?.end) query.end = params.end;
   if (params?.taskId !== undefined) query.task_id = params.taskId;
   if (params?.worksetId !== undefined) query.workset_id = params.worksetId;
+  if (params?.itemId !== undefined) query.item_id = params.itemId;
   return apiClient.get<UserEvent[]>("/api/v1/calendar/user-events", query);
 }
 
@@ -63,6 +76,8 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
     body: params.body ?? "",
     location: params.location ?? "",
     isAllDay: Boolean(params.isAllDay),
+    remindBeforeDays: params.remindBeforeDays ?? null,
+    itemId: params.itemId?.trim() || null,
   };
   const taskId = normalizeWriteTaskId(params.taskId);
   if (taskId !== undefined) body.taskId = taskId;
@@ -81,6 +96,12 @@ export function updateUserEvent(
   if (params.body !== undefined) body.body = params.body;
   if (params.location !== undefined) body.location = params.location;
   if (params.isAllDay !== undefined) body.isAllDay = params.isAllDay;
+  if (params.remindBeforeDays !== undefined) {
+    body.remindBeforeDays = params.remindBeforeDays;
+  }
+  if (params.itemId !== undefined) {
+    body.itemId = params.itemId?.trim() || null;
+  }
   if (params.taskId !== undefined) {
     body.taskId = normalizeWriteTaskId(params.taskId) ?? null;
   }

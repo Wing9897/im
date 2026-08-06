@@ -102,6 +102,7 @@ def expand_task_occurrences(
             inc=False,
         )
 
+        built: list[tuple[datetime, dict[str, Any]]] = []
         for occurrence in raw_occurrences:
             if occurrence >= acquisition_end:
                 break
@@ -126,22 +127,28 @@ def expand_task_occurrences(
             # caller range before materializing the result dictionary.
             if start_dt < range_start_utc or start_dt > range_end_utc:
                 continue
-            occurrences.append(
-                {
-                    "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
-                    "taskId": task_id,
-                    "taskName": task_name,
-                    "title": task_name,
-                    "startTime": rrule_mod._iso_z(start_dt),
-                    "endTime": rrule_mod._iso_z(end_dt),
-                    "isAllDay": is_all_day,
-                    "location": location if location else None,
-                    "description": description if description else None,
-                    "rrule": rule,
-                }
+            built.append(
+                (
+                    occurrence,
+                    {
+                        "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
+                        "taskId": task_id,
+                        "taskName": task_name,
+                        "title": task_name,
+                        "startTime": rrule_mod._iso_z(start_dt),
+                        "endTime": rrule_mod._iso_z(end_dt),
+                        "isAllDay": is_all_day,
+                        "location": location if location else None,
+                        "description": description if description else None,
+                        "rrule": rule,
+                    },
+                )
             )
-            if len(occurrences) >= budget:
+            if len(built) >= budget:
                 break
+        for occurrence, item in built:
+            item["isLastOccurrence"] = rule_set.after(occurrence) is None
+            occurrences.append(item)
     except (ValueError, TypeError, OverflowError) as exc:
         logger.warning(
             "Skipping calendar task %s: RRULE expansion failed (%s)",

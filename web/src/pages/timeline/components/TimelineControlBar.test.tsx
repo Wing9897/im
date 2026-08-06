@@ -30,6 +30,9 @@ interface RenderOpts {
   visibleRangeLabel?: string;
   isFullscreen?: boolean;
   onToggleFullscreen?: () => void;
+  onAddEvent?: () => void;
+  showLoadingIndicator?: boolean;
+  loadingLabel?: string;
 }
 
 function renderControlBar(opts: RenderOpts = {}) {
@@ -47,6 +50,9 @@ function renderControlBar(opts: RenderOpts = {}) {
     visibleRangeLabel: opts.visibleRangeLabel ?? "2025年1月",
     isFullscreen: opts.isFullscreen,
     onToggleFullscreen: opts.onToggleFullscreen,
+    onAddEvent: opts.onAddEvent,
+    showLoadingIndicator: opts.showLoadingIndicator,
+    loadingLabel: opts.loadingLabel,
   };
   const container = document.createElement("div");
   act(() => {
@@ -240,5 +246,33 @@ describe("TimelineControlBar", () => {
       btn.click();
     });
     expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onAddEvent with no args (does not forward the click event)", () => {
+    const onAddEvent = vi.fn();
+    const container = renderControlBar({ onAddEvent });
+    const addBtn = container.querySelector<HTMLButtonElement>(
+      `button[aria-label="${i18n.t("timeline:toolbar.addEvent")}"]`,
+    )!;
+    act(() => {
+      addBtn.click();
+    });
+    expect(onAddEvent).toHaveBeenCalledTimes(1);
+    expect(onAddEvent).toHaveBeenCalledWith();
+  });
+
+  it("keeps a reserved loading slot so the spinner does not shift toolbar layout", () => {
+    const idle = renderControlBar({ showLoadingIndicator: false });
+    const idleSlot = idle.querySelector('[data-testid="timeline-toolbar-loading"]');
+    expect(idleSlot).not.toBeNull();
+    expect(idleSlot!.className).toContain("invisible");
+    expect(idleSlot!.querySelector(".im-refresh-indicator")).toBeNull();
+
+    const loading = renderControlBar({ showLoadingIndicator: true, loadingLabel: "載入中" });
+    const loadingSlot = loading.querySelector('[data-testid="timeline-toolbar-loading"]');
+    expect(loadingSlot).not.toBeNull();
+    expect(loadingSlot!.className).not.toContain("invisible");
+    expect(loadingSlot!.querySelector(".im-refresh-indicator")).not.toBeNull();
+    expect(loadingSlot!.getAttribute("aria-hidden")).toBe("false");
   });
 });

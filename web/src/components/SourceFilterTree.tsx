@@ -1,21 +1,26 @@
 /**
  * Hierarchical workset/task checklist used inside SourceFilterDialog.
  * Worksets are primary rows; member tasks nest under a chevron expand control.
+ *
+ * Selection mutation lives in `sourceFilterDialogDraft` / the dialog state hook —
+ * this file is presentational (search box + tree + tri-state checkboxes).
  */
 
 import { ChevronRight } from "lucide-react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { TextField } from "./ui";
 import type { FilterTreeRow } from "../domain/tasks/sourceFilterSelection";
+import type { TriCheckState } from "../domain/tasks/sourceFilterDialogDraft";
+import {
+  resolveGroupCheckState,
+  visibleChildrenForSourceFilterRow,
+} from "../domain/tasks/sourceFilterDialogDraft";
 import { resolveSourceFilterTaskLabel } from "../domain/timeline/sourceFilterOptions";
 import { formatAnalysisMode } from "../utils/analysis";
 
-export function matchesSourceFilterQuery(name: string, query: string): boolean {
-  const q = query.trim().toLocaleLowerCase();
-  if (!q) return true;
-  return name.toLocaleLowerCase().includes(q);
-}
+export { matchesSourceFilterQuery } from "../domain/tasks/sourceFilterDialogDraft";
 
 type SourceFilterTreeProps = {
   rows: FilterTreeRow[];
@@ -25,6 +30,7 @@ type SourceFilterTreeProps = {
   onToggleExpanded: (worksetId: string) => void;
   checkedTasks: ReadonlySet<string>;
   checkedWorksets: ReadonlySet<string>;
+  allSourcesSelected: boolean;
   onToggleTask: (taskId: string) => void;
   onToggleWorkset: (worksetId: string) => void;
 };
@@ -38,6 +44,33 @@ function taskSearchText(
   return rawName && rawName !== label ? `${label} ${rawName}` : label;
 }
 
+function TriStateCheckbox({
+  state,
+  testId,
+  onChange,
+}: {
+  state: TriCheckState;
+  testId: string;
+  onChange: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = state === "indeterminate";
+    }
+  }, [state]);
+
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={state === "checked"}
+      data-testid={testId}
+      onChange={onChange}
+    />
+  );
+}
+
 /** Search box + expandable workset-primary checkbox tree. */
 export function SourceFilterTree({
   rows,
@@ -47,6 +80,7 @@ export function SourceFilterTree({
   onToggleExpanded,
   checkedTasks,
   checkedWorksets,
+  allSourcesSelected,
   onToggleTask,
   onToggleWorkset,
 }: SourceFilterTreeProps) {
@@ -57,7 +91,9 @@ export function SourceFilterTree({
 
   return (
     <div className="flex flex-col gap-md">
-      <p className="m-0 text-caption text-text-muted">{t("workset.filterHint")}</p>
+      <p className="m-0 text-caption leading-relaxed text-text-secondary">
+        {t("workset.filterHint")}
+      </p>
       <TextField
         type="search"
         value={query}
@@ -65,6 +101,7 @@ export function SourceFilterTree({
         placeholder={t("workset.filterSearchPlaceholder")}
         aria-label={t("workset.filterSearchPlaceholder")}
         data-testid="source-filter-dialog-search"
+        className="border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] bg-surface-raised placeholder:text-text-secondary/80"
       />
       <ul
         className="m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0"
@@ -74,33 +111,40 @@ export function SourceFilterTree({
           const childCount = row.children.length;
           const canExpand = childCount > 0;
           const isOpen = canExpand && (expanded.has(row.id) || searching);
-          const groupChecked =
-            row.kind === "unassigned"
-              ? childCount > 0 && row.children.every((child) => checkedTasks.has(child.id))
-              : checkedWorksets.has(row.id);
-          const visibleChildren = searching
-            ? row.children.filter((child) =>
-                matchesSourceFilterQuery(taskSearchText(child, unnamedLabel), query),
-              )
-            : row.children;
           const isUnassigned = row.kind === "unassigned";
+          const visibleChildren = visibleChildrenForSourceFilterRow(row, query, (child) =>
+            taskSearchText(child, unnamedLabel),
+          );
+          const groupState = resolveGroupCheckState({
+            kind: row.kind,
+            worksetSelected: checkedWorksets.has(row.id),
+            childIds: row.children.map((child) => child.id),
+            checkedTasks,
+            allSourcesSelected,
+          });
 
           return (
             <li
               key={`${row.kind}-${row.id}`}
               className={[
-                "overflow-hidden rounded-md border",
+                "overflow-hidden rounded-md border outline-none",
+                // Virtual “未歸屬” group: muted solid + left rail (not dashed focus-lookalike).
                 isUnassigned
-                  ? "border-dashed border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-raised)_40%,transparent)]"
-                  : "border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)]",
+                  ? "border-[color-mix(in_srgb,var(--text-primary)_22%,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-raised)_55%,transparent)] border-l-[3px] border-l-[color-mix(in_srgb,var(--text-secondary)_55%,var(--surface-border))]"
+                  : "border-[color-mix(in_srgb,var(--text-primary)_26%,var(--surface-border))] bg-surface-raised",
               ].join(" ")}
             >
               <div className="flex items-center gap-1 px-1.5 py-1.5">
                 <button
                   type="button"
                   className={[
-                    "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-text-muted transition-transform duration-150",
-                    canExpand ? "hover:bg-surface-raised hover:text-text-primary" : "opacity-30",
+                    "inline-flex size-7 shrink-0 items-center justify-center rounded-md border-0 bg-transparent",
+                    "shadow-none outline-none",
+                    "transition-[transform,color] duration-150",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)]",
+                    canExpand
+                      ? "text-text-secondary hover:text-text-primary"
+                      : "invisible",
                     isOpen ? "rotate-90" : "",
                   ].join(" ")}
                   aria-expanded={canExpand ? isOpen : undefined}
@@ -109,25 +153,24 @@ export function SourceFilterTree({
                   onClick={() => onToggleExpanded(row.id)}
                   disabled={!canExpand}
                 >
-                  <ChevronRight size={16} strokeWidth={2.25} aria-hidden="true" />
+                  <ChevronRight size={16} strokeWidth={2.5} aria-hidden="true" />
                 </button>
                 <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-sm pr-sm">
-                  <input
-                    type="checkbox"
-                    checked={groupChecked}
-                    data-testid={`board-workset-filter-${row.id}`}
+                  <TriStateCheckbox
+                    state={groupState}
+                    testId={`board-workset-filter-${row.id}`}
                     onChange={() => onToggleWorkset(row.id)}
                   />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-primary">
                     {row.name}
                   </span>
-                  <span className="shrink-0 text-caption text-text-muted">
+                  <span className="shrink-0 rounded-md bg-[color-mix(in_srgb,var(--text-primary)_10%,transparent)] px-1.5 py-0.5 text-caption font-semibold tabular-nums text-text-secondary">
                     {t("workset.filterChildCount", { count: childCount })}
                   </span>
                 </label>
               </div>
               {isOpen && visibleChildren.length > 0 ? (
-                <ul className="m-0 list-none border-t border-surface-border/60 bg-[color-mix(in_srgb,var(--surface-raised)_55%,transparent)] p-0">
+                <ul className="m-0 list-none border-t border-[color-mix(in_srgb,var(--text-primary)_20%,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-card)_55%,transparent)] p-0">
                   {visibleChildren.map((child) => {
                     const label = resolveSourceFilterTaskLabel(
                       child.name,
@@ -142,7 +185,7 @@ export function SourceFilterTree({
                         : null;
                     return (
                       <li key={child.id}>
-                        <label className="flex cursor-pointer items-center gap-sm border-l-2 border-l-accent/35 py-1.5 pl-9 pr-sm hover:bg-surface-raised">
+                        <label className="flex cursor-pointer items-center gap-sm border-l-2 border-l-accent/55 py-1.5 pl-9 pr-sm hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)]">
                           <input
                             type="checkbox"
                             checked={checkedTasks.has(child.id)}
@@ -154,7 +197,7 @@ export function SourceFilterTree({
                           </span>
                           {modeBadge ? (
                             <span
-                              className="shrink-0 rounded px-1 py-0.5 text-[10px] font-medium tracking-wide text-text-muted ring-1 ring-inset ring-surface-border/80"
+                              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-text-secondary ring-1 ring-inset ring-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))]"
                               data-testid={
                                 isRecurring
                                   ? `source-filter-recurring-${child.id}`
@@ -175,7 +218,7 @@ export function SourceFilterTree({
         })}
       </ul>
       {rows.length === 0 ? (
-        <p className="m-0 text-sm text-text-muted">{t("workset.emptyList")}</p>
+        <p className="m-0 text-sm text-text-secondary">{t("workset.emptyList")}</p>
       ) : null}
     </div>
   );

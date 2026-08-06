@@ -48,6 +48,8 @@ CALENDAR_WRITE_TOOL_NAMES = frozenset(
         "calendar.delete_recurring_task",
         "calendar.update_event",
         "calendar.delete_event",
+        "calendar.mark_important",
+        "calendar.unmark_important",
     }
 )
 
@@ -100,12 +102,32 @@ _WRITE_NOTIFICATIONS: dict[str, tuple[str, str, Any]] = {
 }
 
 
+_IMPORTANCE_RESOURCE_TYPE: dict[str, str] = {
+    "analysis": "task",
+    "recurring": "task",
+    "user": "user_event",
+    "item": "item",
+}
+
+
 def _publish_calendar_write_side_effects(
     name: str,
     result: dict[str, Any],
     context: dict[str, Any] | None,
 ) -> None:
     if result.get("error") or not context:
+        return
+    if name in {"calendar.mark_important", "calendar.unmark_important"}:
+        source = str(result.get("source") or "")
+        resource_type = _IMPORTANCE_RESOURCE_TYPE.get(source)
+        resource_id = result.get("id")
+        if resource_type and resource_id:
+            publish_resource_modified(
+                context.get("broadcaster"),
+                resource_type=resource_type,
+                resource_id=str(resource_id),
+                action="important" if name == "calendar.mark_important" else "unimportant",
+            )
         return
     notification = _WRITE_NOTIFICATIONS.get(name)
     if notification is None:

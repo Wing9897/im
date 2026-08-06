@@ -110,6 +110,7 @@ export function SourceFilterDialog({
           onToggleExpanded={state.toggleExpanded}
           checkedTasks={state.checkedTasks}
           checkedWorksets={state.checkedWorksets}
+          allSourcesSelected={state.allSourcesSelected}
           onToggleTask={state.toggleTask}
           onToggleWorkset={state.toggleWorkset}
         />

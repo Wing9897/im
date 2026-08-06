@@ -10,7 +10,7 @@
 - **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期／提醒日投影到日曆（`source=item`）；分類與物品可選 emoji（含 seed logo），歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案** — `project` 閉環多波消化來源積壓
-- **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的 Ops Board
+- **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描情報事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
 

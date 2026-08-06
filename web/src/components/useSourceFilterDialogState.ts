@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { matchesSourceFilterQuery } from "./SourceFilterTree";
 import {
   resolveSourceFilterTaskLabel,
   type SourceFilterOption,
@@ -10,10 +9,17 @@ import {
   buildFilterTreeRows,
   isEmptySourceFilter,
   sourceFilterSelectedCount,
-  UNASSIGNED_FILTER_GROUP_ID,
   type SourceFilterSelection,
   type WorksetMemberTask,
 } from "../domain/tasks/sourceFilterSelection";
+import {
+  filterSourceFilterTreeRows,
+  resolveCheckedTasks,
+  resolveCheckedWorksets,
+  sameSourceFilterSelection,
+  toggleTaskInDraft,
+  toggleWorksetInDraft,
+} from "../domain/tasks/sourceFilterDialogDraft";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { useGeneralWorksetLabel } from "../domain/timeline/useGeneralWorksetLabel";
 
@@ -30,18 +36,7 @@ export type SourceFilterExpandTask = {
   analysisMode?: string | null;
 };
 
-export function sameSelection(a: SourceFilterSelection, b: SourceFilterSelection): boolean {
-  if (a === null && b === null) return true;
-  if (a === null || b === null) return false;
-  if (a.taskIds.length !== b.taskIds.length || a.worksetIds.length !== b.worksetIds.length) {
-    return false;
-  }
-  const tasksA = [...a.taskIds].sort();
-  const tasksB = [...b.taskIds].sort();
-  const wsA = [...a.worksetIds].sort();
-  const wsB = [...b.worksetIds].sort();
-  return tasksA.every((id, i) => id === tasksB[i]) && wsA.every((id, i) => id === wsB[i]);
-}
+export { sameSourceFilterSelection as sameSelection };
 
 type Options = {
   tasks: SourceFilterOption[];
@@ -111,20 +106,15 @@ export function useSourceFilterDialogState({
         memberTasks.filter((task) => !task.worksetId).length
       : sourceFilterSelectedCount(selection);
 
-  const checkedTasks = useMemo(() => {
-    if (draft === null) return new Set(memberTasks.map((task) => task.id));
-    const fromWorksets = new Set(
-      memberTasks
-        .filter((task) => task.worksetId && draft.worksetIds.includes(task.worksetId))
-        .map((task) => task.id),
-    );
-    return new Set([...draft.taskIds, ...fromWorksets]);
-  }, [draft, memberTasks]);
+  const checkedTasks = useMemo(
+    () => resolveCheckedTasks(draft, memberTasks),
+    [draft, memberTasks],
+  );
 
-  const checkedWorksets = useMemo(() => {
-    if (draft === null) return new Set(displayWorksets.map((ws) => ws.id));
-    return new Set(draft.worksetIds);
-  }, [draft, displayWorksets]);
+  const checkedWorksets = useMemo(
+    () => resolveCheckedWorksets(draft, displayWorksets.map((ws) => ws.id)),
+    [draft, displayWorksets],
+  );
 
   const treeRows = useMemo(
     () =>
@@ -135,18 +125,10 @@ export function useSourceFilterDialogState({
   const unnamedLabel = t("board.common.unnamedTask");
 
   const visibleRows = useMemo(() => {
-    const q = query.trim();
-    if (!q) return treeRows;
-    return treeRows.filter((row) => {
-      if (matchesSourceFilterQuery(row.name, q)) return true;
-      return row.children.some((child) => {
-        const label = resolveSourceFilterTaskLabel(child.name, child.id, unnamedLabel);
-        const rawName = (child.name ?? "").trim();
-        return (
-          matchesSourceFilterQuery(label, q) ||
-          (rawName ? matchesSourceFilterQuery(rawName, q) : false)
-        );
-      });
+    return filterSourceFilterTreeRows(treeRows, query, (child) => {
+      const label = resolveSourceFilterTaskLabel(child.name, child.id, unnamedLabel);
+      const rawName = (child.name ?? "").trim();
+      return rawName && rawName !== label ? `${label} ${rawName}` : label;
     });
   }, [treeRows, query, unnamedLabel]);
 
@@ -158,107 +140,21 @@ export function useSourceFilterDialogState({
     [treeRows],
   );
 
-  const collapseOrSet = (next: { taskIds: string[]; worksetIds: string[] }) => {
-    const full: SourceFilterSelection = {
-      taskIds: [...next.taskIds].sort(),
-      worksetIds: [...next.worksetIds].sort(),
-    };
-    const allWorksetsSelected =
-      full.worksetIds.length === allWorksetIds.length &&
-      allWorksetIds.every((id) => full.worksetIds.includes(id));
-    const allUnassignedSelected = unassignedTaskIds.every((id) => full.taskIds.includes(id));
-    // Only unassigned tasks live in taskIds when every workset is selected.
-    const onlyUnassignedInTasks =
-      full.taskIds.length === unassignedTaskIds.length && allUnassignedSelected;
-    if (allWorksetsSelected && onlyUnassignedInTasks) {
-      setDraft(null);
-      return;
-    }
-    setDraft(full);
-  };
+  const draftCtx = useMemo(
+    () => ({
+      allWorksetIds,
+      unassignedTaskIds,
+      memberTasks,
+    }),
+    [allWorksetIds, unassignedTaskIds, memberTasks],
+  );
 
   const toggleWorkset = (worksetId: string) => {
-    if (worksetId === UNASSIGNED_FILTER_GROUP_ID) {
-      const allOn =
-        unassignedTaskIds.length > 0 &&
-        unassignedTaskIds.every((id) => checkedTasks.has(id));
-      if (draft === null) {
-        // Deselect unassigned only: keep all real worksets.
-        collapseOrSet({ taskIds: [], worksetIds: allWorksetIds });
-        return;
-      }
-      const nextTasks = new Set(draft.taskIds);
-      if (allOn) {
-        for (const id of unassignedTaskIds) nextTasks.delete(id);
-      } else {
-        for (const id of unassignedTaskIds) nextTasks.add(id);
-      }
-      collapseOrSet({ taskIds: [...nextTasks], worksetIds: draft.worksetIds });
-      return;
-    }
-
-    if (draft === null) {
-      collapseOrSet({
-        taskIds: unassignedTaskIds,
-        worksetIds: allWorksetIds.filter((id) => id !== worksetId),
-      });
-      return;
-    }
-    const next = new Set(draft.worksetIds);
-    if (next.has(worksetId)) next.delete(worksetId);
-    else next.add(worksetId);
-    // Drop explicit member taskIds that belong to this workset (covered by workset id).
-    const memberIds = new Set(
-      memberTasks.filter((task) => task.worksetId === worksetId).map((task) => task.id),
-    );
-    const nextTasks = draft.taskIds.filter((id) => !memberIds.has(id));
-    collapseOrSet({ taskIds: nextTasks, worksetIds: [...next] });
+    setDraft((prev) => toggleWorksetInDraft(prev, worksetId, draftCtx));
   };
 
   const toggleTask = (taskId: string) => {
-    const parent = memberTasks.find((task) => task.id === taskId);
-    const parentWorksetId = parent?.worksetId ?? null;
-
-    if (draft === null) {
-      if (parentWorksetId) {
-        // Split parent workset into sibling task ids (minus this one) + remaining worksets.
-        const siblings = memberTasks
-          .filter((task) => task.worksetId === parentWorksetId && task.id !== taskId)
-          .map((task) => task.id);
-        collapseOrSet({
-          taskIds: [...unassignedTaskIds, ...siblings],
-          worksetIds: allWorksetIds.filter((id) => id !== parentWorksetId),
-        });
-        return;
-      }
-      collapseOrSet({
-        taskIds: unassignedTaskIds.filter((id) => id !== taskId),
-        worksetIds: allWorksetIds,
-      });
-      return;
-    }
-
-    // Member under a selected workset: convert workset → siblings ± this task.
-    if (parentWorksetId && draft.worksetIds.includes(parentWorksetId)) {
-      const siblings = memberTasks
-        .filter((task) => task.worksetId === parentWorksetId)
-        .map((task) => task.id);
-      const nextTasks = new Set(draft.taskIds);
-      for (const id of siblings) {
-        if (id === taskId) nextTasks.delete(id);
-        else nextTasks.add(id);
-      }
-      collapseOrSet({
-        taskIds: [...nextTasks],
-        worksetIds: draft.worksetIds.filter((id) => id !== parentWorksetId),
-      });
-      return;
-    }
-
-    const next = new Set(draft.taskIds);
-    if (next.has(taskId)) next.delete(taskId);
-    else next.add(taskId);
-    collapseOrSet({ taskIds: [...next], worksetIds: draft.worksetIds });
+    setDraft((prev) => toggleTaskInDraft(prev, taskId, draftCtx));
   };
 
   const selectAll = () => setDraft(null);
@@ -290,6 +186,7 @@ export function useSourceFilterDialogState({
     filterBadgeCount: isEmptySourceFilter(selection) ? 0 : selectedCount,
     checkedTasks,
     checkedWorksets,
+    allSourcesSelected: draft === null,
     visibleRows,
     toggleWorkset,
     toggleTask,
@@ -297,6 +194,6 @@ export function useSourceFilterDialogState({
     clearAll,
     apply,
     toggleExpanded,
-    applyDisabled: sameSelection(draft, selection),
+    applyDisabled: sameSourceFilterSelection(draft, selection),
   };
 }

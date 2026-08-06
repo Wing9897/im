@@ -68,7 +68,11 @@ export function userEventToBoardEvent(
     isAllDay: event.isAllDay,
     timezone: event.timezone ?? null,
     dismissed: Boolean(event.dismissed),
+    important: Boolean(event.important),
     worksetId,
+    itemId: event.itemId?.trim() || null,
+    remindBeforeDays:
+      typeof event.remindBeforeDays === "number" ? event.remindBeforeDays : null,
   };
 }
 
@@ -145,6 +149,8 @@ export function calendarOccurrenceToBoardEvent(
     isAllDay: occurrence.isAllDay,
     timezone: occurrence.timezone ?? null,
     dismissed: Boolean(occurrence.dismissed),
+    important: Boolean(occurrence.important),
+    isLastOccurrence: isItem ? undefined : Boolean(occurrence.isLastOccurrence),
     worksetId: isItem
       ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
       : undefined,

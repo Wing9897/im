@@ -23,6 +23,10 @@ export type UserEventFormValues = {
   /** Ownership workset id (``__user__`` = builtin system workset). */
   worksetId: string;
   isAllDay: boolean;
+  /** Optional remind-N-days-before-start; empty string = unset. */
+  remindBeforeDays: string;
+  /** Optional parent trackable item id (child calendar). */
+  itemId: string;
   /** RRULE when ``kind === "recurring"``. */
   rrule: string;
   /** HH:MM when recurring and not all-day. */
@@ -54,6 +58,8 @@ export const EMPTY_USER_EVENT_FORM: UserEventFormValues = {
   body: "",
   worksetId: SYSTEM_WORKSET_ID,
   isAllDay: false,
+  remindBeforeDays: "",
+  itemId: "",
   rrule: DEFAULT_RRULE,
   eventStartTime: "09:00",
   eventEndTime: "10:00",
@@ -67,6 +73,11 @@ export function valuesFromInitial(
 ): UserEventFormValues {
   const isAllDay = Boolean(initial?.isAllDay);
   const kind: UserEventKind = initial?.kind === "recurring" ? "recurring" : "one_off";
+  const remindRaw = initial?.remindBeforeDays;
+  const remindBeforeDays =
+    remindRaw === undefined || remindRaw === null
+      ? ""
+      : String(remindRaw).trim();
   const base = {
     kind,
     title: initial?.title ?? "",
@@ -74,6 +85,8 @@ export function valuesFromInitial(
     body: initial?.body ?? "",
     worksetId: toUserEventFormWorksetId(initial?.worksetId),
     isAllDay,
+    remindBeforeDays,
+    itemId: (initial?.itemId ?? "").trim(),
     rrule: (initial?.rrule ?? "").trim() || DEFAULT_RRULE,
     eventStartTime: (initial?.eventStartTime ?? "").trim() || "09:00",
     eventEndTime: (initial?.eventEndTime ?? "").trim() || "10:00",

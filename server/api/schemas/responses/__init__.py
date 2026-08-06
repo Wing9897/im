@@ -33,6 +33,7 @@ from server.api.schemas.responses.events import (
     CalendarImportWarningResponse,
     CalendarOccurrenceResponse,
     TimelineDismissalResponse,
+    TimelineImportanceResponse,
     TrendingTopicResponse,
     UserEventResponse,
 )
@@ -204,6 +205,7 @@ __all__ = [
     "TimelineAnnotationsPutBody",
     "TimelineAnnotationsResponse",
     "TimelineDismissalResponse",
+    "TimelineImportanceResponse",
     "TrendingTopicResponse",
     "UpdateTelegramSourceResponse",
     "UserEventResponse",

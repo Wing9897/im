@@ -9,19 +9,28 @@ type WeatherForecastResponse = {
   };
 };
 
+export type FetchWeatherForecastOptions = {
+  signal?: AbortSignal;
+  /** When true, server bypasses its successful forecast TTL cache. */
+  force?: boolean;
+};
+
 export function fetchWeatherForecast(
   location: string,
   startDate: string,
   endDate: string,
-  signal?: AbortSignal,
+  options?: FetchWeatherForecastOptions | AbortSignal,
 ): Promise<WeatherForecastResponse> {
+  const normalized =
+    options instanceof AbortSignal ? { signal: options } : (options ?? {});
   return apiClient.get<WeatherForecastResponse>(
     "/api/v1/weather/forecast",
     {
       location,
       start_date: startDate,
       end_date: endDate,
+      ...(normalized.force ? { force: true } : {}),
     },
-    { signal },
+    { signal: normalized.signal },
   );
 }

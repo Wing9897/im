@@ -35,11 +35,12 @@
     "showDismissedHelp": "軟移除的事件會以刪除線顯示，可從此還原。",
     "showOngoing": "顯示進行中",
     "showOngoingHelp": "月曆格子裡顯示跨日事件的「+N 進行中」提示（僅圓點顏色區分）。",
-    "showEnding": "顯示完結",
-    "showEndingHelp": "月曆格子裡顯示跨日事件的「+N 完結」提示（僅圓點顏色區分）。"
+    "showEnding": "顯示結束",
+    "showEndingHelp": "月曆格子裡顯示「+N 結束」提示：跨日結束、物品到期，以及循環系列的最後一次（僅圓點顏色區分）。"
   },
   "view": {
     "loadTimeout": "載入逾時，請重試",
+    "loading": "載入中…",
     "refreshing": "正在更新時間軸"
   },
   "empty": {
@@ -61,16 +62,21 @@
       "六"
     ],
     "today": "今天",
+    "createOnDayHint": "右鍵開啟選單",
+    "dayContextMenuAria": "日期選單",
+    "addEventOnDay": "新增事件",
     "more": "+{count} 更多",
     "ongoing": "+{count} 進行中",
-    "ending": "+{count} 完結",
+    "ending": "+{count} 結束",
     "weatherAria": "天氣 {high} 至 {low} 度",
     "weatherTitle": "天氣：{high}°C／{low}°C",
+    "weatherRefresh": "更新天氣",
     "dayCellAria": "{date}，{count} 則事件",
     "dayCellAriaEmpty": "{date}，無事件",
     "noEventsToday": "當天沒有事件",
     "itemCount": "{count} 則",
-    "noEvents": "無事件"
+    "noEvents": "無事件",
+    "location": "地點：{value}"
   },
   "sidebar": {
     "closeAria": "關閉",
@@ -83,6 +89,9 @@
     "workset": "工作集：{value}",
     "source": "來源：{value}",
     "userEvent": "用戶事件",
+    "markImportant": "標為重要",
+    "unmarkImportant": "取消重要",
+    "importantBadge": "重要",
     "edit": "編輯",
     "dismiss": "從時間規劃移除",
     "restore": "還原到時間規劃",
@@ -92,19 +101,24 @@
     "overrideHint": "這是人工校正層，會覆蓋頁面顯示時間，但不會改動 AI 原始結果。"
   },
   "eventList": {
-    "day": "該日 ({count})",
-    "allRange": "全範圍 ({count})",
-    "rangeEvents": "範圍事件 ({count})",
     "empty": "沒有事件",
-    "groupUpcoming": "即將到來",
-    "groupOngoing": "進行中",
-    "groupEnded": "完結",
-    "groupUpcomingOnDay": "尚未開始於該日",
-    "groupOngoingOnDay": "該日進行中",
-    "groupCoveringOnDay": "跨日進行中",
-    "groupEndingSpanOnDay": "跨日完結",
-    "groupEndedOnDay": "已結束於該日",
-    "crossDay": "跨日"
+    "filterAll": "全部",
+    "filterOngoing": "進行中",
+    "filterUpcoming": "未開始",
+    "cardTagOngoingMultiDay": "跨日進行中",
+    "cardTagEndingOnDay": "結束於本日",
+    "cardTagEndingOnFocusedDay": "結束於當日",
+    "phaseFilterAria": "依進行狀態篩選本日事件",
+    "emptyFiltered": "目前篩選沒有對應事件",
+    "provenance": {
+      "task": "任務",
+      "user": "用戶",
+      "assistant": "助手",
+      "item": "物品",
+      "ics": "日曆匯入",
+      "a2a": "A2A",
+      "project": "專案"
+    }
   },
   "taskDetail": {
     "closeAria": "關閉詳情面板",
@@ -127,6 +141,7 @@
     "recurringCreated": "已建立週期任務；月曆會依重複規則展開多次。",
     "dismissFailed": "從時間規劃移除失敗",
     "restoreFailed": "還原到時間規劃失敗",
+    "importantFailed": "更新重要標記失敗",
     "dismissConfirm": "將「{title}」從時間規劃移除？之後可以還原。",
     "restoreConfirm": "將「{title}」還原到時間規劃？",
     "ganttLoadTimeout": "載入任務活動資料逾時，請重試"
@@ -153,6 +168,14 @@
     "titleAria": "標題",
     "titlePlaceholder": "標題",
     "taskLabel": "歸屬工作集",
+    "parentItem": "關聯物品（子日曆）",
+    "parentItemAria": "關聯物品",
+    "parentItemNone": "無（獨立事件）",
+    "parentItemHint": "選填。掛在物品下後，可依物品追溯相關日程。",
+    "remindBeforeDays": "提前提醒（天）",
+    "remindBeforeDaysAria": "開始前幾天提醒",
+    "remindBeforeDaysPlaceholder": "例如 1",
+    "remindBeforeDaysHint": "選填。相對開始日提前 N 天；留空表示不提醒。",
     "allDay": "全日",
     "durationPresets": "快速日數",
     "daysPreset": "{count} 天",
@@ -175,6 +198,7 @@
       "startRequired": "請填寫開始時間",
       "startInvalid": "開始時間格式無效",
       "endInvalid": "結束時間格式無效",
+      "remindInvalid": "提醒天數須為 0 或正整數",
       "rruleRequired": "請設定重複規則"
     }
   },

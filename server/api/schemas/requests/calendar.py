@@ -10,6 +10,13 @@ class TimelineDismissalBody(BaseModel):
     eventId: str
 
 
+class TimelineImportanceBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    source: str
+    eventId: str
+
+
 class CalendarImportInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -37,7 +44,9 @@ class UserEventCreateBody(BaseModel):
     body: str = ""
     location: str = ""
     isAllDay: bool = False
+    remindBeforeDays: int | None = None
     taskId: str | None = None
+    itemId: str | None = None
     worksetId: str | None = None
 
 
@@ -50,5 +59,7 @@ class UserEventPatchBody(BaseModel):
     body: str | None = None
     location: str | None = None
     isAllDay: bool | None = None
+    remindBeforeDays: int | None = None
     taskId: str | None = None
+    itemId: str | None = None
     worksetId: str | None = None

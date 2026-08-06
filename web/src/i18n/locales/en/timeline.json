@@ -36,10 +36,11 @@
     "showOngoing": "Show ongoing",
     "showOngoingHelp": "Show “+N ongoing” multi-day hints in month cells (dot color only).",
     "showEnding": "Show ending",
-    "showEndingHelp": "Show “+N ending” multi-day hints in month cells (dot color only)."
+    "showEndingHelp": "Show “+N ending” hints in month cells: cross-day ends, item expiry, and the final recurring occurrence (dot color only). Maps to the card tag “Ends today”."
   },
   "view": {
     "loadTimeout": "Load timed out — please retry",
+    "loading": "Loading…",
     "refreshing": "Refreshing timeline"
   },
   "empty": {
@@ -61,16 +62,21 @@
       "Sat"
     ],
     "today": "Today",
+    "createOnDayHint": "Right-click for menu",
+    "dayContextMenuAria": "Day menu",
+    "addEventOnDay": "Add event",
     "more": "+{count} more",
     "ongoing": "+{count} ongoing",
     "ending": "+{count} ending",
     "weatherAria": "Weather {high} to {low} degrees",
     "weatherTitle": "Weather: {high}°C / {low}°C",
+    "weatherRefresh": "Refresh weather",
     "dayCellAria": "{date}, {count} events",
     "dayCellAriaEmpty": "{date}, no events",
     "noEventsToday": "No events today",
     "itemCount": "{count}",
-    "noEvents": "No events"
+    "noEvents": "No events",
+    "location": "Location: {value}"
   },
   "sidebar": {
     "closeAria": "Close",
@@ -84,6 +90,9 @@
     "source": "Source: {value}",
     "userEvent": "User event",
     "edit": "Edit",
+    "markImportant": "Mark important",
+    "unmarkImportant": "Unmark important",
+    "importantBadge": "Important",
     "dismiss": "Remove from timeline",
     "restore": "Restore to timeline",
     "manualTime": "Manual time adjust",
@@ -92,19 +101,24 @@
     "overrideHint": "This is a manual correction layer. It overrides the displayed time but does not change the original AI result."
   },
   "eventList": {
-    "day": "This day ({count})",
-    "allRange": "Full range ({count})",
-    "rangeEvents": "Range events ({count})",
     "empty": "No events",
-    "groupUpcoming": "Upcoming",
-    "groupOngoing": "In progress",
-    "groupEnded": "Ended",
-    "groupUpcomingOnDay": "Later that day",
-    "groupOngoingOnDay": "Active that day",
-    "groupCoveringOnDay": "Multi-day in progress",
-    "groupEndingSpanOnDay": "Multi-day ending",
-    "groupEndedOnDay": "Ended that day",
-    "crossDay": "Multi-day"
+    "filterAll": "All",
+    "filterOngoing": "In progress",
+    "filterUpcoming": "Not started",
+    "cardTagOngoingMultiDay": "Multi-day in progress",
+    "cardTagEndingOnDay": "Ends today",
+    "cardTagEndingOnFocusedDay": "Ends that day",
+    "phaseFilterAria": "Filter today’s events by progress",
+    "emptyFiltered": "No events match this filter",
+    "provenance": {
+      "task": "Task",
+      "user": "User",
+      "assistant": "Assistant",
+      "item": "Item",
+      "ics": "Calendar import",
+      "a2a": "A2A",
+      "project": "Project"
+    }
   },
   "taskDetail": {
     "closeAria": "Close detail panel",
@@ -127,6 +141,7 @@
     "recurringCreated": "Recurring event created; the calendar expands it across matching days.",
     "dismissFailed": "Failed to remove from timeline",
     "restoreFailed": "Failed to restore to timeline",
+    "importantFailed": "Failed to update important marker",
     "dismissConfirm": "Remove “{title}” from the timeline? You can restore it later.",
     "restoreConfirm": "Restore “{title}” to the timeline?",
     "ganttLoadTimeout": "Timed out loading task activity — please retry"
@@ -153,6 +168,14 @@
     "titleAria": "Title",
     "titlePlaceholder": "Title",
     "taskLabel": "Ownership workset",
+    "parentItem": "Linked item (child calendar)",
+    "parentItemAria": "Linked item",
+    "parentItemNone": "None (standalone)",
+    "parentItemHint": "Optional. Link under an item to trace related schedules from inventory.",
+    "remindBeforeDays": "Remind before (days)",
+    "remindBeforeDaysAria": "Days before start to remind",
+    "remindBeforeDaysPlaceholder": "e.g. 1",
+    "remindBeforeDaysHint": "Optional. N days before start; leave empty for no remind.",
     "allDay": "All day",
     "durationPresets": "Quick days",
     "daysPreset": "{count} days",
@@ -175,6 +198,7 @@
       "startRequired": "Please enter a start time",
       "startInvalid": "Invalid start time format",
       "endInvalid": "Invalid end time format",
+      "remindInvalid": "Remind-before days must be 0 or a positive integer",
       "rruleRequired": "Please set a recurrence rule"
     }
   },

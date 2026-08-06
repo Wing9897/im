@@ -8,6 +8,7 @@ import { SourceFilterDialog } from "../components/SourceFilterDialog";
 import { catalogOrEventSourceOptions } from "../domain/timeline/sourceFilterOptions";
 import { withResolvedUserEventTaskNames } from "../domain/timeline/timedEventMerge";
 import { subscribeResourceModified } from "../domain/sse/resourceModified";
+import { shouldTimelineRefreshForResource } from "../domain/timeline/timelineCalendarRefresh";
 import { useGeneralWorksetLabel } from "../domain/timeline/useGeneralWorksetLabel";
 import {
   useTaskCatalog,
@@ -49,12 +50,7 @@ export function useBoardTimedEventsWidget(options: {
   useEffect(
     () =>
       subscribeResourceModified((detail) => {
-        if (
-          detail.resourceType === "task" ||
-          detail.resourceType === "user_event" ||
-          detail.resourceType === "item" ||
-          detail.resourceType === "item_category"
-        ) {
+        if (shouldTimelineRefreshForResource(detail.resourceType)) {
           void refresh();
         }
       }),

@@ -19,12 +19,17 @@ class UserEventResponse(BaseModel):
     timezone: str | None = None
     icsUid: str | None = None
     icsSource: str | None = None
+    #: Optional remind-N-days-before-start offset; null when unset.
+    remindBeforeDays: int | None = None
     #: Analysis-task provenance id, or empty string when unset (NULL in DB).
     taskId: str = ""
+    #: Optional parent trackable item (child calendar); null when stand-alone.
+    itemId: str | None = None
     #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
     worksetId: str
     source: Literal["user"]
     dismissed: bool
+    important: bool = False
     createdAt: str
     updatedAt: str
 
@@ -52,6 +57,7 @@ class AnalysisEventResponse(BaseModel):
     createdAt: str
     updatedAt: str
     dismissed: bool
+    important: bool = False
 
 
 class AnalysisEventsPageResponse(BaseModel):
@@ -80,6 +86,12 @@ class TimelineDismissalResponse(BaseModel):
     dismissedAt: str
 
 
+class TimelineImportanceResponse(BaseModel):
+    source: Literal["analysis", "user", "recurring", "item"]
+    eventId: str
+    markedAt: str
+
+
 class CalendarOccurrenceResponse(BaseModel):
     """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."""
 
@@ -95,6 +107,9 @@ class CalendarOccurrenceResponse(BaseModel):
     description: str | None = None
     rrule: str = ""
     dismissed: bool = False
+    important: bool = False
+    # True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
+    isLastOccurrence: bool = False
     source: Literal["recurring", "item"] = "recurring"
     worksetId: str | None = None
     itemId: str | None = None

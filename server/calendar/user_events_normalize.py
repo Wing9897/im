@@ -34,6 +34,10 @@ class UserEventWorksetIdError(UserEventValidationError):
     """Invalid or unknown ``worksetId`` (HTTP 400 at the route boundary)."""
 
 
+class UserEventItemIdError(UserEventValidationError):
+    """Invalid or unknown ``itemId`` (HTTP 400 at the route boundary)."""
+
+
 def _require_nonempty_title(title: str) -> str:
     cleaned = (title or "").strip()
     if not cleaned:
@@ -135,12 +139,43 @@ async def resolve_user_event_workset_id(db: Database, workset_id: Any) -> str:
     return normalized
 
 
+def normalize_remind_before_days(value: Any) -> int | None:
+    """Optional non-negative day offset; blank / null clears."""
+    if value is None or value is _UNSET:
+        return None
+    if isinstance(value, str) and not value.strip():
+        return None
+    try:
+        days = int(value)
+    except (TypeError, ValueError) as exc:
+        raise UserEventValidationError("remindBeforeDays must be an integer") from exc
+    if days < 0:
+        raise UserEventValidationError("remindBeforeDays must be >= 0")
+    if days > 3660:
+        raise UserEventValidationError("remindBeforeDays must be <= 3660")
+    return days
+
+
+async def resolve_user_event_item_id(db: Database, item_id: Any) -> str | None:
+    """Resolve optional parent item id (NULL = stand-alone calendar event)."""
+    if item_id is None or item_id is _UNSET:
+        return None
+    cleaned = str(item_id).strip()
+    if not cleaned:
+        return None
+    row = await db.fetch_one("SELECT id FROM items WHERE id = ?", (cleaned,))
+    if row is None:
+        raise UserEventItemIdError("itemId does not refer to an existing item")
+    return cleaned
+
+
 def build_user_event_list_filters(
     *,
     start: str | None = None,
     end: str | None = None,
     task_id: str | None = None,
     workset_id: str | None = None,
+    item_id: str | None = None,
 ) -> tuple[list[str], list[Any]]:
     """Build SQL WHERE clauses for ``list_user_events``.
 
@@ -176,4 +211,11 @@ def build_user_event_list_filters(
         if wid:
             clauses.append("workset_id = ?")
             params.append(wid)
+    if item_id is not None:
+        iid = str(item_id).strip()
+        if iid:
+            clauses.append("item_id = ?")
+            params.append(iid)
+        else:
+            clauses.append("item_id IS NULL")
     return clauses, params

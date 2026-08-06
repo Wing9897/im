@@ -35,12 +35,19 @@ describe("eventOverlapsLocalDay", () => {
 });
 
 describe("computeSidebarEvents", () => {
-  it("returns all events when no day is focused", () => {
-    const events = [
-      makeTimelineItem({ id: "a" }),
-      makeTimelineItem({ id: "b" }),
-    ];
-    expect(computeSidebarEvents(null, events)).toEqual(events);
+  it("defaults to today when no day is focused", () => {
+    const today = makeTimelineItem({
+      id: "today",
+      startTime: new Date(2026, 7, 8, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 8, 11, 0, 0).toISOString(),
+    });
+    const other = makeTimelineItem({
+      id: "other",
+      startTime: new Date(2026, 7, 9, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 7, 9, 11, 0, 0).toISOString(),
+    });
+    const result = computeSidebarEvents(null, [today, other], new Date(2026, 7, 8, 12, 0, 0));
+    expect(result.map((e) => e.id)).toEqual(["today"]);
   });
 
   it("filters to events intersecting the focused local day", () => {

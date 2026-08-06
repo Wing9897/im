@@ -221,6 +221,57 @@ describe("SourceFilterDialog", () => {
     ).toBeTruthy();
   });
 
+  it("searching by workset name keeps member tasks visible", () => {
+    renderDialog();
+    openDialog();
+    const search = document.querySelector(
+      '[data-testid="source-filter-dialog-search"]',
+    ) as HTMLInputElement;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    act(() => {
+      setter.call(search, "Ops");
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="board-source-filter-task-1"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="board-source-filter-task-2"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="board-workset-filter-__user__"]')).toBeNull();
+  });
+
+  it("task-only coverage of all members leaves workset indeterminate until promoted", () => {
+    const onChange = renderDialog({ taskIds: [], worksetIds: [] });
+    openDialog();
+    act(() => {
+      (
+        document.querySelector(
+          '[data-testid="board-workset-expand-ws-1"]',
+        ) as HTMLButtonElement
+      ).click();
+    });
+    act(() => {
+      (document.querySelector('[data-testid="board-source-filter-task-1"]') as HTMLInputElement).click();
+      (document.querySelector('[data-testid="board-source-filter-task-2"]') as HTMLInputElement).click();
+    });
+    const wsCheckbox = document.querySelector(
+      '[data-testid="board-workset-filter-ws-1"]',
+    ) as HTMLInputElement;
+    expect(wsCheckbox.checked).toBe(false);
+    expect(wsCheckbox.indeterminate).toBe(true);
+
+    act(() => {
+      wsCheckbox.click();
+    });
+    act(() => {
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const apply = buttons.find((btn) => btn.textContent === "Apply");
+      apply?.click();
+    });
+    expect(onChange).toHaveBeenCalledWith({
+      taskIds: [],
+      worksetIds: ["ws-1"],
+    });
+  });
+
   it("lists web_intel tasks with mode label and allows selecting them", () => {
     const onChange = vi.fn();
     act(() => {

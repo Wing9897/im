@@ -1,12 +1,16 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { listItems, type TrackableItem } from "../../api/items";
 import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
 import { RecurrenceRuleEditor } from "../task/RecurrenceRuleEditor";
 import {
   Button,
+  FieldLabel,
   FormStack,
   SegmentedControl,
+  SelectField,
   TextField,
 } from "../ui";
 import { UserEventTimeSection } from "./UserEventTimeSection";
@@ -49,6 +53,7 @@ export function UserEventDialog({
   onSubmit,
 }: UserEventDialogProps) {
   const { t } = useTranslation("timeline");
+  const [itemOptions, setItemOptions] = useState<TrackableItem[]>([]);
   const {
     values,
     setValues,
@@ -71,6 +76,21 @@ export function UserEventDialog({
     titleOverride,
     onSubmit,
   });
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    void listItems({ status: "active" })
+      .then((items) => {
+        if (!cancelled) setItemOptions(items);
+      })
+      .catch(() => {
+        if (!cancelled) setItemOptions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   const displayError = error ?? localError;
   const introText =
@@ -127,6 +147,31 @@ export function UserEventDialog({
           className="w-full"
           data-testid="user-event-workset-select"
         />
+
+        <div className="flex flex-col gap-xs">
+          <FieldLabel className="mb-0" htmlFor="user-event-item">
+            {t("userEvent.parentItem")}
+          </FieldLabel>
+          <SelectField
+            id="user-event-item"
+            aria-label={t("userEvent.parentItemAria")}
+            value={values.itemId}
+            onChange={(event) =>
+              setValues((prev) => ({ ...prev, itemId: event.target.value }))
+            }
+            className="w-full"
+            data-testid="user-event-item-select"
+          >
+            <option value="">{t("userEvent.parentItemNone")}</option>
+            {itemOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.emoji ? `${item.emoji} ` : ""}
+                {item.title}
+              </option>
+            ))}
+          </SelectField>
+          <p className="m-0 text-caption text-text-muted">{t("userEvent.parentItemHint")}</p>
+        </div>
 
         <UserEventTimeSection
           values={values}

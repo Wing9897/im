@@ -46,8 +46,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": CONSULT_ADVISOR_TOOL_NAME,
         "description": (
-            "Delegate to the task-form advisor when the user wants to create or edit "
-            "an analysis task on the task editor page. Pass a clear natural-language "
+            "Delegate to the task advisor when the user wants to create or edit "
+            "an analysis task on the task create/edit page. Pass a clear natural-language "
             "instruction describing the desired form changes. Returns a user-facing "
             "message and optional taskConfig fields to apply to the form. "
             "Do not invent a full taskConfig yourself."

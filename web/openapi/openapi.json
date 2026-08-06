@@ -4508,6 +4508,143 @@
         }
       }
     },
+    "/api/v1/calendar/importance": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Importance",
+        "operationId": "list_importance_api_v1_calendar_importance_get",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimelineImportanceResponse"
+                  },
+                  "title": "Response List Importance Api V1 Calendar Importance Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Put Importance",
+        "operationId": "put_importance_api_v1_calendar_importance_put",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimelineImportanceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimelineImportanceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Delete Importance",
+        "operationId": "delete_importance_api_v1_calendar_importance_delete",
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Source"
+            }
+          },
+          {
+            "name": "eventId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Eventid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/calendar/user-events": {
       "get": {
         "tags": [
@@ -4579,6 +4716,22 @@
                 }
               ],
               "title": "Workset Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
             }
           }
         ],
@@ -5631,6 +5784,18 @@
               "format": "date",
               "title": "End Date"
             }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Bypass the successful forecast TTL cache and refetch providers.",
+              "default": false,
+              "title": "Force"
+            },
+            "description": "Bypass the successful forecast TTL cache and refetch providers."
           }
         ],
         "responses": {
@@ -6856,6 +7021,11 @@
           "dismissed": {
             "type": "boolean",
             "title": "Dismissed"
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important",
+            "default": false
           }
         },
         "type": "object",
@@ -7988,6 +8158,16 @@
           "dismissed": {
             "type": "boolean",
             "title": "Dismissed",
+            "default": false
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important",
+            "default": false
+          },
+          "isLastOccurrence": {
+            "type": "boolean",
+            "title": "Islastoccurrence",
             "default": false
           },
           "source": {
@@ -12916,6 +13096,54 @@
         ],
         "title": "TimelineEventTimeOverrideSchema"
       },
+      "TimelineImportanceBody": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "source",
+          "eventId"
+        ],
+        "title": "TimelineImportanceBody"
+      },
+      "TimelineImportanceResponse": {
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "analysis",
+              "user",
+              "recurring",
+              "item"
+            ],
+            "title": "Source"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "markedAt": {
+            "type": "string",
+            "title": "Markedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source",
+          "eventId",
+          "markedAt"
+        ],
+        "title": "TimelineImportanceResponse"
+      },
       "TrendingTopicResponse": {
         "properties": {
           "id": {
@@ -13056,6 +13284,17 @@
             "title": "Isallday",
             "default": false
           },
+          "remindBeforeDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remindbeforedays"
+          },
           "taskId": {
             "anyOf": [
               {
@@ -13066,6 +13305,17 @@
               }
             ],
             "title": "Taskid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
           },
           "worksetId": {
             "anyOf": [
@@ -13155,6 +13405,17 @@
             ],
             "title": "Isallday"
           },
+          "remindBeforeDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remindbeforedays"
+          },
           "taskId": {
             "anyOf": [
               {
@@ -13165,6 +13426,17 @@
               }
             ],
             "title": "Taskid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
           },
           "worksetId": {
             "anyOf": [
@@ -13271,10 +13543,32 @@
             ],
             "title": "Icssource"
           },
+          "remindBeforeDays": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remindbeforedays"
+          },
           "taskId": {
             "type": "string",
             "title": "Taskid",
             "default": ""
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
           },
           "worksetId": {
             "type": "string",
@@ -13288,6 +13582,11 @@
           "dismissed": {
             "type": "boolean",
             "title": "Dismissed"
+          },
+          "important": {
+            "type": "boolean",
+            "title": "Important",
+            "default": false
           },
           "createdAt": {
             "type": "string",

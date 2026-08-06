@@ -16,7 +16,9 @@ vi.mock("../api/weather", () => ({
 }));
 
 const {
+  WEATHER_CACHE_MS,
   forecastIntersection,
+  resetWeatherCachesForTests,
   systemLocationFromTimezone,
   useMonthWeather,
 } = await import("./useMonthWeather");
@@ -29,10 +31,15 @@ function daysFrom(start: Date, count: number): Date[] {
 }
 
 function WeatherHarness({ enabled = true, days }: { enabled?: boolean; days: Date[] }) {
-  const { weatherByDate, error } = useMonthWeather(enabled, days);
+  const { weatherByDate, error, loading, refresh } = useMonthWeather(enabled, days);
   return createElement(
     "output",
-    { "data-error": error ?? "" },
+    {
+      "data-error": error ?? "",
+      "data-loading": loading ? "1" : "0",
+      "data-testid": "weather-probe",
+      onClick: () => refresh(),
+    },
     JSON.stringify(weatherByDate),
   );
 }
@@ -56,11 +63,13 @@ describe("month weather", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 6, 31, 12));
+    resetWeatherCachesForTests();
     mockFetchSettings.mockReset();
     mockFetchForecast.mockReset();
   });
 
   afterEach(() => {
+    resetWeatherCachesForTests();
     vi.useRealTimers();
   });
 
@@ -95,7 +104,7 @@ describe("month weather", () => {
     act(() => rendered.root.unmount());
   });
 
-  it("deduplicates concurrent requests and reuses successful results", async () => {
+  it("deduplicates concurrent requests and reuses successful results within TTL", async () => {
     mockFetchSettings.mockResolvedValue({ weatherLocation: "Dedup City" });
     let resolveForecast!: (value: unknown) => void;
     mockFetchForecast.mockImplementation(
@@ -132,12 +141,37 @@ describe("month weather", () => {
     act(() => cached.root.unmount());
   });
 
+  it("refetches after the success TTL expires", async () => {
+    mockFetchSettings.mockResolvedValue({ weatherLocation: "TTL City" });
+    mockFetchForecast.mockResolvedValue({
+      daily: {
+        time: ["2026-07-31"],
+        weather_code: [1],
+        temperature_2m_max: [30],
+        temperature_2m_min: [22],
+      },
+    });
+    const days = daysFrom(new Date(2026, 6, 31), 2);
+    const first = renderWeather(days);
+    await settleEffects();
+    expect(mockFetchForecast).toHaveBeenCalledTimes(1);
+    act(() => first.root.unmount());
+
+    vi.setSystemTime(new Date(Date.now() + WEATHER_CACHE_MS + 1));
+    const second = renderWeather(days);
+    await settleEffects();
+
+    expect(mockFetchForecast).toHaveBeenCalledTimes(2);
+    act(() => second.root.unmount());
+  });
+
   it("cancels an orphaned request", async () => {
     mockFetchSettings.mockResolvedValue({ weatherLocation: "Cancel City" });
     mockFetchForecast.mockImplementation(() => new Promise(() => {}));
     const rendered = renderWeather(daysFrom(new Date(2026, 6, 31), 2));
     await settleEffects();
-    const signal = mockFetchForecast.mock.calls[0][3] as AbortSignal;
+    const options = mockFetchForecast.mock.calls[0][3] as { signal: AbortSignal };
+    const signal = options.signal;
 
     act(() => rendered.root.unmount());
 
@@ -160,5 +194,33 @@ describe("month weather", () => {
     expect(mockFetchForecast).toHaveBeenCalledTimes(1);
     expect(second.container.querySelector("output")?.getAttribute("data-error")).toBe("offline");
     act(() => second.root.unmount());
+  });
+
+  it("manual refresh bypasses the success cache and forces a provider refetch", async () => {
+    mockFetchSettings.mockResolvedValue({ weatherLocation: "Refresh City" });
+    mockFetchForecast.mockResolvedValue({
+      daily: {
+        time: ["2026-07-31"],
+        weather_code: [1],
+        temperature_2m_max: [30],
+        temperature_2m_min: [22],
+      },
+    });
+    const days = daysFrom(new Date(2026, 6, 31), 2);
+    const rendered = renderWeather(days);
+    await settleEffects();
+    expect(mockFetchForecast).toHaveBeenCalledTimes(1);
+    expect(mockFetchForecast.mock.calls[0][3]).toMatchObject({ force: false });
+
+    act(() => {
+      rendered.container.querySelector("output")?.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
+    });
+    await settleEffects();
+
+    expect(mockFetchForecast).toHaveBeenCalledTimes(2);
+    expect(mockFetchForecast.mock.calls[1][3]).toMatchObject({ force: true });
+    act(() => rendered.root.unmount());
   });
 });

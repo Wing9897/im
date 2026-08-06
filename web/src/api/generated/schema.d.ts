@@ -2567,6 +2567,17 @@ export interface components {
              */
             dismissed: boolean;
             /**
+             * Important
+             * @default false
+             */
+            important: boolean;
+            /**
+             * Islastoccurrence
+             * @description True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
+             * @default false
+             */
+            isLastOccurrence: boolean;
+            /**
              * Source
              * @default recurring
              * @enum {string}
@@ -8282,6 +8293,8 @@ export interface operations {
                 location: string;
                 start_date: string;
                 end_date: string;
+                /** Bypass the successful forecast TTL cache and refetch providers. */
+                force?: boolean;
             };
             header?: never;
             path?: never;

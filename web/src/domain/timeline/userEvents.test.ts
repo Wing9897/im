@@ -6,6 +6,7 @@ import {
   getGeneralWorksetLabel,
   isNullProvenanceTaskId,
   isTimelineAssignableAnalysisMode,
+  normalizeOptionalWorksetId,
   resolveUserEventTaskName,
   toUserEventFormWorksetId,
 } from "./userEvents";
@@ -20,6 +21,16 @@ describe("userEvents helpers", () => {
     expect(toUserEventFormWorksetId(null)).toBe(SYSTEM_WORKSET_ID);
     expect(toUserEventFormWorksetId("")).toBe(SYSTEM_WORKSET_ID);
     expect(toUserEventFormWorksetId("ws-1")).toBe("ws-1");
+
+    // Optional create preselect: non-strings must not call .trim (click events).
+    expect(normalizeOptionalWorksetId(undefined)).toBeNull();
+    expect(normalizeOptionalWorksetId(null)).toBeNull();
+    expect(normalizeOptionalWorksetId("")).toBeNull();
+    expect(normalizeOptionalWorksetId("   ")).toBeNull();
+    expect(normalizeOptionalWorksetId("ws-1")).toBe("ws-1");
+    expect(normalizeOptionalWorksetId("  ws-1  ")).toBe("ws-1");
+    expect(normalizeOptionalWorksetId(42)).toBeNull();
+    expect(normalizeOptionalWorksetId({ type: "click" })).toBeNull();
   });
 
   it("filters assignable analysis modes and optional active-only", () => {

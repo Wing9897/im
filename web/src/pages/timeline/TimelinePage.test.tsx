@@ -79,8 +79,30 @@ vi.mock("./useTimelinePageContainer", () => ({
   useTimelinePageContainer: () => mockUseTimelinePageContainer(),
 }));
 
+vi.mock("../../hooks/useMonthWeather", () => ({
+  useMonthWeather: () => ({
+    weatherByDate: {},
+    error: null,
+    loading: false,
+    refresh: vi.fn(),
+  }),
+}));
+
 vi.mock("../../components/ui", () => ({
   AppPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PillButton: ({
+    children,
+    onClick,
+    disabled,
+  }: {
+    children: ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <button type="button" onClick={onClick} disabled={disabled}>
+      {children}
+    </button>
+  ),
   Button: ({
     children,
     onClick,
@@ -155,6 +177,8 @@ const formValues: UserEventFormValues = {
   body: "Notes",
   worksetId: "__user__",
   isAllDay: false,
+  remindBeforeDays: "",
+  itemId: "",
   rrule: "",
   eventStartTime: "",
   eventEndTime: "",
@@ -321,6 +345,8 @@ describe("TimelinePage user-event CRUD", () => {
       body: "Notes",
       location: "Office",
       isAllDay: false,
+      remindBeforeDays: null,
+      itemId: null,
       worksetId: "__user__",
     });
     expect(mockCreateRecurringTimelineEvent).not.toHaveBeenCalled();
@@ -353,6 +379,8 @@ describe("TimelinePage user-event CRUD", () => {
         body: "Sync",
         worksetId: "__user__",
         isAllDay: false,
+        remindBeforeDays: "",
+        itemId: "",
         rrule: "FREQ=WEEKLY;BYDAY=MO",
         eventStartTime: "09:00",
         eventEndTime: "09:30",

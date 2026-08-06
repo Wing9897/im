@@ -9,6 +9,8 @@ import { subscribeBoardPoll } from "./boardPollBus";
  */
 export const BOARD_POLL_MS = {
   standard: 45_000,
+  /** Weather forecasts — refresh once per hour (+ manual refresh button). */
+  weather: 60 * 60 * 1000,
 } as const;
 
 interface UseBoardWidgetPollResult<T> {

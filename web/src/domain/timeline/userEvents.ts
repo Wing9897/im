@@ -33,6 +33,16 @@ export function toUserEventFormWorksetId(worksetId: string | null | undefined): 
   return trimmed || SYSTEM_WORKSET_ID;
 }
 
+/**
+ * Optional preselect for "create user event" (deep-link / toolbar).
+ * Non-strings (e.g. React click events leaked via onClick={handler}) → null.
+ */
+export function normalizeOptionalWorksetId(worksetId: unknown): string | null {
+  if (typeof worksetId !== "string") return null;
+  const trimmed = worksetId.trim();
+  return trimmed || null;
+}
+
 type AssignableTaskLike = {
   id: string;
   name: string;

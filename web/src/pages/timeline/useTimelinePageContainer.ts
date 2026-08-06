@@ -6,7 +6,13 @@ import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
 import { findActivitySpan } from "../tasks/project/projectDetailModel";
 import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
-import { startOfDay } from "../../domain/timeline/dateUtils";
+import {
+  addDays,
+  addMonths,
+  addQuarters,
+  addYears,
+  startOfDay,
+} from "../../domain/timeline/dateUtils";
 import { usePersistedState } from "../../hooks/usePersistedState";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
 import { useTimelineData } from "./useTimelineData";
@@ -40,7 +46,7 @@ const VALID_VIEW_MODES = ["calendar", "gantt"] as const;
  * - Navigation cursors (`timeCursor` / `rangeStart` / `monthCursor` / `focusedDay`)
  *   stay in `useTimelineNavigation` — do not merge into selection or one mega-store.
  * - `showDismissed` gates soft-dismiss visibility for calendar + gantt; default on.
- * - `showOngoing` / `showEnding` gate month-cell「+N 进行中」／「+N 完结」chips; default on.
+ * - `showOngoing` / `showEnding` gate month-cell「+N 进行中」／「+N 结束」chips; default on.
  * - Client `eventStatuses` / `eventTimeOverrides` are SQLite ui-prefs (not soft-dismiss).
  * - `?view=` is one-shot deep-link (apply then clear) via fingerprint — do not leave
  *   sticky `?view=` forcing the toggle.
@@ -86,16 +92,18 @@ export function useTimelinePageContainer() {
   } = useTimelineAnnotations();
   const [focusedDayIso, setFocusedDayIso] = usePersistedState<string | null>(
     TIMELINE_FOCUSED_DAY_STORAGE_KEY,
-    null,
+    startOfDay(new Date()).toISOString(),
   );
   const focusedDay = useMemo(() => {
     if (focusedDayIso === null || focusedDayIso === "") {
-      return null;
+      // Legacy null / cleared → today so the sidebar stays day-scoped.
+      return startOfDay(new Date());
     }
-    return parsePersistedTimelineDay(focusedDayIso);
+    return parsePersistedTimelineDay(focusedDayIso) ?? startOfDay(new Date());
   }, [focusedDayIso]);
   const setFocusedDay = useCallback((day: Date | null) => {
-    setFocusedDayIso(day ? startOfDay(day).toISOString() : null);
+    // null means "reset to today" (sidebar never shows the full view range).
+    setFocusedDayIso(startOfDay(day ?? new Date()).toISOString());
   }, [setFocusedDayIso]);
 
   const [selectedGanttTaskId, setSelectedGanttTaskId] = usePersistedState<string | null>(
@@ -190,7 +198,8 @@ export function useTimelinePageContainer() {
 
   const handleJumpTo = useCallback(
     (scale: Parameters<typeof navigation.jumpTo>[0]) => {
-      setFocusedDay(null);
+      // Jump snaps the cursor to today — keep the sidebar on today too.
+      setFocusedDay(startOfDay(new Date()));
       navigation.jumpTo(scale);
     },
     [navigation, setFocusedDay],
@@ -198,10 +207,17 @@ export function useTimelinePageContainer() {
 
   const handleMoveCursor = useCallback(
     (delta: number) => {
-      if (navigation.timeScale === "month") {
-        setFocusedDay(null);
-      }
+      const scale = navigation.timeScale;
+      const cursor = navigation.timeCursor;
+      let nextFocus = cursor;
+      if (scale === "day") nextFocus = addDays(cursor, delta);
+      else if (scale === "week") nextFocus = addDays(cursor, delta * 7);
+      else if (scale === "quarter") nextFocus = addQuarters(cursor, delta);
+      else if (scale === "year") nextFocus = addYears(cursor, delta);
+      else nextFocus = addMonths(cursor, delta);
       navigation.moveCursor(delta);
+      // Sidebar stays day-scoped: follow the navigated cursor day.
+      setFocusedDay(startOfDay(nextFocus));
     },
     [navigation, setFocusedDay],
   );

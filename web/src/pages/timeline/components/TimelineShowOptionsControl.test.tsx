@@ -109,7 +109,7 @@ describe("TimelineShowOptionsControl", () => {
     expect(document.activeElement).toBe(dismissed);
     expect(menu?.textContent).toContain("顯示已移除");
     expect(menu?.textContent).toContain("顯示進行中");
-    expect(menu?.textContent).toContain("顯示完結");
+    expect(menu?.textContent).toContain("顯示結束");
     expect(
       document.getElementById(dismissed.getAttribute("aria-describedby")!)?.textContent,
     ).toContain("軟移除");

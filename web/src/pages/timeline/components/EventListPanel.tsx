@@ -1,43 +1,91 @@
+import { useEffect, useMemo, useState } from "react";
+import { MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge, PillButton, SurfaceCard } from "../../../components/ui";
+import { Badge, FilterChip, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import {
-  itemDateKindBadgeTone,
-  itemDateKindDotClass,
+  useTaskCatalog,
+  useWorksetNameById,
+} from "../../../context/TaskCatalogContext";
+import {
   itemDateKindLabel,
+  itemDateKindMarkerClass,
 } from "../../../domain/items/itemCalendarProjection";
 import {
-  groupEventsByDayTimePhase,
-  groupEventsByTimePhase,
-  isCrossDayEvent,
+  EVENT_LIST_DAY_PHASE_TAG_CLASS,
+  EVENT_LIST_DAY_PHASE_TAG_META,
+  calendarLocationDisplay,
+  formatEventListProvenanceLabel,
+  resolveEventCardDisplay,
+  resolveEventListWorksetName,
+  type EventListCardMetaLookups,
+} from "../../../domain/timeline/eventListCardMeta";
+import {
+  filterSidebarDayGroups,
+  groupSidebarDayEvents,
+  type SidebarDayPhaseFilter,
 } from "../../../domain/timeline/eventTimePhase";
-import { usePersistedState } from "../../../hooks/usePersistedState";
+import { startOfDay } from "../../../domain/timeline/dateUtils";
+import {
+  getEventStatusColor,
+  getEventStatusLabel,
+} from "../../../domain/timeline/status";
+import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
 import type { TimelineItem } from "../../../types";
 import { formatOsDateTime } from "../../../utils/time";
 import { dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
-import { TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY } from "../../../domain/prefs";
+import { resolveSidebarDay } from "../timelinePageUtils";
+import { useTimelinePageContext } from "../TimelinePageContext";
 
 /** Collapse newlines/spaces for single-line list previews (line-clamp breaks on multi-line body). */
 export function previewEventBody(body: string): string {
   return body.replace(/\s+/g, " ").trim();
 }
 
+function eventListTimeLabel(event: TimelineItem, allDayLabel: string): string {
+  if (event.isAllDay) return allDayLabel;
+  const start = formatOsDateTime(event.startTime, {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  if (!event.endTime) return start;
+  return `${start} – ${formatOsDateTime(event.endTime, {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
+
 function EventListItem({
   event,
+  focusedDay,
   onSelectEvent,
-  showCrossDayBadge,
+  metaLookups,
 }: {
   event: TimelineItem;
+  focusedDay: Date;
   onSelectEvent: (event: TimelineItem | null) => void;
-  showCrossDayBadge: boolean;
+  metaLookups: EventListCardMetaLookups;
 }) {
   const { t } = useTranslation("timeline");
+  const { eventStatuses } = useTimelinePageContext();
   const bodyPreview = event.body ? previewEventBody(event.body) : "";
   const dismissed = Boolean(event.dismissed);
-  const crossDay = showCrossDayBadge && isCrossDayEvent(event);
-  const itemKind =
-    event.source === "item" && event.itemDateKind ? event.itemDateKind : null;
+  const { leading, showRemindBadge, dayPhaseTag, title } =
+    resolveEventCardDisplay(event, focusedDay);
+  const location = calendarLocationDisplay(event.location);
+  const status = eventStatuses[event.id] ?? "pending";
+  const statusColor = getEventStatusColor(status);
+  const timeLabel = eventListTimeLabel(event, t("userEvent.allDay"));
+  const worksetLabel = t("sidebar.workset", {
+    value: resolveEventListWorksetName(event, metaLookups),
+  });
+  const provenanceLabel = formatEventListProvenanceLabel(event, t);
+
   return (
     <SurfaceCard
       density="field"
@@ -52,36 +100,44 @@ function EventListItem({
         onClick={() => onSelectEvent(event)}
       >
         <div className="flex min-w-0 items-start gap-sm">
-          {itemKind ? (
+          {leading ? (
             <span
-              className={`mt-1.5 ${itemDateKindDotClass(itemKind)}`}
+              className={`mt-1 ${itemDateKindMarkerClass(
+                leading.type === "item" ? leading.itemDateKind : null,
+              )}`}
               aria-hidden="true"
-              data-testid="timeline-item-kind-dot"
-            />
+              data-testid={
+                leading.type === "important"
+                  ? "timeline-important-marker"
+                  : "timeline-item-kind-marker"
+              }
+            >
+              {leading.emoji}
+            </span>
           ) : null}
           <div
             className={`${cardTitleClass} min-w-0 flex-1 truncate ${
               dismissed ? dismissedTitleClass : ""
             }`}
-            title={event.title}
+            title={title}
           >
-            {event.title}
+            {title}
           </div>
-          {itemKind ? (
+          {showRemindBadge ? (
             <Badge
-              tone={itemDateKindBadgeTone(itemKind)}
+              tone="warning"
               className="normal-case tracking-normal shrink-0"
-              data-testid="timeline-item-kind-badge"
+              data-testid="timeline-remind-badge"
             >
-              {itemDateKindLabel(itemKind)}
+              {itemDateKindLabel("remind")}
             </Badge>
           ) : null}
-          {crossDay ? (
+          {dayPhaseTag ? (
             <span
-              className="shrink-0 rounded-sm bg-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] px-1.5 py-0.5 text-[10px] font-semibold leading-none text-text-secondary"
-              data-testid="timeline-event-cross-day"
+              className={EVENT_LIST_DAY_PHASE_TAG_CLASS}
+              data-testid={EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].testId}
             >
-              {t("eventList.crossDay")}
+              {t(EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].labelKey)}
             </span>
           ) : null}
         </div>
@@ -93,20 +149,26 @@ function EventListItem({
             {bodyPreview}
           </div>
         ) : null}
-        <div className={`${captionClass} mt-1 min-w-0 truncate`}>
-          {formatOsDateTime(event.startTime, {
-            month: "numeric",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-          {event.endTime &&
-            ` – ${formatOsDateTime(event.endTime, {
-              month: "numeric",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}`}
+        <div
+          className={`${captionClass} mt-1 flex min-w-0 items-center gap-1 truncate`}
+          data-testid="timeline-event-list-location"
+        >
+          <MapPin size={12} strokeWidth={2} className="shrink-0 opacity-70" aria-hidden="true" />
+          <span className="min-w-0 truncate" title={location}>
+            {t("calendar.location", { value: location })}
+          </span>
+        </div>
+        <div className={`${captionClass} mt-1 min-w-0 truncate`}>{timeLabel}</div>
+        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-sm gap-y-0.5 text-[11px] text-text-muted">
+          <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
+            {getEventStatusLabel(status)}
+          </span>
+          <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
+            {worksetLabel}
+          </span>
+          <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
+            {provenanceLabel}
+          </span>
         </div>
       </button>
     </SurfaceCard>
@@ -116,15 +178,17 @@ function EventListItem({
 function EventListGroup({
   title,
   events,
+  focusedDay,
   onSelectEvent,
   testId,
-  showCrossDayBadge,
+  metaLookups,
 }: {
   title: string;
   events: TimelineItem[];
+  focusedDay: Date;
   onSelectEvent: (event: TimelineItem | null) => void;
   testId: string;
-  showCrossDayBadge: boolean;
+  metaLookups: EventListCardMetaLookups;
 }) {
   if (events.length === 0) return null;
   return (
@@ -143,126 +207,126 @@ function EventListGroup({
         <EventListItem
           key={event.id}
           event={event}
+          focusedDay={focusedDay}
           onSelectEvent={onSelectEvent}
-          showCrossDayBadge={showCrossDayBadge}
+          metaLookups={metaLookups}
         />
       ))}
     </section>
   );
 }
 
-/** Sub-component: event list with toggle between day-focused and full-range */
+/**
+ * Right-hand event list: always scoped to one local day (selected day, default today).
+ * Quick filters: 全部 + 进行中 / 未开始 (vs **real now** only).
+ * Card tags: 跨日进行中 + 结束于本日/当日 (aligned with month +N chips).
+ */
 export function EventListPanel({
   rangeEvents,
-  allRangeEvents,
-  hasDayFocus,
   focusedDay,
   onSelectEvent,
 }: {
+  /** Day-filtered events for the sidebar (from {@link computeSidebarEvents}). */
   rangeEvents: TimelineItem[];
-  allRangeEvents: TimelineItem[];
-  hasDayFocus: boolean;
   focusedDay: Date | null;
   onSelectEvent: (event: TimelineItem | null) => void;
 }) {
   const { t } = useTranslation("timeline");
-  /** Preference when a day is focused; full range always shows all events. */
-  const [preferShowAll, setPreferShowAll] = usePersistedState(
-    TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY,
-    false,
+  const { tasks } = useTaskCatalog();
+  const worksetNameById = useWorksetNameById();
+  const generalWorksetLabel = useGeneralWorksetLabel();
+  const taskWorksetById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const task of tasks) {
+      if (typeof task.worksetId === "string" && task.worksetId.trim()) {
+        map.set(task.id, task.worksetId.trim());
+      }
+    }
+    return map;
+  }, [tasks]);
+  const metaLookups = useMemo<EventListCardMetaLookups>(
+    () => ({ generalWorksetLabel, worksetNameById, taskWorksetById }),
+    [generalWorksetLabel, worksetNameById, taskWorksetById],
   );
-  const showAll = !hasDayFocus || preferShowAll;
-  const dayMode = !showAll && focusedDay != null;
+  const day = resolveSidebarDay(focusedDay);
+  const dayKey = startOfDay(day).getTime();
+  const [phaseFilter, setPhaseFilter] = useState<SidebarDayPhaseFilter>("all");
 
-  const displayEvents = showAll ? allRangeEvents : rangeEvents;
-  const dayGroups = dayMode
-    ? groupEventsByDayTimePhase(displayEvents, focusedDay)
-    : null;
-  const rangeGroups = dayMode ? null : groupEventsByTimePhase(displayEvents);
+  useEffect(() => {
+    setPhaseFilter("all");
+  }, [dayKey]);
+
+  const groups = filterSidebarDayGroups(
+    groupSidebarDayEvents(rangeEvents),
+    phaseFilter,
+  );
+  const visibleCount = groups.ongoing.length + groups.upcoming.length;
+  const dayLabel = startOfDay(day).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-hidden">
-      {hasDayFocus && (
-        <div className="flex shrink-0 flex-wrap gap-1.5">
-          <PillButton active={!showAll} onClick={() => setPreferShowAll(false)}>
-            {t("eventList.day", { count: rangeEvents.length })}
-          </PillButton>
-          <PillButton active={showAll} onClick={() => setPreferShowAll(true)}>
-            {t("eventList.allRange", { count: allRangeEvents.length })}
-          </PillButton>
-        </div>
-      )}
-      {!hasDayFocus && (
-        <p className={`${captionClass} m-0 shrink-0 font-medium`}>
-          {t("eventList.rangeEvents", { count: allRangeEvents.length })}
+      <div className="flex w-full shrink-0 items-center gap-1.5">
+        {rangeEvents.length > 0 ? (
+          <div
+            className="flex min-w-0 shrink-0 flex-wrap gap-1.5"
+            role="group"
+            aria-label={t("eventList.phaseFilterAria")}
+            data-testid="timeline-event-phase-filter"
+          >
+            {(
+              [
+                ["all", "eventList.filterAll"],
+                ["ongoing", "eventList.filterOngoing"],
+                ["upcoming", "eventList.filterUpcoming"],
+              ] as const
+            ).map(([id, labelKey]) => (
+              <FilterChip
+                key={id}
+                size="sm"
+                active={phaseFilter === id}
+                onClick={() => setPhaseFilter(id)}
+                data-testid={`timeline-event-phase-filter-${id}`}
+              >
+                {t(labelKey)}
+              </FilterChip>
+            ))}
+          </div>
+        ) : null}
+        <p
+          className={`${captionClass} m-0 ml-auto shrink-0 font-medium`}
+          data-testid="timeline-event-list-day-label"
+        >
+          {dayLabel}
         </p>
-      )}
+      </div>
       <div
         className="im-auto-scrollbar im-timeline-event-list flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-x-hidden overflow-y-auto pr-0.5"
         data-testid="timeline-event-list-scroll"
       >
-        {displayEvents.length === 0 ? (
+        {rangeEvents.length === 0 ? (
           <p className={`${captionClass} m-0 shrink-0`}>{t("eventList.empty")}</p>
-        ) : dayGroups ? (
-          <>
-            <EventListGroup
-              title={t("eventList.groupUpcomingOnDay")}
-              events={dayGroups.upcoming}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-upcoming"
-              showCrossDayBadge
-            />
-            <EventListGroup
-              title={t("eventList.groupOngoingOnDay")}
-              events={dayGroups.ongoing}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-ongoing"
-              showCrossDayBadge
-            />
-            <EventListGroup
-              title={t("eventList.groupCoveringOnDay")}
-              events={dayGroups.covering}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-covering"
-              showCrossDayBadge={false}
-            />
-            <EventListGroup
-              title={t("eventList.groupEndingSpanOnDay")}
-              events={dayGroups.endingSpan}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-ending-span"
-              showCrossDayBadge={false}
-            />
-            <EventListGroup
-              title={t("eventList.groupEndedOnDay")}
-              events={dayGroups.ended}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-ended"
-              showCrossDayBadge
-            />
-          </>
+        ) : visibleCount === 0 ? (
+          <p className={`${captionClass} m-0 shrink-0`}>{t("eventList.emptyFiltered")}</p>
         ) : (
           <>
             <EventListGroup
-              title={t("eventList.groupUpcoming")}
-              events={rangeGroups!.upcoming}
-              onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-upcoming"
-              showCrossDayBadge={false}
-            />
-            <EventListGroup
-              title={t("eventList.groupOngoing")}
-              events={rangeGroups!.ongoing}
+              title={t("eventList.filterOngoing")}
+              events={groups.ongoing}
+              focusedDay={day}
               onSelectEvent={onSelectEvent}
               testId="timeline-event-group-ongoing"
-              showCrossDayBadge={false}
+              metaLookups={metaLookups}
             />
             <EventListGroup
-              title={t("eventList.groupEnded")}
-              events={rangeGroups!.ended}
+              title={t("eventList.filterUpcoming")}
+              events={groups.upcoming}
+              focusedDay={day}
               onSelectEvent={onSelectEvent}
-              testId="timeline-event-group-ended"
-              showCrossDayBadge={false}
+              testId="timeline-event-group-upcoming"
+              metaLookups={metaLookups}
             />
           </>
         )}

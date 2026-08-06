@@ -93,6 +93,8 @@ export function TimelineGrid({
     showDismissed,
     showOngoing,
     showEnding,
+    weatherByDate,
+    onCreateOnDay,
   } = useTimelinePageContext();
 
   const isCompactMonth = viewMode === "calendar" && timeScale === "month";
@@ -115,8 +117,10 @@ export function TimelineGrid({
           showDismissed={showDismissed}
           showOngoing={showOngoing}
           showEnding={showEnding}
+          weatherByDate={weatherByDate}
           onSelectEvent={onSelectEvent}
           onFocusDay={onFocusDay}
+          onCreateOnDay={onCreateOnDay}
         />
       ) : (
         <LazyLoadErrorBoundary fallbackHeight={320}>
@@ -130,6 +134,7 @@ export function TimelineGrid({
                 timeScale={timeScale}
                 ganttColumns={ganttColumns}
                 rangeStart={rangeStart}
+                eventStatuses={eventStatuses}
                 onRetry={onRetryTimelineEvents}
                 onSelectEvent={onSelectEvent}
               />

@@ -39,14 +39,15 @@ _COMPACT_FIELDS = (
     "isAllDay",
     "timezone",
 )
-#: Compact ``user`` rows additionally carry ownership workset and dismissal.
-_COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed")
-#: Compact ``item`` rows carry ownership workset, date kind, and dismissal.
+#: Compact ``user`` rows additionally carry ownership workset, dismissal, importance.
+_COMPACT_USER_FIELDS = _COMPACT_FIELDS + ("worksetId", "origin", "dismissed", "important")
+#: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
 _COMPACT_ITEM_FIELDS = _COMPACT_FIELDS + (
     "worksetId",
     "itemId",
     "itemDateKind",
     "dismissed",
+    "important",
 )
 
 

@@ -629,8 +629,8 @@
     "newActionHint": "Open notifications",
     "openViewer": "Open Viewer window",
     "openViewerHint": "Read-only projection · new tab",
-    "openOpsBoard": "Ops Board (canvas)",
-    "openOpsBoardHint": "Switch to canvas / Ops Board",
+    "openOpsBoard": "Ops Board",
+    "openOpsBoardHint": "Switch to Ops Board",
     "shortcutHelp": "Keyboard shortcuts",
     "quickAssistant": "Assistant",
     "quickAssistantHint": "⌘/Ctrl+J",
@@ -1133,9 +1133,9 @@
   "monitorMode": {
     "aria": "Monitor mode",
     "pages": "Pages",
-    "canvas": "Canvas / Ops Board",
+    "canvas": "Ops Board",
     "pagesTitle": "Paged monitor",
-    "canvasTitle": "Immersive Ops Board canvas"
+    "canvasTitle": "Immersive Ops Board"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",

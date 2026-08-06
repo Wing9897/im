@@ -226,35 +226,28 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     vi.useRealTimers();
   });
 
-  it("renders TimelineSkeleton when initialLoading is true and events are empty", () => {
+  it("keeps the main layout mounted while initialLoading (no skeleton swap)", () => {
     const { container } = renderViewSwitch({ initialLoading: true, events: [] });
-    const skeleton = container.querySelector('[data-testid="timeline-skeleton"]');
-    expect(skeleton).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-skeleton"]')).toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 
-  it("renders skeleton with correct viewMode (calendar)", () => {
+  it("renders calendar main layout while loading (calendar mode)", () => {
     const { container } = renderViewSwitch({
       initialLoading: true,
       events: [],
       viewMode: "calendar",
     });
-    const skeleton = container.querySelector('[data-testid="timeline-skeleton"]');
-    expect(skeleton).not.toBeNull();
-    const headerGrid = skeleton!.querySelector(".grid-cols-7");
-    expect(headerGrid).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 
-  it("renders skeleton with correct viewMode (gantt)", () => {
+  it("renders gantt main layout while loading (gantt mode)", () => {
     const { container } = renderViewSwitch({
       initialLoading: true,
       events: [],
       viewMode: "gantt",
     });
-    const skeleton = container.querySelector('[data-testid="timeline-skeleton"]');
-    expect(skeleton).not.toBeNull();
-    // Gantt skeleton has 148px label column
-    const ganttGrids = skeleton!.querySelectorAll('div[style*="148px"]');
-    expect(ganttGrids.length).toBeGreaterThan(0);
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 
   it("shows a timeout toast while preserving the calendar layout", () => {
@@ -263,8 +256,7 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
       events: [],
     });
 
-    // Initially shows skeleton
-    expect(container.querySelector('[data-testid="timeline-skeleton"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="timeline-error-state"]')).toBeNull();
 
     // Advance time past the 30s timeout
@@ -282,16 +274,13 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
       events: [],
     });
 
-    // Initially shows skeleton
-    expect(container.querySelector('[data-testid="timeline-skeleton"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
 
     // Advance time partially (15s — before timeout)
     act(() => {
       vi.advanceTimersByTime(15_000);
     });
 
-    // Still shows skeleton (no error yet)
-    expect(container.querySelector('[data-testid="timeline-skeleton"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="timeline-error-state"]')).toBeNull();
 
     // Data arrives — loading completes
@@ -344,7 +333,7 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     expect(container.textContent).toContain(i18n.t("timeline:empty.filteredTitle"));
   });
 
-  it("keeps grid visible and shows refresh indicator while refreshing with cached events", () => {
+  it("keeps grid visible while refreshing with cached events (spinner is in toolbar)", () => {
     const sampleEvent = {
       id: "evt-1",
       title: "Sample",
@@ -360,6 +349,7 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
     });
 
     expect(container.querySelector('[data-testid="timeline-skeleton"]')).toBeNull();
-    expect(container.querySelector('[data-testid="timeline-refresh-indicator"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="timeline-refresh-indicator"]')).toBeNull();
+    expect(container.querySelector('[data-testid="timeline-main-layout"]')).not.toBeNull();
   });
 });

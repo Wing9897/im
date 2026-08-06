@@ -16,6 +16,7 @@ from server.api.schemas.requests.calendar import (
     CalendarImportInput,
     CalendarImportSelectionBody,
     TimelineDismissalBody,
+    TimelineImportanceBody,
     UserEventCreateBody,
     UserEventPatchBody,
 )
@@ -94,6 +95,7 @@ __all__ = [
     "TelegramQrCredentials",
     "TelegramQrWaitBody",
     "TimelineDismissalBody",
+    "TimelineImportanceBody",
     "UserEventCreateBody",
     "UserEventPatchBody",
     "WorksetCreateBody",

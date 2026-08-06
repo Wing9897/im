@@ -314,4 +314,35 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "additionalProperties": False,
         },
     },
+    {
+        "name": "calendar.mark_important",
+        "description": (
+            "Mark a timeline event as important (❗). Works for user events, "
+            "analysis findings, RRULE occurrence ids, and item DATE projections "
+            "(purchased/remind/expires). Idempotent."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+            },
+            "required": ["id"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "calendar.unmark_important",
+        "description": (
+            "Clear the important (❗) marker from a timeline event. Same id "
+            "vocabulary as calendar.mark_important / calendar.delete_event."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string"},
+            },
+            "required": ["id"],
+            "additionalProperties": False,
+        },
+    },
 ]
