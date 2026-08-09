@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import "../../test/i18nIdentityMock";
 
-import { ChatEditorToolbar } from "../tasks/chat-editor/ChatEditorToolbar";
+import {
+  pageChromeInnerClass,
+  pageChromeOuterClass,
+} from "../../components/ui/pageChrome";
 import { ItemFormToolbar } from "./form/ItemFormToolbar";
 import { ItemsEntryToolbar } from "./ItemsEntryToolbar";
 import { ItemsPageChrome } from "./ItemsPageChrome";
@@ -25,8 +28,9 @@ vi.mock("../../domain/connection/connectionStore", () => ({
 }));
 
 /**
- * Cross-surface lock: Items chrome + ChatEditorToolbar must share the exact
- * same sticky outer + inner class strings (not OpsControlBar).
+ * Cross-surface lock: Items chrome aliases must stay identical to shared
+ * ``pageChrome`` tokens (ChatEditorToolbar imports the same module — no
+ * cross-page component import needed here).
  */
 describe("Items page chrome unity", () => {
   let container: HTMLDivElement;
@@ -45,7 +49,13 @@ describe("Items page chrome unity", () => {
     container.remove();
   });
 
-  it("category · entry · form · chat editor share identical outer/inner chrome classes", () => {
+  it("items chrome class aliases match shared pageChrome tokens", () => {
+    expect(itemsPageChromeOuterClass).toBe(pageChromeOuterClass);
+    expect(itemsPageChromeInnerClass).toBe(pageChromeInnerClass);
+    expect(itemsPageChromeEntryOuterClass).toBe(pageChromeOuterClass);
+  });
+
+  it("category · entry · form share identical outer/inner chrome classes", () => {
     act(() => {
       root.render(
         createElement(
@@ -80,14 +90,6 @@ describe("Items page chrome unity", () => {
             onBack: vi.fn(),
             onSave: vi.fn(),
           }),
-          createElement(ChatEditorToolbar, {
-            isEditMode: false,
-            canSaveForm: true,
-            isSaving: false,
-            onBack: vi.fn(),
-            onSave: vi.fn(),
-            onOpenPresetDialog: vi.fn(),
-          }),
         ),
       );
     });
@@ -96,7 +98,6 @@ describe("Items page chrome unity", () => {
       "items-category-toolbar",
       "items-entry-toolbar",
       "item-form-toolbar",
-      "task-editor-toolbar",
     ] as const;
 
     const outers = ids.map((id) => {
@@ -107,7 +108,7 @@ describe("Items page chrome unity", () => {
 
     for (const [index, outer] of outers.entries()) {
       const expectedOuter =
-        index === 1 ? itemsPageChromeEntryOuterClass : itemsPageChromeOuterClass;
+        index === 1 ? itemsPageChromeEntryOuterClass : pageChromeOuterClass;
       expect(outer.className).toBe(expectedOuter);
       const inner = outer.firstElementChild as HTMLElement;
       expect(inner.className).toContain("max-w-[1280px]");
@@ -115,16 +116,13 @@ describe("Items page chrome unity", () => {
     }
 
     expect((outers[0]!.firstElementChild as HTMLElement).className).toBe(
-      itemsPageChromeInnerClass,
+      pageChromeInnerClass,
     );
     expect((outers[1]!.firstElementChild as HTMLElement).className).toBe(
       itemsPageChromeEntryInnerClass,
     );
     expect((outers[2]!.firstElementChild as HTMLElement).className).toBe(
-      itemsPageChromeInnerClass,
-    );
-    expect((outers[3]!.firstElementChild as HTMLElement).className).toBe(
-      itemsPageChromeInnerClass,
+      pageChromeInnerClass,
     );
   });
 });

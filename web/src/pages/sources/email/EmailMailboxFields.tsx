@@ -1,5 +1,6 @@
-import { CheckboxField, SelectField, SettingsRow, TextArea, TextField } from "../../../components/ui";
+import { CheckboxField, MenuSelect, SettingsRow, TextArea, TextField } from "../../../components/ui";
 import type { Dispatch, SetStateAction } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { EmailFormFields, EmailProviderPreset } from "./emailFormModel";
 import { EMAIL_PROVIDER_PRESETS } from "./emailFormModel";
@@ -18,27 +19,33 @@ export function EmailMailboxFields({
   submitting,
 }: EmailMailboxFieldsProps) {
   const { t } = useTranslation("sources");
+  const presetOptions = useMemo(
+    () =>
+      Object.keys(EMAIL_PROVIDER_PRESETS).map((key) => ({
+        value: key,
+        label:
+          key === "gmail"
+            ? "Gmail"
+            : key === "outlook"
+              ? "Outlook / Office 365"
+              : key === "yahoo"
+                ? "Yahoo"
+                : t("emailFields.customHost"),
+      })),
+    [t],
+  );
   return (
     <div className="flex flex-col gap-xl">
       <SettingsRow label={t("emailFields.provider")} htmlFor="email-preset">
-        <SelectField
+        <MenuSelect
           id="email-preset"
+          variant="field"
           value={form.preset}
-          onChange={(e) => setPreset(e.target.value as EmailProviderPreset)}
+          options={presetOptions}
+          onChange={(next) => setPreset(next as EmailProviderPreset)}
           disabled={submitting}
-        >
-          {Object.keys(EMAIL_PROVIDER_PRESETS).map((key) => (
-            <option key={key} value={key}>
-              {key === "gmail"
-                ? "Gmail"
-                : key === "outlook"
-                  ? "Outlook / Office 365"
-                  : key === "yahoo"
-                    ? "Yahoo"
-                    : t("emailFields.customHost")}
-            </option>
-          ))}
-        </SelectField>
+          aria-label={t("emailFields.provider")}
+        />
       </SettingsRow>
 
       <SettingsRow label={t("emailFields.imapHost")} htmlFor="email-imap-host">

@@ -6,9 +6,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import { filterItemsBySourceSelection } from "../../board/useBoardSourceFilter";
 import { resolveTimelineFilterPlan } from "../timeline/timelineFilterPlan";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { filterItemsBySourceSelection } from "./sourceFilterItems";
 import {
   resolveAnalysisTaskIdsFromFilter,
   userEventMatchesSourceSelection,

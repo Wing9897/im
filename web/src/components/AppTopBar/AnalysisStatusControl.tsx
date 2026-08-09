@@ -65,15 +65,21 @@ export function AnalysisStatusControl({
   const [abortConfirmOpen, setAbortConfirmOpen] = useState(false);
   const menuId = useId();
   const interactive = !disabled && !busy;
-  const { open: menuOpen, setOpen: setMenuOpen, menuPos, menuRef, rootRef } =
-    useAnchoredMenu({
-      enabled: interactive,
-      align: "end",
-      gap: 6,
-      edge: 8,
-      fallbackMenuWidth: 140,
-      dismissPointerEvent: "pointerdown",
-    });
+  const {
+    open: menuOpen,
+    setOpen: setMenuOpen,
+    toggle: toggleMenu,
+    menuPos,
+    menuRef,
+    rootRef,
+  } = useAnchoredMenu({
+    enabled: interactive,
+    align: "end",
+    gap: 6,
+    edge: 8,
+    fallbackMenuWidth: 140,
+    dismissPointerEvent: "pointerdown",
+  });
 
   const pauseLabel = busy
     ? t("topBar.busy")
@@ -194,7 +200,7 @@ export function AnalysisStatusControl({
                 onClick={(event) => {
                   event.stopPropagation();
                   if (disabled || busy) return;
-                  setMenuOpen(!menuOpen);
+                  toggleMenu();
                 }}
                 className={`flex h-full items-center rounded-full border-0 bg-transparent px-1.5 text-text-muted outline-none transition-colors focus-visible:outline-none ${
                   interactive

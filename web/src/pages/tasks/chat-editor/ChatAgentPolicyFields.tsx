@@ -132,6 +132,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
         <label className={formLabelClass} htmlFor="task-agent-trigger">
           {t("tasks.agent.triggerLabel")}
         </label>
+        {/* Native select: agent policy form keeps SelectField for native dense editor rows. */}
         <SelectField
           id="task-agent-trigger"
           value={formState.triggerMode}

@@ -4,7 +4,7 @@ import {
   Button,
   CheckboxField,
   FormField,
-  SelectField,
+  MenuSelect,
   SettingsRow,
   TextField,
 } from "../../../components/ui";
@@ -58,15 +58,18 @@ export function HttpFields({
         </SettingsRow>
 
         <SettingsRow label={t("fields.httpMethod")} htmlFor="action-http-method">
-          <SelectField
+          <MenuSelect
             id="action-http-method"
+            variant="field"
             value={form.httpMethod}
-            onChange={(e) => onChange("httpMethod", e.target.value)}
+            options={[
+              { value: "POST", label: "POST" },
+              { value: "PUT", label: "PUT" },
+            ]}
+            onChange={(next) => onChange("httpMethod", next)}
             disabled={submitting}
-          >
-            <option value="POST">POST</option>
-            <option value="PUT">PUT</option>
-          </SelectField>
+            aria-label={t("fields.httpMethod")}
+          />
         </SettingsRow>
       </div>
 

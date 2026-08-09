@@ -1,6 +1,7 @@
+import { useMemo } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { SelectField } from "../../../components/ui";
+import { MenuSelect } from "../../../components/ui";
 import type { DanmakuMode, OverlayDisplayMode } from "./mapViewHelpers";
 import {
   danmakuModeLabel,
@@ -32,6 +33,15 @@ export function MapControls({
 }: MapControlsProps) {
   const { t } = useTranslation("intelligence");
 
+  const liveWindowOptions = useMemo(
+    () =>
+      LIVE_WINDOW_OPTIONS.map((hours) => ({
+        value: String(hours),
+        label: t("map.liveWindowOption", { hours }),
+      })),
+    [t],
+  );
+
   return (
     <>
       <button
@@ -48,19 +58,17 @@ export function MapControls({
       >
         {danmakuModeLabel(t, sharedDanmakuMode)}
       </button>
-      <SelectField
+      <MenuSelect
+        variant="field"
+        menuPortal
         aria-label={t("map.liveWindowAria")}
         value={String(liveWindowHours)}
-        onChange={(e) => onLiveWindowHoursChange(Number(e.target.value))}
-        className={mapSmallSelectClass}
-        wrapperClassName="w-auto"
-      >
-        {LIVE_WINDOW_OPTIONS.map((hours) => (
-          <option key={hours} value={hours}>
-            {t("map.liveWindowOption", { hours })}
-          </option>
-        ))}
-      </SelectField>
+        options={liveWindowOptions}
+        onChange={(next) => onLiveWindowHoursChange(Number(next))}
+        data-testid="map-live-window-select"
+        className="w-auto shrink-0"
+        triggerClassName={mapSmallSelectClass}
+      />
       <button
         type="button"
         className={mapSmallBtnClass}

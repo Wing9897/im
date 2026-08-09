@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { SelectField, SettingsRow } from "../ui";
+import { MenuSelect, SettingsRow } from "../ui";
 import {
   APP_LOCALE_PREFERENCES,
   APP_LOCALE_PREFERENCE_LABEL_KEYS,
@@ -24,7 +24,7 @@ export type LanguageSwitcherVariant = "settings" | "compact";
 interface LanguageSwitcherProps {
   /**
    * `settings` — chip radiogroup with help (Settings → General).
-   * `compact` — native select for auth cards (top-right).
+   * `compact` — MenuSelect for auth cards (top-right chrome).
    */
   variant?: LanguageSwitcherVariant;
 }
@@ -45,24 +45,30 @@ export function LanguageSwitcher({ variant = "settings" }: LanguageSwitcherProps
     setAppLocalePreference(next);
   };
 
+  const localeOptions = useMemo(
+    () =>
+      APP_LOCALE_PREFERENCES.map((id) => ({
+        value: id,
+        label: t(APP_LOCALE_PREFERENCE_LABEL_KEYS[id]),
+      })),
+    [t],
+  );
+
   if (variant === "compact") {
     return (
       <div data-testid="language-switcher" data-variant="compact">
-        <SelectField
+        <MenuSelect
           id="auth-ui-locale"
-          className="min-w-[8.5rem] cursor-pointer py-1 pe-8 text-caption"
+          variant="field"
+          menuPortal
+          className="min-w-[8.5rem] w-auto"
+          triggerClassName="min-w-[8.5rem] cursor-pointer py-1 pe-8 text-caption"
           value={preference}
-          onChange={(e) => handleChange(e.target.value as AppLocalePreference)}
+          options={localeOptions}
+          onChange={(next) => handleChange(next as AppLocalePreference)}
           aria-label={t("language.label")}
           data-testid="language-switcher-select"
-          title={t("language.label")}
-        >
-          {APP_LOCALE_PREFERENCES.map((id) => (
-            <option key={id} value={id} data-testid={`language-option-${id}`}>
-              {t(APP_LOCALE_PREFERENCE_LABEL_KEYS[id])}
-            </option>
-          ))}
-        </SelectField>
+        />
       </div>
     );
   }

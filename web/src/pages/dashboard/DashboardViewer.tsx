@@ -4,8 +4,8 @@
 
 import { EmptyState } from "../../components/common/EmptyState";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
-import { DashboardByTaskList, DashboardByWorksetList } from "./DashboardGroupedLists";
-import { DashboardSystemTasksSection } from "./DashboardSystemTasksSection";
+import { DashboardByTaskList, DashboardByWorksetList } from "./components/DashboardGroupedLists";
+import { DashboardSystemTasksSection } from "./components/DashboardSystemTasksSection";
 import { AppPageShell, Button } from "../../components/ui";
 import { useListKeyboardNavigation } from "../../hooks/useListKeyboardNavigation";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
@@ -13,22 +13,22 @@ import { usePersistedEnum } from "../../hooks/usePersistedState";
 import type { AnalysisTask } from "../../types/tasks";
 import { useTranslation } from "react-i18next";
 import { getTasksPageCopy } from "../../domain/tasks/taskPageCopy";
-import { isProjectTask } from "../../domain/tasks/isProjectTask";
+import { isAgentCalendarTask } from "../../domain/tasks/isAgentCalendarTask";
 import {
   TASKS_MODE_FILTER_STORAGE_KEY,
   getSystemTaskCatalog,
   isTasksModeFilter,
   type TasksModeFilter,
 } from "../../domain/tasks/systemTaskCatalog";
-import { useDashboardViewer } from "./useDashboardViewer";
-import { useDashboardViewerShell } from "./useDashboardViewerShell";
+import { useDashboardViewer } from "./hooks/useDashboardViewer";
+import { useDashboardViewerShell } from "./hooks/useDashboardViewerShell";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useMemo, useState, useCallback } from "react";
 import { buildChannelNameById, useDetailSelection } from "../../components/detail";
 import { useChannelsWithSources } from "../../hooks/useChannelsWithSources";
-import { DashboardViewerDialogs } from "./DashboardViewerDialogs";
-import { DashboardViewerToolbar } from "./DashboardViewerToolbar";
-import { WorksetDetailDialog } from "./WorksetDetailDialog";
+import { DashboardViewerDialogs } from "./components/DashboardViewerDialogs";
+import { DashboardViewerToolbar } from "./components/DashboardViewerToolbar";
+import { WorksetDetailDialog } from "./components/WorksetDetailDialog";
 
 export function DashboardViewer() {
   const { t } = useTranslation();
@@ -80,7 +80,7 @@ export function DashboardViewer() {
   const openTask = useCallback(
     (task: AnalysisTask) => {
       setFocusedId(task.id);
-      if (isProjectTask(task)) {
+      if (isAgentCalendarTask(task)) {
         handleOpenProject(task.id);
         return;
       }

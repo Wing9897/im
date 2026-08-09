@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AppPageShell } from "../../components/ui";
-import { ActionTypesTab } from "./ActionTypesTab";
-import { ActionHistoryTab } from "./ActionHistoryTab";
-import { ActionsTabNav } from "./ActionsTabNav";
+import { ActionTypesTab } from "./components/ActionTypesTab";
+import { ActionHistoryTab } from "./components/ActionHistoryTab";
+import { ActionsTabNav } from "./components/ActionsTabNav";
 import { isActionsTabKey, type ActionsTabKey } from "./actionsTab";
-import { VoiceReminderPanel } from "./VoiceReminderPanel";
+import { VoiceReminderPanel } from "./components/VoiceReminderPanel";
 
 /**
  * Notifications workspace — three concerns stay separate:

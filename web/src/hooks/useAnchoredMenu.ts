@@ -20,8 +20,10 @@ export type UseAnchoredMenuOptions = {
    * Horizontal alignment of the menu relative to the anchor.
    * - `start`: clamp menu left near anchor.left (MenuSelect)
    * - `end`: prefer anchor.right - menuWidth (AnalysisStatusControl)
+   * - `auto`: open rightward in the left half of the viewport, else leftward
+   *   (TimelineShowOptions checklist)
    */
-  align?: "start" | "end";
+  align?: "start" | "end" | "auto";
   /** Gap between anchor bottom and menu top (px). */
   gap?: number;
   /** Viewport edge padding (px). */
@@ -29,12 +31,19 @@ export type UseAnchoredMenuOptions = {
   /** Fallback menu width before the menu node is measured. */
   fallbackMenuWidth?: number;
   /**
+   * When true, prefer opening above the anchor if the measured menu does not
+   * fit below and there is more space above.
+   */
+  flip?: boolean;
+  /**
    * Extra deps that should re-run placement (e.g. options.length).
    * Compared by identity each render — pass a stable number/string when possible.
    */
   contentKey?: unknown;
   /** Pointer event type for outside dismiss (MenuSelect uses mousedown). */
   dismissPointerEvent?: "mousedown" | "pointerdown";
+  /** Focus the anchor (or root) when dismissing via Escape. */
+  restoreFocusOnEscape?: boolean;
 };
 
 export type UseAnchoredMenuResult = {
@@ -51,9 +60,32 @@ export type UseAnchoredMenuResult = {
   rootRef: RefObject<HTMLElement | null>;
 };
 
+function resolveMenuLeft({
+  align,
+  edge,
+  menuWidth,
+  rect,
+}: {
+  align: "start" | "end" | "auto";
+  edge: number;
+  menuWidth: number;
+  rect: DOMRect;
+}): number {
+  const maxLeft = window.innerWidth - menuWidth - edge;
+  if (align === "auto") {
+    const openRightward = rect.left < window.innerWidth / 2;
+    const raw = openRightward ? rect.left : rect.right - menuWidth;
+    return Math.max(edge, Math.min(raw, maxLeft));
+  }
+  if (align === "end") {
+    return Math.min(Math.max(edge, rect.right - menuWidth), maxLeft);
+  }
+  return Math.min(Math.max(edge, rect.left), maxLeft);
+}
+
 /**
  * Shared open-state + viewport-anchored placement + outside/Escape dismiss
- * for portaled menus (MenuSelect, AnalysisStatusControl).
+ * for portaled menus (MenuSelect, AnalysisStatusControl, TimelineShowOptions).
  *
  * Consumers still own portal rendering and menu markup.
  */
@@ -63,8 +95,10 @@ export function useAnchoredMenu({
   gap = 4,
   edge = 8,
   fallbackMenuWidth = 140,
+  flip = false,
   contentKey,
   dismissPointerEvent = "mousedown",
+  restoreFocusOnEscape = false,
 }: UseAnchoredMenuOptions = {}): UseAnchoredMenuResult {
   const [open, setOpenState] = useState(false);
   const [menuPos, setMenuPos] = useState<AnchoredMenuPosition | null>(null);
@@ -97,17 +131,20 @@ export function useAnchoredMenu({
       if (!anchor) return;
       const rect = anchor.getBoundingClientRect();
       const menuWidth = menuRef.current?.offsetWidth ?? Math.max(rect.width, fallbackMenuWidth);
-      const left =
-        align === "end"
-          ? Math.min(
-              Math.max(edge, rect.right - menuWidth),
-              window.innerWidth - menuWidth - edge,
-            )
-          : Math.min(
-              Math.max(edge, rect.left),
-              window.innerWidth - menuWidth - edge,
-            );
-      setMenuPos({ top: rect.bottom + gap, left, width: rect.width });
+      const menuHeight = menuRef.current?.offsetHeight ?? 0;
+      let top = rect.bottom + gap;
+      if (flip && menuHeight > 0) {
+        const spaceBelow = window.innerHeight - rect.bottom - edge;
+        const spaceAbove = rect.top - edge;
+        if (menuHeight > spaceBelow && spaceAbove > spaceBelow) {
+          top = rect.top - menuHeight - gap;
+        }
+      }
+      setMenuPos({
+        top: Math.max(edge, top),
+        left: resolveMenuLeft({ align, edge, menuWidth, rect }),
+        width: rect.width,
+      });
     };
     place();
     window.addEventListener("resize", place);
@@ -116,7 +153,7 @@ export function useAnchoredMenu({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [open, enabled, align, gap, edge, fallbackMenuWidth, contentKey]);
+  }, [open, enabled, align, gap, edge, fallbackMenuWidth, flip, contentKey]);
 
   useEffect(() => {
     // Dismiss while open even if `enabled` flipped false mid-flight.
@@ -133,7 +170,11 @@ export function useAnchoredMenu({
       setOpenState(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenState(false);
+      if (event.key !== "Escape") return;
+      setOpenState(false);
+      if (restoreFocusOnEscape) {
+        (anchorRef.current ?? rootRef.current)?.focus();
+      }
     };
     document.addEventListener(dismissPointerEvent, onPointer);
     document.addEventListener("keydown", onKeyDown);
@@ -141,7 +182,7 @@ export function useAnchoredMenu({
       document.removeEventListener(dismissPointerEvent, onPointer);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, dismissPointerEvent]);
+  }, [open, dismissPointerEvent, restoreFocusOnEscape]);
 
   return {
     open,

@@ -30,6 +30,7 @@ export function FrequencySelector({
     <>
       <div className="min-w-[160px] flex-1">
         <FieldLabel htmlFor="recurrence-freq">{t("tasks.recurrence.freqLabel")}</FieldLabel>
+        {/* Native select: recurrence editor stays on SelectField for native form density. */}
         <SelectField
           id="recurrence-freq"
           value={freq}

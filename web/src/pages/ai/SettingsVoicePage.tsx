@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   CheckboxField,
   FormStack,
+  MenuSelect,
   SelectField,
   SettingsRow,
   formHelpClass,
@@ -26,7 +27,10 @@ import {
   type VoiceSettings,
 } from "../../speech";
 import { useBrowserTtsVoiceOptions } from "../../speech/useBrowserTtsVoiceOptions";
-import { SettingsContentCard, SettingsFieldGroup } from "../settings/SettingsShared";
+import {
+  SettingsContentCard,
+  SettingsFieldGroup,
+} from "../../components/settings/SettingsFormLayout";
 
 /**
  * Voice IO settings for the assistant (SQLite via /api/v1/ui-prefs/assistant/voice-io).
@@ -108,6 +112,7 @@ export function SettingsVoicePage() {
               voicePttSupported ? t("voice.sttHelp") : t("voice.sttHelpDesktopBlocked")
             }
           >
+            {/* Native select: MenuSelect has no disabled-option support for unavailable providers. */}
             <SelectField
               id="voice-stt-provider"
               value={sttSelectValue}
@@ -131,6 +136,7 @@ export function SettingsVoicePage() {
             htmlFor="voice-tts-provider"
             help={t("voice.ttsHelp")}
           >
+            {/* Native select: MenuSelect has no disabled-option support for unavailable providers. */}
             <SelectField
               id="voice-tts-provider"
               value={ttsSelectValue}
@@ -150,17 +156,17 @@ export function SettingsVoicePage() {
           </SettingsRow>
 
           <SettingsRow label={t("voice.languageLabel")} htmlFor="voice-speech-language">
-            <SelectField
+            <MenuSelect
               id="voice-speech-language"
+              variant="field"
               value={settings.speechLanguage}
-              onChange={(e) => update({ speechLanguage: e.target.value })}
-            >
-              {languageOptions.map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-            </SelectField>
+              options={languageOptions.map((opt) => ({
+                value: opt.id,
+                label: opt.label,
+              }))}
+              onChange={(next) => update({ speechLanguage: next })}
+              aria-label={t("voice.languageLabel")}
+            />
           </SettingsRow>
 
           {settings.ttsProvider === "browser" ? (
@@ -170,20 +176,22 @@ export function SettingsVoicePage() {
               help={t("voice.ttsVoiceHelp")}
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <SelectField
+                <MenuSelect
                   id="voice-tts-voice"
+                  variant="field"
                   value={ttsVoiceSelectValue}
-                  onChange={(e) => update({ ttsVoiceUri: e.target.value })}
+                  options={[
+                    { value: "", label: t("voice.ttsVoiceDefault") },
+                    ...voiceOptions.map((opt) => ({
+                      value: opt.voiceURI,
+                      label: opt.label,
+                    })),
+                  ]}
+                  onChange={(next) => update({ ttsVoiceUri: next })}
                   data-testid="voice-tts-voice"
                   className="min-w-0 flex-1"
-                >
-                  <option value="">{t("voice.ttsVoiceDefault")}</option>
-                  {voiceOptions.map((opt) => (
-                    <option key={opt.voiceURI} value={opt.voiceURI}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </SelectField>
+                  aria-label={t("voice.ttsVoiceLabel")}
+                />
                 <button
                   type="button"
                   className="inline-flex shrink-0 items-center justify-center rounded-md border border-surface-border bg-surface-raised px-3 py-1.5 text-[12px] font-medium text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] disabled:opacity-50"
@@ -204,15 +212,18 @@ export function SettingsVoicePage() {
               voicePttSupported ? t("voice.spacePttHelp") : t("voice.spacePttHelpDesktopBlocked")
             }
           >
-            <SelectField
+            <MenuSelect
               id="voice-space-ptt-mode"
+              variant="field"
               value={settings.spacePttMode}
-              onChange={(e) => update({ spacePttMode: e.target.value as SpacePttMode })}
+              options={[
+                { value: "hold", label: t("voice.spacePttOptions.hold") },
+                { value: "toggle", label: t("voice.spacePttOptions.toggle") },
+              ]}
+              onChange={(next) => update({ spacePttMode: next as SpacePttMode })}
               data-testid="voice-space-ptt-mode"
-            >
-              <option value="hold">{t("voice.spacePttOptions.hold")}</option>
-              <option value="toggle">{t("voice.spacePttOptions.toggle")}</option>
-            </SelectField>
+              aria-label={t("voice.spacePttLabel")}
+            />
           </SettingsRow>
 
           <SettingsRow

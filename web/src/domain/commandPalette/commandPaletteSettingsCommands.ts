@@ -1,0 +1,67 @@
+import {
+  Bot,
+  Code2,
+  Gauge,
+  Palette,
+  ScrollText,
+  Settings,
+  Users,
+  Wrench,
+} from "lucide-react";
+import type { CommandPaletteItemDef } from "./commandPaletteTypes";
+
+export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
+  { id: "ai", labelKey: "aiSettings", labelNs: "nav", to: "/ai/provider", icon: Bot, groupId: "settings" },
+  {
+    id: "ai-voice",
+    labelKey: "commandPalette.aiVoice",
+    to: "/ai/voice",
+    icon: Bot,
+    groupId: "settings",
+    keywords: ["stt", "tts", "麥克風", "朗讀"],
+  },
+  {
+    id: "ai-strategy",
+    labelKey: "commandPalette.aiStrategy",
+    to: "/ai/analysis-strategy",
+    icon: Gauge,
+    groupId: "settings",
+    keywords: ["batch", "concurrent", "調度"],
+  },
+  {
+    id: "ai-staff",
+    labelKey: "commandPalette.aiStaff",
+    to: "/ai/staff",
+    icon: Users,
+    groupId: "settings",
+    keywords: ["員工", "介紹", "assistant", "agent", "staff"],
+  },
+  { id: "settings", labelKey: "systemSettings", labelNs: "nav", to: "/settings", icon: Settings, groupId: "settings" },
+  { id: "theme", labelKey: "commandPalette.theme", to: "/settings/theme", icon: Palette, groupId: "settings", keywords: ["theme", "color"] },
+  {
+    id: "settings-data",
+    labelKey: "commandPalette.settingsData",
+    to: "/settings/data",
+    icon: Wrench,
+    groupId: "settings",
+    keywords: ["reset", "database", "資料"],
+  },
+  {
+    id: "settings-api",
+    labelKey: "commandPalette.settingsApi",
+    to: "/settings/api",
+    icon: Code2,
+    groupId: "settings",
+    keywords: [
+      "api",
+      "webhook",
+      "a2a",
+      "客户经理",
+      "客戶經理",
+      "account manager",
+      "liaison",
+      "keys",
+    ],
+  },
+  { id: "logs", labelKey: "logs", labelNs: "nav", to: "/settings/logs", icon: ScrollText, groupId: "settings" },
+];

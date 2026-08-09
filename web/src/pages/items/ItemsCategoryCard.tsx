@@ -12,7 +12,7 @@ import {
   isSyntheticCategoryId,
 } from "../../domain/items/categoryAggregates";
 import { resolveCategoryCardEmoji } from "../../domain/items/itemCalendarProjection";
-import { ItemCardEmojiPicker } from "./emoji/ItemCardEmojiPicker";
+import { ItemCardEmojiPicker } from "../../components/items/emoji/ItemCardEmojiPicker";
 
 type Props = {
   summary: CategorySummary;

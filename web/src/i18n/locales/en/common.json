@@ -36,7 +36,7 @@
       "delete": "Delete",
       "editAria": "Edit {name}",
       "deleteAria": "Delete {name}",
-      "openProjectAria": "Open Agent detail: {name}",
+      "openAgentAria": "Open Agent detail: {name}",
       "recurringProgressHint": "Recurring task (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
       "retryCount": "Retry {count}",
@@ -60,7 +60,7 @@
       "relatedKindEvent": "One-off",
       "openTimeline": "Open timeline"
     },
-    "projectDetail": {
+    "agentDetail": {
       "metaTitle": "Overview",
       "noDescription": "No description",
       "schedule": "Schedule: {schedule}",

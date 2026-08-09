@@ -10,7 +10,7 @@ import {
 } from "../../components/ui";
 import type { ItemFieldSchemaEntry } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
-import { EmojiPickerField } from "./emoji/EmojiPickerField";
+import { EmojiPickerField } from "../../components/items/emoji/EmojiPickerField";
 
 type Props = {
   name: string;

@@ -7,7 +7,9 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   calendarLocationDisplay,
   eventListCardTitle,
+  eventListTimeLabel,
   eventShowsRemindBadge,
+  previewEventBody,
   resolveEventCardDisplay,
   resolveEventListDayPhaseTag,
   resolveEventListProvenanceKind,
@@ -263,5 +265,28 @@ describe("eventListCardMeta", () => {
     });
     expect(chrome.showRemindBadge).toBe(true);
     expect(chrome.title).toBe("milk");
+  });
+
+  it("previewEventBody collapses multiline whitespace", () => {
+    expect(previewEventBody("line1\n\nline2   line3")).toBe("line1 line2 line3");
+  });
+
+  it("eventListTimeLabel uses all-day label or start–end range", () => {
+    expect(
+      eventListTimeLabel(
+        makeTimelineItem({ isAllDay: true, startTime: "2025-08-06T00:00:00" }),
+        "全天",
+      ),
+    ).toBe("全天");
+    const timed = eventListTimeLabel(
+      makeTimelineItem({
+        isAllDay: false,
+        startTime: "2025-08-06T09:30:00",
+        endTime: "2025-08-06T11:00:00",
+      }),
+      "全天",
+    );
+    expect(timed).toContain("–");
+    expect(timed).not.toBe("全天");
   });
 });

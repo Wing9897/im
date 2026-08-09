@@ -142,10 +142,16 @@ describe("FilterBar", () => {
     const container = document.createElement("div");
     renderFilterBar(container, {}, onChange);
     openFilterDialog(container);
-    const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
+    const sourceTrigger = filterDialogRoot().querySelector<HTMLButtonElement>(
+      '[data-testid="monitor-filter-source-value"]',
+    )!;
     act(() => {
-      sourceSelect.value = "a1";
-      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      sourceTrigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="monitor-filter-source-option-a1"]')
+        ?.click();
     });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: ["a1"] }));
   });
@@ -179,11 +185,17 @@ describe("FilterBar", () => {
     });
     openFilterDialog(container);
 
-    const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
-    expect(sourceSelect.multiple).toBe(false);
+    const sourceTrigger = filterDialogRoot().querySelector<HTMLButtonElement>(
+      '[data-testid="monitor-filter-source-value"]',
+    )!;
+    expect(sourceTrigger.getAttribute("aria-haspopup")).toBe("listbox");
     act(() => {
-      sourceSelect.value = "a2";
-      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      sourceTrigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="monitor-filter-source-option-a2"]')
+        ?.click();
     });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: ["a2"] }));
   });
@@ -193,10 +205,16 @@ describe("FilterBar", () => {
     const container = document.createElement("div");
     renderFilterBar(container, { sourceIds: ["a1"] }, onChange);
     openFilterDialog(container);
+    const sourceTrigger = filterDialogRoot().querySelector<HTMLButtonElement>(
+      '[data-testid="monitor-filter-source-value"]',
+    )!;
     act(() => {
-      const sourceSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="帳號過濾"]')!;
-      sourceSelect.value = "";
-      sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      sourceTrigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="monitor-filter-source-option-"]')
+        ?.click();
     });
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sourceIds: undefined }));
@@ -259,10 +277,16 @@ describe("FilterBar", () => {
     const container = document.createElement("div");
     renderFilterBar(container, {}, onChange);
     openFilterDialog(container);
-    const timeSelect = filterDialogRoot().querySelector<HTMLSelectElement>('[aria-label="時段過濾"]')!;
+    const timeTrigger = filterDialogRoot().querySelector<HTMLButtonElement>(
+      '[data-testid="monitor-filter-time-value"]',
+    )!;
     act(() => {
-      timeSelect.value = "7d";
-      timeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      timeTrigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="monitor-filter-time-option-7d"]')
+        ?.click();
     });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ timeRange: "7d" }));
   });

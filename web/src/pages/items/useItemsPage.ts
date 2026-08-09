@@ -17,7 +17,7 @@ import {
 import { buildDuplicateItemBody } from "../../domain/items/itemDuplicate";
 import { itemsEmptyKind } from "../../domain/items/itemAttributes";
 import { formatItemsError } from "../../domain/items/itemErrors";
-import { scheduleEmojiPickerPreload } from "./emoji/emojiPickerLoader";
+import { scheduleEmojiPickerPreload } from "../../components/items/emoji/emojiPickerLoader";
 import {
   ITEMS_SORT_OPTION_KEYS,
   buildItemsListFetchParams,

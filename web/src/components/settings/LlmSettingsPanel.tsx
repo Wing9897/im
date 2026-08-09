@@ -3,8 +3,8 @@ import {
   CheckboxField,
   FormGrid,
   FormStack,
+  MenuSelect,
   PasswordField,
-  SelectField,
   SelectTile,
   SelectTileGrid,
   SettingsRow,
@@ -124,14 +124,18 @@ export function LlmSettingsPanel({
           htmlFor="openai-json-mode"
           help={t("llm.jsonModeHelp")}
         >
-          <SelectField
+          <MenuSelect
             id="openai-json-mode"
+            variant="field"
             value={openaiJsonMode}
-            onChange={(e) => onOpenaiJsonModeChange(e.target.value)}
-          >
-            <option value="json_schema">{t("llm.jsonModeSchemaOption")}</option>
-            <option value="json_object">{t("llm.jsonModeObjectOption")}</option>
-          </SelectField>
+            options={[
+              { value: "json_schema", label: t("llm.jsonModeSchemaOption") },
+              { value: "json_object", label: t("llm.jsonModeObjectOption") },
+            ]}
+            onChange={onOpenaiJsonModeChange}
+            aria-label={t("llm.jsonModeLabel")}
+            data-testid="openai-json-mode"
+          />
         </SettingsRow>
       ) : null}
 

@@ -19,7 +19,8 @@ import {
   useAssistantIdentity,
 } from "../../domain/aiStaff/assistantIdentity";
 import type { SystemSettingsSnapshot } from "../../types";
-import { SettingsContentCard, useSettingsPageState } from "../settings/SettingsShared";
+import { SettingsContentCard } from "../../components/settings/SettingsFormLayout";
+import { useSettingsPageState } from "../settings/SettingsShared";
 import {
   FRONTLINE_LINKS,
   LiaisonIntroCard,

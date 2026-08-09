@@ -1,0 +1,428 @@
+/* Board widget frames, size menus, body content. */
+
+.board-widget-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface-page) 88%, transparent);
+  overflow: hidden;
+}
+
+/* Overlay chrome: no layout height; reveal on hover / keyboard focus. */
+.board-widget-frame__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 6px 0 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--surface-border-alpha, var(--surface-border)) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-page) 72%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: default;
+  user-select: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+
+.board-widget-frame:hover .board-widget-frame__header,
+.board-widget-frame:focus-within .board-widget-frame__header {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/*
+ * Board system-fullscreen (data-board-immersive on .board-root):
+ * keep frame chrome hidden � hover/focus must not reveal headers.
+ * Edit mode still forces headers visible via .board-canvas--edit below.
+ * Widget maximize is separate and keeps hover-reveal.
+ */
+.board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame:hover .board-widget-frame__header,
+.board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame:focus-within .board-widget-frame__header {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Message wall needs channel scope in the header even in immersive � allow hover reveal. */
+.board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame[data-testid="board-widget-wall"]:hover .board-widget-frame__header,
+.board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame[data-testid="board-widget-wall"]:focus-within .board-widget-frame__header {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Touch / no-hover: keep overlay reachable without eating layout space. */
+@media (hover: none) {
+  .board-widget-frame__header {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .board-root[data-board-immersive] .board-canvas:not(.board-canvas--edit) .board-widget-frame__header {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.board-canvas--edit .board-widget-frame__header {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.board-canvas--edit .board-widget-frame__header:active {
+  cursor: grabbing;
+}
+
+.board-canvas--edit .board-widget-frame {
+  outline: 1px dashed color-mix(in srgb, var(--text-primary) 28%, transparent);
+  outline-offset: -1px;
+}
+
+.board-canvas--edit .board-free-item:hover .board-widget-frame,
+.board-canvas--edit .board-free-item:focus-within .board-widget-frame {
+  outline-color: color-mix(in srgb, var(--accent, var(--info)) 55%, transparent);
+}
+
+.board-widget-frame__title {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.board-widget-frame__actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.board-widget-frame__widget-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding-right: 3px;
+  border-right: 1px solid color-mix(in srgb, var(--surface-border-alpha, var(--surface-border)) 70%, transparent);
+}
+
+.board-widget-frame__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.board-widget-frame__btn:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-primary);
+}
+
+.board-widget-frame__btn--active {
+  background: color-mix(in srgb, var(--accent, var(--info)) 18%, transparent);
+  color: var(--text-primary);
+}
+
+.board-widget-frame__btn--danger:hover {
+  background: color-mix(in srgb, #ef4444 16%, transparent);
+  color: #ef4444;
+}
+
+.board-widget-frame__size {
+  position: relative;
+}
+
+.board-widget-frame__size-btn {
+  min-width: 28px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-widget-frame__size-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-page) 96%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px color-mix(in srgb, #000 28%, transparent);
+}
+
+/* Portaled to document.body so overflow:hidden frames cannot clip the picker. */
+.board-widget-frame__size-menu--portal {
+  position: fixed;
+  right: auto;
+  z-index: 10050;
+  max-height: min(280px, calc(100vh - 16px));
+  overflow-y: auto;
+}
+
+.board-widget-frame__size-item {
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.board-widget-frame__size-item:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-primary);
+}
+
+.board-widget-frame__size-item--active {
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.board-widget-frame__body {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.board-widget-frame__body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Hide scrollbars inside frames (wheel / touch scroll still works). */
+.board-widget-frame,
+.board-widget-frame * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.board-widget-frame::-webkit-scrollbar,
+.board-widget-frame *::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.board-widget-body {
+  padding: 6px 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.board-widget-muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.board-widget-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.board-widget-list__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.board-widget-list__row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  margin: 0;
+  padding: 3px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.board-widget-list__row:hover {
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+.board-events-row[aria-pressed="true"] {
+  outline: 1px solid var(--accent, #4ea1ff);
+  outline-offset: -1px;
+  background: color-mix(in srgb, var(--accent, #4ea1ff) 14%, transparent);
+}
+
+.board-widget-list__primary {
+  color: var(--text-primary);
+  font-size: 10px;
+  line-height: 1.3;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.board-widget-list__meta {
+  color: var(--text-muted);
+  font-size: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.board-widget-list__error {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 9px;
+  line-height: 1.3;
+  color: var(--error);
+  text-align: left;
+  white-space: normal;
+}
+
+.board-widget-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.board-widget-status__detail {
+  margin: 0;
+  max-width: 100%;
+  font-size: 9px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-widget-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.board-widget-map > * {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.board-widget-calendar,
+.board-widget-gantt,
+.board-widget-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.board-widget-gantt {
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.board-embed-paused {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 80px;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--surface-border-alpha, var(--surface-border));
+  color: var(--text-muted);
+  font-size: var(--text-body);
+  text-align: center;
+}
+
+.board-widget-map__stage {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  flex: 1;
+  min-height: 80px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+}
+
+.board-widget-map__leaflet.leaflet-container {
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--surface-base);
+}
+
+.board-widget-map__leaflet {
+  width: 100%;
+  height: 100%;
+  background: var(--surface-base);
+}
+
+.board-widget-map__empty {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--surface-page) 55%, transparent);
+  color: var(--text-muted);
+  font-size: var(--text-caption);
+}

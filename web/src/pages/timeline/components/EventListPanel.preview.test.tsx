@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { previewEventBody } from "./EventListPanel";
+
+import { previewEventBody } from "../../../domain/timeline/eventListCardMeta";
 
 describe("previewEventBody", () => {
   it("collapses multiline whitespace for list preview", () => {

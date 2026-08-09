@@ -42,7 +42,7 @@ vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
 
 import { ActionsPage } from "./ActionsPage";
-import { ActionTypeSelector } from "./ActionTypeSelector";
+import { ActionTypeSelector } from "./components/ActionTypeSelector";
 
 function renderActionsPage() {
   return createElement(MemoryRouter, null, createElement(ActionsPage));

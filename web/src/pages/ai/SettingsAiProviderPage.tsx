@@ -14,8 +14,8 @@ import { toErrorMessage } from "../../utils/errors";
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-  useSettingsPageState,
-} from "../settings/SettingsShared";
+} from "../../components/settings/SettingsFormLayout";
+import { useSettingsPageState } from "../settings/SettingsShared";
 
 export function SettingsAiProviderPage() {
   const { t } = useTranslation("settings");

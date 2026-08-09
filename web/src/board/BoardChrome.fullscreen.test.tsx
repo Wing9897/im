@@ -361,7 +361,7 @@ describe("immersive shell flag", () => {
 
   it("CSS suppresses frame header hover reveal while board immersive", () => {
     const css = readFileSync(
-      resolve(process.cwd(), "src/css/board-core.css"),
+      resolve(process.cwd(), "src/css/board-widgets.css"),
       "utf-8",
     );
     expect(css).toContain(

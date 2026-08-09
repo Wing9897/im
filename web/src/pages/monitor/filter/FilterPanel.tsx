@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type React from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SourceChannelPickerContent } from "../../../components/channels/SourceChannelPickerContent";
 import { PlatformFilterChips } from "../../../components/channels/PlatformFilterChips";
-import { SelectField, TextField } from "../../../components/ui";
+import { MenuSelect, TextField } from "../../../components/ui";
 import type {
   Source,
   ChannelWithSource,
@@ -73,14 +72,13 @@ export function FilterPanel({
     return () => clearTimeout(timer);
   }, [searchDraft]);
 
-  const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+  const handleSourceChange = (value: string) => {
     onFiltersChange({ ...filters, sourceIds: value ? [value] : undefined });
   };
 
-  const handleTimeRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value as MessageTimeRange | "";
-    onFiltersChange({ ...filters, timeRange: value || undefined });
+  const handleTimeRangeChange = (value: string) => {
+    const next = value as MessageTimeRange | "";
+    onFiltersChange({ ...filters, timeRange: next || undefined });
   };
 
   const selectPlatform = (platform: string | undefined) => {
@@ -149,31 +147,35 @@ export function FilterPanel({
 
         <div className="im-filter-panel-row im-filter-panel-meta-row">
           <div className="im-filter-panel-field">
-            <SelectField
+            <MenuSelect
+              variant="field"
+              menuPortal
               value={selectedSources[0] ?? ""}
+              options={[
+                { value: "", label: t("filter.sourceAll") },
+                ...visibleSources.map((source) => ({
+                  value: source.id,
+                  label: formatSourceLabel(source),
+                })),
+              ]}
               onChange={handleSourceChange}
               aria-label={t("filter.sourceAria")}
-            >
-              <option value="">{t("filter.sourceAll")}</option>
-              {visibleSources.map((source) => (
-                <option key={source.id} value={source.id}>
-                  {formatSourceLabel(source)}
-                </option>
-              ))}
-            </SelectField>
+              data-testid="monitor-filter-source"
+            />
           </div>
           <div className="im-filter-panel-field">
-            <SelectField
+            <MenuSelect
+              variant="field"
+              menuPortal
               value={selectedTimeRange}
+              options={timeRangeOptions.map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
               onChange={handleTimeRangeChange}
               aria-label={t("filter.timeAria")}
-            >
-              {timeRangeOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </SelectField>
+              data-testid="monitor-filter-time"
+            />
           </div>
         </div>
       </div>

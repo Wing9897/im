@@ -15,4 +15,8 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/ai/voice")).not.toThrow();
     expect(() => prefetchRoute("/ai/analysis-strategy")).not.toThrow();
   });
+
+  it("prefetches agent detail via /agent (not retired /project)", () => {
+    expect(() => prefetchRoute("/tasks/abc/agent")).not.toThrow();
+  });
 });

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../components/common/EmptyState";
 import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
-import { AppPageShell, Button, EmptyStateLink, OpsControlBar, SelectField } from "../../components/ui";
+import { AppPageShell, Button, EmptyStateLink, MenuSelect, OpsControlBar } from "../../components/ui";
 import { pageOpsControlClass } from "../../components/ui/controlStyles";
 import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { LeaderboardTaskTable } from "./LeaderboardTaskTable";
@@ -51,19 +51,23 @@ export function LeaderboardPage() {
           data-testid="leaderboard-toolbar"
         >
           {leaderboardTasks.length > 0 ? (
-            <SelectField
+            <MenuSelect
+              variant="field"
+              menuPortal
               value={selectedTaskId}
-              onChange={(e) => setSelectedTaskId(e.target.value)}
+              options={[
+                { value: "", label: t("leaderboard.allBoards") },
+                ...leaderboardTasks.map((task) => ({
+                  value: task.id,
+                  label: task.name,
+                })),
+              ]}
+              onChange={setSelectedTaskId}
               aria-label={t("leaderboard.selectTaskAria")}
-              className={`${pageOpsControlClass} max-w-[200px] w-auto px-2`}
-            >
-              <option value="">{t("leaderboard.allBoards")}</option>
-              {leaderboardTasks.map((task) => (
-                <option key={task.id} value={task.id}>
-                  {task.name}
-                </option>
-              ))}
-            </SelectField>
+              data-testid="leaderboard-task-select"
+              className="w-auto shrink-0 max-w-[200px]"
+              triggerClassName={`${pageOpsControlClass} max-w-[200px] w-auto px-2`}
+            />
           ) : null}
           {isRefreshing ? <RefreshIndicator label={t("leaderboard.refreshing")} /> : null}
         </OpsControlBar>

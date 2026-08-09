@@ -16,7 +16,7 @@ import {
   EMPTY_USER_EVENT_FORM,
   valuesFromInitial,
   type UserEventFormValues,
-} from "./userEventFormModel";
+} from "../../domain/timeline/userEventFormModel";
 import { buildUserEventSubmitValues } from "./userEventFormSubmit";
 
 type UseUserEventDialogFormArgs = {

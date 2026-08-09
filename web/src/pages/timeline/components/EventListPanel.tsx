@@ -16,7 +16,9 @@ import {
   EVENT_LIST_DAY_PHASE_TAG_CLASS,
   EVENT_LIST_DAY_PHASE_TAG_META,
   calendarLocationDisplay,
+  eventListTimeLabel,
   formatEventListProvenanceLabel,
+  previewEventBody,
   resolveEventCardDisplay,
   resolveEventListWorksetName,
   type EventListCardMetaLookups,
@@ -33,32 +35,9 @@ import {
 } from "../../../domain/timeline/status";
 import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorksetLabel";
 import type { TimelineItem } from "../../../types";
-import { formatOsDateTime } from "../../../utils/time";
 import { dismissedSurfaceClass, dismissedTitleClass } from "../timelineDismissUtils";
 import { resolveSidebarDay } from "../timelinePageUtils";
 import { useTimelinePageContext } from "../TimelinePageContext";
-
-/** Collapse newlines/spaces for single-line list previews (line-clamp breaks on multi-line body). */
-export function previewEventBody(body: string): string {
-  return body.replace(/\s+/g, " ").trim();
-}
-
-function eventListTimeLabel(event: TimelineItem, allDayLabel: string): string {
-  if (event.isAllDay) return allDayLabel;
-  const start = formatOsDateTime(event.startTime, {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-  if (!event.endTime) return start;
-  return `${start} – ${formatOsDateTime(event.endTime, {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
-}
 
 function EventListItem({
   event,

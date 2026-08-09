@@ -62,7 +62,7 @@ flowchart LR
 |---------|-----------|-----------------|
 | Task mode without LLM | `analysisMode: "recurring"` (RRULE) | Timeline UI `viewMode: "calendar"` (calendar vs gantt layout) |
 | Board calendar widget | widget type `"calendar"` | Any task analysis mode |
-| UI agent detail | `/tasks/:taskId/agent` (`analysisMode=agent` + `outputCalendar`) | Retired wire `analysisMode=project`; old URL `/tasks/:taskId/project` redirects |
+| UI agent detail | `/tasks/:taskId/agent` (`analysisMode=agent` + `outputCalendar`) | Retired wire `analysisMode=project`; legacy URL `/tasks/:taskId/project` is retired (no redirect) |
 
 Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not analysis modes.
 
@@ -176,7 +176,7 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect shim).
 - **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Their retired localStorage migration/cleanup bridges are gone after the pre-wipe-floor / prior stamps. User profile likewise (server settings SoT; active LS cache only).
-- **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" — front-line **assistant** + **task advisor** (`taskEditor`); back-office **leaderboard**, **intel_event**, **agent** — plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel of the assistant, not an `AiStaffId` / runtime) — `web/src/assets/ai-staff/` (avatars) + `web/src/domain/aiStaff/` (roster data) + `web/src/components/aiStaff/` (avatar/chat-row chrome). Page implementation lives at `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a backend concept; does not own prompts or task presets. Lightweight API how-to: `/settings/api`. A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Agent ticks (calendar-out / reconcile UI): [`docs/agent/project.md`](agent/project.md). UI detail lives under Tasks at `/tasks/:taskId/agent` (not a top-level nav peer of Sources / Assistant; legacy `/project` redirects).
+- **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" — front-line **assistant** + **task advisor** (`taskEditor`); back-office **leaderboard**, **intel_event**, **agent** — plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel of the assistant, not an `AiStaffId` / runtime) — `web/src/assets/ai-staff/` (avatars) + `web/src/domain/aiStaff/` (roster data) + `web/src/components/aiStaff/` (avatar/chat-row chrome). Page implementation lives at `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a backend concept; does not own prompts or task presets. Lightweight API how-to: `/settings/api`. A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Agent ticks (calendar-out / reconcile UI): [`docs/agent/project.md`](agent/project.md). UI detail lives under Tasks at `/tasks/:taskId/agent` (not a top-level nav peer of Sources / Assistant; legacy `/project` path is retired).
 - **Ops board** — see [Ops board](#ops-board) below.
 
 #### Frontend layering

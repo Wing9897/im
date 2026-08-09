@@ -59,7 +59,7 @@ describe("LanguageSwitcher", () => {
     expect(english.checked).toBe(true);
   });
 
-  it("compact variant is a select without settings help copy", async () => {
+  it("compact variant is a MenuSelect without settings help copy", async () => {
     await harness.render(() => createElement(LanguageSwitcher, { variant: "compact" }));
 
     const root = harness.container.querySelector('[data-testid="language-switcher"]');
@@ -67,17 +67,23 @@ describe("LanguageSwitcher", () => {
     expect(root?.textContent).not.toContain("自動跟隨系統");
     expect(root?.querySelectorAll('input[type="radio"]')).toHaveLength(0);
 
-    const select = root!.querySelector(
-      '[data-testid="language-switcher-select"]',
-    ) as HTMLSelectElement;
-    expect(select).not.toBeNull();
-    expect(select.value).toBe("zh-Hant");
-    expect(select.getAttribute("aria-label")).toBe("介面語言");
-    expect(select.querySelectorAll("option")).toHaveLength(4);
+    const trigger = root!.querySelector(
+      '[data-testid="language-switcher-select-value"]',
+    ) as HTMLButtonElement;
+    expect(trigger).not.toBeNull();
+    expect(trigger.getAttribute("aria-label")).toBe("介面語言");
+    expect(trigger.textContent).toContain("繁體中文");
 
     await act(async () => {
-      select.value = "en";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
+      trigger.click();
+    });
+    expect(
+      document.body.querySelectorAll('[data-testid^="language-switcher-select-option-"]'),
+    ).toHaveLength(4);
+    await act(async () => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="language-switcher-select-option-en"]')
+        ?.click();
     });
     expect(getAppLocalePreference()).toBe("en");
   });

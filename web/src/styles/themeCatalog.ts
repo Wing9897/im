@@ -2,7 +2,7 @@
  * Theme catalog — single source of truth for palettes, motion, and family.
  * CSS is generated via `npm run gen:themes` → `web/src/theme.generated.css`.
  *
- * Implementation split: themeTypes / themeCatalogData / themeGenerateCss.
+ * Implementation split: themeTypes / themeCatalogData (+ group modules) / themeGenerateCss.
  * This barrel keeps import paths and the gen script stable.
  */
 

@@ -15,7 +15,7 @@ import { buildDuplicateItemBody } from "../../domain/items/itemDuplicate";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import type { Workset } from "../../types/worksets";
-import { ItemsEntryCard } from "./ItemsEntryCard";
+import { ItemsEntryCard } from "../../components/items/ItemsEntryCard";
 
 type GroupedRows = Array<{ worksetId: string; rows: TrackableItem[] }>;
 

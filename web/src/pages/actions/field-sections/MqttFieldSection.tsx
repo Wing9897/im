@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { FormField, SelectField, SettingsRow, TextField } from "../../../components/ui";
+import { FormField, MenuSelect, SettingsRow, TextField } from "../../../components/ui";
 import type { ActionFormState, HeaderEntry } from "../form/useActionFormDialog";
 
 export function MqttFields({
@@ -89,16 +89,19 @@ export function MqttFields({
       </SettingsRow>
 
       <SettingsRow label={t("fields.qosLevel")} htmlFor="action-mqtt-qos">
-        <SelectField
+        <MenuSelect
           id="action-mqtt-qos"
-          value={form.mqttQos}
-          onChange={(e) => onChange("mqttQos", Number(e.target.value))}
+          variant="field"
+          value={String(form.mqttQos)}
+          options={[
+            { value: "0", label: "0 - At most once" },
+            { value: "1", label: "1 - At least once" },
+            { value: "2", label: "2 - Exactly once" },
+          ]}
+          onChange={(next) => onChange("mqttQos", Number(next))}
           disabled={submitting}
-        >
-          <option value={0}>0 - At most once</option>
-          <option value={1}>1 - At least once</option>
-          <option value={2}>2 - Exactly once</option>
-        </SelectField>
+          aria-label={t("fields.qosLevel")}
+        />
       </SettingsRow>
     </div>
   );

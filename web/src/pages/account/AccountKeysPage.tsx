@@ -1,8 +1,8 @@
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-} from "../settings/SettingsShared";
-import { AccountAccessKeysSection } from "./AccountAccessKeysSection";
+} from "../../components/settings/SettingsFormLayout";
+import { AccountAccessKeysSection } from "./components/AccountAccessKeysSection";
 
 /** Account → Access keys: household API keys for webhook / automation. */
 export function AccountKeysPage() {

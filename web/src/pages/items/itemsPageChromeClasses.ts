@@ -20,8 +20,8 @@ export const itemsFormPageMaxWidthClass = pageChromeMaxWidthClass;
 export const itemsPageChromeOuterClass = pageChromeOuterClass;
 
 /**
- * Inner row — matches ChatEditorToolbar; `flex-wrap` keeps entry filters in one
- * band when the strip is narrow (category / form simply do not wrap).
+ * Inner row — shared ``pageChromeInnerClass``; `flex-wrap` keeps entry filters
+ * in one band when the strip is narrow (category / form simply do not wrap).
  * Cap matches Items list / form body (`itemsFormPageMaxWidthClass`).
  */
 export const itemsPageChromeInnerClass = pageChromeInnerClass;

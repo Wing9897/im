@@ -8,7 +8,10 @@ import {
   getEvidenceStyleOptions,
   type EvidenceStyle,
 } from "../../domain/settings/analysisEvidenceStyle";
-import { SettingsContentCard, SettingsFieldGroup } from "../settings/SettingsShared";
+import {
+  SettingsContentCard,
+  SettingsFieldGroup,
+} from "../../components/settings/SettingsFormLayout";
 import { useSettingsAnalysisStrategyPage } from "./useSettingsAnalysisStrategyPage";
 
 export function SettingsAnalysisStrategyPage() {

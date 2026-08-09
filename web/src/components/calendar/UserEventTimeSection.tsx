@@ -12,7 +12,7 @@ import { OvernightClockHint } from "./OvernightClockHint";
 import {
   USER_EVENT_DAY_PRESETS,
   type UserEventFormValues,
-} from "./userEventFormModel";
+} from "../../domain/timeline/userEventFormModel";
 
 type UserEventTimeSectionProps = {
   values: UserEventFormValues;

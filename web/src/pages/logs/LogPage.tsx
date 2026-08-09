@@ -1,10 +1,10 @@
 import { useErrorToast } from "../../hooks/useErrorToast";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import { useTranslation } from "react-i18next";
-import { SettingsContentCard } from "../settings/SettingsShared";
-import { LogEventsSection } from "./LogEventsSection";
-import { LogFilterToolbar } from "./LogFilterToolbar";
-import { LogSummaryCards } from "./LogSummaryCards";
+import { SettingsContentCard } from "../../components/settings/SettingsFormLayout";
+import { LogEventsSection } from "./components/LogEventsSection";
+import { LogFilterToolbar } from "./components/LogFilterToolbar";
+import { LogSummaryCards } from "./components/LogSummaryCards";
 import { LogPageProvider, useLogPageContext } from "./LogPageContext";
 
 export function LogPage() {

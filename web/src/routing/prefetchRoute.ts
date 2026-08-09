@@ -27,8 +27,8 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   if (path === "/tasks/new" || /\/tasks\/[^/]+\/edit$/.test(path)) {
     return () => import("../pages/tasks/chat-editor/ChatEditorPage");
   }
-  if (/\/tasks\/[^/]+\/(agent|project)$/.test(path)) {
-    return () => import("../pages/tasks/agent/ProjectDetailPage");
+  if (/\/tasks\/[^/]+\/agent$/.test(path)) {
+    return () => import("../pages/tasks/agent/AgentDetailPage");
   }
   if (/\/tasks\/worksets\//.test(path)) {
     return ROUTE_PREFETCHERS["/tasks"];
