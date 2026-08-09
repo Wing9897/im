@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl, SettingsRow, TextField } from "../../../components/ui";
-import { SourceAddFormCard } from "../SourceAddFormCard";
+import { SourceAddFormCard } from "../board/SourceAddFormCard";
 
 export type TelegramLoginMethod = "phone" | "qr";
 

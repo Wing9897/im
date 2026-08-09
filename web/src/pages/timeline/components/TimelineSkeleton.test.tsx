@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { TimelineSkeleton } from "./TimelineSkeleton";
 import { TimelineViewSwitch } from "./TimelineViewSwitch";
 import { TimelinePageProvider, type TimelinePageContextValue } from "../TimelinePageContext";
 import { buildCalendarDays, buildWeekDays } from "../../../domain/timeline/dateUtils";
 import { mockShowToast } from "../../../test/context-mocks";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
 
 vi.mock("../../../context/ToastContext", async () =>
   (await import("../../../test/context-mocks")).toastContextModuleMock());
+
+vi.mock("../../../context/TaskCatalogContext", async () =>
+  (await import("../../../test/context-mocks")).taskCatalogModuleMock());
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -30,7 +31,7 @@ function unmountAll(mounts: Mount[]) {
 }
 
 function withI18n(children: React.ReactNode) {
-  return createElement(I18nextProvider, { i18n }, children);
+  return wrapWithI18n(children);
 }
 
 function makeContextValue(): TimelinePageContextValue {
@@ -213,8 +214,7 @@ describe("TimelineViewSwitch skeleton loading integration", () => {
   }
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     vi.useFakeTimers();
     mockShowToast.mockReset();
   });

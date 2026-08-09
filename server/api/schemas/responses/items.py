@@ -30,12 +30,14 @@ class ItemResponse(BaseModel):
     title: str
     categoryId: str | None = None
     worksetId: str
-    purchasedAt: str | None = None
     expiresAt: str | None = None
     remindBeforeDays: int | None = None
     notes: str = ""
     status: str = "active"
     emoji: str | None = None
+    quantity: float | None = None
+    unit: str | None = None
+    price: float | None = None
     attributes: dict[str, str] = Field(default_factory=dict)
     createdAt: str | None = None
     updatedAt: str | None = None

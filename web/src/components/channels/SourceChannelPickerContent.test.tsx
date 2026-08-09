@@ -1,12 +1,10 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act, type ReactElement } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 
 import type { ChannelWithSource } from "../../types";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { SourceChannelPickerContent } from "./SourceChannelPickerContent";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 const channels: ChannelWithSource[] = [
   {
@@ -32,7 +30,7 @@ const channels: ChannelWithSource[] = [
 function renderWithI18n(node: ReactElement) {
   const container = document.createElement("div");
   act(() => {
-    createRoot(container).render(createElement(I18nextProvider, { i18n }, node));
+    createRoot(container).render(wrapWithI18n(node));
   });
   return container;
 }
@@ -59,8 +57,7 @@ function setSearchInputValue(input: HTMLInputElement, value: string) {
 
 describe("SourceChannelPickerContent", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   it("groups channels by platform with source labels for source-tree layouts", () => {

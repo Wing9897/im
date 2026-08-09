@@ -1,10 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
 import { AccountAccessKeysSection } from "./AccountAccessKeysSection";
 import { _resetConnectionStoreForTests } from "../../domain/connection/connectionStore";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 const fetchAccessKeys = vi.fn();
 const createAccessKey = vi.fn();
@@ -55,7 +54,7 @@ describe("AccountAccessKeysSection", () => {
   function renderSection() {
     act(() => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(AccountAccessKeysSection)),
+        wrapWithI18n(createElement(AccountAccessKeysSection)),
       );
     });
   }

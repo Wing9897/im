@@ -24,6 +24,7 @@ type UserEventTimeSectionProps = {
   setCustomDays: (value: string) => void;
   onAllDayChange: (checked: boolean) => void;
   onApplyDaySpan: (days: number) => void;
+  remindBeforeDaysHint?: string;
 };
 
 /** All-day toggle, duration presets, and start/end (or recurring clock) fields. */
@@ -37,8 +38,10 @@ export function UserEventTimeSection({
   setCustomDays,
   onAllDayChange,
   onApplyDaySpan,
+  remindBeforeDaysHint,
 }: UserEventTimeSectionProps) {
   const { t } = useTranslation("timeline");
+  const remindHint = remindBeforeDaysHint ?? t("userEvent.remindBeforeDaysHint");
 
   return (
     <div
@@ -198,7 +201,7 @@ export function UserEventTimeSection({
           className="w-full"
           data-testid="user-event-remind-before"
         />
-        <p className="m-0 text-caption text-text-muted">{t("userEvent.remindBeforeDaysHint")}</p>
+        <p className="m-0 text-caption text-text-muted">{remindHint}</p>
       </div>
     </div>
   );

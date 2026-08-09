@@ -591,4 +591,27 @@ describe("UserEventDialog", () => {
 
     host.remove();
   });
+
+  it("hides workset picker when worksetMode is hidden", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          worksetMode: "hidden",
+          worksetOptions: [{ id: "ws-1", name: "工作集" }],
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    expect(document.querySelector('[data-testid="user-event-workset-select"]')).toBeNull();
+
+    host.remove();
+  });
 });

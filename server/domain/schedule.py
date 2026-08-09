@@ -2,8 +2,8 @@
 
 Two purposes share RRULE syntax but **never** share consumption paths:
 
-- ``purpose=trigger`` — AI modes (``event`` / ``leaderboard`` / ``project`` /
-  ``web_intel``). Stored on ``analysis_tasks.schedule_rrule``. Consumed
+- ``purpose=trigger`` — AI modes (``leaderboard`` / ``intel_event`` /
+  ``agent``). Stored on ``analysis_tasks.schedule_rrule``. Consumed
   **only** by the APScheduler next-run path. Sub-day FREQ (``SECONDLY`` /
   ``HOURLY``) is allowed. **Never** expanded into calendar occurrences /
   Board / Timeline month grids.

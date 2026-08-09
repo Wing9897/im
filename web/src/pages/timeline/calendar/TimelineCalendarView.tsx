@@ -1,56 +1,23 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin } from "lucide-react";
 
-import { Badge } from "../../../components/ui";
-import {
-  itemDateKindLabel,
-  itemDateKindMarkerClass,
-} from "../../../domain/items/itemCalendarProjection";
 import {
   eventStartsOnDay,
-  formatTimeLabel,
   formatWeekdayLabel,
   isSameDay,
   isToday,
   type TimelineScale,
 } from "../../../domain/timeline/dateUtils";
-import {
-  EVENT_LIST_DAY_PHASE_TAG_CLASS,
-  EVENT_LIST_DAY_PHASE_TAG_META,
-  calendarLocationDisplay,
-  resolveEventCardDisplay,
-} from "../../../domain/timeline/eventListCardMeta";
-import {
-  getEventStatusColor,
-  getEventStatusLabel,
-  type TimelineEventStatus,
-  type TimelineEventStatusMap,
-} from "../../../domain/timeline/status";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../../types";
 import {
   preferActiveEvents,
   sortActiveThenDismissed,
-  dismissedSurfaceClass,
-  dismissedTitleClass,
 } from "../timelineDismissUtils";
+import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import {
   calendarDayEventsGridClass,
   calendarDayGridClass,
   calendarDayHeaderClass,
-  dayCardAccentRailClass,
-  dayCardBodyClass,
-  dayCardInnerClass,
-  dayCardLocationIconClass,
-  dayCardLocationRowClass,
-  dayCardLocationTextClass,
-  dayCardMetadataClass,
-  dayCardPrimaryRowClass,
-  dayCardSummaryClass,
-  dayCardTimeChipClass,
-  dayCardTitleClass,
-  dayEventCardClass,
   dayViewEmptyClass,
   weekCellDateClass,
   weekCellEmptyClass,
@@ -59,12 +26,6 @@ import {
   weekCellHeaderClass,
   weekCellMetaRowClass,
   weekCellTodayLabelClass,
-  weekEventChipBodyClass,
-  weekEventChipClass,
-  weekEventChipInnerClass,
-  weekEventChipRailClass,
-  weekEventChipTimeClass,
-  weekEventChipTitleClass,
   weekViewDayGridClass,
   weekViewHeaderGridClass,
   weekViewWeekdayLabelClass,
@@ -74,8 +35,10 @@ import {
   calendarScrollableClass,
   monthCalendarFillClass,
 } from "./timelineCalendarLayout";
+import { TimelineDayEventCard } from "./TimelineDayEventCard";
 import { TimelineMonthGrid } from "./TimelineMonthGrid";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";
+import { WeekEventChip } from "./TimelineWeekEventChip";
 
 type TimelineCalendarViewProps = {
   timeScale: TimelineScale;
@@ -141,7 +104,7 @@ export function TimelineCalendarView({
               </div>
             ) : (
               sortActiveThenDismissed(rangeEvents).map((event) => (
-                <DayEventCard
+                <TimelineDayEventCard
                   key={event.id}
                   event={event}
                   focusedDay={rangeStart}
@@ -253,211 +216,5 @@ export function TimelineCalendarView({
         onCreateOnDay={onCreateOnDay}
       />
     </div>
-  );
-}
-
-type DayEventCardProps = {
-  event: TimelineItem;
-  focusedDay: Date;
-  status: TimelineEventStatus;
-  onSelect: (event: TimelineItem) => void;
-};
-
-function dayCardTimeLabel(
-  event: TimelineItem,
-  allDayLabel: string,
-): string {
-  if (event.isAllDay) return allDayLabel;
-  const start = formatTimeLabel(new Date(event.startTime));
-  if (!event.endTime) return start;
-  const endDate = new Date(event.endTime);
-  if (Number.isNaN(endDate.getTime()) || endDate.getTime() <= new Date(event.startTime).getTime()) {
-    return start;
-  }
-  return `${start} – ${formatTimeLabel(endDate)}`;
-}
-
-type WeekEventChipProps = {
-  event: TimelineItem;
-  focusedDay: Date;
-  status: TimelineEventStatus;
-  onSelect: (event: TimelineItem) => void;
-};
-
-function WeekEventChip({ event, focusedDay, status, onSelect }: WeekEventChipProps) {
-  const { t } = useTranslation("timeline");
-  const [hovered, setHovered] = useState(false);
-  const dismissed = Boolean(event.dismissed);
-  const statusColor = getEventStatusColor(status);
-  const { leading, showRemindBadge, dayPhaseTag, title } =
-    resolveEventCardDisplay(event, focusedDay);
-  const timeLabel = dayCardTimeLabel(event, t("userEvent.allDay"));
-
-  return (
-    <button
-      type="button"
-      onClick={(clickEvent) => {
-        clickEvent.stopPropagation();
-        onSelect(event);
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`${weekEventChipClass(hovered)} ${dismissed ? dismissedSurfaceClass : ""}`}
-      data-testid="timeline-week-event-chip"
-      title={title}
-    >
-      <div className={weekEventChipInnerClass}>
-        <span
-          className={weekEventChipRailClass}
-          style={{ backgroundColor: statusColor }}
-          aria-hidden="true"
-        />
-        <div className={weekEventChipBodyClass}>
-          <div className="flex min-w-0 items-start gap-0.5">
-            <div
-              className={`${weekEventChipTitleClass} min-w-0 flex-1 ${
-                dismissed ? dismissedTitleClass : ""
-              }`}
-            >
-              {leading ? (
-                <span
-                  className={`mr-0.5 inline-flex align-middle ${itemDateKindMarkerClass(
-                    leading.type === "item" ? leading.itemDateKind : null,
-                  )}`}
-                  aria-hidden="true"
-                  data-testid={
-                    leading.type === "important"
-                      ? "week-important-marker"
-                      : "week-item-kind-marker"
-                  }
-                >
-                  {leading.emoji}
-                </span>
-              ) : null}
-              {title}
-            </div>
-            {showRemindBadge ? (
-              <Badge
-                tone="warning"
-                className="normal-case tracking-normal shrink-0 !px-1 !py-0 text-[9px] leading-none"
-                data-testid="timeline-remind-badge"
-              >
-                {itemDateKindLabel("remind")}
-              </Badge>
-            ) : null}
-            {dayPhaseTag ? (
-              <span
-                className={EVENT_LIST_DAY_PHASE_TAG_CLASS}
-                data-testid={EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].testId}
-              >
-                {t(EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].labelKey)}
-              </span>
-            ) : null}
-          </div>
-          <div className={weekEventChipTimeClass}>{timeLabel}</div>
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function DayEventCard({ event, focusedDay, status, onSelect }: DayEventCardProps) {
-  const { t } = useTranslation("timeline");
-  const [hovered, setHovered] = useState(false);
-  const dismissed = Boolean(event.dismissed);
-  const statusColor = getEventStatusColor(status);
-  const location = calendarLocationDisplay(event.location);
-  const { leading, showRemindBadge, dayPhaseTag, title } =
-    resolveEventCardDisplay(event, focusedDay);
-  const timeLabel = dayCardTimeLabel(event, t("userEvent.allDay"));
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(event)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={`${dayEventCardClass(hovered)} ${dismissed ? dismissedSurfaceClass : ""}`}
-      data-testid="timeline-day-event-card"
-    >
-      <div className={dayCardInnerClass}>
-        <span
-          className={dayCardAccentRailClass}
-          style={{ backgroundColor: statusColor }}
-          aria-hidden="true"
-        />
-        <div className={dayCardBodyClass}>
-          <div className={dayCardPrimaryRowClass}>
-            <div
-              className={`${dayCardTitleClass} ${
-                dismissed ? dismissedTitleClass : ""
-              }`}
-              title={title}
-            >
-              {leading ? (
-                <span
-                  className={`mr-1 inline-flex align-middle ${itemDateKindMarkerClass(
-                    leading.type === "item" ? leading.itemDateKind : null,
-                  )}`}
-                  aria-hidden="true"
-                  data-testid={
-                    leading.type === "important"
-                      ? "day-important-marker"
-                      : "day-item-kind-marker"
-                  }
-                >
-                  {leading.emoji}
-                </span>
-              ) : null}
-              {title}
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-              {showRemindBadge ? (
-                <Badge
-                  tone="warning"
-                  className="normal-case tracking-normal shrink-0"
-                  data-testid="timeline-remind-badge"
-                >
-                  {itemDateKindLabel("remind")}
-                </Badge>
-              ) : null}
-              {dayPhaseTag ? (
-                <span
-                  className={EVENT_LIST_DAY_PHASE_TAG_CLASS}
-                  data-testid={EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].testId}
-                >
-                  {t(EVENT_LIST_DAY_PHASE_TAG_META[dayPhaseTag].labelKey)}
-                </span>
-              ) : null}
-              <div className={dayCardTimeChipClass}>{timeLabel}</div>
-            </div>
-          </div>
-          {event.body ? (
-            <div className={dayCardSummaryClass} title={event.body}>
-              {event.body}
-            </div>
-          ) : null}
-          <div
-            className={dayCardLocationRowClass}
-            data-testid="timeline-day-event-location"
-          >
-            <MapPin
-              size={12}
-              strokeWidth={2}
-              className={dayCardLocationIconClass}
-              aria-hidden="true"
-            />
-            <span className={dayCardLocationTextClass} title={location}>
-              {t("calendar.location", { value: location })}
-            </span>
-          </div>
-          <div className={dayCardMetadataClass}>
-            <span style={{ color: statusColor }}>
-              {getEventStatusLabel(status)}
-            </span>
-          </div>
-        </div>
-      </div>
-    </button>
   );
 }

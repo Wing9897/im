@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS user_events (
     start_time  TEXT NOT NULL,
     end_time    TEXT,
     location    TEXT NOT NULL DEFAULT '',
-    origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'project', 'ics')),
+    origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'agent', 'ics')),
     event_is_all_day INTEGER NOT NULL DEFAULT 0,
     event_timezone TEXT DEFAULT NULL,
     -- Optional "remind N days before start" (calendar / voice); NULL = no remind.

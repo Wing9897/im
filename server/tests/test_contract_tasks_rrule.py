@@ -175,7 +175,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
 
     listed = await client.get(
         "/api/v1/tasks",
-        params={"item_id": item_id, "analysis_mode": "recurring"},
+        params={"itemId": item_id, "analysisMode": "recurring"},
     )
     assert listed.status_code == 200, listed.text
     listed_body = listed.json()
@@ -184,7 +184,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
     assert listed_body[0]["itemId"] == item_id
     assert listed_body[0]["analysisMode"] == "recurring"
 
-    unbound = await client.get("/api/v1/tasks", params={"item_id": ""})
+    unbound = await client.get("/api/v1/tasks", params={"itemId": ""})
     assert unbound.status_code == 200
     assert all(row.get("itemId") in (None, "") for row in unbound.json())
 
@@ -192,10 +192,10 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
     cal = await client.get(
         "/api/v1/calendar/items",
         params={
-            "range_start": "2026-08-01T00:00:00Z",
-            "range_end": "2026-09-30T23:59:59Z",
-            "task_id": task_id,
-            "include_items": "false",
+            "rangeStart": "2026-08-01T00:00:00Z",
+            "rangeEnd": "2026-09-30T23:59:59Z",
+            "taskId": task_id,
+            "includeItems": "false",
         },
     )
     assert cal.status_code == 200, cal.text
@@ -241,9 +241,9 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
     items = await client.get(
         "/api/v1/calendar/items",
         params={
-            "range_start": "2026-07-31T16:00:00Z",
-            "range_end": "2026-08-31T15:59:59Z",
-            "task_ids": [task_id],
+            "rangeStart": "2026-07-31T16:00:00Z",
+            "rangeEnd": "2026-08-31T15:59:59Z",
+            "taskIds": [task_id],
         },
     )
     assert items.status_code == 200

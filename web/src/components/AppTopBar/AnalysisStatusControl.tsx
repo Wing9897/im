@@ -1,8 +1,9 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useId, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ConfirmDialog } from "../dialogs/ConfirmDialog";
+import { useAnchoredMenu } from "../../hooks/useAnchoredMenu";
 import { colorStatusDotStyle } from "../../styles/statusDot";
 import { logWarn } from "../../utils/logger";
 
@@ -46,6 +47,7 @@ interface AnalysisStatusControlProps {
  * Top-bar AI status pill — same chrome as the original status chip.
  * Click toggles pause; hover reveals a chevron; menu portals to body
  * so title-bar overflow cannot clip the emergency abort item.
+ * Placement / outside dismiss: {@link useAnchoredMenu}.
  */
 export function AnalysisStatusControl({
   color,
@@ -60,57 +62,18 @@ export function AnalysisStatusControl({
   onEmergencyAbort,
 }: AnalysisStatusControlProps) {
   const { t } = useTranslation("common");
-  const [menuOpen, setMenuOpen] = useState(false);
   const [abortConfirmOpen, setAbortConfirmOpen] = useState(false);
-  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const menuRef = useRef<HTMLUListElement>(null);
   const menuId = useId();
-
   const interactive = !disabled && !busy;
-
-  useLayoutEffect(() => {
-    if (!menuOpen || !rootRef.current) {
-      setMenuPos(null);
-      return;
-    }
-    const place = () => {
-      const rect = rootRef.current!.getBoundingClientRect();
-      const menuWidth = menuRef.current?.offsetWidth ?? 140;
-      const left = Math.min(
-        Math.max(8, rect.right - menuWidth),
-        window.innerWidth - menuWidth - 8,
-      );
-      setMenuPos({ top: rect.bottom + 6, left });
-    };
-    place();
-    window.addEventListener("resize", place);
-    window.addEventListener("scroll", place, true);
-    return () => {
-      window.removeEventListener("resize", place);
-      window.removeEventListener("scroll", place, true);
-    };
-  }, [menuOpen]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as Node;
-      if (rootRef.current?.contains(target) || menuRef.current?.contains(target)) {
-        return;
-      }
-      setMenuOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMenuOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [menuOpen]);
+  const { open: menuOpen, setOpen: setMenuOpen, menuPos, menuRef, rootRef } =
+    useAnchoredMenu({
+      enabled: interactive,
+      align: "end",
+      gap: 6,
+      edge: 8,
+      fallbackMenuWidth: 140,
+      dismissPointerEvent: "pointerdown",
+    });
 
   const pauseLabel = busy
     ? t("topBar.busy")
@@ -147,7 +110,7 @@ export function AnalysisStatusControl({
     menuOpen && typeof document !== "undefined"
       ? createPortal(
           <ul
-            ref={menuRef}
+            ref={menuRef as RefObject<HTMLUListElement | null>}
             id={menuId}
             role="menu"
             aria-label={t("topBar.analysisControl")}
@@ -182,7 +145,7 @@ export function AnalysisStatusControl({
   return (
     <>
       <div
-        ref={rootRef}
+        ref={rootRef as RefObject<HTMLDivElement | null>}
         className="group relative inline-flex max-w-[260px] min-w-0"
         data-testid="analysis-status-control"
       >
@@ -231,7 +194,7 @@ export function AnalysisStatusControl({
                 onClick={(event) => {
                   event.stopPropagation();
                   if (disabled || busy) return;
-                  setMenuOpen((open) => !open);
+                  setMenuOpen(!menuOpen);
                 }}
                 className={`flex h-full items-center rounded-full border-0 bg-transparent px-1.5 text-text-muted outline-none transition-colors focus-visible:outline-none ${
                   interactive

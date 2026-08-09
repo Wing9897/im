@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { TASK_ANALYSIS_TIME_RANGE_I18N_KEYS } from "../../../domain/tasks/taskAnalysisTimeRange";
 import { ChatAnalysisFields, TIME_RANGE_VALUES } from "./ChatAnalysisFields";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
 
 function renderFields(
   container: HTMLElement,
@@ -18,11 +16,7 @@ function renderFields(
   const props = { ...defaults, ...overrides };
   act(() => {
     createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(ChatAnalysisFields, props),
-      ),
+      wrapWithI18n(createElement(ChatAnalysisFields, props)),
     );
   });
   return props;
@@ -30,8 +24,7 @@ function renderFields(
 
 describe("ChatAnalysisFields — Analysis Time Range chips", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   it("renders chip buttons for the time range field, not a <select>", () => {

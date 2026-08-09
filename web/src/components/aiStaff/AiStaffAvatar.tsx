@@ -4,7 +4,7 @@ import assistantSrc from "../../assets/ai-staff/assistant.png";
 import taskEditorSrc from "../../assets/ai-staff/taskEditor.png";
 import leaderboardSrc from "../../assets/ai-staff/leaderboard.png";
 import intelEventSrc from "../../assets/ai-staff/intel_event.png";
-import agentSrc from "../../assets/ai-staff/project.png";
+import agentSrc from "../../assets/ai-staff/agent.png";
 
 const AVATAR_SRC: Record<AiStaffId, string> = {
   assistant: assistantSrc,

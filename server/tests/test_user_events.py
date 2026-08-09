@@ -16,10 +16,13 @@ USER_EVENT_KEYS = {
     "timezone",
     "icsUid",
     "icsSource",
+    "remindBeforeDays",
     "taskId",
+    "itemId",
     "worksetId",
     "source",
     "dismissed",
+    "important",
     "createdAt",
     "updatedAt",
 }
@@ -211,21 +214,21 @@ async def test_list_user_events_filters_by_task_id(client, app) -> None:
     )
     assert other.status_code == 201
 
-    listed = await client.get("/api/v1/calendar/user-events", params={"task_id": seed.TASK_EVENT})
+    listed = await client.get("/api/v1/calendar/user-events", params={"taskId": seed.TASK_EVENT})
     assert listed.status_code == 200
     ids = {item["id"] for item in listed.json()}
     assert ids == {owned.json()["id"]}
 
     # task_id=__user__ is rejected; ownership filter uses workset_id.
-    rejected = await client.get("/api/v1/calendar/user-events", params={"task_id": "__user__"})
+    rejected = await client.get("/api/v1/calendar/user-events", params={"taskId": "__user__"})
     assert rejected.status_code == 400
 
-    system_ws = await client.get("/api/v1/calendar/user-events", params={"workset_id": "__user__"})
+    system_ws = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
     assert system_ws.status_code == 200
     system_ids = {item["id"] for item in system_ws.json()}
     assert other.json()["id"] in system_ids
     # Owned event may still be on __user__ workset if task had no workset — check provenance filter.
-    null_provenance = await client.get("/api/v1/calendar/user-events", params={"task_id": ""})
+    null_provenance = await client.get("/api/v1/calendar/user-events", params={"taskId": ""})
     assert null_provenance.status_code == 200
     null_ids = {item["id"] for item in null_provenance.json()}
     assert other.json()["id"] in null_ids

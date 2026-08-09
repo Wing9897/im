@@ -203,7 +203,7 @@ describe("userEventToBoardEvent", () => {
         startTime: "2026-07-22T11:00:00Z",
         endTime: null,
         location: null,
-        origin: "project",
+        origin: "agent",
         source: "user",
         taskId: "proj-1",
         worksetId: SYSTEM_WORKSET_ID,
@@ -217,7 +217,7 @@ describe("userEventToBoardEvent", () => {
     expect(event.taskId).toBe("proj-1");
     expect(event.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(event.taskName).toBe("專案 Alpha");
-    expect(event.origin).toBe("project");
+    expect(event.origin).toBe("agent");
   });
 });
 

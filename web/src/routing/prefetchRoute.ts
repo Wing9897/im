@@ -27,8 +27,8 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   if (path === "/tasks/new" || /\/tasks\/[^/]+\/edit$/.test(path)) {
     return () => import("../pages/tasks/chat-editor/ChatEditorPage");
   }
-  if (/\/tasks\/[^/]+\/project$/.test(path)) {
-    return () => import("../pages/tasks/project/ProjectDetailPage");
+  if (/\/tasks\/[^/]+\/(agent|project)$/.test(path)) {
+    return () => import("../pages/tasks/agent/ProjectDetailPage");
   }
   if (/\/tasks\/worksets\//.test(path)) {
     return ROUTE_PREFETCHERS["/tasks"];
@@ -41,7 +41,7 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
 
 function resolveItemsPrefetch(path: string): (() => Promise<unknown>) | undefined {
   if (path === "/items/new" || /\/items\/[^/]+\/edit$/.test(path)) {
-    return () => import("../pages/items/ItemFormPage");
+    return () => import("../pages/items/form/ItemFormPage");
   }
   if (path === "/items" || path.startsWith("/items/")) {
     return ROUTE_PREFETCHERS["/items"];

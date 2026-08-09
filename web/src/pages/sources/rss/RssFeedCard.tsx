@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { SourceCard, SourceCardErrorLines } from "../SourceCard";
-import { SourceCardActions } from "../SourceCardActions";
+import { SourceCard, SourceCardErrorLines } from "../board/SourceCard";
+import { SourceCardActions } from "../board/SourceCardActions";
 import { Button } from "../../../components/ui";
 import type { RssFeedItem } from "./providers/types";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { formatOsDateTime } from "../../../utils/time";
-import { useReconnectCard } from "../useReconnectCard";
+import { useReconnectCard } from "../board/useReconnectCard";
 
 interface RssFeedCardProps {
   feed: RssFeedItem;

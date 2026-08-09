@@ -66,10 +66,10 @@ CONFIG_DEFAULTS: dict[str, str] = {
     # Agent-only model-facing history caps (UI sessions keep full transcript).
     "agent_history_max_messages": "40",
     "agent_history_max_chars": "48000",
-    # Project-manager Agent ticks (closed-loop); assistant stays at runtime default 8.
-    "agent_project_max_tool_rounds": "28",
-    # Max message-drain waves per project schedule fire (40 msgs/wave). 0 = unlimited.
-    "agent_project_max_drain_waves": "0",
+    # Agent ticks (closed-loop); assistant stays at runtime default 8.
+    "agent_max_tool_rounds": "28",
+    # Max message-drain waves per agent schedule fire (40 msgs/wave). 0 = unlimited.
+    "agent_max_drain_waves": "0",
     # Assistant display identity (UI); empty name → client i18n default.
     "assistant_display_name": "",
     # JPEG/PNG data URL (capped on write); empty → built-in avatar asset.
@@ -94,8 +94,8 @@ _INT_RANGES: dict[str, tuple[int, Optional[int]]] = {
     "analysis_trigger_threshold": (1, 500),
     "agent_history_max_messages": (4, 200),
     "agent_history_max_chars": (2000, 200000),
-    "agent_project_max_tool_rounds": (8, 64),
-    "agent_project_max_drain_waves": (0, 200),
+    "agent_max_tool_rounds": (8, 64),
+    "agent_max_drain_waves": (0, 200),
     "retention_messages_days": (0, None),
     "retention_analysis_days": (0, None),
     "retention_leaderboard_days": (0, None),

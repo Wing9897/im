@@ -217,7 +217,7 @@ async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
     assert child["id"] in ids
     assert proj_id in ids
 
-    top = await client.get("/api/v1/tasks", params={"top_level_only": "true"})
+    top = await client.get("/api/v1/tasks", params={"topLevelOnly": "true"})
     top_ids = {t["id"] for t in top.json()}
     assert child["id"] not in top_ids
     assert proj_id in top_ids

@@ -4,13 +4,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { IntelligenceToolbar } from "./IntelligenceToolbar";
 import type { ViewMode } from "../../types";
 import type { TimeFilterPreset } from "../../components/TimeFilter";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../test/i18nHarness";
+import { setAppLocale } from "../../i18n/locale";
 
 vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
@@ -53,11 +52,7 @@ function renderToolbar(opts: ToolbarOpts = {}) {
   const root = createRoot(container);
   act(() => {
     root.render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(IntelligenceToolbar, props),
-      ),
+      wrapWithI18n(createElement(IntelligenceToolbar, props)),
     );
   });
   return { container, root };
@@ -67,8 +62,7 @@ describe("IntelligenceToolbar", () => {
   const mounts: { container: HTMLDivElement; root: ReturnType<typeof createRoot> }[] = [];
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     window.localStorage.clear();
     window.sessionStorage.clear();
   });

@@ -1,12 +1,13 @@
-"""Database layer: aiosqlite connection wrapper + wipe-only stamp-16 DDL.
+"""Database layer: aiosqlite connection wrapper + wipe-only stamp-23 DDL.
 
 Authoritative schema: domain fragments under ``schema_domains/`` aggregated by
-``schema.py`` (**27** tables, ``PRAGMA user_version=15``).
+``schema.py`` (``PRAGMA user_version=23``).
 Bootstrap／reject policy lives in ``schema_bootstrap.py`` — create empty DBs from
 DDL, stamp exact-current unstamped DBs, hard-reject everything else. There is
-**no** migration registry or in-place upgrade path.
+**no** migration registry or in-place upgrade path. Reset does **not** auto-seed.
 """
 
 from server.db.database import Database
+from server.db.schema_inspect import SchemaEvolutionError
 
-__all__ = ["Database"]
+__all__ = ["Database", "SchemaEvolutionError"]

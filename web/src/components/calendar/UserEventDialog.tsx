@@ -25,6 +25,9 @@ export type { UserEventFormValues, UserEventTaskOption };
 
 export type ParentItemMode = "hidden" | "readonly" | "editable";
 
+/** Workset picker visibility — hidden when parent item owns workset (Items linked calendars). */
+export type WorksetMode = "editable" | "hidden";
+
 type UserEventDialogProps = {
   open: boolean;
   mode: "create" | "edit";
@@ -43,6 +46,10 @@ type UserEventDialogProps = {
    * read-only when ``itemId`` is already scoped (deep-link / edit).
    */
   parentItemMode?: ParentItemMode;
+  /** Default ``editable``; ``hidden`` for item-linked calendar create/edit. */
+  worksetMode?: WorksetMode;
+  /** Override remind-before-days helper (e.g. category preset prefill). */
+  remindBeforeDaysHint?: string;
   onClose: () => void;
   onSubmit: (values: UserEventFormValues) => void;
 };
@@ -58,6 +65,8 @@ export function UserEventDialog({
   titleOverride,
   introOverride,
   parentItemMode = "hidden",
+  worksetMode = "editable",
+  remindBeforeDaysHint,
   onClose,
   onSubmit,
 }: UserEventDialogProps) {
@@ -155,15 +164,17 @@ export function UserEventDialog({
           className="w-full"
           required
         />
-        <WorksetTargetSelectField
-          aria-label={t("userEvent.taskLabel")}
-          value={values.worksetId}
-          onChange={(worksetId) => setValues((prev) => ({ ...prev, worksetId }))}
-          options={worksetOptions}
-          keepStaleOption
-          className="w-full"
-          data-testid="user-event-workset-select"
-        />
+        {worksetMode === "editable" ? (
+          <WorksetTargetSelectField
+            aria-label={t("userEvent.taskLabel")}
+            value={values.worksetId}
+            onChange={(worksetId) => setValues((prev) => ({ ...prev, worksetId }))}
+            options={worksetOptions}
+            keepStaleOption
+            className="w-full"
+            data-testid="user-event-workset-select"
+          />
+        ) : null}
 
         {parentItemMode === "editable" ? (
           <div className="flex flex-col gap-xs" data-testid="user-event-parent-item">
@@ -212,6 +223,7 @@ export function UserEventDialog({
           setCustomDays={setCustomDays}
           onAllDayChange={handleAllDayChange}
           onApplyDaySpan={applyDaySpan}
+          remindBeforeDaysHint={remindBeforeDaysHint}
         />
 
         {isRecurring ? (

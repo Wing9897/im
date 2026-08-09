@@ -353,7 +353,7 @@
       "body": "`POST /api/v1/a2a/agent`: assign work in natural language (for OpenClaw / Hermes, etc.). Shares the assistant’s LLM + tools; the server loops tools internally and returns one shot — final message plus tool summary. No server-side chat history (callers may keep their own). Needs an AI provider and an Account-manager key (or `*`).",
       "capabilities": [
         "Natural-language in; single response with message + toolCalls",
-        "Messages / intel / calendar (create/update/delete events)",
+        "Messages / intel / calendar / items (create/update/delete events and inventory items)",
         "No custom events schema for third-party agents"
       ],
       "exampleAgent": "Call example",
@@ -416,12 +416,12 @@
       "backoffice": "Back-office"
     },
     "assistant": {
-      "summary": "A multi-turn Agent that can look up data or create schedule items when needed.",
+      "summary": "A multi-turn Agent that can look up data, manage schedules, or track inventory items when needed.",
       "capabilities": [
-        "Answer questions about local intel and schedules in natural language",
-        "Search collected messages",
-        "List / create / update / delete user events (one-off calendar items)",
-        "Create / update / delete recurring schedules (recurring-task RRULE tasks)",
+        "Answer questions about local intel, schedules, and items in natural language",
+        "Search collected messages; look up analysis events",
+        "List / create / update / delete user events and recurring (RRULE) tasks",
+        "List / create / update trackable items (qty / unit / price; expiry via linked calendar — never invent dates)",
         "Optionally search the web when enabled in settings",
         "Works in the assistant popup and full assistant page; voice in/out optional"
       ]
@@ -431,7 +431,7 @@
       "capabilities": [
         "Suggest task name and description from what you want to monitor",
         "Suggest task type (leaderboard / intel / agent / recurring) and prompt direction",
-        "Help with time range, search query, and schedule-related fields",
+        "Help with time range, schedule, and related fields",
         "Only configures tasks—does not analyze messages or call tools"
       ]
     },
@@ -454,11 +454,12 @@
       ]
     },
     "agent": {
-      "summary": "Configurable back-office Agent: reconcile calendars or gather intel by trigger and output policy.",
+      "summary": "Configurable back-office Agent: project reconcile or web scout by trigger/output policy; detail at `/tasks/:id/agent`.",
       "capabilities": [
-        "Message-cursor drain, message-threshold gate, or pure schedule triggers",
-        "Calendar read/write and/or web search when the task grants them",
-        "Outputs may write project calendar (user_events.origin=project) or analysis events (analysis_events)",
+        "Triggers: message-cursor drain, message threshold, or pure schedule (cursor drain cannot also output analysis events)",
+        "Per-task: calendar read/write, web search; optional items read (expiry / inventory)",
+        "Cannot create/update items (items.create/update are assistant & Account manager only)",
+        "Outputs may write agent calendar (user_events.origin=agent) and/or analysis events",
         "No chat UI; driven by the agent task schedule (prefer hourly)"
       ]
     },
@@ -467,7 +468,7 @@
       "badgeChannel": "External desk",
       "summary": "External agent: third parties assign work in natural language—no custom API schema. Doesn’t chat with you.",
       "capabilities": [
-        "Shares the assistant’s LLM and tools (different system prompt)",
+        "Shares the assistant’s LLM and tools (messages / intel / calendar / items; different system prompt)",
         "Single-shot reply; history kept by the caller if needed",
         "Keys and examples under Settings → API"
       ],

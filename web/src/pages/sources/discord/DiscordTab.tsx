@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { DiscordBotDetailDialog } from "./DiscordBotDetailDialog";
 import { DiscordBotCard } from "./DiscordBotCard";
 import { DiscordBotForm } from "./DiscordBotForm";

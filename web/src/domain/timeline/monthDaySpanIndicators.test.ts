@@ -90,34 +90,32 @@ describe("monthDaySpanIndicators", () => {
     });
   });
 
-  it("counts item expiry on its day as ending (+N 结束)", () => {
-    const expiry = makeEvent({
-      id: "item:milk:expires",
-      title: "結束 · milk",
+  it("does not count item remind markers as ending", () => {
+    const item = makeEvent({
+      id: "item:milk:remind",
       source: "item",
-      itemDateKind: "expires",
+      itemDateKind: "remind",
       isAllDay: true,
       startTime: "2025-01-16T00:00:00",
       endTime: "2025-01-16T23:59:59",
     });
-    expect(classifyMonthDaySpan(expiry, new Date(2025, 0, 16))).toBe("ending");
-    expect(classifyMonthDaySpan(expiry, new Date(2025, 0, 15))).toBeNull();
-    expect(countMonthDaySpanIndicators([expiry, multiDay], new Date(2025, 0, 16))).toEqual({
-      ongoing: 1,
-      ending: 1,
-    });
-  });
-
-  it("does not count purchased / remind item markers as ending", () => {
-    const purchased = makeEvent({
-      id: "item:milk:purchased",
-      source: "item",
-      itemDateKind: "purchased",
-      isAllDay: true,
-      startTime: "2025-01-16T00:00:00",
-      endTime: "2025-01-16T23:59:59",
-    });
-    expect(classifyMonthDaySpan(purchased, new Date(2025, 0, 16))).toBeNull();
+    expect(classifyMonthDaySpan(item, new Date(2025, 0, 16))).toBeNull();
+    expect(
+      countMonthDaySpanIndicators(
+        [
+          makeEvent({
+            id: "item:milk:remind",
+            source: "item",
+            itemDateKind: "remind",
+            isAllDay: true,
+            startTime: "2025-01-16T00:00:00",
+            endTime: "2025-01-16T23:59:59",
+          }),
+          multiDay,
+        ],
+        new Date(2025, 0, 16),
+      ),
+    ).toEqual({ ongoing: 1, ending: 0 });
   });
 
   it("counts final recurring occurrence on its day as ending", () => {
@@ -149,10 +147,10 @@ describe("monthDaySpanIndicators", () => {
       startTime: "2025-01-15T09:00:00",
       endTime: "2025-01-17T18:00:00",
     });
-    const expiry = makeEvent({
-      id: "item:milk:expires",
+    const remind = makeEvent({
+      id: "item:milk:remind",
       source: "item",
-      itemDateKind: "expires",
+      itemDateKind: "remind",
       isAllDay: true,
       startTime: "2025-01-16T00:00:00",
       endTime: "2025-01-16T23:59:59",
@@ -175,8 +173,8 @@ describe("monthDaySpanIndicators", () => {
     expect(eventShowsInMonthDayPreview(multiDay, new Date(2025, 0, 16))).toBe(false);
     expect(eventShowsInMonthDayPreview(multiDay, new Date(2025, 0, 17))).toBe(false);
 
-    // Item expiry → +N 结束 only (not titled preview).
-    expect(eventShowsInMonthDayPreview(expiry, new Date(2025, 0, 16))).toBe(false);
+    // Item remind → titled preview (not a month ending chip).
+    expect(eventShowsInMonthDayPreview(remind, new Date(2025, 0, 16))).toBe(true);
     // Recurring final → still in normal preview AND counts toward +N 结束.
     expect(eventShowsInMonthDayPreview(last, new Date(2025, 0, 16))).toBe(true);
     expect(classifyMonthDaySpan(last, new Date(2025, 0, 16))).toBe("ending");

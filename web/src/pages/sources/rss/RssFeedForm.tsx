@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceAddFormCard } from "../SourceAddFormCard";
+import { SourceAddFormCard } from "../board/SourceAddFormCard";
 import type { RssAddFormProps } from "./providers/types";
 import { RssFeedFields } from "./RssFeedFields";
 

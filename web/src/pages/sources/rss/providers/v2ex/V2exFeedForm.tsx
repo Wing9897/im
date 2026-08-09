@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Button, SettingsRow, TextField } from "../../../../../components/ui";
-import { SourceAddFormCard } from "../../../SourceAddFormCard";
+import { SourceAddFormCard } from "../../../board/SourceAddFormCard";
 import type { RssAddFormProps } from "../types";
 
 const V2EX_PRESET_IDS = [

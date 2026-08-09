@@ -11,13 +11,13 @@ from server.domain.agent_task_spec import (
 )
 
 
-def test_project_reconcile_preset():
+def test_agent_preset_project_reconcile():
     spec = agent_preset_spec("project_reconcile", has_channels=True)
     assert spec.trigger_mode == "message_cursor"
     assert spec.output_calendar is True
     assert spec.output_analysis_events is False
     assert spec.cap_calendar_writes is True
-    assert spec.user_event_origin() == "project"
+    assert spec.user_event_origin() == "agent"
 
 
 def test_web_scout_preset_schedule_without_channels():
@@ -25,7 +25,7 @@ def test_web_scout_preset_schedule_without_channels():
     assert spec.trigger_mode == "schedule"
     assert spec.output_analysis_events is True
     assert spec.cap_force_web_search is True
-    assert spec.user_event_origin() == "project"
+    assert spec.user_event_origin() == "agent"
 
 
 def test_web_scout_preset_threshold_with_channels():
@@ -103,6 +103,16 @@ def test_message_cursor_requires_channels():
             trigger_mode="message_cursor",
             output_calendar=True,
             has_channels=False,
+        )
+
+
+def test_message_cursor_forbids_output_analysis_events():
+    with pytest.raises(AgentTaskSpecError, match="outputAnalysisEvents"):
+        normalize_agent_task_spec(
+            trigger_mode="message_cursor",
+            output_calendar=True,
+            output_analysis_events=True,
+            has_channels=True,
         )
 
 

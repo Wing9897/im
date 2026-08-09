@@ -21,8 +21,8 @@ router = APIRouter(
 @router.get("/forecast", response_model=WeatherForecastResponse)
 async def forecast(
     location: str = Query(min_length=1, max_length=120),
-    start_date: date = Query(),
-    end_date: date = Query(),
+    start_date: date = Query(alias="startDate"),
+    end_date: date = Query(alias="endDate"),
     force: bool = Query(
         False,
         description="Bypass the successful forecast TTL cache and refetch providers.",

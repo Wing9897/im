@@ -21,6 +21,7 @@ import {
   hitTest,
   type HitZone,
 } from "./timelineSliderLayout";
+import { useTimelineSliderWindowDraft } from "./useTimelineSliderWindowDraft";
 
 export { liveViewportSpanMs };
 
@@ -38,6 +39,10 @@ interface Options {
   onExitLiveMode: () => void;
 }
 
+/**
+ * Timeline slider gestures + canvas viewport.
+ * Draft/preview/commit window data lives in `useTimelineSliderWindowDraft`.
+ */
 export function useTimelineSliderInteraction({
   dataRange,
   timeWindow,
@@ -55,8 +60,21 @@ export function useTimelineSliderInteraction({
   const propWS = timeWindow.start.getTime();
   const propWE = timeWindow.end.getTime();
 
-  /** Local draft while dragging — avoids parent thrash / live re-center fighting the pointer. */
-  const [draft, setDraft] = useState<{ start: number; end: number } | null>(null);
+  const {
+    draft,
+    exitLiveIfNeeded,
+    emitDraft,
+    commitWindow,
+    commitFetch,
+    cancelPreviewFrame,
+    clearDraftAfterGesture,
+  } = useTimelineSliderWindowDraft({
+    onTimeWindowChange,
+    onCommitFetchWindow,
+    onExitLiveMode,
+    liveMode,
+  });
+
   const wS = draft?.start ?? propWS;
   const wE = draft?.end ?? propWE;
 
@@ -71,96 +89,8 @@ export function useTimelineSliderInteraction({
   const dragState = useRef<DragGestureState | null>(null);
   const [focusedHandle, setFocusedHandle] = useState<"left" | "right" | null>(null);
 
-  const liveModeRef = useRef(liveMode);
-  liveModeRef.current = liveMode;
-  const onExitLiveModeRef = useRef(onExitLiveMode);
-  onExitLiveModeRef.current = onExitLiveMode;
-  const onTimeWindowChangeRef = useRef(onTimeWindowChange);
-  onTimeWindowChangeRef.current = onTimeWindowChange;
-  const onCommitFetchWindowRef = useRef(onCommitFetchWindow);
-  onCommitFetchWindowRef.current = onCommitFetchWindow;
   const selectionHalfMsRef = useRef(selectionHalfMs);
   selectionHalfMsRef.current = selectionHalfMs;
-
-  const exitLiveIfNeeded = useCallback(() => {
-    if (liveModeRef.current) {
-      liveModeRef.current = false;
-      onExitLiveModeRef.current();
-    }
-  }, []);
-
-  const commitFetch = useCallback((start: number, end: number) => {
-    const window = { start: new Date(start), end: new Date(end) };
-    onTimeWindowChangeRef.current(window);
-    onCommitFetchWindowRef.current?.(window);
-  }, []);
-
-  /** Coalesce map previews to one update per animation frame; slider draft stays every event. */
-  const pendingPreviewRef = useRef<{ start: number; end: number } | null>(null);
-  const previewFrameRef = useRef<number | null>(null);
-  const draftRef = useRef<{ start: number; end: number } | null>(null);
-
-  const flushPreview = useCallback(() => {
-    const pending = pendingPreviewRef.current;
-    if (!pending) return;
-    pendingPreviewRef.current = null;
-    // Preview only — client filter; never hit the API while scrubbing.
-    onTimeWindowChangeRef.current({
-      start: new Date(pending.start),
-      end: new Date(pending.end),
-    });
-  }, []);
-
-  const cancelPreviewFrame = useCallback(() => {
-    if (previewFrameRef.current != null) {
-      window.cancelAnimationFrame(previewFrameRef.current);
-      previewFrameRef.current = null;
-    }
-  }, []);
-
-  const previewWindow = useCallback(
-    (start: number, end: number) => {
-      exitLiveIfNeeded();
-      const next = { start, end };
-      draftRef.current = next;
-      setDraft(next);
-      pendingPreviewRef.current = next;
-      if (previewFrameRef.current == null) {
-        previewFrameRef.current = window.requestAnimationFrame(() => {
-          previewFrameRef.current = null;
-          flushPreview();
-        });
-      }
-    },
-    [exitLiveIfNeeded, flushPreview],
-  );
-
-  const emitDraft = useCallback(
-    (start: number, end: number) => {
-      previewWindow(start, end);
-    },
-    [previewWindow],
-  );
-
-  const commitWindow = useCallback(
-    (start: number, end: number) => {
-      exitLiveIfNeeded();
-      cancelPreviewFrame();
-      pendingPreviewRef.current = null;
-      draftRef.current = null;
-      setDraft(null);
-      commitFetch(start, end);
-    },
-    [cancelPreviewFrame, commitFetch, exitLiveIfNeeded],
-  );
-
-  useEffect(
-    () => () => {
-      cancelPreviewFrame();
-      flushPreview();
-    },
-    [cancelPreviewFrame, flushPreview],
-  );
 
   // Viewport is user-controlled (pan / wheel) + Live recenter.
   // Do NOT auto-fit to dataRange on leave-Live or fetch expansion — that caused
@@ -261,11 +191,7 @@ export function useTimelineSliderInteraction({
       dragZone.current = null;
       if (canvasRef.current) canvasRef.current.style.cursor = "default";
       if (wasSelecting) {
-        const finalDraft = draftRef.current ?? pendingPreviewRef.current;
-        cancelPreviewFrame();
-        pendingPreviewRef.current = null;
-        draftRef.current = null;
-        setDraft(null);
+        const finalDraft = clearDraftAfterGesture();
         if (finalDraft) commitFetch(finalDraft.start, finalDraft.end);
       }
     };
@@ -276,7 +202,14 @@ export function useTimelineSliderInteraction({
       window.removeEventListener("mouseup", up);
       cancelPreviewFrame();
     };
-  }, [canvasW, cancelPreviewFrame, commitFetch, emitDraft, exitLiveIfNeeded]);
+  }, [
+    canvasW,
+    cancelPreviewFrame,
+    clearDraftAfterGesture,
+    commitFetch,
+    emitDraft,
+    exitLiveIfNeeded,
+  ]);
 
   const onWheel = useCallback(
     (event: React.WheelEvent) => {

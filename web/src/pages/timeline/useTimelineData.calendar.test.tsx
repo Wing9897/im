@@ -490,7 +490,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
   it("merges source=item calendar rows and refreshes on item SSE", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([
       makeOccurrence({
-        id: "item:i1:expires",
+        id: "item:i1:remind",
         taskId: "",
         taskName: "",
         title: "Milk",
@@ -501,7 +501,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         source: "item",
         worksetId: SYSTEM_WORKSET_ID,
         itemId: "i1",
-        itemDateKind: "expires",
+        itemDateKind: "remind",
       }),
     ]);
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
@@ -515,9 +515,9 @@ describe("useTimelineData calendar occurrence wiring", () => {
       { taskIds: [], includeItems: true },
     );
     const itemEvent = resultRef.current!.events.find((e) => e.source === "item");
-    expect(itemEvent?.id).toBe("item:i1:expires");
+    expect(itemEvent?.id).toBe("item:i1:remind");
     expect(itemEvent?.itemId).toBe("i1");
-    expect(itemEvent?.itemDateKind).toBe("expires");
+    expect(itemEvent?.itemDateKind).toBe("remind");
 
     mockFetchCalendarOccurrences.mockClear();
     mockFetchCalendarOccurrences.mockResolvedValue([]);

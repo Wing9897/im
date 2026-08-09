@@ -48,10 +48,6 @@ def _flatten_entry(entry: dict[str, Any]) -> dict[str, Any]:
         "defaultAnalysisTimeRange": entry["defaultAnalysisTimeRange"],
         "badge": entry["badge"],
     }
-    # Language-neutral search keywords for web_intel presets (optional elsewhere).
-    query = str(entry.get("webSearchQuery") or "").strip()
-    if query:
-        flat["webSearchQuery"] = query
     return flat
 
 

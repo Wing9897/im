@@ -62,9 +62,9 @@ export function listUserEvents(params?: {
   const query: Record<string, string> = {};
   if (params?.start) query.start = params.start;
   if (params?.end) query.end = params.end;
-  if (params?.taskId !== undefined) query.task_id = params.taskId;
-  if (params?.worksetId !== undefined) query.workset_id = params.worksetId;
-  if (params?.itemId !== undefined) query.item_id = params.itemId;
+  if (params?.taskId !== undefined) query.taskId = params.taskId;
+  if (params?.worksetId !== undefined) query.worksetId = params.worksetId;
+  if (params?.itemId !== undefined) query.itemId = params.itemId;
   return apiClient.get<UserEvent[]>("/api/v1/calendar/user-events", query);
 }
 

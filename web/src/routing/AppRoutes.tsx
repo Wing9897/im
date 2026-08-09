@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
@@ -33,19 +33,25 @@ function DefaultHomeRedirect() {
   return <Navigate to={homePathForMode(simpleMode)} replace />;
 }
 
+/** Bookmarks under `/tasks/:taskId/project` land on the agent detail route. */
+function ProjectDetailLegacyRedirect() {
+  const { taskId } = useParams<{ taskId: string }>();
+  return <Navigate to={`/tasks/${taskId}/agent`} replace />;
+}
+
 // Module-level lazy registration — stable exotic types for the route tree lifetime.
 const MonitorPage = lazyNamed(() => import("../pages/monitor/MonitorPage"), "MonitorPage");
 const DashboardViewer = lazyNamed(() => import("../pages/dashboard/DashboardViewer"), "DashboardViewer");
 const ChatEditorPage = lazyNamed(() => import("../pages/tasks/chat-editor/ChatEditorPage"), "ChatEditorPage");
 const ProjectDetailPage = lazyNamed(
-  () => import("../pages/tasks/project/ProjectDetailPage"),
+  () => import("../pages/tasks/agent/ProjectDetailPage"),
   "ProjectDetailPage",
 );
 const LeaderboardPage = lazyNamed(() => import("../pages/leaderboard/LeaderboardPage"), "LeaderboardPage");
 const IntelligencePage = lazyNamed(() => import("../pages/intelligence/IntelligencePage"), "IntelligencePage");
 const TimelinePage = lazyNamed(() => import("../pages/timeline/TimelinePage"), "TimelinePage");
 const ItemsPage = lazyNamed(() => import("../pages/items/ItemsPage"), "ItemsPage");
-const ItemFormPage = lazyNamed(() => import("../pages/items/ItemFormPage"), "ItemFormPage");
+const ItemFormPage = lazyNamed(() => import("../pages/items/form/ItemFormPage"), "ItemFormPage");
 const SourceManagementPage = lazyNamed(
   () => import("../pages/sources/SourceManagementPage"),
   "SourceManagementPage",
@@ -98,7 +104,8 @@ export function AppRoutes() {
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/worksets/:worksetId" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
-        <Route path="/tasks/:taskId/project" element={<LazyPage Page={ProjectDetailPage} />} />
+        <Route path="/tasks/:taskId/agent" element={<LazyPage Page={ProjectDetailPage} />} />
+        <Route path="/tasks/:taskId/project" element={<ProjectDetailLegacyRedirect />} />
         <Route path="/leaderboard" element={<LazyPage Page={LeaderboardPage} />} />
         <Route path="/intelligence" element={<LazyPage Page={IntelligencePage} />} />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />

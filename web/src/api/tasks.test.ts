@@ -52,10 +52,10 @@ describe("tasks API", () => {
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/tasks", {
-        top_level_only: "true",
-        analysis_mode: "agent",
-        workset_id: "ws-1",
-        item_id: "item-1",
+        topLevelOnly: "true",
+        analysisMode: "agent",
+        worksetId: "ws-1",
+        itemId: "item-1",
       });
     });
 
@@ -65,7 +65,6 @@ describe("tasks API", () => {
         name: "Existing analysis task",
         description: null,
         promptTemplate: "Analyze",
-        webSearchQuery: "",
         analysisMode: "leaderboard",
         analysisTimeRange: "1d",
         version: 3,
@@ -100,8 +99,7 @@ describe("tasks API", () => {
         "scheduleRrule",
         "updatedAt",
         "version",
-        "webSearchQuery",
-        "worksetId",
+          "worksetId",
       ].sort());
       expect(result[0]).toMatchObject({
         id: "t-1",

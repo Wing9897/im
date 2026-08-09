@@ -7,7 +7,7 @@ import {
 } from "../../../api/sources";
 import type { DiscordBotInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
-import { useSourceListTab } from "../useSourceListTab";
+import { useSourceListTab } from "../board/useSourceListTab";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { toErrorMessage } from "../../../utils/errors";
 import { MASKED_SECRET } from "../../../utils/configValidation";

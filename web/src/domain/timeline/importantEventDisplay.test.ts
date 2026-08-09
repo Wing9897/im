@@ -12,24 +12,24 @@ describe("resolveCalendarLeadingGlyph", () => {
       resolveCalendarLeadingGlyph({
         important: true,
         source: "item",
-        itemDateKind: "expires",
+        itemDateKind: "remind",
       }),
     ).toEqual({ type: "important", emoji: IMPORTANT_EVENT_EMOJI });
   });
 
-  it("returns null for purchased / expires item events", () => {
+  it("returns null for non-remind item events", () => {
     expect(
       resolveCalendarLeadingGlyph({
         important: false,
         source: "item",
-        itemDateKind: "expires",
+        itemDateKind: undefined,
       }),
     ).toBeNull();
     expect(
       resolveCalendarLeadingGlyph({
         important: false,
         source: "item",
-        itemDateKind: "purchased",
+        itemDateKind: "stale",
       }),
     ).toBeNull();
   });
@@ -73,7 +73,7 @@ describe("monthPreviewTitle", () => {
       monthPreviewTitle({
         title: "milk",
         source: "item",
-        itemDateKind: "purchased",
+        itemDateKind: undefined,
       }),
     ).toBe("milk");
     expect(

@@ -10,7 +10,7 @@ import {
 } from "../../components/ui";
 import type { ItemFieldSchemaEntry } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
-import { EmojiPickerField } from "./EmojiPickerField";
+import { EmojiPickerField } from "./emoji/EmojiPickerField";
 
 type Props = {
   name: string;
@@ -143,7 +143,7 @@ export function CategoryEditForm({
               <TextField
                 className="flex-1"
                 value={entry.key}
-                aria-label={t("attributeKey")}
+                aria-label={t("schemaFieldKey")}
                 onChange={(e) => {
                   const next = [...schema];
                   next[idx] = { ...entry, key: e.target.value };
@@ -176,7 +176,7 @@ export function CategoryEditForm({
           <div className="flex flex-wrap gap-xs">
             <TextField
               className="min-w-[100px] flex-1"
-              placeholder={t("attributeKey")}
+              placeholder={t("schemaFieldKey")}
               value={newKey}
               onChange={(e) => onNewKeyChange(e.target.value)}
               disabled={busy}

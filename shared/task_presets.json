@@ -506,7 +506,7 @@
     }
   },
   {
-    "id": "project-date-crud",
+    "id": "agent-date-crud",
     "analysisMode": "agent",
     "defaultAnalysisTimeRange": "7d",
     "badge": "📅",
@@ -534,7 +534,7 @@
     "capForceWebSearch": false
   },
   {
-    "id": "project-work-shift",
+    "id": "agent-work-shift",
     "analysisMode": "agent",
     "defaultAnalysisTimeRange": "7d",
     "badge": "🕒",
@@ -562,11 +562,10 @@
     "capForceWebSearch": false
   },
   {
-    "id": "web-intel-pricing-watch",
+    "id": "agent-pricing-watch",
     "analysisMode": "agent",
     "defaultAnalysisTimeRange": "all",
     "badge": "💹",
-    "webSearchQuery": "",
     "i18n": {
       "zh-Hant": {
         "name": "定價監管情報",
@@ -591,11 +590,10 @@
     "capWebSearch": true
   },
   {
-    "id": "web-intel-geopolitics-hotspots",
+    "id": "agent-geopolitics-hotspots",
     "analysisMode": "agent",
     "defaultAnalysisTimeRange": "all",
     "badge": "🌐",
-    "webSearchQuery": "",
     "i18n": {
       "zh-Hant": {
         "name": "地緣熱點掃描",

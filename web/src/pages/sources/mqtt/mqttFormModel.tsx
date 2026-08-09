@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import type { MqttBrokerInfo } from "../../../types";
 import { MqttBrokerFields, type MqttBrokerFieldsValue } from "./MqttBrokerFields";
 

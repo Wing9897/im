@@ -171,7 +171,7 @@ async def seed_database(db: Any) -> None:
         agent_preset_spec("project_reconcile", has_channels=True)
     )
     # (id, name, mode, time_range, schedule_rrule, rrule, start, end, all_day,
-    #  location, description, web_search_query, agent_policy_or_None)
+    #  location, description, agent_policy_or_None)
     tasks = [
         (
             TASK_LEADERBOARD,
@@ -185,10 +185,9 @@ async def seed_database(db: Any) -> None:
             0,
             None,
             None,
-            "",
             None,
         ),
-        (TASK_EVENT, "關鍵情報", "intel_event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, "", None),
+        (TASK_EVENT, "關鍵情報", "intel_event", "1d", "FREQ=HOURLY", None, None, None, 0, None, None, None),
         (
             TASK_EVENT_TIMED,
             "行程提取",
@@ -201,7 +200,6 @@ async def seed_database(db: Any) -> None:
             0,
             None,
             None,
-            "",
             None,
         ),
         (
@@ -216,7 +214,6 @@ async def seed_database(db: Any) -> None:
             0,
             "會議室A",
             "週會",
-            "",
             None,
         ),
         (
@@ -231,7 +228,6 @@ async def seed_database(db: Any) -> None:
             0,
             None,
             None,
-            "OpenAI Gemini Anthropic API pricing changes",
             _web_scout,
         ),
         (
@@ -246,7 +242,6 @@ async def seed_database(db: Any) -> None:
             0,
             None,
             None,
-            "",
             _project_reconcile,
         ),
     ]
@@ -262,7 +257,6 @@ async def seed_database(db: Any) -> None:
         all_day,
         location,
         description,
-        web_search_query,
         agent_policy,
     ) in tasks:
         prompt = (
@@ -283,18 +277,17 @@ async def seed_database(db: Any) -> None:
         }
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-            "web_search_query, analysis_mode, analysis_time_range, version, is_active, "
+            "analysis_mode, analysis_time_range, version, is_active, "
             "schedule_rrule, trigger_mode, cap_calendar_read, cap_calendar_writes, "
             "cap_web_search, cap_force_web_search, cap_read_analysis_events, cap_read_items, "
             "output_calendar, output_analysis_events, "
             "created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task_id,
                 name,
                 f"{name} description",
                 prompt,
-                web_search_query,
                 mode,
                 time_range,
                 schedule_rrule,
@@ -416,17 +409,17 @@ async def seed_database(db: Any) -> None:
 
     # ── sample items (DDL seed categories + __user__ workset) ─────────
     await db.execute(
-        "INSERT INTO items (id, title, category_id, workset_id, purchased_at, "
+        "INSERT INTO items (id, title, category_id, workset_id, "
         "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
         "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__user__', "
-        "NULL, '2029-06-01', 90, 'seed passport', 'active', NULL, ?, ?, ?)",
+        "'2029-06-01', 90, 'seed passport', 'active', NULL, ?, ?, ?)",
         (ITEM_PASSPORT, "護照樣本", json.dumps({"id_number": "A123456789"}, ensure_ascii=False), now, now),
     )
     await db.execute(
-        "INSERT INTO items (id, title, category_id, workset_id, purchased_at, "
+        "INSERT INTO items (id, title, category_id, workset_id, "
         "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
         "created_at, updated_at) VALUES (?, ?, 'seed_food', '__user__', "
-        "'2027-03-01', '2027-03-15', 3, 'seed food', 'active', NULL, ?, ?, ?)",
+        "'2027-03-15', 3, 'seed food', 'active', NULL, ?, ?, ?)",
         (ITEM_FOOD, "牛奶樣本", json.dumps({"brand": "SeedDairy"}, ensure_ascii=False), now, now),
     )
 

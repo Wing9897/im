@@ -18,8 +18,8 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../
 const INTERNAL_CONFIG_KEYS = new Set([
   "localhost_auth_exempt",
   "setup_complete",
-  "agent_project_max_tool_rounds",
-  "agent_project_max_drain_waves",
+  "agent_max_tool_rounds",
+  "agent_max_drain_waves",
 ]);
 
 /** Retired CONFIG_DEFAULTS keys that must stay absent (mirror server _RETIRED_CONFIG_KEYS). */

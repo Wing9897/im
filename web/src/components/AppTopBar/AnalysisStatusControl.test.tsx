@@ -1,15 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { AnalysisStatusControl } from "./AnalysisStatusControl";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 describe("AnalysisStatusControl", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
   let container: HTMLDivElement;
   let root: Root | null = null;
@@ -46,7 +43,7 @@ describe("AnalysisStatusControl", () => {
     };
     act(() => {
       root = createRoot(container);
-      root.render(createElement(I18nextProvider, { i18n }, createElement(AnalysisStatusControl, props)));
+      root.render(wrapWithI18n(createElement(AnalysisStatusControl, props)));
     });
     return props;
   }

@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
 import { DetailPresentationShell } from "./DetailPresentationShell";
+import { wrapWithI18n } from "../../../test/i18nHarness";
 
 vi.mock("../../common/OverlayPortal", () => ({
   OverlayPortal: ({
@@ -47,10 +46,7 @@ describe("DetailPresentationShell", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
+        wrapWithI18n(createElement(
             DetailPresentationShell,
             {
               presentation: "modal",
@@ -58,8 +54,7 @@ describe("DetailPresentationShell", () => {
               "aria-label": "詳情：測試",
             },
             createElement("span", null, "body"),
-          ),
-        ),
+          )),
       );
     });
 

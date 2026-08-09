@@ -62,7 +62,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("PATCH", "/api/v1/user-events", {}),
         ("PUT", "/api/v1/user-events", {}),
         ("DELETE", "/api/v1/user-events", None),
-        # Schema upgrade gate retired (wipe-only stamp 15).
+        # Schema upgrade gate retired (wipe-only stamp 23).
         ("GET", "/api/v1/system/schema/status", None),
         ("POST", "/api/v1/system/schema/upgrade", {}),
         # Retired collector accounts surface (sources hard-cut; stay 404).
@@ -83,6 +83,8 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("GET", "/api/v1/accounts/dead-endpoint-probe", None),
         ("DELETE", "/api/v1/accounts/dead-endpoint-probe", None),
         ("POST", "/api/v1/accounts/dead-endpoint-probe/reconnect", {}),
+        # Renamed to GET /api/v1/tasks/{id}/agent-ticks (stamp-18 agent naming).
+        ("GET", f"/api/v1/tasks/{task_id}/project-ticks", None),
     ]
 
 

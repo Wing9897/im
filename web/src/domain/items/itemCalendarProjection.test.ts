@@ -40,25 +40,21 @@ describe("itemCalendarProjection helpers", () => {
     await setAppLocale("zh-Hant");
   });
 
-  it("builds stable occurrence ids", () => {
-    expect(itemOccurrenceId("abc", "purchased")).toBe("item:abc:purchased");
-    expect(itemOccurrenceId("abc", "expires")).toBe("item:abc:expires");
+  it("builds stable remind occurrence ids", () => {
     expect(itemOccurrenceId("abc", "remind")).toBe("item:abc:remind");
   });
 
-  it("formats remind titles with i18n prefix; other kinds stay bare", () => {
+  it("formats remind titles with i18n prefix; unknown kinds stay bare", () => {
     expect(formatItemOccurrenceTitle("remind", "Milk")).toBe(
       `${String(i18n.t("items:remindPrefix"))} · Milk`,
     );
-    expect(formatItemOccurrenceTitle("purchased", "Milk")).toBe("Milk");
-    expect(formatItemOccurrenceTitle("expires", "Milk")).toBe("Milk");
+    expect(formatItemOccurrenceTitle("unknown", "Milk")).toBe("Milk");
   });
 
   it("strips remind prefix for plain-title surfaces", () => {
     const remind = `${String(i18n.t("items:remindPrefix"))} · Milk`;
     expect(stripItemKindTitlePrefix("remind", remind)).toBe("Milk");
-    expect(stripItemKindTitlePrefix("expires", "Milk")).toBe("Milk");
-    expect(stripItemKindTitlePrefix("purchased", "Milk")).toBe("Milk");
+    expect(stripItemKindTitlePrefix("unknown", "Milk")).toBe("Milk");
   });
 
   it("prefers item emoji over category emoji, else clear fallback", () => {
@@ -92,16 +88,14 @@ describe("itemCalendarProjection helpers", () => {
 
   it("labels remind only", () => {
     expect(itemDateKindLabel("remind")).toBe(String(i18n.t("items:remindPrefix")));
-    expect(itemDateKindLabel("expires")).toBe("");
-    expect(itemDateKindLabel("purchased")).toBe("");
+    expect(itemDateKindLabel("unknown")).toBe("");
   });
 
-  it("maps item date kinds to tiny calendar glyphs", () => {
-    expect(itemDateKindEmoji("purchased")).toBe(ITEM_DATE_KIND_EMOJI.purchased);
+  it("maps remind date kind to tiny calendar glyph", () => {
     expect(itemDateKindEmoji("remind")).toBe(ITEM_DATE_KIND_EMOJI.remind);
-    expect(itemDateKindEmoji("expires")).toBe(ITEM_DATE_KIND_EMOJI.expires);
-    expect(itemDateKindEmoji("purchased")).toBe("🛒");
-    expect(itemDateKindMarkerClass("purchased")).toContain("text-[8px]");
-    expect(itemDateKindMarkerClass("purchased")).not.toContain("rounded-full");
+    expect(itemDateKindEmoji("remind")).toBe("🔔");
+    expect(itemDateKindEmoji("unknown")).toBe(DEFAULT_ITEM_EMOJI);
+    expect(itemDateKindMarkerClass("remind")).toContain("text-[8px]");
+    expect(itemDateKindMarkerClass("remind")).not.toContain("rounded-full");
   });
 });

@@ -1,10 +1,9 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../i18n";
 import { SessionReauthWizard } from "./SessionReauthWizard";
 import { _resetConnectionStoreForTests } from "../domain/connection/connectionStore";
+import { wrapWithI18n } from "../test/i18nHarness";
 
 const loginWithPassword = vi.fn();
 const resetPassword = vi.fn();
@@ -72,11 +71,7 @@ describe("SessionReauthWizard smoke", () => {
 
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SessionReauthWizard, { onComplete }),
-        ),
+        wrapWithI18n(createElement(SessionReauthWizard, { onComplete })),
       );
     });
 
@@ -119,14 +114,10 @@ describe("SessionReauthWizard smoke", () => {
 
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SessionReauthWizard, {
+        wrapWithI18n(createElement(SessionReauthWizard, {
             onComplete: () => {},
             allowLocalPasswordReset: true,
-          }),
-        ),
+          })),
       );
     });
 
@@ -171,15 +162,11 @@ describe("SessionReauthWizard smoke", () => {
   it("tone=login with no active devices shows revoked help", () => {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SessionReauthWizard, {
+        wrapWithI18n(createElement(SessionReauthWizard, {
             onComplete: () => {},
             tone: "login",
             hasActiveDevice: false,
-          }),
-        ),
+          })),
       );
     });
 

@@ -46,7 +46,7 @@ describe("eventListCardMeta", () => {
   it("resolves provenance kinds per source/origin", () => {
     expect(
       resolveEventListProvenanceKind(
-        makeTimelineItem({ source: "item", itemDateKind: "expires" }),
+        makeTimelineItem({ source: "item", itemDateKind: "remind" }),
       ),
     ).toBe("item");
     expect(
@@ -146,12 +146,7 @@ describe("eventListCardMeta", () => {
     ).toBe(true);
     expect(
       eventShowsRemindBadge(
-        makeTimelineItem({ source: "item", itemDateKind: "expires" }),
-      ),
-    ).toBe(false);
-    expect(
-      eventShowsRemindBadge(
-        makeTimelineItem({ source: "item", itemDateKind: "purchased" }),
+        makeTimelineItem({ source: "item", itemDateKind: undefined }),
       ),
     ).toBe(false);
 
@@ -214,7 +209,7 @@ describe("eventListCardMeta", () => {
         makeTimelineItem({
           title: "milk",
           source: "item",
-          itemDateKind: "purchased",
+          itemDateKind: undefined,
         }),
         { showRemindBadge: false },
       ),

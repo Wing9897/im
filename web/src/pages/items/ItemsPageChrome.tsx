@@ -26,6 +26,10 @@ type Props = {
   /** Accessible name for the controls group (filters). */
   controlsAriaLabel?: string;
   actions?: ReactNode;
+  innerClassName?: string;
+  outerClassName?: string;
+  controlsClassName?: string;
+  actionsClassName?: string;
   "data-testid"?: string;
 };
 
@@ -39,6 +43,10 @@ export function ItemsPageChrome({
   controls,
   controlsAriaLabel,
   actions,
+  innerClassName = itemsPageChromeInnerClass,
+  outerClassName = itemsPageChromeOuterClass,
+  controlsClassName = itemsPageChromeControlsClass,
+  actionsClassName = itemsPageChromeActionsClass,
   "data-testid": dataTestId,
 }: Props) {
   const titleClusterClass = controls
@@ -46,8 +54,8 @@ export function ItemsPageChrome({
     : itemsPageChromeTitleClusterClass;
 
   return (
-    <header className={itemsPageChromeOuterClass} data-testid={dataTestId}>
-      <div className={itemsPageChromeInnerClass}>
+    <header className={outerClassName} data-testid={dataTestId}>
+      <div className={innerClassName}>
         <div className={titleClusterClass}>
           {back ? (
             <Button
@@ -67,7 +75,7 @@ export function ItemsPageChrome({
 
         {controls ? (
           <div
-            className={itemsPageChromeControlsClass}
+            className={controlsClassName}
             role="group"
             aria-label={controlsAriaLabel}
           >
@@ -76,7 +84,7 @@ export function ItemsPageChrome({
         ) : null}
 
         {actions ? (
-          <div className={itemsPageChromeActionsClass}>{actions}</div>
+          <div className={actionsClassName}>{actions}</div>
         ) : null}
       </div>
     </header>

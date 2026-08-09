@@ -21,15 +21,15 @@ export type AnalysisEvent = Omit<
   /** Original calendar timezone identity when supplied by the wire contract. */
   timezone?: string | null;
   /** Present when source === "user": wire origin from user_events */
-  origin?: "manual" | "assistant" | "a2a" | "project" | "ics";
+  origin?: "manual" | "assistant" | "a2a" | "agent" | "ics";
   /** Ownership workset (user_events / items / board projections); builtin `__user__` when system. */
   worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */
   dismissed?: boolean;
   /** User/agent 「重要事件」 marker — display with ❗. */
   important?: boolean;
-  /** Present when source === "item": purchased / expires / remind projection. */
-  itemDateKind?: "purchased" | "expires" | "remind";
+  /** Present when source === "item": remind projection. */
+  itemDateKind?: "remind";
   /**
    * Present when source === "recurring": true if this is the final occurrence
    * of a finite RRULE series (UNTIL / COUNT). Used for month-cell「+N 结束」.

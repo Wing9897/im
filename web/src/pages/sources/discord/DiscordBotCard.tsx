@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
-import { SourceCard, SourceCardErrorLines } from "../SourceCard";
-import { ReconnectButton } from "../ReconnectButton";
+import { SourceCard, SourceCardErrorLines } from "../board/SourceCard";
+import { ReconnectButton } from "../board/ReconnectButton";
 import { subscribeDiscordChannels } from "../../../api/sources";
 import { Button } from "../../../components/ui";
 import type { DiscordBotInfo, DiscordChannelInfo } from "../../../types";
@@ -10,7 +10,7 @@ import { toErrorMessage } from "../../../utils/errors";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { useToast } from "../../../context/ToastContext";
 import { usePersistedState } from "../../../hooks/usePersistedState";
-import { useReconnectCard } from "../useReconnectCard";
+import { useReconnectCard } from "../board/useReconnectCard";
 import { DISCORD_CHANNELS_EXPANDED_STORAGE_KEY } from "../../../domain/prefs";
 
 interface DiscordBotCardProps {

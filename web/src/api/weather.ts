@@ -27,8 +27,8 @@ export function fetchWeatherForecast(
     "/api/v1/weather/forecast",
     {
       location,
-      start_date: startDate,
-      end_date: endDate,
+      startDate,
+      endDate,
       ...(normalized.force ? { force: true } : {}),
     },
     { signal: normalized.signal },

@@ -17,7 +17,6 @@ const sampleBase: TaskFormState = {
   name: "Base Task",
   description: "Base description",
   promptTemplate: "Analyze messages",
-  webSearchQuery: "",
   scheduleType: "daily",
   scheduleValue: "09:00",
   scheduleRrule: null,
@@ -31,7 +30,7 @@ const sampleBase: TaskFormState = {
   eventLocation: "",
   eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -52,7 +51,6 @@ const fullConfig: Partial<TaskFormState> = {
   name: "Updated Task",
   description: "Updated description",
   promptTemplate: "New prompt",
-  webSearchQuery: "",
   scheduleType: "weekly",
   scheduleValue: "1:10:30",
   scheduleRrule: null,
@@ -70,7 +68,6 @@ const validFormStates: TaskFormState[] = [
     name: "Hourly Task",
     description: "",
     promptTemplate: "Analyze hourly",
-    webSearchQuery: "",
     scheduleType: "hourly",
     scheduleValue: null,
     scheduleRrule: null,
@@ -84,7 +81,7 @@ const validFormStates: TaskFormState[] = [
     eventLocation: "",
     eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -104,7 +101,6 @@ const validFormStates: TaskFormState[] = [
     name: "Daily Task",
     description: "Daily run",
     promptTemplate: "Analyze daily",
-    webSearchQuery: "",
     scheduleType: "daily",
     scheduleValue: "14:30",
     scheduleRrule: null,
@@ -118,7 +114,7 @@ const validFormStates: TaskFormState[] = [
     eventLocation: "",
     eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -138,7 +134,6 @@ const validFormStates: TaskFormState[] = [
     name: "Weekly Task",
     description: "Weekly run",
     promptTemplate: "Analyze weekly",
-    webSearchQuery: "",
     scheduleType: "weekly",
     scheduleValue: "3:09:00",
     scheduleRrule: null,
@@ -152,7 +147,7 @@ const validFormStates: TaskFormState[] = [
     eventLocation: "",
     eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -172,7 +167,6 @@ const validFormStates: TaskFormState[] = [
     name: "Custom Seconds",
     description: "",
     promptTemplate: "Fast poll",
-    webSearchQuery: "",
     scheduleType: "custom_seconds",
     scheduleValue: "300",
     scheduleRrule: null,
@@ -186,7 +180,7 @@ const validFormStates: TaskFormState[] = [
     eventLocation: "",
     eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -208,7 +202,6 @@ const sampleFormState: TaskFormState = {
   name: "BTC Tracker",
   description: "Track BTC mentions",
   promptTemplate: "Analyze crypto messages",
-  webSearchQuery: "",
   scheduleType: "daily",
   scheduleValue: "08:00",
   scheduleRrule: null,
@@ -222,7 +215,7 @@ const sampleFormState: TaskFormState = {
   eventLocation: "",
   eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -283,7 +276,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       capForceWebSearch: true,
       capReadAnalysisEvents: true,
       capReadItems: true,
-      webSearchQuery: "OpenAI pricing",
       promptTemplate: "Extract pricing notes",
       channelIds: ["ch-1", "ch-2"],
       scheduleType: "hourly",
@@ -294,7 +286,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       analysisStrategyMode: "balanced",
     });
     expect(payload.channelIds).toEqual(["ch-1", "ch-2"]);
-    expect(payload.webSearchQuery).toBe("");
     expect(payload.batchOverlapCount).toBe(2);
     expect(payload.analysisTriggerThreshold).toBe(5);
     expect(payload.analysisBatchMessageLimit).toBe(40);
@@ -308,7 +299,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       triggerMode: "schedule",
       outputCalendar: false,
       outputAnalysisEvents: true,
-      webSearchQuery: "",
       promptTemplate: "Extract pricing notes",
       channelIds: [],
       scheduleType: "hourly",
@@ -317,7 +307,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       analysisTriggerThreshold: 5,
     });
     expect(payload.channelIds).toEqual([]);
-    expect(payload.webSearchQuery).toBe("");
     expect(payload).not.toHaveProperty("batchOverlapCount");
     expect(payload).not.toHaveProperty("analysisTriggerThreshold");
   });
@@ -338,7 +327,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       expect(payload).toMatchObject({
         analysisMode,
         promptTemplate: sampleBase.promptTemplate,
-        webSearchQuery: "",
         analysisTimeRange: sampleBase.analysisTimeRange,
         channelIds: sampleBase.channelIds,
       });
@@ -360,7 +348,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       ...sampleBase,
       analysisMode: "recurring",
       promptTemplate: "stale analysis prompt",
-      webSearchQuery: "",
       channelIds: ["stale-channel"],
       rrule: "  FREQ=WEEKLY;BYDAY=MO,WE  ",
       eventStartTime: "2025-06-01T09:00:00Z",
@@ -504,7 +491,6 @@ describe("scheduleFieldsFromTask", () => {
       name: "Hydrate",
       description: null,
       promptTemplate: "p",
-      webSearchQuery: "",
       analysisMode: "intel_event",
       analysisTimeRange: "1d",
       version: 1,
@@ -564,7 +550,6 @@ describe("buildCurrentTaskPayload", () => {
       "name",
       "promptTemplate",
       "scheduleRrule",
-      "webSearchQuery",
     ].sort());
     expect(payload.scheduleRrule).toBe("FREQ=DAILY;BYHOUR=8;BYMINUTE=0");
     expect(payload).not.toHaveProperty("scheduleType");
@@ -576,7 +561,7 @@ describe("buildCurrentTaskPayload", () => {
       ...sampleFormState,
       analysisMode: "intel_event",
       includeInTimeline: false,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,

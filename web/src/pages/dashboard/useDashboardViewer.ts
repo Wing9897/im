@@ -6,7 +6,7 @@ import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { deleteTask, toggleTaskActive } from "../../api/tasks";
-import { mapActiveAnalysesToTasks } from "../../components/analysis/analysisStatusModel";
+import { mapActiveAnalysesToTasks } from "../../domain/analysis/analysisStatusModel";
 import { useAnalysisStatus } from "../../context/AnalysisStatusContext";
 import { useMonitorMode } from "../../context/MonitorModeContext";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
@@ -24,7 +24,7 @@ import {
   EMPTY_TASK_CARD_STATS,
   toTaskCardStats,
 } from "./taskCardStats";
-import { selectTopLevelTasks } from "../tasks/project/projectDetailModel";
+import { selectTopLevelTasks } from "../tasks/agent/projectDetailModel";
 
 export function useDashboardViewer() {
   const navigate = useNavigate();
@@ -77,10 +77,15 @@ export function useDashboardViewer() {
         }),
       );
     }
+    // SSE may mark a task analyzing before stats rows exist — keep the live set.
+    for (const taskId of activeAnalysesByTaskId.keys()) {
+      if (map.has(taskId)) continue;
+      map.set(taskId, { ...EMPTY_TASK_CARD_STATS, isRunning: true });
+    }
     return map;
   }, [taskStats, activeAnalysesByTaskId, queueStatus, paused]);
 
-  /** Project children stay under `/tasks/:id/project`, not the main grid. */
+  /** Agent children stay under `/tasks/:id/agent`, not the main grid. */
   const gridTasks = useMemo(() => selectTopLevelTasks(tasks), [tasks]);
 
   const [searchQuery, setSearchQuery] = usePersistedState(TASKS_SEARCH_STORAGE_KEY, "", {
@@ -127,7 +132,7 @@ export function useDashboardViewer() {
 
   const handleOpenProject = useCallback(
     (taskId: string) => {
-      navigate(`/tasks/${taskId}/project`);
+      navigate(`/tasks/${taskId}/agent`);
     },
     [navigate],
   );

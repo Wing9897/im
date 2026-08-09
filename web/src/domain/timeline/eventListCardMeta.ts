@@ -99,7 +99,7 @@ export type EventListProvenanceKind =
   | "item"
   | "ics"
   | "a2a"
-  | "project";
+  | "agent";
 
 /**
  * Generation source for the card footer (任務 / 用戶 / 助手 / 物品 / …).
@@ -117,8 +117,8 @@ export function resolveEventListProvenanceKind(
         return "ics";
       case "a2a":
         return "a2a";
-      case "project":
-        return "project";
+      case "agent":
+        return "agent";
       case "manual":
       default:
         return "user";

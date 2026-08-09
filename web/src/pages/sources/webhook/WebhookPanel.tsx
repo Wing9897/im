@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { sectionTitleClass } from "../../../components/ui/pageTypography";
 import { useWebhookPanel } from "./useWebhookPanel";
 import { WebhookAccessKeysNotice } from "./WebhookAccessKeysNotice";
-import { SourceBoardShell } from "../SourceBoardShell";
+import { SourceBoardShell } from "../board/SourceBoardShell";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 
 interface WebhookServiceInfoProps {

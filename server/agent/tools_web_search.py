@@ -25,7 +25,7 @@ async def _tool_web_search(
         count = int(raw_count) if raw_count not in (None, "") else None
     except (TypeError, ValueError):
         count = None
-    # Default count stays a param (assistant 5 vs web_intel 8) — not a forked copy.
+    # Default count stays a param (assistant 5 vs agent-tick provider cap 8) — not a forked copy.
     if count is None:
         count = ASSISTANT_TOOL_DEFAULT_COUNT
     service = WebSearchExecutionService(

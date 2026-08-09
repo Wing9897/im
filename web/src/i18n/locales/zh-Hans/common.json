@@ -27,6 +27,7 @@
       "queuedTitle": "已 claim、尚未完成分析的消息（含等待重试的批次）",
       "analyzed": "已分析",
       "running": "执行中",
+      "analyzingAria": "分析中：{name}",
       "idle": "闲置",
       "disabled": "已停用",
       "enable": "启用",
@@ -35,7 +36,7 @@
       "delete": "删除",
       "editAria": "编辑 {name}",
       "deleteAria": "删除 {name}",
-      "openProjectAria": "打开项目：{name}",
+      "openProjectAria": "打开 Agent 详情：{name}",
       "recurringProgressHint": "周期任务（无消息分析统计）",
       "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
       "retryCount": "重试 {count}",
@@ -48,7 +49,6 @@
       "timeRange": "时间范围：{range}",
       "location": "地点：{location}",
       "rrule": "重复规则：{rrule}",
-      "calendarNoChannels": "（周期任务模式，不绑定频道）",
       "channelCount": "共 {count} 个频道",
       "channelsMore": "…及其他 {count} 个频道",
       "noChannels": "尚未绑定频道",
@@ -70,8 +70,8 @@
       "childrenEmptyDescription": "Agent 会在每次 tick 视需要创建子周期任务。",
       "eventsTitle": "所属单次事件",
       "eventsEmptyTitle": "暂无所属事件",
-      "eventsEmptyDescription": "项目创建的单次时程事件会显示在这里。",
-      "tickTitle": "最近项目 tick",
+      "eventsEmptyDescription": "此 Agent 任务创建的单次时程事件会显示在这里。",
+      "tickTitle": "最近 Agent tick",
       "tickLastEnd": "上次完成",
       "tickCompletedCount": "已完成次数",
       "tickMessageCount": "本轮处理消息数",
@@ -133,7 +133,7 @@
       "includeInTimelineAria": "显示于时间规划",
       "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在情报事件与地图，但不会进入日历／甘特／时间轴。",
       "rruleHint": "RRULE 仅用于周期任务重复事件，不会触发 AI 分析。",
-      "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与专案波次间隔仅本任务有效。",
+      "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与 Agent 波次间隔仅本任务有效。",
       "followGlobal": "跟随全局",
       "followGlobalPlaceholder": "空＝跟随全局",
       "batchOverlapLabel": "批次重叠",
@@ -149,7 +149,6 @@
       "taskTypeLabel": "任务类型",
       "skillsTitle": "设定／技能",
       "skillsAria": "任务设定与技能",
-      "skillsHint": "依所选任务类型显示可配置项目（排程、Prompt、来源频道等）。",
       "optionalTitle": "进阶设定",
       "descriptionLabel": "描述",
       "descriptionPlaceholder": "任务描述（选填）",
@@ -164,7 +163,8 @@
         "channels": "请至少选择一个来源频道",
         "rrule": "请设置重复规则",
         "eventStart": "请设置开始时间，或改为全天活动",
-        "agentOutput": "请至少勾选一项 Agent 输出"
+        "agentOutput": "请至少勾选一项 Agent 输出",
+        "agentCursorAnalysis": "消息积压抽干不可写情报事件；请改用日历输出，或将触发改为排程／门槛"
       },
       "pickChannels": "点击选择频道",
       "channelsSelected": "已选 {selected} / {total} 个频道",
@@ -312,9 +312,9 @@
     "schedule": {
       "typeLabel": "排程类型",
       "typeAria": "排程类型",
-      "projectWaveInterval": "项目波间间隔（秒）",
-      "projectWaveIntervalAria": "项目每波之间的冷却秒数",
-      "projectWaveIntervalHelp": "下一波开始前冷却；0 = 不等待。保存在本任务（非全局系统设置）。空白则使用默认（20）。",
+      "agentWaveInterval": "Agent 波间间隔（秒）",
+      "agentWaveIntervalAria": "Agent 每波之间的冷却秒数",
+      "agentWaveIntervalHelp": "下一波开始前冷却；0 = 不等待。保存在本任务（非全局系统设置）。空白则使用默认（20）。",
       "types": {
         "seconds_10": "每 10 秒",
         "hourly": "每小时",
@@ -477,22 +477,22 @@
         "description": "从讨论中提取决议、共识、反对意见与后续责任人",
         "promptTemplate": "提取会议／讨论中的决议与结论。优先：已拍板事项、共识、明确反对、指派负责人、后续检查点。在 body 写明：决议内容、状态（通过／暂缓／反对）、负责人；participants 放相关人。有截止或会议时间再填 start_time。忽略无结论的闲聊。"
       },
-      "project-date-crud": {
+      "agent-date-crud": {
         "name": "通用项目日期管理",
         "description": "从来源消息为项目新增、修改、删除单次日期与期限，并在无新消息时对账既有日程",
         "promptTemplate": "你是通用项目日期管理员。目标：从绑定来源消息中找出与本项目有关的日期／期限／会议／截止日期，并用工具完成增、改、删。规则：1) 有明确日期或可合理换算的相对日期才写入；2) 先查现有日程，能对上就更新，对不上才新建；3) 来源说取消／作废就删除或停用；4) 忽略无关闲聊；5) 即使没有新消息也要对账并修正明显错误。完成后用简短 JSON message 总结本回合改动。"
       },
-      "project-work-shift": {
+      "agent-work-shift": {
         "name": "工作轮更表",
         "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
         "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子周期任务或单次事件就更新，对不上才新建；2) 固定轮更用周期任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
       },
-      "web-intel-pricing-watch": {
+      "agent-pricing-watch": {
         "name": "定价监管情报",
         "description": "Agent 多轮搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
         "promptTemplate": "以多轮网页搜索核实后，抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
       },
-      "web-intel-geopolitics-hotspots": {
+      "agent-geopolitics-hotspots": {
         "name": "地缘热点扫描",
         "description": "Agent 多轮搜索东亚等地缘／安全热点，抽成情报事件；可选绑定频道做来源核实",
         "promptTemplate": "以多轮网页搜索核实后，抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
@@ -523,7 +523,8 @@
         "calendar": "日历事件（写入即含写日历权限）",
         "analysisEvents": "情报事件（写入 analysis_events）"
       },
-      "outputHint": "至少勾选一项输出。"
+      "outputHint": "至少勾选一项输出。",
+      "outputHintCursor": "消息积压抽干仅写日历事件；情报事件输出请改用排程或消息门槛触发。"
     }
   },
   "leaderboard": {
@@ -749,7 +750,7 @@
     },
     "analysisBatch": {
       "title": "分析批次",
-      "shortDescription": "排程器对排行榜／情报事件等标记型任务分批呼叫 LLM，写入分析结果。项目任务不走此路径（由上方可编辑的项目任务排程驱动）。"
+      "shortDescription": "排程器对排行榜／情报事件等标记型任务分批呼叫 LLM，写入分析结果。Agent 任务不走此路径（由上方可编辑的 Agent 任务排程驱动）。"
     },
     "outboundNotify": {
       "title": "外发通知",
@@ -1165,7 +1166,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 15／SemVer 0.1.0-beta.16；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 23／SemVer 0.1.0-beta.24；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

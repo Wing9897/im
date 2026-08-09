@@ -42,7 +42,7 @@ async def test_weather_forecast_resolves_city_and_returns_daily_payload(client, 
 
     response = await client.get(
         "/api/v1/weather/forecast",
-        params={"location": "臺北", "start_date": "2026-07-01", "end_date": "2026-07-01"},
+        params={"location": "臺北", "startDate": "2026-07-01", "endDate": "2026-07-01"},
     )
 
     assert response.status_code == 200
@@ -72,7 +72,7 @@ async def test_weather_forecast_clips_to_available_window_and_provider_payload(c
     monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
     response = await client.get(
         "/api/v1/weather/forecast",
-        params={"location": "Taipei", "start_date": "2026-06-28", "end_date": "2026-07-03"},
+        params={"location": "Taipei", "startDate": "2026-06-28", "endDate": "2026-07-03"},
     )
 
     assert response.status_code == 200
@@ -87,7 +87,7 @@ async def test_weather_forecast_returns_empty_without_provider_call_when_out_of_
 
     response = await client.get(
         "/api/v1/weather/forecast",
-        params={"location": "Taipei", "start_date": "2026-06-01", "end_date": "2026-06-30"},
+        params={"location": "Taipei", "startDate": "2026-06-01", "endDate": "2026-06-30"},
     )
 
     assert response.status_code == 200
@@ -117,7 +117,7 @@ async def test_weather_forecast_reuses_successful_ttl_cache(client, monkeypatch)
         }
 
     monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
-    params = {"location": "Taipei", "start_date": "2026-07-02", "end_date": "2026-07-02"}
+    params = {"location": "Taipei", "startDate": "2026-07-02", "endDate": "2026-07-02"}
 
     first = await client.get("/api/v1/weather/forecast", params=params)
     second = await client.get("/api/v1/weather/forecast", params=params)
@@ -144,7 +144,7 @@ async def test_weather_forecast_force_bypasses_ttl_cache(client, monkeypatch):
         }
 
     monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
-    params = {"location": "Taipei", "start_date": "2026-07-02", "end_date": "2026-07-02"}
+    params = {"location": "Taipei", "startDate": "2026-07-02", "endDate": "2026-07-02"}
 
     first = await client.get("/api/v1/weather/forecast", params=params)
     forced = await client.get("/api/v1/weather/forecast", params={**params, "force": "true"})
@@ -212,7 +212,7 @@ async def test_weather_forecast_falls_back_to_met_no_after_open_meteo_failure(cl
 
     response = await client.get(
         "/api/v1/weather/forecast",
-        params={"location": "Taipei", "start_date": "2026-07-01", "end_date": "2026-07-01"},
+        params={"location": "Taipei", "startDate": "2026-07-01", "endDate": "2026-07-01"},
     )
 
     assert response.status_code == 200
@@ -223,7 +223,7 @@ async def test_weather_forecast_falls_back_to_met_no_after_open_meteo_failure(cl
 async def test_weather_forecast_rejects_invalid_date_range(client):
     response = await client.get(
         "/api/v1/weather/forecast",
-        params={"location": "臺北", "start_date": "2026-08-01", "end_date": "2026-07-01"},
+        params={"location": "臺北", "startDate": "2026-08-01", "endDate": "2026-07-01"},
     )
 
     assert response.status_code == 422

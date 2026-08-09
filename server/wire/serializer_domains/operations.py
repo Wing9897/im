@@ -1,4 +1,4 @@
-"""Actions, logs, queue, and project-status wire serializers."""
+"""Actions, logs, queue, and agent-status wire serializers."""
 
 from __future__ import annotations
 
@@ -137,7 +137,7 @@ def serialize_activity_span(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def serialize_project_tick_log_entry(row: Mapping[str, Any]) -> dict[str, Any]:
+def serialize_agent_tick_log_entry(row: Mapping[str, Any]) -> dict[str, Any]:
     message = row.get("agent_message")
     if message is not None and not isinstance(message, str):
         message = str(message)
@@ -160,7 +160,7 @@ def serialize_project_tick_log_entry(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def serialize_project_tick_in_flight(row: Mapping[str, Any]) -> dict[str, Any]:
+def serialize_agent_tick_in_flight(row: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "batchId": row["id"],
         "status": str(row.get("status") or "processing"),

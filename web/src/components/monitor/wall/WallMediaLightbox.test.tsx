@@ -1,18 +1,15 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
 
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { WallMediaLightbox } from "./WallMediaLightbox";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 describe("WallMediaLightbox", () => {
   let root: Root | null = null;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   afterEach(() => {
@@ -27,7 +24,7 @@ describe("WallMediaLightbox", () => {
     const container = document.createElement("div");
     act(() => {
       root = createRoot(container);
-      root.render(<I18nextProvider i18n={i18n}>{node}</I18nextProvider>);
+      root.render(wrapWithI18n(node));
     });
     return container;
   }

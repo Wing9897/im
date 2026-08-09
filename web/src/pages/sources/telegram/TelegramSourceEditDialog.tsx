@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import { SettingsRow, TextField } from "../../../components/ui";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import type { Source } from "../../../types";

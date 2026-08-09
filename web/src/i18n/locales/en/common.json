@@ -27,6 +27,7 @@
       "queuedTitle": "Claimed messages not yet analyzed (including batches waiting to retry)",
       "analyzed": "Analyzed",
       "running": "Running",
+      "analyzingAria": "Analyzing: {name}",
       "idle": "Idle",
       "disabled": "Disabled",
       "enable": "Enable",
@@ -35,7 +36,7 @@
       "delete": "Delete",
       "editAria": "Edit {name}",
       "deleteAria": "Delete {name}",
-      "openProjectAria": "Open project: {name}",
+      "openProjectAria": "Open Agent detail: {name}",
       "recurringProgressHint": "Recurring task (no message analysis stats)",
       "calendarTaskProgressHint": "Calendar task bucket (shows related timed events)",
       "retryCount": "Retry {count}",
@@ -48,7 +49,6 @@
       "timeRange": "Time range: {range}",
       "location": "Location: {location}",
       "rrule": "Recurrence: {rrule}",
-      "calendarNoChannels": "(Recurring-task mode — no channels bound)",
       "channelCount": "{count} channels",
       "channelsMore": "…and {count} more channels",
       "noChannels": "No channels bound yet",
@@ -70,8 +70,8 @@
       "childrenEmptyDescription": "The Agent creates child recurring tasks on each tick when needed.",
       "eventsTitle": "Owned timed events",
       "eventsEmptyTitle": "No owned events yet",
-      "eventsEmptyDescription": "Single events created for this project appear here.",
-      "tickTitle": "Last project tick",
+      "eventsEmptyDescription": "One-off timed events created by this Agent task appear here.",
+      "tickTitle": "Last Agent tick",
       "tickLastEnd": "Last completed",
       "tickCompletedCount": "Completed ticks",
       "tickMessageCount": "Messages in last tick",
@@ -133,7 +133,7 @@
       "includeInTimelineAria": "Show in time planning",
       "includeInTimelineHint": "When off, this task’s analysis events still appear in Intel events and the map, but not in calendar / Gantt / timeline.",
       "rruleHint": "RRULE is only for recurring-task recurrence and does not trigger AI analysis.",
-      "scheduleOverridesHint": "Threshold / batch limit / evidence style can override; leave empty to follow AI Settings → Analysis scheduling. Batch overlap and project wave interval are task-owned only.",
+      "scheduleOverridesHint": "Threshold / batch limit / evidence style can override; leave empty to follow AI Settings → Analysis scheduling. Batch overlap and Agent wave interval are task-owned only.",
       "followGlobal": "Follow global",
       "followGlobalPlaceholder": "Empty = follow global",
       "batchOverlapLabel": "Batch overlap",
@@ -149,7 +149,6 @@
       "taskTypeLabel": "Task type",
       "skillsTitle": "Settings / skills",
       "skillsAria": "Task settings and skills",
-      "skillsHint": "Configurable options for the selected task type (schedule, prompt, source channels, and more).",
       "optionalTitle": "Advanced settings",
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Task description (optional)",
@@ -164,7 +163,8 @@
         "channels": "Select at least one source channel",
         "rrule": "Set a recurrence rule",
         "eventStart": "Set a start time, or mark the event as all-day",
-        "agentOutput": "Select at least one Agent output"
+        "agentOutput": "Select at least one Agent output",
+        "agentCursorAnalysis": "Message-cursor drain cannot write intelligence events; use calendar output, or switch trigger to schedule/threshold"
       },
       "pickChannels": "Click to select channels",
       "channelsSelected": "{selected} / {total} channels selected",
@@ -312,9 +312,9 @@
     "schedule": {
       "typeLabel": "Schedule type",
       "typeAria": "Schedule type",
-      "projectWaveInterval": "Project wave interval (seconds)",
-      "projectWaveIntervalAria": "Cooldown seconds between project waves",
-      "projectWaveIntervalHelp": "Cool-down before the next wave; 0 = no wait. Saved on this task (not a global system setting). Empty uses the default (20).",
+      "agentWaveInterval": "Agent wave interval (seconds)",
+      "agentWaveIntervalAria": "Cooldown seconds between Agent waves",
+      "agentWaveIntervalHelp": "Cool-down before the next wave; 0 = no wait. Saved on this task (not a global system setting). Empty uses the default (20).",
       "types": {
         "seconds_10": "Every 10 seconds",
         "hourly": "Hourly",
@@ -477,22 +477,22 @@
         "description": "Pull decisions, consensus, dissent, and owners from discussions",
         "promptTemplate": "Extract decisions and conclusions from meetings/discussions. Prioritize: finalized items, consensus, clear dissent, assigned owners, follow-up checkpoints. In body include: decision text, status (approved/deferred/opposed), owner; put people in participants. Fill start_time for meeting or due times. Ignore chat with no conclusion."
       },
-      "project-date-crud": {
+      "agent-date-crud": {
         "name": "General project date manager",
         "description": "Add, edit, and delete project dates/deadlines from source messages, and reconcile existing schedule when idle",
         "promptTemplate": "You are a general project date manager. Goal: find project-related dates, deadlines, and meetings in bound source messages, then add/update/delete them with tools. Rules: 1) write only when the date is explicit or reasonably convertible; 2) inspect existing schedule first, update matches, create only when unmatched; 3) cancel/void from source means delete or deactivate; 4) ignore unrelated chatter; 5) even with no new messages, reconcile and fix obvious errors. Finish with a short JSON message summarizing changes."
       },
-      "project-work-shift": {
+      "agent-work-shift": {
         "name": "Work shift roster",
         "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
         "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
       },
-      "web-intel-pricing-watch": {
+      "agent-pricing-watch": {
         "name": "Pricing watch intel",
         "description": "Agent multi-round search of major LLM/cloud API pricing and plan changes into trackable intel events",
         "promptTemplate": "After multi-round web search, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
       },
-      "web-intel-geopolitics-hotspots": {
+      "agent-geopolitics-hotspots": {
         "name": "Geopolitics hotspot scan",
         "description": "Agent multi-round search of East Asia security hotspots; optional channel bind for source verify",
         "promptTemplate": "After multi-round web search, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
@@ -523,7 +523,8 @@
         "calendar": "Calendar events (implies write-calendar)",
         "analysisEvents": "Intelligence events (write analysis_events)"
       },
-      "outputHint": "At least one output is required."
+      "outputHint": "At least one output is required.",
+      "outputHintCursor": "Message-cursor drain writes calendar events only; intelligence-event output needs schedule or message-threshold."
     }
   },
   "leaderboard": {
@@ -749,7 +750,7 @@
     },
     "analysisBatch": {
       "title": "Analysis batch",
-      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, intel events) in LLM batches and writes analysis results. Project tasks do not use this path — they are driven by editable project tasks above."
+      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, intel events) in LLM batches and writes analysis results. Agent tasks do not use this path — they are driven by editable Agent task schedules above."
     },
     "outboundNotify": {
       "title": "Outbound notifications",
@@ -1165,7 +1166,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 15 / SemVer 0.1.0-beta.16 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 23 / SemVer 0.1.0-beta.24 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

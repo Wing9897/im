@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from server.api.deps import get_db, publish_resource_modified
+from server.api.query_aliases import qalias
 from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
 from server.api.schemas.responses import UserEventResponse
 from server.calendar.user_events import (
@@ -47,9 +48,9 @@ async def list_events(
     request: Request,
     start: str | None = None,
     end: str | None = None,
-    task_id: str | None = None,
-    workset_id: str | None = None,
-    item_id: str | None = None,
+    task_id: str | None = qalias("taskId", default=None),
+    workset_id: str | None = qalias("worksetId", default=None),
+    item_id: str | None = qalias("itemId", default=None),
 ) -> list[UserEventResponse]:
     db = get_db(request)
     try:

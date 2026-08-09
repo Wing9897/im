@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { ModalDialog } from "../../components/ModalDialog";
 import {
   AlertBanner,
@@ -17,9 +17,13 @@ import {
 } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
 import { resolveCategoryEmoji } from "../../domain/items/itemCalendarProjection";
+import { findReservedAttributeKeys } from "../../domain/items/itemAttributes";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { CategoryEditForm } from "./CategoryEditForm";
-import { ItemEmojiMark } from "./ItemEmojiMark";
+import { ItemEmojiMark } from "./emoji/ItemEmojiMark";
+
+const dangerIconBtnClass =
+  "im-icon-btn !h-8 !w-8 !rounded-md text-error transition-colors hover:bg-[color-mix(in_srgb,var(--error)_10%,transparent)] hover:text-error disabled:opacity-50 disabled:cursor-not-allowed";
 
 type Props = {
   categories: ItemCategory[];
@@ -66,6 +70,11 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
 
   const save = async () => {
     if (!name.trim() || busy) return;
+    const reserved = findReservedAttributeKeys(schema.map((entry) => entry.key));
+    if (reserved.length > 0) {
+      setError(t("reservedAttributeKeyError"));
+      return;
+    }
     setError(null);
     setBusy(true);
     try {
@@ -155,14 +164,20 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
                 {cat.slug ? t(`seed.${cat.slug}`, { defaultValue: cat.name }) : cat.name}
               </span>
             </button>
-            <Button
-              variant="danger"
-              size="sm"
+            <button
+              type="button"
+              className={dangerIconBtnClass}
               disabled={busy}
               onClick={() => confirmDelete(cat)}
+              aria-label={t("deleteCategoryAria", {
+                name: cat.slug
+                  ? t(`seed.${cat.slug}`, { defaultValue: cat.name })
+                  : cat.name,
+              })}
+              title={t("deleteCategory")}
             >
-              {t("deleteCategory")}
-            </Button>
+              <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+            </button>
           </li>
         ))}
       </ul>

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceAddFormCard } from "../SourceAddFormCard";
+import { SourceAddFormCard } from "../board/SourceAddFormCard";
 import { MqttBrokerFields } from "./MqttBrokerFields";
 import type { MqttFormFields } from "./mqttFormModel";
 

@@ -25,6 +25,7 @@ from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.user_events import create_user_event
 from server.db.database import Database, TransactionDb
+from server.items.linked_dates import reconcile_item_linked_dates
 from server.items.service import create_item
 from server.paths import default_db_path
 from server.queries.worksets_queries import insert_workset
@@ -34,8 +35,8 @@ from server.util import utc_now_iso
 PREFIX = "[cal-ui]"
 WS_ID = "ws-cal-ui-demo"
 INTEL_TASK_ID = "cal-ui-intel-event"
-WEB_TASK_ID = "cal-ui-web-intel"
-PROJECT_TASK_ID = "cal-ui-project"
+WEB_TASK_ID = "cal-ui-agent-web"
+PROJECT_TASK_ID = "cal-ui-agent-reconcile"
 BATCH_ID = "cal-ui-intel-batch"
 
 
@@ -50,6 +51,12 @@ async def _clean(db: Database) -> None:
     await db.execute("DELETE FROM analysis_batches WHERE id = ?", (BATCH_ID,))
     await db.execute(
         "DELETE FROM user_events WHERE title LIKE ? OR id LIKE 'cal-ui-%'",
+        (f"{PREFIX}%",),
+    )
+    # Linked milestone events are titled「到期」/「購入」(no [cal-ui] prefix).
+    await db.execute(
+        "DELETE FROM user_events WHERE item_id IN "
+        "(SELECT id FROM items WHERE title LIKE ?)",
         (f"{PREFIX}%",),
     )
     await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
@@ -306,9 +313,9 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} 專案產出事件",
             "start_time": "2026-08-06T09:00:00+08:00",
             "end_time": "2026-08-06T09:45:00+08:00",
-            "origin": "project",
+            "origin": "agent",
             "task_id": PROJECT_TASK_ID,
-            "body": "origin=project + task provenance",
+            "body": "origin=agent + task provenance",
         },
         # Other workset
         {
@@ -426,35 +433,31 @@ async def seed(db: Database) -> dict[str, int]:
         await create_recurring_task(db, **rkwargs)
         counts["recurring"] += 1
 
-    # ── items: purchase / remind / expiry projections ──
+    # ── items: linked「到期」calendars are SoT (expiry cache write-through) ──
     item_specs = [
         {
             "title": f"{PREFIX} 牛奶（即將過期）",
-            "purchased_at": "2026-08-01",
             "expires_at": "2026-08-08",
             "remind_before_days": 3,
             "emoji": "🥛",
-            "notes": "應出現購買日、提醒日、過期日",
+            "notes": "關聯「到期」；列表徽章＝剩 N 天（非日曆標題）",
         },
         {
             "title": f"{PREFIX} 護照（遠期）",
-            "purchased_at": None,
             "expires_at": "2026-12-01",
             "remind_before_days": 30,
             "emoji": "🛂",
-            "notes": "遠期過期 + 提前提醒",
+            "notes": "遠期到期關聯日曆 + remind",
         },
         {
             "title": f"{PREFIX} 已過期優格",
-            "purchased_at": "2026-07-20",
             "expires_at": "2026-08-01",
             "remind_before_days": 2,
             "emoji": "🫙",
-            "notes": "已過期（過去）",
+            "notes": "已過期（過去）— 表單應見關聯「到期」日曆",
         },
         {
             "title": f"{PREFIX} 本週過期藥品",
-            "purchased_at": "2026-07-01",
             "expires_at": "2026-08-06",
             "remind_before_days": 5,
             "emoji": "💊",
@@ -462,12 +465,11 @@ async def seed(db: Database) -> dict[str, int]:
             "notes": "其他 workset 物品",
         },
         {
-            "title": f"{PREFIX} 僅購買日無過期",
-            "purchased_at": "2026-08-05",
+            "title": f"{PREFIX} 無到期日",
             "expires_at": None,
             "remind_before_days": None,
             "emoji": "📦",
-            "notes": "只有 purchased 投影",
+            "notes": "無關聯「到期」；列表無到期徽章",
         },
     ]
     item_ids: list[str] = []
@@ -475,21 +477,45 @@ async def seed(db: Database) -> dict[str, int]:
         row = await create_item(
             db,
             title=spec["title"],
-            purchased_at=spec.get("purchased_at"),
-            expires_at=spec.get("expires_at"),
-            remind_before_days=spec.get("remind_before_days"),
             emoji=spec.get("emoji"),
             notes=spec.get("notes", ""),
             workset_id=spec.get("workset_id"),
         )
-        item_ids.append(str(row["id"]))
+        item_id = str(row["id"])
+        item_ids.append(item_id)
         counts["items"] += 1
+        workset_id = spec.get("workset_id")
+        if spec.get("expires_at"):
+            await create_user_event(
+                db,
+                title="到期",
+                start_time=f"{spec['expires_at']}T00:00:00Z",
+                is_all_day=True,
+                item_id=item_id,
+                workset_id=workset_id,
+                remind_before_days=spec.get("remind_before_days"),
+                origin="manual",
+            )
+            counts["user_events"] += 1
+        linked = await db.fetch_all(
+            "SELECT id FROM user_events WHERE item_id = ?",
+            (item_id,),
+        )
+        assert linked, f"fixture {spec['title']!r} must have linked calendars as SoT"
+
+    # Optional: sync cache for any leftover [cal-ui] rows from older seeds.
+    legacy_items = await db.fetch_all(
+        "SELECT id FROM items WHERE title LIKE ?",
+        (f"{PREFIX}%",),
+    )
+    for row in legacy_items:
+        iid = str(row["id"])
+        if iid not in item_ids:
+            await reconcile_item_linked_dates(db, iid)
 
     if item_ids:
-        # Item calendar occurrence ids are usually like `item:{id}:expires` etc.
-        # Dismiss using a synthetic known pattern from query — soft-dismiss by item source
-        # with the raw item id still works for some UI paths; prefer occurrence after query.
-        await dismiss_timeline_event(db, source="item", event_id=f"item:{item_ids[0]}:expires")
+        # Soft-dismiss legacy item remind occurrence id (projection is remind-only).
+        await dismiss_timeline_event(db, source="item", event_id=f"item:{item_ids[0]}:remind")
         counts["dismissals"] += 1
 
     # ── analysis_events (intel / web) for Timeline source=analysis ──
@@ -536,14 +562,14 @@ async def seed(db: Database) -> dict[str, int]:
             "id": "cal-ui-ae-web",
             "task_id": WEB_TASK_ID,
             "title": f"{PREFIX} 網情報：產品發布",
-            "body": "web_intel timed",
+            "body": "agent timed",
             "start": "2026-08-09T10:00:00+08:00",
             "end": "2026-08-09T11:00:00+08:00",
             "location": "線上",
         },
     ]
     for spec in analysis_specs:
-        # web_intel events need their own batch FK — reuse intel batch only for INTEL_TASK_ID
+        # agent events need their own batch FK — reuse intel batch only for INTEL_TASK_ID
         if spec["task_id"] != INTEL_TASK_ID:
             web_batch = "cal-ui-web-batch"
             now = utc_now_iso()
@@ -613,6 +639,8 @@ async def main() -> None:
     db = Database(str(path))
     await db.connect()
     try:
+        # Fresh wipe leaves an empty file; bootstrap stamp before seeding.
+        await db.ensure_schema()
         if args.clean:
             await _clean(db)
             print("Cleaned prior [cal-ui] fixtures")

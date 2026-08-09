@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
+from server.api.query_aliases import qalias
 from server.api.schemas.responses import (
     AnalysisEventsPageResponse,
     MessageResponse,
@@ -64,8 +65,14 @@ def _parse_bool_flag(value: Optional[str]) -> Optional[bool]:
 
 
 @router.get("/trending", response_model=list[TrendingTopicResponse])
-async def fetch_trending(request: Request, task_id: Optional[str] = None) -> list[dict]:
-    rows = await fetch_trending_topics(get_db(request), task_id=task_id)
+async def fetch_trending(
+    request: Request,
+    task_id: Optional[str] = qalias("taskId", default=None),
+) -> list[dict]:
+    rows = await fetch_trending_topics(
+        get_db(request),
+        task_id=task_id,
+    )
     return [serialize_trending_topic(row) for row in rows]
 
 
@@ -78,18 +85,19 @@ async def fetch_topic_messages(request: Request, topic_id: str) -> list[dict]:
 @router.get("/events", response_model=AnalysisEventsPageResponse)
 async def fetch_events(
     request: Request,
-    task_id: Optional[str] = None,
-    task_ids: Optional[list[str]] = Query(default=None),
+    task_id: Optional[str] = qalias("taskId", default=None),
+    task_ids: Optional[list[str]] = qalias("taskIds", default=None),
     search: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    start_date: Optional[str] = qalias("startDate", default=None),
+    end_date: Optional[str] = qalias("endDate", default=None),
     sort: str = "event_time",
     limit: int = 50,
     offset: int = 0,
-    has_time: Optional[str] = None,
-    has_coords: Optional[str] = None,
-    include_total: bool = True,
-    include_in_timeline: Optional[str] = Query(
+    has_time: Optional[str] = qalias("hasTime", default=None),
+    has_coords: Optional[str] = qalias("hasCoords", default=None),
+    include_total: Optional[bool] = qalias("includeTotal", default=None),
+    include_in_timeline: Optional[str] = qalias(
+        "includeInTimeline",
         default=None,
         description=(
             "When '1'/'true', only return events from tasks with include_in_timeline=1 (time-planning views)."
@@ -104,7 +112,8 @@ async def fetch_events(
             error_code=VALIDATION_ERROR,
         )
     normalized_limit, normalized_offset = clamp_offset_limit(limit, offset)
-    # Repeated ``task_ids`` wins over single ``task_id`` when the param is present.
+    resolved_include_total = True if include_total is None else bool(include_total)
+    # Repeated ``taskIds`` wins over single ``taskId`` when the param is present.
     rows, total_count = await query_analysis_events(
         get_db(request),
         task_id=task_id,
@@ -117,7 +126,7 @@ async def fetch_events(
         offset=normalized_offset,
         has_time=_parse_bool_flag(has_time),
         has_coords=_parse_bool_flag(has_coords),
-        include_total=include_total,
+        include_total=resolved_include_total,
         require_include_in_timeline=_parse_bool_flag(include_in_timeline) is True,
     )
     items = [serialize_analysis_event(row) for row in rows]
@@ -126,10 +135,10 @@ async def fetch_events(
     await attach_important_flag(db, source="analysis", items=items)
     return {
         "items": items,
-        "totalCount": total_count if include_total else 0,
+        "totalCount": total_count if resolved_include_total else 0,
         "hasMore": (
             offset_page_has_more(normalized_offset, len(rows), total_count)
-            if include_total
+            if resolved_include_total
             else len(rows) >= normalized_limit
         ),
         "sort": sort_key,

@@ -33,8 +33,11 @@ class AgentChannel:
     web_search_enabled: bool = True
     #: When False, ``intelligence.search_events`` is omitted / blocked.
     analysis_events_read_enabled: bool = True
-    #: When False, ``items.list_expiring`` is omitted / blocked.
+    #: When False, ``items.list`` / ``items.list_expiring`` are omitted / blocked.
     items_read_enabled: bool = True
+    #: When False, ``items.create`` / ``items.update`` are omitted / blocked.
+    #: Agent ticks always disable writes so inventory is not mutated by reconcile/scout.
+    items_writes_enabled: bool = True
 
 
 ASSISTANT_CHANNEL = AgentChannel(
@@ -56,13 +59,14 @@ AGENT_CHANNEL = AgentChannel(
     system_prompt=AGENT_TASK_SYSTEM_PROMPT_BASE,
     # Default; agent_tick overrides via ``channel_from_agent_spec``.
     stateless=True,
-    user_event_origin="project",
+    user_event_origin="agent",
     force_web_search=False,
     calendar_writes_enabled=False,
     calendar_read_enabled=True,
     web_search_enabled=False,
     analysis_events_read_enabled=True,
     items_read_enabled=True,
+    items_writes_enabled=False,
 )
 
 

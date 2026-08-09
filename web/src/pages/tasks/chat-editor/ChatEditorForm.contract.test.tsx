@@ -4,11 +4,9 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskEditorState";
 import { ChatEditorForm } from "./ChatEditorForm";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock());
@@ -20,8 +18,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(async () => {
-  setAppLocale("zh-Hant");
-  await i18n.changeLanguage("zh-Hant");
+  await ensureZhHantLocale();
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -40,16 +37,12 @@ describe("ChatEditorForm recurring-only contract", () => {
       const renderMode = (mode: typeof DEFAULT_FORM_STATE.analysisMode) => {
         act(() =>
           root.render(
-            createElement(
-              I18nextProvider,
-              { i18n },
-              createElement(ChatEditorForm, {
+            wrapWithI18n(createElement(ChatEditorForm, {
                 formState: { ...DEFAULT_FORM_STATE, analysisMode: mode, rrule: "FREQ=DAILY" },
                 updateField: () => undefined,
                 channels: [],
                 onOpenChannelDialog: () => undefined,
-              }),
-            ),
+              })),
           ),
         );
       };
@@ -71,10 +64,7 @@ describe("ChatEditorForm recurring-only contract", () => {
   it("shows agent optional channels and timed-mode hint (no seed query)", async () => {
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(ChatEditorForm, {
+        wrapWithI18n(createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
               analysisMode: "agent",
@@ -83,14 +73,12 @@ describe("ChatEditorForm recurring-only contract", () => {
               outputAnalysisEvents: true,
               scheduleType: "hourly",
               promptTemplate: "",
-              webSearchQuery: "",
               channelIds: [],
             },
             updateField: () => undefined,
             channels: [],
             onOpenChannelDialog: () => undefined,
-          }),
-        ),
+          })),
       );
     });
     expect(container.querySelector('[data-testid="task-web-search-query"]')).toBeNull();
@@ -106,10 +94,7 @@ describe("ChatEditorForm recurring-only contract", () => {
   it("shows agent message-gate overrides when channels are bound", async () => {
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(ChatEditorForm, {
+        wrapWithI18n(createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
               analysisMode: "agent",
@@ -118,14 +103,12 @@ describe("ChatEditorForm recurring-only contract", () => {
               outputAnalysisEvents: true,
               scheduleType: "hourly",
               promptTemplate: "Gather intel",
-              webSearchQuery: "",
               channelIds: ["ch-1"],
             },
             updateField: () => undefined,
             channels: [],
             onOpenChannelDialog: () => undefined,
-          }),
-        ),
+          })),
       );
     });
     expect(container.querySelector('[data-testid="task-agent-channel-hint"]')?.textContent).toContain(
@@ -138,10 +121,7 @@ describe("ChatEditorForm recurring-only contract", () => {
   it("shows project wave interval after schedule type in agent cursor mode", async () => {
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(ChatEditorForm, {
+        wrapWithI18n(createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
               analysisMode: "agent",
@@ -149,28 +129,24 @@ describe("ChatEditorForm recurring-only contract", () => {
               outputCalendar: true,
               outputAnalysisEvents: false,
               scheduleType: "hourly",
-              projectWaveIntervalSeconds: 20,
+              agentWaveIntervalSeconds: 20,
               channelIds: ["ch-1"],
             },
             updateField: () => undefined,
             channels: [],
             onOpenChannelDialog: () => undefined,
-          }),
-        ),
+          })),
       );
     });
     expect(container.querySelector('[data-testid="schedule-project-wave-interval"]')).not.toBeNull();
-    expect(container.textContent).toContain("專案波間間隔");
+    expect(container.textContent).toContain("Agent 波間間隔");
   });
 
   it("binds project wave interval to form state instead of system settings", async () => {
     const updateField = vi.fn();
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(ChatEditorForm, {
+        wrapWithI18n(createElement(ChatEditorForm, {
             formState: {
               ...DEFAULT_FORM_STATE,
               analysisMode: "agent",
@@ -178,14 +154,13 @@ describe("ChatEditorForm recurring-only contract", () => {
               outputCalendar: true,
               outputAnalysisEvents: false,
               scheduleType: "hourly",
-              projectWaveIntervalSeconds: 15,
+              agentWaveIntervalSeconds: 15,
               channelIds: ["ch-1"],
             },
             updateField,
             channels: [],
             onOpenChannelDialog: () => undefined,
-          }),
-        ),
+          })),
       );
     });
     const input = container.querySelector(

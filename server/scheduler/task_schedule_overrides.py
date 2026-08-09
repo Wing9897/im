@@ -3,7 +3,7 @@
 Optional columns mean "follow global" (AI Settings → Analysis scheduling)
 when NULL, except task-owned fields:
 - ``batch_overlap_count`` (event): NULL → 0
-- ``project_wave_interval_seconds`` (project): NULL → 20
+- ``agent_wave_interval_seconds`` (agent): NULL → 20
 """
 
 from __future__ import annotations
@@ -17,11 +17,11 @@ from server.prompts.analysis import STRATEGY_INSTRUCTIONS
 ALLOWED_STRATEGY_MODES = frozenset(STRATEGY_INSTRUCTIONS.keys())
 
 DEFAULT_BATCH_OVERLAP_COUNT = 0
-DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS = 20
+DEFAULT_AGENT_WAVE_INTERVAL_SECONDS = 20
 
 # Shared clamp / Pydantic ranges (task_helpers Field ge/le + resolve clamps).
-PROJECT_WAVE_INTERVAL_MIN = 0
-PROJECT_WAVE_INTERVAL_MAX = 600
+AGENT_WAVE_INTERVAL_MIN = 0
+AGENT_WAVE_INTERVAL_MAX = 600
 BATCH_OVERLAP_MIN = 0
 BATCH_OVERLAP_MAX = 10
 ANALYSIS_THRESHOLD_MIN = 1
@@ -50,12 +50,12 @@ def _optional_strategy(row: Mapping[str, Any]) -> str | None:
     return mode
 
 
-def resolve_project_wave_interval_seconds(task: Mapping[str, Any]) -> int:
+def resolve_agent_wave_interval_seconds(task: Mapping[str, Any]) -> int:
     """Project-task wave cool-down; NULL / missing → 20 (no global setting)."""
-    override = _optional_int(task, "project_wave_interval_seconds")
+    override = _optional_int(task, "agent_wave_interval_seconds")
     if override is not None:
-        return max(PROJECT_WAVE_INTERVAL_MIN, min(override, PROJECT_WAVE_INTERVAL_MAX))
-    return DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS
+        return max(AGENT_WAVE_INTERVAL_MIN, min(override, AGENT_WAVE_INTERVAL_MAX))
+    return DEFAULT_AGENT_WAVE_INTERVAL_SECONDS
 
 
 async def resolve_batch_message_limit(db: Database, task: Mapping[str, Any]) -> int:

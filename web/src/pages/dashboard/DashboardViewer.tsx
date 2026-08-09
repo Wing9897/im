@@ -13,6 +13,7 @@ import { usePersistedEnum } from "../../hooks/usePersistedState";
 import type { AnalysisTask } from "../../types/tasks";
 import { useTranslation } from "react-i18next";
 import { getTasksPageCopy } from "../../domain/tasks/taskPageCopy";
+import { isProjectTask } from "../../domain/tasks/isProjectTask";
 import {
   TASKS_MODE_FILTER_STORAGE_KEY,
   getSystemTaskCatalog,
@@ -79,7 +80,7 @@ export function DashboardViewer() {
   const openTask = useCallback(
     (task: AnalysisTask) => {
       setFocusedId(task.id);
-      if (task.analysisMode === "agent" && task.outputCalendar) {
+      if (isProjectTask(task)) {
         handleOpenProject(task.id);
         return;
       }

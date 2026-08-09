@@ -34,7 +34,7 @@ export type AnalysisTask = Omit<
   includeInTimeline?: boolean | null;
   createdAt: string;
   updatedAt: string;
-  /** Agent policy (stamp 19+); optional until OpenAPI regenerates. */
+  /** Agent policy columns (wipe-only baseline); optional until OpenAPI regenerates. */
   triggerMode?: "schedule" | "message_cursor" | "message_threshold";
   capCalendarRead?: boolean;
   capCalendarWrites?: boolean;
@@ -72,6 +72,4 @@ export interface TaskTemplatePreset {
   promptTemplate: string;
   defaultAnalysisTimeRange: TaskAnalysisTimeRange;
   badge: string;
-  /** Language-neutral search keywords for agent web_scout presets (optional). */
-  webSearchQuery?: string;
 }

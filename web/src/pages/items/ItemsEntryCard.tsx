@@ -1,19 +1,48 @@
 /**
  * Item entry tile for the /items category list layer (and workset detail reuse).
+ * Résumé / ID-card layout: large avatar, multi-line title, notes + attribute preview.
  */
 
-import type { ReactNode } from "react";
+import { Archive, ArchiveRestore, Copy, Pencil, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { AccentBarCard, Badge } from "../../components/ui";
-import { cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
+import { cardBodyClass, cardMetaClass, cardTitleClass } from "../../components/ui/pageTypography";
 import type { TrackableItem } from "../../api/items";
 import {
-  daysUntil,
-  expiryTone,
   expiryToneAccentClass,
   expiryToneBadgeTone,
 } from "../../domain/items/itemAttributes";
-import { ItemCardEmojiPicker } from "./ItemCardEmojiPicker";
+import {
+  itemCardExpirySubtitle,
+  itemExpiryBadgeLabel,
+  resolveItemCardExpiry,
+} from "../../domain/items/itemCardExpiry";
+import { itemInventorySummary } from "../../domain/items/itemInventoryDisplay";
+import { ItemCardEmojiPicker } from "./emoji/ItemCardEmojiPicker";
+
+const actionIconBtnClass =
+  "im-icon-btn !h-7 !w-7 !rounded-md text-text-secondary transition-colors";
+const dangerIconBtnClass =
+  "im-icon-btn !h-7 !w-7 !rounded-md text-error transition-colors hover:bg-[color-mix(in_srgb,var(--error)_10%,transparent)] hover:text-error";
+
+const entryCardTitleClass = `m-0 line-clamp-2 min-w-0 break-words ${cardTitleClass}`;
+const entryCardNotesClass = `m-0 line-clamp-2 ${cardBodyClass}`;
+
+function previewAttributeLines(
+  attributes: TrackableItem["attributes"] | undefined,
+  max = 2,
+): Array<{ key: string; value: string }> {
+  const rows: Array<{ key: string; value: string }> = [];
+  for (const [key, raw] of Object.entries(attributes ?? {})) {
+    const trimmedKey = key.trim();
+    const value = String(raw ?? "").trim();
+    if (!trimmedKey || !value) continue;
+    rows.push({ key: trimmedKey, value });
+    if (rows.length >= max) break;
+  }
+  return rows;
+}
 
 type Props = {
   item: TrackableItem;
@@ -25,8 +54,12 @@ type Props = {
   onOpen: () => void;
   /** Persist emoji without navigating to the full edit page. */
   onEmojiChange?: (emoji: string) => void | Promise<void>;
-  /** Archive / delete controls — clicks stop propagation. */
-  actions?: ReactNode;
+  /** Toggle archived ↔ active (clicks stop propagation). */
+  onArchive?: () => void;
+  /** Create a copy without linked calendars (clicks stop propagation). */
+  onDuplicate?: () => void;
+  /** When set, renders desk-density edit/delete icon buttons. */
+  onDelete?: () => void;
   testId?: string;
 };
 
@@ -37,12 +70,26 @@ export function ItemsEntryCard({
   emojiBackgroundColor,
   onOpen,
   onEmojiChange,
-  actions,
+  onArchive,
+  onDuplicate,
+  onDelete,
   testId,
 }: Props) {
   const { t } = useTranslation("items");
-  const days = daysUntil(item.expiresAt);
-  const tone = expiryTone(days, item.remindBeforeDays);
+  const expiry = resolveItemCardExpiry(item);
+  const { tone } = expiry;
+  const subtitle = itemCardExpirySubtitle(expiry, t);
+  const expiryBadge = itemExpiryBadgeLabel(expiry, t);
+  const showActions = Boolean(onArchive || onDuplicate || onDelete);
+  const archived = item.status === "archived";
+  const archiveLabel = archived ? t("unarchive") : t("archive");
+  const notesPreview = item.notes?.trim() || null;
+  const inventoryLine = useMemo(() => itemInventorySummary(item), [item]);
+  const attributeLines = useMemo(
+    () => previewAttributeLines(item.attributes),
+    [item.attributes],
+  );
+  const hasDetails = Boolean(notesPreview || inventoryLine || attributeLines.length > 0);
 
   return (
     <AccentBarCard
@@ -50,7 +97,8 @@ export function ItemsEntryCard({
       material="elevated"
       interactive
       enter="rise"
-      density="compact"
+      density="default"
+      className="min-h-[10.5rem]"
       data-testid={testId ?? `items-entry-card-${item.id}`}
       role="button"
       tabIndex={0}
@@ -63,56 +111,140 @@ export function ItemsEntryCard({
       }}
       aria-label={t("openItemAria", { name: item.title })}
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-sm gap-y-xs">
-        <ItemCardEmojiPicker
-          emoji={emoji}
-          name={item.title}
-          backgroundColor={emojiBackgroundColor}
-          onSelect={onEmojiChange}
-          testId={`items-entry-emoji-${item.id}`}
-        />
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-xs">
-            <h3 className={`m-0 min-w-0 truncate ${cardTitleClass}`} title={item.title}>
-              {item.title}
-            </h3>
-            {item.status === "archived" ? (
-              <Badge tone="neutral" className="normal-case tracking-normal shrink-0">
-                {t("statusArchived")}
-              </Badge>
-            ) : null}
+      <div className="flex h-full min-h-0 flex-col gap-sm">
+        <div className="flex items-start gap-md">
+          <ItemCardEmojiPicker
+            emoji={emoji}
+            name={item.title}
+            backgroundColor={emojiBackgroundColor}
+            avatarSize="card"
+            onSelect={onEmojiChange}
+            testId={`items-entry-emoji-${item.id}`}
+          />
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-sm">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start gap-xs">
+                  <h3 className={entryCardTitleClass} title={item.title}>
+                    {item.title}
+                  </h3>
+                  {archived ? (
+                    <Badge tone="neutral" className="normal-case tracking-normal shrink-0">
+                      {t("statusArchived")}
+                    </Badge>
+                  ) : null}
+                </div>
+                <p className={`mt-1 mb-0 ${cardBodyClass}`}>{subtitle}</p>
+              </div>
+
+              {showActions ? (
+                <div
+                  className="flex shrink-0 flex-nowrap items-center gap-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
+                  {onArchive ? (
+                    <button
+                      type="button"
+                      className={actionIconBtnClass}
+                      onClick={onArchive}
+                      aria-label={archiveLabel}
+                      title={archiveLabel}
+                      data-testid={`items-entry-archive-${item.id}`}
+                    >
+                      {archived ? (
+                        <ArchiveRestore size={14} strokeWidth={2} aria-hidden="true" />
+                      ) : (
+                        <Archive size={14} strokeWidth={2} aria-hidden="true" />
+                      )}
+                    </button>
+                  ) : null}
+                  {onDuplicate ? (
+                    <button
+                      type="button"
+                      className={actionIconBtnClass}
+                      onClick={onDuplicate}
+                      aria-label={t("duplicateItemAria", { name: item.title })}
+                      title={t("duplicateItem")}
+                      data-testid={`items-entry-duplicate-${item.id}`}
+                    >
+                      <Copy size={14} strokeWidth={2} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className={actionIconBtnClass}
+                    onClick={onOpen}
+                    aria-label={t("editItemAria", { name: item.title })}
+                    title={t("editItem")}
+                    data-testid={`items-entry-edit-${item.id}`}
+                  >
+                    <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                  </button>
+                  {onDelete ? (
+                    <button
+                      type="button"
+                      className={dangerIconBtnClass}
+                      onClick={onDelete}
+                      aria-label={t("deleteItemAria", { name: item.title })}
+                      title={t("deleteItem")}
+                      data-testid={`items-entry-delete-${item.id}`}
+                    >
+                      <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
           </div>
-          <p className={`mt-0.5 mb-0 ${cardBodyClass}`}>
-            {item.expiresAt ? item.expiresAt : t("noExpiry")}
-          </p>
         </div>
-        <div className="col-span-2 flex flex-wrap items-center gap-xs">
+
+        {hasDetails ? (
+          <div
+            className="flex min-w-0 flex-col gap-0.5 border-t border-surface-border/45 pt-sm"
+            data-testid={`items-entry-card-details-${item.id}`}
+          >
+            {notesPreview ? (
+              <p className={entryCardNotesClass} title={notesPreview}>
+                {notesPreview}
+              </p>
+            ) : null}
+            {inventoryLine ? (
+              <p
+                className={`m-0 truncate ${cardMetaClass}`}
+                title={inventoryLine}
+                data-testid={`items-entry-inventory-${item.id}`}
+              >
+                {inventoryLine}
+              </p>
+            ) : null}
+            {attributeLines.map((row) => (
+              <p
+                key={row.key}
+                className={`m-0 truncate ${cardMetaClass}`}
+                title={`${row.key}: ${row.value}`}
+              >
+                <span className="text-text-secondary">{row.key}</span>
+                <span aria-hidden="true"> · </span>
+                <span className="text-text-primary">{row.value}</span>
+              </p>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-auto flex flex-wrap items-center gap-xs pt-xs">
           {categoryLabel ? (
             <Badge tone="neutral" className="normal-case tracking-normal">
               {categoryLabel}
             </Badge>
           ) : null}
-          {days != null ? (
+          {expiryBadge ? (
             <Badge tone={expiryToneBadgeTone(tone)} className="normal-case tracking-normal">
-              {days < 0
-                ? t("daysOverdue", { count: Math.abs(days) })
-                : t("daysLeft", { count: days })}
+              {expiryBadge}
             </Badge>
-          ) : (
-            <Badge tone="neutral" className="normal-case tracking-normal">
-              {t("noExpiry")}
-            </Badge>
-          )}
+          ) : null}
         </div>
-        {actions ? (
-          <div
-            className="col-span-2 flex flex-wrap gap-xs"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            {actions}
-          </div>
-        ) : null}
       </div>
     </AccentBarCard>
   );

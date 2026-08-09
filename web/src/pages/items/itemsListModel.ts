@@ -1,6 +1,10 @@
-import type { TrackableItem } from "../../api/items";
+import type { TrackableItem, ItemStatus } from "../../api/items";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { isItemExpiringSoon } from "../../domain/items/categoryAggregates";
+import {
+  ALL_CATEGORIES_ID,
+  isItemExpiringSoon,
+  UNCATEGORIZED_CATEGORY_ID,
+} from "../../domain/items/categoryAggregates";
 import { daysUntil } from "../../domain/items/itemAttributes";
 
 export type ItemsFilterKey = "all" | "expiring" | "overdue" | "archived";
@@ -8,12 +12,18 @@ export type ItemsFilterKey = "all" | "expiring" | "overdue" | "archived";
 /** Entry-list sort — applied within each workset group. */
 export type ItemsSortKey = "expiry" | "name" | "updated";
 
+export const ITEMS_SORT_OPTION_KEYS: ReadonlyArray<[ItemsSortKey, string]> = [
+  ["expiry", "sortExpiry"],
+  ["name", "sortName"],
+  ["updated", "sortUpdated"],
+];
+
 export type ItemsWorksetGroup = {
   worksetId: string;
   rows: TrackableItem[];
 };
 
-/** Lowercased haystack for title / notes / emoji / attribute keys+values. */
+/** Lowercased haystack for title / notes / emoji / attributes / inventory fields. */
 export function itemSearchHaystack(item: TrackableItem): string {
   const attrs = item.attributes ?? {};
   const attrParts: string[] = [];
@@ -21,9 +31,39 @@ export function itemSearchHaystack(item: TrackableItem): string {
     if (key) attrParts.push(key);
     if (value) attrParts.push(String(value));
   }
-  return [item.title, item.notes, item.emoji ?? "", ...attrParts]
+  const inventoryParts: string[] = [];
+  if (item.unit) inventoryParts.push(item.unit);
+  if (item.quantity != null) inventoryParts.push(String(item.quantity));
+  if (item.price != null) inventoryParts.push(String(item.price));
+  return [item.title, item.notes, item.emoji ?? "", ...inventoryParts, ...attrParts]
     .join(" ")
     .toLowerCase();
+}
+
+export type ItemsListFetchParams = {
+  categoryId?: string;
+  status?: ItemStatus;
+  search?: string;
+  worksetId?: string;
+};
+
+/** Map entry-list UI state to ``listItems`` query params (entry layer only). */
+export function buildItemsListFetchParams(args: {
+  categoryRouteId: string | null;
+  filter: ItemsFilterKey;
+  search: string;
+  worksetFilterId: string | null;
+}): ItemsListFetchParams {
+  const params: ItemsListFetchParams = {};
+  if (args.categoryRouteId && args.categoryRouteId !== ALL_CATEGORIES_ID) {
+    params.categoryId =
+      args.categoryRouteId === UNCATEGORIZED_CATEGORY_ID ? "" : args.categoryRouteId;
+  }
+  params.status = args.filter === "archived" ? "archived" : "active";
+  const needle = args.search.trim();
+  if (needle) params.search = needle;
+  if (args.worksetFilterId) params.worksetId = args.worksetFilterId;
+  return params;
 }
 
 /** Apply status / expiring / overdue / text search filters to a scoped item list. */
@@ -79,6 +119,22 @@ export function sortItemsList(
   sort: ItemsSortKey = "expiry",
 ): TrackableItem[] {
   return filtered.slice().sort((a, b) => compareItems(a, b, sort));
+}
+
+/**
+ * Build an id → row lookup for catalog lists (categories / worksets).
+ * Skips nullish rows and non-string ids so `new Map(...)` never receives bare values.
+ */
+export function indexById<T extends { id?: unknown }>(
+  rows: readonly T[] | null | undefined,
+): Map<string, T> {
+  const map = new Map<string, T>();
+  if (!Array.isArray(rows)) return map;
+  for (const row of rows) {
+    if (!row || typeof row.id !== "string" || !row.id) continue;
+    map.set(row.id, row);
+  }
+  return map;
 }
 
 /** Group filtered items by workset, preserving catalog order then leftovers. */

@@ -98,7 +98,6 @@ describe("items API", () => {
       title: "Milk",
       worksetId: "__user__",
       categoryId: "seed_food",
-      purchasedAt: null,
       expiresAt: "2026-08-10",
       remindBeforeDays: 3,
       notes: "",

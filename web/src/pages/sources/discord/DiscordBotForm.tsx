@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { PasswordField, SettingsRow } from "../../../components/ui";
-import { SourceAddFormCard } from "../SourceAddFormCard";
+import { SourceAddFormCard } from "../board/SourceAddFormCard";
 
 interface DiscordBotFormProps {
   botToken: string;

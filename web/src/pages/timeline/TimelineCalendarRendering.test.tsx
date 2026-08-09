@@ -10,11 +10,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { buildCalendarDays, buildWeekDays } from "../../domain/timeline/dateUtils";
 import { makeEvent, makeDayColumns } from "../../test/timelineTestHelpers";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 const { TimelineCalendarView } = await import("./calendar/TimelineCalendarView");
 const { TimelineGanttView } = await import("./gantt/TimelineGanttView");
@@ -112,7 +110,7 @@ function makeGanttViewProps(overrides: Partial<GanttProps> = {}): GanttProps {
 function render(element: React.ReactElement) {
   const container = document.createElement("div");
   act(() => {
-    createRoot(container).render(createElement(I18nextProvider, { i18n }, element));
+    createRoot(container).render(wrapWithI18n(element));
   });
   return container;
 }
@@ -281,8 +279,7 @@ describe("Timeline Calendar Rendering — Requirement 9.5: All-day occurrences i
 
 describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in filter options", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   afterEach(() => {

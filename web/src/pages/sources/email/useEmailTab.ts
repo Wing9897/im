@@ -8,8 +8,8 @@ import {
 import i18n from "../../../i18n";
 import type { EmailMailboxInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
-import { useSourceListTab } from "../useSourceListTab";
-import { useSourceEditController } from "../useSourceEditController";
+import { useSourceListTab } from "../board/useSourceListTab";
+import { useSourceEditController } from "../board/useSourceEditController";
 import { validateEmailImapConfig } from "../../../utils/configValidation";
 import {
   applyEmailPreset,

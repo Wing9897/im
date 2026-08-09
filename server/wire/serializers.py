@@ -15,8 +15,8 @@ from server.wire.serializer_domains.operations import (
     serialize_activity_span,
     serialize_app_log,
     serialize_batch_tool_calls,
-    serialize_project_tick_in_flight,
-    serialize_project_tick_log_entry,
+    serialize_agent_tick_in_flight,
+    serialize_agent_tick_log_entry,
     serialize_queue_batch,
 )
 from server.wire.serializer_domains.sources import (
@@ -26,9 +26,11 @@ from server.wire.serializer_domains.sources import (
     serialize_message,
     serialize_source,
 )
-from server.wire.serializer_domains.tasks import (
+from server.wire.serializer_domains.items import (
     serialize_item,
     serialize_item_category,
+)
+from server.wire.serializer_domains.tasks import (
     serialize_task,
     serialize_task_for_agent,
     serialize_task_schedule,
@@ -48,8 +50,8 @@ __all__ = [
     "serialize_item",
     "serialize_item_category",
     "serialize_message",
-    "serialize_project_tick_in_flight",
-    "serialize_project_tick_log_entry",
+    "serialize_agent_tick_in_flight",
+    "serialize_agent_tick_log_entry",
     "serialize_queue_batch",
     "serialize_source",
     "serialize_task",

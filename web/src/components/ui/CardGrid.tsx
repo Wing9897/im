@@ -7,8 +7,9 @@ interface CardGridProps {
   /**
    * `default` — up to 4 columns on desktop.
    * `compact` — max 2 columns (dialogs / nested sections).
+   * `spacious` — roomier item entry tiles (max 3 columns).
    */
-  density?: "default" | "compact";
+  density?: "default" | "compact" | "spacious";
   "data-allow-opacity-transition"?: boolean;
 }
 
@@ -17,6 +18,8 @@ const densityClass: Record<NonNullable<CardGridProps["density"]>, string> = {
     "grid grid-cols-1 gap-card-gap sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 [&>*]:min-w-0 [&>*]:h-full",
   compact:
     "grid grid-cols-1 gap-card-gap sm:grid-cols-2 [&>*]:min-w-0 [&>*]:h-full",
+  spacious:
+    "grid grid-cols-1 gap-card-gap sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0 [&>*]:h-full",
 };
 
 /**

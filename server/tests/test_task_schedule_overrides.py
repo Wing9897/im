@@ -8,18 +8,18 @@ from server.config import set_configs
 from server.scheduler.task_schedule_overrides import (
     resolve_batch_message_limit,
     resolve_batch_overlap_count,
-    resolve_project_wave_interval_seconds,
+    resolve_agent_wave_interval_seconds,
     resolve_strategy_mode,
     resolve_trigger_threshold,
 )
 
 
 def test_resolve_project_wave_is_task_owned() -> None:
-    assert resolve_project_wave_interval_seconds({"project_wave_interval_seconds": 7}) == 7
-    assert resolve_project_wave_interval_seconds({"project_wave_interval_seconds": None}) == 20
-    assert resolve_project_wave_interval_seconds({}) == 20
-    assert resolve_project_wave_interval_seconds({"project_wave_interval_seconds": 900}) == 600
-    assert resolve_project_wave_interval_seconds({"project_wave_interval_seconds": -1}) == 0
+    assert resolve_agent_wave_interval_seconds({"agent_wave_interval_seconds": 7}) == 7
+    assert resolve_agent_wave_interval_seconds({"agent_wave_interval_seconds": None}) == 20
+    assert resolve_agent_wave_interval_seconds({}) == 20
+    assert resolve_agent_wave_interval_seconds({"agent_wave_interval_seconds": 900}) == 600
+    assert resolve_agent_wave_interval_seconds({"agent_wave_interval_seconds": -1}) == 0
 
 
 @pytest.mark.asyncio

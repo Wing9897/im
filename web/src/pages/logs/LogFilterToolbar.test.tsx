@@ -4,9 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 import { LogFilterToolbar } from "./LogFilterToolbar";
 
 const mockContext = {
@@ -62,9 +60,7 @@ function renderToolbar(opts: RenderOpts = {}) {
 
   const container = document.createElement("div");
   act(() => {
-    createRoot(container).render(
-      createElement(I18nextProvider, { i18n }, createElement(LogFilterToolbar)),
-    );
+    createRoot(container).render(wrapWithI18n(createElement(LogFilterToolbar)));
   });
   return container;
 }
@@ -79,8 +75,7 @@ function setNativeValue(input: HTMLInputElement | HTMLSelectElement, value: stri
 describe("LogFilterToolbar", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   it("renders search input with current value", () => {

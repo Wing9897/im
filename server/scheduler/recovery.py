@@ -9,7 +9,7 @@ from server.config import get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE
 from server.queries.batch_housekeeping import purge_all_superseded_version_data
-from server.queries.project_tick_queries import complete_project_batch
+from server.queries.agent_tick_queries import complete_agent_batch
 from server.scheduler.batch_failure import apply_retry_outcome, decide_batch_error_outcome
 from server.sse import SseBroadcaster
 from server.util import utc_now_iso
@@ -34,7 +34,7 @@ async def recover_orphan_batches(
         (AGENT_MODE,),
     )
     for row in tick_orphans:
-        await complete_project_batch(
+        await complete_agent_batch(
             db,
             str(row["id"]),
             error_message="interrupted: process restart",

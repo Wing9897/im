@@ -1,12 +1,9 @@
 import { Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../components/common/EmptyState";
+import { Button, CardGrid, PanelSection } from "../../components/ui";
 import {
-  Button,
-  CardGrid,
-  PanelSection,
-} from "../../components/ui";
-import {
+  createItem,
   deleteItem,
   updateItem,
   type ItemCategory,
@@ -14,6 +11,7 @@ import {
 } from "../../api/items";
 import { useToast } from "../../context/ToastContext";
 import { categoryLabel } from "../../domain/items/categoryAggregates";
+import { buildDuplicateItemBody } from "../../domain/items/itemDuplicate";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { resolveItemEmoji } from "../../domain/items/itemCalendarProjection";
 import type { Workset } from "../../types/worksets";
@@ -35,6 +33,7 @@ type Props = {
   onClearFilters: () => void;
   onAddItem: () => void;
   onOpenItem: (item: TrackableItem) => void;
+  onDuplicateItem?: (item: TrackableItem) => void | Promise<void>;
   onRefresh: () => Promise<void>;
 };
 
@@ -50,6 +49,7 @@ export function ItemsEntryList({
   onClearFilters,
   onAddItem,
   onOpenItem,
+  onDuplicateItem,
   onRefresh,
 }: Props) {
   const { t } = useTranslation("items");
@@ -62,6 +62,31 @@ export function ItemsEntryList({
     } catch (err) {
       showToast(formatItemsError(err, t), "error");
       throw err;
+    }
+  };
+
+  const toggleArchive = async (item: TrackableItem) => {
+    try {
+      await updateItem(item.id, {
+        status: item.status === "archived" ? "active" : "archived",
+      });
+      await onRefresh();
+    } catch (err) {
+      showToast(formatItemsError(err, t), "error");
+    }
+  };
+
+  const duplicateItem = async (item: TrackableItem) => {
+    if (onDuplicateItem) {
+      await onDuplicateItem(item);
+      return;
+    }
+    try {
+      const created = await createItem(buildDuplicateItemBody(item, t("duplicateItemSuffix")));
+      await onRefresh();
+      onOpenItem({ ...item, id: created.id, title: created.title, status: "active" });
+    } catch (err) {
+      showToast(formatItemsError(err, t), "error");
     }
   };
 
@@ -78,32 +103,20 @@ export function ItemsEntryList({
         emojiBackgroundColor={cat?.color}
         onOpen={() => onOpenItem(item)}
         onEmojiChange={(emoji) => persistItemEmoji(item.id, emoji)}
-        actions={
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                void updateItem(item.id, {
-                  status:
-                    item.status === "archived" ? "active" : "archived",
-                }).then(onRefresh)
-              }
-            >
-              {item.status === "archived" ? t("unarchive") : t("archive")}
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => {
-                if (!window.confirm(t("deleteItemConfirm"))) return;
-                void deleteItem(item.id).then(onRefresh);
-              }}
-            >
-              {t("deleteItem")}
-            </Button>
-          </>
-        }
+        onArchive={() => {
+          void toggleArchive(item);
+        }}
+        onDuplicate={() => {
+          void duplicateItem(item);
+        }}
+        onDelete={() => {
+          if (!window.confirm(t("deleteItemConfirm"))) return;
+          void deleteItem(item.id)
+            .then(onRefresh)
+            .catch((err) => {
+              showToast(formatItemsError(err, t), "error");
+            });
+        }}
       />
     );
   };
@@ -141,7 +154,7 @@ export function ItemsEntryList({
       ) : null}
 
       {emptyKind === "none" && !groupByWorkset ? (
-        <CardGrid data-testid="items-entry-grid">
+        <CardGrid density="spacious" data-testid="items-entry-grid">
           {items.map(renderCard)}
         </CardGrid>
       ) : null}
@@ -155,7 +168,7 @@ export function ItemsEntryList({
               showCount
               itemCount={rows.length}
             >
-              <CardGrid data-testid={`items-entry-grid-${worksetId}`}>
+              <CardGrid density="spacious" data-testid={`items-entry-grid-${worksetId}`}>
                 {rows.map(renderCard)}
               </CardGrid>
             </PanelSection>

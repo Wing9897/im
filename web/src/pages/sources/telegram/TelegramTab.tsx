@@ -5,7 +5,7 @@ import { AddTelegramSourceForm } from "./AddTelegramSourceForm";
 import { QrLoginDialog } from "./QrLoginDialog";
 import { VerificationDialog } from "./TelegramSourceDialogs";
 import { TelegramSourceEditDialog } from "./TelegramSourceEditDialog";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { useTelegramSources } from "./useTelegramSources";
 
 export function TelegramTab() {

@@ -1,4 +1,4 @@
-"""Contract keys: tasks CRUD / templates / project-ticks."""
+"""Contract keys: tasks CRUD / templates / agent-ticks."""
 
 from __future__ import annotations
 
@@ -25,7 +25,6 @@ async def test_list_tasks(client):
     wi = next(t for t in body if t["id"] == seed.TASK_WEB_INTEL)
     assert wi["analysisMode"] == "agent"
     assert wi["outputAnalysisEvents"] is True
-    assert wi["webSearchQuery"]
     proj = next(t for t in body if t["id"] == seed.TASK_PROJECT)
     assert proj["analysisMode"] == "agent"
     assert proj["outputCalendar"] is True
@@ -394,7 +393,7 @@ async def test_task_templates(client):
 
 
 @pytest.mark.asyncio
-async def test_project_tick_status_log(app, client):
+async def test_agent_tick_status_log(app, client):
     """Project detail can load cursor backlog + success/error tick outcomes."""
     from server.db.database import TransactionDb
     from server.queries.tasks_queries import insert_analysis_task
@@ -441,10 +440,10 @@ async def test_project_tick_status_log(app, client):
         (err_batch, task_id, now, now, "2026-07-28T11:00:00Z"),
     )
 
-    resp = await client.get(f"/api/v1/tasks/{task_id}/project-ticks")
+    resp = await client.get(f"/api/v1/tasks/{task_id}/agent-ticks")
     assert resp.status_code == 200
     body = resp.json()
-    assert_keys(body, ["taskId", "cursorAt", "pendingSinceCursor", "ticks", "inFlight"], "ProjectTickStatus")
+    assert_keys(body, ["taskId", "cursorAt", "pendingSinceCursor", "ticks", "inFlight"], "AgentTickStatus")
     assert body["taskId"] == task_id
     assert isinstance(body["pendingSinceCursor"], int)
     assert body["inFlight"] is None
@@ -463,7 +462,7 @@ async def test_project_tick_status_log(app, client):
                 "createdAt",
                 "completedAt",
             ],
-            "ProjectTickLogEntry",
+            "AgentTickLogEntry",
         )
     by_id = {item["batchId"]: item for item in body["ticks"]}
     assert by_id[ok_batch]["outcome"] == "success"
@@ -478,7 +477,7 @@ async def test_project_tick_status_log(app, client):
         "VALUES (?, ?, 1, 'processing', 80, 0, NULL, NULL, NULL, ?, ?, NULL)",
         (processing, task_id, now, now),
     )
-    body2 = (await client.get(f"/api/v1/tasks/{task_id}/project-ticks")).json()
+    body2 = (await client.get(f"/api/v1/tasks/{task_id}/agent-ticks")).json()
     assert body2["inFlight"] is not None
     assert body2["inFlight"]["batchId"] == processing
     assert body2["inFlight"]["status"] == "processing"
@@ -486,7 +485,7 @@ async def test_project_tick_status_log(app, client):
     assert_keys(
         body2["inFlight"],
         ["batchId", "status", "messageCount", "createdAt", "updatedAt"],
-        "ProjectTickInFlight",
+        "AgentTickInFlight",
     )
 
     spans = (await client.get("/api/v1/tasks/activity-spans")).json()

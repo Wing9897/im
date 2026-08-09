@@ -2,9 +2,16 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getTasksPageCopy } from "../../../domain/tasks/taskPageCopy";
 import { Button } from "../../../components/ui";
-import { pageTitleClass } from "../../../components/ui/pageTypography";
 import { useAccessContext } from "../../../utils/accessContext";
 import { hasDeviceSession } from "../../../domain/connection/connectionStore";
+import {
+  pageChromeActionsClass,
+  pageChromeBackButtonClass,
+  pageChromeInnerClass,
+  pageChromeOuterClass,
+  pageChromeTitleClass,
+  pageChromeTitleClusterClass,
+} from "../../../components/ui/pageChrome";
 
 interface ChatEditorToolbarProps {
   isEditMode: boolean;
@@ -20,8 +27,8 @@ interface ChatEditorToolbarProps {
 }
 
 /**
- * Full-width editor chrome — title left, primary actions right
- * (matches other page headers; not a centered 720px column).
+ * Full-width editor chrome — shared sticky pageChrome tokens
+ * (not OpsControlBar). Title left, primary actions right.
  */
 export function ChatEditorToolbar({
   isEditMode,
@@ -40,28 +47,28 @@ export function ChatEditorToolbar({
 
   return (
     <header
-      className="sticky top-0 z-[100] shrink-0 border-b border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)] shadow-[var(--shadow-sm)] backdrop-blur-[8px]"
+      className={pageChromeOuterClass}
       data-testid="task-editor-toolbar"
     >
-      <div className="mx-auto flex w-full min-w-0 max-w-5xl items-center gap-sm px-page-x py-sm">
-        <div className="flex min-w-0 flex-1 items-center gap-sm">
+      <div className={pageChromeInnerClass}>
+        <div className={pageChromeTitleClusterClass}>
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0"
+            className={pageChromeBackButtonClass}
             onClick={onBack}
             aria-label={t("tasks.editor.back")}
             title={t("tasks.editor.back")}
           >
             <ArrowLeft size={16} strokeWidth={2.25} aria-hidden="true" />
           </Button>
-          <h1 className={`min-w-0 truncate ${pageTitleClass}`}>
+          <h1 className={pageChromeTitleClass}>
             {isEditMode ? copy.editLabel : copy.createLabel}
           </h1>
         </div>
 
         {!canEditTasks ? null : (
-          <div className="ml-auto flex shrink-0 items-center justify-end gap-sm">
+          <div className={pageChromeActionsClass}>
             {!isEditMode && showPresets ? (
               <Button
                 variant="secondary"

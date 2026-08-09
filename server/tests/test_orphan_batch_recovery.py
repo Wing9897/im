@@ -168,8 +168,8 @@ async def test_processing_reset_still_runs_when_analysis_paused(db):
 
 
 @pytest.mark.asyncio
-async def test_project_processing_orphan_completes_without_auto_pause(db):
-    """Project mid-drain must not enter pending retry / global auto-pause."""
+async def test_agent_processing_orphan_completes_without_auto_pause(db):
+    """Agent mid-drain must not enter pending retry / global auto-pause."""
     from server.db.database import TransactionDb
     from server.queries.tasks_queries import insert_analysis_task
 
@@ -187,7 +187,7 @@ async def test_project_processing_orphan_completes_without_auto_pause(db):
         await insert_analysis_task(
             TransactionDb(conn),
             task_id=task_id,
-            name="PM orphan",
+            name="Agent orphan",
             description=None,
             prompt_template="goals",
             analysis_mode="agent",

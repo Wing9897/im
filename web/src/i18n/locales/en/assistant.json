@@ -1,7 +1,7 @@
 {
   "toolbar": {
     "aria": "Assistant toolbar",
-    "description": "Local intelligence & schedule assistant",
+    "description": "Local intelligence, schedule & items assistant",
     "stopSpeaking": "Stop speaking",
     "clearChat": "Clear chat"
   },
@@ -14,8 +14,8 @@
     "ttsHintSuffix": " Replies are read aloud."
   },
   "empty": {
-    "title": "Ask about local intel or schedule",
-    "description": "e.g. Recent mentions of a keyword? What's next this week?",
+    "title": "Ask about local intel, schedule, or items",
+    "description": "e.g. Recent mentions of a keyword? What's next this week? Anything expiring soon?",
     "hint": "Hold or tap Space to talk when the draft is unfocused (release/toggle sends STT only); use the mic while focused. Empty recognition does not send the draft.",
     "voiceSettingsLink": "Voice settings"
   },

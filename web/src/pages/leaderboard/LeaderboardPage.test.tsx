@@ -1,6 +1,7 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 const { mockFetchTrendingTopics, mockListChannelsWithSources, runtimeState } = vi.hoisted(() => ({
   mockFetchTrendingTopics: vi.fn(),
@@ -58,13 +59,10 @@ import {
   resetTaskCatalogState,
   taskCatalogState,
 } from "../../test/context-mocks";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { LeaderboardPage } from "./LeaderboardPage";
 
 function pageTree() {
-  return createElement(I18nextProvider, { i18n }, createElement(LeaderboardPage));
+  return wrapWithI18n(createElement(LeaderboardPage));
 }
 
 describe("LeaderboardPage", () => {
@@ -72,8 +70,7 @@ describe("LeaderboardPage", () => {
   let root: Root | null = null;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();

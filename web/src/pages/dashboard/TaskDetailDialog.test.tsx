@@ -1,12 +1,11 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import i18n from "../../i18n";
 import { TaskDetailDialog } from "./TaskDetailDialog";
 import type { AnalysisTask } from "../../types/tasks";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("../../hooks/useFocusTrap", () => ({
   useFocusTrap: () => ({ current: null }),
@@ -84,7 +83,7 @@ function renderDialog(node: React.ReactElement) {
       createElement(
         MemoryRouter,
         null,
-        createElement(I18nextProvider, { i18n }, node),
+        wrapWithI18n(node),
       ),
     );
   });
@@ -176,10 +175,7 @@ describe("MessageDetailDialog", () => {
     act(() => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(MessageDetailDialog, {
+        wrapWithI18n(createElement(MessageDetailDialog, {
             message: {
               id: "m-1",
               platform: "telegram",
@@ -196,8 +192,7 @@ describe("MessageDetailDialog", () => {
               rawData: null,
             },
             onClose: vi.fn(),
-          }),
-        ),
+          })),
       );
     });
 

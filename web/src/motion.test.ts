@@ -12,6 +12,8 @@ describe("tailwind motion reduced-motion guard", () => {
     expect(css).toMatch(/\.im-enter-rise-soft[\s\S]*animation:\s*none\s*!important/);
     expect(css).toMatch(/\.im-enter-glow[\s\S]*animation:\s*none\s*!important/);
     expect(css).toMatch(/\.im-toast-in[\s\S]*animation:\s*none\s*!important/);
+    expect(css).toMatch(/\.im-pulse-dot[\s\S]*animation:\s*none\s*!important/);
+    expect(css).toMatch(/\.im-task-card-analyzing[\s\S]*animation:\s*none\s*!important/);
     expect(css).not.toContain("::view-transition-old(root)");
     expect(css).toContain("@keyframes im-fade-in");
     expect(css).toContain("@keyframes im-fade-out");
@@ -20,6 +22,8 @@ describe("tailwind motion reduced-motion guard", () => {
     expect(css).toContain(".im-animate-out-scale");
     expect(css).toContain("@keyframes im-enter-rise-soft");
     expect(css).toContain("@keyframes im-enter-glow");
+    expect(css).toContain("@keyframes im-task-analyzing");
+    expect(css).toContain(".im-task-card-analyzing");
     expect(css).toContain('[data-theme="sakura"] .im-enter-rise');
     expect(css).toContain('[data-theme="cyberpunk"] .im-enter-rise');
   });

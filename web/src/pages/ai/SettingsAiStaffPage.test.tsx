@@ -104,10 +104,17 @@ describe("SettingsAiStaffPage", () => {
     expect(liaisonCard?.textContent).toContain("客戶經理");
     expect(liaisonCard?.textContent).toContain("Agent 級");
     expect(liaisonCard?.textContent).toContain("對外席");
+    expect(liaisonCard?.textContent).toContain("物品");
     expect(liaisonCard?.textContent).not.toContain("與助手同組");
     const apiLink = liaisonCard?.querySelector('a[href="/settings/api"]');
     expect(apiLink).not.toBeNull();
     expect(apiLink?.textContent).toContain("API");
+
+    const assistantCard = container.querySelector('[data-testid="ai-staff-card-assistant"]');
+    expect(assistantCard?.textContent).toContain("可追蹤物品");
+    const agentCard = container.querySelector('[data-testid="ai-staff-card-agent"]');
+    expect(agentCard?.textContent).toContain("不可建立／更新物品");
+    expect(agentCard?.textContent).toContain("游標抽乾不可同時開情報事件輸出");
   });
 
   it("exposes assistant rename/LLM icons and avatar upload without permanent form fields", () => {

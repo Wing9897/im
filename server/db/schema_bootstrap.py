@@ -1,12 +1,12 @@
 """Wipe-only schema bootstrap and validation (no migration registry).
 
-Stamp **16** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
+Stamp **23** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative domain DDL
-aggregated by ``schema.py``. Exact unstamped stamp-16
-fingerprints are stamped (``PRAGMA user_version=16``). Every other non-empty
+aggregated by ``schema.py``. Exact unstamped stamp-23
+fingerprints are stamped (``PRAGMA user_version=23``). Every other non-empty
 schema is rejected without mutation →
-``python scripts/reset_local_databases.py --apply``.
+``python scripts/reset_local_databases.py --apply`` (does **not** auto-seed).
 
 Product SemVer / git tags are decoupled from ``SCHEMA_SEMVER`` / ``user_version``.
 """
@@ -54,7 +54,7 @@ def _reset_required(message: str) -> SchemaEvolutionError:
 
 
 async def ensure_supported_schema(conn: aiosqlite.Connection) -> None:
-    """Create stamp 16 or validate it; never migrate or silently wipe data."""
+    """Create the current stamp or validate it; never migrate or silently wipe data."""
     fingerprint = await inspect_schema(conn)
     version = fingerprint.version
 

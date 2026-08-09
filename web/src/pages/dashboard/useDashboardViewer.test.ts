@@ -14,11 +14,16 @@ vi.mock("../../context/ToastContext", async () =>
 vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
 
+const { analysisStatusState } = vi.hoisted(() => ({
+  analysisStatusState: {
+    activeAnalyses: new Map<string, { taskId: string; batchId: string; taskName: string }>(),
+    queueStatus: null as null,
+    analysisPaused: false,
+  },
+}));
+
 vi.mock("../../context/AnalysisStatusContext", () => ({
-  useAnalysisStatus: () => ({
-    activeAnalyses: new Map(),
-    queueStatus: null,
-  }),
+  useAnalysisStatus: () => analysisStatusState,
 }));
 
 vi.mock("../../context/MonitorModeContext", () => ({
@@ -76,6 +81,9 @@ describe("useDashboardViewer", () => {
     mockNavigate.mockReset();
     mockShowToast.mockReset();
     mockToggle.mockReset();
+    analysisStatusState.activeAnalyses = new Map();
+    analysisStatusState.queueStatus = null;
+    analysisStatusState.analysisPaused = false;
     resetTaskCatalogState([
       makeAnalysisTask({ id: "task-alpha", name: "Alpha Task", description: "first" }),
       makeAnalysisTask({ id: "task-beta", name: "Beta Task", description: "second" }),
@@ -132,6 +140,39 @@ describe("useDashboardViewer", () => {
     expect(latest!.statsMap.get("task-alpha")?.queuedMessageCount).toBe(3);
   });
 
+  it("marks cards isRunning from activeAnalyses and clears when batch leaves", async () => {
+    analysisStatusState.activeAnalyses = new Map([
+      [
+        "batch-a",
+        { taskId: "task-alpha", batchId: "batch-a", taskName: "Alpha Task" },
+      ],
+      [
+        "batch-b",
+        { taskId: "task-beta", batchId: "batch-b", taskName: "Beta Task" },
+      ],
+    ]);
+    await renderHook();
+
+    expect(latest!.statsMap.get("task-alpha")?.isRunning).toBe(true);
+    expect(latest!.statsMap.get("task-beta")?.isRunning).toBe(true);
+
+    act(() => {
+      analysisStatusState.activeAnalyses = new Map([
+        [
+          "batch-c",
+          { taskId: "task-beta", batchId: "batch-c", taskName: "Beta Task" },
+        ],
+      ]);
+      root.render(createElement(Harness));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(latest!.statsMap.get("task-alpha")?.isRunning).toBe(false);
+    expect(latest!.statsMap.get("task-beta")?.isRunning).toBe(true);
+  });
+
   it("navigates to edit route from handleEdit", async () => {
     await renderHook();
 
@@ -149,7 +190,7 @@ describe("useDashboardViewer", () => {
       latest!.handleOpenProject("proj-1");
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/project");
+    expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/agent");
   });
 
   it("hides child recurring tasks from the grid", async () => {

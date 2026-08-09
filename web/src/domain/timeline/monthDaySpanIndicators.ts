@@ -22,7 +22,7 @@ function eventBounds(event: TimelineItem): { start: Date; end: Date } {
 /** Single-day markers that still feed month-cell「+N 结束」. */
 function isEndingMarkerOnDay(event: TimelineItem, dayStart: Date): boolean {
   if (!eventStartsOnDay(event, dayStart)) return false;
-  if (event.source === "item" && event.itemDateKind === "expires") return true;
+  // Item projection is remind-only (not a spanning calendar kind).
   if (event.source === "recurring" && event.isLastOccurrence) return true;
   return false;
 }
@@ -30,7 +30,7 @@ function isEndingMarkerOnDay(event: TimelineItem, dayStart: Date): boolean {
 /**
  * Classify a multi-day event relative to `day` for month-cell compact counters.
  * Start day and single-day events are excluded (chips already cover the start),
- * except item expiry and the final recurring occurrence which count as ending.
+ * except the final recurring occurrence which counts as ending.
  */
 export function classifyMonthDaySpan(
   event: TimelineItem,
@@ -73,8 +73,8 @@ export function countMonthDaySpanIndicators(
  * Month-cell titled preview rows: events that start on `day` and are NOT already
  * represented solely by「+N 进行中」／「+N 结束」chips.
  *
- * Cross-day middle/end and item expiry stay chip-only. Recurring finals still
- * appear as normal preview rows while also feeding the ending chip.
+ * Cross-day middle/end stay chip-only. Recurring finals still appear as normal
+ * preview rows while also feeding the ending chip.
  */
 export function eventShowsInMonthDayPreview(
   event: TimelineItem,

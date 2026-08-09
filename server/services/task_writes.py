@@ -103,7 +103,7 @@ def resolve_include_in_timeline(
     return 1
 
 
-def should_reset_project_message_cursor(
+def should_reset_agent_message_cursor(
     *,
     existing_mode: str,
     effective_mode: str,
@@ -113,7 +113,7 @@ def should_reset_project_message_cursor(
     existing_trigger: str | None = None,
     effective_trigger: str | None = None,
 ) -> bool:
-    """Whether a task update should wipe ``project_message_cursors``.
+    """Whether a task update should wipe ``agent_message_cursors``.
 
     Soft policy: keep progress for rename / schedule / description-only edits.
     Reset when leaving message_cursor drain, changing goals (prompt), or rebinding sources.
@@ -167,7 +167,7 @@ def resolve_parent_task_id(
     return parent_id
 
 
-async def assert_parent_project_row(db: Any, parent_task_id: str) -> str:
+async def assert_parent_agent_row(db: Any, parent_task_id: str) -> str:
     """Load parent row and ensure it is ``agent`` mode; return its id."""
     row = await db.fetch_one(
         "SELECT id, analysis_mode FROM analysis_tasks WHERE id = ?",

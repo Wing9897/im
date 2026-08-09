@@ -3,9 +3,8 @@
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../i18n";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("../../context/CollectorStatusContext", () => ({
   useCollectorStatus: () => ({
@@ -243,7 +242,6 @@ describe("SettingsSaveBar", () => {
   let root: Root | null = null;
 
   beforeEach(async () => {
-    await i18n.changeLanguage("zh-Hant");
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -260,16 +258,12 @@ describe("SettingsSaveBar", () => {
     act(() => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SettingsSaveBar, {
+        wrapWithI18n(createElement(SettingsSaveBar, {
             saving: false,
             saveSuccess: false,
             saveLabel: "儲存設定",
             onSave: () => {},
-          }),
-        ),
+          })),
       );
     });
 

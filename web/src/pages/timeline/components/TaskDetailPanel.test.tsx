@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import type { TaskActivitySpan } from "../../../types/analysis";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const { TaskDetailPanel } = await import("./TaskDetailPanel");
 
@@ -30,11 +28,7 @@ function render(span: TaskActivitySpan, onClose = vi.fn()) {
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(TaskDetailPanel, { span, onClose }),
-      ),
+      wrapWithI18n(createElement(TaskDetailPanel, { span, onClose })),
     );
   });
   return { container, onClose };
@@ -46,8 +40,7 @@ function render(span: TaskActivitySpan, onClose = vi.fn()) {
 
 describe("TaskDetailPanel", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
   it("renders task name as heading", () => {
     const { container } = render(makeSpan({ taskName: "我的分析任務" }));

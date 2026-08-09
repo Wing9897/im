@@ -1,13 +1,15 @@
 /**
- * Linked-calendar create/edit form initials for Items (開始 / 到期 / 購入 chips + add/edit).
- * Quick kinds are title (+ all-day) presets only — not distinct event kinds.
+ * Linked-calendar create/edit form initials for Items (quick chip + add/edit).
+ * Only「到期」is a special quick preset — title + all-day.
  */
 
 import type { UserEvent } from "../../api/userEvents";
 import { defaultCreateTimedRange, todayDateInput } from "../timeline/dateUtils";
 import { toUserEventFormWorksetId } from "../timeline/userEvents";
+import { isReservedAttributeKey } from "./itemAttributes";
 
-export const LINKED_CALENDAR_QUICK_KINDS = ["start", "expires", "purchased"] as const;
+/** Only expiry is a first-class quick-create preset. */
+export const LINKED_CALENDAR_QUICK_KINDS = ["expires"] as const;
 
 export type LinkedCalendarQuickKind = (typeof LINKED_CALENDAR_QUICK_KINDS)[number];
 
@@ -32,32 +34,50 @@ export function linkedCalendarQuickLabelKey(
   return `quickLinkedCalendar.${kind}`;
 }
 
-/** True when the preset should open as an all-day event (到期). */
+/** True when title is the linked-calendar expiry preset (到期 / Expires). */
+export function isLinkedExpiryTitle(title: string): boolean {
+  return isReservedAttributeKey(title);
+}
+
+/** First active (non-dismissed) linked expiry event on an item, if any. */
+export function findActiveLinkedExpiryEvent(
+  events: readonly UserEvent[],
+): UserEvent | null {
+  return (
+    events.find((event) => !event.dismissed && isLinkedExpiryTitle(event.title)) ?? null
+  );
+}
+
+/** True when the preset should open as an all-day event (expiry only). */
 export function linkedCalendarQuickIsAllDay(kind: LinkedCalendarQuickKind): boolean {
   return kind === "expires";
 }
 
 /**
  * Build ``UserEventDialog`` create ``initial`` for a linked-calendar open,
- * optionally applying a quick-create title / all-day preset.
+ * optionally applying the expiry quick-create title / all-day preset.
  */
 export function buildLinkedCalendarCreateInitial(args: {
   itemId: string;
   worksetId: string;
   title?: string;
   kind?: LinkedCalendarQuickKind | null;
+  /** Category preset — prefilled on create when set. */
+  defaultRemindBeforeDays?: number | null;
   now?: Date;
 }): LinkedCalendarFormInitial {
   const worksetId = toUserEventFormWorksetId(args.worksetId);
   const title = (args.title ?? "").trim();
+  const remindBeforeDays =
+    args.defaultRemindBeforeDays != null ? String(args.defaultRemindBeforeDays) : "";
   const base = {
     title,
     worksetId,
     itemId: args.itemId,
-    remindBeforeDays: "",
+    remindBeforeDays,
   };
 
-  if (args.kind != null && linkedCalendarQuickIsAllDay(args.kind)) {
+  if (args.kind === "expires") {
     // Omit endTime so valuesFromInitial uses the same inclusive day (not wire-exclusive).
     return {
       ...base,
@@ -88,7 +108,8 @@ export function buildLinkedCalendarEditInitial(args: {
     endTime: event.endTime ?? "",
     location: event.location ?? "",
     body: event.body ?? "",
-    worksetId: toUserEventFormWorksetId(event.worksetId || fallbackWorksetId),
+    // Item form owns workset — prefer current form value over stored event workset.
+    worksetId: toUserEventFormWorksetId(fallbackWorksetId || event.worksetId),
     isAllDay: Boolean(event.isAllDay),
     remindBeforeDays:
       event.remindBeforeDays != null ? String(event.remindBeforeDays) : "",

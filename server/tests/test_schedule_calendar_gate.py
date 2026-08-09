@@ -91,8 +91,8 @@ async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) ->
     response = await client.get(
         "/api/v1/calendar/items",
         params={
-            "range_start": "2026-07-01T00:00:00Z",
-            "range_end": "2026-07-08T00:00:00Z",
+            "rangeStart": "2026-07-01T00:00:00Z",
+            "rangeEnd": "2026-07-08T00:00:00Z",
         },
     )
     assert response.status_code == 200

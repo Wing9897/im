@@ -90,8 +90,8 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
             { hasChannels: true },
           );
     applyPolicy(updateField, next);
-    if (preset === AGENT_PRESET_PROJECT_RECONCILE && formState.projectWaveIntervalSeconds == null) {
-      updateField("projectWaveIntervalSeconds", 20);
+    if (preset === AGENT_PRESET_PROJECT_RECONCILE && formState.agentWaveIntervalSeconds == null) {
+      updateField("agentWaveIntervalSeconds", 20);
     }
   };
 
@@ -209,13 +209,18 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
             <input
               type="checkbox"
               checked={formState.outputAnalysisEvents}
+              disabled={formState.triggerMode === "message_cursor"}
               onChange={(e) => patchPolicy({ outputAnalysisEvents: e.target.checked })}
               data-testid="task-agent-output-analysis"
             />
             {t("tasks.agent.output.analysisEvents")}
           </label>
         </div>
-        <p className={`m-0 ${formHelpClass}`}>{t("tasks.agent.outputHint")}</p>
+        <p className={`m-0 ${formHelpClass}`}>
+          {formState.triggerMode === "message_cursor"
+            ? t("tasks.agent.outputHintCursor")
+            : t("tasks.agent.outputHint")}
+        </p>
       </fieldset>
     </div>
   );

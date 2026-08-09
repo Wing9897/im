@@ -11,6 +11,12 @@ function mapValidationMessage(message: string, t: ItemsT): string | null {
   if (lower.includes("title is required") || lower.includes("name is required")) {
     return t("errors.required");
   }
+  if (lower.includes("title must be") || lower.includes("name must be")) {
+    return t("errors.titleTooLong");
+  }
+  if (lower.includes("emoji")) {
+    return t("errors.emoji");
+  }
   if (lower.includes("attribute")) {
     return t("errors.attributes");
   }

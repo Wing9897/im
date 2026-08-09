@@ -4,8 +4,8 @@ import type { AnalysisMode, TaskAnalysisTimeRange } from "./common";
 export type ScheduleType = "seconds_10" | "hourly" | "daily" | "weekly" | "custom_seconds";
 
 /**
- * Base form fields shared between dialog and editor task forms.
- * Provides the common set of fields for task creation/editing.
+ * Base form fields shared by ChatEditor / task create-edit forms.
+ * Common set of fields for task creation and editing.
  */
 export interface BaseTaskFormFields {
   taskName: string;
@@ -40,8 +40,6 @@ export interface TaskFormState
   extends Omit<BaseTaskFormFields, "taskName" | "taskDescription"> {
   name: string;
   description: string;
-  /** Search query / keywords for agent web_scout presets (empty for other modes). */
-  webSearchQuery: string;
   scheduleType: ScheduleType;
   scheduleValue: string | null;
   /**
@@ -50,8 +48,8 @@ export interface TaskFormState
    * unmappable server RRULEs so save does not silently overwrite them.
    */
   scheduleRrule: string | null;
-  /** Project wave cool-down seconds; null → 20 at runtime. */
-  projectWaveIntervalSeconds: number | null;
+  /** Agent wave cool-down seconds; null → 20 at runtime. */
+  agentWaveIntervalSeconds: number | null;
   /** Event batch overlap; null → 0 (no overlap). Event tasks only. */
   batchOverlapCount: number | null;
   /** Trigger threshold; null = follow global AI Settings. */

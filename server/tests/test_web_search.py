@@ -46,8 +46,52 @@ def test_build_tool_schemas_gates_read_tools() -> None:
     assert "calendar.upcoming" not in names
     assert "intelligence.search_events" not in names
     assert "items.list_expiring" not in names
+    assert "items.list" not in names
     assert "messages.search" in names
     assert "items.create" in names
+
+
+def test_build_tool_schemas_gates_items_writes() -> None:
+    names = {
+        s["name"]
+        for s in build_tool_schemas(
+            web_search_enabled=False,
+            items_writes_enabled=False,
+        )
+    }
+    assert "items.create" not in names
+    assert "items.update" not in names
+    assert "items.list" in names
+    assert "items.list_expiring" in names
+
+
+def test_agent_channel_disables_items_writes() -> None:
+    from server.agent.channels import AGENT_CHANNEL, ASSISTANT_CHANNEL, channel_from_agent_spec
+    from server.domain.agent_task_spec import agent_preset_spec
+
+    assert ASSISTANT_CHANNEL.items_writes_enabled is True
+    assert AGENT_CHANNEL.items_writes_enabled is False
+    policy = channel_from_agent_spec(agent_preset_spec("project_reconcile", has_channels=True), stateless=False)
+    assert policy.items_writes_enabled is False
+    assert policy.items_read_enabled is True
+
+
+async def test_execute_tool_blocks_items_writes_when_disabled(app) -> None:
+    db = app.state.db
+    created = await execute_tool(
+        db,
+        "items.create",
+        {"title": "Should not create"},
+        context={"items_writes_enabled": False},
+    )
+    assert created == {"error": "items_writes_disabled"}
+    updated = await execute_tool(
+        db,
+        "items.update",
+        {"id": "missing", "title": "Nope"},
+        context={"items_writes_enabled": False},
+    )
+    assert updated == {"error": "items_writes_disabled"}
 
 
 async def test_duckduckgo_parses_instant_answer() -> None:

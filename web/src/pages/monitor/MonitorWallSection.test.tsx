@@ -1,9 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../i18n";
 import { mockShowToast } from "../../test/context-mocks";
+import { i18n, wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
@@ -68,10 +67,7 @@ describe("MonitorWallSection", () => {
   it("toasts metadata errors and shows wall empty chrome", async () => {
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(MonitorWallSection, {
+        wrapWithI18n(createElement(MonitorWallSection, {
             viewMode: "wall",
             onViewModeChange: vi.fn(),
             channels: [],
@@ -79,8 +75,7 @@ describe("MonitorWallSection", () => {
             statsLoading: false,
             metadataError: String(i18n.t("monitor:metadata.loadError")),
             onRetryMetadata: vi.fn(),
-          }),
-        ),
+          })),
       );
       await Promise.resolve();
     });

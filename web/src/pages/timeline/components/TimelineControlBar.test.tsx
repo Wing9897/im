@@ -8,13 +8,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { TimelineControlBar } from "./TimelineControlBar";
 import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { SourceFilterSelection } from "../../../domain/tasks/sourceFilterSelection";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../../../test/i18nHarness";
 
 interface RenderOpts {
   selectedSources?: SourceFilterSelection;
@@ -57,7 +55,7 @@ function renderControlBar(opts: RenderOpts = {}) {
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      createElement(I18nextProvider, { i18n }, createElement(TimelineControlBar, props)),
+      wrapWithI18n(createElement(TimelineControlBar, props)),
     );
   });
   return container;
@@ -73,8 +71,7 @@ function findButtonByText(container: HTMLElement, text: string): HTMLButtonEleme
 
 describe("TimelineControlBar", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   afterEach(() => {

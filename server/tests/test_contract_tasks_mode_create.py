@@ -74,7 +74,6 @@ async def test_create_agent_requires_prompt_and_outputs(client):
     assert body["analysisMode"] == "agent"
     assert body["outputAnalysisEvents"] is True
     assert body["outputCalendar"] is False
-    assert body["webSearchQuery"] == ""
 
 
 async def test_create_agent_web_scout_defaults_hourly(client):
@@ -83,7 +82,6 @@ async def test_create_agent_web_scout_defaults_hourly(client):
         json={
             "name": "agent create",
             "promptTemplate": "Extract official pricing notes only",
-            "webSearchQuery": "OpenAI pricing",
             "analysisMode": "agent",
             "channelIds": [],
             **_AGENT_WEB_SCOUT,
@@ -93,7 +91,6 @@ async def test_create_agent_web_scout_defaults_hourly(client):
     body = create.json()
     assert_keys(body, TASK_KEYS, "AnalysisTask agent create")
     assert body["analysisMode"] == "agent"
-    assert body["webSearchQuery"] == ""
     assert body["scheduleRrule"] == "FREQ=HOURLY"
     assert body["channelIds"] == []
     assert body["triggerMode"] == "schedule"
@@ -196,7 +193,6 @@ async def test_create_agent_project_reconcile_happy_path(client):
     body = create.json()
     assert body["analysisMode"] == "agent"
     assert body["scheduleRrule"] == "FREQ=HOURLY"
-    assert body["webSearchQuery"] == ""
     assert body["triggerMode"] == "message_cursor"
     assert body["outputCalendar"] is True
     assert body["outputAnalysisEvents"] is False
@@ -209,5 +205,4 @@ async def test_task_templates_include_agent_presets(client):
     agent_presets = [p for p in body if p.get("analysisMode") == "agent"]
     assert len(agent_presets) >= 2
     for preset in agent_presets:
-        assert preset.get("webSearchQuery", "") == ""
         assert preset.get("promptTemplate")

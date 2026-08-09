@@ -16,15 +16,19 @@ from server.items.normalize import (
     normalize_emoji,
     normalize_field_schema,
     normalize_notes,
+    normalize_price,
+    normalize_quantity,
     normalize_remind_before_days,
     normalize_slug,
     normalize_sort_order,
     normalize_status,
+    normalize_unit,
     normalize_workset_id_wire,
-    parse_date_or_none,
+    parse_field_schema_json,
     preserve_attributes_json,
     require_category_name,
     require_title,
+    seed_attributes_from_field_schema,
 )
 from server.queries.items_queries import (
     delete_category,
@@ -34,6 +38,7 @@ from server.queries.items_queries import (
     fetch_item_row,
     insert_category,
     insert_item,
+    sync_linked_calendars_workset,
     update_category,
     update_item,
 )
@@ -111,6 +116,8 @@ async def patch_category(
     field_schema: Any = _UNSET,
     default_remind_before_days: Any = _UNSET,
 ) -> dict[str, Any]:
+    # field_schema is a create-time preset template only. Updating it must never
+    # rewrite existing items' attributes_json (copy-on-create, not live inheritance).
     existing = await fetch_category_row(db, category_id)
     if existing is None:
         raise ItemValidationError("category not found")
@@ -176,28 +183,38 @@ async def create_item(
     title: str,
     workset_id: Any = None,
     category_id: Any = None,
-    purchased_at: Any = None,
-    expires_at: Any = None,
-    remind_before_days: Any = None,
     notes: Any = "",
     status: Any = "active",
     emoji: Any = None,
+    quantity: Any = None,
+    unit: Any = None,
+    price: Any = None,
     attributes: Any = None,
 ) -> dict[str, Any]:
+    """Create an item. Date cache columns stay NULL until linked calendars write through.
+
+    When ``category_id`` is set, missing keys from that category's ``field_schema``
+    are copy-on-create seeded into ``attributes`` as empty strings. Later category
+    template edits do not rewrite existing items.
+    """
     clean_title = require_title(title)
     clean_workset = await _require_workset(db, normalize_workset_id_wire(workset_id))
     clean_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
-    clean_purchased = parse_date_or_none(purchased_at)
-    clean_expires = parse_date_or_none(expires_at)
-    clean_remind = normalize_remind_before_days(remind_before_days)
-    if clean_remind is None and clean_category is not None:
-        cat = await fetch_category_row(db, clean_category)
-        if cat is not None and cat.get("default_remind_before_days") is not None:
-            clean_remind = int(cat["default_remind_before_days"])
     clean_notes = normalize_notes(notes)
     clean_status = normalize_status(status)
     clean_emoji = normalize_emoji(emoji)
+    clean_quantity = normalize_quantity(quantity)
+    clean_unit = normalize_unit(unit)
+    clean_price = normalize_price(price)
     clean_attrs = normalize_attributes(attributes)
+    if clean_category is not None:
+        category_row = await fetch_category_row(db, clean_category)
+        schema = parse_field_schema_json(
+            category_row.get("field_schema") if category_row is not None else None
+        )
+        clean_attrs = normalize_attributes(
+            seed_attributes_from_field_schema(clean_attrs, schema)
+        )
     item_id = new_id()
     now = utc_now_iso()
     async with db.transaction() as conn:
@@ -207,12 +224,14 @@ async def create_item(
             title=clean_title,
             category_id=clean_category,
             workset_id=clean_workset,
-            purchased_at=clean_purchased,
-            expires_at=clean_expires,
-            remind_before_days=clean_remind,
+            expires_at=None,
+            remind_before_days=None,
             notes=clean_notes,
             status=clean_status,
             emoji=clean_emoji,
+            quantity=clean_quantity,
+            unit=clean_unit,
+            price=clean_price,
             attributes_json=attributes_to_json(clean_attrs),
             now=now,
         )
@@ -228,14 +247,15 @@ async def patch_item(
     title: Any = _UNSET,
     workset_id: Any = _UNSET,
     category_id: Any = _UNSET,
-    purchased_at: Any = _UNSET,
-    expires_at: Any = _UNSET,
-    remind_before_days: Any = _UNSET,
     notes: Any = _UNSET,
     status: Any = _UNSET,
     emoji: Any = _UNSET,
+    quantity: Any = _UNSET,
+    unit: Any = _UNSET,
+    price: Any = _UNSET,
     attributes: Any = _UNSET,
 ) -> dict[str, Any]:
+    """Patch non-date fields. Date cache is write-through from linked calendar mutations only."""
     existing = await fetch_item_row(db, item_id)
     if existing is None:
         raise ItemValidationError("item not found")
@@ -245,28 +265,22 @@ async def patch_item(
         next_workset = str(existing["workset_id"])
     else:
         next_workset = await _require_workset(db, normalize_workset_id_wire(workset_id))
+    prev_workset = str(existing["workset_id"])
     prev_category = existing.get("category_id")
     prev_category = str(prev_category) if prev_category else None
     if category_id is _UNSET:
         next_category = prev_category
-        category_changed = False
     else:
         # Changing category must NOT strip attributes (soft template).
         next_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
-        category_changed = next_category != prev_category
-    next_purchased = parse_date_or_none(purchased_at) if purchased_at is not _UNSET else existing.get("purchased_at")
-    next_expires = parse_date_or_none(expires_at) if expires_at is not _UNSET else existing.get("expires_at")
-    if remind_before_days is _UNSET:
-        next_remind = existing.get("remind_before_days")
-        if next_remind is not None:
+    # Preserve denormalized date cache (SoT remains linked calendars).
+    next_expires = existing.get("expires_at")
+    next_remind = existing.get("remind_before_days")
+    if next_remind is not None:
+        try:
             next_remind = int(next_remind)
-    else:
-        next_remind = normalize_remind_before_days(remind_before_days)
-    # Align with FE resolveRemindOnCategoryChange: only soft-fill when remind is empty.
-    if category_changed and next_remind is None and next_category is not None:
-        cat = await fetch_category_row(db, next_category)
-        if cat is not None and cat.get("default_remind_before_days") is not None:
-            next_remind = int(cat["default_remind_before_days"])
+        except (TypeError, ValueError):
+            next_remind = None
     next_notes = normalize_notes(notes) if notes is not _UNSET else str(existing.get("notes") or "")
     next_status = normalize_status(status) if status is not _UNSET else str(existing.get("status") or "active")
     if emoji is _UNSET:
@@ -275,6 +289,21 @@ async def patch_item(
             next_emoji = str(next_emoji) if next_emoji else None
     else:
         next_emoji = normalize_emoji(emoji)
+    if quantity is _UNSET:
+        raw_quantity = existing.get("quantity")
+        next_quantity = float(raw_quantity) if raw_quantity is not None else None
+    else:
+        next_quantity = normalize_quantity(quantity)
+    if unit is _UNSET:
+        raw_unit = existing.get("unit")
+        next_unit = str(raw_unit).strip() if isinstance(raw_unit, str) and raw_unit.strip() else None
+    else:
+        next_unit = normalize_unit(unit)
+    if price is _UNSET:
+        raw_price = existing.get("price")
+        next_price = float(raw_price) if raw_price is not None else None
+    else:
+        next_price = normalize_price(price)
     if attributes is _UNSET:
         # Do not re-parse/re-serialize: dirty nested rows must not amplify on unrelated PATCH.
         next_attrs_json = preserve_attributes_json(existing.get("attributes_json"))
@@ -289,17 +318,24 @@ async def patch_item(
             title=next_title,
             category_id=next_category,
             workset_id=next_workset,
-            purchased_at=(
-                next_purchased if isinstance(next_purchased, str) or next_purchased is None else str(next_purchased)
-            ),
             expires_at=next_expires if isinstance(next_expires, str) or next_expires is None else str(next_expires),
             remind_before_days=next_remind,
             notes=next_notes,
             status=next_status,
             emoji=str(next_emoji) if next_emoji else None,
+            quantity=next_quantity,
+            unit=next_unit,
+            price=next_price,
             attributes_json=next_attrs_json,
             now=now,
         )
+        # Linked calendars follow the item workset (one-off user_events + recurring tasks).
+        if next_workset != prev_workset:
+            await sync_linked_calendars_workset(
+                TransactionDb(conn),
+                item_id=item_id,
+                workset_id=next_workset,
+            )
     row = await fetch_item_row(db, item_id)
     assert row is not None
     return serialize_item(row)

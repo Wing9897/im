@@ -2,17 +2,13 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../test/i18nIdentityMock";
+
 import {
   ITEMS_SEARCH_DEBOUNCE_MS,
   ItemsChromeSearch,
 } from "./ItemsChromeSearch";
 import { itemsPageChromeSearchClass } from "./itemsPageChromeClasses";
-
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-}));
 
 function setInputValue(input: HTMLInputElement, value: string) {
   const setter = Object.getOwnPropertyDescriptor(

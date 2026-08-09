@@ -16,7 +16,7 @@ import { asTimedAnalysisEvent } from "../types/analysis";
 
 /** Fetches trending topics, optionally filtered by task ID. */
 export function fetchTrendingTopics(taskId?: string): Promise<TrendingTopic[]> {
-  const params = taskId ? { task_id: taskId } : undefined;
+  const params = taskId ? { taskId } : undefined;
   return apiClient.get<TrendingTopic[]>("/api/v1/results/trending", params);
 }
 
@@ -33,10 +33,10 @@ export function fetchEvents(params: {
   offset?: number;
   hasTime?: boolean;
   hasCoords?: boolean;
-  /** When false, server skips COUNT(*) (`include_total=false`). Default true. */
+  /** When false, server skips COUNT(*) (`includeTotal=false`). Default true. */
   includeTotal?: boolean;
   /**
-   * Time-planning views only. When true, sends `include_in_timeline=1` so the
+   * Time-planning views only. When true, sends `includeInTimeline=1` so the
    * server excludes tasks that opted out of calendar / gantt / timeline.
    */
   requireIncludeInTimeline?: boolean;
@@ -51,21 +51,21 @@ export function fetchEvents(params: {
   }
   const queryParams: Record<string, string | string[]> = {};
   if (params.taskIds !== undefined) {
-    queryParams.task_ids = params.taskIds;
+    queryParams.taskIds = params.taskIds;
   } else if (params.taskId) {
-    queryParams.task_id = params.taskId;
+    queryParams.taskId = params.taskId;
   }
   if (params.search) queryParams.search = params.search;
-  if (params.startDate) queryParams.start_date = params.startDate;
-  if (params.endDate) queryParams.end_date = params.endDate;
+  if (params.startDate) queryParams.startDate = params.startDate;
+  if (params.endDate) queryParams.endDate = params.endDate;
   if (params.sort) queryParams.sort = params.sort;
   if (params.limit !== undefined) queryParams.limit = String(params.limit);
   if (params.offset !== undefined) queryParams.offset = String(params.offset);
-  if (params.hasTime !== undefined) queryParams.has_time = params.hasTime ? "1" : "0";
-  if (params.hasCoords !== undefined) queryParams.has_coords = params.hasCoords ? "1" : "0";
-  if (params.includeTotal === false) queryParams.include_total = "false";
+  if (params.hasTime !== undefined) queryParams.hasTime = params.hasTime ? "1" : "0";
+  if (params.hasCoords !== undefined) queryParams.hasCoords = params.hasCoords ? "1" : "0";
+  if (params.includeTotal === false) queryParams.includeTotal = "false";
   if (params.requireIncludeInTimeline === true) {
-    queryParams.include_in_timeline = "1";
+    queryParams.includeInTimeline = "1";
   }
   return apiClient.get<AnalysisEventPage>("/api/v1/results/events", queryParams);
 }
@@ -130,16 +130,16 @@ export function fetchCalendarOccurrences(
   opts?: { taskId?: string; taskIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
   const query: Record<string, string | string[]> = {
-    range_start: rangeStart,
-    range_end: rangeEnd,
+    rangeStart,
+    rangeEnd,
   };
   if (opts?.taskIds !== undefined) {
-    query.task_ids = opts.taskIds;
+    query.taskIds = opts.taskIds;
   } else if (opts?.taskId !== undefined) {
-    query.task_id = opts.taskId;
+    query.taskId = opts.taskId;
   }
   if (opts?.includeItems === false) {
-    query.include_items = "false";
+    query.includeItems = "false";
   }
   return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/items", query);
 }

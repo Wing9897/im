@@ -11,7 +11,7 @@ from server.queries.tasks_queries import fetch_task_row, insert_analysis_task
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
 from server.services.task_writes import (
     TaskWriteError,
-    assert_parent_project_row,
+    assert_parent_agent_row,
     normalize_event_clock,
     normalize_rrule,
     resolve_parent_task_id,
@@ -48,7 +48,7 @@ async def create_recurring_task(
     parent: str | None = None
     parent_row: dict[str, Any] | None = None
     if parent_task_id:
-        parent = await assert_parent_project_row(db, str(parent_task_id).strip())
+        parent = await assert_parent_agent_row(db, str(parent_task_id).strip())
         parent = resolve_parent_task_id(
             task_id=None,
             effective_mode=CHILD_RECURRING_MODE,

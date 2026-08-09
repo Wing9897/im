@@ -51,6 +51,7 @@ const RETIRED_SOURCE_PATHS = [
   "styles/themePersistedKeys.ts",
   "voiceReminder/voiceReminderPersistedKeys.ts",
   "components/SchemaUpgradeGate.tsx",
+  "components/analysis/analysisStatusModel.ts",
 ] as const;
 
 describe("retired source paths", () => {

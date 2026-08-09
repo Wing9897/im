@@ -130,7 +130,6 @@ describe("ChatEditorPage integration tests", () => {
         description: "追蹤群組中的熱門話題",
         analysisMode: "leaderboard",
         promptTemplate: "分析以下訊息中的熱門話題",
-        webSearchQuery: "",
         defaultAnalysisTimeRange: "1d",
         badge: "🔥",
       },
@@ -274,7 +273,7 @@ describe("ChatEditorPage integration tests", () => {
       cleanup();
     });
 
-    it("renders toolbar aligned to the form column (max-w-5xl)", async () => {
+    it("renders toolbar aligned to the form column (max-w-[1280px])", async () => {
       let result: ReturnType<typeof renderPage>;
       await act(async () => {
         result = renderPage();
@@ -285,7 +284,7 @@ describe("ChatEditorPage integration tests", () => {
       const toolbar = container.querySelector('[data-testid="task-editor-toolbar"]');
       expect(toolbar).not.toBeNull();
       const row = toolbar!.firstElementChild as HTMLElement;
-      expect(row.className).toContain("max-w-5xl");
+      expect(row.className).toContain("max-w-[1280px]");
       expect(row.className).not.toContain("max-w-[720px]");
       expect(container.textContent).toContain("新增任務");
       expect(container.querySelector('[data-testid="preset-button"]')).not.toBeNull();

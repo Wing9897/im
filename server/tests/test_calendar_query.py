@@ -260,10 +260,13 @@ async def test_get_event_returns_user_event_detail(app) -> None:
         "timezone": None,
         "icsUid": None,
         "icsSource": None,
+        "remindBeforeDays": None,
+        "itemId": None,
         "body": "詳情內容",
         "createdAt": created["createdAt"],
         "updatedAt": created["updatedAt"],
         "dismissed": False,
+        "important": False,
     }
 
 

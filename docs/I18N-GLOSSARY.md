@@ -101,8 +101,8 @@
 ## 任務模板 Presets（顯示文案 SoT）
 
 - **顯示文案 SoT**：[`shared/task_presets.json`](../shared/task_presets.json) — 各 preset 的 `i18n.{zh-Hant,en,zh-Hans}.{name,description,promptTemplate}`。UI 經 `localizeTaskPreset()` 查 locale key。
-- **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）；`web_intel` 可選頂層 `webSearchQuery`（語系無關關鍵詞）。
-- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge`（及可選 `webSearchQuery`）僅在 JSON 來源定義。
+- **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）。`webSearchQuery` 已於 stamp 20 從 schema／OpenAPI／FE 移除（Agent 從 prompt 自行選關鍵字）。
+- **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。
 - **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `common.json` → `tasks.presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。
 
@@ -114,8 +114,10 @@
 | 情報頁／側欄／widget／事件結果 | **情報事件** | Intel events | 情报事件 |
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
 | mode `leaderboard` | 排行榜任務 | Leaderboard task | 排行榜任务 |
-| mode `web_intel` | **網路情報任務** | Web intel task | 网络情报任务 |
-| mode `project` | 專案任務（閉環） | Project task | 项目任务（闭环） |
+| mode `agent` | **Agent 任務** | Agent task | Agent 任务 |
+| Agent 預設 `project_reconcile` | **專案調和**（預設名；UI 任務類型仍稱 Agent） | Project reconcile | 专案调和 |
+| Agent 預設 `web_scout` | **網蒐** | Web scout | 网蒐 |
+| Agent 詳情頁（路由仍可含 `project*` 檔名） | **Agent 詳情**／Agent tick（勿對用戶說「開啟專案」） | Agent detail | Agent 详情 |
 | mode `recurring` | 週期任務 | Recurring task | 周期任务 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
@@ -131,12 +133,12 @@
 
 | 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
 |----|----------|-------------------|------|
-| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、網路情報蒐集員、專案管理助手）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
-| 任務類型徽章／選擇器 | 員工名（週期任務／情報任務／網路情報任務…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`intel_event`／`web_intel`／`leaderboard`／`project`）；員工 id 與 enum token 對齊；**DB／API enum 仍是 analysisMode** |
+| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、Agent）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
+| 任務類型徽章／選擇器 | 員工名（週期任務／情報任務／Agent 任務…） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`recurring`／`intel_event`／`leaderboard`／`agent`）；員工 id 與 enum token 對齊；**DB／API enum 仍是 analysisMode** |
 | AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的任務類型才顯示頭像；`recurring` 無 AI avatar（staff id 為 null） |
 | 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |
 
-**對照規則：** UI 對用戶說「員工／Staff」；任務表單內部類型 id 可叫 employee；後端與 OpenAPI 繼續用 `analysisMode`／`web_intel` 等既有 id。
+**對照規則：** UI 對用戶說「員工／Staff」；任務表單內部類型 id 可叫 employee；後端與 OpenAPI 繼續用 `analysisMode`／`agent` 等既有 id。
 
 ### 平台範圍名詞（`common.platformScope.*`）
 

@@ -10,7 +10,7 @@ import type {
   TaskMutationResult,
   TaskTemplatePreset,
   TaskActivitySpan,
-  ProjectTickStatus,
+  AgentTickStatus,
 } from "../types";
 
 export type { TaskDraftPayload };
@@ -27,10 +27,10 @@ export function listTasks(opts?: {
   itemId?: string;
 }): Promise<AnalysisTask[]> {
   const query: Record<string, string> = {};
-  if (opts?.topLevelOnly) query.top_level_only = "true";
-  if (opts?.analysisMode) query.analysis_mode = opts.analysisMode;
-  if (opts?.worksetId !== undefined) query.workset_id = opts.worksetId;
-  if (opts?.itemId !== undefined) query.item_id = opts.itemId;
+  if (opts?.topLevelOnly) query.topLevelOnly = "true";
+  if (opts?.analysisMode) query.analysisMode = opts.analysisMode;
+  if (opts?.worksetId !== undefined) query.worksetId = opts.worksetId;
+  if (opts?.itemId !== undefined) query.itemId = opts.itemId;
   return Object.keys(query).length > 0
     ? apiClient.get<AnalysisTask[]>("/api/v1/tasks", query)
     : apiClient.get<AnalysisTask[]>("/api/v1/tasks");
@@ -76,14 +76,14 @@ export function fetchTaskActivitySpans(): Promise<TaskActivitySpan[]> {
   return apiClient.get<TaskActivitySpan[]>("/api/v1/tasks/activity-spans");
 }
 
-/** Cursor backlog + recent project-tick success/skip/error log. */
-export function fetchProjectTickStatus(
+/** Cursor backlog + recent agent-tick success/skip/error log. */
+export function fetchAgentTickStatus(
   taskId: string,
   opts?: { limit?: number },
-): Promise<ProjectTickStatus> {
+): Promise<AgentTickStatus> {
   const query: Record<string, string> = {};
   if (opts?.limit != null) query.limit = String(opts.limit);
   return Object.keys(query).length > 0
-    ? apiClient.get<ProjectTickStatus>(`/api/v1/tasks/${taskId}/project-ticks`, query)
-    : apiClient.get<ProjectTickStatus>(`/api/v1/tasks/${taskId}/project-ticks`);
+    ? apiClient.get<AgentTickStatus>(`/api/v1/tasks/${taskId}/agent-ticks`, query)
+    : apiClient.get<AgentTickStatus>(`/api/v1/tasks/${taskId}/agent-ticks`);
 }

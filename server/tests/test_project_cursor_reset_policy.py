@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR, TRIGGER_SCHEDULE
 from server.domain.analysis_modes import AGENT_MODE, LEADERBOARD_MODE
-from server.services.task_writes import should_reset_project_message_cursor
+from server.services.task_writes import should_reset_agent_message_cursor
 
 
 def test_schedule_only_edit_keeps_cursor() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=AGENT_MODE,
             effective_mode=AGENT_MODE,
             existing_prompt="Keep demos",
@@ -24,7 +24,7 @@ def test_schedule_only_edit_keeps_cursor() -> None:
 
 def test_prompt_change_resets_cursor() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=AGENT_MODE,
             effective_mode=AGENT_MODE,
             existing_prompt="Keep demos",
@@ -39,7 +39,7 @@ def test_prompt_change_resets_cursor() -> None:
 
 def test_channel_rebinding_resets_cursor() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=AGENT_MODE,
             effective_mode=AGENT_MODE,
             existing_prompt="Keep demos",
@@ -54,7 +54,7 @@ def test_channel_rebinding_resets_cursor() -> None:
 
 def test_leaving_message_cursor_resets_cursor() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=AGENT_MODE,
             effective_mode=LEADERBOARD_MODE,
             existing_prompt="Keep demos",
@@ -69,7 +69,7 @@ def test_leaving_message_cursor_resets_cursor() -> None:
 
 def test_entering_message_cursor_resets_cursor() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=LEADERBOARD_MODE,
             effective_mode=AGENT_MODE,
             existing_prompt="",
@@ -84,7 +84,7 @@ def test_entering_message_cursor_resets_cursor() -> None:
 
 def test_agent_schedule_trigger_does_not_use_cursor_policy() -> None:
     assert (
-        should_reset_project_message_cursor(
+        should_reset_agent_message_cursor(
             existing_mode=AGENT_MODE,
             effective_mode=AGENT_MODE,
             existing_prompt="a",

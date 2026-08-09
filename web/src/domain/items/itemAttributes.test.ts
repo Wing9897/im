@@ -4,10 +4,54 @@ import {
   expiryTone,
   expiryToneAccentClass,
   expiryToneBadgeTone,
+  findReservedAttributeKeys,
+  isReservedAttributeKey,
   itemsEmptyKind,
   partitionItemAttributes,
   resolveRemindOnCategoryChange,
+  seedAttributesFromFieldSchema,
 } from "./itemAttributes";
+
+describe("seedAttributesFromFieldSchema", () => {
+  it("adds missing category preset keys as empty strings", () => {
+    expect(
+      seedAttributesFromFieldSchema(
+        { id_number: "A123" },
+        [
+          { key: "id_number", label: "證件號碼" },
+          { key: "issuer", label: "簽發機關" },
+        ],
+      ),
+    ).toEqual({ id_number: "A123", issuer: "" });
+  });
+
+  it("does not overwrite existing keys", () => {
+    expect(
+      seedAttributesFromFieldSchema(
+        { issuer: "Gov" },
+        [{ key: "issuer", label: "簽發機關" }],
+      ),
+    ).toEqual({ issuer: "Gov" });
+  });
+
+  it("skips reserved expiry keys from category presets", () => {
+    expect(
+      seedAttributesFromFieldSchema({}, [{ key: "到期", label: "到期" }, { key: "id", label: "ID" }]),
+    ).toEqual({ id: "" });
+  });
+});
+
+describe("reserved attribute keys", () => {
+  it("detects linked-calendar expiry titles", () => {
+    expect(isReservedAttributeKey("到期")).toBe(true);
+    expect(isReservedAttributeKey(" Expires ")).toBe(true);
+    expect(isReservedAttributeKey("expiry_note")).toBe(false);
+  });
+
+  it("finds reserved keys in a list", () => {
+    expect(findReservedAttributeKeys(["id", "到期", "brand"])).toEqual(["到期"]);
+  });
+});
 
 describe("partitionItemAttributes", () => {
   it("keeps non-schema filled keys in other", () => {

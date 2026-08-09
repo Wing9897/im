@@ -4,9 +4,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
 import { AssistantLiveToolSteps, AssistantToolSummary } from "./AssistantToolSteps";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 describe("AssistantToolSteps task advisor attribution", () => {
   let root: Root;
@@ -26,10 +25,7 @@ describe("AssistantToolSteps task advisor attribution", () => {
   it("attributes consult_advisor live steps to taskEditor when enabled", () => {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(AssistantLiveToolSteps, {
+        wrapWithI18n(createElement(AssistantLiveToolSteps, {
             attributeTaskAdvisor: true,
             steps: [
               {
@@ -39,8 +35,7 @@ describe("AssistantToolSteps task advisor attribution", () => {
                 status: "running",
               },
             ],
-          }),
-        ),
+          })),
       );
     });
 
@@ -52,10 +47,7 @@ describe("AssistantToolSteps task advisor attribution", () => {
   it("does not attribute consult_advisor when disabled", () => {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(AssistantToolSummary, {
+        wrapWithI18n(createElement(AssistantToolSummary, {
             toolCalls: [
               {
                 name: "tasks.consult_advisor",
@@ -63,8 +55,7 @@ describe("AssistantToolSteps task advisor attribution", () => {
                 resultSummary: "ok",
               },
             ],
-          }),
-        ),
+          })),
       );
     });
 

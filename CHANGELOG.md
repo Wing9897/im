@@ -9,8 +9,8 @@ First documented stable release line for Intelligence Monitor (Desktop + CLI + D
 ### Highlights
 
 - Collector connections under `/api/v1/sources*` (`sources` / `source_channels` / `messages.source_id`)
-- Wipe-only SQLite baseline **stamp 15** (`SCHEMA_SEMVER` `0.1.0-beta.16`); non-current stamps hard-reject → explicit reset
-- Task modes: `leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`
+- Wipe-only SQLite baseline **stamp 23** (`SCHEMA_SEMVER` `0.1.0-beta.24`); non-current stamps hard-reject → explicit reset
+- Task modes: `leaderboard` / `intel_event` / `recurring` / `agent`
 - Household auth: admin password → device session; revocable access keys; retired pairing / API-key mint bridges stay gone
 - OpenAPI-sourced HTTP contract (`web/openapi/openapi.json` + generated `schema.d.ts`)
 
