@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../context/ToastContext";
 import { toErrorMessage } from "../../utils/errors";
@@ -16,6 +17,7 @@ type TopBarStatusActionsProps = {
 
 export function TopBarStatusActions({ variant = "default" }: TopBarStatusActionsProps) {
   const { t } = useTranslation("common");
+  const navigate = useNavigate();
   const { collectorStatus, aiEngineStatus } = useCollectorStatus();
   const { activeAnalyses } = useAnalysisStatus();
   const {
@@ -36,6 +38,7 @@ export function TopBarStatusActions({ variant = "default" }: TopBarStatusActions
 
   const busy = updatingAnalysisPaused || abortingAnalysis;
   const controlsDisabled = collectorStatus === "error";
+  const aiUnavailable = aiEngineStatus === "unavailable";
 
   const handleOpenViewer = () => {
     try {
@@ -67,6 +70,10 @@ export function TopBarStatusActions({ variant = "default" }: TopBarStatusActions
           busy={busy}
           disabled={controlsDisabled}
           abortingAnalysis={abortingAnalysis}
+          aiUnavailable={aiUnavailable}
+          onOpenAiSettings={() => {
+            navigate("/ai/provider");
+          }}
           onTogglePause={() => {
             void handleAnalysisPausedChange(!analysisPaused);
           }}

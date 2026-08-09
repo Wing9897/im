@@ -98,6 +98,7 @@ export function ChatNameModeFields({
           <MenuSelect
             id="chat-workset"
             variant="field"
+            menuPortal
             value={worksetId ?? ""}
             options={worksetOptions}
             onChange={(next) => onWorksetIdChange(next || null)}

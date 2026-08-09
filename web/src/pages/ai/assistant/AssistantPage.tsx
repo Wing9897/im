@@ -1,4 +1,5 @@
 import { useEffect, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { Link } from "react-router-dom";
 import { Eraser, Volume2, VolumeX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
@@ -161,7 +162,16 @@ export function AssistantPage() {
             className="mx-md mt-sm text-caption"
             data-testid="assistant-ai-unavailable"
           >
-            {t("common:topBar.aiUnavailableTitle")}
+            <span>
+              {t("common:topBar.aiUnavailableTitle")}{" "}
+              <Link
+                to="/ai/provider"
+                className="underline underline-offset-2"
+                data-testid="assistant-ai-settings-link"
+              >
+                {t("common:topBar.openAiSettings")}
+              </Link>
+            </span>
           </AlertBanner>
         ) : null}
 

@@ -115,29 +115,31 @@ export function TimelineSlider({
           <span className={mapSliderEventCountClass}>{t("map.eventCount", { count: eventCount })}</span>
         )}
         <div className="flex-1" />
-        {extraControls}
-        <input
-          type="date"
-          aria-label={t("map.calendarPickerAria")}
-          className={mapSliderCalInputClass}
-          value={interaction.viewCenterDate}
-          onChange={interaction.onCalendarChange}
-        />
-        <button
-          type="button"
-          className={liveClass}
-          onClick={onLiveModeToggle}
-          disabled={liveDisabled}
-          aria-label={
-            liveDisabled
-              ? t("map.liveUnavailable")
-              : liveMode
-                ? t("map.liveDisable")
-                : t("map.liveEnable")
-          }
-        >
-          Live
-        </button>
+        <div className="inline-flex shrink-0 flex-wrap items-center gap-2.5">
+          {extraControls}
+          <input
+            type="date"
+            aria-label={t("map.calendarPickerAria")}
+            className={mapSliderCalInputClass}
+            value={interaction.viewCenterDate}
+            onChange={interaction.onCalendarChange}
+          />
+          <button
+            type="button"
+            className={liveClass}
+            onClick={onLiveModeToggle}
+            disabled={liveDisabled}
+            aria-label={
+              liveDisabled
+                ? t("map.liveUnavailable")
+                : liveMode
+                  ? t("map.liveDisable")
+                  : t("map.liveEnable")
+            }
+          >
+            Live
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -72,4 +72,23 @@ describe("handleCollectorStatusChanged", () => {
 
     expect(errorToastEmitter.emit).not.toHaveBeenCalled();
   });
+
+  it("does not wipe AI engine status when collector stops", () => {
+    const deps = makeDeps();
+
+    handleCollectorStatusChanged({ status: "stopped" }, deps);
+
+    expect(deps.state.setAiEngineStatus).not.toHaveBeenCalled();
+    expect(deps.state.setActiveAnalyses).toHaveBeenCalledWith(new Map());
+  });
+
+  it("refreshes AI status when collector returns to running", () => {
+    const deps = makeDeps();
+    deps.state.collectorStatusRef.current = "stopped";
+
+    handleCollectorStatusChanged({ status: "running" }, deps);
+
+    expect(deps.refreshAiStatus).toHaveBeenCalledWith(true);
+    expect(deps.refreshQueueStatus).toHaveBeenCalledWith(false);
+  });
 });

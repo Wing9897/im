@@ -43,7 +43,7 @@ export function MapControls({
   );
 
   return (
-    <>
+    <div className="inline-flex shrink-0 items-center gap-2.5" data-testid="map-controls">
       <button
         type="button"
         className={overlayButtonClass(true)}
@@ -59,14 +59,13 @@ export function MapControls({
         {danmakuModeLabel(t, sharedDanmakuMode)}
       </button>
       <MenuSelect
-        variant="field"
+        variant="toolbar"
         menuPortal
         aria-label={t("map.liveWindowAria")}
         value={String(liveWindowHours)}
         options={liveWindowOptions}
         onChange={(next) => onLiveWindowHoursChange(Number(next))}
         data-testid="map-live-window-select"
-        className="w-auto shrink-0"
         triggerClassName={mapSmallSelectClass}
       />
       <button
@@ -82,6 +81,6 @@ export function MapControls({
           <Maximize2 size={14} strokeWidth={2.2} aria-hidden="true" />
         )}
       </button>
-    </>
+    </div>
   );
 }

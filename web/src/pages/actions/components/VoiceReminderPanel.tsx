@@ -150,6 +150,7 @@ export function VoiceReminderPanel() {
             </p>
             <MenuSelect
               variant="field"
+              menuPortal
               aria-label={t("voice.preambleAria")}
               className="max-w-[280px]"
               value={settings.preambleChimeId}

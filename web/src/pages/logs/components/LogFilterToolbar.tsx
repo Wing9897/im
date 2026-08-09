@@ -67,9 +67,8 @@ export function LogFilterToolbar() {
         data-im-search
       />
       <MenuSelect
-        variant="field"
+        variant="toolbar"
         menuPortal
-        className="w-auto shrink-0"
         triggerClassName={`${compactFieldClass} shrink-0`}
         value={normalizedLevelFilter}
         options={levelOptions}
@@ -78,9 +77,8 @@ export function LogFilterToolbar() {
         data-testid="log-level-filter"
       />
       <MenuSelect
-        variant="field"
+        variant="toolbar"
         menuPortal
-        className="w-auto shrink-0"
         triggerClassName={`${compactFieldClass} shrink-0`}
         value={normalizedCategoryFilter}
         options={categoryOptions}

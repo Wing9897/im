@@ -138,7 +138,8 @@ const mapSmallBtnActiveClass =
 
 const mapSmallBtnMutedClass = "border-surface-border text-text-muted";
 
-export const mapSmallSelectClass = `${mapSmallBtnClass} pr-7`;
+/** LIVE±Nh MenuSelect trigger — match overlay buttons, override form-chrome h-8/card bg. */
+export const mapSmallSelectClass = `${mapSmallBtnClass} !h-auto !min-h-0 !max-h-none !bg-transparent pr-7`;
 
 export function overlayButtonClass(active: boolean): string {
   return [mapSmallBtnClass, active ? mapSmallBtnActiveClass : mapSmallBtnMutedClass].join(" ");

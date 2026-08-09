@@ -115,21 +115,20 @@ export function IntelligenceToolbar({
               className="pointer-events-none absolute left-2 z-[1] text-text-muted"
             />
             <MenuSelect
-              variant="field"
+              variant="toolbar"
               menuPortal
               value={sortMode}
               options={sortOptions}
               onChange={(next) => onSortModeChange(next as IntelligenceSortMode)}
               aria-label={t("toolbar.sortAria")}
               data-testid="intelligence-sort-select"
-              className="w-auto shrink-0"
               triggerClassName={`${ctrlClass} !w-[7.5rem] pl-7 pr-2`}
             />
           </div>
           <TimeFilter
             value={timeFilterPreset}
             onChange={onTimeFilterChange}
-            className={`${ctrlClass} !w-[5rem] !min-w-[4.5rem] !max-w-[5.5rem] px-2`}
+            className="!w-[5rem] !min-w-[4.5rem] !max-w-[5.5rem]"
           />
         </>
       ) : null}

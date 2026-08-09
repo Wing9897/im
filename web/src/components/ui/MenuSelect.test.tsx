@@ -46,7 +46,31 @@ describe("MenuSelect", () => {
     );
     expect(html).toContain("🍎 Alpha");
     expect(html).toContain('data-testid="item-form-category-select-value"');
+    expect(html).toContain("w-full");
+    expect(html).toContain("width:100%");
     expect(html).not.toContain("min-width:280px");
+  });
+
+  it("toolbar variant stays inline and does not force full width", () => {
+    const html = renderToStaticMarkup(
+      createElement(MenuSelect, {
+        value: "12",
+        options: [{ value: "12", label: "LIVE ±12h" }],
+        onChange: () => {},
+        variant: "toolbar",
+        "data-testid": "map-live-window-select",
+        "aria-label": "Live window",
+      }),
+    );
+    expect(html).toContain("LIVE ±12h");
+    expect(html).toContain("inline-flex");
+    expect(html).toContain("w-auto");
+    expect(html).toContain("shrink-0");
+    expect(html).toContain("width:auto");
+    expect(html).not.toMatch(/(?:^|[^-])width:100%/);
+    expect(html).not.toContain("min-width:280px");
+    // Shell must not bake w-full (toolbar call sites used to fight this with className).
+    expect(html).not.toMatch(/class="[^"]*\bw-full\b/);
   });
 
   describe("interactive listbox", () => {

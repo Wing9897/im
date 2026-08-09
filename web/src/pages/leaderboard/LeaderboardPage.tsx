@@ -52,7 +52,7 @@ export function LeaderboardPage() {
         >
           {leaderboardTasks.length > 0 ? (
             <MenuSelect
-              variant="field"
+              variant="toolbar"
               menuPortal
               value={selectedTaskId}
               options={[
@@ -65,7 +65,7 @@ export function LeaderboardPage() {
               onChange={setSelectedTaskId}
               aria-label={t("leaderboard.selectTaskAria")}
               data-testid="leaderboard-task-select"
-              className="w-auto shrink-0 max-w-[200px]"
+              className="max-w-[200px]"
               triggerClassName={`${pageOpsControlClass} max-w-[200px] w-auto px-2`}
             />
           ) : null}

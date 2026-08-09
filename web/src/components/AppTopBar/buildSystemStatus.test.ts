@@ -130,7 +130,8 @@ describe("buildSystemStatus", () => {
       activeAnalyses: new Map(),
     });
     expect(view.label).toBe("AI 無法連線");
-    expect(view.title).toBe("收集器已停止，且 AI 引擎無法連線");
+    expect(view.title).toContain("收集器已停止，且 AI 引擎無法連線");
+    expect(view.title).toContain("AI 設定");
   });
 
   it("shows collector transition states without claiming a stable stop", () => {

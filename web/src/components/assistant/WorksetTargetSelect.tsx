@@ -12,6 +12,10 @@ export type WorksetTargetOption = {
 
 /**
  * Presentational workset picker (all worksets including builtin ``__user__``).
+ *
+ * Uses `variant="field"` so flex chrome (Assistant「一般」row, settings) can
+ * grow with `flex-1` / `w-full`. Pass `menuPortal` (default on) so overflow
+ * ancestors (floating quick dialog) cannot clip the listbox.
  */
 export function WorksetTargetSelectField({
   id,
@@ -21,6 +25,7 @@ export function WorksetTargetSelectField({
   disabled,
   className,
   keepStaleOption = false,
+  menuPortal = true,
   "data-testid": testId = "workset-target",
   "aria-label": ariaLabel,
 }: {
@@ -31,6 +36,7 @@ export function WorksetTargetSelectField({
   disabled?: boolean;
   className?: string;
   keepStaleOption?: boolean;
+  menuPortal?: boolean;
   "data-testid"?: string;
   "aria-label"?: string;
 }) {
@@ -56,6 +62,7 @@ export function WorksetTargetSelectField({
     <MenuSelect
       id={id}
       variant="field"
+      menuPortal={menuPortal}
       value={selectValue}
       options={menuOptions}
       onChange={onChange}
@@ -76,6 +83,7 @@ export function WorksetTargetSelect({
   onChange,
   disabled,
   className,
+  menuPortal = true,
   "data-testid": testId = "workset-target",
   "aria-label": ariaLabel,
 }: {
@@ -84,6 +92,7 @@ export function WorksetTargetSelect({
   onChange: (worksetId: string) => void;
   disabled?: boolean;
   className?: string;
+  menuPortal?: boolean;
   "data-testid"?: string;
   "aria-label"?: string;
 }) {
@@ -101,6 +110,7 @@ export function WorksetTargetSelect({
       options={options}
       disabled={disabled}
       className={className}
+      menuPortal={menuPortal}
       data-testid={testId}
       aria-label={ariaLabel}
     />

@@ -59,10 +59,10 @@ export function LanguageSwitcher({ variant = "settings" }: LanguageSwitcherProps
       <div data-testid="language-switcher" data-variant="compact">
         <MenuSelect
           id="auth-ui-locale"
-          variant="field"
+          variant="toolbar"
           menuPortal
-          className="min-w-[8.5rem] w-auto"
-          triggerClassName="min-w-[8.5rem] cursor-pointer py-1 pe-8 text-caption"
+          className="min-w-[8.5rem]"
+          triggerClassName="min-w-[8.5rem] cursor-pointer text-caption"
           value={preference}
           options={localeOptions}
           onChange={(next) => handleChange(next as AppLocalePreference)}

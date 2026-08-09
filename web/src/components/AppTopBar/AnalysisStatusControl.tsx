@@ -39,6 +39,9 @@ interface AnalysisStatusControlProps {
   busy: boolean;
   disabled?: boolean;
   abortingAnalysis: boolean;
+  /** When true, menu offers a deep-link to AI provider settings. */
+  aiUnavailable?: boolean;
+  onOpenAiSettings?: () => void;
   onTogglePause: () => void;
   onEmergencyAbort: () => Promise<void>;
 }
@@ -58,6 +61,8 @@ export function AnalysisStatusControl({
   busy,
   disabled = false,
   abortingAnalysis,
+  aiUnavailable = false,
+  onOpenAiSettings,
   onTogglePause,
   onEmergencyAbort,
 }: AnalysisStatusControlProps) {
@@ -128,6 +133,22 @@ export function AnalysisStatusControl({
                 : { top: -9999, left: -9999, visibility: "hidden" }
             }
           >
+            {aiUnavailable && onOpenAiSettings ? (
+              <li role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid="open-ai-settings-button"
+                  className="flex w-full cursor-pointer items-center rounded-md border-0 bg-transparent px-2.5 py-1.5 text-left text-xs font-medium text-text-primary outline-none transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_70%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--surface-overlay)_70%,transparent)]"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenAiSettings();
+                  }}
+                >
+                  {t("topBar.openAiSettings")}
+                </button>
+              </li>
+            ) : null}
             <li role="none">
               <button
                 type="button"

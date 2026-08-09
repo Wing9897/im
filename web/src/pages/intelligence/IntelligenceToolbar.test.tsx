@@ -104,7 +104,16 @@ describe("IntelligenceToolbar", () => {
     const view = toolbar.querySelector('[aria-label="檢視模式"]');
     expect(search).not.toBeNull();
     expect(task).not.toBeNull();
-    expect(toolbar.querySelector('[data-testid="intelligence-sort-select"]')).not.toBeNull();
+    const sortSelect = toolbar.querySelector<HTMLElement>(
+      '[data-testid="intelligence-sort-select"]',
+    );
+    expect(sortSelect).not.toBeNull();
+    expect(sortSelect!.className).toContain("w-auto");
+    expect(sortSelect!.className).not.toContain("w-full");
+    const timeFilter = toolbar.querySelector<HTMLElement>('[data-testid="time-filter"]');
+    expect(timeFilter).not.toBeNull();
+    expect(timeFilter!.className).toContain("w-auto");
+    expect(timeFilter!.className).not.toContain("w-full");
     expect(view).not.toBeNull();
     // Source filter leftmost (same as timeline); search sits with view on the right.
     expect(
