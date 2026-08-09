@@ -13,8 +13,8 @@ import {
 import type { Action, AnalysisTask } from "../../../types";
 import { useActionFormDialog } from "./useActionFormDialog";
 import { ActionFormSection } from "./ActionFormSection";
-import { ActionTypeSelector } from "../ActionTypeSelector";
-import { ActionTypeFields } from "../ActionTypeFields";
+import { ActionTypeSelector } from "../components/ActionTypeSelector";
+import { ActionTypeFields } from "../components/ActionTypeFields";
 import { ActionTriggerSection } from "./ActionTriggerSection";
 
 export function ActionFormDialog({

@@ -17,7 +17,7 @@ import { buildDuplicateItemBody } from "../../../domain/items/itemDuplicate";
 import { partitionItemAttributes } from "../../../domain/items/itemAttributes";
 import { formatItemsError } from "../../../domain/items/itemErrors";
 import type { Workset } from "../../../types/worksets";
-import { scheduleEmojiPickerPreload } from "../emoji/emojiPickerLoader";
+import { scheduleEmojiPickerPreload } from "../../../components/items/emoji/emojiPickerLoader";
 import { ItemForm, type ItemFormHandle, type ItemSaveDraft, type ItemSaveOptions } from "./ItemForm";
 import { ItemFormToolbar } from "./ItemFormToolbar";
 import { toItemWriteBody } from "./itemFormSaveBody";

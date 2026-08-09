@@ -17,7 +17,7 @@ import {
   stopSelectableActivation,
 } from "./detail/SelectableSurface";
 import { colorStatusDotStyle } from "../styles/statusDot";
-import { isProjectTask } from "../domain/tasks/isProjectTask";
+import { isAgentCalendarTask } from "../domain/tasks/isAgentCalendarTask";
 import type { AnalysisTask } from "../types/tasks";
 import type { TaskCardStats } from "../types/dashboard";
 
@@ -48,7 +48,7 @@ export const TaskCard = React.memo(function TaskCard({
   const [toggling, setToggling] = useState(false);
   const isRecurringMode = task.analysisMode === "recurring";
   const isAgentMode = task.analysisMode === "agent";
-  const isProjectMode = isProjectTask(task);
+  const isAgentCalendarMode = isAgentCalendarTask(task);
   const hideAnalysisStats = isAgentMode || isRecurringMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
@@ -88,8 +88,8 @@ export const TaskCard = React.memo(function TaskCard({
       onSelect={onSelect}
       selectAriaLabel={
         onSelect
-          ? isProjectMode
-            ? t("tasks.card.openProjectAria", { name: task.name })
+          ? isAgentCalendarMode
+            ? t("tasks.card.openAgentAria", { name: task.name })
             : t("tasks.card.viewDetailAria", { name: task.name })
           : undefined
       }
@@ -153,7 +153,7 @@ export const TaskCard = React.memo(function TaskCard({
               : isRecurringMode
                 ? t("tasks.card.recurringProgressHint")
                 : t("tasks.card.calendarTaskProgressHint")}
-            {isProjectMode && queuedMessageCount > 0 ? (
+            {isAgentCalendarMode && queuedMessageCount > 0 ? (
               <span className="mt-0.5 block tabular-nums text-warning">
                 {t("tasks.card.queued")}: {queuedMessageCount.toLocaleString()}
               </span>

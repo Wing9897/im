@@ -3,8 +3,8 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Button,
+  MenuSelect,
   PasswordField,
-  SelectField,
   SettingsRow,
   TextArea,
   TextField,
@@ -86,40 +86,45 @@ export function HttpSourceFields({
       </SettingsRow>
 
       <SettingsRow label={t("httpFields.method")} htmlFor={`${idPrefix}-method`}>
-        <SelectField
+        <MenuSelect
           id={`${idPrefix}-method`}
+          variant="field"
           value={form.method}
-          onChange={(e) =>
+          options={[
+            { value: "GET", label: "GET" },
+            { value: "POST", label: "POST" },
+          ]}
+          onChange={(next) =>
             setForm((s) => ({
               ...s,
-              method: e.target.value === "POST" ? "POST" : "GET",
-              bodyType: e.target.value === "POST" ? s.bodyType : "none",
+              method: next === "POST" ? "POST" : "GET",
+              bodyType: next === "POST" ? s.bodyType : "none",
             }))
           }
           disabled={submitting}
-        >
-          <option value="GET">GET</option>
-          <option value="POST">POST</option>
-        </SelectField>
+          aria-label={t("httpFields.method")}
+        />
       </SettingsRow>
 
       <SettingsRow label={t("httpFields.auth")} htmlFor={`${idPrefix}-auth`}>
-        <SelectField
+        <MenuSelect
           id={`${idPrefix}-auth`}
+          variant="field"
           value={form.authType}
-          onChange={(e) => {
-            const value = e.target.value;
+          options={[
+            { value: "none", label: t("httpFields.authNone") },
+            { value: "bearer", label: t("httpFields.authBearer") },
+            { value: "basic", label: t("httpFields.authBasic") },
+          ]}
+          onChange={(next) => {
             setForm((s) => ({
               ...s,
-              authType: value === "bearer" || value === "basic" ? value : "none",
+              authType: next === "bearer" || next === "basic" ? next : "none",
             }));
           }}
           disabled={submitting}
-        >
-          <option value="none">{t("httpFields.authNone")}</option>
-          <option value="bearer">{t("httpFields.authBearer")}</option>
-          <option value="basic">{t("httpFields.authBasic")}</option>
-        </SelectField>
+          aria-label={t("httpFields.auth")}
+        />
       </SettingsRow>
 
       {form.authType === "bearer" ? (
@@ -197,24 +202,26 @@ export function HttpSourceFields({
       {form.method === "POST" ? (
         <>
           <SettingsRow label={t("httpFields.bodyType")} htmlFor={`${idPrefix}-body-type`}>
-            <SelectField
+            <MenuSelect
               id={`${idPrefix}-body-type`}
+              variant="field"
               value={form.bodyType}
-              onChange={(e) => {
-                const value = e.target.value;
+              options={[
+                { value: "none", label: t("httpFields.bodyNone") },
+                { value: "json", label: t("httpFields.bodyJson") },
+                { value: "text", label: t("httpFields.bodyText") },
+                { value: "form", label: t("httpFields.bodyForm") },
+              ]}
+              onChange={(next) => {
                 setForm((s) => ({
                   ...s,
                   bodyType:
-                    value === "json" || value === "text" || value === "form" ? value : "none",
+                    next === "json" || next === "text" || next === "form" ? next : "none",
                 }));
               }}
               disabled={submitting}
-            >
-              <option value="none">{t("httpFields.bodyNone")}</option>
-              <option value="json">{t("httpFields.bodyJson")}</option>
-              <option value="text">{t("httpFields.bodyText")}</option>
-              <option value="form">{t("httpFields.bodyForm")}</option>
-            </SelectField>
+              aria-label={t("httpFields.bodyType")}
+            />
           </SettingsRow>
           {form.bodyType !== "none" ? (
             <SettingsRow label={t("httpFields.body")} htmlFor={`${idPrefix}-body`}>

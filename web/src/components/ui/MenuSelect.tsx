@@ -114,13 +114,14 @@ const optionStyle: CSSProperties = {
 };
 
 /**
- * Custom button + listbox select for **toolbar / chrome** (Items sort, filters, etc.).
+ * Custom button + listbox select for **toolbar / chrome / ops bars**, and for dense
+ * form rows that are a plain options list (prefer `variant="field"`).
  *
- * Prefer {@link SelectField} for dense form rows (native `<select>` + closed-label overlay).
- * Use `MenuSelect` when you need a non-native listbox, CJK-safe closed labels, or
- * `menuPortal` to escape overflow clipping. Shared placement lives in `useAnchoredMenu`.
+ * Prefer {@link SelectField} only when native `<select>` is required (optgroup,
+ * disabled options, form-submit quirks). Use `menuPortal` to escape overflow
+ * clipping. Shared placement lives in `useAnchoredMenu`.
  *
- * Progressive: do not big-bang rewrite existing SelectField forms.
+ * Progressive: do not big-bang rewrite SelectField forms that still need native semantics.
  */
 export function MenuSelect({
   id,

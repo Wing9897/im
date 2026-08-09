@@ -1,9 +1,16 @@
+import {
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+  useEffect,
+  useId,
+  useRef,
+} from "react";
 import { Eye } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import { PillButton } from "../../../components/ui";
-import { usePortaledChecklistMenu } from "../../../hooks/usePortaledChecklistMenu";
+import { useAnchoredMenu } from "../../../hooks/useAnchoredMenu";
 
 type TimelineShowOptionsControlProps = {
   showDismissed: boolean;
@@ -14,10 +21,21 @@ type TimelineShowOptionsControlProps = {
   setShowEnding: (value: boolean) => void;
 };
 
+const FOCUSABLE_SELECTOR = [
+  "[data-checklist-initial-focus]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "a[href]",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",");
+
 /**
  * Toolbar 「显示」checklist (removed / ongoing / ending).
  * Eye icon distinguishes visibility toggles from SourceFilterDialog (ListFilter).
  * Portaled like SourceFilterDialog so toolbar overflow cannot clip the menu.
+ * Placement / outside dismiss: {@link useAnchoredMenu}.
  */
 export function TimelineShowOptionsControl({
   showDismissed,
@@ -28,17 +46,65 @@ export function TimelineShowOptionsControl({
   setShowEnding,
 }: TimelineShowOptionsControlProps) {
   const { t } = useTranslation("timeline");
-  const {
-    open,
-    toggle,
-    triggerRef,
-    menuRef,
-    menuPosition,
-    triggerId,
-    menuId,
-    titleId,
-    onMenuKeyDown,
-  } = usePortaledChecklistMenu();
+  const reactId = useId();
+  const idSuffix = reactId.replace(/:/g, "");
+  const triggerId = `portaled-checklist-trigger-${idSuffix}`;
+  const menuId = `portaled-checklist-menu-${idSuffix}`;
+  const titleId = `portaled-checklist-title-${idSuffix}`;
+  const focusedForCurrentOpen = useRef(false);
+
+  const { open, toggle, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
+    align: "auto",
+    gap: 4,
+    edge: 8,
+    fallbackMenuWidth: 200,
+    flip: true,
+    dismissPointerEvent: "pointerdown",
+    restoreFocusOnEscape: true,
+  });
+
+  useEffect(() => {
+    if (!open || !menuPos || !menuRef.current || focusedForCurrentOpen.current) {
+      return;
+    }
+    const initialFocus = menuRef.current.querySelector<HTMLElement>(
+      "[data-checklist-initial-focus]",
+    );
+    (initialFocus ?? menuRef.current).focus();
+    focusedForCurrentOpen.current = true;
+  }, [menuPos, menuRef, open]);
+
+  useEffect(() => {
+    if (!open) {
+      focusedForCurrentOpen.current = false;
+    }
+  }, [open]);
+
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Tab" || !menuRef.current) {
+      return;
+    }
+    const focusable = Array.from(
+      menuRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    );
+    if (focusable.length === 0) {
+      event.preventDefault();
+      menuRef.current.focus();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (
+      event.shiftKey &&
+      (document.activeElement === first || document.activeElement === menuRef.current)
+    ) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
 
   const isFiltering = !showDismissed || !showOngoing || !showEnding;
   const chromeActive = open || isFiltering;
@@ -73,10 +139,10 @@ export function TimelineShowOptionsControl({
   const menuTitle = t("filter.showOptions");
 
   const menu =
-    open && menuPosition
+    open && typeof document !== "undefined"
       ? createPortal(
           <div
-            ref={menuRef}
+            ref={menuRef as RefObject<HTMLDivElement | null>}
             id={menuId}
             className="board-source-filter__menu board-source-filter__menu--portal"
             role="dialog"
@@ -85,7 +151,11 @@ export function TimelineShowOptionsControl({
             tabIndex={-1}
             onKeyDown={onMenuKeyDown}
             data-testid="timeline-show-options-menu"
-            style={menuPosition}
+            style={
+              menuPos
+                ? { top: menuPos.top, left: menuPos.left }
+                : { top: -9999, left: -9999, visibility: "hidden" }
+            }
           >
             <div className="board-source-filter__menu-head">
               <span id={titleId}>{menuTitle}</span>
@@ -119,9 +189,9 @@ export function TimelineShowOptionsControl({
       : null;
 
   return (
-    <div className="board-source-filter">
+    <div ref={rootRef as RefObject<HTMLDivElement | null>} className="board-source-filter">
       <PillButton
-        ref={triggerRef}
+        ref={anchorRef as RefObject<HTMLButtonElement | null>}
         id={triggerId}
         type="button"
         active={chromeActive}

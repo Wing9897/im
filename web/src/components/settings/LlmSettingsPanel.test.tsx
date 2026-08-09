@@ -79,9 +79,10 @@ describe("LlmSettingsPanel", () => {
     it("renders JSON 輸出模式 select when provider is openai_compatible", () => {
       renderPanel({ llmProvider: "openai_compatible" });
       expect(container.textContent).toContain("JSON 輸出模式");
-      const selects = container.querySelectorAll("select");
-      // JSON mode select only (provider uses tiles)
-      expect(selects.length).toBe(1);
+      // Provider uses tiles; JSON mode is MenuSelect (no native <select>).
+      expect(container.querySelectorAll("select")).toHaveLength(0);
+      expect(container.querySelector("#openai-json-mode")).not.toBeNull();
+      expect(container.querySelector('[data-testid="openai-json-mode"]')).not.toBeNull();
     });
 
     it("does not render JSON 輸出模式 when provider is not openai_compatible", () => {

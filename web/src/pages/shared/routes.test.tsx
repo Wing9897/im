@@ -10,6 +10,8 @@
  * 2. Render representative routes (top-level + nested) to confirm mounting works
  * 3. Compilation verification is done separately via `tsc --noEmit` and `vite build`
  */
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import React, { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
@@ -130,7 +132,7 @@ describe("Route module imports", () => {
       () => import("../monitor/MonitorPage"),
       () => import("../dashboard/DashboardViewer"),
       () => import("../tasks/chat-editor/ChatEditorPage"),
-      () => import("../tasks/agent/ProjectDetailPage"),
+      () => import("../tasks/agent/AgentDetailPage"),
       () => import("../leaderboard/LeaderboardPage"),
       () => import("../intelligence/IntelligencePage"),
       () => import("../timeline/TimelinePage"),
@@ -422,5 +424,18 @@ describe("SystemSettingsProvider scope", () => {
       await Promise.resolve();
     });
     expect(fetchSystemSettings).toHaveBeenCalledTimes(1);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Test: Agent detail route contract (legacy /project retired)         */
+/* ------------------------------------------------------------------ */
+
+describe("Agent detail route contract", () => {
+  it("registers /agent only — legacy /project redirect is retired", () => {
+    const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
+    expect(src).toContain('path="/tasks/:taskId/agent"');
+    expect(src).not.toContain('path="/tasks/:taskId/project"');
+    expect(src).not.toContain("AgentDetailLegacyRedirect");
   });
 });

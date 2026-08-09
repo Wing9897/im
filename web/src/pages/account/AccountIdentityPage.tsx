@@ -18,9 +18,9 @@ import { toErrorMessage } from "../../utils/errors";
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-} from "../settings/SettingsShared";
-import { AccountAvatarControl } from "./AccountAvatarControl";
-import { AccountChangePasswordSection } from "./AccountChangePasswordSection";
+} from "../../components/settings/SettingsFormLayout";
+import { AccountAvatarControl } from "./components/AccountAvatarControl";
+import { AccountChangePasswordSection } from "./components/AccountChangePasswordSection";
 
 /** Account → Identity: display name, avatar, background, change password. */
 export function AccountIdentityPage() {

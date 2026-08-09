@@ -16,7 +16,8 @@ import {
   boardSourceFilterExpandTasks,
   boardSourceFilterWorksets,
 } from "../boardSourceFilterOptions";
-import { resolveSpanWorksetId, useBoardSourceFilter } from "../useBoardSourceFilter";
+import { resolveSpanWorksetId } from "../../domain/tasks/sourceFilterItems";
+import { useBoardSourceFilter } from "../useBoardSourceFilter";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
 import { ANALYSIS_EVENTS_MODES } from "../../domain/tasks/analysisModeCapabilities";

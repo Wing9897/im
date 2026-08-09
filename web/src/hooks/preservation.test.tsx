@@ -17,10 +17,10 @@ const SAMPLE_LOG: AppLogEntry = {
 };
 
 describe("Short log entries render with correct polishedListItemStyle", () => {
-  let LogList: typeof import("../pages/logs/LogList").LogList;
+  let LogList: typeof import("../pages/logs/components/LogList").LogList;
 
   beforeEach(async () => {
-    const mod = await import("../pages/logs/LogList");
+    const mod = await import("../pages/logs/components/LogList");
     LogList = mod.LogList;
   });
 

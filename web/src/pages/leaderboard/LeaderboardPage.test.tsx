@@ -303,9 +303,14 @@ describe("LeaderboardPage", () => {
       expect(toolbar!.className).toContain("im-control-bar");
 
       const taskSelect = container.querySelector(
-        'select[aria-label="選擇排行榜任務"]',
-      ) as HTMLSelectElement;
+        '[data-testid="leaderboard-task-select"]',
+      );
       expect(taskSelect).not.toBeNull();
+      expect(
+        container.querySelector('[data-testid="leaderboard-task-select-value"]')?.getAttribute(
+          "aria-label",
+        ),
+      ).toBe("選擇排行榜任務");
       expect(container.querySelector('input[aria-label="搜尋排行榜"]')).toBeNull();
       expect(container.querySelector('button[aria-label="搜尋排行榜"]')).toBeNull();
     });

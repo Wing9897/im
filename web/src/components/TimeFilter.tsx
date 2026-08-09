@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { SelectField } from "./ui/TextField";
+import { MenuSelect } from "./ui/MenuSelect";
 
 export type TimeFilterPreset = "today" | "1d" | "7d" | "30d";
 
@@ -28,23 +28,31 @@ export const TimeFilter = React.memo(function TimeFilter({
 }: TimeFilterProps) {
   const { t } = useTranslation();
 
+  const options = useMemo(
+    () =>
+      TIME_FILTER_PRESETS.map(({ key, labelKey }) => ({
+        value: key,
+        label: t(labelKey),
+      })),
+    [t],
+  );
+
   return (
-    <SelectField
+    <MenuSelect
+      variant="field"
+      menuPortal
       value={value}
-      onChange={(e) => onChange(e.target.value as TimeFilterPreset)}
+      options={options}
+      onChange={(next) => onChange(next as TimeFilterPreset)}
       aria-label={t("timeFilter.aria")}
-      className={[
+      data-testid="time-filter"
+      className="w-auto shrink-0"
+      triggerClassName={[
         "h-9 w-auto min-w-[5.5rem] max-w-[7rem] text-sm font-medium",
         className ?? "",
       ]
         .filter(Boolean)
         .join(" ")}
-    >
-      {TIME_FILTER_PRESETS.map(({ key, labelKey }) => (
-        <option key={key} value={key}>
-          {t(labelKey)}
-        </option>
-      ))}
-    </SelectField>
+    />
   );
 });

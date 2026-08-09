@@ -38,14 +38,17 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
 };
 
 /**
- * Native `<select>` for **dense form rows** (settings, task editor, source forms).
+ * Native `<select>` for **dense form rows** that still need native select semantics.
  * Shares TextField chrome and paints a closed-state label overlay (Electron/Chromium
  * on Windows often fails to show native select text).
  *
  * Convention (progressive — no big-bang rewrite):
- * - Forms / settings rows → `SelectField` (this)
- * - Toolbar / page chrome / overflow-sensitive menus → `MenuSelect`
- *   (`menuPortal` + `useAnchoredMenu`)
+ * - Keep `SelectField` only where native `<select>` is required (optgroup, disabled
+ *   `<option>`, form-submit quirks, or other native-only behavior).
+ * - Toolbars / page chrome / ops bars / overflow-prone controls → `MenuSelect`
+ *   (`variant="field"` + `menuPortal` when clipped).
+ * - Settings / source dense rows that are a plain options list → prefer
+ *   `MenuSelect variant="field"` (same density goal as Items belonging).
  */
 export function SelectField({
   className,
@@ -103,50 +106,6 @@ export function SelectField({
         {closedLabel}
       </span>
     </div>
-  );
-}
-
-export type OverlaySelectOption = {
-  value: string;
-  label: string;
-};
-
-type OverlaySelectFieldProps = Omit<
-  SelectHTMLAttributes<HTMLSelectElement>,
-  "children" | "onChange" | "value"
-> & {
-  className?: string;
-  options: readonly OverlaySelectOption[];
-  value: string;
-  onChange: (value: string) => void;
-  wrapperClassName?: string;
-};
-
-/** Options-array API — thin wrapper over {@link SelectField}. */
-export function OverlaySelectField({
-  className,
-  options,
-  value,
-  onChange,
-  disabled,
-  wrapperClassName,
-  ...rest
-}: OverlaySelectFieldProps) {
-  return (
-    <SelectField
-      {...rest}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      disabled={disabled}
-      className={className}
-      wrapperClassName={wrapperClassName}
-    >
-      {options.map((option) => (
-        <option key={option.value || "__empty__"} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </SelectField>
   );
 }
 

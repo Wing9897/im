@@ -1,0 +1,49 @@
+/* Dialog shell, drawer, preview panel. */
+
+.im-dialog-subtitle {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.im-dialog-footer-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.im-dialog-shell {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 90%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--text-primary) 4%, transparent),
+    0 18px 48px color-mix(in srgb, var(--text-primary) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+}
+
+.im-dialog-drawer {
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  animation: im-drawer-in var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+@keyframes im-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.im-preview-panel {
+  border-left: 1px solid var(--surface-border-alpha, var(--surface-border));
+}
+
+.im-preview-panel-inner {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}

@@ -8,6 +8,7 @@
 import { stripItemKindTitlePrefix } from "../items/itemCalendarProjection";
 import type { TimelineItem } from "../../types";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { formatOsDateTime } from "../../utils/time";
 import { isSameDay, startOfDay } from "./dateUtils";
 import {
   resolveCalendarLeadingGlyph,
@@ -20,6 +21,32 @@ import {
   toUserEventFormWorksetId,
   type WorksetNameLookup,
 } from "./userEvents";
+
+/** Collapse newlines/spaces for single-line list previews (line-clamp breaks on multi-line body). */
+export function previewEventBody(body: string): string {
+  return body.replace(/\s+/g, " ").trim();
+}
+
+/** Sidebar card time row: all-day label, or local start (– end) via OS datetime. */
+export function eventListTimeLabel(
+  event: Pick<TimelineItem, "isAllDay" | "startTime" | "endTime">,
+  allDayLabel: string,
+): string {
+  if (event.isAllDay) return allDayLabel;
+  const start = formatOsDateTime(event.startTime, {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  if (!event.endTime) return start;
+  return `${start} – ${formatOsDateTime(event.endTime, {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+}
 
 /**
  * Unified 「提醒」 badge: items via remind-kind projection; user / assistant

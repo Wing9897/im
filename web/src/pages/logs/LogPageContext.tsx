@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 
-import { useLogPage } from "./useLogPage";
+import { useLogPage } from "./hooks/useLogPage";
 
 type LogPageContextValue = ReturnType<typeof useLogPage>;
 

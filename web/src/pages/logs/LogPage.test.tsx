@@ -81,9 +81,12 @@ describe("LogPage", () => {
 
     await renderPage();
 
-    const selects = container.querySelectorAll("select");
-    expect(selects[0]?.value).toBe("all");
-    expect(selects[1]?.value).toBe("all");
+    expect(
+      container.querySelector('[data-testid="log-level-filter-value"]')?.textContent,
+    ).toMatch(/全部|All/i);
+    expect(
+      container.querySelector('[data-testid="log-category-filter-value"]')?.textContent,
+    ).toMatch(/全部|All/i);
     expect(container.textContent).toContain("Persisted log entry");
     // Mount refreshes once when Logs acquires runtime interest; no interval poll.
     expect(runtimeLogPageState.refreshLogs).toHaveBeenCalledTimes(1);

@@ -1,0 +1,77 @@
+/* Monitor filter panel + picker dialog body layout. */
+
+.im-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.im-filter-panel-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .im-filter-panel-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.im-filter-panel-field {
+  min-width: 0;
+}
+
+.im-filter-panel--monitor {
+  flex: 1;
+  min-height: 0;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.im-filter-panel-top {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-overlay) 35%, transparent);
+}
+
+.im-filter-panel-meta-row {
+  margin-bottom: 0;
+}
+
+.im-filter-panel-channels {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-overlay) 22%, transparent);
+}
+
+.im-picker-dialog-body {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.im-picker-dialog-body .im-filter-panel--monitor {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.im-picker-dialog-body .im-filter-panel-channels .im-channel-picker {
+  flex: 1;
+  min-height: 0;
+}

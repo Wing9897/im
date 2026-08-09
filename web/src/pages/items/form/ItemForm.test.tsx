@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import "../emoji/emojiPickerReactMock";
+import "../../../components/items/emoji/emojiPickerReactMock";
 import "./itemFormTestMocks";
 
 import {

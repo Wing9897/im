@@ -6,7 +6,7 @@ import {
   type WebSearchProviderSetting,
 } from "../../domain/settings/assistantWebSearchRoute";
 import type { LlmProvider } from "../../types";
-import { CheckboxField, FormStack, PasswordField, SelectField, SettingsRow } from "../ui";
+import { CheckboxField, FormStack, MenuSelect, PasswordField, SettingsRow } from "../ui";
 import { formHelpClass } from "../ui/pageTypography";
 
 export type WebSearchProvider = WebSearchProviderSetting;
@@ -87,24 +87,30 @@ export function AssistantWebSearchPanel({
               nativeAvailable ? t("webSearch.providerHelpNative") : t("webSearch.providerHelpTool")
             }
           >
-            <SelectField
+            <MenuSelect
               id="web-search-provider"
+              variant="field"
               value={resolvedProvider}
-              onChange={(event) => {
-                const next = normalizeWebSearchProviderSetting(event.target.value);
-                onProviderChange(next);
+              options={[
+                ...(showAutoOption
+                  ? [
+                      {
+                        value: "auto",
+                        label: nativeAvailable
+                          ? t("webSearch.providerAutoNative")
+                          : t("webSearch.providerAutoTool"),
+                      },
+                    ]
+                  : []),
+                { value: "duckduckgo", label: t("webSearch.providerDuckDuckGo") },
+                { value: "brave", label: t("webSearch.providerBrave") },
+              ]}
+              onChange={(value) => {
+                onProviderChange(normalizeWebSearchProviderSetting(value));
               }}
-            >
-              {showAutoOption ? (
-                <option value="auto">
-                  {nativeAvailable
-                    ? t("webSearch.providerAutoNative")
-                    : t("webSearch.providerAutoTool")}
-                </option>
-              ) : null}
-              <option value="duckduckgo">{t("webSearch.providerDuckDuckGo")}</option>
-              <option value="brave">{t("webSearch.providerBrave")}</option>
-            </SelectField>
+              aria-label={t("webSearch.providerLabel")}
+              data-testid="web-search-provider"
+            />
           </SettingsRow>
 
           <p className={`mb-0 ${formHelpClass}`} data-testid="web-search-status">

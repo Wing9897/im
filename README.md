@@ -9,7 +9,7 @@
 - **時間規劃** — Timeline 合併分析事件、週期任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
 - **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位／價錢；到期與提醒走關聯日曆（投影 `source=item`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
-- **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` redirect）
+- **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描情報事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用

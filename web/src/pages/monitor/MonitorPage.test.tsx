@@ -59,17 +59,17 @@ vi.mock("./filter/FilterBar", () => ({
   FilterActiveChips: () => null,
 }));
 
-vi.mock("./MonitorViewToggle", () => ({
+vi.mock("./components/MonitorViewToggle", () => ({
   MonitorViewToggle: () => null,
 }));
 
-vi.mock("./MonitorToolbar", () => ({
+vi.mock("./components/MonitorToolbar", () => ({
   MonitorToolbar: ({ statusLabel }: { statusLabel: React.ReactNode }) => (
     <div data-testid="monitor-toolbar">{statusLabel}</div>
   ),
 }));
 
-vi.mock("./MonitorWallSection", () => ({
+vi.mock("./components/MonitorWallSection", () => ({
   MonitorWallSection: () => null,
 }));
 

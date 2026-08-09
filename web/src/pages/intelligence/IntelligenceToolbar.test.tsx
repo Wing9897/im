@@ -164,7 +164,7 @@ describe("IntelligenceToolbar", () => {
 
   it("hides time filter and sort in map mode (map has its own timeline)", () => {
     const container = track(renderToolbar({ viewMode: "map" }));
-    expect(container.querySelector('select[aria-label="時間篩選"]')).toBeNull();
+    expect(container.querySelector('[data-testid="time-filter"]')).toBeNull();
     expect(
       container.querySelector('[data-testid="intelligence-sort-select"]'),
     ).toBeNull();
@@ -174,12 +174,16 @@ describe("IntelligenceToolbar", () => {
   it("calls onTimeFilterChange when time select changes", () => {
     const onTimeFilterChange = vi.fn();
     const container = track(renderToolbar({ onTimeFilterChange, timeFilterPreset: "today" }));
-    const select = container.querySelector<HTMLSelectElement>(
-      'select[aria-label="時間篩選"]',
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-testid="time-filter-value"]',
     )!;
     act(() => {
-      select.value = "7d";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
+      trigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>('[data-testid="time-filter-option-7d"]')
+        ?.click();
     });
     expect(onTimeFilterChange).toHaveBeenCalledWith("7d");
   });
@@ -190,12 +194,18 @@ describe("IntelligenceToolbar", () => {
       onSortModeChange,
       sortMode: "event_time",
     }));
-    const select = container.querySelector<HTMLSelectElement>(
-      '[data-testid="intelligence-sort-select"]',
+    const trigger = container.querySelector<HTMLButtonElement>(
+      '[data-testid="intelligence-sort-select-value"]',
     )!;
     act(() => {
-      select.value = "analyzed_at";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
+      trigger.click();
+    });
+    act(() => {
+      document.body
+        .querySelector<HTMLButtonElement>(
+          '[data-testid="intelligence-sort-select-option-analyzed_at"]',
+        )
+        ?.click();
     });
     expect(onSortModeChange).toHaveBeenCalledWith("analyzed_at");
   });

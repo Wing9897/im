@@ -20,7 +20,7 @@ import { resolveCategoryEmoji } from "../../domain/items/itemCalendarProjection"
 import { findReservedAttributeKeys } from "../../domain/items/itemAttributes";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { CategoryEditForm } from "./CategoryEditForm";
-import { ItemEmojiMark } from "./emoji/ItemEmojiMark";
+import { ItemEmojiMark } from "../../components/items/emoji/ItemEmojiMark";
 
 const dangerIconBtnClass =
   "im-icon-btn !h-8 !w-8 !rounded-md text-error transition-colors hover:bg-[color-mix(in_srgb,var(--error)_10%,transparent)] hover:text-error disabled:opacity-50 disabled:cursor-not-allowed";

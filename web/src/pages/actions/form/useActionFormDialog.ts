@@ -7,7 +7,7 @@ import {
   applyActionTypeSwitch,
   formStateFromAction,
   nextHeaderId,
-} from "../useActionTypeHandlers";
+} from "../hooks/useActionTypeHandlers";
 import { useActionFormSubmit } from "./useActionFormSubmit";
 
 // ── Header entry for HTTP Webhook ─────────────────────

@@ -1,8 +1,8 @@
 import {
   SettingsContentCard,
   SettingsFieldGroup,
-} from "../settings/SettingsShared";
-import { AccountDeviceSessionSection } from "./AccountDeviceSessionSection";
+} from "../../components/settings/SettingsFormLayout";
+import { AccountDeviceSessionSection } from "./components/AccountDeviceSessionSection";
 
 /** Account → Devices: session list, revoke, logout. */
 export function AccountDevicesPage() {

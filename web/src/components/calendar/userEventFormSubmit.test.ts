@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { EMPTY_USER_EVENT_FORM } from "./userEventFormModel";
+import { EMPTY_USER_EVENT_FORM } from "../../domain/timeline/userEventFormModel";
 import { buildUserEventSubmitValues } from "./userEventFormSubmit";
 
 describe("buildUserEventSubmitValues", () => {

@@ -84,6 +84,7 @@ export function ChatNameModeFields({
       </SettingsRow>
       <SettingsRow label={t("workset.ownershipLabel")} htmlFor="chat-workset">
         <div className="flex flex-wrap items-center gap-sm">
+          {/* Native select: kept beside create-workset button in dense task editor row. */}
           <SelectField
             id="chat-workset"
             value={worksetId ?? ""}

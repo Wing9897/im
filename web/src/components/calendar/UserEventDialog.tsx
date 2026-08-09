@@ -18,9 +18,9 @@ import { useUserEventDialogForm } from "./useUserEventDialogForm";
 import type {
   UserEventFormValues,
   UserEventTaskOption,
-} from "./userEventFormModel";
+} from "../../domain/timeline/userEventFormModel";
 
-export type { UserEventKind } from "./userEventFormModel";
+export type { UserEventKind } from "../../domain/timeline/userEventFormModel";
 export type { UserEventFormValues, UserEventTaskOption };
 
 export type ParentItemMode = "hidden" | "readonly" | "editable";
@@ -181,6 +181,7 @@ export function UserEventDialog({
             <FieldLabel className="mb-0" htmlFor="user-event-item">
               {t("userEvent.parentItem")}
             </FieldLabel>
+            {/* Native select: dialog form keeps SelectField for native option list + submit quirks. */}
             <SelectField
               id="user-event-item"
               aria-label={t("userEvent.parentItemAria")}

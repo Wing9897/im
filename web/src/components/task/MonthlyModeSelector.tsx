@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { FieldLabel, FilterChip, SelectField } from "../../components/ui";
 import { WEEKDAY_CODES } from "../../utils/rrule";
 import type { WeekdayCode } from "../../types/calendar";
-import type { MonthlyMode } from "./recurrenceRuleUtils";
+import type { MonthlyMode } from "../../domain/tasks/recurrenceRuleUtils";
 
 const ORDINAL_VALUES = [1, 2, 3, 4, -1] as const;
 
@@ -93,6 +93,7 @@ export function MonthlyModeSelector({
         <div className="flex flex-wrap items-end gap-md">
           <div className="min-w-[160px] flex-1">
             <FieldLabel htmlFor="recurrence-ordinal">{t("tasks.recurrence.ordinalLabel")}</FieldLabel>
+            {/* Native select: recurrence editor stays on SelectField for native form density. */}
             <SelectField
               id="recurrence-ordinal"
               value={ordinal ?? 1}

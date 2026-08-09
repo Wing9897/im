@@ -10,7 +10,7 @@ import { validateRRuleConfig } from "../../utils/rruleValidation";
 import {
   USER_EVENT_CLOCK_RE,
   type UserEventFormValues,
-} from "./userEventFormModel";
+} from "../../domain/timeline/userEventFormModel";
 
 export type UserEventFormSubmitResult =
   | { ok: true; values: UserEventFormValues }

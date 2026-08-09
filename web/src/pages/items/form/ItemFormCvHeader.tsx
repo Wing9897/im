@@ -10,7 +10,7 @@ import { PenLine } from "lucide-react";
 import { Badge, TextField } from "../../../components/ui";
 import { cardTitleClass, captionClass } from "../../../components/ui/pageTypography";
 import type { TrackableItem } from "../../../api/items";
-import { EmojiPickerField } from "../emoji/EmojiPickerField";
+import { EmojiPickerField } from "../../../components/items/emoji/EmojiPickerField";
 import { ItemFormCvInventory } from "./ItemFormCvInventory";
 import { itemFormIconButtonClass } from "./itemFormClasses";
 

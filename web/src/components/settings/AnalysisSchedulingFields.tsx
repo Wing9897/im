@@ -1,4 +1,4 @@
-import { SelectField, SettingsRow, TextField } from "../ui";
+import { MenuSelect, SettingsRow, TextField } from "../ui";
 import {
   getEvidenceStyleOptions,
   type EvidenceStyle,
@@ -98,22 +98,23 @@ export function AnalysisSchedulingFields({
         htmlFor={evidenceId}
         help={labels.evidenceStyleHelp}
       >
-        <SelectField
+        <MenuSelect
           id={evidenceId}
+          variant="field"
           className="max-w-[320px]"
           value={evidenceStyle}
-          onChange={(e) => onEvidenceStyleChange(e.target.value)}
+          options={[
+            ...(allowFollowGlobal && labels.followGlobal
+              ? [{ value: "", label: labels.followGlobal }]
+              : []),
+            ...evidenceOptions.map((opt) => ({
+              value: opt.value,
+              label: opt.label,
+            })),
+          ]}
+          onChange={onEvidenceStyleChange}
           aria-label={labels.evidenceStyle}
-        >
-          {allowFollowGlobal ? (
-            <option value="">{labels.followGlobal}</option>
-          ) : null}
-          {evidenceOptions.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </SelectField>
+        />
       </SettingsRow>
     </>
   );

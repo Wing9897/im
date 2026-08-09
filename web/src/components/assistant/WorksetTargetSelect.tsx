@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
-import { SelectField } from "../ui";
+import { MenuSelect } from "../ui";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useGeneralWorksetLabel } from "../../domain/timeline/useGeneralWorksetLabel";
 
@@ -41,26 +41,29 @@ export function WorksetTargetSelectField({
   const selectValue = keepStaleOption || inOptions ? normalized : SYSTEM_WORKSET_ID;
   const showStale = keepStaleOption && !inOptions && normalized !== SYSTEM_WORKSET_ID;
 
+  const menuOptions = useMemo(() => {
+    const rows = [
+      { value: SYSTEM_WORKSET_ID, label: generalWorksetLabel },
+      ...(showStale ? [{ value: normalized, label: normalized }] : []),
+      ...options
+        .filter((opt) => opt.id !== SYSTEM_WORKSET_ID)
+        .map((opt) => ({ value: opt.id, label: opt.name })),
+    ];
+    return rows;
+  }, [generalWorksetLabel, normalized, options, showStale]);
+
   return (
-    <SelectField
+    <MenuSelect
       id={id}
+      variant="field"
       value={selectValue}
-      onChange={(e) => onChange(e.target.value)}
+      options={menuOptions}
+      onChange={onChange}
       disabled={disabled}
       className={className}
       data-testid={testId}
       aria-label={ariaLabel ?? t("assistant:targetWorkset.aria")}
-    >
-      <option value={SYSTEM_WORKSET_ID}>{generalWorksetLabel}</option>
-      {showStale ? <option value={normalized}>{normalized}</option> : null}
-      {options
-        .filter((opt) => opt.id !== SYSTEM_WORKSET_ID)
-        .map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.name}
-          </option>
-        ))}
-    </SelectField>
+    />
   );
 }
 

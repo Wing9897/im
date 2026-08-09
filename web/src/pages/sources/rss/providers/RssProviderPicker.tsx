@@ -36,6 +36,7 @@ export function RssProviderPicker({
         >
           <PlatformIcon platform={activeProvider.iconPlatform} size={16} />
         </span>
+        {/* Native select: MenuSelect has no optgroup support for provider grouping. */}
         <SelectField
           id="rss-provider-select"
           className="min-w-0 flex-1"

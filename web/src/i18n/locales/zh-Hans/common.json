@@ -36,7 +36,7 @@
       "delete": "删除",
       "editAria": "编辑 {name}",
       "deleteAria": "删除 {name}",
-      "openProjectAria": "打开 Agent 详情：{name}",
+      "openAgentAria": "打开 Agent 详情：{name}",
       "recurringProgressHint": "周期任务（无消息分析统计）",
       "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
       "retryCount": "重试 {count}",
@@ -60,7 +60,7 @@
       "relatedKindEvent": "单次",
       "openTimeline": "打开时间轴"
     },
-    "projectDetail": {
+    "agentDetail": {
       "metaTitle": "概览",
       "noDescription": "暂无描述",
       "schedule": "排程：{schedule}",

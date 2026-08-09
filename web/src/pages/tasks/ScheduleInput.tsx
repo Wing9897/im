@@ -7,7 +7,6 @@ import i18n from "../../i18n";
 import type { ScheduleType } from "../../types";
 
 export type { ScheduleType } from "../../types";
-export { isUnmappedTriggerSchedule } from "../../domain/tasks/triggerSchedule";
 
 /** FE preset UI for AI trigger schedules (persisted as scheduleRrule server-side). */
 
@@ -136,6 +135,7 @@ export function ScheduleInput({
   const typeSelect = (
     <FieldStack>
       <FieldLabel htmlFor="schedule-type">{t("tasks.schedule.typeLabel")}</FieldLabel>
+      {/* Native select: disabled unmapped option is not supported by MenuSelect. */}
       <SelectField
         id="schedule-type"
         value={unmappedRrule ? "" : scheduleType}
@@ -193,6 +193,7 @@ export function ScheduleInput({
           <FieldStack>
             <FieldLabel>{t("tasks.schedule.weeklyDateTime")}</FieldLabel>
             <div className="flex items-start gap-sm">
+              {/* Native select: schedule editor stays on SelectField for native form density. */}
               <SelectField
                 className="w-auto shrink-0"
                 value={day}

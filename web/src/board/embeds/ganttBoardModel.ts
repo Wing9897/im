@@ -19,7 +19,7 @@ import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { asTimedAnalysisEvent, type AnalysisEvent, type TaskActivitySpan, type TimelineItem } from "../../types";
 import { isWorksetActivitySpan } from "../../types/analysis";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { resolveSpanWorksetId } from "../useBoardSourceFilter";
+import { resolveSpanWorksetId } from "../../domain/tasks/sourceFilterItems";
 
 export interface GanttActivity {
   id: string;

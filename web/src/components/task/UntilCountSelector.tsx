@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { FieldLabel, SelectField, TextField } from "../../components/ui";
-import { untilToDateInput } from "./recurrenceRuleUtils";
+import { untilToDateInput } from "../../domain/tasks/recurrenceRuleUtils";
 import type { RecurrenceEnd, RecurrenceEndType } from "../../types/calendar";
 
 const END_VALUES: RecurrenceEndType[] = ["never", "until", "count"];
@@ -34,6 +34,7 @@ export function UntilCountSelector({
     <>
       <div className="min-w-[200px] flex-1">
         <FieldLabel htmlFor="recurrence-end-type">{t("tasks.recurrence.endLabel")}</FieldLabel>
+        {/* Native select: recurrence editor stays on SelectField for native form density. */}
         <SelectField
           id="recurrence-end-type"
           value={end.type}

@@ -51,4 +51,4 @@
 - Channel：`server/agent/channels.py` → `AGENT_CHANNEL` / `channel_from_agent_spec`（tick 內連續；不持久化跨次排程 UI session）
 - Policy：`server/domain/agent_task_spec.py`（`project_reconcile`／`web_scout` 預設）
 - Schema：見 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix)
-- UI：任務底下的 Agent 詳情 `/tasks/:taskId/agent`（`analysisMode=agent` + `outputCalendar`；舊路徑 `/tasks/:taskId/project` redirect）；**不是**與 Sources／Assistant 同層的頂層導航。
+- UI：任務底下的 Agent 詳情 `/tasks/:taskId/agent`（`analysisMode=agent` + `outputCalendar`；舊路徑 `/tasks/:taskId/project` 已退役、不再 redirect）；**不是**與 Sources／Assistant 同層的頂層導航。

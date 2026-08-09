@@ -1,9 +1,10 @@
+import { useMemo } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../components/SourceFilterDialog";
 import { RefreshIndicator } from "../../components/common/RefreshIndicator";
 import { TimeFilter, type TimeFilterPreset } from "../../components/TimeFilter";
-import { OpsControlBar, SegmentedControl, SelectField } from "../../components/ui";
+import { MenuSelect, OpsControlBar, SegmentedControl } from "../../components/ui";
 import { pageOpsControlClass } from "../../components/ui/controlStyles";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import type { ViewMode } from "../../types";
@@ -81,6 +82,15 @@ export function IntelligenceToolbar({
     { id: "map", label: tc("ui.viewMap") },
   ] as const;
 
+  const sortOptions = useMemo(
+    () =>
+      INTELLIGENCE_SORT_MODES.map((key) => ({
+        value: key,
+        label: getIntelligenceSortLabel(key, t),
+      })),
+    [t],
+  );
+
   return (
     <OpsControlBar sticky ariaLabel={t("toolbar.aria")} className="im-intelligence-toolbar">
       <div className="shrink-0" data-testid="intelligence-source-filter">
@@ -104,19 +114,17 @@ export function IntelligenceToolbar({
               aria-hidden="true"
               className="pointer-events-none absolute left-2 z-[1] text-text-muted"
             />
-            <SelectField
+            <MenuSelect
+              variant="field"
+              menuPortal
               value={sortMode}
-              onChange={(e) => onSortModeChange(e.target.value as IntelligenceSortMode)}
+              options={sortOptions}
+              onChange={(next) => onSortModeChange(next as IntelligenceSortMode)}
               aria-label={t("toolbar.sortAria")}
               data-testid="intelligence-sort-select"
-              className={`${ctrlClass} !w-[7.5rem] pl-7 pr-2`}
-            >
-              {INTELLIGENCE_SORT_MODES.map((key) => (
-                <option key={key} value={key}>
-                  {getIntelligenceSortLabel(key, t)}
-                </option>
-              ))}
-            </SelectField>
+              className="w-auto shrink-0"
+              triggerClassName={`${ctrlClass} !w-[7.5rem] pl-7 pr-2`}
+            />
           </div>
           <TimeFilter
             value={timeFilterPreset}

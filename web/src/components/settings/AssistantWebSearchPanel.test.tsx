@@ -1,6 +1,33 @@
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 import { AssistantWebSearchPanel } from "./AssistantWebSearchPanel";
+
+async function openProviderMenu(harness: TestHarness) {
+  const trigger = harness.container.querySelector<HTMLButtonElement>(
+    '[data-testid="web-search-provider-value"]',
+  );
+  expect(trigger).toBeTruthy();
+  await act(async () => {
+    trigger!.click();
+  });
+  return trigger!;
+}
+
+function providerOptionValues(): string[] {
+  return Array.from(
+    document.body.querySelectorAll<HTMLButtonElement>(
+      '[data-testid^="web-search-provider-option-"]',
+    ),
+  ).map((btn) => btn.getAttribute("data-testid")!.replace("web-search-provider-option-", ""));
+}
+
+function providerOptionLabel(value: string): string {
+  return (
+    document.body.querySelector(`[data-testid="web-search-provider-option-${value}"]`)
+      ?.textContent ?? ""
+  );
+}
 
 describe("AssistantWebSearchPanel", () => {
   let harness: TestHarness;
@@ -67,8 +94,8 @@ describe("AssistantWebSearchPanel", () => {
       onProviderChange: vi.fn(),
       onBraveApiKeyChange: vi.fn(),
     });
-    const select = harness.container.querySelector("#web-search-provider") as HTMLSelectElement;
-    const values = Array.from(select.options).map((o) => o.value);
+    await openProviderMenu(harness);
+    const values = providerOptionValues();
     expect(values).toEqual(["duckduckgo", "brave"]);
     expect(values).not.toContain("auto");
     const status = harness.container.querySelector('[data-testid="web-search-status"]');
@@ -87,11 +114,10 @@ describe("AssistantWebSearchPanel", () => {
       onProviderChange: vi.fn(),
       onBraveApiKeyChange: vi.fn(),
     });
-    const select = harness.container.querySelector("#web-search-provider") as HTMLSelectElement;
-    const autoOpt = Array.from(select.options).find((o) => o.value === "auto");
-    expect(autoOpt).toBeTruthy();
-    expect(autoOpt?.textContent ?? "").toMatch(/工具路徑|工具路径|Tool path/i);
-    expect(autoOpt?.textContent ?? "").not.toMatch(/跟 LLM|follow LLM|原生/i);
+    await openProviderMenu(harness);
+    expect(providerOptionValues()).toContain("auto");
+    expect(providerOptionLabel("auto")).toMatch(/工具路徑|工具路径|Tool path/i);
+    expect(providerOptionLabel("auto")).not.toMatch(/跟 LLM|follow LLM|原生/i);
     const status = harness.container.querySelector('[data-testid="web-search-status"]');
     expect(status?.textContent ?? "").toMatch(/DuckDuckGo|Brave|工具/i);
     expect(status?.textContent ?? "").not.toMatch(/跟 LLM|follow LLM/i);
@@ -110,11 +136,9 @@ describe("AssistantWebSearchPanel", () => {
       onProviderChange: vi.fn(),
       onBraveApiKeyChange: vi.fn(),
     });
-    const select = harness.container.querySelector("#web-search-provider") as HTMLSelectElement;
-    const values = Array.from(select.options).map((o) => o.value);
-    expect(values).toContain("auto");
-    const autoOpt = Array.from(select.options).find((o) => o.value === "auto");
-    expect(autoOpt?.textContent ?? "").toMatch(/原生|native/i);
+    await openProviderMenu(harness);
+    expect(providerOptionValues()).toContain("auto");
+    expect(providerOptionLabel("auto")).toMatch(/原生|native/i);
     const status = harness.container.querySelector('[data-testid="web-search-status"]');
     expect(status?.textContent ?? "").toMatch(/OpenAI/i);
     expect(harness.container.querySelector("#brave-search-api-key")).toBeNull();
@@ -131,9 +155,8 @@ describe("AssistantWebSearchPanel", () => {
       onProviderChange: vi.fn(),
       onBraveApiKeyChange: vi.fn(),
     });
-    const select = harness.container.querySelector("#web-search-provider") as HTMLSelectElement;
-    const autoOpt = Array.from(select.options).find((o) => o.value === "auto");
-    expect(autoOpt?.textContent ?? "").toMatch(/工具路徑|工具路径|Tool path/i);
+    await openProviderMenu(harness);
+    expect(providerOptionLabel("auto")).toMatch(/工具路徑|工具路径|Tool path/i);
     const status = harness.container.querySelector('[data-testid="web-search-status"]');
     expect(status?.textContent ?? "").toMatch(/DuckDuckGo|Brave|工具|tool/i);
     expect(status?.textContent ?? "").not.toMatch(/將使用 Gemini|Using Gemini|OpenAI 原生|OpenAI native/i);
