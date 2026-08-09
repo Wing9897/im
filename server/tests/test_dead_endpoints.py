@@ -83,7 +83,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("GET", "/api/v1/accounts/dead-endpoint-probe", None),
         ("DELETE", "/api/v1/accounts/dead-endpoint-probe", None),
         ("POST", "/api/v1/accounts/dead-endpoint-probe/reconnect", {}),
-        # Renamed to GET /api/v1/tasks/{id}/agent-ticks (stamp-18 agent naming).
+        # Retired alias of GET /api/v1/tasks/{id}/agent-ticks (project→agent rename).
         ("GET", f"/api/v1/tasks/{task_id}/project-ticks", None),
     ]
 

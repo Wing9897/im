@@ -16,10 +16,6 @@
   gap: 8px;
 }
 
-.im-assistant-direct--fade {
-  opacity: 0;
-}
-
 .im-assistant-direct__stack {
   display: flex;
   flex-direction: column;

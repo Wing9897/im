@@ -2,13 +2,12 @@
  * Regression tests for recurring-task occurrence wiring.
  *
  * Recurring tasks are expanded server-side (GET /api/v1/calendar/items).
- * These tests pin:
+ * These tests pin hook wiring (adapter unit coverage lives in timedEventMerge.test.ts):
  * - occurrences are fetched for the visible range (padded for the month grid)
- * - occurrences are adapted to TimelineItem with source: "recurring"
  * - "all tasks" merges analysis + calendar occurrences
  * - filtering by a recurring task shows only that task's occurrences
  * - filtering by an event task does not mix in calendar occurrences
- * - timelineTasks includes event, recurring, and project modes
+ * - timelineTasks includes event, recurring, and agent modes
  * - __user__ workset shows its owned user_events (incl. tagged provenance); other worksets excluded
  * - task filters include tagged user_events for that task
  */
@@ -61,7 +60,6 @@ import {
   MonitorModeProvider,
 } from "../../context/MonitorModeContext";
 import { makeAnalysisTask, resetAnalysisStatusState, resetTaskCatalogState, taskCatalogState } from "../../test/context-mocks";
-import { calendarOccurrenceToBoardEvent } from "../../domain/timeline/timedEventMerge";
 import { emitResourceModified } from "../../domain/sse/resourceModified";
 import { useTimelineData } from "./useTimelineData";
 
@@ -83,21 +81,6 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
     ...overrides,
   };
 }
-
-describe("calendarOccurrenceToBoardEvent (timeline wiring)", () => {
-  it("adapts an occurrence with the calendar discriminator and all-day flag", () => {
-    const event = calendarOccurrenceToBoardEvent(makeOccurrence({ isAllDay: true }));
-    expect(event.source).toBe("recurring");
-    expect(event.isAllDay).toBe(true);
-    expect(event.id).toBe("cal-1:20250115T090000Z");
-    expect(event.title).toBe("Weekly Standup");
-    expect(event.body).toBe("Team sync");
-    expect(event.startTime).toBe("2025-01-15T09:00:00Z");
-    expect(event.endTime).toBe("2025-01-15T10:00:00Z");
-    expect(event.taskName).toBe("Weekly Standup");
-    expect(event.participants).toEqual([]);
-  });
-});
 
 describe("useTimelineData calendar occurrence wiring", () => {
   let container: HTMLDivElement;

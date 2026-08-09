@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRow,
-  SelectField,
+  MenuSelect,
   TextField,
   Button,
   SelectTile,
@@ -49,6 +49,17 @@ export function ChatNameModeFields({
   const [createOpen, setCreateOpen] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
 
+  const worksetOptions = useMemo(
+    () => [
+      { value: "", label: t("workset.unassigned") },
+      ...worksets.map((ws) => ({
+        value: ws.id,
+        label: ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name,
+      })),
+    ],
+    [t, worksets],
+  );
+
   const handleCreateWorkset = async (cleaned: string) => {
     setCreateBusy(true);
     try {
@@ -84,20 +95,15 @@ export function ChatNameModeFields({
       </SettingsRow>
       <SettingsRow label={t("workset.ownershipLabel")} htmlFor="chat-workset">
         <div className="flex flex-wrap items-center gap-sm">
-          {/* Native select: kept beside create-workset button in dense task editor row. */}
-          <SelectField
+          <MenuSelect
             id="chat-workset"
+            variant="field"
             value={worksetId ?? ""}
-            onChange={(e) => onWorksetIdChange(e.target.value || null)}
+            options={worksetOptions}
+            onChange={(next) => onWorksetIdChange(next || null)}
             className="min-w-0 flex-1"
-          >
-            <option value="">{t("workset.unassigned")}</option>
-            {worksets.map((ws) => (
-              <option key={ws.id} value={ws.id}>
-                {ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name}
-              </option>
-            ))}
-          </SelectField>
+            aria-label={t("workset.ownershipLabel")}
+          />
           <Button
             type="button"
             variant="secondary"
