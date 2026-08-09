@@ -82,6 +82,12 @@ describe("calendarOccurrenceToBoardEvent", () => {
     expect(event.source).toBe("recurring");
     expect(event.itemId).toBe("item-9");
   });
+
+  it("preserves the all-day flag on adapted occurrences", () => {
+    const event = calendarOccurrenceToBoardEvent(makeOccurrence({ isAllDay: true }));
+    expect(event.isAllDay).toBe(true);
+    expect(event.source).toBe("recurring");
+  });
 });
 
 describe("mergeWithCalendarOccurrences", () => {

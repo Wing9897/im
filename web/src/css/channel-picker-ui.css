@@ -140,8 +140,7 @@
   border-bottom: none;
 }
 
-.im-picker-platform-toggle,
-.im-picker-account-toggle {
+.im-picker-platform-toggle {
   appearance: none;
   width: 100%;
   display: flex;
@@ -159,8 +158,7 @@
   transition: background var(--im-duration-fast, 100ms) var(--im-easing-default, ease);
 }
 
-.im-picker-platform-toggle:hover,
-.im-picker-account-toggle:hover {
+.im-picker-platform-toggle:hover {
   background: color-mix(in srgb, var(--surface-card) 80%, transparent);
 }
 
@@ -178,8 +176,7 @@
   transform: rotate(90deg);
 }
 
-.im-picker-platform-name,
-.im-picker-account-name {
+.im-picker-platform-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -187,8 +184,7 @@
   white-space: nowrap;
 }
 
-.im-picker-platform-count,
-.im-picker-account-count {
+.im-picker-platform-count {
   flex-shrink: 0;
   font-size: 11px;
   font-weight: 500;
@@ -210,29 +206,6 @@
 
 .im-picker-platform-body {
   padding: 4px 0 6px;
-}
-
-.im-picker-account-block + .im-picker-account-block {
-  border-top: 1px solid color-mix(in srgb, var(--surface-border) 65%, transparent);
-}
-
-.im-picker-account-toggle {
-  padding: 8px 12px 8px 28px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.im-picker-account-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  padding: 8px 12px 4px 28px;
-  letter-spacing: 0.02em;
 }
 
 .im-picker-rows {

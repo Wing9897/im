@@ -130,9 +130,9 @@ async def test_agent_delete_allows_owned_child(app) -> None:
 
 
 @pytest.mark.asyncio
-async def test_user_event_may_own_project_task(app) -> None:
+async def test_user_event_may_own_agent_task(app) -> None:
     db: Database = app.state.db
-    await _insert_task(db, task_id="proj-1", mode="agent", name="Alpha")
+    await _insert_task(db, task_id="agent-1", mode="agent", name="Alpha")
 
     result = await execute_tool(
         db,
@@ -142,10 +142,10 @@ async def test_user_event_may_own_project_task(app) -> None:
             "startTime": "2026-07-28T10:00:00Z",
         },
         context={
-            "agent_scope_task_id": "proj-1",
+            "agent_scope_task_id": "agent-1",
             "user_event_origin": "agent",
         },
     )
     assert "error" not in result
-    assert result["item"]["taskId"] == "proj-1"
+    assert result["item"]["taskId"] == "agent-1"
     assert result["item"]["origin"] == "agent"
