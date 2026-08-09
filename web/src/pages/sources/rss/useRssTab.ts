@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { deleteSource } from "../../../api/sources";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
-import { useSourceListTab } from "../useSourceListTab";
-import { useSourceEditController } from "../useSourceEditController";
+import { useSourceListTab } from "../board/useSourceListTab";
+import { useSourceEditController } from "../board/useSourceEditController";
 import {
   DEFAULT_RSS_PROVIDER_ID,
   getRssProvider,

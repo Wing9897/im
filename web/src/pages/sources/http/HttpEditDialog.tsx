@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useTranslation } from "react-i18next";
 import type { HttpSourceInfo } from "../../../types";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import { HttpSourceFields } from "./HttpFormFields";
 import type { HttpFormFields } from "./httpFormTypes";
 

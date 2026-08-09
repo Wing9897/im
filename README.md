@@ -7,9 +7,9 @@
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — 統一 trigger-purpose `schedule_rrule`（APScheduler next-run only；FE 預設：10 秒、每小時、每日、每週、自訂秒數 → RRULE）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
 - **時間規劃** — Timeline 合併分析事件、週期任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
-- **物品** — `/items` 兩層（分類卡片 → 分類內列表），購入／到期／提醒日投影到日曆（`source=item`）；分類與物品可選 emoji（含 seed logo），歸屬工作集
+- **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位／價錢；到期與提醒走關聯日曆（投影 `source=item`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
-- **專案／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；預設專案調和／網蒐）
+- **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` redirect）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
 - **助手與提醒** — Agent 自然語言交互；語音提醒掃描情報事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
@@ -274,15 +274,17 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v19**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.20`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-19 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v23**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.24`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-23 庫。
 
-**Wipe-only：** v1–v18 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v22 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v15 explicit reset](docs/ARCHITECTURE.md#schema-v15-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v23 explicit reset](docs/ARCHITECTURE.md#schema-v23-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+
+本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 
 ### 連接埠
 
@@ -300,8 +302,8 @@ uv run python scripts/reset_local_databases.py --apply
 | [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md) | UI 用語／error_code 詞彙表 |
 | [`docs/agent/assistant.md`](docs/agent/assistant.md) | 內建助手（Agent + 瀏覽器語音）使用與契約 |
 | [`docs/agent/a2a.md`](docs/agent/a2a.md) | 客戶經理（Agent-to-Agent / Account manager）：自然語言 `POST /api/v1/a2a/agent`（events CRUD 門面已移除） |
-| [`docs/agent/project.md`](docs/agent/project.md) | 專案管理 tick：空佇列跳過、多波抽乾、連續 session、置頂目標 |
-| [`docs/diagrams/README.md`](docs/diagrams/README.md) | Mermaid 結構圖：Input → Process → Output、排程、專案閉環 |
+| [`docs/agent/project.md`](docs/agent/project.md) | Agent／專案調和 tick：空佇列跳過、多波抽乾、連續 session、置頂目標；agent 無 items 寫入 |
+| [`docs/diagrams/README.md`](docs/diagrams/README.md) | Mermaid 結構圖：Input → Process → Output、排程、Agent 閉環 |
 | [`desktop/resources/README.md`](desktop/resources/README.md) | 封裝用圖示說明 |
 
 漂移檢查：`npm run check`、`npm run verify:deploy`、`server/tests/test_contract_*.py`、`server/tests/test_dead_endpoints.py`。

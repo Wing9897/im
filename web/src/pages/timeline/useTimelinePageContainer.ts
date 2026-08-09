@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { isEmptySourceFilter } from "../../domain/tasks/sourceFilterSelection";
-import { findActivitySpan } from "../tasks/project/projectDetailModel";
+import { findActivitySpan } from "../tasks/agent/projectDetailModel";
 import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import {

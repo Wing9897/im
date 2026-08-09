@@ -57,6 +57,25 @@ body {
   --im-scrollbar-thumb-active: var(--surface-overlay);
 }
 
+/* Native select popups follow app theme; pin option colors for Electron/Chromium. */
+html {
+  color-scheme: light dark;
+}
+
+html[data-theme-mode="light"] {
+  color-scheme: light;
+}
+
+html[data-theme-mode="dark"] {
+  color-scheme: dark;
+}
+
+select option,
+select optgroup {
+  background-color: var(--surface-card);
+  color: var(--text-primary);
+}
+
 button,
 select,
 input,

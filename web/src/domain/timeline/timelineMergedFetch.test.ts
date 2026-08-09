@@ -74,7 +74,7 @@ function makeItemOccurrence(
   overrides: Partial<CalendarOccurrence> = {},
 ): CalendarOccurrence {
   return {
-    id: "item:i1:expires",
+    id: "item:i1:remind",
     taskId: "",
     taskName: "",
     title: "Milk",
@@ -88,7 +88,7 @@ function makeItemOccurrence(
     source: "item",
     worksetId: SYSTEM_WORKSET_ID,
     itemId: "i1",
-    itemDateKind: "expires",
+    itemDateKind: "remind",
     dismissed: false,
     ...overrides,
   };
@@ -164,9 +164,9 @@ describe("mergeTimelineFilterSources", () => {
       userEvents: [],
     });
     const item = merged.find((e) => e.source === "item");
-    expect(item?.id).toBe("item:i1:expires");
+    expect(item?.id).toBe("item:i1:remind");
     expect(item?.itemId).toBe("i1");
-    expect(item?.itemDateKind).toBe("expires");
+    expect(item?.itemDateKind).toBe("remind");
     expect(item?.dismissed).toBe(false);
     expect(item?.startTime).toBe("2025-01-20T00:00:00");
   });

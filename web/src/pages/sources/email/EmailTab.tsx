@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { EmailMailboxDetailDialog } from "./EmailMailboxDetailDialog";
 import { EmailEditDialog } from "./EmailEditDialog";
 import { EmailMailboxCard } from "./EmailMailboxCard";

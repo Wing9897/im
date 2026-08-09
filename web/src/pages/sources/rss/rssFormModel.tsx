@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import type { RssFeedInfo } from "../../../types";
 import type { RssFormFields } from "./providers/types";
 import { RssFeedFields } from "./RssFeedFields";

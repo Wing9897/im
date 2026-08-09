@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { MqttBrokerDetailDialog } from "./MqttBrokerDetailDialog";
 import { MqttBrokerCard } from "./MqttBrokerCard";
 import { MqttBrokerForm } from "./MqttBrokerForm";

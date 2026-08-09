@@ -6,15 +6,78 @@ from datetime import date, timedelta
 from typing import Any
 
 from server.db.database import Database
-from server.items.normalize import ItemValidationError
-from server.items.service import create_item
-from server.queries.items_queries import fetch_expiring_items
+from server.items.normalize import ItemValidationError, _UNSET
+from server.items.service import create_item, patch_item
+from server.queries.items_queries import fetch_expiring_items, fetch_item_row, fetch_item_rows
 from server.wire.serializers import serialize_item
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 
 def _today_local() -> date:
     return date.today()
+
+
+def _compact_item_summary(item: dict[str, Any], *, today: date | None = None) -> dict[str, Any]:
+    expires = item.get("expiresAt")
+    overdue = False
+    if today is not None and expires:
+        overdue = bool(str(expires) < today.isoformat())
+    return {
+        "id": item["id"],
+        "title": item["title"],
+        "worksetId": item.get("worksetId") or SYSTEM_WORKSET_ID,
+        "categoryId": item.get("categoryId"),
+        "expiresAt": expires,
+        "remindBeforeDays": item.get("remindBeforeDays"),
+        "status": item.get("status") or "active",
+        "overdue": overdue,
+        "quantity": item.get("quantity"),
+        "unit": item.get("unit"),
+        "price": item.get("price"),
+        "attributes": item.get("attributes") or {},
+        "notes": item.get("notes") or "",
+    }
+
+
+async def _tool_list(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
+    workset_id = arguments.get("worksetId") or arguments.get("workset_id")
+    if isinstance(workset_id, str):
+        workset_id = workset_id.strip() or None
+    else:
+        workset_id = None
+    category_id = arguments.get("categoryId") or arguments.get("category_id")
+    if isinstance(category_id, str):
+        category_id = category_id.strip()
+        if category_id == "":
+            category_id = ""
+        elif not category_id:
+            category_id = None
+    else:
+        category_id = None
+    status = arguments.get("status")
+    if isinstance(status, str):
+        status = status.strip().lower() or None
+    else:
+        status = None
+    if status is not None and status not in {"active", "archived"}:
+        return {"error": "status must be active or archived"}
+    search = arguments.get("search")
+    search_needle = str(search).strip() if search else ""
+    limit_raw = arguments.get("limit", 50)
+    try:
+        limit = max(1, min(int(limit_raw), 100))
+    except (TypeError, ValueError):
+        return {"error": "limit must be an integer"}
+
+    rows = await fetch_item_rows(
+        db,
+        workset_id=workset_id,
+        category_id=category_id,
+        status=status,
+        search=search_needle or None,
+    )
+    items = [_compact_item_summary(serialize_item(row)) for row in rows[:limit]]
+    return {"items": items, "count": len(items)}
 
 
 async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -42,6 +105,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
 
     today = _today_local()
     until = today + timedelta(days=days)
+    # Read denormalized cache only (write-through happens on linked calendar mutations).
     rows = await fetch_expiring_items(
         db,
         today=today.isoformat(),
@@ -64,24 +128,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
         items = items[:limit]
 
     # Compact summary for the model: core + attributes.
-    summaries = []
-    for item in items:
-        expires = item.get("expiresAt")
-        overdue = bool(expires and str(expires) < today.isoformat())
-        summaries.append(
-            {
-                "id": item["id"],
-                "title": item["title"],
-                "worksetId": item.get("worksetId") or SYSTEM_WORKSET_ID,
-                "categoryId": item.get("categoryId"),
-                "purchasedAt": item.get("purchasedAt"),
-                "expiresAt": expires,
-                "remindBeforeDays": item.get("remindBeforeDays"),
-                "overdue": overdue,
-                "attributes": item.get("attributes") or {},
-                "notes": item.get("notes") or "",
-            }
-        )
+    summaries = [_compact_item_summary(item, today=today) for item in items]
     return {
         "items": summaries,
         "today": today.isoformat(),
@@ -103,15 +150,61 @@ async def _tool_create(db: Database, arguments: dict[str, Any]) -> dict[str, Any
             title=title,
             workset_id=workset_id,
             category_id=arguments.get("categoryId") or arguments.get("category_id"),
-            purchased_at=arguments.get("purchasedAt") or arguments.get("purchased_at"),
-            expires_at=arguments.get("expiresAt") or arguments.get("expires_at"),
-            remind_before_days=arguments.get("remindBeforeDays")
-            if "remindBeforeDays" in arguments
-            else arguments.get("remind_before_days"),
             notes=arguments.get("notes") or "",
             status="active",
+            quantity=arguments.get("quantity"),
+            unit=arguments.get("unit"),
+            price=arguments.get("price"),
             attributes=arguments.get("attributes"),
         )
     except ItemValidationError as exc:
         return {"error": str(exc)}
     return {"item": item, "created": True}
+
+
+async def _tool_update(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
+    item_id = arguments.get("id") or arguments.get("itemId") or arguments.get("item_id")
+    if not isinstance(item_id, str) or not item_id.strip():
+        return {"error": "id is required"}
+    item_id = item_id.strip()
+    existing = await fetch_item_row(db, item_id)
+    if existing is None:
+        return {"error": "item not found"}
+
+    patch_kwargs: dict[str, Any] = {}
+    field_aliases = (
+        ("title", ("title",)),
+        ("worksetId", ("worksetId", "workset_id")),
+        ("categoryId", ("categoryId", "category_id")),
+        ("notes", ("notes",)),
+        ("status", ("status",)),
+        ("quantity", ("quantity",)),
+        ("unit", ("unit",)),
+        ("price", ("price",)),
+        ("attributes", ("attributes",)),
+    )
+    for wire_key, arg_keys in field_aliases:
+        for arg_key in arg_keys:
+            if arg_key in arguments:
+                patch_kwargs[wire_key] = arguments[arg_key]
+                break
+    if not patch_kwargs:
+        return {"error": "no updatable fields provided"}
+
+    try:
+        item = await patch_item(
+            db,
+            item_id,
+            title=patch_kwargs.get("title", _UNSET),
+            workset_id=patch_kwargs.get("worksetId", _UNSET),
+            category_id=patch_kwargs.get("categoryId", _UNSET),
+            notes=patch_kwargs.get("notes", _UNSET),
+            status=patch_kwargs.get("status", _UNSET),
+            quantity=patch_kwargs.get("quantity", _UNSET),
+            unit=patch_kwargs.get("unit", _UNSET),
+            price=patch_kwargs.get("price", _UNSET),
+            attributes=patch_kwargs.get("attributes", _UNSET),
+        )
+    except ItemValidationError as exc:
+        return {"error": str(exc)}
+    return {"item": item, "updated": True}

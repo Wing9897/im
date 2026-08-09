@@ -30,7 +30,6 @@ _CURRENT_TASK_CONTEXT_KEYS = (
     "name",
     "description",
     "promptTemplate",
-    "webSearchQuery",
     "analysisMode",
     "analysisTimeRange",
     "scheduleRrule",

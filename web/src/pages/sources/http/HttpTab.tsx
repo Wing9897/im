@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { HttpSourceDetailDialog } from "./HttpSourceDetailDialog";
 import { HttpSourceCard } from "./HttpSourceCard";
 import { HttpSourceForm } from "./HttpSourceForm";

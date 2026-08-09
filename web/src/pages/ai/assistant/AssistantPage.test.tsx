@@ -1,10 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const { mockStreamAgentChat, mockCreateSpeechPorts } = vi.hoisted(() => ({
   mockStreamAgentChat: vi.fn(),
@@ -78,12 +76,11 @@ describe("AssistantPage", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     window.localStorage.clear();
-    setAppLocale("zh-Hant");
-    void i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     mockStreamAgentChat.mockReset();
     mockCreateSpeechPorts.mockReset();
     mockPorts({ sttAvailable: false, ttsAvailable: false });
@@ -103,15 +100,11 @@ describe("AssistantPage", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
+        wrapWithI18n(createElement(
             MemoryRouter,
             null,
             createElement(AssistantChatProvider, null, createElement(AssistantPage)),
-          ),
-        ),
+          )),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -125,7 +118,7 @@ describe("AssistantPage", () => {
     expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
     expect(container.querySelector("[data-testid='assistant-send']")).toBeTruthy();
     expect(container.querySelector("[data-testid='assistant-ptt']")).toBeNull();
-    expect(container.textContent).toContain("問本機情報或日程");
+    expect(container.textContent).toContain("問本機情報、日程或物品");
     expect(container.textContent).toContain("此環境無法語音辨識，請改用文字輸入。");
   });
 

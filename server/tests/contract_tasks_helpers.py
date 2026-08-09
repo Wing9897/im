@@ -9,7 +9,6 @@ TASK_KEYS = [
     "name",
     "description",
     "promptTemplate",
-    "webSearchQuery",
     "analysisMode",
     "analysisTimeRange",
     "isActive",

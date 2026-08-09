@@ -155,13 +155,8 @@ export function calendarOccurrenceToBoardEvent(
       ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
       : undefined,
     itemId: occurrence.itemId?.trim() || null,
-    itemDateKind: isItem
-      ? occurrence.itemDateKind === "expires" ||
-        occurrence.itemDateKind === "remind" ||
-        occurrence.itemDateKind === "purchased"
-        ? occurrence.itemDateKind
-        : "remind"
-      : undefined,
+    // Server projects remind only.
+    itemDateKind: isItem ? "remind" : undefined,
   };
 }
 

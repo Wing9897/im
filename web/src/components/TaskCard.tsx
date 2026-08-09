@@ -17,10 +17,9 @@ import {
   stopSelectableActivation,
 } from "./detail/SelectableSurface";
 import { colorStatusDotStyle } from "../styles/statusDot";
+import { isProjectTask } from "../domain/tasks/isProjectTask";
 import type { AnalysisTask } from "../types/tasks";
 import type { TaskCardStats } from "../types/dashboard";
-
-export type { TaskCardStats };
 
 export interface TaskCardProps {
   task: AnalysisTask;
@@ -49,7 +48,7 @@ export const TaskCard = React.memo(function TaskCard({
   const [toggling, setToggling] = useState(false);
   const isRecurringMode = task.analysisMode === "recurring";
   const isAgentMode = task.analysisMode === "agent";
-  const isProjectMode = isAgentMode && Boolean(task.outputCalendar);
+  const isProjectMode = isProjectTask(task);
   const hideAnalysisStats = isAgentMode || isRecurringMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
@@ -72,13 +71,16 @@ export const TaskCard = React.memo(function TaskCard({
     onDelete(task.id);
   }, [onDelete, task.id]);
 
+  const isAnalyzing = stats.isRunning;
   const runningDotStyle = colorStatusDotStyle(
-    stats.isRunning ? "var(--success)" : "var(--text-muted)",
+    isAnalyzing ? "var(--info)" : "var(--text-muted)",
   );
 
   const toggleLabel = task.isActive
     ? t("tasks.card.disable")
     : t("tasks.card.enable");
+
+  const analyzingLabel = t("tasks.card.analyzingAria", { name: task.name });
 
   return (
     <SelectableSurface
@@ -98,11 +100,17 @@ export const TaskCard = React.memo(function TaskCard({
         accentClass={MODE_ACCENT_CLASS[task.analysisMode]}
         interactive
         enter="rise"
-        className={
+        className={[
           isSelected
             ? "ring-1 ring-accent ring-offset-1 ring-offset-[var(--surface-base)]"
-            : undefined
-        }
+            : "",
+          isAnalyzing ? "im-task-card-analyzing" : "",
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined}
+        title={isAnalyzing ? analyzingLabel : undefined}
+        data-analyzing={isAnalyzing ? "true" : undefined}
+        aria-busy={isAnalyzing || undefined}
       >
         <div className="flex items-start justify-between gap-sm">
           <div className="flex min-w-0 flex-1 items-center gap-sm">
@@ -180,7 +188,7 @@ export const TaskCard = React.memo(function TaskCard({
               </div>
             </div>
             {task.isActive &&
-            !stats.isRunning &&
+            !isAnalyzing &&
             stats.unanalyzedCount > 0 &&
             stats.unanalyzedCount < stats.triggerThreshold ? (
               <div
@@ -246,18 +254,22 @@ export const TaskCard = React.memo(function TaskCard({
                 <PowerOff size={14} strokeWidth={2} aria-hidden="true" />
               </span>
             ) : (
-              <span style={runningDotStyle} aria-hidden="true" />
+              <span
+                style={runningDotStyle}
+                className={isAnalyzing ? "im-pulse-dot" : undefined}
+                aria-hidden="true"
+              />
             )}
             <span
               className={[
                 "truncate",
-                task.isActive && stats.isRunning ? "text-success" : undefined,
+                task.isActive && isAnalyzing ? "text-info" : undefined,
               ]
                 .filter(Boolean)
                 .join(" ")}
             >
               {task.isActive
-                ? stats.isRunning
+                ? isAnalyzing
                   ? t("tasks.card.running")
                   : t("tasks.card.idle")
                 : t("tasks.card.disabled")}

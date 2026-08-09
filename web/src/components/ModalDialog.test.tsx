@@ -148,7 +148,7 @@ describe("ModalDialog", () => {
     expect(body.className).not.toContain("py-md");
   });
 
-  it("keepMounted parks the tree as hidden after close instead of unmounting", () => {
+  it("keepMounted parks the tree without re-applying enter animation", () => {
     const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
       (query: string) =>
         ({
@@ -163,6 +163,7 @@ describe("ModalDialog", () => {
         }) as MediaQueryList,
     );
     const onClose = vi.fn();
+    const onExited = vi.fn();
     try {
       act(() => {
         root.render(
@@ -172,6 +173,7 @@ describe("ModalDialog", () => {
               open: true,
               title: "Keep",
               onClose,
+              onExited,
               testId: "keep-mounted-modal",
               keepMounted: true,
               footer: createElement("button", { type: "button" }, "OK"),
@@ -191,6 +193,7 @@ describe("ModalDialog", () => {
               open: false,
               title: "Keep",
               onClose,
+              onExited,
               testId: "keep-mounted-modal",
               keepMounted: true,
               footer: createElement("button", { type: "button" }, "OK"),
@@ -205,7 +208,69 @@ describe("ModalDialog", () => {
       ) as HTMLElement | null;
       expect(overlay).not.toBeNull();
       expect(overlay?.hidden).toBe(true);
+      expect(overlay?.getAttribute("data-overlay-parked")).toBe("true");
+      expect(overlay?.style.display).toBe("none");
+      expect(overlay?.className).not.toContain("im-animate-in");
+      expect(overlay?.className).not.toContain("im-animate-out");
       expect(document.body.querySelector('[data-testid="keep-body"]')).not.toBeNull();
+      expect(onExited).toHaveBeenCalledTimes(1);
+    } finally {
+      matchMediaSpy.mockRestore();
+    }
+  });
+
+  it("calls onExited once after unmount when keepMounted is false", () => {
+    const matchMediaSpy = vi.spyOn(window, "matchMedia").mockImplementation(
+      (query: string) =>
+        ({
+          matches: true,
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
+    );
+    const onExited = vi.fn();
+    try {
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: true,
+              title: "Exit",
+              onClose: vi.fn(),
+              onExited,
+              testId: "exit-once-modal",
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", null, "Body"),
+          ),
+        );
+      });
+
+      act(() => {
+        root.render(
+          createElement(
+            ModalDialog,
+            {
+              open: false,
+              title: "Exit",
+              onClose: vi.fn(),
+              onExited,
+              testId: "exit-once-modal",
+              footer: createElement("button", { type: "button" }, "OK"),
+            },
+            createElement("p", null, "Body"),
+          ),
+        );
+      });
+
+      expect(document.body.querySelector('[data-testid="exit-once-modal"]')).toBeNull();
+      expect(onExited).toHaveBeenCalledTimes(1);
     } finally {
       matchMediaSpy.mockRestore();
     }

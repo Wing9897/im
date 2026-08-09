@@ -4,9 +4,6 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import type { TimelineItem } from "../../../types";
 import {
@@ -19,6 +16,7 @@ import {
   type TimelinePageContextValue,
 } from "../TimelinePageContext";
 import { TimelineSidebar } from "./TimelineSidebar";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock(),
@@ -92,8 +90,7 @@ describe("TimelineSidebar detail provenance", () => {
   let root: Root;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     resetTaskCatalogState([]);
     taskCatalogState.worksets = [
       { id: SYSTEM_WORKSET_ID, name: "一般", createdAt: null, updatedAt: null },
@@ -114,17 +111,13 @@ describe("TimelineSidebar detail provenance", () => {
   function renderSidebar(selectedEvent: TimelineItem | null) {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(TimelinePageProvider, {
+        wrapWithI18n(createElement(TimelinePageProvider, {
             value: makeContext(selectedEvent),
             children: createElement(TimelineSidebar, {
               rangeEvents: [],
               focusedDay: null,
             }),
-          }),
-        ),
+          })),
       );
     });
   }
@@ -140,12 +133,12 @@ describe("TimelineSidebar detail provenance", () => {
     expect(container.textContent).not.toContain("任務：");
   });
 
-  it("shows project provenance (not taskName-as-workset) for project-origin events", () => {
+  it("shows agent provenance (not taskName-as-workset) for agent-origin events", () => {
     renderSidebar(
       makeUserEvent({
         taskId: "proj-1",
         taskName: "專案 Alpha",
-        origin: "project",
+        origin: "agent",
         worksetId: SYSTEM_WORKSET_ID,
       }),
     );
@@ -154,7 +147,7 @@ describe("TimelineSidebar detail provenance", () => {
     ).toBe("工作集：一般");
     expect(
       container.querySelector('[data-testid="timeline-sidebar-provenance"]')?.textContent,
-    ).toBe("專案");
+    ).toBe("代理");
   });
 
   it("shows task provenance with task name for analysis events", () => {

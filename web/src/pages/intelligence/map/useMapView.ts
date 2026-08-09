@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisEvent, TimeWindow } from "../../../types";
-import { useAnalysisStatus } from "../../../context/AnalysisStatusContext";
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import {
   computeDataRange,
@@ -13,24 +12,20 @@ import {
 } from "../../../domain/intelligence/mapPresentation";
 import { captureError } from "../../../utils/errorReporter";
 import {
-  type DanmakuMode, type OverlayDisplayMode, ONE_HOUR,
+  type DanmakuMode, type OverlayDisplayMode,
   EVENT_PANEL_MIN_HEIGHT, EVENT_PANEL_MAX_HEIGHT,
   LIVE_INFO_PANEL_MIN_HEIGHT, LIVE_INFO_PANEL_MAX_HEIGHT,
   clampHeight, readSharedDanmakuMode,
   cycleDanmakuMode, cycleOverlayDisplayMode,
   SHARED_DANMAKU_MODE_KEY,
-  MAP_LIVE_MODE_STORAGE_KEY,
-  MAP_TIME_WINDOW_STORAGE_KEY,
-  readStoredMapTimeWindow,
-  writeStoredMapTimeWindow,
 } from "./mapViewHelpers";
 import {
   MAP_EVENT_PANEL_HEIGHT_STORAGE_KEY,
   MAP_LIVE_INFO_PANEL_HEIGHT_STORAGE_KEY,
-  MAP_LIVE_WINDOW_HOURS_STORAGE_KEY,
   MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY,
 } from "../../../domain/prefs";
 import { useMapLiveMessages } from "./useMapLiveMessages";
+import { useMapViewTimeWindow } from "./useMapViewTimeWindow";
 
 interface UseMapViewOptions {
   items: AnalysisEvent[];
@@ -48,9 +43,9 @@ interface UseMapViewOptions {
  *   (see `useTimelineSliderInteraction`).
  * - `onFetchWindowChange` pushes the committed window up to the feed; scrub
  *   must not call it.
+ * - Time/live data: `useMapViewTimeWindow`. Gestures: timeline slider hook.
  */
 export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
-  const { lastAnalysisEvent } = useAnalysisStatus();
   const { withCoords } = useMemo(() => partitionByCoordinates(items), [items]);
   // Pre-parse timestamps + sort once; scrub filters this list without re-sorting.
   const timedItemsDesc = useMemo(() => sortTimedMapEvents(withCoords), [withCoords]);
@@ -64,10 +59,6 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
     MAP_OVERLAY_DISPLAY_MODE_STORAGE_KEY,
     "both",
   );
-  const [liveWindowHours, setLiveWindowHours] = usePersistedState<number>(
-    MAP_LIVE_WINDOW_HOURS_STORAGE_KEY,
-    12,
-  );
   const [eventPanelHeight, setEventPanelHeight] = usePersistedState<number>(
     MAP_EVENT_PANEL_HEIGHT_STORAGE_KEY,
     280,
@@ -78,6 +69,17 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
   );
 
   const { liveMessagesRecent, incomingLiveMessages } = useMapLiveMessages();
+
+  const {
+    liveWindowHours,
+    setLiveWindowHours,
+    liveMode,
+    timeWindow,
+    handleTimeWindowChange,
+    commitFetchWindow,
+    handleLiveModeToggle,
+    exitLiveMode,
+  } = useMapViewTimeWindow({ onFetchWindowChange });
 
   const toggleFullscreen = useCallback(async () => {
     const el = containerRef.current;
@@ -102,114 +104,8 @@ export function useMapView({ items, onFetchWindowChange }: UseMapViewOptions) {
   }, []);
 
   const dataRange = useMemo(() => computeDataRange(withCoords), [withCoords]);
-  const liveWindowMs = liveWindowHours * ONE_HOUR;
-
-  const [liveMode, setLiveMode] = usePersistedState<boolean>(
-    MAP_LIVE_MODE_STORAGE_KEY,
-    true,
-  );
-
-  // Default to Live mode — show current time ±liveWindowHours so newly
-  // arriving events are immediately visible without user interaction.
-  const [timeWindow, setTimeWindow] = useState<TimeWindow>(() => {
-    const liveDefault = () => {
-      const now = Date.now();
-      return { start: new Date(now - liveWindowMs), end: new Date(now + liveWindowMs) };
-    };
-    if (typeof window === "undefined") return liveDefault();
-    try {
-      const storedLive = window.localStorage.getItem(MAP_LIVE_MODE_STORAGE_KEY);
-      const restoredLive =
-        storedLive === null ? true : (JSON.parse(storedLive) as boolean);
-      if (restoredLive) return liveDefault();
-    } catch {
-      return liveDefault();
-    }
-    return readStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, liveDefault());
-  });
-  const restoredFetchRef = useRef(false);
   const [selectedItem, setSelectedItem] = useState<AnalysisEvent | null>(null);
   const [clusterItems, setClusterItems] = useState<AnalysisEvent[] | null>(null);
-
-  const handleTimeWindowChange = useCallback((w: TimeWindow) => {
-    setTimeWindow(w);
-  }, []);
-
-  const applyLiveWindow = useCallback(() => {
-    const now = Date.now();
-    const next: TimeWindow = {
-      start: new Date(now - liveWindowMs),
-      end: new Date(now + liveWindowMs),
-    };
-    setTimeWindow(next);
-    // Live advances are intentional fetch points (not 50Hz scrub).
-    onFetchWindowChange?.(next);
-  }, [liveWindowMs, onFetchWindowChange]);
-
-  /** Commit scrub / calendar / keyboard — one API fetch after the gesture. */
-  const commitFetchWindow = useCallback(
-    (w: TimeWindow) => {
-      setTimeWindow(w);
-      writeStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, w);
-      onFetchWindowChange?.(w);
-    },
-    [onFetchWindowChange],
-  );
-
-  const handleLiveModeToggle = useCallback(() => {
-    setLiveMode((prev) => {
-      if (!prev) {
-        applyLiveWindow();
-        return true;
-      }
-      setTimeWindow((current) => {
-        writeStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, current);
-        return current;
-      });
-      return false;
-    });
-  }, [applyLiveWindow, setLiveMode]);
-
-  /** Idempotent exit used by timeline drag / calendar — never toggles back on. */
-  const exitLiveMode = useCallback(() => {
-    setLiveMode(false);
-    setTimeWindow((current) => {
-      writeStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, current);
-      return current;
-    });
-  }, [setLiveMode]);
-
-  useEffect(() => {
-    if (liveMode) return;
-    if (restoredFetchRef.current) return;
-    restoredFetchRef.current = true;
-    onFetchWindowChange?.(timeWindow);
-  }, [liveMode, onFetchWindowChange, timeWindow]);
-
-  useEffect(() => {
-    if (liveMode) {
-      applyLiveWindow();
-    }
-  }, [applyLiveWindow, liveMode]);
-
-  // Re-center the live time window when analysis completes so new events
-  // stay visible without a separate data refetch (handled by useIntelligenceFeed).
-  useEffect(() => {
-    if (!liveMode) return;
-    if (!lastAnalysisEvent) return;
-    if (lastAnalysisEvent.type !== "completed") return;
-
-    applyLiveWindow();
-  }, [lastAnalysisEvent, liveMode, applyLiveWindow]);
-
-  // Advance the live time window every 60 seconds so the view stays current.
-  useEffect(() => {
-    if (!liveMode) return;
-    const interval = setInterval(() => {
-      applyLiveWindow();
-    }, 60_000);
-    return () => { clearInterval(interval); };
-  }, [applyLiveWindow, liveMode]);
 
   // Scrub updates `timeWindow` once per animation frame for client-side marker filtering only.
   // Do NOT call onFetchWindowChange here — that would hammer the API.

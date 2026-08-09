@@ -396,6 +396,7 @@ describe("TimelinePage user-event CRUD", () => {
       location: "Zoom",
       body: "Sync",
       rrule: "FREQ=WEEKLY;BYDAY=MO",
+      itemId: null,
     });
     expect(mockCreateUserEvent).not.toHaveBeenCalled();
     // refreshEvents receives the post-create catalog so workset filters include the new task

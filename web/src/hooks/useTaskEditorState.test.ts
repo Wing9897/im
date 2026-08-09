@@ -70,7 +70,6 @@ describe("useTaskEditorState", () => {
       name: "Preset Name",
       description: "Preset Description",
       promptTemplate: "Analyze {{messages}}",
-      webSearchQuery: "",
       analysisMode: "leaderboard",
       defaultAnalysisTimeRange: "7d",
       badge: "trending",
@@ -92,11 +91,10 @@ describe("useTaskEditorState", () => {
     renderHarness();
 
     const preset: TaskTemplatePreset = {
-      id: "project-product-launch",
+      id: "agent-product-launch",
       name: "產品上線專案",
       description: "desc",
       promptTemplate: "prompt",
-      webSearchQuery: "",
       analysisMode: "agent",
       defaultAnalysisTimeRange: "7d",
       badge: "🚀",
@@ -198,7 +196,6 @@ describe("useTaskEditorState", () => {
       act(() => {
         latest.updateField("analysisMode", "agent");
         latest.updateField("name", "Agent scout");
-        latest.updateField("webSearchQuery", "");
         latest.updateField("channelIds", []);
         latest.updateField("outputAnalysisEvents", true);
         latest.updateField("outputCalendar", false);
@@ -213,6 +210,21 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(true);
       expect(latest.saveBlockReason).toBeNull();
     });
+
+    it("blocks message_cursor combined with outputAnalysisEvents", () => {
+      renderHarness();
+      act(() => {
+        latest.updateField("analysisMode", "agent");
+        latest.updateField("name", "Agent reconcile");
+        latest.updateField("promptTemplate", "Keep calendar current");
+        latest.updateField("channelIds", ["ch-1"]);
+        latest.updateField("triggerMode", "message_cursor");
+        latest.updateField("outputCalendar", true);
+        latest.updateField("outputAnalysisEvents", true);
+      });
+      expect(latest.canSave).toBe(false);
+      expect(latest.saveBlockReason).toMatch(/cursor|intelligence|情報|情报/i);
+    });
   });
 
   it("setFormState allows direct state replacement", () => {
@@ -223,7 +235,6 @@ describe("useTaskEditorState", () => {
       name: "Loaded Task",
       description: "From DB",
       promptTemplate: "Do analysis",
-      webSearchQuery: "",
       channelIds: ["ch1", "ch2"],
     };
 

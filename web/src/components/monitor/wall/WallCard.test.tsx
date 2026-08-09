@@ -1,9 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 
 import type { Channel, Message } from "../../../types";
 import { WallCard } from "./WallCard";
@@ -14,6 +11,7 @@ import {
   wallMediaImageClass,
 } from "./wallCardLayout";
 import { pickWallLayout } from "../../../domain/monitor/wall/wallLayout";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const mediaState = vi.hoisted(() => ({
   objectUrl: null as string | null,
@@ -56,8 +54,7 @@ const slot: WallSlotState = {
 };
 
 beforeEach(async () => {
-  setAppLocale("zh-Hant");
-  await i18n.changeLanguage("zh-Hant");
+  await ensureZhHantLocale();
 });
 
 describe("WallCard", () => {
@@ -72,7 +69,7 @@ describe("WallCard", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
-        createElement(I18nextProvider, { i18n }, createElement(WallCard, {
+        wrapWithI18n(createElement(WallCard, {
           channel,
           slot,
           onAdvance: vi.fn(),
@@ -100,7 +97,7 @@ describe("WallCard", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
-        createElement(I18nextProvider, { i18n }, createElement(WallCard, {
+        wrapWithI18n(createElement(WallCard, {
           channel,
           slot: { queue: [], currentIndex: 0, unseenCount: 0 },
           onAdvance: vi.fn(),
@@ -149,7 +146,7 @@ describe("WallCard", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
-        createElement(I18nextProvider, { i18n }, createElement(WallCard, {
+        wrapWithI18n(createElement(WallCard, {
           channel,
           slot: {
             queue: [{ ...message, media: { kind: "photo" } }],
@@ -178,7 +175,7 @@ describe("WallCard", () => {
     document.body.appendChild(container);
     act(() => {
       createRoot(container).render(
-        createElement(I18nextProvider, { i18n }, createElement(WallCard, {
+        wrapWithI18n(createElement(WallCard, {
           channel,
           slot: {
             queue: [{ ...message, media: { kind: "photo" }, content: "地震速報" }],

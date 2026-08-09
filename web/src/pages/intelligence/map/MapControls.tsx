@@ -1,5 +1,6 @@
 import { Maximize2, Minimize2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SelectField } from "../../../components/ui";
 import type { DanmakuMode, OverlayDisplayMode } from "./mapViewHelpers";
 import {
   danmakuModeLabel,
@@ -47,18 +48,19 @@ export function MapControls({
       >
         {danmakuModeLabel(t, sharedDanmakuMode)}
       </button>
-      <select
+      <SelectField
         aria-label={t("map.liveWindowAria")}
-        value={liveWindowHours}
+        value={String(liveWindowHours)}
         onChange={(e) => onLiveWindowHoursChange(Number(e.target.value))}
         className={mapSmallSelectClass}
+        wrapperClassName="w-auto"
       >
         {LIVE_WINDOW_OPTIONS.map((hours) => (
           <option key={hours} value={hours}>
             {t("map.liveWindowOption", { hours })}
           </option>
         ))}
-      </select>
+      </SelectField>
       <button
         type="button"
         className={mapSmallBtnClass}

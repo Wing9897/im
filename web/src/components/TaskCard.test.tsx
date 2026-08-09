@@ -6,7 +6,8 @@ vi.mock("../context/TaskCatalogContext", async () =>
   (await import("../test/context-mocks")).taskCatalogModuleMock());
 
 import { TaskCard } from "./TaskCard";
-import type { TaskCardProps, TaskCardStats } from "./TaskCard";
+import type { TaskCardProps } from "./TaskCard";
+import type { TaskCardStats } from "../types/dashboard";
 import type { AnalysisTask } from "../types/tasks";
 import { resetTaskCatalogState, taskCatalogState } from "../test/context-mocks";
 
@@ -16,7 +17,6 @@ function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     name: "Test Task",
     description: null,
     promptTemplate: "test prompt",
-    webSearchQuery: "",
     analysisMode: "intel_event",
     analysisTimeRange: "7d",
     version: 1,
@@ -117,6 +117,25 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("執行中");
   });
 
+  it("applies analyzing visual when isRunning is true", () => {
+    renderCard({ stats: createMockStats({ isRunning: true }) });
+
+    const glow = container.querySelector(".im-task-card-analyzing") as HTMLElement | null;
+    expect(glow).not.toBeNull();
+    expect(glow?.getAttribute("data-analyzing")).toBe("true");
+    expect(glow?.getAttribute("aria-busy")).toBe("true");
+    expect(glow?.getAttribute("title")).toContain("Test Task");
+    expect(container.querySelector(".im-pulse-dot")).not.toBeNull();
+  });
+
+  it("removes analyzing visual when isRunning is false", () => {
+    renderCard({ stats: createMockStats({ isRunning: false }) });
+
+    expect(container.querySelector(".im-task-card-analyzing")).toBeNull();
+    expect(container.querySelector("[data-analyzing]")).toBeNull();
+    expect(container.querySelector(".im-pulse-dot")).toBeNull();
+  });
+
   it('shows "閒置" indicator when isRunning is false', () => {
     renderCard({ stats: createMockStats({ isRunning: false }) });
 
@@ -159,7 +178,6 @@ describe("TaskCard", () => {
       task: createMockTask({
         analysisMode: "agent",
         outputAnalysisEvents: true,
-        webSearchQuery: "OpenAI pricing",
         channelIds: [],
       }),
       stats: createMockStats({ unanalyzedCount: 9, analyzedCount: 3 }),
@@ -167,7 +185,6 @@ describe("TaskCard", () => {
 
     expect(container.querySelector('[data-testid="ai-staff-avatar-agent"]')).not.toBeNull();
     expect(container.textContent).toContain("Agent 任務");
-    // webSearchQuery is editor/seed metadata only — TaskCard does not surface it.
     expect(container.textContent).not.toContain("OpenAI pricing");
     expect(container.textContent).not.toContain("待分析");
     expect(container.textContent).not.toContain("個頻道");

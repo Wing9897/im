@@ -47,8 +47,8 @@ export function isWorksetActivitySpan(
   return span.sourceKind === "workset";
 }
 
-/** One completed project-tick batch for the detail log. */
-export interface ProjectTickLogEntry {
+/** One completed agent-tick batch for the detail log. */
+export interface AgentTickLogEntry {
   batchId: string;
   status: string;
   /** Server sends a free-form string; `success` / `skipped` / `error` are the known values. */
@@ -66,7 +66,7 @@ export interface ProjectTickLogEntry {
 }
 
 /** Schedule fire still draining waves (pending/processing batch). */
-export interface ProjectTickInFlight {
+export interface AgentTickInFlight {
   batchId: string;
   status: string;
   messageCount: number;
@@ -75,12 +75,12 @@ export interface ProjectTickInFlight {
 }
 
 /** Cursor backlog + recent ticks for a project task. */
-export interface ProjectTickStatus {
+export interface AgentTickStatus {
   taskId: string;
   cursorAt: string | null;
   pendingSinceCursor: number;
-  ticks: ProjectTickLogEntry[];
-  inFlight?: ProjectTickInFlight | null;
+  ticks: AgentTickLogEntry[];
+  inFlight?: AgentTickInFlight | null;
 }
 
 /** Per-task analysis statistics returned by `/results/stats`. */

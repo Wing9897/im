@@ -20,7 +20,6 @@ function item(partial: Partial<TrackableItem> & { id: string; title: string }): 
   return {
     worksetId: "ws-1",
     categoryId: null,
-    purchasedAt: null,
     expiresAt: null,
     remindBeforeDays: 7,
     notes: "",

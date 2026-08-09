@@ -15,8 +15,8 @@ from server.scheduler.task_schedule_overrides import (
     ANALYSIS_THRESHOLD_MIN,
     BATCH_OVERLAP_MAX,
     BATCH_OVERLAP_MIN,
-    PROJECT_WAVE_INTERVAL_MAX,
-    PROJECT_WAVE_INTERVAL_MIN,
+    AGENT_WAVE_INTERVAL_MAX,
+    AGENT_WAVE_INTERVAL_MIN,
 )
 
 
@@ -26,7 +26,6 @@ class TaskConfigBody(BaseModel):
     name: str
     description: str | None = None
     promptTemplate: str = ""
-    webSearchQuery: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
     channelIds: list[str | dict[str, Any]] | None = None
@@ -39,8 +38,8 @@ class TaskConfigBody(BaseModel):
     )
     includeInTimeline: bool | None = None
     isActive: bool | None = None
-    projectWaveIntervalSeconds: int | None = Field(
-        default=None, ge=PROJECT_WAVE_INTERVAL_MIN, le=PROJECT_WAVE_INTERVAL_MAX
+    agentWaveIntervalSeconds: int | None = Field(
+        default=None, ge=AGENT_WAVE_INTERVAL_MIN, le=AGENT_WAVE_INTERVAL_MAX
     )
     batchOverlapCount: int | None = Field(default=None, ge=BATCH_OVERLAP_MIN, le=BATCH_OVERLAP_MAX)
     analysisTriggerThreshold: int | None = Field(default=None, ge=ANALYSIS_THRESHOLD_MIN, le=ANALYSIS_THRESHOLD_MAX)

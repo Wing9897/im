@@ -88,6 +88,45 @@ export function buildCategorySummaries(
   return summaries;
 }
 
+function compareCategorySummaries(
+  a: CategorySummary,
+  b: CategorySummary,
+  sort: "expiry" | "name" | "updated",
+  labelOf: (summary: CategorySummary) => string,
+): number {
+  if (sort === "name") {
+    const byLabel = labelOf(a).localeCompare(labelOf(b), undefined, { sensitivity: "base" });
+    if (byLabel !== 0) return byLabel;
+    return a.id.localeCompare(b.id);
+  }
+  if (sort === "updated") {
+    const ua = a.category?.updatedAt ?? a.category?.createdAt ?? "";
+    const ub = b.category?.updatedAt ?? b.category?.createdAt ?? "";
+    if (ua !== ub) return ub.localeCompare(ua);
+    return labelOf(a).localeCompare(labelOf(b), undefined, { sensitivity: "base" });
+  }
+  // expiry: urgency counts first, then admin sort order, then name
+  if (a.overdueCount !== b.overdueCount) return b.overdueCount - a.overdueCount;
+  if (a.expiringCount !== b.expiringCount) return b.expiringCount - a.expiringCount;
+  const so =
+    (a.category?.sortOrder ?? 0) - (b.category?.sortOrder ?? 0);
+  if (so !== 0) return so;
+  return labelOf(a).localeCompare(labelOf(b), undefined, { sensitivity: "base" });
+}
+
+/** Sort category cards; uncategorized stays last. */
+export function sortCategorySummaries(
+  summaries: readonly CategorySummary[],
+  sort: "expiry" | "name" | "updated",
+  labelOf: (summary: CategorySummary) => string,
+): CategorySummary[] {
+  const uncategorized = summaries.find((row) => row.id === UNCATEGORIZED_CATEGORY_ID);
+  const real = summaries.filter((row) => row.id !== UNCATEGORIZED_CATEGORY_ID);
+  const sorted = real.slice().sort((a, b) => compareCategorySummaries(a, b, sort, labelOf));
+  if (uncategorized) sorted.push(uncategorized);
+  return sorted;
+}
+
 /** Filter items for the list layer given a route category id. */
 export function filterItemsByCategoryRoute(
   items: readonly TrackableItem[],

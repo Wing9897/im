@@ -19,7 +19,7 @@ async def test_fresh_database_auth_and_representative_routes(tmp_path) -> None:
 
     async with app.router.lifespan_context(app):
         assert db_path.is_file()
-        assert await app.state.db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION == 19
+        assert await app.state.db.fetch_value("PRAGMA user_version") == CURRENT_SCHEMA_VERSION
 
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://127.0.0.1") as client:
@@ -59,7 +59,7 @@ async def test_fresh_database_auth_and_representative_routes(tmp_path) -> None:
             representative_gets = {
                 "/api/v1/tasks": list,
                 "/api/v1/results/events?limit=5": dict,
-                ("/api/v1/calendar/items?range_start=2026-01-01T00:00:00Z&range_end=2026-01-02T00:00:00Z"): list,
+                ("/api/v1/calendar/items?rangeStart=2026-01-01T00:00:00Z&rangeEnd=2026-01-02T00:00:00Z"): list,
                 "/api/v1/config/settings": dict,
             }
             for path, expected_type in representative_gets.items():

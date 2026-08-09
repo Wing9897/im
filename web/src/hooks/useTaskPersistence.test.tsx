@@ -163,7 +163,6 @@ describe("useTaskPersistence", () => {
       ...FILLED_FORM_STATE,
       analysisMode: "recurring",
       promptTemplate: "",
-      webSearchQuery: "",
       channelIds: [],
       rrule: "FREQ=DAILY",
       eventStartTime: "22:00",

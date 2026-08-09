@@ -24,6 +24,7 @@ def _tools_prompt_block(
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
     items_read_enabled: bool = True,
+    items_writes_enabled: bool = True,
 ) -> str:
     return json.dumps(
         build_tool_schemas(
@@ -33,6 +34,7 @@ def _tools_prompt_block(
             calendar_read_enabled=calendar_read_enabled,
             analysis_events_read_enabled=analysis_events_read_enabled,
             items_read_enabled=items_read_enabled,
+            items_writes_enabled=items_writes_enabled,
         ),
         ensure_ascii=False,
         indent=2,
@@ -52,6 +54,7 @@ def build_system_prompt(
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
     items_read_enabled: bool = True,
+    items_writes_enabled: bool = True,
     user_background: str | None = None,
     base_prompt: str | None = None,
 ) -> str:
@@ -73,6 +76,7 @@ def build_system_prompt(
             calendar_read_enabled=calendar_read_enabled,
             analysis_events_read_enabled=analysis_events_read_enabled,
             items_read_enabled=items_read_enabled,
+            items_writes_enabled=items_writes_enabled,
         )
         + "\n\n"
         + output_language_directive(normalize_ui_locale(locale))

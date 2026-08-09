@@ -4,15 +4,17 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable
 
-from server.agent.tools_items.handlers import _tool_create, _tool_list_expiring
+from server.agent.tools_items.handlers import _tool_create, _tool_list, _tool_list_expiring, _tool_update
 from server.agent.tools_items.schemas import TOOL_SCHEMAS
 from server.db.database import Database
 
 ToolHandler = Callable[[Database, dict[str, Any]], Awaitable[dict[str, Any]]]
 
 TOOL_HANDLERS: dict[str, ToolHandler] = {
+    "items.list": _tool_list,
     "items.list_expiring": _tool_list_expiring,
     "items.create": _tool_create,
+    "items.update": _tool_update,
 }
 
 TOOL_NAMES = frozenset(TOOL_HANDLERS)

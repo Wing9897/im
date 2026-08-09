@@ -25,6 +25,8 @@ async def test_tool_names_match_plan(app) -> None:
         "calendar.delete_recurring_task",
         "calendar.update_event",
         "calendar.delete_event",
+        "calendar.mark_important",
+        "calendar.unmark_important",
     }
     result = await execute_calendar_tool(app.state.db, "calendar.list_calendars", {})
     assert result["count"] >= 1

@@ -18,5 +18,5 @@ async def test_fetch_viewer_stats_matches_seed(db):
     assert stats["activeTasks"] == 6
     assert stats["totalBatches"] >= 1
     assert stats["completedBatches"] >= 1
-    # 2 topics + 1 benefit + 1 schedule event + 1 web_intel event
+    # 2 topics + 1 benefit + 1 schedule event + 1 agent finding event
     assert stats["totalResults"] == 5

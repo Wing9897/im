@@ -2,8 +2,10 @@
 
 Active items with ``expires_at`` and ``remind_before_days > 0`` emit a
 **remind** occurrence on ``expires_at - remind_before_days`` (floating
-all-day DATE semantics). ``purchased_at`` / ``expires_at`` are kept on the
-item row for list / agent windows but are not auto-projected to the timeline.
+all-day DATE semantics). ``expires_at`` is a denormalized cache synced from linked
+milestone user_events titled 到期 / Expires (見 ``server.items.linked_dates``). Cache is
+write-through from linked calendar mutations only; GET list/get does not
+reconcile. API no longer accepts item-level date writes.
 
 All-day times use wall-date ``YYYY-MM-DDT00:00:00`` / ``T23:59:59`` (no ``Z``)
 so FE ``parseAllDayWallDate`` and user_event all-day DATE semantics stay on the
@@ -20,9 +22,9 @@ from server.db.database import Database
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-ItemDateKind = Literal["purchased", "expires", "remind"]
+ItemDateKind = Literal["remind"]
 
-ITEM_OCCURRENCE_ID_RE = re.compile(r"^item:([^:]+):(purchased|expires|remind)$")
+ITEM_OCCURRENCE_ID_RE = re.compile(r"^item:([^:]+):(remind)$")
 
 
 def _date_to_floating_iso(day: date) -> tuple[str, str]:
@@ -97,7 +99,6 @@ def build_item_occurrence(
         item["body"] = str(row.get("notes") or "")
         item["createdAt"] = row.get("created_at")
         item["updatedAt"] = row.get("updated_at")
-        item["purchasedAt"] = row.get("purchased_at")
         item["expiresAt"] = row.get("expires_at")
         item["status"] = row.get("status")
     return item
@@ -111,7 +112,7 @@ def project_item_row(
 ) -> list[dict[str, Any]]:
     """Emit remind occurrences that fall in the DATE window.
 
-    ``purchased_at`` / ``expires_at`` stay on the item row for list filters;
+    ``expires_at`` stays on the item row for list filters;
     they are no longer projected as special calendar kinds (use linked
     user-events / recurring tasks for timeline dates instead).
     """
@@ -161,11 +162,7 @@ async def get_item_occurrence(db: Database, event_id: str) -> dict[str, Any] | N
     row = await fetch_item_row(db, item_id)
     if row is None or str(row.get("status") or "") != "active":
         return None
-    if kind in ("purchased", "expires"):
+    day = remind_day_for_item(row)
+    if day is None:
         return None
-    if kind == "remind":
-        day = remind_day_for_item(row)
-        if day is None:
-            return None
-        return build_item_occurrence(row, kind=kind, day=day, detail="full")
-    return None
+    return build_item_occurrence(row, kind=kind, day=day, detail="full")

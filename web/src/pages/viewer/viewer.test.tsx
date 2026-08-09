@@ -6,9 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("react-router-dom", () => ({
   NavLink: (props: { to: string; children: React.ReactNode; style?: unknown }) =>
@@ -110,8 +108,7 @@ describe("ViewerLayout", () => {
   let container: HTMLDivElement;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -122,7 +119,7 @@ describe("ViewerLayout", () => {
 
   it("renders navigation links for tasks, results, and status", () => {
     act(() => {
-      createRoot(container).render(createElement(I18nextProvider, { i18n }, createElement(ViewerLayout)));
+      createRoot(container).render(wrapWithI18n(createElement(ViewerLayout)));
     });
 
     const links = container.querySelectorAll<HTMLAnchorElement>("a[data-testid='viewer-navlink']");
@@ -136,7 +133,7 @@ describe("ViewerLayout", () => {
 
   it("renders navigation labels in Chinese", () => {
     act(() => {
-      createRoot(container).render(createElement(I18nextProvider, { i18n }, createElement(ViewerLayout)));
+      createRoot(container).render(wrapWithI18n(createElement(ViewerLayout)));
     });
 
     expect(container.textContent).toContain("任務");
@@ -146,7 +143,7 @@ describe("ViewerLayout", () => {
 
   it("renders the brand name", () => {
     act(() => {
-      createRoot(container).render(createElement(I18nextProvider, { i18n }, createElement(ViewerLayout)));
+      createRoot(container).render(wrapWithI18n(createElement(ViewerLayout)));
     });
 
     expect(container.textContent).toContain("IM Viewer");
@@ -169,7 +166,7 @@ describe("Write UI hidden when access context is remote", () => {
 
   it("renders the top bar actions even when remote", () => {
     act(() => {
-      createRoot(container).render(createElement(I18nextProvider, { i18n }, createElement(AppTopBar)));
+      createRoot(container).render(wrapWithI18n(createElement(AppTopBar)));
     });
 
     const iconArea = container.querySelector("[data-testid='topbar-icon-actions']");
@@ -180,7 +177,7 @@ describe("Write UI hidden when access context is remote", () => {
 
   it("still renders status indicators and navigation when remote", () => {
     act(() => {
-      createRoot(container).render(createElement(I18nextProvider, { i18n }, createElement(AppTopBar)));
+      createRoot(container).render(wrapWithI18n(createElement(AppTopBar)));
     });
 
     expect(container.querySelector("[data-testid='topbar-status-area']")).not.toBeNull();

@@ -4,10 +4,10 @@ import { EmptyStateSources } from "../../../assets/illustrations/EmptyStateIllus
 import { AlertBanner, Button } from "../../../components/ui";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import type { Source } from "../../../types";
-import { ReconnectButton } from "../ReconnectButton";
-import { SourceCard, SourceCardErrorLines } from "../SourceCard";
+import { ReconnectButton } from "../board/ReconnectButton";
+import { SourceCard, SourceCardErrorLines } from "../board/SourceCard";
 import { TelegramSourceDetailDialog } from "./TelegramSourceDetailDialog";
-import { SourceListSection } from "../SourceListSection";
+import { SourceListSection } from "../board/SourceListSection";
 
 interface TelegramSourceListSectionProps {
   sources: Source[];

@@ -2,21 +2,19 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../test/i18nIdentityMock";
+
 import { ItemsEntryToolbar } from "./ItemsEntryToolbar";
 import {
-  itemsPageChromeControlsClass,
+  itemsPageChromeEntryActionsClass,
+  itemsPageChromeEntryControlsClass,
+  itemsPageChromeEntryInnerClass,
+  itemsPageChromeEntryOuterClass,
+  itemsPageChromeEntryToolsClass,
   itemsPageChromeFilterChipClass,
-  itemsPageChromeInnerClass,
-  itemsPageChromeOuterClass,
   itemsPageChromeSearchClass,
   itemsPageChromeTitleClusterWithControlsClass,
 } from "./itemsPageChromeClasses";
-
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-}));
 
 describe("ItemsEntryToolbar chrome", () => {
   let container: HTMLDivElement;
@@ -46,10 +44,15 @@ describe("ItemsEntryToolbar chrome", () => {
           search: "",
           sort: "expiry",
           groupByWorkset: false,
+          worksetFilterId: null,
+          worksets: [
+            { id: "ws-a", name: "Workset A", isSystem: false, createdAt: "", updatedAt: "" },
+          ],
           onFilterChange: vi.fn(),
           onSearchChange: vi.fn(),
           onSortChange: vi.fn(),
           onGroupByWorksetChange: vi.fn(),
+          onWorksetFilterChange: vi.fn(),
           onBack: vi.fn(),
           onAddItem: vi.fn(),
           onManageCategories: vi.fn(),
@@ -64,15 +67,20 @@ describe("ItemsEntryToolbar chrome", () => {
 
     const toolbar = container.querySelector('[data-testid="items-entry-toolbar"]');
     expect(toolbar).not.toBeNull();
-    expect(toolbar!.className).toBe(itemsPageChromeOuterClass);
+    expect(toolbar!.className).toBe(itemsPageChromeEntryOuterClass);
+    expect(toolbar!.className).not.toContain("overflow-x-hidden");
 
     const row = toolbar!.firstElementChild as HTMLElement;
-    expect(row.className).toBe(itemsPageChromeInnerClass);
+    expect(row.className).toBe(itemsPageChromeEntryInnerClass);
+    expect(row.className).toContain("grid");
+    expect(row.className).toContain("grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto]");
+    expect(row.className).not.toContain("overflow-x-auto");
     expect(row.className).not.toContain("max-w-3xl");
     expect(row.className).not.toContain("max-w-[768px]");
 
     const titleCluster = row.firstElementChild as HTMLElement;
     expect(titleCluster.className).toBe(itemsPageChromeTitleClusterWithControlsClass);
+    expect(titleCluster.className).toContain("col-start-1");
   });
 
   it("keeps filters/search/sort in the same strip with chrome density classes", () => {
@@ -92,10 +100,30 @@ describe("ItemsEntryToolbar chrome", () => {
     expect(toolbar!.textContent).toContain("filterAll");
 
     const controls = toolbar!.querySelector(
-      `[class="${itemsPageChromeControlsClass}"]`,
+      `[class="${itemsPageChromeEntryControlsClass}"]`,
     );
     expect(controls).not.toBeNull();
+    expect(controls!.className).toContain("col-start-2");
+    expect(controls!.className).toContain("overflow-x-hidden");
+    expect(controls!.className).toContain("flex-nowrap");
     expect(controls!.className).toContain("gap-sm");
+
+    const actions = toolbar!.querySelector(
+      `[class="${itemsPageChromeEntryActionsClass}"]`,
+    ) as HTMLElement;
+    expect(actions).not.toBeNull();
+    expect(actions.className).toContain("relative");
+    expect(actions.className).toContain("z-[1]");
+    expect(actions.className).toContain("col-start-3");
+
+    const tools = controls!.querySelector(
+      `[class="${itemsPageChromeEntryToolsClass}"]`,
+    );
+    expect(tools).not.toBeNull();
+    expect(tools!.querySelector('[data-testid="items-entry-search"]')).not.toBeNull();
+    expect(tools!.querySelector('[data-testid="items-entry-workset-filter"]')).not.toBeNull();
+    expect(tools!.querySelector('[data-testid="items-layout-toggle"]')).not.toBeNull();
+    expect(tools!.querySelector('[data-testid="items-entry-sort"]')).not.toBeNull();
 
     const chips = Array.from(
       controls!.querySelectorAll("button[aria-pressed]"),
@@ -104,6 +132,11 @@ describe("ItemsEntryToolbar chrome", () => {
     for (const chip of chips) {
       expect(chip.className).toContain(itemsPageChromeFilterChipClass);
     }
+
+    const searchWrap = toolbar!.querySelector('[data-testid="items-entry-search"]');
+    expect(searchWrap).not.toBeNull();
+    expect(searchWrap!.className).toContain("shrink-0");
+    expect(searchWrap!.className).not.toContain("flex-1");
 
     const search = toolbar!.querySelector(
       '[data-testid="items-entry-search-input"]',
@@ -129,11 +162,13 @@ describe("ItemsEntryToolbar chrome", () => {
     });
     expect(onGroupByWorksetChange).toHaveBeenCalledWith(true);
 
-    const sort = toolbar!.querySelector(
-      '[data-testid="items-entry-sort"]',
-    ) as HTMLSelectElement;
-    expect(sort).not.toBeNull();
-    expect(sort.value).toBe("expiry");
+    const sortTrigger = toolbar!.querySelector(
+      '[data-testid="items-entry-sort-value"]',
+    ) as HTMLButtonElement;
+    expect(sortTrigger).not.toBeNull();
+    expect(sortTrigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(sortTrigger.textContent).toContain("sortExpiry");
+    expect(toolbar!.querySelector('[data-testid="items-entry-sort"] svg')).not.toBeNull();
 
     const back = toolbar!.querySelector(
       'button[aria-label="backToCategories"]',
@@ -145,13 +180,21 @@ describe("ItemsEntryToolbar chrome", () => {
     expect(onBack).toHaveBeenCalledTimes(1);
 
     const buttons = Array.from(toolbar!.querySelectorAll("button"));
+    const manageCategories = buttons.find((b) =>
+      b.getAttribute("aria-label")?.includes("manageCategories"),
+    );
+    expect(manageCategories).not.toBeUndefined();
+    expect(manageCategories!.textContent).toContain("manageCategories");
+
     act(() => {
-      buttons.find((b) => b.textContent?.includes("addItem"))!.click();
+      toolbar!.querySelector('[data-testid="items-entry-add"]')!.dispatchEvent(
+        new MouseEvent("click", { bubbles: true }),
+      );
     });
     expect(onAddItem).toHaveBeenCalledTimes(1);
 
     act(() => {
-      buttons.find((b) => b.textContent?.includes("manageCategories"))!.click();
+      manageCategories!.click();
     });
     expect(onManageCategories).toHaveBeenCalledTimes(1);
   });

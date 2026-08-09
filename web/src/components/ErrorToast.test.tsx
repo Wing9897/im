@@ -1,16 +1,15 @@
 import { act } from "react";
 import type React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import i18n from "../i18n";
 import {
   ACCOUNT_ACCESS_KEYS_PATH,
   ErrorToast,
   formatCorrelationRef,
   getActionsForErrorCode,
 } from "./ErrorToast";
+import { wrapWithI18n } from "../test/i18nHarness";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -28,7 +27,7 @@ afterEach(() => {
 function renderToast(node: React.ReactNode) {
   act(() => {
     root = createRoot(container);
-    root.render(<I18nextProvider i18n={i18n}>{node}</I18nextProvider>);
+    root.render(wrapWithI18n(node));
   });
 }
 

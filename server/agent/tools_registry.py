@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.agent.project_scope import apply_project_scope
+from server.agent.agent_scope import apply_agent_scope
 from server.agent.tools_calendar import TOOL_HANDLERS as CALENDAR_HANDLERS
 from server.agent.tools_calendar import TOOL_SCHEMAS as CALENDAR_SCHEMAS
 from server.agent.tools_intelligence import TOOL_HANDLERS as INTELLIGENCE_HANDLERS
@@ -39,7 +39,7 @@ BASE_TOOL_SCHEMAS: list[dict[str, Any]] = [
 
 WEB_TOOL_NAMES = frozenset(WEB_HANDLERS)
 
-#: Calendar mutation tools (web_intel channel omits / blocks these).
+#: Calendar mutation tools (agent ticks without ``cap_calendar_writes`` omit / block these).
 CALENDAR_WRITE_TOOL_NAMES = frozenset(
     {
         "calendar.create_event",
@@ -64,7 +64,9 @@ CALENDAR_READ_TOOL_NAMES = frozenset(
 )
 
 INTELLIGENCE_READ_TOOL_NAMES = frozenset(INTELLIGENCE_HANDLERS)
-ITEMS_READ_TOOL_NAMES = frozenset({"items.list_expiring"})
+ITEMS_READ_TOOL_NAMES = frozenset({"items.list", "items.list_expiring"})
+#: Inventory mutation tools — agent ticks omit these; assistant / A2A keep them.
+ITEMS_WRITE_TOOL_NAMES = frozenset({"items.create", "items.update"})
 
 
 def build_tool_schemas(
@@ -75,6 +77,7 @@ def build_tool_schemas(
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
     items_read_enabled: bool = True,
+    items_writes_enabled: bool = True,
 ) -> list[dict[str, Any]]:
     schemas = list(BASE_TOOL_SCHEMAS)
     if not calendar_writes_enabled:
@@ -85,6 +88,8 @@ def build_tool_schemas(
         schemas = [s for s in schemas if str(s.get("name") or "") not in INTELLIGENCE_READ_TOOL_NAMES]
     if not items_read_enabled:
         schemas = [s for s in schemas if str(s.get("name") or "") not in ITEMS_READ_TOOL_NAMES]
+    if not items_writes_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in ITEMS_WRITE_TOOL_NAMES]
     if web_search_enabled:
         schemas.extend(WEB_SCHEMAS)
     if task_advisor_enabled:
@@ -121,6 +126,7 @@ _WRITE_NOTIFICATIONS: dict[str, tuple[str, str, Any]] = {
     "calendar.update_event": ("user_event", "updated", lambda r: _nested_id(r, "item")),
     "calendar.delete_event": ("user_event", "deleted", _deleted_event_id),
     "items.create": ("item", "created", lambda r: _nested_id(r, "item")),
+    "items.update": ("item", "updated", lambda r: _nested_id(r, "item")),
 }
 
 
@@ -184,9 +190,11 @@ async def execute_tool(
         return {"error": "analysis_events_read_disabled"}
     if name in ITEMS_READ_TOOL_NAMES and ctx.get("items_read_enabled") is False:
         return {"error": "items_read_disabled"}
-    project_id = ctx.get("project_scope_task_id")
+    if name in ITEMS_WRITE_TOOL_NAMES and ctx.get("items_writes_enabled") is False:
+        return {"error": "items_writes_disabled"}
+    project_id = ctx.get("agent_scope_task_id")
     if project_id:
-        scoped_error = await apply_project_scope(db, name, args, project_id=str(project_id))
+        scoped_error = await apply_agent_scope(db, name, args, project_id=str(project_id))
         if scoped_error is not None:
             return scoped_error
     if name == "calendar.create_event" and context:

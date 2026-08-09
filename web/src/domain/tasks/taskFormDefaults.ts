@@ -21,7 +21,6 @@ export function applyConfigToFormState(
   if (config.name !== undefined) updated.name = config.name;
   if (config.description !== undefined) updated.description = config.description;
   if (config.promptTemplate !== undefined) updated.promptTemplate = config.promptTemplate;
-  if (config.webSearchQuery !== undefined) updated.webSearchQuery = config.webSearchQuery;
   if (config.scheduleType !== undefined) updated.scheduleType = config.scheduleType;
   if (config.scheduleValue !== undefined) updated.scheduleValue = config.scheduleValue;
   if (
@@ -59,8 +58,8 @@ export function applyConfigToFormState(
   if (config.includeInTimeline !== undefined) {
     updated.includeInTimeline = config.includeInTimeline;
   }
-  if (config.projectWaveIntervalSeconds !== undefined) {
-    updated.projectWaveIntervalSeconds = config.projectWaveIntervalSeconds;
+  if (config.agentWaveIntervalSeconds !== undefined) {
+    updated.agentWaveIntervalSeconds = config.agentWaveIntervalSeconds;
   }
   if (config.batchOverlapCount !== undefined) {
     updated.batchOverlapCount = config.batchOverlapCount;
@@ -135,7 +134,6 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
   return {
     ...commonConfig,
     promptTemplate: formState.promptTemplate,
-    webSearchQuery: "",
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,
     ...(formState.analysisMode === "intel_event" || formState.analysisMode === "agent"
@@ -143,7 +141,7 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
       : {}),
     ...(formState.analysisMode === "agent"
       ? {
-          projectWaveIntervalSeconds: formState.projectWaveIntervalSeconds,
+          agentWaveIntervalSeconds: formState.agentWaveIntervalSeconds,
           triggerMode: formState.triggerMode,
           capCalendarRead: formState.capCalendarRead,
           capCalendarWrites: formState.capCalendarWrites,
@@ -178,7 +176,6 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
     name: task.name,
     description: task.description ?? "",
     promptTemplate: task.promptTemplate,
-    webSearchQuery: task.webSearchQuery ?? "",
     scheduleType: schedule.scheduleType,
     scheduleValue: schedule.scheduleValue,
     scheduleRrule: schedule.scheduleRrule,
@@ -194,7 +191,7 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
     eventLocation: "",
     eventDescription: "",
     includeInTimeline: task.includeInTimeline ?? true,
-    projectWaveIntervalSeconds: task.projectWaveIntervalSeconds ?? null,
+    agentWaveIntervalSeconds: task.agentWaveIntervalSeconds ?? null,
     batchOverlapCount: task.batchOverlapCount ?? null,
     analysisTriggerThreshold: task.analysisTriggerThreshold ?? null,
     analysisBatchMessageLimit: task.analysisBatchMessageLimit ?? null,
@@ -238,7 +235,6 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     name: config.name,
     description: config.description ?? null,
     promptTemplate: config.promptTemplate,
-    webSearchQuery: config.webSearchQuery ?? "",
     analysisMode: config.analysisMode ?? "leaderboard",
     analysisTimeRange: config.analysisTimeRange ?? "1d",
     version: 1,
@@ -246,7 +242,7 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     scheduleRrule: schedule.scheduleRrule,
     channelIds,
     includeInTimeline: config.includeInTimeline ?? true,
-    projectWaveIntervalSeconds: config.projectWaveIntervalSeconds ?? null,
+    agentWaveIntervalSeconds: config.agentWaveIntervalSeconds ?? null,
     batchOverlapCount: config.batchOverlapCount ?? null,
     analysisTriggerThreshold: config.analysisTriggerThreshold ?? null,
     analysisBatchMessageLimit: config.analysisBatchMessageLimit ?? null,
@@ -285,7 +281,6 @@ export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayl
     name: formState.name,
     description: formState.description,
     promptTemplate: formState.promptTemplate,
-    webSearchQuery: "",
     scheduleRrule,
     analysisMode: formState.analysisMode,
     analysisTimeRange: formState.analysisTimeRange,

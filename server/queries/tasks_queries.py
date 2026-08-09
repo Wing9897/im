@@ -99,7 +99,7 @@ async def delete_incomplete_batches(conn: aiosqlite.Connection, task_id: str) ->
 async def fetch_activity_span_rows(db: Any) -> list[dict[str, Any]]:
     """Gantt spans; only batches matching the task's current version count.
 
-    Also surfaces the latest completed batch's project-tick summary
+    Also surfaces the latest completed batch's agent-tick summary
     (``agent_message`` / ``tool_calls_json``) for project detail UI.
 
     Appends one ``source_kind=workset`` row per ``user_events.workset_id``
@@ -178,8 +178,7 @@ async def insert_analysis_task(
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
     workset_id: str | None = None,
-    web_search_query: str = "",
-    project_wave_interval_seconds: int | None = None,
+    agent_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
     analysis_batch_message_limit: int | None = None,
@@ -204,28 +203,27 @@ async def insert_analysis_task(
 ) -> None:
     await tx.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
-        "web_search_query, analysis_mode, analysis_time_range, version, is_active, "
+        "analysis_mode, analysis_time_range, version, is_active, "
         "schedule_rrule, include_in_timeline, workset_id, "
-        "project_wave_interval_seconds, batch_overlap_count, "
+        "agent_wave_interval_seconds, batch_overlap_count, "
         "analysis_trigger_threshold, analysis_batch_message_limit, "
         "analysis_strategy_mode, "
         "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
         "output_calendar, output_analysis_events, "
         "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
             description,
             prompt_template,
-            web_search_query or "",
             analysis_mode,
             analysis_time_range,
             schedule_rrule,
             include_in_timeline,
             workset_id,
-            project_wave_interval_seconds,
+            agent_wave_interval_seconds,
             batch_overlap_count,
             analysis_trigger_threshold,
             analysis_batch_message_limit,
@@ -284,8 +282,7 @@ async def update_analysis_task(
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
     workset_id: str | None = None,
-    web_search_query: str = "",
-    project_wave_interval_seconds: int | None = None,
+    agent_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
     analysis_batch_message_limit: int | None = None,
@@ -303,9 +300,9 @@ async def update_analysis_task(
 ) -> None:
     await tx.execute(
         "UPDATE analysis_tasks SET name = ?, description = ?, prompt_template = ?, "
-        "web_search_query = ?, analysis_mode = ?, analysis_time_range = ?, version = ?, "
+        "analysis_mode = ?, analysis_time_range = ?, version = ?, "
         "schedule_rrule = ?, include_in_timeline = ?, workset_id = ?, "
-        "project_wave_interval_seconds = ?, batch_overlap_count = ?, "
+        "agent_wave_interval_seconds = ?, batch_overlap_count = ?, "
         "analysis_trigger_threshold = ?, analysis_batch_message_limit = ?, "
         "analysis_strategy_mode = ?, "
         "trigger_mode = ?, cap_calendar_read = ?, cap_calendar_writes = ?, "
@@ -316,14 +313,13 @@ async def update_analysis_task(
             name,
             description,
             prompt_template,
-            web_search_query or "",
             analysis_mode,
             analysis_time_range,
             version,
             schedule_rrule,
             include_in_timeline,
             workset_id,
-            project_wave_interval_seconds,
+            agent_wave_interval_seconds,
             batch_overlap_count,
             analysis_trigger_threshold,
             analysis_batch_message_limit,

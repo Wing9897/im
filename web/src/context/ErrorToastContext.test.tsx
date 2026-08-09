@@ -4,12 +4,11 @@
  */
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import i18n from "../i18n";
 import { ErrorToastProvider } from "./ErrorToastContext";
 import { errorToastEmitter, type ErrorToastEvent } from "../api/errorToastEmitter";
+import { wrapWithI18n } from "../test/i18nHarness";
 
 function makeEvent(overrides?: Partial<ErrorToastEvent>): ErrorToastEvent {
   return {
@@ -46,11 +45,11 @@ describe("ErrorToastContext", () => {
     act(() => {
       root = createRoot(container);
       root.render(
-        <I18nextProvider i18n={i18n}>
+        wrapWithI18n(
           <ErrorToastProvider onNavigate={onNavigate}>
             <div data-testid="app-content" />
           </ErrorToastProvider>
-        </I18nextProvider>,
+        ),
       );
     });
   }

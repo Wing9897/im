@@ -7,8 +7,8 @@ import {
 } from "../../../api/sources";
 import type { HttpSourceInfo } from "../../../types";
 import { useFormSubmit } from "../../../hooks/useFormSubmit";
-import { useSourceListTab } from "../useSourceListTab";
-import { useSourceEditController } from "../useSourceEditController";
+import { useSourceListTab } from "../board/useSourceListTab";
+import { useSourceEditController } from "../board/useSourceEditController";
 import { INITIAL_HTTP_FORM, type HttpFormFields } from "./httpFormTypes";
 import i18n from "../../../i18n";
 import {

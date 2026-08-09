@@ -33,6 +33,22 @@ describe("MenuSelect", () => {
     expect(html).not.toContain('role="radiogroup"');
   });
 
+  it("field variant uses form control chrome without the 280px min width", () => {
+    const html = renderToStaticMarkup(
+      createElement(MenuSelect, {
+        value: "cat-a",
+        options: [{ value: "cat-a", label: "🍎 Alpha" }],
+        onChange: () => {},
+        variant: "field",
+        "data-testid": "item-form-category-select",
+        "aria-label": "Category",
+      }),
+    );
+    expect(html).toContain("🍎 Alpha");
+    expect(html).toContain('data-testid="item-form-category-select-value"');
+    expect(html).not.toContain("min-width:280px");
+  });
+
   describe("interactive listbox", () => {
     let container: HTMLDivElement;
     let root: Root;
@@ -93,6 +109,33 @@ describe("MenuSelect", () => {
 
       expect(onChange).toHaveBeenCalledWith("default");
       expect(container.querySelector('[data-testid="theme-texture-pref-list"]')).toBeNull();
+    });
+
+    it("portals the listbox to document.body when menuPortal is set", () => {
+      act(() => {
+        root.render(
+          createElement(MenuSelect, {
+            value: "leaf",
+            options,
+            onChange: () => {},
+            menuPortal: true,
+            "data-testid": "portal-select",
+            "aria-label": "紋理",
+          }),
+        );
+      });
+
+      const trigger = container.querySelector<HTMLButtonElement>(
+        '[data-testid="portal-select-value"]',
+      );
+      act(() => {
+        trigger?.click();
+      });
+
+      const list = document.body.querySelector('[data-testid="portal-select-list"]');
+      expect(list).toBeTruthy();
+      expect(container.querySelector('[data-testid="portal-select-list"]')).toBeNull();
+      expect(list?.parentElement).toBe(document.body);
     });
   });
 });

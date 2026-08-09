@@ -1,7 +1,7 @@
 {
   "toolbar": {
     "aria": "助手工具栏",
-    "description": "本机情报与日程助手",
+    "description": "本机情报、日程与物品助手",
     "stopSpeaking": "停止朗读",
     "clearChat": "清空对话"
   },
@@ -14,8 +14,8 @@
     "ttsHintSuffix": " 回答会朗读。"
   },
   "empty": {
-    "title": "问本机情报或日程",
-    "description": "例如：最近有没有提到某某？未来七天有什么安排？",
+    "title": "问本机情报、日程或物品",
+    "description": "例如：最近有没有提到某某？未来七天有什么安排？哪些物品快到期？",
     "hint": "未聚焦输入框时可按空格键说话（放开即发送识别文字）；聚焦时用麦克风。无识别不会送出草稿。",
     "voiceSettingsLink": "语音设定"
   },

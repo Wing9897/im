@@ -80,8 +80,8 @@ interface ScheduleInputProps {
   onScheduleValueChange: (value: string | null) => void;
   validationError?: string | null;
   /** Project-mode: show project wave interval after schedule fields. */
-  showProjectWaveInterval?: boolean;
-  projectWaveIntervalSeconds?: string;
+  showAgentWaveInterval?: boolean;
+  agentWaveIntervalSeconds?: string;
   onProjectWaveIntervalSecondsChange?: (value: string) => void;
   onProjectWaveIntervalSecondsCommit?: (value: string) => void;
 }
@@ -108,8 +108,8 @@ export function ScheduleInput({
   onScheduleTypeChange,
   onScheduleValueChange,
   validationError,
-  showProjectWaveInterval = false,
-  projectWaveIntervalSeconds = "20",
+  showAgentWaveInterval = false,
+  agentWaveIntervalSeconds = "20",
   onProjectWaveIntervalSecondsChange,
   onProjectWaveIntervalSecondsCommit,
 }: ScheduleInputProps) {
@@ -266,11 +266,11 @@ export function ScheduleInput({
     <FormStack gap="lg">
       {unmappedBanner}
       {scheduleFields}
-      {showProjectWaveInterval ? (
+      {showAgentWaveInterval ? (
         <FieldStack>
           <div className="border-t border-surface-border/70 pt-md">
             <FieldLabel htmlFor="schedule-project-wave-interval">
-              {t("tasks.schedule.projectWaveInterval")}
+              {t("tasks.schedule.agentWaveInterval")}
             </FieldLabel>
             <TextField
               id="schedule-project-wave-interval"
@@ -280,13 +280,13 @@ export function ScheduleInput({
               min={0}
               max={600}
               step={1}
-              value={projectWaveIntervalSeconds}
+              value={agentWaveIntervalSeconds}
               onChange={(e) => onProjectWaveIntervalSecondsChange?.(e.target.value)}
               onBlur={(e) => onProjectWaveIntervalSecondsCommit?.(e.target.value)}
-              aria-label={t("tasks.schedule.projectWaveIntervalAria")}
+              aria-label={t("tasks.schedule.agentWaveIntervalAria")}
               placeholder="20"
             />
-            <p className={formHelpClass}>{t("tasks.schedule.projectWaveIntervalHelp")}</p>
+            <p className={formHelpClass}>{t("tasks.schedule.agentWaveIntervalHelp")}</p>
           </div>
         </FieldStack>
       ) : null}

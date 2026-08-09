@@ -47,7 +47,7 @@ describe("results API", () => {
 
       await fetchTrendingTopics("task-1");
 
-      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/trending", { task_id: "task-1" });
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/trending", { taskId: "task-1" });
     });
 
     it("propagates errors", async () => {
@@ -77,15 +77,15 @@ describe("results API", () => {
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/events", {
-        task_id: "task-1",
+        taskId: "task-1",
         search: "keyword",
-        start_date: "2024-01-01",
-        end_date: "2024-01-31",
+        startDate: "2024-01-01",
+        endDate: "2024-01-31",
         sort: "event_time",
         limit: "10",
         offset: "0",
-        has_time: "1",
-        has_coords: "0",
+        hasTime: "1",
+        hasCoords: "0",
       });
       expect(result).toEqual(page);
     });
@@ -97,7 +97,7 @@ describe("results API", () => {
       await fetchEvents({ taskIds: ["a", "b"], limit: 5 });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/events", {
-        task_ids: ["a", "b"],
+        taskIds: ["a", "b"],
         limit: "5",
       });
     });
@@ -177,10 +177,10 @@ describe("results API", () => {
       const result = await fetchTimelineEvents(window);
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/events", {
-        start_date: window.startDate,
-        end_date: window.endDate,
-        has_time: "1",
-        include_in_timeline: "1",
+        startDate: window.startDate,
+        endDate: window.endDate,
+        hasTime: "1",
+        includeInTimeline: "1",
         limit: "200",
         offset: "0",
         sort: "event_time",
@@ -197,11 +197,11 @@ describe("results API", () => {
       await fetchTimelineEvents({ ...window, taskId: "task-1" });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/events", {
-        task_id: "task-1",
-        start_date: window.startDate,
-        end_date: window.endDate,
-        has_time: "1",
-        include_in_timeline: "1",
+        taskId: "task-1",
+        startDate: window.startDate,
+        endDate: window.endDate,
+        hasTime: "1",
+        includeInTimeline: "1",
         limit: "200",
         offset: "0",
         sort: "event_time",
@@ -247,10 +247,10 @@ describe("results API", () => {
       const result = await fetchTimelineEvents(window);
 
       expect(apiClient.get).toHaveBeenNthCalledWith(2, "/api/v1/results/events", {
-        start_date: window.startDate,
-        end_date: window.endDate,
-        has_time: "1",
-        include_in_timeline: "1",
+        startDate: window.startDate,
+        endDate: window.endDate,
+        hasTime: "1",
+        includeInTimeline: "1",
         limit: "200",
         offset: "1",
         sort: "event_time",

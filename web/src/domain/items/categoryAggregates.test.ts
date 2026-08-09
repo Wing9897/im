@@ -4,6 +4,7 @@ import {
   ALL_CATEGORIES_ID,
   UNCATEGORIZED_CATEGORY_ID,
   buildCategorySummaries,
+  sortCategorySummaries,
   categoryLabel,
   filterItemsByCategoryRoute,
   isItemExpiringSoon,
@@ -30,7 +31,6 @@ function item(
   return {
     worksetId: "__user__",
     categoryId: null,
-    purchasedAt: null,
     expiresAt: null,
     remindBeforeDays: 7,
     notes: "",
@@ -88,6 +88,34 @@ describe("buildCategorySummaries", () => {
     expect(docs.itemCount).toBe(0);
     const unc = summaries.find((s) => s.id === UNCATEGORIZED_CATEGORY_ID)!;
     expect(unc.itemCount).toBe(1);
+  });
+});
+
+describe("sortCategorySummaries", () => {
+  it("sorts by urgency for expiry and keeps uncategorized last", () => {
+    const categories = [
+      cat({ id: "c1", name: "Food", sortOrder: 20, slug: "food" }),
+      cat({ id: "c2", name: "Docs", sortOrder: 10, slug: "passport_docs" }),
+    ];
+    const items = [
+      item({ id: "i1", title: "Milk", categoryId: "c1", expiresAt: isoDaysFromNow(2) }),
+      item({ id: "i2", title: "Old", categoryId: "c1", expiresAt: isoDaysFromNow(-10) }),
+      item({ id: "i3", title: "Loose", categoryId: null }),
+    ];
+    const summaries = buildCategorySummaries(categories, items);
+    const label = (summary: (typeof summaries)[number]) =>
+      summary.category?.name ?? "uncategorized";
+
+    expect(sortCategorySummaries(summaries, "expiry", label).map((s) => s.id)).toEqual([
+      "c1",
+      "c2",
+      UNCATEGORIZED_CATEGORY_ID,
+    ]);
+    expect(sortCategorySummaries(summaries, "name", label).map((s) => s.id)).toEqual([
+      "c2",
+      "c1",
+      UNCATEGORIZED_CATEGORY_ID,
+    ]);
   });
 });
 

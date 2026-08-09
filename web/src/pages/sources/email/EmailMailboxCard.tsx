@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { SourceCard, SourceCardErrorLines } from "../SourceCard";
-import { SourceCardActions } from "../SourceCardActions";
+import { SourceCard, SourceCardErrorLines } from "../board/SourceCard";
+import { SourceCardActions } from "../board/SourceCardActions";
 import { Button } from "../../../components/ui";
 import { formatOsDateTime } from "../../../utils/time";
 import type { EmailMailboxInfo } from "../../../types";
-import { useReconnectCard } from "../useReconnectCard";
+import { useReconnectCard } from "../board/useReconnectCard";
 
 interface EmailMailboxCardProps {
   mailbox: EmailMailboxInfo;

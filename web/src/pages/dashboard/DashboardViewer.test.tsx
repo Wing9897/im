@@ -397,7 +397,7 @@ describe("DashboardViewer", () => {
       card!.click();
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/project");
+    expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/agent");
   });
 
   it("hides child recurring cards that belong to a project", () => {

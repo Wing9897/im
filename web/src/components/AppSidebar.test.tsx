@@ -1,14 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../i18n";
 import { getTasksPageLabel } from "../domain/tasks/taskPageCopy";
-import { setAppLocale } from "../i18n/locale";
 import { SIMPLE_MODE_STORAGE_KEY } from "../domain/ui/simpleMode";
 import { SimpleModeProvider } from "../context/SimpleModeContext";
 import { SIDEBAR_COLLAPSED_KEY } from "../hooks/useSidebarCollapsed";
 import { SIDEBAR_RAIL_MODE_KEY } from "../hooks/useSidebarRailMode";
+import { ensureZhHantLocale, i18n, wrapWithI18n } from "../test/i18nHarness";
+import { setAppLocale } from "../i18n/locale";
 
 let mockPathname = "/monitor";
 const mockNavigate = vi.fn();
@@ -63,8 +62,7 @@ describe("AppSidebar", () => {
     mockPathname = "/monitor";
     mockNavigate.mockReset();
     window.localStorage.clear();
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -74,18 +72,13 @@ describe("AppSidebar", () => {
     act(() => root.unmount());
     document.body.removeChild(container);
     window.localStorage.clear();
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   function renderSidebar() {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SimpleModeProvider, null, createElement(AppSidebar)),
-        ),
+        wrapWithI18n(createElement(SimpleModeProvider, null, createElement(AppSidebar))),
       );
     });
   }

@@ -4,8 +4,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
 import { AssistantDirectBubbles } from "./AssistantDirectBubbles";
 import { messagesAfterDirectBaseline } from "./assistantDirectBubbleSelectors";
 import {
@@ -15,6 +13,7 @@ import {
   flashTotalMs,
   scheduleFlashLifecycle,
 } from "./assistantDirectBubbleTimers";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 vi.mock("../../domain/aiStaff/assistantIdentity", () => ({
   useAssistantIdentity: () => ({ identity: { avatarDataUrl: null, displayName: null } }),
@@ -109,17 +108,13 @@ describe("AssistantDirectBubbles", () => {
   function render(props: Record<string, unknown>) {
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(AssistantDirectBubbles, {
+        wrapWithI18n(createElement(AssistantDirectBubbles, {
             messages: [],
             sending: false,
             listening: false,
             liveToolSteps: [],
             ...props,
-          }),
-        ),
+          })),
       );
     });
   }

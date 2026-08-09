@@ -14,7 +14,7 @@ class UserEventResponse(BaseModel):
     startTime: str
     endTime: str | None
     location: str | None
-    origin: Literal["manual", "assistant", "a2a", "project", "ics"]
+    origin: Literal["manual", "assistant", "a2a", "agent", "ics"]
     isAllDay: bool = False
     timezone: str | None = None
     icsUid: str | None = None
@@ -113,7 +113,7 @@ class CalendarOccurrenceResponse(BaseModel):
     source: Literal["recurring", "item"] = "recurring"
     worksetId: str | None = None
     itemId: str | None = None
-    itemDateKind: Literal["purchased", "expires", "remind"] | None = None
+    itemDateKind: Literal["remind"] | None = None
 
 
 class CalendarImportWarningResponse(BaseModel):

@@ -3,7 +3,8 @@
  *
  * Occurrence projection lives on the server (`item_projection` → GET /calendar/items)
  * and emits remind floating all-day markers when remind_before_days is set.
- * purchased_at / expires_at stay on the item for list filters only.
+ * expires_at is denormalized from linked「到期」calendars
+ * (see ``server/items/linked_dates.py``) for list badges / filters / agent windows.
  * This module formats titles (i18n), occurrence ids, and calendar kind glyphs
  * (tiny emoji markers — not chromatic dots). Card remind badges live in
  * `eventShowsRemindBadge` / `resolveEventCardDisplay`.
@@ -15,19 +16,15 @@ import {
   UNCATEGORIZED_CATEGORY_ID,
 } from "./categoryAggregates";
 
-/** Wire / parse kinds. Server currently projects only ``remind``. */
-export type ItemDateKind = "purchased" | "expires" | "remind";
+/** Wire / parse kinds. Server projects only ``remind``. */
+export type ItemDateKind = "remind";
 
 /**
  * Calendar-row kind glyphs (distinct from the item's own brand emoji).
  * Kept tiny in UI via {@link itemDateKindMarkerClass}.
- * Only ``remind`` is emitted by current projection; purchased/expires kept for
- * legacy occurrence-id parse tolerance.
  */
 export const ITEM_DATE_KIND_EMOJI: Readonly<Record<ItemDateKind, string>> = {
-  purchased: "🛒",
   remind: "🔔",
-  expires: "⚠️",
 };
 
 /** Clear default when neither item nor category has an emoji (seed slug `other`). */
@@ -44,7 +41,6 @@ export function itemOccurrenceId(itemId: string, kind: ItemDateKind): string {
 }
 
 function prefixKeyForKind(kind: string | null | undefined): string | null {
-  // Only remind rows are projected today; purchased/expires stay on the item.
   if (kind === "remind") return "items:remindPrefix";
   return null;
 }
@@ -126,10 +122,10 @@ export function resolveItemEmoji(
   return resolveCategoryEmoji(category);
 }
 
-/** Glyph for an item DATE kind (🛒 / 🔔 / ⚠️). Falls back to package for unknown. */
+/** Glyph for an item DATE kind (🔔). Falls back to package for unknown. */
 export function itemDateKindEmoji(kind: string | null | undefined): string {
-  if (kind === "purchased" || kind === "remind" || kind === "expires") {
-    return ITEM_DATE_KIND_EMOJI[kind];
+  if (kind === "remind") {
+    return ITEM_DATE_KIND_EMOJI.remind;
   }
   return DEFAULT_ITEM_EMOJI;
 }

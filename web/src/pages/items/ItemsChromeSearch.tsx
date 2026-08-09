@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button, TextField } from "../../components/ui";
-import { itemsPageChromeSearchClass } from "./itemsPageChromeClasses";
+import { itemsPageChromeCategorySearchWrapClass, itemsPageChromeSearchClass } from "./itemsPageChromeClasses";
 
 export const ITEMS_SEARCH_DEBOUNCE_MS = 250;
 
@@ -14,6 +14,7 @@ type Props = {
   /** Optional aria-label key; defaults to placeholderKey. */
   ariaKey?: string;
   className?: string;
+  wrapClassName?: string;
   "data-testid"?: string;
 };
 
@@ -27,6 +28,7 @@ export function ItemsChromeSearch({
   placeholderKey = "searchPlaceholder",
   ariaKey,
   className,
+  wrapClassName = itemsPageChromeCategorySearchWrapClass,
   "data-testid": dataTestId = "items-chrome-search",
 }: Props) {
   const { t } = useTranslation("items");
@@ -71,11 +73,12 @@ export function ItemsChromeSearch({
   const fieldClass = [itemsPageChromeSearchClass, className ?? ""]
     .filter(Boolean)
     .join(" ");
+  const wrapClass = wrapClassName;
 
   return (
     <div
       ref={wrapRef}
-      className="relative min-w-[10rem] flex-1 basis-[10rem]"
+      className={wrapClass}
       data-testid={dataTestId}
     >
       <Search

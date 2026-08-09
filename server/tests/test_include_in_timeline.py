@@ -33,7 +33,7 @@ async def test_include_in_timeline_false_excluded_from_calendar_still_on_events(
 
     timed = await client.get(
         "/api/v1/results/events",
-        params={"has_time": "1", "include_in_timeline": "1", "limit": "50"},
+        params={"hasTime": "1", "includeInTimeline": "1", "limit": "50"},
     )
     assert timed.status_code == 200
     assert all(item["id"] != "ev-1" for item in timed.json()["items"])
@@ -48,8 +48,8 @@ async def test_events_task_ids_multi_filter(client) -> None:
     multi = await client.get(
         "/api/v1/results/events",
         params=[
-            ("task_ids", seed.TASK_EVENT),
-            ("task_ids", seed.TASK_EVENT_TIMED),
+            ("taskIds", seed.TASK_EVENT),
+            ("taskIds", seed.TASK_EVENT_TIMED),
             ("limit", "50"),
         ],
     )
@@ -61,7 +61,7 @@ async def test_events_task_ids_multi_filter(client) -> None:
 
     single = await client.get(
         "/api/v1/results/events",
-        params={"task_id": seed.TASK_EVENT_TIMED, "limit": "50"},
+        params={"taskId": seed.TASK_EVENT_TIMED, "limit": "50"},
     )
     assert single.status_code == 200
     assert all(item["taskId"] == seed.TASK_EVENT_TIMED for item in single.json()["items"])

@@ -47,11 +47,11 @@ class AgentTaskSpec:
     def user_event_origin(self) -> str:
         """Provenance for calendar tool writes (DDL-safe ``user_events.origin``).
 
-        Agent calendar writes always use ``project``. Analysis-only tasks never
+        Agent calendar writes always use ``agent``. Analysis-only tasks never
         enable calendar writes, so this value is unused on that path; findings
         go to ``analysis_events`` (no ``origin`` column).
         """
-        return "project"
+        return "agent"
 
 
 def normalize_agent_task_spec(
@@ -98,6 +98,12 @@ def normalize_agent_task_spec(
     if not out_cal and not out_ae:
         raise AgentTaskSpecError(
             "Agent tasks require at least one output: outputCalendar or outputAnalysisEvents"
+        )
+
+    # Cursor drain is calendar-reconcile only; analysis-event output uses schedule/threshold.
+    if mode == TRIGGER_MESSAGE_CURSOR and out_ae:
+        raise AgentTaskSpecError(
+            "triggerMode=message_cursor cannot be combined with outputAnalysisEvents"
         )
 
     # Rule 5: message_cursor requires channels when known at save time.

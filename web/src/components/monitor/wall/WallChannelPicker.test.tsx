@@ -1,12 +1,10 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 
 import type { ChannelWithSource } from "../../../types";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { WallChannelPicker } from "./WallChannelPicker";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const channels: ChannelWithSource[] = [
   {
@@ -37,11 +35,7 @@ function renderPicker(props: {
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(WallChannelPicker, props),
-      ),
+      wrapWithI18n(createElement(WallChannelPicker, props)),
     );
   });
   return container;
@@ -49,8 +43,7 @@ function renderPicker(props: {
 
 describe("WallChannelPicker", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   it("opens dialog and toggles channel selection", () => {

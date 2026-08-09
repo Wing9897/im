@@ -6,6 +6,43 @@ from typing import Any
 
 TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
+        "name": "items.list",
+        "description": (
+            "List trackable items with optional filters (workset, category, status, keyword). "
+            "Use for inventory lookup — not for expiry questions (use items.list_expiring). "
+            "Returns core fields plus quantity/unit/price and attributes summary."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "worksetId": {
+                    "type": "string",
+                    "description": "Optional ownership workset filter (default: all worksets).",
+                },
+                "categoryId": {
+                    "type": "string",
+                    "description": "Optional category filter; empty string = uncategorized only.",
+                },
+                "status": {
+                    "type": "string",
+                    "enum": ["active", "archived"],
+                    "description": "Optional status filter (default: all statuses).",
+                },
+                "search": {
+                    "type": "string",
+                    "description": "Optional title/notes/attributes/quantity/unit/price keyword filter.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100,
+                    "description": "Max rows (default 50).",
+                },
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
         "name": "items.list_expiring",
         "description": (
             "List trackable items that are overdue or expiring within the given days. "
@@ -50,9 +87,10 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "Create a trackable item (inventory / document / food / card, etc.). "
             "worksetId defaults to builtin「一般」(__user__) when omitted. "
-            "Dates are local calendar DATE (YYYY-MM-DD), not timed UTC instants. "
+            "Purchase / expiry dates are not set here — create linked calendar "
+            "milestones (購入 / 到期) via calendar tools instead. "
             "attributes are optional soft key/value extensions; changing category later "
-            "does not strip them. Confirm title and key dates with the user before writing."
+            "does not strip them. Confirm title with the user before writing."
         ),
         "parameters": {
             "type": "object",
@@ -63,16 +101,21 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": "Ownership workset; omit or __user__ for「一般」.",
                 },
                 "categoryId": {"type": "string"},
-                "purchasedAt": {
-                    "type": "string",
-                    "description": "Purchase DATE YYYY-MM-DD",
-                },
-                "expiresAt": {
-                    "type": "string",
-                    "description": "Expiry DATE YYYY-MM-DD",
-                },
-                "remindBeforeDays": {"type": "integer", "minimum": 0, "maximum": 3650},
                 "notes": {"type": "string"},
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Optional inventory count (supports decimals, e.g. 1.5).",
+                },
+                "unit": {
+                    "type": "string",
+                    "description": "Optional unit label (e.g. 個, 盒, kg, ml).",
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Optional price in dollars ($); no separate currency field.",
+                },
                 "attributes": {
                     "type": "object",
                     "additionalProperties": {"type": "string"},
@@ -80,6 +123,43 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
             },
             "required": ["title"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "name": "items.update",
+        "description": (
+            "Update a trackable item (title, workset, category, notes, status, quantity, unit, "
+            "price, attributes). Purchase/expiry dates are NOT set here — use linked calendar "
+            "milestones via calendar tools. Confirm changes with the user before writing."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "id": {"type": "string", "description": "Item id to update."},
+                "title": {"type": "string", "minLength": 1},
+                "worksetId": {"type": "string"},
+                "categoryId": {"type": "string", "description": "Category id; null to clear."},
+                "notes": {"type": "string"},
+                "status": {"type": "string", "enum": ["active", "archived"]},
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Inventory count (supports decimals).",
+                },
+                "unit": {"type": "string", "description": "Unit label (e.g. 個, 盒, kg)."},
+                "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Price in dollars ($).",
+                },
+                "attributes": {
+                    "type": "object",
+                    "additionalProperties": {"type": "string"},
+                    "description": "Soft extension key/values (string values only).",
+                },
+            },
+            "required": ["id"],
             "additionalProperties": False,
         },
     },

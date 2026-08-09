@@ -1,11 +1,12 @@
+import { act } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createElement, act } from "react";
-import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
-import { buildCalendarDays, buildWeekDays } from "../../../domain/timeline/dateUtils";
-import { makeEvent } from "../../../test/timelineTestHelpers";
+import { makeEvent } from "../../../test/timelineTestHelpers";import {
+  buildCalendarDays,
+  buildWeekDays,
+  makeTimelineCalendarViewProps,
+  prepareTimelineCalendarViewTests,
+  renderTimelineCalendarView,
+} from "./timelineCalendarViewTestHarness";
 
 const { mockUseErrorToast } = vi.hoisted(() => ({
   mockUseErrorToast: vi.fn(),
@@ -24,54 +25,16 @@ const { TimelineCalendarView } = await import("./TimelineCalendarView");
 type Props = Parameters<typeof TimelineCalendarView>[0];
 
 function makeProps(overrides: Partial<Props> = {}): Props {
-  const timeCursor = new Date(2025, 0, 15); // January 15, 2025
-  const monthCursor = new Date(2025, 0, 1); // January 2025
-  const monthDays = buildCalendarDays(monthCursor);
-  const weekDays = buildWeekDays(timeCursor);
-
-  return {
-    timeScale: "month",
-    rangeStart: new Date(2025, 0, 13), // Monday of the week
-    rangeEvents: [],
-    weekDays,
-    timeCursor,
-    monthCursor,
-    monthDays,
-    monthEvents: [],
-    focusedDay: null,
-    eventStatuses: {},
-    weatherByDate: {
-      "2025-01-15": { code: 0, high: 25, low: 18 },
-    },
-    onSelectEvent: vi.fn(),
-    onFocusDay: vi.fn(),
-    ...overrides,
-  };
+  return makeTimelineCalendarViewProps<Props>(overrides);
 }
 
 function render(props: Props) {
-  const container = document.createElement("div");
-  act(() => {
-    createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(TimelineCalendarView, props),
-      ),
-    );
-  });
-  return container;
+  return renderTimelineCalendarView(TimelineCalendarView, props);
 }
-
-/* ------------------------------------------------------------------ */
-/*  Tests                                                              */
-/* ------------------------------------------------------------------ */
 
 describe("TimelineCalendarView", () => {
   beforeEach(async () => {
-    mockUseErrorToast.mockClear();
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await prepareTimelineCalendarViewTests(mockUseErrorToast);
   });
 
   describe("month view — renders correct number of day cells", () => {
@@ -478,13 +441,13 @@ describe("TimelineCalendarView", () => {
       expect(container.querySelectorAll('[data-testid="month-span-indicators"]').length).toBe(0);
     });
 
-    it("counts item expiry + recurring final in +N 結束; recurring still titles in preview", () => {
+    it("counts recurring final in +N 結束; remind item still titles in preview", () => {
       const events = [
         makeEvent({
-          id: "item:milk:expires",
-          title: "milk",
+          id: "item:milk:remind",
+          title: "提醒 · milk",
           source: "item",
-          itemDateKind: "expires",
+          itemDateKind: "remind",
           isAllDay: true,
           startTime: "2025-01-16T00:00:00",
           endTime: "2025-01-16T23:59:59",
@@ -496,12 +459,6 @@ describe("TimelineCalendarView", () => {
           isLastOccurrence: true,
           startTime: "2025-01-16T09:00:00",
           endTime: "2025-01-16T10:00:00",
-        }),
-        makeEvent({
-          id: "meet",
-          title: "普通會議",
-          startTime: "2025-01-16T11:00:00",
-          endTime: "2025-01-16T12:00:00",
         }),
       ];
       const monthCursor = new Date(2025, 0, 1);
@@ -516,12 +473,13 @@ describe("TimelineCalendarView", () => {
       );
 
       const dayCells = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'));
-      const day16 = dayCells.find((cell) => cell.textContent?.includes("普通會議"));
+      const day16 = dayCells.find((cell) =>
+        (cell.getAttribute("aria-label") ?? "").includes("2025年1月16日"),
+      );
       expect(day16).toBeTruthy();
-      expect(day16?.textContent).toContain("普通會議");
-      expect(day16?.textContent).toContain("+2 結束");
-      // Item expiry stays chip-only; recurring final remains a normal preview row.
-      expect(day16?.textContent).not.toContain("milk");
+      expect(day16?.textContent).toContain("+1 結束");
+      // Remind item + recurring final remain normal preview rows (limit 2).
+      expect(day16?.textContent).toContain("提醒 · milk");
       expect(day16?.textContent).toContain("最後一次週會");
     });
 
@@ -610,262 +568,4 @@ describe("TimelineCalendarView", () => {
     });
   });
 
-  describe("day view — card location + layout", () => {
-    it("always shows location, using N/A when missing", () => {
-      const events = [
-        makeEvent({
-          id: "with-loc",
-          title: "有地點",
-          startTime: "2025-01-15T09:00:00",
-          endTime: "2025-01-15T10:00:00",
-          location: "會議室 A",
-        }),
-        makeEvent({
-          id: "no-loc",
-          title: "無地點",
-          startTime: "2025-01-15T11:00:00",
-          endTime: "2025-01-15T12:00:00",
-          location: null,
-        }),
-      ];
-      const container = render(
-        makeProps({
-          timeScale: "day",
-          rangeStart: new Date(2025, 0, 15),
-          rangeEvents: events,
-        }),
-      );
-
-      const cards = container.querySelectorAll('[data-testid="timeline-day-event-card"]');
-      expect(cards.length).toBe(2);
-      const locations = Array.from(
-        container.querySelectorAll('[data-testid="timeline-day-event-location"]'),
-      ).map((node) => node.textContent ?? "");
-      expect(locations.some((text) => text.includes("會議室 A"))).toBe(true);
-      expect(locations.some((text) => text.includes("N/A"))).toBe(true);
-    });
-  });
-
-  describe("item purchase / expiry — normal event styling", () => {
-    it("month preview uses standard dot and plain title for purchased items", () => {
-      const purchased = makeEvent({
-        id: "item:milk:purchased",
-        title: "milk",
-        source: "item",
-        itemDateKind: "purchased",
-        isAllDay: true,
-        startTime: "2025-01-05T00:00:00",
-        endTime: "2025-01-05T23:59:59",
-      });
-      const monthCursor = new Date(2025, 0, 1);
-      const container = render(
-        makeProps({
-          timeScale: "month",
-          monthCursor,
-          monthDays: buildCalendarDays(monthCursor),
-          monthEvents: [purchased],
-          timeCursor: new Date(2025, 0, 5),
-        }),
-      );
-
-      expect(container.querySelector('[data-testid="month-item-marker-purchased"]')).toBeNull();
-      expect(container.textContent).toContain("milk");
-      expect(container.textContent).not.toContain("🛒");
-    });
-
-    it("month preview keeps remind emoji marker and prefixed title", () => {
-      const remind = makeEvent({
-        id: "item:milk:remind",
-        title: "提醒 · milk",
-        source: "item",
-        itemDateKind: "remind",
-        isAllDay: true,
-        startTime: "2025-01-05T00:00:00",
-        endTime: "2025-01-05T23:59:59",
-      });
-      const monthCursor = new Date(2025, 0, 1);
-      const container = render(
-        makeProps({
-          timeScale: "month",
-          monthCursor,
-          monthDays: buildCalendarDays(monthCursor),
-          monthEvents: [remind],
-          timeCursor: new Date(2025, 0, 5),
-        }),
-      );
-
-      expect(
-        container.querySelector('[data-testid="month-item-marker-remind"]')?.textContent,
-      ).toBe("🔔");
-      expect(container.textContent).toContain("提醒 · milk");
-    });
-  });
-
-  describe("important marker — single leading glyph", () => {
-    /** Remind stays in month titled preview; expires is chip-only (+N 結束). */
-    const importantPreviewItem = makeEvent({
-      id: "item-important-preview",
-      title: "提醒 · milk",
-      source: "item",
-      itemDateKind: "remind",
-      important: true,
-      startTime: "2025-01-15T00:00:00",
-      endTime: "2025-01-15T23:59:59",
-    });
-    const importantItem = makeEvent({
-      id: "item-important",
-      title: "milk",
-      source: "item",
-      itemDateKind: "expires",
-      important: true,
-      startTime: "2025-01-15T00:00:00",
-      endTime: "2025-01-15T23:59:59",
-    });
-
-    it("month preview shows ❗ without item-kind emoji", () => {
-      const monthCursor = new Date(2025, 0, 1);
-      const container = render(
-        makeProps({
-          timeScale: "month",
-          monthCursor,
-          monthDays: buildCalendarDays(monthCursor),
-          monthEvents: [importantPreviewItem],
-          timeCursor: new Date(2025, 0, 15),
-        }),
-      );
-
-      expect(container.querySelector('[data-testid="month-important-marker"]')?.textContent).toBe(
-        "❗",
-      );
-      expect(container.querySelector('[data-testid="month-item-marker-remind"]')).toBeNull();
-      expect(container.textContent).toContain("提醒 · milk");
-      expect(container.textContent).not.toContain("🔔");
-    });
-
-    it("week chip shows ❗ without item-kind emoji", () => {
-      const timeCursor = new Date(2025, 0, 15);
-      const container = render(
-        makeProps({
-          timeScale: "week",
-          weekDays: buildWeekDays(timeCursor),
-          timeCursor,
-          rangeEvents: [importantItem],
-        }),
-      );
-
-      const chip = container.querySelector('[data-testid="timeline-week-event-chip"]');
-      expect(chip?.querySelector('[data-testid="week-important-marker"]')?.textContent).toBe("❗");
-      expect(chip?.querySelector('[data-testid="week-item-kind-marker"]')).toBeNull();
-      expect(chip?.textContent).toContain("milk");
-      expect(chip?.textContent).not.toContain("⚠️");
-    });
-
-    it("day card shows ❗ without item-kind emoji", () => {
-      const container = render(
-        makeProps({
-          timeScale: "day",
-          rangeStart: new Date(2025, 0, 15),
-          rangeEvents: [importantItem],
-        }),
-      );
-
-      const card = container.querySelector('[data-testid="timeline-day-event-card"]');
-      expect(card?.querySelector('[data-testid="day-important-marker"]')?.textContent).toBe("❗");
-      expect(card?.querySelector('[data-testid="day-item-kind-marker"]')).toBeNull();
-      expect(card?.textContent).toContain("milk");
-      expect(card?.textContent).not.toContain("⚠️");
-    });
-  });
-
-  describe("week / day phase tags and remind badge", () => {
-    it("week chip shows remind badge and ending tag for item markers that start that day", () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date(2025, 0, 15, 12, 0, 0));
-      const timeCursor = new Date(2025, 0, 15);
-      const remind = makeEvent({
-        id: "item-remind",
-        title: "提醒 · milk",
-        source: "item",
-        itemDateKind: "remind",
-        startTime: "2025-01-15T00:00:00",
-        endTime: "2025-01-15T23:59:59",
-      });
-      const expires = makeEvent({
-        id: "item-expires",
-        title: "milk",
-        source: "item",
-        itemDateKind: "expires",
-        startTime: "2025-01-15T00:00:00",
-        endTime: "2025-01-15T23:59:59",
-      });
-      const container = render(
-        makeProps({
-          timeScale: "week",
-          weekDays: buildWeekDays(timeCursor),
-          timeCursor,
-          rangeEvents: [remind, expires],
-        }),
-      );
-
-      expect(
-        container.querySelector('[data-testid="timeline-remind-badge"]')?.textContent,
-      ).toBe("提醒");
-      expect(
-        container.querySelector(
-          '[data-testid="timeline-event-day-phase-ending-today"]',
-        )?.textContent,
-      ).toBe("結束於本日");
-      expect(container.textContent).not.toContain("提醒 · milk");
-      expect(container.textContent).toContain("milk");
-      vi.useRealTimers();
-    });
-
-    it("day card shows 跨日进行中 / ending tag and remind badge", () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date(2025, 0, 15, 12, 0, 0));
-      const covering = makeEvent({
-        id: "cover",
-        title: "Conference Week",
-        startTime: "2025-01-13T09:00:00",
-        endTime: "2025-01-17T18:00:00",
-      });
-      const ending = makeEvent({
-        id: "overnight",
-        title: "Overnight",
-        startTime: "2025-01-14T20:00:00",
-        endTime: "2025-01-15T08:00:00",
-      });
-      const userRemind = makeEvent({
-        id: "user-remind",
-        title: "提醒會議",
-        source: "user",
-        origin: "manual",
-        remindBeforeDays: 1,
-        startTime: "2025-01-15T10:00:00",
-        endTime: "2025-01-15T11:00:00",
-      });
-      const container = render(
-        makeProps({
-          timeScale: "day",
-          rangeStart: new Date(2025, 0, 15),
-          rangeEvents: [covering, ending, userRemind],
-        }),
-      );
-
-      expect(
-        container.querySelector(
-          '[data-testid="timeline-event-day-phase-ongoing-multi-day"]',
-        )?.textContent,
-      ).toBe("跨日進行中");
-      expect(
-        container.querySelector(
-          '[data-testid="timeline-event-day-phase-ending-today"]',
-        )?.textContent,
-      ).toBe("結束於本日");
-      expect(
-        container.querySelector('[data-testid="timeline-remind-badge"]')?.textContent,
-      ).toBe("提醒");
-      vi.useRealTimers();
-    });
-  });
 });

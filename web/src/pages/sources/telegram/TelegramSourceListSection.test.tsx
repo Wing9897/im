@@ -12,13 +12,11 @@
  */
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 
 import { TelegramSourceListSection } from "./TelegramSourceListSection";
 import type { Source } from "../../../types";
+import { wrapWithI18n } from "../../../test/i18nHarness";
 
 function makeSource(overrides: Partial<Source> = {}): Source {
   return {
@@ -64,11 +62,7 @@ function renderSection(container: HTMLElement, args: RenderArgs = {}) {
   act(() => {
     root = createRoot(container);
     root.render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(TelegramSourceListSection, props),
-      ),
+      wrapWithI18n(createElement(TelegramSourceListSection, props)),
     );
   });
   return { props, root: root! };

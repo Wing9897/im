@@ -271,7 +271,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tasks/{task_id}/project-ticks": {
+    "/api/v1/tasks/{task_id}/agent-ticks": {
         parameters: {
             query?: never;
             header?: never;
@@ -279,10 +279,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Project Tick Status
-         * @description Cursor backlog + recent project-tick success/skip/error log.
+         * Agent Tick Status
+         * @description Cursor backlog + recent agent-tick success/skip/error log.
          */
-        get: operations["project_tick_status_api_v1_tasks__task_id__project_ticks_get"];
+        get: operations["agent_tick_status_api_v1_tasks__task_id__agent_ticks_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -407,7 +407,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Items */
+        /**
+         * List Items
+         * @description List items; date cache columns are read-only (SoT = linked calendars).
+         */
         get: operations["list_items_api_v1_items_get"];
         put?: never;
         /** Post Item */
@@ -2099,6 +2102,55 @@ export interface components {
             error?: string | null;
             taskConfig?: components["schemas"]["TaskDraftPayload"] | null;
         };
+        /**
+         * AgentTickInFlightResponse
+         * @description Current schedule-fire batch still pending/processing (waves in progress).
+         */
+        AgentTickInFlightResponse: {
+            /** Batchid */
+            batchId: string;
+            /** Status */
+            status: string;
+            /** Messagecount */
+            messageCount: number;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** AgentTickLogEntryResponse */
+        AgentTickLogEntryResponse: {
+            /** Batchid */
+            batchId: string;
+            /** Status */
+            status: string;
+            /** Outcome */
+            outcome: string;
+            /** Messagecount */
+            messageCount: number;
+            /** Agentmessage */
+            agentMessage?: string | null;
+            /** Errormessage */
+            errorMessage?: string | null;
+            /** Toolcalls */
+            toolCalls?: components["schemas"]["AgentToolCallSummary"][];
+            /** Createdat */
+            createdAt?: string | null;
+            /** Completedat */
+            completedAt?: string | null;
+        };
+        /** AgentTickStatusResponse */
+        AgentTickStatusResponse: {
+            /** Taskid */
+            taskId: string;
+            /** Cursorat */
+            cursorAt?: string | null;
+            /** Pendingsincecursor */
+            pendingSinceCursor: number;
+            /** Ticks */
+            ticks?: components["schemas"]["AgentTickLogEntryResponse"][];
+            inFlight?: components["schemas"]["AgentTickInFlightResponse"] | null;
+        };
         /** AgentToolCallSummary */
         AgentToolCallSummary: {
             /** Name */
@@ -2611,7 +2663,7 @@ export interface components {
             /** Itemid */
             itemId?: string | null;
             /** Itemdatekind */
-            itemDateKind?: ("purchased" | "expires" | "remind") | null;
+            itemDateKind?: "remind" | null;
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -3133,12 +3185,6 @@ export interface components {
             worksetId?: string | null;
             /** Categoryid */
             categoryId?: string | null;
-            /** Purchasedat */
-            purchasedAt?: string | null;
-            /** Expiresat */
-            expiresAt?: string | null;
-            /** Remindbeforedays */
-            remindBeforeDays?: number | null;
             /**
              * Notes
              * @default
@@ -3151,6 +3197,12 @@ export interface components {
             status: string | null;
             /** Emoji */
             emoji?: string | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Price */
+            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3181,8 +3233,6 @@ export interface components {
             categoryId?: string | null;
             /** Worksetid */
             worksetId: string;
-            /** Purchasedat */
-            purchasedAt?: string | null;
             /** Expiresat */
             expiresAt?: string | null;
             /** Remindbeforedays */
@@ -3199,6 +3249,12 @@ export interface components {
             status: string;
             /** Emoji */
             emoji?: string | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Price */
+            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3216,18 +3272,18 @@ export interface components {
             worksetId?: string | null;
             /** Categoryid */
             categoryId?: string | null;
-            /** Purchasedat */
-            purchasedAt?: string | null;
-            /** Expiresat */
-            expiresAt?: string | null;
-            /** Remindbeforedays */
-            remindBeforeDays?: number | null;
             /** Notes */
             notes?: string | null;
             /** Status */
             status?: string | null;
             /** Emoji */
             emoji?: string | null;
+            /** Quantity */
+            quantity?: number | null;
+            /** Unit */
+            unit?: string | null;
+            /** Price */
+            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3366,55 +3422,6 @@ export interface components {
             clientId?: string | null;
             /** Name */
             name?: string | null;
-        };
-        /**
-         * ProjectTickInFlightResponse
-         * @description Current schedule-fire batch still pending/processing (waves in progress).
-         */
-        ProjectTickInFlightResponse: {
-            /** Batchid */
-            batchId: string;
-            /** Status */
-            status: string;
-            /** Messagecount */
-            messageCount: number;
-            /** Createdat */
-            createdAt?: string | null;
-            /** Updatedat */
-            updatedAt?: string | null;
-        };
-        /** ProjectTickLogEntryResponse */
-        ProjectTickLogEntryResponse: {
-            /** Batchid */
-            batchId: string;
-            /** Status */
-            status: string;
-            /** Outcome */
-            outcome: string;
-            /** Messagecount */
-            messageCount: number;
-            /** Agentmessage */
-            agentMessage?: string | null;
-            /** Errormessage */
-            errorMessage?: string | null;
-            /** Toolcalls */
-            toolCalls?: components["schemas"]["AgentToolCallSummary"][];
-            /** Createdat */
-            createdAt?: string | null;
-            /** Completedat */
-            completedAt?: string | null;
-        };
-        /** ProjectTickStatusResponse */
-        ProjectTickStatusResponse: {
-            /** Taskid */
-            taskId: string;
-            /** Cursorat */
-            cursorAt?: string | null;
-            /** Pendingsincecursor */
-            pendingSinceCursor: number;
-            /** Ticks */
-            ticks?: components["schemas"]["ProjectTickLogEntryResponse"][];
-            inFlight?: components["schemas"]["ProjectTickInFlightResponse"] | null;
         };
         /** QueueBatchResponse */
         QueueBatchResponse: {
@@ -3775,8 +3782,6 @@ export interface components {
              * @default
              */
             promptTemplate: string;
-            /** Websearchquery */
-            webSearchQuery?: string | null;
             /** Analysismode */
             analysisMode?: ("leaderboard" | "intel_event" | "recurring" | "agent") | null;
             /** Analysistimerange */
@@ -3794,8 +3799,8 @@ export interface components {
             includeInTimeline?: boolean | null;
             /** Isactive */
             isActive?: boolean | null;
-            /** Projectwaveintervalseconds */
-            projectWaveIntervalSeconds?: number | null;
+            /** Agentwaveintervalseconds */
+            agentWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
             batchOverlapCount?: number | null;
             /** Analysistriggerthreshold */
@@ -3846,8 +3851,6 @@ export interface components {
             description?: string | null;
             /** Prompttemplate */
             promptTemplate?: string | null;
-            /** Websearchquery */
-            webSearchQuery?: string | null;
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
@@ -3893,11 +3896,6 @@ export interface components {
              */
             promptTemplate: string;
             /**
-             * Websearchquery
-             * @default
-             */
-            webSearchQuery: string;
-            /**
              * Analysismode
              * @enum {string}
              */
@@ -3921,8 +3919,8 @@ export interface components {
             worksetId?: string | null;
             /** Itemid */
             itemId?: string | null;
-            /** Projectwaveintervalseconds */
-            projectWaveIntervalSeconds?: number | null;
+            /** Agentwaveintervalseconds */
+            agentWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
             batchOverlapCount?: number | null;
             /** Analysistriggerthreshold */
@@ -4280,7 +4278,7 @@ export interface components {
              * Origin
              * @enum {string}
              */
-            origin: "manual" | "assistant" | "a2a" | "project" | "ics";
+            origin: "manual" | "assistant" | "a2a" | "agent" | "ics";
             /**
              * Isallday
              * @default false
@@ -4858,10 +4856,10 @@ export interface operations {
     list_tasks_api_v1_tasks_get: {
         parameters: {
             query?: {
-                top_level_only?: boolean;
-                analysis_mode?: string | null;
-                workset_id?: string | null;
-                item_id?: string | null;
+                topLevelOnly?: boolean | null;
+                analysisMode?: string | null;
+                worksetId?: string | null;
+                itemId?: string | null;
             };
             header?: never;
             path?: never;
@@ -5050,7 +5048,7 @@ export interface operations {
             };
         };
     };
-    project_tick_status_api_v1_tasks__task_id__project_ticks_get: {
+    agent_tick_status_api_v1_tasks__task_id__agent_ticks_get: {
         parameters: {
             query?: {
                 limit?: number;
@@ -5069,7 +5067,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ProjectTickStatusResponse"];
+                    "application/json": components["schemas"]["AgentTickStatusResponse"];
                 };
             };
             /** @description Validation Error */
@@ -6448,7 +6446,7 @@ export interface operations {
     fetch_trending_api_v1_results_trending_get: {
         parameters: {
             query?: {
-                task_id?: string | null;
+                taskId?: string | null;
             };
             header?: never;
             path?: never;
@@ -6510,19 +6508,19 @@ export interface operations {
     fetch_events_api_v1_results_events_get: {
         parameters: {
             query?: {
-                task_id?: string | null;
-                task_ids?: string[] | null;
+                taskId?: string | null;
+                taskIds?: string[] | null;
                 search?: string | null;
-                start_date?: string | null;
-                end_date?: string | null;
+                startDate?: string | null;
+                endDate?: string | null;
                 sort?: string;
                 limit?: number;
                 offset?: number;
-                has_time?: string | null;
-                has_coords?: string | null;
-                include_total?: boolean;
+                hasTime?: string | null;
+                hasCoords?: string | null;
+                includeTotal?: boolean | null;
                 /** @description When '1'/'true', only return events from tasks with include_in_timeline=1 (time-planning views). */
-                include_in_timeline?: string | null;
+                includeInTimeline?: string | null;
             };
             header?: never;
             path?: never;
@@ -7434,13 +7432,13 @@ export interface operations {
     };
     list_calendar_items_api_v1_calendar_items_get: {
         parameters: {
-            query: {
-                range_start: string;
-                range_end: string;
-                task_id?: string | null;
-                task_ids?: string[] | null;
-                /** @description Include trackable-item purchased/expires DATE projections (source=item). */
-                include_items?: boolean;
+            query?: {
+                rangeStart?: string | null;
+                rangeEnd?: string | null;
+                taskId?: string | null;
+                taskIds?: string[] | null;
+                /** @description Include trackable-item remind DATE projections (source=item). */
+                includeItems?: boolean | null;
             };
             header?: never;
             path?: never;
@@ -7727,9 +7725,9 @@ export interface operations {
             query?: {
                 start?: string | null;
                 end?: string | null;
-                task_id?: string | null;
-                workset_id?: string | null;
-                item_id?: string | null;
+                taskId?: string | null;
+                worksetId?: string | null;
+                itemId?: string | null;
             };
             header?: never;
             path?: never;
@@ -8536,8 +8534,8 @@ export interface operations {
         parameters: {
             query: {
                 location: string;
-                start_date: string;
-                end_date: string;
+                startDate: string;
+                endDate: string;
                 /** @description Bypass the successful forecast TTL cache and refetch providers. */
                 force?: boolean;
             };

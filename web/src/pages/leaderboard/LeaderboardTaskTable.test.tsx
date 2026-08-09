@@ -3,11 +3,9 @@ import { resolve } from "node:path";
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import type { Message, TrendingTopic } from "../../types";
 import { LeaderboardTaskTable } from "./LeaderboardTaskTable";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 // Vitest runs with cwd at web/, so resolve the shared layout stylesheet from there.
 const globalCss = readFileSync(resolve(process.cwd(), "src/css/shared-layout.css"), "utf-8");
@@ -50,11 +48,7 @@ function tableTree(props: {
   topicMessageErrors: Record<string, string>;
   onToggleTopic: () => void;
 }) {
-  return createElement(
-    I18nextProvider,
-    { i18n },
-    createElement(LeaderboardTaskTable, props),
-  );
+  return wrapWithI18n(createElement(LeaderboardTaskTable, props));
 }
 
 describe("LeaderboardTaskTable visual updates", () => {
@@ -62,8 +56,7 @@ describe("LeaderboardTaskTable visual updates", () => {
   let root: Root | null = null;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
   });

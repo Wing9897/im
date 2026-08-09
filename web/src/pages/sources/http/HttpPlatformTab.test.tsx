@@ -4,10 +4,8 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, useSearchParams } from "react-router-dom";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 vi.mock("./HttpTab", () => ({
   HttpTab: ({ modeToggle }: { modeToggle?: React.ReactNode }) =>
@@ -44,8 +42,7 @@ describe("HttpPlatformTab", () => {
   beforeEach(async () => {
     container = document.createElement("div");
     document.body.appendChild(container);
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   afterEach(() => {
@@ -62,15 +59,11 @@ describe("HttpPlatformTab", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
+        wrapWithI18n(createElement(
             MemoryRouter,
             { initialEntries: ["/sources?tab=http"] },
             createElement(HttpPlatformTab),
-          ),
-        ),
+          )),
       );
       await Promise.resolve();
     });
@@ -86,15 +79,11 @@ describe("HttpPlatformTab", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
+        wrapWithI18n(createElement(
             MemoryRouter,
             { initialEntries: ["/sources?tab=http&mode=webhook"] },
             createElement(HttpPlatformTab),
-          ),
-        ),
+          )),
       );
       await Promise.resolve();
     });
@@ -110,10 +99,7 @@ describe("HttpPlatformTab", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(
+        wrapWithI18n(createElement(
             MemoryRouter,
             { initialEntries: ["/sources?tab=http&mode=webhook"] },
             createElement(
@@ -126,8 +112,7 @@ describe("HttpPlatformTab", () => {
               }),
               createElement(HttpPlatformTab),
             ),
-          ),
-        ),
+          )),
       );
       await Promise.resolve();
     });

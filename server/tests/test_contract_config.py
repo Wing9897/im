@@ -16,8 +16,8 @@ _INTERNAL_CONFIG_KEYS = frozenset(
         "localhost_auth_exempt",
         "setup_complete",
         # Project tick knobs — server-owned; not on SystemSettingsSnapshot yet.
-        "agent_project_max_tool_rounds",
-        "agent_project_max_drain_waves",
+        "agent_max_tool_rounds",
+        "agent_max_drain_waves",
     }
 )
 

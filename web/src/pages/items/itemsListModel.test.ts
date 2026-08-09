@@ -1,29 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import type { TrackableItem } from "../../api/items";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { ALL_CATEGORIES_ID, UNCATEGORIZED_CATEGORY_ID } from "../../domain/items/categoryAggregates";
+import { makeTrackableItem } from "../../test/fixtures/trackableItem";
 import {
+  buildItemsListFetchParams,
   filterItemsList,
   groupItemsByWorkset,
+  indexById,
   itemSearchHaystack,
   sortItemsList,
 } from "./itemsListModel";
 
 function item(overrides: Partial<TrackableItem> & { id: string }): TrackableItem {
-  return {
-    title: overrides.id,
-    notes: "",
-    worksetId: SYSTEM_WORKSET_ID,
-    categoryId: null,
-    purchasedAt: null,
-    expiresAt: null,
-    remindBeforeDays: null,
-    attributes: {},
-    status: "active",
-    createdAt: null,
-    updatedAt: null,
-    ...overrides,
-  };
+  return makeTrackableItem(overrides);
 }
 
 describe("filterItemsList", () => {
@@ -53,16 +43,29 @@ describe("filterItemsList", () => {
     expect(filterItemsList(withMeta, "all", "brand").map((r) => r.id)).toEqual(["e"]);
     expect(filterItemsList(withMeta, "all", "shelf").map((r) => r.id)).toEqual(["n"]);
   });
+
+  it("matches quantity unit and price", () => {
+    const rows = [
+      item({ id: "q", title: "Rice", quantity: 2.5, unit: "kg", price: 19.9 }),
+      item({ id: "x", title: "Other" }),
+    ];
+    expect(filterItemsList(rows, "all", "kg").map((r) => r.id)).toEqual(["q"]);
+    expect(filterItemsList(rows, "all", "2.5").map((r) => r.id)).toEqual(["q"]);
+    expect(filterItemsList(rows, "all", "19.9").map((r) => r.id)).toEqual(["q"]);
+  });
 });
 
 describe("itemSearchHaystack", () => {
-  it("includes title notes emoji and attributes", () => {
+  it("includes title notes emoji attributes and inventory", () => {
     const hay = itemSearchHaystack(
       item({
         id: "1",
         title: "Milk",
         notes: "Cold",
         emoji: "🥛",
+        quantity: 2,
+        unit: "L",
+        price: 12.5,
         attributes: { fat: "2%" },
       }),
     );
@@ -71,6 +74,36 @@ describe("itemSearchHaystack", () => {
     expect(hay).toContain("🥛");
     expect(hay).toContain("fat");
     expect(hay).toContain("2%");
+    expect(hay).toContain("2");
+    expect(hay).toContain("l");
+    expect(hay).toContain("12.5");
+  });
+});
+
+describe("buildItemsListFetchParams", () => {
+  it("maps entry-list filters to listItems query params", () => {
+    expect(
+      buildItemsListFetchParams({
+        categoryRouteId: ALL_CATEGORIES_ID,
+        filter: "all",
+        search: "",
+        worksetFilterId: null,
+      }),
+    ).toEqual({ status: "active" });
+
+    expect(
+      buildItemsListFetchParams({
+        categoryRouteId: UNCATEGORIZED_CATEGORY_ID,
+        filter: "archived",
+        search: " milk ",
+        worksetFilterId: "ws-1",
+      }),
+    ).toEqual({
+      categoryId: "",
+      status: "archived",
+      search: "milk",
+      worksetId: "ws-1",
+    });
   });
 });
 
@@ -82,6 +115,30 @@ describe("sortItemsList", () => {
     ];
     expect(sortItemsList(rows, "name").map((r) => r.id)).toEqual(["1", "2"]);
     expect(sortItemsList(rows, "expiry").map((r) => r.id)).toEqual(["1", "2"]);
+  });
+});
+
+describe("indexById", () => {
+  it("maps entry pairs including personal workset __user__", () => {
+    const personal = { id: "__user__", name: "Personal" };
+    const other = { id: "ws-1", name: "Team" };
+    const map = indexById([personal, other]);
+    expect(map.get("__user__")).toEqual(personal);
+    expect(map.get("ws-1")).toEqual(other);
+    expect(map.size).toBe(2);
+  });
+
+  it("hardens against empty and malformed rows", () => {
+    expect(indexById(null).size).toBe(0);
+    expect(indexById(undefined).size).toBe(0);
+    expect(indexById([]).size).toBe(0);
+    const map = indexById([
+      null as unknown as { id: string },
+      { id: 1 as unknown as string },
+      { id: "" },
+      { id: "ok", name: "Keep" },
+    ]);
+    expect([...map.keys()]).toEqual(["ok"]);
   });
 });
 

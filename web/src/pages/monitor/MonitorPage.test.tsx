@@ -1,10 +1,9 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../i18n";
 
 import type { Message } from "../../types";
+import { wrapWithI18n } from "../../test/i18nHarness";
 
 // REST API mocks for monitor page source/channel/message queries
 const { mockListSources, mockListChannelsWithSources, mockQueryMessagesPage, runtimeState } = vi.hoisted(() => ({
@@ -149,7 +148,7 @@ describe("MonitorPage", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(MonitorPage)),
+        wrapWithI18n(createElement(MonitorPage)),
       );
       await Promise.resolve();
     });
@@ -214,7 +213,7 @@ describe("MonitorPage", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(MonitorPage)),
+        wrapWithI18n(createElement(MonitorPage)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -229,7 +228,7 @@ describe("MonitorPage", () => {
 
     await act(async () => {
       root!.render(
-        createElement(I18nextProvider, { i18n }, createElement(MonitorPage)),
+        wrapWithI18n(createElement(MonitorPage)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -292,7 +291,7 @@ describe("MonitorPage", () => {
     await act(async () => {
       root = createRoot(container);
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(MonitorPage)),
+        wrapWithI18n(createElement(MonitorPage)),
       );
       await Promise.resolve();
       await Promise.resolve();

@@ -21,7 +21,6 @@ const item: TrackableItem = {
   title: "Passport",
   worksetId: "ws-1",
   categoryId: "documents",
-  purchasedAt: null,
   expiresAt: null,
   remindBeforeDays: 7,
   notes: "",

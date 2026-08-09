@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import {
   buildQuarterWeeks,
   buildYearGanttColumns,
@@ -20,6 +17,7 @@ import {
   makeMonthColumns,
 } from "../../../test/timelineTestHelpers";
 import { computeEventBarPosition } from "./ganttEventPositioning";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const { TimelineGanttView } = await import("./TimelineGanttView");
 
@@ -73,11 +71,7 @@ function render(props: Props) {
   const container = document.createElement("div");
   act(() => {
     createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(TimelineGanttView, props),
-      ),
+      wrapWithI18n(createElement(TimelineGanttView, props)),
     );
   });
   return container;
@@ -89,8 +83,7 @@ function render(props: Props) {
 
 describe("TimelineGanttView", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   describe("empty state rendering", () => {

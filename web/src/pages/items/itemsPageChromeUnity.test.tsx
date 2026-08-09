@@ -2,23 +2,31 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ItemFormToolbar } from "./ItemFormToolbar";
+import "../../test/i18nIdentityMock";
+
+import { ChatEditorToolbar } from "../tasks/chat-editor/ChatEditorToolbar";
+import { ItemFormToolbar } from "./form/ItemFormToolbar";
 import { ItemsEntryToolbar } from "./ItemsEntryToolbar";
 import { ItemsPageChrome } from "./ItemsPageChrome";
+import { ITEM_FORM_TEST_WORKSETS } from "./form/itemFormTestFixtures";
 import {
+  itemsPageChromeEntryInnerClass,
+  itemsPageChromeEntryOuterClass,
   itemsPageChromeInnerClass,
   itemsPageChromeOuterClass,
 } from "./itemsPageChromeClasses";
 
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
+vi.mock("../../utils/accessContext", () => ({
+  useAccessContext: () => "local",
+}));
+
+vi.mock("../../domain/connection/connectionStore", () => ({
+  hasDeviceSession: () => true,
 }));
 
 /**
- * Cross-surface lock: category overview, entry list, and form toolbars must
- * share the exact same sticky outer + inner class strings.
+ * Cross-surface lock: Items chrome + ChatEditorToolbar must share the exact
+ * same sticky outer + inner class strings (not OpsControlBar).
  */
 describe("Items page chrome unity", () => {
   let container: HTMLDivElement;
@@ -37,7 +45,7 @@ describe("Items page chrome unity", () => {
     container.remove();
   });
 
-  it("category · entry · form share identical outer/inner chrome classes", () => {
+  it("category · entry · form · chat editor share identical outer/inner chrome classes", () => {
     act(() => {
       root.render(
         createElement(
@@ -54,10 +62,13 @@ describe("Items page chrome unity", () => {
             search: "",
             sort: "expiry",
             groupByWorkset: false,
+            worksetFilterId: null,
+            worksets: ITEM_FORM_TEST_WORKSETS,
             onFilterChange: vi.fn(),
             onSearchChange: vi.fn(),
             onSortChange: vi.fn(),
             onGroupByWorksetChange: vi.fn(),
+            onWorksetFilterChange: vi.fn(),
             onBack: vi.fn(),
             onAddItem: vi.fn(),
             onManageCategories: vi.fn(),
@@ -69,6 +80,14 @@ describe("Items page chrome unity", () => {
             onBack: vi.fn(),
             onSave: vi.fn(),
           }),
+          createElement(ChatEditorToolbar, {
+            isEditMode: false,
+            canSaveForm: true,
+            isSaving: false,
+            onBack: vi.fn(),
+            onSave: vi.fn(),
+            onOpenPresetDialog: vi.fn(),
+          }),
         ),
       );
     });
@@ -77,6 +96,7 @@ describe("Items page chrome unity", () => {
       "items-category-toolbar",
       "items-entry-toolbar",
       "item-form-toolbar",
+      "task-editor-toolbar",
     ] as const;
 
     const outers = ids.map((id) => {
@@ -85,21 +105,26 @@ describe("Items page chrome unity", () => {
       return el as HTMLElement;
     });
 
-    for (const outer of outers) {
-      expect(outer.className).toBe(itemsPageChromeOuterClass);
+    for (const [index, outer] of outers.entries()) {
+      const expectedOuter =
+        index === 1 ? itemsPageChromeEntryOuterClass : itemsPageChromeOuterClass;
+      expect(outer.className).toBe(expectedOuter);
       const inner = outer.firstElementChild as HTMLElement;
-      expect(inner.className).toBe(itemsPageChromeInnerClass);
-      expect(inner.className).toContain("max-w-5xl");
+      expect(inner.className).toContain("max-w-[1280px]");
       expect(inner.className).not.toContain("max-w-3xl");
     }
 
-    expect(outers[0]!.className).toBe(outers[1]!.className);
-    expect(outers[1]!.className).toBe(outers[2]!.className);
     expect((outers[0]!.firstElementChild as HTMLElement).className).toBe(
-      (outers[1]!.firstElementChild as HTMLElement).className,
+      itemsPageChromeInnerClass,
     );
     expect((outers[1]!.firstElementChild as HTMLElement).className).toBe(
-      (outers[2]!.firstElementChild as HTMLElement).className,
+      itemsPageChromeEntryInnerClass,
+    );
+    expect((outers[2]!.firstElementChild as HTMLElement).className).toBe(
+      itemsPageChromeInnerClass,
+    );
+    expect((outers[3]!.firstElementChild as HTMLElement).className).toBe(
+      itemsPageChromeInnerClass,
     );
   });
 });

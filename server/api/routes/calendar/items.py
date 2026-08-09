@@ -13,9 +13,10 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Request
 
 from server.api.deps import get_db
+from server.api.query_aliases import qalias
 from server.api.schemas.responses import CalendarOccurrenceResponse
 from server.calendar.item_projection import fetch_item_occurrences_in_range
 from server.calendar.query import expand_active_calendar_occurrences
@@ -50,31 +51,38 @@ def _occurrence_wire(row: dict[str, Any], *, source: str) -> dict[str, Any]:
 @router.get("/items", response_model=list[CalendarOccurrenceResponse])
 async def list_calendar_items(
     request: Request,
-    range_start: str,
-    range_end: str,
-    task_id: Optional[str] = Query(default=None),
-    task_ids: Optional[list[str]] = Query(default=None),
-    include_items: bool = Query(
-        default=True,
-        description="Include trackable-item purchased/expires DATE projections (source=item).",
+    range_start: Optional[str] = qalias("rangeStart", default=None),
+    range_end: Optional[str] = qalias("rangeEnd", default=None),
+    task_id: Optional[str] = qalias("taskId", default=None),
+    task_ids: Optional[list[str]] = qalias("taskIds", default=None),
+    include_items: Optional[bool] = qalias(
+        "includeItems",
+        default=None,
+        description="Include trackable-item remind DATE projections (source=item).",
     ),
 ) -> list[dict]:
-    start = _parse_range_param(range_start, "range_start")
-    end = _parse_range_param(range_end, "range_end", end_of_day=True)
-    effective_ids = task_ids if task_ids is not None else None
+    if not range_start or not range_end:
+        raise http_error(
+            422,
+            "rangeStart and rangeEnd are required",
+            error_code=VALIDATION_ERROR,
+        )
+    start = _parse_range_param(str(range_start), "rangeStart")
+    end = _parse_range_param(str(range_end), "rangeEnd", end_of_day=True)
+    resolved_include = True if include_items is None else bool(include_items)
     db = get_db(request)
     occurrences = await expand_active_calendar_occurrences(
         db,
         start,
         end,
-        task_id=None if effective_ids is not None else task_id,
-        task_ids=effective_ids,
+        task_id=None if task_ids is not None else task_id,
+        task_ids=task_ids,
     )
     await attach_dismissed_flag(db, source="recurring", items=occurrences)
     await attach_important_flag(db, source="recurring", items=occurrences)
     rows = [_occurrence_wire(occ, source="recurring") for occ in occurrences]
 
-    if include_items:
+    if resolved_include:
         # Same projection path as agent query_window (item_projection + dismiss).
         item_rows = await fetch_item_occurrences_in_range(
             db,
@@ -84,6 +92,5 @@ async def list_calendar_items(
         )
         await attach_dismissed_flag(db, source="item", items=item_rows)
         await attach_important_flag(db, source="item", items=item_rows)
-        rows.extend(_occurrence_wire(item, source="item") for item in item_rows)
-
+        rows.extend(_occurrence_wire(row, source="item") for row in item_rows)
     return rows

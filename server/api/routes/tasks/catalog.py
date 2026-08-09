@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import Query, Request
+from fastapi import Request
 
 from server.api.deps import get_db
+from server.api.query_aliases import qalias
 from server.api.routes.task_helpers import TaskConfigBody, validate_task_body
 from server.api.routes.tasks._common import notify, register_task
 from server.api.routes.tasks._router import router
@@ -38,15 +39,15 @@ async def activity_spans(request: Request) -> list[dict]:
 @router.get("", response_model=list[TaskResponse])
 async def list_tasks(
     request: Request,
-    top_level_only: bool = Query(False),
-    analysis_mode: Optional[str] = Query(None),
-    workset_id: Optional[str] = Query(None),
-    item_id: Optional[str] = Query(None),
+    top_level_only: Optional[bool] = qalias("topLevelOnly", default=None),
+    analysis_mode: Optional[str] = qalias("analysisMode", default=None),
+    workset_id: Optional[str] = qalias("worksetId", default=None),
+    item_id: Optional[str] = qalias("itemId", default=None),
 ) -> list[dict]:
     try:
         return await list_tasks_payload(
             get_db(request),
-            top_level_only=top_level_only,
+            top_level_only=bool(top_level_only) if top_level_only is not None else False,
             analysis_mode=analysis_mode,
             workset_id=workset_id,
             item_id=item_id,

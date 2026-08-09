@@ -13,7 +13,7 @@
 | 前端 Speech adapters | `SttPort` / `TtsPort`；v1 = `BrowserStt` / `BrowserTts` |
 | 助手 UI | 文字聊天、PTT、可编辑识别稿、可选朗读、展示 tool 摘要 |
 | Agent Runtime | 只认文字；多轮 JSON tool-calling；复用 `ConfigurableLlmClient`；经 `tools_registry` 调度 |
-| Tools | 本机 `messages.search`；`intelligence.search_events`；日历读/写；可选 `web.search`（设定门控） |
+| Tools | 本机 `messages.search`；`intelligence.search_events`；日历读/写；物品 list／create／update／list_expiring；可选 `web.search`（设定门控） |
 
 换 Whisper / 豆包 = 新 Adapter + 设置枚举，**不改** Runtime / Tools。
 
@@ -39,7 +39,7 @@
 - `worksetId`：可选；作为本轮 `calendar.create_event` 未显式传 `worksetId` 时的默认归属工作集。`__user__`／空／省略 → builtin 系统工作集「一般」；真实 id 须为已存在的 workset。可选 `taskId` 仅作溯源，不得传 `__user__`。
 - `sessionId`：可选；省略时服务端生成新 id，后续多轮可回传以延续会话标识（历史仍由客户端在 `messages` 中带上；本机纪录另存 SQLite `ui-prefs`／`GET/PUT /api/v1/ui-prefs/assistant/sessions`）。
 - `surface`／`currentTask`：仅任务创建／编辑页的全局助手请求可带 `surface: "task_editor"` 与当前表单草稿 `currentTask`（见下节）。其他路由与 A2A **不**传。
-- **送入模型的上下文压缩（仅 Agent）**：服务端在调用 LLM 前按 `agent_history_max_messages`（默认 40）与 `agent_history_max_chars`（默认 48000）省略较旧对话轮次，并插入一行省略提示。UI／SQLite 会话纪录**不裁剪**。可在 **AI 员工介绍 → 助手 LLM** 调整。与「分析调度」无关，也不作用于任务顾问／排行榜分析员／情报任务分析员／网络情报搜集员／项目管理助手等其他员工路径。
+- **送入模型的上下文压缩（仅助手聊天 Agent）**：服务端在调用 LLM 前按 `agent_history_max_messages`（默认 40）与 `agent_history_max_chars`（默认 48000）省略较旧对话轮次，并插入一行省略提示。UI／SQLite 会话纪录**不裁剪**。可在 **AI 员工介绍 → 助手 LLM** 调整。与「分析调度」无关，也不作用于任务顾问／排行榜分析员／情报任务分析员／后勤 Agent（`analysis_mode=agent` ticks）等其他员工路径。
 
 响应（camelCase）：
 
@@ -92,12 +92,14 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind`）；购入／到期留在物品字段，时间线上的其他日期用关联 user-event，勿另开双轨。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind` only）。**到期**以关联里程碑 `user_events`（标题 到期／Expires）为写路径 SoT（日历 create／update／delete write-through → [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 回填物品 flat cache）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
+| `items.list` | 列出可追蹤物品（可篩 workset／分類／狀態／關鍵字；含 quantity／unit／price） | 預設 50，硬頂 100 |
 | `items.list_expiring` | 列出即将到期／已过期的 active 物品（相对「今天」+ `days` 窗） | 默认合理上限，见 handler |
-| `items.create` | 创建物品（可选分类／到期日／attributes；空 remind 时套分类 `defaultRemindBeforeDays`） | 1 条 |
+| `items.create` | 创建物品（可选分类／attributes；到期日走关联日历；**仅 assistant／A2A**，agent tick 不可用） | 1 条 |
+| `items.update` | 更新物品欄位（含 quantity／unit／price；到期日走关联日历；**仅 assistant／A2A**，agent tick 不可用） | 1 条 |
 
 ### 任务顾问（仅任务编辑 surface）
 
@@ -131,7 +133,7 @@
 
 ### 日历
 
-统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/user_events.py`（与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；写入规则与 REST 共用 `server/services/task_writes.py`。
+统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/calendar/user_events.py`（与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers_read.py`／`handlers_write.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；写入规则与 REST 共用 `server/services/task_writes.py`。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -149,7 +151,7 @@
 
 列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user`）；用户事件另带 `origin`、`worksetId`（归属；builtin `__user__`＝「一般」）以及可选溯源 `taskId`（空＝无任务溯源，**不是**「一般」工作集）。
 
-来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=project`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`project.md`](project.md)。
+来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=agent`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`project.md`](project.md)。
 
 可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`（按分析任务过滤：analysis／RRULE 该任务 **加上** `user_events.task_id` 溯源匹配行；**勿**传 `__user__`——那是工作集 id，列表过滤会拒绝）。归属筛选用写入／UI 的 `worksetId`／`sourceFilter.worksetIds`，不是 `taskId=__user__`。语义过滤由模型选 tool + 传 `search` / 任务名完成。
 

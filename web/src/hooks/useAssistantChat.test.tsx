@@ -298,7 +298,6 @@ describe("useAssistantChat", () => {
       getCurrentTask: () => ({
         name: "草稿任務",
         promptTemplate: "分析熱門話題",
-        webSearchQuery: "",
         scheduleRrule: "FREQ=HOURLY",
         analysisMode: "leaderboard",
       }),
@@ -317,7 +316,6 @@ describe("useAssistantChat", () => {
       taskConfig: {
         name: "新任務名",
         promptTemplate: "分析熱門話題",
-        webSearchQuery: "",
         scheduleRrule: "FREQ=HOURLY",
         analysisMode: "leaderboard",
         channelIds: [],

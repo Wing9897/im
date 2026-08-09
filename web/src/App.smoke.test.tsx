@@ -1,14 +1,13 @@
 import { act, createElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "./i18n";
 import {
   _resetConnectionStoreForTests,
   clearConnection,
   hasDeviceSession,
   saveDeviceSession,
 } from "./domain/connection/connectionStore";
+import { wrapWithI18n } from "./test/i18nHarness";
 
 const fetchHealth = vi.fn();
 const resolveAuthGate = vi.fn();
@@ -141,7 +140,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -187,7 +186,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
     });
@@ -229,7 +228,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -271,7 +270,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -323,7 +322,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -358,7 +357,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();
@@ -381,7 +380,7 @@ describe("App smoke", () => {
 
     await act(async () => {
       root.render(
-        createElement(I18nextProvider, { i18n }, createElement(App)),
+        wrapWithI18n(createElement(App)),
       );
       await Promise.resolve();
       await Promise.resolve();

@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { FormStack } from "../../../components/ui";
-import { SourceTabLayout } from "../SourceTabLayout";
+import { SourceTabLayout } from "../board/SourceTabLayout";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { RssFeedDetailDialog } from "./RssFeedDetailDialog";
 import { RssFeedCard } from "./RssFeedCard";

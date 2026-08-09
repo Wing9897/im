@@ -17,7 +17,7 @@ import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
 import { ChatChannelSelector } from "./ChatChannelSelector";
 import { ChatScheduleOverrideFields } from "./ChatScheduleOverrideFields";
-import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../../../domain/tasks/scheduleDefaults";
+import { DEFAULT_AGENT_WAVE_INTERVAL_SECONDS } from "../../../domain/tasks/scheduleDefaults";
 import type { ChannelWithSource } from "../../../types";
 import type { TaskFormState } from "./useChatEditor";
 
@@ -58,8 +58,8 @@ export function ChatEditorForm({
     if (gateOpen) setOptionalOpen(true);
   }, [gateOpen]);
 
-  const projectWaveIntervalSeconds = String(
-    formState.projectWaveIntervalSeconds ?? DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+  const agentWaveIntervalSeconds = String(
+    formState.agentWaveIntervalSeconds ?? DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
   );
 
   return (
@@ -104,8 +104,8 @@ export function ChatEditorForm({
                 updateField("capReadItems", DEFAULT_AGENT_POLICY.capReadItems);
                 updateField("outputCalendar", DEFAULT_AGENT_POLICY.outputCalendar);
                 updateField("outputAnalysisEvents", DEFAULT_AGENT_POLICY.outputAnalysisEvents);
-                if (formState.projectWaveIntervalSeconds == null) {
-                  updateField("projectWaveIntervalSeconds", DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS);
+                if (formState.agentWaveIntervalSeconds == null) {
+                  updateField("agentWaveIntervalSeconds", DEFAULT_AGENT_WAVE_INTERVAL_SECONDS);
                 }
               }
             }}
@@ -157,17 +157,17 @@ export function ChatEditorForm({
                       scheduleRrule={formState.scheduleRrule}
                       onScheduleTypeChange={(type) => updateField("scheduleType", type)}
                       onScheduleValueChange={(value) => updateField("scheduleValue", value)}
-                      showProjectWaveInterval={vis.showWaveInterval}
-                      projectWaveIntervalSeconds={projectWaveIntervalSeconds}
+                      showAgentWaveInterval={vis.showWaveInterval}
+                      agentWaveIntervalSeconds={agentWaveIntervalSeconds}
                       onProjectWaveIntervalSecondsChange={(value) => {
                         const trimmed = value.trim();
                         if (!trimmed) {
-                          updateField("projectWaveIntervalSeconds", null);
+                          updateField("agentWaveIntervalSeconds", null);
                           return;
                         }
                         const num = Number(trimmed);
                         updateField(
-                          "projectWaveIntervalSeconds",
+                          "agentWaveIntervalSeconds",
                           Number.isInteger(num) ? num : null,
                         );
                       }}
@@ -175,20 +175,20 @@ export function ChatEditorForm({
                         const trimmed = value.trim();
                         if (!trimmed) {
                           updateField(
-                            "projectWaveIntervalSeconds",
-                            DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+                            "agentWaveIntervalSeconds",
+                            DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
                           );
                           return;
                         }
                         const num = Number(trimmed);
                         if (!Number.isInteger(num) || num < 0) {
                           updateField(
-                            "projectWaveIntervalSeconds",
-                            DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS,
+                            "agentWaveIntervalSeconds",
+                            DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
                           );
                           return;
                         }
-                        updateField("projectWaveIntervalSeconds", Math.min(num, 600));
+                        updateField("agentWaveIntervalSeconds", Math.min(num, 600));
                       }}
                     />
                     {vis.isAgent ? (

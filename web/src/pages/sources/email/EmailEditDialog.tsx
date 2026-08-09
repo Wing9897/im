@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import type { EmailMailboxInfo } from "../../../types";
 import { EmailMailboxForm } from "./EmailMailboxForm";
 import type { EmailFormFields, EmailProviderPreset } from "./emailFormModel";

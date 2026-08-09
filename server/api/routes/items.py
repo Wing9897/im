@@ -139,6 +139,7 @@ async def list_items(
     status: str | None = Query(default=None),
     search: str | None = Query(default=None),
 ) -> list[dict[str, Any]]:
+    """List items; date cache columns are read-only (SoT = linked calendars)."""
     rows = await fetch_item_rows(
         get_db(request),
         workset_id=workset_id,
@@ -157,12 +158,12 @@ async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
             title=body.title,
             workset_id=body.worksetId,
             category_id=body.categoryId,
-            purchased_at=body.purchasedAt,
-            expires_at=body.expiresAt,
-            remind_before_days=body.remindBeforeDays,
             notes=body.notes,
             status=body.status,
             emoji=body.emoji,
+            quantity=body.quantity,
+            unit=body.unit,
+            price=body.price,
             attributes=body.attributes,
         )
     except ItemValidationError as exc:
@@ -187,12 +188,12 @@ async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody)
         "title": "title",
         "worksetId": "workset_id",
         "categoryId": "category_id",
-        "purchasedAt": "purchased_at",
-        "expiresAt": "expires_at",
-        "remindBeforeDays": "remind_before_days",
         "notes": "notes",
         "status": "status",
         "emoji": "emoji",
+        "quantity": "quantity",
+        "unit": "unit",
+        "price": "price",
         "attributes": "attributes",
     }
     kwargs = {mapping[wire]: value for wire, value in fields.items() if wire in mapping}

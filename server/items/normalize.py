@@ -21,9 +21,14 @@ NOTES_MAX = 4000
 NAME_MAX = 120
 #: Optional emoji / short logo (grapheme cluster may be multi-codepoint).
 EMOJI_MAX = 16
+UNIT_MAX = 32
+QUANTITY_MAX = 1_000_000_000
+PRICE_MAX = 1_000_000_000_000
 SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 ALLOWED_STATUSES = frozenset({"active", "archived"})
+#: Reserved for linked-calendar「到期」/ Expires quick option (not free attributes).
+RESERVED_ATTRIBUTE_KEYS = frozenset({"到期", "Expires"})
 _SCALAR_ATTR_TYPES = (str, int, float, bool)
 
 _UNSET = object()
@@ -31,6 +36,13 @@ _UNSET = object()
 
 class ItemValidationError(ValueError):
     """Invalid item / category fields."""
+
+
+def _assert_not_reserved_attribute_key(key: str) -> None:
+    if key in RESERVED_ATTRIBUTE_KEYS:
+        raise ItemValidationError(
+            "attribute key is reserved for linked-calendar expiry; use 关联日历 → 到期"
+        )
 
 
 def _coerce_attr_scalar(value: Any) -> str | None:
@@ -129,6 +141,7 @@ def normalize_attributes(attributes: Any) -> dict[str, str]:
         k = str(key).strip()
         if not k:
             continue
+        _assert_not_reserved_attribute_key(k)
         if len(k) > 64:
             raise ItemValidationError("attribute keys must be <= 64 characters")
         text = _coerce_attr_scalar(value)
@@ -175,7 +188,7 @@ def parse_attributes_json(raw: Any) -> dict[str, str]:
     out: dict[str, str] = {}
     for key, value in parsed.items():
         k = str(key).strip()
-        if not k or len(k) > 64:
+        if not k or len(k) > 64 or k in RESERVED_ATTRIBUTE_KEYS:
             continue
         if value is None or isinstance(value, (dict, list)):
             continue
@@ -218,12 +231,36 @@ def normalize_field_schema(value: Any) -> list[dict[str, str]]:
         label = str(entry.get("label") or key).strip()
         if not key:
             raise ItemValidationError("fieldSchema key is required")
+        _assert_not_reserved_attribute_key(key)
         if len(key) > 64 or len(label) > 120:
             raise ItemValidationError("fieldSchema key/label too long")
         if key in seen:
             continue
         seen.add(key)
         out.append({"key": key, "label": label or key})
+    return out
+
+
+def seed_attributes_from_field_schema(
+    attributes: dict[str, str],
+    field_schema: list[dict[str, str]] | None,
+) -> dict[str, str]:
+    """Copy-on-create: fill missing category preset keys with empty string values.
+
+    Existing keys (including empty strings) are never overwritten. Do **not** call
+    this when a category template changes — existing items keep their own
+    attributes_json unchanged (no live inheritance / rewrite).
+    """
+    out = dict(attributes)
+    for entry in field_schema or []:
+        if len(out) >= ATTR_MAX_KEYS:
+            break
+        key = str(entry.get("key") or "").strip()
+        if not key or key in out or key in RESERVED_ATTRIBUTE_KEYS:
+            continue
+        if len(key) > 64:
+            continue
+        out[key] = ""
     return out
 
 
@@ -274,6 +311,46 @@ def normalize_emoji(value: Any) -> str | None:
     if len(cleaned) > EMOJI_MAX:
         raise ItemValidationError(f"emoji must be <= {EMOJI_MAX} characters")
     return cleaned
+
+
+def normalize_quantity(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ItemValidationError("quantity must be a number") from exc
+    if num < 0:
+        raise ItemValidationError("quantity must be >= 0")
+    if num > QUANTITY_MAX:
+        raise ItemValidationError(f"quantity must be <= {QUANTITY_MAX}")
+    return num
+
+
+def normalize_unit(value: Any) -> str | None:
+    if value is None:
+        return None
+    cleaned = str(value).strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > UNIT_MAX:
+        raise ItemValidationError(f"unit must be <= {UNIT_MAX} characters")
+    return cleaned
+
+
+def normalize_price(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ItemValidationError("price must be a number") from exc
+    if num < 0:
+        raise ItemValidationError("price must be >= 0")
+    if num > PRICE_MAX:
+        raise ItemValidationError(f"price must be <= {PRICE_MAX}")
+    # Store with at most two decimal places (money semantics).
+    return round(num, 2)
 
 
 def normalize_sort_order(value: Any) -> int:

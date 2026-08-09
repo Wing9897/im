@@ -24,8 +24,8 @@ describe("weather API", () => {
       "/api/v1/weather/forecast",
       {
         location: "臺北",
-        start_date: "2026-07-01",
-        end_date: "2026-07-16",
+        startDate: "2026-07-01",
+        endDate: "2026-07-16",
       },
       { signal: controller.signal },
     );
@@ -40,8 +40,8 @@ describe("weather API", () => {
       "/api/v1/weather/forecast",
       {
         location: "臺北",
-        start_date: "2026-07-01",
-        end_date: "2026-07-01",
+        startDate: "2026-07-01",
+        endDate: "2026-07-01",
         force: true,
       },
       { signal: undefined },

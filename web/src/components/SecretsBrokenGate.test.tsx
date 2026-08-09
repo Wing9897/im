@@ -1,9 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../i18n";
 import { SecretsBrokenGate } from "./SecretsBrokenGate";
+import { wrapWithI18n } from "../test/i18nHarness";
 
 const rotateSecretsPublic = vi.fn();
 
@@ -50,11 +49,7 @@ describe("SecretsBrokenGate", () => {
 
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SecretsBrokenGate, { onRecoverComplete }),
-        ),
+        wrapWithI18n(createElement(SecretsBrokenGate, { onRecoverComplete })),
       );
       await Promise.resolve();
     });
@@ -100,11 +95,7 @@ describe("SecretsBrokenGate", () => {
 
     await act(async () => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SecretsBrokenGate, { onRecoverComplete }),
-        ),
+        wrapWithI18n(createElement(SecretsBrokenGate, { onRecoverComplete })),
       );
       await Promise.resolve();
     });

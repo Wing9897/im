@@ -1,7 +1,7 @@
 {
   "toolbar": {
     "aria": "助手工具列",
-    "description": "本機情報與日程助手",
+    "description": "本機情報、日程與物品助手",
     "stopSpeaking": "停止朗讀",
     "clearChat": "清空對話"
   },
@@ -14,8 +14,8 @@
     "ttsHintSuffix": " 回答會朗讀。"
   },
   "empty": {
-    "title": "問本機情報或日程",
-    "description": "例如：最近有沒有提到某某？未來七天有什麼安排？",
+    "title": "問本機情報、日程或物品",
+    "description": "例如：最近有沒有提到某某？未來七天有什麼安排？哪些物品快到期？",
     "hint": "未聚焦輸入框時可按空白鍵說話（放開即送出識別文字）；聚焦時用麥克風。無識別不會送出草稿。",
     "voiceSettingsLink": "語音設定"
   },

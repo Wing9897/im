@@ -28,13 +28,15 @@ CREATE TABLE IF NOT EXISTS items (
                          REFERENCES item_categories(id) ON DELETE SET NULL,
     workset_id           TEXT NOT NULL DEFAULT '__user__'
                          REFERENCES worksets(id),
-    purchased_at         TEXT DEFAULT NULL,
     expires_at           TEXT DEFAULT NULL,
     remind_before_days   INTEGER DEFAULT NULL,
     notes                TEXT NOT NULL DEFAULT '',
     status               TEXT NOT NULL DEFAULT 'active'
                          CHECK (status IN ('active', 'archived')),
     emoji                TEXT DEFAULT NULL,
+    quantity             REAL DEFAULT NULL,
+    unit                 TEXT DEFAULT NULL,
+    price                REAL DEFAULT NULL,
     attributes_json      TEXT NOT NULL DEFAULT '{}',
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL

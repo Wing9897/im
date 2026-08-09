@@ -416,17 +416,23 @@
         "operationId": "list_tasks_api_v1_tasks_get",
         "parameters": [
           {
-            "name": "top_level_only",
+            "name": "topLevelOnly",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Top Level Only"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Toplevelonly"
             }
           },
           {
-            "name": "analysis_mode",
+            "name": "analysisMode",
             "in": "query",
             "required": false,
             "schema": {
@@ -438,11 +444,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Analysis Mode"
+              "title": "Analysismode"
             }
           },
           {
-            "name": "workset_id",
+            "name": "worksetId",
             "in": "query",
             "required": false,
             "schema": {
@@ -454,11 +460,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Workset Id"
+              "title": "Worksetid"
             }
           },
           {
-            "name": "item_id",
+            "name": "itemId",
             "in": "query",
             "required": false,
             "schema": {
@@ -470,7 +476,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Item Id"
+              "title": "Itemid"
             }
           }
         ],
@@ -708,14 +714,14 @@
         }
       }
     },
-    "/api/v1/tasks/{task_id}/project-ticks": {
+    "/api/v1/tasks/{task_id}/agent-ticks": {
       "get": {
         "tags": [
           "tasks"
         ],
-        "summary": "Project Tick Status",
-        "description": "Cursor backlog + recent project-tick success/skip/error log.",
-        "operationId": "project_tick_status_api_v1_tasks__task_id__project_ticks_get",
+        "summary": "Agent Tick Status",
+        "description": "Cursor backlog + recent agent-tick success/skip/error log.",
+        "operationId": "agent_tick_status_api_v1_tasks__task_id__agent_ticks_get",
         "parameters": [
           {
             "name": "task_id",
@@ -745,7 +751,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProjectTickStatusResponse"
+                  "$ref": "#/components/schemas/AgentTickStatusResponse"
                 }
               }
             }
@@ -1295,6 +1301,7 @@
           "items"
         ],
         "summary": "List Items",
+        "description": "List items; date cache columns are read-only (SoT = linked calendars).",
         "operationId": "list_items_api_v1_items_get",
         "parameters": [
           {
@@ -2646,7 +2653,7 @@
         "operationId": "fetch_trending_api_v1_results_trending_get",
         "parameters": [
           {
-            "name": "task_id",
+            "name": "taskId",
             "in": "query",
             "required": false,
             "schema": {
@@ -2658,7 +2665,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Id"
+              "title": "Taskid"
             }
           }
         ],
@@ -2745,7 +2752,7 @@
         "operationId": "fetch_events_api_v1_results_events_get",
         "parameters": [
           {
-            "name": "task_id",
+            "name": "taskId",
             "in": "query",
             "required": false,
             "schema": {
@@ -2757,11 +2764,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Id"
+              "title": "Taskid"
             }
           },
           {
-            "name": "task_ids",
+            "name": "taskIds",
             "in": "query",
             "required": false,
             "schema": {
@@ -2776,7 +2783,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Ids"
+              "title": "Taskids"
             }
           },
           {
@@ -2796,7 +2803,7 @@
             }
           },
           {
-            "name": "start_date",
+            "name": "startDate",
             "in": "query",
             "required": false,
             "schema": {
@@ -2808,11 +2815,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Start Date"
+              "title": "Startdate"
             }
           },
           {
-            "name": "end_date",
+            "name": "endDate",
             "in": "query",
             "required": false,
             "schema": {
@@ -2824,7 +2831,7 @@
                   "type": "null"
                 }
               ],
-              "title": "End Date"
+              "title": "Enddate"
             }
           },
           {
@@ -2858,7 +2865,7 @@
             }
           },
           {
-            "name": "has_time",
+            "name": "hasTime",
             "in": "query",
             "required": false,
             "schema": {
@@ -2870,11 +2877,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Has Time"
+              "title": "Hastime"
             }
           },
           {
-            "name": "has_coords",
+            "name": "hasCoords",
             "in": "query",
             "required": false,
             "schema": {
@@ -2886,21 +2893,27 @@
                   "type": "null"
                 }
               ],
-              "title": "Has Coords"
+              "title": "Hascoords"
             }
           },
           {
-            "name": "include_total",
+            "name": "includeTotal",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "boolean",
-              "default": true,
-              "title": "Include Total"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Includetotal"
             }
           },
           {
-            "name": "include_in_timeline",
+            "name": "includeInTimeline",
             "in": "query",
             "required": false,
             "schema": {
@@ -2913,7 +2926,7 @@
                 }
               ],
               "description": "When '1'/'true', only return events from tasks with include_in_timeline=1 (time-planning views).",
-              "title": "Include In Timeline"
+              "title": "Includeintimeline"
             },
             "description": "When '1'/'true', only return events from tasks with include_in_timeline=1 (time-planning views)."
           }
@@ -4210,25 +4223,7 @@
         "operationId": "list_calendar_items_api_v1_calendar_items_get",
         "parameters": [
           {
-            "name": "range_start",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Range Start"
-            }
-          },
-          {
-            "name": "range_end",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Range End"
-            }
-          },
-          {
-            "name": "task_id",
+            "name": "rangeStart",
             "in": "query",
             "required": false,
             "schema": {
@@ -4240,11 +4235,43 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Id"
+              "title": "Rangestart"
             }
           },
           {
-            "name": "task_ids",
+            "name": "rangeEnd",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Rangeend"
+            }
+          },
+          {
+            "name": "taskId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Taskid"
+            }
+          },
+          {
+            "name": "taskIds",
             "in": "query",
             "required": false,
             "schema": {
@@ -4259,20 +4286,26 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Ids"
+              "title": "Taskids"
             }
           },
           {
-            "name": "include_items",
+            "name": "includeItems",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "boolean",
-              "description": "Include trackable-item purchased/expires DATE projections (source=item).",
-              "default": true,
-              "title": "Include Items"
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include trackable-item remind DATE projections (source=item).",
+              "title": "Includeitems"
             },
-            "description": "Include trackable-item purchased/expires DATE projections (source=item)."
+            "description": "Include trackable-item remind DATE projections (source=item)."
           }
         ],
         "responses": {
@@ -4703,7 +4736,7 @@
             }
           },
           {
-            "name": "task_id",
+            "name": "taskId",
             "in": "query",
             "required": false,
             "schema": {
@@ -4715,11 +4748,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Task Id"
+              "title": "Taskid"
             }
           },
           {
-            "name": "workset_id",
+            "name": "worksetId",
             "in": "query",
             "required": false,
             "schema": {
@@ -4731,11 +4764,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Workset Id"
+              "title": "Worksetid"
             }
           },
           {
-            "name": "item_id",
+            "name": "itemId",
             "in": "query",
             "required": false,
             "schema": {
@@ -4747,7 +4780,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Item Id"
+              "title": "Itemid"
             }
           }
         ],
@@ -5782,23 +5815,23 @@
             }
           },
           {
-            "name": "start_date",
+            "name": "startDate",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "format": "date",
-              "title": "Start Date"
+              "title": "Startdate"
             }
           },
           {
-            "name": "end_date",
+            "name": "endDate",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
               "format": "date",
-              "title": "End Date"
+              "title": "Enddate"
             }
           },
           {
@@ -6800,6 +6833,177 @@
         ],
         "title": "AgentChatResponse",
         "description": "Agent chat final payload (non-stream and stream ``type=final``)."
+      },
+      "AgentTickInFlightResponse": {
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "title": "Batchid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "messageCount": {
+            "type": "integer",
+            "title": "Messagecount"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batchId",
+          "status",
+          "messageCount"
+        ],
+        "title": "AgentTickInFlightResponse",
+        "description": "Current schedule-fire batch still pending/processing (waves in progress)."
+      },
+      "AgentTickLogEntryResponse": {
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "title": "Batchid"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "outcome": {
+            "type": "string",
+            "title": "Outcome"
+          },
+          "messageCount": {
+            "type": "integer",
+            "title": "Messagecount"
+          },
+          "agentMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agentmessage"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "toolCalls": {
+            "items": {
+              "$ref": "#/components/schemas/AgentToolCallSummary"
+            },
+            "type": "array",
+            "title": "Toolcalls"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "completedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "batchId",
+          "status",
+          "outcome",
+          "messageCount"
+        ],
+        "title": "AgentTickLogEntryResponse"
+      },
+      "AgentTickStatusResponse": {
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "title": "Taskid"
+          },
+          "cursorAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cursorat"
+          },
+          "pendingSinceCursor": {
+            "type": "integer",
+            "title": "Pendingsincecursor"
+          },
+          "ticks": {
+            "items": {
+              "$ref": "#/components/schemas/AgentTickLogEntryResponse"
+            },
+            "type": "array",
+            "title": "Ticks"
+          },
+          "inFlight": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AgentTickInFlightResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "taskId",
+          "pendingSinceCursor"
+        ],
+        "title": "AgentTickStatusResponse"
       },
       "AgentToolCallSummary": {
         "properties": {
@@ -8221,11 +8425,7 @@
             "anyOf": [
               {
                 "type": "string",
-                "enum": [
-                  "purchased",
-                  "expires",
-                  "remind"
-                ]
+                "const": "remind"
               },
               {
                 "type": "null"
@@ -9982,39 +10182,6 @@
             ],
             "title": "Categoryid"
           },
-          "purchasedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Purchasedat"
-          },
-          "expiresAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expiresat"
-          },
-          "remindBeforeDays": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remindbeforedays"
-          },
           "notes": {
             "anyOf": [
               {
@@ -10049,6 +10216,39 @@
               }
             ],
             "title": "Emoji"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
           },
           "attributes": {
             "anyOf": [
@@ -10126,17 +10326,6 @@
             "type": "string",
             "title": "Worksetid"
           },
-          "purchasedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Purchasedat"
-          },
           "expiresAt": {
             "anyOf": [
               {
@@ -10179,6 +10368,39 @@
               }
             ],
             "title": "Emoji"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
           },
           "attributes": {
             "additionalProperties": {
@@ -10255,39 +10477,6 @@
             ],
             "title": "Categoryid"
           },
-          "purchasedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Purchasedat"
-          },
-          "expiresAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Expiresat"
-          },
-          "remindBeforeDays": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remindbeforedays"
-          },
           "notes": {
             "anyOf": [
               {
@@ -10320,6 +10509,39 @@
               }
             ],
             "title": "Emoji"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
           },
           "attributes": {
             "anyOf": [
@@ -10853,177 +11075,6 @@
         "additionalProperties": false,
         "type": "object",
         "title": "MqttBrokerPatchBody"
-      },
-      "ProjectTickInFlightResponse": {
-        "properties": {
-          "batchId": {
-            "type": "string",
-            "title": "Batchid"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "messageCount": {
-            "type": "integer",
-            "title": "Messagecount"
-          },
-          "createdAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Createdat"
-          },
-          "updatedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updatedat"
-          }
-        },
-        "type": "object",
-        "required": [
-          "batchId",
-          "status",
-          "messageCount"
-        ],
-        "title": "ProjectTickInFlightResponse",
-        "description": "Current schedule-fire batch still pending/processing (waves in progress)."
-      },
-      "ProjectTickLogEntryResponse": {
-        "properties": {
-          "batchId": {
-            "type": "string",
-            "title": "Batchid"
-          },
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "outcome": {
-            "type": "string",
-            "title": "Outcome"
-          },
-          "messageCount": {
-            "type": "integer",
-            "title": "Messagecount"
-          },
-          "agentMessage": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Agentmessage"
-          },
-          "errorMessage": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Errormessage"
-          },
-          "toolCalls": {
-            "items": {
-              "$ref": "#/components/schemas/AgentToolCallSummary"
-            },
-            "type": "array",
-            "title": "Toolcalls"
-          },
-          "createdAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Createdat"
-          },
-          "completedAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Completedat"
-          }
-        },
-        "type": "object",
-        "required": [
-          "batchId",
-          "status",
-          "outcome",
-          "messageCount"
-        ],
-        "title": "ProjectTickLogEntryResponse"
-      },
-      "ProjectTickStatusResponse": {
-        "properties": {
-          "taskId": {
-            "type": "string",
-            "title": "Taskid"
-          },
-          "cursorAt": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Cursorat"
-          },
-          "pendingSinceCursor": {
-            "type": "integer",
-            "title": "Pendingsincecursor"
-          },
-          "ticks": {
-            "items": {
-              "$ref": "#/components/schemas/ProjectTickLogEntryResponse"
-            },
-            "type": "array",
-            "title": "Ticks"
-          },
-          "inFlight": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ProjectTickInFlightResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "taskId",
-          "pendingSinceCursor"
-        ],
-        "title": "ProjectTickStatusResponse"
       },
       "QueueBatchResponse": {
         "properties": {
@@ -12038,17 +12089,6 @@
             "title": "Prompttemplate",
             "default": ""
           },
-          "webSearchQuery": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Websearchquery"
-          },
           "analysisMode": {
             "anyOf": [
               {
@@ -12133,7 +12173,7 @@
             ],
             "title": "Isactive"
           },
-          "projectWaveIntervalSeconds": {
+          "agentWaveIntervalSeconds": {
             "anyOf": [
               {
                 "type": "integer",
@@ -12144,7 +12184,7 @@
                 "type": "null"
               }
             ],
-            "title": "Projectwaveintervalseconds"
+            "title": "Agentwaveintervalseconds"
           },
           "batchOverlapCount": {
             "anyOf": [
@@ -12372,17 +12412,6 @@
             ],
             "title": "Prompttemplate"
           },
-          "webSearchQuery": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Websearchquery"
-          },
           "scheduleRrule": {
             "anyOf": [
               {
@@ -12585,11 +12614,6 @@
             "title": "Prompttemplate",
             "default": ""
           },
-          "webSearchQuery": {
-            "type": "string",
-            "title": "Websearchquery",
-            "default": ""
-          },
           "analysisMode": {
             "type": "string",
             "enum": [
@@ -12661,7 +12685,7 @@
             ],
             "title": "Itemid"
           },
-          "projectWaveIntervalSeconds": {
+          "agentWaveIntervalSeconds": {
             "anyOf": [
               {
                 "type": "integer"
@@ -12670,7 +12694,7 @@
                 "type": "null"
               }
             ],
-            "title": "Projectwaveintervalseconds"
+            "title": "Agentwaveintervalseconds"
           },
           "batchOverlapCount": {
             "anyOf": [
@@ -13795,7 +13819,7 @@
               "manual",
               "assistant",
               "a2a",
-              "project",
+              "agent",
               "ics"
             ],
             "title": "Origin"

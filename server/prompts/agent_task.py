@@ -28,7 +28,7 @@ def _calendar_clause(spec: AgentTaskSpec) -> str:
             )
         return "## 日曆\n- 本任務未授權日曆讀寫工具。\n"
     read_note = (
-        "- 讀取工具可用；寫入鎖定在本任務範圍（有 project_scope 時）。\n"
+        "- 讀取工具可用；寫入鎖定在本任務範圍（有 agent_scope 時）。\n"
         if spec.cap_calendar_read
         else "- 本任務未授權日曆讀取工具；僅可寫入。\n"
     )

@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../i18n";
-import { setAppLocale } from "../../i18n/locale";
 import { ScheduleInput, validateScheduleValue } from "./ScheduleInput";
 import type { ScheduleType } from "./ScheduleInput";
+import { ensureZhHantLocale, wrapWithI18n } from "../../test/i18nHarness";
 
 /* ------------------------------------------------------------------ */
 /*  validateScheduleValue unit tests                                   */
@@ -13,8 +11,7 @@ import type { ScheduleType } from "./ScheduleInput";
 
 describe("validateScheduleValue", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
   describe("seconds_10", () => {
     it("accepts null value", () => {
@@ -119,8 +116,7 @@ describe("validateScheduleValue", () => {
 
 describe("ScheduleInput component", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   function renderScheduleInput(props: {
@@ -130,21 +126,17 @@ describe("ScheduleInput component", () => {
     onScheduleTypeChange?: (type: ScheduleType) => void;
     onScheduleValueChange?: (value: string | null) => void;
     validationError?: string | null;
-    showProjectWaveInterval?: boolean;
-    projectWaveIntervalSeconds?: string;
+    showAgentWaveInterval?: boolean;
+    agentWaveIntervalSeconds?: string;
   }) {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(ScheduleInput, {
+        wrapWithI18n(createElement(ScheduleInput, {
             onScheduleTypeChange: props.onScheduleTypeChange ?? vi.fn(),
             onScheduleValueChange: props.onScheduleValueChange ?? vi.fn(),
             ...props,
-          }),
-        ),
+          })),
       );
     });
     return container;
@@ -189,22 +181,22 @@ describe("ScheduleInput component", () => {
       expect(select.querySelector('option[value=""]')?.textContent).toBe("自訂觸發 RRULE");
     });
 
-    it("shows project wave interval after schedule type when enabled", () => {
+    it("shows agent wave interval after schedule type when enabled", () => {
       const container = renderScheduleInput({
         scheduleType: "hourly",
         scheduleValue: null,
-        showProjectWaveInterval: true,
-        projectWaveIntervalSeconds: "20",
+        showAgentWaveInterval: true,
+        agentWaveIntervalSeconds: "20",
       });
       const field = container.querySelector(
         '[data-testid="schedule-project-wave-interval"]',
       ) as HTMLInputElement;
       expect(field).not.toBeNull();
       expect(field.value).toBe("20");
-      expect(container.textContent).toContain("專案波間間隔");
+      expect(container.textContent).toContain("Agent 波間間隔");
     });
 
-    it("hides project wave interval by default", () => {
+    it("hides agent wave interval by default", () => {
       const container = renderScheduleInput({
         scheduleType: "hourly",
         scheduleValue: null,

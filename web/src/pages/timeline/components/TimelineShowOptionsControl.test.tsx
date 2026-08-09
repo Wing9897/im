@@ -4,18 +4,15 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { TimelineShowOptionsControl } from "./TimelineShowOptionsControl";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 describe("TimelineShowOptionsControl", () => {
   let container: HTMLDivElement;
   let root: Root;
 
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -41,18 +38,14 @@ describe("TimelineShowOptionsControl", () => {
     const setShowEnding = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(TimelineShowOptionsControl, {
+        wrapWithI18n(createElement(TimelineShowOptionsControl, {
             showDismissed: props.showDismissed ?? true,
             setShowDismissed,
             showOngoing: props.showOngoing ?? true,
             setShowOngoing,
             showEnding: props.showEnding ?? true,
             setShowEnding,
-          }),
-        ),
+          })),
       );
     });
     return { setShowDismissed, setShowOngoing, setShowEnding };

@@ -63,7 +63,7 @@ describe("user events API contract", () => {
     await listUserEvents({ taskId: "proj-1" });
 
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
-      task_id: "proj-1",
+      taskId: "proj-1",
     });
   });
 
@@ -223,7 +223,7 @@ describe("user events API contract", () => {
 
     await listUserEvents({ itemId: "item-1" });
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
-      item_id: "item-1",
+      itemId: "item-1",
     });
   });
 });

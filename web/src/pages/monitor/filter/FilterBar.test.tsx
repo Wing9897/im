@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../../../i18n";
-import { setAppLocale } from "../../../i18n/locale";
 import { FilterBar } from "./FilterBar";
 import type { Source, ChannelWithSource, MessageFilters } from "../../../types";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const sources: Source[] = [
   {
@@ -48,11 +46,7 @@ function renderFilterBar(
 ) {
   act(() => {
     createRoot(container).render(
-      createElement(
-        I18nextProvider,
-        { i18n },
-        createElement(FilterBar, { filters, onFiltersChange, sources, channels }),
-      ),
+      wrapWithI18n(createElement(FilterBar, { filters, onFiltersChange, sources, channels })),
     );
   });
 }
@@ -71,8 +65,7 @@ function openFilterDialog(container: HTMLElement) {
 
 describe("FilterBar", () => {
   beforeEach(async () => {
-    setAppLocale("zh-Hant");
-    await i18n.changeLanguage("zh-Hant");
+    await ensureZhHantLocale();
   });
 
   it("opens the filter dialog when the trigger is clicked", () => {

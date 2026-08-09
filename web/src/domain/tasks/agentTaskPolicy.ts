@@ -90,6 +90,15 @@ export function normalizeAgentPolicy(
     triggerMode = "schedule";
   }
 
+  // Cursor drain is calendar-reconcile only (matches server normalize_agent_task_spec).
+  if (triggerMode === "message_cursor" && outputAnalysisEvents) {
+    outputAnalysisEvents = false;
+    if (!outputCalendar) {
+      outputCalendar = true;
+      capCalendarWrites = true;
+    }
+  }
+
   if (!outputCalendar && !outputAnalysisEvents) {
     // Keep one output so the form stays saveable; prefer calendar for cursor preset.
     if (triggerMode === "message_cursor") outputCalendar = true;

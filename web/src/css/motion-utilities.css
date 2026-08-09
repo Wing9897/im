@@ -137,6 +137,26 @@
   animation: imPulse 1.6s ease-out infinite;
 }
 
+/* Task card: currently analyzing (active SSE batch) */
+@keyframes im-task-analyzing {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--info) 42%, transparent),
+      0 0 10px color-mix(in srgb, var(--info) 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--info) 68%, transparent),
+      0 0 18px color-mix(in srgb, var(--info) 32%, transparent);
+  }
+}
+
+.im-task-card-analyzing {
+  animation: im-task-analyzing 2s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--info) 45%, var(--surface-border));
+}
+
 @keyframes imSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -170,7 +190,13 @@
   .im-enter-rise-soft,
   .im-enter-glow,
   .im-toast-in,
-  .im-shimmer {
+  .im-shimmer,
+  .im-pulse-dot,
+  .im-task-card-analyzing {
     animation: none !important;
+  }
+
+  .im-task-card-analyzing {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--info) 55%, transparent);
   }
 }

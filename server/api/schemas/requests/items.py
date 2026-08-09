@@ -33,12 +33,12 @@ class ItemCreateBody(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     worksetId: str | None = None
     categoryId: str | None = None
-    purchasedAt: str | None = None
-    expiresAt: str | None = None
-    remindBeforeDays: int | None = None
     notes: str | None = ""
     status: str | None = "active"
     emoji: str | None = None
+    quantity: float | None = None
+    unit: str | None = None
+    price: float | None = None
     attributes: dict[str, str] | None = None
 
 
@@ -48,10 +48,10 @@ class ItemUpdateBody(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     worksetId: str | None = None
     categoryId: str | None = None
-    purchasedAt: str | None = None
-    expiresAt: str | None = None
-    remindBeforeDays: int | None = None
     notes: str | None = None
     status: str | None = None
     emoji: str | None = None
+    quantity: float | None = None
+    unit: str | None = None
+    price: float | None = None
     attributes: dict[str, str] | None = None

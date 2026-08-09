@@ -1,9 +1,8 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import i18n from "../../../i18n";
+import { i18n, wrapWithI18n } from "../../../test/i18nHarness";
 import { setAppLocale } from "../../../i18n/locale";
 
 vi.mock("./useWebhookPanel", () => ({
@@ -48,11 +47,7 @@ describe("WebhookPanel", () => {
     act(() => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(MemoryRouter, null, createElement(WebhookPanel)),
-        ),
+        wrapWithI18n(createElement(MemoryRouter, null, createElement(WebhookPanel))),
       );
     });
 
@@ -65,11 +60,7 @@ describe("WebhookPanel", () => {
     act(() => {
       root = createRoot(container);
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(MemoryRouter, null, createElement(WebhookPanel)),
-        ),
+        wrapWithI18n(createElement(MemoryRouter, null, createElement(WebhookPanel))),
       );
     });
 

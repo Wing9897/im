@@ -28,7 +28,7 @@ describe("ItemsPageChrome", () => {
     container.remove();
   });
 
-  it("exposes the shared sticky band tokens (border-b + blur + max-w-5xl)", () => {
+  it("exposes the shared sticky band tokens (border-b + blur + max-w-[1280px])", () => {
     act(() => {
       root.render(
         createElement(ItemsPageChrome, {
@@ -50,7 +50,7 @@ describe("ItemsPageChrome", () => {
 
     const row = toolbar!.firstElementChild as HTMLElement;
     expect(row.className).toBe(itemsPageChromeInnerClass);
-    expect(row.className).toContain("max-w-5xl");
+    expect(row.className).toContain("max-w-[1280px]");
     expect(row.className).toContain("py-sm");
     expect(row.className).toContain("gap-sm");
     expect(row.className).not.toContain("max-w-3xl");
@@ -61,5 +61,7 @@ describe("ItemsPageChrome", () => {
 
     const actions = row.lastElementChild as HTMLElement;
     expect(actions.className).toBe(itemsPageChromeActionsClass);
+    expect(actions.className).toContain("relative");
+    expect(actions.className).toContain("z-[1]");
   });
 });

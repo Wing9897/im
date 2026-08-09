@@ -1,12 +1,11 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import i18n from "../i18n";
-import { setAppLocale } from "../i18n/locale";
 import type { SourceFilterSelection } from "../domain/tasks/sourceFilterSelection";
 import { SourceFilterDialog } from "./SourceFilterDialog";
+import { i18n, wrapWithI18n } from "../test/i18nHarness";
+import { setAppLocale } from "../i18n/locale";
 
 const TASKS = [
   { id: "task-1", name: "First task" },
@@ -49,10 +48,7 @@ describe("SourceFilterDialog", () => {
     const onChange = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SourceFilterDialog, {
+        wrapWithI18n(createElement(SourceFilterDialog, {
             tasks: TASKS,
             worksets: WORKSETS,
             expandTasks: EXPAND_TASKS,
@@ -60,8 +56,7 @@ describe("SourceFilterDialog", () => {
             onChange,
             ariaLabelPrefix: "Intelligence",
             variant: "toolbar",
-          }),
-        ),
+          })),
       );
     });
     return onChange;
@@ -155,10 +150,7 @@ describe("SourceFilterDialog", () => {
     const hex = "2049aa3c7fa64c01b19c45ad336cc7be";
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SourceFilterDialog, {
+        wrapWithI18n(createElement(SourceFilterDialog, {
             tasks: [
               { id: hex, name: "Alpha briefing" },
               { id: "task-empty", name: "" },
@@ -172,8 +164,7 @@ describe("SourceFilterDialog", () => {
             onChange: vi.fn(),
             ariaLabelPrefix: "Timeline",
             variant: "toolbar",
-          }),
-        ),
+          })),
       );
     });
     openDialog();
@@ -276,10 +267,7 @@ describe("SourceFilterDialog", () => {
     const onChange = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(SourceFilterDialog, {
+        wrapWithI18n(createElement(SourceFilterDialog, {
             tasks: [{ id: "web-1", name: "Pricing watch" }],
             worksets: WORKSETS,
             expandTasks: [
@@ -294,8 +282,7 @@ describe("SourceFilterDialog", () => {
             onChange,
             ariaLabelPrefix: "Intelligence",
             variant: "toolbar",
-          }),
-        ),
+          })),
       );
     });
     openDialog();

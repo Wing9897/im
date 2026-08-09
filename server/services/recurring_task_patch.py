@@ -121,7 +121,7 @@ async def patch_recurring_task(
                 if workset_id is not ...
                 else (row.get("workset_id") or None)
             ),
-            project_wave_interval_seconds=None,
+            agent_wave_interval_seconds=None,
             batch_overlap_count=None,
             analysis_trigger_threshold=row.get("analysis_trigger_threshold"),
             analysis_batch_message_limit=row.get("analysis_batch_message_limit"),

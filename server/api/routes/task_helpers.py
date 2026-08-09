@@ -20,8 +20,8 @@ from server.scheduler.task_schedule_overrides import (
     ANALYSIS_THRESHOLD_MIN,
     BATCH_OVERLAP_MAX,
     BATCH_OVERLAP_MIN,
-    PROJECT_WAVE_INTERVAL_MAX,
-    PROJECT_WAVE_INTERVAL_MIN,
+    AGENT_WAVE_INTERVAL_MAX,
+    AGENT_WAVE_INTERVAL_MIN,
 )
 from server.wire.serializers import serialize_channel_ref, serialize_task
 
@@ -81,10 +81,10 @@ def validate_task_body(body: TaskConfigBody) -> None:
             error_code=VALIDATION_ERROR,
         )
     _validate_optional_int_in_range(
-        "projectWaveIntervalSeconds",
-        body.projectWaveIntervalSeconds,
-        minimum=PROJECT_WAVE_INTERVAL_MIN,
-        maximum=PROJECT_WAVE_INTERVAL_MAX,
+        "agentWaveIntervalSeconds",
+        body.agentWaveIntervalSeconds,
+        minimum=AGENT_WAVE_INTERVAL_MIN,
+        maximum=AGENT_WAVE_INTERVAL_MAX,
     )
     _validate_optional_int_in_range(
         "batchOverlapCount",
@@ -109,7 +109,7 @@ def validate_task_body(body: TaskConfigBody) -> None:
 def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:
     """Map optional TaskConfigBody scheduling overrides to DB column kwargs."""
     return {
-        "project_wave_interval_seconds": body.projectWaveIntervalSeconds,
+        "agent_wave_interval_seconds": body.agentWaveIntervalSeconds,
         "batch_overlap_count": body.batchOverlapCount,
         "analysis_trigger_threshold": body.analysisTriggerThreshold,
         "analysis_batch_message_limit": body.analysisBatchMessageLimit,

@@ -16,6 +16,7 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 查分析產出的情報事件／情報必須用 intelligence.search_events（含無時間的事件），禁止編造。
 查日程必須使用 calendar.* tools，不要編造事件。
 查物品到期／過期／即將到期必須用 items.list_expiring，禁止臆造到期日；
+查物品清單／庫存／數量／價格用 items.list；更新物品用 items.update。
 新增物品用 items.create（須帶 workset，預設一般／__user__）。
 回答口語化：先結論後要點；單次不要羅列超過約 10 條，更多請用戶收窄時間。
 回答時清楚區分「本機資料」與「網路來源」。
@@ -25,7 +26,9 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 - 涉及分析情報事件／情報摘要（含無排程時間） → intelligence.search_events。
 - 涉及行程／會議／用戶事件／時間規劃 → calendar.*。
 - 涉及證件／食物／信用卡等可追蹤物品到期 → items.list_expiring（必查庫，禁止編造）。
-- 新增可追蹤物品 → items.create（確認標題與日期；workset 預設一般）。
+- 查詢可追蹤物品清單／庫存／數量／價格 → items.list。
+- 更新可追蹤物品 → items.update（到期日仍走關聯日曆，勿在此寫 expiresAt）。
+- 新增可追蹤物品 → items.create（確認標題；workset 預設一般）。
 - web.search 僅在設定啟用、且問題需要外部／即時資訊、用戶要求核實、或本機結果不足時使用；不要一開始就上網。
 
 本機搜尋時間窗（messages／intelligence）：
@@ -69,7 +72,8 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 查已採集聊天／來源內容必須用 messages.* tools，禁止編造本機訊息。
 查分析產出的情報事件／情報必須用 intelligence.search_events，禁止編造。
 查／建／改／刪日程必須使用 calendar.* tools，不要編造事件。
-查物品到期必須用 items.list_expiring，禁止臆造；新增物品用 items.create（workset 預設一般）。
+查物品到期必須用 items.list_expiring，禁止臆造；
+查物品清單／庫存用 items.list；更新用 items.update；新增用 items.create（workset 預設一般）。
 回答時清楚區分「本機資料」與「網路來源」。
 
 原則（local-first）：
@@ -77,6 +81,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 - 涉及分析情報事件／情報摘要 → intelligence.search_events。
 - 涉及行程／會議／用戶事件 → calendar.*。
 - 涉及可追蹤物品到期 → items.list_expiring。
+- 查詢／更新可追蹤物品 → items.list / items.update。
 - 新增可追蹤物品 → items.create。
 - web.search 僅在設定啟用且本機不足／需要外部即時資訊時使用。
 
@@ -113,21 +118,23 @@ _ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(repr(value) for value in ANALYSIS
 TASK_CONFIG_SCHEMA_PROMPT = (
     "- name: short task name (string)\n"
     "- description: brief description (string)\n"
-    "- promptTemplate: the LLM prompt template (string); for web_intel, how the "
-    "Agent should search and turn findings into events (required)\n"
-    "- webSearchQuery: optional search seed / keywords for analysisMode=web_intel "
-    "(Agent may choose other queries)\n"
+    "- promptTemplate: the LLM prompt template (string); for analysisMode=agent, "
+    "how the Agent should search / reconcile and turn findings into events "
+    "(required)\n"
     f"- analysisMode: one of {_ANALYSIS_MODE_PROMPT_VALUES} (string)\n"
     f"- analysisTimeRange: one of {_ANALYSIS_TIME_RANGE_PROMPT_VALUES} (string)\n"
     "- scheduleRrule: canonical AI trigger RRULE (sole schedule field; "
     "e.g. FREQ=HOURLY or FREQ=SECONDLY;INTERVAL=10) when the user asks to "
     "change schedule\n"
-    "- includeInTimeline: bool; for analysisMode=intel_event or web_intel; default true "
+    "- includeInTimeline: bool; for analysisMode=intel_event or agent; default true "
     "(when false, analysis events stay off calendar / "
     "Gantt / timeline but still appear on the intelligence feed / map)\n"
     "- calendar fields (rrule, eventStartTime, eventEndTime, eventIsAllDay, "
     "eventLocation, eventDescription): only for analysisMode=recurring\n"
-    "Do NOT include channelIds — the user picks source channels in the form UI."
+    "Do NOT include channelIds — the user picks source channels in the form UI.\n"
+    "Do NOT invent item expiresAt on ItemCreate — use linked「到期」calendars.\n"
+    "For analysisMode=agent web search, choose keywords from promptTemplate "
+    "(no separate search-seed field).\n"
 )
 
 CHAT_ASSISTANT_SYSTEM_PROMPT = (

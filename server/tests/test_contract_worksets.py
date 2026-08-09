@@ -103,7 +103,7 @@ async def test_worksets_crud_and_task_workset_id(client):
     owned = next(t for t in tasks.json() if t["id"] == task_body["id"])
     assert owned["worksetId"] is None
 
-    events = await client.get("/api/v1/calendar/user-events", params={"workset_id": "__user__"})
+    events = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
     assert events.status_code == 200
     reassigned = next(e for e in events.json() if e["id"] == ue_id)
     assert reassigned["worksetId"] == "__user__"
@@ -157,7 +157,7 @@ async def test_user_event_create_by_workset(client):
     assert tagged.status_code == 201
     assert tagged.json()["worksetId"] == wid
 
-    filtered = await client.get("/api/v1/calendar/user-events", params={"workset_id": wid})
+    filtered = await client.get("/api/v1/calendar/user-events", params={"worksetId": wid})
     assert filtered.status_code == 200
     assert any(row["id"] == tagged.json()["id"] for row in filtered.json())
     assert all(row["worksetId"] == wid for row in filtered.json())

@@ -1,13 +1,12 @@
 import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { I18nextProvider } from "react-i18next";
-import i18n from "../i18n";
 import { FirstRunWizard } from "./FirstRunWizard";
 import {
   _resetConnectionStoreForTests,
   getConnectionSnapshot,
 } from "../domain/connection/connectionStore";
+import { wrapWithI18n } from "../test/i18nHarness";
 
 const registerAdmin = vi.fn();
 const loginWithPassword = vi.fn();
@@ -113,14 +112,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
     const onComplete = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete,
-          }),
-        ),
+          })),
       );
     });
 
@@ -151,14 +146,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
     const onComplete = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete,
-          }),
-        ),
+          })),
       );
     });
 
@@ -194,14 +185,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
 
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete: () => {},
-          }),
-        ),
+          })),
       );
     });
 
@@ -238,14 +225,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
     const onComplete = vi.fn();
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete,
-          }),
-        ),
+          })),
       );
     });
 
@@ -274,14 +257,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
 
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete,
-          }),
-        ),
+          })),
       );
     });
 
@@ -316,14 +295,10 @@ describe("FirstRunWizard smoke (create-system)", () => {
 
     act(() => {
       root.render(
-        createElement(
-          I18nextProvider,
-          { i18n },
-          createElement(FirstRunWizard, {
+        wrapWithI18n(createElement(FirstRunWizard, {
             status: freshStatus,
             onComplete,
-          }),
-        ),
+          })),
       );
     });
 

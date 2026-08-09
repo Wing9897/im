@@ -5,7 +5,7 @@
 人類通道：`POST /api/v1/agent/chat`（見 [`assistant.md`](assistant.md)）。  
 A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
-兩者共用同一 `AgentRuntime` + 工具 + LLM key；**system prompt 不同**；A2A **不在伺服器保存對話 session**。
+兩者共用同一 `AgentRuntime` + 工具 + LLM key（含訊息／情報／日程／物品寫入；與後勤 `analysis_mode=agent` tick **不同**——tick 不開 `items.create`／`items.update`）；**system prompt 不同**；A2A **不在伺服器保存對話 session**。
 
 ## 認證
 

@@ -170,7 +170,7 @@ async def _fetch_items_in_range(
     range_end: datetime,
     workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Active item DATE projections (purchased/expires); archived excluded."""
+    """Active item DATE projections (remind-only); archived excluded."""
     raw = await fetch_item_occurrences_in_range(
         db,
         range_start=range_start,

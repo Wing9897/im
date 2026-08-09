@@ -21,7 +21,6 @@ class TaskDraftPayload(BaseModel):
     name: str | None = None
     description: str | None = None
     promptTemplate: str | None = None
-    webSearchQuery: str | None = None
     scheduleRrule: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
@@ -70,7 +69,6 @@ class TaskResponse(BaseModel):
     name: str
     description: str | None = None
     promptTemplate: str = ""
-    webSearchQuery: str = ""
     analysisMode: AnalysisMode
     analysisTimeRange: str
     version: int
@@ -81,7 +79,7 @@ class TaskResponse(BaseModel):
     worksetId: str | None = None
     #: Parent inventory item for ``analysisMode=recurring`` calendars (``recurring_schedules.item_id``).
     itemId: str | None = None
-    projectWaveIntervalSeconds: int | None = None
+    agentWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
     analysisTriggerThreshold: int | None = None
     analysisBatchMessageLimit: int | None = None
@@ -137,11 +135,11 @@ class TaskActivitySpanResponse(BaseModel):
     earliestBatchStart: str | None = None
     latestBatchEnd: str | None = None
     completedBatchCount: int
-    #: Latest completed batch agent message (project tick); null when unset.
+    #: Latest completed batch agent message (agent tick); null when unset.
     lastAgentMessage: str | None = None
     #: Latest completed batch tool-call summaries (empty when none).
     lastToolCalls: list[AgentToolCallSummary] = Field(default_factory=list)
-    #: Latest completed batch error (failed project tick); null on success/skip.
+    #: Latest completed batch error (failed agent tick); null on success/skip.
     lastErrorMessage: str | None = None
     #: Messages drained in the latest completed tick (0 when skipped).
     lastMessageCount: int | None = None
@@ -153,7 +151,7 @@ class TaskActivitySpanResponse(BaseModel):
     worksetId: str | None = None
 
 
-class ProjectTickLogEntryResponse(BaseModel):
+class AgentTickLogEntryResponse(BaseModel):
     batchId: str
     status: str
     #: success | skipped | error
@@ -166,7 +164,7 @@ class ProjectTickLogEntryResponse(BaseModel):
     completedAt: str | None = None
 
 
-class ProjectTickInFlightResponse(BaseModel):
+class AgentTickInFlightResponse(BaseModel):
     """Current schedule-fire batch still pending/processing (waves in progress)."""
 
     batchId: str
@@ -176,13 +174,13 @@ class ProjectTickInFlightResponse(BaseModel):
     updatedAt: str | None = None
 
 
-class ProjectTickStatusResponse(BaseModel):
+class AgentTickStatusResponse(BaseModel):
     taskId: str
     cursorAt: str | None = None
     pendingSinceCursor: int
-    ticks: list[ProjectTickLogEntryResponse] = Field(default_factory=list)
+    ticks: list[AgentTickLogEntryResponse] = Field(default_factory=list)
     #: Non-null while a drain fire has not yet completed (wave progress via messageCount).
-    inFlight: ProjectTickInFlightResponse | None = None
+    inFlight: AgentTickInFlightResponse | None = None
 
 
 class QueueBatchResponse(BaseModel):

@@ -3,23 +3,40 @@ import { describe, expect, it } from "vitest";
 import {
   buildLinkedCalendarCreateInitial,
   buildLinkedCalendarEditInitial,
+  findActiveLinkedExpiryEvent,
+  isLinkedExpiryTitle,
   linkedCalendarQuickIsAllDay,
   linkedCalendarQuickLabelKey,
   LINKED_CALENDAR_QUICK_KINDS,
 } from "./linkedCalendarQuickCreate";
 
 describe("linkedCalendarQuickCreate", () => {
-  it("exposes start / expires / purchased presets", () => {
-    expect(LINKED_CALENDAR_QUICK_KINDS).toEqual(["start", "expires", "purchased"]);
+  it("exposes only the expiry quick preset", () => {
+    expect(LINKED_CALENDAR_QUICK_KINDS).toEqual(["expires"]);
   });
 
-  it("maps label keys and all-day only for expires", () => {
-    expect(linkedCalendarQuickLabelKey("start")).toBe("quickLinkedCalendar.start");
-    expect(linkedCalendarQuickLabelKey("expires")).toBe("quickLinkedCalendar.expires");
-    expect(linkedCalendarQuickLabelKey("purchased")).toBe("quickLinkedCalendar.purchased");
-    expect(linkedCalendarQuickIsAllDay("start")).toBe(false);
+  it("maps label keys and all-day preset for expiry", () => {
+    for (const kind of LINKED_CALENDAR_QUICK_KINDS) {
+      expect(linkedCalendarQuickLabelKey(kind)).toBe(`quickLinkedCalendar.${kind}`);
+    }
     expect(linkedCalendarQuickIsAllDay("expires")).toBe(true);
-    expect(linkedCalendarQuickIsAllDay("purchased")).toBe(false);
+  });
+
+  it("detects linked expiry titles and active events", () => {
+    expect(isLinkedExpiryTitle("到期")).toBe(true);
+    expect(isLinkedExpiryTitle("Expires")).toBe(true);
+    expect(isLinkedExpiryTitle("Renewal")).toBe(false);
+
+    const events = [
+      { id: "a", title: "到期", dismissed: false },
+      { id: "b", title: "Other", dismissed: false },
+    ] as Parameters<typeof findActiveLinkedExpiryEvent>[0];
+    expect(findActiveLinkedExpiryEvent(events)?.id).toBe("a");
+    expect(
+      findActiveLinkedExpiryEvent([{ id: "c", title: "到期", dismissed: true }] as Parameters<
+        typeof findActiveLinkedExpiryEvent
+      >[0]),
+    ).toBeNull();
   });
 
   it("prefills timed create defaults without a quick kind", () => {
@@ -42,17 +59,17 @@ describe("linkedCalendarQuickCreate", () => {
     expect(initial.endTime).toBeTruthy();
   });
 
-  it("prefills title and all-day range for expires", () => {
+  it("prefills title and all-day range for expiry kind", () => {
     const now = new Date(2026, 7, 6, 14, 30, 0);
     const initial = buildLinkedCalendarCreateInitial({
       itemId: "item-1",
       worksetId: "ws-1",
-      title: "到期",
+      title: "expires",
       kind: "expires",
       now,
     });
     expect(initial).toEqual({
-      title: "到期",
+      title: "expires",
       worksetId: "ws-1",
       itemId: "item-1",
       remindBeforeDays: "",
@@ -62,21 +79,14 @@ describe("linkedCalendarQuickCreate", () => {
     expect(initial).not.toHaveProperty("endTime");
   });
 
-  it("prefills title as timed for start and purchased", () => {
-    const now = new Date(2026, 7, 6, 9, 0, 0);
-    for (const kind of ["start", "purchased"] as const) {
-      const initial = buildLinkedCalendarCreateInitial({
-        itemId: "item-9",
-        worksetId: "__user__",
-        title: kind === "start" ? "開始" : "購入",
-        kind,
-        now,
-      });
-      expect(initial.isAllDay).toBe(false);
-      expect(initial.title).toBe(kind === "start" ? "開始" : "購入");
-      expect(initial.itemId).toBe("item-9");
-      expect(initial.endTime).toBeTruthy();
-    }
+  it("prefills remindBeforeDays from category default on create", () => {
+    const initial = buildLinkedCalendarCreateInitial({
+      itemId: "item-1",
+      worksetId: "ws-1",
+      kind: "expires",
+      defaultRemindBeforeDays: 90,
+    });
+    expect(initial.remindBeforeDays).toBe("90");
   });
 
   it("maps a linked one-off event into edit initial", () => {
@@ -109,11 +119,38 @@ describe("linkedCalendarQuickCreate", () => {
       endTime: "2026-09-01T10:00:00Z",
       location: "office",
       body: "notes",
-      worksetId: "ws-owned",
+      worksetId: "ws-fallback",
       isAllDay: false,
       remindBeforeDays: "2",
       itemId: "item-42",
     });
+  });
+
+  it("prefers item-form workset over stored event workset on edit", () => {
+    const initial = buildLinkedCalendarEditInitial({
+      event: {
+        id: "ue-1",
+        title: "Passport renew",
+        startTime: "2026-09-01T09:00:00Z",
+        endTime: "2026-09-01T10:00:00Z",
+        body: "",
+        location: "",
+        origin: "manual",
+        isAllDay: false,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: "ws-owned",
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "",
+        updatedAt: "",
+      },
+      itemId: "item-42",
+      fallbackWorksetId: "ws-form",
+    });
+    expect(initial.worksetId).toBe("ws-form");
   });
 
   it("falls back workset and clears remind when unset on edit", () => {

@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 import i18n from "../i18n";
 import { localizeTaskPreset } from "../domain/tasks/localizeTaskPreset";
 import { chatEditorFormStorageKey } from "../domain/prefs";
-import { DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
+import { DEFAULT_AGENT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
 import {
   isUnmappedTriggerSchedule,
   presetToTriggerRrule,
@@ -22,7 +22,6 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   name: "",
   description: "",
   promptTemplate: "",
-  webSearchQuery: "",
   analysisMode: "recurring",
   analysisTimeRange: "1d",
   channelIds: [],
@@ -36,7 +35,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   eventLocation: "",
   eventDescription: "",
   includeInTimeline: true,
-  projectWaveIntervalSeconds: null,
+  agentWaveIntervalSeconds: null,
   batchOverlapCount: null,
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
@@ -58,7 +57,6 @@ export const DEFAULT_FORM_STATE: TaskFormState = INITIAL_EDITOR_FIELDS;
 type SaveGateFields = {
   name: string;
   promptTemplate: string;
-  webSearchQuery: string;
   channelIds: string[];
   rrule: string;
   analysisMode: AnalysisMode;
@@ -95,6 +93,9 @@ export function getTaskSaveBlockReason(
     }
     if (!fields.outputCalendar && !fields.outputAnalysisEvents) {
       return String(i18n.t("tasks.editor.saveNeeds.agentOutput"));
+    }
+    if (fields.triggerMode === "message_cursor" && fields.outputAnalysisEvents) {
+      return String(i18n.t("tasks.editor.saveNeeds.agentCursorAnalysis"));
     }
     if (fields.triggerMode === "message_cursor" && fields.channelIds.length === 0) {
       return String(i18n.t("tasks.editor.saveNeeds.channels"));
@@ -165,7 +166,6 @@ export function useTaskEditorState(
           promptTemplate: localized.promptTemplate,
           analysisMode: nextMode,
           analysisTimeRange: localized.defaultAnalysisTimeRange,
-          webSearchQuery: "",
         };
         if (
           nextMode === "agent" &&
@@ -175,8 +175,8 @@ export function useTaskEditorState(
           next.scheduleType = "hourly";
           next.scheduleRrule = presetToTriggerRrule("hourly", next.scheduleValue);
         }
-        if (nextMode === "agent" && next.projectWaveIntervalSeconds == null) {
-          next.projectWaveIntervalSeconds = DEFAULT_PROJECT_WAVE_INTERVAL_SECONDS;
+        if (nextMode === "agent" && next.agentWaveIntervalSeconds == null) {
+          next.agentWaveIntervalSeconds = DEFAULT_AGENT_WAVE_INTERVAL_SECONDS;
         }
         return next;
       });
@@ -187,7 +187,6 @@ export function useTaskEditorState(
   const saveGateFields = {
     name: formState.name,
     promptTemplate: formState.promptTemplate,
-    webSearchQuery: formState.webSearchQuery,
     channelIds: formState.channelIds,
     rrule: formState.rrule,
     analysisMode: formState.analysisMode,

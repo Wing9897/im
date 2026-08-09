@@ -116,8 +116,13 @@ async def fetch_item_rows(
         params.append(status)
     if search and search.strip():
         needle = f"%{search.strip().lower()}%"
-        clauses.append("(LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ?)")
-        params.extend([needle, needle, needle])
+        clauses.append(
+            "("
+            "LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ? "
+            "OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ? OR CAST(price AS TEXT) LIKE ?"
+            ")"
+        )
+        params.extend([needle, needle, needle, needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return await db.fetch_all(
         f"SELECT * FROM items {where} ORDER BY "
@@ -133,7 +138,7 @@ async def fetch_active_items_with_dates(
     range_end_date: str,
     workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Active items with purchase/expiry/remind DATE falling in [start, end].
+    """Active items with expiry/remind DATE falling in [start, end].
 
     Remind day is ``date(expires_at, '-' || remind_before_days || ' days')`` when
     ``remind_before_days > 0``.
@@ -141,8 +146,7 @@ async def fetch_active_items_with_dates(
     clauses = [
         "status = 'active'",
         "("
-        "(purchased_at IS NOT NULL AND purchased_at >= ? AND purchased_at <= ?) "
-        "OR (expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?) "
+        "(expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?) "
         "OR ("
         "expires_at IS NOT NULL AND remind_before_days IS NOT NULL "
         "AND remind_before_days > 0 "
@@ -152,8 +156,6 @@ async def fetch_active_items_with_dates(
         ")",
     ]
     params: list[Any] = [
-        range_start_date,
-        range_end_date,
         range_start_date,
         range_end_date,
         range_start_date,
@@ -204,31 +206,36 @@ async def insert_item(
     title: str,
     category_id: str | None,
     workset_id: str,
-    purchased_at: str | None,
     expires_at: str | None,
     remind_before_days: int | None,
     notes: str,
     status: str,
     emoji: str | None,
+    quantity: float | None,
+    unit: str | None,
+    price: float | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO items ("
-        "id, title, category_id, workset_id, purchased_at, expires_at, "
-        "remind_before_days, notes, status, emoji, attributes_json, created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "id, title, category_id, workset_id, expires_at, "
+        "remind_before_days, notes, status, emoji, quantity, unit, price, "
+        "attributes_json, created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item_id,
             title,
             category_id,
             workset_id,
-            purchased_at,
             expires_at,
             remind_before_days,
             notes,
             status,
             emoji,
+            quantity,
+            unit,
+            price,
             attributes_json,
             now,
             now,
@@ -243,29 +250,33 @@ async def update_item(
     title: str,
     category_id: str | None,
     workset_id: str,
-    purchased_at: str | None,
     expires_at: str | None,
     remind_before_days: int | None,
     notes: str,
     status: str,
     emoji: str | None,
+    quantity: float | None,
+    unit: str | None,
+    price: float | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
-        "UPDATE items SET title = ?, category_id = ?, workset_id = ?, purchased_at = ?, "
+        "UPDATE items SET title = ?, category_id = ?, workset_id = ?, "
         "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, emoji = ?, "
-        "attributes_json = ?, updated_at = ? WHERE id = ?",
+        "quantity = ?, unit = ?, price = ?, attributes_json = ?, updated_at = ? WHERE id = ?",
         (
             title,
             category_id,
             workset_id,
-            purchased_at,
             expires_at,
             remind_before_days,
             notes,
             status,
             emoji,
+            quantity,
+            unit,
+            price,
             attributes_json,
             now,
             item_id,
@@ -275,3 +286,24 @@ async def update_item(
 
 async def delete_item(tx: TransactionDb, item_id: str) -> None:
     await tx.execute("DELETE FROM items WHERE id = ?", (item_id,))
+
+
+async def sync_linked_calendars_workset(
+    tx: TransactionDb,
+    *,
+    item_id: str,
+    workset_id: str,
+) -> None:
+    """Propagate item workset to linked one-off events and recurring task calendars."""
+    await tx.execute(
+        "UPDATE user_events SET workset_id = ? WHERE item_id = ?",
+        (workset_id, item_id),
+    )
+    await tx.execute(
+        """
+        UPDATE analysis_tasks
+        SET workset_id = ?
+        WHERE id IN (SELECT task_id FROM recurring_schedules WHERE item_id = ?)
+        """,
+        (workset_id, item_id),
+    )

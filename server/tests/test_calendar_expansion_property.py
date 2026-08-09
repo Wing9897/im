@@ -37,6 +37,8 @@ CALENDAR_OCCURRENCE_KEYS = frozenset(
         "location",
         "description",
         "rrule",
+        "itemId",
+        "isLastOccurrence",
     }
 )
 
@@ -138,6 +140,12 @@ def _full_reference_task_sequence(
 
     task_id = str(task.get("id") or "")
     task_name = str(task.get("name") or "")
+    raw_item_id = task.get("item_id")
+    item_id = (
+        raw_item_id.strip()
+        if isinstance(raw_item_id, str) and raw_item_id.strip()
+        else None
+    )
     end_tod = _reference_time_of_day(task.get("event_end_time"), local_tz=local_tz) if not is_all_day else None
     result: list[dict[str, Any]] = []
     for candidate in candidates:
@@ -170,6 +178,8 @@ def _full_reference_task_sequence(
                 "location": task.get("event_location") or None,
                 "description": task.get("event_description") or None,
                 "rrule": rule,
+                "itemId": item_id,
+                "isLastOccurrence": recurrence.after(candidate) is None,
             }
         )
     return result

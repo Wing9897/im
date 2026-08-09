@@ -1,4 +1,11 @@
-import { useEffect, useId, useState, type AnimationEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type AnimationEvent,
+  type ReactNode,
+} from "react";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -11,6 +18,11 @@ interface ModalDialogProps {
   ariaLabel?: string;
   closeAriaLabel?: string;
   onClose: () => void;
+  /**
+   * Fires after the exit animation finishes (or immediately when reduced-motion /
+   * keepMounted park completes). Use to commit work only once the shell is gone.
+   */
+  onExited?: () => void;
   children: ReactNode;
   footer: ReactNode;
   footerJustify?: "flex-start" | "flex-end" | "center" | "space-between";
@@ -26,7 +38,7 @@ interface ModalDialogProps {
   /** Body padding preset. ``none`` for full-bleed filter/picker content. */
   bodyPadding?: "default" | "none";
   /**
-   * After the first open, keep the React tree mounted while closed (HTML `hidden`).
+   * After the first open, keep the React tree mounted while closed (parked).
    * Use for expensive children (emoji keyboard) so reopen skips remount cost.
    * Focus trap and body scroll lock stay inactive while parked.
    */
@@ -54,6 +66,7 @@ export function ModalDialog({
   ariaLabel,
   closeAriaLabel,
   onClose,
+  onExited,
   children,
   footer,
   footerJustify = "flex-end",
@@ -69,6 +82,10 @@ export function ModalDialog({
   const [present, setPresent] = useState(open);
   const [exiting, setExiting] = useState(false);
   const [parked, setParked] = useState(false);
+  const onExitedRef = useRef(onExited);
+  onExitedRef.current = onExited;
+  /** Ensures onExited fires once per close (animationend + timeout race). */
+  const exitedNotifiedRef = useRef(false);
   const focusTrapRef = useFocusTrap({
     active: present && !exiting && !parked,
     onEscape: onClose,
@@ -78,14 +95,19 @@ export function ModalDialog({
     setExiting(false);
     if (keepMounted) {
       setParked(true);
-      return;
+    } else {
+      setPresent(false);
+      setParked(false);
     }
-    setPresent(false);
-    setParked(false);
+    if (!exitedNotifiedRef.current) {
+      exitedNotifiedRef.current = true;
+      onExitedRef.current?.();
+    }
   };
 
   useEffect(() => {
     if (open) {
+      exitedNotifiedRef.current = false;
       setPresent(true);
       setExiting(false);
       setParked(false);

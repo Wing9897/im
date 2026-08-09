@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SourceEditDialogShell } from "../SourceEditDialogShell";
+import { SourceEditDialogShell } from "../board/SourceEditDialogShell";
 import { PasswordField, SettingsRow, TextField } from "../../../components/ui";
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { MASKED_SECRET } from "../../../utils/configValidation";

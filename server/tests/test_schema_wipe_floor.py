@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-17 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-23 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -22,8 +22,8 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
-def test_wipe_floor_is_stamp_nineteen() -> None:
-    assert CURRENT_SCHEMA_VERSION == 19
+def test_wipe_floor_is_current_stamp() -> None:
+    assert CURRENT_SCHEMA_VERSION == 23
 
 
 @pytest.mark.asyncio
