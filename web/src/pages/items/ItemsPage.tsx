@@ -115,9 +115,9 @@ export function ItemsPage() {
                 data-testid="items-category-search"
               />
               <MenuSelect
-                variant="field"
+                variant="toolbar"
                 menuPortal
-                className="w-auto shrink-0 min-w-[6rem]"
+                className="min-w-[6rem]"
                 triggerClassName={itemsPageChromeSelectClass}
                 value={categorySort}
                 options={categorySortOptions}

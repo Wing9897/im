@@ -46,9 +46,9 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
  * - Keep `SelectField` only where native `<select>` is required (optgroup, disabled
  *   `<option>`, form-submit quirks, or other native-only behavior).
  * - Toolbars / page chrome / ops bars / overflow-prone controls → `MenuSelect`
- *   (`variant="field"` + `menuPortal` when clipped).
+ *   (`variant="toolbar"` + `menuPortal` when clipped; never forces `w-full`).
  * - Settings / source dense rows that are a plain options list → prefer
- *   `MenuSelect variant="field"` (same density goal as Items belonging).
+ *   `MenuSelect variant="field"` (full-width form chrome, same density as Items belonging).
  */
 export function SelectField({
   className,

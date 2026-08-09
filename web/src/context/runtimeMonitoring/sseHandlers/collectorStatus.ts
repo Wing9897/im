@@ -29,6 +29,10 @@ function applyCollectorStatus(status: CollectorStatus, deps: EventListenerDeps):
   state.collectorStatusRef.current = status;
   state.setCollectorStatus(status);
   if (status !== "running") {
+    // Collector lifecycle is independent of LLM health. Do not wipe
+    // aiEngineStatus here — agent ticks / assistant still need a truthful
+    // AI pill, and repeated stopped SSE would otherwise clobber a fresh
+    // "available" result after the user configures keys post-wipe.
     state.setQueueStatus((prev) =>
       prev?.processingBatches?.length || prev?.attentionBatches?.length
         ? {
@@ -38,9 +42,7 @@ function applyCollectorStatus(status: CollectorStatus, deps: EventListenerDeps):
           }
         : prev,
     );
-    state.setAiEngineStatus("unknown");
     state.setActiveAnalyses(new Map());
-    state.lastAiHealthSignatureRef.current = "collector-not-running";
   } else if (previousStatus !== "running") {
     refreshQueueStatus(false);
     refreshAiStatus(true);

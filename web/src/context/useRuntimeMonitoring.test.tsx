@@ -180,7 +180,8 @@ describe("useRuntimeMonitoring", () => {
     });
 
     expect(latestState!.collectorStatus).toBe("stopped");
-    expect(latestState!.aiEngineStatus).toBe("unknown");
+    // AI health is independent of collector lifecycle — keep last probe result.
+    expect(latestState!.aiEngineStatus).toBe("available");
 
     cleanupHarness(root, container);
   });

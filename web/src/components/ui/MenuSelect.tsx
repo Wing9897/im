@@ -10,7 +10,7 @@ export type MenuSelectOption = {
   label: string;
 };
 
-type MenuSelectVariant = "default" | "field";
+type MenuSelectVariant = "default" | "field" | "toolbar";
 
 type MenuSelectProps = {
   id?: string;
@@ -18,9 +18,13 @@ type MenuSelectProps = {
   options: readonly MenuSelectOption[];
   onChange: (value: string) => void;
   className?: string;
-  /** Extra classes on the field-variant trigger button (e.g. toolbar density). */
+  /** Extra classes on the field/toolbar trigger button (e.g. toolbar density). */
   triggerClassName?: string;
-  /** Full-width form control — matches SelectField chrome (no native `<select>`). */
+  /**
+   * `field` — full-width form control (matches SelectField chrome).
+   * `toolbar` — inline ops/chrome control; does **not** force `w-full`.
+   * `default` — larger card-style trigger (theme pickers, etc.).
+   */
   variant?: MenuSelectVariant;
   /** Portal the listbox to `document.body` so overflow ancestors cannot clip it. */
   menuPortal?: boolean;
@@ -29,11 +33,29 @@ type MenuSelectProps = {
   disabled?: boolean;
 };
 
-const fieldTriggerClass = `${controlBaseClass} ${controlSizeClass.md} cursor-pointer text-left disabled:cursor-not-allowed`;
+/** Form chrome without baked-in `w-full` — width comes from variant / className. */
+const controlChromeClass = controlBaseClass.replace(/\bw-full\b/, "").replace(/\s+/g, " ").trim();
+
+const fieldTriggerClass = `${controlChromeClass} ${controlSizeClass.md} w-full cursor-pointer text-left disabled:cursor-not-allowed`;
+
+const toolbarTriggerClass = `${controlChromeClass} ${controlSizeClass.md} w-auto cursor-pointer text-left disabled:cursor-not-allowed`;
 
 const fieldTriggerStyle: CSSProperties = {
   display: "flex",
   width: "100%",
+  minWidth: 0,
+  maxWidth: "100%",
+  boxSizing: "border-box",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 8,
+  cursor: "pointer",
+  textAlign: "left",
+};
+
+const toolbarTriggerStyle: CSSProperties = {
+  display: "inline-flex",
+  width: "auto",
   minWidth: 0,
   maxWidth: "100%",
   boxSizing: "border-box",
@@ -137,6 +159,8 @@ export function MenuSelect({
   "data-testid": testId,
 }: MenuSelectProps) {
   const isField = variant === "field";
+  const isToolbar = variant === "toolbar";
+  const usesFormChrome = isField || isToolbar;
   const autoId = useId();
   const listId = `${id ?? autoId}-list`;
   const { open, setOpen, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
@@ -172,7 +196,11 @@ export function MenuSelect({
 
   const shellClass = isField
     ? ["relative block w-full min-w-0 box-border", className ?? ""].filter(Boolean).join(" ")
-    : className;
+    : isToolbar
+      ? ["relative inline-flex w-auto shrink-0 min-w-0 box-border", className ?? ""]
+          .filter(Boolean)
+          .join(" ")
+      : className;
 
   const listBoxStyle: CSSProperties | undefined = menuPortal
     ? {
@@ -190,7 +218,7 @@ export function MenuSelect({
         boxSizing: "border-box",
         visibility: menuPos ? "visible" : "hidden",
       }
-    : isField
+    : usesFormChrome
       ? {
           position: "absolute",
           left: 0,
@@ -201,8 +229,8 @@ export function MenuSelect({
           padding: 4,
           listStyle: "none",
           width: "100%",
-          minWidth: 0,
-          maxWidth: "100%",
+          minWidth: isToolbar ? "max-content" : 0,
+          maxWidth: isToolbar ? "none" : "100%",
           maxHeight: 280,
           overflowY: "auto",
           boxSizing: "border-box",
@@ -252,7 +280,7 @@ export function MenuSelect({
     <div
       ref={rootRef as RefObject<HTMLDivElement | null>}
       className={shellClass}
-      style={isField ? undefined : shellStyle}
+      style={usesFormChrome ? undefined : shellStyle}
       data-testid={testId}
     >
       <button
@@ -267,17 +295,22 @@ export function MenuSelect({
         data-testid={testId ? `${testId}-value` : undefined}
         title={displayLabel}
         className={
-          isField
-            ? [fieldTriggerClass, triggerClassName ?? ""].filter(Boolean).join(" ")
+          usesFormChrome
+            ? [
+                isToolbar ? toolbarTriggerClass : fieldTriggerClass,
+                triggerClassName ?? "",
+              ]
+                .filter(Boolean)
+                .join(" ")
             : "rounded-md border border-surface-border bg-surface-card px-sm py-1.5 text-caption font-medium leading-snug text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
         }
-        style={isField ? fieldTriggerStyle : triggerStyle}
+        style={isField ? fieldTriggerStyle : isToolbar ? toolbarTriggerStyle : triggerStyle}
         onClick={() => {
           if (!disabled) setOpen(!open);
         }}
         onKeyDown={onTriggerKeyDown}
       >
-        <span style={isField ? fieldLabelStyle : labelStyle}>{displayLabel}</span>
+        <span style={usesFormChrome ? fieldLabelStyle : labelStyle}>{displayLabel}</span>
         <ChevronDown
           size={14}
           strokeWidth={2.2}

@@ -78,6 +78,33 @@ describe("AnalysisStatusControl", () => {
     expect(menu?.parentElement).toBe(document.body);
   });
 
+  it("offers AI settings deep-link when AI is unavailable", () => {
+    const onOpenAiSettings = vi.fn();
+    render({
+      label: "AI 無法連線",
+      title: "收集器運行中，但 AI 引擎無法連線",
+      aiUnavailable: true,
+      onOpenAiSettings,
+    });
+    const trigger = container.querySelector(
+      "[data-testid='system-status-menu-trigger']",
+    ) as HTMLButtonElement;
+
+    act(() => {
+      trigger.click();
+    });
+    const settingsBtn = document.querySelector(
+      "[data-testid='open-ai-settings-button']",
+    ) as HTMLButtonElement;
+    expect(settingsBtn).not.toBeNull();
+    expect(settingsBtn.textContent).toContain("AI 設定");
+
+    act(() => {
+      settingsBtn.click();
+    });
+    expect(onOpenAiSettings).toHaveBeenCalledTimes(1);
+  });
+
   it("does not show a permanent pause or abort toolbar button", () => {
     render();
     expect(container.querySelector("[data-testid='pause-resume-button']")).toBeNull();

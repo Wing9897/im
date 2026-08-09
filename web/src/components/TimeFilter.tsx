@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { pageOpsControlClass } from "./ui/controlStyles";
 import { MenuSelect } from "./ui/MenuSelect";
 
 export type TimeFilterPreset = "today" | "1d" | "7d" | "30d";
@@ -39,16 +40,17 @@ export const TimeFilter = React.memo(function TimeFilter({
 
   return (
     <MenuSelect
-      variant="field"
+      variant="toolbar"
       menuPortal
       value={value}
       options={options}
       onChange={(next) => onChange(next as TimeFilterPreset)}
       aria-label={t("timeFilter.aria")}
       data-testid="time-filter"
-      className="w-auto shrink-0"
       triggerClassName={[
-        "h-9 w-auto min-w-[5.5rem] max-w-[7rem] text-sm font-medium",
+        // Match Intelligence / ops-bar 30px density (not form h-8/h-9).
+        pageOpsControlClass,
+        "w-auto min-w-[5.5rem] max-w-[7rem] px-2",
         className ?? "",
       ]
         .filter(Boolean)

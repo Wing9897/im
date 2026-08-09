@@ -21,12 +21,14 @@ vi.mock("../../../api/tasks", () => ({
 vi.mock("../../../context/TaskCatalogContext", async () =>
   (await import("../../../test/context-mocks")).taskCatalogModuleMock());
 
+const collectorStatusState = vi.hoisted(() => ({
+  collectorStatus: "running" as string,
+  aiEngineStatus: "available" as string,
+  requestAiStatusRefresh: vi.fn(),
+}));
+
 vi.mock("../../../context/CollectorStatusContext", () => ({
-  useCollectorStatus: () => ({
-    collectorStatus: "running",
-    aiEngineStatus: "available",
-    requestAiStatusRefresh: vi.fn(),
-  }),
+  useCollectorStatus: () => collectorStatusState,
 }));
 
 vi.mock("../../../speech", async () => {
@@ -83,6 +85,9 @@ describe("AssistantPage", () => {
     await ensureZhHantLocale();
     mockStreamAgentChat.mockReset();
     mockCreateSpeechPorts.mockReset();
+    collectorStatusState.collectorStatus = "running";
+    collectorStatusState.aiEngineStatus = "available";
+    collectorStatusState.requestAiStatusRefresh.mockReset();
     mockPorts({ sttAvailable: false, ttsAvailable: false });
   });
 
@@ -120,6 +125,19 @@ describe("AssistantPage", () => {
     expect(container.querySelector("[data-testid='assistant-ptt']")).toBeNull();
     expect(container.textContent).toContain("問本機情報、日程或物品");
     expect(container.textContent).toContain("此環境無法語音辨識，請改用文字輸入。");
+  });
+
+  it("links to AI provider settings when the engine is unavailable", async () => {
+    collectorStatusState.aiEngineStatus = "unavailable";
+    await renderPage();
+
+    const banner = container.querySelector("[data-testid='assistant-ai-unavailable']");
+    expect(banner).toBeTruthy();
+    const link = container.querySelector(
+      "[data-testid='assistant-ai-settings-link']",
+    ) as HTMLAnchorElement | null;
+    expect(link).toBeTruthy();
+    expect(link?.getAttribute("href")).toBe("/ai/provider");
   });
 
   it("puts chrome inside the card and omits OpsControlBar", async () => {

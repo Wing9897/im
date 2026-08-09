@@ -111,9 +111,9 @@ export function ItemsEntryToolbar({
               data-testid="items-entry-search"
             />
             <MenuSelect
-              variant="field"
+              variant="toolbar"
               menuPortal
-              className="w-auto shrink-0 min-w-[6.5rem]"
+              className="min-w-[6.5rem]"
               triggerClassName={itemsPageChromeSelectClass}
               value={worksetFilterId ?? ""}
               options={worksetOptions}
@@ -153,9 +153,9 @@ export function ItemsEntryToolbar({
               </button>
             </div>
             <MenuSelect
-              variant="field"
+              variant="toolbar"
               menuPortal
-              className="w-auto shrink-0 min-w-[6rem]"
+              className="min-w-[6rem]"
               triggerClassName={itemsPageChromeSelectClass}
               value={sort}
               options={sortOptions}

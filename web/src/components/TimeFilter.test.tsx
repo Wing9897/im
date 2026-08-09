@@ -44,12 +44,20 @@ describe("TimeFilter", () => {
       root.render(wrapWithI18n(<TimeFilter value="today" onChange={vi.fn()} />));
     });
 
+    const shell = container.querySelector<HTMLElement>('[data-testid="time-filter"]');
+    expect(shell).not.toBeNull();
+    expect(shell!.className).toContain("w-auto");
+    expect(shell!.className).toContain("shrink-0");
+    expect(shell!.className).not.toContain("w-full");
+
     const trigger = container.querySelector<HTMLButtonElement>(
       '[data-testid="time-filter-value"]',
     );
     expect(trigger).not.toBeNull();
+    expect(trigger!.className).toContain("im-page-ops-ctrl");
     expect(trigger!.getAttribute("aria-label")).toBe("時間篩選");
     expect(trigger!.textContent).toContain("本日");
+    expect(trigger!.style.width).toBe("auto");
 
     openTimeFilter(container);
     const labels = TIME_FILTER_PRESETS.map((p) => i18n.t(p.labelKey));
