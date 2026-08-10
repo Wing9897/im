@@ -151,10 +151,13 @@ describe("SettingsAnalysisStrategyPage", () => {
     expect(container.textContent).toContain("已啟用");
     expect(container.textContent).not.toContain("任務可另行覆寫");
 
-    const select = container.querySelector<HTMLSelectElement>("#analysis-evidence-style");
-    expect(select).toBeTruthy();
-    expect(select!.value).toBe("balanced");
-    expect(select!.querySelectorAll("option").length).toBe(3);
+    const evidenceTrigger = container.querySelector<HTMLButtonElement>("#analysis-evidence-style");
+    expect(evidenceTrigger).toBeTruthy();
+    expect(evidenceTrigger!.textContent).toContain("均衡");
+    act(() => {
+      evidenceTrigger!.click();
+    });
+    expect(document.body.querySelectorAll('[role="option"]').length).toBe(3);
   });
 
   it("renders advanced collapsible section headers collapsed by default", () => {

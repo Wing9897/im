@@ -84,7 +84,7 @@ describe("systemTaskCatalog", () => {
     expect(batch?.title).toBe("分析批次");
     expect(batch?.staffId).toBeUndefined();
     expect(batch?.shortDescription).toContain("標記型");
-    expect(batch?.shortDescription).toContain("專案任務");
+    expect(batch?.shortDescription).toContain("Agent 任務");
     expect(catalog.find((item) => item.id === "project-manager")).toBeUndefined();
     expect(catalog.find((item) => item.id === "project-tick")).toBeUndefined();
   });

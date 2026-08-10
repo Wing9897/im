@@ -170,7 +170,7 @@ describe("TaskDetailDialog", () => {
 
 describe("MessageDetailDialog", () => {
   it("renders chat bubble hero", async () => {
-    const { MessageDetailDialog } = await import("../../monitor/MessageDetailDialog");
+    const { MessageDetailDialog } = await import("../../monitor/components/MessageDetailDialog");
 
     act(() => {
       root = createRoot(container);
