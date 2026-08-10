@@ -7,9 +7,10 @@ import { contentFadeClass } from "../../../components/ui/pageLayout";
 import { formatDateOnly } from "../../../utils/dateFormat";
 import { ItemsPageChrome } from "../ItemsPageChrome";
 import {
+  itemsFormPageMaxWidthClass,
   itemsPageChromeEntryToolsClass,
-  itemsPageChromeFillClass,
   itemsPageChromeSelectClass,
+  itemsPageFillClass,
 } from "../itemsPageChromeClasses";
 import type { ItemsFinancePlFilter, ItemsFinancePreset, ItemsFinanceSortKey } from "../../../domain/items/itemFinance";
 import { useItemsFinancePage } from "./useItemsFinancePage";
@@ -62,7 +63,7 @@ export function ItemsFinancePage() {
   const paneClass = `im-animate-in min-w-0 ${contentFadeClass}`;
 
   return (
-    <div className={itemsPageChromeFillClass} data-testid="items-finance-page">
+    <div className={itemsPageFillClass} data-testid="items-finance-page">
       <ItemsPageChrome
         title={t("finance.pageTitle")}
         back={{
@@ -71,7 +72,7 @@ export function ItemsFinancePage() {
         }}
         controlsAriaLabel={t("finance.controlsAria")}
         controls={
-          <div className={`${itemsPageChromeEntryToolsClass} flex-wrap gap-2`}>
+          <div className={itemsPageChromeEntryToolsClass}>
             <MenuSelect
               variant="toolbar"
               menuPortal
@@ -130,7 +131,9 @@ export function ItemsFinancePage() {
       />
 
       <div className="im-auto-scrollbar min-h-0 overflow-y-auto">
-        <div className="mx-auto w-full min-w-0 max-w-[1280px] px-page-x py-md max-[780px]:px-sm max-[780px]:py-sm">
+        <div
+          className={`mx-auto w-full min-w-0 px-page-x py-md max-[780px]:px-sm max-[780px]:py-sm ${itemsFormPageMaxWidthClass}`}
+        >
           {error ? (
             <AlertBanner variant="error" role="alert">
               {error}
