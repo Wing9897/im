@@ -167,6 +167,10 @@
     },
     "titleAria": "标题",
     "titlePlaceholder": "标题",
+    "calendarKindBadge": {
+      "expires": "到期",
+      "purchaseEffective": "购买·生效"
+    },
     "taskLabel": "归属工作集",
     "parentItem": "所属物品",
     "parentItemAria": "所属物品",

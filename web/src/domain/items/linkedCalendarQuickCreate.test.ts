@@ -161,6 +161,66 @@ describe("linkedCalendarQuickCreate", () => {
     });
   });
 
+  it("keeps special calendarKind on edit even when title was renamed", () => {
+    const expires = buildLinkedCalendarEditInitial({
+      event: {
+        id: "ue-exp",
+        title: "保修到期",
+        kind: "expires",
+        startTime: "2026-08-01T00:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: true,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: "ws-1",
+        itemId: "item-1",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "",
+        updatedAt: "",
+      },
+      itemId: "item-1",
+      fallbackWorksetId: "ws-1",
+    });
+    expect(expires.calendarKind).toBe("expires");
+    expect(expires.title).toBe("保修到期");
+
+    const purchase = buildLinkedCalendarEditInitial({
+      event: {
+        id: "ue-buy",
+        title: "双十一相机",
+        kind: "purchase_effective",
+        amount: 1280,
+        direction: "income",
+        startTime: "2026-08-01T10:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: false,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: "ws-1",
+        itemId: "item-1",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "",
+        updatedAt: "",
+      },
+      itemId: "item-1",
+      fallbackWorksetId: "ws-1",
+    });
+    expect(purchase.calendarKind).toBe("purchase_effective");
+    expect(purchase.title).toBe("双十一相机");
+    expect(purchase.amountInput).toBe("1280");
+    expect(purchase.direction).toBe("income");
+  });
+
   it("prefers item-form workset over stored event workset on edit", () => {
     const initial = buildLinkedCalendarEditInitial({
       event: {

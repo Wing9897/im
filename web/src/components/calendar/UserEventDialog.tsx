@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { listItems, type TrackableItem } from "../../api/items";
+import type { UserEventCalendarKind } from "../../domain/timeline/userEventCalendarKind";
 import type {
   UserEventFormValues,
   UserEventTaskOption,
@@ -10,6 +11,7 @@ import { WorksetTargetSelectField } from "../assistant/WorksetTargetSelect";
 import { ModalDialog } from "../ModalDialog";
 import { RecurrenceRuleEditor } from "../task/RecurrenceRuleEditor";
 import {
+  Badge,
   Button,
   FieldLabel,
   FormStack,
@@ -19,6 +21,26 @@ import {
 } from "../ui";
 import { UserEventTimeSection } from "./UserEventTimeSection";
 import { useUserEventDialogForm } from "./useUserEventDialogForm";
+
+function specialCalendarKindBadge(
+  calendarKind: UserEventCalendarKind,
+): { kind: "expires" | "purchase_effective"; tone: "warning" | "info"; testId: string } | null {
+  if (calendarKind === "expires") {
+    return {
+      kind: "expires",
+      tone: "warning",
+      testId: "user-event-calendar-kind-badge-expires",
+    };
+  }
+  if (calendarKind === "purchase_effective") {
+    return {
+      kind: "purchase_effective",
+      tone: "info",
+      testId: "user-event-calendar-kind-badge-purchase-effective",
+    };
+  }
+  return null;
+}
 
 export type { UserEventKind } from "../../domain/timeline/userEventFormModel";
 export type { UserEventFormValues, UserEventTaskOption };
@@ -126,6 +148,7 @@ export function UserEventDialog({
   const introText =
     introOverride ?? (isRecurring ? t("userEvent.introRecurring") : t("userEvent.intro"));
   const showFinance = !isRecurring && shouldShowFinanceFields(values);
+  const calendarKindBadge = specialCalendarKindBadge(values.calendarKind);
 
   return (
     <ModalDialog
@@ -161,6 +184,22 @@ export function UserEventDialog({
           </div>
         ) : null}
         <p className="m-0 text-caption text-text-muted">{introText}</p>
+        {calendarKindBadge ? (
+          <div
+            className="flex flex-wrap items-center gap-sm"
+            data-testid="user-event-calendar-kind-banner"
+          >
+            <Badge
+              tone={calendarKindBadge.tone}
+              className="normal-case tracking-normal"
+              data-testid={calendarKindBadge.testId}
+            >
+              {calendarKindBadge.kind === "expires"
+                ? t("userEvent.calendarKindBadge.expires")
+                : t("userEvent.calendarKindBadge.purchaseEffective")}
+            </Badge>
+          </div>
+        ) : null}
         <TextField
           aria-label={t("userEvent.titleAria")}
           placeholder={t("userEvent.titlePlaceholder")}

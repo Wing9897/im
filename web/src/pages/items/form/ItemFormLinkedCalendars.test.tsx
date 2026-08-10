@@ -427,8 +427,69 @@ describe("ItemForm linked calendars", () => {
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-purchase-effective"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="item-linked-calendar-badge-income"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="item-form-linked-expiry-panel"]')).toBeNull();
+  });
+
+  it("keeps expires badge when linked expiry title is customized", async () => {
+    listUserEvents.mockResolvedValueOnce([
+      {
+        id: "ue-exp-renamed",
+        title: "保修到期",
+        kind: "expires",
+        startTime: "2026-08-01T00:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: true,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "",
+      },
+    ]);
+
+    await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
+
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-expires"]')).toBeTruthy();
+    expect(document.body.textContent).toContain("保修到期");
+  });
+
+  it("does not treat normal events titled 到期 as expiry chips", async () => {
+    listUserEvents.mockResolvedValueOnce([
+      {
+        id: "ue-normal-expiry-title",
+        title: "到期",
+        kind: "normal",
+        startTime: "2026-08-01T00:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: true,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "",
+      },
+    ]);
+
+    await renderForm({ item: makeItem({ id: "item-42" }) });
+
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-expires"]')).toBeNull();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeNull();
   });
 
   it("soft-deletes a linked one-off calendar after confirm", async () => {

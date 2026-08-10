@@ -113,6 +113,16 @@ function LinkedCalendarKindBadges({
   }
 
   if (isPurchaseEffectiveCalendarEvent(event)) {
+    badges.push(
+      <Badge
+        key="purchase"
+        tone="info"
+        className="max-w-full truncate normal-case tracking-normal"
+        data-testid="item-linked-calendar-badge-purchase-effective"
+      >
+        {t("linkedCalendarBadge.purchaseEffective")}
+      </Badge>,
+    );
     const direction = event.direction === "income" ? "income" : "expense";
     badges.push(
       <Badge

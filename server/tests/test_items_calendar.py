@@ -472,7 +472,7 @@ async def test_multiple_linked_expiry_primary_is_first_created(client, app):
 
 @pytest.mark.asyncio
 async def test_update_linked_expiry_title_still_allowed(client):
-    """Editing the sole linked expiry event does not trip duplicate guard."""
+    """Renaming an expires event keeps kind + item expiresAt projection."""
     created = await client.post("/api/v1/items", json={"title": "Passport"})
     item_id = created.json()["id"]
     event = await client.post(
@@ -487,13 +487,95 @@ async def test_update_linked_expiry_title_still_allowed(client):
         },
     )
     event_id = event.json()["id"]
+    assert event.json()["kind"] == "expires"
+    assert (await client.get(f"/api/v1/items/{item_id}")).json()["expiresAt"] == "2026-08-01"
 
     patched = await client.patch(
         f"/api/v1/calendar/user-events/{event_id}",
-        json={"startTime": "2026-09-01T00:00:00Z", "remindBeforeDays": 5},
+        json={"title": "保修到期", "startTime": "2026-09-01T00:00:00Z", "remindBeforeDays": 5},
     )
     assert patched.status_code == 200
-    assert patched.json()["startTime"].startswith("2026-09-01")
+    body = patched.json()
+    assert body["title"] == "保修到期"
+    assert body["kind"] == "expires"
+    assert body["startTime"].startswith("2026-09-01")
+    assert (await client.get(f"/api/v1/items/{item_id}")).json()["expiresAt"] == "2026-09-01"
+
+
+@pytest.mark.asyncio
+async def test_rename_purchase_effective_keeps_finance(client):
+    """Title edits must not drop purchase_effective finance fields."""
+    created = await client.post("/api/v1/items", json={"title": "Camera"})
+    item_id = created.json()["id"]
+    event = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "購入",
+            "kind": "purchase_effective",
+            "startTime": "2026-08-05T10:00:00Z",
+            "itemId": item_id,
+            "amount": 1280.5,
+            "direction": "expense",
+        },
+    )
+    assert event.status_code == 201
+    event_id = event.json()["id"]
+
+    patched = await client.patch(
+        f"/api/v1/calendar/user-events/{event_id}",
+        json={"title": "双十一相机"},
+    )
+    assert patched.status_code == 200
+    body = patched.json()
+    assert body["title"] == "双十一相机"
+    assert body["kind"] == "purchase_effective"
+    assert body["amount"] == 1280.5
+    assert body["direction"] == "expense"
+
+
+@pytest.mark.asyncio
+async def test_title_does_not_infer_kind_on_create_or_patch(client):
+    """Normal events titled 「到期」 stay normal; amount clears unless purchase_effective."""
+    titled = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "到期",
+            "startTime": "2026-08-01T00:00:00Z",
+            "isAllDay": True,
+            "amount": 12,
+        },
+    )
+    assert titled.status_code == 201
+    assert titled.json()["kind"] == "normal"
+    assert titled.json()["amount"] is None
+
+    event_id = titled.json()["id"]
+    patched = await client.patch(
+        f"/api/v1/calendar/user-events/{event_id}",
+        json={"title": "購入", "amount": 50},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["kind"] == "normal"
+    assert patched.json()["amount"] is None
+
+    purchase = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Misc",
+            "kind": "purchase_effective",
+            "startTime": "2026-08-05T10:00:00Z",
+            "amount": 9,
+        },
+    )
+    purchase_id = purchase.json()["id"]
+    demoted = await client.patch(
+        f"/api/v1/calendar/user-events/{purchase_id}",
+        json={"kind": "normal"},
+    )
+    assert demoted.status_code == 200
+    assert demoted.json()["kind"] == "normal"
+    assert demoted.json()["amount"] is None
+    assert demoted.json()["direction"] is None
 
 
 @pytest.mark.asyncio

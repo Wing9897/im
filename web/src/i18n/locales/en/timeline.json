@@ -167,6 +167,10 @@
     },
     "titleAria": "Title",
     "titlePlaceholder": "Title",
+    "calendarKindBadge": {
+      "expires": "Expires",
+      "purchaseEffective": "Purchase·effective"
+    },
     "taskLabel": "Ownership workset",
     "parentItem": "Belongs to item",
     "parentItemAria": "Belongs to item",

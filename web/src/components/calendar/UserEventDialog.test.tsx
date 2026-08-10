@@ -130,6 +130,129 @@ describe("UserEventDialog", () => {
     });
 
     expect(document.body.querySelector('[data-testid="user-event-finance-fields"]')).toBeNull();
+    expect(
+      document.body.querySelector('[data-testid="user-event-calendar-kind-banner"]'),
+    ).toBeNull();
+    host.remove();
+  });
+
+  it("shows special calendar-kind badge and keeps kind when title is renamed", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "edit",
+          worksetMode: "hidden",
+          parentItemMode: "readonly",
+          initial: {
+            title: "到期",
+            kind: "one_off",
+            calendarKind: "expires",
+            itemId: "item-1",
+            isAllDay: true,
+            startTime: "2026-08-10",
+            endTime: "2026-08-10",
+          },
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(
+      document.body.querySelector('[data-testid="user-event-calendar-kind-badge-expires"]'),
+    ).toBeTruthy();
+    const titleInput = document.body.querySelector(
+      'input[aria-label="標題"]',
+    ) as HTMLInputElement;
+    expect(titleInput).toBeTruthy();
+    expect(titleInput.readOnly).toBe(false);
+    expect(titleInput.disabled).toBe(false);
+
+    await act(async () => {
+      setInputValue(titleInput, "保修到期");
+    });
+
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (b) => b.textContent === "儲存",
+    );
+    expect(submit).toBeTruthy();
+    await act(async () => {
+      submit!.click();
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "保修到期",
+        calendarKind: "expires",
+      }),
+    );
+
+    host.remove();
+  });
+
+  it("keeps purchase finance visible after renaming away from preset title", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "edit",
+          worksetMode: "hidden",
+          initial: {
+            title: "購入",
+            kind: "one_off",
+            calendarKind: "purchase_effective",
+            amountInput: "42",
+            direction: "expense",
+            startTime: "2026-08-10T10:00",
+          },
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(
+      document.body.querySelector(
+        '[data-testid="user-event-calendar-kind-badge-purchase-effective"]',
+      ),
+    ).toBeTruthy();
+    expect(document.body.querySelector('[data-testid="user-event-finance-fields"]')).toBeTruthy();
+
+    const titleInput = document.body.querySelector(
+      'input[aria-label="標題"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(titleInput, "双十一相机");
+    });
+    expect(document.body.querySelector('[data-testid="user-event-finance-fields"]')).toBeTruthy();
+
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (b) => b.textContent === "儲存",
+    );
+    await act(async () => {
+      submit!.click();
+    });
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "双十一相机",
+        calendarKind: "purchase_effective",
+        amountInput: "42",
+        direction: "expense",
+      }),
+    );
+
     host.remove();
   });
 

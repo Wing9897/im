@@ -58,6 +58,7 @@
   },
   "linkedCalendarBadge": {
     "expires": "Expiry",
+    "purchaseEffective": "Purchase·effective",
     "primary": "Primary"
   },
   "linkedCalendarRemindPrefillHint": "When you add a linked calendar, Remind before (days) is prefilled from this category default ({{days}} days). You can change it in the dialog.",
