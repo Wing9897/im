@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from types import EllipsisType
-from typing import Any
 
 from server.api.channel_refs import parse_channel_refs
 from server.api.routes.task_helpers import (

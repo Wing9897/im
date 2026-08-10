@@ -61,4 +61,3 @@ async def test_ui_prefs_get_response_keys(client, path, params, response_keys) -
 def test_ui_pref_keys_retired_from_config_defaults() -> None:
     for key in UI_PREF_KEYS:
         assert key not in CONFIG_DEFAULTS
-

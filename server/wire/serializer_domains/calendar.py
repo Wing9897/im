@@ -81,11 +81,7 @@ def serialize_user_event(
         "timezone": row.get("event_timezone") or None,
         "icsUid": row.get("ics_uid") or None,
         "icsSource": row.get("ics_source") or None,
-        "remindBeforeDays": (
-            int(row["remind_before_days"])
-            if row.get("remind_before_days") is not None
-            else None
-        ),
+        "remindBeforeDays": (int(row["remind_before_days"]) if row.get("remind_before_days") is not None else None),
         "taskId": task_id,
         "itemId": (
             str(row["item_id"]).strip()

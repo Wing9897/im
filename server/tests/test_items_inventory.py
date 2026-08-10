@@ -6,6 +6,7 @@ import pytest
 
 from server.agent.tools_items import execute_items_tool
 
+
 async def test_item_create_and_patch_quantity_unit_price(client):
     created = await client.post(
         "/api/v1/items",

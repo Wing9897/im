@@ -38,9 +38,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "taskId": {
                     "type": "string",
-                    "description": (
-                        "Optional analysis-task provenance (event/recurring/agent); omit when unassigned"
-                    ),
+                    "description": ("Optional analysis-task provenance (event/recurring/agent); omit when unassigned"),
                 },
             },
             "required": ["title", "startTime"],

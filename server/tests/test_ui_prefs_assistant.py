@@ -228,4 +228,3 @@ def test_sanitize_assistant_voice_io_migrates_reserved_providers() -> None:
     )
     assert clean["sttProvider"] == "browser"
     assert clean["ttsProvider"] == "browser"
-

@@ -53,4 +53,3 @@ async def insert_event(
             created_at,
         ),
     )
-

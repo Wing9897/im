@@ -12,8 +12,8 @@ from server.config import set_configs
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
 from server.domain.schedule import default_trigger_rrule, preset_to_trigger_rrule
-from server.scheduler.manager import SchedulerManager
 from server.scheduler.agent_tick import execute_agent_tick, parse_agent_items
+from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster
 from server.tests import seed
 from server.util import utc_now_iso

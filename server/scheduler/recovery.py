@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 from server.config import get_config_bool, get_config_int
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE
-from server.queries.batch_housekeeping import purge_all_superseded_version_data
 from server.queries.agent_tick_queries import complete_agent_batch
+from server.queries.batch_housekeeping import purge_all_superseded_version_data
 from server.scheduler.batch_failure import apply_retry_outcome, decide_batch_error_outcome
 from server.sse import SseBroadcaster
 from server.util import utc_now_iso

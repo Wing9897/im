@@ -18,11 +18,11 @@ from server.queries.agent_tick_queries import (
     load_agent_message_cursor,
 )
 from server.scheduler.agent_tick_format import (
+    _AGENT_MESSAGE_LIMIT,
+    _SKIP_NO_MESSAGES,
     DEFAULT_AGENT_MAX_DRAIN_WAVES,
     DEFAULT_AGENT_MAX_TOOL_ROUNDS_CURSOR,
     MESSAGE_SUMMARY_LIMIT,
-    _AGENT_MESSAGE_LIMIT,
-    _SKIP_NO_MESSAGES,
     serialize_tick_tool_calls,
     truncate_text,
 )

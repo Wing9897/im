@@ -29,9 +29,7 @@ class TimelineImportanceValidationError(ValueError):
 def _require_source(source: str) -> ImportanceSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineImportanceValidationError(
-            "source must be 'analysis', 'user', 'recurring', or 'item'"
-        )
+        raise TimelineImportanceValidationError("source must be 'analysis', 'user', 'recurring', or 'item'")
     return value  # type: ignore[return-value]
 
 
@@ -67,8 +65,7 @@ async def mark_timeline_important(
         (clean_source, clean_id, now),
     )
     row = await db.fetch_one(
-        "SELECT source, event_id, marked_at FROM timeline_importance "
-        "WHERE source = ? AND event_id = ?",
+        "SELECT source, event_id, marked_at FROM timeline_importance WHERE source = ? AND event_id = ?",
         (clean_source, clean_id),
     )
     assert row is not None

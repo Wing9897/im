@@ -116,11 +116,7 @@ def build_agent_seed_message(
         "Follow the pinned Task goals / rules in the system prompt.",
     ]
     if wave_index is not None:
-        parts.append(
-            f"Drain wave {wave_index}"
-            + (f" ({wave_total_hint})" if wave_total_hint else "")
-            + "."
-        )
+        parts.append(f"Drain wave {wave_index}" + (f" ({wave_total_hint})" if wave_total_hint else "") + ".")
     if calendar_summary is not None and spec.cap_calendar_read:
         parts.extend(["", "## Current calendar summary", calendar_summary])
     if message_lines is not None:
@@ -150,17 +146,13 @@ def build_agent_seed_message(
         else:
             parts.append("(none — pure scheduled fire; work from the task prompt only)")
     if spec.cap_force_web_search or spec.cap_web_search:
-        parts.append(
-            'Choose search keywords from the task prompt when needed; use web.search '
-            "(multi-round OK)."
-        )
+        parts.append("Choose search keywords from the task prompt when needed; use web.search (multi-round OK).")
     if spec.output_analysis_events and not spec.output_calendar:
         parts.append('Finish with {"items":[...]} JSON.')
     elif spec.output_calendar and not spec.output_analysis_events:
         parts.append('Finish with a short {"message":"..."} summary.')
     else:
         parts.append(
-            'Finish with {"items":[...]} when producing intel events, '
-            'or {"message":"..."} when only calendar changed.'
+            'Finish with {"items":[...]} when producing intel events, or {"message":"..."} when only calendar changed.'
         )
     return "\n".join(parts)

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from server.api.schemas.responses import AnalysisEventResponse
+from server.tests import seed
 from server.tests.contract_helpers import assert_keys
 from server.tests.contract_results_helpers import insert_event
-from server.tests import seed
 
 
 async def test_events(client):
@@ -233,4 +233,3 @@ async def test_events_has_time_filter(client):
     assert all(item["startTime"] for item in timed.json()["items"])
     untimed = await client.get("/api/v1/results/events", params={"hasTime": "0", "limit": "50"})
     assert all(not item["startTime"] for item in untimed.json()["items"])
-

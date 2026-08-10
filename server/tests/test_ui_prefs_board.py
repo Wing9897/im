@@ -203,4 +203,3 @@ async def test_board_oversized_payload_422(client) -> None:
     )
     assert resp.status_code == 422
     assert "character limit" in resp.json()["message"]
-

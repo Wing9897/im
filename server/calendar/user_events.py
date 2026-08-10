@@ -237,9 +237,7 @@ async def update_user_event(
 
     prev_title = str(existing.get("title") or "")
     raw_prev_iid = existing.get("item_id")
-    prev_item_id = (
-        str(raw_prev_iid).strip() if isinstance(raw_prev_iid, str) and raw_prev_iid.strip() else None
-    )
+    prev_item_id = str(raw_prev_iid).strip() if isinstance(raw_prev_iid, str) and raw_prev_iid.strip() else None
 
     next_title = _require_nonempty_title(str(title)) if title is not _UNSET else str(existing["title"])
     next_start = _require_start_time(str(start_time)) if start_time is not _UNSET else str(existing["start_time"])

@@ -24,9 +24,9 @@ from server.scheduler.agent_batches import (
     record_agent_skip,
 )
 from server.scheduler.agent_tick_format import (
-    DEFAULT_AGENT_MAX_TOOL_ROUNDS,
     _AGENT_MESSAGE_LIMIT,
     _SKIP_EMPTY_PROMPT,
+    DEFAULT_AGENT_MAX_TOOL_ROUNDS,
     parse_agent_items,
     serialize_tick_tool_calls,
     truncate_text,

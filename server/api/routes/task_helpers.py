@@ -13,6 +13,8 @@ from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row, fetch_task_workset_id
 from server.queries.worksets_queries import workset_exists
 from server.scheduler.task_schedule_overrides import (
+    AGENT_WAVE_INTERVAL_MAX,
+    AGENT_WAVE_INTERVAL_MIN,
     ALLOWED_STRATEGY_MODES,
     ANALYSIS_BATCH_LIMIT_MAX,
     ANALYSIS_BATCH_LIMIT_MIN,
@@ -20,8 +22,6 @@ from server.scheduler.task_schedule_overrides import (
     ANALYSIS_THRESHOLD_MIN,
     BATCH_OVERLAP_MAX,
     BATCH_OVERLAP_MIN,
-    AGENT_WAVE_INTERVAL_MAX,
-    AGENT_WAVE_INTERVAL_MIN,
 )
 from server.wire.serializers import serialize_channel_ref, serialize_task
 
@@ -162,22 +162,16 @@ def agent_policy_write_fields(
     try:
         spec = normalize_agent_task_spec(
             trigger_mode=(
-                body.triggerMode
-                if "triggerMode" in fields
-                else (existing.get("trigger_mode") or "schedule")
+                body.triggerMode if "triggerMode" in fields else (existing.get("trigger_mode") or "schedule")
             ),
             cap_calendar_read=_pick_bool("capCalendarRead", "cap_calendar_read", True),
             cap_calendar_writes=_pick_bool("capCalendarWrites", "cap_calendar_writes", False),
             cap_web_search=_pick_bool("capWebSearch", "cap_web_search", False),
             cap_force_web_search=_pick_bool("capForceWebSearch", "cap_force_web_search", False),
-            cap_read_analysis_events=_pick_bool(
-                "capReadAnalysisEvents", "cap_read_analysis_events", True
-            ),
+            cap_read_analysis_events=_pick_bool("capReadAnalysisEvents", "cap_read_analysis_events", True),
             cap_read_items=_pick_bool("capReadItems", "cap_read_items", True),
             output_calendar=_pick_bool("outputCalendar", "output_calendar", False),
-            output_analysis_events=_pick_bool(
-                "outputAnalysisEvents", "output_analysis_events", False
-            ),
+            output_analysis_events=_pick_bool("outputAnalysisEvents", "output_analysis_events", False),
             has_channels=has_channels,
         )
     except AgentTaskSpecError as exc:

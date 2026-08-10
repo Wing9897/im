@@ -47,8 +47,7 @@ async def _clean(db: Database) -> None:
         (f"{PREFIX}%",),
     )
     await db.execute(
-        "DELETE FROM user_events WHERE item_id IN "
-        "(SELECT id FROM items WHERE title LIKE ?)",
+        "DELETE FROM user_events WHERE item_id IN (SELECT id FROM items WHERE title LIKE ?)",
         (f"{PREFIX}%",),
     )
     await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
@@ -161,7 +160,7 @@ async def seed(db: Database) -> dict[str, int]:
             "notes": "電子產品自訂分類 + 保固到期",
             "attributes": {
                 "brand": "Apple",
-                "model": "MacBook Pro 14\" M3 Pro",
+                "model": 'MacBook Pro 14" M3 Pro',
                 "serial": "C02XK9ABCDEF",
             },
             "expires_at": "2027-11-01",
@@ -457,10 +456,7 @@ async def main() -> None:
             print("Cleaned prior [dev-seed] fixtures")
         counts = await seed(db)
         print("Seeded:", json.dumps(counts, ensure_ascii=False))
-        print(
-            "Open /timeline or /items — filter titles starting with [dev-seed] "
-            "or workset「Dev Seed 測試組」"
-        )
+        print("Open /timeline or /items — filter titles starting with [dev-seed] or workset「Dev Seed 測試組」")
     finally:
         await db.close()
 

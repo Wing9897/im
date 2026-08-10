@@ -40,9 +40,7 @@ class ItemValidationError(ValueError):
 
 def _assert_not_reserved_attribute_key(key: str) -> None:
     if key in RESERVED_ATTRIBUTE_KEYS:
-        raise ItemValidationError(
-            "attribute key is reserved for linked-calendar expiry; use 关联日历 → 到期"
-        )
+        raise ItemValidationError("attribute key is reserved for linked-calendar expiry; use 关联日历 → 到期")
 
 
 def _coerce_attr_scalar(value: Any) -> str | None:

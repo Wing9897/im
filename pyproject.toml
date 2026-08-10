@@ -72,6 +72,8 @@ select = ["E", "F", "I", "W"]
 [tool.ruff.lint.per-file-ignores]
 "server/main.py" = ["E402"]
 "server/__main__.py" = ["E402"]
+"scripts/seed_calendar_ui_fixtures.py" = ["E402"]
+"scripts/seed_dev_items_calendar.py" = ["E402"]
 
 [tool.uv]
 # App repo, not a library — skip setuptools rebuild on every `uv run` in dev.

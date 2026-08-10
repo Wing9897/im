@@ -250,4 +250,3 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "endTime": wire(day2_end),
     }
     assert "Skipping recurring task calendar-invalid" in caplog.text
-

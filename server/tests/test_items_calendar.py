@@ -10,6 +10,7 @@ from server.agent.tools_items import execute_items_tool
 from server.calendar.query import query_window
 from server.worksets_const import SYSTEM_WORKSET_ID
 
+
 async def test_calendar_projects_remind_only_not_purchased_or_expires(client, app):
     today = date.today()
     expires = (today + timedelta(days=10)).isoformat()
