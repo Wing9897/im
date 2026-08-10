@@ -4230,6 +4230,12 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /**
+             * Kind
+             * @default normal
+             * @enum {string}
+             */
+            kind: "normal" | "expires" | "purchase_effective";
             /** Amount */
             amount?: number | null;
             /** Direction */
@@ -4257,6 +4263,8 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /** Kind */
+            kind?: ("normal" | "expires" | "purchase_effective") | null;
             /** Amount */
             amount?: number | null;
             /** Direction */
@@ -4303,6 +4311,12 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId: string;
+            /**
+             * Kind
+             * @default normal
+             * @enum {string}
+             */
+            kind: "normal" | "expires" | "purchase_effective";
             /** Amount */
             amount?: number | null;
             /** Direction */

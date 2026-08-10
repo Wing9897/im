@@ -107,7 +107,29 @@ describe("UserEventDialog", () => {
     expect(arg.taskId).toBeUndefined();
     expect(arg.amountInput).toBe("");
     expect(arg.direction).toBe("expense");
+    expect(arg.calendarKind).toBe("normal");
 
+    host.remove();
+  });
+
+  it("hides finance fields for title Purchased when calendarKind is normal", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          initial: { title: "購入", kind: "one_off", calendarKind: "normal" },
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-finance-fields"]')).toBeNull();
     host.remove();
   });
 
@@ -122,7 +144,7 @@ describe("UserEventDialog", () => {
         createElement(UserEventDialog, {
           open: true,
           mode: "create",
-          initial: { title: "購入", kind: "one_off" },
+          initial: { title: "購入", kind: "one_off", calendarKind: "purchase_effective" },
           onClose: vi.fn(),
           onSubmit,
         }),

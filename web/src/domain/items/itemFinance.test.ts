@@ -19,6 +19,7 @@ function event(overrides: Partial<UserEvent> & { id: string }): UserEvent {
   return {
     id: overrides.id,
     title: overrides.title ?? "Purchased",
+    kind: overrides.kind ?? "purchase_effective",
     startTime: overrides.startTime ?? "2026-08-05T10:00:00",
     endTime: overrides.endTime ?? null,
     body: "",
@@ -52,6 +53,7 @@ describe("itemFinance", () => {
           id: "e1",
           itemId: "a",
           title: "Purchased",
+          kind: "purchase_effective",
           startTime: "2026-08-03T09:00:00",
           amount: 1200,
           direction: "expense",
@@ -120,5 +122,23 @@ describe("itemFinance", () => {
     const range = financePresetRange("thisMonth", now);
     expect(range.startDay).toBe("2026-08-01");
     expect(range.endDay).toBe("2026-08-10");
+  });
+
+  it("ignores purchase titles when kind is normal", () => {
+    const rows = buildItemsFinanceRows(
+      [item({ id: "a", title: "Camera" })],
+      [
+        event({
+          id: "e1",
+          itemId: "a",
+          title: "Purchased",
+          kind: "normal",
+          amount: 1200,
+          direction: "expense",
+        }),
+      ],
+      { startDay: "2026-08-01", endDay: "2026-08-10" },
+    );
+    expect(rows).toHaveLength(0);
   });
 });

@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-24 / prior hard-reject): ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-25 / prior hard-reject): ``test_schema_wipe_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 

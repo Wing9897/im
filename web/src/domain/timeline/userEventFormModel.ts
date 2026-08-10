@@ -5,14 +5,24 @@ import {
   toDateTimeLocalInput,
 } from "./dateUtils";
 import type { UserEventKind } from "./userEventKindSwitch";
+import {
+  normalizeUserEventCalendarKind,
+  type UserEventCalendarKind,
+} from "./userEventCalendarKind";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { buildRRule } from "../../utils/rrule";
 
 export type { UserEventKind };
+export type { UserEventCalendarKind };
 
 export type UserEventFormValues = {
   /** Create-dialog kind; edit / import paths always submit ``one_off``. */
   kind: UserEventKind;
+  /**
+   * Wire ``user_events.kind`` (normal / expires / purchase_effective).
+   * Distinct from one_off/recurring ``kind`` above.
+   */
+  calendarKind: UserEventCalendarKind;
   title: string;
   /** One-off: ISO wire datetime (or all-day DATE start). Recurring: unused. */
   startTime: string;
@@ -27,7 +37,7 @@ export type UserEventFormValues = {
   remindBeforeDays: string;
   /** Optional parent trackable item id (linked calendar). */
   itemId: string;
-  /** Optional transaction amount input (purchase/effective); empty = unset. */
+  /** Optional transaction amount input (purchase_effective); empty = unset. */
   amountInput: string;
   /** expense | income — meaningful when amount is set; UI default expense. */
   direction: "expense" | "income";
@@ -55,6 +65,7 @@ export const DEFAULT_RRULE = buildRRule({
 
 export const EMPTY_USER_EVENT_FORM: UserEventFormValues = {
   kind: "one_off",
+  calendarKind: "normal",
   title: "",
   startTime: "",
   endTime: "",
@@ -79,6 +90,7 @@ export function valuesFromInitial(
 ): UserEventFormValues {
   const isAllDay = Boolean(initial?.isAllDay);
   const kind: UserEventKind = initial?.kind === "recurring" ? "recurring" : "one_off";
+  const calendarKind = normalizeUserEventCalendarKind(initial?.calendarKind);
   const remindRaw = initial?.remindBeforeDays;
   const remindBeforeDays =
     remindRaw === undefined || remindRaw === null
@@ -94,6 +106,7 @@ export function valuesFromInitial(
     endTime?: string;
   } = {
     kind,
+    calendarKind,
     title: initial?.title ?? "",
     location: initial?.location ?? "",
     body: initial?.body ?? "",

@@ -104,7 +104,10 @@ async def _link_item_milestone(
     day: str,
     workset_id: str | None = None,
     remind_before_days: int | None = None,
+    kind: str | None = None,
 ) -> None:
+    from server.calendar.user_event_kinds import infer_user_event_kind_from_title
+
     await create_user_event(
         db,
         title=title,
@@ -113,6 +116,7 @@ async def _link_item_milestone(
         item_id=item_id,
         workset_id=workset_id,
         remind_before_days=remind_before_days,
+        kind=kind or infer_user_event_kind_from_title(title),
         origin="manual",
     )
 

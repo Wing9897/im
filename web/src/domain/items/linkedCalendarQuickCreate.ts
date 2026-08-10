@@ -5,8 +5,16 @@
 
 import type { UserEvent } from "../../api/userEvents";
 import { defaultCreateTimedRange, todayDateInput } from "../timeline/dateUtils";
+import {
+  isExpiresCalendarEvent,
+  isLinkedExpiryTitle,
+  normalizeUserEventCalendarKind,
+  quickKindToCalendarKind,
+  type UserEventCalendarKind,
+} from "../timeline/userEventCalendarKind";
 import { toUserEventFormWorksetId } from "../timeline/userEvents";
-import { isReservedAttributeKey } from "./itemAttributes";
+
+export { isLinkedExpiryTitle };
 
 export const LINKED_CALENDAR_QUICK_KINDS = ["expires", "other", "purchaseEffective"] as const;
 
@@ -24,6 +32,8 @@ export type LinkedCalendarFormInitial = {
   endTime?: string;
   location?: string;
   body?: string;
+  /** Wire ``user_events.kind`` — authority for finance / expiry (not one_off/recurring). */
+  calendarKind?: UserEventCalendarKind;
   amountInput?: string;
   direction?: "expense" | "income";
 };
@@ -62,11 +72,6 @@ export function linkedCalendarAddChipAriaKey(
   }
 }
 
-/** True when title is the linked-calendar expiry preset (到期 / Expires). */
-export function isLinkedExpiryTitle(title: string): boolean {
-  return isReservedAttributeKey(title);
-}
-
 function compareLinkedExpiryPrimary(a: UserEvent, b: UserEvent): number {
   const ca = (a.createdAt ?? "").trim();
   const cb = (b.createdAt ?? "").trim();
@@ -78,7 +83,7 @@ function compareLinkedExpiryPrimary(a: UserEvent, b: UserEvent): number {
 export function findActiveLinkedExpiryEvent(
   events: readonly UserEvent[],
 ): UserEvent | null {
-  const active = events.filter((event) => !event.dismissed && isLinkedExpiryTitle(event.title));
+  const active = events.filter((event) => !event.dismissed && isExpiresCalendarEvent(event));
   if (active.length === 0) return null;
   return [...active].sort(compareLinkedExpiryPrimary)[0] ?? null;
 }
@@ -105,14 +110,17 @@ export function buildLinkedCalendarCreateInitial(args: {
   const title = (args.title ?? "").trim();
   const remindBeforeDays =
     args.defaultRemindBeforeDays != null ? String(args.defaultRemindBeforeDays) : "";
+  const quickKind = args.kind ?? "other";
+  const calendarKind = quickKindToCalendarKind(quickKind);
   const base = {
     title,
     worksetId,
     itemId: args.itemId,
     remindBeforeDays,
+    calendarKind,
   };
 
-  if (args.kind === "expires") {
+  if (quickKind === "expires") {
     // Omit endTime so valuesFromInitial uses the same inclusive day (not wire-exclusive).
     return {
       ...base,
@@ -123,7 +131,7 @@ export function buildLinkedCalendarCreateInitial(args: {
 
   const range = defaultCreateTimedRange(args.now);
   const purchaseFinance =
-    args.kind === "purchaseEffective"
+    quickKind === "purchaseEffective"
       ? { amountInput: "", direction: "expense" as const }
       : {};
   return {
@@ -154,6 +162,7 @@ export function buildLinkedCalendarEditInitial(args: {
     remindBeforeDays:
       event.remindBeforeDays != null ? String(event.remindBeforeDays) : "",
     itemId,
+    calendarKind: normalizeUserEventCalendarKind(event.kind),
     amountInput: event.amount != null ? String(event.amount) : "",
     direction: event.direction === "income" ? "income" : "expense",
   };

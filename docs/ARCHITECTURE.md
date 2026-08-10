@@ -98,7 +98,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v24** (`SCHEMA_SEMVER` `0.1.0-beta.25`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v25** (`SCHEMA_SEMVER` `0.1.0-beta.26`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -296,7 +296,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-24 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-25 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
@@ -361,7 +361,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `trending_topics` | Extracted trending topics from analysis |
 | `topic_messages` | Topic ↔ message associations |
 | `analysis_events` | Unified event findings (optional `start_time` + optional map coordinates) |
-| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `agent` agent ticks, `a2a` A2A agent channel, `ics` one-shot imports; `workset_id` NOT NULL ownership; optional `task_id` provenance; optional finance `amount` + `direction` (`expense`\|`income`); imported UID/source/fingerprint + all-day/TZID metadata) |
+| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `agent` agent ticks, `a2a` A2A agent channel, `ics` one-shot imports; `workset_id` NOT NULL ownership; optional `task_id` provenance; `kind` (`normal`\|`expires`\|`purchase_effective`); optional finance `amount` + `direction` (`expense`\|`income`, only for `purchase_effective`); imported UID/source/fingerprint + all-day/TZID metadata) |
 | `timeline_dismissals` | Soft-dismiss markers for timeline (`source` + `event_id`; does not delete source rows) |
 | `admin_accounts` | Singleton household admin (normalized username + argon2 password hash) |
 | `device_sessions` | Device sessions (refresh token hash, expiry, revoke) |
@@ -375,13 +375,13 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `agent_message_cursors` | Per-agent `message_cursor` last-seen message cursor for `agent_tick` (`last_message_at` ISO + optional `last_message_id` same-second tie-break) |
 | `worksets` | Ownership dimension (`id` / `name` / `is_system`); builtin `__user__` (`is_system=1`); `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events`／`items.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
 | `item_categories` | Soft-template categories (`slug`, optional `emoji`, `field_schema` JSON create-time presets `{key,label}`, `default_remind_before_days`); seed rows with stable slugs + emoji logos. **Copy-on-create only:** creating an item seeds missing preset keys into `attributes_json` as empty strings; later edits to `field_schema` must **not** rewrite existing items. |
-| `items` | Trackable inventory (optional `emoji` + `attributes_json` soft string KV; optional `quantity`／`unit`); ownership via `workset_id`. **No item-level `price`** — purchase／effective amounts live on linked `user_events.amount` + `direction`. **Items date model:** linked `user_events` (milestone titles 到期／Expires) are the write-path source of truth via calendar create／update／delete write-through ([`server/items/linked_dates.py`](../server/items/linked_dates.py)). Flat `expires_at`／`remind_before_days` are a denormalized cache for list badges／sort／`list_expiring`／remind projection — never standalone SoT. There is no `purchased_at` column. Calendar `source=item` projects remind DATE (when `remind_before_days` is set) as floating all-day (`itemDateKind=remind` only) |
+| `items` | Trackable inventory (optional `emoji` + `attributes_json` soft string KV; optional `quantity`／`unit`); ownership via `workset_id`. **No item-level `price`** — purchase／effective amounts live on linked `user_events` with `kind=purchase_effective` (`amount` + `direction`). **Items date model:** linked `user_events` with `kind=expires` are the write-path source of truth (title presets 到期／Expires are UX only) via calendar create／update／delete write-through ([`server/items/linked_dates.py`](../server/items/linked_dates.py)). Flat `expires_at`／`remind_before_days` are a denormalized cache for list badges／sort／`list_expiring`／remind projection — never standalone SoT. There is no `purchased_at` column. Calendar `source=item` projects remind DATE (when `remind_before_days` is set) as floating all-day (`itemDateKind=remind` only) |
 
 ### Schema baseline (wipe-only)
 
 Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
 
-**Current stamp is 24** (`SCHEMA_SEMVER` = `0.1.0-beta.25`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-24 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 25** (`SCHEMA_SEMVER` = `0.1.0-beta.26`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-25 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -389,18 +389,18 @@ Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **24** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.25`) |
-| **23** and earlier (prior) | Hard-reject → reset |
+| **25** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.26`) |
+| **24** and earlier (prior) | Hard-reject → reset |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other non-empty schema** | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 24. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 25. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 24 is the wipe-only floor** (prior stamps including v23 hard-reject). Historical wipe cuts (e.g. stamp 20 dropped `web_search_query` and renamed `agent_message_cursors` / `agent_wave_interval_seconds`; stamp 24 removes item-level `price` and adds `user_events.amount` / `direction`) remain absorbed into the current DDL. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 25 is the wipe-only floor** (prior stamps including v24 hard-reject). Historical wipe cuts (e.g. stamp 20 dropped `web_search_query` and renamed `agent_message_cursors` / `agent_wave_interval_seconds`; stamp 24 removed item-level `price` and added `user_events.amount` / `direction`; stamp 25 adds `user_events.kind` (`normal`|`expires`|`purchase_effective`)) remain absorbed into the current DDL. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v24 explicit reset
+#### Schema v25 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -408,7 +408,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v24-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v25-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -421,7 +421,7 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v24 database (no auto-seed). Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v25 database (no auto-seed). Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
 **Stamp 15** introduced wipe-only vocabulary (`leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`) and the collector plane rename. **Stamp 18** unifies `web_intel` + `project` into `agent` (policy columns on `analysis_tasks`; prior DB stamps hard-reject → explicit reset). Also in the baseline: `app_logs.kind` (+ `idx_app_logs_kind_time`), cursor split (`agent_message_cursors.last_message_at` / `last_message_id`), AI timer storage on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded), calendar series on `recurring_schedules.rrule` (purpose=calendar), and trackable items. Categories remain **soft templates** with **copy-on-create** attribute key presets (`field_schema` → item `attributes_json` empty values at create; template edits do not rewrite existing items). Assistant must call `items.list_expiring` for expiry questions (no invention). Sensitive attribute values stay in the local DB only.
 
@@ -445,14 +445,14 @@ Stamp-23 wipe-only behavior is documented under [Schema baseline (wipe-only)](#s
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v24 DDL, validate its full fingerprint, then stamp 24 | Schema creation and v24 stamp |
-| Unstamped current, version 0 | Require the exact v24 fingerprint and stamp 24 | Stamp only |
-| Current, version 24 | Validate the exact v24 fingerprint on every startup | None |
+| Empty, version 0 | Create v25 DDL, validate its full fingerprint, then stamp 25 | Schema creation and v25 stamp |
+| Unstamped current, version 0 | Require the exact v25 fingerprint and stamp 25 | Stamp only |
+| Current, version 25 | Validate the exact v25 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
 | Incomplete/lookalike version 0 or prior | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 24. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 25. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -617,7 +617,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-24 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-25 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 

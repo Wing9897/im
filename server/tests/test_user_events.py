@@ -20,6 +20,7 @@ USER_EVENT_KEYS = {
     "taskId",
     "itemId",
     "worksetId",
+    "kind",
     "amount",
     "direction",
     "source",
@@ -301,6 +302,7 @@ async def test_user_events_amount_and_direction_roundtrip(client) -> None:
         "/api/v1/calendar/user-events",
         json={
             "title": "Purchased",
+            "kind": "purchase_effective",
             "startTime": "2026-08-05T10:00:00Z",
             "endTime": "2026-08-05T11:00:00Z",
             "amount": 1280.5,
@@ -308,6 +310,7 @@ async def test_user_events_amount_and_direction_roundtrip(client) -> None:
     )
     assert created.status_code == 201
     body = created.json()
+    assert body["kind"] == "purchase_effective"
     assert body["amount"] == 1280.5
     assert body["direction"] == "expense"
 
@@ -332,8 +335,35 @@ async def test_user_events_amount_and_direction_roundtrip(client) -> None:
         "/api/v1/calendar/user-events",
         json={
             "title": "Purchased",
+            "kind": "purchase_effective",
             "startTime": "2026-08-05T10:00:00Z",
             "amount": -1,
         },
     )
     assert bad.status_code == 422
+
+    stripped = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Purchased",
+            "kind": "normal",
+            "startTime": "2026-08-05T10:00:00Z",
+            "amount": 50,
+        },
+    )
+    assert stripped.status_code == 201
+    assert stripped.json()["kind"] == "normal"
+    assert stripped.json()["amount"] is None
+    assert stripped.json()["direction"] is None
+
+    title_only = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Purchased",
+            "startTime": "2026-08-05T10:00:00Z",
+            "amount": 10,
+        },
+    )
+    assert title_only.status_code == 201
+    assert title_only.json()["kind"] == "normal"
+    assert title_only.json()["amount"] is None

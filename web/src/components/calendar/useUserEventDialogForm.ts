@@ -61,6 +61,7 @@ export function useUserEventDialogForm({
   const initialAmountInput = initial?.amountInput ?? "";
   const initialDirection = initial?.direction === "income" ? "income" : "expense";
   const initialKind = initial?.kind === "recurring" ? "recurring" : "one_off";
+  const initialCalendarKind = initial?.calendarKind ?? "normal";
   const initialRrule = initial?.rrule ?? "";
   const initialEventStart = initial?.eventStartTime ?? "";
   const initialEventEnd = initial?.eventEndTime ?? "";
@@ -72,6 +73,7 @@ export function useUserEventDialogForm({
     setValues(
       valuesFromInitial({
         kind: allowKindSwitch ? initialKind : "one_off",
+        calendarKind: initialCalendarKind,
         title: initialTitle,
         startTime: initialStart,
         endTime: initialEnd,
@@ -92,6 +94,7 @@ export function useUserEventDialogForm({
     open,
     allowKindSwitch,
     initialKind,
+    initialCalendarKind,
     initialTitle,
     initialStart,
     initialEnd,

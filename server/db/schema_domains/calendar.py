@@ -22,7 +22,11 @@ CREATE TABLE IF NOT EXISTS user_events (
     item_id     TEXT DEFAULT NULL,
     -- Ownership is always a workset; delete_workset reassigns to __user__ first.
     workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
-    -- Optional finance fields for purchase/effective linked calendars (not expiry).
+    -- Special linked-calendar semantics (authority over title presets).
+    -- normal = generic; expires = primary expiry projection; purchase_effective = finance.
+    kind        TEXT NOT NULL DEFAULT 'normal'
+                CHECK (kind IN ('normal', 'expires', 'purchase_effective')),
+    -- Optional finance fields — only meaningful when kind=purchase_effective.
     amount      REAL DEFAULT NULL,
     direction   TEXT DEFAULT NULL
                 CHECK (direction IS NULL OR direction IN ('expense', 'income')),
@@ -39,6 +43,8 @@ CREATE INDEX IF NOT EXISTS idx_user_events_item_id
     ON user_events(item_id);
 CREATE INDEX IF NOT EXISTS idx_user_events_workset_id
     ON user_events(workset_id);
+CREATE INDEX IF NOT EXISTS idx_user_events_kind
+    ON user_events(kind);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_events_ics_source_uid
     ON user_events(ics_source, ics_uid)
     WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;

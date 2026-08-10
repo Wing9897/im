@@ -8,8 +8,11 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": "calendar.create_event",
         "description": (
-            "Create a one-off user event (no RRULE). For recurring schedules "
-            "(每週三／daily／monthly), use calendar.create_recurring_task instead. "
+            "Create a one-off user event (no RRULE). Always creates kind=normal "
+            "(generic timeline event) — never expires or purchase_effective, and "
+            "never amount/direction. Special linked-calendar kinds are Items UI only. "
+            "For recurring schedules (每週三／daily／monthly), use "
+            "calendar.create_recurring_task instead. "
             "Optional worksetId attaches ownership to a workset (builtin __user__ = 一般). "
             "Optional taskId keeps analysis-task provenance only. "
             "Confirm title and startTime with the user "

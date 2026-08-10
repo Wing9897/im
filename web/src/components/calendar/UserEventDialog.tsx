@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { listItems, type TrackableItem } from "../../api/items";
-import { isLinkedPurchaseEffectiveTitle } from "../../domain/items/itemFinance";
-import { parseOptionalNumberInput } from "../../domain/items/itemInventoryDisplay";
 import type {
   UserEventFormValues,
   UserEventTaskOption,
@@ -57,8 +55,7 @@ type UserEventDialogProps = {
 };
 
 function shouldShowFinanceFields(values: UserEventFormValues): boolean {
-  if (isLinkedPurchaseEffectiveTitle(values.title)) return true;
-  return parseOptionalNumberInput(values.amountInput) != null;
+  return values.calendarKind === "purchase_effective";
 }
 
 /** User / recurring event create-edit form (timeline Add Event dialog). */

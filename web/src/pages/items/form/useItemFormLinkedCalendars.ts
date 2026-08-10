@@ -28,7 +28,8 @@ function linkedOneOffWriteParams(
   worksetId: string,
   remindBeforeDays: number | null,
 ) {
-  const amount = parseOptionalNumberInput(values.amountInput);
+  const isPurchase = values.calendarKind === "purchase_effective";
+  const amount = isPurchase ? parseOptionalNumberInput(values.amountInput) : null;
   return {
     title: values.title,
     startTime: values.startTime,
@@ -39,6 +40,7 @@ function linkedOneOffWriteParams(
     remindBeforeDays,
     itemId,
     worksetId,
+    kind: values.calendarKind,
     amount,
     direction: amount == null ? null : values.direction,
   };

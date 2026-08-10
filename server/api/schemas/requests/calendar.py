@@ -50,6 +50,8 @@ class UserEventCreateBody(BaseModel):
     taskId: str | None = None
     itemId: str | None = None
     worksetId: str | None = None
+    #: ``normal`` (default) | ``expires`` | ``purchase_effective``.
+    kind: Literal["normal", "expires", "purchase_effective"] = "normal"
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
 
@@ -67,5 +69,6 @@ class UserEventPatchBody(BaseModel):
     taskId: str | None = None
     itemId: str | None = None
     worksetId: str | None = None
+    kind: Literal["normal", "expires", "purchase_effective"] | None = None
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
