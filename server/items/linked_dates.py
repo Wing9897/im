@@ -76,7 +76,7 @@ async def _active_linked_expiry_rows(
     return list(rows)
 
 
-def _earliest_day(rows: list[Mapping[str, Any]]) -> str | None:
+def _earliest_day(rows: Sequence[Mapping[str, Any]]) -> str | None:
     for row in rows:
         day = _date_prefix(row.get("start_time"))
         if day:
