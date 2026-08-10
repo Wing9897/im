@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { listTasks } from "../../../api/tasks";
 import { listUserEvents, type UserEvent } from "../../../api/userEvents";
 import {
-  deriveLinkedExpiryPreview,
+  countActiveLinkedExpiryEvents,
   mergeLinkedCalendarRows,
   resolveActiveLinkedExpiry,
   type LinkedCalendarRow,
 } from "../../../domain/items/linkedCalendarRows";
-import type { ItemCardExpiry } from "../../../domain/items/itemCardExpiry";
 
 type Options = {
   itemId: string | null;
@@ -21,7 +20,8 @@ type Options = {
 export type LinkedCalendarRowsState = {
   rows: LinkedCalendarRow[];
   activeExpiry: UserEvent | null;
-  expiryPreview: ItemCardExpiry;
+  /** Active ``kind=expires`` count (for Primary badge when > 1). */
+  expiresCount: number;
   loading: boolean;
   loadError: boolean;
   createLocked: boolean;
@@ -31,14 +31,13 @@ export type LinkedCalendarRowsState = {
 /** Loads + merges one-off / recurring calendars linked to an inventory item. */
 export function useLinkedCalendarRows({
   itemId,
-  itemExpiresAt = null,
-  remindBeforeDays = null,
   refreshKey = 0,
   onActiveExpiryChange,
 }: Options): LinkedCalendarRowsState {
   const createLocked = itemId == null;
   const [rows, setRows] = useState<LinkedCalendarRow[]>([]);
   const [activeExpiry, setActiveExpiry] = useState<UserEvent | null>(null);
+  const [expiresCount, setExpiresCount] = useState(0);
   const [loading, setLoading] = useState(!createLocked);
   const [loadError, setLoadError] = useState(false);
 
@@ -46,6 +45,7 @@ export function useLinkedCalendarRows({
     if (!itemId) {
       setRows([]);
       setActiveExpiry(null);
+      setExpiresCount(0);
       setLoading(false);
       setLoadError(false);
       onActiveExpiryChange?.(null);
@@ -59,12 +59,14 @@ export function useLinkedCalendarRows({
         listTasks({ itemId, analysisMode: "recurring" }),
       ]);
       const expiryEvent = resolveActiveLinkedExpiry(events);
-      setRows(mergeLinkedCalendarRows(events, recurring, expiryEvent));
+      setRows(mergeLinkedCalendarRows(events, recurring));
       setActiveExpiry(expiryEvent);
+      setExpiresCount(countActiveLinkedExpiryEvents(events));
       onActiveExpiryChange?.(expiryEvent);
     } catch {
       setRows([]);
       setActiveExpiry(null);
+      setExpiresCount(0);
       setLoadError(true);
       onActiveExpiryChange?.(null);
     } finally {
@@ -76,15 +78,10 @@ export function useLinkedCalendarRows({
     void reload();
   }, [reload, refreshKey]);
 
-  const expiryPreview = useMemo(
-    () => deriveLinkedExpiryPreview(activeExpiry, itemExpiresAt, remindBeforeDays),
-    [activeExpiry, itemExpiresAt, remindBeforeDays],
-  );
-
   return {
     rows,
     activeExpiry,
-    expiryPreview,
+    expiresCount,
     loading,
     loadError,
     createLocked,

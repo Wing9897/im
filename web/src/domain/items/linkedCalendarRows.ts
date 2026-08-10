@@ -1,6 +1,7 @@
 import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types";
 import { findActiveLinkedExpiryEvent } from "./linkedCalendarQuickCreate";
+import { isExpiresCalendarEvent } from "../timeline/userEventCalendarKind";
 import { resolveItemCardExpiry, type ItemCardExpiry } from "./itemCardExpiry";
 import { formatDateOnly, formatDateTime } from "../../utils/dateFormat";
 
@@ -70,21 +71,22 @@ export function toLinkedRecurringRow(task: AnalysisTask): LinkedCalendarRow {
   };
 }
 
-/** Merge one-off events + recurring tasks, excluding active expiry; sort by sortKey. */
+/** Merge one-off events + recurring tasks (all kinds share one chip list); sort by sortKey. */
 export function mergeLinkedCalendarRows(
   events: readonly UserEvent[],
   recurring: readonly AnalysisTask[],
-  expiryEvent: UserEvent | null = findActiveLinkedExpiryEvent(events),
 ): LinkedCalendarRow[] {
   const merged: LinkedCalendarRow[] = [
-    ...events
-      .filter((event) => !expiryEvent || event.id !== expiryEvent.id)
-      .filter((event) => !event.dismissed)
-      .map(toLinkedOneOffRow),
+    ...events.filter((event) => !event.dismissed).map(toLinkedOneOffRow),
     ...recurring.map(toLinkedRecurringRow),
   ];
   merged.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
   return merged;
+}
+
+/** Count active (non-dismissed) ``kind=expires`` milestones — drives Primary badge. */
+export function countActiveLinkedExpiryEvents(events: readonly UserEvent[]): number {
+  return events.filter((event) => !event.dismissed && isExpiresCalendarEvent(event)).length;
 }
 
 export function resolveActiveLinkedExpiry(events: readonly UserEvent[]): UserEvent | null {

@@ -1,4 +1,5 @@
 import { CalendarClock, CalendarDays, Repeat2, ShoppingBag } from "lucide-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { UserEvent } from "../../../api/userEvents";
@@ -9,16 +10,11 @@ import {
   linkedCalendarAddChipLabelKey,
   type LinkedCalendarQuickKind,
 } from "../../../domain/items/linkedCalendarQuickCreate";
-import {
-  expiryToneBadgeTone,
-  type ExpiryTone,
-} from "../../../domain/items/itemAttributes";
-import {
-  itemCardExpirySubtitle,
-  itemExpiryBadgeLabel,
-  type ItemCardExpiry,
-} from "../../../domain/items/itemCardExpiry";
 import type { LinkedCalendarRow } from "../../../domain/items/linkedCalendarRows";
+import {
+  isExpiresCalendarEvent,
+  isPurchaseEffectiveCalendarEvent,
+} from "../../../domain/timeline/userEventCalendarKind";
 import { ItemFormCvSection } from "./ItemFormCvSection";
 import { ItemFormDashedAddChip } from "./ItemFormDashedAddChip";
 import {
@@ -68,64 +64,83 @@ function quickAddChipIcon(kind: LinkedCalendarQuickKind) {
   }
 }
 
-function LinkedExpiryIconChip({
+function oneOffChipIcon(event: UserEvent): ReactNode {
+  if (isExpiresCalendarEvent(event)) {
+    return <CalendarClock size={16} strokeWidth={1.75} aria-hidden />;
+  }
+  if (isPurchaseEffectiveCalendarEvent(event)) {
+    return <ShoppingBag size={16} strokeWidth={1.75} aria-hidden />;
+  }
+  return <CalendarDays size={16} strokeWidth={1.75} aria-hidden />;
+}
+
+function LinkedCalendarKindBadges({
   event,
-  expiry,
-  disabled,
-  onEdit,
-  onDelete,
+  primaryExpiryId,
+  markPrimaryExpiry,
 }: {
   event: UserEvent;
-  expiry: ItemCardExpiry;
-  disabled: boolean;
-  onEdit?: (event: UserEvent) => void;
-  onDelete?: (event: UserEvent) => void;
+  primaryExpiryId: string | null;
+  markPrimaryExpiry: boolean;
 }) {
   const { t } = useTranslation("items");
-  const badge = itemExpiryBadgeLabel(expiry, t);
-  const subtitle = itemCardExpirySubtitle(expiry, t);
-  const tone: ExpiryTone = expiry.tone;
+  const badges: ReactNode[] = [];
 
-  return (
-    <ItemFormIconChip
-      variant="expiry"
-      interactive
-      disabled={disabled}
-      icon={<CalendarClock size={16} strokeWidth={1.75} aria-hidden />}
-      label={t("quickLinkedCalendar.expires")}
-      sublabel={subtitle}
-      title={t("linkedExpiryFeatureTitle")}
-      testId="item-form-linked-expiry-row"
-      labelTestId="item-linked-calendar-title"
-      onClick={() => onEdit?.(event)}
-      onDelete={onDelete ? () => onDelete(event) : undefined}
-      deleteAriaLabel={t("deleteLinkedCalendarAria", {
-        name: t("quickLinkedCalendar.expires"),
-      })}
-      deleteTestId="item-form-linked-expiry-delete"
-      badge={
-        badge ? (
-          <Badge
-            tone={expiryToneBadgeTone(tone)}
-            className="max-w-full truncate normal-case tracking-normal"
-            data-testid="item-form-expiry-badge-preview"
-          >
-            {badge}
-          </Badge>
-        ) : undefined
-      }
-    />
-  );
+  if (isExpiresCalendarEvent(event)) {
+    badges.push(
+      <Badge
+        key="expires"
+        tone="warning"
+        className="max-w-full truncate normal-case tracking-normal"
+        data-testid="item-linked-calendar-badge-expires"
+      >
+        {t("linkedCalendarBadge.expires")}
+      </Badge>,
+    );
+    if (markPrimaryExpiry && primaryExpiryId != null && event.id === primaryExpiryId) {
+      badges.push(
+        <Badge
+          key="primary"
+          tone="accent"
+          className="max-w-full truncate normal-case tracking-normal"
+          data-testid="item-linked-calendar-badge-primary"
+        >
+          {t("linkedCalendarBadge.primary")}
+        </Badge>,
+      );
+    }
+  }
+
+  if (isPurchaseEffectiveCalendarEvent(event)) {
+    const direction = event.direction === "income" ? "income" : "expense";
+    badges.push(
+      <Badge
+        key="finance"
+        tone={direction === "income" ? "success" : "neutral"}
+        className="max-w-full truncate normal-case tracking-normal"
+        data-testid={`item-linked-calendar-badge-${direction}`}
+      >
+        {t(`finance.direction.${direction}`)}
+      </Badge>,
+    );
+  }
+
+  if (badges.length === 0) return null;
+  return <span className="flex max-w-full flex-wrap justify-center gap-0.5">{badges}</span>;
 }
 
 function LinkedCalendarIconChip({
   row,
+  primaryExpiryId,
+  markPrimaryExpiry,
   disabled,
   onEdit,
   onDeleteOneOff,
   onDeleteRecurring,
 }: {
   row: LinkedCalendarRow;
+  primaryExpiryId: string | null;
+  markPrimaryExpiry: boolean;
   disabled: boolean;
   onEdit?: (event: UserEvent) => void;
   onDeleteOneOff?: (event: UserEvent) => void;
@@ -137,7 +152,7 @@ function LinkedCalendarIconChip({
     row.kind === "recurring" ? (
       <Repeat2 size={15} strokeWidth={1.75} aria-hidden />
     ) : (
-      <CalendarDays size={16} strokeWidth={1.75} aria-hidden />
+      oneOffChipIcon(row.event)
     );
 
   const onDelete =
@@ -146,6 +161,12 @@ function LinkedCalendarIconChip({
       : row.kind === "recurring" && onDeleteRecurring
         ? () => onDeleteRecurring(row.taskId, row.title)
         : undefined;
+
+  const isPrimaryExpiry =
+    row.kind === "oneOff" &&
+    primaryExpiryId != null &&
+    row.event.id === primaryExpiryId &&
+    isExpiresCalendarEvent(row.event);
 
   return (
     <ItemFormIconChip
@@ -156,15 +177,26 @@ function LinkedCalendarIconChip({
       sublabel={row.detail}
       title={row.title}
       testId={
-        row.kind === "oneOff"
-          ? "item-linked-calendar-row-one-off"
-          : "item-linked-calendar-row-recurring"
+        isPrimaryExpiry
+          ? "item-form-linked-expiry-row"
+          : row.kind === "oneOff"
+            ? "item-linked-calendar-row-one-off"
+            : "item-linked-calendar-row-recurring"
       }
       labelTestId="item-linked-calendar-title"
       kindTestId={
         row.kind === "recurring"
           ? "item-linked-calendar-badge-recurring"
           : "item-linked-calendar-badge-one-off"
+      }
+      badge={
+        row.kind === "oneOff" ? (
+          <LinkedCalendarKindBadges
+            event={row.event}
+            primaryExpiryId={primaryExpiryId}
+            markPrimaryExpiry={markPrimaryExpiry}
+          />
+        ) : undefined
       }
       onClick={
         editable && row.kind === "oneOff"
@@ -174,9 +206,11 @@ function LinkedCalendarIconChip({
       onDelete={onDelete}
       deleteAriaLabel={t("deleteLinkedCalendarAria", { name: row.title })}
       deleteTestId={
-        row.kind === "oneOff"
-          ? "item-form-linked-calendar-delete-one-off"
-          : "item-form-linked-calendar-delete-recurring"
+        isPrimaryExpiry
+          ? "item-form-linked-expiry-delete"
+          : row.kind === "oneOff"
+            ? "item-form-linked-calendar-delete-one-off"
+            : "item-form-linked-calendar-delete-recurring"
       }
     />
   );
@@ -201,11 +235,10 @@ export function ItemFormLinkedCalendarsSection({
   const {
     rows,
     activeExpiry,
-    expiryPreview,
+    expiresCount,
     loading,
     loadError,
     createLocked,
-    hasPrimaryExpiry,
   } = useLinkedCalendarRows({
     itemId,
     itemExpiresAt,
@@ -215,10 +248,12 @@ export function ItemFormLinkedCalendarsSection({
   });
 
   const showGrid = createLocked || (!loading && !loadError);
-  const showEmptyHint = showGrid && !createLocked && rows.length === 0 && hasPrimaryExpiry;
+  const showEmptyHint = showGrid && !createLocked && !loading && !loadError && rows.length === 0;
   const chipsDisabled = disabled || !canAdd;
   /** Create mode without a title: one short line; chips stay disabled. Auto-save needs no essay. */
   const showTitleRequiredHint = createLocked && !canAdd;
+  const markPrimaryExpiry = expiresCount > 1;
+  const primaryExpiryId = activeExpiry?.id ?? null;
 
   return (
     <ItemFormCvSection
@@ -243,21 +278,13 @@ export function ItemFormLinkedCalendarsSection({
             data-testid="item-form-linked-calendar-grid"
             aria-label={t("linkedCalendarGridAria")}
           >
-            {!createLocked && hasPrimaryExpiry && activeExpiry ? (
-              <LinkedExpiryIconChip
-                event={activeExpiry}
-                expiry={expiryPreview}
-                disabled={chipsDisabled}
-                onEdit={onEditOneOff}
-                onDelete={onDeleteOneOff}
-              />
-            ) : null}
-
             {!createLocked
               ? rows.map((row) => (
                   <LinkedCalendarIconChip
                     key={row.id}
                     row={row}
+                    primaryExpiryId={primaryExpiryId}
+                    markPrimaryExpiry={markPrimaryExpiry}
                     disabled={chipsDisabled}
                     onEdit={onEditOneOff}
                     onDeleteOneOff={onDeleteOneOff}
@@ -270,7 +297,6 @@ export function ItemFormLinkedCalendarsSection({
               ? LINKED_CALENDAR_QUICK_KINDS.map((kind) => (
                   <ItemFormDashedAddChip
                     key={kind}
-                    variant={kind === "expires" ? "expiry" : undefined}
                     disabled={chipsDisabled}
                     icon={quickAddChipIcon(kind)}
                     label={t(linkedCalendarAddChipLabelKey(kind))}
@@ -295,21 +321,6 @@ export function ItemFormLinkedCalendarsSection({
         {showEmptyHint ? (
           <p className={itemFormEmptyHintClass} data-testid="item-form-linked-calendars-empty">
             {t("linkedCalendarsEmpty")}
-          </p>
-        ) : null}
-
-        {!createLocked && hasPrimaryExpiry && activeExpiry ? (
-          <p
-            className={itemFormSecondaryHintClass}
-            data-testid="item-form-linked-expiry-callout"
-          >
-            {t("linkedExpiryBadgeCalloutShort")}
-          </p>
-        ) : null}
-
-        {!createLocked && !hasPrimaryExpiry && !loading ? (
-          <p className={itemFormSecondaryHintClass} data-testid="item-form-linked-expiry-panel">
-            {t("linkedExpiryFeatureHint")}
           </p>
         ) : null}
 

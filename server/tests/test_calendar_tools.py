@@ -342,6 +342,8 @@ async def test_create_update_delete_user_event_tools(app) -> None:
     assert item["title"] == "助手建立的會議"
     assert item["source"] == "user"
     assert item["origin"] == "assistant"
+    assert item["kind"] == "normal"
+    assert item.get("amount") is None
     event_id = item["id"]
 
     updated = await execute_calendar_tool(

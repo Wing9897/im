@@ -64,6 +64,9 @@ async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, An
             "location": str(args.get("location") or ""),
             "origin": origin,
             "task_id": _tool_task_id(args),
+            # Special linked-calendar kinds (expires / purchase_effective) + amount
+            # are Items UI only — agent always creates generic timeline events.
+            "kind": "normal",
         }
         if workset_id is not None:
             create_kwargs["workset_id"] = workset_id

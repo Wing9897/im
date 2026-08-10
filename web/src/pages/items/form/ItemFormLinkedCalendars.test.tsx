@@ -325,11 +325,12 @@ describe("ItemForm linked calendars", () => {
     );
   });
 
-  it("shows expiry panel with badge callout when linked expiry exists", async () => {
+  it("shows unified expiry chip with kind badge and no feature callout", async () => {
     listUserEvents.mockResolvedValueOnce([
       {
         id: "ue-exp",
         title: "到期",
+        kind: "expires",
         startTime: "2026-08-01T00:00:00Z",
         endTime: null,
         body: "",
@@ -343,7 +344,7 @@ describe("ItemForm linked calendars", () => {
         source: "user",
         dismissed: false,
         important: false,
-        createdAt: "",
+        createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
     ]);
@@ -351,8 +352,100 @@ describe("ItemForm linked calendars", () => {
     await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
 
     expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="item-form-linked-expiry-callout"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-expires"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-primary"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-linked-expiry-delete"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-callout"]')).toBeNull();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-panel"]')).toBeNull();
+  });
+
+  it("marks primary expiry when multiple expires exist", async () => {
+    listUserEvents.mockResolvedValueOnce([
+      {
+        id: "ue-exp-1",
+        title: "到期",
+        kind: "expires",
+        startTime: "2026-08-01T00:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: true,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "",
+      },
+      {
+        id: "ue-exp-2",
+        title: "Expires",
+        kind: "expires",
+        startTime: "2026-09-01T00:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: true,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "2026-02-01T00:00:00Z",
+        updatedAt: "",
+      },
+    ]);
+
+    await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
+
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeTruthy();
+    expect(document.querySelectorAll('[data-testid="item-linked-calendar-badge-expires"]').length).toBe(
+      2,
+    );
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-primary"]')?.textContent).toBe(
+      "linkedCalendarBadge.primary",
+    );
+    // Secondary expiry uses the shared one-off chip test id.
+    expect(document.querySelector('[data-testid="item-linked-calendar-row-one-off"]')).toBeTruthy();
+  });
+
+  it("shows purchase direction badge on purchase_effective chips", async () => {
+    listUserEvents.mockResolvedValueOnce([
+      {
+        id: "ue-buy",
+        title: "購入",
+        kind: "purchase_effective",
+        amount: 42,
+        direction: "income",
+        startTime: "2026-08-01T10:00:00Z",
+        endTime: null,
+        body: "",
+        location: null,
+        origin: "manual",
+        isAllDay: false,
+        remindBeforeDays: null,
+        taskId: "",
+        worksetId: SYSTEM_WORKSET_ID,
+        itemId: "item-42",
+        source: "user",
+        dismissed: false,
+        important: false,
+        createdAt: "",
+        updatedAt: "",
+      },
+    ]);
+
+    await renderForm({ item: makeItem({ id: "item-42" }) });
+
+    expect(document.querySelector('[data-testid="item-linked-calendar-badge-income"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-panel"]')).toBeNull();
   });
 
   it("soft-deletes a linked one-off calendar after confirm", async () => {
@@ -410,6 +503,7 @@ describe("ItemForm linked calendars", () => {
     ).toBeTruthy();
     expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-linked-expiry-callout"]')).toBeNull();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-panel"]')).toBeNull();
   });
 
   it("allows creating another expiry calendar when one already exists", async () => {
