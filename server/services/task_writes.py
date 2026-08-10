@@ -13,11 +13,11 @@ import re
 from typing import Any
 
 from server.calendar.rrule import RruleValidationError, validate_rrule
+from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR
 from server.domain.analysis_modes import (
     AGENT_MODE,
     CHILD_RECURRING_MODE,
 )
-from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR
 from server.time_iso import parse_iso
 
 #: Only ``analysisMode=recurring`` may carry a recurrence; it is never an AI trigger.
@@ -118,12 +118,8 @@ def should_reset_agent_message_cursor(
     Soft policy: keep progress for rename / schedule / description-only edits.
     Reset when leaving message_cursor drain, changing goals (prompt), or rebinding sources.
     """
-    existing_cursor = (
-        existing_mode == AGENT_MODE and str(existing_trigger or "") == TRIGGER_MESSAGE_CURSOR
-    )
-    effective_cursor = (
-        effective_mode == AGENT_MODE and str(effective_trigger or "") == TRIGGER_MESSAGE_CURSOR
-    )
+    existing_cursor = existing_mode == AGENT_MODE and str(existing_trigger or "") == TRIGGER_MESSAGE_CURSOR
+    effective_cursor = effective_mode == AGENT_MODE and str(effective_trigger or "") == TRIGGER_MESSAGE_CURSOR
     if existing_cursor and not effective_cursor:
         return True
     if not effective_cursor:

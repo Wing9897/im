@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from server.db.database import Database
-from server.items.normalize import ItemValidationError, _UNSET
+from server.items.normalize import _UNSET, ItemValidationError
 from server.items.service import create_item, patch_item
 from server.queries.items_queries import fetch_expiring_items, fetch_item_row, fetch_item_rows
 from server.wire.serializers import serialize_item

@@ -96,21 +96,15 @@ def normalize_agent_task_spec(
         mode = TRIGGER_SCHEDULE
 
     if not out_cal and not out_ae:
-        raise AgentTaskSpecError(
-            "Agent tasks require at least one output: outputCalendar or outputAnalysisEvents"
-        )
+        raise AgentTaskSpecError("Agent tasks require at least one output: outputCalendar or outputAnalysisEvents")
 
     # Cursor drain is calendar-reconcile only; analysis-event output uses schedule/threshold.
     if mode == TRIGGER_MESSAGE_CURSOR and out_ae:
-        raise AgentTaskSpecError(
-            "triggerMode=message_cursor cannot be combined with outputAnalysisEvents"
-        )
+        raise AgentTaskSpecError("triggerMode=message_cursor cannot be combined with outputAnalysisEvents")
 
     # Rule 5: message_cursor requires channels when known at save time.
     if mode == TRIGGER_MESSAGE_CURSOR and has_channels is False:
-        raise AgentTaskSpecError(
-            "triggerMode=message_cursor requires at least one bound channel"
-        )
+        raise AgentTaskSpecError("triggerMode=message_cursor requires at least one bound channel")
 
     return AgentTaskSpec(
         trigger_mode=mode,  # type: ignore[arg-type]

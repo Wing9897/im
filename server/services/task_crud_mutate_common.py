@@ -33,8 +33,7 @@ def validate_agent_prompt(*, effective_mode: str, prompt: str) -> None:
         return
     if not prompt.strip():
         raise TaskWriteError(
-            "agent tasks require a non-empty promptTemplate "
-            "(goals / search / extraction rules for the Agent)"
+            "agent tasks require a non-empty promptTemplate (goals / search / extraction rules for the Agent)"
         )
 
 

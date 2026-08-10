@@ -107,4 +107,3 @@ def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }
-

@@ -13,12 +13,12 @@ from server.db.database import Database, TransactionDb
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
 from server.queries.tasks_queries import insert_analysis_task
-from server.scheduler.manager import SchedulerManager
 from server.scheduler.agent_tick import (
     MESSAGE_SUMMARY_LIMIT,
     build_agent_tick_seed,
     execute_agent_tick,
 )
+from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster
 from server.util import new_id, utc_now_iso
 

@@ -167,9 +167,7 @@ async def seed_database(db: Any) -> None:
     from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 
     _web_scout = agent_spec_to_db_kwargs(agent_preset_spec("web_scout"))
-    _project_reconcile = agent_spec_to_db_kwargs(
-        agent_preset_spec("project_reconcile", has_channels=True)
-    )
+    _project_reconcile = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
     # (id, name, mode, time_range, schedule_rrule, rrule, start, end, all_day,
     #  location, description, agent_policy_or_None)
     tasks = [

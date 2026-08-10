@@ -42,9 +42,7 @@ async def assert_no_duplicate_linked_expiry(
     if exclude_event_id:
         rows = [row for row in rows if str(row.get("id") or "") != exclude_event_id]
     if rows:
-        raise LinkedExpiryConflictError(
-            "item already has an active linked expiry calendar (到期 / Expires)"
-        )
+        raise LinkedExpiryConflictError("item already has an active linked expiry calendar (到期 / Expires)")
 
 
 def _date_prefix(raw: Any) -> str | None:

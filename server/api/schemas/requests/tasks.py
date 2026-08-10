@@ -9,14 +9,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from server.domain.agent_task_spec import TriggerMode
 from server.domain.analysis_modes import AnalysisMode
 from server.scheduler.task_schedule_overrides import (
+    AGENT_WAVE_INTERVAL_MAX,
+    AGENT_WAVE_INTERVAL_MIN,
     ANALYSIS_BATCH_LIMIT_MAX,
     ANALYSIS_BATCH_LIMIT_MIN,
     ANALYSIS_THRESHOLD_MAX,
     ANALYSIS_THRESHOLD_MIN,
     BATCH_OVERLAP_MAX,
     BATCH_OVERLAP_MIN,
-    AGENT_WAVE_INTERVAL_MAX,
-    AGENT_WAVE_INTERVAL_MIN,
 )
 
 
@@ -38,9 +38,7 @@ class TaskConfigBody(BaseModel):
     )
     includeInTimeline: bool | None = None
     isActive: bool | None = None
-    agentWaveIntervalSeconds: int | None = Field(
-        default=None, ge=AGENT_WAVE_INTERVAL_MIN, le=AGENT_WAVE_INTERVAL_MAX
-    )
+    agentWaveIntervalSeconds: int | None = Field(default=None, ge=AGENT_WAVE_INTERVAL_MIN, le=AGENT_WAVE_INTERVAL_MAX)
     batchOverlapCount: int | None = Field(default=None, ge=BATCH_OVERLAP_MIN, le=BATCH_OVERLAP_MAX)
     analysisTriggerThreshold: int | None = Field(default=None, ge=ANALYSIS_THRESHOLD_MIN, le=ANALYSIS_THRESHOLD_MAX)
     analysisBatchMessageLimit: int | None = Field(

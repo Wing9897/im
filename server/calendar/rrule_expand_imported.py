@@ -138,11 +138,7 @@ def _expand_imported_occurrences(
         task_id = str(task_value(task, "id") or "")
         task_name = str(task_value(task, "name") or "")
         raw_item = task_value(task, "item_id")
-        item_id = (
-            str(raw_item).strip()
-            if isinstance(raw_item, str) and str(raw_item).strip()
-            else None
-        )
+        item_id = str(raw_item).strip() if isinstance(raw_item, str) and str(raw_item).strip() else None
         built: list[tuple[Any, dict[str, Any]]] = []
         for occurrence in raw_occurrences:
             if occurrence > window_end + timedelta(seconds=1):

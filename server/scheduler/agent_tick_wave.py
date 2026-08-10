@@ -113,9 +113,7 @@ async def _run_one_wave(
     """Execute one LLM wave; advance the message cursor only after success."""
     resolved_spec = spec or agent_task_spec_from_row(task, has_channels=True)
     calendar_summary = (
-        await _calendar_summary(db, task_id)
-        if resolved_spec.cap_calendar_read
-        else "(calendar read disabled)"
+        await _calendar_summary(db, task_id) if resolved_spec.cap_calendar_read else "(calendar read disabled)"
     )
     if isinstance(cursor, AgentMessageCursor):
         cursor_label = cursor.timestamp

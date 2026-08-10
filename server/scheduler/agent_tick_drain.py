@@ -24,9 +24,9 @@ from server.queries.agent_tick_queries import (
     fetch_agent_messages_since,
     update_agent_batch_message_count,
 )
-from server.scheduler.batch_claim import load_task
 from server.scheduler.agent_tick_format import MESSAGE_SUMMARY_LIMIT
 from server.scheduler.agent_tick_wave import _run_one_wave
+from server.scheduler.batch_claim import load_task
 
 logger = logging.getLogger(__name__)
 

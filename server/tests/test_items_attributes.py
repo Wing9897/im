@@ -6,6 +6,7 @@ import pytest
 
 from server.worksets_const import SYSTEM_WORKSET_ID
 
+
 async def test_items_change_category_keeps_attributes(client):
     cats = await client.get("/api/v1/items/categories")
     assert cats.status_code == 200
@@ -319,7 +320,7 @@ async def test_patch_item_workset_syncs_linked_calendars(client):
         },
     )
     assert recurring.status_code == 201
-    task_id = recurring.json()["id"]
+    assert recurring.json()["id"]
 
     patched = await client.patch(
         f"/api/v1/items/{item_id}",

@@ -209,12 +209,8 @@ async def create_item(
     clean_attrs = normalize_attributes(attributes)
     if clean_category is not None:
         category_row = await fetch_category_row(db, clean_category)
-        schema = parse_field_schema_json(
-            category_row.get("field_schema") if category_row is not None else None
-        )
-        clean_attrs = normalize_attributes(
-            seed_attributes_from_field_schema(clean_attrs, schema)
-        )
+        schema = parse_field_schema_json(category_row.get("field_schema") if category_row is not None else None)
+        clean_attrs = normalize_attributes(seed_attributes_from_field_schema(clean_attrs, schema))
     item_id = new_id()
     now = utc_now_iso()
     async with db.transaction() as conn:

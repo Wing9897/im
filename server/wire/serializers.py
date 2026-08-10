@@ -9,14 +9,18 @@ from server.wire.serializer_domains.calendar import (
     serialize_trending_topic,
     serialize_user_event,
 )
+from server.wire.serializer_domains.items import (
+    serialize_item,
+    serialize_item_category,
+)
 from server.wire.serializer_domains.operations import (
     serialize_action,
     serialize_action_trigger_history,
     serialize_activity_span,
-    serialize_app_log,
-    serialize_batch_tool_calls,
     serialize_agent_tick_in_flight,
     serialize_agent_tick_log_entry,
+    serialize_app_log,
+    serialize_batch_tool_calls,
     serialize_queue_batch,
 )
 from server.wire.serializer_domains.sources import (
@@ -25,10 +29,6 @@ from server.wire.serializer_domains.sources import (
     serialize_channel_ref,
     serialize_message,
     serialize_source,
-)
-from server.wire.serializer_domains.items import (
-    serialize_item,
-    serialize_item_category,
 )
 from server.wire.serializer_domains.tasks import (
     serialize_task,

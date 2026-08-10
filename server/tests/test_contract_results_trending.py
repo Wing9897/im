@@ -34,4 +34,3 @@ async def test_trending_topic_messages(client):
     body = resp.json()
     assert len(body) == 1
     assert_keys(body[0], MESSAGE_KEYS, "topic Message")
-

@@ -6,9 +6,9 @@ import pytest
 
 from server.config import set_configs
 from server.scheduler.task_schedule_overrides import (
+    resolve_agent_wave_interval_seconds,
     resolve_batch_message_limit,
     resolve_batch_overlap_count,
-    resolve_agent_wave_interval_seconds,
     resolve_strategy_mode,
     resolve_trigger_threshold,
 )

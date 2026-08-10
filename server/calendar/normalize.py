@@ -119,11 +119,7 @@ def build_occurrence_item(
 ) -> dict[str, Any]:
     """RRULE occurrence as a calendar item (already camelCase from expansion)."""
     raw_item_id = occ.get("itemId")
-    item_id = (
-        str(raw_item_id).strip()
-        if isinstance(raw_item_id, str) and str(raw_item_id).strip()
-        else None
-    )
+    item_id = str(raw_item_id).strip() if isinstance(raw_item_id, str) and str(raw_item_id).strip() else None
     item = {
         "id": str(occ["id"]),
         "taskId": str(occ.get("taskId") or ""),

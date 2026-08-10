@@ -27,11 +27,7 @@ router = APIRouter(prefix="/user-events", tags=["calendar"])
 
 
 def _http_from_validation(exc: UserEventValidationError) -> HTTPException:
-    status = (
-        400
-        if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError, UserEventItemIdError))
-        else 422
-    )
+    status = 400 if isinstance(exc, (UserEventTaskIdError, UserEventWorksetIdError, UserEventItemIdError)) else 422
     return http_error(status, str(exc), error_code=VALIDATION_ERROR)
 
 

@@ -6,8 +6,8 @@ from dataclasses import dataclass, replace
 from typing import Literal
 
 from server.domain.agent_task_spec import AgentTaskSpec
-from server.prompts.assistant import A2A_AGENT_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT
 from server.prompts.agent_task import AGENT_TASK_SYSTEM_PROMPT_BASE
+from server.prompts.assistant import A2A_AGENT_SYSTEM_PROMPT, AGENT_SYSTEM_PROMPT
 
 AgentChannelId = Literal["assistant", "a2a", "agent"]
 

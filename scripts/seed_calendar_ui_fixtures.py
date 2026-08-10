@@ -20,11 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
-from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.user_events import create_user_event
 from server.db.database import Database, TransactionDb
+from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.items.linked_dates import reconcile_item_linked_dates
 from server.items.service import create_item
 from server.paths import default_db_path
@@ -55,8 +55,7 @@ async def _clean(db: Database) -> None:
     )
     # Linked milestone events are titled「到期」/「購入」(no [cal-ui] prefix).
     await db.execute(
-        "DELETE FROM user_events WHERE item_id IN "
-        "(SELECT id FROM items WHERE title LIKE ?)",
+        "DELETE FROM user_events WHERE item_id IN (SELECT id FROM items WHERE title LIKE ?)",
         (f"{PREFIX}%",),
     )
     await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
@@ -104,9 +103,7 @@ async def _ensure_intel_tasks(db: Database) -> None:
         row = await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (task_id,))
         if row:
             continue
-        policy = agent_spec_to_db_kwargs(
-            agent_preset_spec(preset, has_channels=preset == "project_reconcile")
-        )
+        policy = agent_spec_to_db_kwargs(agent_preset_spec(preset, has_channels=preset == "project_reconcile"))
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
             "analysis_time_range, version, is_active, include_in_timeline, "

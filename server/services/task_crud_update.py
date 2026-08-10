@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from server.api.channel_refs import parse_channel_refs
 from server.api.routes.task_helpers import (
     TaskConfigBody,
@@ -92,15 +90,9 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         fields_set=body.model_fields_set,
     )
 
-    existing_was_agent_parent = existing_mode == AGENT_MODE and bool(
-        existing.get("output_calendar")
-    )
+    existing_was_agent_parent = existing_mode == AGENT_MODE and bool(existing.get("output_calendar"))
     leaving_agent_parent = existing_was_agent_parent and (
-        effective_mode != AGENT_MODE
-        or (
-            "outputCalendar" in body.model_fields_set
-            and body.outputCalendar is False
-        )
+        effective_mode != AGENT_MODE or ("outputCalendar" in body.model_fields_set and body.outputCalendar is False)
     )
 
     channels_changed = False
@@ -170,9 +162,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         if refs is not None:
             await replace_task_channels(tx, task_id, refs)
 
-        if leaving_agent_parent or (
-            existing_mode == AGENT_MODE and effective_mode != AGENT_MODE
-        ):
+        if leaving_agent_parent or (existing_mode == AGENT_MODE and effective_mode != AGENT_MODE):
             await clear_children_parent_links(tx, task_id, now=now)
         if existing_mode == CHILD_RECURRING_MODE:
             await tx.execute("DELETE FROM recurring_schedules WHERE task_id = ?", (task_id,))
