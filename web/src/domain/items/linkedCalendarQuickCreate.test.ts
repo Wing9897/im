@@ -11,25 +11,28 @@ import {
 } from "./linkedCalendarQuickCreate";
 
 describe("linkedCalendarQuickCreate", () => {
-  it("exposes only the expiry quick preset", () => {
-    expect(LINKED_CALENDAR_QUICK_KINDS).toEqual(["expires"]);
+  it("exposes expiry, other, and purchase/effective quick presets", () => {
+    expect(LINKED_CALENDAR_QUICK_KINDS).toEqual(["expires", "other", "purchaseEffective"]);
   });
 
-  it("maps label keys and all-day preset for expiry", () => {
+  it("maps label keys and all-day preset for expiry only", () => {
     for (const kind of LINKED_CALENDAR_QUICK_KINDS) {
       expect(linkedCalendarQuickLabelKey(kind)).toBe(`quickLinkedCalendar.${kind}`);
     }
     expect(linkedCalendarQuickIsAllDay("expires")).toBe(true);
+    expect(linkedCalendarQuickIsAllDay("other")).toBe(false);
+    expect(linkedCalendarQuickIsAllDay("purchaseEffective")).toBe(false);
   });
 
-  it("detects linked expiry titles and active events", () => {
+  it("detects linked expiry titles and picks primary by createdAt", () => {
     expect(isLinkedExpiryTitle("到期")).toBe(true);
     expect(isLinkedExpiryTitle("Expires")).toBe(true);
     expect(isLinkedExpiryTitle("Renewal")).toBe(false);
 
     const events = [
-      { id: "a", title: "到期", dismissed: false },
-      { id: "b", title: "Other", dismissed: false },
+      { id: "b", title: "Expires", dismissed: false, createdAt: "2026-02-01T00:00:00Z" },
+      { id: "a", title: "到期", dismissed: false, createdAt: "2026-01-01T00:00:00Z" },
+      { id: "c", title: "Other", dismissed: false, createdAt: "2025-01-01T00:00:00Z" },
     ] as Parameters<typeof findActiveLinkedExpiryEvent>[0];
     expect(findActiveLinkedExpiryEvent(events)?.id).toBe("a");
     expect(
@@ -39,11 +42,12 @@ describe("linkedCalendarQuickCreate", () => {
     ).toBeNull();
   });
 
-  it("prefills timed create defaults without a quick kind", () => {
+  it("prefills timed create defaults for other kind", () => {
     const now = new Date(2026, 7, 6, 14, 30, 0);
     const initial = buildLinkedCalendarCreateInitial({
       itemId: "item-1",
       worksetId: "ws-1",
+      kind: "other",
       now,
     });
     expect(initial).toEqual(
@@ -79,7 +83,21 @@ describe("linkedCalendarQuickCreate", () => {
     expect(initial).not.toHaveProperty("endTime");
   });
 
-  it("prefills remindBeforeDays from category default on create", () => {
+  it("prefills timed range for purchaseEffective kind", () => {
+    const now = new Date(2026, 7, 6, 14, 30, 0);
+    const initial = buildLinkedCalendarCreateInitial({
+      itemId: "item-1",
+      worksetId: "ws-1",
+      title: "Purchased",
+      kind: "purchaseEffective",
+      now,
+    });
+    expect(initial.isAllDay).toBe(false);
+    expect(initial.title).toBe("Purchased");
+    expect(initial.endTime).toBeTruthy();
+  });
+
+  it("prefills remindBeforeDays from category default on expiry create", () => {
     const initial = buildLinkedCalendarCreateInitial({
       itemId: "item-1",
       worksetId: "ws-1",

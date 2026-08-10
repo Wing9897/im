@@ -112,14 +112,16 @@ export function cleanupItemFormDialogs(): void {
 }
 
 export function commitItemTitle(value: string): void {
-  const editBtn = document.querySelector(
-    '[data-testid="item-form-cv-title-edit"]',
-  ) as HTMLButtonElement;
-  act(() => {
-    editBtn.click();
-  });
-
-  const title = document.getElementById("item-title") as HTMLInputElement;
+  let title = document.getElementById("item-title") as HTMLInputElement | null;
+  if (!title) {
+    const editBtn = document.querySelector(
+      '[data-testid="item-form-cv-title-edit"]',
+    ) as HTMLButtonElement;
+    act(() => {
+      editBtn.click();
+    });
+    title = document.getElementById("item-title") as HTMLInputElement;
+  }
   expect(title).toBeTruthy();
 
   act(() => {
@@ -128,9 +130,11 @@ export function commitItemTitle(value: string): void {
       value,
     );
     title.dispatchEvent(new Event("input", { bubbles: true }));
-    title.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
-    );
+    if (document.querySelector('[data-testid="item-form-cv-title-edit"]')) {
+      title.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),
+      );
+    }
   });
 }
 

@@ -397,8 +397,8 @@ async def test_list_items_linked_expiry_drives_expires_at(client):
 
 
 @pytest.mark.asyncio
-async def test_reject_duplicate_linked_expiry_on_same_item(client):
-    """Only one active linked「到期」/ Expires calendar per item."""
+async def test_multiple_linked_expiry_primary_is_first_created(client, app):
+    """Multiple linked expiries allowed; item cache follows earliest created_at primary."""
     created = await client.post("/api/v1/items", json={"title": "Milk"})
     assert created.status_code == 201
     item_id = created.json()["id"]
@@ -406,13 +406,20 @@ async def test_reject_duplicate_linked_expiry_on_same_item(client):
     first = await client.post(
         "/api/v1/calendar/user-events",
         json={
-            "title": "到期",
+            "title": "Expires",
             "startTime": "2026-08-01T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
+            "remindBeforeDays": 2,
         },
     )
     assert first.status_code == 201
+    first_id = first.json()["id"]
+
+    await app.state.db.execute(
+        "UPDATE user_events SET created_at = ? WHERE id = ?",
+        ("2026-01-01T00:00:00.000Z", first_id),
+    )
 
     second = await client.post(
         "/api/v1/calendar/user-events",
@@ -421,10 +428,37 @@ async def test_reject_duplicate_linked_expiry_on_same_item(client):
             "startTime": "2026-08-10T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
+            "remindBeforeDays": 9,
         },
     )
-    assert second.status_code == 422
-    assert "expiry" in second.json()["message"].lower()
+    assert second.status_code == 201
+    second_id = second.json()["id"]
+
+    await app.state.db.execute(
+        "UPDATE user_events SET created_at = ? WHERE id = ?",
+        ("2026-02-01T00:00:00.000Z", second_id),
+    )
+
+    from server.items.linked_dates import reconcile_item_linked_dates
+
+    await reconcile_item_linked_dates(app.state.db, item_id)
+
+    fetched = await client.get(f"/api/v1/items/{item_id}")
+    assert fetched.status_code == 200
+    assert fetched.json()["expiresAt"] == "2026-08-01"
+    assert fetched.json()["remindBeforeDays"] == 2
+
+    deleted = await client.delete(f"/api/v1/calendar/user-events/{first_id}")
+    assert deleted.status_code == 204
+
+    promoted = await client.get(f"/api/v1/items/{item_id}")
+    assert promoted.status_code == 200
+    assert promoted.json()["expiresAt"] == "2026-08-10"
+    assert promoted.json()["remindBeforeDays"] == 9
+
+    # Sanity: second event still exists
+    ev = await client.get(f"/api/v1/calendar/user-events/{second_id}")
+    assert ev.status_code == 200
 
 
 @pytest.mark.asyncio

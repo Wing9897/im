@@ -96,7 +96,7 @@ describe("ItemForm linked calendars", () => {
     expect(document.body.textContent).toContain("Weekly check");
 
     const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
+      '[data-testid="item-form-quick-linked-calendar-other"]',
     ) as HTMLButtonElement | null;
     expect(addCal).toBeTruthy();
 
@@ -160,14 +160,18 @@ describe("ItemForm linked calendars", () => {
     expect(
       document.querySelector('[data-testid="item-form-linked-calendars-create-hint"]')?.textContent,
     ).toBe("linkedCalendarsTitleRequiredHint");
-    const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
-    ) as HTMLButtonElement | null;
     const expiresChip = document.querySelector(
       '[data-testid="item-form-quick-linked-calendar-expires"]',
     ) as HTMLButtonElement | null;
-    expect(addCal!.disabled).toBe(true);
+    const otherChip = document.querySelector(
+      '[data-testid="item-form-quick-linked-calendar-other"]',
+    ) as HTMLButtonElement | null;
+    const purchaseChip = document.querySelector(
+      '[data-testid="item-form-quick-linked-calendar-purchaseEffective"]',
+    ) as HTMLButtonElement | null;
     expect(expiresChip!.disabled).toBe(true);
+    expect(otherChip!.disabled).toBe(true);
+    expect(purchaseChip!.disabled).toBe(true);
     expect(listUserEvents).not.toHaveBeenCalled();
   });
 
@@ -183,7 +187,7 @@ describe("ItemForm linked calendars", () => {
     await commitItemTitle("New passport");
 
     const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
+      '[data-testid="item-form-quick-linked-calendar-other"]',
     ) as HTMLButtonElement | null;
     expect(addCal!.disabled).not.toBe(true);
 
@@ -230,16 +234,16 @@ describe("ItemForm linked calendars", () => {
     expect(remindInput?.value).toBe("90");
   });
 
-  it("prefills category default remind on add linked calendar", async () => {
+  it("prefills category default remind on add expiry calendar", async () => {
     await renderForm({
       item: makeItem({ id: "item-42", categoryId: "seed_food" }),
     });
 
-    const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
+    const expiresChip = document.querySelector(
+      '[data-testid="item-form-quick-linked-calendar-expires"]',
     ) as HTMLButtonElement | null;
     await act(async () => {
-      addCal!.click();
+      expiresChip!.click();
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -266,7 +270,7 @@ describe("ItemForm linked calendars", () => {
     });
 
     const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
+      '[data-testid="item-form-quick-linked-calendar-other"]',
     ) as HTMLButtonElement | null;
     await act(async () => {
       addCal!.click();
@@ -375,17 +379,23 @@ describe("ItemForm linked calendars", () => {
     confirmSpy.mockRestore();
   });
 
-  it("highlights Expires quick chip in grid when none exists", async () => {
+  it("shows three add chips when no primary expiry", async () => {
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
-    const expiresChip = document.querySelector(
-      '[data-testid="item-form-quick-linked-calendar-expires"]',
-    ) as HTMLButtonElement | null;
-    expect(expiresChip?.disabled).not.toBe(true);
+    expect(
+      document.querySelector('[data-testid="item-form-quick-linked-calendar-expires"]'),
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-testid="item-form-quick-linked-calendar-other"]'),
+    ).toBeTruthy();
+    expect(
+      document.querySelector('[data-testid="item-form-quick-linked-calendar-purchaseEffective"]'),
+    ).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-linked-expiry-callout"]')).toBeNull();
   });
 
-  it("blocks manual create with Expires title when one already exists", async () => {
+  it("allows creating another expiry calendar when one already exists", async () => {
     listUserEvents.mockResolvedValueOnce([
       {
         id: "ue-exp",
@@ -403,31 +413,23 @@ describe("ItemForm linked calendars", () => {
         source: "user",
         dismissed: false,
         important: false,
-        createdAt: "",
+        createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
     ]);
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
-    const addCal = document.querySelector(
-      '[data-testid="item-form-add-linked-calendar"]',
+    const expiresChip = document.querySelector(
+      '[data-testid="item-form-quick-linked-calendar-expires"]',
     ) as HTMLButtonElement | null;
     await act(async () => {
-      addCal!.click();
+      expiresChip!.click();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    const titleInput = document.querySelector(
-      '[data-testid="user-event-dialog"] input[aria-label="userEvent.titleAria"]',
-    ) as HTMLInputElement | null;
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
-      setter.call(titleInput, "Expires");
-      titleInput!.dispatchEvent(new Event("input", { bubbles: true }));
-      titleInput!.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    expect(document.querySelector('[data-testid="user-event-dialog"]')).toBeTruthy();
 
     const submit = Array.from(document.querySelectorAll("button")).find(
       (b) => b.textContent === "userEvent.create",
@@ -438,9 +440,6 @@ describe("ItemForm linked calendars", () => {
       await Promise.resolve();
     });
 
-    expect(createUserEvent).not.toHaveBeenCalled();
-    expect(document.querySelector('[role="alert"]')?.textContent).toBe(
-      "linkedExpiryAlreadyExistsError",
-    );
+    expect(createUserEvent).toHaveBeenCalled();
   });
 });

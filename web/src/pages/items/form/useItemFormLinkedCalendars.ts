@@ -14,7 +14,6 @@ import { createRecurringTimelineEvent } from "../../../domain/timeline/createRec
 import {
   buildLinkedCalendarCreateInitial,
   buildLinkedCalendarEditInitial,
-  isLinkedExpiryTitle,
   linkedCalendarQuickLabelKey,
   type LinkedCalendarFormInitial,
   type LinkedCalendarQuickKind,
@@ -94,16 +93,20 @@ export function useItemFormLinkedCalendars({
     if (formBusy) return;
     const resolvedItem = await resolveItem();
     if (!resolvedItem) return;
-    if (kind === "expires" && activeLinkedExpiry) return;
     setLinkedCalendarMode("create");
     setEditingLinkedEvent(null);
+    const quickKind = kind ?? "other";
+    const prefillTitle =
+      quickKind === "other"
+        ? ""
+        : t(linkedCalendarQuickLabelKey(quickKind));
     setLinkedCalendarInitial(
       buildLinkedCalendarCreateInitial({
         itemId: resolvedItem.id,
         worksetId: worksetId || resolvedItem.worksetId,
-        title: kind ? t(linkedCalendarQuickLabelKey(kind)) : "",
-        kind: kind ?? null,
-        defaultRemindBeforeDays,
+        title: prefillTitle,
+        kind: quickKind,
+        defaultRemindBeforeDays: quickKind === "expires" ? defaultRemindBeforeDays : null,
       }),
     );
     setLinkedCalendarError(null);
@@ -147,14 +150,6 @@ export function useItemFormLinkedCalendars({
         return;
       }
       if (linkedCalendarMode === "edit" && editingLinkedEvent) {
-        if (
-          isLinkedExpiryTitle(values.title) &&
-          activeLinkedExpiry &&
-          activeLinkedExpiry.id !== editingLinkedEvent.id
-        ) {
-          setLinkedCalendarError(t("linkedExpiryAlreadyExistsError"));
-          return;
-        }
         await updateUserEvent(
           editingLinkedEvent.id,
           linkedOneOffWriteParams(values, lockedItemId, ownedWorksetId, remind),
@@ -174,14 +169,6 @@ export function useItemFormLinkedCalendars({
         });
         showToast(tt("messages.recurringCreated"), "success");
       } else {
-        if (
-          isLinkedExpiryTitle(values.title) &&
-          activeLinkedExpiry &&
-          (!editingLinkedEvent || activeLinkedExpiry.id !== editingLinkedEvent.id)
-        ) {
-          setLinkedCalendarError(t("linkedExpiryAlreadyExistsError"));
-          return;
-        }
         await createUserEvent(
           linkedOneOffWriteParams(values, lockedItemId, ownedWorksetId, remind),
         );

@@ -281,7 +281,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
                 disabled={busy}
                 canAdd={canAddLinkedCalendar}
                 categoryDefaultRemindBeforeDays={category?.defaultRemindBeforeDays ?? null}
-                onAdd={() => void linked.openLinkedCalendarCreate()}
                 onQuickAdd={(kind) => void linked.openLinkedCalendarCreate(kind)}
                 onEditOneOff={(event) => {
                   linked.openLinkedCalendarEdit(event);

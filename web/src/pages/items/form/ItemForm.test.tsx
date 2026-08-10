@@ -211,14 +211,14 @@ describe("ItemForm", () => {
     ).toBe("A123456");
   });
 
-  it("create mode shows title display with edit button, not a direct input", async () => {
+  it("create mode shows editable title input directly", async () => {
     await renderForm({ item: null });
 
-    expect(document.getElementById("item-title")).toBeNull();
-    expect(document.querySelector('[data-testid="item-form-cv-title-edit"]')).toBeTruthy();
-    expect(
-      document.querySelector('[data-testid="item-form-cv-title-display"]')?.textContent,
-    ).toBe("titleField");
+    const title = document.getElementById("item-title") as HTMLInputElement;
+    expect(title).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-cv-title-edit"]')).toBeNull();
+    expect(document.querySelector('[data-testid="item-form-cv-title-display"]')).toBeNull();
+    expect(title.placeholder).toBe("titleField");
   });
 
   it("create mode seeds category preset keys into submit attributes", async () => {
