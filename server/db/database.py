@@ -1,7 +1,7 @@
 """aiosqlite connection wrapper with schema-fingerprint validation.
 
 Schema bootstrap／reject is delegated to ``server.db.schema_bootstrap``
-(wipe-only stamp-23; no migration registry). Destructive rebuild remains an
+(wipe-only stamp-24; no migration registry). Destructive rebuild remains an
 explicit reset operation (no auto-seed). See ``docs/ARCHITECTURE.md`` for the
 supported schema matrix.
 """

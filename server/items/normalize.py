@@ -23,7 +23,6 @@ NAME_MAX = 120
 EMOJI_MAX = 16
 UNIT_MAX = 32
 QUANTITY_MAX = 1_000_000_000
-PRICE_MAX = 1_000_000_000_000
 SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 ALLOWED_STATUSES = frozenset({"active", "archived"})
@@ -334,21 +333,6 @@ def normalize_unit(value: Any) -> str | None:
     if len(cleaned) > UNIT_MAX:
         raise ItemValidationError(f"unit must be <= {UNIT_MAX} characters")
     return cleaned
-
-
-def normalize_price(value: Any) -> float | None:
-    if value is None or value == "":
-        return None
-    try:
-        num = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ItemValidationError("price must be a number") from exc
-    if num < 0:
-        raise ItemValidationError("price must be >= 0")
-    if num > PRICE_MAX:
-        raise ItemValidationError(f"price must be <= {PRICE_MAX}")
-    # Store with at most two decimal places (money semantics).
-    return round(num, 2)
 
 
 def normalize_sort_order(value: Any) -> int:

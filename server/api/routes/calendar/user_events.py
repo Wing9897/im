@@ -79,6 +79,8 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
             "remind_before_days": body.remindBeforeDays,
             "task_id": body.taskId,
             "item_id": body.itemId,
+            "amount": body.amount,
+            "direction": body.direction,
         }
         if "worksetId" in fields_set:
             kwargs["workset_id"] = body.worksetId
@@ -122,6 +124,8 @@ async def patch_event(
         "taskId": "task_id",
         "itemId": "item_id",
         "worksetId": "workset_id",
+        "amount": "amount",
+        "direction": "direction",
     }
     kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}
 

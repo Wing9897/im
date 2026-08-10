@@ -89,6 +89,12 @@ def serialize_user_event(
             else None
         ),
         "worksetId": workset_id,
+        "amount": (float(row["amount"]) if row.get("amount") is not None else None),
+        "direction": (
+            str(row["direction"]).strip()
+            if isinstance(row.get("direction"), str) and str(row.get("direction")).strip()
+            else None
+        ),
         "source": "user",
         "dismissed": bool(dismissed),
         "important": bool(important),

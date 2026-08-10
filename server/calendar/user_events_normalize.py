@@ -17,6 +17,8 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 ALLOWED_ORIGINS = frozenset({"manual", "assistant", "a2a", "agent", "ics"})
 #: Tasks that may own a user_event (filter / timeline attribution).
 USER_EVENT_TASK_MODES = TIMELINE_OWNING_ANALYSIS_MODES
+ALLOWED_EVENT_DIRECTIONS = frozenset({"expense", "income"})
+AMOUNT_MAX = 1_000_000_000_000
 
 # Sentinel: field not provided in a partial update.
 _UNSET = object()
@@ -24,6 +26,33 @@ _UNSET = object()
 
 class UserEventValidationError(ValueError):
     """Invalid user-event fields."""
+
+
+def normalize_event_amount(value: Any) -> float | None:
+    """Optional transaction amount (money); null clears finance fields."""
+    if value is None or value == "":
+        return None
+    try:
+        num = float(value)
+    except (TypeError, ValueError) as exc:
+        raise UserEventValidationError("amount must be a number") from exc
+    if num < 0:
+        raise UserEventValidationError("amount must be >= 0")
+    if num > AMOUNT_MAX:
+        raise UserEventValidationError(f"amount must be <= {AMOUNT_MAX}")
+    return round(num, 2)
+
+
+def normalize_event_direction(value: Any, *, amount: float | None) -> str | None:
+    """``expense`` | ``income``; cleared when amount is null; defaults to expense."""
+    if amount is None:
+        return None
+    if value is None or value == "":
+        return "expense"
+    cleaned = str(value).strip().lower()
+    if cleaned not in ALLOWED_EVENT_DIRECTIONS:
+        raise UserEventValidationError("direction must be 'expense' or 'income'")
+    return cleaned
 
 
 class UserEventTaskIdError(UserEventValidationError):

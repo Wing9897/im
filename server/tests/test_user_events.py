@@ -20,6 +20,8 @@ USER_EVENT_KEYS = {
     "taskId",
     "itemId",
     "worksetId",
+    "amount",
+    "direction",
     "source",
     "dismissed",
     "important",
@@ -292,3 +294,46 @@ async def test_user_events_task_id_bind_and_reject(client, app) -> None:
         },
     )
     assert missing.status_code == 400
+
+
+async def test_user_events_amount_and_direction_roundtrip(client) -> None:
+    created = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Purchased",
+            "startTime": "2026-08-05T10:00:00Z",
+            "endTime": "2026-08-05T11:00:00Z",
+            "amount": 1280.5,
+        },
+    )
+    assert created.status_code == 201
+    body = created.json()
+    assert body["amount"] == 1280.5
+    assert body["direction"] == "expense"
+
+    event_id = body["id"]
+    patched = await client.patch(
+        f"/api/v1/calendar/user-events/{event_id}",
+        json={"direction": "income", "amount": 99},
+    )
+    assert patched.status_code == 200
+    assert patched.json()["amount"] == 99
+    assert patched.json()["direction"] == "income"
+
+    cleared = await client.patch(
+        f"/api/v1/calendar/user-events/{event_id}",
+        json={"amount": None},
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["amount"] is None
+    assert cleared.json()["direction"] is None
+
+    bad = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Purchased",
+            "startTime": "2026-08-05T10:00:00Z",
+            "amount": -1,
+        },
+    )
+    assert bad.status_code == 422

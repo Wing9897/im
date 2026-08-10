@@ -1,5 +1,7 @@
 """Calendar import, dismissal, and user-event request models."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -48,6 +50,8 @@ class UserEventCreateBody(BaseModel):
     taskId: str | None = None
     itemId: str | None = None
     worksetId: str | None = None
+    amount: float | None = None
+    direction: Literal["expense", "income"] | None = None
 
 
 class UserEventPatchBody(BaseModel):
@@ -63,3 +67,5 @@ class UserEventPatchBody(BaseModel):
     taskId: str | None = None
     itemId: str | None = None
     worksetId: str | None = None
+    amount: float | None = None
+    direction: Literal["expense", "income"] | None = None

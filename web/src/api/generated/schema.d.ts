@@ -3201,8 +3201,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Price */
-            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3253,8 +3251,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Price */
-            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -3282,8 +3278,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Price */
-            price?: number | null;
             /** Attributes */
             attributes?: {
                 [key: string]: string;
@@ -4236,6 +4230,10 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Direction */
+            direction?: ("expense" | "income") | null;
         };
         /** UserEventPatchBody */
         UserEventPatchBody: {
@@ -4259,6 +4257,10 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
+            /** Amount */
+            amount?: number | null;
+            /** Direction */
+            direction?: ("expense" | "income") | null;
         };
         /** UserEventResponse */
         UserEventResponse: {
@@ -4301,6 +4303,10 @@ export interface components {
             itemId?: string | null;
             /** Worksetid */
             worksetId: string;
+            /** Amount */
+            amount?: number | null;
+            /** Direction */
+            direction?: ("expense" | "income") | null;
             /**
              * Source
              * @constant

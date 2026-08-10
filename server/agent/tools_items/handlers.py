@@ -33,7 +33,6 @@ def _compact_item_summary(item: dict[str, Any], *, today: date | None = None) ->
         "overdue": overdue,
         "quantity": item.get("quantity"),
         "unit": item.get("unit"),
-        "price": item.get("price"),
         "attributes": item.get("attributes") or {},
         "notes": item.get("notes") or "",
     }
@@ -154,7 +153,6 @@ async def _tool_create(db: Database, arguments: dict[str, Any]) -> dict[str, Any
             status="active",
             quantity=arguments.get("quantity"),
             unit=arguments.get("unit"),
-            price=arguments.get("price"),
             attributes=arguments.get("attributes"),
         )
     except ItemValidationError as exc:
@@ -180,7 +178,6 @@ async def _tool_update(db: Database, arguments: dict[str, Any]) -> dict[str, Any
         ("status", ("status",)),
         ("quantity", ("quantity",)),
         ("unit", ("unit",)),
-        ("price", ("price",)),
         ("attributes", ("attributes",)),
     )
     for wire_key, arg_keys in field_aliases:
@@ -202,7 +199,6 @@ async def _tool_update(db: Database, arguments: dict[str, Any]) -> dict[str, Any
             status=patch_kwargs.get("status", _UNSET),
             quantity=patch_kwargs.get("quantity", _UNSET),
             unit=patch_kwargs.get("unit", _UNSET),
-            price=patch_kwargs.get("price", _UNSET),
             attributes=patch_kwargs.get("attributes", _UNSET),
         )
     except ItemValidationError as exc:

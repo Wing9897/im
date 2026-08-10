@@ -38,7 +38,6 @@ class ItemCreateBody(BaseModel):
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    price: float | None = None
     attributes: dict[str, str] | None = None
 
 
@@ -53,5 +52,4 @@ class ItemUpdateBody(BaseModel):
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    price: float | None = None
     attributes: dict[str, str] | None = None

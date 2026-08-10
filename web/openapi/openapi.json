@@ -10239,17 +10239,6 @@
             ],
             "title": "Unit"
           },
-          "price": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price"
-          },
           "attributes": {
             "anyOf": [
               {
@@ -10391,17 +10380,6 @@
             ],
             "title": "Unit"
           },
-          "price": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price"
-          },
           "attributes": {
             "additionalProperties": {
               "type": "string"
@@ -10531,17 +10509,6 @@
               }
             ],
             "title": "Unit"
-          },
-          "price": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price"
           },
           "attributes": {
             "anyOf": [
@@ -13646,6 +13613,32 @@
               }
             ],
             "title": "Worksetid"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "expense",
+                  "income"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
           }
         },
         "additionalProperties": false,
@@ -13767,6 +13760,32 @@
               }
             ],
             "title": "Worksetid"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "expense",
+                  "income"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
           }
         },
         "additionalProperties": false,
@@ -13892,6 +13911,32 @@
           "worksetId": {
             "type": "string",
             "title": "Worksetid"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "expense",
+                  "income"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
           },
           "source": {
             "type": "string",

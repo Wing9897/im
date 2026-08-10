@@ -41,8 +41,6 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
     quantity = float(raw_quantity) if raw_quantity is not None else None
     raw_unit = row.get("unit")
     unit = str(raw_unit).strip() if isinstance(raw_unit, str) and raw_unit.strip() else None
-    raw_price = row.get("price")
-    price = float(raw_price) if raw_price is not None else None
     return {
         "id": str(row["id"]),
         "title": str(row.get("title") or ""),
@@ -55,7 +53,6 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
         "emoji": emoji,
         "quantity": quantity,
         "unit": unit,
-        "price": price,
         "attributes": parse_attributes_json(row.get("attributes_json")),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
