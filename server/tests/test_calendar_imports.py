@@ -485,9 +485,9 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
     occurrences = await client.get(
         "/api/v1/calendar/items",
         params={
-            "range_start": "2026-08-01T00:00:00Z",
-            "range_end": "2026-08-31T23:59:59Z",
-            "task_id": ids["series-1@example.test"],
+            "rangeStart": "2026-08-01T00:00:00Z",
+            "rangeEnd": "2026-08-31T23:59:59Z",
+            "taskId": ids["series-1@example.test"],
         },
     )
     assert occurrences.status_code == 200
