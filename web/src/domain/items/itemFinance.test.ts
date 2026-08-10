@@ -30,6 +30,8 @@ function event(overrides: Partial<UserEvent> & { id: string }): UserEvent {
     createdAt: "",
     updatedAt: "",
     dismissed: false,
+    amount: overrides.amount ?? null,
+    direction: overrides.direction ?? null,
     ...overrides,
   };
 }
@@ -42,53 +44,63 @@ describe("itemFinance", () => {
     expect(isLinkedPurchaseEffectiveTitle("Expires")).toBe(false);
   });
 
-  it("builds rows for events in inclusive day range", () => {
+  it("builds rows from event amount and direction", () => {
     const rows = buildItemsFinanceRows(
-      [item({ id: "a", title: "Camera", price: 1200 })],
-      [event({ id: "e1", itemId: "a", title: "Purchased", startTime: "2026-08-03T09:00:00" })],
+      [item({ id: "a", title: "Camera" })],
+      [
+        event({
+          id: "e1",
+          itemId: "a",
+          title: "Purchased",
+          startTime: "2026-08-03T09:00:00",
+          amount: 1200,
+          direction: "expense",
+        }),
+      ],
       { startDay: "2026-08-01", endDay: "2026-08-10" },
     );
     expect(rows).toHaveLength(1);
     expect(rows[0]?.purchaseDay).toBe("2026-08-03");
-    expect(rows[0]?.price).toBe(1200);
+    expect(rows[0]?.amount).toBe(1200);
+    expect(rows[0]?.direction).toBe("expense");
   });
 
   it("excludes dismissed and out-of-range events", () => {
     const rows = buildItemsFinanceRows(
       [item({ id: "a" })],
       [
-        event({ id: "e1", dismissed: true }),
-        event({ id: "e2", startTime: "2026-07-01T09:00:00" }),
+        event({ id: "e1", dismissed: true, amount: 10 }),
+        event({ id: "e2", startTime: "2026-07-01T09:00:00", amount: 10 }),
       ],
       { startDay: "2026-08-01", endDay: "2026-08-10" },
     );
     expect(rows).toHaveLength(0);
   });
 
-  it("summarizes priced rows", () => {
+  it("summarizes expense and income separately", () => {
     const rows = buildItemsFinanceRows(
+      [item({ id: "a" }), item({ id: "b" }), item({ id: "c" })],
       [
-        item({ id: "a", price: 10 }),
-        item({ id: "b", price: null }),
-      ],
-      [
-        event({ id: "e1", itemId: "a" }),
-        event({ id: "e2", itemId: "b" }),
+        event({ id: "e1", itemId: "a", amount: 100, direction: "expense" }),
+        event({ id: "e2", itemId: "b", amount: 40, direction: "income" }),
+        event({ id: "e3", itemId: "c", amount: null }),
       ],
       { startDay: "2026-08-01", endDay: "2026-08-31" },
     );
     const summary = summarizeItemsFinance(rows);
-    expect(summary.rowCount).toBe(2);
-    expect(summary.pricedCount).toBe(1);
-    expect(summary.totalCost).toBe(10);
+    expect(summary.rowCount).toBe(3);
+    expect(summary.withAmountCount).toBe(2);
+    expect(summary.totalExpense).toBe(100);
+    expect(summary.totalIncome).toBe(40);
+    expect(summary.net).toBe(60);
   });
 
   it("sorts by purchase date descending by default helper", () => {
     const rows = buildItemsFinanceRows(
       [item({ id: "a" }), item({ id: "b" })],
       [
-        event({ id: "e1", itemId: "a", startTime: "2026-08-01T09:00:00" }),
-        event({ id: "e2", itemId: "b", startTime: "2026-08-09T09:00:00" }),
+        event({ id: "e1", itemId: "a", startTime: "2026-08-01T09:00:00", amount: 1 }),
+        event({ id: "e2", itemId: "b", startTime: "2026-08-09T09:00:00", amount: 2 }),
       ],
       { startDay: "2026-08-01", endDay: "2026-08-31" },
     );

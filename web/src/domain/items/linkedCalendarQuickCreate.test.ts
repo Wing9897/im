@@ -95,6 +95,8 @@ describe("linkedCalendarQuickCreate", () => {
     expect(initial.isAllDay).toBe(false);
     expect(initial.title).toBe("Purchased");
     expect(initial.endTime).toBeTruthy();
+    expect(initial.amountInput).toBe("");
+    expect(initial.direction).toBe("expense");
   });
 
   it("prefills remindBeforeDays from category default on expiry create", () => {
@@ -141,6 +143,8 @@ describe("linkedCalendarQuickCreate", () => {
       isAllDay: false,
       remindBeforeDays: "2",
       itemId: "item-42",
+      amountInput: "",
+      direction: "expense",
     });
   });
 

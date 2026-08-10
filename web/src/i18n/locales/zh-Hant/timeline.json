@@ -194,6 +194,13 @@
     "locationPlaceholder": "地點",
     "bodyAria": "說明（選填）",
     "bodyPlaceholder": "說明",
+    "amount": "金額",
+    "amountPlaceholder": "選填",
+    "amountHint": "用於購入／生效關聯日曆。不清楚可留空。",
+    "direction": "方向",
+    "directionAria": "支出或收入",
+    "directionExpense": "支出",
+    "directionIncome": "收入",
     "errors": {
       "titleRequired": "請填寫標題",
       "startRequired": "請填寫開始時間",

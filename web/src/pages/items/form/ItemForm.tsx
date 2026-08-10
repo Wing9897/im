@@ -14,9 +14,7 @@ import type { Workset } from "../../../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { ItemFormCvBelonging } from "./ItemFormCvBelonging";
 import {
-  priceInputFromValue,
   quantityInputFromValue,
-  wirePriceFromInput,
   wireQuantityFromInput,
 } from "./ItemFormCvInventory";
 import { ItemFormCvHeader } from "./ItemFormCvHeader";
@@ -36,7 +34,6 @@ export type ItemSaveDraft = {
   emoji: string | null;
   quantity: number | null;
   unit: string | null;
-  price: number | null;
   attributes: Record<string, string>;
   status: "active" | "archived";
 };
@@ -93,7 +90,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
   const [emoji, setEmoji] = useState(item?.emoji ?? "");
   const [quantityInput, setQuantityInput] = useState(quantityInputFromValue(item?.quantity));
   const [unit, setUnit] = useState(item?.unit ?? "");
-  const [priceInput, setPriceInput] = useState(priceInputFromValue(item?.price));
   const [attributes, setAttributes] = useState<Record<string, string>>(() => {
     const initial = item?.attributes ?? {};
     if (item) return initial;
@@ -137,7 +133,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     emoji: emoji.trim() || null,
     quantity: wireQuantityFromInput(quantityInput),
     unit: unit.trim() || null,
-    price: wirePriceFromInput(priceInput),
     attributes: effectiveItem
       ? attributes
       : seedAttributesFromFieldSchema(attributes, category?.fieldSchema),
@@ -151,7 +146,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     emoji,
     quantityInput,
     unit,
-    priceInput,
     attributes,
     category?.fieldSchema,
   ]);
@@ -246,12 +240,10 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
               busy={busy}
               quantityInput={quantityInput}
               unit={unit}
-              priceInput={priceInput}
               onTitleChange={setTitle}
               onEmojiChange={setEmoji}
               onQuantityInputChange={setQuantityInput}
               onUnitChange={setUnit}
-              onPriceInputChange={setPriceInput}
             />
           </div>
 

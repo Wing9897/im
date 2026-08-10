@@ -44,14 +44,13 @@ describe("filterItemsList", () => {
     expect(filterItemsList(withMeta, "all", "shelf").map((r) => r.id)).toEqual(["n"]);
   });
 
-  it("matches quantity unit and price", () => {
+  it("matches quantity and unit", () => {
     const rows = [
-      item({ id: "q", title: "Rice", quantity: 2.5, unit: "kg", price: 19.9 }),
+      item({ id: "q", title: "Rice", quantity: 2.5, unit: "kg" }),
       item({ id: "x", title: "Other" }),
     ];
     expect(filterItemsList(rows, "all", "kg").map((r) => r.id)).toEqual(["q"]);
     expect(filterItemsList(rows, "all", "2.5").map((r) => r.id)).toEqual(["q"]);
-    expect(filterItemsList(rows, "all", "19.9").map((r) => r.id)).toEqual(["q"]);
   });
 });
 
@@ -65,7 +64,6 @@ describe("itemSearchHaystack", () => {
         emoji: "🥛",
         quantity: 2,
         unit: "L",
-        price: 12.5,
         attributes: { fat: "2%" },
       }),
     );
@@ -76,7 +74,7 @@ describe("itemSearchHaystack", () => {
     expect(hay).toContain("2%");
     expect(hay).toContain("2");
     expect(hay).toContain("l");
-    expect(hay).toContain("12.5");
+    expect(hay).not.toContain("12.5");
   });
 });
 

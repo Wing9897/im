@@ -16,7 +16,6 @@ export function makeTrackableItem(
     emoji: null,
     quantity: null,
     unit: null,
-    price: null,
     attributes: {},
     createdAt: null,
     updatedAt: null,

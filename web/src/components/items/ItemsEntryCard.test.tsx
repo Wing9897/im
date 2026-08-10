@@ -275,7 +275,7 @@ describe("ItemsEntryCard", () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
-  it("shows inventory summary when quantity, unit, or price are set", () => {
+  it("shows inventory summary when quantity or unit are set", () => {
     act(() => {
       root = createRoot(container);
       root.render(
@@ -285,7 +285,6 @@ describe("ItemsEntryCard", () => {
             title: "Stock",
             quantity: 3,
             unit: "盒",
-            price: 1280,
           })}
           emoji="📦"
           onOpen={vi.fn()}
@@ -296,6 +295,6 @@ describe("ItemsEntryCard", () => {
     const line = container.querySelector('[data-testid="items-entry-inventory-i3"]');
     expect(line).not.toBeNull();
     expect(line?.textContent).toContain("× 3 盒");
-    expect(line?.textContent).toContain("$ 1,280");
+    expect(line?.textContent).not.toContain("$");
   });
 });

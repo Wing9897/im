@@ -12,23 +12,10 @@ export function formatItemQuantityUnit(
   return `× ${qtyText} ${unitLabel}`;
 }
 
-/** Price display with unified $ prefix. */
-export function formatItemPrice(price: number | null | undefined): string | null {
-  if (price == null || Number.isNaN(price)) return null;
-  const hasFraction = Math.round(price * 100) % 100 !== 0;
-  const formatted = hasFraction
-    ? price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : price.toLocaleString(undefined, { maximumFractionDigits: 0 });
-  return `$ ${formatted}`;
-}
-
-export function itemInventorySummary(item: Pick<TrackableItem, "quantity" | "unit" | "price">): string | null {
-  const parts: string[] = [];
-  const qtyLine = formatItemQuantityUnit(item.quantity, item.unit);
-  const priceLine = formatItemPrice(item.price);
-  if (qtyLine) parts.push(qtyLine);
-  if (priceLine) parts.push(priceLine);
-  return parts.length > 0 ? parts.join(" · ") : null;
+export function itemInventorySummary(
+  item: Pick<TrackableItem, "quantity" | "unit">,
+): string | null {
+  return formatItemQuantityUnit(item.quantity, item.unit);
 }
 
 /** Parse optional numeric form input to wire value (null when empty). */

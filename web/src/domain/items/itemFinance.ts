@@ -1,5 +1,6 @@
 /**
  * Items finance v1 — purchase/effective linked calendars in a date window.
+ * Totals come from event ``amount`` + ``direction`` (not item fields).
  * Full P&L (resale, depreciation, multi-currency) is out of scope here.
  */
 
@@ -17,9 +18,15 @@ export const LINKED_PURCHASE_EFFECTIVE_TITLES = new Set([
   "生效",
 ]);
 
-export type ItemsFinancePlFilter = "all" | "withCost" | "missingCost";
+export type EventFinanceDirection = "expense" | "income";
 
-export type ItemsFinanceSortKey = "purchaseDateDesc" | "purchaseDateAsc" | "priceDesc" | "priceAsc";
+export type ItemsFinancePlFilter = "all" | "withAmount" | "missingAmount";
+
+export type ItemsFinanceSortKey =
+  | "purchaseDateDesc"
+  | "purchaseDateAsc"
+  | "amountDesc"
+  | "amountAsc";
 
 export type ItemsFinancePreset = "thisMonth" | "last30" | "thisYear" | "custom";
 
@@ -31,7 +38,8 @@ export type ItemsFinanceRange = {
 export type ItemsFinanceRow = {
   itemId: string;
   title: string;
-  price: number | null;
+  amount: number | null;
+  direction: EventFinanceDirection | null;
   purchaseDay: string;
   purchaseEventTitle: string;
   eventId: string;
@@ -39,8 +47,11 @@ export type ItemsFinanceRow = {
 
 export type ItemsFinanceSummary = {
   rowCount: number;
-  pricedCount: number;
-  totalCost: number;
+  withAmountCount: number;
+  totalExpense: number;
+  totalIncome: number;
+  /** Expense − income for the filtered rows. */
+  net: number;
 };
 
 export function isLinkedPurchaseEffectiveTitle(title: string | null | undefined): boolean {
@@ -102,6 +113,14 @@ function itemTitleById(items: readonly TrackableItem[]): Map<string, TrackableIt
   return new Map(items.map((row) => [row.id, row]));
 }
 
+function normalizeDirection(
+  value: string | null | undefined,
+  amount: number | null,
+): EventFinanceDirection | null {
+  if (amount == null || !Number.isFinite(amount)) return null;
+  return value === "income" ? "income" : "expense";
+}
+
 /**
  * One row per purchase/effective event in range (same item may appear twice).
  * v1 does not dedupe by item — earliest-in-range is a later enhancement.
@@ -124,10 +143,13 @@ export function buildItemsFinanceRows(
     const item = byId.get(event.itemId);
     if (!item) continue;
 
+    const amount =
+      event.amount != null && Number.isFinite(event.amount) ? Number(event.amount) : null;
     rows.push({
       itemId: item.id,
       title: item.title,
-      price: item.price ?? null,
+      amount,
+      direction: normalizeDirection(event.direction, amount),
       purchaseDay: day,
       purchaseEventTitle: event.title,
       eventId: event.id,
@@ -142,10 +164,10 @@ export function filterItemsFinanceRows(
   plFilter: ItemsFinancePlFilter,
 ): ItemsFinanceRow[] {
   switch (plFilter) {
-    case "withCost":
-      return rows.filter((row) => row.price != null && Number.isFinite(row.price));
-    case "missingCost":
-      return rows.filter((row) => row.price == null || !Number.isFinite(row.price));
+    case "withAmount":
+      return rows.filter((row) => row.amount != null && Number.isFinite(row.amount));
+    case "missingAmount":
+      return rows.filter((row) => row.amount == null || !Number.isFinite(row.amount));
     case "all":
     default:
       return [...rows];
@@ -161,14 +183,14 @@ export function sortItemsFinanceRows(
     switch (sort) {
       case "purchaseDateAsc":
         return a.purchaseDay.localeCompare(b.purchaseDay) || a.title.localeCompare(b.title);
-      case "priceDesc": {
-        const pa = a.price ?? -Infinity;
-        const pb = b.price ?? -Infinity;
+      case "amountDesc": {
+        const pa = a.amount ?? -Infinity;
+        const pb = b.amount ?? -Infinity;
         return pb - pa || a.purchaseDay.localeCompare(b.purchaseDay);
       }
-      case "priceAsc": {
-        const pa = a.price ?? Infinity;
-        const pb = b.price ?? Infinity;
+      case "amountAsc": {
+        const pa = a.amount ?? Infinity;
+        const pb = b.amount ?? Infinity;
         return pa - pb || a.purchaseDay.localeCompare(b.purchaseDay);
       }
       case "purchaseDateDesc":
@@ -180,13 +202,23 @@ export function sortItemsFinanceRows(
 }
 
 export function summarizeItemsFinance(rows: readonly ItemsFinanceRow[]): ItemsFinanceSummary {
-  let totalCost = 0;
-  let pricedCount = 0;
+  let totalExpense = 0;
+  let totalIncome = 0;
+  let withAmountCount = 0;
   for (const row of rows) {
-    if (row.price != null && Number.isFinite(row.price)) {
-      totalCost += row.price;
-      pricedCount += 1;
+    if (row.amount == null || !Number.isFinite(row.amount)) continue;
+    withAmountCount += 1;
+    if (row.direction === "income") {
+      totalIncome += row.amount;
+    } else {
+      totalExpense += row.amount;
     }
   }
-  return { rowCount: rows.length, pricedCount, totalCost };
+  return {
+    rowCount: rows.length,
+    withAmountCount,
+    totalExpense,
+    totalIncome,
+    net: totalExpense - totalIncome,
+  };
 }

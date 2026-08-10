@@ -29,11 +29,9 @@ describe("ItemFormCvInventory", () => {
     const props = {
       quantityInput: "",
       unit: "",
-      priceInput: "",
       busy: false,
       onQuantityInputChange: vi.fn(),
       onUnitChange: vi.fn(),
-      onPriceInputChange: vi.fn(),
       ...overrides,
     };
 
@@ -52,18 +50,10 @@ describe("ItemFormCvInventory", () => {
     expect(cluster).toBeTruthy();
     expect(cluster?.querySelector('[data-testid="item-form-quantity-input"]')).toBeTruthy();
     expect(cluster?.querySelector("#item-unit")).toBeTruthy();
-    expect(
-      cluster?.contains(document.querySelector('[data-testid="item-form-price-input"]')),
-    ).toBe(false);
   });
 
-  it("renders price with dollar prefix input", async () => {
-    await renderInventory({ priceInput: "1280" });
-
-    const price = document.querySelector(
-      '[data-testid="item-form-price-input"]',
-    ) as HTMLInputElement;
-    expect(price?.value).toBe("1280");
-    expect(price?.className).toContain("pl-6");
+  it("does not render an item price field", async () => {
+    await renderInventory({ quantityInput: "1", unit: "盒" });
+    expect(document.querySelector('[data-testid="item-form-price-input"]')).toBeNull();
   });
 });

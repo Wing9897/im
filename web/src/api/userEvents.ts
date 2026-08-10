@@ -18,6 +18,10 @@ export type UserEvent = Omit<
   remindBeforeDays?: number | null;
   /** Optional parent trackable item (this calendar belongs to the item). */
   itemId?: string | null;
+  /** Optional transaction amount (purchase/effective linked calendars). */
+  amount?: number | null;
+  /** expense | income when amount is set. */
+  direction?: "expense" | "income" | null;
 };
 
 export type UserEventOrigin = UserEvent["origin"];
@@ -38,6 +42,10 @@ interface UserEventWriteParams {
   itemId?: string | null;
   /** Ownership workset; `""` / `"__user__"` / omit → builtin system workset (LIVE). */
   worksetId?: string | null;
+  /** Optional transaction amount (purchase/effective); null clears. */
+  amount?: number | null;
+  /** expense | income; cleared when amount is null; server defaults expense. */
+  direction?: "expense" | "income" | null;
 }
 
 /** Strip fake `__user__` / blank provenance so it never hits the API as taskId. */
@@ -84,6 +92,8 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
   const taskId = normalizeWriteTaskId(params.taskId);
   if (taskId !== undefined) body.taskId = taskId;
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
+  if (params.amount !== undefined) body.amount = params.amount;
+  if (params.direction !== undefined) body.direction = params.direction;
   return apiClient.post<UserEvent>("/api/v1/calendar/user-events", body);
 }
 
@@ -108,6 +118,8 @@ export function updateUserEvent(
     body.taskId = normalizeWriteTaskId(params.taskId) ?? null;
   }
   if (params.worksetId !== undefined) body.worksetId = params.worksetId;
+  if (params.amount !== undefined) body.amount = params.amount;
+  if (params.direction !== undefined) body.direction = params.direction;
   return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
 }
 

@@ -96,7 +96,7 @@
   "filterArchived": "Archived",
   "filterWorksetAll": "All worksets",
   "filterWorksetAria": "Filter by workset",
-  "searchPlaceholder": "Search title, notes, emoji, qty, unit, price, fields…",
+  "searchPlaceholder": "Search title, notes, emoji, qty, unit, fields…",
   "searchAria": "Search items",
   "searchClearAria": "Clear search",
   "categorySearchPlaceholder": "Search types…",
@@ -113,14 +113,12 @@
   "titleField": "Title",
   "cvHeaderAria": "Item identity",
   "cvBelongingAria": "Category and workset",
-  "cvInventoryAria": "Quantity, unit, and price",
+  "cvInventoryAria": "Quantity and unit",
   "quantity": "Quantity",
   "quantityPlaceholder": "Optional",
   "unit": "Unit",
   "unitPlaceholder": "Optional or custom",
   "unitPresetsAria": "Common units",
-  "price": "Price",
-  "pricePlaceholder": "Optional",
   "sectionExtras": "Extra details",
   "sectionExtrasHint": "Optional notes for this item — brand, serial number, and so on. Skip what you don't need. New items copy this type's preset field keys; you only fill values.",
   "sectionNotes": "Notes",
@@ -198,27 +196,35 @@
     },
     "startDate": "Start date",
     "endDate": "End date",
-    "plFilterAria": "Cost filter",
+    "plFilterAria": "Amount filter",
     "plFilter": {
       "all": "All purchases",
-      "withCost": "With price",
-      "missingCost": "Missing price"
+      "withAmount": "With amount",
+      "missingAmount": "Missing amount"
     },
     "sortAria": "Sort purchases",
     "sort": {
       "purchaseDateDesc": "Purchase date (newest)",
       "purchaseDateAsc": "Purchase date (oldest)",
-      "priceDesc": "Price (high to low)",
-      "priceAsc": "Price (low to high)"
+      "amountDesc": "Amount (high to low)",
+      "amountAsc": "Amount (low to high)"
     },
     "summaryTitle": "Period summary",
     "summaryCount": "{count} purchases",
-    "summaryPriced": "{count} with price",
-    "summaryTotal": "Total cost {total}",
+    "summaryWithAmount": "{count} with amount",
+    "summaryExpense": "Expense {total}",
+    "summaryIncome": "Income {total}",
+    "summaryNet": "Net {total}",
     "emptyTitle": "No purchases in this range",
-    "emptyHint": "Add a linked calendar titled Purchased (or 购入 / 購入 / Effective / 生效) on an item, or widen the date range.",
+    "emptyHint": "Add a linked calendar titled Purchased (or 购入 / 購入 / Effective / 生效) with an amount on an item, or widen the date range.",
     "colItem": "Item",
     "colPurchase": "Purchase date",
-    "colEvent": "Calendar title"
+    "colEvent": "Calendar title",
+    "colDirection": "Direction",
+    "colAmount": "Amount",
+    "direction": {
+      "expense": "Expense",
+      "income": "Income"
+    }
   }
 }

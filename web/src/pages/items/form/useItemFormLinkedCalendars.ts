@@ -20,6 +20,7 @@ import {
 } from "../../../domain/items/linkedCalendarQuickCreate";
 import { parseRemindBeforeDays } from "../../../domain/timeline/parseRemindBeforeDays";
 import { toUserEventFormWorksetId } from "../../../domain/timeline/userEvents";
+import { parseOptionalNumberInput } from "../../../domain/items/itemInventoryDisplay";
 
 function linkedOneOffWriteParams(
   values: UserEventFormValues,
@@ -27,6 +28,7 @@ function linkedOneOffWriteParams(
   worksetId: string,
   remindBeforeDays: number | null,
 ) {
+  const amount = parseOptionalNumberInput(values.amountInput);
   return {
     title: values.title,
     startTime: values.startTime,
@@ -37,6 +39,8 @@ function linkedOneOffWriteParams(
     remindBeforeDays,
     itemId,
     worksetId,
+    amount,
+    direction: amount == null ? null : values.direction,
   };
 }
 

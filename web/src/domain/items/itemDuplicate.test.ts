@@ -13,7 +13,6 @@ describe("buildDuplicateItemBody", () => {
         emoji: "🥛",
         quantity: 2,
         unit: "盒",
-        price: 48,
         attributes: { brand: "Local" },
         status: "archived",
         expiresAt: "2026-12-01",
@@ -32,10 +31,10 @@ describe("buildDuplicateItemBody", () => {
       emoji: "🥛",
       quantity: 2,
       unit: "盒",
-      price: 48,
       attributes: { brand: "Local" },
       status: "active",
     });
+    expect(body).not.toHaveProperty("price");
     expect(body).not.toHaveProperty("expiresAt");
     expect(body).not.toHaveProperty("remindBeforeDays");
     expect(body).not.toHaveProperty("id");

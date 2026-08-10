@@ -96,7 +96,7 @@
   "filterArchived": "已封存",
   "filterWorksetAll": "全部工作集",
   "filterWorksetAria": "依工作集篩選",
-  "searchPlaceholder": "搜尋標題、備註、表情、數量、單位、價格、欄位…",
+  "searchPlaceholder": "搜尋標題、備註、表情、數量、單位、欄位…",
   "searchAria": "搜尋物品",
   "searchClearAria": "清空搜尋",
   "categorySearchPlaceholder": "搜尋類型…",
@@ -113,14 +113,12 @@
   "titleField": "名稱",
   "cvHeaderAria": "物品身分",
   "cvBelongingAria": "分類與工作集",
-  "cvInventoryAria": "數量、單位與價錢",
+  "cvInventoryAria": "數量與單位",
   "quantity": "數量",
   "quantityPlaceholder": "選填",
   "unit": "單位",
   "unitPlaceholder": "選填或自訂",
   "unitPresetsAria": "常用單位",
-  "price": "價錢",
-  "pricePlaceholder": "選填",
   "sectionExtras": "其他資料",
   "sectionExtrasHint": "可選填這件物品的補充說明，例如品牌、序號；不必每項都填。新建時會帶入分類預設欄位鍵，只需填內容。",
   "sectionNotes": "備註",
@@ -198,27 +196,35 @@
     },
     "startDate": "開始日期",
     "endDate": "結束日期",
-    "plFilterAria": "成本篩選",
+    "plFilterAria": "金額篩選",
     "plFilter": {
       "all": "全部購入",
-      "withCost": "有價錢",
-      "missingCost": "缺價錢"
+      "withAmount": "有金額",
+      "missingAmount": "缺金額"
     },
     "sortAria": "購入排序",
     "sort": {
       "purchaseDateDesc": "購入日期（新到舊）",
       "purchaseDateAsc": "購入日期（舊到新）",
-      "priceDesc": "價錢（高到低）",
-      "priceAsc": "價錢（低到高）"
+      "amountDesc": "金額（高到低）",
+      "amountAsc": "金額（低到高）"
     },
     "summaryTitle": "期間匯總",
     "summaryCount": "{count} 筆購入",
-    "summaryPriced": "{count} 筆有價錢",
-    "summaryTotal": "成本合計 {total}",
+    "summaryWithAmount": "{count} 筆有金額",
+    "summaryExpense": "支出 {total}",
+    "summaryIncome": "收入 {total}",
+    "summaryNet": "淨額 {total}",
     "emptyTitle": "此範圍內沒有購入記錄",
-    "emptyHint": "在物品上新增標題為「購入」或 Purchased / 购入 / Effective / 生效 的關聯日曆，或放寬日期範圍。",
+    "emptyHint": "在物品上新增標題為「購入」或 Purchased / 购入 / Effective / 生效 的關聯日曆並填寫金額，或放寬日期範圍。",
     "colItem": "物品",
     "colPurchase": "購入日期",
-    "colEvent": "日曆標題"
+    "colEvent": "日曆標題",
+    "colDirection": "方向",
+    "colAmount": "金額",
+    "direction": {
+      "expense": "支出",
+      "income": "收入"
+    }
   }
 }

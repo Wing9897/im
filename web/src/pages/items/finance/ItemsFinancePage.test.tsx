@@ -34,7 +34,7 @@ describe("ItemsFinancePage", () => {
     mockListItems.mockReset();
     mockListUserEvents.mockReset();
     mockListItems.mockResolvedValue([
-      makeTrackableItem({ id: "i1", title: "相機", price: 500 }),
+      makeTrackableItem({ id: "i1", title: "相機" }),
     ]);
     mockListUserEvents.mockResolvedValue([
       {
@@ -46,6 +46,8 @@ describe("ItemsFinancePage", () => {
         isAllDay: false,
         origin: "manual",
         worksetId: "__user__",
+        amount: 500,
+        direction: "expense",
         createdAt: "",
         updatedAt: "",
       },

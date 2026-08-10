@@ -421,7 +421,7 @@
         "Answer questions about local intel, schedules, and items in natural language",
         "Search collected messages; look up analysis events",
         "List / create / update / delete user events and recurring (RRULE) tasks",
-        "List / create / update trackable items (qty / unit / price; expiry via linked calendar — never invent dates)",
+        "List / create / update trackable items (qty / unit; money on purchase/effective linked calendars; expiry via linked calendar — never invent dates)",
         "Optionally search the web when enabled in settings",
         "Works in the assistant popup and full assistant page; voice in/out optional"
       ]

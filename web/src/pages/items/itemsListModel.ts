@@ -34,7 +34,6 @@ export function itemSearchHaystack(item: TrackableItem): string {
   const inventoryParts: string[] = [];
   if (item.unit) inventoryParts.push(item.unit);
   if (item.quantity != null) inventoryParts.push(String(item.quantity));
-  if (item.price != null) inventoryParts.push(String(item.price));
   return [item.title, item.notes, item.emoji ?? "", ...inventoryParts, ...attrParts]
     .join(" ")
     .toLowerCase();

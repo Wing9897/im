@@ -35,6 +35,6 @@ export const itemFormAttributeChipClass =
 export const itemFormAddPanelClass =
   "flex flex-wrap items-end gap-sm rounded-md bg-[color-mix(in_srgb,var(--surface-raised)_22%,transparent)] px-sm py-sm";
 
-/** CV header inventory row — quantity/unit/price cluster. */
+/** CV header inventory row — quantity/unit cluster. */
 export const itemFormInventoryRowClass =
   "mt-1 flex flex-wrap items-end gap-x-md gap-y-xs sm:gap-x-lg";

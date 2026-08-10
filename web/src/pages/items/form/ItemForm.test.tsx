@@ -52,7 +52,6 @@ describe("ItemForm", () => {
         status: "archived",
         quantity: 2,
         unit: "kg",
-        price: 1280,
       }),
     });
 
@@ -80,9 +79,7 @@ describe("ItemForm", () => {
     expect(
       (header?.querySelector('[data-testid="item-form-quantity-input"]') as HTMLInputElement)?.value,
     ).toBe("2");
-    expect((header?.querySelector('[data-testid="item-form-price-input"]') as HTMLInputElement)?.value).toBe(
-      "1280",
-    );
+    expect(header?.querySelector('[data-testid="item-form-price-input"]')).toBeNull();
   });
 
   it("places notes full width at the bottom, not in a sidebar column", async () => {
@@ -263,18 +260,15 @@ describe("ItemForm", () => {
     expect(draft).not.toHaveProperty("remindBeforeDays");
   });
 
-  it("submits quantity, unit, and price from header inventory fields", async () => {
+  it("submits quantity and unit from header inventory fields", async () => {
     const onSave = vi.fn(async () => undefined);
     const { formRef } = await renderForm({
-      item: makeItem({ quantity: null, unit: null, price: null }),
+      item: makeItem({ quantity: null, unit: null }),
       onSave,
     });
 
     const quantity = document.querySelector(
       '[data-testid="item-form-quantity-input"]',
-    ) as HTMLInputElement;
-    const price = document.querySelector(
-      '[data-testid="item-form-price-input"]',
     ) as HTMLInputElement;
 
     act(() => {
@@ -284,8 +278,6 @@ describe("ItemForm", () => {
       )?.set;
       setter?.call(quantity, "3");
       quantity.dispatchEvent(new Event("input", { bubbles: true }));
-      setter?.call(price, "99.5");
-      price.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
     await act(async () => {
@@ -295,8 +287,8 @@ describe("ItemForm", () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         quantity: 3,
-        price: 99.5,
       }),
     );
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty("price");
   });
 });

@@ -24,6 +24,8 @@ export type LinkedCalendarFormInitial = {
   endTime?: string;
   location?: string;
   body?: string;
+  amountInput?: string;
+  direction?: "expense" | "income";
 };
 
 /** i18n key under ``items`` for both chip label and prefilled title. */
@@ -120,11 +122,16 @@ export function buildLinkedCalendarCreateInitial(args: {
   }
 
   const range = defaultCreateTimedRange(args.now);
+  const purchaseFinance =
+    args.kind === "purchaseEffective"
+      ? { amountInput: "", direction: "expense" as const }
+      : {};
   return {
     ...base,
     startTime: range.startTime,
     endTime: range.endTime,
     isAllDay: false,
+    ...purchaseFinance,
   };
 }
 
@@ -147,5 +154,7 @@ export function buildLinkedCalendarEditInitial(args: {
     remindBeforeDays:
       event.remindBeforeDays != null ? String(event.remindBeforeDays) : "",
     itemId,
+    amountInput: event.amount != null ? String(event.amount) : "",
+    direction: event.direction === "income" ? "income" : "expense",
   };
 }
