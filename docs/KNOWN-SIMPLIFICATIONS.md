@@ -77,8 +77,8 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 |-------|--------|
 | Message cursor | `GET /messages/page` → `{ timestamp, id }` |
 | Log cursor | `GET /logs` → `{ time, id }` |
-| Query params | camelCase only (`taskId`, `rangeStart`, …); HTTP snake_case dual-read **removed** — see [`ARCHITECTURE.md` Wire conventions](./ARCHITECTURE.md#wire-conventions). Thin `server/api/query_aliases.qalias` is the **camel-only Query helper — keep** (not worth dissolving into per-route `Query(alias=...)` noise) |
-| LLM tool arguments | **Permanent Agent-boundary tolerance:** schemas expose canonical camelCase, while `server/agent/tool_args.py` accepts selected snake_case pairs and useful semantic aliases (for example `allTime`／`all_time` and `timeRange`／`time_range = "all"`). Model-generated arguments vary, so do not hard-cut this coercion; it is not an HTTP contract |
+| Query params | **HTTP is camelCase-only** on the wire (`taskId`, `rangeStart`, `startDate`, `endDate`, `hasTime`, `hasCoords`, `topLevelOnly`, …). Snake_case dual-read is **gone** — do not reintroduce HTTP aliases. See [`ARCHITECTURE.md` Wire conventions](./ARCHITECTURE.md#wire-conventions). Thin `server/api/query_aliases.qalias` is the **camel-only Query helper — keep** (not worth dissolving into per-route `Query(alias=...)` noise) |
+| LLM tool arguments | **Permanent Agent-boundary tolerance (not HTTP):** schemas expose canonical camelCase, while `server/agent/tool_args.py` accepts selected snake_case pairs and useful semantic aliases (for example `allTime`／`all_time` and `timeRange`／`time_range = "all"`). Model-generated arguments vary, so do not hard-cut this coercion; it stays a separate permanent boundary from the HTTP contract |
 | SSE `collector_status_changed` | payload uses `adapter_name`, `error_summary` (snake_case) |
 | Error bodies | `error_code`, `correlation_id` (snake_case) |
 | `GET /config/settings` | settings snapshot (camelCase); use `PUT /config/settings` to update |
@@ -86,7 +86,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
 | Schema stamp v23 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v23-explicit-reset) (wipe-only floor, domain DDL aggregate, `sources`, `source_channels`, `messages.source_id`; `SCHEMA_SEMVER` `0.1.0-beta.24`) |
-| Task catalog vs `top_level_only` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `top_level_only` — it loads full `GET /tasks` so agent detail (`/tasks/:taskId/agent`) can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?top_level_only=true` stays available only for other callers that want server-side hide |
+| Task catalog vs `topLevelOnly` | Shared FE catalog (`useTaskCatalogLoader`) **must NOT** pass `topLevelOnly` — it loads full `GET /tasks` so agent detail (`/tasks/:taskId/agent`) can resolve child recurring via `parentTaskId`. Dashboard uses client-side `selectTopLevelTasks`; list API `?topLevelOnly=true` stays available only for other callers that want server-side hide |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
@@ -101,10 +101,10 @@ The intelligence UI treats **event time** as the user-facing clock. Preference o
 
 | Layer | Behavior |
 |-------|----------|
-| Frontend display / card-list filter | Server-side `start_date`/`end_date` on `/results/events`; API returns event-time order by default |
+| Frontend display / card-list filter | Server-side `startDate`/`endDate` on `/results/events`; API returns event-time order by default |
 | API sort | `sort=event_time` (default): `ORDER BY COALESCE(ae.start_time, m.timestamp, ae.created_at) DESC`; `sort=analyzed_at`: `ORDER BY ae.created_at DESC` |
-| API `start_date` / `end_date` | Filter on the same `COALESCE(...)` expression |
-| Frontend fetch | `useIntelligenceSource` → `fetchEvents`; sends `start_date` / `end_date` from card/list `useTimeFilter` or map `timeWindow`; `sort` from toolbar / `im:intelligence:sort` |
+| API `startDate` / `endDate` | Filter on the same `COALESCE(...)` expression (HTTP camelCase wire names; not `start_date`／`end_date`) |
+| Frontend fetch | `useIntelligenceSource` → `fetchEvents`; sends `startDate` / `endDate` from card/list `useTimeFilter` or map `timeWindow`; `sort` from toolbar / `im:intelligence:sort` |
 
 Map mode passes its time window to the API so background sync needs fewer pages; client-side map filtering remains for live-mode display.
 

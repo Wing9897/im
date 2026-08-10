@@ -22,30 +22,30 @@ from server.db.database import Database
 
 
 async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, Any]:
-    project_id = args.get("_agent_scope_task_id") or arg(args, "taskId", "task_id")
+    scope_task_id = args.get("_agent_scope_task_id") or arg(args, "taskId", "task_id")
     items = await list_calendars(db)
-    if project_id:
-        pid = str(project_id).strip()
-        # Project tick: only this project row + its child recurring tasks.
+    if scope_task_id:
+        tid = str(scope_task_id).strip()
+        # Agent-scope tick: only this task row + its child recurring tasks.
         scoped: list[dict[str, Any]] = []
         child_ids = {
             str(r["id"])
             for r in await db.fetch_all(
                 "SELECT task_id AS id FROM recurring_schedules WHERE parent_task_id = ?",
-                (pid,),
+                (tid,),
             )
         }
         for item in items:
             iid = str(item.get("id") or "")
-            if iid == pid or iid in child_ids:
+            if iid == tid or iid in child_ids:
                 scoped.append(item)
-        # Ensure the project itself appears even if list_calendars omitted it.
-        if not any(str(i.get("id")) == pid for i in scoped):
+        # Ensure the scoped task itself appears even if list_calendars omitted it.
+        if not any(str(i.get("id")) == tid for i in scoped):
             row = await db.fetch_one(
                 "SELECT id, name, analysis_mode, is_active, NULL AS rrule, NULL AS event_location, "
                 "NULL AS event_description, 0 AS event_is_all_day, NULL AS event_start_time, "
                 "NULL AS event_end_time, NULL AS event_timezone FROM analysis_tasks WHERE id = ?",
-                (pid,),
+                (tid,),
             )
             if row is not None:
                 scoped.insert(

@@ -1,5 +1,7 @@
 # 專案調和（Agent closed-loop）
 
+產品預設顯示名仍為 **專案調和**（wire preset id `project_reconcile`）。本檔原名 `project.md`，已改為 `agent.md` 以對齊 `analysis_mode=agent`；**UI URL 僅** `/tasks/:taskId/agent`（舊 `/tasks/:taskId/project` 已退役、無 redirect）。
+
 `analysis_mode=agent` 且 `output_calendar`（UI 預設「專案調和」／`project_reconcile`）由排程驅動多輪 `AgentRuntime`（**不是** `execute_batch` 的一次性 JSON 分析）。
 
 舊的獨立 `analysis_mode=project` / `project_tick.py` / `prompts/project.py` 已併入統一 Agent 路徑。
@@ -51,4 +53,4 @@
 - Channel：`server/agent/channels.py` → `AGENT_CHANNEL` / `channel_from_agent_spec`（tick 內連續；不持久化跨次排程 UI session）
 - Policy：`server/domain/agent_task_spec.py`（`project_reconcile`／`web_scout` 預設）
 - Schema：見 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix)
-- UI：任務底下的 Agent 詳情 `/tasks/:taskId/agent`（`analysisMode=agent` + `outputCalendar`；舊路徑 `/tasks/:taskId/project` 已退役、不再 redirect）；**不是**與 Sources／Assistant 同層的頂層導航。
+- UI：任務底下的 Agent 詳情 **僅** `/tasks/:taskId/agent`（`analysisMode=agent` + `outputCalendar`；產品名「專案調和」；舊路徑 `/tasks/:taskId/project` 已退役、不再 redirect）；**不是**與 Sources／Assistant 同層的頂層導航。

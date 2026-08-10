@@ -199,8 +199,9 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": "calendar.delete_event",
         "description": (
-            "Soft-dismiss a timeline event by id (user event, analysis event, or "
-            "single RRULE occurrence id). The source row is kept; restore only via "
+            "Soft-dismiss a timeline event by id (user event, analysis event, "
+            "single RRULE occurrence id, or item remind DATE projection "
+            "`item:{id}:remind`). The source row is kept; restore only via "
             "the timeline UI (「顯示已移除」). Agent list/get hide dismissed items. "
             "Affects timeline only (intelligence feed still shows analysis events)."
         ),
@@ -218,7 +219,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "Mark a timeline event as important (❗). Works for user events, "
             "analysis findings, RRULE occurrence ids, and item DATE projections "
-            "(purchased/remind/expires). Idempotent."
+            "(itemDateKind=remind only; no purchased/expires projections). Idempotent."
         ),
         "parameters": {
             "type": "object",

@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Query, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified
+from server.api.query_aliases import qalias
 from server.api.schemas.requests import (
     CategoryCreateBody,
     CategoryUpdateBody,
@@ -134,8 +135,8 @@ async def delete_category_route(request: Request, category_id: str) -> dict[str,
 @router.get("", response_model=list[ItemResponse])
 async def list_items(
     request: Request,
-    workset_id: str | None = Query(default=None, alias="worksetId"),
-    category_id: str | None = Query(default=None, alias="categoryId"),
+    workset_id: str | None = qalias("worksetId", default=None),
+    category_id: str | None = qalias("categoryId", default=None),
     status: str | None = Query(default=None),
     search: str | None = Query(default=None),
 ) -> list[dict[str, Any]]:

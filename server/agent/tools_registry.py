@@ -192,9 +192,9 @@ async def execute_tool(
         return {"error": "items_read_disabled"}
     if name in ITEMS_WRITE_TOOL_NAMES and ctx.get("items_writes_enabled") is False:
         return {"error": "items_writes_disabled"}
-    project_id = ctx.get("agent_scope_task_id")
-    if project_id:
-        scoped_error = await apply_agent_scope(db, name, args, project_id=str(project_id))
+    scope_task_id = ctx.get("agent_scope_task_id")
+    if scope_task_id:
+        scoped_error = await apply_agent_scope(db, name, args, scope_task_id=str(scope_task_id))
         if scoped_error is not None:
             return scoped_error
     if name == "calendar.create_event" and context:

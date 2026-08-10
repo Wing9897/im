@@ -40,31 +40,31 @@ async def apply_agent_scope(
     name: str,
     args: dict[str, Any],
     *,
-    project_id: str,
+    scope_task_id: str,
 ) -> dict[str, Any] | None:
     """Mutate ``args`` for agent ticks. Return an error dict to short-circuit."""
     if name in AGENT_SCOPE_READ_TOOLS or name in AGENT_SCOPE_EVENT_WRITE_TOOLS:
-        # Force calendar reads/writes onto this project (and its child recurrings).
-        args["taskId"] = project_id
+        # Force calendar reads/writes onto this task (and its child recurrings).
+        args["taskId"] = scope_task_id
         args.pop("task_id", None)
-        args["_default_task_id"] = project_id
-        args["_agent_scope_task_id"] = project_id
+        args["_default_task_id"] = scope_task_id
+        args["_agent_scope_task_id"] = scope_task_id
 
     if name == "calendar.create_event":
-        args["taskId"] = project_id
-        args["_default_task_id"] = project_id
+        args["taskId"] = scope_task_id
+        args["_default_task_id"] = scope_task_id
 
     if name == "calendar.create_recurring_task":
-        args["_parent_task_id"] = project_id
+        args["_parent_task_id"] = scope_task_id
 
     if name in {"calendar.update_recurring_task", "calendar.delete_recurring_task"}:
-        args["_require_parent_task_id"] = project_id
+        args["_require_parent_task_id"] = scope_task_id
 
     if name == "messages.search":
-        rows = await fetch_task_channel_rows(db, project_id)
+        rows = await fetch_task_channel_rows(db, scope_task_id)
         if not rows:
             return {
-                "error": "project has no bound channels; messages.search unavailable",
+                "error": "agent task has no bound channels; messages.search unavailable",
                 "items": [],
                 "count": 0,
             }
