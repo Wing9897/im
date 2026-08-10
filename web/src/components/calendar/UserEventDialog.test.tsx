@@ -105,6 +105,69 @@ describe("UserEventDialog", () => {
     expect(arg.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(arg.isAllDay).toBe(false);
     expect(arg.taskId).toBeUndefined();
+    expect(arg.amountInput).toBe("");
+    expect(arg.direction).toBe("expense");
+
+    host.remove();
+  });
+
+  it("submits amount and income direction from finance fields", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          initial: { title: "購入", kind: "one_off" },
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="user-event-finance-fields"]')).toBeTruthy();
+    const amountInput = document.body.querySelector(
+      '[data-testid="user-event-amount-input"]',
+    ) as HTMLInputElement;
+    expect(amountInput).toBeTruthy();
+    await act(async () => {
+      setInputValue(amountInput, "128.5");
+    });
+
+    const incomeTab = Array.from(document.body.querySelectorAll('[role="tab"]')).find(
+      (el) => el.textContent === "收入",
+    ) as HTMLButtonElement | undefined;
+    expect(incomeTab).toBeTruthy();
+    await act(async () => {
+      incomeTab!.click();
+    });
+
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement | null;
+    if (startInput) {
+      await act(async () => {
+        setInputValue(startInput, "2026-08-10T10:00");
+      });
+    }
+
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (b) => b.textContent === "新增",
+    );
+    expect(submit).toBeTruthy();
+    await act(async () => {
+      submit!.click();
+    });
+
+    expect(onSubmit).toHaveBeenCalled();
+    const arg = onSubmit.mock.calls[0][0];
+    expect(arg.title).toBe("購入");
+    expect(arg.amountInput).toBe("128.5");
+    expect(arg.direction).toBe("income");
 
     host.remove();
   });
