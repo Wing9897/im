@@ -13,7 +13,7 @@ export function mockFetch(response: {
     json: response.json ?? (() => Promise.resolve({})),
     text: response.text ?? (() => Promise.resolve("")),
   });
-  globalThis.fetch = fn as unknown as typeof fetch;
+  globalThis.fetch = fn;
   return fn;
 }
 

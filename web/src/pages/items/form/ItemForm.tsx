@@ -128,7 +128,7 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     setAttributes((prev) => seedAttributesFromFieldSchema(prev, category?.fieldSchema));
   }, [item, category?.fieldSchema]);
 
-  const buildDraft = (): ItemSaveDraft => ({
+  const buildDraft = useCallback((): ItemSaveDraft => ({
     id: effectiveItem?.id,
     title: title.trim(),
     worksetId,
@@ -142,7 +142,19 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
       ? attributes
       : seedAttributesFromFieldSchema(attributes, category?.fieldSchema),
     status: effectiveItem?.status === "archived" ? "archived" : "active",
-  });
+  }), [
+    effectiveItem,
+    title,
+    worksetId,
+    categoryId,
+    notes,
+    emoji,
+    quantityInput,
+    unit,
+    priceInput,
+    attributes,
+    category?.fieldSchema,
+  ]);
 
   const ensureSavedItem = useCallback(async (): Promise<TrackableItem | null> => {
     if (effectiveItem) return effectiveItem;
@@ -159,7 +171,7 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     } finally {
       setSaving(false);
     }
-  }, [effectiveItem, title, saving, onSave, t, worksetId, categoryId, notes, emoji, quantityInput, unit, priceInput, attributes]);
+  }, [effectiveItem, title, saving, onSave, t, buildDraft]);
 
   const linkedCalendarRemindHint =
     category?.defaultRemindBeforeDays != null && category.defaultRemindBeforeDays > 0
@@ -210,7 +222,7 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
       setError(formatItemsError(err, t));
       setSaving(false);
     }
-  }, [busy, onSave, t, title, worksetId, categoryId, notes, emoji, quantityInput, unit, priceInput, attributes, effectiveItem?.id, effectiveItem?.status]);
+  }, [busy, onSave, t, title, buildDraft]);
 
   useImperativeHandle(ref, () => ({ submit, canSubmit, busy }), [canSubmit, busy, submit]);
 
@@ -271,9 +283,15 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
                 categoryDefaultRemindBeforeDays={category?.defaultRemindBeforeDays ?? null}
                 onAdd={() => void linked.openLinkedCalendarCreate()}
                 onQuickAdd={(kind) => void linked.openLinkedCalendarCreate(kind)}
-                onEditOneOff={linked.openLinkedCalendarEdit}
-                onDeleteOneOff={linked.deleteLinkedOneOff}
-                onDeleteRecurring={linked.deleteLinkedRecurring}
+                onEditOneOff={(event) => {
+                  linked.openLinkedCalendarEdit(event);
+                }}
+                onDeleteOneOff={(event) => {
+                  void linked.deleteLinkedOneOff(event);
+                }}
+                onDeleteRecurring={(taskId, title) => {
+                  void linked.deleteLinkedRecurring(taskId, title);
+                }}
                 onActiveExpiryChange={linked.setActiveLinkedExpiry}
               />
 

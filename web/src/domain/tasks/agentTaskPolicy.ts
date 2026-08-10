@@ -69,12 +69,12 @@ export function normalizeAgentPolicy(
   opts?: { hasChannels?: boolean | null },
 ): AgentTaskPolicy {
   let triggerMode = input.triggerMode ?? "schedule";
-  let capCalendarRead = input.capCalendarRead ?? true;
+  const capCalendarRead = input.capCalendarRead ?? true;
   let capCalendarWrites = input.capCalendarWrites ?? false;
   let capWebSearch = input.capWebSearch ?? false;
   let capForceWebSearch = input.capForceWebSearch ?? false;
-  let capReadAnalysisEvents = input.capReadAnalysisEvents ?? true;
-  let capReadItems = input.capReadItems ?? true;
+  const capReadAnalysisEvents = input.capReadAnalysisEvents ?? true;
+  const capReadItems = input.capReadItems ?? true;
   let outputCalendar = input.outputCalendar ?? false;
   let outputAnalysisEvents = input.outputAnalysisEvents ?? false;
 

@@ -41,6 +41,8 @@ function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | n
     itemId: event.itemId ?? null,
     itemDateKind: event.itemDateKind ?? null,
     dismissed: Boolean(event.dismissed),
+    important: Boolean(event.important),
+    isLastOccurrence: false,
   };
 }
 

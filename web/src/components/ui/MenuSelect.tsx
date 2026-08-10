@@ -241,7 +241,7 @@ export function MenuSelect({
   // useAnchoredMenu still owns open + dismiss; we only skip fixed positioning when not portaled.
   const listbox = open ? (
     <ul
-      ref={menuPortal ? (menuRef as RefObject<HTMLUListElement | null>) : undefined}
+      ref={menuPortal ? (menuRef as RefObject<HTMLUListElement>) : undefined}
       id={listId}
       role="listbox"
       aria-label={ariaLabel}
@@ -278,13 +278,13 @@ export function MenuSelect({
 
   return (
     <div
-      ref={rootRef as RefObject<HTMLDivElement | null>}
+      ref={rootRef as RefObject<HTMLDivElement>}
       className={shellClass}
       style={usesFormChrome ? undefined : shellStyle}
       data-testid={testId}
     >
       <button
-        ref={anchorRef as RefObject<HTMLButtonElement | null>}
+        ref={anchorRef as RefObject<HTMLButtonElement>}
         type="button"
         id={id}
         disabled={disabled}

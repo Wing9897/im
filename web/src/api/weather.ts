@@ -29,7 +29,7 @@ export function fetchWeatherForecast(
       location,
       startDate,
       endDate,
-      ...(normalized.force ? { force: true } : {}),
+      ...(normalized.force ? { force: "true" } : {}),
     },
     { signal: normalized.signal },
   );
