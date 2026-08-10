@@ -262,6 +262,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
         "icsSource": None,
         "remindBeforeDays": None,
         "itemId": None,
+        "kind": "normal",
         "amount": None,
         "direction": None,
         "body": "詳情內容",

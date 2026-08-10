@@ -83,6 +83,7 @@ export function TimelinePageDialogs({
                 endTime: createInitial?.endTime ?? "",
                 itemId: createInitial?.itemId ?? "",
                 remindBeforeDays: createInitial?.remindBeforeDays ?? "",
+                calendarKind: "normal",
               }
         }
         busy={dialogBusy}

@@ -1,0 +1,90 @@
+/**
+ * Special linked-calendar kinds on ``user_events.kind`` (wire).
+ * Distinct from dialog one_off/recurring ``UserEventKind``.
+ */
+
+export const USER_EVENT_CALENDAR_KINDS = [
+  "normal",
+  "expires",
+  "purchase_effective",
+] as const;
+
+export type UserEventCalendarKind = (typeof USER_EVENT_CALENDAR_KINDS)[number];
+
+/** Title presets historically used by Items quick-create「到期」. */
+export const LINKED_EXPIRY_TITLES = new Set(["到期", "Expires"]);
+
+/** Title presets historically used by purchase/effective quick-create. */
+export const LINKED_PURCHASE_EFFECTIVE_TITLES = new Set([
+  "Purchased",
+  "购入",
+  "購入",
+  "Effective",
+  "生效",
+]);
+
+export function isLinkedExpiryTitle(title: string | null | undefined): boolean {
+  return LINKED_EXPIRY_TITLES.has(String(title ?? "").trim());
+}
+
+export function isLinkedPurchaseEffectiveTitle(title: string | null | undefined): boolean {
+  return LINKED_PURCHASE_EFFECTIVE_TITLES.has(String(title ?? "").trim());
+}
+
+/** Map legacy title presets → kind (seed / migration helpers only). */
+export function inferUserEventCalendarKindFromTitle(
+  title: string | null | undefined,
+): UserEventCalendarKind {
+  const cleaned = String(title ?? "").trim();
+  if (LINKED_EXPIRY_TITLES.has(cleaned)) return "expires";
+  if (LINKED_PURCHASE_EFFECTIVE_TITLES.has(cleaned)) return "purchase_effective";
+  return "normal";
+}
+
+export function normalizeUserEventCalendarKind(
+  value: string | null | undefined,
+): UserEventCalendarKind {
+  const cleaned = String(value ?? "").trim();
+  if (cleaned === "expires" || cleaned === "purchase_effective" || cleaned === "normal") {
+    return cleaned;
+  }
+  return "normal";
+}
+
+/**
+ * Authority = kind. Title fallback only when kind is missing (legacy fixtures).
+ */
+export function isExpiresCalendarEvent(event: {
+  kind?: string | null;
+  title?: string | null;
+}): boolean {
+  if (event.kind === "expires") return true;
+  if (event.kind != null && String(event.kind).trim() !== "") return false;
+  return isLinkedExpiryTitle(event.title);
+}
+
+/**
+ * Authority = kind. Title fallback only when kind is missing (legacy fixtures).
+ */
+export function isPurchaseEffectiveCalendarEvent(event: {
+  kind?: string | null;
+  title?: string | null;
+}): boolean {
+  if (event.kind === "purchase_effective") return true;
+  if (event.kind != null && String(event.kind).trim() !== "") return false;
+  return isLinkedPurchaseEffectiveTitle(event.title);
+}
+
+export function quickKindToCalendarKind(
+  kind: "expires" | "other" | "purchaseEffective",
+): UserEventCalendarKind {
+  switch (kind) {
+    case "expires":
+      return "expires";
+    case "purchaseEffective":
+      return "purchase_effective";
+    case "other":
+    default:
+      return "normal";
+  }
+}

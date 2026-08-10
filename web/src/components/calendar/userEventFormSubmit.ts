@@ -75,6 +75,7 @@ function buildRecurringSubmit(
     ok: true,
     values: {
       kind: "recurring",
+      calendarKind: values.calendarKind,
       title,
       startTime: "",
       endTime: "",
@@ -112,6 +113,7 @@ function buildOneOffAllDaySubmit(
     ok: true,
     values: {
       kind: "one_off",
+      calendarKind: values.calendarKind,
       title,
       startTime,
       endTime: exclusiveEnd,
@@ -146,6 +148,7 @@ function buildOneOffTimedSubmit(
     ok: true,
     values: {
       kind: "one_off",
+      calendarKind: values.calendarKind,
       title,
       startTime,
       endTime: endTime || "",

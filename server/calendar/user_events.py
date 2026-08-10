@@ -23,10 +23,11 @@ from server.calendar.user_events_normalize import (
     _normalize_origin,
     _require_nonempty_title,
     _require_start_time,
+    apply_finance_for_kind,
     build_user_event_list_filters,
     normalize_event_amount,
-    normalize_event_direction,
     normalize_remind_before_days,
+    normalize_user_event_kind,
     normalize_user_event_task_id_wire,
     normalize_user_event_workset_id_wire,
     resolve_user_event_item_id,
@@ -48,6 +49,7 @@ __all__ = [
     "normalize_user_event_task_id_wire",
     "normalize_user_event_workset_id_wire",
     "normalize_remind_before_days",
+    "normalize_user_event_kind",
     "resolve_user_event_task_id",
     "resolve_user_event_workset_id",
     "resolve_user_event_item_id",
@@ -137,12 +139,13 @@ async def create_user_event(
     task_id: Any = None,
     item_id: Any = None,
     workset_id: Any = _UNSET,
+    kind: Any = None,
     amount: Any = None,
     direction: Any = None,
     sync_item_dates: bool = True,
 ) -> dict[str, Any]:
     from server.items.linked_dates import (
-        is_linked_expiry_title,
+        is_linked_expiry_kind,
         sync_item_dates_from_linked_calendars,
     )
 
@@ -154,8 +157,13 @@ async def create_user_event(
     clean_remind = normalize_remind_before_days(remind_before_days)
     clean_task_id = await resolve_user_event_task_id(db, task_id)
     clean_item_id = await resolve_user_event_item_id(db, item_id)
+    clean_kind = normalize_user_event_kind(kind)
     clean_amount = normalize_event_amount(amount)
-    clean_direction = normalize_event_direction(direction, amount=clean_amount)
+    clean_amount, clean_direction = apply_finance_for_kind(
+        clean_kind,
+        amount=clean_amount,
+        direction=direction,
+    )
 
     if workset_id is _UNSET:
         # Empty / omitted taskId → system workset; real task → copy task workset if any.
@@ -179,9 +187,9 @@ async def create_user_event(
     await db.execute(
         "INSERT INTO user_events "
         "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
-        "remind_before_days, task_id, item_id, workset_id, amount, direction, "
+        "remind_before_days, task_id, item_id, workset_id, kind, amount, direction, "
         "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -195,13 +203,14 @@ async def create_user_event(
             clean_task_id,
             clean_item_id,
             clean_workset_id,
+            clean_kind,
             clean_amount,
             clean_direction,
             now,
             now,
         ),
     )
-    if sync_item_dates and clean_item_id and is_linked_expiry_title(clean_title):
+    if sync_item_dates and clean_item_id and is_linked_expiry_kind(clean_kind):
         await sync_item_dates_from_linked_calendars(db, clean_item_id)
     item = await get_user_event(db, event_id)
     assert item is not None
@@ -222,13 +231,14 @@ async def update_user_event(
     task_id: Any = _UNSET,
     item_id: Any = _UNSET,
     workset_id: Any = _UNSET,
+    kind: Any = _UNSET,
     amount: Any = _UNSET,
     direction: Any = _UNSET,
     sync_item_dates: bool = True,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
     from server.items.linked_dates import (
-        is_linked_expiry_title,
+        is_linked_expiry_kind,
         sync_item_dates_from_linked_calendars,
     )
 
@@ -236,9 +246,9 @@ async def update_user_event(
     if existing is None:
         return None
 
-    prev_title = str(existing.get("title") or "")
     raw_prev_iid = existing.get("item_id")
     prev_item_id = str(raw_prev_iid).strip() if isinstance(raw_prev_iid, str) and raw_prev_iid.strip() else None
+    prev_kind = normalize_user_event_kind(existing.get("kind"))
 
     next_title = _require_nonempty_title(str(title)) if title is not _UNSET else str(existing["title"])
     next_start = _require_start_time(str(start_time)) if start_time is not _UNSET else str(existing["start_time"])
@@ -285,6 +295,8 @@ async def update_user_event(
     else:
         next_workset_id = await resolve_user_event_workset_id(db, workset_id)
 
+    next_kind = normalize_user_event_kind(kind) if kind is not _UNSET else prev_kind
+
     if amount is _UNSET:
         raw_amount = existing.get("amount")
         next_amount = float(raw_amount) if raw_amount is not None else None
@@ -297,12 +309,16 @@ async def update_user_event(
         )
     else:
         direction_arg = direction
-    next_direction = normalize_event_direction(direction_arg, amount=next_amount)
+    next_amount, next_direction = apply_finance_for_kind(
+        next_kind,
+        amount=next_amount,
+        direction=direction_arg,
+    )
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
         "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
-        "workset_id = ?, amount = ?, direction = ?, updated_at = ? WHERE id = ?",
+        "workset_id = ?, kind = ?, amount = ?, direction = ?, updated_at = ? WHERE id = ?",
         (
             next_title,
             next_body,
@@ -314,6 +330,7 @@ async def update_user_event(
             next_task_id,
             next_item_id,
             next_workset_id,
+            next_kind,
             next_amount,
             next_direction,
             utc_now_iso(),
@@ -321,7 +338,7 @@ async def update_user_event(
         ),
     )
     if sync_item_dates:
-        touched_expires = is_linked_expiry_title(prev_title) or is_linked_expiry_title(next_title)
+        touched_expires = is_linked_expiry_kind(prev_kind) or is_linked_expiry_kind(next_kind)
         if prev_item_id and touched_expires:
             await sync_item_dates_from_linked_calendars(db, prev_item_id)
         if next_item_id and next_item_id != prev_item_id and touched_expires:
@@ -334,7 +351,7 @@ async def update_user_event(
 async def delete_user_event(db: Database, event_id: str) -> bool:
     """Soft-dismiss a user event for the timeline (row retained for restore)."""
     from server.items.linked_dates import (
-        is_linked_expiry_title,
+        is_linked_expiry_kind,
         sync_item_dates_from_linked_calendars,
     )
 
@@ -344,7 +361,7 @@ async def delete_user_event(db: Database, event_id: str) -> bool:
     await dismiss_timeline_event(db, source="user", event_id=event_id)
     raw_iid = existing.get("item_id")
     item_id = str(raw_iid).strip() if isinstance(raw_iid, str) and raw_iid.strip() else None
-    title = str(existing.get("title") or "")
-    if item_id and is_linked_expiry_title(title):
+    kind = str(existing.get("kind") or "")
+    if item_id and is_linked_expiry_kind(kind):
         await sync_item_dates_from_linked_calendars(db, item_id)
     return True

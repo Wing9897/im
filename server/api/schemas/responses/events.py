@@ -27,7 +27,9 @@ class UserEventResponse(BaseModel):
     itemId: str | None = None
     #: Ownership workset id (builtin ``__user__`` for handwritten / assistant).
     worksetId: str
-    #: Optional transaction amount for purchase/effective linked calendars.
+    #: Special linked-calendar semantics; title presets are UX only.
+    kind: Literal["normal", "expires", "purchase_effective"] = "normal"
+    #: Optional transaction amount for ``kind=purchase_effective`` only.
     amount: float | None = None
     #: ``expense`` (default when amount set) or ``income``; null when amount unset.
     direction: Literal["expense", "income"] | None = None

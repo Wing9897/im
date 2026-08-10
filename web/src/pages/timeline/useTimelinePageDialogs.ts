@@ -180,6 +180,7 @@ export function useTimelinePageDialogs({
             remindBeforeDays,
             itemId,
             worksetId,
+            kind: "normal",
           });
         } else if (editingEvent) {
           await updateUserEvent(editingEvent.id, {
@@ -192,6 +193,7 @@ export function useTimelinePageDialogs({
             remindBeforeDays,
             itemId,
             worksetId,
+            // Omit kind/amount — preserve special kinds; title-only edits stay non-finance.
           });
         }
         setDialogOpen(false);

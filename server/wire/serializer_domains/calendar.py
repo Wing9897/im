@@ -89,6 +89,7 @@ def serialize_user_event(
             else None
         ),
         "worksetId": workset_id,
+        "kind": str(row.get("kind") or "normal").strip() or "normal",
         "amount": (float(row["amount"]) if row.get("amount") is not None else None),
         "direction": (
             str(row["direction"]).strip()

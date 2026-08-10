@@ -79,6 +79,7 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
             "remind_before_days": body.remindBeforeDays,
             "task_id": body.taskId,
             "item_id": body.itemId,
+            "kind": body.kind,
             "amount": body.amount,
             "direction": body.direction,
         }
@@ -124,6 +125,7 @@ async def patch_event(
         "taskId": "task_id",
         "itemId": "item_id",
         "worksetId": "workset_id",
+        "kind": "kind",
         "amount": "amount",
         "direction": "direction",
     }

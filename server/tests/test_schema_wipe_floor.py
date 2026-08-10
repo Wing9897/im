@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-24 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-25 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -23,7 +23,7 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 24
+    assert CURRENT_SCHEMA_VERSION == 25
 
 
 @pytest.mark.asyncio

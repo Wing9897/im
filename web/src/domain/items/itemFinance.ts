@@ -1,5 +1,5 @@
 /**
- * Items finance v1 — purchase/effective linked calendars in a date window.
+ * Items finance v1 — purchase_effective linked calendars in a date window.
  * Totals come from event ``amount`` + ``direction`` (not item fields).
  * Full P&L (resale, depreciation, multi-currency) is out of scope here.
  */
@@ -8,15 +8,16 @@ import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 import { formatDateOnly } from "../../utils/dateFormat";
 import { addDays, startOfDay, startOfMonth, startOfYear, todayDateInput } from "../timeline/dateUtils";
+import {
+  isLinkedPurchaseEffectiveTitle,
+  isPurchaseEffectiveCalendarEvent,
+  LINKED_PURCHASE_EFFECTIVE_TITLES,
+} from "../timeline/userEventCalendarKind";
 
-/** Quick-create preset titles + common「生效 / Effective」variants. */
-export const LINKED_PURCHASE_EFFECTIVE_TITLES = new Set([
-  "Purchased",
-  "购入",
-  "購入",
-  "Effective",
-  "生效",
-]);
+export {
+  isLinkedPurchaseEffectiveTitle,
+  LINKED_PURCHASE_EFFECTIVE_TITLES,
+};
 
 export type EventFinanceDirection = "expense" | "income";
 
@@ -53,10 +54,6 @@ export type ItemsFinanceSummary = {
   /** Expense − income for the filtered rows. */
   net: number;
 };
-
-export function isLinkedPurchaseEffectiveTitle(title: string | null | undefined): boolean {
-  return LINKED_PURCHASE_EFFECTIVE_TITLES.has(String(title ?? "").trim());
-}
 
 /** Local calendar day (YYYY-MM-DD) for range checks — all-day uses start date only. */
 export function purchaseEffectiveDayFromEvent(event: UserEvent): string | null {
@@ -136,7 +133,7 @@ export function buildItemsFinanceRows(
   for (const event of events) {
     if (event.dismissed) continue;
     if (!event.itemId?.trim()) continue;
-    if (!isLinkedPurchaseEffectiveTitle(event.title)) continue;
+    if (!isPurchaseEffectiveCalendarEvent(event)) continue;
     const day = purchaseEffectiveDayFromEvent(event);
     if (!day || !isDayInInclusiveRange(day, range.startDay, range.endDay)) continue;
 

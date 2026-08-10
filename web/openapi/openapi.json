@@ -13614,6 +13614,16 @@
             ],
             "title": "Worksetid"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "expires",
+              "purchase_effective"
+            ],
+            "title": "Kind",
+            "default": "normal"
+          },
           "amount": {
             "anyOf": [
               {
@@ -13760,6 +13770,22 @@
               }
             ],
             "title": "Worksetid"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "normal",
+                  "expires",
+                  "purchase_effective"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
           },
           "amount": {
             "anyOf": [
@@ -13911,6 +13937,16 @@
           "worksetId": {
             "type": "string",
             "title": "Worksetid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "expires",
+              "purchase_effective"
+            ],
+            "title": "Kind",
+            "default": "normal"
           },
           "amount": {
             "anyOf": [

@@ -9,6 +9,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from server.calendar.user_event_kinds import (
+    finance_allowed_for_kind,
+    normalize_user_event_kind as _normalize_kind_value,
+)
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
 from server.time_iso import parse_iso, to_iso_z
@@ -26,6 +30,14 @@ _UNSET = object()
 
 class UserEventValidationError(ValueError):
     """Invalid user-event fields."""
+
+
+def normalize_user_event_kind(value: Any) -> str:
+    """``normal`` | ``expires`` | ``purchase_effective``; blank → ``normal``."""
+    try:
+        return _normalize_kind_value(value)
+    except ValueError as exc:
+        raise UserEventValidationError(str(exc)) from exc
 
 
 def normalize_event_amount(value: Any) -> float | None:
@@ -53,6 +65,19 @@ def normalize_event_direction(value: Any, *, amount: float | None) -> str | None
     if cleaned not in ALLOWED_EVENT_DIRECTIONS:
         raise UserEventValidationError("direction must be 'expense' or 'income'")
     return cleaned
+
+
+def apply_finance_for_kind(
+    kind: str,
+    *,
+    amount: float | None,
+    direction: Any,
+) -> tuple[float | None, str | None]:
+    """Keep amount/direction only for ``purchase_effective``; otherwise clear."""
+    if not finance_allowed_for_kind(kind):
+        return None, None
+    clean_amount = amount
+    return clean_amount, normalize_event_direction(direction, amount=clean_amount)
 
 
 class UserEventTaskIdError(UserEventValidationError):

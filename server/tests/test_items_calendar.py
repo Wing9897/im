@@ -32,6 +32,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
             "startTime": f"{day}T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
+            "kind": "purchase_effective" if title == "購入" else "expires",
         }
         if remind is not None:
             body["remindBeforeDays"] = remind
@@ -48,6 +49,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": f"{expires}T00:00:00Z",
             "isAllDay": True,
             "itemId": arch_id,
@@ -124,6 +126,7 @@ async def test_item_occurrence_dismiss_source_item(client, app):
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": f"{day}T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -190,6 +193,7 @@ async def test_agent_list_expiring_and_create(app, client):
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": f"{day}T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -273,6 +277,7 @@ async def test_linked_expiry_event_updates_item_expires_at(client):
         "/api/v1/calendar/user-events",
         json={
             "title": "Expires",
+            "kind": "expires",
             "startTime": "2026-08-10T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -306,6 +311,7 @@ async def test_linked_purchased_event_does_not_sync_item_cache(client):
         "/api/v1/calendar/user-events",
         json={
             "title": "購入",
+            "kind": "purchase_effective",
             "startTime": "2026-07-20T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -382,6 +388,7 @@ async def test_list_items_linked_expiry_drives_expires_at(client):
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": "2026-08-12T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -407,6 +414,7 @@ async def test_multiple_linked_expiry_primary_is_first_created(client, app):
         "/api/v1/calendar/user-events",
         json={
             "title": "Expires",
+            "kind": "expires",
             "startTime": "2026-08-01T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -425,6 +433,7 @@ async def test_multiple_linked_expiry_primary_is_first_created(client, app):
         "/api/v1/calendar/user-events",
         json={
             "title": "Expires",
+            "kind": "expires",
             "startTime": "2026-08-10T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -470,6 +479,7 @@ async def test_update_linked_expiry_title_still_allowed(client):
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": "2026-08-01T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,
@@ -499,6 +509,7 @@ async def test_delete_linked_expiry_clears_item_cache(client):
         "/api/v1/calendar/user-events",
         json={
             "title": "到期",
+            "kind": "expires",
             "startTime": "2026-08-01T00:00:00Z",
             "isAllDay": True,
             "itemId": item_id,

@@ -1,9 +1,9 @@
 """Align item expires_at / remind_before_days with linked expiry calendars.
 
-Items API no longer accepts expiry / remind writes. Linked ``user_events``
-titled 到期 / Expires are the source of truth. Item columns are a denormalized
-cache for list badges, sort, agent ``list_expiring``, and remind projection —
-never a standalone SoT.
+Items API no longer accepts expiry / remind writes. Linked ``user_events`` with
+``kind=expires`` are the source of truth (title presets 到期 / Expires are UX
+only). Item columns are a denormalized cache for list badges, sort, agent
+``list_expiring``, and remind projection — never a standalone SoT.
 
 Write-through: calendar create / update / delete calls
 ``sync_item_dates_from_linked_calendars``. GET list/get must not reconcile.
@@ -14,15 +14,27 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Mapping
 
+from server.calendar.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.db.database import Database
 from server.util import utc_now_iso
 
-#: Titles used by Items quick-create「到期」chip (en / zh-Hans / zh-Hant).
-LINKED_EXPIRY_TITLES = frozenset({"到期", "Expires"})
+# Re-export for callers that historically imported title helpers from here.
+from server.calendar.user_event_kinds import (  # noqa: E402
+    LINKED_EXPIRY_TITLES,
+    is_linked_expiry_title,
+)
+
+__all__ = [
+    "LINKED_EXPIRY_TITLES",
+    "is_linked_expiry_title",
+    "is_linked_expiry_kind",
+    "sync_item_dates_from_linked_calendars",
+    "reconcile_item_linked_dates",
+]
 
 
-def is_linked_expiry_title(title: str | None) -> bool:
-    return str(title or "").strip() in LINKED_EXPIRY_TITLES
+def is_linked_expiry_kind(kind: str | None) -> bool:
+    return str(kind or "").strip() == USER_EVENT_KIND_EXPIRES
 
 
 def _date_prefix(raw: Any) -> str | None:
@@ -38,7 +50,7 @@ async def _active_linked_expiry_rows(
     db: Database,
     item_id: str,
 ) -> list[dict[str, Any]]:
-    """Non-dismissed linked user_events whose title is an expiry milestone."""
+    """Non-dismissed linked user_events with ``kind=expires`` (primary = earliest created_at)."""
     rows = await db.fetch_all(
         """
         SELECT ue.*
@@ -46,11 +58,11 @@ async def _active_linked_expiry_rows(
         LEFT JOIN timeline_dismissals td
           ON td.source = 'user' AND td.event_id = ue.id
         WHERE ue.item_id = ?
-          AND ue.title IN (?, ?)
+          AND ue.kind = ?
           AND td.event_id IS NULL
         ORDER BY ue.created_at ASC, ue.id ASC
         """,
-        (item_id, "到期", "Expires"),
+        (item_id, USER_EVENT_KIND_EXPIRES),
     )
     return list(rows)
 
@@ -65,7 +77,7 @@ async def sync_item_dates_from_linked_calendars(
     db: Database,
     item_id: str,
 ) -> None:
-    """Write denormalized expiry cache from active linked「到期」milestones."""
+    """Write denormalized expiry cache from active linked ``kind=expires`` milestones."""
     clean_id = (item_id or "").strip()
     if not clean_id:
         return

@@ -11,7 +11,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "List trackable items with optional filters (workset, category, status, keyword). "
             "Use for inventory lookup — not for expiry questions (use items.list_expiring). "
             "Returns core fields plus quantity/unit and attributes summary. "
-            "Money is on purchase/effective linked calendars (amount/direction), not the item."
+            "Money is on purchase_effective linked calendars (amount/direction), not the item."
         ),
         "parameters": {
             "type": "object",
@@ -89,7 +89,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Create a trackable item (inventory / document / food / card, etc.). "
             "worksetId defaults to builtin「一般」(__user__) when omitted. "
             "Purchase / expiry dates are not set here — create linked calendar "
-            "milestones (購入 / 到期) via calendar tools instead. "
+            "milestones via the Items form (kind=expires / purchase_effective). "
+            "calendar.create_event only creates kind=normal events (no finance / expiry). "
             "attributes are optional soft key/value extensions; changing category later "
             "does not strip them. Confirm title with the user before writing."
         ),

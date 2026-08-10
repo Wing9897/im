@@ -30,15 +30,22 @@ describe("linkedCalendarQuickCreate", () => {
     expect(isLinkedExpiryTitle("Renewal")).toBe(false);
 
     const events = [
-      { id: "b", title: "Expires", dismissed: false, createdAt: "2026-02-01T00:00:00Z" },
-      { id: "a", title: "到期", dismissed: false, createdAt: "2026-01-01T00:00:00Z" },
-      { id: "c", title: "Other", dismissed: false, createdAt: "2025-01-01T00:00:00Z" },
+      { id: "b", title: "Expires", kind: "expires", dismissed: false, createdAt: "2026-02-01T00:00:00Z" },
+      { id: "a", title: "到期", kind: "expires", dismissed: false, createdAt: "2026-01-01T00:00:00Z" },
+      { id: "c", title: "Other", kind: "normal", dismissed: false, createdAt: "2025-01-01T00:00:00Z" },
+      {
+        id: "d",
+        title: "到期",
+        kind: "normal",
+        dismissed: false,
+        createdAt: "2024-01-01T00:00:00Z",
+      },
     ] as Parameters<typeof findActiveLinkedExpiryEvent>[0];
     expect(findActiveLinkedExpiryEvent(events)?.id).toBe("a");
     expect(
-      findActiveLinkedExpiryEvent([{ id: "c", title: "到期", dismissed: true }] as Parameters<
-        typeof findActiveLinkedExpiryEvent
-      >[0]),
+      findActiveLinkedExpiryEvent([
+        { id: "c", title: "到期", kind: "expires", dismissed: true },
+      ] as Parameters<typeof findActiveLinkedExpiryEvent>[0]),
     ).toBeNull();
   });
 
@@ -57,6 +64,7 @@ describe("linkedCalendarQuickCreate", () => {
         worksetId: "ws-1",
         isAllDay: false,
         remindBeforeDays: "",
+        calendarKind: "normal",
       }),
     );
     expect(initial.startTime).toContain("2026-08-06");
@@ -77,6 +85,7 @@ describe("linkedCalendarQuickCreate", () => {
       worksetId: "ws-1",
       itemId: "item-1",
       remindBeforeDays: "",
+      calendarKind: "expires",
       startTime: "2026-08-06",
       isAllDay: true,
     });
@@ -95,6 +104,7 @@ describe("linkedCalendarQuickCreate", () => {
     expect(initial.isAllDay).toBe(false);
     expect(initial.title).toBe("Purchased");
     expect(initial.endTime).toBeTruthy();
+    expect(initial.calendarKind).toBe("purchase_effective");
     expect(initial.amountInput).toBe("");
     expect(initial.direction).toBe("expense");
   });
@@ -143,6 +153,7 @@ describe("linkedCalendarQuickCreate", () => {
       isAllDay: false,
       remindBeforeDays: "2",
       itemId: "item-42",
+      calendarKind: "normal",
       amountInput: "",
       direction: "expense",
     });
