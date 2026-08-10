@@ -1,11 +1,12 @@
-import { CalendarClock, CalendarDays, Repeat2 } from "lucide-react";
+import { CalendarClock, CalendarDays, Repeat2, ShoppingBag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import type { UserEvent } from "../../../api/userEvents";
 import { Badge } from "../../../components/ui";
 import {
   LINKED_CALENDAR_QUICK_KINDS,
-  linkedCalendarQuickLabelKey,
+  linkedCalendarAddChipAriaKey,
+  linkedCalendarAddChipLabelKey,
   type LinkedCalendarQuickKind,
 } from "../../../domain/items/linkedCalendarQuickCreate";
 import {
@@ -44,8 +45,7 @@ type Props = {
   canAdd?: boolean;
   /** Category preset for remind-before-days prefill on linked calendar create. */
   categoryDefaultRemindBeforeDays?: number | null;
-  onAdd: () => void;
-  /** Quick title presets → same create dialog as onAdd. */
+  /** Quick add presets → same create dialog. */
   onQuickAdd?: (kind: LinkedCalendarQuickKind) => void;
   /** Edit a one-off linked user event (same dialog as Timeline). */
   onEditOneOff?: (event: UserEvent) => void;
@@ -53,9 +53,20 @@ type Props = {
   onDeleteOneOff?: (event: UserEvent) => void;
   /** Soft-delete a recurring analysis task linked to this item. */
   onDeleteRecurring?: (taskId: string, title: string) => void;
-  /** Notify parent when active linked expiry changes (for duplicate guard). */
+  /** Notify parent when primary linked expiry changes. */
   onActiveExpiryChange?: (event: UserEvent | null) => void;
 };
+
+function quickAddChipIcon(kind: LinkedCalendarQuickKind) {
+  switch (kind) {
+    case "expires":
+      return <CalendarClock size={16} strokeWidth={1.75} aria-hidden />;
+    case "purchaseEffective":
+      return <ShoppingBag size={16} strokeWidth={1.75} aria-hidden />;
+    case "other":
+      return <CalendarDays size={16} strokeWidth={1.75} aria-hidden />;
+  }
+}
 
 function LinkedExpiryIconChip({
   event,
@@ -180,7 +191,6 @@ export function ItemFormLinkedCalendarsSection({
   disabled = false,
   canAdd = true,
   categoryDefaultRemindBeforeDays = null,
-  onAdd,
   onQuickAdd,
   onEditOneOff,
   onDeleteOneOff,
@@ -195,7 +205,7 @@ export function ItemFormLinkedCalendarsSection({
     loading,
     loadError,
     createLocked,
-    hasLinkedExpiry,
+    hasPrimaryExpiry,
   } = useLinkedCalendarRows({
     itemId,
     itemExpiresAt,
@@ -205,7 +215,7 @@ export function ItemFormLinkedCalendarsSection({
   });
 
   const showGrid = createLocked || (!loading && !loadError);
-  const showEmptyHint = showGrid && !createLocked && rows.length === 0 && hasLinkedExpiry;
+  const showEmptyHint = showGrid && !createLocked && rows.length === 0 && hasPrimaryExpiry;
   const chipsDisabled = disabled || !canAdd;
   const showCreateHint = createLocked;
 
@@ -233,7 +243,7 @@ export function ItemFormLinkedCalendarsSection({
             data-testid="item-form-linked-calendar-grid"
             aria-label={t("linkedCalendarGridAria")}
           >
-            {!createLocked && hasLinkedExpiry && activeExpiry ? (
+            {!createLocked && hasPrimaryExpiry && activeExpiry ? (
               <LinkedExpiryIconChip
                 event={activeExpiry}
                 expiry={expiryPreview}
@@ -241,21 +251,6 @@ export function ItemFormLinkedCalendarsSection({
                 onEdit={onEditOneOff}
                 onDelete={onDeleteOneOff}
               />
-            ) : onQuickAdd || createLocked ? (
-              LINKED_CALENDAR_QUICK_KINDS.map((kind) => (
-                <ItemFormDashedAddChip
-                  key={kind}
-                  variant="expiry"
-                  disabled={chipsDisabled}
-                  icon={<CalendarClock size={16} strokeWidth={1.75} aria-hidden />}
-                  label={t(linkedCalendarQuickLabelKey(kind))}
-                  ariaLabel={t("quickLinkedCalendarAddAria", {
-                    name: t(linkedCalendarQuickLabelKey(kind)),
-                  })}
-                  testId={`item-form-quick-linked-calendar-${kind}`}
-                  onClick={() => onQuickAdd?.(kind)}
-                />
-              ))
             ) : null}
 
             {!createLocked
@@ -271,14 +266,20 @@ export function ItemFormLinkedCalendarsSection({
                 ))
               : null}
 
-            <ItemFormDashedAddChip
-              disabled={chipsDisabled}
-              icon={<CalendarDays size={16} strokeWidth={1.75} aria-hidden />}
-              label={t("addLinkedCalendar")}
-              ariaLabel={t("addLinkedCalendarAria")}
-              testId="item-form-add-linked-calendar"
-              onClick={onAdd}
-            />
+            {onQuickAdd || createLocked
+              ? LINKED_CALENDAR_QUICK_KINDS.map((kind) => (
+                  <ItemFormDashedAddChip
+                    key={kind}
+                    variant={kind === "expires" ? "expiry" : undefined}
+                    disabled={chipsDisabled}
+                    icon={quickAddChipIcon(kind)}
+                    label={t(linkedCalendarAddChipLabelKey(kind))}
+                    ariaLabel={t(linkedCalendarAddChipAriaKey(kind))}
+                    testId={`item-form-quick-linked-calendar-${kind}`}
+                    onClick={() => onQuickAdd?.(kind)}
+                  />
+                ))
+              : null}
           </div>
         ) : null}
 
@@ -297,7 +298,7 @@ export function ItemFormLinkedCalendarsSection({
           </p>
         ) : null}
 
-        {!createLocked && hasLinkedExpiry && activeExpiry ? (
+        {!createLocked && hasPrimaryExpiry && activeExpiry ? (
           <p
             className={itemFormSecondaryHintClass}
             data-testid="item-form-linked-expiry-callout"
@@ -306,7 +307,7 @@ export function ItemFormLinkedCalendarsSection({
           </p>
         ) : null}
 
-        {!createLocked && !hasLinkedExpiry && !loading ? (
+        {!createLocked && !hasPrimaryExpiry && !loading ? (
           <p className={itemFormSecondaryHintClass} data-testid="item-form-linked-expiry-panel">
             {t("linkedExpiryFeatureHint")}
           </p>

@@ -138,8 +138,6 @@ async def create_user_event(
     sync_item_dates: bool = True,
 ) -> dict[str, Any]:
     from server.items.linked_dates import (
-        LinkedExpiryConflictError,
-        assert_no_duplicate_linked_expiry,
         is_linked_expiry_title,
         sync_item_dates_from_linked_calendars,
     )
@@ -169,12 +167,6 @@ async def create_user_event(
                 clean_workset_id = SYSTEM_WORKSET_ID
     else:
         clean_workset_id = await resolve_user_event_workset_id(db, workset_id)
-
-    if clean_item_id and is_linked_expiry_title(clean_title):
-        try:
-            await assert_no_duplicate_linked_expiry(db, clean_item_id)
-        except LinkedExpiryConflictError as exc:
-            raise UserEventValidationError(str(exc)) from exc
 
     event_id = new_id()
     now = utc_now_iso()
@@ -225,8 +217,6 @@ async def update_user_event(
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
     from server.items.linked_dates import (
-        LinkedExpiryConflictError,
-        assert_no_duplicate_linked_expiry,
         is_linked_expiry_title,
         sync_item_dates_from_linked_calendars,
     )
@@ -283,16 +273,6 @@ async def update_user_event(
             next_workset_id = SYSTEM_WORKSET_ID
     else:
         next_workset_id = await resolve_user_event_workset_id(db, workset_id)
-
-    if next_item_id and is_linked_expiry_title(next_title):
-        try:
-            await assert_no_duplicate_linked_expiry(
-                db,
-                next_item_id,
-                exclude_event_id=event_id,
-            )
-        except LinkedExpiryConflictError as exc:
-            raise UserEventValidationError(str(exc)) from exc
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "

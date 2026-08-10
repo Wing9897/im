@@ -1,6 +1,6 @@
 /**
  * Linked-calendar create/edit form initials for Items (quick chip + add/edit).
- * Only「到期」is a special quick preset — title + all-day.
+ * Quick presets: expiry (all-day), purchase/effective (timed), other (empty title).
  */
 
 import type { UserEvent } from "../../api/userEvents";
@@ -8,8 +8,7 @@ import { defaultCreateTimedRange, todayDateInput } from "../timeline/dateUtils";
 import { toUserEventFormWorksetId } from "../timeline/userEvents";
 import { isReservedAttributeKey } from "./itemAttributes";
 
-/** Only expiry is a first-class quick-create preset. */
-export const LINKED_CALENDAR_QUICK_KINDS = ["expires"] as const;
+export const LINKED_CALENDAR_QUICK_KINDS = ["expires", "other", "purchaseEffective"] as const;
 
 export type LinkedCalendarQuickKind = (typeof LINKED_CALENDAR_QUICK_KINDS)[number];
 
@@ -34,18 +33,52 @@ export function linkedCalendarQuickLabelKey(
   return `quickLinkedCalendar.${kind}`;
 }
 
+/** i18n key for add-chip label / aria (may differ from prefilled dialog title). */
+export function linkedCalendarAddChipLabelKey(
+  kind: LinkedCalendarQuickKind,
+): `addExpiryCalendar` | `addOtherCalendar` | `addPurchaseEffectiveCalendar` {
+  switch (kind) {
+    case "expires":
+      return "addExpiryCalendar";
+    case "other":
+      return "addOtherCalendar";
+    case "purchaseEffective":
+      return "addPurchaseEffectiveCalendar";
+  }
+}
+
+export function linkedCalendarAddChipAriaKey(
+  kind: LinkedCalendarQuickKind,
+): `addExpiryCalendarAria` | `addOtherCalendarAria` | `addPurchaseEffectiveCalendarAria` {
+  switch (kind) {
+    case "expires":
+      return "addExpiryCalendarAria";
+    case "other":
+      return "addOtherCalendarAria";
+    case "purchaseEffective":
+      return "addPurchaseEffectiveCalendarAria";
+  }
+}
+
 /** True when title is the linked-calendar expiry preset (到期 / Expires). */
 export function isLinkedExpiryTitle(title: string): boolean {
   return isReservedAttributeKey(title);
 }
 
-/** First active (non-dismissed) linked expiry event on an item, if any. */
+function compareLinkedExpiryPrimary(a: UserEvent, b: UserEvent): number {
+  const ca = (a.createdAt ?? "").trim();
+  const cb = (b.createdAt ?? "").trim();
+  if (ca !== cb) return ca.localeCompare(cb);
+  return a.id.localeCompare(b.id);
+}
+
+/** Primary active (non-dismissed) linked expiry — earliest created_at, then id. */
 export function findActiveLinkedExpiryEvent(
   events: readonly UserEvent[],
 ): UserEvent | null {
-  return (
-    events.find((event) => !event.dismissed && isLinkedExpiryTitle(event.title)) ?? null
-  );
+  const active = events.filter((event) => !event.dismissed && isLinkedExpiryTitle(event.title));
+  if (active.length === 0) return null;
+  return [...active].sort(compareLinkedExpiryPrimary)[0] ?? null;
 }
 
 /** True when the preset should open as an all-day event (expiry only). */
@@ -55,7 +88,7 @@ export function linkedCalendarQuickIsAllDay(kind: LinkedCalendarQuickKind): bool
 
 /**
  * Build ``UserEventDialog`` create ``initial`` for a linked-calendar open,
- * optionally applying the expiry quick-create title / all-day preset.
+ * optionally applying quick-create presets.
  */
 export function buildLinkedCalendarCreateInitial(args: {
   itemId: string;

@@ -38,8 +38,19 @@ function makeTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
 }
 
 describe("mergeLinkedCalendarRows", () => {
-  it("excludes active expiry and dismissed events, then sorts", () => {
-    const expiry = makeEvent({ id: "exp", title: "到期", startTime: "2026-09-01T00:00:00.000Z" });
+  it("excludes only primary expiry and dismissed events, then sorts", () => {
+    const primary = makeEvent({
+      id: "exp-primary",
+      title: "到期",
+      startTime: "2026-09-01T00:00:00.000Z",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    const secondaryExpiry = makeEvent({
+      id: "exp-secondary",
+      title: "Expires",
+      startTime: "2026-10-01T00:00:00.000Z",
+      createdAt: "2026-02-01T00:00:00.000Z",
+    });
     const kept = makeEvent({ id: "a", title: "A", startTime: "2026-08-01T00:00:00.000Z" });
     const dismissed = makeEvent({
       id: "b",
@@ -49,8 +60,12 @@ describe("mergeLinkedCalendarRows", () => {
     });
     const recurring = makeTask({ id: "r1", name: "R", createdAt: "2026-08-15T00:00:00.000Z" });
 
-    const rows = mergeLinkedCalendarRows([expiry, kept, dismissed], [recurring], expiry);
-    expect(rows.map((r) => r.id)).toEqual(["ue:a", "rs:r1"]);
+    const rows = mergeLinkedCalendarRows(
+      [primary, secondaryExpiry, kept, dismissed],
+      [recurring],
+      primary,
+    );
+    expect(rows.map((r) => r.id)).toEqual(["ue:a", "rs:r1", "ue:exp-secondary"]);
     expect(rows[0]?.kind).toBe("oneOff");
     expect(rows[1]?.kind).toBe("recurring");
   });

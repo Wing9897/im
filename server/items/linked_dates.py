@@ -25,27 +25,6 @@ def is_linked_expiry_title(title: str | None) -> bool:
     return str(title or "").strip() in LINKED_EXPIRY_TITLES
 
 
-class LinkedExpiryConflictError(ValueError):
-    """Item already has an active linked expiry calendar."""
-
-
-async def assert_no_duplicate_linked_expiry(
-    db: Database,
-    item_id: str,
-    *,
-    exclude_event_id: str | None = None,
-) -> None:
-    """Reject a second active linked「到期」/ Expires on the same item."""
-    clean_id = (item_id or "").strip()
-    if not clean_id:
-        return
-    rows = await _active_linked_expiry_rows(db, clean_id)
-    if exclude_event_id:
-        rows = [row for row in rows if str(row.get("id") or "") != exclude_event_id]
-    if rows:
-        raise LinkedExpiryConflictError("item already has an active linked expiry calendar (到期 / Expires)")
-
-
 def _date_prefix(raw: Any) -> str | None:
     if not isinstance(raw, str):
         return None
@@ -69,19 +48,17 @@ async def _active_linked_expiry_rows(
         WHERE ue.item_id = ?
           AND ue.title IN (?, ?)
           AND td.event_id IS NULL
-        ORDER BY ue.start_time ASC, ue.id ASC
+        ORDER BY ue.created_at ASC, ue.id ASC
         """,
         (item_id, "到期", "Expires"),
     )
     return list(rows)
 
 
-def _earliest_day(rows: Sequence[Mapping[str, Any]]) -> str | None:
-    for row in rows:
-        day = _date_prefix(row.get("start_time"))
-        if day:
-            return day
-    return None
+def _primary_expiry_day(rows: Sequence[Mapping[str, Any]]) -> str | None:
+    if not rows:
+        return None
+    return _date_prefix(rows[0].get("start_time"))
 
 
 async def sync_item_dates_from_linked_calendars(
@@ -97,7 +74,7 @@ async def sync_item_dates_from_linked_calendars(
         return
 
     expiry_rows = await _active_linked_expiry_rows(db, clean_id)
-    expires_at = _earliest_day(expiry_rows)
+    expires_at = _primary_expiry_day(expiry_rows)
     remind_before_days = None
     if expiry_rows:
         raw_remind = expiry_rows[0].get("remind_before_days")

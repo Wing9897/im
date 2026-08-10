@@ -66,8 +66,45 @@ export function ItemFormCvHeader({
     setEditingTitle(false);
   };
 
+  const isCreateMode = item == null;
   const hasTitle = Boolean(title.trim());
   const displayTitle = hasTitle ? title.trim() : t("titleField");
+
+  const titleField = (
+    <TextField
+      id="item-title"
+      value={isCreateMode ? title : titleDraft}
+      onChange={(e) => {
+        const next = e.target.value;
+        if (isCreateMode) {
+          onTitleChange(next);
+        } else {
+          setTitleDraft(next);
+        }
+      }}
+      disabled={busy}
+      autoFocus={isCreateMode}
+      placeholder={t("titleField")}
+      aria-label={t("titleField")}
+      className="w-full"
+      onBlur={isCreateMode ? undefined : commitTitle}
+      onKeyDown={
+        isCreateMode
+          ? undefined
+          : (e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commitTitle();
+              }
+              if (e.key === "Escape") {
+                e.preventDefault();
+                setTitleDraft(title);
+                setEditingTitle(false);
+              }
+            }
+      }
+    />
+  );
 
   return (
     <header
@@ -86,29 +123,8 @@ export function ItemFormCvHeader({
 
       <div className="flex min-w-0 flex-1 items-start gap-xs pt-0.5">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {editingTitle ? (
-            <TextField
-              id="item-title"
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              disabled={busy}
-              autoFocus
-              placeholder={t("titleField")}
-              aria-label={t("titleField")}
-              className="w-full"
-              onBlur={commitTitle}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  commitTitle();
-                }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setTitleDraft(title);
-                  setEditingTitle(false);
-                }
-              }}
-            />
+          {isCreateMode || editingTitle ? (
+            titleField
           ) : (
             <div className="flex min-w-0 items-center gap-1">
               <p

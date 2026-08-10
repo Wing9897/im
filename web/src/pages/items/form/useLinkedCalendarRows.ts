@@ -25,7 +25,7 @@ export type LinkedCalendarRowsState = {
   loading: boolean;
   loadError: boolean;
   createLocked: boolean;
-  hasLinkedExpiry: boolean;
+  hasPrimaryExpiry: boolean;
 };
 
 /** Loads + merges one-off / recurring calendars linked to an inventory item. */
@@ -88,6 +88,6 @@ export function useLinkedCalendarRows({
     loading,
     loadError,
     createLocked,
-    hasLinkedExpiry: activeExpiry != null,
+    hasPrimaryExpiry: activeExpiry != null,
   };
 }
