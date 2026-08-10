@@ -15,10 +15,21 @@ function setInputValue(input: HTMLInputElement, value: string) {
   input.dispatchEvent(new Event("change", { bubbles: true }));
 }
 
-function setSelectValue(select: HTMLSelectElement, value: string) {
-  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!.set!;
-  setter.call(select, value);
-  select.dispatchEvent(new Event("change", { bubbles: true }));
+async function pickMenuSelectOption(testId: string, value: string): Promise<void> {
+  const trigger = document.body.querySelector(
+    `[data-testid="${testId}-value"]`,
+  ) as HTMLButtonElement | null;
+  expect(trigger).toBeTruthy();
+  await act(async () => {
+    trigger!.click();
+  });
+  const option = document.body.querySelector(
+    `[data-testid="${testId}-option-${value}"]`,
+  ) as HTMLButtonElement | null;
+  expect(option).toBeTruthy();
+  await act(async () => {
+    option!.click();
+  });
 }
 
 describe("UserEventDialog", () => {
@@ -60,11 +71,11 @@ describe("UserEventDialog", () => {
     ) as HTMLInputElement;
     expect(titleInput).toBeTruthy();
 
-    const taskSelect = document.body.querySelector(
-      '[data-testid="user-event-workset-select"]',
-    ) as HTMLSelectElement;
-    expect(taskSelect).toBeTruthy();
-    expect(taskSelect.value).toBe(SYSTEM_WORKSET_ID);
+    const worksetTrigger = document.body.querySelector(
+      '[data-testid="user-event-workset-select-value"]',
+    ) as HTMLButtonElement;
+    expect(worksetTrigger).toBeTruthy();
+    expect(worksetTrigger.textContent).toContain("一般");
 
     await act(async () => {
       setInputValue(titleInput, "  測試  ");
@@ -513,14 +524,13 @@ describe("UserEventDialog", () => {
       );
     });
 
-    const taskSelect = document.body.querySelector(
-      '[data-testid="user-event-workset-select"]',
-    ) as HTMLSelectElement;
-    expect(taskSelect.value).toBe("ws-1");
+    const worksetTrigger = document.body.querySelector(
+      '[data-testid="user-event-workset-select-value"]',
+    ) as HTMLButtonElement;
+    expect(worksetTrigger).toBeTruthy();
+    expect(worksetTrigger.textContent).toContain("工作集");
 
-    await act(async () => {
-      setSelectValue(taskSelect, SYSTEM_WORKSET_ID);
-    });
+    await pickMenuSelectOption("user-event-workset-select", SYSTEM_WORKSET_ID);
 
     const buttons = Array.from(document.body.querySelectorAll("button"));
     const submit = buttons.find((b) => b.textContent === "儲存");

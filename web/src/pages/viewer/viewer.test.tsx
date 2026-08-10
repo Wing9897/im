@@ -13,6 +13,7 @@ vi.mock("react-router-dom", () => ({
     createElement("a", { href: props.to, "data-testid": "viewer-navlink" }, props.children),
   Outlet: () => createElement("div", { "data-testid": "outlet" }, "outlet-content"),
   useLocation: () => ({ pathname: "/monitor" }),
+  useNavigate: () => vi.fn(),
   Link: (props: { to: string; children: React.ReactNode; style?: unknown; [key: string]: unknown }) =>
     createElement(
       "a",

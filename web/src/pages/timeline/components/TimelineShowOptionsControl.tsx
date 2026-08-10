@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import { PillButton } from "../../../components/ui";
 import { useAnchoredMenu } from "../../../hooks/useAnchoredMenu";
+import { spacing } from "../../../styles/tokens";
 
 type TimelineShowOptionsControlProps = {
   showDismissed: boolean;
@@ -55,7 +56,7 @@ export function TimelineShowOptionsControl({
 
   const { open, toggle, menuPos, anchorRef, menuRef, rootRef } = useAnchoredMenu({
     align: "auto",
-    gap: 4,
+    gap: spacing.xs,
     edge: 8,
     fallbackMenuWidth: 200,
     flip: true,

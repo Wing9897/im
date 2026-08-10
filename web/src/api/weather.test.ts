@@ -42,7 +42,7 @@ describe("weather API", () => {
         location: "臺北",
         startDate: "2026-07-01",
         endDate: "2026-07-01",
-        force: true,
+        force: "true",
       },
       { signal: undefined },
     );

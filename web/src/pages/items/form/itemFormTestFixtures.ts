@@ -24,7 +24,7 @@ export const ITEM_FORM_TEST_CATEGORIES: ItemCategory[] = [
     name: "證件",
     slug: "passport_docs",
     sortOrder: 10,
-    color: "#3B82F6",
+    color: null,
     emoji: "🪪",
     fieldSchema: [
       { key: "id_number", label: "證件號碼" },
@@ -39,7 +39,7 @@ export const ITEM_FORM_TEST_CATEGORIES: ItemCategory[] = [
     name: "食物",
     slug: "food",
     sortOrder: 20,
-    color: "#22C55E",
+    color: null,
     emoji: "🍎",
     fieldSchema: [
       { key: "brand", label: "品牌" },
