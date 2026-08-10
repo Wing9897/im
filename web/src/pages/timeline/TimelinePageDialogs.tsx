@@ -75,6 +75,8 @@ export function TimelinePageDialogs({
                     ? String(editingEvent.remindBeforeDays)
                     : "",
                 itemId: editingEvent.itemId?.trim() ?? "",
+                // Timeline never edits special kinds / finance — Items UI only.
+                calendarKind: "normal",
               }
             : {
                 worksetId: toUserEventFormWorksetId(createInitial?.worksetId),

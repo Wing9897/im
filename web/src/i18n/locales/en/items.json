@@ -56,12 +56,12 @@
     "expires": "Expires",
     "purchaseEffective": "Purchased"
   },
-  "linkedExpiryFeatureTitle": "List expiry badge",
-  "linkedExpiryFeatureHint": "Optionally add an all-day calendar titled Expires to show days left, expiring soon, or overdue badges on item cards. You can add other linked calendars anytime.",
+  "linkedCalendarBadge": {
+    "expires": "Expiry",
+    "primary": "Primary"
+  },
   "linkedCalendarRemindPrefillHint": "When you add a linked calendar, Remind before (days) is prefilled from this category default ({{days}} days). You can change it in the dialog.",
   "linkedCalendarRemindPrefillDialogHint": "Prefilled from category default: remind {{days}} days before start (editable).",
-  "linkedExpiryBadgeCallout": "This expiry calendar drives list-card badges (N days left / expiring soon / N days overdue). On Timeline it still appears as a normal event.",
-  "linkedExpiryBadgeCalloutShort": "Drives list-card expiry badges.",
   "backToList": "Back to list",
   "editItem": "Edit item",
   "editItemAria": "Edit {name}",

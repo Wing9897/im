@@ -56,12 +56,12 @@
     "expires": "到期",
     "purchaseEffective": "購入"
   },
-  "linkedExpiryFeatureTitle": "列表到期徽章",
-  "linkedExpiryFeatureHint": "可選：新增標題為「到期」的全日曆事件，物品列表會顯示剩餘天數、即將到期或已過期徽章；也可隨時新增其他關聯日曆。",
+  "linkedCalendarBadge": {
+    "expires": "到期",
+    "primary": "主"
+  },
   "linkedCalendarRemindPrefillHint": "新增關聯日曆時，「提前提醒（天）」會預填此類型的預設值（{{days}} 天），可在對話框中修改。",
   "linkedCalendarRemindPrefillDialogHint": "已套用類型預設：提前 {{days}} 天提醒（可修改）。",
-  "linkedExpiryBadgeCallout": "此到期日曆驅動列表卡片上的到期徽章（剩 N 天／即將到期／過期 N 天）；時間規劃頁面仍顯示為一般事件。",
-  "linkedExpiryBadgeCalloutShort": "驅動列表卡片到期徽章。",
   "backToList": "返回列表",
   "editItem": "編輯物品",
   "editItemAria": "編輯 {name}",
