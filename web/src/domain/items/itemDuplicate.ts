@@ -13,7 +13,6 @@ export function buildDuplicateItemBody(
     emoji: source.emoji ?? null,
     quantity: source.quantity ?? null,
     unit: source.unit ?? null,
-    price: source.price ?? null,
     attributes: { ...(source.attributes ?? {}) },
     status: "active",
   };

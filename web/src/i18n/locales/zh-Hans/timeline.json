@@ -194,6 +194,13 @@
     "locationPlaceholder": "地点",
     "bodyAria": "说明（选填）",
     "bodyPlaceholder": "说明",
+    "amount": "金额",
+    "amountPlaceholder": "选填",
+    "amountHint": "用于购入／生效关联日历。不清楚可留空。",
+    "direction": "方向",
+    "directionAria": "支出或收入",
+    "directionExpense": "支出",
+    "directionIncome": "收入",
     "errors": {
       "titleRequired": "请填写标题",
       "startRequired": "请填写开始时间",

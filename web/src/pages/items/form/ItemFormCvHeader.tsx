@@ -1,7 +1,7 @@
 /**
  * Résumé-style identity block for the item create/edit form.
  * Left: large circular avatar (emoji now; image/`object-cover` later).
- * Right: title (+ archive badge), quantity/unit/price. Category / workset live in {@link ItemFormCvBelonging}.
+ * Right: title (+ archive badge), quantity/unit. Category / workset live in {@link ItemFormCvBelonging}.
  */
 
 import { useEffect, useState } from "react";
@@ -26,12 +26,10 @@ type HeaderProps = {
   busy: boolean;
   quantityInput: string;
   unit: string;
-  priceInput: string;
   onTitleChange: (value: string) => void;
   onEmojiChange: (value: string) => void;
   onQuantityInputChange: (value: string) => void;
   onUnitChange: (value: string) => void;
-  onPriceInputChange: (value: string) => void;
 };
 
 export function ItemFormCvHeader({
@@ -42,12 +40,10 @@ export function ItemFormCvHeader({
   busy,
   quantityInput,
   unit,
-  priceInput,
   onTitleChange,
   onEmojiChange,
   onQuantityInputChange,
   onUnitChange,
-  onPriceInputChange,
 }: HeaderProps) {
   const { t } = useTranslation("items");
   const archived = item?.status === "archived";
@@ -153,11 +149,9 @@ export function ItemFormCvHeader({
           <ItemFormCvInventory
             quantityInput={quantityInput}
             unit={unit}
-            priceInput={priceInput}
             busy={busy}
             onQuantityInputChange={onQuantityInputChange}
             onUnitChange={onUnitChange}
-            onPriceInputChange={onPriceInputChange}
           />
         </div>
         {archived ? (

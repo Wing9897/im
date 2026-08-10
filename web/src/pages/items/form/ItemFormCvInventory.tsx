@@ -1,3 +1,9 @@
+/**
+ * Optional inventory metadata in the CV header: quantity + unit paired.
+ * Fixed item-level fields — not category attribute schema.
+ * Money lives on purchase/effective linked calendars (amount/direction).
+ */
+
 import { useTranslation } from "react-i18next";
 import { FieldLabel, TextField } from "../../../components/ui";
 import { parseOptionalNumberInput } from "../../../domain/items/itemInventoryDisplay";
@@ -7,25 +13,17 @@ import { ItemUnitCombobox } from "./ItemUnitCombobox";
 type Props = {
   quantityInput: string;
   unit: string;
-  priceInput: string;
   busy: boolean;
   onQuantityInputChange: (value: string) => void;
   onUnitChange: (value: string) => void;
-  onPriceInputChange: (value: string) => void;
 };
 
-/**
- * Optional inventory metadata in the CV header: quantity + unit paired, price nearby.
- * Fixed item-level fields — not category attribute schema.
- */
 export function ItemFormCvInventory({
   quantityInput,
   unit,
-  priceInput,
   busy,
   onQuantityInputChange,
   onUnitChange,
-  onPriceInputChange,
 }: Props) {
   const { t } = useTranslation("items");
 
@@ -66,31 +64,6 @@ export function ItemFormCvInventory({
           />
         </div>
       </div>
-
-      <div className="flex min-w-[6.5rem] flex-col gap-0.5 sm:max-w-[8.5rem]">
-        <FieldLabel htmlFor="item-price">{t("price")}</FieldLabel>
-        <div className="relative w-full min-w-[6rem]">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-sm z-[1] flex items-center text-body text-text-secondary"
-          >
-            $
-          </span>
-          <TextField
-            id="item-price"
-            type="number"
-            inputMode="decimal"
-            step="0.01"
-            min={0}
-            value={priceInput}
-            placeholder={t("pricePlaceholder")}
-            disabled={busy}
-            onChange={(event) => onPriceInputChange(event.target.value)}
-            className="w-full pl-6"
-            data-testid="item-form-price-input"
-          />
-        </div>
-      </div>
     </div>
   );
 }
@@ -100,15 +73,6 @@ export function quantityInputFromValue(value: number | null | undefined): string
   return String(value);
 }
 
-export function priceInputFromValue(value: number | null | undefined): string {
-  if (value == null || Number.isNaN(value)) return "";
-  return String(value);
-}
-
 export function wireQuantityFromInput(raw: string): number | null {
-  return parseOptionalNumberInput(raw);
-}
-
-export function wirePriceFromInput(raw: string): number | null {
   return parseOptionalNumberInput(raw);
 }

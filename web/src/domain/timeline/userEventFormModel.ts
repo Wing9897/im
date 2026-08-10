@@ -27,6 +27,10 @@ export type UserEventFormValues = {
   remindBeforeDays: string;
   /** Optional parent trackable item id (linked calendar). */
   itemId: string;
+  /** Optional transaction amount input (purchase/effective); empty = unset. */
+  amountInput: string;
+  /** expense | income — meaningful when amount is set; UI default expense. */
+  direction: "expense" | "income";
   /** RRULE when ``kind === "recurring"``. */
   rrule: string;
   /** HH:MM when recurring and not all-day. */
@@ -60,6 +64,8 @@ export const EMPTY_USER_EVENT_FORM: UserEventFormValues = {
   isAllDay: false,
   remindBeforeDays: "",
   itemId: "",
+  amountInput: "",
+  direction: "expense",
   rrule: DEFAULT_RRULE,
   eventStartTime: "09:00",
   eventEndTime: "10:00",
@@ -78,7 +84,15 @@ export function valuesFromInitial(
     remindRaw === undefined || remindRaw === null
       ? ""
       : String(remindRaw).trim();
-  const base = {
+  const amountRaw = initial?.amountInput;
+  const amountInput =
+    amountRaw === undefined || amountRaw === null ? "" : String(amountRaw).trim();
+  const direction: "expense" | "income" =
+    initial?.direction === "income" ? "income" : "expense";
+  const base: Omit<UserEventFormValues, "startTime" | "endTime"> & {
+    startTime?: string;
+    endTime?: string;
+  } = {
     kind,
     title: initial?.title ?? "",
     location: initial?.location ?? "",
@@ -87,6 +101,8 @@ export function valuesFromInitial(
     isAllDay,
     remindBeforeDays,
     itemId: (initial?.itemId ?? "").trim(),
+    amountInput,
+    direction,
     rrule: (initial?.rrule ?? "").trim() || DEFAULT_RRULE,
     eventStartTime: (initial?.eventStartTime ?? "").trim() || "09:00",
     eventEndTime: (initial?.eventEndTime ?? "").trim() || "10:00",

@@ -58,6 +58,8 @@ export function useUserEventDialogForm({
   const initialIsAllDay = Boolean(initial?.isAllDay);
   const initialRemindBeforeDays = initial?.remindBeforeDays ?? "";
   const initialItemId = initial?.itemId ?? "";
+  const initialAmountInput = initial?.amountInput ?? "";
+  const initialDirection = initial?.direction === "income" ? "income" : "expense";
   const initialKind = initial?.kind === "recurring" ? "recurring" : "one_off";
   const initialRrule = initial?.rrule ?? "";
   const initialEventStart = initial?.eventStartTime ?? "";
@@ -79,6 +81,8 @@ export function useUserEventDialogForm({
         isAllDay: initialIsAllDay,
         remindBeforeDays: initialRemindBeforeDays,
         itemId: initialItemId,
+        amountInput: initialAmountInput,
+        direction: initialDirection,
         rrule: initialRrule,
         eventStartTime: initialEventStart,
         eventEndTime: initialEventEnd,
@@ -97,6 +101,8 @@ export function useUserEventDialogForm({
     initialIsAllDay,
     initialRemindBeforeDays,
     initialItemId,
+    initialAmountInput,
+    initialDirection,
     initialRrule,
     initialEventStart,
     initialEventEnd,

@@ -15,7 +15,6 @@ describe("toItemWriteBody", () => {
       emoji: "🪪",
       quantity: 2,
       unit: "盒",
-      price: 1280,
       attributes: { id_number: "A1" },
       status: "active",
     };
@@ -27,10 +26,10 @@ describe("toItemWriteBody", () => {
       emoji: "🪪",
       quantity: 2,
       unit: "盒",
-      price: 1280,
       attributes: { id_number: "A1" },
       status: "active",
     });
     expect(toItemWriteBody(draft)).not.toHaveProperty("id");
+    expect(toItemWriteBody(draft)).not.toHaveProperty("price");
   });
 });

@@ -17,13 +17,13 @@ import { useItemsFinancePage } from "./useItemsFinancePage";
 
 const PRESET_KEYS: ItemsFinancePreset[] = ["thisMonth", "last30", "thisYear", "custom"];
 
-const PL_FILTER_KEYS: ItemsFinancePlFilter[] = ["all", "withCost", "missingCost"];
+const PL_FILTER_KEYS: ItemsFinancePlFilter[] = ["all", "withAmount", "missingAmount"];
 
 const SORT_KEYS: ItemsFinanceSortKey[] = [
   "purchaseDateDesc",
   "purchaseDateAsc",
-  "priceDesc",
-  "priceAsc",
+  "amountDesc",
+  "amountAsc",
 ];
 
 export function ItemsFinancePage() {
@@ -158,9 +158,11 @@ export function ItemsFinancePage() {
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-text-secondary">
                   <span>{t("finance.summaryCount", { count: summary.rowCount })}</span>
-                  <span>{t("finance.summaryPriced", { count: summary.pricedCount })}</span>
+                  <span>{t("finance.summaryWithAmount", { count: summary.withAmountCount })}</span>
+                  <span>{t("finance.summaryExpense", { total: summary.totalExpense.toFixed(2) })}</span>
+                  <span>{t("finance.summaryIncome", { total: summary.totalIncome.toFixed(2) })}</span>
                   <span className="font-medium text-text-primary">
-                    {t("finance.summaryTotal", { total: summary.totalCost.toFixed(2) })}
+                    {t("finance.summaryNet", { total: summary.net.toFixed(2) })}
                   </span>
                 </div>
               </div>
@@ -181,13 +183,14 @@ export function ItemsFinancePage() {
                 />
               ) : (
                 <div className="overflow-x-auto rounded-lg border border-border/60">
-                  <table className="w-full min-w-[32rem] text-left text-sm" data-testid="items-finance-table">
+                  <table className="w-full min-w-[36rem] text-left text-sm" data-testid="items-finance-table">
                     <thead className="border-b border-border/60 bg-surface/50 text-xs text-text-muted">
                       <tr>
                         <th className="px-md py-2 font-medium">{t("finance.colItem")}</th>
                         <th className="px-md py-2 font-medium">{t("finance.colPurchase")}</th>
                         <th className="px-md py-2 font-medium">{t("finance.colEvent")}</th>
-                        <th className="px-md py-2 font-medium text-right">{t("price")}</th>
+                        <th className="px-md py-2 font-medium">{t("finance.colDirection")}</th>
+                        <th className="px-md py-2 font-medium text-right">{t("finance.colAmount")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -212,9 +215,14 @@ export function ItemsFinancePage() {
                             </td>
                             <td className="px-md py-2 text-text-secondary">{purchaseLabel}</td>
                             <td className="px-md py-2 text-text-secondary">{row.purchaseEventTitle}</td>
+                            <td className="px-md py-2 text-text-secondary">
+                              {row.direction
+                                ? t(`finance.direction.${row.direction}`)
+                                : t("attributeEmptyValue")}
+                            </td>
                             <td className="px-md py-2 text-right tabular-nums">
-                              {row.price != null && Number.isFinite(row.price)
-                                ? row.price.toFixed(2)
+                              {row.amount != null && Number.isFinite(row.amount)
+                                ? row.amount.toFixed(2)
                                 : t("attributeEmptyValue")}
                             </td>
                           </tr>
