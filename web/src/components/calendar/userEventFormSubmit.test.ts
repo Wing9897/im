@@ -35,6 +35,51 @@ describe("buildUserEventSubmitValues", () => {
       expect(result.values.worksetId).toBe(SYSTEM_WORKSET_ID);
       expect(result.values.startTime).toBeTruthy();
       expect(result.values.isAllDay).toBe(false);
+      expect(result.values.calendarKind).toBe("normal");
+    }
+  });
+
+  it("preserves calendarKind when title no longer matches presets", () => {
+    const expires = buildUserEventSubmitValues({
+      ...EMPTY_USER_EVENT_FORM,
+      calendarKind: "expires",
+      title: "保修到期",
+      isAllDay: true,
+      startTime: "2026-08-10",
+      endTime: "2026-08-10",
+    });
+    expect(expires.ok).toBe(true);
+    if (expires.ok) {
+      expect(expires.values.calendarKind).toBe("expires");
+      expect(expires.values.title).toBe("保修到期");
+    }
+
+    const purchase = buildUserEventSubmitValues({
+      ...EMPTY_USER_EVENT_FORM,
+      calendarKind: "purchase_effective",
+      title: "双十一相机",
+      startTime: "2026-08-10T10:00",
+      amountInput: "99",
+      direction: "income",
+    });
+    expect(purchase.ok).toBe(true);
+    if (purchase.ok) {
+      expect(purchase.values.calendarKind).toBe("purchase_effective");
+      expect(purchase.values.title).toBe("双十一相机");
+      expect(purchase.values.amountInput).toBe("99");
+      expect(purchase.values.direction).toBe("income");
+    }
+
+    const normalExpiryTitle = buildUserEventSubmitValues({
+      ...EMPTY_USER_EVENT_FORM,
+      calendarKind: "normal",
+      title: "到期",
+      startTime: "2026-08-10T10:00",
+    });
+    expect(normalExpiryTitle.ok).toBe(true);
+    if (normalExpiryTitle.ok) {
+      expect(normalExpiryTitle.values.calendarKind).toBe("normal");
+      expect(normalExpiryTitle.values.title).toBe("到期");
     }
   });
 

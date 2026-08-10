@@ -58,6 +58,7 @@
   },
   "linkedCalendarBadge": {
     "expires": "到期",
+    "purchaseEffective": "购买·生效",
     "primary": "主"
   },
   "linkedCalendarRemindPrefillHint": "新增关联日历时，「提前提醒（天）」会预填此类型的默认值（{{days}} 天），可在对话框中修改。",
