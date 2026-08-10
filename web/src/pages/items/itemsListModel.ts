@@ -131,8 +131,10 @@ export function indexById<T extends { id?: unknown }>(
   const map = new Map<string, T>();
   if (!Array.isArray(rows)) return map;
   for (const row of rows) {
-    if (!row || typeof row.id !== "string" || !row.id) continue;
-    map.set(row.id, row);
+    if (row == null || typeof row !== "object") continue;
+    const id: unknown = (row as { id?: unknown }).id;
+    if (typeof id !== "string" || !id) continue;
+    map.set(id, row as T);
   }
   return map;
 }

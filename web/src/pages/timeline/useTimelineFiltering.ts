@@ -96,8 +96,8 @@ export function useTimelineFiltering({
     // Overlap the full Sunday-first 42-day grid so cross-month spans that start
     // before monthCursor still feed ongoing/ending chips (incl. leading cells).
     const days = buildCalendarDays(monthCursor);
-    const gridStart = days[0]!;
-    const gridEndExclusive = addDays(days[days.length - 1]!, 1);
+    const gridStart = days[0];
+    const gridEndExclusive = addDays(days[days.length - 1], 1);
     return filteredEvents.filter((event) =>
       eventOverlapsRange(event, gridStart, gridEndExclusive),
     );

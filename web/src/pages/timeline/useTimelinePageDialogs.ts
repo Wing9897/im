@@ -93,7 +93,7 @@ export function useTimelinePageDialogs({
         itemId = (worksetIdOrOpts.itemId ?? "").trim();
       } else {
         // Toolbar may pass a React synthetic event if wired as onClick={openCreateDialog}.
-        worksetId = normalizeOptionalWorksetId(worksetIdOrOpts as string | null | undefined);
+        worksetId = normalizeOptionalWorksetId(worksetIdOrOpts);
       }
       const range = day ? createTimedRangeOnDay(day) : defaultCreateTimedRange();
       setCreateInitial({

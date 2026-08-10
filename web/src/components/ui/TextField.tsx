@@ -10,12 +10,22 @@ function closedLabelTextClass(className?: string): string {
   return "text-body";
 }
 
+type OptionElementProps = {
+  value?: string | number | readonly string[];
+  children?: ReactNode;
+};
+
 function labelFromOptionChildren(children: ReactNode, value: unknown): string {
+  const selected =
+    typeof value === "string" || typeof value === "number" ? String(value) : "";
   let match = "";
   Children.forEach(children, (child) => {
-    if (!isValidElement(child) || child.type !== "option") return;
-    const optionValue = String(child.props.value ?? "");
-    if (optionValue !== String(value ?? "")) return;
+    if (!isValidElement<OptionElementProps>(child) || child.type !== "option") return;
+    const optionValue =
+      typeof child.props.value === "string" || typeof child.props.value === "number"
+        ? String(child.props.value)
+        : "";
+    if (optionValue !== selected) return;
     const label = child.props.children;
     match = typeof label === "string" || typeof label === "number" ? String(label) : match;
   });
@@ -35,6 +45,7 @@ export function TextField({ className, type = "text", ...rest }: TextFieldProps)
 type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   className?: string;
   wrapperClassName?: string;
+  "data-testid"?: string;
 };
 
 /**

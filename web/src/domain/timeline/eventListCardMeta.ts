@@ -80,9 +80,15 @@ function lookupWorksetName(
   if (worksetId === SYSTEM_WORKSET_ID) return general;
   if (!lookups.worksetNameById) return worksetId;
   if (lookups.worksetNameById instanceof Map) {
-    return lookups.worksetNameById.get(worksetId) ?? worksetId;
+    const named: unknown = (lookups.worksetNameById as ReadonlyMap<string, string>).get(
+      worksetId,
+    );
+    return typeof named === "string" ? named : worksetId;
   }
-  return lookups.worksetNameById[worksetId] ?? worksetId;
+  const named: unknown = (lookups.worksetNameById as Readonly<Record<string, string>>)[
+    worksetId
+  ];
+  return typeof named === "string" ? named : worksetId;
 }
 
 /**

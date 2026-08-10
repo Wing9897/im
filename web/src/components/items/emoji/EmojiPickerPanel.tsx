@@ -121,7 +121,7 @@ export const EmojiPickerPanel = memo(function EmojiPickerPanel({
           skinTonesDisabled
           lazyLoadEmojis
           autoFocusSearch={false}
-          categories={[...ITEM_EMOJI_CATEGORIES]}
+          categories={[...ITEM_EMOJI_CATEGORIES] as never}
         />
       </Suspense>
     </div>

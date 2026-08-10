@@ -142,7 +142,7 @@ export function TimelineShowOptionsControl({
     open && typeof document !== "undefined"
       ? createPortal(
           <div
-            ref={menuRef as RefObject<HTMLDivElement | null>}
+            ref={menuRef as RefObject<HTMLDivElement>}
             id={menuId}
             className="board-source-filter__menu board-source-filter__menu--portal"
             role="dialog"
@@ -189,9 +189,9 @@ export function TimelineShowOptionsControl({
       : null;
 
   return (
-    <div ref={rootRef as RefObject<HTMLDivElement | null>} className="board-source-filter">
+    <div ref={rootRef as RefObject<HTMLDivElement>} className="board-source-filter">
       <PillButton
-        ref={anchorRef as RefObject<HTMLButtonElement | null>}
+        ref={anchorRef as RefObject<HTMLButtonElement>}
         id={triggerId}
         type="button"
         active={chromeActive}

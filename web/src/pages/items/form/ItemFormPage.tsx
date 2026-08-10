@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
@@ -27,7 +27,6 @@ import {
 } from "../itemsPageChromeClasses";
 import {
   buildItemsEditPath,
-  buildItemsNewPath,
   resolveCreateInitialCategoryId,
   resolveItemFormBackPath,
 } from "../itemsNavigation";
@@ -164,7 +163,9 @@ export function ItemFormPage() {
         isEditMode={isEditMode}
         canSave={canSave}
         busy={formBusy}
-        itemStatus={item?.status ?? null}
+        itemStatus={
+          item?.status === "active" || item?.status === "archived" ? item.status : null
+        }
         onBack={handleBack}
         onSave={triggerSave}
         onArchiveToggle={isEditMode && item ? () => void handleArchiveToggle() : undefined}

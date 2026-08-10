@@ -59,7 +59,7 @@ export function createItemFormRenderer(root: Root) {
     worksets?: typeof ITEM_FORM_TEST_WORKSETS;
     onSave?: (draft: unknown) => Promise<void>;
   }) {
-    const onSave = opts?.onSave ?? vi.fn(async () => undefined);
+    const onSave = opts?.onSave ?? vi.fn(() => Promise.resolve(undefined));
     const formRef = createRef<ItemFormHandle>();
     await act(async () => {
       root.render(
@@ -87,22 +87,22 @@ export function createItemFormRenderer(root: Root) {
 export function categorySelectTrigger(): HTMLButtonElement {
   const el = document.querySelector(
     '[data-testid="item-form-category-select-value"]',
-  ) as HTMLButtonElement | null;
+  );
   expect(el).toBeTruthy();
-  return el!;
+  return el as HTMLButtonElement;
 }
 
-export async function pickCategory(categoryId: string): Promise<void> {
+export function pickCategory(categoryId: string): void {
   const trigger = categorySelectTrigger();
-  await act(async () => {
+  act(() => {
     trigger.click();
   });
   const option = document.querySelector(
     `[data-testid="item-form-category-select-option-${categoryId}"]`,
-  ) as HTMLButtonElement | null;
+  );
   expect(option).toBeTruthy();
-  await act(async () => {
-    option!.click();
+  act(() => {
+    (option as HTMLElement).click();
   });
 }
 
@@ -111,23 +111,22 @@ export function cleanupItemFormDialogs(): void {
   document.querySelectorAll('[role="dialog"]').forEach((node) => node.remove());
 }
 
-export async function commitItemTitle(value: string): Promise<void> {
+export function commitItemTitle(value: string): void {
   const editBtn = document.querySelector(
     '[data-testid="item-form-cv-title-edit"]',
   ) as HTMLButtonElement;
-  await act(async () => {
+  act(() => {
     editBtn.click();
   });
 
   const title = document.getElementById("item-title") as HTMLInputElement;
   expect(title).toBeTruthy();
 
-  await act(async () => {
-    const setter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    setter?.call(title, value);
+  act(() => {
+    Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set?.call(
+      title,
+      value,
+    );
     title.dispatchEvent(new Event("input", { bubbles: true }));
     title.dispatchEvent(
       new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }),

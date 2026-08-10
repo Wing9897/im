@@ -112,7 +112,7 @@ export function AgentDetailPage() {
         <div className="flex min-w-0 flex-1 items-center gap-sm">
           <TaskEmployeeAvatar employeeId={employeeId} size="sm" label={employeeName} />
           <h1 className={`min-w-0 truncate ${pageTitleClass}`}>{project.name}</h1>
-          <Badge tone={MODE_BADGE_TONE.project} className="shrink-0 normal-case tracking-normal">
+          <Badge tone={MODE_BADGE_TONE.agent} className="shrink-0 normal-case tracking-normal">
             {employeeName}
           </Badge>
         </div>

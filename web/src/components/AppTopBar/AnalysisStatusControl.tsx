@@ -121,7 +121,7 @@ export function AnalysisStatusControl({
     menuOpen && typeof document !== "undefined"
       ? createPortal(
           <ul
-            ref={menuRef as RefObject<HTMLUListElement | null>}
+            ref={menuRef as RefObject<HTMLUListElement>}
             id={menuId}
             role="menu"
             aria-label={t("topBar.analysisControl")}
@@ -172,7 +172,7 @@ export function AnalysisStatusControl({
   return (
     <>
       <div
-        ref={rootRef as RefObject<HTMLDivElement | null>}
+        ref={rootRef as RefObject<HTMLDivElement>}
         className="group relative inline-flex max-w-[260px] min-w-0"
         data-testid="analysis-status-control"
       >
