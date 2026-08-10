@@ -175,6 +175,23 @@ describe("ItemForm linked calendars", () => {
     expect(listUserEvents).not.toHaveBeenCalled();
   });
 
+  it("hides create hint after title is filled (auto-save needs no essay)", async () => {
+    await renderForm({ item: null });
+    expect(
+      document.querySelector('[data-testid="item-form-linked-calendars-create-hint"]'),
+    ).toBeTruthy();
+
+    await commitItemTitle("New passport");
+
+    expect(
+      document.querySelector('[data-testid="item-form-linked-calendars-create-hint"]'),
+    ).toBeNull();
+    const addCal = document.querySelector(
+      '[data-testid="item-form-quick-linked-calendar-other"]',
+    ) as HTMLButtonElement | null;
+    expect(addCal!.disabled).not.toBe(true);
+  });
+
   it("auto-saves item and opens linked calendar dialog on create", async () => {
     const saved = makeItem({ id: "item-new", title: "New passport" });
     const onSave = vi.fn(async (_draft: unknown, options?: { leaveAfterSave?: boolean }) => {
