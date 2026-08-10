@@ -31,10 +31,6 @@ export const itemFormAttributeGridClass =
 export const itemFormAttributeChipClass =
   "relative min-w-0 rounded-md border border-surface-border/35 bg-[color-mix(in_srgb,var(--surface-raised)_28%,transparent)] px-sm py-1.5";
 
-/** Inline add-attribute panel — subtle inset, no extra divider. */
-export const itemFormAddPanelClass =
-  "flex flex-wrap items-end gap-sm rounded-md bg-[color-mix(in_srgb,var(--surface-raised)_22%,transparent)] px-sm py-sm";
-
 /** CV header inventory row — quantity/unit cluster. */
 export const itemFormInventoryRowClass =
   "mt-1 flex flex-wrap items-end gap-x-md gap-y-xs sm:gap-x-lg";

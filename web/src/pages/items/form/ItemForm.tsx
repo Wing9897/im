@@ -6,7 +6,6 @@ import type { ItemCategory, TrackableItem } from "../../../api/items";
 import {
   partitionItemAttributes as defaultPartition,
   seedAttributesFromFieldSchema,
-  isReservedAttributeKey,
   type AttributePartitions,
 } from "../../../domain/items/itemAttributes";
 import { formatItemsError } from "../../../domain/items/itemErrors";
@@ -98,8 +97,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     );
     return seedAttributesFromFieldSchema(initial, initialCategory?.fieldSchema);
   });
-  const [extraKey, setExtraKey] = useState("");
-  const [extraValue, setExtraValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Set after create-mode auto-save before parent item prop catches up. */
@@ -288,25 +285,9 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
 
               <ItemFormAttributesSection
                 partitions={partitions}
-                extraKey={extraKey}
-                extraValue={extraValue}
                 saving={busy}
                 onAttrChange={setAttr}
                 onAttrRemove={removeAttr}
-                onExtraKeyChange={setExtraKey}
-                onExtraValueChange={setExtraValue}
-                onAddExtra={() => {
-                  const key = extraKey.trim();
-                  if (!key) return;
-                  if (isReservedAttributeKey(key)) {
-                    setError(t("reservedAttributeKeyError"));
-                    return;
-                  }
-                  setError(null);
-                  setAttr(key, extraValue);
-                  setExtraKey("");
-                  setExtraValue("");
-                }}
               />
             </div>
           </div>

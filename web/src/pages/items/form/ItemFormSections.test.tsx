@@ -28,14 +28,9 @@ describe("ItemFormAttributesSection", () => {
   ) {
     const props = {
       partitions: { suggested: [], other: [] },
-      extraKey: "",
-      extraValue: "",
       saving: false,
       onAttrChange: vi.fn(),
       onAttrRemove: vi.fn(),
-      onExtraKeyChange: vi.fn(),
-      onExtraValueChange: vi.fn(),
-      onAddExtra: vi.fn(),
       ...overrides,
     };
 
@@ -58,22 +53,19 @@ describe("ItemFormAttributesSection", () => {
     expect(document.querySelector('[data-testid="item-form-attribute-grid"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="item-form-attribute-chip-brand"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="item-form-attribute-chip-tag"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="item-form-add-attribute"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-add-attribute"]')).toBeNull();
   });
 
-  it("opens inline add panel from dashed chip", async () => {
+  it("does not offer free-form add-attribute controls", async () => {
     await renderSection();
 
-    const add = document.querySelector(
-      '[data-testid="item-form-add-attribute"]',
-    ) as HTMLButtonElement;
-    await act(async () => {
-      add.click();
-    });
-
-    expect(document.querySelector('[data-testid="item-form-add-attribute-panel"]')).toBeTruthy();
-    expect(document.getElementById("item-extra-key")).toBeTruthy();
-    expect(document.getElementById("item-extra-value")).toBeTruthy();
+    expect(document.querySelector('[data-testid="item-form-add-attribute"]')).toBeNull();
+    expect(document.querySelector('[data-testid="item-form-add-attribute-panel"]')).toBeNull();
+    expect(document.getElementById("item-extra-key")).toBeNull();
+    expect(document.getElementById("item-extra-value")).toBeNull();
+    expect(
+      document.querySelector('[data-testid="item-form-extras"]')?.textContent,
+    ).toContain("attributesEmpty");
   });
 
   it("enters edit mode when pen is clicked", async () => {
