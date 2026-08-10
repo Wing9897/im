@@ -96,10 +96,10 @@
 
 | Tool | 行为 | 限额 |
 |------|------|------|
-| `items.list` | 列出可追蹤物品（可篩 workset／分類／狀態／關鍵字；含 quantity／unit／price） | 預設 50，硬頂 100 |
+| `items.list` | 列出可追蹤物品（可篩 workset／分類／狀態／關鍵字；含 quantity／unit；金額在關聯 `user_events`） | 預設 50，硬頂 100 |
 | `items.list_expiring` | 列出即将到期／已过期的 active 物品（相对「今天」+ `days` 窗） | 默认合理上限，见 handler |
 | `items.create` | 创建物品（可选分类／attributes；到期日走关联日历；**仅 assistant／A2A**，agent tick 不可用） | 1 条 |
-| `items.update` | 更新物品欄位（含 quantity／unit／price；到期日走关联日历；**仅 assistant／A2A**，agent tick 不可用） | 1 条 |
+| `items.update` | 更新物品欄位（含 quantity／unit；到期日／金額走关联日历；**仅 assistant／A2A**，agent tick 不可用） | 1 条 |
 
 ### 任务顾问（仅任务编辑 surface）
 
