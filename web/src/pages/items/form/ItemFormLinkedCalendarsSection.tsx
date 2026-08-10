@@ -1,13 +1,13 @@
-import { CalendarClock, CalendarDays, Repeat2, ShoppingBag } from "lucide-react";
-import type { ReactNode } from "react";
+import { CalendarClock, CalendarDays, CalendarPlus, Repeat2, ShoppingBag } from "lucide-react";
+import { type ReactNode, type RefObject, useEffect, useId } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 
 import type { UserEvent } from "../../../api/userEvents";
 import { Badge } from "../../../components/ui";
 import {
   LINKED_CALENDAR_QUICK_KINDS,
-  linkedCalendarAddChipAriaKey,
-  linkedCalendarAddChipLabelKey,
+  linkedCalendarModeLabelKey,
   type LinkedCalendarQuickKind,
 } from "../../../domain/items/linkedCalendarQuickCreate";
 import type { LinkedCalendarRow } from "../../../domain/items/linkedCalendarRows";
@@ -15,6 +15,7 @@ import {
   isExpiresCalendarEvent,
   isPurchaseEffectiveCalendarEvent,
 } from "../../../domain/timeline/userEventCalendarKind";
+import { useAnchoredMenu } from "../../../hooks/useAnchoredMenu";
 import { ItemFormCvSection } from "./ItemFormCvSection";
 import { ItemFormDashedAddChip } from "./ItemFormDashedAddChip";
 import {
@@ -53,7 +54,7 @@ type Props = {
   onActiveExpiryChange?: (event: UserEvent | null) => void;
 };
 
-function quickAddChipIcon(kind: LinkedCalendarQuickKind) {
+function quickKindIcon(kind: LinkedCalendarQuickKind) {
   switch (kind) {
     case "expires":
       return <CalendarClock size={16} strokeWidth={1.75} aria-hidden />;
@@ -216,6 +217,94 @@ function LinkedCalendarIconChip({
   );
 }
 
+/** One dashed add chip → compact mode menu → existing create dialog. */
+function LinkedCalendarAddControl({
+  disabled,
+  onPick,
+}: {
+  disabled: boolean;
+  onPick?: (kind: LinkedCalendarQuickKind) => void;
+}) {
+  const { t } = useTranslation("items");
+  const reactId = useId();
+  const menuId = `item-linked-calendar-mode-menu-${reactId.replace(/:/g, "")}`;
+  const { open, toggle, close, menuPos, menuRef, rootRef } = useAnchoredMenu({
+    enabled: !disabled,
+    align: "start",
+    gap: 4,
+    edge: 8,
+    fallbackMenuWidth: 180,
+    flip: true,
+    dismissPointerEvent: "mousedown",
+    restoreFocusOnEscape: true,
+  });
+
+  useEffect(() => {
+    if (disabled) close();
+  }, [disabled, close]);
+
+  const pick = (kind: LinkedCalendarQuickKind) => {
+    close();
+    onPick?.(kind);
+  };
+
+  const menu =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <ul
+            ref={menuRef as RefObject<HTMLUListElement>}
+            id={menuId}
+            role="menu"
+            aria-label={t("linkedCalendarModeMenuAria")}
+            data-testid="item-form-linked-calendar-mode-menu"
+            className="im-menu-surface fixed z-[3000] m-0 min-w-[11rem] list-none rounded-md border border-surface-border bg-surface-card p-1 shadow-md"
+            style={
+              menuPos
+                ? { top: menuPos.top, left: menuPos.left }
+                : { top: -9999, left: -9999, visibility: "hidden" }
+            }
+          >
+            {LINKED_CALENDAR_QUICK_KINDS.map((kind) => (
+              <li key={kind} role="none">
+                <button
+                  type="button"
+                  role="menuitem"
+                  data-testid={`item-form-linked-calendar-mode-${kind}`}
+                  className="flex w-full cursor-pointer items-center gap-2 rounded-sm border-0 bg-transparent px-sm py-1.5 text-left text-caption font-medium leading-snug text-text-primary outline-none transition-colors hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))] focus-visible:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]"
+                  onClick={() => pick(kind)}
+                >
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center text-text-secondary">
+                    {quickKindIcon(kind)}
+                  </span>
+                  <span className="min-w-0 truncate">{t(linkedCalendarModeLabelKey(kind))}</span>
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )
+      : null;
+
+  return (
+    <div ref={rootRef as RefObject<HTMLDivElement>} className="relative">
+      <ItemFormDashedAddChip
+        disabled={disabled}
+        icon={<CalendarPlus size={16} strokeWidth={1.75} aria-hidden />}
+        label={t("addLinkedCalendar")}
+        ariaLabel={t("addLinkedCalendarAria")}
+        ariaHasPopup="menu"
+        ariaExpanded={open}
+        ariaControls={menuId}
+        testId="item-form-add-linked-calendar"
+        onClick={() => {
+          if (!disabled) toggle();
+        }}
+      />
+      {menu}
+    </div>
+  );
+}
+
 /** Lists one-off + recurring calendars linked to an inventory item + CTA to add. */
 export function ItemFormLinkedCalendarsSection({
   itemId,
@@ -293,19 +382,9 @@ export function ItemFormLinkedCalendarsSection({
                 ))
               : null}
 
-            {onQuickAdd || createLocked
-              ? LINKED_CALENDAR_QUICK_KINDS.map((kind) => (
-                  <ItemFormDashedAddChip
-                    key={kind}
-                    disabled={chipsDisabled}
-                    icon={quickAddChipIcon(kind)}
-                    label={t(linkedCalendarAddChipLabelKey(kind))}
-                    ariaLabel={t(linkedCalendarAddChipAriaKey(kind))}
-                    testId={`item-form-quick-linked-calendar-${kind}`}
-                    onClick={() => onQuickAdd?.(kind)}
-                  />
-                ))
-              : null}
+            {onQuickAdd || createLocked ? (
+              <LinkedCalendarAddControl disabled={chipsDisabled} onPick={onQuickAdd} />
+            ) : null}
           </div>
         ) : null}
 

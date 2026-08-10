@@ -26,6 +26,10 @@ type Props = {
   onClick: () => void;
   testId?: string;
   ariaLabel?: string;
+  /** Optional menu-trigger a11y (e.g. linked-calendar mode picker). */
+  ariaHasPopup?: "menu" | "listbox" | "dialog" | boolean;
+  ariaExpanded?: boolean;
+  ariaControls?: string;
 };
 
 /** Dashed circle + label — used for add linked calendar / add attribute. */
@@ -38,6 +42,9 @@ export function ItemFormDashedAddChip({
   onClick,
   testId,
   ariaLabel,
+  ariaHasPopup,
+  ariaExpanded,
+  ariaControls,
 }: Props) {
   const circleClass = variant === "expiry" ? DASHED_CIRCLE_EXPIRY : DASHED_CIRCLE_DEFAULT;
 
@@ -60,6 +67,9 @@ export function ItemFormDashedAddChip({
       className={shellClass}
       disabled={disabled}
       aria-label={ariaLabel ?? label}
+      aria-haspopup={ariaHasPopup}
+      aria-expanded={ariaExpanded}
+      aria-controls={ariaControls}
       data-testid={testId}
       onClick={() => {
         if (disabled) return;
