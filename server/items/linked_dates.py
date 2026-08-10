@@ -11,6 +11,7 @@ Write-through: calendar create / update / delete calls
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any, Mapping
 
 from server.db.database import Database
