@@ -56,16 +56,14 @@ describe("ItemFormAttributesSection", () => {
     expect(document.querySelector('[data-testid="item-form-add-attribute"]')).toBeNull();
   });
 
-  it("does not offer free-form add-attribute controls", async () => {
+  it("hides the section when there are no attribute fields", async () => {
     await renderSection();
 
+    expect(document.querySelector('[data-testid="item-form-extras"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-add-attribute"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-add-attribute-panel"]')).toBeNull();
     expect(document.getElementById("item-extra-key")).toBeNull();
     expect(document.getElementById("item-extra-value")).toBeNull();
-    expect(
-      document.querySelector('[data-testid="item-form-extras"]')?.textContent,
-    ).toContain("attributesEmpty");
   });
 
   it("enters edit mode when pen is clicked", async () => {

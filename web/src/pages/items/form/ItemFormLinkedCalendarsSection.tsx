@@ -217,12 +217,12 @@ export function ItemFormLinkedCalendarsSection({
   const showGrid = createLocked || (!loading && !loadError);
   const showEmptyHint = showGrid && !createLocked && rows.length === 0 && hasPrimaryExpiry;
   const chipsDisabled = disabled || !canAdd;
-  const showCreateHint = createLocked;
+  /** Create mode without a title: one short line; chips stay disabled. Auto-save needs no essay. */
+  const showTitleRequiredHint = createLocked && !canAdd;
 
   return (
     <ItemFormCvSection
       title={t("sectionLinkedCalendars")}
-      hint={createLocked ? t("sectionLinkedCalendarsCreateHint") : t("sectionLinkedCalendarsHint")}
       testId="item-form-linked-calendars"
       ariaLabel={t("sectionLinkedCalendars")}
     >
@@ -283,12 +283,12 @@ export function ItemFormLinkedCalendarsSection({
           </div>
         ) : null}
 
-        {showCreateHint ? (
+        {showTitleRequiredHint ? (
           <p
             className={itemFormSecondaryHintClass}
             data-testid="item-form-linked-calendars-create-hint"
           >
-            {canAdd ? t("linkedCalendarsAutoSaveHint") : t("linkedCalendarsTitleRequiredHint")}
+            {t("linkedCalendarsTitleRequiredHint")}
           </p>
         ) : null}
 

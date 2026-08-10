@@ -170,7 +170,7 @@ describe("ItemForm", () => {
     expect(document.querySelector('[data-testid="item-form-attribute-grid"]')).toBeTruthy();
   });
 
-  it("shows empty extras hint when item has no suggested or other attributes", async () => {
+  it("hides extras section when item has no suggested or other attributes", async () => {
     await renderForm({
       item: makeItem({
         categoryId: null,
@@ -178,9 +178,7 @@ describe("ItemForm", () => {
       }),
     });
 
-    expect(
-      document.querySelector('[data-testid="item-form-extras"]')?.textContent,
-    ).toContain("attributesEmpty");
+    expect(document.querySelector('[data-testid="item-form-extras"]')).toBeNull();
   });
 
   async function openAttributeEditor(key: string) {

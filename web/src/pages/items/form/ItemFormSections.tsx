@@ -9,7 +9,6 @@ import { ItemFormCvSection } from "./ItemFormCvSection";
 import {
   itemFormAttributeChipClass,
   itemFormAttributeGridClass,
-  itemFormEmptyHintClass,
   itemFormIconButtonClass,
   itemFormIconButtonDangerClass,
 } from "./itemFormClasses";
@@ -147,42 +146,37 @@ export function ItemFormAttributesSection({
     })),
   ];
 
-  const hasFields = fields.length > 0;
+  if (fields.length === 0) return null;
 
   return (
     <ItemFormCvSection
       title={t("sectionExtras")}
-      hint={t("sectionExtrasHint")}
       testId="item-form-extras"
       ariaLabel={t("sectionExtras")}
     >
-      {hasFields ? (
-        <div
-          className={itemFormAttributeGridClass}
-          data-testid="item-form-attribute-grid"
-          aria-label={t("attributeGridAria")}
-        >
-          {fields.map((field) => (
-            <AttributeFieldCell
-              key={field.key}
-              field={field}
-              saving={saving}
-              editing={editingKey === field.key}
-              onStartEdit={() => setEditingKey(field.key)}
-              onCommit={(value) => {
-                onAttrChange(field.key, value);
-                setEditingKey(null);
-              }}
-              onRemove={() => {
-                onAttrRemove(field.key);
-                if (editingKey === field.key) setEditingKey(null);
-              }}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className={itemFormEmptyHintClass}>{t("attributesEmpty")}</p>
-      )}
+      <div
+        className={itemFormAttributeGridClass}
+        data-testid="item-form-attribute-grid"
+        aria-label={t("attributeGridAria")}
+      >
+        {fields.map((field) => (
+          <AttributeFieldCell
+            key={field.key}
+            field={field}
+            saving={saving}
+            editing={editingKey === field.key}
+            onStartEdit={() => setEditingKey(field.key)}
+            onCommit={(value) => {
+              onAttrChange(field.key, value);
+              setEditingKey(null);
+            }}
+            onRemove={() => {
+              onAttrRemove(field.key);
+              if (editingKey === field.key) setEditingKey(null);
+            }}
+          />
+        ))}
+      </div>
     </ItemFormCvSection>
   );
 }
@@ -198,7 +192,6 @@ export function ItemFormNotesSection({ notes, saving, onNotesChange }: NotesProp
   return (
     <ItemFormCvSection
       title={t("sectionNotes")}
-      hint={t("sectionNotesHint")}
       testId="item-form-notes"
       ariaLabel={t("sectionNotes")}
     >
