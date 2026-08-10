@@ -5,6 +5,7 @@ import {
   buildLinkedCalendarEditInitial,
   findActiveLinkedExpiryEvent,
   isLinkedExpiryTitle,
+  linkedCalendarModeLabelKey,
   linkedCalendarQuickIsAllDay,
   linkedCalendarQuickLabelKey,
   LINKED_CALENDAR_QUICK_KINDS,
@@ -18,6 +19,7 @@ describe("linkedCalendarQuickCreate", () => {
   it("maps label keys and all-day preset for expiry only", () => {
     for (const kind of LINKED_CALENDAR_QUICK_KINDS) {
       expect(linkedCalendarQuickLabelKey(kind)).toBe(`quickLinkedCalendar.${kind}`);
+      expect(linkedCalendarModeLabelKey(kind)).toBe(`linkedCalendarMode.${kind}`);
     }
     expect(linkedCalendarQuickIsAllDay("expires")).toBe(true);
     expect(linkedCalendarQuickIsAllDay("other")).toBe(false);

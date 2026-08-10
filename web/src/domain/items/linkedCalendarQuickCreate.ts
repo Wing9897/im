@@ -38,38 +38,18 @@ export type LinkedCalendarFormInitial = {
   direction?: "expense" | "income";
 };
 
-/** i18n key under ``items`` for both chip label and prefilled title. */
+/** i18n key under ``items`` for prefilled dialog title (expires / purchase). */
 export function linkedCalendarQuickLabelKey(
   kind: LinkedCalendarQuickKind,
 ): `quickLinkedCalendar.${LinkedCalendarQuickKind}` {
   return `quickLinkedCalendar.${kind}`;
 }
 
-/** i18n key for add-chip label / aria (may differ from prefilled dialog title). */
-export function linkedCalendarAddChipLabelKey(
+/** i18n key for mode-picker menu labels (add flow step 1). */
+export function linkedCalendarModeLabelKey(
   kind: LinkedCalendarQuickKind,
-): `addExpiryCalendar` | `addOtherCalendar` | `addPurchaseEffectiveCalendar` {
-  switch (kind) {
-    case "expires":
-      return "addExpiryCalendar";
-    case "other":
-      return "addOtherCalendar";
-    case "purchaseEffective":
-      return "addPurchaseEffectiveCalendar";
-  }
-}
-
-export function linkedCalendarAddChipAriaKey(
-  kind: LinkedCalendarQuickKind,
-): `addExpiryCalendarAria` | `addOtherCalendarAria` | `addPurchaseEffectiveCalendarAria` {
-  switch (kind) {
-    case "expires":
-      return "addExpiryCalendarAria";
-    case "other":
-      return "addOtherCalendarAria";
-    case "purchaseEffective":
-      return "addPurchaseEffectiveCalendarAria";
-  }
+): `linkedCalendarMode.${LinkedCalendarQuickKind}` {
+  return `linkedCalendarMode.${kind}`;
 }
 
 function compareLinkedExpiryPrimary(a: UserEvent, b: UserEvent): number {
