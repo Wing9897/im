@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from fastapi import APIRouter, Query, Request, Response
+from fastapi import APIRouter, Request, Response
 
 from server.api.deps import API_DEPS, get_db
+from server.api.query_aliases import qalias
 from server.api.schemas.requests import LogCreate
 from server.api.schemas.responses import AppLogEntryResponse, AppLogPageResponse
 from server.app_logging import (
@@ -30,7 +31,7 @@ async def query_logs_page(
     cursor_id: Optional[str] = None,
     limit: int = 50,
     kind: Optional[str] = None,
-    exclude_kind: Optional[str] = Query(default=None, alias="excludeKind"),
+    exclude_kind: Optional[str] = qalias("excludeKind", default=None),
 ) -> dict:
     db = get_db(request)
     rows, has_more, total_count = await fetch_app_logs_page(

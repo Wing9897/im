@@ -91,7 +91,10 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
     },
     {
         "name": "calendar.get",
-        "description": ("Fetch one event by id (analysis event id, user event id, or RRULE occurrence id)."),
+        "description": (
+            "Fetch one event by id (analysis event id, user event id, RRULE "
+            "occurrence id, or item remind DATE projection id `item:{id}:remind`)."
+        ),
         "parameters": {
             "type": "object",
             "properties": {

@@ -36,7 +36,7 @@
 | `agent` | `execute_agent_tick`（`AgentTaskSpec`：游標／閾值／定時 + 工具／輸出權限） | 共用 agent system + 政策條款 + **置頂**該任務目標（`promptTemplate`）；cursor 同輪多波連續 session |
 | `recurring` | 不跑 AI 分析 | — |
 
-Agent／專案調和契約細節：[`docs/agent/project.md`](docs/agent/project.md)。
+Agent／專案調和契約細節：[`docs/agent/agent.md`](docs/agent/agent.md)（URL 僅 `/tasks/:taskId/agent`）。
 
 ## 專案結構
 
@@ -302,7 +302,7 @@ uv run python scripts/reset_local_databases.py --apply
 | [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md) | UI 用語／error_code 詞彙表 |
 | [`docs/agent/assistant.md`](docs/agent/assistant.md) | 內建助手（Agent + 瀏覽器語音）使用與契約 |
 | [`docs/agent/a2a.md`](docs/agent/a2a.md) | 客戶經理（Agent-to-Agent / Account manager）：自然語言 `POST /api/v1/a2a/agent`（events CRUD 門面已移除） |
-| [`docs/agent/project.md`](docs/agent/project.md) | Agent／專案調和 tick：空佇列跳過、多波抽乾、連續 session、置頂目標；agent 無 items 寫入 |
+| [`docs/agent/agent.md`](docs/agent/agent.md) | Agent／專案調和 tick：空佇列跳過、多波抽乾、連續 session、置頂目標；agent 無 items 寫入；URL 僅 `/tasks/:taskId/agent` |
 | [`docs/diagrams/README.md`](docs/diagrams/README.md) | Mermaid 結構圖：Input → Process → Output、排程、Agent 閉環 |
 | [`desktop/resources/README.md`](desktop/resources/README.md) | 封裝用圖示說明 |
 

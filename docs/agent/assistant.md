@@ -4,7 +4,7 @@
 
 ## 怎么用
 
-侧栏 **助手**／命令面板：文字或浏览器 PTT；可选 TTS。纪录：`ui-prefs/assistant/sessions`。语音 `/ai/voice`；联网走 AI 供應商；默认工作集 `__user__`。花名册 `/ai/staff`；A2A／项目见 [`a2a.md`](a2a.md)、[`project.md`](project.md)。需已配置 AI Provider；**Electron 不跑浏览器 STT**（用浏览器分頁；会话经 ui-prefs 共用）。
+侧栏 **助手**／命令面板：文字或浏览器 PTT；可选 TTS。纪录：`ui-prefs/assistant/sessions`。语音 `/ai/voice`；联网走 AI 供應商；默认工作集 `__user__`。花名册 `/ai/staff`；A2A／專案調和（Agent tick）见 [`a2a.md`](a2a.md)、[`agent.md`](agent.md)。需已配置 AI Provider；**Electron 不跑浏览器 STT**（用浏览器分頁；会话经 ui-prefs 共用）。
 
 ## 架构原则
 
@@ -141,17 +141,19 @@
 | `calendar.upcoming` | 从服务端「现在」起的未来事件；相对时间用 `days`（如 7） | 默认 20，硬顶 100 |
 | `calendar.recent` | 过去事件摘要 | 默认 20，硬顶 100 |
 | `calendar.window` | 绝对日期窗 `start`+`end`；**勿**用它拼「未來 N 天」（易漏时区） | 默认 50，硬顶 100 |
-| `calendar.get` | 按事件 id 取详情（含用户事件） | 1 条 |
+| `calendar.get` | 按事件 id 取详情（用户／分析／RRULE／物品提醒投影 `item:{id}:remind`） | 1 条 |
 | `calendar.create_event` | 创建单次用户事件（服务端固定 `origin=assistant`）；必填 `title`+`startTime`；可选 `worksetId`（否则用请求体默认 `worksetId`）；可选 `taskId` 溯源（禁止 `__user__`） | 1 条 |
 | `calendar.create_recurring_task` | **新建** `analysisMode=recurring` 任务＋RRULE（周期任务）；必填 `rrule`＋`name`/`title`；非全日需 `eventStartTime`（系统本地 `HH:MM`）；展开后 wire 为 UTC；不碰其他模式 | 1 条 |
 | `calendar.update_recurring_task` | **更新**既有 recurring 任务（name／rrule／时钟／地点／描述／`isActive`）；`isActive` 主要用于再启用；停用优先 `delete_recurring_task`；拒绝非 recurring 模式 | 1 条 |
 | `calendar.delete_recurring_task` | **软删除／停用**既有 recurring 任务（优先入口；`isActive=false`，系列行保留，可再 `update_recurring_task` 设 `isActive=true` 重啟）；拒绝非 recurring 模式 | 1 条 |
 | `calendar.update_event` | 更新用户事件（勿用于 analysis / RRULE）；可选改 `worksetId`（归属）／`taskId`（溯源，禁止 `__user__`） | 1 条 |
-| `calendar.delete_event` | 时间规划 soft-dismiss（用户／分析／RRULE 单次）；源行保留，仅时间规划隐藏；情报页分析事件仍可见；**恢复仅 UI**（「顯示已移除」），助手无 restore tool | 1 条 |
+| `calendar.delete_event` | 时间规划 soft-dismiss（用户／分析／RRULE 单次／物品提醒投影）；源行保留，仅时间规划隐藏；情报页分析事件仍可见；**恢复仅 UI**（「顯示已移除」），助手无 restore tool | 1 条 |
+| `calendar.mark_important` | 标重要（❗）；含用户／分析／RRULE／**物品提醒投影**（`itemDateKind=remind` only；无 purchased／expires 投影） | 1 条 |
+| `calendar.unmark_important` | 清除重要标记；id 词汇同 `mark_important`／`delete_event` | 1 条 |
 
-列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user`）；用户事件另带 `origin`、`worksetId`（归属；builtin `__user__`＝「一般」）以及可选溯源 `taskId`（空＝无任务溯源，**不是**「一般」工作集）。
+列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user` / `item`）；`source=item` 仅投影提醒日（`itemDateKind=remind`；无购入／到期投影）。用户事件另带 `origin`、`worksetId`（归属；builtin `__user__`＝「一般」）以及可选溯源 `taskId`（空＝无任务溯源，**不是**「一般」工作集）。
 
-来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=agent`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`project.md`](project.md)。
+来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=agent`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`agent.md`](agent.md)。
 
 可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`（按分析任务过滤：analysis／RRULE 该任务 **加上** `user_events.task_id` 溯源匹配行；**勿**传 `__user__`——那是工作集 id，列表过滤会拒绝）。归属筛选用写入／UI 的 `worksetId`／`sourceFilter.worksetIds`，不是 `taskId=__user__`。语义过滤由模型选 tool + 传 `search` / 任务名完成。
 

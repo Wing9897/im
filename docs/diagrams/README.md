@@ -2,7 +2,7 @@
 
 High-level Mermaid views of Intelligence Monitor: **Input → Process → Output**, the four task modes (including unified `agent`), the schedule timer, and the project-reconcile feedback loop.
 
-Contract detail stays in [`ARCHITECTURE.md`](../ARCHITECTURE.md) and [`agent/project.md`](../agent/project.md).
+Contract detail stays in [`ARCHITECTURE.md`](../ARCHITECTURE.md) and [`agent/agent.md`](../agent/agent.md)（產品預設「專案調和」；URL 僅 `/tasks/:taskId/agent`）.
 
 ## 1. Big picture (Input → Process → Output + calendar side-channel)
 
@@ -140,5 +140,5 @@ Within one fire: waves share one continuing session (compacted history; system +
 ## Related
 
 - [`ARCHITECTURE.md` Core design](../ARCHITECTURE.md#core-design-task-as-universal-interface)
-- [`agent/project.md`](../agent/project.md)
+- [`agent/agent.md`](../agent/agent.md)
 - Root overview: [`../../README.md`](../../README.md)
