@@ -1,4 +1,4 @@
-import { LayoutGrid, Layers, Tags } from "lucide-react";
+import { LayoutGrid, Layers, Tags, Wallet } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, FilterChip, MenuSelect } from "../../components/ui";
@@ -38,6 +38,7 @@ type Props = {
   onBack: () => void;
   onAddItem: () => void;
   onManageCategories: () => void;
+  onOpenFinance?: () => void;
 };
 
 /** Entry-list top strip — back · title · filters · search · layout · sort · actions. */
@@ -57,6 +58,7 @@ export function ItemsEntryToolbar({
   onBack,
   onAddItem,
   onManageCategories,
+  onOpenFinance,
 }: Props) {
   const { t } = useTranslation("items");
   const sortOptions = useMemo(
@@ -168,6 +170,19 @@ export function ItemsEntryToolbar({
       }
       actions={
         <>
+          {onOpenFinance ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onOpenFinance}
+              aria-label={t("finance.openAria")}
+              title={t("finance.open")}
+              data-testid="items-entry-finance"
+            >
+              <Wallet size={14} strokeWidth={2} aria-hidden />
+              <span className={itemsPageChromeEntryActionLabelClass}>{t("finance.open")}</span>
+            </Button>
+          ) : null}
           <Button
             variant="secondary"
             size="sm"

@@ -1,4 +1,4 @@
-import { Tags } from "lucide-react";
+import { Tags, Wallet } from "lucide-react";
 import { AlertBanner, Button, MenuSelect } from "../../components/ui";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { contentFadeClass } from "../../components/ui/pageLayout";
@@ -70,6 +70,17 @@ export function ItemsPage() {
 
   const primaryActions = (
     <>
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => navigate("/items/finance")}
+        aria-label={t("finance.openAria")}
+        title={t("finance.open")}
+        data-testid="items-category-finance"
+      >
+        <Wallet size={14} strokeWidth={2} aria-hidden />
+        {t("finance.open")}
+      </Button>
       <Button variant="secondary" size="sm" onClick={() => setManageCategories(true)}>
         <Tags size={14} strokeWidth={2} aria-hidden />
         {t("manageCategories")}
@@ -99,6 +110,7 @@ export function ItemsPage() {
           onBack={() => navigate("/items")}
           onAddItem={openCreate}
           onManageCategories={() => setManageCategories(true)}
+          onOpenFinance={() => navigate("/items/finance")}
         />
       ) : (
         <ItemsPageChrome

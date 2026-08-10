@@ -183,5 +183,42 @@
     "other": "其他"
   },
   "remindPrefix": "提醒",
-  "statusArchived": "已封存"
+  "statusArchived": "已封存",
+  "finance": {
+    "open": "財務",
+    "openAria": "開啟物品財務",
+    "pageTitle": "物品財務",
+    "controlsAria": "財務篩選",
+    "presetAria": "日期範圍預設",
+    "preset": {
+      "thisMonth": "本月",
+      "last30": "近 30 天",
+      "thisYear": "今年",
+      "custom": "自訂"
+    },
+    "startDate": "開始日期",
+    "endDate": "結束日期",
+    "plFilterAria": "成本篩選",
+    "plFilter": {
+      "all": "全部購入",
+      "withCost": "有價錢",
+      "missingCost": "缺價錢"
+    },
+    "sortAria": "購入排序",
+    "sort": {
+      "purchaseDateDesc": "購入日期（新到舊）",
+      "purchaseDateAsc": "購入日期（舊到新）",
+      "priceDesc": "價錢（高到低）",
+      "priceAsc": "價錢（低到高）"
+    },
+    "summaryTitle": "期間匯總",
+    "summaryCount": "{count} 筆購入",
+    "summaryPriced": "{count} 筆有價錢",
+    "summaryTotal": "成本合計 {total}",
+    "emptyTitle": "此範圍內沒有購入記錄",
+    "emptyHint": "在物品上新增標題為「購入」或 Purchased / 购入 / Effective / 生效 的關聯日曆，或放寬日期範圍。",
+    "colItem": "物品",
+    "colPurchase": "購入日期",
+    "colEvent": "日曆標題"
+  }
 }
