@@ -1,19 +1,12 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PenLine, Plus, Trash2 } from "lucide-react";
+import { PenLine, Trash2 } from "lucide-react";
 
-import {
-  Button,
-  FieldLabel,
-  TextArea,
-  TextField,
-} from "../../../components/ui";
+import { TextArea, TextField } from "../../../components/ui";
 import { cardBodyClass, formLabelClass } from "../../../components/ui/pageTypography";
 import type { AttributePartitions } from "../../../domain/items/itemAttributes";
 import { ItemFormCvSection } from "./ItemFormCvSection";
-import { ItemFormDashedAddChip } from "./ItemFormDashedAddChip";
 import {
-  itemFormAddPanelClass,
   itemFormAttributeChipClass,
   itemFormAttributeGridClass,
   itemFormEmptyHintClass,
@@ -23,14 +16,9 @@ import {
 
 type AttributesProps = {
   partitions: AttributePartitions;
-  extraKey: string;
-  extraValue: string;
   saving: boolean;
   onAttrChange: (key: string, value: string) => void;
   onAttrRemove: (key: string) => void;
-  onExtraKeyChange: (value: string) => void;
-  onExtraValueChange: (value: string) => void;
-  onAddExtra: () => void;
 };
 
 type AttributeField = {
@@ -137,18 +125,12 @@ function AttributeFieldCell({
 
 export function ItemFormAttributesSection({
   partitions,
-  extraKey,
-  extraValue,
   saving,
   onAttrChange,
   onAttrRemove,
-  onExtraKeyChange,
-  onExtraValueChange,
-  onAddExtra,
 }: AttributesProps) {
   const { t } = useTranslation("items");
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [addingOpen, setAddingOpen] = useState(false);
 
   const fields: AttributeField[] = [
     ...partitions.suggested.map((field) => ({
@@ -174,86 +156,33 @@ export function ItemFormAttributesSection({
       testId="item-form-extras"
       ariaLabel={t("sectionExtras")}
     >
-      <div
-        className={itemFormAttributeGridClass}
-        data-testid="item-form-attribute-grid"
-        aria-label={t("attributeGridAria")}
-      >
-        {fields.map((field) => (
-          <AttributeFieldCell
-            key={field.key}
-            field={field}
-            saving={saving}
-            editing={editingKey === field.key}
-            onStartEdit={() => setEditingKey(field.key)}
-            onCommit={(value) => {
-              onAttrChange(field.key, value);
-              setEditingKey(null);
-            }}
-            onRemove={() => {
-              onAttrRemove(field.key);
-              if (editingKey === field.key) setEditingKey(null);
-            }}
-          />
-        ))}
-
-        <ItemFormDashedAddChip
-          disabled={saving}
-          icon={<Plus size={16} strokeWidth={1.75} aria-hidden />}
-          label={t("addAttribute")}
-          ariaLabel={t("addAttributeAria")}
-          testId="item-form-add-attribute"
-          layout="field"
-          onClick={() => {
-            setAddingOpen((open) => !open);
-            setEditingKey(null);
-          }}
-        />
-      </div>
-
-      {!hasFields && !addingOpen ? (
-        <p className={itemFormEmptyHintClass}>{t("attributesEmpty")}</p>
-      ) : null}
-
-      {addingOpen ? (
+      {hasFields ? (
         <div
-          className={itemFormAddPanelClass}
-          data-testid="item-form-add-attribute-panel"
+          className={itemFormAttributeGridClass}
+          data-testid="item-form-attribute-grid"
+          aria-label={t("attributeGridAria")}
         >
-          <div className="min-w-[7.5rem] flex-1">
-            <FieldLabel htmlFor="item-extra-key">{t("attributeKey")}</FieldLabel>
-            <TextField
-              id="item-extra-key"
-              placeholder={t("attributeKeyPlaceholder")}
-              value={extraKey}
-              disabled={saving}
-              onChange={(e) => onExtraKeyChange(e.target.value)}
+          {fields.map((field) => (
+            <AttributeFieldCell
+              key={field.key}
+              field={field}
+              saving={saving}
+              editing={editingKey === field.key}
+              onStartEdit={() => setEditingKey(field.key)}
+              onCommit={(value) => {
+                onAttrChange(field.key, value);
+                setEditingKey(null);
+              }}
+              onRemove={() => {
+                onAttrRemove(field.key);
+                if (editingKey === field.key) setEditingKey(null);
+              }}
             />
-          </div>
-          <div className="min-w-[7.5rem] flex-1">
-            <FieldLabel htmlFor="item-extra-value">{t("attributeValue")}</FieldLabel>
-            <TextField
-              id="item-extra-value"
-              placeholder={t("attributeValuePlaceholder")}
-              value={extraValue}
-              disabled={saving}
-              onChange={(e) => onExtraValueChange(e.target.value)}
-            />
-          </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            disabled={saving}
-            data-testid="item-form-add-attribute-confirm"
-            onClick={() => {
-              onAddExtra();
-              setAddingOpen(false);
-            }}
-          >
-            {t("addAttribute")}
-          </Button>
+          ))}
         </div>
-      ) : null}
+      ) : (
+        <p className={itemFormEmptyHintClass}>{t("attributesEmpty")}</p>
+      )}
     </ItemFormCvSection>
   );
 }
