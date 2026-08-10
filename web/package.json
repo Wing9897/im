@@ -21,7 +21,7 @@
     "openapi:types": "openapi-typescript openapi/openapi.json -o src/api/generated/schema.d.ts"
   },
   "dependencies": {
-    "emoji-picker-react": "^4.12.2",
+    "emoji-picker-react": "4.12.2",
     "i18next": "26.3.6",
     "leaflet": "1.9.4",
     "lucide-react": "1.16.0",
