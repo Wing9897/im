@@ -183,5 +183,42 @@
     "other": "Other"
   },
   "remindPrefix": "Remind",
-  "statusArchived": "Archived"
+  "statusArchived": "Archived",
+  "finance": {
+    "open": "Finance",
+    "openAria": "Open items finance",
+    "pageTitle": "Items finance",
+    "controlsAria": "Finance filters",
+    "presetAria": "Date range preset",
+    "preset": {
+      "thisMonth": "This month",
+      "last30": "Last 30 days",
+      "thisYear": "This year",
+      "custom": "Custom range"
+    },
+    "startDate": "Start date",
+    "endDate": "End date",
+    "plFilterAria": "Cost filter",
+    "plFilter": {
+      "all": "All purchases",
+      "withCost": "With price",
+      "missingCost": "Missing price"
+    },
+    "sortAria": "Sort purchases",
+    "sort": {
+      "purchaseDateDesc": "Purchase date (newest)",
+      "purchaseDateAsc": "Purchase date (oldest)",
+      "priceDesc": "Price (high to low)",
+      "priceAsc": "Price (low to high)"
+    },
+    "summaryTitle": "Period summary",
+    "summaryCount": "{count} purchases",
+    "summaryPriced": "{count} with price",
+    "summaryTotal": "Total cost {total}",
+    "emptyTitle": "No purchases in this range",
+    "emptyHint": "Add a linked calendar titled Purchased (or 购入 / 購入 / Effective / 生效) on an item, or widen the date range.",
+    "colItem": "Item",
+    "colPurchase": "Purchase date",
+    "colEvent": "Calendar title"
+  }
 }

@@ -183,5 +183,42 @@
     "other": "其他"
   },
   "remindPrefix": "提醒",
-  "statusArchived": "已归档"
+  "statusArchived": "已归档",
+  "finance": {
+    "open": "财务",
+    "openAria": "打开物品财务",
+    "pageTitle": "物品财务",
+    "controlsAria": "财务筛选",
+    "presetAria": "日期范围预设",
+    "preset": {
+      "thisMonth": "本月",
+      "last30": "近 30 天",
+      "thisYear": "今年",
+      "custom": "自定义"
+    },
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "plFilterAria": "成本筛选",
+    "plFilter": {
+      "all": "全部购入",
+      "withCost": "有价钱",
+      "missingCost": "缺价钱"
+    },
+    "sortAria": "购入排序",
+    "sort": {
+      "purchaseDateDesc": "购入日期（新到旧）",
+      "purchaseDateAsc": "购入日期（旧到新）",
+      "priceDesc": "价钱（高到低）",
+      "priceAsc": "价钱（低到高）"
+    },
+    "summaryTitle": "期间汇总",
+    "summaryCount": "{count} 笔购入",
+    "summaryPriced": "{count} 笔有价钱",
+    "summaryTotal": "成本合计 {total}",
+    "emptyTitle": "此范围内没有购入记录",
+    "emptyHint": "在物品上添加标题为「购入」或 Purchased / 購入 / Effective / 生效 的关联日历，或放宽日期范围。",
+    "colItem": "物品",
+    "colPurchase": "购入日期",
+    "colEvent": "日历标题"
+  }
 }
