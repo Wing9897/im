@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS user_events (
     item_id     TEXT DEFAULT NULL,
     -- Ownership is always a workset; delete_workset reassigns to __user__ first.
     workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
+    -- Optional finance fields for purchase/effective linked calendars (not expiry).
+    amount      REAL DEFAULT NULL,
+    direction   TEXT DEFAULT NULL
+                CHECK (direction IS NULL OR direction IN ('expense', 'income')),
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );

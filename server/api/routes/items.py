@@ -164,7 +164,6 @@ async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
             emoji=body.emoji,
             quantity=body.quantity,
             unit=body.unit,
-            price=body.price,
             attributes=body.attributes,
         )
     except ItemValidationError as exc:
@@ -194,7 +193,6 @@ async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody)
         "emoji": "emoji",
         "quantity": "quantity",
         "unit": "unit",
-        "price": "price",
         "attributes": "attributes",
     }
     kwargs = {mapping[wire]: value for wire, value in fields.items() if wire in mapping}

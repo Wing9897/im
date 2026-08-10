@@ -119,10 +119,10 @@ async def fetch_item_rows(
         clauses.append(
             "("
             "LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ? "
-            "OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ? OR CAST(price AS TEXT) LIKE ?"
+            "OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ?"
             ")"
         )
-        params.extend([needle, needle, needle, needle, needle, needle])
+        params.extend([needle, needle, needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return await db.fetch_all(
         f"SELECT * FROM items {where} ORDER BY "
@@ -213,16 +213,15 @@ async def insert_item(
     emoji: str | None,
     quantity: float | None,
     unit: str | None,
-    price: float | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO items ("
         "id, title, category_id, workset_id, expires_at, "
-        "remind_before_days, notes, status, emoji, quantity, unit, price, "
+        "remind_before_days, notes, status, emoji, quantity, unit, "
         "attributes_json, created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item_id,
             title,
@@ -235,7 +234,6 @@ async def insert_item(
             emoji,
             quantity,
             unit,
-            price,
             attributes_json,
             now,
             now,
@@ -257,14 +255,13 @@ async def update_item(
     emoji: str | None,
     quantity: float | None,
     unit: str | None,
-    price: float | None,
     attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "UPDATE items SET title = ?, category_id = ?, workset_id = ?, "
         "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, emoji = ?, "
-        "quantity = ?, unit = ?, price = ?, attributes_json = ?, updated_at = ? WHERE id = ?",
+        "quantity = ?, unit = ?, attributes_json = ?, updated_at = ? WHERE id = ?",
         (
             title,
             category_id,
@@ -276,7 +273,6 @@ async def update_item(
             emoji,
             quantity,
             unit,
-            price,
             attributes_json,
             now,
             item_id,

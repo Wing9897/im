@@ -10,7 +10,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "List trackable items with optional filters (workset, category, status, keyword). "
             "Use for inventory lookup — not for expiry questions (use items.list_expiring). "
-            "Returns core fields plus quantity/unit/price and attributes summary."
+            "Returns core fields plus quantity/unit and attributes summary. "
+            "Money is on purchase/effective linked calendars (amount/direction), not the item."
         ),
         "parameters": {
             "type": "object",
@@ -30,7 +31,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "search": {
                     "type": "string",
-                    "description": "Optional title/notes/attributes/quantity/unit/price keyword filter.",
+                    "description": "Optional title/notes/attributes/quantity/unit keyword filter.",
                 },
                 "limit": {
                     "type": "integer",
@@ -111,11 +112,6 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": "Optional unit label (e.g. 個, 盒, kg, ml).",
                 },
-                "price": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Optional price in dollars ($); no separate currency field.",
-                },
                 "attributes": {
                     "type": "object",
                     "additionalProperties": {"type": "string"},
@@ -130,7 +126,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "name": "items.update",
         "description": (
             "Update a trackable item (title, workset, category, notes, status, quantity, unit, "
-            "price, attributes). Purchase/expiry dates are NOT set here — use linked calendar "
+            "attributes). Purchase/expiry dates and money are NOT set here — use linked calendar "
             "milestones via calendar tools. Confirm changes with the user before writing."
         ),
         "parameters": {
@@ -148,11 +144,6 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": "Inventory count (supports decimals).",
                 },
                 "unit": {"type": "string", "description": "Unit label (e.g. 個, 盒, kg)."},
-                "price": {
-                    "type": "number",
-                    "minimum": 0,
-                    "description": "Price in dollars ($).",
-                },
                 "attributes": {
                     "type": "object",
                     "additionalProperties": {"type": "string"},

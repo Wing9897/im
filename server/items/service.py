@@ -16,7 +16,6 @@ from server.items.normalize import (
     normalize_emoji,
     normalize_field_schema,
     normalize_notes,
-    normalize_price,
     normalize_quantity,
     normalize_remind_before_days,
     normalize_slug,
@@ -188,7 +187,6 @@ async def create_item(
     emoji: Any = None,
     quantity: Any = None,
     unit: Any = None,
-    price: Any = None,
     attributes: Any = None,
 ) -> dict[str, Any]:
     """Create an item. Date cache columns stay NULL until linked calendars write through.
@@ -205,7 +203,6 @@ async def create_item(
     clean_emoji = normalize_emoji(emoji)
     clean_quantity = normalize_quantity(quantity)
     clean_unit = normalize_unit(unit)
-    clean_price = normalize_price(price)
     clean_attrs = normalize_attributes(attributes)
     if clean_category is not None:
         category_row = await fetch_category_row(db, clean_category)
@@ -227,7 +224,6 @@ async def create_item(
             emoji=clean_emoji,
             quantity=clean_quantity,
             unit=clean_unit,
-            price=clean_price,
             attributes_json=attributes_to_json(clean_attrs),
             now=now,
         )
@@ -248,7 +244,6 @@ async def patch_item(
     emoji: Any = _UNSET,
     quantity: Any = _UNSET,
     unit: Any = _UNSET,
-    price: Any = _UNSET,
     attributes: Any = _UNSET,
 ) -> dict[str, Any]:
     """Patch non-date fields. Date cache is write-through from linked calendar mutations only."""
@@ -295,11 +290,6 @@ async def patch_item(
         next_unit = str(raw_unit).strip() if isinstance(raw_unit, str) and raw_unit.strip() else None
     else:
         next_unit = normalize_unit(unit)
-    if price is _UNSET:
-        raw_price = existing.get("price")
-        next_price = float(raw_price) if raw_price is not None else None
-    else:
-        next_price = normalize_price(price)
     if attributes is _UNSET:
         # Do not re-parse/re-serialize: dirty nested rows must not amplify on unrelated PATCH.
         next_attrs_json = preserve_attributes_json(existing.get("attributes_json"))
@@ -321,7 +311,6 @@ async def patch_item(
             emoji=str(next_emoji) if next_emoji else None,
             quantity=next_quantity,
             unit=next_unit,
-            price=next_price,
             attributes_json=next_attrs_json,
             now=now,
         )

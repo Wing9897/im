@@ -24,6 +24,8 @@ from server.calendar.user_events_normalize import (
     _require_nonempty_title,
     _require_start_time,
     build_user_event_list_filters,
+    normalize_event_amount,
+    normalize_event_direction,
     normalize_remind_before_days,
     normalize_user_event_task_id_wire,
     normalize_user_event_workset_id_wire,
@@ -135,6 +137,8 @@ async def create_user_event(
     task_id: Any = None,
     item_id: Any = None,
     workset_id: Any = _UNSET,
+    amount: Any = None,
+    direction: Any = None,
     sync_item_dates: bool = True,
 ) -> dict[str, Any]:
     from server.items.linked_dates import (
@@ -150,6 +154,8 @@ async def create_user_event(
     clean_remind = normalize_remind_before_days(remind_before_days)
     clean_task_id = await resolve_user_event_task_id(db, task_id)
     clean_item_id = await resolve_user_event_item_id(db, item_id)
+    clean_amount = normalize_event_amount(amount)
+    clean_direction = normalize_event_direction(direction, amount=clean_amount)
 
     if workset_id is _UNSET:
         # Empty / omitted taskId → system workset; real task → copy task workset if any.
@@ -173,8 +179,9 @@ async def create_user_event(
     await db.execute(
         "INSERT INTO user_events "
         "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
-        "remind_before_days, task_id, item_id, workset_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "remind_before_days, task_id, item_id, workset_id, amount, direction, "
+        "created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -188,6 +195,8 @@ async def create_user_event(
             clean_task_id,
             clean_item_id,
             clean_workset_id,
+            clean_amount,
+            clean_direction,
             now,
             now,
         ),
@@ -213,6 +222,8 @@ async def update_user_event(
     task_id: Any = _UNSET,
     item_id: Any = _UNSET,
     workset_id: Any = _UNSET,
+    amount: Any = _UNSET,
+    direction: Any = _UNSET,
     sync_item_dates: bool = True,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
@@ -274,10 +285,24 @@ async def update_user_event(
     else:
         next_workset_id = await resolve_user_event_workset_id(db, workset_id)
 
+    if amount is _UNSET:
+        raw_amount = existing.get("amount")
+        next_amount = float(raw_amount) if raw_amount is not None else None
+    else:
+        next_amount = normalize_event_amount(amount)
+    if direction is _UNSET:
+        raw_direction = existing.get("direction")
+        direction_arg: Any = (
+            str(raw_direction).strip() if isinstance(raw_direction, str) and str(raw_direction).strip() else None
+        )
+    else:
+        direction_arg = direction
+    next_direction = normalize_event_direction(direction_arg, amount=next_amount)
+
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
         "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
-        "workset_id = ?, updated_at = ? WHERE id = ?",
+        "workset_id = ?, amount = ?, direction = ?, updated_at = ? WHERE id = ?",
         (
             next_title,
             next_body,
@@ -289,6 +314,8 @@ async def update_user_event(
             next_task_id,
             next_item_id,
             next_workset_id,
+            next_amount,
+            next_direction,
             utc_now_iso(),
             event_id,
         ),

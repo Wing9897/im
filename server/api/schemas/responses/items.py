@@ -37,7 +37,6 @@ class ItemResponse(BaseModel):
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    price: float | None = None
     attributes: dict[str, str] = Field(default_factory=dict)
     createdAt: str | None = None
     updatedAt: str | None = None
