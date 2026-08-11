@@ -1,4 +1,5 @@
 {
+  "emptyValue": "—",
   "pageTitle": "Items",
   "allCategories": "All types",
   "backToCategories": "Back to types",
@@ -138,7 +139,6 @@
     "required": "Please fill in the required fields.",
     "titleTooLong": "Title is too long. Shorten it and save again.",
     "emoji": "Emoji is invalid or too long. Please pick another.",
-    "attributes": "Attributes exceed limits (value too long, too many keys, or payload too large).",
     "remind": "Remind-before days is invalid.",
     "date": "Dates must be YYYY-MM-DD.",
     "notFound": "Item or category not found."

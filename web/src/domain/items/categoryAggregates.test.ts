@@ -15,7 +15,6 @@ import {
 function cat(partial: Partial<ItemCategory> & { id: string; name: string }): ItemCategory {
   return {
     sortOrder: 0,
-    fieldSchema: [],
     defaultRemindBeforeDays: 7,
     color: null,
     slug: null,
@@ -35,7 +34,6 @@ function item(
     remindBeforeDays: 7,
     notes: "",
     status: "active",
-    attributes: {},
     createdAt: null,
     updatedAt: null,
     ...partial,

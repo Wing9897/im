@@ -8,7 +8,6 @@
 import { apiClient } from "./client";
 import type { components } from "./generated/schema";
 
-export type ItemFieldSchemaEntry = components["schemas"]["ItemFieldSchemaEntry"];
 export type ItemCategory = components["schemas"]["ItemCategoryResponse"];
 export type TrackableItem = components["schemas"]["ItemResponse"];
 export type ItemWriteParams = components["schemas"]["ItemCreateBody"];

@@ -17,9 +17,6 @@ function mapValidationMessage(message: string, t: ItemsT): string | null {
   if (lower.includes("emoji")) {
     return t("errors.emoji");
   }
-  if (lower.includes("attribute")) {
-    return t("errors.attributes");
-  }
   if (lower.includes("remind")) {
     return t("errors.remind");
   }

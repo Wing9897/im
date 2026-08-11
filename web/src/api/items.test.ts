@@ -103,7 +103,6 @@ describe("items API", () => {
       notes: "",
       status: "active",
       emoji: "🥛",
-      attributes: { brand: "A" },
     };
     await expect(createItem(body)).resolves.toEqual(created);
     expect(apiClient.post).toHaveBeenCalledWith("/api/v1/items", body);

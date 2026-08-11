@@ -16,7 +16,6 @@ export function makeTrackableItem(
     emoji: null,
     quantity: null,
     unit: null,
-    attributes: {},
     createdAt: null,
     updatedAt: null,
     ...partial,
@@ -33,7 +32,7 @@ export function makeItemFormPassportItem(
     categoryId: "seed_passport_docs",
     expiresAt: "2030-01-01",
     remindBeforeDays: 14,
-    attributes: { id_number: "A123456", custom_tag: "keep-me" },
+    notes: "id_number A123456",
     ...partial,
   });
 }

@@ -25,8 +25,6 @@ export type ItemSaveDraft = {
   emoji: string | null;
   quantity: number | null;
   unit: string | null;
-  /** Always empty — custom/schema attributes UI removed; use notes. */
-  attributes: Record<string, string>;
   status: "active" | "archived";
 };
 
@@ -102,7 +100,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     emoji: emoji.trim() || null,
     quantity: wireQuantityFromInput(quantityInput),
     unit: unit.trim() || null,
-    attributes: {},
     status: effectiveItem?.status === "archived" ? "archived" : "active",
   }), [
     effectiveItem,

@@ -1,4 +1,5 @@
 {
+  "emptyValue": "—",
   "pageTitle": "物品",
   "allCategories": "全部類型",
   "backToCategories": "返回類型",
@@ -138,7 +139,6 @@
     "required": "請填寫必要欄位。",
     "titleTooLong": "標題過長，請縮短後再儲存。",
     "emoji": "表情符號無效或過長，請重新選擇。",
-    "attributes": "擴展欄位超出限制（單值過長、鍵過多或總量過大）。",
     "remind": "提前提醒天數無效。",
     "date": "日期格式須為 YYYY-MM-DD。",
     "notFound": "找不到此物品或分類。"

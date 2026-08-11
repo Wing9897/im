@@ -33,14 +33,13 @@ describe("filterItemsList", () => {
     expect(filterItemsList(rows, "all", "milk").map((r) => r.id)).toEqual(["a"]);
   });
 
-  it("matches emoji and attribute keys/values", () => {
+  it("matches emoji and notes", () => {
     const withMeta = [
-      item({ id: "e", title: "Pass", emoji: "🛂", attributes: { brand: "Acme" } }),
+      item({ id: "e", title: "Pass", emoji: "🛂", notes: "brand Acme" }),
       item({ id: "n", title: "Other", notes: "shelf" }),
     ];
     expect(filterItemsList(withMeta, "all", "🛂").map((r) => r.id)).toEqual(["e"]);
     expect(filterItemsList(withMeta, "all", "acme").map((r) => r.id)).toEqual(["e"]);
-    expect(filterItemsList(withMeta, "all", "brand").map((r) => r.id)).toEqual(["e"]);
     expect(filterItemsList(withMeta, "all", "shelf").map((r) => r.id)).toEqual(["n"]);
   });
 
@@ -55,7 +54,7 @@ describe("filterItemsList", () => {
 });
 
 describe("itemSearchHaystack", () => {
-  it("includes title notes emoji attributes and inventory", () => {
+  it("includes title notes emoji and inventory", () => {
     const hay = itemSearchHaystack(
       item({
         id: "1",
@@ -64,14 +63,11 @@ describe("itemSearchHaystack", () => {
         emoji: "🥛",
         quantity: 2,
         unit: "L",
-        attributes: { fat: "2%" },
       }),
     );
     expect(hay).toContain("milk");
     expect(hay).toContain("cold");
     expect(hay).toContain("🥛");
-    expect(hay).toContain("fat");
-    expect(hay).toContain("2%");
     expect(hay).toContain("2");
     expect(hay).toContain("l");
     expect(hay).not.toContain("12.5");
