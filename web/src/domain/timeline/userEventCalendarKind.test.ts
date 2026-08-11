@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  inferUserEventCalendarKindFromTitle,
   isExpiresCalendarEvent,
   isPurchaseEffectiveCalendarEvent,
   normalizeUserEventCalendarKind,
@@ -35,11 +34,5 @@ describe("userEventCalendarKind", () => {
     expect(quickKindToCalendarKind("other")).toBe("normal");
     expect(normalizeUserEventCalendarKind("expires")).toBe("expires");
     expect(normalizeUserEventCalendarKind("bogus")).toBe("normal");
-  });
-
-  it("keeps title→kind inference for seed/migration helpers only", () => {
-    expect(inferUserEventCalendarKindFromTitle("到期")).toBe("expires");
-    expect(inferUserEventCalendarKindFromTitle("購入")).toBe("purchase_effective");
-    expect(inferUserEventCalendarKindFromTitle("保修到期")).toBe("normal");
   });
 });

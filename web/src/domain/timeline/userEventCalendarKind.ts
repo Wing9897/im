@@ -17,9 +17,6 @@ export const USER_EVENT_CALENDAR_KINDS = [
 
 export type UserEventCalendarKind = (typeof USER_EVENT_CALENDAR_KINDS)[number];
 
-/** Same wire values; alias stressing item-linked ``user_events`` usage. */
-export type ItemLinkedCalendarKind = UserEventCalendarKind;
-
 /** Title presets historically used by Items quick-create「到期」. */
 export const LINKED_EXPIRY_TITLES = new Set(["到期", "Expires"]);
 
@@ -38,16 +35,6 @@ export function isLinkedExpiryTitle(title: string | null | undefined): boolean {
 
 export function isLinkedPurchaseEffectiveTitle(title: string | null | undefined): boolean {
   return LINKED_PURCHASE_EFFECTIVE_TITLES.has(String(title ?? "").trim());
-}
-
-/** Map legacy title presets → kind (seed / migration helpers only). */
-export function inferUserEventCalendarKindFromTitle(
-  title: string | null | undefined,
-): UserEventCalendarKind {
-  const cleaned = String(title ?? "").trim();
-  if (LINKED_EXPIRY_TITLES.has(cleaned)) return "expires";
-  if (LINKED_PURCHASE_EFFECTIVE_TITLES.has(cleaned)) return "purchase_effective";
-  return "normal";
 }
 
 export function normalizeUserEventCalendarKind(

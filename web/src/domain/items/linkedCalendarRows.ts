@@ -1,8 +1,6 @@
 import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types";
-import { findActiveLinkedExpiryEvent } from "./linkedCalendarQuickCreate";
 import { isExpiresCalendarEvent } from "../timeline/userEventCalendarKind";
-import { resolveItemCardExpiry, type ItemCardExpiry } from "./itemCardExpiry";
 import { formatDateOnly, formatDateTime } from "../../utils/dateFormat";
 
 export type LinkedCalendarRowBase = {
@@ -21,32 +19,6 @@ export function formatLinkedEventWhen(event: UserEvent): string {
   if (!Number.isFinite(startMs)) return event.startTime;
   if (event.isAllDay) return formatDateOnly(startMs) || event.startTime.slice(0, 10);
   return formatDateTime(startMs) || event.startTime;
-}
-
-export function expiryDateFromLinkedEvent(event: UserEvent | null): string | null {
-  if (!event?.startTime?.trim()) return null;
-  const startMs = Date.parse(event.startTime);
-  if (Number.isFinite(startMs) && event.isAllDay) {
-    return formatDateOnly(startMs) || event.startTime.slice(0, 10);
-  }
-  const match = /^(\d{4}-\d{2}-\d{2})/.exec(event.startTime.trim());
-  return match?.[1] ?? null;
-}
-
-export function deriveLinkedExpiryPreview(
-  activeExpiry: UserEvent | null,
-  itemExpiresAt: string | null | undefined,
-  remindBeforeDays: number | null | undefined,
-): ItemCardExpiry {
-  const fromEvent = expiryDateFromLinkedEvent(activeExpiry);
-  const cached =
-    typeof itemExpiresAt === "string" && itemExpiresAt.trim()
-      ? itemExpiresAt.trim()
-      : null;
-  return resolveItemCardExpiry({
-    expiresAt: fromEvent ?? cached,
-    remindBeforeDays: remindBeforeDays ?? null,
-  });
 }
 
 export function toLinkedOneOffRow(event: UserEvent): LinkedCalendarRow {
@@ -87,8 +59,4 @@ export function mergeLinkedCalendarRows(
 /** Count active (non-dismissed) ``kind=expires`` milestones — drives Primary badge. */
 export function countActiveLinkedExpiryEvents(events: readonly UserEvent[]): number {
   return events.filter((event) => !event.dismissed && isExpiresCalendarEvent(event)).length;
-}
-
-export function resolveActiveLinkedExpiry(events: readonly UserEvent[]): UserEvent | null {
-  return findActiveLinkedExpiryEvent(events);
 }

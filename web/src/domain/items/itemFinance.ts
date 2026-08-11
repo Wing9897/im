@@ -8,16 +8,7 @@ import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 import { formatDateOnly } from "../../utils/dateFormat";
 import { addDays, startOfDay, startOfMonth, startOfYear, todayDateInput } from "../timeline/dateUtils";
-import {
-  isLinkedPurchaseEffectiveTitle,
-  isPurchaseEffectiveCalendarEvent,
-  LINKED_PURCHASE_EFFECTIVE_TITLES,
-} from "../timeline/userEventCalendarKind";
-
-export {
-  isLinkedPurchaseEffectiveTitle,
-  LINKED_PURCHASE_EFFECTIVE_TITLES,
-};
+import { isPurchaseEffectiveCalendarEvent } from "../timeline/userEventCalendarKind";
 
 export type EventFinanceDirection = "expense" | "income";
 
@@ -70,7 +61,7 @@ export function purchaseEffectiveDayFromEvent(event: UserEvent): string | null {
   return match?.[1] ?? null;
 }
 
-export function isDayInInclusiveRange(day: string, startDay: string, endDay: string): boolean {
+function isDayInInclusiveRange(day: string, startDay: string, endDay: string): boolean {
   if (!day || !startDay || !endDay) return false;
   if (startDay <= endDay) {
     return day >= startDay && day <= endDay;

@@ -33,9 +33,6 @@ import { useLinkedCalendarRows } from "./useLinkedCalendarRows";
 type Props = {
   /** Parent item id; null in create mode (section visible but add disabled). */
   itemId: string | null;
-  /** Denormalized expiry cache from the item row (may lag until server reconcile). */
-  itemExpiresAt?: string | null;
-  remindBeforeDays?: number | null;
   /** Bump to reload after an in-place create/edit/delete. */
   refreshKey?: number;
   disabled?: boolean;
@@ -319,8 +316,6 @@ function LinkedCalendarAddControl({
 /** Lists one-off + recurring calendars linked to an inventory item + CTA to add. */
 export function ItemFormLinkedCalendarsSection({
   itemId,
-  itemExpiresAt = null,
-  remindBeforeDays = null,
   refreshKey = 0,
   disabled = false,
   canAdd = true,
@@ -341,8 +336,6 @@ export function ItemFormLinkedCalendarsSection({
     createLocked,
   } = useLinkedCalendarRows({
     itemId,
-    itemExpiresAt,
-    remindBeforeDays,
     refreshKey,
     onActiveExpiryChange,
   });

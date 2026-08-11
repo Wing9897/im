@@ -7,7 +7,6 @@ from typing import Any
 
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 TITLE_MAX = 200
 NOTES_MAX = 4000
 NAME_MAX = 120
@@ -24,20 +23,6 @@ _UNSET = object()
 
 class ItemValidationError(ValueError):
     """Invalid item / category fields."""
-
-
-def parse_date_or_none(value: Any) -> str | None:
-    if value is None:
-        return None
-    raw = str(value).strip()
-    if not raw:
-        return None
-    # Accept ISO datetime and keep the calendar date only (DATE semantics).
-    if "T" in raw:
-        raw = raw[:10]
-    if not DATE_RE.match(raw):
-        raise ItemValidationError("dates must be YYYY-MM-DD")
-    return raw
 
 
 def require_title(title: str) -> str:

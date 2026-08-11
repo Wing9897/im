@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { isLinkedExpiryTitle } from "../timeline/userEventCalendarKind";
 import {
   buildLinkedCalendarCreateInitial,
   buildLinkedCalendarEditInitial,
   findActiveLinkedExpiryEvent,
-  isLinkedExpiryTitle,
   linkedCalendarModeLabelKey,
-  linkedCalendarQuickIsAllDay,
   linkedCalendarQuickLabelKey,
   LINKED_CALENDAR_QUICK_KINDS,
 } from "./linkedCalendarQuickCreate";
@@ -16,14 +15,11 @@ describe("linkedCalendarQuickCreate", () => {
     expect(LINKED_CALENDAR_QUICK_KINDS).toEqual(["expires", "other", "purchaseEffective"]);
   });
 
-  it("maps label keys and all-day preset for expiry only", () => {
+  it("maps label keys for quick presets", () => {
     for (const kind of LINKED_CALENDAR_QUICK_KINDS) {
       expect(linkedCalendarQuickLabelKey(kind)).toBe(`quickLinkedCalendar.${kind}`);
       expect(linkedCalendarModeLabelKey(kind)).toBe(`linkedCalendarMode.${kind}`);
     }
-    expect(linkedCalendarQuickIsAllDay("expires")).toBe(true);
-    expect(linkedCalendarQuickIsAllDay("other")).toBe(false);
-    expect(linkedCalendarQuickIsAllDay("purchaseEffective")).toBe(false);
   });
 
   it("detects linked expiry titles and picks primary by createdAt", () => {
