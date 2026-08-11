@@ -158,7 +158,7 @@ describe("SourceFilterDialog", () => {
             worksets: WORKSETS,
             expandTasks: [
               { id: hex, worksetId: null },
-              { id: "task-empty", worksetId: null, analysisMode: "recurring" },
+              { id: "task-empty", worksetId: null, analysisMode: "agent" },
             ],
             selection: null,
             onChange: vi.fn(),
@@ -189,7 +189,7 @@ describe("SourceFilterDialog", () => {
     expect(emptyRow.textContent).toContain("Unnamed task");
     expect(emptyRow.textContent).not.toContain("task-empty");
     expect(
-      document.querySelector('[data-testid="source-filter-recurring-task-empty"]'),
+      document.querySelector('[data-testid="source-filter-mode-task-empty"]'),
     ).toBeTruthy();
   });
 

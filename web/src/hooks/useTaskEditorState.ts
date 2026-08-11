@@ -2,12 +2,13 @@
  * Task editor state layer — session-persisted fields + save validation.
  * Pair with `useTaskPersistence` (save / hydrate).
  */
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import i18n from "../i18n";
 import { localizeTaskPreset } from "../domain/tasks/localizeTaskPreset";
 import { chatEditorFormStorageKey } from "../domain/prefs";
 import { DEFAULT_AGENT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
+import { isAnalysisMode } from "../domain/tasks/analysisModeCapabilities";
 import {
   isUnmappedTriggerSchedule,
   presetToTriggerRrule,
@@ -58,10 +59,7 @@ type SaveGateFields = {
   name: string;
   promptTemplate: string;
   channelIds: string[];
-  rrule: string;
   analysisMode: AnalysisMode;
-  eventIsAllDay: boolean;
-  eventStartTime: string;
   triggerMode?: string;
   outputCalendar?: boolean;
   outputAnalysisEvents?: boolean;
@@ -78,14 +76,6 @@ export function getTaskSaveBlockReason(
 ): string | null {
   if (isSaving) return String(i18n.t("tasks.editor.saveNeeds.saving"));
   if (!fields.name.trim()) return String(i18n.t("tasks.editor.saveNeeds.name"));
-
-  if (fields.analysisMode === "recurring") {
-    if (!fields.rrule.trim()) return String(i18n.t("tasks.editor.saveNeeds.rrule"));
-    const hasStart =
-      fields.eventIsAllDay || Boolean(fields.eventStartTime.trim());
-    if (!hasStart) return String(i18n.t("tasks.editor.saveNeeds.eventStart"));
-    return null;
-  }
 
   if (fields.analysisMode === "agent") {
     if (!fields.promptTemplate.trim()) {
@@ -138,6 +128,11 @@ export function useTaskEditorState(
     { storage: "session", persistDebounceMs: 400 },
   );
 
+  useEffect(() => {
+    if (isAnalysisMode(String(formState.analysisMode))) return;
+    setFormState((prev) => ({ ...prev, analysisMode: "intel_event" }));
+  }, [formState.analysisMode, setFormState]);
+
   const updateField = useCallback(
     <K extends keyof EditorFormFields>(field: K, value: EditorFormFields[K]) => {
       setFormState((prev) => {
@@ -188,10 +183,7 @@ export function useTaskEditorState(
     name: formState.name,
     promptTemplate: formState.promptTemplate,
     channelIds: formState.channelIds,
-    rrule: formState.rrule,
     analysisMode: formState.analysisMode,
-    eventIsAllDay: formState.eventIsAllDay,
-    eventStartTime: formState.eventStartTime,
     triggerMode: formState.triggerMode,
     outputCalendar: formState.outputCalendar,
     outputAnalysisEvents: formState.outputAnalysisEvents,

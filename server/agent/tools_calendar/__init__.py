@@ -14,9 +14,9 @@ from typing import Any, Awaitable, Callable
 from server.agent.tool_limits import CALENDAR_RESULT_HARD_CAP as HARD_CAP
 from server.agent.tools_calendar.handlers import (
     _tool_create_event,
-    _tool_create_recurring_task,
+    _tool_create_recurring_series,
     _tool_delete_event,
-    _tool_delete_recurring_task,
+    _tool_delete_recurring_series,
     _tool_get,
     _tool_list_calendars,
     _tool_mark_important,
@@ -24,7 +24,7 @@ from server.agent.tools_calendar.handlers import (
     _tool_unmark_important,
     _tool_upcoming,
     _tool_update_event,
-    _tool_update_recurring_task,
+    _tool_update_recurring_series,
     _tool_window,
 )
 from server.agent.tools_calendar.schemas import TOOL_SCHEMAS
@@ -39,9 +39,9 @@ TOOL_HANDLERS: dict[str, ToolHandler] = {
     "calendar.window": _tool_window,
     "calendar.get": _tool_get,
     "calendar.create_event": _tool_create_event,
-    "calendar.create_recurring_task": _tool_create_recurring_task,
-    "calendar.update_recurring_task": _tool_update_recurring_task,
-    "calendar.delete_recurring_task": _tool_delete_recurring_task,
+    "calendar.create_recurring_series": _tool_create_recurring_series,
+    "calendar.update_recurring_series": _tool_update_recurring_series,
+    "calendar.delete_recurring_series": _tool_delete_recurring_series,
     "calendar.update_event": _tool_update_event,
     "calendar.delete_event": _tool_delete_event,
     "calendar.mark_important": _tool_mark_important,

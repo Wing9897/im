@@ -5,6 +5,10 @@ Wire / OpenAPI / FE ``AnalysisMode`` must stay aligned with these constants.
 Process-layer registry: each mode is an ``AnalysisModeSpec``. Capability
 frozensets below are **derived** from the specs so schedulers / writers /
 timeline filters share one declaration.
+
+Recurring calendar series are **not** an analysis mode — they live on
+``recurring_schedules`` (calendar domain) and are edited via
+``/api/v1/calendar/recurring*``.
 """
 
 from __future__ import annotations
@@ -14,18 +18,16 @@ from typing import Final, Literal
 
 LEADERBOARD_MODE: Final = "leaderboard"
 INTEL_EVENT_MODE: Final = "intel_event"
-CHILD_RECURRING_MODE: Final = "recurring"
 AGENT_MODE: Final = "agent"
 
 AnalysisMode = Literal[
     "leaderboard",
     "intel_event",
-    "recurring",
     "agent",
 ]
 
 #: How the mode is executed at runtime (developer-facing; drives which code path owns work).
-AnalysisPipeline = Literal["message_batch", "agent_tick", "rrule_expand"]
+AnalysisPipeline = Literal["message_batch", "agent_tick"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,14 +65,6 @@ ANALYSIS_MODE_SPECS: Final[tuple[AnalysisModeSpec, ...]] = (
         pipeline="message_batch",
     ),
     AnalysisModeSpec(
-        mode=CHILD_RECURRING_MODE,
-        ai=False,
-        schedulable=False,
-        message_batch=False,
-        timeline_owning=True,
-        pipeline="rrule_expand",
-    ),
-    AnalysisModeSpec(
         mode=AGENT_MODE,
         ai=True,
         schedulable=True,
@@ -87,7 +81,7 @@ ALL_ANALYSIS_MODES: Final[tuple[AnalysisMode, ...]] = tuple(spec.mode for spec i
 #: Modes that run AI analysis (scheduler batch or agent tick).
 AI_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(spec.mode for spec in ANALYSIS_MODE_SPECS if spec.ai)
 
-#: Modes the scheduler registers for timed runs (excludes RRULE / filter buckets).
+#: Modes the scheduler registers for timed runs.
 SCHEDULABLE_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if spec.schedulable
 )
@@ -102,7 +96,7 @@ TIMELINE_OWNING_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if spec.timeline_owning
 )
 
-#: Modes that never receive APScheduler timers (RRULE / filter buckets only).
+#: Modes that never receive APScheduler timers.
 NON_SCHEDULABLE_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
     spec.mode for spec in ANALYSIS_MODE_SPECS if not spec.schedulable
 )

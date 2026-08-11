@@ -23,14 +23,22 @@ vi.mock("../../../hooks/useChannelsWithSources", () => ({
 }));
 
 vi.mock("../../../api/userEvents", () => ({
-  listUserEvents: vi.fn().mockResolvedValue([]),
+  listUserEventsPage: vi.fn().mockResolvedValue({ items: [], totalCount: 0, hasMore: false }),
 }));
 
-vi.mock("../../../api/taskSchedule", () => ({
-  fetchTaskSchedule: vi.fn().mockResolvedValue({
-    taskId: "child-1",
-    rrule: "FREQ=DAILY",
-    eventLocation: null,
+vi.mock("../../../api/recurringSeries", () => ({
+  listRecurringSeries: vi.fn().mockResolvedValue({
+    items: [
+      {
+        id: "child-1",
+        name: "Daily standup",
+        rrule: "FREQ=DAILY",
+        isActive: true,
+        parentTaskId: "proj-1",
+      },
+    ],
+    totalCount: 1,
+    hasMore: false,
   }),
 }));
 
@@ -89,7 +97,6 @@ vi.mock("../../../api/tasks", () => ({
 import {
   makeAnalysisTask,
   resetTaskCatalogState,
-  taskCatalogState,
 } from "../../../test/context-mocks";
 import { AgentDetailPage } from "./AgentDetailPage";
 
@@ -109,12 +116,6 @@ describe("AgentDetailPage", () => {
         description: "Ship the product",
         scheduleRrule: "FREQ=HOURLY",
       }),
-      makeAnalysisTask({
-        id: "child-1",
-        name: "Daily standup",
-        analysisMode: "recurring",
-        parentTaskId: "proj-1",
-      }),
     ]);
   });
 
@@ -129,10 +130,6 @@ describe("AgentDetailPage", () => {
   });
 
   it("renders project overview and child recurring list", async () => {
-    // Catalog includes parentTaskId children; project detail must still see them
-    // (would break if shared catalog used top_level_only).
-    expect(taskCatalogState.tasks.some((task) => task.parentTaskId === "proj-1")).toBe(true);
-
     await act(async () => {
       root = createRoot(container);
       root.render(
@@ -181,9 +178,9 @@ describe("AgentDetailPage", () => {
   });
 
   it("redirects when task is not a project", async () => {
-    taskCatalogState.tasks = [
+    resetTaskCatalogState([
       makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "intel_event" }),
-    ];
+    ]);
 
     await act(async () => {
       root = createRoot(container);

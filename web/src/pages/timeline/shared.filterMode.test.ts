@@ -8,7 +8,6 @@ describe("resolveTimelineFilterPlan", () => {
     { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-a" },
     { id: "web-1", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-a" },
     { id: "lb-1", analysisMode: "leaderboard", worksetId: "ws-a" },
-    { id: "cal-1", analysisMode: "recurring", worksetId: null },
   ];
 
   it("resolves hierarchical multi-select plans", () => {
@@ -26,24 +25,25 @@ describe("resolveTimelineFilterPlan", () => {
       fetchItems: false,
     });
     expect(
-      resolveTimelineFilterPlan({ taskIds: ["evt-1", "cal-1"], worksetIds: [] }, tasks),
+      resolveTimelineFilterPlan({ taskIds: ["evt-1"], worksetIds: [] }, tasks),
     ).toMatchObject({
       fetchAnalysis: true,
-      fetchCalendar: true,
+      fetchCalendar: false,
       fetchUserEvents: true,
       fetchItems: false,
       analysisTaskIds: ["evt-1"],
-      recurringTaskIds: ["cal-1"],
-      selectedRealTaskIds: ["evt-1", "cal-1"],
+      recurringTaskIds: [],
+      selectedRealTaskIds: ["evt-1"],
     });
     expect(
       resolveTimelineFilterPlan({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] }, tasks),
     ).toMatchObject({
       fetchAnalysis: false,
-      fetchCalendar: false,
+      fetchCalendar: true,
       fetchUserEvents: true,
       fetchItems: true,
       includeGeneralWorksetUserEvents: true,
+      recurringTaskIds: null,
     });
     expect(
       resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks),

@@ -23,9 +23,6 @@ export interface UseChatEditorReturn {
   canSave: boolean;
   saveBlockReason: string | null;
   isSaving: boolean;
-  scheduleHydrating: boolean;
-  scheduleHydrateError: string | null;
-  retryScheduleHydrate: () => void;
   applyPreset: (preset: TaskTemplatePreset) => void;
   channels: ChannelWithSource[];
 }
@@ -83,13 +80,7 @@ export function useChatEditor(): UseChatEditorReturn {
     setError(message);
   }, []);
 
-  const {
-    save,
-    isSaving,
-    scheduleHydrating,
-    scheduleHydrateError,
-    retryScheduleHydrate,
-  } = useTaskPersistence({
+  const { save, isSaving } = useTaskPersistence({
     formState,
     setFormState,
     isMountedRef,
@@ -97,8 +88,8 @@ export function useChatEditor(): UseChatEditorReturn {
   });
 
   useEffect(() => {
-    setIsSavingState(isSaving || scheduleHydrating);
-  }, [isSaving, scheduleHydrating]);
+    setIsSavingState(isSaving);
+  }, [isSaving]);
 
   useEffect(() => {
     if (channelsError) {
@@ -111,12 +102,9 @@ export function useChatEditor(): UseChatEditorReturn {
     updateField,
     error,
     save,
-    canSave: canSave && !scheduleHydrating,
+    canSave,
     saveBlockReason,
     isSaving,
-    scheduleHydrating,
-    scheduleHydrateError,
-    retryScheduleHydrate,
     applyPreset,
     channels,
   };

@@ -52,7 +52,6 @@ async def test_unknown_schedule_and_invalid_persisted_schedules_are_isolated(app
             task_id,
             analysis_mode="leaderboard",
             schedule_rrule=schedule_rrule,
-            rrule=None,
         )
 
     caplog.set_level(logging.ERROR, logger="server.scheduler.manager")
@@ -88,19 +87,19 @@ async def test_re_registration_replaces_the_existing_task_job(app):
     assert jobs[0].trigger.interval.total_seconds() == 3600
 
 
-@pytest.mark.parametrize(
-    ("analysis_mode", "is_active"),
-    [("recurring", 1), ("leaderboard", 0)],
-)
-async def test_re_registration_removes_jobs_for_recurring_or_inactive(app, analysis_mode, is_active):
-    """Recurring and inactive tasks retain no scheduler job, including stale jobs."""
+async def test_re_registration_removes_jobs_for_inactive(app):
+    """Inactive analysis tasks retain no scheduler job, including stale jobs.
+
+    Recurring calendar series live on ``recurring_schedules`` (not analysis_mode)
+    and never register APScheduler jobs.
+    """
     manager = SchedulerManager(app.state.db, analysis_engine=None, broadcaster=SseBroadcaster())
     await manager.register_task(seed.TASK_LEADERBOARD)
     assert manager._scheduler.get_job(seed.TASK_LEADERBOARD) is not None
 
     await app.state.db.execute(
-        "UPDATE analysis_tasks SET analysis_mode = ?, is_active = ? WHERE id = ?",
-        (analysis_mode, is_active, seed.TASK_LEADERBOARD),
+        "UPDATE analysis_tasks SET is_active = 0 WHERE id = ?",
+        (seed.TASK_LEADERBOARD,),
     )
     await manager.register_task(seed.TASK_LEADERBOARD)
 

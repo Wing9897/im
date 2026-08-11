@@ -23,9 +23,9 @@ describe("formatAnalysisMode", () => {
     expect(formatAnalysisMode("leaderboard")).toBe("排行榜任務");
   });
 
-  it('returns task-type name for "agent" and "recurring"', () => {
+  it('returns task-type name for "agent"', () => {
     expect(formatAnalysisMode("agent")).toBe("Agent 任務");
-    expect(formatAnalysisMode("recurring")).toBe("週期任務");
+    expect(formatAnalysisMode("recurring")).toBe("未知");
   });
 
   it('returns "未知" for unrecognized values', () => {

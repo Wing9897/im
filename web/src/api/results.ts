@@ -123,20 +123,20 @@ export async function fetchTimelineEvents({
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 }
 
-/** Fetches expanded calendar-task + optional item DATE rows within an ISO range. */
+/** Fetches expanded recurring-series + optional item DATE rows within an ISO range. */
 export function fetchCalendarOccurrences(
   rangeStart: string,
   rangeEnd: string,
-  opts?: { taskId?: string; taskIds?: string[]; includeItems?: boolean },
+  opts?: { seriesId?: string; seriesIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
   const query: Record<string, string | string[]> = {
     rangeStart,
     rangeEnd,
   };
-  if (opts?.taskIds !== undefined) {
-    query.taskIds = opts.taskIds;
-  } else if (opts?.taskId !== undefined) {
-    query.taskId = opts.taskId;
+  if (opts?.seriesIds !== undefined) {
+    query.seriesIds = opts.seriesIds;
+  } else if (opts?.seriesId !== undefined) {
+    query.seriesId = opts.seriesId;
   }
   if (opts?.includeItems === false) {
     query.includeItems = "false";

@@ -3,9 +3,8 @@
  *
  * Write-path SoT: linked ``user_events`` with ``kind=expires`` (Items form
  * 「關聯日曆」). Title presets 到期／Expires are UX only. The server
- * denormalizes the earliest active linked expiry onto ``item.expiresAt`` /
- * ``remindBeforeDays`` on calendar create／update／delete write-through
- * (not on GET list/get).
+ * derives ``item.expiresAt`` / ``remindBeforeDays`` on read from the primary
+ * active linked expiry (no denormalized item columns).
  *
  * Card badges are **derived day-count status** (剩 N 天 / 過期 N 天) — not the
  * linked calendar event title. Category chips are separate. When
@@ -16,7 +15,7 @@ import type { TrackableItem } from "../../api/items";
 import { daysUntil, expiryTone, type ExpiryTone } from "./itemExpiryTone";
 
 export type ItemCardExpiry = {
-  /** YYYY-MM-DD from denormalized item.expiresAt (linked kind=expires cache). */
+  /** YYYY-MM-DD from derived item.expiresAt (primary linked kind=expires). */
   expiresAt: string | null;
   days: number | null;
   tone: ExpiryTone;
@@ -39,7 +38,7 @@ export function resolveItemCardExpiry(
   };
 }
 
-/** Card body line — never bare YYYY-MM-DD; prefix linked expiry when cached. */
+/** Card body line — never bare YYYY-MM-DD; prefix linked expiry when present. */
 export function itemCardExpirySubtitle(
   expiry: ItemCardExpiry,
   t: (key: string, opts?: Record<string, unknown>) => string,

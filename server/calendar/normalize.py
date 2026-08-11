@@ -22,7 +22,7 @@ from typing import Any, Iterable, Literal, Mapping
 
 from server.util import parse_json_list
 
-Source = Literal["analysis", "recurring", "user", "item"]
+Source = Literal["analysis", "recurring", "user", "item_remind"]
 Detail = Literal["compact", "full"]
 
 OCCURRENCE_ID_RE = re.compile(r"^([^:]+):(\d{8}T\d{6}Z)$")
@@ -47,10 +47,31 @@ _COMPACT_USER_FIELDS = _COMPACT_FIELDS + (
     "dismissed",
     "important",
 )
-#: Compact RRULE rows may carry optional parent inventory item (linked calendar).
-_COMPACT_OCCURRENCE_FIELDS = _COMPACT_FIELDS + ("itemId",)
+#: Compact RRULE rows use ``seriesId`` (not analysis ``taskId``) + optional item link.
+_COMPACT_OCCURRENCE_FIELDS = (
+    "id",
+    "seriesId",
+    "title",
+    "startTime",
+    "endTime",
+    "location",
+    "source",
+    "isAllDay",
+    "timezone",
+    "itemId",
+)
 #: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
-_COMPACT_ITEM_FIELDS = _COMPACT_FIELDS + (
+#: Empty ``seriesId`` (shared CalendarOccurrence wire; not an RRULE series).
+_COMPACT_ITEM_FIELDS = (
+    "id",
+    "seriesId",
+    "title",
+    "startTime",
+    "endTime",
+    "location",
+    "source",
+    "isAllDay",
+    "timezone",
     "worksetId",
     "itemId",
     "itemDateKind",
@@ -122,7 +143,7 @@ def build_occurrence_item(
     item_id = str(raw_item_id).strip() if isinstance(raw_item_id, str) and str(raw_item_id).strip() else None
     item = {
         "id": str(occ["id"]),
-        "taskId": str(occ.get("taskId") or ""),
+        "seriesId": str(occ.get("seriesId") or ""),
         "title": str(occ.get("title") or ""),
         "startTime": occ.get("startTime"),
         "endTime": occ.get("endTime"),
@@ -150,7 +171,7 @@ def build_user_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> d
 
 
 def build_item_calendar_item(item: Mapping[str, Any], *, detail: Detail = "compact") -> dict[str, Any]:
-    """Item remind projection as a calendar item (``source=item``)."""
+    """Item remind projection as a calendar item (``source=item_remind``)."""
     return _project(dict(item), detail, _COMPACT_ITEM_FIELDS)
 
 

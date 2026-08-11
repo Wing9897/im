@@ -30,7 +30,8 @@ EMAIL_CHANNEL = (
 TASK_LEADERBOARD = "task-lb"
 TASK_EVENT = "task-cm"
 TASK_EVENT_TIMED = "task-tl"
-TASK_CALENDAR = "task-cal"
+TASK_CALENDAR = "task-cal"  # standalone recurring series id (not analysis_tasks)
+SERIES_CALENDAR = TASK_CALENDAR
 TASK_WEB_INTEL = "task-wi"
 TASK_PROJECT = "task-proj"
 
@@ -201,20 +202,6 @@ async def seed_database(db: Any) -> None:
             None,
         ),
         (
-            TASK_CALENDAR,
-            "每週例會",
-            "recurring",
-            "all",
-            None,
-            "FREQ=WEEKLY;BYDAY=MO",
-            "2026-07-06T10:00:00+00:00",
-            "2026-07-06T11:00:00+00:00",
-            0,
-            "會議室A",
-            "週會",
-            None,
-        ),
-        (
             TASK_WEB_INTEL,
             "定價監管情報",
             "agent",
@@ -302,13 +289,24 @@ async def seed_database(db: Any) -> None:
                 now,
             ),
         )
-        if rrule:
-            await db.execute(
-                "INSERT INTO recurring_schedules "
-                "(task_id, rrule, dtstart, dtend, is_all_day, location, description, "
-                "timezone, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'UTC', ?, ?)",
-                (task_id, rrule, event_start, event_end, all_day, location, description, now, now),
-            )
+        _ = (rrule, event_start, event_end, all_day, location, description)
+    # Standalone recurring series (calendar domain; not an analysis task).
+    await db.execute(
+        "INSERT INTO recurring_schedules "
+        "(id, name, workset_id, is_active, rrule, dtstart, dtend, is_all_day, location, description, "
+        "timezone, created_at, updated_at) VALUES (?, ?, '__user__', 1, ?, ?, ?, 0, ?, ?, 'UTC', ?, ?)",
+        (
+            SERIES_CALENDAR,
+            "每週例會",
+            "FREQ=WEEKLY;BYDAY=MO",
+            "2026-07-06T10:00:00+00:00",
+            "2026-07-06T11:00:00+00:00",
+            "會議室A",
+            "週會",
+            now,
+            now,
+        ),
+    )
     for task_id in (TASK_LEADERBOARD, TASK_EVENT, TASK_EVENT_TIMED, TASK_PROJECT):
         await db.execute(
             "INSERT INTO task_channels (task_id, platform, platform_id) VALUES (?, ?, ?)",
@@ -408,16 +406,16 @@ async def seed_database(db: Any) -> None:
     # ── sample items (DDL seed categories + __user__ workset) ─────────
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
-        "expires_at, remind_before_days, notes, status, emoji, "
+        "notes, status, emoji, "
         "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__user__', "
-        "'2029-06-01', 90, 'seed passport id A123456789', 'active', NULL, ?, ?)",
+        "'seed passport id A123456789', 'active', NULL, ?, ?)",
         (ITEM_PASSPORT, "護照樣本", now, now),
     )
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
-        "expires_at, remind_before_days, notes, status, emoji, "
+        "notes, status, emoji, "
         "created_at, updated_at) VALUES (?, ?, 'seed_food', '__user__', "
-        "'2027-03-15', 3, 'seed food brand SeedDairy', 'active', NULL, ?, ?)",
+        "'seed food brand SeedDairy', 'active', NULL, ?, ?)",
         (ITEM_FOOD, "牛奶樣本", now, now),
     )
 

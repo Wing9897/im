@@ -45,7 +45,7 @@ export function paddedTimelineFetchWindow(
 }
 
 function isItemOccurrence(occurrence: CalendarOccurrence): boolean {
-  return occurrence.source === "item";
+  return occurrence.source === "item_remind";
 }
 
 function itemOccurrenceToTimelineItem(occurrence: CalendarOccurrence): TimelineItem | null {
@@ -91,7 +91,12 @@ export function mergeTimelineFilterSources(opts: {
     ? isAll
       ? [...recurringOccurrences]
       : recurringOccurrences.filter(
-          (occurrence) => occurrence.taskId != null && allow.has(occurrence.taskId),
+          (occurrence) =>
+            (occurrence.seriesId != null &&
+              occurrence.seriesId !== "" &&
+              allow.has(occurrence.seriesId)) ||
+            (occurrence.worksetId != null &&
+              allowWorksets.has(occurrence.worksetId)),
         )
     : [];
 
@@ -185,8 +190,8 @@ export async function fetchMergedTimelineEvents(
           filterPlan.fetchCalendar
             ? filterPlan.recurringTaskIds === null
               ? { includeItems: true }
-              : { taskIds: filterPlan.recurringTaskIds, includeItems: true }
-            : { taskIds: [], includeItems: true },
+              : { seriesIds: filterPlan.recurringTaskIds, includeItems: true }
+            : { seriesIds: [], includeItems: true },
         )
       : Promise.resolve([] as CalendarOccurrence[]),
     filterPlan.fetchUserEvents

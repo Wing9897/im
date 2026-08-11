@@ -1,12 +1,12 @@
 """Wipe-only schema bootstrap and validation (no migration registry).
 
-Stamp **26** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
+Stamp **28** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative domain DDL
-aggregated by ``schema.py``. Exact unstamped stamp-26
-fingerprints are stamped (``PRAGMA user_version=26``). Every other non-empty
-schema is rejected without mutation →
-``python scripts/reset_local_databases.py --apply`` (does **not** auto-seed).
+aggregated by ``schema.py``. Exact unstamped current fingerprints are stamped
+(``PRAGMA user_version=28``). Every other non-empty schema is rejected without
+mutation → ``python scripts/reset_local_databases.py --apply`` (does **not**
+auto-seed).
 
 Product SemVer / git tags are decoupled from ``SCHEMA_SEMVER`` / ``user_version``.
 """

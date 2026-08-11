@@ -13,7 +13,6 @@ from server.queries.tasks_queries import delete_analysis_task
 from server.services.task_crud_list import list_tasks_payload
 from server.services.task_crud_mutate import (
     TaskMutationResult,
-    create_recurring_task_record,
     create_task_record,
     delete_task_record,
     toggle_task_active_record,
@@ -22,7 +21,6 @@ from server.services.task_crud_mutate import (
 
 __all__ = [
     "TaskMutationResult",
-    "create_recurring_task_record",
     "create_task_record",
     "delete_analysis_task",
     "delete_task_record",

@@ -26,7 +26,7 @@ function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | n
   }
   return {
     id: event.id,
-    taskId: event.taskId ?? "",
+    seriesId: event.seriesId ?? event.taskId ?? "",
     taskName: event.taskName?.trim() || String(i18n.t("board.common.unassignedTask")),
     title: event.title || String(i18n.t("board.common.untitledEvent")),
     startTime: event.startTime,
@@ -36,7 +36,7 @@ function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | n
     location: event.location,
     description: event.body || null,
     rrule: "",
-    source: event.source === "item" ? "item" : "recurring",
+    source: event.source === "item_remind" ? "item_remind" : "recurring",
     worksetId: event.worksetId ?? null,
     itemId: event.itemId ?? null,
     itemDateKind: event.itemDateKind ?? null,

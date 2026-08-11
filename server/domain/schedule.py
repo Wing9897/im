@@ -7,9 +7,9 @@ Two purposes share RRULE syntax but **never** share consumption paths:
   **only** by the APScheduler next-run path. Sub-day FREQ (``SECONDLY`` /
   ``HOURLY``) is allowed. **Never** expanded into calendar occurrences /
   Board / Timeline month grids.
-- ``purpose=calendar`` — ``analysis_mode=recurring`` series on
-  ``recurring_schedules.rrule``. Day-grained FREQ only. Expanded at query
-  time. **Never** registers an AI timer.
+- ``purpose=calendar`` — standalone ``recurring_schedules.rrule`` series.
+  Day-grained FREQ only. Expanded at query time. **Never** registers an AI
+  timer. Not an ``analysis_mode``.
 
 FE editor presets (``seconds_10`` / ``hourly`` / …) are a client convenience
 layer that maps to/from trigger RRULE locally; the HTTP wire carries
@@ -24,7 +24,6 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from server.domain.analysis_modes import (
-    CHILD_RECURRING_MODE,
     SCHEDULABLE_ANALYSIS_MODES,
     get_analysis_mode_spec,
 )
@@ -74,20 +73,29 @@ class ScheduleValidationError(ValueError):
 
 
 def schedule_purpose_for_mode(analysis_mode: str | None) -> SchedulePurpose | None:
-    """Return the schedule purpose owned by ``analysis_mode``, or None if unknown."""
+    """Return the schedule purpose owned by ``analysis_mode``, or None if unknown.
+
+    Calendar series are not analysis modes — use ``may_calendar_expand_series``.
+    """
     spec = get_analysis_mode_spec(analysis_mode)
     if spec is None:
         return None
-    if spec.pipeline == "rrule_expand":
-        return "calendar"
     if spec.schedulable:
         return "trigger"
     return None
 
 
 def may_calendar_expand(analysis_mode: str | None) -> bool:
-    """Hard gate: only recurring (calendar-purpose) modes expand into occurrences."""
-    return schedule_purpose_for_mode(analysis_mode) == "calendar"
+    """Deprecated: analysis modes never calendar-expand. Always False."""
+    del analysis_mode
+    return False
+
+
+def may_calendar_expand_series(row: dict | None) -> bool:
+    """Hard gate: active standalone series expand into occurrences."""
+    if not row:
+        return False
+    return bool(row.get("is_active", 1)) and bool(row.get("rrule"))
 
 
 def may_register_trigger(analysis_mode: str | None) -> bool:
@@ -218,13 +226,12 @@ def resolve_trigger_rrule(
     schedule_rrule: str | None = None,
     existing_rrule: str | None = None,
 ) -> str | None:
-    """Resolve the persisted trigger RRULE for an AI / recurring shell write.
+    """Resolve the persisted trigger RRULE for an AI-mode write.
 
-    Recurring shells store ``NULL`` (calendar series lives on
-    ``recurring_schedules``). AI modes always persist a validated trigger RRULE.
-    Wire write SoT is ``schedule_rrule`` alone (plus existing / default).
+    AI modes always persist a validated trigger RRULE. Wire write SoT is
+    ``schedule_rrule`` alone (plus existing / default).
     """
-    if analysis_mode == CHILD_RECURRING_MODE:
+    if not may_register_trigger(analysis_mode):
         return None
     if schedule_rrule is not None and str(schedule_rrule).strip():
         return validate_trigger_rrule(schedule_rrule)

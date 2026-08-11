@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { listItems } from "../../../api/items";
-import { listUserEvents } from "../../../api/userEvents";
+import { listUserEventsPage } from "../../../api/userEvents";
 import {
   buildItemsFinanceRows,
   filterItemsFinanceRows,
@@ -51,7 +51,9 @@ export function useItemsFinancePage() {
       const window = financeEventsQueryWindow(range);
       const [items, events] = await Promise.all([
         listItems(),
-        listUserEvents({ start: window.start, end: window.end }),
+        listUserEventsPage({ start: window.start, end: window.end }).then(
+          (page) => page.items,
+        ),
       ]);
       setRawRows(buildItemsFinanceRows(items, events, range));
     } catch (err) {

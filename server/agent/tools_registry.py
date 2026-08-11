@@ -43,9 +43,9 @@ WEB_TOOL_NAMES = frozenset(WEB_HANDLERS)
 CALENDAR_WRITE_TOOL_NAMES = frozenset(
     {
         "calendar.create_event",
-        "calendar.create_recurring_task",
-        "calendar.update_recurring_task",
-        "calendar.delete_recurring_task",
+        "calendar.create_recurring_series",
+        "calendar.update_recurring_series",
+        "calendar.delete_recurring_series",
         "calendar.update_event",
         "calendar.delete_event",
         "calendar.mark_important",
@@ -102,12 +102,12 @@ def _nested_id(result: dict[str, Any], key: str) -> str | None:
     return str(nested["id"]) if isinstance(nested, dict) and nested.get("id") else None
 
 
-def _deleted_task_id(result: dict[str, Any]) -> str | None:
-    """Soft-delete keeps the row, so the id may come back under any of three keys."""
+def _deleted_series_id(result: dict[str, Any]) -> str | None:
+    """Extract the recurring-series id from a successful hard-delete result."""
     if not result.get("deleted"):
         return None
-    task_id = _nested_id(result, "task") or result.get("id") or result.get("taskId")
-    return str(task_id) if task_id else None
+    series_id = _nested_id(result, "series") or result.get("id") or result.get("seriesId")
+    return str(series_id) if series_id else None
 
 
 def _deleted_event_id(result: dict[str, Any]) -> str | None:
@@ -115,13 +115,12 @@ def _deleted_event_id(result: dict[str, Any]) -> str | None:
     return str(event_id) if event_id else None
 
 
-#: Tool name → (resourceType, action, id extractor). ``calendar.delete_recurring_task``
-#: is a soft delete (``isActive=false``), so it publishes "updated" to keep the row
-#: in the task catalog instead of announcing it as gone.
+#: Tool name → (resourceType, action, id extractor).
+#: Recurring series use ``resourceType=recurring`` (not task catalog).
 _WRITE_NOTIFICATIONS: dict[str, tuple[str, str, Any]] = {
-    "calendar.create_recurring_task": ("task", "created", lambda r: _nested_id(r, "task")),
-    "calendar.update_recurring_task": ("task", "updated", lambda r: _nested_id(r, "task")),
-    "calendar.delete_recurring_task": ("task", "updated", _deleted_task_id),
+    "calendar.create_recurring_series": ("recurring", "created", lambda r: _nested_id(r, "series")),
+    "calendar.update_recurring_series": ("recurring", "updated", lambda r: _nested_id(r, "series")),
+    "calendar.delete_recurring_series": ("recurring", "deleted", _deleted_series_id),
     "calendar.create_event": ("user_event", "created", lambda r: _nested_id(r, "item")),
     "calendar.update_event": ("user_event", "updated", lambda r: _nested_id(r, "item")),
     "calendar.delete_event": ("user_event", "deleted", _deleted_event_id),
@@ -132,7 +131,7 @@ _WRITE_NOTIFICATIONS: dict[str, tuple[str, str, Any]] = {
 
 _IMPORTANCE_RESOURCE_TYPE: dict[str, str] = {
     "analysis": "task",
-    "recurring": "task",
+    "recurring": "recurring",
     "user": "user_event",
     "item": "item",
 }

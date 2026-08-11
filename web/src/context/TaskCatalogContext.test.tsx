@@ -170,7 +170,7 @@ describe("TaskCatalogContext", () => {
     cleanupHarness(root, container);
   });
 
-  it("loads the full task list without top_level_only so parentTaskId children stay in catalog", async () => {
+  it("loads the full analysis task list without top_level_only", async () => {
     mockListTasks.mockResolvedValueOnce([
       {
         id: "proj-1",
@@ -182,20 +182,6 @@ describe("TaskCatalogContext", () => {
         version: 1,
         isActive: true,
         channelIds: [],
-        createdAt: "2026-04-17T03:00:00.000Z",
-        updatedAt: "2026-04-17T03:00:00.000Z",
-      },
-      {
-        id: "child-1",
-        name: "Standup",
-        description: null,
-        promptTemplate: "prompt",
-        analysisMode: "recurring",
-        analysisTimeRange: "7d",
-        version: 1,
-        isActive: true,
-        channelIds: [],
-        parentTaskId: "proj-1",
         createdAt: "2026-04-17T03:00:00.000Z",
         updatedAt: "2026-04-17T03:00:00.000Z",
       },
@@ -222,12 +208,8 @@ describe("TaskCatalogContext", () => {
     expect(mockListTasks).toHaveBeenCalledWith();
     expect(latestState?.tasks.map((task) => task.id)).toEqual([
       "proj-1",
-      "child-1",
       "event-1",
     ]);
-    expect(latestState?.tasks.find((task) => task.id === "child-1")?.parentTaskId).toBe(
-      "proj-1",
-    );
 
     cleanupHarness(root, container);
   });

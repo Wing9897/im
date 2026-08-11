@@ -485,17 +485,17 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
     )
     await db.execute(
         "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("item", "item-live", now),
+        ("item_remind", "item:item-live:remind", now),
     )
     await db.execute(
         "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("item", "item-gone", now),
+        ("item_remind", "item:item-gone:remind", now),
     )
     await db.execute(
-        "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'recurring', 'all', 1, 1, NULL, ?, ?)",
-        ("task-cal-live", "Cal Live", "", now, now),
+        "INSERT INTO recurring_schedules "
+        "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
+        "VALUES (?, ?, '__user__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
+        ("task-cal-live", "Cal Live", "2026-07-23T10:00:00", now, now),
     )
     await db.execute(
         "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
@@ -511,7 +511,7 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
     assert counts["timeline_dismissals"] == 4
     assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'ev-live'") == 1
     assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'ue-live'") == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'item-live'") == 1
+    assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'item:item-live:remind'") == 1
     assert (
         await db.fetch_value(
             "SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'task-cal-live:20260723T100000Z'"
@@ -521,7 +521,7 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
     assert (
         await db.fetch_value(
             "SELECT COUNT(*) FROM timeline_dismissals WHERE event_id IN ("
-            "'ev-gone', 'ue-gone', 'item-gone', 'task-cal-gone:20260724T100000Z')"
+            "'ev-gone', 'ue-gone', 'item:item-gone:remind', 'task-cal-gone:20260724T100000Z')"
         )
         == 0
     )

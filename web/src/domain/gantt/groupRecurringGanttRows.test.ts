@@ -4,11 +4,11 @@ import { makeEvent } from "../../test/timelineTestHelpers";
 import { groupRecurringGanttRows } from "./groupRecurringGanttRows";
 
 describe("groupRecurringGanttRows", () => {
-  it("merges recurring occurrences with the same taskId into one row with multiple bars", () => {
+  it("merges recurring occurrences with the same seriesId into one row with multiple bars", () => {
     const events = [
       makeEvent({
         id: "task-meet:2025-01-15T09:00:00Z",
-        taskId: "task-meet",
+        seriesId: "task-meet",
         title: "開會",
         source: "recurring",
         startTime: "2025-01-15T09:00:00Z",
@@ -16,7 +16,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "task-meet:2025-01-22T09:00:00Z",
-        taskId: "task-meet",
+        seriesId: "task-meet",
         title: "開會",
         source: "recurring",
         startTime: "2025-01-22T09:00:00Z",
@@ -24,7 +24,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "task-meet:2025-01-29T09:00:00Z",
-        taskId: "task-meet",
+        seriesId: "task-meet",
         title: "開會",
         source: "recurring",
         startTime: "2025-01-29T09:00:00Z",
@@ -45,7 +45,7 @@ describe("groupRecurringGanttRows", () => {
     expect(rows[0]!.dismissed).toBe(false);
   });
 
-  it("does not merge non-recurring events even when taskId matches", () => {
+  it("does not merge non-recurring events even when seriesId matches", () => {
     const events = [
       makeEvent({
         id: "analysis-1",
@@ -77,10 +77,10 @@ describe("groupRecurringGanttRows", () => {
     expect(rows.every((row) => row.occurrences.length === 1)).toBe(true);
   });
 
-  it("keeps recurring events without taskId as singleton rows", () => {
+  it("keeps recurring events without seriesId as singleton rows", () => {
     const event = makeEvent({
       id: "orphan-occ",
-      taskId: null,
+      seriesId: null,
       title: "Orphan",
       source: "recurring",
       startTime: "2025-01-15T09:00:00Z",
@@ -96,7 +96,7 @@ describe("groupRecurringGanttRows", () => {
     const mixed = groupRecurringGanttRows([
       makeEvent({
         id: "a:1",
-        taskId: "a",
+        seriesId: "a",
         title: "A",
         source: "recurring",
         dismissed: true,
@@ -105,7 +105,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "a:2",
-        taskId: "a",
+        seriesId: "a",
         title: "A",
         source: "recurring",
         dismissed: false,
@@ -118,7 +118,7 @@ describe("groupRecurringGanttRows", () => {
     const allDismissed = groupRecurringGanttRows([
       makeEvent({
         id: "b:1",
-        taskId: "b",
+        seriesId: "b",
         title: "B",
         source: "recurring",
         dismissed: true,
@@ -127,7 +127,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "b:2",
-        taskId: "b",
+        seriesId: "b",
         title: "B",
         source: "recurring",
         dismissed: true,
@@ -158,11 +158,11 @@ describe("groupRecurringGanttRows", () => {
     expect(rows.map((row) => row.rowId)).toEqual(["active-late", "dismissed-early"]);
   });
 
-  it("keeps separate series for different taskIds and sorts occurrences by startTime", () => {
+  it("keeps separate series for different seriesIds and sorts occurrences by startTime", () => {
     const rows = groupRecurringGanttRows([
       makeEvent({
         id: "b:later",
-        taskId: "task-b",
+        seriesId: "task-b",
         title: "B",
         source: "recurring",
         startTime: "2025-01-20T09:00:00Z",
@@ -170,7 +170,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "a:later",
-        taskId: "task-a",
+        seriesId: "task-a",
         title: "A",
         source: "recurring",
         startTime: "2025-01-18T09:00:00Z",
@@ -178,7 +178,7 @@ describe("groupRecurringGanttRows", () => {
       }),
       makeEvent({
         id: "a:earlier",
-        taskId: "task-a",
+        seriesId: "task-a",
         title: "A",
         source: "recurring",
         startTime: "2025-01-11T09:00:00Z",

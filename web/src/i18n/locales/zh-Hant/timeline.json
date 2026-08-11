@@ -244,7 +244,7 @@
     },
     "target": {
       "user_event": "單次",
-      "recurring_task": "週期"
+      "recurring": "週期"
     },
     "action": {
       "create": "新增",

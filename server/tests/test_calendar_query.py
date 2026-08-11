@@ -16,14 +16,42 @@ from server.tests import seed
 
 async def test_list_calendars_includes_event_and_recurring_tasks(app) -> None:
     calendars = await list_calendars(app.state.db)
+    by_id = {c["id"]: c for c in calendars}
     modes = {c["analysisMode"] for c in calendars}
-    ids = {c["id"] for c in calendars}
-    assert "recurring" in modes
     assert "intel_event" in modes
-    assert seed.TASK_CALENDAR in ids
-    assert seed.TASK_EVENT in ids
+    assert "recurring" not in modes  # series are not an analysisMode
+    assert seed.TASK_CALENDAR in by_id
+    assert seed.TASK_EVENT in by_id
+    assert by_id[seed.TASK_CALENDAR]["analysisMode"] == ""
+    assert by_id[seed.TASK_CALENDAR]["kind"] == "recurring_series"
+    assert by_id[seed.TASK_CALENDAR]["source"] == "recurring"
+    assert by_id[seed.TASK_EVENT]["analysisMode"] == "intel_event"
+    assert by_id[seed.TASK_EVENT]["kind"] == "analysis_task"
+    assert by_id[seed.TASK_EVENT]["source"] == "analysis"
     # Metadata only — no event body payload.
     assert all("body" not in c for c in calendars)
+
+
+async def test_list_calendars_include_inactive_series(app) -> None:
+    db = app.state.db
+    await db.execute(
+        "UPDATE recurring_schedules SET is_active = 0 WHERE id = ?",
+        (seed.TASK_CALENDAR,),
+    )
+    try:
+        active_only = await list_calendars(db)
+        assert seed.TASK_CALENDAR not in {c["id"] for c in active_only}
+
+        with_inactive = await list_calendars(db, include_inactive=True)
+        by_id = {c["id"]: c for c in with_inactive}
+        assert seed.TASK_CALENDAR in by_id
+        assert by_id[seed.TASK_CALENDAR]["isActive"] is False
+        assert by_id[seed.TASK_CALENDAR]["kind"] == "recurring_series"
+    finally:
+        await db.execute(
+            "UPDATE recurring_schedules SET is_active = 1 WHERE id = ?",
+            (seed.TASK_CALENDAR,),
+        )
 
 
 async def test_query_window_merges_analysis_events_and_rrule(app) -> None:
@@ -45,8 +73,14 @@ async def test_query_window_merges_analysis_events_and_rrule(app) -> None:
     assert analysis["startTime"].startswith("2026-07-15")
 
     recurring_items = [i for i in items if i["source"] == "recurring"]
-    assert any(i["taskId"] == seed.TASK_CALENDAR for i in recurring_items)
-    assert all({"id", "taskId", "title", "startTime", "endTime", "source"} <= set(i) for i in items)
+    assert any(i["seriesId"] == seed.TASK_CALENDAR for i in recurring_items)
+    for item in items:
+        keys = set(item)
+        if item["source"] == "recurring":
+            assert {"id", "seriesId", "title", "startTime", "endTime", "source"} <= keys
+            assert "taskId" not in keys
+        else:
+            assert {"id", "taskId", "title", "startTime", "endTime", "source"} <= keys
 
 
 async def test_query_window_merges_user_events(app) -> None:
@@ -71,32 +105,32 @@ async def test_query_window_merges_user_events(app) -> None:
     assert match["origin"] == "manual"
     assert match["title"] == "用戶事件測試"
 
-    # Untagged user events are excluded when filtering by a concrete task.
+    # Untagged user events are excluded when filtering by a concrete analysis task.
     filtered = await query_window(
         db,
         start="2026-07-13T00:00:00Z",
         end="2026-07-21T23:59:59Z",
-        task_id=seed.TASK_CALENDAR,
+        task_id=seed.TASK_EVENT,
         limit=100,
     )
     assert all(i["id"] != created["id"] for i in filtered["items"] if i["source"] == "user")
 
-    # Tagged user events appear under that task filter.
+    # Tagged user events appear under that analysis-task filter (series ids are not taskIds).
     tagged = await create_user_event(
         db,
-        title="掛到行事曆任務",
+        title="掛到情報事件任務",
         start_time="2026-07-16T13:00:00Z",
         origin="manual",
-        task_id=seed.TASK_CALENDAR,
+        task_id=seed.TASK_EVENT,
     )
     filtered_tagged = await query_window(
         db,
         start="2026-07-13T00:00:00Z",
         end="2026-07-21T23:59:59Z",
-        task_id=seed.TASK_CALENDAR,
+        task_id=seed.TASK_EVENT,
         limit=100,
     )
-    assert any(i["id"] == tagged["id"] and i["taskId"] == seed.TASK_CALENDAR for i in filtered_tagged["items"])
+    assert any(i["id"] == tagged["id"] and i["taskId"] == seed.TASK_EVENT for i in filtered_tagged["items"])
 
     # System-workset filter: ownership ``__user__`` only (no analysis/RRULE).
     # Events with task provenance still appear when their workset is builtin.
@@ -227,7 +261,7 @@ async def test_get_event_analysis_and_rrule_occurrence(app) -> None:
     detail = await get_event(db, event_id=occ_id)
     assert detail is not None
     assert detail["source"] == "recurring"
-    assert detail["taskId"] == seed.TASK_CALENDAR
+    assert detail["seriesId"] == seed.TASK_CALENDAR
     assert detail["id"] == occ_id
 
 

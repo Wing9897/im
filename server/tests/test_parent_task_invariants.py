@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from server.services.task_writes import TaskWriteError, resolve_parent_task_id
+from server.services.task_writes import (
+    TaskWriteError,
+    resolve_parent_task_id,
+    resolve_series_parent_task_id,
+)
 from server.tests import seed
 
 
@@ -22,18 +26,16 @@ def test_resolve_parent_clears_for_non_recurring() -> None:
 
 def test_resolve_parent_rejects_self_reference() -> None:
     with pytest.raises(TaskWriteError, match="itself"):
-        resolve_parent_task_id(
-            task_id="same",
-            effective_mode="recurring",
+        resolve_series_parent_task_id(
+            series_id="same",
             supplied_parent_task_id="same",
         )
 
 
 def test_resolve_parent_rejects_non_agent_parent_mode() -> None:
     with pytest.raises(TaskWriteError, match="agent"):
-        resolve_parent_task_id(
-            task_id="child",
-            effective_mode="recurring",
+        resolve_series_parent_task_id(
+            series_id="child",
             supplied_parent_task_id="not-proj",
             parent_mode="intel_event",
         )
@@ -52,8 +54,8 @@ _AGENT_PARENT = {
 }
 
 
-async def test_put_task_mode_change_clears_parent(client, app) -> None:
-    """Changing away from recurring clears parent_task_id on the row."""
+async def test_series_is_not_mutable_through_task_routes(client, app) -> None:
+    """A standalone series id never becomes an analysis-task shell."""
     create_proj = await client.post(
         "/api/v1/tasks",
         json={
@@ -64,20 +66,20 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
     assert create_proj.status_code == 201
     proj_id = create_proj.json()["id"]
 
-    from server.services.recurring_task_writes import create_recurring_task
+    from server.services.recurring_series_writes import create_recurring_series
 
-    row = await create_recurring_task(
+    row = await create_recurring_series(
         app.state.db,
         name="Child Standup",
         rrule="FREQ=WEEKLY;BYDAY=MO",
         event_start_time="10:00",
         parent_task_id=proj_id,
     )
-    child_id = str(row["id"])
+    series_id = str(row["id"])
     assert row.get("parent_task_id") == proj_id
 
     update = await client.put(
-        f"/api/v1/tasks/{child_id}",
+        f"/api/v1/tasks/{series_id}",
         json={
             "name": "Child Standup",
             "promptTemplate": "",
@@ -87,22 +89,19 @@ async def test_put_task_mode_change_clears_parent(client, app) -> None:
             "scheduleRrule": "FREQ=HOURLY",
         },
     )
-    assert update.status_code == 200
-    assert update.json()["parentTaskId"] is None
-    assert update.json()["analysisMode"] == "intel_event"
+    assert update.status_code == 404
 
     db_row = await app.state.db.fetch_one(
-        "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
-        (child_id,),
+        "SELECT id FROM analysis_tasks WHERE id = ?",
+        (series_id,),
     )
-    assert db_row["analysis_mode"] == "intel_event"
-    assert (
-        await app.state.db.fetch_one(
-            "SELECT task_id FROM recurring_schedules WHERE task_id = ?",
-            (child_id,),
-        )
-        is None
+    assert db_row is None
+    series_row = await app.state.db.fetch_one(
+        "SELECT parent_task_id FROM recurring_schedules WHERE id = ?",
+        (series_id,),
     )
+    assert series_row is not None
+    assert series_row["parent_task_id"] == proj_id
 
 
 async def test_put_project_mode_change_clears_children_parent(client, app) -> None:
@@ -117,9 +116,9 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
     assert create_proj.status_code == 201
     proj_id = create_proj.json()["id"]
 
-    from server.services.recurring_task_writes import create_recurring_task
+    from server.services.recurring_series_writes import create_recurring_series
 
-    child = await create_recurring_task(
+    child = await create_recurring_series(
         app.state.db,
         name="Was Child",
         rrule="FREQ=DAILY",
@@ -144,13 +143,8 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
     assert update.json()["analysisMode"] == "intel_event"
     assert update.json()["parentTaskId"] is None
 
-    child_row = await app.state.db.fetch_one(
-        "SELECT analysis_mode FROM analysis_tasks WHERE id = ?",
-        (child_id,),
-    )
-    assert child_row["analysis_mode"] == "recurring"
     schedule = await app.state.db.fetch_one(
-        "SELECT parent_task_id FROM recurring_schedules WHERE task_id = ?",
+        "SELECT parent_task_id FROM recurring_schedules WHERE id = ?",
         (child_id,),
     )
     assert schedule is not None
@@ -158,9 +152,9 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
 
 
 async def test_rest_create_recurring_requires_start_clock(client) -> None:
-    """Atomic create / schedule PUT require start clock unless all-day."""
+    """Standalone series creation requires a start clock unless all-day."""
     missing = await client.post(
-        "/api/v1/tasks/recurring",
+        "/api/v1/calendar/recurring",
         json={"name": "No Clock", "rrule": "FREQ=DAILY"},
     )
     assert missing.status_code == 422
@@ -177,23 +171,22 @@ async def test_rest_create_recurring_requires_start_clock(client) -> None:
         },
     )
     assert shell.status_code == 422
-    assert "POST /tasks/recurring" in shell.json()["message"]
 
     ok = await client.post(
-        "/api/v1/tasks/recurring",
+        "/api/v1/calendar/recurring",
         json={"name": "With Clock", "rrule": "FREQ=DAILY", "eventStartTime": "09:30"},
     )
     assert ok.status_code == 201, ok.text
-    task_id = ok.json()["id"]
-    schedule = await client.get(f"/api/v1/tasks/{task_id}/schedule")
+    series_id = ok.json()["id"]
+    schedule = await client.get(f"/api/v1/calendar/recurring/{series_id}")
     assert schedule.status_code == 200
     body = schedule.json()
     assert body["rrule"] == "FREQ=DAILY"
     assert body["eventStartTime"] == "09:30"
-    assert body["taskId"] == task_id
+    assert body["id"] == series_id
 
 
-async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
+async def test_task_catalog_excludes_series_and_calendar_top_level_hides_children(client, app) -> None:
     create_proj = await client.post(
         "/api/v1/tasks",
         json={
@@ -202,9 +195,9 @@ async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
         },
     )
     proj_id = create_proj.json()["id"]
-    from server.services.recurring_task_writes import create_recurring_task
+    from server.services.recurring_series_writes import create_recurring_series
 
-    child = await create_recurring_task(
+    child = await create_recurring_series(
         app.state.db,
         name="Hidden Child",
         rrule="FREQ=DAILY",
@@ -214,12 +207,13 @@ async def test_list_tasks_top_level_only_hides_children(client, app) -> None:
 
     all_tasks = await client.get("/api/v1/tasks")
     ids = {t["id"] for t in all_tasks.json()}
-    assert child["id"] in ids
+    assert child["id"] not in ids
     assert proj_id in ids
 
-    top = await client.get("/api/v1/tasks", params={"topLevelOnly": "true"})
-    top_ids = {t["id"] for t in top.json()}
+    all_series = await client.get("/api/v1/calendar/recurring")
+    assert child["id"] in {row["id"] for row in all_series.json()["items"]}
+
+    top = await client.get("/api/v1/calendar/recurring", params={"topLevelOnly": "true"})
+    top_ids = {row["id"] for row in top.json()["items"]}
     assert child["id"] not in top_ids
-    assert proj_id in top_ids
-    # Seeded tasks remain top-level.
-    assert seed.TASK_LEADERBOARD in top_ids
+    assert seed.SERIES_CALENDAR in top_ids

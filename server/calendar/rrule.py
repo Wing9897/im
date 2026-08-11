@@ -23,7 +23,7 @@ from dateutil import tz as du_tz
 
 from server.calendar.rrule_expand_synthetic import (
     expand_calendar_occurrences,
-    expand_task_occurrences,
+    expand_series_occurrences,
 )
 from server.calendar.rrule_validate import (
     ANCHOR_DATE,
@@ -44,7 +44,7 @@ __all__ = [
     "du_rrule",
     "du_tz",
     "expand_calendar_occurrences",
-    "expand_task_occurrences",
+    "expand_series_occurrences",
     "validate_rrule",
 ]
 

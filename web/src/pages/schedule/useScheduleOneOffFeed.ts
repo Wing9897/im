@@ -4,26 +4,20 @@ import {
   listUserEventsPage,
   type UserEvent,
 } from "../../api/userEvents";
-import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { toErrorMessage } from "../../utils/errors";
 import { SCHEDULE_PAGE_SIZE } from "./scheduleConfig";
 
-export function useScheduleOneOffFeed(opts: {
-  enabled: boolean;
-  debouncedSearch: string;
-}) {
-  const { enabled, debouncedSearch } = opts;
+export function useScheduleOneOffFeed(opts: { debouncedSearch: string }) {
+  const { debouncedSearch } = opts;
   const [items, setItems] = useState<UserEvent[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
   const requestIdRef = useRef(0);
 
   const reload = useCallback(async () => {
-    if (!enabled) return;
     const requestId = ++requestIdRef.current;
     setInitialLoading(true);
     setError(null);
@@ -46,15 +40,14 @@ export function useScheduleOneOffFeed(opts: {
     } finally {
       if (requestId === requestIdRef.current) setInitialLoading(false);
     }
-  }, [debouncedSearch, enabled]);
+  }, [debouncedSearch]);
 
   useEffect(() => {
-    if (!enabled) return;
     void reload();
-  }, [enabled, reload]);
+  }, [reload]);
 
   const loadMore = useCallback(async () => {
-    if (!enabled || !hasMore || loadingMore || initialLoading) return;
+    if (!hasMore || loadingMore || initialLoading) return;
     const requestId = requestIdRef.current;
     setLoadingMore(true);
     try {
@@ -80,22 +73,7 @@ export function useScheduleOneOffFeed(opts: {
     } finally {
       if (requestId === requestIdRef.current) setLoadingMore(false);
     }
-  }, [
-    debouncedSearch,
-    enabled,
-    hasMore,
-    initialLoading,
-    items.length,
-    loadingMore,
-  ]);
-
-  useInfiniteScroll({
-    triggerNode: loadMoreNode,
-    onLoadMore: loadMore,
-    disabled: !enabled || initialLoading || !hasMore,
-    root: null,
-    rootMargin: "0px 0px 240px 0px",
-  });
+  }, [debouncedSearch, hasMore, initialLoading, items.length, loadingMore]);
 
   return {
     items,
@@ -106,6 +84,5 @@ export function useScheduleOneOffFeed(opts: {
     error,
     reload,
     loadMore,
-    setLoadMoreTriggerRef: setLoadMoreNode,
   };
 }

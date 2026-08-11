@@ -71,9 +71,6 @@ function createMockHookReturn(overrides: Partial<UseChatEditorReturn> = {}): Use
     canSave: false,
     saveBlockReason: null,
     isSaving: false,
-    scheduleHydrating: false,
-    scheduleHydrateError: null,
-    retryScheduleHydrate: vi.fn(),
     applyPreset: vi.fn(),
     channels: [],
     ...overrides,
@@ -303,24 +300,6 @@ describe("ChatEditorPage integration tests", () => {
 
       expect(container.querySelector('[data-testid="preset-button"]')).not.toBeNull();
 
-      cleanup();
-    });
-
-    it("hides preset button for recurring mode", async () => {
-      mockUseChatEditor.mockReturnValue(
-        createMockHookReturn({
-          formState: { ...createMockHookReturn().formState, analysisMode: "recurring" },
-        }),
-      );
-
-      let result: ReturnType<typeof renderPage>;
-      await act(async () => {
-        result = renderPage();
-        await Promise.resolve();
-      });
-      const { container, cleanup } = result!;
-
-      expect(container.querySelector('[data-testid="preset-button"]')).toBeNull();
       cleanup();
     });
 

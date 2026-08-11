@@ -29,32 +29,23 @@ afterEach(() => {
   container.remove();
 });
 
-describe("ChatEditorForm recurring-only contract", () => {
-  it.each(["leaderboard", "intel_event"] as const)(
-    "shows recurrence controls/helper copy only in recurring mode, not %s mode",
+describe("ChatEditorForm analysis-task contract", () => {
+  it.each(["leaderboard", "intel_event", "agent"] as const)(
+    "does not show calendar recurrence controls in %s mode",
     (analysisMode) => {
       const helperCopy = String(i18n.t("tasks.editor.rruleHint"));
-      const renderMode = (mode: typeof DEFAULT_FORM_STATE.analysisMode) => {
-        act(() =>
-          root.render(
-            wrapWithI18n(createElement(ChatEditorForm, {
-                formState: { ...DEFAULT_FORM_STATE, analysisMode: mode, rrule: "FREQ=DAILY" },
-                updateField: () => undefined,
-                channels: [],
-                onOpenChannelDialog: () => undefined,
-              })),
-          ),
-        );
-      };
-
-      renderMode("recurring");
-      expect(container.querySelector('[role="note"]')?.textContent).toBe(helperCopy);
-      expect(container.textContent).toContain("重複規則");
-      expect(container.querySelector('[aria-label="排程類型"]')).toBeNull();
-      expect(container.querySelector('[aria-label="進階設定"]')).toBeNull();
-
-      renderMode(analysisMode);
+      act(() =>
+        root.render(
+          wrapWithI18n(createElement(ChatEditorForm, {
+              formState: { ...DEFAULT_FORM_STATE, analysisMode },
+              updateField: () => undefined,
+              channels: [],
+              onOpenChannelDialog: () => undefined,
+            })),
+        ),
+      );
       expect(container.querySelector('[role="note"]')).toBeNull();
+      expect(container.textContent).not.toContain(helperCopy);
       expect(container.textContent).not.toContain("重複規則");
       expect(container.querySelector('[aria-label="排程類型"]')).not.toBeNull();
       expect(container.querySelector('[aria-label="進階設定"]')).not.toBeNull();

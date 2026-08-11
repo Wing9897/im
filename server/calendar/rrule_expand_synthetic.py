@@ -48,16 +48,16 @@ def _extract_time_of_day(value: Any, *, local_tz: tzinfo | None = None) -> time 
     return None
 
 
-def expand_task_occurrences(
-    task: Mapping[str, Any],
+def expand_series_occurrences(
+    series: Mapping[str, Any],
     range_start: datetime,
     range_end: datetime,
     budget: int,
 ) -> list[dict[str, Any]]:
-    """Expand a single calendar task's RRULE inside [range_start, range_end].
+    """Expand a single recurring series RRULE inside [range_start, range_end].
 
     Returns CalendarOccurrence dicts (camelCase). Any parse failure returns []
-    so one bad task never breaks the whole request.
+    so one bad series never breaks the whole request.
 
     Recurrence calendar days and ``HH:MM`` clocks are interpreted in the host
     system timezone; wire ``startTime`` / ``endTime`` are UTC.
@@ -67,28 +67,30 @@ def expand_task_occurrences(
     if budget <= 0:
         return []
 
-    rule = str(task_value(task, "rrule") or "").strip()
+    rule = str(task_value(series, "rrule") or "").strip()
     if not rule:
         return []
     if rule.upper().startswith("RRULE:"):
         # Writers reject the prefix; refuse to expand non-canonical stored forms.
         return []
-    if str(task_value(task, "event_start_local") or "").strip():
-        return _expand_imported_occurrences(task, range_start, range_end, budget)
+    if str(task_value(series, "event_start_local") or "").strip():
+        return _expand_imported_occurrences(series, range_start, range_end, budget)
 
     local_tz = rrule_mod._system_tzinfo()
-    is_all_day = bool(task_value(task, "event_is_all_day"))
+    is_all_day = bool(task_value(series, "event_is_all_day"))
     start_tod = (
         time(0, 0)
         if is_all_day
-        else (_extract_time_of_day(task_value(task, "event_start_time"), local_tz=local_tz) or time(0, 0))
+        else (_extract_time_of_day(task_value(series, "event_start_time"), local_tz=local_tz) or time(0, 0))
     )
-    task_id = str(task_value(task, "id") or "")
-    task_name = str(task_value(task, "name") or "")
-    location = task_value(task, "event_location")
-    description = task_value(task, "event_description")
-    item_id = _task_item_id(task)
-    end_tod = _extract_time_of_day(task_value(task, "event_end_time"), local_tz=local_tz) if not is_all_day else None
+    series_id = str(task_value(series, "id") or "")
+    series_name = str(task_value(series, "name") or "")
+    location = task_value(series, "event_location")
+    description = task_value(series, "event_description")
+    item_id = _task_item_id(series)
+    raw_workset = task_value(series, "workset_id")
+    workset_id = str(raw_workset).strip() if raw_workset not in (None, "") else None
+    end_tod = _extract_time_of_day(task_value(series, "event_end_time"), local_tz=local_tz) if not is_all_day else None
 
     occurrences: list[dict[str, Any]] = []
     try:
@@ -140,16 +142,17 @@ def expand_task_occurrences(
                 (
                     occurrence,
                     {
-                        "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
-                        "taskId": task_id,
-                        "taskName": task_name,
-                        "title": task_name,
+                        "id": f"{series_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
+                        "seriesId": series_id,
+                        "taskName": series_name,
+                        "title": series_name,
                         "startTime": rrule_mod._iso_z(start_dt),
                         "endTime": rrule_mod._iso_z(end_dt),
                         "isAllDay": is_all_day,
                         "location": location if location else None,
                         "description": description if description else None,
                         "rrule": rule,
+                        "worksetId": workset_id,
                         "itemId": item_id,
                     },
                 )
@@ -161,8 +164,8 @@ def expand_task_occurrences(
             occurrences.append(item)
     except (ValueError, TypeError, OverflowError) as exc:
         logger.warning(
-            "Skipping calendar task %s: RRULE expansion failed (%s)",
-            task_value(task, "id"),
+            "Skipping calendar series %s: RRULE expansion failed (%s)",
+            task_value(series, "id"),
             exc,
         )
         return []
@@ -171,18 +174,18 @@ def expand_task_occurrences(
 
 
 def expand_calendar_occurrences(
-    tasks: Sequence[Mapping[str, Any]],
+    series_rows: Sequence[Mapping[str, Any]],
     range_start: datetime,
     range_end: datetime,
 ) -> list[dict[str, Any]]:
-    """Expand all active calendar tasks under the shared MAX_OCCURRENCES budget."""
+    """Expand all active recurring series under the shared MAX_OCCURRENCES budget."""
     results: list[dict[str, Any]] = []
-    for task in tasks:
-        if not bool(task.get("is_active", 1)):
+    for series in series_rows:
+        if not bool(series.get("is_active", 1)):
             continue
         remaining = MAX_OCCURRENCES - len(results)
         if remaining <= 0:
             break
-        results.extend(expand_task_occurrences(task, range_start, range_end, remaining))
-    results.sort(key=lambda o: (o["startTime"], o["taskId"]))
+        results.extend(expand_series_occurrences(series, range_start, range_end, remaining))
+    results.sort(key=lambda o: (o["startTime"], o["seriesId"]))
     return results

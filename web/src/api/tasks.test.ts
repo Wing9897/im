@@ -5,7 +5,6 @@ import { apiClient } from "./client";
 import {
   listTasks,
   createTask,
-  createRecurringTask,
   updateTask,
   deleteTask,
   toggleTaskActive,
@@ -48,14 +47,12 @@ describe("tasks API", () => {
         topLevelOnly: true,
         analysisMode: "agent",
         worksetId: "ws-1",
-        itemId: "item-1",
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/tasks", {
         topLevelOnly: "true",
         analysisMode: "agent",
         worksetId: "ws-1",
-        itemId: "item-1",
       });
     });
 
@@ -74,7 +71,6 @@ describe("tasks API", () => {
         includeInTimeline: true,
         parentTaskId: null,
         worksetId: null,
-        itemId: null,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-02T00:00:00Z",
       };
@@ -92,7 +88,6 @@ describe("tasks API", () => {
         "id",
         "includeInTimeline",
         "isActive",
-        "itemId",
         "name",
         "parentTaskId",
         "promptTemplate",
@@ -136,28 +131,6 @@ describe("tasks API", () => {
       vi.mocked(apiClient.post).mockRejectedValue(new Error("Validation error"));
 
       await expect(createTask({} as any)).rejects.toThrow("Validation error");
-    });
-  });
-
-  // ─── createRecurringTask ───────────────────────────────────────────
-
-  describe("createRecurringTask", () => {
-    it("posts atomic recurring payload to /tasks/recurring", async () => {
-      const body = {
-        name: "Night",
-        rrule: "FREQ=DAILY",
-        eventStartTime: "22:00",
-        eventEndTime: "06:00",
-        eventIsAllDay: false,
-      };
-      const response = { id: "rec-1", deletedBatchCount: 0 };
-      vi.mocked(apiClient.post).mockResolvedValue(response);
-
-      const result = await createRecurringTask(body);
-
-      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/tasks/recurring", body);
-      expect(apiClient.post).not.toHaveBeenCalledWith("/api/v1/tasks", expect.anything());
-      expect(result).toEqual(response);
     });
   });
 

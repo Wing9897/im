@@ -19,7 +19,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_item_categories_slug
 CREATE INDEX IF NOT EXISTS idx_item_categories_sort
     ON item_categories(sort_order ASC, name ASC);
 
--- Trackable items (inventory / expiry). Core flat columns; free-form details in notes.
+-- Trackable items (inventory). Core flat columns; free-form details in notes.
+-- Expiry / remind-before are derived on read from the primary linked
+-- user_events row with kind=expires (no denormalized cache columns).
 CREATE TABLE IF NOT EXISTS items (
     id                   TEXT PRIMARY KEY,
     title                TEXT NOT NULL,
@@ -27,8 +29,6 @@ CREATE TABLE IF NOT EXISTS items (
                          REFERENCES item_categories(id) ON DELETE SET NULL,
     workset_id           TEXT NOT NULL DEFAULT '__user__'
                          REFERENCES worksets(id),
-    expires_at           TEXT DEFAULT NULL,
-    remind_before_days   INTEGER DEFAULT NULL,
     notes                TEXT NOT NULL DEFAULT '',
     status               TEXT NOT NULL DEFAULT 'active'
                          CHECK (status IN ('active', 'archived')),
@@ -42,8 +42,8 @@ CREATE INDEX IF NOT EXISTS idx_items_workset_id
     ON items(workset_id);
 CREATE INDEX IF NOT EXISTS idx_items_category_id
     ON items(category_id);
-CREATE INDEX IF NOT EXISTS idx_items_status_expires
-    ON items(status, expires_at ASC);
+CREATE INDEX IF NOT EXISTS idx_items_status
+    ON items(status);
 CREATE INDEX IF NOT EXISTS idx_items_updated_at_asc
     ON items(updated_at ASC);
 

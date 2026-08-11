@@ -1,10 +1,44 @@
-"""Database queries for item_categories and items."""
+"""Database queries for item_categories and items.
+
+Item expiry / remind-before are **derived on read** from the primary linked
+``user_events`` row with ``kind=expires`` (non-dismissed, earliest
+``created_at``). There are no denormalized ``items.expires_at`` /
+``items.remind_before_days`` columns.
+"""
 
 from __future__ import annotations
 
 from typing import Any
 
+from server.calendar.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.db.database import TransactionDb
+
+# Correlated subquery: primary active linked expires calendar for an item.
+_PRIMARY_EXPIRES_EVENT_ID_SQL = f"""(
+  SELECT ue.id
+  FROM user_events ue
+  LEFT JOIN timeline_dismissals td
+    ON td.source = 'user' AND td.event_id = ue.id
+  WHERE ue.item_id = i.id
+    AND ue.kind = '{USER_EVENT_KIND_EXPIRES}'
+    AND td.event_id IS NULL
+  ORDER BY ue.created_at ASC, ue.id ASC
+  LIMIT 1
+)"""
+
+# SELECT list that aliases derived dates as expires_at / remind_before_days
+# so serializers keep reading those keys.
+_ITEMS_WITH_DERIVED_DATES_SELECT = f"""
+SELECT
+  i.*,
+  CASE
+    WHEN pe.start_time IS NULL THEN NULL
+    ELSE substr(pe.start_time, 1, 10)
+  END AS expires_at,
+  pe.remind_before_days AS remind_before_days
+FROM items i
+LEFT JOIN user_events pe ON pe.id = {_PRIMARY_EXPIRES_EVENT_ID_SQL}
+"""
 
 
 async def fetch_all_category_rows(db: Any) -> list[dict[str, Any]]:
@@ -85,7 +119,10 @@ async def delete_category(tx: TransactionDb, category_id: str) -> None:
 
 
 async def fetch_item_row(db: Any, item_id: str) -> dict[str, Any] | None:
-    return await db.fetch_one("SELECT * FROM items WHERE id = ?", (item_id,))
+    return await db.fetch_one(
+        f"{_ITEMS_WITH_DERIVED_DATES_SELECT} WHERE i.id = ?",
+        (item_id,),
+    )
 
 
 async def fetch_item_rows(
@@ -99,27 +136,28 @@ async def fetch_item_rows(
     clauses: list[str] = []
     params: list[Any] = []
     if workset_id is not None:
-        clauses.append("workset_id = ?")
+        clauses.append("i.workset_id = ?")
         params.append(workset_id)
     if category_id is not None:
         if category_id == "":
-            clauses.append("category_id IS NULL")
+            clauses.append("i.category_id IS NULL")
         else:
-            clauses.append("category_id = ?")
+            clauses.append("i.category_id = ?")
             params.append(category_id)
     if status is not None:
-        clauses.append("status = ?")
+        clauses.append("i.status = ?")
         params.append(status)
     if search and search.strip():
         needle = f"%{search.strip().lower()}%"
         clauses.append(
-            "(LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ?)"
+            "(LOWER(i.title) LIKE ? OR LOWER(i.notes) LIKE ? OR LOWER(i.unit) LIKE ? "
+            "OR CAST(i.quantity AS TEXT) LIKE ?)"
         )
         params.extend([needle, needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return await db.fetch_all(
-        f"SELECT * FROM items {where} ORDER BY "
-        "CASE WHEN expires_at IS NULL THEN 1 ELSE 0 END, expires_at ASC, updated_at DESC",
+        f"{_ITEMS_WITH_DERIVED_DATES_SELECT} {where} ORDER BY "
+        "CASE WHEN expires_at IS NULL THEN 1 ELSE 0 END, expires_at ASC, i.updated_at DESC",
         tuple(params),
     )
 
@@ -131,13 +169,13 @@ async def fetch_active_items_with_dates(
     range_end_date: str,
     workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Active items with expiry/remind DATE falling in [start, end].
+    """Active items whose derived expiry/remind DATE falls in [start, end].
 
     Remind day is ``date(expires_at, '-' || remind_before_days || ' days')`` when
     ``remind_before_days > 0``.
     """
     clauses = [
-        "status = 'active'",
+        "i.status = 'active'",
         "("
         "(expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?) "
         "OR ("
@@ -155,10 +193,13 @@ async def fetch_active_items_with_dates(
         range_end_date,
     ]
     if workset_id is not None:
-        clauses.append("workset_id = ?")
+        clauses.append("i.workset_id = ?")
         params.append(workset_id)
     where = " AND ".join(clauses)
-    return await db.fetch_all(f"SELECT * FROM items WHERE {where}", tuple(params))
+    return await db.fetch_all(
+        f"{_ITEMS_WITH_DERIVED_DATES_SELECT} WHERE {where}",
+        tuple(params),
+    )
 
 
 async def fetch_expiring_items(
@@ -170,24 +211,24 @@ async def fetch_expiring_items(
     include_overdue: bool = True,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
-    """Active items with expires_at in window (and optionally overdue before today)."""
+    """Active items with derived expires_at in window (and optionally overdue before today)."""
     if include_overdue:
-        clauses = ["status = 'active'", "expires_at IS NOT NULL", "expires_at <= ?"]
+        clauses = ["i.status = 'active'", "expires_at IS NOT NULL", "expires_at <= ?"]
         params: list[Any] = [until]
     else:
         clauses = [
-            "status = 'active'",
+            "i.status = 'active'",
             "expires_at IS NOT NULL",
             "expires_at >= ?",
             "expires_at <= ?",
         ]
         params = [today, until]
     if workset_id is not None:
-        clauses.append("workset_id = ?")
+        clauses.append("i.workset_id = ?")
         params.append(workset_id)
     where = " AND ".join(clauses)
     return await db.fetch_all(
-        f"SELECT * FROM items WHERE {where} ORDER BY expires_at ASC LIMIT ?",
+        f"{_ITEMS_WITH_DERIVED_DATES_SELECT} WHERE {where} ORDER BY expires_at ASC LIMIT ?",
         (*params, limit),
     )
 
@@ -199,8 +240,6 @@ async def insert_item(
     title: str,
     category_id: str | None,
     workset_id: str,
-    expires_at: str | None,
-    remind_before_days: int | None,
     notes: str,
     status: str,
     emoji: str | None,
@@ -210,17 +249,14 @@ async def insert_item(
 ) -> None:
     await tx.execute(
         "INSERT INTO items ("
-        "id, title, category_id, workset_id, expires_at, "
-        "remind_before_days, notes, status, emoji, quantity, unit, "
+        "id, title, category_id, workset_id, notes, status, emoji, quantity, unit, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item_id,
             title,
             category_id,
             workset_id,
-            expires_at,
-            remind_before_days,
             notes,
             status,
             emoji,
@@ -239,8 +275,6 @@ async def update_item(
     title: str,
     category_id: str | None,
     workset_id: str,
-    expires_at: str | None,
-    remind_before_days: int | None,
     notes: str,
     status: str,
     emoji: str | None,
@@ -250,14 +284,12 @@ async def update_item(
 ) -> None:
     await tx.execute(
         "UPDATE items SET title = ?, category_id = ?, workset_id = ?, "
-        "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, emoji = ?, "
+        "notes = ?, status = ?, emoji = ?, "
         "quantity = ?, unit = ?, updated_at = ? WHERE id = ?",
         (
             title,
             category_id,
             workset_id,
-            expires_at,
-            remind_before_days,
             notes,
             status,
             emoji,
@@ -279,16 +311,12 @@ async def sync_linked_calendars_workset(
     item_id: str,
     workset_id: str,
 ) -> None:
-    """Propagate item workset to linked one-off events and recurring task calendars."""
+    """Propagate item workset to linked one-off events and recurring series."""
     await tx.execute(
         "UPDATE user_events SET workset_id = ? WHERE item_id = ?",
         (workset_id, item_id),
     )
     await tx.execute(
-        """
-        UPDATE analysis_tasks
-        SET workset_id = ?
-        WHERE id IN (SELECT task_id FROM recurring_schedules WHERE item_id = ?)
-        """,
+        "UPDATE recurring_schedules SET workset_id = ? WHERE item_id = ?",
         (workset_id, item_id),
     )

@@ -88,7 +88,7 @@ export function financePresetRange(
   }
 }
 
-/** ISO window for `listUserEvents({ start, end })` (local day bounds). */
+/** ISO window for `listUserEventsPage({ start, end })` (local day bounds). */
 export function financeEventsQueryWindow(range: ItemsFinanceRange): { start: string; end: string } {
   const startMs = Date.parse(`${range.startDay}T00:00:00`);
   const endMs = Date.parse(`${range.endDay}T23:59:59.999`);

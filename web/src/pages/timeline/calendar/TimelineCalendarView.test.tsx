@@ -446,7 +446,7 @@ describe("TimelineCalendarView", () => {
         makeEvent({
           id: "item:milk:remind",
           title: "提醒 · milk",
-          source: "item",
+          source: "item_remind",
           itemDateKind: "remind",
           isAllDay: true,
           startTime: "2025-01-16T00:00:00",

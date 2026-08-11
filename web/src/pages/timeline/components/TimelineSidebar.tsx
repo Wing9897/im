@@ -81,7 +81,7 @@ export function TimelineSidebar({
   );
 
   const isUserEvent = selectedEvent?.source === "user";
-  const isItemEvent = selectedEvent?.source === "item";
+  const isItemEvent = selectedEvent?.source === "item_remind";
   const isDismissed = Boolean(selectedEvent?.dismissed);
   const isImportant = Boolean(selectedEvent?.important);
   const showRemindBadge = selectedEvent

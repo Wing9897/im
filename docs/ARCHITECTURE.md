@@ -38,7 +38,7 @@ graph TB
 
 ## Core design: Task as universal interface
 
-**Analysis tasks (`analysis_tasks`) are the universal product interface.** Multi-source signals are selected via `task_channels` → configured as a task (mode / prompt / RRULE / schedule) → consumed as results, reminders, and actions. Downstream UIs (intelligence, timeline, board widgets, actions, voice reminders) scope work via hierarchical source filters `{ taskIds, worksetIds }` (or a task whitelist) — ownership of handwritten／assistant calendar items is by `worksetId`, not a lone `taskId` / `taskId=__user__` sentinel.
+**Analysis tasks (`analysis_tasks`) are the intelligence-work interface; standalone recurring series belong to the calendar domain.** Multi-source signals are selected via `task_channels` → configured as an analysis task (mode / prompt / trigger schedule) → consumed as results and actions. Downstream UIs (intelligence, timeline, board widgets, actions, voice reminders) scope work via hierarchical source filters `{ taskIds, worksetIds }` (or a task whitelist) — ownership of handwritten／assistant calendar items is by `worksetId`, not a lone `taskId` / `taskId=__user__` sentinel.
 
 ```mermaid
 flowchart LR
@@ -50,7 +50,7 @@ flowchart LR
 
 | Task field role | Meaning |
 |-----------------|---------|
-| `mode` | **Open-loop:** `leaderboard` / `intel_event`（單次 LLM JSON → 結果表）. **Configurable Agent:** `agent`（`agent_tick`：觸發方式 + 工具／輸出權限；預設「專案調和」「網蒐」）. **No LLM:** `recurring`（週期任務 / RRULE） |
+| `mode` | **Open-loop:** `leaderboard` / `intel_event`（單次 LLM JSON → 結果表）. **Configurable Agent:** `agent`（`agent_tick`：觸發方式 + 工具／輸出權限；預設「專案調和」「網蒐」）. Calendar recurrence is not an analysis mode. |
 | `task_channels` | Which collected channels feed the task (`leaderboard` / `intel_event` required; `agent` depends on `trigger_mode`: cursor required, threshold optional, schedule optional) |
 | `version` | Invalidation boundary for batches / markers / findings |
 | Schedule / RRULE | Unified RRULE-shaped description; AI modes persist trigger-purpose `schedule_rrule` (APScheduler only); recurring calendar series on `recurring_schedules.rrule` (query-time expand only) |
@@ -60,7 +60,7 @@ flowchart LR
 
 | Concept | Wire / id | Not the same as |
 |---------|-----------|-----------------|
-| Task mode without LLM | `analysisMode: "recurring"` (RRULE) | Timeline UI `viewMode: "calendar"` (calendar vs gantt layout) |
+| Calendar recurrence | Standalone `/api/v1/calendar/recurring` series (RRULE) | Timeline UI `viewMode: "calendar"` (calendar vs gantt layout) |
 | Board calendar widget | widget type `"calendar"` | Any task analysis mode |
 | UI agent detail | `/tasks/:taskId/agent` (`analysisMode=agent` + `outputCalendar`) | Retired wire `analysisMode=project`; legacy URL `/tasks/:taskId/project` is retired (no redirect) |
 
@@ -69,7 +69,7 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 **In → Task → Out**
 
 1. **In:** Collectors write `messages` for sources/channels (signal plane).
-2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, and `agent` via `agent_tick` (`AgentRuntime` + task policy for trigger/caps/outputs); `recurring` RRULEs expand only at read time.
+2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, and `agent` via `agent_tick` (`AgentRuntime` + task policy for trigger/caps/outputs). Standalone calendar RRULE series expand only at read time.
 3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; agent `output_calendar` writes owned `user_events` + child `recurring` (`origin=agent`); agent `output_analysis_events` writes findings to `analysis_events` (not `user_events.origin`).
 
 **Task-scoped UI vs exceptions**
@@ -98,7 +98,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v26** (`SCHEMA_SEMVER` `0.1.0-beta.27`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v28** (`SCHEMA_SEMVER` `0.1.0-beta.29`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -116,7 +116,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `collector/email_imap_fetch.py` | IMAP fetch / UID cursor helpers (public entry remains `email_imap.py`) |
 | `collector/email_imap_mailbox.py` | IMAP mailbox open／verify／multi-folder fetch／mark-seen helpers |
 | `collector/email_imap_poll.py` | IMAP poll-once cycle + folder cursor／UIDVALIDITY persistence |
-| `analyzer/` | AnalysisEngine + configurable LLM client façade (`llm_client.py` + `llm_client_factory` / `llm_client_handlers` / `llm_providers`), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `agent` multi-round ticks in `scheduler/agent_tick.py` — policy-driven trigger／tools／outputs; `recurring` skips AI); prompt **assembly** in `analyzer/prompt.py` |
+| `analyzer/` | AnalysisEngine + configurable LLM client façade (`llm_client.py` + `llm_client_factory` / `llm_client_handlers` / `llm_providers`), incremental markers, analysis modes (`leaderboard` / `intel_event` oneshot LLM; `agent` multi-round ticks in `scheduler/agent_tick.py` — policy-driven trigger／tools／outputs); prompt **assembly** in `analyzer/prompt.py` |
 | `prompts/` | **System / schema prompt** string library (`analysis` / `assistant` / `agent_task` / `clock` / …) + `locale.py` (UI locale normalize + output-language directive). Find wording here; assembly lives in `analyzer/prompt.py` / `agent/runtime_prompt.py` (facade `agent/runtime.py`) / `scheduler/agent_tick.py`. This is **not** the user-facing task template catalog — that lives in `presets/task_presets.py` and has zh-Hant UI locale as its display-text source of truth ([`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `prompts/clock.py` | `current_time_prompt_block` — injects wall-clock context into analysis / agent prompts (deep-import by design; not re-exported from `prompts/__init__.py`) |
 | `agent/` | Text Agent runtime + tool registry (`calendar.*` / `messages.search` / optional `web.search`; `POST /api/v1/agent/chat`); orchestration façade `runtime.py` with `runtime_prompt`／`runtime_complete`／`runtime_parse`／`runtime_tool_round`; see [Agent / assistant](#agent--assistant) |
@@ -125,9 +125,9 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `web_search/` | Multi-provider clients (DuckDuckGo default, Brave optional) + shared `WebSearchExecutionService` (`execution.py`) used by assistant / agent `web.search` tool (agent ticks via AgentRuntime; count / master-switch as params) |
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
 | `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus write／dismiss services `user_events.py` + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`items`／`imports`／`dismissals`／`user-events`). |
-| `services/task_writes.py` | Task-write rules shared by `POST/PUT /api/v1/tasks` and the calendar agent tools: RRULE validation + canonical storage (no `RRULE:` prefix), recurring-only recurrence gate, `HH:MM` clock normalize |
+| `services/task_writes.py` | Shared task and series write validation: trigger/calendar RRULE canonicalization, parent-agent invariant, and `HH:MM` clock normalization |
 | `services/task_crud.py` | Task CRUD façade (`task_crud_list` / `task_crud_mutate`) for REST catalog + mutations |
-| `services/recurring_task_writes.py` | Recurring-task write façade (`recurring_task_create` / `recurring_task_patch` / `recurring_task_schedule`) |
+| `services/recurring_series_writes.py` | Standalone recurring-series write façade (`create` / `patch` / hard delete) |
 | `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
 | `calendar/user_events.py` | Shared CRUD for manual UI + assistant calendar tools (wire shape via `wire/serializers.serialize_user_event`) |
 | `actions/` | Automated responses — Telegram send, Discord send, HTTP webhook, MQTT publish |
@@ -172,7 +172,7 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **Notifications workspace** (`/actions`): UI label **通知**; tabs `types` / `voice` / `history` (外發通知 / 語音提醒 / 觸發紀錄). Backend automation APIs remain under `/api/v1/actions*` — UI name ≠ API resource name.
 - **Naming:** `pages/actions/ActionTypeSelector.tsx` is the **ActionType** tile picker (Telegram Bot / Discord / HTTP / MQTT). Per-type field sections render via `ActionTypeFields`; form helpers use `validateActionTypeFields` / `applyActionTypeSwitch`. The default notifications tab component is `ActionTypesTab` — wire tab id is `"types"` (URL `?tab=` / i18n `tabs.types` / `types.*` keys). Real account↔channel picking lives under `components/channels/` (`SourceChannelPickerContent`, `ChannelPickerDialogShell`) and dialogs like `ChannelSelectorDialog` (not the retired dead `pages/actions/ChannelSelector`).
 - **Voice reminders**: frontend-local scanner (`web/src/voiceReminder/`); route `/actions?tab=voice`. It page-loads timed key events + RRULE occurrences inside the reminder window and overlapping **user events**. Ownership matches timeline: filter via hierarchical `sourceFilter` (`{ taskIds, worksetIds } | null`) through the shared `SourceFilterDialog` tree; builtin `__user__` (`SYSTEM_WORKSET_ID`) workset covers「一般」events. Default is `{ taskIds: [], worksetIds: ["__user__"] }`; `null` = all sources. Flat legacy `taskIds` arrays are hard-rejected (missing → default). Browser TTS/scanning stays in the frontend; reminder settings/history/fired dedupe are SQLite-backed and unrelated to Agent STT/TTS on `/ai/voice`.
-- **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session lists persist as device-scoped JSON values in SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring schedules use `calendar.create_recurring_task`／`update_recurring_task`／`delete_recurring_task` (recurring-mode only; delete is soft `isActive=false`).
+- **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session lists persist as device-scoped JSON values in SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring calendar series use `calendar.create_recurring_series`／`update_recurring_series`／`delete_recurring_series` (standalone series; hard-delete; pause via `isActive=false`).
 - **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect shim).
 - **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Their retired localStorage migration/cleanup bridges are gone after the pre-wipe-floor / prior stamps. User profile likewise (server settings SoT; active LS cache only).
@@ -255,7 +255,7 @@ A thin **Electron** wrapper that provides the native desktop experience:
 3. Opens a `BrowserWindow` pointing at the server's URL
 4. Provides system tray icon and lifecycle management
 5. Kills the Python subprocess on application quit
-6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to `analysis_tasks`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
+6. **Calendar import (one-shot):** OS `.ics` file association + `intelligencemonitor://calendar/import` deep link → Electron bounds/decodes and forwards the original ICS over preload IPC → React calls `/api/v1/calendar/imports/preview` → user selects supported items → one `/commit` transaction writes one-time events to `user_events` and RRULE series to standalone `recurring_schedules`. Commit emits resource invalidation so Timeline／Board／Gantt refresh from their normal APIs. Not a calendar sync client (no webcal subscription／CalDAV／Google OAuth).
 7. **Packaging:** First-class Desktop delivery is **Windows NSIS**, **macOS DMG/zip**, and **Linux AppImage/deb** (`desktop/electron-builder.yml`). **CLI** is the same headless server entry as `python -m server`／`intelligence-monitor`, shipped as a per-OS PyInstaller zip (`npm run package:cli` → `dist/cli/intelligence-monitor-cli-<os>-<arch>.zip`) from the Desktop sidecar onedir. The PyInstaller binary must be built on the **target OS** (no cross-compile). PRs and `main` pushes run Ubuntu `quality` + build only. An explicit `workflow_dispatch` resolves the next SemVer from the latest git tag `v*` (inject into build workspace only — **no** bot commit to main), then runs the `package` matrix (win／mac／linux: `dist:*` + `verify:desktop:full` [= `desktop_verify` only; desktop vitest stays in `quality`] + `package:cli`), pushes tag `v$RELEASE_VERSION`, creates the GitHub Release (Desktop **and** CLI; missing assets fail), and publishes GHCR. **Product version authority is git tags**; repo `VERSION` may lag. Schema stamp／`SCHEMA_SEMVER` are DB-contract identities and need not equal the product tag.
 
 **Headless container (GHCR):** `Dockerfile` ships the FastAPI server + built SPA (no Electron). Data volume `/data`; see `docker-compose.yml` and `npm run docker:build`. GHCR push follows the manual `workflow_dispatch` release path; `main` pushes never publish an image. Dockerfile `HEALTHCHECK` + CI deploy smoke cover post-publish readiness.
@@ -268,7 +268,7 @@ The desktop shell still contains no calendar business parser. RFC 5545 interpret
 |-------|----------|
 | Input bounds | UTF-8 only; maximum **2 MiB** and **2,000 VEVENTs**. Desktop checks bytes before IPC and while downloading; server rechecks both limits. |
 | Supported input | Multi-event VCALENDAR; escaped／folded text; UTC, floating DATE-TIME, IANA `TZID`, embedded `VTIMEZONE`, `VALUE=DATE` all-day and multi-day events, `DTEND`／`DURATION`; RRULE `DAILY`／`WEEKLY`／`MONTHLY`／`YEARLY` with `INTERVAL`／`BYDAY`／`BYMONTHDAY`／`BYMONTH`／`COUNT` or `UNTIL`; `EXDATE` and `RDATE` date/date-time values. |
-| Persistence | No RRULE → `user_events(origin='ics')`; RRULE → `analysis_tasks(analysis_mode='recurring')`. UTC instants are persisted for timed values; original local anchor, TZID／VTIMEZONE, all-day dates, exceptions, UID, source, and fingerprint are retained where recurrence expansion needs them. |
+| Persistence | No RRULE → `user_events(origin='ics')`; RRULE → standalone `recurring_schedules` series. UTC instants are persisted for timed values; original local anchor, TZID／VTIMEZONE, all-day dates, exceptions, UID, source, and fingerprint are retained where recurrence expansion needs them. |
 | Idempotency | `(ics_source, ics_uid)` is unique per target table. Preview reports create/update/unchanged and field diffs; commit reparses and verifies each preview fingerprint. Updates preserve the existing event/task id; all selected writes share one SQLite transaction. |
 | Explicitly unsupported | `RECURRENCE-ID` override instances, duplicate supported UIDs in one file, missing UID, PERIOD-valued RDATE/EXDATE, mixed DATE/DATE-TIME boundaries, unsupported RRULE components/frequencies. They remain visible with warnings and cannot be selected; they are never silently imported. |
 | Floating time | Interpreted in the **server host system timezone** and shown with a warning. Desktop-host mode normally matches the user's machine; remote-server mode may not. |
@@ -296,7 +296,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-26 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-28 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `sync_task_presets.py` | `npm run sync:presets` / `sync:presets:check` | Sync `BUILTIN_PRESETS` display text from zh-Hant locale (CI drift check) |
@@ -353,8 +353,8 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `channels` | Monitored channels/feeds |
 | `source_channels` | Source ↔ channel associations |
 | `messages` | Collected messages from all platforms |
-| `analysis_tasks` | Shared task definitions (`leaderboard` / `intel_event` / `recurring` / `agent`), trigger-purpose `schedule_rrule` for AI timers, agent policy columns (`trigger_mode` / caps / outputs; stamp **19**), and AI scheduling overrides; contains no recurring calendar payload columns |
-| `recurring_schedules` | One-to-one recurring/event payload for `recurring` tasks: RRULE, DTSTART/DTEND, timezone/all-day/location/description, recurrence dates, ICS identity, and optional project parent |
+| `analysis_tasks` | Shared task definitions (`leaderboard` / `intel_event` / `agent`), trigger-purpose `schedule_rrule` for AI timers, agent policy columns (`trigger_mode` / caps / outputs; stamp **19**), and AI scheduling overrides; contains no recurring calendar payload columns (standalone series live on `recurring_schedules`) |
+| `recurring_schedules` | Standalone calendar series: identity/name/workset/active state, RRULE, DTSTART/DTEND, timezone/all-day/location/description, recurrence dates, ICS identity, and optional project/item parent |
 | `task_channels` | Task ↔ channel associations |
 | `analysis_batches` | Individual analysis run records |
 | `analysis_markers` | Incremental analysis cursor (message analyzed markers) |
@@ -375,7 +375,7 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `agent_message_cursors` | Per-agent `message_cursor` last-seen message cursor for `agent_tick` (`last_message_at` ISO + optional `last_message_id` same-second tie-break) |
 | `worksets` | Ownership dimension (`id` / `name` / `is_system`); builtin `__user__` (`is_system=1`); `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events`／`items.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
 | `item_categories` | Soft-template categories (`slug`, optional `emoji`, `default_remind_before_days`); seed rows with stable slugs + emoji logos. Categories group items and supply default remind hints only — no `field_schema` / attribute presets. |
-| `items` | Trackable inventory (optional `emoji`; optional `quantity`／`unit`; free-form details in `notes`); ownership via `workset_id`. **No item-level `price` or `attributes_json`** — purchase／effective amounts live on linked `user_events` with `kind=purchase_effective` (`amount` + `direction`). **Items date model:** linked `user_events` with `kind=expires` are the write-path source of truth (title presets 到期／Expires are UX only) via calendar create／update／delete write-through ([`server/items/linked_dates.py`](../server/items/linked_dates.py)). Flat `expires_at`／`remind_before_days` are a denormalized cache for list badges／sort／`list_expiring`／remind projection — never standalone SoT. There is no `purchased_at` column. Calendar `source=item` projects remind DATE (when `remind_before_days` is set) as floating all-day (`itemDateKind=remind` only) |
+| `items` | Trackable inventory (optional `emoji`; optional `quantity`／`unit`; free-form details in `notes`); ownership via `workset_id`. **No item-level `price` or `attributes_json`** — purchase／effective amounts live on linked `user_events` with `kind=purchase_effective` (`amount` + `direction`). **Items date model:** linked `user_events` with `kind=expires` are the source of truth (title presets 到期／Expires are UX only). Stamp **28** dropped cache columns `expires_at`／`remind_before_days`; wire `expiresAt`／`remindBeforeDays` on ItemResponse are **derived on read** from the primary linked expires event (non-dismissed, earliest `created_at`). No write-through sync — [`server/items/linked_dates.py`](../server/items/linked_dates.py) only exposes `is_linked_expiry_kind`. There is no `purchased_at` column. Calendar `source=item_remind` projects remind DATE only as floating all-day (`itemDateKind=remind`; occurrence ids still `item:{id}:remind`) |
 
 #### Calendar on timeline (source vs item-linked kind)
 
@@ -386,15 +386,15 @@ Timeline merge rows use wire `source`; item linkage and `user_events.kind` are o
 | `source=analysis` \| `recurring` | AI / task intel (analysis findings or RRULE occurrences) |
 | `source=user` + no `itemId` | True general calendar (`user_events`) |
 | `source=user` + `itemId` | **Item-linked** calendar on that item; `kind` = `expires` \| `purchase_effective` \| `normal` |
-| `source=item` | **Remind projection only** (`itemDateKind=remind`); derived from item cache / remind-before — **not** the same as item-linked `user_events` |
+| `source=item_remind` | **Remind DATE projection only** (`itemDateKind=remind`); derived on read from linked expires + remind-before — **not** the same as item-linked `user_events`. Dismissals／importance CHECK uses `item_remind`; occurrence ids remain `item:{id}:remind` |
 
-`kind` on item-linked user events drives system behavior (expiry cache write-through, finance amount/direction), not UI-only labels. Title presets (到期／Expires／购入／…) remain UX defaults. Do not confuse `source=item` (projection) with `source=user` + `itemId` (editable linked calendars).
+`kind` on item-linked user events drives system behavior (expiry derive-on-read, finance amount/direction), not UI-only labels. Title presets (到期／Expires／购入／…) remain UX defaults. Do not confuse `source=item_remind` (projection) with `source=user` + `itemId` (editable linked calendars).
 
 ### Schema baseline (wipe-only)
 
 Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
 
-**Current stamp is 26** (`SCHEMA_SEMVER` = `0.1.0-beta.27`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-26 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
+**Current stamp is 28** (`SCHEMA_SEMVER` = `0.1.0-beta.29`). Startup creates the authoritative DDL only for an empty database, stamps an exact-current unstamped structure, and accepts an exact stamp-28 fingerprint. Every other non-empty schema hard-rejects before collector/scheduler startup with `python scripts/reset_local_databases.py --apply` in the error. Startup never migrates, backs up, restores, or silently deletes a database. Public identity is returned by `GET /api/v1/health` as `schemaVersion` and `schemaSemver`; `PRAGMA user_version` remains the integer stamp.
 
 **Decoupled from product SemVer:** integer stamp + `SCHEMA_SEMVER` identify the **database wipe-only contract**. Product releases are governed by **git tags** (`v*`／GitHub Release). They do **not** need to match each other, and CI must not treat root `VERSION` as a gate that forces tag equality or bot commits back to `main`.
 
@@ -402,18 +402,18 @@ Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `
 
 | Stamped `user_version` | Support |
 |------------------------|---------|
-| **26** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.27`) |
-| **25** and earlier (prior) | Hard-reject → reset |
+| **28** (current, exact fingerprint) | Full runtime (`schemaSemver` = `0.1.0-beta.29`) |
+| **27** and earlier (prior) | Hard-reject → reset |
 | **0** (empty / exact-current unstamped) | Create or stamp current DDL |
 | **Any other non-empty schema** | Hard reject — explicit DB reset (no in-place path or automatic deletion) |
 
 #### Wipe-floor invariant
 
-There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 26. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
+There is no migration registry, `_data_migrations` ledger, schema-upgrade route/UI, backup marker, or post-migration validator in stamp 28. `test_schema_wipe_floor.py` guards this hard cut and the reset guidance.
 
-**Stamp 26 is the wipe-only floor** (prior stamps including v25 hard-reject). Historical wipe cuts (e.g. stamp 20 dropped `web_search_query` and renamed `agent_message_cursors` / `agent_wave_interval_seconds`; stamp 24 removed item-level `price` and added `user_events.amount` / `direction`; stamp 25 adds `user_events.kind` (`normal`|`expires`|`purchase_effective`); stamp 26 drops `item_categories.field_schema` and `items.attributes_json`) remain absorbed into the current DDL. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
+**Stamp 28 is the wipe-only floor** (prior stamps including v27 hard-reject). Historical wipe cuts (e.g. stamp 20 dropped `web_search_query` and renamed `agent_message_cursors` / `agent_wave_interval_seconds`; stamp 24 removed item-level `price` and added `user_events.amount` / `direction`; stamp 25 added `user_events.kind`; stamp 26 dropped item attribute schemas; stamp 27 made `recurring_schedules` a standalone calendar-domain table and removed `recurring` from analysis modes; stamp 28 dropped `items.expires_at`／`remind_before_days` cache columns and renamed timeline source `item` → `item_remind`) remain absorbed into the current DDL. A future in-place migration must be introduced deliberately as a new contract; no dormant fake migration chain remains.
 
-#### Schema v26 explicit reset
+#### Schema v28 explicit reset
 
 There is no automatic deletion or in-place conversion from an older stamp. Before resetting, stop Electron, `npm run dev`, and any standalone server so SQLite WAL state is closed. If data must be retained for manual recovery, copy the database outside every Intelligence Monitor data directory first.
 
@@ -421,7 +421,7 @@ Windows packaged-host example:
 
 ```powershell
 $source = Join-Path $env:APPDATA "Intelligence Monitor"
-$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v26-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
+$backup = Join-Path ([Environment]::GetFolderPath("Desktop")) ("IntelligenceMonitor-pre-v28-backup-" + (Get-Date -Format "yyyyMMdd-HHmmss"))
 Copy-Item $source $backup -Recurse
 ```
 
@@ -434,9 +434,9 @@ uv run python scripts/reset_local_databases.py          # dry-run: inspect every
 uv run python scripts/reset_local_databases.py --apply  # destructive only after review
 ```
 
-The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v26 database (no auto-seed). Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
+The helper deletes only known SQLite database files and their `-wal`／`-shm` sidecars. It deliberately leaves backups, Telegram sessions, `secret.key`, `connection.json`, directories, and volumes untouched. Restart creates a fresh v28 database (no auto-seed). Restoring an old stamped database does not upgrade it—it restores the original unsupported state.
 
-**Stamp 15** introduced wipe-only vocabulary (`leaderboard` / `intel_event` / `web_intel` / `recurring` / `project`) and the collector plane rename. **Stamp 18** unifies `web_intel` + `project` into `agent` (policy columns on `analysis_tasks`; prior DB stamps hard-reject → explicit reset). Also in the baseline: `app_logs.kind` (+ `idx_app_logs_kind_time`), cursor split (`agent_message_cursors.last_message_at` / `last_message_id`), AI timer storage on `analysis_tasks.schedule_rrule` (RRULE-shaped, purpose=trigger; APScheduler next-run only — never calendar-expanded), calendar series on `recurring_schedules.rrule` (purpose=calendar), and trackable items. Categories remain **soft templates** (name／emoji／default remind only; no attribute presets). Free-form item details live in `notes`. Assistant must call `items.list_expiring` for expiry questions (no invention).
+**Stamp 15** introduced the historical task vocabulary and collector plane rename. **Stamp 18** unified `web_intel` + `project` into `agent`; **stamp 27** removed `recurring` from analysis modes and made calendar series standalone. **Stamp 28** derive-on-read item expiry (no flat cache columns) and `source=item_remind`. Also in the baseline: `app_logs.kind`, cursor split, AI timer storage on `analysis_tasks.schedule_rrule` (purpose=trigger; APScheduler only), calendar series on `recurring_schedules.rrule` (purpose=calendar; series delete is hard-delete), and trackable items. Analysis task modes are only `leaderboard`／`intel_event`／`agent` — recurring is **not** an analysis mode. Categories remain **soft templates** (name／emoji／default remind only; no attribute presets). Free-form item details live in `notes`. Assistant must call `items.list_expiring` for expiry questions (no invention).
 
 **`system_config` policy:** scalars and small secrets only. Multi-row entities, queryable secrets, or large JSON blobs belong in tables (device tokens, access keys, `ui_prefs`).
 
@@ -450,22 +450,22 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 - Persistence: timed rows UPSERT on `(task_id, version, event_key)`; untimed rows `INSERT OR IGNORE` on `(task_id, version, content_hash)` with `semantic_hash` near-dedup.
 - Geocode runs when an item has a usable `location` and missing coordinates (not gated by legacy task mode).
 - Primary API: `GET /api/v1/results/events` (`hasTime`, `hasCoords`, `startDate`／`endDate`, sort, offset pagination — HTTP camelCase only).
-- UI keeps **/intelligence** and **/timeline** as separate pages sharing the Event API (map needs coords; timeline needs `startTime`). **/items** is a peer page (visible in simple mode) for trackable inventory. Timeline page-loads timed analysis events for its visible date window, then merges RRULE recurring occurrences, overlapping `user_events`, and active item DATE projections (`source=item`) for selected worksets. Toolbar source filter: **全部** (`null`) = all sources; selecting a workset includes that workset’s user_events **and** items (no isolated items bucket); selecting a concrete **intel_event / agent / recurring** task = that task’s analysis/RRULE rows **plus** `user_events` with matching provenance `task_id`. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId=null`) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__user__` as「一般」.
+- UI keeps **/intelligence** and **/timeline** as separate pages sharing the Event API (map needs coords; timeline needs `startTime`). **/items** is a peer page (visible in simple mode) for trackable inventory. Timeline page-loads timed analysis events for its visible date window, then merges RRULE recurring occurrences, overlapping `user_events`, and active item remind DATE projections (`source=item_remind`) for selected worksets. Toolbar source filter: **全部** (`null`) = all sources; selecting a workset includes that workset’s user_events **and** items (no isolated items bucket); selecting a concrete **intel_event / agent** analysis task = that task’s analysis rows **plus** `user_events` with matching provenance `task_id`; selecting a **recurring series** = that series’ RRULE rows **plus** matching provenance. Gantt activity-spans emit **one row per workset** with user events (`sourceKind=workset`, `worksetId` = workset id, `taskId=null`) alongside analysis-task rows (`worksetId=null`); board gantt filters prefer `worksetId`+`sourceKind` and label `__user__` as「一般」.
 
 ### Schema support matrix
 
-Stamp-26 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-28 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
-| Empty, version 0 | Create v26 DDL, validate its full fingerprint, then stamp 26 | Schema creation and v26 stamp |
-| Unstamped current, version 0 | Require the exact v26 fingerprint and stamp 26 | Stamp only |
-| Current, version 26 | Validate the exact v26 fingerprint on every startup | None |
+| Empty, version 0 | Create v28 DDL, validate its full fingerprint, then stamp 28 | Schema creation and v28 stamp |
+| Unstamped current, version 0 | Require the exact v28 fingerprint and stamp 28 | Stamp only |
+| Current, version 28 | Validate the exact v28 fingerprint on every startup | None |
 | Any other non-empty schema | Hard-reject with explicit reset command | None |
 | Incomplete/lookalike version 0 or prior | Reject with table/column/index/foreign-key mismatch categories | None |
 | Unsupported or future version | Reject; newer files are never downgraded | None |
 
-There is no `MigrationStep` registry or content-migration ledger on stamp 26. A future in-place migration must be introduced as an explicit new contract.
+There is no `MigrationStep` registry or content-migration ledger on stamp 28. A future in-place migration must be introduced as an explicit new contract.
 
 The file defaults to `{DATA_DIR}/intelligence_monitor.db` and can be overridden with `INTELLIGENCE_MONITOR_DB`.
 
@@ -493,7 +493,7 @@ Telegram sources do not use Telethon's default SQLite session files (`.session`)
 
 ### Unified schedule + purpose gate
 
-Both AI timers and recurring calendar series are described with **RRULE-shaped** strings (`server/domain/schedule.py` — purpose gates + `validate_trigger_rrule` / calendar expand helpers), but **consumption is hard-split by purpose / analysis_mode**:
+Both AI timers and recurring calendar series are described with **RRULE-shaped** strings (`server/domain/schedule.py` — purpose gates + `validate_trigger_rrule` / calendar expand helpers), but **consumption is hard-split by domain and purpose**:
 
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
@@ -503,7 +503,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 - FE editor presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE **locally** in the client (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). They are **not** on the HTTP wire.
 - **Create/update/read SoT is `scheduleRrule` alone** — clients send and receive the canonical RRULE. Runtime registration reads `analysis_tasks.schedule_rrule` only (`schedule_trigger_from_rrule`).
 - **AI schedules never calendar-expand** — even `FREQ=SECONDLY` trigger strings must not enter month grids. Expand SQL + `may_calendar_expand` enforce this.
-- Recurring tasks do not create scheduler jobs or run LLM analysis. Their calendar RRULEs are expanded only at query time; a calendar RRULE never triggers AI analysis.
+- Standalone recurring series do not create scheduler jobs or run LLM analysis. Their calendar RRULEs are expanded only at query time; a calendar RRULE never triggers AI analysis.
 - Analysis-task findings (`analysis_events`) keep their own timeline semantics — they are results, not second-level trigger points.
 
 The scheduler uses **APScheduler** (AsyncIOScheduler) interval/cron triggers built from trigger-purpose RRULE to run periodic AI analysis batches:
@@ -622,7 +622,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_contract_system.py` | health, logs, system |
 | `test_contract_tasks_crud.py` | tasks CRUD, templates |
 | `test_contract_tasks_mode_create.py` | mode-specific create paths |
-| `test_contract_tasks_rrule.py` | schedule RRULE wire |
+| `test_contract_tasks_rrule.py` | task trigger RRULE rejection + standalone calendar recurring wire |
 | `test_contract_tasks_activity_spans.py` | activity spans |
 | `test_contract_viewer.py` | viewer |
 | `test_weather_route.py` | `GET /api/v1/weather/forecast` (behavior + response keys) |
@@ -630,7 +630,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-26 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-28 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 

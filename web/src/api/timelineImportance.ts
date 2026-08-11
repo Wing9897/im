@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 
-export type TimelineImportanceSource = "analysis" | "user" | "recurring" | "item";
+export type TimelineImportanceSource = "analysis" | "user" | "recurring" | "item_remind";
 
 export type TimelineImportance = {
   source: TimelineImportanceSource;
@@ -44,6 +44,6 @@ export function timelineItemImportanceSource(
 ): TimelineImportanceSource {
   if (source === "user") return "user";
   if (source === "recurring") return "recurring";
-  if (source === "item") return "item";
+  if (source === "item_remind") return "item_remind";
   return "analysis";
 }

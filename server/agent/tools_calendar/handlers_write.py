@@ -22,13 +22,13 @@ from server.calendar.user_events import (
     update_user_event,
 )
 from server.db.database import Database
-from server.services.recurring_task_writes import (
-    create_recurring_task,
-    patch_recurring_task,
-    soft_delete_recurring_task,
+from server.services.recurring_series_writes import (
+    create_recurring_series,
+    hard_delete_recurring_series,
+    patch_recurring_series,
 )
 from server.services.task_writes import TaskWriteError
-from server.wire.serializers import serialize_task_for_agent
+from server.wire.serializer_domains.recurring import serialize_recurring_series
 
 
 def _tool_task_id(args: dict[str, Any]) -> Any:
@@ -76,13 +76,13 @@ async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, An
     return {"item": item}
 
 
-async def _tool_create_recurring_task(db: Database, args: dict[str, Any]) -> dict[str, Any]:
-    """Create a recurring-mode analysis task (RRULE). Never other modes."""
+async def _tool_create_recurring_series(db: Database, args: dict[str, Any]) -> dict[str, Any]:
+    """Create a standalone recurring calendar series."""
     name = arg(args, "name", "title")
     parent_raw = args.get("_parent_task_id")
     parent_task_id = str(parent_raw).strip() if parent_raw not in (None, "") else None
     try:
-        row = await create_recurring_task(
+        row = await create_recurring_series(
             db,
             name=str(name or ""),
             rrule=str(arg(args, "rrule", "RRule") or ""),
@@ -95,16 +95,16 @@ async def _tool_create_recurring_task(db: Database, args: dict[str, Any]) -> dic
         )
     except TaskWriteError as exc:
         return {"error": str(exc)}
-    return {"task": serialize_task_for_agent(row, [])}
+    return {"series": serialize_recurring_series(row)}
 
 
-async def _tool_update_recurring_task(db: Database, args: dict[str, Any]) -> dict[str, Any]:
-    """Patch an existing recurring-mode task. Refuses non-recurring analysis modes."""
-    task_id = arg(args, "id", "taskId", "task_id")
+async def _tool_update_recurring_series(db: Database, args: dict[str, Any]) -> dict[str, Any]:
+    """Patch an existing recurring series. Id is the series id."""
+    series_id = arg(args, "id", "seriesId", "series_id")
     require_parent = args.get("_require_parent_task_id")
 
     kwargs: dict[str, Any] = {
-        "task_id": str(task_id or ""),
+        "series_id": str(series_id or ""),
         "require_parent_task_id": str(require_parent) if require_parent else None,
     }
     if "name" in args or "title" in args:
@@ -138,31 +138,30 @@ async def _tool_update_recurring_task(db: Database, args: dict[str, Any]) -> dic
         return {"error": "at least one field to update is required"}
 
     try:
-        updated = await patch_recurring_task(db, **kwargs)
+        updated = await patch_recurring_series(db, **kwargs)
     except TaskWriteError as exc:
         return {"error": str(exc)}
-    return {"task": serialize_task_for_agent(updated, [])}
+    return {"series": serialize_recurring_series(updated)}
 
 
-async def _tool_delete_recurring_task(db: Database, args: dict[str, Any]) -> dict[str, Any]:
-    """Soft-delete a recurring-mode task (isActive=false). Refuses non-recurring modes."""
-    task_id = arg(args, "id", "taskId", "task_id")
+async def _tool_delete_recurring_series(db: Database, args: dict[str, Any]) -> dict[str, Any]:
+    """Hard-delete a recurring series (same as Schedule UI / REST DELETE)."""
+    series_id = arg(args, "id", "seriesId", "series_id")
     require_parent = args.get("_require_parent_task_id")
     try:
-        updated = await soft_delete_recurring_task(
+        deleted = await hard_delete_recurring_series(
             db,
-            task_id=str(task_id or ""),
+            series_id=str(series_id or ""),
             require_parent_task_id=str(require_parent) if require_parent else None,
         )
     except TaskWriteError as exc:
-        return {"error": str(exc), "deleted": False, "soft": False}
-    tid = str(updated["id"])
+        return {"error": str(exc), "deleted": False}
+    sid = str(deleted["id"])
     return {
         "deleted": True,
-        "soft": True,
-        "id": tid,
-        "taskId": tid,
-        "task": serialize_task_for_agent(updated, []),
+        "id": sid,
+        "seriesId": sid,
+        "series": serialize_recurring_series(deleted),
     }
 
 
@@ -260,11 +259,11 @@ async def _tool_unmark_important(db: Database, args: dict[str, Any]) -> dict[str
 
 __all__ = [
     "_tool_create_event",
-    "_tool_create_recurring_task",
+    "_tool_create_recurring_series",
     "_tool_delete_event",
-    "_tool_delete_recurring_task",
+    "_tool_delete_recurring_series",
     "_tool_mark_important",
     "_tool_unmark_important",
     "_tool_update_event",
-    "_tool_update_recurring_task",
+    "_tool_update_recurring_series",
 ]

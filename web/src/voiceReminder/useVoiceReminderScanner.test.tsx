@@ -30,7 +30,7 @@ vi.mock("../api/results", () => ({
 }));
 
 vi.mock("../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) => mockListUserEvents(...args),
+  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
 }));
 
 vi.mock("../api/tasks", () => ({
@@ -105,14 +105,14 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockFetchTimelineEvents.mockResolvedValue([
       {
         id: "page-1",
-        taskId: "task-1",
+        seriesId: "task-1",
         taskName: "Tracked task",
         title: "First paged event",
         startTime: "2026-07-20T10:00:00.000Z",
       },
       {
         id: "page-2",
-        taskId: "task-1",
+        seriesId: "task-1",
         taskName: "Tracked task",
         title: "Second paged event",
         startTime: "2026-07-20T10:00:00.000Z",
@@ -156,7 +156,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: ["task-1"], includeItems: false },
+      { seriesIds: ["task-1"], includeItems: false },
     );
     expect(mockAnnounce).toHaveBeenCalledTimes(2);
     expect(mockAnnounce.mock.calls.map((call) => String(call[1]))).toEqual([
@@ -204,7 +204,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockFetchCalendarOccurrences.mockResolvedValue([
       {
         id: "occ-1",
-        taskId: "cal-task",
+        seriesId: "cal-task",
         taskName: "週會",
         title: "站立會議",
         startTime: "2026-07-20T10:00:00.000Z",
@@ -229,7 +229,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: ["cal-task"], includeItems: false },
+      { seriesIds: ["cal-task"], includeItems: false },
     );
     expect(mockAnnounce).toHaveBeenCalledTimes(1);
     expect(String(mockAnnounce.mock.calls[0]?.[1])).toContain("站立會議");
@@ -296,7 +296,7 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       "2026-07-20T08:59:00.000Z",
       "2026-07-20T10:05:00.000Z",
-      { taskIds: [], includeItems: false },
+      { seriesIds: [], includeItems: false },
     );
   });
 

@@ -13,11 +13,10 @@ import {
 } from "./analysisModeCapabilities";
 
 describe("analysisModeCapabilities — agent / finding modes", () => {
-  it("orders agent among the four product modes", () => {
+  it("orders the three analysis modes", () => {
     expect(ANALYSIS_MODE_ORDER).toEqual([
       "leaderboard",
       "intel_event",
-      "recurring",
       "agent",
     ]);
   });

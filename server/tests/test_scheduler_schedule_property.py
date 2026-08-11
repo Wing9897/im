@@ -138,7 +138,7 @@ def test_supported_schedule_totality_and_determinism(schedule, metadata):
     varied_task = {
         **metadata,
         "id": f"{metadata['id']}-varied",
-        "analysis_mode": "recurring" if metadata["analysis_mode"] != "recurring" else "leaderboard",
+        "analysis_mode": "agent" if metadata["analysis_mode"] != "agent" else "leaderboard",
         "rrule": f"{metadata['rrule'] or ''}-varied",
         "event_title": f"{metadata['event_title'] or ''}-varied",
         "event_description": f"{metadata['event_description'] or ''}-varied",

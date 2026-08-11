@@ -19,9 +19,9 @@ router = APIRouter(prefix="/importance", tags=["calendar"])
 
 _IMPORTANCE_RESOURCE_TYPE: dict[str, str] = {
     "analysis": "task",
-    "recurring": "task",
+    "recurring": "recurring",
     "user": "user_event",
-    "item": "item",
+    "item_remind": "item",
 }
 
 

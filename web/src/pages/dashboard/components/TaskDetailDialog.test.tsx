@@ -17,44 +17,6 @@ vi.mock("../../../components/common/OverlayPortal", () => ({
   ),
 }));
 
-vi.mock("../../../api/userEvents", () => ({
-  listUserEvents: vi.fn().mockResolvedValue([
-    {
-      id: "ue-1",
-      title: "Kickoff",
-      startTime: "2026-08-01T09:00:00Z",
-      endTime: null,
-      location: "HQ",
-      body: "",
-      origin: "manual",
-      taskId: "cal-1",
-    },
-  ]),
-}));
-
-vi.mock("../../../api/results", () => ({
-  fetchCalendarOccurrences: vi.fn().mockResolvedValue([
-    {
-      id: "occ-1",
-      taskId: "rec-1",
-      title: "Daily standup",
-      startTime: "2026-07-29T01:00:00Z",
-      endTime: "2026-07-29T01:30:00Z",
-      location: null,
-      description: null,
-      isAllDay: false,
-    },
-  ]),
-}));
-
-vi.mock("../../../api/taskSchedule", () => ({
-  fetchTaskSchedule: vi.fn().mockResolvedValue({
-    taskId: "rec-1",
-    rrule: "FREQ=DAILY",
-    eventLocation: null,
-  }),
-}));
-
 let container: HTMLDivElement;
 let root: Root | null = null;
 
@@ -124,46 +86,6 @@ describe("TaskDetailDialog", () => {
     expect(container.textContent).toContain("3");
     expect(container.textContent).toContain("共 2 個頻道");
     expect(container.querySelector("[data-testid='task-detail-channels-toggle']")).toBeTruthy();
-  });
-
-  it("shows related timed events for recurring tasks instead of analysis metrics", async () => {
-    await act(async () => {
-      renderDialog(
-        createElement(TaskDetailDialog, {
-          task: makeTask({
-            id: "rec-1",
-            name: "Standup",
-            analysisMode: "recurring",
-            channelIds: [],
-          }),
-          stats: {
-            unanalyzedCount: 9,
-            queuedMessageCount: 0,
-            analyzedCount: 0,
-            triggerThreshold: 50,
-            isRunning: false,
-          },
-          onClose: vi.fn(),
-          onEdit: vi.fn(),
-        }),
-      );
-    });
-
-    await act(async () => {
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).not.toContain("待分析");
-    expect(container.textContent).not.toContain("FREQ=DAILY");
-    expect(container.querySelector("[data-testid='task-detail-related-events']")).toBeTruthy();
-    expect(container.querySelector("[data-testid='task-detail-related-list']")?.textContent).toContain(
-      "Daily standup",
-    );
-    expect(container.querySelector("[data-testid='task-detail-related-list']")?.textContent).toContain(
-      "Kickoff",
-    );
-    expect(container.querySelector("[data-testid='task-detail-open-timeline']")).toBeTruthy();
   });
 
 });

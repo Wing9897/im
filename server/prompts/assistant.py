@@ -44,14 +44,14 @@ AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機�
 只有用戶指名絕對日期時才用 calendar.window。
 
 建立／修改／刪除「用戶事件」（單次、非週期）用 calendar.create_event / update_event / delete_event。
-週期任務（每週三／每天／每月等）：新建用 calendar.create_recurring_task；改用 calendar.update_recurring_task；
-刪／停用優先用 calendar.delete_recurring_task（軟刪＝isActive=false，系列列保留）。
-三者都硬鎖 analysisMode=recurring，禁止動 leaderboard／intel_event／AI 分析任務。
-update_recurring_task 的 isActive 主要用於再啟用（isActive=true）；不要用 isActive=false 代替 delete。
-建立／修改前用自然語言向用戶確認標題、週期規則與時鐘時間；停用前先確認。成功後可提醒用戶到「時間規劃」查看。
+週期序列（每週三／每天／每月等）：新建用 calendar.create_recurring_series；改用 calendar.update_recurring_series；
+硬刪用 calendar.delete_recurring_series；若只暫停，改用 update_recurring_series(isActive=false)。
+再啟用前先 calendar.list_calendars(includeInactive=true) 找暫停系列（預設列表不含 isActive=false）。
+三者操作獨立日曆序列，不建立或修改 analysis task。
+建立／修改前用自然語言向用戶確認標題、週期規則與時鐘時間；刪除前先確認。成功後可提醒用戶到「時間規劃」查看。
 「今天／明天／下週」等相對日期必須依下方「當前時間」推算，禁止使用訓練資料中的過期年份或日期。
 寫入用戶事件的 startTime／endTime 時用完整 ISO-8601（含時區，建議 Z 或與系統本地相同的偏移）。
-寫入週期任務的 eventStartTime／eventEndTime 時優先用 HH:MM（系統本地牆上時間，與任務表單相同；例如早上十點 → 10:00）。
+寫入週期序列的 eventStartTime／eventEndTime 時優先用 HH:MM（系統本地牆上時間；例如早上十點 → 10:00）。
 展開後的行程時間與其他事件一樣以 UTC ISO 存、本機顯示。
 
 你必須只輸出一個 JSON 物件，二選一：
@@ -94,13 +94,14 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 只有指名絕對日期時才用 calendar.window。
 
 建立／修改／刪除用戶事件用 calendar.create_event / update_event / delete_event。
-週期任務：新建 calendar.create_recurring_task；改 calendar.update_recurring_task；
-刪／停用優先 calendar.delete_recurring_task（軟刪＝isActive=false）；
-再啟用用 update_recurring_task(isActive=true)。皆硬鎖 recurring 模式，不碰其他任務類型。
+週期序列：新建 calendar.create_recurring_series；改 calendar.update_recurring_series；
+硬刪用 calendar.delete_recurring_series；暫停／再啟用用 update_recurring_series(isActive=false/true)。
+再啟用前先 calendar.list_calendars(includeInactive=true) 找暫停系列。
+這些工具操作獨立日曆序列，不建立或修改 analysis task。
 欄位已足夠清晰時直接執行；
-缺關鍵欄位（標題、開始時間，或週期任務的 id／rrule／時鐘時間）時用一句話指出缺什麼，不要反覆確認。
+缺關鍵欄位（標題、開始時間，或週期序列的 id／rrule／時鐘時間）時用一句話指出缺什麼，不要反覆確認。
 「今天／明天／下週」依下方「當前時間」推算。
-用戶事件時間用完整 ISO-8601（含時區）；週期任務時鐘用系統本地 HH:MM（展開為 UTC ISO）。
+用戶事件時間用完整 ISO-8601（含時區）；週期序列時鐘用系統本地 HH:MM（展開為 UTC ISO）。
 
 你必須只輸出一個 JSON 物件，二選一：
 1) 呼叫工具：
@@ -129,8 +130,7 @@ TASK_CONFIG_SCHEMA_PROMPT = (
     "- includeInTimeline: bool; for analysisMode=intel_event or agent; default true "
     "(when false, analysis events stay off calendar / "
     "Gantt / timeline but still appear on the intelligence feed / map)\n"
-    "- calendar fields (rrule, eventStartTime, eventEndTime, eventIsAllDay, "
-    "eventLocation, eventDescription): only for analysisMode=recurring\n"
+    "- Calendar recurring-series fields do not belong in taskConfig; use calendar tools instead.\n"
     "Do NOT include channelIds — the user picks source channels in the form UI.\n"
     "Do NOT invent item expiresAt on ItemCreate — use linked「到期」calendars.\n"
     "For analysisMode=agent web search, choose keywords from promptTemplate "

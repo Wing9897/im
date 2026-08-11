@@ -322,7 +322,29 @@ async def seed(db: Database) -> dict[str, Any]:
                 await asyncio.sleep(1.05)
 
         item_row = await db.fetch_one(
-            "SELECT id, title, expires_at, remind_before_days FROM items WHERE id = ?",
+            """
+            SELECT
+              i.id,
+              i.title,
+              CASE
+                WHEN pe.start_time IS NULL THEN NULL
+                ELSE substr(pe.start_time, 1, 10)
+              END AS expires_at,
+              pe.remind_before_days AS remind_before_days
+            FROM items i
+            LEFT JOIN user_events pe ON pe.id = (
+              SELECT ue.id
+              FROM user_events ue
+              LEFT JOIN timeline_dismissals td
+                ON td.source = 'user' AND td.event_id = ue.id
+              WHERE ue.item_id = i.id
+                AND ue.kind = 'expires'
+                AND td.event_id IS NULL
+              ORDER BY ue.created_at ASC, ue.id ASC
+              LIMIT 1
+            )
+            WHERE i.id = ?
+            """,
             (item_id,),
         )
         assert item_row is not None
@@ -352,10 +374,33 @@ def _expected_finance() -> dict[str, float]:
 
 
 async def verify(db: Database) -> dict[str, Any]:
-    """Assert kinds, primary expires_at cache, and finance aggregation."""
+    """Assert kinds, derived primary expiresAt, and finance aggregation."""
     errors: list[str] = []
     items = await db.fetch_all(
-        "SELECT id, title, expires_at, remind_before_days FROM items WHERE title LIKE ? ORDER BY title",
+        """
+        SELECT
+          i.id,
+          i.title,
+          CASE
+            WHEN pe.start_time IS NULL THEN NULL
+            ELSE substr(pe.start_time, 1, 10)
+          END AS expires_at,
+          pe.remind_before_days AS remind_before_days
+        FROM items i
+        LEFT JOIN user_events pe ON pe.id = (
+          SELECT ue.id
+          FROM user_events ue
+          LEFT JOIN timeline_dismissals td
+            ON td.source = 'user' AND td.event_id = ue.id
+          WHERE ue.item_id = i.id
+            AND ue.kind = 'expires'
+            AND td.event_id IS NULL
+          ORDER BY ue.created_at ASC, ue.id ASC
+          LIMIT 1
+        )
+        WHERE i.title LIKE ?
+        ORDER BY i.title
+        """,
         (f"{PREFIX}%",),
     )
     if len(items) != 6:
@@ -476,8 +521,8 @@ async def verify(db: Database) -> dict[str, Any]:
     # Stamp sanity
     stamp_row = await db.fetch_one("PRAGMA user_version")
     stamp_val = list(stamp_row.values())[0] if stamp_row else None
-    if int(stamp_val or -1) != 26:
-        errors.append(f"schema stamp={stamp_val!r} expected 26")
+    if int(stamp_val or -1) != 28:
+        errors.append(f"schema stamp={stamp_val!r} expected 28")
 
     result = {
         "ok": not errors,
@@ -538,7 +583,7 @@ async def main() -> None:
     path = Path(args.db) if args.db else default_db_path()
     print(f"DB: {path}")
     if not path.is_file() and not args.verify_only:
-        print("Warning: database file missing; schema will be bootstrapped (stamp 26).")
+        print("Warning: database file missing; schema will be bootstrapped (stamp 28).")
 
     db = Database(str(path))
     await db.connect()
@@ -547,9 +592,9 @@ async def main() -> None:
         stamp = await db.fetch_one("PRAGMA user_version")
         stamp_val = list(stamp.values())[0] if stamp else None
         print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != 26:
+        if int(stamp_val or 0) != 28:
             print(
-                "ERROR: need stamp 26. Run:\n"
+                "ERROR: need stamp 28. Run:\n"
                 "  uv run python scripts/reset_local_databases.py --apply\n"
                 "then re-run this seed.",
                 file=sys.stderr,

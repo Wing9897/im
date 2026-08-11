@@ -43,6 +43,6 @@ export function timelineItemDismissalSource(
 ): TimelineDismissalSource {
   if (source === "user") return "user";
   if (source === "recurring") return "recurring";
-  if (source === "item") return "item";
+  if (source === "item_remind") return "item_remind";
   return "analysis";
 }

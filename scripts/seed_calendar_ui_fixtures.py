@@ -25,11 +25,10 @@ from server.calendar.user_events import create_user_event
 from server.db.database import Database, TransactionDb
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
-from server.items.linked_dates import reconcile_item_linked_dates
 from server.items.service import create_item
 from server.paths import default_db_path
 from server.queries.worksets_queries import insert_workset
-from server.services.recurring_task_create import create_recurring_task
+from server.services.recurring_series_create import create_recurring_series
 from server.util import utc_now_iso
 
 PREFIX = "[cal-ui]"
@@ -59,13 +58,7 @@ async def _clean(db: Database) -> None:
         (f"{PREFIX}%",),
     )
     await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
-    # Recurring: delete tasks by name prefix (cascades schedules)
-    rows = await db.fetch_all(
-        "SELECT id FROM analysis_tasks WHERE name LIKE ?",
-        (f"{PREFIX}%",),
-    )
-    for row in rows:
-        await db.execute("DELETE FROM analysis_tasks WHERE id = ?", (row["id"],))
+    await db.execute("DELETE FROM recurring_schedules WHERE name LIKE ?", (f"{PREFIX}%",))
     for tid in (INTEL_TASK_ID, WEB_TASK_ID, PROJECT_TASK_ID):
         await db.execute("DELETE FROM analysis_tasks WHERE id = ?", (tid,))
     await db.execute("DELETE FROM worksets WHERE id = ?", (WS_ID,))
@@ -427,7 +420,7 @@ async def seed(db: Database) -> dict[str, int]:
         }
         if "workset_id" in spec:
             rkwargs["workset_id"] = spec["workset_id"]
-        await create_recurring_task(db, **rkwargs)
+        await create_recurring_series(db, **rkwargs)
         counts["recurring"] += 1
 
     # ── items: linked「到期」calendars are SoT (expiry cache write-through) ──
@@ -500,19 +493,11 @@ async def seed(db: Database) -> dict[str, int]:
         )
         assert linked, f"fixture {spec['title']!r} must have linked calendars as SoT"
 
-    # Optional: sync cache for any leftover [cal-ui] rows from older seeds.
-    legacy_items = await db.fetch_all(
-        "SELECT id FROM items WHERE title LIKE ?",
-        (f"{PREFIX}%",),
-    )
-    for row in legacy_items:
-        iid = str(row["id"])
-        if iid not in item_ids:
-            await reconcile_item_linked_dates(db, iid)
-
     if item_ids:
-        # Soft-dismiss legacy item remind occurrence id (projection is remind-only).
-        await dismiss_timeline_event(db, source="item", event_id=f"item:{item_ids[0]}:remind")
+        # Soft-dismiss item remind occurrence id (projection is remind-only).
+        await dismiss_timeline_event(
+            db, source="item_remind", event_id=f"item:{item_ids[0]}:remind"
+        )
         counts["dismissals"] += 1
 
     # ── analysis_events (intel / web) for Timeline source=analysis ──

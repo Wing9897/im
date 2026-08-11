@@ -15,7 +15,6 @@ from server.calendar.timeline_dismissals import active_timeline_items
 from server.config import get_config_int
 from server.db.database import Database
 from server.domain.agent_task_spec import AgentTaskSpec, agent_task_spec_from_row
-from server.domain.analysis_modes import CHILD_RECURRING_MODE
 from server.prompts.agent_task import build_agent_seed_message
 from server.queries.agent_tick_queries import (
     AgentMessageCursor,
@@ -42,7 +41,7 @@ def _compact_message_line(row: dict[str, Any]) -> str:
 async def _calendar_summary(db: Database, task_id: str) -> str:
     result = await query_upcoming(db, limit=40, days=30, task_id=task_id, hard_cap=80)
     items = active_timeline_items(result.get("items") or [])
-    children = await fetch_agent_calendar_children(db, task_id, CHILD_RECURRING_MODE)
+    children = await fetch_agent_calendar_children(db, task_id)
     lines = [
         f"Owned user_events / occurrences in next ~30 days: {len(items)}",
     ]

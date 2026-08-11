@@ -118,7 +118,7 @@ vi.mock("../api/messages", () => ({
 vi.mock("../api/tasks", () => ({
   fetchTaskActivitySpans: vi.fn(async () => [
     {
-      taskId: "task-1",
+      seriesId: "task-1",
       taskName: "任務",
       description: null,
       analysisTimeRange: "1d",

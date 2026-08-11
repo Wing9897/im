@@ -20,6 +20,12 @@ import { getGeneralWorksetLabel } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 
+const emptyUserEventsPage = { items: [] as unknown[], totalCount: 0, hasMore: false };
+
+function userEventsPage(items: unknown[]) {
+  return { items, totalCount: items.length, hasMore: false };
+}
+
 const {
   mockFetchTimelineEvents,
   mockFetchCalendarOccurrences,
@@ -29,7 +35,7 @@ const {
   mockFetchTimelineEvents: vi.fn().mockResolvedValue([]),
   mockFetchCalendarOccurrences: vi.fn().mockResolvedValue([]),
   mockFetchTaskActivitySpans: vi.fn().mockResolvedValue([]),
-  mockListUserEvents: vi.fn().mockResolvedValue([]),
+  mockListUserEvents: vi.fn().mockResolvedValue({ items: [], totalCount: 0, hasMore: false }),
 }));
 
 vi.mock("../../api/results", () => ({
@@ -38,7 +44,7 @@ vi.mock("../../api/results", () => ({
 }));
 
 vi.mock("../../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) => mockListUserEvents(...args),
+  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
 }));
 
 vi.mock("../../api/tasks", () => ({
@@ -68,7 +74,7 @@ type HookResult = ReturnType<typeof useTimelineData>;
 function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
   return {
     id: "cal-1:20250115T090000Z",
-    taskId: "cal-1",
+    seriesId: "cal-1",
     taskName: "Weekly Standup",
     title: "Weekly Standup",
     startTime: "2025-01-15T09:00:00Z",
@@ -131,7 +137,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     mockFetchTimelineEvents.mockReset().mockResolvedValue([]);
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([]);
     mockFetchTaskActivitySpans.mockReset().mockResolvedValue([]);
-    mockListUserEvents.mockReset().mockResolvedValue([]);
+    mockListUserEvents.mockReset().mockResolvedValue(emptyUserEventsPage);
     resetTaskCatalogState();
     resetAnalysisStatusState();
     resultRef = { current: null };
@@ -174,7 +180,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
   });
 
   it("merges user events into the all-tasks view", async () => {
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue(userEventsPage([
       {
         id: "ue-1",
         title: "用戶事件",
@@ -188,7 +194,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         createdAt: "2025-01-12T08:00:00Z",
         updatedAt: "2025-01-12T08:00:00Z",
       },
-    ]);
+    ]));
     await renderHook(null);
     await act(async () => {
       await Promise.resolve();
@@ -208,7 +214,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         worksetId: "ws-A",
       }),
     ]);
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue(userEventsPage([
       {
         id: "ue-cross",
         title: "归属 B，provenance 指向 A 成员",
@@ -237,7 +243,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         createdAt: "2025-01-12T09:00:00Z",
         updatedAt: "2025-01-12T09:00:00Z",
       },
-    ]);
+    ]));
     await renderHook({ taskIds: [], worksetIds: ["ws-A"] });
     await act(async () => {
       await Promise.resolve();
@@ -247,7 +253,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
 
   it("shows all user events owned by the general workset when __user__ is selected", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue(userEventsPage([
       {
         id: "ue-only",
         title: "用戶事件",
@@ -290,7 +296,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         createdAt: "2025-01-12T10:00:00Z",
         updatedAt: "2025-01-12T10:00:00Z",
       },
-    ]);
+    ]));
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
     await act(async () => {
       await Promise.resolve();
@@ -300,11 +306,11 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(events.every((e) => e.source === "user")).toBe(true);
     expect(events.find((e) => e.id === "ue-only")?.taskName).toBe(getGeneralWorksetLabel());
     expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
-    // Workset selection fetches unified calendar/items (source=item); RRULE taskIds=[].
+    // Workset selection fetches unified standalone recurring + item rows.
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
-      { taskIds: [], includeItems: true },
+      { includeItems: true },
     );
     expect(resultRef.current!.timelineEvents).toHaveLength(2);
     expect(resultRef.current!.timelineEventsInitialLoading).toBe(false);
@@ -313,7 +319,6 @@ describe("useTimelineData calendar occurrence wiring", () => {
   it("does not merge calendar occurrences when an event-mode task is selected", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "timeline-task-1", name: "Event Task", analysisMode: "intel_event" }),
-      makeAnalysisTask({ id: "cal-1", name: "Weekly Standup", analysisMode: "recurring" }),
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([makeOccurrence()]);
     await renderHook({ taskIds: ["timeline-task-1"], worksetIds: [] });
@@ -350,7 +355,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         updatedAt: "2025-01-10T00:00:00Z",
       },
     ]);
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue(userEventsPage([
       {
         id: "ue-match",
         title: "掛到事件任務",
@@ -377,7 +382,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         createdAt: "2025-01-12T09:00:00Z",
         updatedAt: "2025-01-12T09:00:00Z",
       },
-    ]);
+    ]));
     await renderHook({ taskIds: ["timeline-task-1"], worksetIds: [] });
     await act(async () => {
       await Promise.resolve();
@@ -386,68 +391,64 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(ids).toEqual(["analysis-1", "ue-match"]);
   });
 
-  it("filters calendar occurrences when a recurring task is selected", async () => {
+  it("filters standalone recurring occurrences by workset", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "cal-1", name: "Weekly Standup", analysisMode: "recurring" }),
-      makeAnalysisTask({ id: "cal-2", name: "Other Cal", analysisMode: "recurring" }),
+      makeAnalysisTask({ id: "evt-1", name: "Event", analysisMode: "intel_event", worksetId: "ws-a" }),
     ]);
     mockFetchCalendarOccurrences.mockResolvedValue([
-      makeOccurrence({ id: "cal-1:a", taskId: "cal-1", title: "Standup" }),
-      makeOccurrence({ id: "cal-2:b", taskId: "cal-2", title: "Other", taskName: "Other Cal" }),
+      makeOccurrence({ id: "cal-1:a", seriesId: "cal-1", title: "Standup", worksetId: "ws-a" }),
+      makeOccurrence({ id: "cal-2:b", seriesId: "cal-2", title: "Other", taskName: "Other Cal", worksetId: "ws-b" }),
     ]);
-    await renderHook({ taskIds: ["cal-1"], worksetIds: [] });
+    await renderHook({ taskIds: [], worksetIds: ["ws-a"] });
     const events = resultRef.current!.events;
     expect(events).toHaveLength(1);
-    expect(events[0].taskId).toBe("cal-1");
+    expect(events[0].seriesId).toBe("cal-1");
     expect(events[0].source).toBe("recurring");
-    expect(mockFetchTimelineEvents).not.toHaveBeenCalled();
+    expect(mockFetchTimelineEvents).toHaveBeenCalledWith(
+      expect.objectContaining({
+        taskIds: ["evt-1"],
+        startDate: expect.any(String),
+        endDate: expect.any(String),
+      }),
+    );
   });
 
-  it("refreshEvents(catalogOverride) fetches calendar for a just-created recurring task", async () => {
-    // Source filter is __user__ only with an empty catalog → fetchCalendar false
-    // but fetchItems true (workset) so calendar/items is already called once.
-    // After create, caller passes the refreshed catalog so RRULE rows appear.
+  it("refreshEvents fetches standalone recurring rows without a task catalog override", async () => {
     resetTaskCatalogState([]);
     mockFetchCalendarOccurrences.mockResolvedValue([]);
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
-      { taskIds: [], includeItems: true },
+      { includeItems: true },
     );
 
     mockFetchCalendarOccurrences.mockClear();
     mockFetchCalendarOccurrences.mockResolvedValue([
-      makeOccurrence({ id: "rec-new:a", taskId: "rec-new", title: "每日" }),
+      makeOccurrence({ id: "rec-new:a", seriesId: "rec-new", title: "每日", worksetId: SYSTEM_WORKSET_ID }),
       makeOccurrence({
         id: "rec-new:b",
-        taskId: "rec-new",
+        seriesId: "rec-new",
         title: "每日",
+        worksetId: SYSTEM_WORKSET_ID,
         startTime: "2025-01-16T09:00:00Z",
       }),
     ]);
 
     await act(async () => {
-      await resultRef.current!.refreshEvents([
-        makeAnalysisTask({
-          id: "rec-new",
-          name: "每日",
-          analysisMode: "recurring",
-          worksetId: SYSTEM_WORKSET_ID,
-        }),
-      ]);
+      await resultRef.current!.refreshEvents();
     });
 
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
-      { taskIds: ["rec-new"], includeItems: true },
+      { includeItems: true },
     );
     const events = resultRef.current!.events;
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });
 
-  it("includes intel_event, agent, and recurring modes in timelineTasks", async () => {
+  it("includes timeline-owning analysis modes in timelineTasks", async () => {
     resetTaskCatalogState([
       makeAnalysisTask({ id: "evt-1", name: "Event Task", analysisMode: "intel_event" }),
       makeAnalysisTask({
@@ -456,7 +457,6 @@ describe("useTimelineData calendar occurrence wiring", () => {
         analysisMode: "agent",
         outputAnalysisEvents: true,
       }),
-      makeAnalysisTask({ id: "cal-1", name: "Calendar Task", analysisMode: "recurring" }),
       makeAnalysisTask({
         id: "proj-1",
         name: "Project Alpha",
@@ -467,7 +467,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     ]);
     await renderHook(null);
     const ids = resultRef.current!.timelineTasks.map((t) => t.id);
-    expect(ids).toEqual(["evt-1", "web-1", "cal-1", "proj-1"]);
+    expect(ids).toEqual(["evt-1", "web-1", "proj-1"]);
   });
 
   it("merges source=item calendar rows and refreshes on item SSE", async () => {
@@ -481,7 +481,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
         endTime: "2025-01-20T23:59:59",
         isAllDay: true,
         rrule: "",
-        source: "item",
+        source: "item_remind",
         worksetId: SYSTEM_WORKSET_ID,
         itemId: "i1",
         itemDateKind: "remind",
@@ -495,9 +495,9 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
-      { taskIds: [], includeItems: true },
+      { includeItems: true },
     );
-    const itemEvent = resultRef.current!.events.find((e) => e.source === "item");
+    const itemEvent = resultRef.current!.events.find((e) => e.source === "item_remind");
     expect(itemEvent?.id).toBe("item:i1:remind");
     expect(itemEvent?.itemId).toBe("i1");
     expect(itemEvent?.itemDateKind).toBe("remind");
@@ -517,7 +517,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
   });
 
   it("refreshes user events after user_event SSE", async () => {
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue(userEventsPage([
       {
         id: "ue-1",
         title: "Standup",
@@ -527,17 +527,17 @@ describe("useTimelineData calendar occurrence wiring", () => {
         location: "",
         isAllDay: false,
         worksetId: SYSTEM_WORKSET_ID,
-        taskId: null,
+        seriesId: null,
         origin: "user",
       },
-    ]);
+    ]));
     await renderHook(null);
     await act(async () => {
       await Promise.resolve();
     });
 
     mockListUserEvents.mockClear();
-    mockListUserEvents.mockResolvedValue([]);
+    mockListUserEvents.mockResolvedValue(emptyUserEventsPage);
     await act(async () => {
       emitResourceModified({
         resourceType: "user_event",
@@ -550,14 +550,28 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockListUserEvents).toHaveBeenCalled();
   });
 
+  it("refreshes calendar without refreshing tasks after recurring SSE", async () => {
+    await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
+    mockFetchCalendarOccurrences.mockClear();
+    taskCatalogState.refreshTasks.mockClear();
+
+    await act(async () => {
+      emitResourceModified({
+        resourceType: "recurring",
+        resourceId: "series-1",
+        action: "updated",
+      });
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockFetchCalendarOccurrences).toHaveBeenCalled();
+    expect(taskCatalogState.refreshTasks).not.toHaveBeenCalled();
+  });
+
   it("refreshes catalog before calendar fetch when a task row changes", async () => {
     const refreshedCatalog = [
-      makeAnalysisTask({
-        id: "rec-new",
-        name: "Daily",
-        analysisMode: "recurring",
-        worksetId: SYSTEM_WORKSET_ID,
-      }),
+      makeAnalysisTask({ id: "evt-new", name: "Daily", analysisMode: "intel_event" }),
     ];
     taskCatalogState.refreshTasks.mockResolvedValueOnce(refreshedCatalog);
     await renderHook({ taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] });
@@ -566,7 +580,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     await act(async () => {
       emitResourceModified({
         resourceType: "task",
-        resourceId: "rec-new",
+        resourceId: "evt-new",
         action: "created",
       });
       await Promise.resolve();
@@ -577,17 +591,17 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(mockFetchCalendarOccurrences).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(String),
-      { taskIds: ["rec-new"], includeItems: true },
+      { includeItems: true },
     );
   });
 
-  it("drops soft-deleted calendar tasks from the assignable timeline task list", async () => {
+  it("drops inactive analysis tasks from the assignable timeline task list", async () => {
     resetTaskCatalogState([
-      makeAnalysisTask({ id: "cal-live", name: "Live", analysisMode: "recurring" }),
+      makeAnalysisTask({ id: "cal-live", name: "Live", analysisMode: "intel_event" }),
       makeAnalysisTask({
         id: "cal-deleted",
         name: "Soft deleted",
-        analysisMode: "recurring",
+        analysisMode: "intel_event",
         isActive: false,
       }),
     ]);

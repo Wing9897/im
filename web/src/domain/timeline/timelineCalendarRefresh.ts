@@ -7,6 +7,7 @@
 
 export const TIMELINE_CALENDAR_RESOURCE_TYPES = [
   "task",
+  "recurring",
   "user_event",
   "item",
   "item_category",

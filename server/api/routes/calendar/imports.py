@@ -52,7 +52,7 @@ async def commit_import(request: Request, body: CalendarImportCommitBody) -> Cal
     for item in result["results"]:
         if item["action"] == "unchanged":
             continue
-        resource_type = "task" if item["targetType"] == "recurring_task" else "user_event"
+        resource_type = "recurring" if item["targetType"] == "recurring" else "user_event"
         action = "created" if item["action"] == "created" else "updated"
         publish_resource_modified(request, resource_type, item["targetId"], action)
     return CalendarImportCommitResponse.model_validate(result)

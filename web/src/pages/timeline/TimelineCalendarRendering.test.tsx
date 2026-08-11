@@ -29,7 +29,7 @@ type GanttProps = Parameters<typeof TimelineGanttView>[0];
 function makeCalendarEvent(overrides: Partial<ReturnType<typeof makeEvent>> = {}) {
   return makeEvent({
     id: "cal-task1-2025-01-15T09:00:00Z",
-    taskId: "cal-task-1",
+    seriesId: "cal-task-1",
     taskName: "Weekly Standup",
     title: "Weekly Standup",
     body: "Team standup meeting",
@@ -45,7 +45,7 @@ function makeCalendarEvent(overrides: Partial<ReturnType<typeof makeEvent>> = {}
 function makeAllDayCalendarEvent(overrides: Partial<ReturnType<typeof makeEvent>> = {}) {
   return makeEvent({
     id: "cal-task2-2025-01-15T00:00:00Z",
-    taskId: "cal-task-2",
+    seriesId: "cal-task-2",
     taskName: "Company Holiday",
     title: "Company Holiday",
     body: "All day off",

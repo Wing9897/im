@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from server.calendar import rrule as calendar_module
-from server.calendar.rrule import expand_task_occurrences
+from server.calendar.rrule import expand_series_occurrences
 
 
 def test_hhmm_expands_in_system_local_timezone(monkeypatch) -> None:
@@ -15,7 +15,6 @@ def test_hhmm_expands_in_system_local_timezone(monkeypatch) -> None:
     task = {
         "id": "local-cal",
         "name": "本地十點",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY",
         "event_is_all_day": 0,
@@ -27,7 +26,7 @@ def test_hhmm_expands_in_system_local_timezone(monkeypatch) -> None:
     # Window in UTC that covers 2026-07-01 10:00 +08 (= 02:00Z).
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
-    items = expand_task_occurrences(task, range_start, range_end, budget=5)
+    items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
     assert items[0]["endTime"] == "2026-07-01T03:00:00Z"
@@ -42,7 +41,6 @@ def test_finite_rrule_marks_final_occurrence(monkeypatch) -> None:
     task = {
         "id": "count-cal",
         "name": "三次",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY;COUNT=3",
         "event_is_all_day": 0,
@@ -54,7 +52,7 @@ def test_finite_rrule_marks_final_occurrence(monkeypatch) -> None:
     # Anchor is 2000-01-01 — query the first few days so COUNT=3 is in-window.
     range_start = datetime(2000, 1, 1, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2000, 1, 5, 23, 59, tzinfo=timezone.utc)
-    items = expand_task_occurrences(task, range_start, range_end, budget=10)
+    items = expand_series_occurrences(task, range_start, range_end, budget=10)
     assert len(items) == 3
     assert [item["isLastOccurrence"] for item in items] == [False, False, True]
 
@@ -67,7 +65,6 @@ def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:
     task = {
         "id": "iso-cal",
         "name": "ISO",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY",
         "event_is_all_day": 0,
@@ -78,7 +75,7 @@ def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:
     }
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
-    items = expand_task_occurrences(task, range_start, range_end, budget=5)
+    items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
 
@@ -91,7 +88,6 @@ def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
     task = {
         "id": "overnight-cal",
         "name": "夜班",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY",
         "event_is_all_day": 0,
@@ -103,7 +99,7 @@ def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
     }
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
-    items = expand_task_occurrences(task, range_start, range_end, budget=5)
+    items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     # 22:00 +08 = 14:00Z; 06:00 next day +08 = 22:00Z.
     assert items[0]["startTime"] == "2026-07-01T14:00:00Z"
@@ -129,7 +125,6 @@ def test_overnight_imported_and_synthetic_paths_agree(monkeypatch) -> None:
     synthetic = {
         "id": "overnight-parity",
         "name": "夜班",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY",
         "event_is_all_day": 0,
@@ -145,8 +140,8 @@ def test_overnight_imported_and_synthetic_paths_agree(monkeypatch) -> None:
     }
     range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
-    syn_items = expand_task_occurrences(synthetic, range_start, range_end, budget=5)
-    imp_items = expand_task_occurrences(imported, range_start, range_end, budget=5)
+    syn_items = expand_series_occurrences(synthetic, range_start, range_end, budget=5)
+    imp_items = expand_series_occurrences(imported, range_start, range_end, budget=5)
     assert len(syn_items) == 1 and len(imp_items) == 1
     assert syn_items[0]["startTime"] == imp_items[0]["startTime"]
     assert syn_items[0]["endTime"] == imp_items[0]["endTime"]
@@ -165,7 +160,6 @@ def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
     task = {
         "id": "task-1234",
         "name": "1234",
-        "analysis_mode": "recurring",
         "is_active": 1,
         "rrule": "FREQ=DAILY;UNTIL=20270819T235959Z",
         "event_is_all_day": 1,
@@ -181,7 +175,7 @@ def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
     # August 2026 in UTC+8 (month window used by the timeline month grid).
     range_start = datetime(2026, 7, 31, 16, 0, 0, tzinfo=timezone.utc)
     range_end = datetime(2026, 8, 31, 15, 59, 59, tzinfo=timezone.utc)
-    items = expand_task_occurrences(task, range_start, range_end, budget=100)
+    items = expand_series_occurrences(task, range_start, range_end, budget=100)
     assert len(items) >= 28
     assert items[0]["startTime"] == "2026-07-31T16:00:00Z"
     assert items[0]["isAllDay"] is True

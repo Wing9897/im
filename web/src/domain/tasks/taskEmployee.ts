@@ -1,7 +1,6 @@
 /**
  * Task-type identity aligned 1:1 with analysis_mode enum token.
- * `recurring` is a calendar task type (no AI avatar); other modes may show AI
- * staff avatars, but task-type labels use `tasks.employees.*.name` (not aiStaff titles).
+ * Task-type labels use `tasks.employees.*.name` (not AI staff titles).
  *
  * `TaskEmployeeId` is now a direct alias of `AnalysisMode` — the mapping functions
  * are kept as an abstraction boundary so call sites stay stable if the two diverge.
@@ -19,14 +18,12 @@ export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
 ] as const;
 
 const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
-  recurring: "recurring",
   intel_event: "intel_event",
   leaderboard: "leaderboard",
   agent: "agent",
 };
 
 const EMPLOYEE_BY_MODE: Record<AnalysisMode, TaskEmployeeId> = {
-  recurring: "recurring",
   intel_event: "intel_event",
   leaderboard: "leaderboard",
   agent: "agent",
@@ -41,12 +38,11 @@ export function analysisModeForTaskEmployee(employeeId: TaskEmployeeId): Analysi
 }
 
 /** True when the task type uses AI staff (avatar + AI roster). */
-export function taskEmployeeUsesAi(employeeId: TaskEmployeeId): boolean {
-  return employeeId !== "recurring";
+export function taskEmployeeUsesAi(_employeeId: TaskEmployeeId): boolean {
+  return true;
 }
 
-/** AI roster id when the type has an AiStaffAvatar; null for recurring. */
-export function aiStaffIdForTaskEmployee(employeeId: TaskEmployeeId): AiStaffId | null {
-  if (employeeId === "recurring") return null;
+/** AI roster id for a task type. */
+export function aiStaffIdForTaskEmployee(employeeId: TaskEmployeeId): AiStaffId {
   return employeeId;
 }

@@ -28,7 +28,7 @@ from server.wire.serializers import serialize_channel_ref, serialize_task
 ALLOWED_MODES = ALL_ANALYSIS_MODES
 # FE editor presets live in ``ALLOWED_SCHEDULE_PRESETS`` (domain); not on HTTP wire.
 
-# Recurring calendar RRULE lives on PUT /tasks/{id}/schedule (not TaskConfigBody).
+# Recurring calendar RRULE lives on /api/v1/calendar/recurring (not TaskConfigBody).
 # Recurring-only recurrence expanded at query time — never an AI analysis trigger.
 # AI trigger schedules use RRULE-shaped strings (purpose=trigger) for APScheduler
 # only and must never calendar-expand.

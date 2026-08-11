@@ -221,8 +221,8 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
               onDeleteOneOff={(event) => {
                 void linked.deleteLinkedOneOff(event);
               }}
-              onDeleteRecurring={(taskId, title) => {
-                void linked.deleteLinkedRecurring(taskId, title);
+              onDeleteRecurring={(seriesId, title) => {
+                void linked.deleteLinkedRecurring(seriesId, title);
               }}
               onActiveExpiryChange={linked.setActiveLinkedExpiry}
             />

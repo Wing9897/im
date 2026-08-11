@@ -27,7 +27,7 @@ describe("resolveItemCardExpiry", () => {
     });
   });
 
-  it("derives overdue badge from denormalized expiresAt", () => {
+  it("derives overdue badge from expiresAt", () => {
     const expiresAt = isoDaysFrom(today, -6);
     expect(
       resolveItemCardExpiry({ expiresAt, remindBeforeDays: 2 }, today),

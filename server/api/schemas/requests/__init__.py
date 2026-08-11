@@ -15,6 +15,8 @@ from server.api.schemas.requests.calendar import (
     CalendarImportCommitBody,
     CalendarImportInput,
     CalendarImportSelectionBody,
+    RecurringSeriesCreateBody,
+    RecurringSeriesPatchBody,
     TimelineDismissalBody,
     TimelineImportanceBody,
     UserEventCreateBody,
@@ -48,7 +50,7 @@ from server.api.schemas.requests.sources import (
     TelegramQrWaitBody,
 )
 from server.api.schemas.requests.system import AiEngineTestBody, AnalysisPauseBody
-from server.api.schemas.requests.tasks import CreateRecurringTaskBody, TaskConfigBody, TaskScheduleBody
+from server.api.schemas.requests.tasks import TaskConfigBody
 from server.api.schemas.requests.worksets import WorksetCreateBody, WorksetUpdateBody
 
 __all__ = [
@@ -64,7 +66,6 @@ __all__ = [
     "CategoryCreateBody",
     "CategoryUpdateBody",
     "ChangePasswordBody",
-    "CreateRecurringTaskBody",
     "DiscordBotBody",
     "DiscordBotPatchBody",
     "DiscordSubscribeBody",
@@ -85,9 +86,10 @@ __all__ = [
     "RefreshBody",
     "RegisterBody",
     "ResetPasswordBody",
+    "RecurringSeriesCreateBody",
+    "RecurringSeriesPatchBody",
     "RotateSecretsBody",
     "TaskConfigBody",
-    "TaskScheduleBody",
     "Telegram2faBody",
     "TelegramCodeBody",
     "TelegramCredentials",

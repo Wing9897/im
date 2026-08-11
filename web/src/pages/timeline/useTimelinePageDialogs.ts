@@ -17,7 +17,6 @@ import {
   timelineItemImportanceSource,
 } from "../../api/timelineImportance";
 import { useToast } from "../../context/ToastContext";
-import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
 import {
   createTimedRangeOnDay,
@@ -66,7 +65,6 @@ export function useTimelinePageDialogs({
 }: Args) {
   const { t } = useTranslation("timeline");
   const navigate = useNavigate();
-  const { tasks, refreshTasks } = useTaskCatalog();
   const { showToast } = useToast();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -149,9 +147,8 @@ export function useTimelinePageDialogs({
           return;
         }
         const itemId = (values.itemId ?? "").trim() || null;
-        let catalogForRefresh: Awaited<ReturnType<typeof refreshTasks>> | undefined;
         if (dialogMode === "create" && values.kind === "recurring") {
-          const created = await createRecurringTimelineEvent({
+          await createRecurringTimelineEvent({
             title: values.title,
             worksetId,
             isAllDay: values.isAllDay,
@@ -162,12 +159,6 @@ export function useTimelinePageDialogs({
             rrule: values.rrule,
             itemId,
           });
-          // Await the refreshed catalog so the filter plan includes the new
-          // recurring task (workset-only filters otherwise skip calendar fetch).
-          // If catalog refresh fails, stitch the created task into the current
-          // snapshot so the same race does not resurface.
-          catalogForRefresh =
-            (await refreshTasks().catch(() => undefined)) ?? [...tasks, created];
           showToast(t("messages.recurringCreated"), "success");
         } else if (dialogMode === "create") {
           await createUserEvent({
@@ -199,14 +190,14 @@ export function useTimelinePageDialogs({
         setDialogOpen(false);
         setEditingEvent(null);
         setCreateInitial(null);
-        await refreshEvents(catalogForRefresh);
+        await refreshEvents();
       } catch (error) {
         setDialogError(error instanceof Error ? error.message : t("messages.saveFailed"));
       } finally {
         setDialogBusy(false);
       }
     },
-    [dialogMode, editingEvent, refreshEvents, refreshTasks, showToast, t, tasks],
+    [dialogMode, editingEvent, refreshEvents, showToast, t],
   );
 
   const handleDismissTimelineEvent = useCallback((event: TimelineItem) => {

@@ -21,11 +21,12 @@ describe("userEventCalendarKind", () => {
     expect(isPurchaseEffectiveCalendarEvent({ kind: "expires", title: "Purchased" })).toBe(false);
   });
 
-  it("falls back to title presets only when kind is missing", () => {
-    expect(isExpiresCalendarEvent({ title: "到期" })).toBe(true);
-    expect(isExpiresCalendarEvent({ kind: "", title: "Expires" })).toBe(true);
-    expect(isPurchaseEffectiveCalendarEvent({ title: "購入" })).toBe(true);
-    expect(isPurchaseEffectiveCalendarEvent({ kind: null, title: "Effective" })).toBe(true);
+  it("does not infer kind from title presets", () => {
+    expect(isExpiresCalendarEvent({ kind: undefined })).toBe(false);
+    expect(isExpiresCalendarEvent({ kind: "" })).toBe(false);
+    expect(isExpiresCalendarEvent({ kind: null })).toBe(false);
+    expect(isPurchaseEffectiveCalendarEvent({ kind: undefined })).toBe(false);
+    expect(isPurchaseEffectiveCalendarEvent({ kind: null })).toBe(false);
   });
 
   it("maps quick presets and normalizes wire kinds", () => {

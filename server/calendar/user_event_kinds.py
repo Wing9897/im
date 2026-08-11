@@ -1,19 +1,19 @@
 """Special ``user_events.kind`` vocabulary (expires / purchase_effective / normal).
 
 Applies to **item-linked** calendars: timeline ``source=user`` + ``item_id``.
-Not the same as timeline ``source=item`` remind projections (``itemDateKind=remind``
+Not the same as timeline ``source=item_remind`` remind projections (``itemDateKind=remind``
 only; those rows are not ``user_events`` and have no ``kind``).
 
 Calendar hierarchy (timeline ``source`` vs this ``kind``):
-  analysis | recurring → AI / task intel
-  user + no item_id    → general calendar
-  user + item_id       → item-linked; ``kind`` drives expiry cache / finance
-  item                 → remind projection only (≠ item-linked user events)
+  analysis               → AI intel
+  recurring              → calendar RRULE series
+  user + no item_id      → general calendar
+  user + item_id         → item-linked; ``kind`` drives expiry / finance
+  item_remind            → remind projection only (≠ item-linked user events)
 
 Title presets (到期 / Purchased / …) remain UX defaults; authority for expiry
-cache write-through and finance is ``kind``. Stamp 25 added the column and is
-absorbed into the current wipe-only floor (stamp 26); there is no in-place row
-migration — seeds and create payloads must set ``kind``.
+cache write-through and finance is ``kind``. Seeds and create payloads must set
+``kind`` explicitly (no title→kind inference).
 """
 
 from __future__ import annotations
@@ -32,10 +32,10 @@ ALLOWED_USER_EVENT_KINDS = frozenset(
     }
 )
 
-#: Title presets historically used by Items quick-create「到期」.
+#: Title presets historically used by Items quick-create「到期」 (UX only).
 LINKED_EXPIRY_TITLES = frozenset({"到期", "Expires"})
 
-#: Title presets historically used by Items purchase/effective quick-create.
+#: Title presets historically used by Items purchase/effective quick-create (UX only).
 LINKED_PURCHASE_EFFECTIVE_TITLES = frozenset(
     {
         "Purchased",
@@ -45,16 +45,6 @@ LINKED_PURCHASE_EFFECTIVE_TITLES = frozenset(
         "生效",
     }
 )
-
-
-def infer_user_event_kind_from_title(title: str | None) -> str:
-    """Map legacy title presets → kind (seed / docs / one-shot helpers only)."""
-    cleaned = str(title or "").strip()
-    if cleaned in LINKED_EXPIRY_TITLES:
-        return USER_EVENT_KIND_EXPIRES
-    if cleaned in LINKED_PURCHASE_EFFECTIVE_TITLES:
-        return USER_EVENT_KIND_PURCHASE_EFFECTIVE
-    return USER_EVENT_KIND_NORMAL
 
 
 def normalize_user_event_kind(value: Any) -> str:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UserEventResponse(BaseModel):
@@ -42,6 +42,39 @@ class UserEventResponse(BaseModel):
 
 class UserEventsPageResponse(BaseModel):
     items: list[UserEventResponse]
+    totalCount: int
+    hasMore: bool
+
+
+class RecurringSeriesResponse(BaseModel):
+    """Standalone calendar recurring series (not an analysis task)."""
+
+    id: str
+    name: str
+    description: str | None = None
+    rrule: str
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool = False
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    eventTimezone: str | None = None
+    eventStartLocal: str | None = None
+    eventEndLocal: str | None = None
+    eventExdates: list[str] = Field(default_factory=list)
+    eventRdates: list[str] = Field(default_factory=list)
+    icsUid: str | None = None
+    icsSource: str | None = None
+    isActive: bool = True
+    worksetId: str
+    parentTaskId: str | None = None
+    itemId: str | None = None
+    createdAt: str | None = None
+    updatedAt: str | None = None
+
+
+class RecurringSeriesPageResponse(BaseModel):
+    items: list[RecurringSeriesResponse]
     totalCount: int
     hasMore: bool
 
@@ -93,13 +126,13 @@ class TrendingTopicResponse(BaseModel):
 
 
 class TimelineDismissalResponse(BaseModel):
-    source: Literal["analysis", "user", "recurring", "item"]
+    source: Literal["analysis", "user", "recurring", "item_remind"]
     eventId: str
     dismissedAt: str
 
 
 class TimelineImportanceResponse(BaseModel):
-    source: Literal["analysis", "user", "recurring", "item"]
+    source: Literal["analysis", "user", "recurring", "item_remind"]
     eventId: str
     markedAt: str
 
@@ -108,7 +141,8 @@ class CalendarOccurrenceResponse(BaseModel):
     """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."""
 
     id: str
-    taskId: str = ""
+    #: Recurring series id for ``source=recurring``; empty for item DATE projections.
+    seriesId: str = ""
     taskName: str = ""
     title: str
     startTime: str
@@ -122,7 +156,7 @@ class CalendarOccurrenceResponse(BaseModel):
     important: bool = False
     # True when this RRULE occurrence is the final one in a finite series (UNTIL/COUNT).
     isLastOccurrence: bool = False
-    source: Literal["recurring", "item"] = "recurring"
+    source: Literal["recurring", "item_remind"] = "recurring"
     worksetId: str | None = None
     itemId: str | None = None
     itemDateKind: Literal["remind"] | None = None
@@ -142,7 +176,7 @@ class CalendarImportChangeResponse(BaseModel):
 class CalendarImportPreviewItemResponse(BaseModel):
     uid: str
     title: str
-    targetType: Literal["user_event", "recurring_task"]
+    targetType: Literal["user_event", "recurring"]
     action: Literal["create", "update", "unchanged", "unsupported"]
     supported: bool
     existingId: str | None
@@ -169,7 +203,7 @@ class CalendarImportPreviewResponse(BaseModel):
 
 class CalendarImportCommitItemResponse(BaseModel):
     uid: str
-    targetType: Literal["user_event", "recurring_task"]
+    targetType: Literal["user_event", "recurring"]
     targetId: str
     action: Literal["created", "updated", "unchanged"]
 

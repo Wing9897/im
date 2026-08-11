@@ -159,7 +159,7 @@ export function useCalendarImportFlow(): CalendarImportFlow {
       for (const item of committed.results) {
         if (item.action === "unchanged") continue;
         const resourceType =
-          item.targetType === "recurring_task" ? "task" : "user_event";
+          item.targetType === "recurring" ? "recurring" : "user_event";
         if (invalidatedTypes.has(resourceType)) continue;
         invalidatedTypes.add(resourceType);
         emitResourceModified({

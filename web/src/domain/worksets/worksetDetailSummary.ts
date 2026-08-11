@@ -28,7 +28,7 @@ function addLocalDays(d: Date, delta: number): Date {
   return next;
 }
 
-/** ISO window for `listUserEvents({ start, end, worksetId })`. */
+/** ISO window for `listUserEventsPage({ start, end, worksetId })`. */
 export function worksetEventsQueryWindow(now = new Date()): { start: string; end: string } {
   const today = startOfLocalDay(now);
   const start = addLocalDays(today, -WORKSET_EVENTS_LOOKBACK_DAYS);

@@ -1,12 +1,12 @@
 /**
  * Special kinds on ``user_events.kind`` (wire) for **item-linked** calendars
  * (`source=user` + ``itemId``). Distinct from dialog one_off/recurring
- * ``UserEventKind``, and from timeline ``source=item`` remind projections
+ * ``UserEventKind``, and from timeline ``source=item_remind`` remind projections
  * (those are not ``user_events`` and have no ``kind``).
  *
- * Hierarchy: analysis|recurring = AI/task intel; user without itemId = general
- * calendar; user+itemId = item-linked (this vocabulary); source=item = remind
- * projection only. ``kind`` drives expiry cache / finance — not UI-only labels.
+ * Hierarchy: analysis = AI intel; recurring = calendar series; user without
+ * itemId = general calendar; user+itemId = item-linked (this vocabulary);
+ * source=item_remind = remind projection only. ``kind`` drives expiry SoT / finance.
  */
 
 export const USER_EVENT_CALENDAR_KINDS = [
@@ -47,28 +47,18 @@ export function normalizeUserEventCalendarKind(
   return "normal";
 }
 
-/**
- * Authority = kind. Title fallback only when kind is missing (legacy fixtures).
- */
+/** Authority = ``kind`` only (title presets are UX defaults, not behavior). */
 export function isExpiresCalendarEvent(event: {
-  kind?: string | null;
-  title?: string | null;
+  kind: string | null | undefined;
 }): boolean {
-  if (event.kind === "expires") return true;
-  if (event.kind != null && String(event.kind).trim() !== "") return false;
-  return isLinkedExpiryTitle(event.title);
+  return event.kind === "expires";
 }
 
-/**
- * Authority = kind. Title fallback only when kind is missing (legacy fixtures).
- */
+/** Authority = ``kind`` only (title presets are UX defaults, not behavior). */
 export function isPurchaseEffectiveCalendarEvent(event: {
-  kind?: string | null;
-  title?: string | null;
+  kind: string | null | undefined;
 }): boolean {
-  if (event.kind === "purchase_effective") return true;
-  if (event.kind != null && String(event.kind).trim() !== "") return false;
-  return isLinkedPurchaseEffectiveTitle(event.title);
+  return event.kind === "purchase_effective";
 }
 
 export function quickKindToCalendarKind(

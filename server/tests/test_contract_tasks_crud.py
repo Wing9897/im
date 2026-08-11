@@ -12,7 +12,8 @@ from server.tests.contract_tasks_helpers import TASK_KEYS
 async def test_list_tasks(client):
     resp = await client.get("/api/v1/tasks")
     body = resp.json()
-    assert len(body) == 6
+    assert len(body) == 5
+    assert seed.SERIES_CALENDAR not in {task["id"] for task in body}
     for task in body:
         assert_keys(task, TASK_KEYS, "AnalysisTask")
         assert "parentTaskId" in task
@@ -412,12 +413,6 @@ async def test_agent_tick_status_log(app, client):
             analysis_mode="agent",
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
-            rrule=None,
-            event_start_time=None,
-            event_end_time=None,
-            event_is_all_day=0,
-            event_location=None,
-            event_description=None,
             now=now,
             trigger_mode="message_cursor",
             cap_calendar_read=1,

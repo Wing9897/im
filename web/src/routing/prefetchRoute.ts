@@ -2,6 +2,7 @@
 const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/monitor": () => import("../pages/monitor/MonitorPage"),
   "/tasks": () => import("../pages/dashboard/DashboardViewer"),
+  "/schedule": () => import("../pages/schedule/SchedulePage"),
   "/leaderboard": () => import("../pages/leaderboard/LeaderboardPage"),
   "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
   "/timeline": () => import("../pages/timeline/TimelinePage"),
@@ -39,6 +40,16 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   return undefined;
 }
 
+function resolveSchedulePrefetch(path: string): (() => Promise<unknown>) | undefined {
+  if (/\/schedule\/recurring\/[^/]+\/edit$/.test(path)) {
+    return () => import("../pages/schedule/RecurringSeriesEditor");
+  }
+  if (path.startsWith("/schedule")) {
+    return ROUTE_PREFETCHERS["/schedule"];
+  }
+  return undefined;
+}
+
 function resolveItemsPrefetch(path: string): (() => Promise<unknown>) | undefined {
   if (path === "/items/finance") {
     return () => import("../pages/items/finance/ItemsFinancePage");
@@ -60,6 +71,7 @@ export function prefetchRoute(to: string): void {
   const path = to.split("?")[0] ?? to;
   const loader =
     ROUTE_PREFETCHERS[path] ??
+    resolveSchedulePrefetch(path) ??
     resolveTasksPrefetch(path) ??
     resolveItemsPrefetch(path) ??
     (path.startsWith("/ai")

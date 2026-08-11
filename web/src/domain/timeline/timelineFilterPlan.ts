@@ -108,10 +108,7 @@ export function resolveTimelineFilterPlan(
     const mode = task.analysisMode;
     const caps = getAnalysisModeCapabilities(mode);
     if (!caps) continue;
-    if (caps.pipeline === "rrule_expand") {
-      recurringTaskIds.push(id);
-      fetchUserForTagged = true;
-    } else if (taskWritesAnalysisEvents(task)) {
+    if (taskWritesAnalysisEvents(task)) {
       analysisTaskIds.push(id);
       fetchUserForTagged = true;
     } else if (mode === "agent" && Boolean(task.outputCalendar)) {
@@ -129,13 +126,18 @@ export function resolveTimelineFilterPlan(
   // Items ride along with selected worksets (no separate items bucket).
   const fetchItems = selectedWorksetIds.length > 0;
 
+  const fetchRecurringForWorkset = selectedWorksetIds.length > 0;
   return {
     fetchAnalysis: analysisTaskIds.length > 0,
-    fetchCalendar: recurringTaskIds.length > 0,
+    fetchCalendar: fetchRecurringForWorkset || recurringTaskIds.length > 0,
     fetchUserEvents,
     fetchItems,
     analysisTaskIds: analysisTaskIds.length > 0 ? analysisTaskIds : [],
-    recurringTaskIds: recurringTaskIds.length > 0 ? recurringTaskIds : [],
+    recurringTaskIds: fetchRecurringForWorkset
+      ? null
+      : recurringTaskIds.length > 0
+        ? recurringTaskIds
+        : [],
     selectedRealTaskIds,
     explicitTaskIds,
     selectedWorksetIds,

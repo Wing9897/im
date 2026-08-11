@@ -16,11 +16,14 @@ export type AnalysisEvent = Omit<
   taskName: string | null;
   /**
    * Timeline source discriminator (not ``user_events.kind``):
-   * - analysis | recurring → AI / task intel
+   * - analysis → AI / task intel
+   * - recurring → calendar RRULE series (``seriesId``; not an analysis task)
    * - user (no itemId) → general calendar; user + itemId → item-linked calendar
-   * - item → remind DATE projection only (≠ item-linked user_events)
+   * - item_remind → remind DATE projection only (≠ item-linked user_events)
    */
-  source?: "analysis" | "recurring" | "user" | "item";
+  source?: "analysis" | "recurring" | "user" | "item_remind";
+  /** Present when ``source === "recurring"``: owning recurring series id. */
+  seriesId?: string | null;
   /** Frontend-only: indicates an all-day event */
   isAllDay?: boolean;
   /** Original calendar timezone identity when supplied by the wire contract. */
@@ -33,7 +36,7 @@ export type AnalysisEvent = Omit<
   dismissed?: boolean;
   /** User/agent 「重要事件」 marker — display with ❗. */
   important?: boolean;
-  /** Present when source === "item": remind projection. */
+  /** Present when source === "item_remind": remind projection. */
   itemDateKind?: "remind";
   /**
    * Present when source === "recurring": true if this is the final occurrence
@@ -41,7 +44,7 @@ export type AnalysisEvent = Omit<
    */
   isLastOccurrence?: boolean;
   /**
-   * Parent trackable item id: inventory projections (`source === "item"`) or
+   * Parent trackable item id: inventory projections (`source === "item_remind"`) or
    * child user calendars (`source === "user"` with item link).
    */
   itemId?: string | null;

@@ -61,7 +61,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
     start = datetime.now(timezone.utc) - timedelta(days=1)
     end = datetime.now(timezone.utc) + timedelta(days=40)
     result = await query_window(app.state.db, start=start, end=end, limit=100)
-    item_rows = [row for row in result["items"] if row.get("source") == "item"]
+    item_rows = [row for row in result["items"] if row.get("source") == "item_remind"]
     ids = {row["id"] for row in item_rows}
     assert f"item:{item_id}:purchased" not in ids
     assert f"item:{item_id}:expires" not in ids
@@ -86,7 +86,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
     remind_day_5 = (today + timedelta(days=10 - 5)).isoformat()
     result2 = await query_window(app.state.db, start=start, end=end, limit=100)
     remind_rows = [
-        row for row in result2["items"] if row.get("source") == "item" and row["id"] == f"item:{item_id}:remind"
+        row for row in result2["items"] if row.get("source") == "item_remind" and row["id"] == f"item:{item_id}:remind"
     ]
     assert len(remind_rows) == 1
     assert remind_rows[0]["startTime"] == f"{remind_day_5}T00:00:00"
@@ -100,7 +100,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
         },
     )
     assert api.status_code == 200
-    api_items = [row for row in api.json() if row.get("source") == "item"]
+    api_items = [row for row in api.json() if row.get("source") == "item_remind"]
 
     assert {row["id"] for row in api_items} >= {
         f"item:{item_id}:remind",
@@ -138,10 +138,10 @@ async def test_item_occurrence_dismiss_source_item(client, app):
 
     dismissed = await client.put(
         "/api/v1/calendar/dismissals",
-        json={"source": "item", "eventId": event_id},
+        json={"source": "item_remind", "eventId": event_id},
     )
     assert dismissed.status_code == 200
-    assert dismissed.json()["source"] == "item"
+    assert dismissed.json()["source"] == "item_remind"
 
     start = datetime.now(timezone.utc) - timedelta(days=1)
     end = datetime.now(timezone.utc) + timedelta(days=40)
@@ -155,12 +155,12 @@ async def test_item_occurrence_dismiss_source_item(client, app):
     )
     assert api.status_code == 200
     row = next(r for r in api.json() if r["id"] == event_id)
-    assert row["source"] == "item"
+    assert row["source"] == "item_remind"
     assert row["dismissed"] is True
 
     restored = await client.delete(
         "/api/v1/calendar/dismissals",
-        params={"source": "item", "eventId": event_id},
+        params={"source": "item_remind", "eventId": event_id},
     )
     assert restored.status_code == 204
 
@@ -208,28 +208,30 @@ async def test_agent_list_expiring_and_create(app, client):
 
 
 @pytest.mark.asyncio
-async def test_agent_list_expiring_reads_denormalized_cache(app):
-    """items.list_expiring reads cache columns (no GET-time reconcile)."""
+async def test_agent_list_expiring_reads_derived_linked_expires(client, app):
+    """items.list_expiring derives expiry from primary linked kind=expires."""
     from server.tests.items_helpers import seed_item_row
     from server.util import new_id
 
     item_id = new_id()
-    title = f"cache-expiring-{item_id[:8]}"
+    title = f"derived-expiring-{item_id[:8]}"
     expires = (date.today() + timedelta(days=3)).isoformat()
-    await seed_item_row(
-        app.state.db,
-        item_id=item_id,
-        title=title,
-        expires_at=expires,
-        remind_before_days=2,
+    await seed_item_row(app.state.db, item_id=item_id, title=title)
+    linked = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "到期",
+            "kind": "expires",
+            "startTime": f"{expires}T00:00:00Z",
+            "isAllDay": True,
+            "itemId": item_id,
+            "remindBeforeDays": 2,
+        },
     )
+    assert linked.status_code == 201
 
     listed = await execute_items_tool(app.state.db, "items.list_expiring", {"days": 14})
     assert any(row["title"] == title for row in listed["items"])
-
-    row = await app.state.db.fetch_one("SELECT expires_at FROM items WHERE id = ?", (item_id,))
-    assert row is not None
-    assert row["expires_at"] == expires
 
 
 @pytest.mark.asyncio
@@ -326,25 +328,19 @@ async def test_linked_purchased_event_does_not_sync_item_cache(client):
 
 
 @pytest.mark.asyncio
-async def test_list_items_reads_cache_without_reconcile(client, app):
-    """GET list does not reconcile; orphan cache remains until a calendar mutation."""
+async def test_list_items_without_linked_expires_has_null_dates(client, app):
+    """GET list derives dates; item with no kind=expires link has null expiry fields."""
     from server.tests.items_helpers import seed_item_row
     from server.util import new_id
 
     item_id = new_id()
-    await seed_item_row(
-        app.state.db,
-        item_id=item_id,
-        title="orphan yogurt",
-        expires_at="2026-08-01",
-        remind_before_days=2,
-    )
+    await seed_item_row(app.state.db, item_id=item_id, title="orphan yogurt")
 
     listed = await client.get("/api/v1/items")
     assert listed.status_code == 200
     row = next(r for r in listed.json() if r["id"] == item_id)
-    assert row["expiresAt"] == "2026-08-01"
-    assert row["remindBeforeDays"] == 2
+    assert row["expiresAt"] is None
+    assert row["remindBeforeDays"] is None
 
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})
     assert linked.status_code == 200
@@ -352,24 +348,18 @@ async def test_list_items_reads_cache_without_reconcile(client, app):
 
 
 @pytest.mark.asyncio
-async def test_get_item_reads_cache_without_reconcile(client, app):
-    """GET /items/{id} reads cache as-is; does not invent or clear without mutation."""
+async def test_get_item_without_linked_expires_has_null_dates(client, app):
+    """GET /items/{id} derives dates; no kind=expires link → null expiry fields."""
     from server.tests.items_helpers import seed_item_row
     from server.util import new_id
 
     item_id = new_id()
-    await seed_item_row(
-        app.state.db,
-        item_id=item_id,
-        title="orphan yogurt get",
-        expires_at="2026-08-01",
-        remind_before_days=2,
-    )
+    await seed_item_row(app.state.db, item_id=item_id, title="orphan yogurt get")
 
     fetched = await client.get(f"/api/v1/items/{item_id}")
     assert fetched.status_code == 200
-    assert fetched.json()["expiresAt"] == "2026-08-01"
-    assert fetched.json()["remindBeforeDays"] == 2
+    assert fetched.json()["expiresAt"] is None
+    assert fetched.json()["remindBeforeDays"] is None
 
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})
     assert linked.status_code == 200
@@ -448,9 +438,6 @@ async def test_multiple_linked_expiry_primary_is_first_created(client, app):
         ("2026-02-01T00:00:00.000Z", second_id),
     )
 
-    from server.items.linked_dates import reconcile_item_linked_dates
-
-    await reconcile_item_linked_dates(app.state.db, item_id)
 
     fetched = await client.get(f"/api/v1/items/{item_id}")
     assert fetched.status_code == 200

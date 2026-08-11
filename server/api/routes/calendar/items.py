@@ -1,7 +1,7 @@
 """Unified calendar occurrence expansion (shared by Timeline / Board / Gantt).
 
 Returns RRULE expansions plus optional trackable-item DATE projections
-(``source=item``) from the same ``item_projection`` path used by agent
+(``source=item_remind``) from the same ``item_projection`` path used by agent
 ``query_window`` — one server projection, no FE dual-track.
 
 Wire shape is ``CalendarOccurrenceResponse`` (Pydantic defaults fill optional
@@ -53,12 +53,12 @@ async def list_calendar_items(
     request: Request,
     range_start: Optional[str] = qalias("rangeStart", default=None),
     range_end: Optional[str] = qalias("rangeEnd", default=None),
-    task_id: Optional[str] = qalias("taskId", default=None),
-    task_ids: Optional[list[str]] = qalias("taskIds", default=None),
+    series_id: Optional[str] = qalias("seriesId", default=None),
+    series_ids: Optional[list[str]] = qalias("seriesIds", default=None),
     include_items: Optional[bool] = qalias(
         "includeItems",
         default=None,
-        description="Include trackable-item remind DATE projections (source=item).",
+        description="Include trackable-item remind DATE projections (source=item_remind).",
     ),
 ) -> list[dict]:
     if not range_start or not range_end:
@@ -75,8 +75,8 @@ async def list_calendar_items(
         db,
         start,
         end,
-        task_id=None if task_ids is not None else task_id,
-        task_ids=task_ids,
+        series_id=None if series_ids is not None else series_id,
+        series_ids=series_ids,
     )
     await attach_dismissed_flag(db, source="recurring", items=occurrences)
     await attach_important_flag(db, source="recurring", items=occurrences)
@@ -90,7 +90,7 @@ async def list_calendar_items(
             range_end=end,
             workset_id=None,
         )
-        await attach_dismissed_flag(db, source="item", items=item_rows)
-        await attach_important_flag(db, source="item", items=item_rows)
-        rows.extend(_occurrence_wire(row, source="item") for row in item_rows)
+        await attach_dismissed_flag(db, source="item_remind", items=item_rows)
+        await attach_important_flag(db, source="item_remind", items=item_rows)
+        rows.extend(_occurrence_wire(row, source="item_remind") for row in item_rows)
     return rows

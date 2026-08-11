@@ -14,12 +14,12 @@ async def test_dismiss_restore_publishes_resource_modified(client, app) -> None:
     try:
         created = await client.put(
             "/api/v1/calendar/dismissals",
-            json={"source": "item", "eventId": "item-occ-1"},
+            json={"source": "item_remind", "eventId": "item-occ-1"},
         )
         assert created.status_code == 200
         restored = await client.delete(
             "/api/v1/calendar/dismissals",
-            params={"source": "item", "eventId": "item-occ-1"},
+            params={"source": "item_remind", "eventId": "item-occ-1"},
         )
         assert restored.status_code == 204
         events = [queue.get_nowait() for _ in range(2)]

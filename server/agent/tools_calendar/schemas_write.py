@@ -12,7 +12,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "(generic timeline event) — never expires or purchase_effective, and "
             "never amount/direction. Special linked-calendar kinds are Items UI only. "
             "For recurring schedules (每週三／daily／monthly), use "
-            "calendar.create_recurring_task instead. "
+            "calendar.create_recurring_series instead. "
             "Optional worksetId attaches ownership to a workset (builtin __user__ = 一般). "
             "Optional taskId keeps analysis-task provenance only. "
             "Confirm title and startTime with the user "
@@ -41,7 +41,10 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "taskId": {
                     "type": "string",
-                    "description": ("Optional analysis-task provenance (event/recurring/agent); omit when unassigned"),
+                    "description": (
+                        "Optional analysis-task provenance (intel_event / agent); "
+                        "omit when unassigned"
+                    ),
                 },
             },
             "required": ["title", "startTime"],
@@ -49,13 +52,13 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "calendar.create_recurring_task",
+        "name": "calendar.create_recurring_series",
         "description": (
-            "Create a NEW recurring task with RRULE so recurring occurrences appear "
+            "Create a NEW standalone recurring calendar series so occurrences appear "
             "on the timeline (e.g. 每週三 10:00 → rrule=FREQ=WEEKLY;BYDAY=WE, "
-            "eventStartTime=10:00). Hard-locked to analysisMode=recurring: never creates "
-            "leaderboard/event/AI analysis tasks. To change or remove an existing "
-            "recurring task use calendar.update_recurring_task / delete_recurring_task. "
+            "eventStartTime=10:00). This never creates an analysis task. To change or "
+            "hard-delete an existing series use calendar.update_recurring_series / "
+            "delete_recurring_series. "
             "Confirm name, recurrence, and clock time with the user before calling."
         ),
         "parameters": {
@@ -63,7 +66,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "Task / occurrence title (alias: title)",
+                    "description": "Series / occurrence title (alias: title)",
                 },
                 "rrule": {
                     "type": "string",
@@ -100,22 +103,21 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "calendar.update_recurring_task",
+        "name": "calendar.update_recurring_series",
         "description": (
-            "Update an EXISTING analysisMode=recurring task (name, rrule, clock times, "
-            "location, description, isActive). Refuses leaderboard/event/AI tasks. "
-            "For deactivate/soft-delete prefer calendar.delete_recurring_task; use isActive "
-            "mainly to re-activate (true). Confirm changes with the user. Prefer "
-            "calendar.list_calendars to resolve id."
+            "Update an EXISTING standalone recurring series (name, rrule, clock times, "
+            "location, description, isActive). Analysis tasks are outside this tool. "
+            "Use isActive=false to pause without deleting. Confirm changes with the user. Prefer "
+            "calendar.list_calendars (includeInactive=true when resuming a paused series) to resolve id."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "Calendar task id (aliases: taskId)",
+                    "description": "Recurring series id (aliases: seriesId)",
                 },
-                "name": {"type": "string", "description": "Task / occurrence title"},
+                "name": {"type": "string", "description": "Series / occurrence title"},
                 "title": {"type": "string", "description": "Alias of name"},
                 "rrule": {
                     "type": "string",
@@ -133,11 +135,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "body": {"type": "string"},
                 "isActive": {
                     "type": "boolean",
-                    "description": (
-                        "Prefer true to re-activate a soft-deleted series. "
-                        "For deactivate prefer calendar.delete_recurring_task "
-                        "(false here is equivalent but not preferred)."
-                    ),
+                    "description": "Set false to pause the series, or true to reactivate it.",
                 },
             },
             "required": ["id"],
@@ -145,20 +143,18 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         },
     },
     {
-        "name": "calendar.delete_recurring_task",
+        "name": "calendar.delete_recurring_series",
         "description": (
-            "Preferred way to deactivate/soft-delete an analysisMode=recurring task "
-            "(sets isActive=false; hides the RRULE series; row kept). Prefer this over "
-            "update_recurring_task(isActive=false). Re-activate later via "
-            "update_recurring_task with isActive=true. Refuses other task modes. "
-            "Confirm before deactivating."
+            "Hard-delete a standalone recurring series and its occurrence markers. "
+            "Use update_recurring_series(isActive=false) to pause without deleting. "
+            "Confirm before deleting."
         ),
         "parameters": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "string",
-                    "description": "Calendar task id (aliases: taskId)",
+                    "description": "Recurring series id (aliases: seriesId)",
                 },
             },
             "required": ["id"],
@@ -184,7 +180,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": (
                         "Optional analysis-task provenance "
-                        "(event/recurring/agent); empty string clears provenance. "
+                        "(intel_event / agent); empty string clears provenance. "
                         "Never pass __user__ (that is a workset id)."
                     ),
                 },

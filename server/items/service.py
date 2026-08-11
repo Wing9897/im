@@ -168,7 +168,7 @@ async def create_item(
     quantity: Any = None,
     unit: Any = None,
 ) -> dict[str, Any]:
-    """Create an item. Date cache columns stay NULL until linked calendars write through."""
+    """Create an item. Expiry is derived from linked ``kind=expires`` calendars on read."""
     clean_title = require_title(title)
     clean_workset = await _require_workset(db, normalize_workset_id_wire(workset_id))
     clean_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
@@ -186,8 +186,6 @@ async def create_item(
             title=clean_title,
             category_id=clean_category,
             workset_id=clean_workset,
-            expires_at=None,
-            remind_before_days=None,
             notes=clean_notes,
             status=clean_status,
             emoji=clean_emoji,
@@ -213,7 +211,7 @@ async def patch_item(
     quantity: Any = _UNSET,
     unit: Any = _UNSET,
 ) -> dict[str, Any]:
-    """Patch non-date fields. Date cache is write-through from linked calendar mutations only."""
+    """Patch non-date fields. Expiry wire fields are derived from linked calendars."""
     existing = await fetch_item_row(db, item_id)
     if existing is None:
         raise ItemValidationError("item not found")
@@ -230,14 +228,6 @@ async def patch_item(
         next_category = prev_category
     else:
         next_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
-    # Preserve denormalized date cache (SoT remains linked calendars).
-    next_expires = existing.get("expires_at")
-    next_remind = existing.get("remind_before_days")
-    if next_remind is not None:
-        try:
-            next_remind = int(next_remind)
-        except (TypeError, ValueError):
-            next_remind = None
     next_notes = normalize_notes(notes) if notes is not _UNSET else str(existing.get("notes") or "")
     next_status = normalize_status(status) if status is not _UNSET else str(existing.get("status") or "active")
     if emoji is _UNSET:
@@ -265,8 +255,6 @@ async def patch_item(
             title=next_title,
             category_id=next_category,
             workset_id=next_workset,
-            expires_at=next_expires if isinstance(next_expires, str) or next_expires is None else str(next_expires),
-            remind_before_days=next_remind,
             notes=next_notes,
             status=next_status,
             emoji=str(next_emoji) if next_emoji else None,

@@ -93,18 +93,13 @@ export function applyConfigToFormState(
 /**
  * Builds the TaskConfig payload sent to create/update APIs.
  *
- * This is the mode boundary for recurring-only fields: analysis payloads are
- * built without RRULE/event keys even when stale recurring values remain in the
- * form state after a mode switch. Calendar payloads retain the existing
- * camelCase wire names for recurrence and event presentation fields.
+ * Calendar recurring fields are not part of task persistence.
  */
 export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
   // Write path SoT: only scheduleRrule. Presets stay in form state for UX.
   const scheduleRrule =
-    formState.analysisMode === "recurring"
-      ? null
-      : formState.scheduleRrule?.trim() ||
-        presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+    formState.scheduleRrule?.trim() ||
+    presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
   const commonConfig = {
     name: formState.name,
     description: formState.description || null,
@@ -115,16 +110,6 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     TaskConfig,
     "name" | "description" | "analysisMode" | "scheduleRrule" | "worksetId"
   >;
-
-  if (formState.analysisMode === "recurring") {
-    return {
-      ...commonConfig,
-      promptTemplate: "",
-      channelIds: [],
-      // Server also forces calendar → 1; keep client honest for round-trips.
-      includeInTimeline: true,
-    };
-  }
 
   const messageGate =
     formState.analysisMode === "agent" &&

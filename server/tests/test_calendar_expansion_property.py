@@ -17,7 +17,7 @@ from server.calendar.occurrence_span import roll_end_if_overnight
 from server.calendar.rrule import (
     MAX_OCCURRENCES,
     expand_calendar_occurrences,
-    expand_task_occurrences,
+    expand_series_occurrences,
     validate_rrule,
 )
 from server.tests.property_strategies import MIN_PROPERTY_EXAMPLES, property_trace, utc_windows, valid_rrules
@@ -28,7 +28,7 @@ _TIME_RE = re.compile(r"(\d{1,2}):(\d{2})")
 CALENDAR_OCCURRENCE_KEYS = frozenset(
     {
         "id",
-        "taskId",
+        "seriesId",
         "taskName",
         "title",
         "startTime",
@@ -37,6 +37,7 @@ CALENDAR_OCCURRENCE_KEYS = frozenset(
         "location",
         "description",
         "rrule",
+        "worksetId",
         "itemId",
         "isLastOccurrence",
     }
@@ -66,7 +67,6 @@ def _recurring_task(
     return {
         "id": task_id,
         "name": f"Recurring {task_id}",
-        "analysis_mode": "recurring",
         "is_active": is_active,
         "rrule": rule,
         "event_is_all_day": all_day,
@@ -165,7 +165,7 @@ def _full_reference_task_sequence(
         result.append(
             {
                 "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
-                "taskId": task_id,
+                "seriesId": task_id,
                 "taskName": task_name,
                 "title": task_name,
                 "startTime": _reference_iso_z(start_dt),
@@ -174,6 +174,7 @@ def _full_reference_task_sequence(
                 "location": task.get("event_location") or None,
                 "description": task.get("event_description") or None,
                 "rrule": rule,
+                "worksetId": task.get("workset_id") or None,
                 "itemId": item_id,
                 "isLastOccurrence": recurrence.after(candidate) is None,
             }
@@ -193,7 +194,7 @@ def _reference_calendar_occurrences(
         if remaining <= 0:
             break
         result.extend(_full_reference_task_sequence(task, range_start, range_end)[:remaining])
-    return sorted(result, key=lambda item: (item["startTime"], item["taskId"]))
+    return sorted(result, key=lambda item: (item["startTime"], item["seriesId"]))
 
 
 @st.composite
@@ -229,12 +230,12 @@ def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     tasks, (range_start, range_end) = case
     for task in tasks:
         validate_rrule(task["rrule"])
-        assert task["analysis_mode"] == "recurring" and task["is_active"] == 1
+        assert task["is_active"] == 1
 
     occurrences = expand_calendar_occurrences(tasks, range_start, range_end)
     starts = [datetime.fromisoformat(item["startTime"].replace("Z", "+00:00")) for item in occurrences]
     assert all(range_start <= start <= range_end for start in starts)
-    assert occurrences == sorted(occurrences, key=lambda item: (item["startTime"], item["taskId"]))
+    assert occurrences == sorted(occurrences, key=lambda item: (item["startTime"], item["seriesId"]))
     assert len(occurrences) <= MAX_OCCURRENCES == 1000
 
     hour, minute = boundary_time
@@ -256,8 +257,8 @@ def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     cap_start = datetime(2000, 1, 1, tzinfo=local_tz)
     capped = expand_calendar_occurrences(cap_tasks, cap_start, cap_start + timedelta(days=366))
     assert len(capped) == MAX_OCCURRENCES
-    assert {item["taskId"] for item in capped} == {"cap-a", "cap-b", "cap-c"}
-    assert capped == sorted(capped, key=lambda item: (item["startTime"], item["taskId"]))
+    assert {item["seriesId"] for item in capped} == {"cap-a", "cap-b", "cap-c"}
+    assert capped == sorted(capped, key=lambda item: (item["startTime"], item["seriesId"]))
 
 
 def test_occurrence_id_is_stable_across_overlapping_query_windows():
@@ -265,13 +266,13 @@ def test_occurrence_id_is_stable_across_overlapping_query_windows():
     task = _recurring_task("stable-series", "FREQ=DAILY", 9, 30)
     shared_start = datetime(2026, 7, 15, 9, 30, tzinfo=local_tz).astimezone(timezone.utc)
 
-    wider = expand_task_occurrences(
+    wider = expand_series_occurrences(
         task,
         datetime(2026, 7, 1, tzinfo=local_tz),
         datetime(2026, 7, 31, 23, 59, tzinfo=local_tz),
         MAX_OCCURRENCES,
     )
-    narrower = expand_task_occurrences(
+    narrower = expand_series_occurrences(
         task,
         datetime(2026, 7, 10, tzinfo=local_tz),
         datetime(2026, 7, 20, 23, 59, tzinfo=local_tz),
@@ -342,7 +343,7 @@ def test_property_5_preserves_legacy_calendar_semantics_when_sequence_fits_budge
     reference = _full_reference_task_sequence(task, range_start, range_end)
     assert len(reference) == complete_count <= budget
 
-    actual = expand_task_occurrences(task, range_start, range_end, budget)
+    actual = expand_series_occurrences(task, range_start, range_end, budget)
     assert actual == reference
     assert actual[0]["startTime"] == _reference_iso_z(range_start)
     assert actual[-1]["startTime"] == _reference_iso_z(range_end)
@@ -355,7 +356,7 @@ def test_property_5_preserves_legacy_calendar_semantics_when_sequence_fits_budge
     mixed_reference = _reference_calendar_occurrences(mixed_tasks, range_start, range_end)
     mixed_actual = expand_calendar_occurrences(mixed_tasks, range_start, range_end)
     assert mixed_actual == mixed_reference == reference
-    assert {item["taskId"] for item in mixed_actual} == {task["id"]}
+    assert {item["seriesId"] for item in mixed_actual} == {task["id"]}
 
 
 @st.composite
@@ -393,7 +394,7 @@ def test_property_6_preserves_shared_allocation_final_order_and_exact_contract(c
 
     assert actual == expected
     assert len(actual) == MAX_OCCURRENCES
-    assert actual == sorted(actual, key=lambda item: (item["startTime"], item["taskId"]))
+    assert actual == sorted(actual, key=lambda item: (item["startTime"], item["seriesId"]))
     assert all(frozenset(item) == CALENDAR_OCCURRENCE_KEYS for item in actual)
 
     expected_allocations = {
@@ -401,7 +402,7 @@ def test_property_6_preserves_shared_allocation_final_order_and_exact_contract(c
         tasks[1]["id"]: counts[1],
         tasks[2]["id"]: MAX_OCCURRENCES - counts[0] - counts[1],
     }
-    assert Counter(item["taskId"] for item in actual) == Counter(expected_allocations)
+    assert Counter(item["seriesId"] for item in actual) == Counter(expected_allocations)
 
 
 class _ObservedRecurrence:
@@ -445,7 +446,7 @@ def _observe_task_expansion(
     with pytest.MonkeyPatch.context() as monkeypatch:
         monkeypatch.setattr(calendar_module.du_rrule, "rrulestr", observed_rrulestr)
         monkeypatch.setattr(calendar_module, "_iso_z", observed_iso_z)
-        actual = calendar_module.expand_task_occurrences(task, range_start, range_end, budget)
+        actual = calendar_module.expand_series_occurrences(task, range_start, range_end, budget)
 
     assert observation["iso_calls"] % 2 == 0
     return actual, observation["candidates"], observation["iso_calls"] // 2

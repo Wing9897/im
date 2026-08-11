@@ -12,8 +12,8 @@ import {
   createItemFormRenderer,
   createUserEvent,
   deleteUserEvent,
-  listTasks,
-  listUserEvents,
+  listRecurringSeries,
+  listUserEventsPage,
   makeItem,
   resetItemFormTestMocks,
   showToast,
@@ -68,7 +68,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("shows linked-calendars section and opens in-place create when editing", async () => {
-    listUserEvents.mockResolvedValue([
+    listUserEventsPage.mockResolvedValue({ items: [
       {
         id: "ue-1",
         title: "Passport renew",
@@ -87,35 +87,28 @@ describe("ItemForm linked calendars", () => {
         createdAt: "",
         updatedAt: "",
       },
-    ]);
-    listTasks.mockResolvedValue([
-      {
+    ], totalCount: 0, hasMore: false });
+    listRecurringSeries.mockResolvedValue({
+      items: [{
         id: "rs-1",
         name: "Weekly check",
         description: null,
-        promptTemplate: "",
-        analysisMode: "recurring",
-        analysisTimeRange: "all",
-        version: 1,
+        rrule: "FREQ=WEEKLY;BYDAY=MO",
         isActive: true,
-        channelIds: [],
-        scheduleRrule: "FREQ=WEEKLY;BYDAY=MO",
-        includeInTimeline: true,
         parentTaskId: null,
         worksetId: SYSTEM_WORKSET_ID,
         itemId: "item-42",
         createdAt: "2026-08-01T00:00:00Z",
         updatedAt: "2026-08-01T00:00:00Z",
-      },
-    ]);
+      }],
+      totalCount: 1,
+      hasMore: false,
+    });
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
-    expect(listUserEvents).toHaveBeenCalledWith({ itemId: "item-42" });
-    expect(listTasks).toHaveBeenCalledWith({
-      itemId: "item-42",
-      analysisMode: "recurring",
-    });
+    expect(listUserEventsPage).toHaveBeenCalledWith({ itemId: "item-42" });
+    expect(listRecurringSeries).toHaveBeenCalledWith({ itemId: "item-42" });
     expect(document.querySelector('[data-testid="item-form-linked-calendars"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="item-form-linked-calendar-grid"]')).toBeTruthy();
     expect(document.body.textContent).toContain("Passport renew");
@@ -130,7 +123,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("opens edit dialog when clicking a one-off linked calendar row", async () => {
-    listUserEvents.mockResolvedValue([
+    listUserEventsPage.mockResolvedValue({ items: [
       {
         id: "ue-1",
         title: "Passport renew",
@@ -150,7 +143,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
@@ -181,7 +174,7 @@ describe("ItemForm linked calendars", () => {
       '[data-testid="item-form-add-linked-calendar"]',
     ) as HTMLButtonElement | null;
     expect(addCal!.disabled).toBe(true);
-    expect(listUserEvents).not.toHaveBeenCalled();
+    expect(listUserEventsPage).not.toHaveBeenCalled();
   });
 
   it("hides create hint after title is filled (auto-save needs no essay)", async () => {
@@ -224,7 +217,7 @@ describe("ItemForm linked calendars", () => {
       { leaveAfterSave: false },
     );
     expect(document.querySelector('[data-testid="user-event-dialog"]')).toBeTruthy();
-    expect(listUserEvents).toHaveBeenCalledWith({ itemId: "item-new" });
+    expect(listUserEventsPage).toHaveBeenCalledWith({ itemId: "item-new" });
   });
 
   it("opens create dialog with title + all-day for quick Expires only", async () => {
@@ -309,7 +302,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("shows unified expiry chip with kind badge and no feature callout", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-exp",
         title: "到期",
@@ -330,7 +323,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
 
@@ -343,7 +336,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("marks primary expiry when multiple expires exist", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-exp-1",
         title: "到期",
@@ -384,7 +377,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "2026-02-01T00:00:00Z",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
 
@@ -400,7 +393,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("shows purchase direction badge on purchase_effective chips", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-buy",
         title: "購入",
@@ -423,7 +416,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
@@ -433,7 +426,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("keeps expires badge when linked expiry title is customized", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-exp-renamed",
         title: "保修到期",
@@ -454,7 +447,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42", expiresAt: "2026-08-01" }) });
 
@@ -463,7 +456,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("does not treat normal events titled 到期 as expiry chips", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-normal-expiry-title",
         title: "到期",
@@ -484,7 +477,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 
@@ -493,7 +486,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("soft-deletes a linked one-off calendar after confirm", async () => {
-    listUserEvents.mockResolvedValue([
+    listUserEventsPage.mockResolvedValue({ items: [
       {
         id: "ue-1",
         title: "Passport renew",
@@ -513,7 +506,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
@@ -563,7 +556,7 @@ describe("ItemForm linked calendars", () => {
   });
 
   it("allows creating another expiry calendar when one already exists", async () => {
-    listUserEvents.mockResolvedValueOnce([
+    listUserEventsPage.mockResolvedValueOnce({ items: [
       {
         id: "ue-exp",
         title: "Expires",
@@ -583,7 +576,7 @@ describe("ItemForm linked calendars", () => {
         createdAt: "2026-01-01T00:00:00Z",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
 
     await renderForm({ item: makeItem({ id: "item-42" }) });
 

@@ -1,6 +1,5 @@
 /**
- * Anti-regression: FE new recurring creates must use atomic POST /tasks/recurring.
- * Do not reintroduce shell ``POST /tasks`` + ``PUT /schedule`` for web/timeline creates.
+ * Anti-regression: recurring series use calendar CRUD, never task endpoints.
  */
 
 import { readFileSync } from "node:fs";
@@ -15,41 +14,30 @@ function readSrc(rel: string): string {
 }
 
 describe("recurring create FE contract", () => {
-  it("tasks API posts atomic create only to /tasks/recurring", () => {
-    const source = readSrc("api/tasks.ts");
-    expect(source).toContain('"/api/v1/tasks/recurring"');
-    expect(source).toMatch(
-      /createRecurringTask[\s\S]*?apiClient\.post[\s\S]*?\/api\/v1\/tasks\/recurring/,
-    );
+  it("recurring API owns calendar CRUD", () => {
+    const source = readSrc("api/recurringSeries.ts");
+    expect(source).toContain('"/api/v1/calendar/recurring"');
+    expect(source).toMatch(/createRecurringSeries/);
+    expect(source).toMatch(/patchRecurringSeries/);
+    expect(source).toMatch(/deleteRecurringSeries/);
   });
 
-  it("task editor + timeline create paths call createRecurringTask (not createTask shell)", () => {
+  it("task editor stays analysis-only while timeline uses calendar create", () => {
     const persistence = readSrc("hooks/useTaskPersistence.ts");
-    expect(persistence).toMatch(/createRecurringTask\s*\(/);
-    expect(persistence).toMatch(/formStateToCreateRecurringConfig/);
-    // New recurring must not fall through to createTask.
-    expect(persistence).toMatch(
-      /analysisMode\s*===\s*["']recurring["'][\s\S]*?createRecurringTask/,
-    );
+    expect(persistence).not.toMatch(/createRecurringTask|createRecurringSeries/);
+    expect(persistence).toMatch(/createTask|updateTask/);
+    expect(persistence).not.toMatch(/analysisMode\s*[:=]\s*["']recurring["']/);
 
     const timeline = readSrc("domain/timeline/createRecurringTimelineEvent.ts");
-    expect(timeline).toMatch(/createRecurringTask\s*\(/);
+    expect(timeline).toMatch(/createRecurringSeries\s*\(/);
     expect(timeline).not.toMatch(/createTask\s*\(/);
-    expect(timeline).not.toMatch(/putTaskSchedule\s*\(/);
+
+    const scheduleEditor = readSrc("pages/schedule/RecurringSeriesEditor.tsx");
+    expect(scheduleEditor).toMatch(/patchRecurringSeries|getRecurringSeries/);
   });
 
-  it("CreateRecurringTaskConfig / TaskSchedule* alias OpenAPI schema types", () => {
+  it("removes task recurring and schedule clients", () => {
     const tasksApi = readSrc("api/tasks.ts");
-    expect(tasksApi).toMatch(
-      /CreateRecurringTaskConfig\s*=\s*components\["schemas"\]\["CreateRecurringTaskBody"\]/,
-    );
-
-    const scheduleApi = readSrc("api/taskSchedule.ts");
-    expect(scheduleApi).toMatch(
-      /TaskSchedule\s*=\s*components\["schemas"\]\["TaskScheduleResponse"\]/,
-    );
-    expect(scheduleApi).toMatch(
-      /TaskScheduleConfig\s*=\s*components\["schemas"\]\["TaskScheduleBody"\]/,
-    );
+    expect(tasksApi).not.toMatch(/tasks\/recurring|createRecurringTask/);
   });
 });

@@ -232,45 +232,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/tasks/recurring": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Recurring Task Endpoint
-         * @description Single-shot recurring create (task + schedule). See ``CreateRecurringTaskBody``.
-         */
-        post: operations["create_recurring_task_endpoint_api_v1_tasks_recurring_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/tasks/{task_id}/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Task Schedule */
-        get: operations["get_task_schedule_api_v1_tasks__task_id__schedule_get"];
-        /** Put Task Schedule */
-        put: operations["put_task_schedule_api_v1_tasks__task_id__schedule_put"];
-        post?: never;
-        /** Remove Task Schedule */
-        delete: operations["remove_task_schedule_api_v1_tasks__task_id__schedule_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/tasks/{task_id}/agent-ticks": {
         parameters: {
             query?: never;
@@ -1493,6 +1454,43 @@ export interface paths {
         patch: operations["patch_event_api_v1_calendar_user_events__event_id__patch"];
         trace?: never;
     };
+    "/api/v1/calendar/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Recurring Series */
+        get: operations["list_recurring_series_api_v1_calendar_recurring_get"];
+        put?: never;
+        /** Create Recurring Series Endpoint */
+        post: operations["create_recurring_series_endpoint_api_v1_calendar_recurring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/recurring/{series_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Recurring Series */
+        get: operations["get_recurring_series_api_v1_calendar_recurring__series_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Recurring Series Endpoint */
+        delete: operations["delete_recurring_series_endpoint_api_v1_calendar_recurring__series_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Recurring Series Endpoint */
+        patch: operations["patch_recurring_series_endpoint_api_v1_calendar_recurring__series_id__patch"];
+        trace?: never;
+    };
     "/api/v1/ui-prefs/board": {
         parameters: {
             query?: never;
@@ -2494,7 +2492,7 @@ export interface components {
              * Targettype
              * @enum {string}
              */
-            targetType: "user_event" | "recurring_task";
+            targetType: "user_event" | "recurring";
             /** Targetid */
             targetId: string;
             /**
@@ -2538,7 +2536,7 @@ export interface components {
              * Targettype
              * @enum {string}
              */
-            targetType: "user_event" | "recurring_task";
+            targetType: "user_event" | "recurring";
             /**
              * Action
              * @enum {string}
@@ -2606,10 +2604,10 @@ export interface components {
             /** Id */
             id: string;
             /**
-             * Taskid
+             * Seriesid
              * @default
              */
-            taskId: string;
+            seriesId: string;
             /**
              * Taskname
              * @default
@@ -2657,7 +2655,7 @@ export interface components {
              * @default recurring
              * @enum {string}
              */
-            source: "recurring" | "item";
+            source: "recurring" | "item_remind";
             /** Worksetid */
             worksetId?: string | null;
             /** Itemid */
@@ -2745,40 +2743,6 @@ export interface components {
             sourceId: string | null;
             /** Sourcename */
             sourceName: string | null;
-        };
-        /** CreateRecurringTaskBody */
-        CreateRecurringTaskBody: {
-            /** Name */
-            name: string;
-            /** Rrule */
-            rrule: string;
-            /** Eventstarttime */
-            eventStartTime?: string | null;
-            /** Eventendtime */
-            eventEndTime?: string | null;
-            /**
-             * Eventisallday
-             * @default false
-             */
-            eventIsAllDay: boolean;
-            /** Eventlocation */
-            eventLocation?: string | null;
-            /** Eventdescription */
-            eventDescription?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Worksetid */
-            worksetId?: string | null;
-            /**
-             * Parenttaskid
-             * @description Optional project parent for nested recurring children
-             */
-            parentTaskId?: string | null;
-            /**
-             * Itemid
-             * @description Optional parent trackable item: this recurring calendar belongs to the inventory item (not a sub-event of another event)
-             */
-            itemId?: string | null;
         };
         /** DeviceInfoResponse */
         DeviceInfoResponse: {
@@ -3413,6 +3377,130 @@ export interface components {
             /** Updatedat */
             updatedAt?: string | null;
         };
+        /** RecurringSeriesCreateBody */
+        RecurringSeriesCreateBody: {
+            /** Name */
+            name: string;
+            /** Rrule */
+            rrule: string;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /**
+             * Eventisallday
+             * @default false
+             */
+            eventIsAllDay: boolean;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /**
+             * Parenttaskid
+             * @description Optional agent parent for nested recurring children
+             */
+            parentTaskId?: string | null;
+            /**
+             * Itemid
+             * @description Optional parent trackable item for this recurring calendar
+             */
+            itemId?: string | null;
+        };
+        /** RecurringSeriesPageResponse */
+        RecurringSeriesPageResponse: {
+            /** Items */
+            items: components["schemas"]["RecurringSeriesResponse"][];
+            /** Totalcount */
+            totalCount: number;
+            /** Hasmore */
+            hasMore: boolean;
+        };
+        /** RecurringSeriesPatchBody */
+        RecurringSeriesPatchBody: {
+            /** Name */
+            name?: string | null;
+            /** Rrule */
+            rrule?: string | null;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /** Eventisallday */
+            eventIsAllDay?: boolean | null;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Isactive */
+            isActive?: boolean | null;
+            /** Worksetid */
+            worksetId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
+        };
+        /**
+         * RecurringSeriesResponse
+         * @description Standalone calendar recurring series (not an analysis task).
+         */
+        RecurringSeriesResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description?: string | null;
+            /** Rrule */
+            rrule: string;
+            /** Eventstarttime */
+            eventStartTime?: string | null;
+            /** Eventendtime */
+            eventEndTime?: string | null;
+            /**
+             * Eventisallday
+             * @default false
+             */
+            eventIsAllDay: boolean;
+            /** Eventlocation */
+            eventLocation?: string | null;
+            /** Eventdescription */
+            eventDescription?: string | null;
+            /** Eventtimezone */
+            eventTimezone?: string | null;
+            /** Eventstartlocal */
+            eventStartLocal?: string | null;
+            /** Eventendlocal */
+            eventEndLocal?: string | null;
+            /** Eventexdates */
+            eventExdates?: string[];
+            /** Eventrdates */
+            eventRdates?: string[];
+            /** Icsuid */
+            icsUid?: string | null;
+            /** Icssource */
+            icsSource?: string | null;
+            /**
+             * Isactive
+             * @default true
+             */
+            isActive: boolean;
+            /** Worksetid */
+            worksetId: string;
+            /** Parenttaskid */
+            parentTaskId?: string | null;
+            /** Itemid */
+            itemId?: string | null;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
         /** RefreshAllSourcesResponse */
         RefreshAllSourcesResponse: {
             /** Totalsources */
@@ -3748,7 +3836,7 @@ export interface components {
              */
             promptTemplate: string;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "intel_event" | "recurring" | "agent") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "agent") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3819,7 +3907,7 @@ export interface components {
             /** Schedulerrule */
             scheduleRrule?: string | null;
             /** Analysismode */
-            analysisMode?: ("leaderboard" | "intel_event" | "recurring" | "agent") | null;
+            analysisMode?: ("leaderboard" | "intel_event" | "agent") | null;
             /** Analysistimerange */
             analysisTimeRange?: string | null;
             /** Channelids */
@@ -3864,7 +3952,7 @@ export interface components {
              * Analysismode
              * @enum {string}
              */
-            analysisMode: "leaderboard" | "intel_event" | "recurring" | "agent";
+            analysisMode: "leaderboard" | "intel_event" | "agent";
             /** Analysistimerange */
             analysisTimeRange: string;
             /** Version */
@@ -3947,70 +4035,6 @@ export interface components {
             channelIds?: components["schemas"]["ChannelRefResponse"][] | null;
             /** Deletedbatchcount */
             deletedBatchCount?: number | null;
-        };
-        /** TaskScheduleBody */
-        TaskScheduleBody: {
-            /** Rrule */
-            rrule: string;
-            /** Eventstarttime */
-            eventStartTime?: string | null;
-            /** Eventendtime */
-            eventEndTime?: string | null;
-            /**
-             * Eventisallday
-             * @default false
-             */
-            eventIsAllDay: boolean;
-            /** Eventlocation */
-            eventLocation?: string | null;
-            /** Eventdescription */
-            eventDescription?: string | null;
-            /**
-             * Parenttaskid
-             * @description Optional project parent for nested recurring children
-             */
-            parentTaskId?: string | null;
-        };
-        /**
-         * TaskScheduleResponse
-         * @description Recurring calendar plan for ``analysisMode=recurring`` tasks.
-         */
-        TaskScheduleResponse: {
-            /** Taskid */
-            taskId: string;
-            /** Rrule */
-            rrule: string;
-            /** Eventstarttime */
-            eventStartTime?: string | null;
-            /** Eventendtime */
-            eventEndTime?: string | null;
-            /**
-             * Eventisallday
-             * @default false
-             */
-            eventIsAllDay: boolean;
-            /** Eventlocation */
-            eventLocation?: string | null;
-            /** Eventdescription */
-            eventDescription?: string | null;
-            /** Eventtimezone */
-            eventTimezone?: string | null;
-            /** Eventstartlocal */
-            eventStartLocal?: string | null;
-            /** Eventendlocal */
-            eventEndLocal?: string | null;
-            /** Eventexdates */
-            eventExdates?: string[];
-            /** Eventrdates */
-            eventRdates?: string[];
-            /** Icsuid */
-            icsUid?: string | null;
-            /** Icssource */
-            icsSource?: string | null;
-            /** Parenttaskid */
-            parentTaskId?: string | null;
-            /** Itemid */
-            itemId?: string | null;
         };
         /** Telegram2faBody */
         Telegram2faBody: {
@@ -4102,7 +4126,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "analysis" | "user" | "recurring" | "item";
+            source: "analysis" | "user" | "recurring" | "item_remind";
             /** Eventid */
             eventId: string;
             /** Dismissedat */
@@ -4128,7 +4152,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "analysis" | "user" | "recurring" | "item";
+            source: "analysis" | "user" | "recurring" | "item_remind";
             /** Eventid */
             eventId: string;
             /** Markedat */
@@ -4859,7 +4883,6 @@ export interface operations {
                 topLevelOnly?: boolean | null;
                 analysisMode?: string | null;
                 worksetId?: string | null;
-                itemId?: string | null;
             };
             header?: never;
             path?: never;
@@ -4908,134 +4931,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskResponse"];
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_recurring_task_endpoint_api_v1_tasks_recurring_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRecurringTaskBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_task_schedule_api_v1_tasks__task_id__schedule_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskScheduleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    put_task_schedule_api_v1_tasks__task_id__schedule_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TaskScheduleBody"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TaskScheduleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_task_schedule_api_v1_tasks__task_id__schedule_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7435,9 +7330,9 @@ export interface operations {
             query?: {
                 rangeStart?: string | null;
                 rangeEnd?: string | null;
-                taskId?: string | null;
-                taskIds?: string[] | null;
-                /** @description Include trackable-item remind DATE projections (source=item). */
+                seriesId?: string | null;
+                seriesIds?: string[] | null;
+                /** @description Include trackable-item remind DATE projections (source=item_remind). */
                 includeItems?: boolean | null;
             };
             header?: never;
@@ -7873,6 +7768,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserEventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_recurring_series_api_v1_calendar_recurring_get: {
+        parameters: {
+            query?: {
+                worksetId?: string | null;
+                itemId?: string | null;
+                parentTaskId?: string | null;
+                topLevelOnly?: boolean | null;
+                search?: string | null;
+                limit?: number | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringSeriesPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_recurring_series_endpoint_api_v1_calendar_recurring_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringSeriesCreateBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringSeriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_recurring_series_api_v1_calendar_recurring__series_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringSeriesResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_recurring_series_endpoint_api_v1_calendar_recurring__series_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_recurring_series_endpoint_api_v1_calendar_recurring__series_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                series_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringSeriesPatchBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringSeriesResponse"];
                 };
             };
             /** @description Validation Error */

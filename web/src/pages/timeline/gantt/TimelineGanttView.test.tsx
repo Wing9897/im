@@ -167,11 +167,11 @@ describe("TimelineGanttView", () => {
       expect(rows.length).toBe(3);
     });
 
-    it("merges recurring occurrences with the same taskId into one row with multiple bars", () => {
+    it("merges recurring occurrences with the same seriesId into one row with multiple bars", () => {
       const events = [
         makeEvent({
           id: "meet:0900",
-          taskId: "meet",
+          seriesId: "meet",
           title: "開會",
           source: "recurring",
           startTime: "2025-01-15T09:00:00Z",
@@ -179,7 +179,7 @@ describe("TimelineGanttView", () => {
         }),
         makeEvent({
           id: "meet:1500",
-          taskId: "meet",
+          seriesId: "meet",
           title: "開會",
           source: "recurring",
           startTime: "2025-01-15T15:00:00Z",

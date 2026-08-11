@@ -41,7 +41,7 @@ def _json_list(value: Any) -> list[str]:
 
 
 def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any]:
-    if target_type == "recurring_task":
+    if target_type == "recurring":
         return {
             "title": str(row.get("name") or ""),
             "description": str(row.get("event_description") or ""),
@@ -69,7 +69,7 @@ def _existing_comparable(row: dict[str, Any], target_type: str) -> dict[str, Any
 def _changes(row: dict[str, Any], event: ParsedIcsEvent) -> list[dict[str, Any]]:
     before = _existing_comparable(row, event.target_type)
     after = event.comparable()
-    if event.target_type == "recurring_task":
+    if event.target_type == "recurring":
         after = {
             "title": event.title,
             "description": event.description,
@@ -97,23 +97,24 @@ async def _find_existing(db: Database, source: str, uid: str) -> tuple[str, dict
         "SELECT * FROM user_events WHERE ics_source = ? AND ics_uid = ?",
         (source, uid),
     )
-    task = await db.fetch_one(
-        "SELECT t.*, rs.rrule, rs.dtstart AS event_start_time, rs.dtend AS event_end_time, "
-        "rs.is_all_day AS event_is_all_day, rs.location AS event_location, "
-        "rs.description AS event_description, rs.timezone AS event_timezone, "
-        "rs.timezone_ical AS event_timezone_ical, rs.dtstart AS event_start_local, "
-        "rs.dtend AS event_end_local, rs.exdates_json AS event_exdates_json, "
-        "rs.rdates_json AS event_rdates_json, rs.ics_import_fingerprint "
-        "FROM recurring_schedules rs JOIN analysis_tasks t ON t.id = rs.task_id "
-        "WHERE rs.ics_source = ? AND rs.ics_uid = ?",
+    series = await db.fetch_one(
+        "SELECT id, name, workset_id, is_active, rrule, "
+        "dtstart AS event_start_time, dtend AS event_end_time, "
+        "is_all_day AS event_is_all_day, location AS event_location, "
+        "description AS event_description, timezone AS event_timezone, "
+        "timezone_ical AS event_timezone_ical, dtstart AS event_start_local, "
+        "dtend AS event_end_local, exdates_json AS event_exdates_json, "
+        "rdates_json AS event_rdates_json, ics_import_fingerprint "
+        "FROM recurring_schedules "
+        "WHERE ics_source = ? AND ics_uid = ?",
         (source, uid),
     )
-    if event is not None and task is not None:
+    if event is not None and series is not None:
         raise CalendarImportError(f"Imported event {uid!r} is mapped to more than one target")
     if event is not None:
         return "user_event", event
-    if task is not None:
-        return "recurring_task", task
+    if series is not None:
+        return "recurring", series
     return None
 
 

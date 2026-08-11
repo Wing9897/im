@@ -56,7 +56,7 @@ export function eventListTimeLabel(
 export function eventShowsRemindBadge(
   event: Pick<TimelineItem, "source" | "itemDateKind" | "remindBeforeDays">,
 ): boolean {
-  if (event.source === "item") {
+  if (event.source === "item_remind") {
     return event.itemDateKind === "remind";
   }
   const days = event.remindBeforeDays;
@@ -141,7 +141,7 @@ export type EventListProvenanceKind =
 export function resolveEventListProvenanceKind(
   event: TimelineItem,
 ): EventListProvenanceKind {
-  if (event.source === "item") return "item";
+  if (event.source === "item_remind") return "item";
   if (event.source === "user") {
     switch (event.origin) {
       case "assistant":
@@ -249,7 +249,7 @@ export function eventListCardTitle(
   } = {},
 ): string {
   const base = event.title.trim();
-  if (event.source !== "item") return base;
+  if (event.source !== "item_remind") return base;
 
   const showRemind =
     opts.showRemindBadge ?? eventShowsRemindBadge(event);

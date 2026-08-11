@@ -93,7 +93,7 @@ describe("monthDaySpanIndicators", () => {
   it("does not count item remind markers as ending", () => {
     const item = makeEvent({
       id: "item:milk:remind",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       isAllDay: true,
       startTime: "2025-01-16T00:00:00",
@@ -105,7 +105,7 @@ describe("monthDaySpanIndicators", () => {
         [
           makeEvent({
             id: "item:milk:remind",
-            source: "item",
+            source: "item_remind",
             itemDateKind: "remind",
             isAllDay: true,
             startTime: "2025-01-16T00:00:00",
@@ -149,7 +149,7 @@ describe("monthDaySpanIndicators", () => {
     });
     const remind = makeEvent({
       id: "item:milk:remind",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       isAllDay: true,
       startTime: "2025-01-16T00:00:00",

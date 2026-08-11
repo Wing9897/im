@@ -1,9 +1,6 @@
 import type { AnalysisMode } from "../../types";
 import i18n from "../../i18n";
-import {
-  analysisModeHidesPromptAndChannel,
-  analysisModeShowsRruleFields,
-} from "../../domain/tasks/analysisModeCapabilities";
+import { analysisModeHidesPromptAndChannel } from "../../domain/tasks/analysisModeCapabilities";
 import {
   TASK_EMPLOYEE_ORDER,
   analysisModeForTaskEmployee,
@@ -17,13 +14,11 @@ type TaskFormAnalysisModeMeta = {
   promptLabel: string;
   promptPlaceholder: string;
   promptHint: string;
-  /** When true, the mode uses recurring-task fields instead of analysis fields */
-  isRecurringMode?: boolean;
-  /** Whether this mode hides prompt/channel fields (recurring). */
+  /** Whether this mode hides prompt/channel fields. */
   hidesPromptAndChannel?: boolean;
 };
 
-/** Editor picker order: recurring first, then AI task types. */
+/** Editor picker order: AI task types. */
 export const taskFormAnalysisModeOrder: AnalysisMode[] = TASK_EMPLOYEE_ORDER.map(
   (employeeId) => analysisModeForTaskEmployee(employeeId),
 );
@@ -44,7 +39,6 @@ export function getTaskFormAnalysisModeMeta(
     promptLabel: String(i18n.t(`${prefix}.promptLabel`)),
     promptPlaceholder: String(i18n.t(`${prefix}.promptPlaceholder`)),
     promptHint: String(i18n.t(`${prefix}.promptHint`)),
-    isRecurringMode: analysisModeShowsRruleFields(analysisMode) || undefined,
     hidesPromptAndChannel: analysisModeHidesPromptAndChannel(analysisMode) || undefined,
   };
 }

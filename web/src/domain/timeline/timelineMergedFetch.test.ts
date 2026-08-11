@@ -56,7 +56,7 @@ function makeAnalysis(overrides: Partial<TimelineItem> = {}): TimelineItem {
 function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
   return {
     id: "cal-1:20250115T090000Z",
-    taskId: "cal-1",
+    seriesId: "cal-1",
     taskName: "週會",
     title: "週會",
     startTime: "2025-01-15T09:00:00Z",
@@ -85,7 +85,7 @@ function makeItemOccurrence(
     location: null,
     description: null,
     rrule: "",
-    source: "item",
+    source: "item_remind",
     worksetId: SYSTEM_WORKSET_ID,
     itemId: "i1",
     itemDateKind: "remind",
@@ -111,7 +111,6 @@ describe("mergeTimelineFilterSources", () => {
   const catalog = [
     { id: "evt-1", analysisMode: "intel_event", worksetId: "ws-A" },
     { id: "web-1", analysisMode: "agent", outputAnalysisEvents: true, worksetId: "ws-A" },
-    { id: "cal-1", analysisMode: "recurring", worksetId: "ws-A" },
   ];
 
   it("merges analysis + user + calendar in the all-sources view", () => {
@@ -151,7 +150,7 @@ describe("mergeTimelineFilterSources", () => {
       userEvents: [],
     });
     expect(merged.map((e) => e.id)).toEqual(["web-hit"]);
-    expect(merged.every((e) => e.source !== "item")).toBe(true);
+    expect(merged.every((e) => e.source !== "item_remind")).toBe(true);
   });
 
   it("merges source=item rows from the unified calendar fetch", () => {
@@ -163,7 +162,7 @@ describe("mergeTimelineFilterSources", () => {
       calendarOccurrences: [makeOccurrence(), makeItemOccurrence()],
       userEvents: [],
     });
-    const item = merged.find((e) => e.source === "item");
+    const item = merged.find((e) => e.source === "item_remind");
     expect(item?.id).toBe("item:i1:remind");
     expect(item?.itemId).toBe("i1");
     expect(item?.itemDateKind).toBe("remind");
@@ -184,20 +183,21 @@ describe("mergeTimelineFilterSources", () => {
     ).toEqual([]);
   });
 
-  it("filters calendar rows to selected recurring tasks", () => {
-    const plan = resolveTimelineFilterPlan({ taskIds: ["cal-1"], worksetIds: [] }, catalog);
+  it("filters recurring rows by selected workset", () => {
+    const selection = { taskIds: [] as string[], worksetIds: ["ws-A"] };
+    const plan = resolveTimelineFilterPlan(selection, catalog);
     const merged = mergeTimelineFilterSources({
-      selectedSources: { taskIds: ["cal-1"], worksetIds: [] },
+      selectedSources: selection,
       filterPlan: plan,
       analysisEvents: [],
       calendarOccurrences: [
-        makeOccurrence({ id: "cal-1:a", taskId: "cal-1" }),
-        makeOccurrence({ id: "cal-2:b", taskId: "cal-2" }),
+        makeOccurrence({ id: "cal-1:a", seriesId: "cal-1", worksetId: "ws-A" }),
+        makeOccurrence({ id: "cal-2:b", seriesId: "cal-2", worksetId: "ws-B" }),
       ],
       userEvents: [],
     });
     expect(merged).toHaveLength(1);
-    expect(merged[0].taskId).toBe("cal-1");
+    expect(merged[0].seriesId).toBe("cal-1");
     expect(merged[0].source).toBe("recurring");
   });
 });
@@ -251,7 +251,7 @@ describe("fetchMergedTimelineEvents", () => {
       [],
     );
     expect(plan.fetchItems).toBe(true);
-    expect(plan.fetchCalendar).toBe(false);
+    expect(plan.fetchCalendar).toBe(true);
 
     mockFetchSharedCalendarItems.mockResolvedValue([
       makeItemOccurrence({ dismissed: true }),
@@ -267,10 +267,10 @@ describe("fetchMergedTimelineEvents", () => {
     expect(mockFetchSharedCalendarItems).toHaveBeenCalledWith(
       "2025-01-01T00:00:00.000Z",
       "2025-02-01T00:00:00.000Z",
-      { taskIds: [], includeItems: true },
+      { includeItems: true },
     );
     expect(events).toHaveLength(1);
-    expect(events[0].source).toBe("item");
+    expect(events[0].source).toBe("item_remind");
     expect(events[0].dismissed).toBe(true);
   });
 
@@ -287,33 +287,26 @@ describe("fetchMergedTimelineEvents", () => {
     ).rejects.toThrow("calendar boom");
   });
 
-  it("fetches RRULE occurrences when __user__ workset gains a recurring member", async () => {
-    const before = resolveTimelineFilterPlan(
+  it("fetches standalone recurring occurrences for a selected workset", async () => {
+    const plan = resolveTimelineFilterPlan(
       { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
       [],
     );
-    expect(before.fetchCalendar).toBe(false);
-
-    const afterCatalog = [
-      { id: "rec-new", analysisMode: "recurring", worksetId: SYSTEM_WORKSET_ID },
-    ];
-    const plan = resolveTimelineFilterPlan(
-      { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
-      afterCatalog,
-    );
     expect(plan.fetchCalendar).toBe(true);
-    expect(plan.recurringTaskIds).toEqual(["rec-new"]);
+    expect(plan.recurringTaskIds).toBeNull();
 
     mockFetchSharedCalendarItems.mockResolvedValue([
       makeOccurrence({
         id: "rec-new:20260801T010000Z",
-        taskId: "rec-new",
+        seriesId: "rec-new",
+        worksetId: SYSTEM_WORKSET_ID,
         title: "每日",
         startTime: "2026-08-01T01:00:00Z",
       }),
       makeOccurrence({
         id: "rec-new:20260802T010000Z",
-        taskId: "rec-new",
+        seriesId: "rec-new",
+        worksetId: SYSTEM_WORKSET_ID,
         title: "每日",
         startTime: "2026-08-02T01:00:00Z",
       }),
@@ -329,7 +322,7 @@ describe("fetchMergedTimelineEvents", () => {
     expect(mockFetchSharedCalendarItems).toHaveBeenCalledWith(
       "2026-08-01T00:00:00.000Z",
       "2026-08-31T23:59:59.000Z",
-      { taskIds: ["rec-new"], includeItems: true },
+      { includeItems: true },
     );
     expect(events.filter((e) => e.source === "recurring")).toHaveLength(2);
   });

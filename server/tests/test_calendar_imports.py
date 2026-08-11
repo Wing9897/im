@@ -263,7 +263,7 @@ async def test_preview_commit_uid_upsert_is_stable_and_diffed(client, app) -> No
     assert payload["eventCount"] == 4
     by_uid = {item["uid"]: item for item in payload["items"] if item["supported"]}
     assert by_uid["single-1@example.test"]["action"] == "create"
-    assert by_uid["series-1@example.test"]["targetType"] == "recurring_task"
+    assert by_uid["series-1@example.test"]["targetType"] == "recurring"
     override = next(
         item for item in payload["items"] if item["uid"] == "series-1@example.test" and not item["supported"]
     )
@@ -367,13 +367,13 @@ async def test_imported_rrule_uses_real_anchor_timezone_exdate_and_rdate(client,
             "selections": [{"uid": series["uid"], "fingerprint": series["fingerprint"]}],
         },
     )
-    task_id = committed.json()["results"][0]["targetId"]
+    series_id = committed.json()["results"][0]["targetId"]
 
     window = await query_window(
         app.state.db,
         start="2026-08-01T00:00:00Z",
         end="2026-08-31T23:59:59Z",
-        task_id=task_id,
+        task_id=series_id,
         limit=50,
     )
     starts = [item["startTime"] for item in window["items"] if item["source"] == "recurring"]
@@ -403,12 +403,12 @@ async def test_all_day_until_exdate_and_rdate_keep_calendar_dates(client, app) -
             "selections": [{"uid": item["uid"], "fingerprint": item["fingerprint"]}],
         },
     )
-    task_id = committed.json()["results"][0]["targetId"]
+    series_id = committed.json()["results"][0]["targetId"]
     window = await query_window(
         app.state.db,
         start="2026-08-01T00:00:00Z",
         end="2026-08-05T23:59:59Z",
-        task_id=task_id,
+        task_id=series_id,
         limit=20,
     )
     recurring = [event for event in window["items"] if event["source"] == "recurring"]
@@ -437,15 +437,15 @@ async def test_custom_vtimezone_survives_commit_and_expansion(client, app) -> No
             "selections": [{"uid": item["uid"], "fingerprint": item["fingerprint"]}],
         },
     )
-    task_id = committed.json()["results"][0]["targetId"]
-    row = await app.state.db.fetch_one("SELECT timezone_ical FROM recurring_schedules WHERE task_id = ?", (task_id,))
+    series_id = committed.json()["results"][0]["targetId"]
+    row = await app.state.db.fetch_one("SELECT timezone_ical FROM recurring_schedules WHERE id = ?", (series_id,))
     assert row is not None and "BEGIN:VTIMEZONE" in row["timezone_ical"]
 
     window = await query_window(
         app.state.db,
         start="2026-08-01T00:00:00Z",
         end="2026-08-03T00:00:00Z",
-        task_id=task_id,
+        task_id=series_id,
         limit=20,
     )
     assert [event["startTime"] for event in window["items"]] == [
@@ -478,7 +478,9 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
         params={"start": "2026-08-01T00:00:00Z", "end": "2026-08-31T23:59:59Z"},
     )
     assert user_events.status_code == 200
-    imported_user = next(item for item in user_events.json() if item["id"] == ids["single-1@example.test"])
+    imported_user = next(
+        item for item in user_events.json()["items"] if item["id"] == ids["single-1@example.test"]
+    )
     assert imported_user["origin"] == "ics"
     assert imported_user["icsUid"] == "single-1@example.test"
 
@@ -487,7 +489,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
         params={
             "rangeStart": "2026-08-01T00:00:00Z",
             "rangeEnd": "2026-08-31T23:59:59Z",
-            "taskId": ids["series-1@example.test"],
+            "seriesId": ids["series-1@example.test"],
         },
     )
     assert occurrences.status_code == 200
@@ -509,7 +511,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
     by_source = {item["source"] for item in agent_window["items"]}
     assert {"user", "recurring"} <= by_source
     assert ids["single-1@example.test"] in {item["id"] for item in agent_window["items"]}
-    assert any(item["taskId"] == ids["series-1@example.test"] for item in agent_window["items"])
+    assert any(item.get("seriesId") == ids["series-1@example.test"] for item in agent_window["items"])
 
 
 def test_openapi_exposes_concrete_import_contract(app) -> None:

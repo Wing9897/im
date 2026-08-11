@@ -60,6 +60,7 @@ vi.mock("../../api/timelineDismissals", () => ({
   timelineItemDismissalSource: (source: string | undefined) => {
     if (source === "user") return "user";
     if (source === "recurring") return "recurring";
+    if (source === "item_remind") return "item_remind";
     return "analysis";
   },
 }));
@@ -354,18 +355,7 @@ describe("TimelinePage user-event CRUD", () => {
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
   });
 
-  it("creates a recurring event via the recurring-task API path", async () => {
-    const { taskCatalogState } = await import("../../test/context-mocks");
-    const refreshedCatalog = [
-      {
-        id: "rec-1",
-        name: "Weekly standup",
-        analysisMode: "recurring" as const,
-        worksetId: "__user__",
-      },
-    ];
-    taskCatalogState.refreshTasks.mockResolvedValueOnce(refreshedCatalog as never);
-
+  it("creates a recurring event via the recurring-series API path", async () => {
     await renderPage();
     await flushAction(() => captures.addEvent!());
     const dialog = captures.dialog as CapturedDialog;
@@ -400,8 +390,7 @@ describe("TimelinePage user-event CRUD", () => {
       itemId: null,
     });
     expect(mockCreateUserEvent).not.toHaveBeenCalled();
-    // refreshEvents receives the post-create catalog so workset filters include the new task
-    expect(mockRefreshEvents).toHaveBeenCalledWith(refreshedCatalog);
+    expect(mockRefreshEvents).toHaveBeenCalledWith();
     expect(mockShowToast).toHaveBeenCalledWith(
       expect.stringMatching(/週期|周期|Recurring/i),
       "success",

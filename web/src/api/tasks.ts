@@ -1,7 +1,6 @@
 /** REST API client functions for analysis task CRUD operations. */
 
 import { apiClient } from "./client";
-import type { components } from "./generated/schema";
 import type {
   AnalysisTask,
   TaskConfig,
@@ -15,22 +14,16 @@ import type {
 
 export type { TaskDraftPayload };
 
-/** Atomic recurring create body - OpenAPI ``CreateRecurringTaskBody``. */
-export type CreateRecurringTaskConfig = components["schemas"]["CreateRecurringTaskBody"];
-
 /** Fetches all analysis tasks from the backend. */
 export function listTasks(opts?: {
   topLevelOnly?: boolean;
   analysisMode?: string;
   worksetId?: string;
-  /** Filter by ``recurring_schedules.item_id`` (empty string = unbound only). */
-  itemId?: string;
 }): Promise<AnalysisTask[]> {
   const query: Record<string, string> = {};
   if (opts?.topLevelOnly) query.topLevelOnly = "true";
   if (opts?.analysisMode) query.analysisMode = opts.analysisMode;
   if (opts?.worksetId !== undefined) query.worksetId = opts.worksetId;
-  if (opts?.itemId !== undefined) query.itemId = opts.itemId;
   return Object.keys(query).length > 0
     ? apiClient.get<AnalysisTask[]>("/api/v1/tasks", query)
     : apiClient.get<AnalysisTask[]>("/api/v1/tasks");
@@ -39,13 +32,6 @@ export function listTasks(opts?: {
 /** Creates a new analysis task with the given configuration. */
 export function createTask(task: TaskConfig): Promise<TaskMutationResult> {
   return apiClient.post<TaskMutationResult>("/api/v1/tasks", task);
-}
-
-/** Atomic recurring create: task + schedule in one request (timeline / web). */
-export function createRecurringTask(
-  body: CreateRecurringTaskConfig,
-): Promise<TaskMutationResult> {
-  return apiClient.post<TaskMutationResult>("/api/v1/tasks/recurring", body);
 }
 
 /** Updates an existing analysis task's configuration. */

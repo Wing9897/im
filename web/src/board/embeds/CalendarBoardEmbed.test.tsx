@@ -13,7 +13,7 @@ function localIso(y: number, m0: number, d: number, h = 0, min = 0): string {
 function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
   return {
     id: "occ-1",
-    taskId: "task-1",
+    seriesId: "task-1",
     taskName: "測試任務",
     title: "Binance 平台用戶積分與活動任務",
     startTime: localIso(2026, 6, 22, 8, 0),

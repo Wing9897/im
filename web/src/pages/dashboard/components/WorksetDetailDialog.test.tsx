@@ -7,7 +7,7 @@ import type { UserEvent } from "../../../api/userEvents";
 
 const listItems = vi.fn();
 const listItemCategories = vi.fn();
-const listUserEvents = vi.fn();
+const listUserEventsPage = vi.fn();
 const navigate = vi.fn();
 
 vi.mock("../../../api/items", () => ({
@@ -16,7 +16,7 @@ vi.mock("../../../api/items", () => ({
 }));
 
 vi.mock("../../../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) => listUserEvents(...args),
+  listUserEventsPage: (...args: unknown[]) => listUserEventsPage(...args),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -140,7 +140,7 @@ async function flushLoads() {
     await Promise.all([
       listItems.mock.results.at(-1)?.value,
       listItemCategories.mock.results.at(-1)?.value,
-      listUserEvents.mock.results.at(-1)?.value,
+      listUserEventsPage.mock.results.at(-1)?.value,
     ]);
   });
 }
@@ -152,7 +152,7 @@ describe("WorksetDetailDialog", () => {
   beforeEach(() => {
     listItems.mockReset();
     listItemCategories.mockReset();
-    listUserEvents.mockReset();
+    listUserEventsPage.mockReset();
     navigate.mockReset();
     listItemCategories.mockResolvedValue([]);
     listItems.mockResolvedValue([
@@ -162,9 +162,9 @@ describe("WorksetDetailDialog", () => {
     ]);
     const soon = new Date();
     soon.setDate(soon.getDate() + 3);
-    listUserEvents.mockResolvedValue([
+    listUserEventsPage.mockResolvedValue({ items: [
       userEvent({ id: "e1", title: "Standup", startTime: soon.toISOString() }),
-    ]);
+    ], totalCount: 0, hasMore: false });
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -202,7 +202,7 @@ describe("WorksetDetailDialog", () => {
     await flushLoads();
 
     expect(listItems).toHaveBeenCalledWith({ worksetId: "ws-1" });
-    expect(listUserEvents).toHaveBeenCalledWith(
+    expect(listUserEventsPage).toHaveBeenCalledWith(
       expect.objectContaining({ worksetId: "ws-1", start: expect.any(String), end: expect.any(String) }),
     );
     expect(container.textContent).toContain("Scan");
@@ -356,7 +356,7 @@ describe("WorksetDetailDialog", () => {
 
   it("shows empty summary copy when nothing is due", async () => {
     listItems.mockResolvedValue([item({ id: "ok", title: "Ok", expiresAt: isoDaysFromNow(40) })]);
-    listUserEvents.mockResolvedValue([]);
+    listUserEventsPage.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
 
     act(() => {
       root = createRoot(container);
