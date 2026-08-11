@@ -64,7 +64,6 @@ class ItemSpec:
     category_slug: str
     emoji: str
     notes: str
-    attributes: dict[str, str] = field(default_factory=dict)
     workset_id: str | None = None
     events: list[LinkedEventSpec] = field(default_factory=list)
 
@@ -78,7 +77,10 @@ def _day(offset_days: int = 0) -> str:
 
 
 def _demo_specs() -> list[ItemSpec]:
-    """4–6 items covering expires / purchase_effective / normal + finance."""
+    """4–6 items covering expires / purchase_effective / normal + finance.
+
+    Free-form details live in ``notes`` only (item attributes UI removed).
+    """
     milk_expires = _day(3)  # soon — list badges
     return [
         ItemSpec(
@@ -86,8 +88,10 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 護照",
             category_slug="passport_docs",
             emoji="🛂",
-            notes="primary expires + 第二張 expires（非 primary）+ normal 提醒",
-            attributes={"id_number": "K99887766", "issuer": "香港入境事務處"},
+            notes=(
+                "證件號 K99887766；簽發：香港入境事務處。"
+                "關聯：primary expires + 第二張 expires（非 primary）+ normal 提醒。"
+            ),
             workset_id=WS_ID,
             events=[
                 LinkedEventSpec(
@@ -118,8 +122,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 相機",
             category_slug="warranty",
             emoji="📷",
-            notes="purchase_effective 支出 + 二手賣出收入",
-            attributes={"serial": "CAM-DEMO-001", "vendor": "相機店"},
+            notes="序號 CAM-DEMO-001；店家：相機店。關聯：purchase_effective 支出 + 二手賣出收入。",
             events=[
                 LinkedEventSpec(
                     title="購入",
@@ -144,8 +147,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 有機全脂牛奶",
             category_slug="food",
             emoji="🥛",
-            notes=f"即將到期（{milk_expires}）— 列表徽章",
-            attributes={"brand": "Organic Valley", "storage": "冷藏 2–4°C"},
+            notes=f"品牌 Organic Valley；冷藏 2–4°C。即將到期（{milk_expires}）— 列表徽章。",
             events=[
                 LinkedEventSpec(
                     title="到期",
@@ -160,8 +162,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} Netflix 訂閱",
             category_slug="subscription",
             emoji="🎬",
-            notes="purchase_effective 支出 + expires",
-            attributes={"provider": "Netflix", "plan": "Premium 4K"},
+            notes="方案 Premium 4K。關聯：purchase_effective 支出 + expires。",
             events=[
                 LinkedEventSpec(
                     title="購入",
@@ -184,8 +185,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 筆記本",
             category_slug="household",
             emoji="📓",
-            notes="僅 normal 行事曆，無金額",
-            attributes={"brand": "MUJI", "location": "書桌"},
+            notes="品牌 MUJI；位置書桌。僅 normal 行事曆，無金額。",
             events=[
                 LinkedEventSpec(
                     title="補貨提醒",
@@ -201,8 +201,10 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 保固卡（自訂到期標題）",
             category_slug="warranty",
             emoji="🛡️",
-            notes="kind=expires 但標題≠「到期」— 徽章看 kind / expires_at，不是標題",
-            attributes={"serial": "WRN-RENAMED", "vendor": "Demo"},
+            notes=(
+                "序號 WRN-RENAMED。kind=expires 但標題≠「到期」—"
+                "徽章看 kind / expires_at，不是標題。"
+            ),
             events=[
                 LinkedEventSpec(
                     title="保固截止日",
@@ -296,7 +298,7 @@ async def seed(db: Database) -> dict[str, Any]:
             emoji=item_spec.emoji,
             notes=item_spec.notes,
             workset_id=item_spec.workset_id,
-            attributes=item_spec.attributes or None,
+            attributes=None,
         )
         item_id = str(row["id"])
         linked: list[dict[str, Any]] = []
