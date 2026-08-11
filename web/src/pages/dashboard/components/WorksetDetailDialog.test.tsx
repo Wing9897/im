@@ -110,7 +110,6 @@ function item(partial: Partial<TrackableItem> & { id: string; title: string }): 
     remindBeforeDays: 7,
     notes: "",
     status: "active",
-    attributes: {},
     createdAt: null,
     updatedAt: null,
     ...partial,

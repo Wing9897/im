@@ -72,7 +72,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           name: name.trim(),
           color,
           emoji: emojiValue,
-          fieldSchema: [],
           defaultRemindBeforeDays: defaultRemind,
           sortOrder: 0,
         });
@@ -81,7 +80,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           name: name.trim(),
           color,
           emoji: emojiValue,
-          fieldSchema: [],
           defaultRemindBeforeDays: defaultRemind,
         });
       }

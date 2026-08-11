@@ -1,6 +1,6 @@
 /**
  * Item entry tile for the /items category list layer (and workset detail reuse).
- * Résumé / ID-card layout: large avatar, multi-line title, notes + attribute preview.
+ * Résumé / ID-card layout: large avatar, multi-line title, notes + inventory.
  */
 
 import { Archive, ArchiveRestore, Copy, Pencil, Trash2 } from "lucide-react";
@@ -28,21 +28,6 @@ const dangerIconBtnClass =
 
 const entryCardTitleClass = `m-0 line-clamp-2 min-w-0 break-words ${cardTitleClass}`;
 const entryCardNotesClass = `m-0 line-clamp-2 ${cardBodyClass}`;
-
-function previewAttributeLines(
-  attributes: TrackableItem["attributes"] | undefined,
-  max = 2,
-): Array<{ key: string; value: string }> {
-  const rows: Array<{ key: string; value: string }> = [];
-  for (const [key, raw] of Object.entries(attributes ?? {})) {
-    const trimmedKey = key.trim();
-    const value = String(raw ?? "").trim();
-    if (!trimmedKey || !value) continue;
-    rows.push({ key: trimmedKey, value });
-    if (rows.length >= max) break;
-  }
-  return rows;
-}
 
 type Props = {
   item: TrackableItem;
@@ -85,11 +70,7 @@ export function ItemsEntryCard({
   const archiveLabel = archived ? t("unarchive") : t("archive");
   const notesPreview = item.notes?.trim() || null;
   const inventoryLine = useMemo(() => itemInventorySummary(item), [item]);
-  const attributeLines = useMemo(
-    () => previewAttributeLines(item.attributes),
-    [item.attributes],
-  );
-  const hasDetails = Boolean(notesPreview || inventoryLine || attributeLines.length > 0);
+  const hasDetails = Boolean(notesPreview || inventoryLine);
 
   return (
     <AccentBarCard
@@ -219,17 +200,6 @@ export function ItemsEntryCard({
                 {inventoryLine}
               </p>
             ) : null}
-            {attributeLines.map((row) => (
-              <p
-                key={row.key}
-                className={`m-0 truncate ${cardMetaClass}`}
-                title={`${row.key}: ${row.value}`}
-              >
-                <span className="text-text-secondary">{row.key}</span>
-                <span aria-hidden="true"> · </span>
-                <span className="text-text-primary">{row.value}</span>
-              </p>
-            ))}
           </div>
         ) : null}
 

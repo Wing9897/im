@@ -14,7 +14,6 @@ import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import { contentFadeClass } from "../../../components/ui/pageLayout";
 import { categoryLabel } from "../../../domain/items/categoryAggregates";
 import { buildDuplicateItemBody } from "../../../domain/items/itemDuplicate";
-import { partitionItemAttributes } from "../../../domain/items/itemAttributes";
 import { formatItemsError } from "../../../domain/items/itemErrors";
 import type { Workset } from "../../../types/worksets";
 import { scheduleEmojiPickerPreload } from "../../../components/items/emoji/emojiPickerLoader";
@@ -198,7 +197,6 @@ export function ItemFormPage() {
                 initialWorksetId={initialWorksetId}
                 onSave={handleSave}
                 onToolbarStateChange={setToolbarState}
-                partitionItemAttributes={partitionItemAttributes}
               />
             </div>
           )}

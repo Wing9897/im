@@ -25,7 +25,6 @@ const item: TrackableItem = {
   remindBeforeDays: 7,
   notes: "",
   status: "active",
-  attributes: {},
   createdAt: null,
   updatedAt: null,
 };

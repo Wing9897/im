@@ -23,18 +23,12 @@ export type ItemsWorksetGroup = {
   rows: TrackableItem[];
 };
 
-/** Lowercased haystack for title / notes / emoji / attributes / inventory fields. */
+/** Lowercased haystack for title / notes / emoji / inventory fields. */
 export function itemSearchHaystack(item: TrackableItem): string {
-  const attrs = item.attributes ?? {};
-  const attrParts: string[] = [];
-  for (const [key, value] of Object.entries(attrs)) {
-    if (key) attrParts.push(key);
-    if (value) attrParts.push(String(value));
-  }
   const inventoryParts: string[] = [];
   if (item.unit) inventoryParts.push(item.unit);
   if (item.quantity != null) inventoryParts.push(String(item.quantity));
-  return [item.title, item.notes, item.emoji ?? "", ...inventoryParts, ...attrParts]
+  return [item.title, item.notes, item.emoji ?? "", ...inventoryParts]
     .join(" ")
     .toLowerCase();
 }

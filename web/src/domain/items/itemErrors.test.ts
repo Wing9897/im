@@ -11,15 +11,6 @@ describe("formatItemsError", () => {
       formatItemsError(
         new ApiRequestError(422, {
           error: "validation_error",
-          message: "attribute values must be <= 500 characters",
-        }),
-        t,
-      ),
-    ).toBe("i18n:errors.attributes");
-    expect(
-      formatItemsError(
-        new ApiRequestError(422, {
-          error: "validation_error",
           message: "emoji must be <= 16 characters",
         }),
         t,

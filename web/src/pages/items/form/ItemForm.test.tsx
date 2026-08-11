@@ -177,7 +177,7 @@ describe("ItemForm", () => {
     expect(title.placeholder).toBe("titleField");
   });
 
-  it("create mode submits empty attributes (notes hold free-form text)", async () => {
+  it("create mode submits notes without attributes", async () => {
     const onSave = vi.fn(async () => undefined);
     const { formRef } = await renderForm({
       item: null,
@@ -195,9 +195,9 @@ describe("ItemForm", () => {
       expect.objectContaining({
         title: "證件一",
         categoryId: "seed_passport_docs",
-        attributes: {},
       }),
     );
+    expect(onSave.mock.calls[0]?.[0]).not.toHaveProperty("attributes");
   });
 
   it("submits ItemSaveDraft without legacy date fields", async () => {

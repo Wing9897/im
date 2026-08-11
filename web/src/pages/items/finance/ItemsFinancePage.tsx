@@ -218,12 +218,12 @@ export function ItemsFinancePage() {
                             <td className="px-md py-2 text-text-secondary">
                               {row.direction
                                 ? t(`finance.direction.${row.direction}`)
-                                : t("attributeEmptyValue")}
+                                : t("emptyValue")}
                             </td>
                             <td className="px-md py-2 text-right tabular-nums">
                               {row.amount != null && Number.isFinite(row.amount)
                                 ? row.amount.toFixed(2)
-                                : t("attributeEmptyValue")}
+                                : t("emptyValue")}
                             </td>
                           </tr>
                         );

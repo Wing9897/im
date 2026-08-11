@@ -59,7 +59,6 @@ export function ItemFormCvBelonging({
         sortOrder: 999,
         color: null,
         emoji: null,
-        fieldSchema: [],
         defaultRemindBeforeDays: null,
         createdAt: null,
         updatedAt: null,
