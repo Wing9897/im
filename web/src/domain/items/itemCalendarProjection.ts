@@ -3,7 +3,7 @@
  *
  * Occurrence projection lives on the server (`item_projection` → GET /calendar/items)
  * and emits remind floating all-day markers when remind_before_days is set.
- * expires_at is denormalized from linked「到期」calendars
+ * expires_at is denormalized from linked ``kind=expires`` calendars
  * (see ``server/items/linked_dates.py``) for list badges / filters / agent windows.
  * This module formats titles (i18n), occurrence ids, and calendar kind glyphs
  * (tiny emoji markers — not chromatic dots). Card remind badges live in

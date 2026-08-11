@@ -92,7 +92,7 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind` only）。**到期**以关联里程碑 `user_events`（标题 到期／Expires）为写路径 SoT（日历 create／update／delete write-through → [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 回填物品 flat cache）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind` only）。**到期**写路径 SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填；日历 create／update／delete write-through → [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 回填物品 flat cache）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
 
 | Tool | 行为 | 限额 |
 |------|------|------|

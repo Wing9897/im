@@ -14,18 +14,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Mapping
 
-# Re-export for callers that historically imported title helpers from here.
-from server.calendar.user_event_kinds import (  # noqa: E402
-    LINKED_EXPIRY_TITLES,
-    USER_EVENT_KIND_EXPIRES,
-    is_linked_expiry_title,
-)
+from server.calendar.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.db.database import Database
 from server.util import utc_now_iso
 
 __all__ = [
-    "LINKED_EXPIRY_TITLES",
-    "is_linked_expiry_title",
     "is_linked_expiry_kind",
     "sync_item_dates_from_linked_calendars",
     "reconcile_item_linked_dates",
