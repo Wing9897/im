@@ -26,6 +26,12 @@ export type UserEvent = Omit<
   direction?: "expense" | "income" | null;
 };
 
+export type UserEventsPage = {
+  items: UserEvent[];
+  totalCount: number;
+  hasMore: boolean;
+};
+
 export type UserEventOrigin = UserEvent["origin"];
 
 interface UserEventWriteParams {
@@ -52,6 +58,22 @@ interface UserEventWriteParams {
   direction?: "expense" | "income" | null;
 }
 
+export type ListUserEventsParams = {
+  start?: string;
+  end?: string;
+  /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__user__`. */
+  taskId?: string;
+  /** Ownership workset id (incl. builtin `__user__`). */
+  worksetId?: string;
+  /** Parent item id; `""` = stand-alone only. */
+  itemId?: string;
+  /** Substring on title / body / location. */
+  search?: string;
+  /** When set, server applies OFFSET/LIMIT paging. */
+  limit?: number;
+  offset?: number;
+};
+
 /** Strip fake `__user__` / blank provenance so it never hits the API as taskId. */
 function normalizeWriteTaskId(taskId: string | null | undefined): string | null | undefined {
   if (taskId === undefined) return undefined;
@@ -61,23 +83,28 @@ function normalizeWriteTaskId(taskId: string | null | undefined): string | null 
   return trimmed;
 }
 
-export function listUserEvents(params?: {
-  start?: string;
-  end?: string;
-  /** Analysis-task provenance id, or `""` for NULL provenance only. Not `__user__`. */
-  taskId?: string;
-  /** Ownership workset id (incl. builtin `__user__`). */
-  worksetId?: string;
-  /** Parent item id; `""` = stand-alone only. */
-  itemId?: string;
-}): Promise<UserEvent[]> {
+function toListQuery(params?: ListUserEventsParams): Record<string, string> {
   const query: Record<string, string> = {};
   if (params?.start) query.start = params.start;
   if (params?.end) query.end = params.end;
   if (params?.taskId !== undefined) query.taskId = params.taskId;
   if (params?.worksetId !== undefined) query.worksetId = params.worksetId;
   if (params?.itemId !== undefined) query.itemId = params.itemId;
-  return apiClient.get<UserEvent[]>("/api/v1/calendar/user-events", query);
+  if (params?.search) query.search = params.search;
+  if (params?.limit !== undefined) query.limit = String(params.limit);
+  if (params?.offset !== undefined) query.offset = String(params.offset);
+  return query;
+}
+
+/** Paginated list (items / totalCount / hasMore). */
+export function listUserEventsPage(params?: ListUserEventsParams): Promise<UserEventsPage> {
+  return apiClient.get<UserEventsPage>("/api/v1/calendar/user-events", toListQuery(params));
+}
+
+/** Convenience wrapper that returns only the items array. */
+export async function listUserEvents(params?: ListUserEventsParams): Promise<UserEvent[]> {
+  const page = await listUserEventsPage(params);
+  return page.items;
 }
 
 export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent> {

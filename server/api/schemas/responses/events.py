@@ -40,6 +40,12 @@ class UserEventResponse(BaseModel):
     updatedAt: str
 
 
+class UserEventsPageResponse(BaseModel):
+    items: list[UserEventResponse]
+    totalCount: int
+    hasMore: bool
+
+
 class AnalysisEventResponse(BaseModel):
     id: str
     taskId: str

@@ -62,7 +62,7 @@ async def test_user_events_crud_roundtrip(client) -> None:
         params={"start": "2026-07-21T00:00:00Z", "end": "2026-07-22T00:00:00Z"},
     )
     assert listed.status_code == 200
-    assert any(item["id"] == event_id for item in listed.json())
+    assert any(item["id"] == event_id for item in listed.json()["items"])
 
     patched = await client.patch(
         f"/api/v1/calendar/user-events/{event_id}",
@@ -76,7 +76,7 @@ async def test_user_events_crud_roundtrip(client) -> None:
     assert deleted.status_code == 204
 
     soft = await client.get("/api/v1/calendar/user-events")
-    match = next(item for item in soft.json() if item["id"] == event_id)
+    match = next(item for item in soft.json()["items"] if item["id"] == event_id)
     assert match["dismissed"] is True
 
 
@@ -127,7 +127,9 @@ async def test_user_events_list_preserves_a2a_origin(client, app) -> None:
     )
     response = await client.get("/api/v1/calendar/user-events")
     assert response.status_code == 200
-    listed = next(item for item in response.json() if item["id"] == event["id"])
+    body = response.json()
+    assert set(body) == {"items", "totalCount", "hasMore"}
+    listed = next(item for item in body["items"] if item["id"] == event["id"])
     assert listed["origin"] == "a2a"
     assert set(listed) == USER_EVENT_KEYS
 
@@ -219,7 +221,7 @@ async def test_list_user_events_filters_by_task_id(client, app) -> None:
 
     listed = await client.get("/api/v1/calendar/user-events", params={"taskId": seed.TASK_EVENT})
     assert listed.status_code == 200
-    ids = {item["id"] for item in listed.json()}
+    ids = {item["id"] for item in listed.json()["items"]}
     assert ids == {owned.json()["id"]}
 
     # task_id=__user__ is rejected; ownership filter uses workset_id.
@@ -228,12 +230,12 @@ async def test_list_user_events_filters_by_task_id(client, app) -> None:
 
     system_ws = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
     assert system_ws.status_code == 200
-    system_ids = {item["id"] for item in system_ws.json()}
+    system_ids = {item["id"] for item in system_ws.json()["items"]}
     assert other.json()["id"] in system_ids
     # Owned event may still be on __user__ workset if task had no workset — check provenance filter.
     null_provenance = await client.get("/api/v1/calendar/user-events", params={"taskId": ""})
     assert null_provenance.status_code == 200
-    null_ids = {item["id"] for item in null_provenance.json()}
+    null_ids = {item["id"] for item in null_provenance.json()["items"]}
     assert other.json()["id"] in null_ids
     assert owned.json()["id"] not in null_ids
 
@@ -367,3 +369,55 @@ async def test_user_events_amount_and_direction_roundtrip(client) -> None:
     assert title_only.status_code == 201
     assert title_only.json()["kind"] == "normal"
     assert title_only.json()["amount"] is None
+
+
+async def test_list_user_events_search_and_pagination(client) -> None:
+    created = []
+    for idx, title in enumerate(["晨會 Alpha", "午餐 Beta", "晚間 Alpha 複盤"]):
+        response = await client.post(
+            "/api/v1/calendar/user-events",
+            json={
+                "title": title,
+                "body": f"body-{idx}",
+                "location": "台北" if idx == 0 else "高雄",
+                "startTime": f"2026-09-0{idx + 1}T09:00:00Z",
+            },
+        )
+        assert response.status_code == 201
+        created.append(response.json())
+
+    by_title = await client.get("/api/v1/calendar/user-events", params={"search": "Alpha"})
+    assert by_title.status_code == 200
+    page = by_title.json()
+    assert page["totalCount"] == 2
+    assert page["hasMore"] is False
+    assert {item["id"] for item in page["items"]} == {created[0]["id"], created[2]["id"]}
+
+    by_location = await client.get("/api/v1/calendar/user-events", params={"search": "高雄"})
+    assert by_location.status_code == 200
+    assert {item["id"] for item in by_location.json()["items"]} == {created[1]["id"], created[2]["id"]}
+
+    first = await client.get(
+        "/api/v1/calendar/user-events",
+        params={"search": "Alpha", "limit": 1, "offset": 0},
+    )
+    assert first.status_code == 200
+    first_page = first.json()
+    assert first_page["totalCount"] == 2
+    assert first_page["hasMore"] is True
+    assert len(first_page["items"]) == 1
+
+    second = await client.get(
+        "/api/v1/calendar/user-events",
+        params={"search": "Alpha", "limit": 1, "offset": 1},
+    )
+    assert second.status_code == 200
+    second_page = second.json()
+    assert second_page["totalCount"] == 2
+    assert second_page["hasMore"] is False
+    assert len(second_page["items"]) == 1
+    assert first_page["items"][0]["id"] != second_page["items"][0]["id"]
+    assert {first_page["items"][0]["id"], second_page["items"][0]["id"]} == {
+        created[0]["id"],
+        created[2]["id"],
+    }

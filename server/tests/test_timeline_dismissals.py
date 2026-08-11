@@ -114,7 +114,7 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     assert row is not None
 
     listed = await client.get("/api/v1/calendar/user-events")
-    match = next(item for item in listed.json() if item["id"] == event_id)
+    match = next(item for item in listed.json()["items"] if item["id"] == event_id)
     assert match["dismissed"] is True
 
     restored = await client.delete(
@@ -123,7 +123,7 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     )
     assert restored.status_code == 204
     listed_again = await client.get("/api/v1/calendar/user-events")
-    match_again = next(item for item in listed_again.json() if item["id"] == event_id)
+    match_again = next(item for item in listed_again.json()["items"] if item["id"] == event_id)
     assert match_again["dismissed"] is False
 
 

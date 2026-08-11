@@ -95,6 +95,8 @@ export const TASKS_MODE_FILTER_STORAGE_KEY = "im:tasks:mode-filter";
 export const TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY =
   "im:tasks:detail:channels-expanded";
 export const TASKS_SEARCH_STORAGE_KEY = "im:tasks:search";
+export const SCHEDULE_SEARCH_STORAGE_KEY = "im:schedule:search";
+export const SCHEDULE_TAB_STORAGE_KEY = "im:schedule:tab";
 export const CHAT_EDITOR_TEMPLATE_USAGE_KEY = "im:task-template-usage";
 
 export function chatEditorFormStorageKey(taskId: string | undefined): string {

@@ -57,6 +57,7 @@ __all__ = [
     "get_user_event_row",
     "get_user_event",
     "list_user_events",
+    "list_user_events_page",
     "create_user_event",
     "update_user_event",
     "delete_user_event",
@@ -92,6 +93,9 @@ async def list_user_events(
     task_id: str | None = None,
     workset_id: str | None = None,
     item_id: str | None = None,
+    search: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
 ) -> list[dict[str, Any]]:
     """List events that overlap the optional inclusive time window.
 
@@ -109,20 +113,70 @@ async def list_user_events(
     - omitted / ``None``: no parent-item filter
     - ``""``: only stand-alone rows (``item_id IS NULL``)
     - real id: linked calendars under that item
+
+    ``search``: optional substring on title / body / location.
+
+    When ``limit`` is set, apply OFFSET/LIMIT paging (same clamp as other list
+    routes). When omitted, return the full matching set (timeline callers).
     """
+    page = await list_user_events_page(
+        db,
+        start=start,
+        end=end,
+        task_id=task_id,
+        workset_id=workset_id,
+        item_id=item_id,
+        search=search,
+        limit=limit,
+        offset=offset,
+    )
+    return page["items"]
+
+
+async def list_user_events_page(
+    db: Database,
+    *,
+    start: str | None = None,
+    end: str | None = None,
+    task_id: str | None = None,
+    workset_id: str | None = None,
+    item_id: str | None = None,
+    search: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> dict[str, Any]:
+    """Return ``{items, totalCount, hasMore}`` for the user-events list."""
+    from server.queries.pagination import clamp_offset_limit, offset_page_has_more
+
     clauses, params = build_user_event_list_filters(
         start=start,
         end=end,
         task_id=task_id,
         workset_id=workset_id,
         item_id=item_id,
+        search=search,
     )
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-    rows = await db.fetch_all(
-        f"SELECT * FROM user_events {where} ORDER BY start_time ASC, id ASC",
-        tuple(params),
+    total_count = int(
+        await db.fetch_value(f"SELECT COUNT(*) FROM user_events {where}", tuple(params)) or 0
     )
-    return await _serialize_user_event_rows(db, rows)
+    order_sql = f"SELECT * FROM user_events {where} ORDER BY start_time ASC, id ASC"
+    if limit is None:
+        rows = await db.fetch_all(order_sql, tuple(params))
+        items = await _serialize_user_event_rows(db, rows)
+        return {"items": items, "totalCount": total_count, "hasMore": False}
+
+    normalized_limit, normalized_offset = clamp_offset_limit(limit, offset)
+    rows = await db.fetch_all(
+        f"{order_sql} LIMIT ? OFFSET ?",
+        tuple(list(params) + [normalized_limit, normalized_offset]),
+    )
+    items = await _serialize_user_event_rows(db, rows)
+    return {
+        "items": items,
+        "totalCount": total_count,
+        "hasMore": offset_page_has_more(normalized_offset, len(rows), total_count),
+    }
 
 
 async def create_user_event(

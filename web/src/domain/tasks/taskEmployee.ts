@@ -11,9 +11,8 @@ import type { AiStaffId } from "../aiStaff/aiStaff";
 
 export type TaskEmployeeId = AnalysisMode;
 
-/** Picker / badge order: recurring first, then AI modes. */
+/** Picker / badge order for Tasks create/filter (recurring lives under /schedule). */
 export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
-  "recurring",
   "intel_event",
   "leaderboard",
   "agent",

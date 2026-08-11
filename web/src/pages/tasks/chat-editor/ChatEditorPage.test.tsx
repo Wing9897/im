@@ -56,7 +56,7 @@ import { ChatEditorPage } from "./ChatEditorPage";
 import { DEFAULT_FORM_STATE } from "../../../hooks/useTaskEditorState";
 import type { TaskFormState, UseChatEditorReturn } from "./useChatEditor";
 
-/** Leaderboard surface for channel/preset UI (SoT default is recurring). */
+/** Leaderboard surface for channel/preset UI (SoT default is intel_event). */
 const ANALYSIS_FORM_STATE: TaskFormState = {
   ...DEFAULT_FORM_STATE,
   analysisMode: "leaderboard",

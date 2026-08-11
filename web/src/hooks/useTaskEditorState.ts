@@ -22,7 +22,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   name: "",
   description: "",
   promptTemplate: "",
-  analysisMode: "recurring",
+  analysisMode: "intel_event",
   analysisTimeRange: "1d",
   channelIds: [],
   scheduleType: "seconds_10",

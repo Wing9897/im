@@ -114,9 +114,9 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(false);
     });
 
-    it("defaults to recurring and returns false when only name is set", () => {
+    it("defaults to intel_event and returns false when only name is set", () => {
       renderHarness();
-      expect(latest.formState.analysisMode).toBe("recurring");
+      expect(latest.formState.analysisMode).toBe("intel_event");
       act(() => { latest.updateField("name", "My Task"); });
       expect(latest.canSave).toBe(false);
     });
@@ -156,6 +156,7 @@ describe("useTaskEditorState", () => {
     it("returns true in recurring mode when name, rrule, and start time are set", () => {
       renderHarness();
       act(() => {
+        latest.updateField("analysisMode", "recurring");
         latest.updateField("name", "Calendar Task");
         latest.updateField("rrule", "FREQ=DAILY");
         latest.updateField("eventStartTime", "09:00");
@@ -166,6 +167,7 @@ describe("useTaskEditorState", () => {
     it("returns true in recurring all-day mode without start time", () => {
       renderHarness();
       act(() => {
+        latest.updateField("analysisMode", "recurring");
         latest.updateField("name", "Calendar Task");
         latest.updateField("rrule", "FREQ=DAILY");
         latest.updateField("eventIsAllDay", true);
@@ -176,6 +178,7 @@ describe("useTaskEditorState", () => {
     it("returns false in recurring mode when timed start is missing", () => {
       renderHarness();
       act(() => {
+        latest.updateField("analysisMode", "recurring");
         latest.updateField("name", "Calendar Task");
         latest.updateField("rrule", "FREQ=DAILY");
       });
@@ -185,6 +188,7 @@ describe("useTaskEditorState", () => {
     it("returns false in recurring mode when rrule is missing", () => {
       renderHarness();
       act(() => {
+        latest.updateField("analysisMode", "recurring");
         latest.updateField("name", "Calendar Task");
         latest.updateField("eventStartTime", "09:00");
       });

@@ -41,7 +41,7 @@ const TASKS_MODE_FILTER_VALUES = new Set<string>([
   "all",
   "leaderboard",
   "intel_event",
-  "recurring",
+  "agent",
 ]);
 
 export function isTasksModeFilter(value: string | null): value is TasksModeFilter {

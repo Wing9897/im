@@ -36,6 +36,7 @@ function DefaultHomeRedirect() {
 // Module-level lazy registration — stable exotic types for the route tree lifetime.
 const MonitorPage = lazyNamed(() => import("../pages/monitor/MonitorPage"), "MonitorPage");
 const DashboardViewer = lazyNamed(() => import("../pages/dashboard/DashboardViewer"), "DashboardViewer");
+const SchedulePage = lazyNamed(() => import("../pages/schedule/SchedulePage"), "SchedulePage");
 const ChatEditorPage = lazyNamed(() => import("../pages/tasks/chat-editor/ChatEditorPage"), "ChatEditorPage");
 const AgentDetailPage = lazyNamed(
   () => import("../pages/tasks/agent/AgentDetailPage"),
@@ -103,6 +104,8 @@ export function AppRoutes() {
         <Route path="/tasks/worksets/:worksetId" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/agent" element={<LazyPage Page={AgentDetailPage} />} />
+        <Route path="/schedule" element={<LazyPage Page={SchedulePage} />} />
+        <Route path="/schedule/recurring/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/leaderboard" element={<LazyPage Page={LeaderboardPage} />} />
         <Route path="/intelligence" element={<LazyPage Page={IntelligencePage} />} />
         <Route path="/timeline" element={<LazyPage Page={TimelinePage} />} />

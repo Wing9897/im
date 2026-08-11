@@ -12,6 +12,7 @@ import zhHantSettings from "./locales/zh-Hant/settings.json";
 import zhHantAssistant from "./locales/zh-Hant/assistant.json";
 import zhHantLogs from "./locales/zh-Hant/logs.json";
 import zhHantItems from "./locales/zh-Hant/items.json";
+import zhHantSchedule from "./locales/zh-Hant/schedule.json";
 import zhHansCommon from "./locales/zh-Hans/common.json";
 import zhHansNav from "./locales/zh-Hans/nav.json";
 import zhHansActions from "./locales/zh-Hans/actions.json";
@@ -23,6 +24,7 @@ import zhHansSettings from "./locales/zh-Hans/settings.json";
 import zhHansAssistant from "./locales/zh-Hans/assistant.json";
 import zhHansLogs from "./locales/zh-Hans/logs.json";
 import zhHansItems from "./locales/zh-Hans/items.json";
+import zhHansSchedule from "./locales/zh-Hans/schedule.json";
 import enCommon from "./locales/en/common.json";
 import enNav from "./locales/en/nav.json";
 import enActions from "./locales/en/actions.json";
@@ -34,6 +36,7 @@ import enSettings from "./locales/en/settings.json";
 import enAssistant from "./locales/en/assistant.json";
 import enLogs from "./locales/en/logs.json";
 import enItems from "./locales/en/items.json";
+import enSchedule from "./locales/en/schedule.json";
 
 export const defaultNS = "common";
 
@@ -49,6 +52,7 @@ export const NAMESPACES = [
   "assistant",
   "logs",
   "items",
+  "schedule",
 ] as const;
 
 export const resources = {
@@ -64,6 +68,7 @@ export const resources = {
     assistant: zhHantAssistant,
     logs: zhHantLogs,
     items: zhHantItems,
+    schedule: zhHantSchedule,
   },
   "zh-Hans": {
     common: zhHansCommon,
@@ -77,6 +82,7 @@ export const resources = {
     assistant: zhHansAssistant,
     logs: zhHansLogs,
     items: zhHansItems,
+    schedule: zhHansSchedule,
   },
   en: {
     common: enCommon,
@@ -90,6 +96,7 @@ export const resources = {
     assistant: enAssistant,
     logs: enLogs,
     items: enItems,
+    schedule: enSchedule,
   },
 } as const;
 

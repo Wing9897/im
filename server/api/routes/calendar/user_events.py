@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from server.api.deps import get_db, publish_resource_modified
 from server.api.query_aliases import qalias
 from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
-from server.api.schemas.responses import UserEventResponse
+from server.api.schemas.responses import UserEventResponse, UserEventsPageResponse
 from server.calendar.user_events import (
     UserEventItemIdError,
     UserEventTaskIdError,
@@ -18,7 +18,7 @@ from server.calendar.user_events import (
     create_user_event,
     delete_user_event,
     get_user_event,
-    list_user_events,
+    list_user_events_page,
     update_user_event,
 )
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
@@ -39,7 +39,7 @@ def _notify(request: Request, event_id: str, action: str) -> None:
     publish_resource_modified(request, "user_event", event_id, action)
 
 
-@router.get("", response_model=list[UserEventResponse])
+@router.get("", response_model=UserEventsPageResponse)
 async def list_events(
     request: Request,
     start: str | None = None,
@@ -47,20 +47,30 @@ async def list_events(
     task_id: str | None = qalias("taskId", default=None),
     workset_id: str | None = qalias("worksetId", default=None),
     item_id: str | None = qalias("itemId", default=None),
-) -> list[UserEventResponse]:
+    search: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> UserEventsPageResponse:
     db = get_db(request)
     try:
-        rows = await list_user_events(
+        page = await list_user_events_page(
             db,
             start=start,
             end=end,
             task_id=task_id,
             workset_id=workset_id,
             item_id=item_id,
+            search=search,
+            limit=limit,
+            offset=offset,
         )
     except UserEventValidationError as exc:
         raise _http_from_validation(exc) from exc
-    return [UserEventResponse.model_validate(row) for row in rows]
+    return UserEventsPageResponse(
+        items=[UserEventResponse.model_validate(row) for row in page["items"]],
+        totalCount=int(page["totalCount"]),
+        hasMore=bool(page["hasMore"]),
+    )
 
 
 @router.post("", status_code=201, response_model=UserEventResponse)

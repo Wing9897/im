@@ -4309,6 +4309,15 @@ export interface components {
             /** Updatedat */
             updatedAt: string;
         };
+        /** UserEventsPageResponse */
+        UserEventsPageResponse: {
+            /** Items */
+            items: components["schemas"]["UserEventResponse"][];
+            /** Totalcount */
+            totalCount: number;
+            /** Hasmore */
+            hasMore: boolean;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -7719,6 +7728,9 @@ export interface operations {
                 taskId?: string | null;
                 worksetId?: string | null;
                 itemId?: string | null;
+                search?: string | null;
+                limit?: number | null;
+                offset?: number;
             };
             header?: never;
             path?: never;
@@ -7732,7 +7744,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserEventResponse"][];
+                    "application/json": components["schemas"]["UserEventsPageResponse"];
                 };
             };
             /** @description Validation Error */

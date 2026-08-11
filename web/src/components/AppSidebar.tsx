@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   BellRing,
   Bot,
+  CalendarClock,
   CalendarDays,
   Package,
   Database,
@@ -42,6 +43,7 @@ export { MAIN_SIDEBAR_PREFETCH_PATHS };
 const SIDEBAR_ICONS: Record<SidebarIconKey, LucideIcon> = {
   monitor: Radio,
   tasks: ListChecks,
+  schedule: CalendarClock,
   items: Package,
   sources: Database,
   leaderboard: Trophy,

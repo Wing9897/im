@@ -129,7 +129,11 @@ export function ChatNameModeFields({
           columns="repeat(auto-fit, minmax(148px, 1fr))"
           className="gap-sm"
         >
-          {taskFormAnalysisModeOrder.map((mode) => {
+          {(analysisMode === "recurring" &&
+          !taskFormAnalysisModeOrder.includes("recurring")
+            ? (["recurring", ...taskFormAnalysisModeOrder] as AnalysisMode[])
+            : taskFormAnalysisModeOrder
+          ).map((mode) => {
             const employeeId = getTaskEmployeeIdForMode(mode);
             const nameLabel = getTaskEmployeeDisplayName(employeeId);
             const blurb = getTaskEmployeeBlurb(employeeId);

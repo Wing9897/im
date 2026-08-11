@@ -36,6 +36,7 @@ from server.api.schemas.responses.events import (
     TimelineImportanceResponse,
     TrendingTopicResponse,
     UserEventResponse,
+    UserEventsPageResponse,
 )
 from server.api.schemas.responses.logs import (
     AppLogCursorResponse,
@@ -209,6 +210,7 @@ __all__ = [
     "TrendingTopicResponse",
     "UpdateTelegramSourceResponse",
     "UserEventResponse",
+    "UserEventsPageResponse",
     "ViewerStatsResponse",
     "ViewerStatusResponse",
     "ViewerTaskResponse",

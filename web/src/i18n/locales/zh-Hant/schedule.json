@@ -1,0 +1,57 @@
+{
+  "pageTitle": "我的日程",
+  "toolbarAria": "日程工具列",
+  "tabs": {
+    "oneOff": "一般事件",
+    "recurring": "循環事件"
+  },
+  "searchPlaceholder": "搜尋標題、內容或地點",
+  "searchAria": "搜尋日程",
+  "create": "新增",
+  "createOneOff": "新增一般事件",
+  "createRecurring": "新增循環事件",
+  "createOneOffAria": "新增一般事件",
+  "createRecurringAria": "新增循環事件",
+  "empty": {
+    "oneOff": "尚無一般事件",
+    "oneOffHint": "建立手寫日程，或從時間規劃新增。",
+    "recurring": "尚無循環事件",
+    "recurringHint": "建立週期行程，不會再出現在任務設定列表。"
+  },
+  "card": {
+    "edit": "編輯",
+    "editAria": "編輯 {title}",
+    "delete": "刪除",
+    "deleteAria": "刪除 {title}",
+    "allDay": "全天",
+    "workset": "工作集",
+    "item": "關聯物品",
+    "rrule": "重複規則",
+    "noRrule": "未設定重複規則",
+    "location": "地點"
+  },
+  "loadMoreHint": "已顯示 {shown} / {total}",
+  "loadMoreHintHasMore": "向下捲動載入更多（已顯示 {shown}）",
+  "deleteOneOffTitle": "刪除一般事件",
+  "deleteOneOffMessage": "確定刪除「{title}」？此操作無法復原。",
+  "deleteRecurringTitle": "刪除循環事件",
+  "deleteRecurringMessage": "確定刪除循環事件「{title}」？之後的週期發生也會一併停止。",
+  "toast": {
+    "oneOffCreated": "已建立一般事件",
+    "oneOffUpdated": "已更新一般事件",
+    "oneOffDeleted": "已刪除一般事件",
+    "recurringCreated": "已建立循環事件",
+    "recurringDeleted": "已刪除循環事件",
+    "saveFailed": "儲存失敗",
+    "deleteFailed": "刪除失敗",
+    "loadFailed": "載入失敗"
+  },
+  "gridAria": "日程卡片列表",
+  "rruleFreq": {
+    "daily": "每天",
+    "weekly": "每週",
+    "monthly": "每月",
+    "yearly": "每年",
+    "other": "自訂重複"
+  }
+}

@@ -232,6 +232,7 @@ def build_user_event_list_filters(
     task_id: str | None = None,
     workset_id: str | None = None,
     item_id: str | None = None,
+    search: str | None = None,
 ) -> tuple[list[str], list[Any]]:
     """Build SQL WHERE clauses for ``list_user_events``.
 
@@ -244,6 +245,10 @@ def build_user_event_list_filters(
     ``workset_id``:
     - omitted / ``None`` / empty: no ownership filter
     - real id (incl. ``__user__``): ``workset_id = ?``
+
+    ``search``:
+    - omitted / blank: no text filter
+    - non-empty: case-insensitive substring on title / body / location
     """
     clauses: list[str] = []
     params: list[Any] = []
@@ -274,4 +279,10 @@ def build_user_event_list_filters(
             params.append(iid)
         else:
             clauses.append("item_id IS NULL")
+    if search is not None:
+        needle = str(search).strip()
+        if needle:
+            like = f"%{needle}%"
+            clauses.append("(title LIKE ? OR body LIKE ? OR location LIKE ?)")
+            params.extend([like, like, like])
     return clauses, params

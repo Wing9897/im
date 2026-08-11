@@ -1,5 +1,6 @@
 import {
   BellRing,
+  CalendarClock,
   CalendarDays,
   Database,
   History,
@@ -27,6 +28,15 @@ export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
   },
   { id: "monitor-wall", labelKey: "commandPalette.monitorWall", to: "/monitor?view=wall", icon: Radio, groupId: "navigation", keywords: ["wall", "看板"] },
   { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
+  {
+    id: "schedule",
+    labelKey: "schedule",
+    labelNs: "nav",
+    to: "/schedule",
+    icon: CalendarClock,
+    groupId: "navigation",
+    keywords: ["schedule", "calendar", "日程", "循环"],
+  },
   { id: "leaderboard", labelKey: "leaderboard", labelNs: "nav", to: "/leaderboard", icon: Trophy, groupId: "navigation" },
   { id: "intelligence", labelKey: "keyEvents", labelNs: "nav", to: "/intelligence", icon: MapPin, groupId: "navigation", keywords: ["intel"] },
   {

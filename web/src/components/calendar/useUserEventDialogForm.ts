@@ -72,7 +72,9 @@ export function useUserEventDialogForm({
     setCustomDays("");
     setValues(
       valuesFromInitial({
-        kind: allowKindSwitch ? initialKind : "one_off",
+        // When kind switch is locked (edit / titled create), honor caller `initial.kind`
+        // so schedule-page recurring create can stay on `recurring`.
+        kind: initialKind,
         calendarKind: initialCalendarKind,
         title: initialTitle,
         startTime: initialStart,
