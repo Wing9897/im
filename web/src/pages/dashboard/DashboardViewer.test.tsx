@@ -366,7 +366,22 @@ describe("DashboardViewer", () => {
   });
 
   it("restores mode filter from localStorage", () => {
-    window.localStorage.setItem(TASKS_MODE_FILTER_STORAGE_KEY, JSON.stringify("recurring"));
+    window.localStorage.setItem(TASKS_MODE_FILTER_STORAGE_KEY, JSON.stringify("leaderboard"));
+    taskCatalogState.tasks = [
+      createMockTask({ id: "t1", name: "Leaderboard Task", analysisMode: "leaderboard" }),
+      createMockTask({ id: "t2", name: "Intel Task", analysisMode: "intel_event" }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    expect(container.textContent).toContain("Leaderboard Task");
+    expect(container.textContent).not.toContain("Intel Task");
+  });
+
+  it("hides top-level recurring tasks from the tasks grid (schedule owns them)", () => {
     taskCatalogState.tasks = [
       createMockTask({ id: "t1", name: "Leaderboard Task", analysisMode: "leaderboard" }),
       createMockTask({ id: "t2", name: "Calendar Task", analysisMode: "recurring" }),
@@ -377,8 +392,10 @@ describe("DashboardViewer", () => {
       root.render(<DashboardViewer />);
     });
 
-    expect(container.textContent).toContain("Calendar Task");
-    expect(container.textContent).not.toContain("Leaderboard Task");
+    expect(container.textContent).toContain("Leaderboard Task");
+    expect(container.textContent).not.toContain("Calendar Task");
+    expect(container.querySelector('[data-testid="task-card-t2"]')).toBeNull();
+    expect(container.textContent).not.toMatch(/循環|周期|Recurring/);
   });
 
   it("opens project detail route when a project card is selected", () => {

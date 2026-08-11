@@ -4782,6 +4782,48 @@
               ],
               "title": "Itemid"
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -4790,11 +4832,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserEventResponse"
-                  },
-                  "title": "Response List Events Api V1 Calendar User Events Get"
+                  "$ref": "#/components/schemas/UserEventsPageResponse"
                 }
               }
             }
@@ -13919,6 +13957,32 @@
           "updatedAt"
         ],
         "title": "UserEventResponse"
+      },
+      "UserEventsPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/UserEventResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalCount",
+          "hasMore"
+        ],
+        "title": "UserEventsPageResponse"
       },
       "ValidationError": {
         "properties": {

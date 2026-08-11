@@ -24,7 +24,7 @@ describe("user events API contract", () => {
   });
 
   it("lists events with the requested overlap window", async () => {
-    vi.mocked(apiClient.get).mockResolvedValue([]);
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
 
     await listUserEvents({
       start: "2026-07-01T00:00:00Z",
@@ -52,18 +52,46 @@ describe("user events API contract", () => {
       createdAt: "2026-07-28T08:00:00Z",
       updatedAt: "2026-07-28T08:00:00Z",
     };
-    vi.mocked(apiClient.get).mockResolvedValue([event]);
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [event], totalCount: 1, hasMore: false });
 
     await expect(listUserEvents()).resolves.toEqual([expect.objectContaining({ origin: "a2a" })]);
   });
 
   it("forwards taskId on list when provided", async () => {
-    vi.mocked(apiClient.get).mockResolvedValue([]);
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
 
     await listUserEvents({ taskId: "proj-1" });
 
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
       taskId: "proj-1",
+    });
+  });
+
+  it("forwards search and paging params and unwraps items", async () => {
+    const event: UserEvent = {
+      id: "event-page",
+      title: "Paged",
+      body: "",
+      startTime: "2026-07-28T09:00:00Z",
+      endTime: null,
+      location: null,
+      origin: "manual",
+      taskId: "",
+      source: "user",
+      dismissed: false,
+      createdAt: "2026-07-28T08:00:00Z",
+      updatedAt: "2026-07-28T08:00:00Z",
+    };
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [event], totalCount: 3, hasMore: true });
+
+    await expect(
+      listUserEvents({ search: "Paged", limit: 1, offset: 2 }),
+    ).resolves.toEqual([expect.objectContaining({ id: "event-page" })]);
+
+    expect(apiClient.get).toHaveBeenCalledWith("/api/v1/calendar/user-events", {
+      search: "Paged",
+      limit: "1",
+      offset: "2",
     });
   });
 
@@ -203,7 +231,7 @@ describe("user events API contract", () => {
 
   it("forwards itemId on create and list", async () => {
     vi.mocked(apiClient.post).mockResolvedValue({});
-    vi.mocked(apiClient.get).mockResolvedValue([]);
+    vi.mocked(apiClient.get).mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
 
     await createUserEvent({
       title: "Under item",

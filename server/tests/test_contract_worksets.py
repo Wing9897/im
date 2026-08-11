@@ -105,7 +105,7 @@ async def test_worksets_crud_and_task_workset_id(client):
 
     events = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
     assert events.status_code == 200
-    reassigned = next(e for e in events.json() if e["id"] == ue_id)
+    reassigned = next(e for e in events.json()["items"] if e["id"] == ue_id)
     assert reassigned["worksetId"] == "__user__"
 
     again = await client.delete(f"/api/v1/worksets/{workset_id}")
@@ -159,8 +159,8 @@ async def test_user_event_create_by_workset(client):
 
     filtered = await client.get("/api/v1/calendar/user-events", params={"worksetId": wid})
     assert filtered.status_code == 200
-    assert any(row["id"] == tagged.json()["id"] for row in filtered.json())
-    assert all(row["worksetId"] == wid for row in filtered.json())
+    assert any(row["id"] == tagged.json()["id"] for row in filtered.json()["items"])
+    assert all(row["worksetId"] == wid for row in filtered.json()["items"])
 
 
 async def test_unknown_workset_id_rejected_on_task_create(client):

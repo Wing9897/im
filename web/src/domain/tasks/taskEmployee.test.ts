@@ -16,13 +16,13 @@ describe("taskEmployee", () => {
     }
   });
 
-  it("covers all task types in picker order", () => {
+  it("covers Tasks picker order without recurring (schedule owns recurring)", () => {
     expect(TASK_EMPLOYEE_ORDER).toEqual([
-      "recurring",
       "intel_event",
       "leaderboard",
       "agent",
     ]);
+    expect(TASK_EMPLOYEE_ORDER).not.toContain("recurring");
   });
 
   it("maps AI task types to AiStaff ids and recurring to null", () => {

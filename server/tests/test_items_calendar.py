@@ -77,7 +77,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
 
     # Changing remind days on the linked「到期」moves the calendar remind point.
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})
-    expiry_id = next(row["id"] for row in linked.json() if row["title"] == "到期")
+    expiry_id = next(row["id"] for row in linked.json()["items"] if row["title"] == "到期")
     patched = await client.patch(
         f"/api/v1/calendar/user-events/{expiry_id}",
         json={"remindBeforeDays": 5},
@@ -348,7 +348,7 @@ async def test_list_items_reads_cache_without_reconcile(client, app):
 
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})
     assert linked.status_code == 200
-    assert linked.json() == []
+    assert linked.json()["items"] == []
 
 
 @pytest.mark.asyncio
@@ -373,7 +373,7 @@ async def test_get_item_reads_cache_without_reconcile(client, app):
 
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})
     assert linked.status_code == 200
-    assert linked.json() == []
+    assert linked.json()["items"] == []
 
 
 @pytest.mark.asyncio

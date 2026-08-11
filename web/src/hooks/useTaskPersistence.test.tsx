@@ -15,6 +15,13 @@ const mockRefreshTasks = vi.fn().mockResolvedValue(undefined);
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({ taskId: undefined }),
+  useLocation: () => ({
+    pathname: "/tasks/new",
+    search: "",
+    hash: "",
+    key: "persist-test",
+    state: null,
+  }),
 }));
 
 vi.mock("../context/ToastContext", async () =>
@@ -188,7 +195,7 @@ describe("useTaskPersistence", () => {
       worksetId: "ws-1",
     });
     expect(mockCreateTask).not.toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith("/tasks");
+    expect(mockNavigate).toHaveBeenCalledWith("/schedule");
 
     cleanup(root, container);
   });

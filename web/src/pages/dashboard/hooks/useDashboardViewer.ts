@@ -85,8 +85,11 @@ export function useDashboardViewer() {
     return map;
   }, [taskStats, activeAnalysesByTaskId, queueStatus, paused]);
 
-  /** Agent children stay under `/tasks/:id/agent`, not the main grid. */
-  const gridTasks = useMemo(() => selectTopLevelTasks(tasks), [tasks]);
+  /** Agent children stay under `/tasks/:id/agent`; recurring lives on `/schedule`. */
+  const gridTasks = useMemo(
+    () => selectTopLevelTasks(tasks).filter((task) => task.analysisMode !== "recurring"),
+    [tasks],
+  );
 
   const [searchQuery, setSearchQuery] = usePersistedState(TASKS_SEARCH_STORAGE_KEY, "", {
     persistDebounceMs: 400,
@@ -125,9 +128,14 @@ export function useDashboardViewer() {
 
   const handleEdit = useCallback(
     (taskId: string) => {
+      const task = tasks.find((row) => row.id === taskId);
+      if (task?.analysisMode === "recurring") {
+        navigate(`/schedule/recurring/${taskId}/edit`);
+        return;
+      }
       navigate(`/tasks/${taskId}/edit`);
     },
-    [navigate],
+    [navigate, tasks],
   );
 
   const handleOpenProject = useCallback(

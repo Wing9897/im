@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { fetchTaskSchedule, putTaskSchedule } from "../api/taskSchedule";
 import { createRecurringTask, createTask, updateTask } from "../api/tasks";
 import {
@@ -58,8 +58,11 @@ export function useTaskPersistence({
 }: UseTaskPersistenceOptions): UseTaskPersistenceReturn {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const { tasks, tasksLoading, taskLoadError, refreshTasks } = useTaskCatalog();
+  const isScheduleRecurringRoute = location.pathname.startsWith("/schedule/recurring/");
+  const isTasksEditRoute = location.pathname.startsWith("/tasks/") && location.pathname.endsWith("/edit");
 
   const [isSaving, setIsSaving] = useState(false);
   const [scheduleHydrating, setScheduleHydrating] = useState(false);
@@ -90,6 +93,11 @@ export function useTaskPersistence({
     }
     const task = safeArray(tasks).find((t) => t.id === taskId);
     if (!task) return;
+    // Recurring calendars are managed under /schedule — redirect legacy /tasks edit deep links.
+    if (task.analysisMode === "recurring" && isTasksEditRoute && !isScheduleRecurringRoute) {
+      navigate(`/schedule/recurring/${taskId}/edit`, { replace: true });
+      return;
+    }
     hydratedTaskIdRef.current = taskId;
     const next = analysisTaskToFormState(task);
     if (task.analysisMode === "recurring") {
@@ -117,7 +125,18 @@ export function useTaskPersistence({
     setScheduleHydrating(false);
     setScheduleHydrateError(null);
     setFormState(next);
-  }, [taskId, tasks, tasksLoading, taskLoadError, setFormState, showToast, isMountedRef]);
+  }, [
+    taskId,
+    tasks,
+    tasksLoading,
+    taskLoadError,
+    setFormState,
+    showToast,
+    isMountedRef,
+    isTasksEditRoute,
+    isScheduleRecurringRoute,
+    navigate,
+  ]);
 
   // Retry schedule subresource without re-hydrating the whole task form.
   useEffect(() => {
@@ -186,7 +205,11 @@ export function useTaskPersistence({
       // Refresh the task catalog so the list page shows the new/updated task immediately
       await refreshTasks().catch(() => {});
       if (!isMountedRef.current) return;
-      navigate("/tasks");
+      const returnTo =
+        isScheduleRecurringRoute || formState.analysisMode === "recurring"
+          ? "/schedule"
+          : "/tasks";
+      navigate(returnTo);
     } catch (err) {
       if (!isMountedRef.current) return;
       const message = handleCommandError(err, showToast);
@@ -205,6 +228,7 @@ export function useTaskPersistence({
     isMountedRef,
     onError,
     refreshTasks,
+    isScheduleRecurringRoute,
   ]);
 
   return {

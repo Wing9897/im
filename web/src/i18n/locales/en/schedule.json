@@ -1,0 +1,57 @@
+{
+  "pageTitle": "My schedule",
+  "toolbarAria": "Schedule toolbar",
+  "tabs": {
+    "oneOff": "One-off events",
+    "recurring": "Recurring events"
+  },
+  "searchPlaceholder": "Search title, body, or location",
+  "searchAria": "Search schedule",
+  "create": "Add",
+  "createOneOff": "Add one-off event",
+  "createRecurring": "Add recurring event",
+  "createOneOffAria": "Add one-off event",
+  "createRecurringAria": "Add recurring event",
+  "empty": {
+    "oneOff": "No one-off events yet",
+    "oneOffHint": "Create a handwritten event, or add one from Timeline.",
+    "recurring": "No recurring events yet",
+    "recurringHint": "Create a repeating plan — it no longer appears under Tasks."
+  },
+  "card": {
+    "edit": "Edit",
+    "editAria": "Edit {title}",
+    "delete": "Delete",
+    "deleteAria": "Delete {title}",
+    "allDay": "All day",
+    "workset": "Workset",
+    "item": "Linked item",
+    "rrule": "Recurrence",
+    "noRrule": "No recurrence rule",
+    "location": "Location"
+  },
+  "loadMoreHint": "Showing {shown} / {total}",
+  "loadMoreHintHasMore": "Scroll for more (showing {shown})",
+  "deleteOneOffTitle": "Delete one-off event",
+  "deleteOneOffMessage": "Delete “{title}”? This cannot be undone.",
+  "deleteRecurringTitle": "Delete recurring event",
+  "deleteRecurringMessage": "Delete recurring event “{title}”? Future occurrences will stop.",
+  "toast": {
+    "oneOffCreated": "One-off event created",
+    "oneOffUpdated": "One-off event updated",
+    "oneOffDeleted": "One-off event deleted",
+    "recurringCreated": "Recurring event created",
+    "recurringDeleted": "Recurring event deleted",
+    "saveFailed": "Save failed",
+    "deleteFailed": "Delete failed",
+    "loadFailed": "Load failed"
+  },
+  "gridAria": "Schedule cards",
+  "rruleFreq": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "other": "Custom recurrence"
+  }
+}

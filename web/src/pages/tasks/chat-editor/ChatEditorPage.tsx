@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { validateScheduleValue } from "../ScheduleInput";
 import { ChatEditorForm } from "./ChatEditorForm";
 import { ChatEditorToolbar } from "./ChatEditorToolbar";
@@ -18,9 +18,11 @@ import { analysisModeSupportsTaskPresets } from "../../../domain/tasks/taskPrese
 export function ChatEditorPage() {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
+  const location = useLocation();
   const { taskId } = useParams<{ taskId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const isEditMode = Boolean(taskId);
+  const isScheduleRecurringRoute = location.pathname.startsWith("/schedule/recurring/");
   const worksetDeepLinkHandled = useRef(false);
 
   const {
@@ -100,7 +102,7 @@ export function ChatEditorPage() {
   const disabledSaveReason = scheduleError ?? saveBlockReason;
 
   const handleBack = () => {
-    navigate("/tasks");
+    navigate(isScheduleRecurringRoute ? "/schedule" : "/tasks");
   };
 
   const handlePresetApply = () => {

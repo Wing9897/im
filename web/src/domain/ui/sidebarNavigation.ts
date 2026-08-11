@@ -3,6 +3,7 @@ import { isSimpleModeHiddenPath } from "./simpleMode";
 export type SidebarIconKey =
   | "monitor"
   | "tasks"
+  | "schedule"
   | "items"
   | "sources"
   | "leaderboard"
@@ -32,6 +33,7 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
     labelKey: "groupManage",
     items: [
       { to: "/tasks", labelKey: "tasks", icon: "tasks", activePrefix: "/tasks" },
+      { to: "/schedule", labelKey: "schedule", icon: "schedule", activePrefix: "/schedule" },
       { to: "/items", labelKey: "items", icon: "items" },
       { to: "/sources", labelKey: "sources", icon: "sources", activePrefix: "/sources" },
     ],
