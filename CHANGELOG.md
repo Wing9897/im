@@ -9,7 +9,7 @@ First documented stable release line for Intelligence Monitor (Desktop + CLI + D
 ### Highlights
 
 - Collector connections under `/api/v1/sources*` (`sources` / `source_channels` / `messages.source_id`)
-- Wipe-only SQLite baseline **stamp 25** (`SCHEMA_SEMVER` `0.1.0-beta.26`); non-current stamps hard-reject → explicit reset
+- Wipe-only SQLite baseline **stamp 26** (`SCHEMA_SEMVER` `0.1.0-beta.27`); non-current stamps hard-reject → explicit reset
 - `user_events.kind` (`normal`|`expires`|`purchase_effective`) is authority for expiry projection and finance; title presets remain UX only
 - Remove item-level `price`; purchase_effective linked calendars carry `amount` + `direction` (`expense`|`income`)
 - Task modes: `leaderboard` / `intel_event` / `recurring` / `agent`

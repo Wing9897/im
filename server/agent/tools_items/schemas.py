@@ -10,7 +10,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "List trackable items with optional filters (workset, category, status, keyword). "
             "Use for inventory lookup — not for expiry questions (use items.list_expiring). "
-            "Returns core fields plus quantity/unit and attributes summary. "
+            "Returns core fields plus quantity/unit and notes. "
             "Money is on purchase_effective linked calendars (amount/direction), not the item."
         ),
         "parameters": {
@@ -31,7 +31,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "search": {
                     "type": "string",
-                    "description": "Optional title/notes/attributes/quantity/unit keyword filter.",
+                    "description": "Optional title/notes/quantity/unit keyword filter.",
                 },
                 "limit": {
                     "type": "integer",
@@ -50,7 +50,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "ALWAYS use this when the user asks about expiry / 到期 / 過期 / 即將到期 — "
             "do NOT invent item expiry dates from memory. "
             "Archived items are excluded; overdue active items are included by default. "
-            "Returns core fields plus attributes summary."
+            "Returns core fields plus notes summary."
         ),
         "parameters": {
             "type": "object",
@@ -77,7 +77,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                 },
                 "search": {
                     "type": "string",
-                    "description": "Optional title/notes/attributes keyword filter.",
+                    "description": "Optional title/notes keyword filter.",
                 },
             },
             "additionalProperties": False,
@@ -91,8 +91,7 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
             "Purchase / expiry dates are not set here — create linked calendar "
             "milestones via the Items form (kind=expires / purchase_effective). "
             "calendar.create_event only creates kind=normal events (no finance / expiry). "
-            "attributes are optional soft key/value extensions; changing category later "
-            "does not strip them. Confirm title with the user before writing."
+            "Free-form details go in notes. Confirm title with the user before writing."
         ),
         "parameters": {
             "type": "object",
@@ -113,11 +112,6 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "string",
                     "description": "Optional unit label (e.g. 個, 盒, kg, ml).",
                 },
-                "attributes": {
-                    "type": "object",
-                    "additionalProperties": {"type": "string"},
-                    "description": "Soft extension key/values (string values only).",
-                },
             },
             "required": ["title"],
             "additionalProperties": False,
@@ -126,8 +120,8 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": "items.update",
         "description": (
-            "Update a trackable item (title, workset, category, notes, status, quantity, unit, "
-            "attributes). Purchase/expiry dates and money are NOT set here — use linked calendar "
+            "Update a trackable item (title, workset, category, notes, status, quantity, unit). "
+            "Purchase/expiry dates and money are NOT set here — use linked calendar "
             "milestones via calendar tools. Confirm changes with the user before writing."
         ),
         "parameters": {
@@ -145,11 +139,6 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": "Inventory count (supports decimals).",
                 },
                 "unit": {"type": "string", "description": "Unit label (e.g. 個, 盒, kg)."},
-                "attributes": {
-                    "type": "object",
-                    "additionalProperties": {"type": "string"},
-                    "description": "Soft extension key/values (string values only).",
-                },
             },
             "required": ["id"],
             "additionalProperties": False,

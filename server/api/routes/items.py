@@ -75,7 +75,6 @@ async def post_category(request: Request, body: CategoryCreateBody) -> dict[str,
             sort_order=body.sortOrder,
             color=body.color,
             emoji=body.emoji,
-            field_schema=body.fieldSchema,
             default_remind_before_days=body.defaultRemindBeforeDays,
         )
     except ItemValidationError as exc:
@@ -103,7 +102,6 @@ async def patch_category_route(request: Request, category_id: str, body: Categor
         "sortOrder": "sort_order",
         "color": "color",
         "emoji": "emoji",
-        "fieldSchema": "field_schema",
         "defaultRemindBeforeDays": "default_remind_before_days",
     }
     for wire, arg in mapping.items():
@@ -164,7 +162,6 @@ async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
             emoji=body.emoji,
             quantity=body.quantity,
             unit=body.unit,
-            attributes=body.attributes,
         )
     except ItemValidationError as exc:
         _map_validation(exc)
@@ -193,7 +190,6 @@ async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody)
         "emoji": "emoji",
         "quantity": "quantity",
         "unit": "unit",
-        "attributes": "attributes",
     }
     kwargs = {mapping[wire]: value for wire, value in fields.items() if wire in mapping}
     try:

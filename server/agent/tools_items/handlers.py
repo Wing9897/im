@@ -33,7 +33,6 @@ def _compact_item_summary(item: dict[str, Any], *, today: date | None = None) ->
         "overdue": overdue,
         "quantity": item.get("quantity"),
         "unit": item.get("unit"),
-        "attributes": item.get("attributes") or {},
         "notes": item.get("notes") or "",
     }
 
@@ -117,7 +116,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
     if search_needle:
         filtered = []
         for item in items:
-            hay = f"{item.get('title') or ''} {item.get('notes') or ''} {item.get('attributes') or ''}".lower()
+            hay = f"{item.get('title') or ''} {item.get('notes') or ''}".lower()
             if search_needle in hay:
                 filtered.append(item)
             if len(filtered) >= limit:
@@ -126,7 +125,6 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
     else:
         items = items[:limit]
 
-    # Compact summary for the model: core + attributes.
     summaries = [_compact_item_summary(item, today=today) for item in items]
     return {
         "items": summaries,
@@ -153,7 +151,6 @@ async def _tool_create(db: Database, arguments: dict[str, Any]) -> dict[str, Any
             status="active",
             quantity=arguments.get("quantity"),
             unit=arguments.get("unit"),
-            attributes=arguments.get("attributes"),
         )
     except ItemValidationError as exc:
         return {"error": str(exc)}
@@ -178,7 +175,6 @@ async def _tool_update(db: Database, arguments: dict[str, Any]) -> dict[str, Any
         ("status", ("status",)),
         ("quantity", ("quantity",)),
         ("unit", ("unit",)),
-        ("attributes", ("attributes",)),
     )
     for wire_key, arg_keys in field_aliases:
         for arg_key in arg_keys:
@@ -199,7 +195,6 @@ async def _tool_update(db: Database, arguments: dict[str, Any]) -> dict[str, Any
             status=patch_kwargs.get("status", _UNSET),
             quantity=patch_kwargs.get("quantity", _UNSET),
             unit=patch_kwargs.get("unit", _UNSET),
-            attributes=patch_kwargs.get("attributes", _UNSET),
         )
     except ItemValidationError as exc:
         return {"error": str(exc)}

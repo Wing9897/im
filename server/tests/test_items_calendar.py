@@ -182,7 +182,7 @@ async def test_agent_list_expiring_and_create(app, client):
         "items.create",
         {
             "title": "Visa",
-            "attributes": {"issuer": "Gov"},
+            "notes": "issuer Gov",
         },
     )
     assert created.get("created") is True
@@ -233,12 +233,11 @@ async def test_agent_list_expiring_reads_denormalized_cache(app):
 
 
 @pytest.mark.asyncio
-async def test_delete_category_nulls_category_keeps_attributes(client):
+async def test_delete_category_nulls_category_keeps_item(client):
     cat = await client.post(
         "/api/v1/items/categories",
         json={
             "name": "Temp",
-            "fieldSchema": [{"key": "x", "label": "X"}],
             "defaultRemindBeforeDays": 7,
         },
     )
@@ -250,7 +249,7 @@ async def test_delete_category_nulls_category_keeps_attributes(client):
         json={
             "title": "Thing",
             "categoryId": cat_id,
-            "attributes": {"x": "1", "y": "2"},
+            "notes": "x=1 y=2",
         },
     )
     assert item.status_code == 201
@@ -263,7 +262,8 @@ async def test_delete_category_nulls_category_keeps_attributes(client):
     assert fetched.status_code == 200
     body = fetched.json()
     assert body["categoryId"] is None
-    assert body["attributes"] == {"x": "1", "y": "2"}
+    assert body["notes"] == "x=1 y=2"
+    assert "attributes" not in body
 
 
 @pytest.mark.asyncio

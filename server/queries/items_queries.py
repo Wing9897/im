@@ -28,15 +28,14 @@ async def insert_category(
     sort_order: int,
     color: str | None,
     emoji: str | None,
-    field_schema: str,
     default_remind_before_days: int | None,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO item_categories ("
-        "id, name, slug, sort_order, color, emoji, field_schema, default_remind_before_days, "
+        "id, name, slug, sort_order, color, emoji, default_remind_before_days, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             category_id,
             name,
@@ -44,7 +43,6 @@ async def insert_category(
             sort_order,
             color,
             emoji,
-            field_schema,
             default_remind_before_days,
             now,
             now,
@@ -61,20 +59,18 @@ async def update_category(
     sort_order: int,
     color: str | None,
     emoji: str | None,
-    field_schema: str,
     default_remind_before_days: int | None,
     now: str,
 ) -> None:
     await tx.execute(
         "UPDATE item_categories SET name = ?, slug = ?, sort_order = ?, color = ?, "
-        "emoji = ?, field_schema = ?, default_remind_before_days = ?, updated_at = ? WHERE id = ?",
+        "emoji = ?, default_remind_before_days = ?, updated_at = ? WHERE id = ?",
         (
             name,
             slug,
             sort_order,
             color,
             emoji,
-            field_schema,
             default_remind_before_days,
             now,
             category_id,
@@ -118,11 +114,11 @@ async def fetch_item_rows(
         needle = f"%{search.strip().lower()}%"
         clauses.append(
             "("
-            "LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(attributes_json) LIKE ? "
+            "LOWER(title) LIKE ? OR LOWER(notes) LIKE ? "
             "OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ?"
             ")"
         )
-        params.extend([needle, needle, needle, needle, needle])
+        params.extend([needle, needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return await db.fetch_all(
         f"SELECT * FROM items {where} ORDER BY "
@@ -213,15 +209,14 @@ async def insert_item(
     emoji: str | None,
     quantity: float | None,
     unit: str | None,
-    attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "INSERT INTO items ("
         "id, title, category_id, workset_id, expires_at, "
         "remind_before_days, notes, status, emoji, quantity, unit, "
-        "attributes_json, created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             item_id,
             title,
@@ -234,7 +229,6 @@ async def insert_item(
             emoji,
             quantity,
             unit,
-            attributes_json,
             now,
             now,
         ),
@@ -255,13 +249,12 @@ async def update_item(
     emoji: str | None,
     quantity: float | None,
     unit: str | None,
-    attributes_json: str,
     now: str,
 ) -> None:
     await tx.execute(
         "UPDATE items SET title = ?, category_id = ?, workset_id = ?, "
         "expires_at = ?, remind_before_days = ?, notes = ?, status = ?, emoji = ?, "
-        "quantity = ?, unit = ?, attributes_json = ?, updated_at = ? WHERE id = ?",
+        "quantity = ?, unit = ?, updated_at = ? WHERE id = ?",
         (
             title,
             category_id,
@@ -273,7 +266,6 @@ async def update_item(
             emoji,
             quantity,
             unit,
-            attributes_json,
             now,
             item_id,
         ),
