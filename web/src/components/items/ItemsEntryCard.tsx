@@ -12,7 +12,7 @@ import type { TrackableItem } from "../../api/items";
 import {
   expiryToneAccentClass,
   expiryToneBadgeTone,
-} from "../../domain/items/itemAttributes";
+} from "../../domain/items/itemExpiryTone";
 import {
   itemCardExpirySubtitle,
   itemExpiryBadgeLabel,

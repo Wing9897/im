@@ -15,7 +15,7 @@ import {
   sortCategorySummaries,
 } from "../../domain/items/categoryAggregates";
 import { buildDuplicateItemBody } from "../../domain/items/itemDuplicate";
-import { itemsEmptyKind } from "../../domain/items/itemAttributes";
+import { itemsEmptyKind } from "../../domain/items/itemExpiryTone";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { scheduleEmojiPickerPreload } from "../../components/items/emoji/emojiPickerLoader";
 import {

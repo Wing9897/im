@@ -46,15 +46,6 @@ describe("EventListPanel", () => {
       { id: "ws-ops", name: "營運", createdAt: null, updatedAt: null },
     ];
 
-    const purchased = makeTimelineItem({
-      id: "item:p",
-      title: "milk",
-      source: "item",
-      itemDateKind: "purchased",
-      worksetId: SYSTEM_WORKSET_ID,
-      startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
-      endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
-    });
     const remind = makeTimelineItem({
       id: "item:r",
       title: "提醒 · milk",
@@ -63,15 +54,6 @@ describe("EventListPanel", () => {
       worksetId: SYSTEM_WORKSET_ID,
       startTime: new Date(2026, 6, 14, 12, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 14, 13, 0, 0).toISOString(),
-    });
-    const expires = makeTimelineItem({
-      id: "item:e",
-      title: "milk",
-      source: "item",
-      itemDateKind: "expires",
-      worksetId: SYSTEM_WORKSET_ID,
-      startTime: new Date(2026, 6, 14, 14, 0, 0).toISOString(),
-      endTime: new Date(2026, 6, 14, 15, 0, 0).toISOString(),
     });
     const assistant = makeTimelineItem({
       id: "user:a",
@@ -116,9 +98,7 @@ describe("EventListPanel", () => {
     });
     const { container } = renderPanel({
       rangeEvents: [
-        purchased,
         remind,
-        expires,
         userRemind,
         assistant,
         assistantRemind,
@@ -207,7 +187,7 @@ describe("EventListPanel", () => {
       id: "item-imp",
       title: "milk",
       source: "item",
-      itemDateKind: "expires",
+      itemDateKind: "remind",
       important: true,
       startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
       endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),

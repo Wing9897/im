@@ -4,7 +4,7 @@
  */
 
 import type { ItemCategory, TrackableItem } from "../../api/items";
-import { daysUntil, expiryTone } from "./itemAttributes";
+import { daysUntil, expiryTone } from "./itemExpiryTone";
 
 /** URL / route sentinel for items with null category_id. */
 export const UNCATEGORIZED_CATEGORY_ID = "uncategorized";

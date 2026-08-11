@@ -220,7 +220,7 @@ WRITE_TOOL_SCHEMAS: list[dict[str, Any]] = [
         "description": (
             "Mark a timeline event as important (❗). Works for user events, "
             "analysis findings, RRULE occurrence ids, and item DATE projections "
-            "(itemDateKind=remind only; no purchased/expires projections). Idempotent."
+            "(itemDateKind=remind only). Idempotent."
         ),
         "parameters": {
             "type": "object",

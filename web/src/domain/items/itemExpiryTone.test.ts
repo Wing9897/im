@@ -5,7 +5,7 @@ import {
   expiryToneAccentClass,
   expiryToneBadgeTone,
   itemsEmptyKind,
-} from "./itemAttributes";
+} from "./itemExpiryTone";
 
 describe("daysUntil / expiryTone", () => {
   it("computes remaining days and tones", () => {

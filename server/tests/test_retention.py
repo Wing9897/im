@@ -464,8 +464,7 @@ async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
         ("ue-live", "Live", now, now, now),
     )
     await db.execute(
-        "INSERT INTO items (id, title, notes, status, created_at, updated_at) "
-        "VALUES (?, ?, '', 'active', ?, ?)",
+        "INSERT INTO items (id, title, notes, status, created_at, updated_at) VALUES (?, ?, '', 'active', ?, ?)",
         ("item-live", "Live item", now, now),
     )
     await db.execute(

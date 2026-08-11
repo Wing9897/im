@@ -5,7 +5,7 @@ import {
   isItemExpiringSoon,
   UNCATEGORIZED_CATEGORY_ID,
 } from "../../domain/items/categoryAggregates";
-import { daysUntil } from "../../domain/items/itemAttributes";
+import { daysUntil } from "../../domain/items/itemExpiryTone";
 
 export type ItemsFilterKey = "all" | "expiring" | "overdue" | "archived";
 

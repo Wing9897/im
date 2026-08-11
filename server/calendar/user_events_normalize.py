@@ -11,6 +11,8 @@ from typing import Any
 
 from server.calendar.user_event_kinds import (
     finance_allowed_for_kind,
+)
+from server.calendar.user_event_kinds import (
     normalize_user_event_kind as _normalize_kind_value,
 )
 from server.db.database import Database

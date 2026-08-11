@@ -16,6 +16,7 @@ import {
   isPurchaseEffectiveCalendarEvent,
 } from "../../../domain/timeline/userEventCalendarKind";
 import { useAnchoredMenu } from "../../../hooks/useAnchoredMenu";
+import { spacing } from "../../../styles/tokens";
 import { ItemFormCvSection } from "./ItemFormCvSection";
 import { ItemFormDashedAddChip } from "./ItemFormDashedAddChip";
 import {
@@ -241,7 +242,7 @@ function LinkedCalendarAddControl({
   const { open, toggle, close, menuPos, menuRef, rootRef } = useAnchoredMenu({
     enabled: !disabled,
     align: "start",
-    gap: 4,
+    gap: spacing.xs,
     edge: 8,
     fallbackMenuWidth: 180,
     flip: true,

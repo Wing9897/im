@@ -441,7 +441,7 @@ The helper deletes only known SQLite database files and their `-wal`／`-shm` si
 
 ### Schema support matrix
 
-Stamp-23 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
+Stamp-26 wipe-only behavior is documented under [Schema baseline (wipe-only)](#schema-baseline-wipe-only). Summary:
 
 | Opened database | Startup behavior | Mutation |
 |-----------------|------------------|---------|
