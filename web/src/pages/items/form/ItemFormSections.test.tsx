@@ -22,7 +22,7 @@ describe("ItemFormNotesSection", () => {
     container.remove();
   });
 
-  it("renders notes textarea without attributes extras section", async () => {
+  it("renders notes textarea without retired extras section", async () => {
     await act(async () => {
       root.render(
         createElement(ItemFormNotesSection, {

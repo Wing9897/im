@@ -161,7 +161,7 @@ describe("ItemForm", () => {
     );
   });
 
-  it("does not render attributes / extras section", async () => {
+  it("does not render retired extras section", async () => {
     await renderForm();
     expect(document.querySelector('[data-testid="item-form-extras"]')).toBeNull();
     expect(document.querySelector('[data-testid="item-form-attribute-grid"]')).toBeNull();

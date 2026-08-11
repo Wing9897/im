@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from server.calendar.user_event_kinds import LINKED_EXPIRY_TITLES
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -19,8 +18,6 @@ QUANTITY_MAX = 1_000_000_000
 SLUG_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 
 ALLOWED_STATUSES = frozenset({"active", "archived"})
-#: Alias of linked-calendar「到期」/ Expires title presets (kept for callers).
-RESERVED_ATTRIBUTE_KEYS = LINKED_EXPIRY_TITLES
 
 _UNSET = object()
 

@@ -1,5 +1,5 @@
 /**
- * REST client for trackable items + soft-template categories.
+ * REST client for trackable items + categories.
  *
  * Transport stays hand-written; response/body shapes align with OpenAPI
  * ``components["schemas"]`` (same style as tasks.ts).

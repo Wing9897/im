@@ -11,7 +11,7 @@ export const ITEM_FORM_CHIP_GRID_CLASS =
 export const ITEM_FORM_CHIP_LABEL_CLASS =
   "block max-w-full truncate text-center text-caption font-medium text-text-primary";
 
-/** Secondary caption under chips (dates / keys) — muted vs primary title. */
+/** Secondary caption under chips (dates / sublabels) — muted vs primary title. */
 export const ITEM_FORM_CHIP_KEY_CLASS =
   "block max-w-full truncate text-center text-card-meta text-text-muted";
 

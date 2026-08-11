@@ -1,6 +1,6 @@
 /**
  * Optional inventory metadata in the CV header: quantity + unit paired.
- * Fixed item-level fields — not category attribute schema.
+ * Fixed item-level fields — quantity / unit only.
  * Money lives on purchase/effective linked calendars (amount/direction).
  */
 
