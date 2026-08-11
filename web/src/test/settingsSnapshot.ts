@@ -1,22 +1,8 @@
+/** Default system settings snapshot for tests (Stamp 29 — no LLM provider slots). */
 import type { SystemSettingsSnapshot } from "../types";
 
-/** Default system settings snapshot for tests. */
 export const defaultSettingsSnapshot: SystemSettingsSnapshot = {
-  llmProvider: "ollama",
   analysisPaused: false,
-  ollamaBaseUrl: "http://localhost:11434",
-  ollamaModel: "llama3",
-  ollamaThinkingEnabled: false,
-  openaiBaseUrl: "",
-  openaiModel: "",
-  openaiApiKey: "",
-  openaiJsonMode: "json_schema",
-  geminiBaseUrl: "",
-  geminiModel: "",
-  geminiApiKey: "",
-  openrouterBaseUrl: "",
-  openrouterModel: "",
-  openrouterApiKey: "",
   analysisBatchMessageLimit: "50",
   analysisMaxTotalChars: "100000",
   analysisMaxEstimatedInputTokens: "8000",
@@ -34,13 +20,6 @@ export const defaultSettingsSnapshot: SystemSettingsSnapshot = {
   autoPauseOnRetriesExhausted: true,
   weatherLocation: "system",
   uiLocale: "zh-Hant",
-  assistantWebSearchEnabled: true,
-  webSearchProvider: "auto",
-  braveSearchApiKey: "",
-  assistantLlmProvider: "",
-  assistantLlmBaseUrl: "",
-  assistantLlmModel: "",
-  assistantLlmApiKey: "",
   agentHistoryMaxMessages: "40",
   agentHistoryMaxChars: "48000",
   assistantDisplayName: "",

@@ -49,7 +49,7 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
     messages = _messages_from_body(body)
     llm: ConfigurableLlmClient | None = None
     try:
-        llm = await ConfigurableLlmClient.from_db_for_agent(db)
+        llm = await ConfigurableLlmClient.from_assistant_staff(db)
         runtime = AgentRuntime(db, llm, broadcaster=request.app.state.broadcaster)
         per_call = await get_config_int(db, "llm_generation_timeout")
         wall = agent_wall_timeout_seconds(per_call)

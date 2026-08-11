@@ -8,6 +8,8 @@ import { controlBaseClass, controlSizeClass } from "./controlStyles";
 export type MenuSelectOption = {
   value: string;
   label: string;
+  /** Shown in the list but not selectable. */
+  disabled?: boolean;
 };
 
 type MenuSelectVariant = "default" | "field" | "toolbar";
@@ -28,6 +30,11 @@ type MenuSelectProps = {
   variant?: MenuSelectVariant;
   /** Portal the listbox to `document.body` so overflow ancestors cannot clip it. */
   menuPortal?: boolean;
+  /**
+   * When set, an unmatched / empty ``value`` shows this label instead of
+   * silently falling back to ``options[0]`` (avoids fake “selected” chrome).
+   */
+  placeholder?: string;
   "aria-label"?: string;
   "data-testid"?: string;
   disabled?: boolean;
@@ -154,6 +161,7 @@ export function MenuSelect({
   triggerClassName,
   variant = "default",
   menuPortal = false,
+  placeholder,
   disabled = false,
   "aria-label": ariaLabel,
   "data-testid": testId,
@@ -175,11 +183,15 @@ export function MenuSelect({
   const selected = useMemo(() => {
     const match = options.find((opt) => opt.value === value);
     if (match) return match;
+    if (placeholder !== undefined) {
+      return { value: value || "", label: placeholder };
+    }
     if (options[0]) return options[0];
     return { value, label: value || "—" };
-  }, [options, value]);
+  }, [options, placeholder, value]);
 
-  const closeAndSelect = (next: string) => {
+  const closeAndSelect = (next: string, optionDisabled?: boolean) => {
+    if (optionDisabled) return;
     onChange(next);
     setOpen(false);
   };
@@ -193,6 +205,8 @@ export function MenuSelect({
   };
 
   const displayLabel = selected.label.trim() || "—";
+  const showingPlaceholder =
+    placeholder !== undefined && (!value || !options.some((opt) => opt.value === value));
 
   const shellClass = isField
     ? ["relative block w-full min-w-0 box-border", className ?? ""].filter(Boolean).join(" ")
@@ -250,23 +264,28 @@ export function MenuSelect({
       data-testid={testId ? `${testId}-list` : undefined}
     >
       {options.map((opt) => {
-        const isActive = opt.value === selected.value;
+        const isActive = opt.value === selected.value && Boolean(value);
+        const optionDisabled = Boolean(opt.disabled);
         return (
           <li key={opt.value} role="presentation">
             <button
               type="button"
               role="option"
               aria-selected={isActive}
+              aria-disabled={optionDisabled || undefined}
+              disabled={optionDisabled}
               title={opt.label}
               data-testid={testId ? `${testId}-option-${opt.value}` : undefined}
               className={[
                 "rounded-sm border-none px-sm py-1.5 text-caption leading-snug",
-                isActive
-                  ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-medium text-accent"
-                  : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]",
+                optionDisabled
+                  ? "cursor-not-allowed bg-transparent text-text-muted opacity-70"
+                  : isActive
+                    ? "bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-medium text-accent"
+                    : "bg-transparent text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]",
               ].join(" ")}
               style={optionStyle}
-              onClick={() => closeAndSelect(opt.value)}
+              onClick={() => closeAndSelect(opt.value, optionDisabled)}
             >
               {opt.label}
             </button>
@@ -310,7 +329,12 @@ export function MenuSelect({
         }}
         onKeyDown={onTriggerKeyDown}
       >
-        <span style={usesFormChrome ? fieldLabelStyle : labelStyle}>{displayLabel}</span>
+        <span
+          style={usesFormChrome ? fieldLabelStyle : labelStyle}
+          className={showingPlaceholder ? "text-text-muted" : undefined}
+        >
+          {displayLabel}
+        </span>
         <ChevronDown
           size={14}
           strokeWidth={2.2}

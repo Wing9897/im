@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import i18n from "../../i18n";
-import type { LlmProvider, SystemSettingsSnapshot } from "../../types";
+import type { LlmProvider } from "../../types";
 
 type Translate = TFunction | typeof i18n.t;
 
@@ -42,9 +42,6 @@ export function geminiBaseUrlPresetId(
 }
 
 type LlmProviderFieldConfig = {
-  baseUrlKey: keyof SystemSettingsSnapshot;
-  modelKey: keyof SystemSettingsSnapshot;
-  apiKeyKey: keyof SystemSettingsSnapshot | null;
   emptyBaseUrlMessage: string;
   emptyModelMessage: string;
   label: string;
@@ -61,9 +58,6 @@ export function getLlmProviderConfig(
 ): Record<LlmProvider, LlmProviderFieldConfig> {
   return {
     ollama: {
-      baseUrlKey: "ollamaBaseUrl",
-      modelKey: "ollamaModel",
-      apiKeyKey: null,
       emptyBaseUrlMessage: String(t("settings:llm.providers.ollama.emptyBaseUrlMessage")),
       emptyModelMessage: String(t("settings:llm.providers.ollama.emptyModelMessage")),
       label: String(t("settings:llm.providers.ollama.label")),
@@ -75,9 +69,6 @@ export function getLlmProviderConfig(
       apiKeyPlaceholder: String(t("settings:llm.providers.ollama.apiKeyPlaceholder")),
     },
     openai_compatible: {
-      baseUrlKey: "openaiBaseUrl",
-      modelKey: "openaiModel",
-      apiKeyKey: "openaiApiKey",
       emptyBaseUrlMessage: String(t("settings:llm.providers.openai_compatible.emptyBaseUrlMessage")),
       emptyModelMessage: String(t("settings:llm.providers.openai_compatible.emptyModelMessage")),
       label: String(t("settings:llm.providers.openai_compatible.label")),
@@ -88,9 +79,6 @@ export function getLlmProviderConfig(
       apiKeyPlaceholder: "sk-...",
     },
     gemini_compatible: {
-      baseUrlKey: "geminiBaseUrl",
-      modelKey: "geminiModel",
-      apiKeyKey: "geminiApiKey",
       emptyBaseUrlMessage: String(t("settings:llm.providers.gemini_compatible.emptyBaseUrlMessage")),
       emptyModelMessage: String(t("settings:llm.providers.gemini_compatible.emptyModelMessage")),
       label: String(t("settings:llm.providers.gemini_compatible.label")),
@@ -101,9 +89,6 @@ export function getLlmProviderConfig(
       apiKeyPlaceholder: "AIza...",
     },
     openrouter: {
-      baseUrlKey: "openrouterBaseUrl",
-      modelKey: "openrouterModel",
-      apiKeyKey: "openrouterApiKey",
       emptyBaseUrlMessage: String(t("settings:llm.providers.openrouter.emptyBaseUrlMessage")),
       emptyModelMessage: String(t("settings:llm.providers.openrouter.emptyModelMessage")),
       label: String(t("settings:llm.providers.openrouter.label")),
@@ -132,4 +117,20 @@ export function getLlmProviderOptions(
     label: config[id].label,
     hint: config[id].hint,
   }));
+}
+
+export function isLlmProvider(value: string | undefined | null): value is LlmProvider {
+  return (
+    value === "ollama" ||
+    value === "openai_compatible" ||
+    value === "gemini_compatible" ||
+    value === "openrouter"
+  );
+}
+
+export function normalizeLlmProvider(
+  value: string | undefined | null,
+  fallback: LlmProvider = "ollama",
+): LlmProvider {
+  return isLlmProvider(value) ? value : fallback;
 }

@@ -11,9 +11,11 @@ from httpx import ASGITransport, AsyncClient
 from server.auth.admin_auth import create_admin_account
 from server.config import set_configs
 from server.db.database import Database
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.main import create_app
 from server.secrets import _fernet, protect_text
 from server.secrets_probe import probe_stored_secrets, scrub_undecryptable_secrets
+from server.util import utc_now_iso
 
 
 async def _app_with_db(tmp_path: Path, *, db_name: str = "secrets-gate.db"):
@@ -31,6 +33,33 @@ async def _break_key(key_path: Path) -> None:
     _fernet.cache_clear()
     key_path.write_bytes(b"plain:" + Fernet.generate_key())
     _fernet.cache_clear()
+
+
+async def _ensure_default_profile(db: Database) -> None:
+    exists = await db.fetch_value(
+        "SELECT id FROM llm_profiles WHERE id = ?",
+        (DEFAULT_LLM_PROFILE_ID,),
+    )
+    if exists:
+        return
+    now = utc_now_iso()
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, 'Test Ollama', 'ollama', 'http://localhost:11434', 'llama-test', '', "
+        "0, 'disabled', 1, 'auto', '', 1, ?, ?)",
+        (DEFAULT_LLM_PROFILE_ID, now, now),
+    )
+
+
+async def _set_default_profile_api_key(db: Database, api_key: str) -> None:
+    await _ensure_default_profile(db)
+    await db.execute(
+        "UPDATE llm_profiles SET api_key = ?, updated_at = ? WHERE id = ?",
+        (protect_text(api_key), utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+    )
 
 
 @pytest.mark.asyncio
@@ -56,8 +85,8 @@ async def test_probe_fails_when_ciphertext_cannot_decrypt(tmp_path, monkeypatch)
     await db.connect()
     await db.ensure_schema()
     try:
-        await set_configs(db, {"openai_api_key": "sk-real"})
-        raw = await db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'")
+        await _set_default_profile_api_key(db, "sk-real")
+        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,))
         assert str(raw).startswith("enc:v1:")
 
         # Replace key file with a different Fernet key (plain: format for non-DPAPI path).
@@ -81,7 +110,8 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
     await db.connect()
     await db.ensure_schema()
     try:
-        await set_configs(db, {"openai_api_key": "sk-real", "ui_locale": "zh-Hans"})
+        await _set_default_profile_api_key(db, "sk-real")
+        await set_configs(db, {"ui_locale": "zh-Hans"})
         await db.execute(
             "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
             "VALUES ('a1', 'email', 'L', 'connected', ?, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
@@ -99,18 +129,19 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
         )
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_rrule, created_at, updated_at) "
-            "VALUES ('t1', 'Keep me', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', "
-            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
+            "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+            "VALUES ('t1', 'Keep me', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, "
+            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
+            (DEFAULT_LLM_PROFILE_ID,),
         )
 
         counts = await scrub_undecryptable_secrets(db)
-        assert counts["system_config"] == 1
+        assert counts["llm_profiles"] == 1
         assert counts["sources"] == 1
         assert counts["stale_connected"] == 1
         assert counts["actions"] == 1
 
-        assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'") is None
+        assert await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,)) == ""
         assert await db.fetch_value("SELECT value FROM system_config WHERE key = 'ui_locale'") == "zh-Hans"
         assert await db.fetch_value("SELECT credentials FROM sources WHERE id = 'a1'") is None
         assert await db.fetch_value("SELECT status FROM sources WHERE id = 'a1'") == "disconnected"
@@ -136,12 +167,13 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
     async with app1.router.lifespan_context(app1):
         assert app1.state.secrets_ready is True
         await create_admin_account(app1.state.db, username="admin", password="password1")
-        await set_configs(app1.state.db, {"openai_api_key": "sk-keep"})
+        await _set_default_profile_api_key(app1.state.db, "sk-keep")
         await app1.state.db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_rrule, created_at, updated_at) "
-            "VALUES ('t-keep', 'Keep Task', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', "
-            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
+            "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+            "VALUES ('t-keep', 'Keep Task', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, "
+            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
+            (DEFAULT_LLM_PROFILE_ID,),
         )
         transport = ASGITransport(app=app1)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -176,7 +208,7 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
             body = rotate.json()
             assert body["message"] == "Secrets rotated"
             assert body["secretsReady"] is True
-            assert body["scrubbed"]["system_config"] >= 1
+            assert body["scrubbed"]["llm_profiles"] >= 1
 
             health2 = await client.get("/api/v1/health")
             assert health2.status_code == 200
@@ -190,8 +222,11 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
             assert task_name == "Keep Task"
             admin = await app2.state.db.fetch_value("SELECT username FROM admin_accounts WHERE username = 'admin'")
             assert admin == "admin"
-            cipher = await app2.state.db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'")
-            assert cipher is None
+            cipher = await app2.state.db.fetch_value(
+                "SELECT api_key FROM llm_profiles WHERE id = ?",
+                (DEFAULT_LLM_PROFILE_ID,),
+            )
+            assert cipher == ""
 
             # Already ready → reject further rotate.
             again = await client.post(
@@ -211,7 +246,7 @@ async def test_secrets_gate_blocks_then_reset_unlocks(tmp_path, monkeypatch):
     app1 = await _app_with_db(tmp_path, db_name="gate.db")
     async with app1.router.lifespan_context(app1):
         assert app1.state.secrets_ready is True
-        await set_configs(app1.state.db, {"openai_api_key": "sk-keep"})
+        await _set_default_profile_api_key(app1.state.db, "sk-keep")
         health = None
         transport = ASGITransport(app=app1)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:

@@ -8,9 +8,16 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from server.analyzer.llm_client import ConfigurableLlmClient, load_agent_llm_config, load_llm_config
+from server.analyzer.llm_config import (
+    DEFAULT_PROVIDER_BASE_URLS,
+    config_from_draft_fields,
+    load_llm_config_for_profile,
+)
 from server.analyzer.llm_json import extract_json_from_markdown, normalize_items, parse_json_response
 from server.analyzer.llm_providers import LlmClientError
-from server.config import set_configs
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.secrets import protect_text
+from server.util import utc_now_iso
 
 
 def test_extract_json_from_markdown_reads_fenced_block() -> None:
@@ -47,16 +54,54 @@ def test_normalize_items_from_list_and_singleton() -> None:
     assert normalize_items({"id": "solo"}) == [{"id": "solo"}]
 
 
+async def _update_default_profile(
+    db,
+    *,
+    provider: str,
+    model: str = "",
+    api_key: str = "",
+    base_url: str = "",
+) -> None:
+    await db.execute(
+        "UPDATE llm_profiles SET provider = ?, model = ?, api_key = ?, base_url = ?, updated_at = ? "
+        "WHERE id = ?",
+        (
+            provider,
+            model,
+            protect_text(api_key) if api_key else "",
+            base_url,
+            utc_now_iso(),
+            DEFAULT_LLM_PROFILE_ID,
+        ),
+    )
+
+
+async def test_load_llm_config_uses_default_profile(app) -> None:
+    db = app.state.db
+    await _update_default_profile(
+        db,
+        provider="ollama",
+        model="llama-default",
+        base_url="http://localhost:11434",
+    )
+
+    config = await load_llm_config(db)
+
+    assert config["provider"] == "ollama"
+    assert config["provider_raw"] == "ollama"
+    assert config["model"] == "llama-default"
+    assert config["base_url"] == "http://localhost:11434"
+    assert config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+
+
 async def test_load_llm_config_resolves_provider_aliases(app) -> None:
     db = app.state.db
-    await set_configs(
+    await _update_default_profile(
         db,
-        {
-            "llm_provider": "gemini_compatible",
-            "gemini_model": "gemini-test",
-            "gemini_api_key": "secret",
-            "gemini_base_url": "https://example.test/v1beta",
-        },
+        provider="gemini_compatible",
+        model="gemini-test",
+        api_key="secret",
+        base_url="https://example.test/v1beta",
     )
 
     config = await load_llm_config(db)
@@ -68,117 +113,147 @@ async def test_load_llm_config_resolves_provider_aliases(app) -> None:
     assert config["base_url"] == "https://example.test/v1beta"
 
 
-async def _seed_global_and_openai(db) -> None:
-    await set_configs(
-        db,
-        {
-            "llm_provider": "ollama",
-            "ollama_model": "llama-global",
-            "ollama_base_url": "http://localhost:11434",
-            "openai_model": "gpt-agent-override",
-            "openai_api_key": "openai-secret",
-            "openai_base_url": "https://api.openai.com/v1",
-        },
-    )
-
-
-@pytest.mark.parametrize(
-    "assistant_provider",
-    ["", "follow", "FOLLOW", "not-a-provider"],
-)
-async def test_load_agent_llm_config_follows_global(app, assistant_provider: str) -> None:
+async def test_load_agent_llm_config_follows_default_assistant_staff(app) -> None:
     db = app.state.db
-    await _seed_global_and_openai(db)
-    await set_configs(db, {"assistant_llm_provider": assistant_provider})
+    await _update_default_profile(
+        db,
+        provider="ollama",
+        model="llama-agent",
+        base_url="http://localhost:11434",
+    )
 
     config = await load_agent_llm_config(db)
 
     assert config["provider"] == "ollama"
-    assert config["provider_raw"] == "ollama"
-    assert config["model"] == "llama-global"
-    assert config["base_url"] == "http://localhost:11434"
+    assert config["model"] == "llama-agent"
+    assert config["profile_id"] == DEFAULT_LLM_PROFILE_ID
 
 
-async def test_load_agent_llm_config_override_empty_fields_fall_back_to_provider_prefix(
-    app,
-) -> None:
-    """Empty assistant_llm_* fields reuse the override provider's global {prefix}_* keys."""
+async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(app) -> None:
+    """Assistant staff may live on a non-default profile — resolve by staff_class."""
     db = app.state.db
-    await _seed_global_and_openai(db)
-    await set_configs(
+    now = utc_now_iso()
+    profile_id = "profile-assistant-elsewhere"
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        (
+            profile_id,
+            "Assistant elsewhere",
+            "openai_compatible",
+            "https://api.openai.com/v1",
+            "gpt-assistant",
+            protect_text("assistant-secret"),
+            now,
+            now,
+        ),
+    )
+    # Move the sole active assistant staff instance off the default profile.
+    await db.execute(
+        "UPDATE llm_staff_instances SET profile_id = ?, updated_at = ? "
+        "WHERE staff_class = 'assistant'",
+        (profile_id, now),
+    )
+    await _update_default_profile(
         db,
-        {
-            "assistant_llm_provider": "openai",
-            "assistant_llm_base_url": "",
-            "assistant_llm_model": "",
-            "assistant_llm_api_key": "",
-        },
+        provider="ollama",
+        model="should-not-use",
+        base_url="http://localhost:11434",
     )
 
     config = await load_agent_llm_config(db)
 
     assert config["provider"] == "openai"
-    assert config["provider_raw"] == "openai"
-    assert config["model"] == "gpt-agent-override"
-    assert config["api_key"] == "openai-secret"
-    assert config["base_url"] == "https://api.openai.com/v1"
-
-
-async def test_load_agent_llm_config_override_uses_assistant_specific_fields(app) -> None:
-    db = app.state.db
-    await _seed_global_and_openai(db)
-    await set_configs(
-        db,
-        {
-            "assistant_llm_provider": "openai",
-            "assistant_llm_base_url": "https://assistant.example/v1",
-            "assistant_llm_model": "gpt-assistant-only",
-            "assistant_llm_api_key": "assistant-secret",
-        },
-    )
-
-    config = await load_agent_llm_config(db)
-
-    assert config["provider"] == "openai"
-    assert config["provider_raw"] == "openai"
-    assert config["model"] == "gpt-assistant-only"
+    assert config["model"] == "gpt-assistant"
     assert config["api_key"] == "assistant-secret"
-    assert config["base_url"] == "https://assistant.example/v1"
+    assert config["profile_id"] == profile_id
 
 
-async def test_load_agent_llm_config_override_partial_fields_mix_with_prefix(app) -> None:
-    """Only non-empty assistant fields override; the rest stay on provider prefix."""
+async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:
     db = app.state.db
-    await _seed_global_and_openai(db)
-    await set_configs(
-        db,
-        {
-            "assistant_llm_provider": "openai",
-            "assistant_llm_model": "gpt-assistant-only",
-            "assistant_llm_base_url": "",
-            "assistant_llm_api_key": "",
-        },
+    now = utc_now_iso()
+    profile_id = "profile-openai-test"
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        (
+            profile_id,
+            "OpenAI test",
+            "openai_compatible",
+            "https://api.openai.com/v1",
+            "gpt-test",
+            protect_text("openai-secret"),
+            now,
+            now,
+        ),
     )
 
-    config = await load_agent_llm_config(db)
-
-    assert config["provider"] == "openai"
-    assert config["model"] == "gpt-assistant-only"
-    assert config["api_key"] == "openai-secret"
-    assert config["base_url"] == "https://api.openai.com/v1"
-
-
-async def test_load_agent_llm_config_override_accepts_alias(app) -> None:
-    db = app.state.db
-    await _seed_global_and_openai(db)
-    await set_configs(db, {"assistant_llm_provider": "openai_compatible"})
-
-    config = await load_agent_llm_config(db)
+    config = await load_llm_config_for_profile(db, profile_id)
 
     assert config["provider"] == "openai"
     assert config["provider_raw"] == "openai_compatible"
-    assert config["model"] == "gpt-agent-override"
+    assert config["model"] == "gpt-test"
     assert config["api_key"] == "openai-secret"
+    assert config["profile_id"] == profile_id
+
+
+def test_config_from_draft_fields_merges_over_fallback() -> None:
+    fallback = {
+        "provider": "ollama",
+        "provider_raw": "ollama",
+        "model": "llama-fallback",
+        "api_key": "keep-me",
+        "base_url": "http://localhost:11434",
+        "ollama_thinking_enabled": False,
+        "json_mode": "disabled",
+        "web_search_enabled": True,
+        "web_search_provider": "auto",
+        "brave_search_api_key": "",
+        "profile_id": DEFAULT_LLM_PROFILE_ID,
+    }
+    config = config_from_draft_fields(
+        {
+            "provider": "openai_compatible",
+            "model": "gpt-draft",
+            "baseUrl": "https://api.openai.com/v1",
+            "apiKey": "draft-secret",
+        },
+        fallback=fallback,  # type: ignore[arg-type]
+    )
+    assert config["provider"] == "openai"
+    assert config["provider_raw"] == "openai_compatible"
+    assert config["model"] == "gpt-draft"
+    assert config["api_key"] == "draft-secret"
+    assert config["base_url"] == "https://api.openai.com/v1"
+
+
+async def test_client_from_draft_uses_draft_fields(app) -> None:
+    client = await ConfigurableLlmClient.from_draft(
+        app.state.db,
+        {
+            "provider": "gemini_compatible",
+            "model": "gemini-draft",
+            "baseUrl": "https://example.test/v1beta",
+            "apiKey": "draft-key",
+        },
+    )
+    try:
+        assert client.provider == "gemini"
+        assert client.model == "gemini-draft"
+        assert client.api_key == "draft-key"
+        assert client.base_url == "https://example.test/v1beta"
+    finally:
+        await client.close()
+
+
+def test_gemini_default_base_url_matches_profile_fallback() -> None:
+    assert DEFAULT_PROVIDER_BASE_URLS["gemini"] == "https://generativelanguage.googleapis.com/v1beta"
 
 
 async def test_complete_attaches_provider_on_http_error() -> None:

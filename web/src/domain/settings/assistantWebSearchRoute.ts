@@ -1,5 +1,4 @@
-import type { LlmProvider, SystemSettingsSnapshot } from "../../types";
-import { getLlmProviderConfig } from "./llmProviderConfig";
+import type { LlmProvider } from "../../types";
 
 export type WebSearchProviderSetting = "auto" | "duckduckgo" | "brave";
 
@@ -10,24 +9,6 @@ export type AssistantWebSearchStatusKind =
   | "tool_duckduckgo"
   | "tool_brave"
   | "auto_fallback_tool";
-
-function isAssistantLlmFollow(value: string | undefined): boolean {
-  const trimmed = (value ?? "").trim();
-  return !trimmed || trimmed === "follow";
-}
-
-function normalizeProvider(value: string | undefined, fallback: LlmProvider): LlmProvider {
-  const trimmed = (value ?? "").trim();
-  if (
-    trimmed === "ollama" ||
-    trimmed === "openai_compatible" ||
-    trimmed === "gemini_compatible" ||
-    trimmed === "openrouter"
-  ) {
-    return trimmed;
-  }
-  return fallback;
-}
 
 export function normalizeWebSearchProviderSetting(value: string | undefined): WebSearchProviderSetting {
   const trimmed = (value ?? "").trim().toLowerCase();
@@ -54,24 +35,7 @@ export function isOfficialGeminiBase(baseUrl: string): boolean {
   return hostnameOf(baseUrl) === "generativelanguage.googleapis.com";
 }
 
-/** Effective assistant LLM (follow global or override) for search routing UX. */
-export function effectiveAssistantLlm(settings: SystemSettingsSnapshot): {
-  provider: LlmProvider;
-  baseUrl: string;
-} {
-  const follow = isAssistantLlmFollow(settings.assistantLlmProvider);
-  const provider = follow
-    ? settings.llmProvider
-    : normalizeProvider(settings.assistantLlmProvider, settings.llmProvider);
-  const fields = getLlmProviderConfig()[provider];
-  const globalBase = String(settings[fields.baseUrlKey] ?? "");
-  const baseUrl = follow
-    ? globalBase
-    : settings.assistantLlmBaseUrl.trim() || globalBase;
-  return { provider, baseUrl };
-}
-
-/** True only when the assistant LLM can use official native web search. */
+/** True only when the LLM can use official native web search. */
 export function llmHasNativeWebSearch(llmProvider: LlmProvider, llmBaseUrl: string): boolean {
   if (llmProvider === "openai_compatible" && isOfficialOpenaiBase(llmBaseUrl)) {
     return true;

@@ -10,7 +10,7 @@ from server.agent.channels import channel_from_agent_spec
 from server.agent.runtime import AgentRuntime
 from server.agent.web_search_routing import resolve_web_search_route
 from server.analyzer.incremental import fetch_unanalyzed_messages
-from server.analyzer.llm_client import ConfigurableLlmClient, load_llm_config
+from server.analyzer.llm_client import ConfigurableLlmClient
 from server.analyzer.prompt import format_messages
 from server.app_logging import failure_details_from_exc
 from server.config import get_config, get_config_int
@@ -115,11 +115,13 @@ async def run_schedule_or_threshold(
     else:
         batch_id = await open_processing_batch(db, task=task, message_count=0)
 
-    llm_cfg = await load_llm_config(db)
+    from server.analyzer.llm_config import load_llm_config_for_task
+
+    llm_cfg = await load_llm_config_for_task(db, task)
     search_on = spec.cap_force_web_search or spec.cap_web_search
     route = resolve_web_search_route(
         web_search_enabled=search_on,
-        web_search_provider=await get_config(db, "web_search_provider"),
+        web_search_provider=llm_cfg["web_search_provider"],
         llm_provider=llm_cfg["provider"],
         llm_base_url=llm_cfg["base_url"],
     )
@@ -161,7 +163,7 @@ async def run_schedule_or_threshold(
     final_text = ""
     tool_calls: list[Any] = []
     try:
-        client = await ConfigurableLlmClient.from_db_for_agent(db)
+        client = await ConfigurableLlmClient.from_profile(db, str(task.get("llm_profile_id") or "") or None)
         runtime = AgentRuntime(
             db,
             client,

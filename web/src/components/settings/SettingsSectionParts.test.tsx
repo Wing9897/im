@@ -3,7 +3,7 @@ import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import i18n from "../../i18n";
 import { AdvancedSettingsPanel } from "./AdvancedSettingsPanel";
-import { LlmSettingsPanel } from "./LlmSettingsPanel";
+import { LlmProfileConnectionPanel } from "./LlmProfileConnectionPanel";
 import { RuntimeResetPanel } from "./RuntimeResetPanel";
 
 beforeEach(async () => {
@@ -20,7 +20,7 @@ describe("AdvancedSettingsPanel", () => {
       llmGenerationTimeout: "120",
       maxConcurrentBatches: "1",
       maxBatchRetries: "3",
-      llmProvider: "ollama",
+      preferLocalConcurrencyHint: true,
       onAnalysisMaxTotalCharsChange: vi.fn(),
       onAnalysisMaxEstimatedInputTokensChange: vi.fn(),
       onLlmGenerationTimeoutChange: vi.fn(),
@@ -90,10 +90,10 @@ describe("AdvancedSettingsPanel", () => {
 
 });
 
-// --- LlmSettingsPanel ---
+// --- LlmProfileConnectionPanel ---
 
-describe("LlmSettingsPanel", () => {
-  function renderPanel(container: HTMLElement, overrides: Partial<Parameters<typeof LlmSettingsPanel>[0]> = {}) {
+describe("LlmProfileConnectionPanel", () => {
+  function renderPanel(container: HTMLElement, overrides: Partial<Parameters<typeof LlmProfileConnectionPanel>[0]> = {}) {
     const defaults = {
       llmProvider: "ollama" as const,
       llmBaseUrl: "http://localhost:11434",
@@ -110,7 +110,7 @@ describe("LlmSettingsPanel", () => {
     };
     const props = { ...defaults, ...overrides };
     act(() => {
-      createRoot(container).render(createElement(LlmSettingsPanel, props));
+      createRoot(container).render(createElement(LlmProfileConnectionPanel, props));
     });
     return props;
   }

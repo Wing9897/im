@@ -14,7 +14,7 @@ import type { LlmProvider } from "../../types";
 import { getLlmProviderConfig, getLlmProviderOptions } from "../../domain/settings/llmProviderConfig";
 import { GeminiBaseUrlField } from "./GeminiBaseUrlField";
 
-interface LlmSettingsPanelProps {
+interface LlmProfileConnectionPanelProps {
   llmProvider: LlmProvider;
   llmBaseUrl: string;
   llmModel: string;
@@ -29,7 +29,8 @@ interface LlmSettingsPanelProps {
   onOllamaThinkingEnabledChange: (v: boolean) => void;
 }
 
-export function LlmSettingsPanel({
+/** Provider connection fields for a single ``llm_profiles`` row editor. */
+export function LlmProfileConnectionPanel({
   llmProvider,
   llmBaseUrl,
   llmModel,
@@ -42,7 +43,7 @@ export function LlmSettingsPanel({
   onLlmApiKeyChange,
   onOpenaiJsonModeChange,
   onOllamaThinkingEnabledChange,
-}: LlmSettingsPanelProps) {
+}: LlmProfileConnectionPanelProps) {
   const { t } = useTranslation("settings");
   const providerMeta = getLlmProviderConfig(t)[llmProvider];
   const providerOptions = getLlmProviderOptions(t);
@@ -127,8 +128,9 @@ export function LlmSettingsPanel({
           <MenuSelect
             id="openai-json-mode"
             variant="field"
-            value={openaiJsonMode}
+            value={openaiJsonMode || "disabled"}
             options={[
+              { value: "disabled", label: t("llm.jsonModeDisabledOption") },
               { value: "json_schema", label: t("llm.jsonModeSchemaOption") },
               { value: "json_object", label: t("llm.jsonModeObjectOption") },
             ]}

@@ -14,6 +14,29 @@ vi.mock("../../../context/TaskCatalogContext", async () =>
 vi.mock("../../../context/ToastContext", async () =>
   (await import("../../../test/context-mocks")).toastContextModuleMock());
 
+vi.mock("../../../api/llmProfiles", () => ({
+  listLlmProfiles: vi.fn(async () => [
+    {
+      id: "profile-default",
+      name: "Default",
+      provider: "openai_compatible",
+      baseUrl: "https://api.openai.com/v1",
+      model: "gpt-test",
+      apiKey: "********",
+      thinkingEnabled: false,
+      jsonMode: "disabled",
+      webSearchEnabled: true,
+      webSearchProvider: "auto",
+      braveSearchApiKey: "",
+      isDefault: true,
+      staffClasses: [],
+      staffInstances: [],
+      createdAt: null,
+      updatedAt: null,
+    },
+  ]),
+}));
+
 let container: HTMLDivElement;
 let root: Root;
 
@@ -32,9 +55,9 @@ afterEach(() => {
 describe("ChatEditorForm analysis-task contract", () => {
   it.each(["leaderboard", "intel_event", "agent"] as const)(
     "does not show calendar recurrence controls in %s mode",
-    (analysisMode) => {
+    async (analysisMode) => {
       const helperCopy = String(i18n.t("tasks.editor.rruleHint"));
-      act(() =>
+      await act(async () => {
         root.render(
           wrapWithI18n(createElement(ChatEditorForm, {
               formState: { ...DEFAULT_FORM_STATE, analysisMode },
@@ -42,8 +65,9 @@ describe("ChatEditorForm analysis-task contract", () => {
               channels: [],
               onOpenChannelDialog: () => undefined,
             })),
-        ),
-      );
+        );
+        await Promise.resolve();
+      });
       expect(container.querySelector('[role="note"]')).toBeNull();
       expect(container.textContent).not.toContain(helperCopy);
       expect(container.textContent).not.toContain("重複規則");

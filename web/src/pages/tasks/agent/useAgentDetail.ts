@@ -1,9 +1,8 @@
 /**
  * Loads project meta, child recurring, owned user_events, and last-tick summary.
  *
- * Catalog stays full-list (`listTasks()` without `top_level_only`) so child
- * recurring rows remain visible here via `parentTaskId` — do not switch the
- * shared catalog to top-level-only.
+ * Child recurring series are loaded via ``/calendar/recurring?parentTaskId=``;
+ * the shared task catalog is analysis-only.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";

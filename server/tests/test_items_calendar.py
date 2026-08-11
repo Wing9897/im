@@ -304,7 +304,7 @@ async def test_linked_expiry_event_updates_item_expires_at(client):
 
 @pytest.mark.asyncio
 async def test_linked_purchased_event_does_not_sync_item_cache(client):
-    """Linked「購入」is a normal calendar — no item date cache write-through."""
+    """Linked「購入」is a normal calendar — does not drive wire expiresAt."""
     created = await client.post("/api/v1/items", json={"title": "Gadget"})
     assert created.status_code == 201
     item_id = created.json()["id"]
@@ -567,7 +567,7 @@ async def test_title_does_not_infer_kind_on_create_or_patch(client):
 
 @pytest.mark.asyncio
 async def test_delete_linked_expiry_clears_item_cache(client):
-    """Deleting linked「到期」write-through clears list cache badges."""
+    """Dismissing linked「到期」clears derive-on-read list badges."""
     created = await client.post(
         "/api/v1/items",
         json={"title": "Dismissed expiry"},

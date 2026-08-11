@@ -324,6 +324,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/llm/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Profiles */
+        get: operations["list_profiles_api_v1_llm_profiles_get"];
+        put?: never;
+        /** Create Profile */
+        post: operations["create_profile_api_v1_llm_profiles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_v1_llm_profiles__profile_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Profile */
+        delete: operations["delete_profile_api_v1_llm_profiles__profile_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Profile */
+        patch: operations["patch_profile_api_v1_llm_profiles__profile_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/llm/profiles/{profile_id}/copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Copy Profile */
+        post: operations["copy_profile_api_v1_llm_profiles__profile_id__copy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/profiles/{profile_id}/set-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Default Profile */
+        post: operations["set_default_profile_api_v1_llm_profiles__profile_id__set_default_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/staff-instances": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Staff Instances */
+        get: operations["list_staff_instances_api_v1_llm_staff_instances_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items/categories": {
         parameters: {
             query?: never;
@@ -2175,6 +2263,8 @@ export interface components {
             llmApiKey?: string | null;
             /** Ollamathinkingenabled */
             ollamaThinkingEnabled?: boolean | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /** AnalysisEventResponse */
         AnalysisEventResponse: {
@@ -3218,6 +3308,156 @@ export interface components {
             /** Unit */
             unit?: string | null;
         };
+        /** LlmProfileCopyBody */
+        LlmProfileCopyBody: {
+            /** Name */
+            name?: string | null;
+        };
+        /** LlmProfileDeleteResponse */
+        LlmProfileDeleteResponse: {
+            /** Ok */
+            ok: boolean;
+        };
+        /** LlmProfileResponse */
+        LlmProfileResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Provider */
+            provider: ("ollama" | "openai_compatible" | "gemini_compatible" | "openrouter") | string;
+            /**
+             * Baseurl
+             * @default
+             */
+            baseUrl: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /**
+             * Apikey
+             * @default
+             */
+            apiKey: string;
+            /**
+             * Thinkingenabled
+             * @default false
+             */
+            thinkingEnabled: boolean;
+            /**
+             * Jsonmode
+             * @default disabled
+             */
+            jsonMode: string;
+            /**
+             * Websearchenabled
+             * @default true
+             */
+            webSearchEnabled: boolean;
+            /**
+             * Websearchprovider
+             * @default auto
+             */
+            webSearchProvider: string;
+            /**
+             * Bravesearchapikey
+             * @default
+             */
+            braveSearchApiKey: string;
+            /**
+             * Isdefault
+             * @default false
+             */
+            isDefault: boolean;
+            /** Staffclasses */
+            staffClasses?: string[];
+            /** Staffinstances */
+            staffInstances?: components["schemas"]["LlmStaffInstanceResponse"][];
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+        };
+        /** LlmProfileUpsertBody */
+        LlmProfileUpsertBody: {
+            /** Name */
+            name: string;
+            /**
+             * Provider
+             * @default ollama
+             * @enum {string}
+             */
+            provider: "ollama" | "openai_compatible" | "gemini_compatible" | "openrouter";
+            /**
+             * Baseurl
+             * @default
+             */
+            baseUrl: string;
+            /**
+             * Model
+             * @default
+             */
+            model: string;
+            /** Apikey */
+            apiKey?: string | null;
+            /**
+             * Thinkingenabled
+             * @default false
+             */
+            thinkingEnabled: boolean;
+            /**
+             * Jsonmode
+             * @default disabled
+             */
+            jsonMode: string;
+            /**
+             * Websearchenabled
+             * @default true
+             */
+            webSearchEnabled: boolean;
+            /**
+             * Websearchprovider
+             * @default auto
+             * @enum {string}
+             */
+            webSearchProvider: "auto" | "duckduckgo" | "brave";
+            /** Bravesearchapikey */
+            braveSearchApiKey?: string | null;
+            /** Staffclasses */
+            staffClasses?: ("leaderboard" | "intel_event" | "agent" | "assistant")[];
+            /** Isdefault */
+            isDefault?: boolean | null;
+        };
+        /** LlmStaffInstanceResponse */
+        LlmStaffInstanceResponse: {
+            /** Id */
+            id: string;
+            /** Staffclass */
+            staffClass: ("leaderboard" | "intel_event" | "agent" | "assistant") | string;
+            /** Profileid */
+            profileId: string;
+            /** Displayname */
+            displayName?: string | null;
+            /**
+             * Isactive
+             * @default true
+             */
+            isActive: boolean;
+            /** Createdat */
+            createdAt?: string | null;
+            /** Updatedat */
+            updatedAt?: string | null;
+            /** Profilename */
+            profileName?: string | null;
+            /** Profileprovider */
+            profileProvider?: string | null;
+            /** Profilemodel */
+            profileModel?: string | null;
+            /** Profileisdefault */
+            profileIsDefault?: boolean | null;
+        };
         /** LogCreate */
         LogCreate: {
             /** Level */
@@ -3678,41 +3918,12 @@ export interface components {
         /**
          * SystemSettingsSnapshot
          * @description GET/PUT ``/config/settings`` wire snapshot (camelCase).
+         *
+         *     LLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``.
          */
         SystemSettingsSnapshot: {
-            /**
-             * Llmprovider
-             * @enum {string}
-             */
-            llmProvider: "ollama" | "openai_compatible" | "gemini_compatible" | "openrouter";
             /** Analysispaused */
             analysisPaused: boolean;
-            /** Ollamabaseurl */
-            ollamaBaseUrl: string;
-            /** Ollamamodel */
-            ollamaModel: string;
-            /** Ollamathinkingenabled */
-            ollamaThinkingEnabled: boolean;
-            /** Openaibaseurl */
-            openaiBaseUrl: string;
-            /** Openaimodel */
-            openaiModel: string;
-            /** Openaiapikey */
-            openaiApiKey: string;
-            /** Openaijsonmode */
-            openaiJsonMode: string;
-            /** Geminibaseurl */
-            geminiBaseUrl: string;
-            /** Geminimodel */
-            geminiModel: string;
-            /** Geminiapikey */
-            geminiApiKey: string;
-            /** Openrouterbaseurl */
-            openrouterBaseUrl: string;
-            /** Openroutermodel */
-            openrouterModel: string;
-            /** Openrouterapikey */
-            openrouterApiKey: string;
             /** Analysisbatchmessagelimit */
             analysisBatchMessageLimit: string;
             /** Analysismaxtotalchars */
@@ -3747,20 +3958,6 @@ export interface components {
             weatherLocation: string;
             /** Uilocale */
             uiLocale: string;
-            /** Assistantwebsearchenabled */
-            assistantWebSearchEnabled: boolean;
-            /** Websearchprovider */
-            webSearchProvider: string;
-            /** Bravesearchapikey */
-            braveSearchApiKey: string;
-            /** Assistantllmprovider */
-            assistantLlmProvider: string;
-            /** Assistantllmbaseurl */
-            assistantLlmBaseUrl: string;
-            /** Assistantllmmodel */
-            assistantLlmModel: string;
-            /** Assistantllmapikey */
-            assistantLlmApiKey: string;
             /** Agenthistorymaxmessages */
             agentHistoryMaxMessages: string;
             /** Agenthistorymaxchars */
@@ -3882,6 +4079,8 @@ export interface components {
             outputCalendar?: boolean | null;
             /** Outputanalysisevents */
             outputAnalysisEvents?: boolean | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -3934,6 +4133,8 @@ export interface components {
             outputCalendar?: boolean | null;
             /** Outputanalysisevents */
             outputAnalysisEvents?: boolean | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /** TaskResponse */
         TaskResponse: {
@@ -3966,12 +4167,8 @@ export interface components {
              * @default true
              */
             includeInTimeline: boolean;
-            /** Parenttaskid */
-            parentTaskId?: string | null;
             /** Worksetid */
             worksetId?: string | null;
-            /** Itemid */
-            itemId?: string | null;
             /** Agentwaveintervalseconds */
             agentWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
@@ -4027,6 +4224,8 @@ export interface components {
              * @default false
              */
             outputAnalysisEvents: boolean;
+            /** Llmprofileid */
+            llmProfileId: string;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -4880,7 +5079,6 @@ export interface operations {
     list_tasks_api_v1_tasks_get: {
         parameters: {
             query?: {
-                topLevelOnly?: boolean | null;
                 analysisMode?: string | null;
                 worksetId?: string | null;
             };
@@ -5219,6 +5417,242 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_profiles_api_v1_llm_profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"][];
+                };
+            };
+        };
+    };
+    create_profile_api_v1_llm_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmProfileUpsertBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_llm_profiles__profile_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_profile_api_v1_llm_profiles__profile_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileDeleteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_profile_api_v1_llm_profiles__profile_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmProfileUpsertBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    copy_profile_api_v1_llm_profiles__profile_id__copy_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LlmProfileCopyBody"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_default_profile_api_v1_llm_profiles__profile_id__set_default_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmProfileResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_staff_instances_api_v1_llm_staff_instances_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmStaffInstanceResponse"][];
                 };
             };
         };

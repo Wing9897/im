@@ -1,24 +1,25 @@
-"""Build ``ConfigurableLlmClient`` instances from DB / draft config."""
+"""Build ``ConfigurableLlmClient`` instances from profile / draft config."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from server.analyzer.llm_config import (
+    DEFAULT_PROVIDER_BASE_URLS,
     LlmConfig,
-    canonical_provider,
+    config_from_draft_fields,
     load_agent_llm_config,
     load_llm_config,
+    load_llm_config_for_profile,
 )
-from server.config import CONFIG_DEFAULTS, get_config_int
+from server.config import get_config_int
 from server.db.database import Database
-from server.secrets import MASKED_SECRET
 
 
 def client_from_resolved_config(cls: Any, config: LlmConfig, timeout_seconds: int) -> Any:
     base_url = config["base_url"]
     if not base_url:
-        base_url = CONFIG_DEFAULTS.get(f"{config['provider']}_base_url", "")
+        base_url = DEFAULT_PROVIDER_BASE_URLS.get(config["provider"], "")
     return cls(
         provider=config["provider"],
         model=config["model"],
@@ -30,42 +31,37 @@ def client_from_resolved_config(cls: Any, config: LlmConfig, timeout_seconds: in
     )
 
 
-async def client_from_db(cls: Any, db: Database) -> Any:
+async def client_from_default_profile(cls: Any, db: Database) -> Any:
+    """Build a client from the default ``llm_profiles`` row."""
     config = await load_llm_config(db)
     timeout = await get_config_int(db, "llm_generation_timeout")
     return client_from_resolved_config(cls, config, timeout)
 
 
-async def client_from_db_for_agent(cls: Any, db: Database) -> Any:
-    """Build a client using ``assistant_llm_provider`` (follow / override)."""
+async def client_from_assistant_staff(cls: Any, db: Database) -> Any:
+    """Build a client from the active ``staff_class=assistant`` profile binding."""
     config = await load_agent_llm_config(db)
     timeout = await get_config_int(db, "llm_generation_timeout")
     return client_from_resolved_config(cls, config, timeout)
 
 
-async def client_from_draft(cls: Any, db: Database, draft: dict[str, Any]) -> Any:
-    """Build a one-off client from unsaved UI draft values."""
-    saved = await load_llm_config(db)
-    raw_provider = str(draft.get("llmProvider") or saved["provider_raw"] or "ollama").strip()
-    canonical = canonical_provider(raw_provider)
-    base_url = str(draft.get("llmBaseUrl") or saved["base_url"] or "").strip()
-    if not base_url:
-        base_url = CONFIG_DEFAULTS.get(f"{canonical}_base_url", "")
-    model = str(draft.get("llmModel") or saved["model"] or "").strip()
-    draft_api_key = draft.get("llmApiKey")
-    api_key = str(saved["api_key"] if draft_api_key in (None, MASKED_SECRET) else draft_api_key)
-    draft_thinking = draft.get("ollamaThinkingEnabled")
-    if draft_thinking is None:
-        ollama_thinking_enabled = saved["ollama_thinking_enabled"]
-    else:
-        ollama_thinking_enabled = bool(draft_thinking)
+async def client_from_profile(cls: Any, db: Database, profile_id: str | None) -> Any:
+    config = await load_llm_config_for_profile(db, profile_id)
     timeout = await get_config_int(db, "llm_generation_timeout")
-    return cls(
-        provider=canonical,
-        model=model,
-        api_key=api_key,
-        base_url=base_url,
-        timeout_seconds=timeout,
-        allow_loopback=raw_provider in ("ollama", "openai_compatible"),
-        ollama_thinking_enabled=ollama_thinking_enabled,
-    )
+    return client_from_resolved_config(cls, config, timeout)
+
+
+async def client_from_draft(cls: Any, db: Database, draft: dict[str, Any]) -> Any:
+    """Build a one-off client from unsaved profile-card draft values."""
+    profile_id = draft.get("llmProfileId") or draft.get("id")
+    fallback: LlmConfig | None = None
+    if profile_id:
+        try:
+            fallback = await load_llm_config_for_profile(db, str(profile_id))
+        except Exception:  # noqa: BLE001 — draft may reference a not-yet-saved id
+            fallback = await load_llm_config(db)
+    else:
+        fallback = await load_llm_config(db)
+    config = config_from_draft_fields(draft, fallback=fallback)
+    timeout = await get_config_int(db, "llm_generation_timeout")
+    return client_from_resolved_config(cls, config, timeout)

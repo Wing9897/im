@@ -4,9 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import i18n from "../../i18n";
 import type { LlmProvider } from "../../types";
-import { LlmSettingsPanel } from "./LlmSettingsPanel";
+import { LlmProfileConnectionPanel } from "./LlmProfileConnectionPanel";
 
-describe("LlmSettingsPanel", () => {
+describe("LlmProfileConnectionPanel", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
@@ -45,7 +45,7 @@ describe("LlmSettingsPanel", () => {
     const props = { ...defaultProps, ...overrides };
     act(() => {
       root = createRoot(container);
-      root.render(createElement(LlmSettingsPanel, props));
+      root.render(createElement(LlmProfileConnectionPanel, props));
     });
   }
 

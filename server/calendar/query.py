@@ -68,10 +68,15 @@ async def query_window(
     cursor: str | None = None,
     search: str | None = None,
     task_id: str | None = None,
+    series_id: str | None = None,
     workset_id: str | None = None,
     hard_cap: int = 100,
 ) -> dict[str, Any]:
-    """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources."""
+    """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources.
+
+    ``task_id`` filters analysis events + user-event provenance.
+    ``series_id`` filters RRULE series (id or parent_task_id child match).
+    """
     range_start = start if isinstance(start, datetime) else parse_iso(start)
     range_end = end if isinstance(end, datetime) else parse_iso(end, end_of_day=True)
     if range_start is None or range_end is None:
@@ -99,7 +104,7 @@ async def query_window(
             db,
             range_start=range_start,
             range_end=range_end,
-            task_id=task_id,
+            series_id=series_id,
         )
     user_items = await _fetch_user_in_range(
         db,
@@ -141,6 +146,7 @@ async def query_upcoming(
     days: int | None = None,
     search: str | None = None,
     task_id: str | None = None,
+    series_id: str | None = None,
     workset_id: str | None = None,
     now: datetime | None = None,
     hard_cap: int = 100,
@@ -164,6 +170,7 @@ async def query_upcoming(
         cursor=None,
         search=search,
         task_id=task_id,
+        series_id=series_id,
         workset_id=workset_id,
         hard_cap=hard_cap,
     )
@@ -176,6 +183,7 @@ async def query_recent(
     limit: int = 20,
     search: str | None = None,
     task_id: str | None = None,
+    series_id: str | None = None,
     workset_id: str | None = None,
     now: datetime | None = None,
     hard_cap: int = 100,
@@ -206,7 +214,7 @@ async def query_recent(
             db,
             range_start=range_start,
             range_end=range_end,
-            task_id=task_id,
+            series_id=series_id,
         )
     user_items = await _fetch_user_in_range(
         db,

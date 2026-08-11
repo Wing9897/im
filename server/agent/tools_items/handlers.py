@@ -103,7 +103,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
 
     today = _today_local()
     until = today + timedelta(days=days)
-    # Read denormalized cache only (write-through happens on linked calendar mutations).
+    # Derive-on-read: expiresAt comes from the primary linked kind=expires event.
     rows = await fetch_expiring_items(
         db,
         today=today.isoformat(),

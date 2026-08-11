@@ -141,8 +141,8 @@ async def test_put_project_mode_change_clears_children_parent(client, app) -> No
     )
     assert update.status_code == 200
     assert update.json()["analysisMode"] == "intel_event"
-    assert update.json()["parentTaskId"] is None
 
+    # Child series ownership lives on recurring_schedules, not TaskResponse.
     schedule = await app.state.db.fetch_one(
         "SELECT parent_task_id FROM recurring_schedules WHERE id = ?",
         (child_id,),

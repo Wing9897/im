@@ -40,6 +40,28 @@ const RETIRED_CONFIG_KEYS = new Set([
   "batch_overlap_count",
   "agent_project_wave_interval_seconds",
   "intelligence_rules_version",
+  // Stamp 29: LLM connection slots moved to llm_profiles.
+  "llm_provider",
+  "ollama_base_url",
+  "ollama_model",
+  "ollama_thinking_enabled",
+  "openai_base_url",
+  "openai_model",
+  "openai_api_key",
+  "openai_json_mode",
+  "gemini_base_url",
+  "gemini_model",
+  "gemini_api_key",
+  "openrouter_base_url",
+  "openrouter_model",
+  "openrouter_api_key",
+  "assistant_llm_provider",
+  "assistant_llm_base_url",
+  "assistant_llm_model",
+  "assistant_llm_api_key",
+  "assistant_web_search_enabled",
+  "web_search_provider",
+  "brave_search_api_key",
 ]);
 
 function linesOf(block: string): string[] {

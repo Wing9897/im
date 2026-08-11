@@ -68,7 +68,7 @@ async def test_a2a_agent_accepts_full_scope_and_returns_single_shot(client, app)
     mock_llm.close = AsyncMock()
     mock_llm.provider = "ollama"
 
-    with patch.object(ConfigurableLlmClient, "from_db_for_agent", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/a2a/agent",
             json={"input": "明天有什麼會議？"},

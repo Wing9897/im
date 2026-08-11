@@ -11,6 +11,7 @@ class AiEngineTestBody(BaseModel):
     llmModel: str | None = None
     llmApiKey: str | None = None
     ollamaThinkingEnabled: bool | None = None
+    llmProfileId: str | None = None
 
 
 class AnalysisPauseBody(BaseModel):

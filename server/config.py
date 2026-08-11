@@ -1,6 +1,7 @@
 """system_config access with the authoritative default key set.
 
 Key list matches ``CONFIG_DEFAULTS`` in this module.
+LLM connection settings live on ``llm_profiles`` (stamp 29+), not here.
 """
 
 from __future__ import annotations
@@ -13,21 +14,7 @@ from server.util import parse_bool, utc_now_iso
 
 #: Authoritative defaults. A key absent from the table falls back to this map.
 CONFIG_DEFAULTS: dict[str, str] = {
-    "llm_provider": "ollama",
     "analysis_paused": "false",
-    "ollama_base_url": "http://localhost:11434",
-    "ollama_model": "",
-    "ollama_thinking_enabled": "false",
-    "openai_base_url": "https://api.openai.com/v1",
-    "openai_model": "",
-    "openai_api_key": "",
-    "openai_json_mode": "disabled",
-    "gemini_base_url": "https://generativelanguage.googleapis.com/v1beta",
-    "gemini_model": "",
-    "gemini_api_key": "",
-    "openrouter_base_url": "https://openrouter.ai/api/v1",
-    "openrouter_model": "",
-    "openrouter_api_key": "",
     "analysis_batch_message_limit": "50",
     "analysis_max_total_chars": "100000",
     "analysis_max_estimated_input_tokens": "30000",
@@ -51,18 +38,6 @@ CONFIG_DEFAULTS: dict[str, str] = {
     # UI / AI output language (zh-Hant | zh-Hans | en). Client localStorage is
     # the live UI source of truth; this copy drives background analysis.
     "ui_locale": "zh-Hant",
-    # Assistant web search. auto = follow assistant LLM native when available,
-    # else DuckDuckGo/Brave tool path. Manual duckduckgo|brave force the tool.
-    "assistant_web_search_enabled": "true",
-    "web_search_provider": "auto",
-    "brave_search_api_key": "",
-    # Agent LLM: empty / "follow" = use llm_provider; else a provider id.
-    # Non-empty assistant_llm_{base_url,model,api_key} override that provider's
-    # global {prefix}_* keys; empty fields fall back to the provider prefix.
-    "assistant_llm_provider": "",
-    "assistant_llm_base_url": "",
-    "assistant_llm_model": "",
-    "assistant_llm_api_key": "",
     # Agent-only model-facing history caps (UI sessions keep full transcript).
     "agent_history_max_messages": "40",
     "agent_history_max_chars": "48000",

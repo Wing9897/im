@@ -24,10 +24,10 @@ describe("hasUnsavedChanges", () => {
   it("returns true iff current and saved are not deeply equal", () => {
     const base = makeSnapshot();
     const modified = makeSnapshot({ analysisTriggerThreshold: "5" });
-    const differentProvider = makeSnapshot({ llmProvider: "openai_compatible" });
+    const differentTimeout = makeSnapshot({ llmGenerationTimeout: "90" });
 
     expect(hasUnsavedChanges(base, modified)).toBe(true);
-    expect(hasUnsavedChanges(base, differentProvider)).toBe(true);
+    expect(hasUnsavedChanges(base, differentTimeout)).toBe(true);
     expect(hasUnsavedChanges(base, base)).toBe(!deepEqual(base, base));
     expect(hasUnsavedChanges(modified, base)).toBe(true);
   });

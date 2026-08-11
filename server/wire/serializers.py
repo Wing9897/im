@@ -31,10 +31,12 @@ from server.wire.serializer_domains.sources import (
     serialize_source,
 )
 from server.wire.serializer_domains.recurring import serialize_recurring_series
+from server.wire.serializer_domains.llm_profiles import (
+    serialize_llm_profile,
+    serialize_llm_staff_instance,
+)
 from server.wire.serializer_domains.tasks import (
     serialize_task,
-    serialize_task_for_agent,
-    serialize_task_schedule,
     serialize_workset,
 )
 
@@ -50,6 +52,8 @@ __all__ = [
     "serialize_channel_ref",
     "serialize_item",
     "serialize_item_category",
+    "serialize_llm_profile",
+    "serialize_llm_staff_instance",
     "serialize_message",
     "serialize_agent_tick_in_flight",
     "serialize_agent_tick_log_entry",
@@ -57,8 +61,6 @@ __all__ = [
     "serialize_recurring_series",
     "serialize_source",
     "serialize_task",
-    "serialize_task_for_agent",
-    "serialize_task_schedule",
     "serialize_trending_topic",
     "serialize_user_event",
     "serialize_workset",

@@ -147,6 +147,15 @@
       "foundationTitle": "Basics",
       "foundationHint": "Tasks build on a repeatable / triggerable schedule.",
       "taskTypeLabel": "Task type",
+      "llmProfileLabel": "LLM profile",
+      "llmProfileDefaultBadge": "Default",
+      "llmProfileIncompleteBadge": "Incomplete",
+      "llmProfilePlaceholder": "Select an AI profile",
+      "llmProfileLoading": "Loading AI profiles…",
+      "llmProfileEmpty": "No AI profiles yet. Create one before this task can run.",
+      "llmProfileAllIncomplete": "Existing profiles are incomplete. Finish a profile (provider, model, and key when required) before saving.",
+      "llmProfileCreateCta": "Create AI profile",
+      "llmProfileHint": "This task uses the selected profile’s connection (provider, model, and API key) automatically.",
       "skillsTitle": "Settings / skills",
       "skillsAria": "Task settings and skills",
       "optionalTitle": "Advanced settings",
@@ -164,7 +173,11 @@
         "rrule": "Set a recurrence rule",
         "eventStart": "Set a start time, or mark the event as all-day",
         "agentOutput": "Select at least one Agent output",
-        "agentCursorAnalysis": "Message-cursor drain cannot write intelligence events; use calendar output, or switch trigger to schedule/threshold"
+        "agentCursorAnalysis": "Message-cursor drain cannot write intelligence events; use calendar output, or switch trigger to schedule/threshold",
+        "llmProfile": "Select a complete AI profile",
+        "llmProfileEmpty": "Create an AI profile first",
+        "llmProfileIncomplete": "Selected AI profile is incomplete",
+        "llmProfileLoading": "Waiting for AI profiles to load"
       },
       "pickChannels": "Click to select channels",
       "channelsSelected": "{selected} / {total} channels selected",
@@ -1167,7 +1180,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 28 / SemVer 0.1.0-beta.29 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 29 / SemVer 0.1.0-beta.30 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
 import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
-import { ChatNameModeFields } from "./ChatNameModeFields";
+import { ChatNameModeFields, type LlmProfileGate } from "./ChatNameModeFields";
 import { ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
@@ -25,6 +25,7 @@ interface ChatEditorFormProps {
   updateField: <K extends keyof TaskFormState>(field: K, value: TaskFormState[K]) => void;
   channels: ChannelWithSource[];
   onOpenChannelDialog: () => void;
+  onLlmProfileGateChange?: (gate: LlmProfileGate) => void;
 }
 
 export function ChatEditorForm({
@@ -32,6 +33,7 @@ export function ChatEditorForm({
   updateField,
   channels,
   onOpenChannelDialog,
+  onLlmProfileGateChange,
 }: ChatEditorFormProps) {
   const { t } = useTranslation("common");
   const modeMeta = getTaskFormAnalysisModeMeta(formState.analysisMode);
@@ -79,6 +81,7 @@ export function ChatEditorForm({
             name={formState.name}
             analysisMode={formState.analysisMode}
             worksetId={formState.worksetId}
+            llmProfileId={formState.llmProfileId}
             onNameChange={(v) => updateField("name", v)}
             onAnalysisModeChange={(v) => {
               updateField("analysisMode", v);
@@ -109,6 +112,8 @@ export function ChatEditorForm({
               }
             }}
             onWorksetIdChange={(v) => updateField("worksetId", v)}
+            onLlmProfileIdChange={(v) => updateField("llmProfileId", v)}
+            onLlmProfileGateChange={onLlmProfileGateChange}
           />
         </FormGrid>
       </SurfaceCard>

@@ -7,6 +7,7 @@ from server.api.routes.task_helpers import (
     TaskConfigBody,
     agent_policy_write_fields,
     channel_refs_for,
+    resolve_llm_profile_id,
     resolve_workset_id,
     schedule_override_write_fields,
     task_response,
@@ -62,6 +63,12 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         db,
         supplied=body.worksetId,
         existing=existing.get("workset_id"),
+        fields_set=body.model_fields_set,
+    )
+    llm_profile_id = await resolve_llm_profile_id(
+        db,
+        supplied=body.llmProfileId,
+        existing=existing.get("llm_profile_id"),
         fields_set=body.model_fields_set,
     )
 
@@ -122,6 +129,7 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
             schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
+            llm_profile_id=llm_profile_id,
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,
@@ -144,6 +152,10 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
         desired = 1 if body.isActive else 0
         current = int(existing.get("is_active") or 0)
         if current != desired:
+            if desired:
+                from server.analyzer.llm_config import require_complete_profile_row
+
+                await require_complete_profile_row(db, llm_profile_id)
             await set_task_active(db, task_id, desired, utc_now_iso())
 
     row = await require_task_row_or_lookup(db, task_id)

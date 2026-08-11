@@ -28,8 +28,8 @@ async def test_dismiss_restore_publishes_resource_modified(client, app) -> None:
 
     payloads = [json.loads(event["data"])["payload"] for event in events]
     assert payloads == [
-        {"resourceType": "item", "resourceId": "item-occ-1", "action": "dismissed"},
-        {"resourceType": "item", "resourceId": "item-occ-1", "action": "restored"},
+        {"resourceType": "item_remind", "resourceId": "item-occ-1", "action": "dismissed"},
+        {"resourceType": "item_remind", "resourceId": "item-occ-1", "action": "restored"},
     ]
 
 

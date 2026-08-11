@@ -34,7 +34,6 @@ export type AnalysisTask = Omit<
   includeInTimeline?: boolean | null;
   createdAt: string;
   updatedAt: string;
-  /** Agent policy columns (wipe-only baseline); optional until OpenAPI regenerates. */
   triggerMode?: "schedule" | "message_cursor" | "message_threshold";
   capCalendarRead?: boolean;
   capCalendarWrites?: boolean;
@@ -44,6 +43,7 @@ export type AnalysisTask = Omit<
   capReadItems?: boolean;
   outputCalendar?: boolean;
   outputAnalysisEvents?: boolean;
+  llmProfileId?: string;
 };
 
 /** Configuration payload for creating/updating an analysis task.
@@ -56,6 +56,8 @@ export type TaskConfig = Omit<
   analysisMode?: AnalysisMode | null;
   analysisTimeRange?: TaskAnalysisTimeRange | null;
   channelIds?: string[] | ChannelRef[];
+  /** LLM profile id; omit / null on create → server default. */
+  llmProfileId?: string | null;
 };
 
 export type TaskMutationResult = AnalysisTask & { deletedBatchCount: number };

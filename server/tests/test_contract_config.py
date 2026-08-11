@@ -1,11 +1,10 @@
-"""Contract keys: config routes (settings snapshot / API key)."""
+"""Contract keys: config routes (settings snapshot / retired LLM slots)."""
 
 from __future__ import annotations
 
 from server.api.routes.config import _SETTINGS_KEYS
 from server.api.schemas.responses import SystemSettingsSnapshot
-from server.config import CONFIG_DEFAULTS, get_config
-from server.secrets import MASKED_SECRET
+from server.config import CONFIG_DEFAULTS
 from server.tests.contract_helpers import assert_keys
 
 #: Wire keys — single source is ``_SETTINGS_KEYS`` in config routes.
@@ -45,6 +44,57 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "agent_project_wave_interval_seconds",
         # Prompt revision tag removed — correlate via git / prompt files, not system_config.
         "intelligence_rules_version",
+        # Stamp 29: LLM connection slots moved to llm_profiles.
+        "llm_provider",
+        "ollama_base_url",
+        "ollama_model",
+        "ollama_thinking_enabled",
+        "openai_base_url",
+        "openai_model",
+        "openai_api_key",
+        "openai_json_mode",
+        "gemini_base_url",
+        "gemini_model",
+        "gemini_api_key",
+        "openrouter_base_url",
+        "openrouter_model",
+        "openrouter_api_key",
+        "assistant_llm_provider",
+        "assistant_llm_base_url",
+        "assistant_llm_model",
+        "assistant_llm_api_key",
+        "assistant_web_search_enabled",
+        "web_search_provider",
+        "brave_search_api_key",
+    }
+)
+
+#: Retired camelCase wire keys that must stay absent from settings snapshot.
+_RETIRED_WIRE_KEYS = frozenset(
+    {
+        "llmProvider",
+        "ollamaBaseUrl",
+        "ollamaModel",
+        "ollamaThinkingEnabled",
+        "openaiBaseUrl",
+        "openaiModel",
+        "openaiApiKey",
+        "openaiJsonMode",
+        "geminiBaseUrl",
+        "geminiModel",
+        "geminiApiKey",
+        "openrouterBaseUrl",
+        "openrouterModel",
+        "openrouterApiKey",
+        "assistantLlmProvider",
+        "assistantLlmBaseUrl",
+        "assistantLlmModel",
+        "assistantLlmApiKey",
+        "assistantWebSearchEnabled",
+        "webSearchProvider",
+        "braveSearchApiKey",
+        "dataRetentionDays",
+        "autoPauseOnRateLimit",
     }
 )
 
@@ -72,25 +122,23 @@ async def test_settings_snapshot_and_roundtrip(client):
     assert isinstance(snapshot["analysisPaused"], bool)
     assert isinstance(snapshot["analysisTraceVerbose"], bool)
     assert isinstance(snapshot["autoPauseOnRetriesExhausted"], bool)
-    assert isinstance(snapshot["ollamaThinkingEnabled"], bool)
-    assert isinstance(snapshot["assistantWebSearchEnabled"], bool)
-    assert snapshot["webSearchProvider"] in {"auto", "duckduckgo", "brave"}
-    assert "braveSearchApiKey" in snapshot
-    assert "autoPauseOnRateLimit" not in snapshot
     assert isinstance(snapshot["maxConcurrentBatches"], str)
+    for retired in _RETIRED_WIRE_KEYS:
+        assert retired not in snapshot
 
-    snapshot["ollamaModel"] = "qwen3:8b"
     snapshot["maxConcurrentBatches"] = "3"
+    snapshot["agentHistoryMaxMessages"] = "48"
     saved = (await client.put("/api/v1/config/settings", json=snapshot)).json()
-    assert saved["ollamaModel"] == "qwen3:8b"
     assert saved["maxConcurrentBatches"] == "3"
+    assert saved["agentHistoryMaxMessages"] == "48"
 
     again = (await client.get("/api/v1/config/settings")).json()
-    assert again["ollamaModel"] == "qwen3:8b"
     assert again["maxConcurrentBatches"] == "3"
+    assert again["agentHistoryMaxMessages"] == "48"
     assert "dataRetentionDays" not in again
     assert "retentionMessagesDays" in again
     assert again["uiLocale"] == "zh-Hant"
+    assert "llmProvider" not in again
 
 
 async def test_ui_locale_settings_roundtrip(client):
@@ -150,7 +198,7 @@ async def test_settings_put_ignores_analysis_paused(client):
     assert again["analysisPaused"] is True
 
 
-async def test_settings_put_ignores_unknown_data_retention_days(client, app):
+async def test_settings_put_ignores_analysis_paused_and_retired_retention(client, app):
     """Retired dataRetentionDays wire key is ignored on PUT and absent from GET."""
     before = (await client.get("/api/v1/config/settings")).json()
     messages = before["retentionMessagesDays"]
@@ -168,24 +216,40 @@ async def test_settings_put_ignores_unknown_data_retention_days(client, app):
     assert stored == 0
 
 
-async def test_secret_settings_are_masked_and_preserved(client, app):
+async def test_settings_put_ignores_retired_llm_provider_keys(client, app):
+    """Stamp-29: llmProvider / openaiApiKey etc. are ignored and never stored in system_config."""
+    before = (await client.get("/api/v1/config/settings")).json()
     saved = (
         await client.put(
             "/api/v1/config/settings",
-            json={"openaiApiKey": "sk-never-return-this"},
+            json={
+                **before,
+                "llmProvider": "openai_compatible",
+                "openaiApiKey": "sk-should-not-store",
+                "openaiModel": "gpt-ignored",
+                "assistantLlmProvider": "openai",
+                "braveSearchApiKey": "brave-ignored",
+            },
         )
     ).json()
-    assert saved["openaiApiKey"] == MASKED_SECRET
+    for retired in (
+        "llmProvider",
+        "openaiApiKey",
+        "openaiModel",
+        "assistantLlmProvider",
+        "braveSearchApiKey",
+    ):
+        assert retired not in saved
 
-    raw = await app.state.db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'")
-    assert str(raw).startswith("enc:v1:")
-    assert "sk-never-return-this" not in str(raw)
-
-    await client.put(
-        "/api/v1/config/settings",
-        json={"openaiApiKey": MASKED_SECRET, "openaiModel": "gpt-test"},
-    )
-    assert await get_config(app.state.db, "openai_api_key") == "sk-never-return-this"
+    for key in (
+        "llm_provider",
+        "openai_api_key",
+        "openai_model",
+        "assistant_llm_provider",
+        "brave_search_api_key",
+    ):
+        count = await app.state.db.fetch_value("SELECT COUNT(*) FROM system_config WHERE key = ?", (key,))
+        assert count == 0
 
 
 async def test_assistant_identity_settings_roundtrip(client):
@@ -279,8 +343,3 @@ async def test_user_profile_settings_roundtrip(client):
     assert cleared["userDisplayName"] == ""
     assert cleared["userAvatar"] == ""
     assert cleared["userBackground"] == ""
-
-
-def test_gemini_default_base_url_matches_config_contract():
-    """llm_client fallback and frontend preset must align with CONFIG_DEFAULTS."""
-    assert CONFIG_DEFAULTS["gemini_base_url"] == "https://generativelanguage.googleapis.com/v1beta"

@@ -1,7 +1,7 @@
 """Analysis engine: LLM orchestration + chat assistant.
 
-The engine owns one ConfigurableLlmClient and hot-reloads it when the
-LLM-related ``system_config`` values change (hash comparison per call).
+The engine owns ConfigurableLlmClient instances keyed by profile id and
+hot-reloads when the profile row / timeout changes (hash comparison per call).
 Batch persistence lives in the scheduler package; this module only turns
 (prompt, messages) into parsed structured items.
 """
@@ -14,7 +14,8 @@ import json
 import logging
 from typing import Any
 
-from server.analyzer.llm_client import ConfigurableLlmClient, load_llm_config
+from server.analyzer.llm_client import ConfigurableLlmClient
+from server.analyzer.llm_config import load_llm_config, load_llm_config_for_profile
 from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.analyzer.prompt import AssembledPrompt
 from server.config import get_config, get_config_int
@@ -39,44 +40,49 @@ _CURRENT_TASK_CONTEXT_KEYS = (
     "eventIsAllDay",
     "eventLocation",
     "eventDescription",
+    "llmProfileId",
 )
 
 
 class AnalysisEngine:
-    """Owns the LLM client and provides analyze/chat entry points.
+    """Owns LLM clients and provides analyze/chat entry points.
 
-    The client is created lazily on first use so startup never blocks on
+    Clients are created lazily on first use so startup never blocks on
     LLM configuration; each call re-checks the config hash and hot-reloads.
     """
 
     def __init__(self, db: Database) -> None:
         self._db = db
-        self._client: ConfigurableLlmClient | None = None
-        self._config_hash = ""
+        self._clients: dict[str, ConfigurableLlmClient] = {}
+        self._config_hashes: dict[str, str] = {}
         self._client_lock = asyncio.Lock()
+        self._last_profile_id = ""
 
     @property
     def provider(self) -> str:
-        return self._client.provider if self._client is not None else ""
+        client = self._clients.get(self._last_profile_id)
+        return client.provider if client is not None else ""
 
     @property
     def model(self) -> str:
-        return self._client.model if self._client is not None else ""
+        client = self._clients.get(self._last_profile_id)
+        return client.model if client is not None else ""
 
     async def close(self) -> None:
-        if self._client is not None:
-            await self._client.close()
-            self._client = None
+        for client in self._clients.values():
+            await client.close()
+        self._clients.clear()
+        self._config_hashes.clear()
 
     async def health_check(self) -> dict:
         try:
-            client = await self._ensure_client()
+            client = await self._ensure_client(None)
         except Exception as exc:  # noqa: BLE001 — diagnostics endpoint never raises
             return {"status": "error", "provider": "", "model": "", "error": str(exc)}
         return await client.health_check()
 
     async def test_completion(self, draft: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Minimal-token generation probe using saved or draft provider settings."""
+        """Minimal-token generation probe using saved or draft profile fields."""
         if draft:
             client = await ConfigurableLlmClient.from_draft(self._db, draft)
             try:
@@ -90,7 +96,7 @@ class AnalysisEngine:
             }
 
         try:
-            client = await self._ensure_client()
+            client = await self._ensure_client(None)
         except Exception as exc:  # noqa: BLE001 — diagnostics endpoint never raises
             return {
                 "success": False,
@@ -110,14 +116,14 @@ class AnalysisEngine:
 
     # ── batch analysis ──────────────────────────────────────────────────
 
-    async def analyze(self, prompt: AssembledPrompt) -> dict[str, Any]:
+    async def analyze(self, prompt: AssembledPrompt, *, profile_id: str | None = None) -> dict[str, Any]:
         """Run one assembled prompt through the LLM and parse mode items.
 
         Returns ``{items, prompt_tokens, completion_tokens}``.
         Raises LlmClientError / ValueError on failure (caller handles retry).
         """
-        client = await self._ensure_client()
-        json_mode = await self._json_mode_for_analyze(client)
+        client = await self._ensure_client(profile_id)
+        json_mode = await self._json_mode_for_analyze(client, profile_id)
         result = await client.complete(prompt.llm_messages, json_mode=json_mode)
         parsed = parse_json_response(result["text"])
         return {
@@ -143,6 +149,9 @@ class AnalysisEngine:
         system_prompt = CHAT_ASSISTANT_SYSTEM_PROMPT + "\n\n" + output_language_directive(resolved_locale)
         user_content = message
         draft = self._sanitize_current_task(current_task)
+        profile_id = None
+        if draft and draft.get("llmProfileId"):
+            profile_id = str(draft["llmProfileId"])
         if draft:
             user_content = (
                 "Current task form draft (JSON). Use this as context; do not "
@@ -150,7 +159,7 @@ class AnalysisEngine:
                 f"{json.dumps(draft, ensure_ascii=False, indent=2)}\n\n"
                 f"User message:\n{message}"
             )
-        client = await self._ensure_client()
+        client = await self._ensure_client(profile_id)
         result = await client.complete(
             [
                 {"role": "system", "content": system_prompt},
@@ -198,38 +207,42 @@ class AnalysisEngine:
     # ── lazy creation + hot reload ───────────────────────────────────────
 
     @staticmethod
-    async def _current_config_hash(db: Database) -> str:
-        config = await load_llm_config(db)
+    async def _config_hash_for_profile(db: Database, profile_id: str | None) -> tuple[str, str]:
+        config = await load_llm_config_for_profile(db, profile_id)
         config["timeout"] = str(await get_config_int(db, "llm_generation_timeout"))
-        return hashlib.md5(json.dumps(config, sort_keys=True).encode()).hexdigest()
+        resolved_id = config["profile_id"]
+        return resolved_id, hashlib.md5(json.dumps(config, sort_keys=True).encode()).hexdigest()
 
-    async def _json_mode_enabled(self) -> bool:
-        return is_openai_json_mode_enabled(await get_config(self._db, "openai_json_mode"))
-
-    async def _json_mode_for_analyze(self, client: ConfigurableLlmClient) -> bool:
+    async def _json_mode_for_analyze(self, client: ConfigurableLlmClient, profile_id: str | None) -> bool:
         """Batch analysis always needs JSON; Ollama uses ``format: json`` even when OpenAI mode is off."""
         if client.provider == "ollama":
             return True
-        return await self._json_mode_enabled()
+        config = await load_llm_config_for_profile(self._db, profile_id)
+        return is_openai_json_mode_enabled(config.get("json_mode") or "disabled")
 
-    async def _ensure_client(self) -> ConfigurableLlmClient:
-        """Create the client on first use; hot-reload when config changed."""
+    async def _ensure_client(self, profile_id: str | None) -> ConfigurableLlmClient:
+        """Create/reload the client for a profile id (None → default profile)."""
         async with self._client_lock:
-            new_hash = await self._current_config_hash(self._db)
-            if self._client is not None and new_hash == self._config_hash:
-                return self._client
+            resolved_id, new_hash = await self._config_hash_for_profile(self._db, profile_id)
+            existing = self._clients.get(resolved_id)
+            if existing is not None and self._config_hashes.get(resolved_id) == new_hash:
+                self._last_profile_id = resolved_id
+                return existing
             try:
-                new_client = await ConfigurableLlmClient.from_db(self._db)
+                new_client = await ConfigurableLlmClient.from_profile(self._db, resolved_id)
             except Exception as exc:  # noqa: BLE001 — keep last working client
-                if self._client is not None:
+                if existing is not None:
                     logger.warning(
-                        "Failed to reload LLM client with new config, retaining previous: %s",
+                        "Failed to reload LLM client for profile %s, retaining previous: %s",
+                        resolved_id,
                         exc,
                     )
-                    return self._client
+                    self._last_profile_id = resolved_id
+                    return existing
                 raise
-            if self._client is not None:
-                await self._client.close()
-            self._client = new_client
-            self._config_hash = new_hash
-            return self._client
+            if existing is not None:
+                await existing.close()
+            self._clients[resolved_id] = new_client
+            self._config_hashes[resolved_id] = new_hash
+            self._last_profile_id = resolved_id
+            return new_client

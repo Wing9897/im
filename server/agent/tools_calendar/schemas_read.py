@@ -11,11 +11,19 @@ from server.agent.tool_limits import (
 )
 from server.calendar.query import HORIZON_DAYS
 
-_TASK_OR_SERIES_ID = {
+_TASK_ID = {
     "type": "string",
     "description": (
-        "Filter by analysis task id **or** recurring series id (same dual-role "
-        "key as the query layer). Alias: seriesId."
+        "Filter analysis events and user-event provenance by analysis task id. "
+        "Not a recurring series id — use seriesId for RRULE series."
+    ),
+}
+
+_SERIES_ID = {
+    "type": "string",
+    "description": (
+        "Filter RRULE occurrences by recurring series id (or parent agent task id "
+        "to include that project's child series). Not an analysis task provenance filter."
     ),
 }
 
@@ -62,11 +70,8 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": "Look-ahead days from now (e.g. 7 for 未來一週)",
                 },
                 "search": {"type": "string", "description": "Optional title/location filter"},
-                "taskId": _TASK_OR_SERIES_ID,
-                "seriesId": {
-                    "type": "string",
-                    "description": "Alias of taskId (prefer when filtering a recurring series)",
-                },
+                "taskId": _TASK_ID,
+                "seriesId": _SERIES_ID,
             },
             "additionalProperties": False,
         },
@@ -82,11 +87,8 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "properties": {
                 "limit": {"type": "integer", "minimum": 1, "maximum": CALENDAR_RESULT_HARD_CAP},
                 "search": {"type": "string"},
-                "taskId": _TASK_OR_SERIES_ID,
-                "seriesId": {
-                    "type": "string",
-                    "description": "Alias of taskId (prefer when filtering a recurring series)",
-                },
+                "taskId": _TASK_ID,
+                "seriesId": _SERIES_ID,
             },
             "additionalProperties": False,
         },
@@ -113,11 +115,8 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "limit": {"type": "integer", "minimum": 1, "maximum": CALENDAR_RESULT_HARD_CAP},
                 "cursor": {"type": "string", "description": "Opaque offset cursor from nextCursor"},
                 "search": {"type": "string"},
-                "taskId": _TASK_OR_SERIES_ID,
-                "seriesId": {
-                    "type": "string",
-                    "description": "Alias of taskId (prefer when filtering a recurring series)",
-                },
+                "taskId": _TASK_ID,
+                "seriesId": _SERIES_ID,
             },
             "required": ["start", "end"],
             "additionalProperties": False,

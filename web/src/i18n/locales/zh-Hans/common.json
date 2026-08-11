@@ -147,6 +147,15 @@
       "foundationTitle": "基本设置",
       "foundationHint": "任务建立在可重复／可触发的时间排程之上。",
       "taskTypeLabel": "任务类型",
+      "llmProfileLabel": "LLM 配置",
+      "llmProfileDefaultBadge": "默认",
+      "llmProfileIncompleteBadge": "未完成",
+      "llmProfilePlaceholder": "选择 AI 设定档",
+      "llmProfileLoading": "载入 AI 设定档中…",
+      "llmProfileEmpty": "尚无 AI 设定档。请先建立一笔，任务才能生效。",
+      "llmProfileAllIncomplete": "现有设定档尚未完成。请补齐提供商、模型（以及需要时的密钥）后再保存。",
+      "llmProfileCreateCta": "建立 AI 设定档",
+      "llmProfileHint": "此任务会自动使用所选配置的连接（提供商、模型与 API 密钥）。",
       "skillsTitle": "设定／技能",
       "skillsAria": "任务设定与技能",
       "optionalTitle": "进阶设定",
@@ -164,7 +173,11 @@
         "rrule": "请设置重复规则",
         "eventStart": "请设置开始时间，或改为全天活动",
         "agentOutput": "请至少勾选一项 Agent 输出",
-        "agentCursorAnalysis": "消息积压抽干不可写情报事件；请改用日历输出，或将触发改为排程／门槛"
+        "agentCursorAnalysis": "消息积压抽干不可写情报事件；请改用日历输出，或将触发改为排程／门槛",
+        "llmProfile": "请选择完整的 AI 设定档",
+        "llmProfileEmpty": "请先建立 AI 设定档",
+        "llmProfileIncomplete": "所选 AI 设定档尚未完成",
+        "llmProfileLoading": "正在载入 AI 设定档"
       },
       "pickChannels": "点击选择频道",
       "channelsSelected": "已选 {selected} / {total} 个频道",
@@ -1167,7 +1180,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 28／SemVer 0.1.0-beta.29；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 29／SemVer 0.1.0-beta.30；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"

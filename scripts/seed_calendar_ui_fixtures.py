@@ -423,7 +423,7 @@ async def seed(db: Database) -> dict[str, int]:
         await create_recurring_series(db, **rkwargs)
         counts["recurring"] += 1
 
-    # ── items: linked「到期」calendars are SoT (expiry cache write-through) ──
+    # ── items: linked「到期」calendars are SoT (derive-on-read expiresAt) ──
     item_specs = [
         {
             "title": f"{PREFIX} 牛奶（即將過期）",

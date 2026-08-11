@@ -74,7 +74,7 @@ function filterPlanKey(plan: ReturnType<typeof resolveTimelineFilterPlan>): stri
     plan.fetchUserEvents ? "U" : "-",
     plan.fetchItems ? "I" : "-",
     plan.analysisTaskIds === null ? "*" : plan.analysisTaskIds.join(","),
-    plan.recurringTaskIds === null ? "*" : plan.recurringTaskIds.join(","),
+    plan.seriesIds === null ? "*" : plan.seriesIds.join(","),
     plan.selectedRealTaskIds.join(","),
     plan.explicitTaskIds.join(","),
     plan.selectedWorksetIds.join(","),

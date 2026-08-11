@@ -103,9 +103,8 @@ async def test_agent_compacts_long_client_history(app) -> None:
     clear_session_clocks()
     db = app.state.db
     await db.execute(
-        "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?) "
-        "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-        ("assistant_web_search_enabled", "false", "2026-07-01T12:00:00+00:00"),
+        "UPDATE llm_profiles SET web_search_enabled = 0, updated_at = ? WHERE id = ?",
+        ("2026-07-01T12:00:00+00:00", "__default__"),
     )
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
     mock_llm.complete = AsyncMock(return_value={"text": json.dumps({"message": "ok"})})
@@ -323,8 +322,11 @@ async def test_agent_retries_without_json_mode_when_provider_rejects_it(app) -> 
     )
 
     runtime = AgentRuntime(db, mock_llm)
-    with patch("server.agent.runtime_complete.get_config", AsyncMock(return_value="true")):
-        result = await runtime.chat([{"role": "user", "content": "你好"}])
+    await db.execute(
+        "UPDATE llm_profiles SET json_mode = 'enabled', updated_at = ? WHERE id = ?",
+        ("2026-07-01T12:00:00+00:00", "__default__"),
+    )
+    result = await runtime.chat([{"role": "user", "content": "你好"}])
 
     assert "回答" in result["message"] or result["message"]
     assert mock_llm.complete.await_count == 2
@@ -342,7 +344,7 @@ async def test_agent_chat_endpoint_with_mocked_llm(app, client) -> None:
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_db_for_agent", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat",
             json={"messages": [{"role": "user", "content": "未來有什麼？"}], "sessionId": "s2"},
@@ -404,7 +406,7 @@ async def test_agent_chat_stream_endpoint_with_mocked_llm(app, client) -> None:
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_db_for_agent", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat/stream",
             json={"messages": [{"role": "user", "content": "未來有什麼？"}], "sessionId": "s-stream"},

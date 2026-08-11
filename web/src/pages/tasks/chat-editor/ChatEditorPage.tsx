@@ -34,6 +34,10 @@ export function ChatEditorPage() {
 
   const [showChannelDialog, setShowChannelDialog] = useState(false);
   const [showPresetDialog, setShowPresetDialog] = useState(false);
+  const [llmProfileGate, setLlmProfileGate] = useState<{
+    ready: boolean;
+    reason: string | null;
+  }>({ ready: false, reason: null });
   const [presets, setPresets] = useState<TaskTemplatePreset[]>([]);
   const [presetsLoading, setPresetsLoading] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState("");
@@ -90,8 +94,9 @@ export function ChatEditorPage() {
   }, [showPresets]);
 
   const scheduleError = validateScheduleValue(formState.scheduleType, formState.scheduleValue);
-  const canSaveForm = canSave && !scheduleError;
-  const disabledSaveReason = scheduleError ?? saveBlockReason;
+  const canSaveForm = canSave && !scheduleError && llmProfileGate.ready;
+  const disabledSaveReason =
+    scheduleError ?? (!llmProfileGate.ready ? llmProfileGate.reason : null) ?? saveBlockReason;
 
   const handleBack = () => {
     navigate("/tasks");
@@ -143,6 +148,7 @@ export function ChatEditorPage() {
             updateField={updateField}
             channels={channels}
             onOpenChannelDialog={() => setShowChannelDialog(true)}
+            onLlmProfileGateChange={setLlmProfileGate}
           />
         </div>
       </div>

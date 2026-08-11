@@ -36,6 +36,7 @@ class TaskDraftPayload(BaseModel):
     capReadItems: bool | None = None
     outputCalendar: bool | None = None
     outputAnalysisEvents: bool | None = None
+    llmProfileId: str | None = None
 
 
 class AgentToolCallSummary(BaseModel):
@@ -75,10 +76,7 @@ class TaskResponse(BaseModel):
     isActive: bool
     scheduleRrule: str | None = None
     includeInTimeline: bool = True
-    parentTaskId: str | None = None
     worksetId: str | None = None
-    #: Reserved task linkage field; standalone recurring series use ``RecurringSeriesResponse.itemId``.
-    itemId: str | None = None
     agentWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
     analysisTriggerThreshold: int | None = None
@@ -93,31 +91,11 @@ class TaskResponse(BaseModel):
     capReadItems: bool = True
     outputCalendar: bool = False
     outputAnalysisEvents: bool = False
+    llmProfileId: str
     createdAt: str | None = None
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None
     deletedBatchCount: int | None = None
-
-
-class TaskScheduleResponse(BaseModel):
-    """Retired task-schedule shape kept only for internal serializer compatibility."""
-
-    taskId: str
-    rrule: str
-    eventStartTime: str | None = None
-    eventEndTime: str | None = None
-    eventIsAllDay: bool = False
-    eventLocation: str | None = None
-    eventDescription: str | None = None
-    eventTimezone: str | None = None
-    eventStartLocal: str | None = None
-    eventEndLocal: str | None = None
-    eventExdates: list[str] = Field(default_factory=list)
-    eventRdates: list[str] = Field(default_factory=list)
-    icsUid: str | None = None
-    icsSource: str | None = None
-    parentTaskId: str | None = None
-    itemId: str | None = None
 
 
 class TaskDeleteResponse(BaseModel):

@@ -43,9 +43,9 @@ async def _insert_agent_task(
         "include_in_timeline, analysis_trigger_threshold, "
         "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-        "output_calendar, output_analysis_events, "
+        "output_calendar, output_analysis_events, llm_profile_id, "
         "created_at, updated_at) "
-        "VALUES (?, ?, '', ?, ?, 'all', 1, 1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, '', ?, ?, 'all', 1, 1, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             "Web intel",
@@ -62,6 +62,7 @@ async def _insert_agent_task(
             policy["cap_read_items"],
             policy["output_calendar"],
             policy["output_analysis_events"],
+            "__default__",
             now,
             now,
         ),
@@ -117,7 +118,7 @@ def _patch_agent_chat(
     side_effect: Exception | None = None,
     capture: dict[str, Any] | None = None,
 ) -> None:
-    async def _fake_from_db(_db):  # noqa: ANN001
+    async def _fake_from_db(_db, _profile_id=None):  # noqa: ANN001
         return type(
             "C",
             (),
@@ -144,7 +145,7 @@ def _patch_agent_chat(
         }
 
     monkeypatch.setattr(
-        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_profile",
         _fake_from_db,
     )
     monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)
@@ -204,15 +205,14 @@ async def test_agent_tick_forces_web_search_via_channel(
     app,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Assistant master switch off must not block scheduled agent (web_scout) ticks."""
+    """Profile web_search off must not block scheduled agent (web_scout) ticks."""
     db = app.state.db
     task_id = "agent-web-assistant-off"
     await _insert_agent_task(db, task_id=task_id)
     now = utc_now_iso()
     await db.execute(
-        "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?) "
-        "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at",
-        ("assistant_web_search_enabled", "false", now),
+        "UPDATE llm_profiles SET web_search_enabled = 0, updated_at = ? WHERE id = ?",
+        (now, "__default__"),
     )
 
     capture: dict[str, Any] = {}
@@ -309,7 +309,7 @@ async def test_agent_message_gate_under_threshold_skips_quietly(
 
     monkeypatch.setattr(AgentRuntime, "chat", _should_not_run)
     monkeypatch.setattr(
-        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_profile",
         AsyncMock(return_value=type("C", (), {"close": AsyncMock()})()),
     )
 
@@ -459,7 +459,7 @@ async def test_agent_success_clears_failure_streak(app, monkeypatch: pytest.Monk
 
     mode = {"fail": True}
 
-    async def _fake_from_db(_db):  # noqa: ANN001
+    async def _fake_from_db(_db, _profile_id=None):  # noqa: ANN001
         return type("C", (), {"provider": "ollama", "model": "t", "close": AsyncMock()})()
 
     async def _fake_chat(self, messages, **kwargs):  # noqa: ANN001, ANN003
@@ -472,7 +472,7 @@ async def test_agent_success_clears_failure_streak(app, monkeypatch: pytest.Monk
         }
 
     monkeypatch.setattr(
-        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_db_for_agent",
+        "server.scheduler.agent_tick_schedule.ConfigurableLlmClient.from_profile",
         _fake_from_db,
     )
     monkeypatch.setattr(AgentRuntime, "chat", _fake_chat)

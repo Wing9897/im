@@ -39,6 +39,12 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
             (*SECRET_CONFIG_KEYS, _CIPHER_LIKE),
         )
 
+    profiles_count = await db.execute(
+        "UPDATE llm_profiles SET api_key = '', brave_search_api_key = '', updated_at = ? "
+        "WHERE api_key LIKE ? OR brave_search_api_key LIKE ?",
+        (now, _CIPHER_LIKE, _CIPHER_LIKE),
+    )
+
     sources_count = await db.execute(
         "UPDATE sources SET credentials = NULL, status = 'disconnected', updated_at = ? WHERE credentials LIKE ?",
         (now, _CIPHER_LIKE),
@@ -53,14 +59,17 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
         (_CIPHER_LIKE,),
     )
     logger.info(
-        "Scrubbed undecryptable secrets: system_config=%d sources=%d stale_connected=%d actions=%d",
+        "Scrubbed undecryptable secrets: system_config=%d llm_profiles=%d sources=%d "
+        "stale_connected=%d actions=%d",
         config_count,
+        profiles_count,
         sources_count,
         stale_connected,
         actions_count,
     )
     return {
         "system_config": config_count,
+        "llm_profiles": profiles_count,
         "sources": sources_count,
         "stale_connected": stale_connected,
         "actions": actions_count,
@@ -84,6 +93,17 @@ async def probe_stored_secrets(db: Any) -> tuple[bool, str | None]:
         )
         for row in rows:
             cipher = _ciphertext(row.get("value"))
+            if cipher is not None:
+                samples.append(cipher)
+
+    profile_rows = await db.fetch_all(
+        "SELECT api_key, brave_search_api_key FROM llm_profiles "
+        "WHERE api_key LIKE ? OR brave_search_api_key LIKE ? LIMIT 8",
+        (_CIPHER_LIKE, _CIPHER_LIKE),
+    )
+    for row in profile_rows:
+        for key in ("api_key", "brave_search_api_key"):
+            cipher = _ciphertext(row.get(key))
             if cipher is not None:
                 samples.append(cipher)
 

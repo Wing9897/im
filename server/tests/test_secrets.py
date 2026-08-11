@@ -5,8 +5,10 @@ from __future__ import annotations
 import json
 
 import server.secrets as secret_store
-from server.config import get_config, set_configs
 from server.db.database import Database
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.secrets import protect_text
+from server.util import utc_now_iso
 
 
 def test_secret_roundtrip_is_not_plaintext():
@@ -17,15 +19,18 @@ def test_secret_roundtrip_is_not_plaintext():
     assert secret_store.unprotect_text(protected) == "super-secret-value"
 
 
-async def test_config_secrets_are_encrypted_transparently(tmp_path):
-    db = Database(str(tmp_path / "config-secrets.db"))
+async def test_llm_profile_secrets_are_encrypted_transparently(tmp_path):
+    db = Database(str(tmp_path / "profile-secrets.db"))
     await db.connect()
     await db.ensure_schema()
     try:
-        await set_configs(db, {"openai_api_key": "sk-test"})
-        raw = await db.fetch_value("SELECT value FROM system_config WHERE key = 'openai_api_key'")
+        await db.execute(
+            "UPDATE llm_profiles SET api_key = ?, updated_at = ? WHERE id = ?",
+            (protect_text("sk-test"), utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+        )
+        raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,))
         assert str(raw).startswith("enc:v1:")
-        assert await get_config(db, "openai_api_key") == "sk-test"
+        assert secret_store.unprotect_text(raw) == "sk-test"
     finally:
         await db.close()
 

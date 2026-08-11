@@ -47,6 +47,9 @@ async def apply_agent_scope(
         # Force calendar reads/writes onto this task (and its child recurrings).
         args["taskId"] = scope_task_id
         args.pop("task_id", None)
+        # seriesId=parent task id selects child series via parent_task_id match.
+        args["seriesId"] = scope_task_id
+        args.pop("series_id", None)
         args["_default_task_id"] = scope_task_id
         args["_agent_scope_task_id"] = scope_task_id
 

@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-28 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-29 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -23,12 +23,12 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 28
+    assert CURRENT_SCHEMA_VERSION == 29
 
 
 @pytest.mark.asyncio
 async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
-    """Empty DB + ensure_supported_schema → current stamp + seeded __user__."""
+    """Empty DB + ensure_supported_schema → current stamp + seeded __user__; zero LLM profiles."""
     path = str(tmp_path / "fresh-wipe-floor.db")
     db = Database(path)
     await db.connect()
@@ -38,12 +38,18 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert fingerprint.version == CURRENT_SCHEMA_VERSION
         assert fingerprint == CURRENT_SCHEMA_FINGERPRINT
         assert await db.fetch_value("SELECT is_system FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)) == 1
+        assert int(await db.fetch_value("SELECT COUNT(*) FROM llm_profiles") or 0) == 0
+        assert int(await db.fetch_value("SELECT COUNT(*) FROM llm_staff_instances") or 0) == 0
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
             cols = {str(row[1]): row for row in await cursor.fetchall()}
         workset_col = cols["workset_id"]
         assert int(workset_col[3]) == 1  # notnull
         assert workset_col[4] is not None
         assert "__user__" in str(workset_col[4])
+        async with db.conn.execute("PRAGMA table_info(analysis_tasks)") as cursor:
+            task_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "llm_profile_id" in task_cols
+        assert int(task_cols["llm_profile_id"][3]) == 1
     finally:
         await db.close()
 

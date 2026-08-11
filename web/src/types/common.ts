@@ -45,6 +45,8 @@ export interface AiEngineTestDraft {
   llmModel: string;
   llmApiKey: string;
   ollamaThinkingEnabled?: boolean;
+  /** When set, masked apiKey falls back to this saved profile's secret. */
+  llmProfileId?: string;
 }
 
 /** LLM Provider options */

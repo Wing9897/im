@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -43,25 +41,14 @@ class RetentionRunResponse(BaseModel):
 
 
 class SystemSettingsSnapshot(BaseModel):
-    """GET/PUT ``/config/settings`` wire snapshot (camelCase)."""
+    """GET/PUT ``/config/settings`` wire snapshot (camelCase).
+
+    LLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
-    llmProvider: Literal["ollama", "openai_compatible", "gemini_compatible", "openrouter"]
     analysisPaused: bool
-    ollamaBaseUrl: str
-    ollamaModel: str
-    ollamaThinkingEnabled: bool
-    openaiBaseUrl: str
-    openaiModel: str
-    openaiApiKey: str
-    openaiJsonMode: str
-    geminiBaseUrl: str
-    geminiModel: str
-    geminiApiKey: str
-    openrouterBaseUrl: str
-    openrouterModel: str
-    openrouterApiKey: str
     analysisBatchMessageLimit: str
     analysisMaxTotalChars: str
     analysisMaxEstimatedInputTokens: str
@@ -79,13 +66,6 @@ class SystemSettingsSnapshot(BaseModel):
     autoPauseOnRetriesExhausted: bool
     weatherLocation: str
     uiLocale: str
-    assistantWebSearchEnabled: bool
-    webSearchProvider: str
-    braveSearchApiKey: str
-    assistantLlmProvider: str
-    assistantLlmBaseUrl: str
-    assistantLlmModel: str
-    assistantLlmApiKey: str
     agentHistoryMaxMessages: str
     agentHistoryMaxChars: str
     assistantDisplayName: str

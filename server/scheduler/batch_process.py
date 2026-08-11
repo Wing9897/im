@@ -162,7 +162,10 @@ async def process_batch(
     # (observed in live E2E: one batch stuck 17+ minutes past the timeout).
     llm_timeout = await get_config_int(db, "llm_generation_timeout")
     try:
-        result = await asyncio.wait_for(analysis_engine.analyze(prompt), timeout=llm_timeout * 2)
+        result = await asyncio.wait_for(
+            analysis_engine.analyze(prompt, profile_id=str(task.get("llm_profile_id") or "") or None),
+            timeout=llm_timeout * 2,
+        )
     except asyncio.TimeoutError as exc:
         await handle_batch_failure(
             db=db,

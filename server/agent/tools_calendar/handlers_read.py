@@ -22,13 +22,14 @@ from server.calendar.timeline_dismissals import active_timeline_items
 from server.db.database import Database
 
 
-def _filter_task_or_series_id(args: dict[str, Any]) -> Any:
-    """Shared filter key for upcoming/recent/window.
+def _filter_task_id(args: dict[str, Any]) -> Any:
+    """Analysis-task filter for upcoming/recent/window (not a series id)."""
+    return arg(args, "taskId", "task_id")
 
-    ``seriesId`` is an explicit alias of ``taskId``: either may be an analysis
-    task id **or** a recurring series id (RRULE expand accepts both).
-    """
-    return arg(args, "seriesId", "series_id", "taskId", "task_id")
+
+def _filter_series_id(args: dict[str, Any]) -> Any:
+    """Recurring-series filter (series id or parent agent task id for children)."""
+    return arg(args, "seriesId", "series_id")
 
 
 async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, Any]:
@@ -74,7 +75,8 @@ async def _tool_upcoming(db: Database, args: dict[str, Any]) -> dict[str, Any]:
         limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_LIST_LIMIT) or CALENDAR_DEFAULT_LIST_LIMIT,
         days=days,
         search=args.get("search"),
-        task_id=_filter_task_or_series_id(args),
+        task_id=_filter_task_id(args),
+        series_id=_filter_series_id(args),
         hard_cap=CALENDAR_RESULT_HARD_CAP,
     )
     result["items"] = active_timeline_items(result.get("items") or [])
@@ -86,7 +88,8 @@ async def _tool_recent(db: Database, args: dict[str, Any]) -> dict[str, Any]:
         db,
         limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_LIST_LIMIT) or CALENDAR_DEFAULT_LIST_LIMIT,
         search=args.get("search"),
-        task_id=_filter_task_or_series_id(args),
+        task_id=_filter_task_id(args),
+        series_id=_filter_series_id(args),
         hard_cap=CALENDAR_RESULT_HARD_CAP,
     )
     result["items"] = active_timeline_items(result.get("items") or [])
@@ -107,7 +110,8 @@ async def _tool_window(db: Database, args: dict[str, Any]) -> dict[str, Any]:
             limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_WINDOW_LIMIT) or CALENDAR_DEFAULT_WINDOW_LIMIT,
             cursor=args.get("cursor"),
             search=args.get("search"),
-            task_id=_filter_task_or_series_id(args),
+            task_id=_filter_task_id(args),
+            series_id=_filter_series_id(args),
             hard_cap=CALENDAR_RESULT_HARD_CAP,
         )
     except ValueError as exc:

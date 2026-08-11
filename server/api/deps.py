@@ -15,7 +15,7 @@ from server.sse import publish_resource_modified as sse_publish_resource_modifie
 #: verify_write_access is method-aware, so applying it to GET routes is a no-op.
 API_DEPS = [Depends(verify_auth), Depends(verify_write_access)]
 
-_ROW_LOOKUP_TABLES = frozenset({"actions", "sources", "worksets"})
+_ROW_LOOKUP_TABLES = frozenset({"actions", "sources", "worksets", "llm_profiles"})
 
 
 async def require_row(db: Database, table: str, kind: str, row_id: str) -> dict[str, Any]:

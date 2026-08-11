@@ -7,7 +7,6 @@ from typing import Any, Protocol
 
 from server.agent.web_search_routing import WebSearchRoute, resolve_web_search_route
 from server.analyzer.llm_client import load_agent_llm_config
-from server.config import get_config, get_config_bool
 from server.db.database import Database
 from server.util import is_openai_json_mode_enabled
 
@@ -29,11 +28,12 @@ class LlmCompleter(Protocol):
 
 
 async def prefer_json_mode(db: Database, llm: LlmCompleter) -> bool:
-    """Match analysis engine: Ollama always uses format=json; others follow openai_json_mode."""
+    """Match analysis engine: Ollama always uses format=json; others follow profile json_mode."""
     provider = getattr(llm, "provider", None)
     if provider == "ollama":
         return True
-    return is_openai_json_mode_enabled(await get_config(db, "openai_json_mode"))
+    llm_cfg = await load_agent_llm_config(db)
+    return is_openai_json_mode_enabled(llm_cfg.get("json_mode") or "disabled")
 
 
 async def resolve_web_search_route_for_runtime(
@@ -43,14 +43,14 @@ async def resolve_web_search_route_for_runtime(
     force_enabled: bool = False,
     force_disabled: bool = False,
 ) -> WebSearchRoute:
+    llm_cfg = await load_agent_llm_config(db)
     if force_disabled:
         web_enabled = False
     elif force_enabled:
         web_enabled = True
     else:
-        web_enabled = await get_config_bool(db, "assistant_web_search_enabled")
-    setting = await get_config(db, "web_search_provider")
-    llm_cfg = await load_agent_llm_config(db)
+        web_enabled = bool(llm_cfg.get("web_search_enabled"))
+    setting = str(llm_cfg.get("web_search_provider") or "auto")
     # Prefer live client strings when set; ignore MagicMock auto-attrs.
     live_provider = getattr(llm, "provider", None)
     live_base = getattr(llm, "base_url", None)

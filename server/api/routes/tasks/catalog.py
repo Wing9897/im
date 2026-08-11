@@ -47,14 +47,12 @@ async def retired_recurring_task_route() -> None:
 @router.get("", response_model=list[TaskResponse])
 async def list_tasks(
     request: Request,
-    top_level_only: Optional[bool] = qalias("topLevelOnly", default=None),
     analysis_mode: Optional[str] = qalias("analysisMode", default=None),
     workset_id: Optional[str] = qalias("worksetId", default=None),
 ) -> list[dict]:
     try:
         return await list_tasks_payload(
             get_db(request),
-            top_level_only=bool(top_level_only) if top_level_only is not None else False,
             analysis_mode=analysis_mode,
             workset_id=workset_id,
         )

@@ -16,13 +16,13 @@ async def test_list_tasks(client):
     assert seed.SERIES_CALENDAR not in {task["id"] for task in body}
     for task in body:
         assert_keys(task, TASK_KEYS, "AnalysisTask")
-        assert "parentTaskId" in task
+        assert "parentTaskId" not in task
+        assert "itemId" not in task
     lb = next(t for t in body if t["id"] == seed.TASK_LEADERBOARD)
     # Quirk #8: channelIds items are ChannelRef objects in GET responses.
     assert lb["channelIds"], "leaderboard task must have channels"
     for ref in lb["channelIds"]:
         assert_keys(ref, ["id", "platform", "platformId"], "ChannelRef")
-    assert lb["parentTaskId"] is None
     wi = next(t for t in body if t["id"] == seed.TASK_WEB_INTEL)
     assert wi["analysisMode"] == "agent"
     assert wi["outputAnalysisEvents"] is True

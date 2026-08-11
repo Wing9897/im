@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Pencil, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
-import { AssistantLlmSettingsDialog } from "../../components/aiStaff/AssistantLlmSettingsDialog";
+import { AssistantHistorySettingsDialog } from "../../components/aiStaff/AssistantHistorySettingsDialog";
 import { Badge, Button, SurfaceCard, TextField } from "../../components/ui";
 import {
   cardBodyClass,
@@ -20,12 +20,12 @@ import {
 } from "../../domain/aiStaff/assistantIdentity";
 import type { SystemSettingsSnapshot } from "../../types";
 import { SettingsContentCard } from "../../components/settings/SettingsFormLayout";
-import { useSettingsPageState } from "../settings/SettingsShared";
 import {
   FRONTLINE_LINKS,
   LiaisonIntroCard,
   RosterStaffCard,
 } from "./AiStaffIntroCards";
+import { useSettingsPageState } from "../settings/SettingsShared";
 
 const titleIconBtnClass =
   "im-icon-btn !h-7 !w-7 !rounded-md text-text-secondary transition-colors";
@@ -37,7 +37,7 @@ function AssistantStaffCard() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState("");
-  const [llmDialogOpen, setLlmDialogOpen] = useState(false);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const { identity, setDisplayName, setAvatarDataUrl, resetAvatar } = useAssistantIdentity();
   const { settings, saving, handleSave } = useSettingsPageState();
   const fallbackName = t("common:aiStaff.assistant");
@@ -105,9 +105,9 @@ function AssistantStaffCard() {
     }
   };
 
-  const onSaveLlm = async (patch: Partial<SystemSettingsSnapshot>) => {
-    await handleSave({ requireProviderConfig: false, patch });
-    setLlmDialogOpen(false);
+  const onSaveHistory = async (patch: Partial<SystemSettingsSnapshot>) => {
+    await handleSave({ patch });
+    setHistoryDialogOpen(false);
   };
 
   return (
@@ -194,7 +194,6 @@ function AssistantStaffCard() {
               className={titleIconBtnClass}
               onMouseDown={(e) => {
                 if (renaming) {
-                  // Avoid blur-commit racing the click and reopening rename.
                   e.preventDefault();
                   commitRename();
                 }
@@ -211,10 +210,10 @@ function AssistantStaffCard() {
             <button
               type="button"
               className={titleIconBtnClass}
-              onClick={() => setLlmDialogOpen(true)}
-              aria-label={t("staff.editLlmAria")}
-              title={t("staff.editLlmAria")}
-              data-testid="assistant-edit-llm"
+              onClick={() => setHistoryDialogOpen(true)}
+              aria-label={t("staff.editHistoryAria")}
+              title={t("staff.editHistoryAria")}
+              data-testid="assistant-edit-history"
               disabled={!settings}
             >
               <Sparkles size={14} strokeWidth={2} aria-hidden="true" />
@@ -253,12 +252,12 @@ function AssistantStaffCard() {
       </Link>
 
       {settings ? (
-        <AssistantLlmSettingsDialog
-          open={llmDialogOpen}
+        <AssistantHistorySettingsDialog
+          open={historyDialogOpen}
           settings={settings}
           saving={saving}
-          onClose={() => setLlmDialogOpen(false)}
-          onSave={onSaveLlm}
+          onClose={() => setHistoryDialogOpen(false)}
+          onSave={onSaveHistory}
         />
       ) : null}
     </SurfaceCard>

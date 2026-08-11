@@ -53,6 +53,7 @@ export function makeAnalysisTask(overrides: Partial<AnalysisTask> = {}): Analysi
     scheduleRrule: "FREQ=SECONDLY;INTERVAL=10",
     channelIds: [],
     worksetId: null,
+    llmProfileId: "profile-default",
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
     ...overrides,

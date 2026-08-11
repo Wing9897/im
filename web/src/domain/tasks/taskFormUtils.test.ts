@@ -34,6 +34,7 @@ const sampleBase: TaskFormState = {
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -85,6 +86,7 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -118,6 +120,7 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -151,6 +154,7 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -184,6 +188,7 @@ const validFormStates: TaskFormState[] = [
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -197,6 +202,7 @@ const validFormStates: TaskFormState[] = [
 ];
 
 const sampleFormState: TaskFormState = {
+  ...sampleBase,
   name: "BTC Tracker",
   description: "Track BTC mentions",
   promptTemplate: "Analyze crypto messages",
@@ -206,18 +212,6 @@ const sampleFormState: TaskFormState = {
   analysisMode: "leaderboard",
   analysisTimeRange: "1d",
   channelIds: ["ch-abc123", "ch-def456"],
-  rrule: "",
-  eventStartTime: "",
-  eventEndTime: "",
-  eventIsAllDay: false,
-  eventLocation: "",
-  eventDescription: "",
-  includeInTimeline: true,
-  agentWaveIntervalSeconds: null,
-  batchOverlapCount: null,
-  analysisTriggerThreshold: null,
-  analysisBatchMessageLimit: null,
-  analysisStrategyMode: null,
 };
 
 describe("applyConfigToFormState", () => {
@@ -263,6 +257,15 @@ describe("applyConfigToFormState", () => {
 });
 
 describe("formStateToTaskConfig calendar contract", () => {
+  it("omits empty llmProfileId and includes a set profile id", () => {
+    expect(formStateToTaskConfig(sampleBase)).not.toHaveProperty("llmProfileId");
+    const withProfile = formStateToTaskConfig({
+      ...sampleBase,
+      llmProfileId: " profile-abc ",
+    });
+    expect(withProfile.llmProfileId).toBe("profile-abc");
+  });
+
   it("keeps optional channelIds for agent and emits message-gate overrides when bound", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
@@ -412,12 +415,14 @@ describe("scheduleFieldsFromTask", () => {
       isActive: true,
       scheduleRrule: "FREQ=HOURLY",
       channelIds: [],
+      llmProfileId: "profile-xyz",
       createdAt: "2024-01-01T00:00:00Z",
       updatedAt: "2024-01-01T00:00:00Z",
     } as AnalysisTask;
     const form = analysisTaskToFormState(task);
     expect(form.scheduleType).toBe("hourly");
     expect(form.scheduleRrule).toBe("FREQ=HOURLY");
+    expect(form.llmProfileId).toBe("profile-xyz");
   });
 });
 

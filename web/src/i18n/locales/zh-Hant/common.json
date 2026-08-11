@@ -147,6 +147,15 @@
       "foundationTitle": "基本設定",
       "foundationHint": "任務建立在可重複／可觸發的時間排程之上。",
       "taskTypeLabel": "任務類型",
+      "llmProfileLabel": "LLM 設定檔",
+      "llmProfileDefaultBadge": "預設",
+      "llmProfileIncompleteBadge": "未完成",
+      "llmProfilePlaceholder": "選擇 AI 設定檔",
+      "llmProfileLoading": "載入 AI 設定檔中…",
+      "llmProfileEmpty": "尚無 AI 設定檔。請先建立一筆，任務才能生效。",
+      "llmProfileAllIncomplete": "現有設定檔尚未完成。請補齊提供者、模型（以及需要時的金鑰）後再儲存。",
+      "llmProfileCreateCta": "建立 AI 設定檔",
+      "llmProfileHint": "此任務會自動使用所選設定檔的連線（提供者、模型與 API 金鑰）。",
       "skillsTitle": "設定／技能",
       "skillsAria": "任務設定與技能",
       "optionalTitle": "進階設定",
@@ -164,7 +173,11 @@
         "rrule": "請設定重複規則",
         "eventStart": "請設定開始時間，或改為整天活動",
         "agentOutput": "請至少勾選一項 Agent 輸出",
-        "agentCursorAnalysis": "訊息積壓抽乾不可寫情報事件；請改用日曆輸出，或將觸發改為排程／門檻"
+        "agentCursorAnalysis": "訊息積壓抽乾不可寫情報事件；請改用日曆輸出，或將觸發改為排程／門檻",
+        "llmProfile": "請選擇完整的 AI 設定檔",
+        "llmProfileEmpty": "請先建立 AI 設定檔",
+        "llmProfileIncomplete": "所選 AI 設定檔尚未完成",
+        "llmProfileLoading": "正在載入 AI 設定檔"
       },
       "pickChannels": "點擊選擇頻道",
       "channelsSelected": "已選 {selected} / {total} 個頻道",
@@ -1167,7 +1180,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 28／SemVer 0.1.0-beta.29；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 29／SemVer 0.1.0-beta.30；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

@@ -10,8 +10,9 @@ import pytest
 from server.analyzer.engine import AnalysisEngine
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.analyzer.prompt import AssembledPrompt
-from server.config import set_configs
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.prompts.assistant import TASK_CONFIG_SCHEMA_PROMPT
+from server.util import utc_now_iso
 
 
 def test_task_config_schema_prompt_lists_required_fields() -> None:
@@ -57,16 +58,27 @@ def test_extract_task_config_parses_supported_shapes(
     assert AnalysisEngine._extract_task_config(response_text) == expected
 
 
-async def test_json_mode_enabled_honors_disabled_sentinels(app) -> None:
+async def test_json_mode_for_analyze_honors_profile_json_mode(app) -> None:
     db = app.state.db
     engine = AnalysisEngine(db)
+    mock_client = MagicMock(spec=ConfigurableLlmClient)
+    mock_client.provider = "openai"
 
     for value in ("", "disabled", "off", "false", "0", "FALSE"):
-        await set_configs(db, {"openai_json_mode": value})
-        assert await engine._json_mode_enabled() is False
+        await db.execute(
+            "UPDATE llm_profiles SET json_mode = ?, updated_at = ? WHERE id = ?",
+            (value, utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+        )
+        assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is False
 
-    await set_configs(db, {"openai_json_mode": "true"})
-    assert await engine._json_mode_enabled() is True
+    await db.execute(
+        "UPDATE llm_profiles SET json_mode = ?, updated_at = ? WHERE id = ?",
+        ("true", utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+    )
+    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
+
+    mock_client.provider = "ollama"
+    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
 
 
 async def test_engine_provider_and_model_are_empty_before_first_use(app) -> None:
@@ -80,30 +92,26 @@ async def test_concurrent_first_use_creates_one_llm_client(app) -> None:
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.close = AsyncMock()
 
-    async def create_client(_db):
+    async def create_client(_db, _profile_id):
         await asyncio.sleep(0)
         return mock_client
 
     with (
-        patch.object(engine, "_current_config_hash", AsyncMock(return_value="same-config")),
-        patch.object(ConfigurableLlmClient, "from_db", AsyncMock(side_effect=create_client)) as from_db,
+        patch.object(
+            AnalysisEngine,
+            "_config_hash_for_profile",
+            AsyncMock(return_value=(DEFAULT_LLM_PROFILE_ID, "same-config")),
+        ),
+        patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(side_effect=create_client)) as from_profile,
     ):
-        clients = await asyncio.gather(*(engine._ensure_client() for _ in range(3)))
+        clients = await asyncio.gather(*(engine._ensure_client(None) for _ in range(3)))
 
     assert clients == [mock_client, mock_client, mock_client]
-    from_db.assert_awaited_once_with(app.state.db)
+    from_profile.assert_awaited_once_with(app.state.db, DEFAULT_LLM_PROFILE_ID)
 
 
 async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:
     db = app.state.db
-    await set_configs(
-        db,
-        {
-            "llm_provider": "ollama",
-            "ollama_model": "test-model",
-            "openai_json_mode": "false",
-        },
-    )
 
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.complete = AsyncMock(
@@ -131,7 +139,7 @@ async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:
         primary_tokens=4,
     )
 
-    with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
+    with patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(return_value=mock_client)):
         result = await engine.analyze(prompt)
 
     assert result["items"] == [{"title": "Intel", "content": "Body"}]
@@ -145,13 +153,6 @@ async def test_analyze_parses_llm_json_and_returns_token_counts(app) -> None:
 
 async def test_consult_task_advisor_extracts_task_config_from_llm_reply(app) -> None:
     db = app.state.db
-    await set_configs(
-        db,
-        {
-            "llm_provider": "ollama",
-            "ollama_model": "chat-model",
-        },
-    )
 
     response_text = (
         'Here is a suggested setup.\n```json\n{"taskConfig": {"name": "Alerts", "promptTemplate": "watch quakes"}}\n```'
@@ -164,7 +165,7 @@ async def test_consult_task_advisor_extracts_task_config_from_llm_reply(app) -> 
 
     engine = AnalysisEngine(db)
 
-    with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
+    with patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(return_value=mock_client)):
         result = await engine.consult_task_advisor("monitor earthquakes")
 
     assert result["message"] == response_text
@@ -180,7 +181,6 @@ async def test_consult_task_advisor_extracts_task_config_from_llm_reply(app) -> 
 
 async def test_consult_task_advisor_appends_english_locale_directive(app) -> None:
     db = app.state.db
-    await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.complete = AsyncMock(return_value={"text": "Sure."})
@@ -188,7 +188,7 @@ async def test_consult_task_advisor_appends_english_locale_directive(app) -> Non
 
     engine = AnalysisEngine(db)
 
-    with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
+    with patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(return_value=mock_client)):
         await engine.consult_task_advisor("hello", locale="en")
 
     system = mock_client.complete.await_args.args[0][0]["content"]
@@ -198,7 +198,6 @@ async def test_consult_task_advisor_appends_english_locale_directive(app) -> Non
 
 async def test_consult_task_advisor_includes_current_task_draft_without_channels(app) -> None:
     db = app.state.db
-    await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.complete = AsyncMock(return_value={"text": "Updated the prompt."})
@@ -213,7 +212,7 @@ async def test_consult_task_advisor_includes_current_task_draft_without_channels
         "description": "",
     }
 
-    with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
+    with patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(return_value=mock_client)):
         await engine.consult_task_advisor("把提示詞寫清楚一點", current_task=draft)
 
     user_content = mock_client.complete.await_args.args[0][1]["content"]
@@ -227,7 +226,6 @@ async def test_consult_task_advisor_includes_current_task_draft_without_channels
 
 async def test_consult_task_advisor_returns_null_task_config_for_plain_chat(app) -> None:
     db = app.state.db
-    await set_configs(db, {"llm_provider": "ollama", "ollama_model": "chat-model"})
 
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.complete = AsyncMock(return_value={"text": "Sure, ask me anything about tasks."})
@@ -235,7 +233,7 @@ async def test_consult_task_advisor_returns_null_task_config_for_plain_chat(app)
 
     engine = AnalysisEngine(db)
 
-    with patch.object(ConfigurableLlmClient, "from_db", AsyncMock(return_value=mock_client)):
+    with patch.object(ConfigurableLlmClient, "from_profile", AsyncMock(return_value=mock_client)):
         result = await engine.consult_task_advisor("hello")
 
     assert result["taskConfig"] is None

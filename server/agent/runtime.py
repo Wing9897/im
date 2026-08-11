@@ -105,7 +105,10 @@ class AgentRuntime:
         force_web_search: bool = False,
     ) -> dict[str, Any]:
         route = web_route or await self._resolve_web_search_route(force_enabled=force_web_search)
-        brave_key = await get_config(self.db, "brave_search_api_key")
+        from server.analyzer.llm_config import load_agent_llm_config
+
+        llm_cfg = await load_agent_llm_config(self.db)
+        brave_key = str(llm_cfg.get("brave_search_api_key") or "")
         return {
             "web_search_enabled": route.enabled and route.inject_web_search_tool,
             "web_search_provider": route.tool_provider,

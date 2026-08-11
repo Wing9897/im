@@ -5,7 +5,20 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 from server.util import parse_json_list
-from server.wire.serializer_domains.tasks import _recurring_wire_clock
+
+
+def _recurring_wire_clock(row: Mapping[str, Any], key: str) -> Any:
+    value = row.get(key)
+    if not value:
+        return value
+    if row.get("event_is_all_day"):
+        return None
+    if row.get("ics_source") or str(row.get("event_timezone") or "") != "floating":
+        return value
+    text = str(value)
+    if "T" in text and len(text) >= 16:
+        return text.split("T", 1)[1][:5]
+    return value
 
 
 def serialize_recurring_series(row: Mapping[str, Any]) -> dict[str, Any]:
