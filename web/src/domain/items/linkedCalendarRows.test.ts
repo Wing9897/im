@@ -3,7 +3,6 @@ import type { UserEvent } from "../../api/userEvents";
 import type { AnalysisTask } from "../../types";
 import {
   countActiveLinkedExpiryEvents,
-  deriveLinkedExpiryPreview,
   mergeLinkedCalendarRows,
   toLinkedOneOffRow,
   toLinkedRecurringRow,
@@ -106,22 +105,5 @@ describe("row mappers", () => {
       detail: "FREQ=WEEKLY",
       taskId: "task-1",
     });
-  });
-});
-
-describe("deriveLinkedExpiryPreview", () => {
-  it("prefers linked event date over item cache", () => {
-    const preview = deriveLinkedExpiryPreview(
-      makeEvent({ startTime: "2026-12-25T12:00:00.000Z", isAllDay: true }),
-      "2026-01-01",
-      7,
-    );
-    expect(preview.expiresAt).toMatch(/^2026-12-2[45]$/);
-    expect(preview.expiresAt).not.toBe("2026-01-01");
-  });
-
-  it("falls back to item cache when no active expiry", () => {
-    const preview = deriveLinkedExpiryPreview(null, "2026-06-01", null);
-    expect(preview.expiresAt).toBe("2026-06-01");
   });
 });

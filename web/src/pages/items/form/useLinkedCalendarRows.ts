@@ -2,17 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 
 import { listTasks } from "../../../api/tasks";
 import { listUserEvents, type UserEvent } from "../../../api/userEvents";
+import { findActiveLinkedExpiryEvent } from "../../../domain/items/linkedCalendarQuickCreate";
 import {
   countActiveLinkedExpiryEvents,
   mergeLinkedCalendarRows,
-  resolveActiveLinkedExpiry,
   type LinkedCalendarRow,
 } from "../../../domain/items/linkedCalendarRows";
 
 type Options = {
   itemId: string | null;
-  itemExpiresAt?: string | null;
-  remindBeforeDays?: number | null;
   refreshKey?: number;
   onActiveExpiryChange?: (event: UserEvent | null) => void;
 };
@@ -25,7 +23,6 @@ export type LinkedCalendarRowsState = {
   loading: boolean;
   loadError: boolean;
   createLocked: boolean;
-  hasPrimaryExpiry: boolean;
 };
 
 /** Loads + merges one-off / recurring calendars linked to an inventory item. */
@@ -58,7 +55,7 @@ export function useLinkedCalendarRows({
         listUserEvents({ itemId }),
         listTasks({ itemId, analysisMode: "recurring" }),
       ]);
-      const expiryEvent = resolveActiveLinkedExpiry(events);
+      const expiryEvent = findActiveLinkedExpiryEvent(events);
       setRows(mergeLinkedCalendarRows(events, recurring));
       setActiveExpiry(expiryEvent);
       setExpiresCount(countActiveLinkedExpiryEvents(events));
@@ -85,6 +82,5 @@ export function useLinkedCalendarRows({
     loading,
     loadError,
     createLocked,
-    hasPrimaryExpiry: activeExpiry != null,
   };
 }

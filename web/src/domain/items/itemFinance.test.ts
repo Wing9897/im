@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 import { makeTrackableItem } from "../../test/fixtures/trackableItem";
+import { isLinkedPurchaseEffectiveTitle } from "../timeline/userEventCalendarKind";
 import {
   buildItemsFinanceRows,
   financePresetRange,
-  isLinkedPurchaseEffectiveTitle,
   purchaseEffectiveDayFromEvent,
   sortItemsFinanceRows,
   summarizeItemsFinance,

@@ -210,8 +210,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
           >
             <ItemFormLinkedCalendarsSection
               itemId={effectiveItem?.id ?? null}
-              itemExpiresAt={effectiveItem?.expiresAt}
-              remindBeforeDays={effectiveItem?.remindBeforeDays}
               refreshKey={linked.linkedCalendarRefreshKey}
               disabled={busy}
               canAdd={canAddLinkedCalendar}

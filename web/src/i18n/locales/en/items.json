@@ -193,7 +193,7 @@
     "summaryIncome": "Income {total}",
     "summaryNet": "Net {total}",
     "emptyTitle": "No purchases in this range",
-    "emptyHint": "Add a linked calendar titled Purchased (or 购入 / 購入 / Effective / 生效) with an amount on an item, or widen the date range.",
+    "emptyHint": "Add a purchase/effective linked calendar with an amount on an item, or widen the date range.",
     "colItem": "Item",
     "colPurchase": "Purchase date",
     "colEvent": "Calendar title",

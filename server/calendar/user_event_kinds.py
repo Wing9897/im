@@ -47,10 +47,6 @@ LINKED_PURCHASE_EFFECTIVE_TITLES = frozenset(
 )
 
 
-def is_linked_expiry_title(title: str | None) -> bool:
-    return str(title or "").strip() in LINKED_EXPIRY_TITLES
-
-
 def infer_user_event_kind_from_title(title: str | None) -> str:
     """Map legacy title presets → kind (seed / docs / one-shot helpers only)."""
     cleaned = str(title or "").strip()

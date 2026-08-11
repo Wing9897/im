@@ -193,7 +193,7 @@
     "summaryIncome": "收入 {total}",
     "summaryNet": "净额 {total}",
     "emptyTitle": "此范围内没有购入记录",
-    "emptyHint": "在物品上添加标题为「购入」或 Purchased / 購入 / Effective / 生效 的关联日历并填写金额，或放宽日期范围。",
+    "emptyHint": "在物品上添加「购入／生效」关联日历并填写金额，或放宽日期范围。",
     "colItem": "物品",
     "colPurchase": "购入日期",
     "colEvent": "日历标题",

@@ -12,7 +12,6 @@ import {
   itemDateKindLabel,
   itemDateKindMarkerClass,
   stripItemKindTitlePrefix,
-  itemOccurrenceId,
   resolveCategoryCardEmoji,
   resolveCategoryEmoji,
   resolveItemEmoji,
@@ -38,10 +37,6 @@ const DDL_SEED_CATEGORY_EMOJIS: Readonly<Record<string, string>> = {
 describe("itemCalendarProjection helpers", () => {
   beforeEach(async () => {
     await setAppLocale("zh-Hant");
-  });
-
-  it("builds stable remind occurrence ids", () => {
-    expect(itemOccurrenceId("abc", "remind")).toBe("item:abc:remind");
   });
 
   it("formats remind titles with i18n prefix; unknown kinds stay bare", () => {

@@ -1,8 +1,7 @@
 /**
  * Linked-calendar create/edit form initials for Items (quick chip + add/edit).
  * These open **item-linked** ``user_events`` (`source=user` + ``itemId``) with
- * ``UserEventCalendarKind`` / ``ItemLinkedCalendarKind`` — not timeline
- * ``source=item`` remind projections.
+ * ``UserEventCalendarKind`` — not timeline ``source=item`` remind projections.
  *
  * Quick presets: expiry (all-day → kind=expires), purchase/effective (timed →
  * purchase_effective), other (empty title → normal). Kind is system authority
@@ -13,14 +12,11 @@ import type { UserEvent } from "../../api/userEvents";
 import { defaultCreateTimedRange, todayDateInput } from "../timeline/dateUtils";
 import {
   isExpiresCalendarEvent,
-  isLinkedExpiryTitle,
   normalizeUserEventCalendarKind,
   quickKindToCalendarKind,
   type UserEventCalendarKind,
 } from "../timeline/userEventCalendarKind";
 import { toUserEventFormWorksetId } from "../timeline/userEvents";
-
-export { isLinkedExpiryTitle };
 
 export const LINKED_CALENDAR_QUICK_KINDS = ["expires", "other", "purchaseEffective"] as const;
 
@@ -72,11 +68,6 @@ export function findActiveLinkedExpiryEvent(
   const active = events.filter((event) => !event.dismissed && isExpiresCalendarEvent(event));
   if (active.length === 0) return null;
   return [...active].sort(compareLinkedExpiryPrimary)[0] ?? null;
-}
-
-/** True when the preset should open as an all-day event (expiry only). */
-export function linkedCalendarQuickIsAllDay(kind: LinkedCalendarQuickKind): boolean {
-  return kind === "expires";
 }
 
 /**

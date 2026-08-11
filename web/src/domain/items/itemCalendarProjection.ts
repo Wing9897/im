@@ -5,8 +5,8 @@
  * and emits remind floating all-day markers when remind_before_days is set.
  * expires_at is denormalized from linked ``kind=expires`` calendars
  * (see ``server/items/linked_dates.py``) for list badges / filters / agent windows.
- * This module formats titles (i18n), occurrence ids, and calendar kind glyphs
- * (tiny emoji markers — not chromatic dots). Card remind badges live in
+ * This module formats titles (i18n) and calendar kind glyphs (tiny emoji
+ * markers — not chromatic dots). Card remind badges live in
  * `eventShowsRemindBadge` / `resolveEventCardDisplay`.
  */
 
@@ -35,10 +35,6 @@ export const ALL_CATEGORIES_EMOJI = "🗂️";
 
 /** Synthetic「未分类」card — distinct from seed `other` / default package. */
 export const UNCATEGORIZED_EMOJI = "🏷️";
-
-export function itemOccurrenceId(itemId: string, kind: ItemDateKind): string {
-  return `item:${itemId}:${kind}`;
-}
 
 function prefixKeyForKind(kind: string | null | undefined): string | null {
   if (kind === "remind") return "items:remindPrefix";
