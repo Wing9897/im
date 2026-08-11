@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 from server.collector.email_config import build_email_credentials, email_channel_platform_id
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES
 from server.secrets import protect_text
 
 NOW = "2026-07-01T12:00:00+00:00"
@@ -52,6 +53,26 @@ ACTION_1 = "act-1"
 
 async def seed_database(db: Any) -> None:
     now = NOW
+
+    # ── LLM profile (not DDL-seeded; tests need a complete usable default) ──
+    from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES
+
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, ?, 'ollama', 'http://localhost:11434', 'llama-test', '', 0, 'disabled', "
+        "1, 'auto', '', 1, ?, ?)",
+        (DEFAULT_LLM_PROFILE_ID, "Test Ollama", now, now),
+    )
+    for staff_class in LLM_STAFF_CLASSES:
+        await db.execute(
+            "INSERT INTO llm_staff_instances ("
+            "id, staff_class, profile_id, display_name, is_active, created_at, updated_at"
+            ") VALUES (?, ?, ?, NULL, 1, ?, ?)",
+            (f"staff-default-{staff_class}", staff_class, DEFAULT_LLM_PROFILE_ID, now, now),
+        )
 
     # ── sources ──────────────────────────────────────────────────────
     email_creds = build_email_credentials(
@@ -265,9 +286,9 @@ async def seed_database(db: Any) -> None:
             "analysis_mode, analysis_time_range, version, is_active, "
             "schedule_rrule, trigger_mode, cap_calendar_read, cap_calendar_writes, "
             "cap_web_search, cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-            "output_calendar, output_analysis_events, "
+            "output_calendar, output_analysis_events, llm_profile_id, "
             "created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task_id,
                 name,
@@ -285,6 +306,7 @@ async def seed_database(db: Any) -> None:
                 policy.get("cap_read_items", 1),
                 policy["output_calendar"],
                 policy["output_analysis_events"],
+                "__default__",
                 now,
                 now,
             ),

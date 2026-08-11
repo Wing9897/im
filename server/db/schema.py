@@ -6,6 +6,7 @@ from server.db.schema_domains import (
     auth,
     calendar,
     items,
+    llm,
     sources,
     system,
     tasks,
@@ -14,6 +15,7 @@ from server.db.schema_domains import (
 
 DDL_PARTS = (
     sources.DDL,
+    llm.DDL,  # profiles before analysis_tasks.llm_profile_id FK
     tasks.DDL,
     analysis.DDL,
     system.DDL,

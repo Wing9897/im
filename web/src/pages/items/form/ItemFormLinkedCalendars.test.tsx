@@ -485,7 +485,7 @@ describe("ItemForm linked calendars", () => {
     expect(document.querySelector('[data-testid="item-form-linked-expiry-row"]')).toBeNull();
   });
 
-  it("soft-deletes a linked one-off calendar after confirm", async () => {
+  it("hard-deletes a linked one-off calendar after confirm", async () => {
     listUserEventsPage.mockResolvedValue({ items: [
       {
         id: "ue-1",

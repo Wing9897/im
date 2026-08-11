@@ -22,6 +22,29 @@ vi.mock("../../../context/TaskCatalogContext", async () =>
 vi.mock("../../../context/ToastContext", async () =>
   (await import("../../../test/context-mocks")).toastContextModuleMock());
 
+vi.mock("../../../api/llmProfiles", () => ({
+  listLlmProfiles: vi.fn(async () => [
+    {
+      id: "profile-default",
+      name: "Default",
+      provider: "openai_compatible",
+      baseUrl: "https://api.openai.com/v1",
+      model: "gpt-test",
+      apiKey: "********",
+      thinkingEnabled: false,
+      jsonMode: "disabled",
+      webSearchEnabled: true,
+      webSearchProvider: "auto",
+      braveSearchApiKey: "",
+      isDefault: true,
+      staffClasses: [],
+      staffInstances: [],
+      createdAt: null,
+      updatedAt: null,
+    },
+  ]),
+}));
+
 vi.mock("../../../components/task/TaskTemplatePresetDialog", () => ({
   TaskTemplatePresetDialog: (props: {
     onApply: () => void;

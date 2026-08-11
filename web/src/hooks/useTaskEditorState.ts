@@ -42,6 +42,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
   worksetId: null,
+  llmProfileId: "",
   triggerMode: "message_cursor",
   capCalendarRead: true,
   capCalendarWrites: true,

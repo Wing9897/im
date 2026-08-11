@@ -32,8 +32,12 @@ export type TimelineFilterPlan = {
   fetchItems: boolean;
   /** `null` = no task_id filter (all); otherwise IN list for event-mode tasks. */
   analysisTaskIds: string[] | null;
-  /** `null` = all recurring; otherwise IN list for recurring tasks. */
-  recurringTaskIds: string[] | null;
+  /**
+   * Recurring series filter for calendar fetch.
+   * `null` = all series (workset selection); `[]` = fetch none.
+   * Explicit per-series ids are not populated from the ownership tree filter.
+   */
+  seriesIds: string[] | null;
   /**
    * Task ids used for analysis / RRULE fetch + calendar client filter:
    * explicit selection ∪ members of selected worksets.
@@ -66,7 +70,7 @@ export function resolveTimelineFilterPlan(
       fetchUserEvents: true,
       fetchItems: true,
       analysisTaskIds: null,
-      recurringTaskIds: null,
+      seriesIds: null,
       selectedRealTaskIds: [],
       explicitTaskIds: [],
       selectedWorksetIds: [],
@@ -81,7 +85,7 @@ export function resolveTimelineFilterPlan(
       fetchUserEvents: false,
       fetchItems: false,
       analysisTaskIds: [],
-      recurringTaskIds: [],
+      seriesIds: [],
       selectedRealTaskIds: [],
       explicitTaskIds: [],
       selectedWorksetIds: [],
@@ -99,7 +103,6 @@ export function resolveTimelineFilterPlan(
   ];
 
   const analysisTaskIds: string[] = [];
-  const recurringTaskIds: string[] = [];
   let fetchUserForTagged = false;
 
   for (const id of selectedRealTaskIds) {
@@ -129,15 +132,11 @@ export function resolveTimelineFilterPlan(
   const fetchRecurringForWorkset = selectedWorksetIds.length > 0;
   return {
     fetchAnalysis: analysisTaskIds.length > 0,
-    fetchCalendar: fetchRecurringForWorkset || recurringTaskIds.length > 0,
+    fetchCalendar: fetchRecurringForWorkset,
     fetchUserEvents,
     fetchItems,
     analysisTaskIds: analysisTaskIds.length > 0 ? analysisTaskIds : [],
-    recurringTaskIds: fetchRecurringForWorkset
-      ? null
-      : recurringTaskIds.length > 0
-        ? recurringTaskIds
-        : [],
+    seriesIds: fetchRecurringForWorkset ? null : [],
     selectedRealTaskIds,
     explicitTaskIds,
     selectedWorksetIds,

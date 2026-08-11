@@ -596,3 +596,59 @@ describe("Retired dual-track paths stay absent", () => {
     );
   });
 });
+
+describe("Stamp 29 LLM + recurring series invariants", () => {
+  it("product code has no calendar.*_recurring_task tool names", () => {
+    const pattern = /calendar\.\w*_recurring_task\b/;
+    const offenders: string[] = [];
+    for (const file of allProductFiles()) {
+      const content = fs.readFileSync(file, "utf-8");
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("#") || trimmed.startsWith("//") || trimmed.startsWith("*")) {
+          continue;
+        }
+        if (pattern.test(line)) {
+          offenders.push(`${relFromRoot(file)} :: ${trimmed}`);
+        }
+      }
+    }
+    if (offenders.length > 0) {
+      const report = offenders.map((f) => `  - ${f}`).join("\n");
+      expect(
+        offenders,
+        `Retired calendar.*_recurring_task tools must not reappear:\n${report}`,
+      ).toEqual([]);
+    }
+  });
+
+  it("server mounts /api/v1/llm routes", () => {
+    const routesInit = fs.readFileSync(
+      path.resolve(ROOT_DIR, "server", "api", "routes", "__init__.py"),
+      "utf-8",
+    );
+    const llmRoute = path.resolve(ROOT_DIR, "server", "api", "routes", "llm.py");
+    expect(fs.existsSync(llmRoute)).toBe(true);
+    expect(routesInit).toMatch(/llm/);
+    const llmSource = fs.readFileSync(llmRoute, "utf-8");
+    expect(llmSource).toMatch(/\/api\/v1\/llm/);
+  });
+
+  it("no live assistant_llm_ settings SoT in CONFIG_DEFAULTS or settings wire", () => {
+    const configDefaults = fs.readFileSync(path.resolve(ROOT_DIR, "server", "config.py"), "utf-8");
+    const defaultsBlock = configDefaults.match(
+      /CONFIG_DEFAULTS:\s*dict\[str,\s*str\]\s*=\s*\{([\s\S]*?)\n\}/,
+    );
+    expect(defaultsBlock, "CONFIG_DEFAULTS not found").toBeTruthy();
+    expect(defaultsBlock![1]).not.toMatch(/assistant_llm_/);
+    expect(defaultsBlock![1]).not.toMatch(/^\s*"llm_provider":/m);
+
+    const configRoutes = fs.readFileSync(
+      path.resolve(ROOT_DIR, "server", "api", "routes", "config.py"),
+      "utf-8",
+    );
+    const wireBlock = configRoutes.match(/_SETTINGS_KEYS:\s*dict\[str,\s*str\]\s*=\s*\{([^}]+)\}/s);
+    expect(wireBlock, "_SETTINGS_KEYS not found").toBeTruthy();
+    expect(wireBlock![1]).not.toMatch(/assistantLlm|assistant_llm_|llmProvider|"llm_provider"/);
+  });
+});

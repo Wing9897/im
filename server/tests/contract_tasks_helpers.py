@@ -15,9 +15,8 @@ TASK_KEYS = [
     "channelIds",
     "scheduleRrule",
     "includeInTimeline",
-    "parentTaskId",
     "worksetId",
-    "itemId",
+    "llmProfileId",
 ]
 
 SCHEDULE_KEYS = [

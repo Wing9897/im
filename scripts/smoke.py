@@ -3,8 +3,8 @@
 After admin register, loopback is no longer auth-exempt — set VERIFY_BEARER
 or IM_ACCESS_TOKEN (device access token / full-scope API key).
 
-Covers: health, SPA static, sources, messages, settings, tasks/analysis,
-and SSE realtime.
+Covers: health, SPA static, sources, messages, settings, LLM profiles,
+tasks/analysis, and SSE realtime.
 
 SPA static: skipped (not failed) when ``web/dist`` is absent / static is not
 mounted. For a full SPA check run ``npm run build:web`` or hit Vite directly.
@@ -50,7 +50,14 @@ def main() -> int:
         )
         print("Start the server or set VERIFY_BASE, then retry.", file=sys.stderr)
         return 2
-    check("health /api/v1/health", status == 200 and body["status"] == "ok")
+    check(
+        "health /api/v1/health",
+        status == 200
+        and isinstance(body, dict)
+        and body.get("status") == "ok"
+        and body.get("schemaVersion") == 29
+        and body.get("schemaSemver") == "0.1.0-beta.30",
+    )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)
     try:
@@ -127,30 +134,91 @@ def main() -> int:
     status, channels = api("GET", "/api/v1/channels/with-sources", timeout=15)
     check("channels auto-created", any(c["id"] == "telegram:smoke-channel" for c in channels))
 
-    # 7. Settings roundtrip (with teardown)
+    # 7. Settings roundtrip (stamp 29: LLM keys retired from system_config)
     status, settings = api("GET", "/api/v1/config/settings", timeout=15)
-    check("settings fetch", status == 200 and "llmProvider" in settings)
     check(
-        "settings autoPauseOnRetriesExhausted present",
-        isinstance(settings, dict)
+        "settings fetch",
+        status == 200
+        and isinstance(settings, dict)
         and "autoPauseOnRetriesExhausted" in settings
         and isinstance(settings["autoPauseOnRetriesExhausted"], bool),
     )
-    original_model = settings.get("ollamaModel")
-    settings["ollamaModel"] = "smoke-model"
+    check(
+        "settings retired LLM keys absent",
+        isinstance(settings, dict)
+        and "llmProvider" not in settings
+        and "ollamaModel" not in settings,
+    )
+    original_name = settings.get("assistantDisplayName", "")
+    settings["assistantDisplayName"] = "smoke-assistant"
     status, saved = api("PUT", "/api/v1/config/settings", settings, timeout=15)
-    check("settings save roundtrip", status == 200 and saved["ollamaModel"] == "smoke-model")
-    if original_model is not None:
-        status, restored = api(
-            "PUT",
-            "/api/v1/config/settings",
-            {"ollamaModel": original_model},
+    check(
+        "settings save roundtrip",
+        status == 200 and saved.get("assistantDisplayName") == "smoke-assistant",
+    )
+    status, restored = api(
+        "PUT",
+        "/api/v1/config/settings",
+        {"assistantDisplayName": original_name},
+        timeout=15,
+    )
+    check(
+        "settings assistantDisplayName restored",
+        status == 200 and restored.get("assistantDisplayName") == original_name,
+    )
+
+    # 7b. LLM profiles (stamp 29 — fresh DBs may have zero profiles; no forced __default__)
+    status, profiles = api("GET", "/api/v1/llm/profiles", timeout=15)
+    check("llm profiles list", status == 200 and isinstance(profiles, list))
+    profile_id = None
+    if isinstance(profiles, list):
+        default = next((p for p in profiles if isinstance(p, dict) and p.get("isDefault")), None)
+        usable = default or next(
+            (
+                p
+                for p in profiles
+                if isinstance(p, dict)
+                and str(p.get("model") or "").strip()
+                and (
+                    str(p.get("provider") or "") == "ollama"
+                    and str(p.get("baseUrl") or "").strip()
+                    or str(p.get("provider") or "") != "ollama"
+                    and str(p.get("apiKey") or "").strip()
+                )
+            ),
+            None,
+        )
+        if usable and isinstance(usable, dict):
+            profile_id = usable.get("id")
+            check(
+                "llm profile shape",
+                isinstance(usable.get("name"), str)
+                and isinstance(usable.get("provider"), str)
+                and isinstance(usable.get("model"), str)
+                and isinstance(usable.get("staffClasses"), list),
+            )
+    if not profile_id:
+        status, created_profile = api(
+            "POST",
+            "/api/v1/llm/profiles",
+            {
+                "name": "smoke ollama",
+                "provider": "ollama",
+                "baseUrl": "http://localhost:11434",
+                "model": "llama-smoke",
+                "staffClasses": ["assistant"],
+                "isDefault": True,
+            },
             timeout=15,
         )
         check(
-            "settings ollamaModel restored",
-            status == 200 and restored.get("ollamaModel") == original_model,
+            "llm profile create for empty db",
+            status == 201
+            and isinstance(created_profile, dict)
+            and created_profile.get("isDefault") is True
+            and created_profile.get("model") == "llama-smoke",
         )
+        profile_id = created_profile.get("id") if isinstance(created_profile, dict) else None
 
     # 8. Task CRUD + templates
     status, templates = api("GET", "/api/v1/tasks/templates", timeout=15)
@@ -165,11 +233,19 @@ def main() -> int:
             "analysisTimeRange": "1d",
             "channelIds": ["telegram:smoke-channel"],
             "scheduleRrule": "FREQ=HOURLY",
+            "llmProfileId": profile_id,
         },
         timeout=15,
     )
-    check("task create", status == 201 and task["channelIds"][0]["id"] == "telegram:smoke-channel")
-    task_id = task["id"]
+    check(
+        "task create",
+        status == 201
+        and isinstance(task, dict)
+        and task.get("channelIds")
+        and task["channelIds"][0]["id"] == "telegram:smoke-channel"
+        and task.get("llmProfileId") == profile_id,
+    )
+    task_id = task["id"] if isinstance(task, dict) else None
 
     status, stats = api("GET", "/api/v1/results/stats?time_range=all", timeout=15)
     entry = next((s for s in stats if s["taskId"] == task_id), None)

@@ -180,10 +180,10 @@ async def _fetch_rrule_in_range(
     *,
     range_start: datetime,
     range_end: datetime,
-    task_id: str | None,
+    series_id: str | None,
 ) -> list[dict[str, Any]]:
     occurrences = await expand_active_calendar_occurrences(
-        db, range_start, range_end, series_id=task_id
+        db, range_start, range_end, series_id=series_id
     )
     items = [build_occurrence_item(occ) for occ in occurrences]
     # DB dismissal source is "recurring" for RRULE occurrence ids.

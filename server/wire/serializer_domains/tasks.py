@@ -4,22 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from server.util import parse_json_list
-
-
-def _recurring_wire_clock(row: Mapping[str, Any], key: str) -> Any:
-    value = row.get(key)
-    if not value:
-        return value
-    if row.get("event_is_all_day"):
-        return None
-    if row.get("ics_source") or str(row.get("event_timezone") or "") != "floating":
-        return value
-    text = str(value)
-    if "T" in text and len(text) >= 16:
-        return text.split("T", 1)[1][:5]
-    return value
-
 
 def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """AnalysisTask; ``channel_refs=None`` omits channelIds."""
@@ -34,9 +18,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "isActive": bool(row.get("is_active")),
         "scheduleRrule": row.get("schedule_rrule"),
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
-        "parentTaskId": row.get("parent_task_id") or None,
         "worksetId": row.get("workset_id") or None,
-        "itemId": row.get("item_id") or None,
         "agentWaveIntervalSeconds": (
             int(row["agent_wave_interval_seconds"]) if row.get("agent_wave_interval_seconds") is not None else None
         ),
@@ -57,45 +39,12 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "capReadItems": bool(row.get("cap_read_items", 1)),
         "outputCalendar": bool(row.get("output_calendar", 0)),
         "outputAnalysisEvents": bool(row.get("output_analysis_events", 0)),
+        "llmProfileId": row.get("llm_profile_id") or "",
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }
     if channel_refs is not None:
         task["channelIds"] = channel_refs
-    return task
-
-
-def serialize_task_schedule(row: Mapping[str, Any]) -> dict[str, Any] | None:
-    if not row.get("rrule"):
-        return None
-    return {
-        "taskId": row["id"],
-        "rrule": row.get("rrule"),
-        "eventStartTime": _recurring_wire_clock(row, "event_start_time"),
-        "eventEndTime": _recurring_wire_clock(row, "event_end_time"),
-        "eventIsAllDay": bool(row.get("event_is_all_day")),
-        "eventLocation": row.get("event_location"),
-        "eventDescription": row.get("event_description"),
-        "eventTimezone": row.get("event_timezone"),
-        "eventStartLocal": row.get("event_start_local"),
-        "eventEndLocal": row.get("event_end_local"),
-        "eventExdates": parse_json_list(row.get("event_exdates_json")),
-        "eventRdates": parse_json_list(row.get("event_rdates_json")),
-        "icsUid": row.get("ics_uid"),
-        "icsSource": row.get("ics_source"),
-        "parentTaskId": row.get("parent_task_id") or None,
-        "itemId": row.get("item_id") or None,
-    }
-
-
-def serialize_task_for_agent(
-    row: Mapping[str, Any],
-    channel_refs: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    task = serialize_task(row, channel_refs)
-    schedule = serialize_task_schedule(row)
-    if schedule is not None:
-        task.update({key: value for key, value in schedule.items() if key != "taskId"})
     return task
 
 

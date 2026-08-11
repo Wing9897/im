@@ -18,4 +18,5 @@ export * from "./taskFormFields";
 export * from "./viewer";
 export * from "./dashboard";
 export * from "./worksets";
+export * from "./llmProfiles";
 export * from "./recurring";

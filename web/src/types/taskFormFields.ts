@@ -60,6 +60,11 @@ export interface TaskFormState
   analysisStrategyMode: "conservative" | "balanced" | "aggressive" | null;
   /** Optional workset ownership; null = unassigned. */
   worksetId: string | null;
+  /**
+   * LLM profile id for this task's connection.
+   * Empty on create → backend injects the default profile (or UI may preselect it).
+   */
+  llmProfileId: string;
   /** Agent-mode policy fields (ignored unless analysisMode=agent). */
   triggerMode: "schedule" | "message_cursor" | "message_threshold";
   capCalendarRead: boolean;

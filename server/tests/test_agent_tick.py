@@ -129,7 +129,7 @@ async def test_execute_agent_tick_skips_llm_without_messages(app) -> None:
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ) as from_db:
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-run")
@@ -166,7 +166,7 @@ async def test_execute_agent_tick_persists_tool_calls(app) -> None:
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ):
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-tools")
@@ -206,7 +206,7 @@ async def test_execute_agent_tick_drains_multiple_waves(app) -> None:
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ):
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-drain")
@@ -255,7 +255,7 @@ async def test_execute_agent_tick_cools_between_waves(app) -> None:
     with (
         patch.object(
             ConfigurableLlmClient,
-            "from_db_for_agent",
+            "from_profile",
             AsyncMock(return_value=mock_llm),
         ),
         patch("server.scheduler.agent_tick_drain.asyncio.sleep", new_callable=AsyncMock) as sleep_mock,
@@ -299,7 +299,7 @@ async def test_execute_agent_tick_reuses_session_across_waves(app) -> None:
     with (
         patch.object(
             ConfigurableLlmClient,
-            "from_db_for_agent",
+            "from_profile",
             AsyncMock(return_value=mock_llm),
         ),
         patch.object(AgentRuntime, "chat", _tracking_chat),
@@ -342,7 +342,7 @@ async def test_execute_agent_tick_stops_before_next_wave_when_paused(app) -> Non
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ):
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-pause")
@@ -386,7 +386,7 @@ async def test_execute_agent_tick_stops_before_next_wave_when_task_disabled(app)
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ):
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-disable")
@@ -433,7 +433,7 @@ async def test_execute_agent_tick_wave_hard_timeout_defers_remaining(app) -> Non
     with (
         patch.object(
             ConfigurableLlmClient,
-            "from_db_for_agent",
+            "from_profile",
             AsyncMock(return_value=mock_llm),
         ),
         patch.object(AgentRuntime, "chat", _hang_chat),
@@ -462,7 +462,7 @@ async def test_execute_agent_tick_wave_hard_timeout_defers_remaining(app) -> Non
 
     with patch.object(
         ConfigurableLlmClient,
-        "from_db_for_agent",
+        "from_profile",
         AsyncMock(return_value=mock_llm),
     ):
         await execute_agent_tick(db=db, broadcaster=broadcaster, task_id="proj-fail")

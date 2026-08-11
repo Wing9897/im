@@ -21,7 +21,7 @@ export function useSettingsAnalysisStrategyPage() {
   );
 
   const handleSave = useCallback(async () => {
-    await saveSettings({ requireProviderConfig: false });
+    await saveSettings();
   }, [saveSettings]);
 
   return {

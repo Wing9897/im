@@ -22,7 +22,7 @@ async def test_agent_chat_contract(client):
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_db_for_agent", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat",
             json={"messages": [{"role": "user", "content": "What's next?"}], "sessionId": "contract-s1"},
@@ -44,7 +44,7 @@ async def test_agent_chat_stream_final_line_contract(client):
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_db_for_agent", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat/stream",
             json={"messages": [{"role": "user", "content": "stream test"}], "sessionId": "contract-s2"},

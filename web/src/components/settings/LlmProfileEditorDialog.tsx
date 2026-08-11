@@ -1,0 +1,262 @@
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ModalDialog } from "../ModalDialog";
+import { AssistantWebSearchPanel } from "../settings/AssistantWebSearchPanel";
+import { LlmProfileConnectionPanel } from "../settings/LlmProfileConnectionPanel";
+import {
+  Button,
+  CheckboxField,
+  FormGrid,
+  FormStack,
+  SettingsRow,
+  TextField,
+} from "../ui";
+import { formHelpClass } from "../ui/pageTypography";
+import {
+  getLlmProviderConfig,
+  normalizeLlmProvider,
+} from "../../domain/settings/llmProviderConfig";
+import type { LlmProvider } from "../../types";
+import type {
+  LlmProfile,
+  LlmProfileUpsert,
+  LlmStaffClass,
+  LlmWebSearchProvider,
+} from "../../types/llmProfiles";
+import { LLM_STAFF_CLASSES, isMaskedSecret } from "../../types/llmProfiles";
+
+export type LlmProfileDraft = {
+  name: string;
+  provider: LlmProvider;
+  baseUrl: string;
+  model: string;
+  apiKey: string;
+  thinkingEnabled: boolean;
+  jsonMode: string;
+  webSearchEnabled: boolean;
+  webSearchProvider: LlmWebSearchProvider;
+  braveSearchApiKey: string;
+  staffClasses: LlmStaffClass[];
+  isDefault: boolean;
+};
+
+export function emptyProfileDraft(isFirst = false): LlmProfileDraft {
+  return {
+    name: "",
+    provider: "ollama",
+    baseUrl: "http://localhost:11434",
+    model: "",
+    apiKey: "",
+    thinkingEnabled: false,
+    jsonMode: "disabled",
+    webSearchEnabled: true,
+    webSearchProvider: "auto",
+    braveSearchApiKey: "",
+    staffClasses: [],
+    isDefault: isFirst,
+  };
+}
+
+export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
+  const provider = normalizeLlmProvider(String(profile.provider));
+  const webProvider = profile.webSearchProvider;
+  return {
+    name: profile.name,
+    provider,
+    baseUrl: profile.baseUrl,
+    model: profile.model,
+    apiKey: profile.apiKey,
+    thinkingEnabled: profile.thinkingEnabled,
+    jsonMode: profile.jsonMode || "disabled",
+    webSearchEnabled: profile.webSearchEnabled,
+    webSearchProvider:
+      webProvider === "brave" || webProvider === "duckduckgo" || webProvider === "auto"
+        ? webProvider
+        : "auto",
+    braveSearchApiKey: profile.braveSearchApiKey,
+    staffClasses: profile.staffClasses.filter((c): c is LlmStaffClass =>
+      (LLM_STAFF_CLASSES as readonly string[]).includes(c),
+    ),
+    isDefault: profile.isDefault,
+  };
+}
+
+/** Build upsert body; omit masked secrets so the server keeps stored values. */
+export function draftToUpsertBody(draft: LlmProfileDraft): LlmProfileUpsert {
+  const body: LlmProfileUpsert = {
+    name: draft.name.trim(),
+    provider: draft.provider,
+    baseUrl: draft.baseUrl.trim(),
+    model: draft.model.trim(),
+    thinkingEnabled: draft.thinkingEnabled,
+    jsonMode: draft.jsonMode || "disabled",
+    webSearchEnabled: draft.webSearchEnabled,
+    webSearchProvider: draft.webSearchProvider,
+    staffClasses: [...draft.staffClasses],
+    isDefault: draft.isDefault,
+  };
+  if (!isMaskedSecret(draft.apiKey)) {
+    body.apiKey = draft.apiKey;
+  }
+  if (!isMaskedSecret(draft.braveSearchApiKey)) {
+    body.braveSearchApiKey = draft.braveSearchApiKey;
+  }
+  return body;
+}
+
+type LlmProfileEditorDialogProps = {
+  open: boolean;
+  mode: "create" | "edit";
+  initial: LlmProfileDraft;
+  saving: boolean;
+  onClose: () => void;
+  onSave: (draft: LlmProfileDraft) => void | Promise<void>;
+};
+
+export function LlmProfileEditorDialog({
+  open,
+  mode,
+  initial,
+  saving,
+  onClose,
+  onSave,
+}: LlmProfileEditorDialogProps) {
+  const { t } = useTranslation("settings");
+  const [draft, setDraft] = useState<LlmProfileDraft>(initial);
+
+  useEffect(() => {
+    if (open) {
+      setDraft(initial);
+    }
+  }, [open, initial]);
+
+  const toggleStaffClass = (staffClass: LlmStaffClass, checked: boolean) => {
+    setDraft((prev) => {
+      const next = new Set(prev.staffClasses);
+      if (checked) next.add(staffClass);
+      else next.delete(staffClass);
+      return { ...prev, staffClasses: LLM_STAFF_CLASSES.filter((c) => next.has(c)) };
+    });
+  };
+
+  return (
+    <ModalDialog
+      open={open}
+      title={mode === "create" ? t("profiles.dialogCreateTitle") : t("profiles.dialogEditTitle")}
+      onClose={onClose}
+      size="wide"
+      testId="llm-profile-editor-dialog"
+      footer={
+        <>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
+            {t("profiles.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => void onSave(draft)}
+            disabled={saving || !draft.name.trim()}
+          >
+            {saving ? t("shared.saving") : t("profiles.save")}
+          </Button>
+        </>
+      }
+    >
+      <FormStack gap="lg">
+        <FormGrid>
+          <SettingsRow label={t("profiles.nameLabel")} htmlFor="llm-profile-name" help={t("profiles.nameHelp")}>
+            <TextField
+              id="llm-profile-name"
+              data-testid="llm-profile-name"
+              value={draft.name}
+              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder={t("profiles.namePlaceholder")}
+            />
+          </SettingsRow>
+          <SettingsRow label={t("profiles.defaultLabel")} help={t("profiles.defaultHelp")}>
+            <CheckboxField
+              id="llm-profile-is-default"
+              data-testid="llm-profile-is-default"
+              label={draft.isDefault ? t("shared.enabled") : t("shared.disabled")}
+              checked={draft.isDefault}
+              onChange={(e) => setDraft((prev) => ({ ...prev, isDefault: e.target.checked }))}
+              aria-label={t("profiles.defaultLabel")}
+            />
+          </SettingsRow>
+        </FormGrid>
+
+        <LlmProfileConnectionPanel
+          llmProvider={draft.provider}
+          llmBaseUrl={draft.baseUrl}
+          llmModel={draft.model}
+          llmApiKey={draft.apiKey}
+          openaiJsonMode={draft.jsonMode}
+          ollamaThinkingEnabled={draft.thinkingEnabled}
+          onLlmProviderChange={(v) => setDraft((prev) => ({ ...prev, provider: v }))}
+          onLlmBaseUrlChange={(v) => setDraft((prev) => ({ ...prev, baseUrl: v }))}
+          onLlmModelChange={(v) => setDraft((prev) => ({ ...prev, model: v }))}
+          onLlmApiKeyChange={(v) => setDraft((prev) => ({ ...prev, apiKey: v }))}
+          onOpenaiJsonModeChange={(v) => setDraft((prev) => ({ ...prev, jsonMode: v }))}
+          onOllamaThinkingEnabledChange={(v) =>
+            setDraft((prev) => ({ ...prev, thinkingEnabled: v }))
+          }
+        />
+
+        <SettingsRow label={t("profiles.staffClassesLabel")} help={t("profiles.staffClassesHelp")}>
+          <div className="flex flex-col gap-xs" data-testid="llm-profile-staff-classes">
+            {LLM_STAFF_CLASSES.map((staffClass) => (
+              <CheckboxField
+                key={staffClass}
+                id={`llm-profile-staff-${staffClass}`}
+                label={t(`profiles.staffClass.${staffClass}`)}
+                checked={draft.staffClasses.includes(staffClass)}
+                onChange={(e) => toggleStaffClass(staffClass, e.target.checked)}
+              />
+            ))}
+          </div>
+        </SettingsRow>
+
+        <AssistantWebSearchPanel
+          enabled={draft.webSearchEnabled}
+          provider={draft.webSearchProvider}
+          braveApiKey={draft.braveSearchApiKey}
+          llmProvider={draft.provider}
+          llmBaseUrl={draft.baseUrl}
+          onEnabledChange={(value) => setDraft((prev) => ({ ...prev, webSearchEnabled: value }))}
+          onProviderChange={(value) =>
+            setDraft((prev) => ({ ...prev, webSearchProvider: value }))
+          }
+          onBraveApiKeyChange={(value) =>
+            setDraft((prev) => ({ ...prev, braveSearchApiKey: value }))
+          }
+        />
+
+        <p className={`mb-0 ${formHelpClass}`}>{t("profiles.editorHint")}</p>
+      </FormStack>
+    </ModalDialog>
+  );
+}
+
+export function validateProfileDraft(
+  draft: LlmProfileDraft,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): string | null {
+  if (!draft.name.trim()) {
+    return t("profiles.nameRequired");
+  }
+  const meta = getLlmProviderConfig(t)[draft.provider];
+  if (!draft.baseUrl.trim()) {
+    return meta.emptyBaseUrlMessage;
+  }
+  if (!draft.model.trim()) {
+    return meta.emptyModelMessage;
+  }
+  if (
+    draft.provider !== "ollama" &&
+    !draft.apiKey.trim() &&
+    !isMaskedSecret(draft.apiKey)
+  ) {
+    return t("profiles.apiKeyRequired");
+  }
+  return null;
+}

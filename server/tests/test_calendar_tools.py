@@ -80,19 +80,19 @@ async def test_list_calendars_include_inactive_for_resume(app) -> None:
     assert resumed["series"]["isActive"] is True
 
 
-async def test_upcoming_accepts_series_id_alias(app) -> None:
+async def test_upcoming_filters_series_id_separately_from_task_id(app) -> None:
     db = app.state.db
-    via_alias = await execute_calendar_tool(
+    via_series = await execute_calendar_tool(
         db,
         "calendar.upcoming",
         {"days": 14, "seriesId": seed.TASK_CALENDAR, "limit": 50},
     )
-    assert "error" not in via_alias
+    assert "error" not in via_series
     assert all(
         item.get("seriesId") == seed.TASK_CALENDAR or item.get("source") != "recurring"
-        for item in via_alias["items"]
+        for item in via_series["items"]
     )
-    assert any(item.get("seriesId") == seed.TASK_CALENDAR for item in via_alias["items"])
+    assert any(item.get("seriesId") == seed.TASK_CALENDAR for item in via_series["items"])
 
 
 async def test_create_recurring_series_weekly(app) -> None:
@@ -146,11 +146,11 @@ async def test_create_recurring_series_appears_in_upcoming(app) -> None:
     upcoming = await execute_calendar_tool(
         db,
         "calendar.upcoming",
-        {"days": 7, "taskId": task_id, "limit": 50},
+        {"days": 7, "seriesId": task_id, "limit": 50},
     )
     assert "error" not in upcoming
     matches = [item for item in upcoming["items"] if item.get("seriesId") == task_id]
-    assert matches, "expected RRULE occurrences from the new calendar task"
+    assert matches, "expected RRULE occurrences from the new calendar series"
     assert any(item.get("title") == "每日循環測試" for item in matches)
 
 

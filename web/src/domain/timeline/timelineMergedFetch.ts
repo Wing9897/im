@@ -4,8 +4,8 @@
  * Board keeps {@link fetchMergedTimedBoardEvents} as its single dedupe path;
  * Timeline uses this plan-aware path with the same shared fetch + merge helpers.
  *
- * Item DATE rows come from GET /api/v1/calendar/items (source=item) — same
- * server projection as agent query_window (remind only; not item-linked
+ * Item DATE rows come from GET /api/v1/calendar/items (source=item_remind) —
+ * same server projection as agent query_window (remind only; not item-linked
  * user_events with kind). No FE listItems re-projection.
  */
 
@@ -188,9 +188,9 @@ export async function fetchMergedTimelineEvents(
           startIso,
           endIso,
           filterPlan.fetchCalendar
-            ? filterPlan.recurringTaskIds === null
+            ? filterPlan.seriesIds === null
               ? { includeItems: true }
-              : { seriesIds: filterPlan.recurringTaskIds, includeItems: true }
+              : { seriesIds: filterPlan.seriesIds, includeItems: true }
             : { seriesIds: [], includeItems: true },
         )
       : Promise.resolve([] as CalendarOccurrence[]),

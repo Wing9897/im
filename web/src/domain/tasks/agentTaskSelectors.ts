@@ -17,11 +17,12 @@ export function selectProjectChildren(
 ): RecurringSeries[] {
   return series.filter((row) => row.parentTaskId === projectId);
 }
-/** Top-level tasks only — hide project children from the main tasks grid. */
+
+/** Analysis tasks are always catalog rows (child series live under `/calendar/recurring`). */
 export function selectTopLevelTasks(
   tasks: readonly AnalysisTask[],
 ): AnalysisTask[] {
-  return tasks.filter((task) => !task.parentTaskId);
+  return [...tasks];
 }
 
 export function selectOwnedUserEvents(

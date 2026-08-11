@@ -1,7 +1,7 @@
 """aiosqlite connection wrapper with schema-fingerprint validation.
 
 Schema bootstrap／reject is delegated to ``server.db.schema_bootstrap``
-(wipe-only stamp-28; no migration registry). Destructive rebuild remains an
+(wipe-only stamp-29; no migration registry). Destructive rebuild remains an
 explicit reset operation (no auto-seed). See ``docs/ARCHITECTURE.md`` for the
 supported schema matrix.
 """
@@ -250,6 +250,11 @@ class TransactionDb:
         async with self._conn.execute(sql, params) as cursor:
             row = await cursor.fetchone()
         return dict(row) if row is not None else None
+
+    async def fetch_all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+        async with self._conn.execute(sql, params) as cursor:
+            rows = await cursor.fetchall()
+        return [dict(row) for row in rows]
 
     async def fetch_value(self, sql: str, params: tuple[Any, ...] = ()) -> Any:
         row = await self.fetch_one(sql, params)

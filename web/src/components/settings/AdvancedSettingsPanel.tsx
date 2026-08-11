@@ -8,7 +8,8 @@ interface AdvancedSettingsPanelProps {
   llmGenerationTimeout: string;
   maxConcurrentBatches: string;
   maxBatchRetries: string;
-  llmProvider: string;
+  /** Optional hint for concurrent-batch copy (profiles own the provider now). */
+  preferLocalConcurrencyHint?: boolean;
   onAnalysisMaxTotalCharsChange: (v: string) => void;
   onAnalysisMaxEstimatedInputTokensChange: (v: string) => void;
   onLlmGenerationTimeoutChange: (v: string) => void;
@@ -22,7 +23,7 @@ export function AdvancedSettingsPanel({
   llmGenerationTimeout,
   maxConcurrentBatches,
   maxBatchRetries,
-  llmProvider,
+  preferLocalConcurrencyHint = false,
   onAnalysisMaxTotalCharsChange,
   onAnalysisMaxEstimatedInputTokensChange,
   onLlmGenerationTimeoutChange,
@@ -78,7 +79,7 @@ export function AdvancedSettingsPanel({
           label={t("analysis.advanced.maxConcurrentLabel")}
           htmlFor="max-concurrent-batches"
           help={
-            llmProvider === "ollama"
+            preferLocalConcurrencyHint
               ? t("analysis.advanced.maxConcurrentHelpOllama")
               : t("analysis.advanced.maxConcurrentHelpCloud")
           }
@@ -97,7 +98,7 @@ export function AdvancedSettingsPanel({
               {t("analysis.advanced.maxConcurrentWarning")}
             </AlertBanner>
           ) : null}
-          {concurrentNum > 2 && llmProvider === "ollama" ? (
+          {concurrentNum > 2 && preferLocalConcurrencyHint ? (
             <AlertBanner variant="error" className="mt-sm mb-0 text-caption">
               {t("analysis.advanced.maxConcurrentError")}
             </AlertBanner>

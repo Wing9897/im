@@ -293,7 +293,7 @@ describe("fetchMergedTimelineEvents", () => {
       [],
     );
     expect(plan.fetchCalendar).toBe(true);
-    expect(plan.recurringTaskIds).toBeNull();
+    expect(plan.seriesIds).toBeNull();
 
     mockFetchSharedCalendarItems.mockResolvedValue([
       makeOccurrence({

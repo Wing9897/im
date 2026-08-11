@@ -8,6 +8,7 @@ import aiosqlite
 
 from server.db.database import TransactionDb
 from server.ingestion import upsert_channel
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.version_sql import version_matched_batch_on
 from server.worksets_const import SYSTEM_WORKSET_DEFAULT_NAME, SYSTEM_WORKSET_ID
 
@@ -166,6 +167,7 @@ async def insert_analysis_task(
     cap_read_items: int = 1,
     output_calendar: int = 0,
     output_analysis_events: int = 0,
+    llm_profile_id: str = DEFAULT_LLM_PROFILE_ID,
     now: str,
 ) -> None:
     await tx.execute(
@@ -177,9 +179,9 @@ async def insert_analysis_task(
         "analysis_strategy_mode, "
         "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-        "output_calendar, output_analysis_events, "
+        "output_calendar, output_analysis_events, llm_profile_id, "
         "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -204,6 +206,7 @@ async def insert_analysis_task(
             cap_read_items,
             output_calendar,
             output_analysis_events,
+            llm_profile_id,
             now,
             now,
         ),
@@ -237,6 +240,7 @@ async def update_analysis_task(
     cap_read_items: int = 1,
     output_calendar: int = 0,
     output_analysis_events: int = 0,
+    llm_profile_id: str,
     now: str,
 ) -> None:
     await tx.execute(
@@ -249,7 +253,8 @@ async def update_analysis_task(
         "trigger_mode = ?, cap_calendar_read = ?, cap_calendar_writes = ?, "
         "cap_web_search = ?, cap_force_web_search = ?, "
         "cap_read_analysis_events = ?, cap_read_items = ?, "
-        "output_calendar = ?, output_analysis_events = ?, updated_at = ? WHERE id = ?",
+        "output_calendar = ?, output_analysis_events = ?, llm_profile_id = ?, "
+        "updated_at = ? WHERE id = ?",
         (
             name,
             description,
@@ -274,6 +279,7 @@ async def update_analysis_task(
             cap_read_items,
             output_calendar,
             output_analysis_events,
+            llm_profile_id,
             now,
             task_id,
         ),

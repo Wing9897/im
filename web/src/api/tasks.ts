@@ -16,12 +16,10 @@ export type { TaskDraftPayload };
 
 /** Fetches all analysis tasks from the backend. */
 export function listTasks(opts?: {
-  topLevelOnly?: boolean;
   analysisMode?: string;
   worksetId?: string;
 }): Promise<AnalysisTask[]> {
   const query: Record<string, string> = {};
-  if (opts?.topLevelOnly) query.topLevelOnly = "true";
   if (opts?.analysisMode) query.analysisMode = opts.analysisMode;
   if (opts?.worksetId !== undefined) query.worksetId = opts.worksetId;
   return Object.keys(query).length > 0

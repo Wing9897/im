@@ -211,6 +211,38 @@ async def resolve_workset_id(
     return existing or None
 
 
+async def resolve_llm_profile_id(
+    db: Any,
+    *,
+    supplied: str | None,
+    existing: str | None = None,
+    fields_set: set[str] | None = None,
+    require_complete: bool = True,
+) -> str:
+    """Resolve required llm_profile_id; fall back to is_default when omitted.
+
+    Never invents a fake ``__default__`` id. When no profiles exist (or the
+    chosen profile is incomplete), raises 400 with a clear message.
+    """
+    from server.analyzer.llm_config import fetch_default_profile_id, require_complete_profile_row
+    from server.queries.llm_profiles_queries import fetch_profile_row
+
+    explicit = fields_set is None or "llmProfileId" in fields_set
+    profile_id: str | None = None
+    if explicit and supplied is not None and str(supplied).strip():
+        profile_id = str(supplied).strip()
+        if await fetch_profile_row(db, profile_id) is None:
+            raise http_error(400, f"Unknown llmProfileId: {profile_id}", error_code=VALIDATION_ERROR)
+    elif existing and str(existing).strip():
+        profile_id = str(existing).strip()
+    else:
+        profile_id = await fetch_default_profile_id(db)
+
+    if require_complete:
+        await require_complete_profile_row(db, profile_id)
+    return profile_id
+
+
 async def require_task_row(
     db: Any,
     task_id: str,

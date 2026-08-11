@@ -17,7 +17,7 @@
 
 换 Whisper / 豆包 = 新 Adapter + 设置枚举，**不改** Runtime / Tools。
 
-工具选择由模型在 loop 内自选（**非固定 flow**）。Prompt 要求 local-first；总闸 `assistant_web_search_enabled` 关闭时既不注入 `web.search` 也不开原生 search。开启时由 `web_search_provider` + 助手 LLM 路由（见下「联网搜索」）。
+工具选择由模型在 loop 内自选（**非固定 flow**）。Prompt 要求 local-first；助手所挂 `llm_profiles` 行的 `web_search_enabled` 关闭时既不注入 `web.search` 也不开原生 search。开启时由该档的 `web_search_provider` + 助手 LLM 路由（见下「联网搜索」）。
 
 ## HTTP 契约
 
@@ -165,20 +165,20 @@
 
 来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=agent`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`agent.md`](agent.md)。
 
-可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`／别名 `seriesId`（同一过滤键：可为分析任务 id **或** 周期系列 id；analysis／RRULE 该 id **加上** `user_events.task_id` 溯源匹配行；**勿**传 `__user__`——那是工作集 id，列表过滤会拒绝）。过滤周期系列时优先传 `seriesId`。归属筛选用写入／UI 的 `worksetId`／`sourceFilter.worksetIds`，不是 `taskId=__user__`。语义过滤由模型选 tool + 传 `search` / 任务名完成。暂停系列需 `list_calendars(includeInactive=true)` 才能按名解析 id。
+可选参数（upcoming / recent / window）：`search`（标题/地点过滤）、`taskId`（分析事件 + `user_events.task_id` 溯源）、`seriesId`（RRULE 系列 id，或父级 agent 任务 id 以包含其子系列）。二者**不是**别名，勿混用。**勿**传 `__user__`——那是工作集 id，列表过滤会拒绝。归属筛选用写入／UI 的 `worksetId`／`sourceFilter.worksetIds`。语义过滤由模型选 tool + 传 `search` / 任务名完成。暂停系列需 `list_calendars(includeInactive=true)` 才能按名解析 id。
 
 ### 联网搜索（可选）
 
-实现：`server/agent/web_search_routing.py`（路由）+ `server/agent/tools_web_search.py` + `server/web_search/` + OpenAI Responses／Gemini grounding（原生路径）。设定键：
+实现：`server/agent/web_search_routing.py`（路由）+ `server/agent/tools_web_search.py` + `server/web_search/` + OpenAI Responses／Gemini grounding（原生路径）。设定来自助手员工挂接的 **`llm_profiles`** 行（经 `llm_staff_instances.staff_class=assistant` 解析），不是 flat `system_config`：
 
-- `assistant_web_search_enabled`（默认 `true`）— **总闸**：关闭则不注入 `web.search`，也不开启供应商原生 search tools
+- `web_search_enabled`（默认 `true`）— **总闸**：关闭则不注入 `web.search`，也不开启供应商原生 search tools
 - `web_search_provider`：
   - `auto`（默认）— 跟当前助手／聊天 LLM：
     - OpenAI（官方 `api.openai.com`）→ Responses API 原生 `web_search`，**不**注入自研 `web.search`
     - Gemini（官方 `generativelanguage.googleapis.com`）→ Google Search grounding；非官方基址则诚实回退 DDG／Brave 工具并在设定 UI 提示
     - 其他（Ollama／OpenRouter／compatible 非官方）→ 自研 `web.search` + DuckDuckGo（可选手动 Brave）
   - `duckduckgo` / `brave` — **强制**工具路径（忽略原生）
-- Brave key 未配置时 tool 返回明确 error
+- `brave_search_api_key` 未配置时 Brave tool 返回明确 error
 - 分析管线（event／leaderboard 等）**不**走助手联网
 
 | 路径 | 行为 | 限额／备注 |

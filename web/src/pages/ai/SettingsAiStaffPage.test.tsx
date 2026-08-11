@@ -22,7 +22,7 @@ vi.mock("../settings/SettingsShared", async () => {
   return {
     ...actual,
     useSettingsPageState: () => ({
-      settings: { ...defaultSettingsSnapshot, assistantLlmProvider: "" },
+      settings: { ...defaultSettingsSnapshot },
       updateSettings: mockUpdateSettings,
       saving: false,
       saveSuccess: false,
@@ -79,8 +79,11 @@ describe("SettingsAiStaffPage", () => {
     window.localStorage.clear();
   });
 
-  it("renders five runtime staff cards plus page-local liaison intro card", () => {
+  it("renders five runtime staff cards plus page-local liaison intro card", async () => {
     renderPage(root);
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(container.querySelector('[data-testid="ai-staff-card-assistant"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="ai-staff-card-liaison"]')).not.toBeNull();
@@ -97,7 +100,6 @@ describe("SettingsAiStaffPage", () => {
         .querySelector('[data-testid="ai-staff-avatar-leaderboard"]')
         ?.getAttribute("data-staff-surface"),
     ).toBe("backoffice");
-    // Liaison is presentation-only (own asset) — not a roster AiStaffId.
     expect(container.querySelector('[data-testid="ai-staff-avatar-liaison"]')).not.toBeNull();
 
     const liaisonCard = container.querySelector('[data-testid="ai-staff-card-liaison"]');
@@ -117,11 +119,24 @@ describe("SettingsAiStaffPage", () => {
     expect(agentCard?.textContent).toContain("游標抽乾不可同時開情報事件輸出");
   });
 
-  it("exposes assistant rename/LLM icons and avatar upload without permanent form fields", () => {
+  it("does not list staff instances or bound profiles", async () => {
     renderPage(root);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(container.querySelector('[data-testid="llm-staff-instances"]')).toBeNull();
+    expect(container.textContent).not.toContain("員工實例");
+    expect(container.textContent).not.toMatch(/設定檔：/);
+  });
+
+  it("exposes assistant rename/history icons and avatar upload without permanent form fields", async () => {
+    renderPage(root);
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(container.querySelector('[data-testid="assistant-edit-name"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="assistant-edit-llm"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="assistant-edit-history"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="assistant-avatar-upload"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="assistant-avatar-file"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="assistant-display-name"]')).toBeNull();
@@ -132,7 +147,7 @@ describe("SettingsAiStaffPage", () => {
       container.querySelector('[data-testid="ai-staff-card-taskEditor"] [data-testid="assistant-edit-name"]'),
     ).toBeNull();
     expect(
-      container.querySelector('[data-testid="ai-staff-card-leaderboard"] [data-testid="assistant-edit-llm"]'),
+      container.querySelector('[data-testid="ai-staff-card-leaderboard"] [data-testid="assistant-edit-history"]'),
     ).toBeNull();
   });
 
@@ -171,27 +186,32 @@ describe("SettingsAiStaffPage", () => {
     expect(container.querySelector('[data-testid="assistant-display-name"]')).toBeNull();
   });
 
-  it("opens assistant LLM dialog from sparkles icon", () => {
+  it("opens assistant history dialog from sparkles icon", async () => {
     renderPage(root);
-
-    expect(document.body.querySelector('[data-testid="assistant-llm-dialog"]')).toBeNull();
-
-    const editLlm = container.querySelector(
-      '[data-testid="assistant-edit-llm"]',
-    ) as HTMLButtonElement;
-    act(() => {
-      editLlm.click();
+    await act(async () => {
+      await Promise.resolve();
     });
 
-    const dialog = document.body.querySelector('[data-testid="assistant-llm-dialog"]');
+    expect(document.body.querySelector('[data-testid="assistant-history-dialog"]')).toBeNull();
+
+    const editHistory = container.querySelector(
+      '[data-testid="assistant-edit-history"]',
+    ) as HTMLButtonElement;
+    act(() => {
+      editHistory.click();
+    });
+
+    const dialog = document.body.querySelector('[data-testid="assistant-history-dialog"]');
     expect(dialog).not.toBeNull();
-    expect(dialog?.textContent).toContain("助手 LLM");
-    expect(dialog?.textContent).toContain("跟隨 AI 供應商");
-    expect(document.body.querySelector('[data-testid="assistant-llm-follow"]')).not.toBeNull();
+    expect(dialog?.textContent).toContain("助手對話保留");
+    expect(document.body.querySelector('[data-testid="assistant-history-max-messages"]')).not.toBeNull();
   });
 
-  it("staff intro avatars omit framed border/background ring classes", () => {
+  it("staff intro avatars omit framed border/background ring classes", async () => {
     renderPage(root);
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     const avatar = container.querySelector(
       '[data-testid="ai-staff-avatar-assistant"]',
@@ -200,8 +220,6 @@ describe("SettingsAiStaffPage", () => {
     expect(avatar.className).not.toMatch(/\bborder\b/);
     expect(avatar.className).toContain("bg-transparent");
 
-    // Upload wrapper must reset UA button chrome (no Tailwind preflight) —
-    // otherwise box-sizing:border-box + default border paints a light circle.
     const upload = container.querySelector(
       '[data-testid="assistant-avatar-upload"]',
     ) as HTMLElement;

@@ -90,7 +90,6 @@ export function SettingsAnalysisStrategyPage() {
           llmGenerationTimeout={settingsObject.llmGenerationTimeout}
           maxConcurrentBatches={settingsObject.maxConcurrentBatches}
           maxBatchRetries={settingsObject.maxBatchRetries}
-          llmProvider={settingsObject.llmProvider}
           onAnalysisMaxTotalCharsChange={(v) => handleSettingChange("analysisMaxTotalChars", v)}
           onAnalysisMaxEstimatedInputTokensChange={(v) =>
             handleSettingChange("analysisMaxEstimatedInputTokens", v)

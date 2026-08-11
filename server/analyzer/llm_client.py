@@ -1,8 +1,7 @@
 """Configurable multi-provider LLM client (Ollama / OpenAI-compatible /
 Gemini-compatible / OpenRouter).
 
-Provider connection details live in ``system_config`` under per-provider key
-prefixes (``{prefix}_base_url`` / ``{prefix}_model`` / ``{prefix}_api_key``).
+Provider connection details live in ``llm_profiles`` rows (stamp 29+).
 The configured ``base_url`` is always honoured — the previous generation
 hard-coded the OpenAI/Gemini endpoints, breaking every "-compatible" deployment.
 
@@ -19,9 +18,10 @@ from typing import Any, ClassVar
 import aiohttp
 
 from server.analyzer.llm_client_factory import (
-    client_from_db,
-    client_from_db_for_agent,
+    client_from_assistant_staff,
+    client_from_default_profile,
     client_from_draft,
+    client_from_profile,
     client_from_resolved_config,
 )
 from server.analyzer.llm_client_handlers import (
@@ -37,9 +37,6 @@ from server.analyzer.llm_providers import LlmClientError
 from server.db.database import Database
 from server.outbound import validate_outbound_url
 
-#: llm_provider value -> canonical name. The canonical name doubles as the
-#: system_config key prefix ({prefix}_base_url / {prefix}_model / {prefix}_api_key)
-#: and the wire protocol selector.
 # Canonical provider -> wire handler key (openai and openrouter share openai-style HTTP).
 _PROVIDER_WIRE_KEY: dict[str, str] = {
     "ollama": "ollama",
@@ -96,13 +93,19 @@ class ConfigurableLlmClient:
         return client_from_resolved_config(cls, config, timeout_seconds)
 
     @classmethod
-    async def from_db(cls, db: Database) -> "ConfigurableLlmClient":
-        return await client_from_db(cls, db)
+    async def from_default_profile(cls, db: Database) -> "ConfigurableLlmClient":
+        """Build a client from the default ``llm_profiles`` row."""
+        return await client_from_default_profile(cls, db)
 
     @classmethod
-    async def from_db_for_agent(cls, db: Database) -> "ConfigurableLlmClient":
-        """Build a client using ``assistant_llm_provider`` (follow / override)."""
-        return await client_from_db_for_agent(cls, db)
+    async def from_assistant_staff(cls, db: Database) -> "ConfigurableLlmClient":
+        """Build a client from the active ``staff_class=assistant`` profile binding."""
+        return await client_from_assistant_staff(cls, db)
+
+    @classmethod
+    async def from_profile(cls, db: Database, profile_id: str | None) -> "ConfigurableLlmClient":
+        """Build a client from an ``llm_profiles`` row."""
+        return await client_from_profile(cls, db, profile_id)
 
     @classmethod
     async def from_draft(cls, db: Database, draft: dict[str, Any]) -> "ConfigurableLlmClient":

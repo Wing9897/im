@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   fetchSystemSettings,
   saveSystemSettings,
@@ -14,7 +13,6 @@ import type {
 } from "../types";
 import { toErrorMessage } from "../utils/errors";
 import {
-  getActiveProviderConfig,
   buildSettingsObject,
   shouldShowConcurrentBatchesWarning,
   mergePersistedSnapshot,
@@ -36,7 +34,6 @@ const DIRECT_STRING_SETTINGS_KEYS: ReadonlySet<SettingsKey> = new Set([
 ] as SettingsKey[]);
 
 export function useSystemSettingsPage() {
-  const { t } = useTranslation("settings");
   const { requestAiStatusRefresh } = useCollectorStatus();
   const [settings, setSettings] = useState<SystemSettingsSnapshot | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<SystemSettingsSnapshot | null>(null);
@@ -98,7 +95,6 @@ export function useSystemSettingsPage() {
   }, []);
 
   const executeSave = useCallback(async (options?: {
-    requireProviderConfig?: boolean;
     patch?: Partial<SystemSettingsSnapshot>;
   }) => {
     if (!settings) {
@@ -108,22 +104,6 @@ export function useSystemSettingsPage() {
     const snapshot = options?.patch ? { ...settings, ...options.patch } : settings;
     if (options?.patch) {
       setSettings(snapshot);
-    }
-
-    const requireProviderConfig = options?.requireProviderConfig !== false;
-    if (requireProviderConfig) {
-      const activeConfig = getActiveProviderConfig(snapshot, t);
-
-      if (!activeConfig.baseUrl.trim()) {
-        setError(activeConfig.fields.emptyBaseUrlMessage);
-        setSaveSuccess(false);
-        return;
-      }
-      if (!activeConfig.model.trim()) {
-        setError(activeConfig.fields.emptyModelMessage);
-        setSaveSuccess(false);
-        return;
-      }
     }
 
     setSaving(true);
@@ -145,10 +125,9 @@ export function useSystemSettingsPage() {
     } finally {
       setSaving(false);
     }
-  }, [settings, clearSaveSuccessTimer, requestAiStatusRefresh, t]);
+  }, [settings, clearSaveSuccessTimer, requestAiStatusRefresh]);
 
   const handleSave = async (options?: {
-    requireProviderConfig?: boolean;
     patch?: Partial<SystemSettingsSnapshot>;
   }) => {
     if (!settings || !savedSnapshot) {
@@ -166,12 +145,12 @@ export function useSystemSettingsPage() {
       return;
     }
 
-    await executeSave(options);
+    await executeSave({ patch: options?.patch });
   };
 
   const confirmConcurrentBatchesSave = useCallback(async () => {
     setShowConcurrentBatchesWarning(false);
-    await executeSave({ requireProviderConfig: true });
+    await executeSave();
   }, [executeSave]);
 
   const cancelConcurrentBatchesSave = useCallback(() => {
@@ -198,28 +177,16 @@ export function useSystemSettingsPage() {
     }
   }, []);
 
-  const activeProviderConfig = settings
-    ? getActiveProviderConfig(settings, t)
-    : null;
-
   const settingsObject = useMemo<SettingsObject | null>(() => {
-    if (!settings || !activeProviderConfig) return null;
-    return buildSettingsObject(settings, activeProviderConfig);
-  }, [settings, activeProviderConfig]);
+    if (!settings) return null;
+    return buildSettingsObject(settings);
+  }, [settings]);
 
   const handleSettingChange = useCallback(
     <K extends SettingsKey>(key: K, value: SettingsObject[K]) => {
       if (!settings) return;
-      const config = getActiveProviderConfig(settings, t);
 
       const settingHandlers: Record<string, () => void> = {
-        llmProvider: () => updateSettings("llmProvider", value as SystemSettingsSnapshot["llmProvider"]),
-        llmBaseUrl: () => updateSettings(config.fields.baseUrlKey, value as string),
-        llmModel: () => updateSettings(config.fields.modelKey, value as string),
-        llmApiKey: () => { if (config.fields.apiKeyKey) updateSettings(config.fields.apiKeyKey, value as string); },
-        openaiJsonMode: () => updateSettings("openaiJsonMode", value as string),
-        ollamaThinkingEnabled: () =>
-          updateSettings("ollamaThinkingEnabled", value as boolean),
         analysisTraceVerbose: () => updateSettings("analysisTraceVerbose", value as boolean),
         autoPauseOnRetriesExhausted: () =>
           updateSettings("autoPauseOnRetriesExhausted", value as boolean),
@@ -232,7 +199,7 @@ export function useSystemSettingsPage() {
         updateSettings(key as keyof SystemSettingsSnapshot, value as string);
       }
     },
-    [settings, updateSettings, t],
+    [settings, updateSettings],
   );
 
   const hasUnsavedChanges = useMemo(() => {
@@ -244,7 +211,6 @@ export function useSystemSettingsPage() {
     settings,
     settingsInitialLoading: settings === null && error === null,
     savedSnapshot,
-    activeProviderConfig,
     settingsObject,
     saving,
     resettingRuntimeData,

@@ -44,19 +44,17 @@ describe("tasks API", () => {
       vi.mocked(apiClient.get).mockResolvedValue([]);
 
       await listTasks({
-        topLevelOnly: true,
         analysisMode: "agent",
         worksetId: "ws-1",
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/tasks", {
-        topLevelOnly: "true",
         analysisMode: "agent",
         worksetId: "ws-1",
       });
     });
 
-    it("preserves the stamp-5 task response shape (schedule fields are a subresource)", async () => {
+    it("preserves the analysis-task response shape (no parentTaskId/itemId)", async () => {
       const task: AnalysisTask = {
         id: "t-1",
         name: "Existing analysis task",
@@ -69,8 +67,8 @@ describe("tasks API", () => {
         channelIds: [{ platform: "telegram", platformId: "42", id: "telegram:42" }],
         scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
         includeInTimeline: true,
-        parentTaskId: null,
         worksetId: null,
+        llmProfileId: "profile-default",
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-02T00:00:00Z",
       };
@@ -88,13 +86,13 @@ describe("tasks API", () => {
         "id",
         "includeInTimeline",
         "isActive",
+        "llmProfileId",
         "name",
-        "parentTaskId",
         "promptTemplate",
         "scheduleRrule",
         "updatedAt",
         "version",
-          "worksetId",
+        "worksetId",
       ].sort());
       expect(result[0]).toMatchObject({
         id: "t-1",
@@ -102,6 +100,8 @@ describe("tasks API", () => {
         scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
         version: 3,
       });
+      expect(result[0]).not.toHaveProperty("parentTaskId");
+      expect(result[0]).not.toHaveProperty("itemId");
       expect(result[0]).not.toHaveProperty("rrule");
       expect(result[0]).not.toHaveProperty("eventLocation");
     });

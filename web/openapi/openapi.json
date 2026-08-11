@@ -416,22 +416,6 @@
         "operationId": "list_tasks_api_v1_tasks_get",
         "parameters": [
           {
-            "name": "topLevelOnly",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Toplevelonly"
-            }
-          },
-          {
             "name": "analysisMode",
             "in": "query",
             "required": false,
@@ -909,6 +893,328 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/profiles": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Profiles",
+        "operationId": "list_profiles_api_v1_llm_profiles_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LlmProfileResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Profiles Api V1 Llm Profiles Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Create Profile",
+        "operationId": "create_profile_api_v1_llm_profiles_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmProfileUpsertBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Get Profile",
+        "operationId": "get_profile_api_v1_llm_profiles__profile_id__get",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Patch Profile",
+        "operationId": "patch_profile_api_v1_llm_profiles__profile_id__patch",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmProfileUpsertBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Delete Profile",
+        "operationId": "delete_profile_api_v1_llm_profiles__profile_id__delete",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileDeleteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/profiles/{profile_id}/copy": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Copy Profile",
+        "operationId": "copy_profile_api_v1_llm_profiles__profile_id__copy_post",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/LlmProfileCopyBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/profiles/{profile_id}/set-default": {
+      "post": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Set Default Profile",
+        "operationId": "set_default_profile_api_v1_llm_profiles__profile_id__set_default_post",
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/staff-instances": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "List Staff Instances",
+        "operationId": "list_staff_instances_api_v1_llm_staff_instances_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LlmStaffInstanceResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Staff Instances Api V1 Llm Staff Instances Get"
                 }
               }
             }
@@ -7247,6 +7553,17 @@
               }
             ],
             "title": "Ollamathinkingenabled"
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "additionalProperties": false,
@@ -10484,6 +10801,384 @@
         "type": "object",
         "title": "ItemUpdateBody"
       },
+      "LlmProfileCopyBody": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LlmProfileCopyBody"
+      },
+      "LlmProfileDeleteResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "LlmProfileDeleteResponse"
+      },
+      "LlmProfileResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "openai_compatible",
+                  "gemini_compatible",
+                  "openrouter"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Provider"
+          },
+          "baseUrl": {
+            "type": "string",
+            "title": "Baseurl",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": ""
+          },
+          "apiKey": {
+            "type": "string",
+            "title": "Apikey",
+            "default": ""
+          },
+          "thinkingEnabled": {
+            "type": "boolean",
+            "title": "Thinkingenabled",
+            "default": false
+          },
+          "jsonMode": {
+            "type": "string",
+            "title": "Jsonmode",
+            "default": "disabled"
+          },
+          "webSearchEnabled": {
+            "type": "boolean",
+            "title": "Websearchenabled",
+            "default": true
+          },
+          "webSearchProvider": {
+            "type": "string",
+            "title": "Websearchprovider",
+            "default": "auto"
+          },
+          "braveSearchApiKey": {
+            "type": "string",
+            "title": "Bravesearchapikey",
+            "default": ""
+          },
+          "isDefault": {
+            "type": "boolean",
+            "title": "Isdefault",
+            "default": false
+          },
+          "staffClasses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Staffclasses"
+          },
+          "staffInstances": {
+            "items": {
+              "$ref": "#/components/schemas/LlmStaffInstanceResponse"
+            },
+            "type": "array",
+            "title": "Staffinstances"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "provider"
+        ],
+        "title": "LlmProfileResponse"
+      },
+      "LlmProfileUpsertBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ollama",
+              "openai_compatible",
+              "gemini_compatible",
+              "openrouter"
+            ],
+            "title": "Provider",
+            "default": "ollama"
+          },
+          "baseUrl": {
+            "type": "string",
+            "title": "Baseurl",
+            "default": ""
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": ""
+          },
+          "apiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Apikey"
+          },
+          "thinkingEnabled": {
+            "type": "boolean",
+            "title": "Thinkingenabled",
+            "default": false
+          },
+          "jsonMode": {
+            "type": "string",
+            "title": "Jsonmode",
+            "default": "disabled"
+          },
+          "webSearchEnabled": {
+            "type": "boolean",
+            "title": "Websearchenabled",
+            "default": true
+          },
+          "webSearchProvider": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "duckduckgo",
+              "brave"
+            ],
+            "title": "Websearchprovider",
+            "default": "auto"
+          },
+          "braveSearchApiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bravesearchapikey"
+          },
+          "staffClasses": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "leaderboard",
+                "intel_event",
+                "agent",
+                "assistant"
+              ]
+            },
+            "type": "array",
+            "title": "Staffclasses"
+          },
+          "isDefault": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isdefault"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "LlmProfileUpsertBody"
+      },
+      "LlmStaffInstanceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "staffClass": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "leaderboard",
+                  "intel_event",
+                  "agent",
+                  "assistant"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Staffclass"
+          },
+          "profileId": {
+            "type": "string",
+            "title": "Profileid"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          },
+          "profileName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profilename"
+          },
+          "profileProvider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileprovider"
+          },
+          "profileModel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profilemodel"
+          },
+          "profileIsDefault": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileisdefault"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "staffClass",
+          "profileId"
+        ],
+        "title": "LlmStaffInstanceResponse"
+      },
       "LogCreate": {
         "properties": {
           "level": {
@@ -12055,71 +12750,9 @@
       },
       "SystemSettingsSnapshot": {
         "properties": {
-          "llmProvider": {
-            "type": "string",
-            "enum": [
-              "ollama",
-              "openai_compatible",
-              "gemini_compatible",
-              "openrouter"
-            ],
-            "title": "Llmprovider"
-          },
           "analysisPaused": {
             "type": "boolean",
             "title": "Analysispaused"
-          },
-          "ollamaBaseUrl": {
-            "type": "string",
-            "title": "Ollamabaseurl"
-          },
-          "ollamaModel": {
-            "type": "string",
-            "title": "Ollamamodel"
-          },
-          "ollamaThinkingEnabled": {
-            "type": "boolean",
-            "title": "Ollamathinkingenabled"
-          },
-          "openaiBaseUrl": {
-            "type": "string",
-            "title": "Openaibaseurl"
-          },
-          "openaiModel": {
-            "type": "string",
-            "title": "Openaimodel"
-          },
-          "openaiApiKey": {
-            "type": "string",
-            "title": "Openaiapikey"
-          },
-          "openaiJsonMode": {
-            "type": "string",
-            "title": "Openaijsonmode"
-          },
-          "geminiBaseUrl": {
-            "type": "string",
-            "title": "Geminibaseurl"
-          },
-          "geminiModel": {
-            "type": "string",
-            "title": "Geminimodel"
-          },
-          "geminiApiKey": {
-            "type": "string",
-            "title": "Geminiapikey"
-          },
-          "openrouterBaseUrl": {
-            "type": "string",
-            "title": "Openrouterbaseurl"
-          },
-          "openrouterModel": {
-            "type": "string",
-            "title": "Openroutermodel"
-          },
-          "openrouterApiKey": {
-            "type": "string",
-            "title": "Openrouterapikey"
           },
           "analysisBatchMessageLimit": {
             "type": "string",
@@ -12189,34 +12822,6 @@
             "type": "string",
             "title": "Uilocale"
           },
-          "assistantWebSearchEnabled": {
-            "type": "boolean",
-            "title": "Assistantwebsearchenabled"
-          },
-          "webSearchProvider": {
-            "type": "string",
-            "title": "Websearchprovider"
-          },
-          "braveSearchApiKey": {
-            "type": "string",
-            "title": "Bravesearchapikey"
-          },
-          "assistantLlmProvider": {
-            "type": "string",
-            "title": "Assistantllmprovider"
-          },
-          "assistantLlmBaseUrl": {
-            "type": "string",
-            "title": "Assistantllmbaseurl"
-          },
-          "assistantLlmModel": {
-            "type": "string",
-            "title": "Assistantllmmodel"
-          },
-          "assistantLlmApiKey": {
-            "type": "string",
-            "title": "Assistantllmapikey"
-          },
           "agentHistoryMaxMessages": {
             "type": "string",
             "title": "Agenthistorymaxmessages"
@@ -12249,21 +12854,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "llmProvider",
           "analysisPaused",
-          "ollamaBaseUrl",
-          "ollamaModel",
-          "ollamaThinkingEnabled",
-          "openaiBaseUrl",
-          "openaiModel",
-          "openaiApiKey",
-          "openaiJsonMode",
-          "geminiBaseUrl",
-          "geminiModel",
-          "geminiApiKey",
-          "openrouterBaseUrl",
-          "openrouterModel",
-          "openrouterApiKey",
           "analysisBatchMessageLimit",
           "analysisMaxTotalChars",
           "analysisMaxEstimatedInputTokens",
@@ -12281,13 +12872,6 @@
           "autoPauseOnRetriesExhausted",
           "weatherLocation",
           "uiLocale",
-          "assistantWebSearchEnabled",
-          "webSearchProvider",
-          "braveSearchApiKey",
-          "assistantLlmProvider",
-          "assistantLlmBaseUrl",
-          "assistantLlmModel",
-          "assistantLlmApiKey",
           "agentHistoryMaxMessages",
           "agentHistoryMaxChars",
           "assistantDisplayName",
@@ -12297,7 +12881,7 @@
           "userBackground"
         ],
         "title": "SystemSettingsSnapshot",
-        "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase)."
+        "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase).\n\nLLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``."
       },
       "TaskActivitySpanResponse": {
         "properties": {
@@ -12746,6 +13330,17 @@
               }
             ],
             "title": "Outputanalysisevents"
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "additionalProperties": false,
@@ -12977,6 +13572,17 @@
               }
             ],
             "title": "Outputanalysisevents"
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "type": "object",
@@ -13046,17 +13652,6 @@
             "title": "Includeintimeline",
             "default": true
           },
-          "parentTaskId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parenttaskid"
-          },
           "worksetId": {
             "anyOf": [
               {
@@ -13067,17 +13662,6 @@
               }
             ],
             "title": "Worksetid"
-          },
-          "itemId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Itemid"
           },
           "agentWaveIntervalSeconds": {
             "anyOf": [
@@ -13179,6 +13763,10 @@
             "title": "Outputanalysisevents",
             "default": false
           },
+          "llmProfileId": {
+            "type": "string",
+            "title": "Llmprofileid"
+          },
           "createdAt": {
             "anyOf": [
               {
@@ -13234,7 +13822,8 @@
           "analysisMode",
           "analysisTimeRange",
           "version",
-          "isActive"
+          "isActive",
+          "llmProfileId"
         ],
         "title": "TaskResponse"
       },

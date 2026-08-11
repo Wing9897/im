@@ -56,3 +56,5 @@ class TaskConfigBody(BaseModel):
     capReadItems: bool | None = None
     outputCalendar: bool | None = None
     outputAnalysisEvents: bool | None = None
+    #: LLM profile id (stamp 29+). Omitted / null → inject default profile on create.
+    llmProfileId: str | None = None

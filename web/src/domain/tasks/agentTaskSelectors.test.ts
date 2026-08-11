@@ -44,13 +44,11 @@ describe("agentTaskSelectors", () => {
     expect(selectProjectChildren([child, orphanChild], "proj-1")).toEqual([child]);
   });
 
-  it("hides parent-linked tasks from the top-level grid", () => {
+  it("returns the full analysis catalog (child series are not task rows)", () => {
     expect(selectTopLevelTasks([project, other])).toEqual([project, other]);
   });
 
-  it("keeps children in the full catalog path: dashboard top-level only, project detail still selects children", () => {
-    // Shared catalog loads full GET /tasks (no top_level_only). Both filters
-    // run client-side over the same list — do not server-filter the catalog.
+  it("keeps child series under /calendar/recurring?parentTaskId= while catalog is analysis-only", () => {
     const catalog = [project, other];
     expect(catalog.map((task) => task.id)).toEqual([
       "proj-1",

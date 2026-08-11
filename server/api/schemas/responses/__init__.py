@@ -92,7 +92,6 @@ from server.api.schemas.responses.tasks import (
     TaskDeleteResponse,
     TaskDraftPayload,
     TaskResponse,
-    TaskScheduleResponse,
 )
 from server.api.schemas.responses.ui_prefs import (
     AssistantSessionSchema,
@@ -204,7 +203,6 @@ __all__ = [
     "TaskDeleteResponse",
     "TaskDraftPayload",
     "TaskResponse",
-    "TaskScheduleResponse",
     "RecurringSeriesResponse",
     "RecurringSeriesPageResponse",
     "TimelineAnnotationsPutBody",

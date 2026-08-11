@@ -6,7 +6,7 @@ from server.db.schema_domains.vocabulary import (
 )
 
 DDL = f"""
--- Optional ownership dimension for analysis tasks (orthogonal to analysis_mode / parent_task_id).
+-- Optional ownership dimension for analysis tasks (orthogonal to analysis_mode).
 -- Builtin system row id ``__user__`` (is_system=1) is the handwritten / assistant ownership bucket.
 CREATE TABLE IF NOT EXISTS worksets (
     id         TEXT PRIMARY KEY,
@@ -55,11 +55,16 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     cap_read_items            INTEGER NOT NULL DEFAULT 1,
     output_calendar           INTEGER NOT NULL DEFAULT 0,
     output_analysis_events    INTEGER NOT NULL DEFAULT 0,
+    -- LLM connection profile (stamp 29+); tasks always bind a profile.
+    llm_profile_id       TEXT NOT NULL
+                         REFERENCES llm_profiles(id),
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_analysis_tasks_workset
     ON analysis_tasks(workset_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_tasks_llm_profile
+    ON analysis_tasks(llm_profile_id);
 
 -- Agent message_cursor incremental cursor (not system_config).
 -- last_message_at = ISO timestamp only; last_message_id = same-second tie-break (nullable).

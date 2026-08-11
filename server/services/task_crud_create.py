@@ -7,6 +7,7 @@ from server.api.routes.task_helpers import (
     TaskConfigBody,
     agent_policy_write_fields,
     channel_refs_for,
+    resolve_llm_profile_id,
     resolve_workset_id,
     schedule_override_write_fields,
     task_response,
@@ -47,6 +48,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
         supplied=body.includeInTimeline,
     )
     workset_id = await resolve_workset_id(db, supplied=body.worksetId)
+    llm_profile_id = await resolve_llm_profile_id(db, supplied=body.llmProfileId)
     agent_fields = agent_policy_write_fields(
         effective_mode=effective_mode,
         body=body,
@@ -72,6 +74,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             schedule_rrule=schedule_rrule,
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
+            llm_profile_id=llm_profile_id,
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,

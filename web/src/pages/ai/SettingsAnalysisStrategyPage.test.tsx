@@ -20,7 +20,6 @@ import i18n from "../../i18n";
 
 const mockSettingsObject = vi.hoisted(() =>
   vi.fn((): {
-    llmProvider: string;
     analysisBatchMessageLimit: string;
     analysisMaxTotalChars: string;
     analysisMaxEstimatedInputTokens: string;
@@ -32,7 +31,6 @@ const mockSettingsObject = vi.hoisted(() =>
     analysisTriggerThreshold: string;
     autoPauseOnRetriesExhausted: boolean;
   } | null => ({
-    llmProvider: "ollama",
     analysisBatchMessageLimit: "50",
     analysisMaxTotalChars: "100000",
     analysisMaxEstimatedInputTokens: "8000",
@@ -78,7 +76,6 @@ describe("SettingsAnalysisStrategyPage", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     mockSettingsObject.mockReturnValue({
-      llmProvider: "ollama",
       analysisBatchMessageLimit: "50",
       analysisMaxTotalChars: "100000",
       analysisMaxEstimatedInputTokens: "8000",

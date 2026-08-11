@@ -13,7 +13,7 @@
     "data": "资料维护",
     "api": "API",
     "logs": "系统日志",
-    "aiProvider": "AI 供应商",
+    "aiProvider": "AI 设定档",
     "voice": "语音",
     "analysisStrategy": "分析调度",
     "aiStaff": "AI员工介绍"
@@ -168,27 +168,27 @@
     "testSuccess": "AI 测试成功（{latency}ms，{tokens}{preview}）",
     "testPreviewSuffix": "，回复：{preview}",
     "testFailedDefault": "AI 测试失败",
-    "loading": "载入 AI 供应商设定中…",
-    "loadError": "无法载入 AI 供应商设定",
-    "testHint": "「AI 测试」只验证目前表单的 LLM 连线（极短请求），不含联网搜索；无需先保存。",
+    "loading": "载入 AI 设定档中…",
+    "loadError": "无法载入 AI 设定档",
+    "testHint": "「AI 测试」只验证该设定档的 LLM 连线（极短请求），不含联网搜索。",
     "testHintUnsaved": "（含未保存变更）",
     "testing": "测试中…",
     "testButton": "AI 测试",
-    "saveLabel": "储存 AI 供应商设定"
+    "saveLabel": "储存 AI 设定档"
   },
   "webSearch": {
-    "sectionTitle": "助手联网",
-    "sectionHelp": "关闭后仅停用助手对话搜索。「Agent 任务」若开启网搜仍会搜索；下方供应商设定与 Agent 网搜共用。",
-    "enabledLabel": "允许助手联网搜索",
-    "enabledAria": "允许助手联网搜索",
+    "sectionTitle": "联网搜索",
+    "sectionHelp": "关闭后此设定档无法联网搜索。绑定此档的助手与 Agent 任务共用这些设定。",
+    "enabledLabel": "允许联网搜索",
+    "enabledAria": "允许联网搜索",
     "providerLabel": "搜索供应商",
-    "providerHelpNative": "自动＝原生搜索；DuckDuckGo／Brave＝强制自研工具。助手与 Agent 任务共用此设定。",
-    "providerHelpTool": "当前 LLM 无原生搜索，请选 DuckDuckGo 或 Brave。助手与 Agent 任务共用此设定。",
+    "providerHelpNative": "自动＝原生搜索；DuckDuckGo／Brave＝强制自研工具。",
+    "providerHelpTool": "当前 LLM 无原生搜索，请选 DuckDuckGo 或 Brave。",
     "providerAutoNative": "自动（原生搜索）",
     "providerAutoTool": "工具路径（DDG／Brave）",
     "providerDuckDuckGo": "DuckDuckGo",
     "providerBrave": "Brave Search",
-    "statusDisabled": "助手联网已关闭（Agent 排程网搜不受影响）。",
+    "statusDisabled": "此设定档已关闭联网搜索。",
     "statusOpenaiNative": "将使用 OpenAI 原生搜索。",
     "statusGeminiNative": "将使用 Gemini Google Search。",
     "statusToolDuckDuckGo": "将使用 DuckDuckGo 工具。",
@@ -244,7 +244,8 @@
         "emptyBaseUrlMessage": "OpenRouter API URL 不能为空。",
         "emptyModelMessage": "模型名称 不能为空。"
       }
-    }
+    },
+    "jsonModeDisabledOption": "关闭"
   },
   "voice": {
     "disclaimer": "语音只作输入／朗读；Agent 只处理文字。浏览器识别多依赖云端；桌面版不支持浏览器语音，请改用文字输入。",
@@ -350,7 +351,7 @@
     },
     "liaison": {
       "title": "客户经理（A2A）",
-      "body": "`POST /api/v1/a2a/agent`：用自然语言交办即可（给 OpenClaw／Hermes 等）。与助手共用 LLM＋工具；服务器内部自己 loop，返回单次结果＋用过的工具摘要。不存对话历史（可由第三方自行保存）。需 AI 供应商与客户经理密钥（或 `*`）。",
+      "body": "`POST /api/v1/a2a/agent`：用自然语言交办即可（给 OpenClaw／Hermes 等）。与助手共用 LLM＋工具；服务器内部自己 loop，返回单次结果＋用过的工具摘要。不存对话历史（可由第三方自行保存）。需 AI 设定档与客户经理密钥（或 `*`）。",
       "capabilities": [
         "自然语言输入，单次返回 message + toolCalls",
         "查消息／情报／日程／物品；可建改删事件与库存物品",
@@ -389,8 +390,8 @@
     "displayNameLabel": "显示名称",
     "displayNameHelp": "留空则使用默认名称。",
     "editNameAria": "编辑助手显示名称",
-    "editLlmAria": "编辑助手 LLM 设定",
-    "llmDialogTitle": "助手 LLM",
+    "editLlmAria": "编辑助手对话保留设定",
+    "llmDialogTitle": "助手对话保留",
     "llmDialogCancel": "取消",
     "llmDialogSave": "保存",
     "uploadAvatar": "上传",
@@ -400,8 +401,8 @@
     "avatarTooLarge": "压缩后图片仍过大，请换一张更小的图。",
     "avatarReadFailed": "无法读取该图片。",
     "llmProviderLabel": "LLM 供应商",
-    "llmProviderFollow": "跟随 AI 供应商",
-    "llmProviderHelp": "使用该供应商在「AI 供应商」页已保存的地址、模型与 API 密钥。",
+    "llmProviderFollow": "跟随默认 AI 设定档",
+    "llmProviderHelp": "LLM 连线请在「AI 设定档」中配置，并在此绑定员工类别。",
     "historyMaxMessagesLabel": "对话保留条数",
     "historyMaxMessagesHelp": "送入模型时最多保留的近期消息数（系统提示不计）。超出时省略较早轮次；界面记录仍完整保留。默认 40。",
     "historyMaxCharsLabel": "对话字符上限",
@@ -473,6 +474,48 @@
         "密钥与示例见「系统设置 → API」"
       ],
       "openApiDocs": "查看 API 说明与示例"
-    }
+    },
+    "editHistoryAria": "编辑助手对话保留设定",
+    "historyDialogTitle": "助手对话保留"
+  },
+  "profiles": {
+    "intro": "每个设定档是可复用的 LLM 连线（供应商、模型、密钥、联网搜索），可供员工类别绑定。请将其中一个设为默认，供新任务与回退使用。",
+    "loading": "载入 AI 设定档中…",
+    "empty": "尚无设定档。请先建立一笔以连接 LLM。",
+    "create": "新建设定档",
+    "edit": "编辑设定档",
+    "copy": "复制设定档",
+    "delete": "删除设定档",
+    "setDefault": "设为默认",
+    "cancel": "取消",
+    "save": "保存设定档",
+    "dialogCreateTitle": "新建 AI 设定档",
+    "dialogEditTitle": "编辑 AI 设定档",
+    "nameLabel": "设定档名称",
+    "nameHelp": "显示于员工绑定与任务表单。",
+    "namePlaceholder": "例如：本机 Ollama",
+    "nameRequired": "请填写设定档名称。",
+    "apiKeyRequired": "此供应商需要 API 密钥。",
+    "defaultLabel": "默认设定档",
+    "defaultHelp": "任务或员工类别未指定时使用。",
+    "defaultBadge": "默认",
+    "staffClassesLabel": "员工类别",
+    "staffClassesHelp": "哪些员工角色使用此设定档。同一类别同时只能绑定一个设定档。",
+    "staffClass": {
+      "leaderboard": "排行榜分析员",
+      "intel_event": "情报事件分析员",
+      "agent": "Agent",
+      "assistant": "助手"
+    },
+    "noStaffClasses": "未绑定员工类别",
+    "noModel": "未设定模型",
+    "editorHint": "显示为 ******** 的 API 密钥会保留原值，除非你输入新密钥。",
+    "created": "设定档已建立",
+    "updated": "设定档已更新",
+    "copied": "设定档已复制",
+    "deleted": "设定档已删除",
+    "setDefaultSuccess": "默认设定档已更新",
+    "cannotDeleteDefault": "请先将其他设定档设为默认，再删除此档。",
+    "deleteConfirm": "确定删除设定档「{name}」？其上的员工绑定会移到默认设定档。"
   }
 }

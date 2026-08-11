@@ -14,16 +14,10 @@ from server.wire.serializers import serialize_channel_ref, serialize_task
 async def list_tasks_payload(
     db: Database,
     *,
-    top_level_only: bool = False,
     analysis_mode: Optional[str] = None,
     workset_id: Optional[str] = None,
-    item_id: Optional[str] = None,
 ) -> list[dict[str, Any]]:
-    del item_id  # recurring item linkage moved to /calendar/recurring
     rows = await fetch_all_task_rows(db)
-    if top_level_only:
-        # Analysis tasks are always top-level after the recurring hard-cut.
-        pass
     if analysis_mode is not None:
         mode = analysis_mode.strip()
         if mode == "recurring":

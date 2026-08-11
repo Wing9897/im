@@ -86,6 +86,7 @@ export function applyConfigToFormState(
   if (config.outputAnalysisEvents !== undefined) {
     updated.outputAnalysisEvents = config.outputAnalysisEvents;
   }
+  if (config.llmProfileId !== undefined) updated.llmProfileId = config.llmProfileId;
 
   return updated;
 }
@@ -100,6 +101,7 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
   const scheduleRrule =
     formState.scheduleRrule?.trim() ||
     presetToTriggerRrule(formState.scheduleType, formState.scheduleValue);
+  const llmProfileId = formState.llmProfileId.trim();
   const commonConfig = {
     name: formState.name,
     description: formState.description || null,
@@ -118,6 +120,8 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
 
   return {
     ...commonConfig,
+    // Omit empty so create can inject the server default profile.
+    ...(llmProfileId ? { llmProfileId } : {}),
     promptTemplate: formState.promptTemplate,
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,
@@ -187,6 +191,7 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
         ? task.analysisStrategyMode
         : null,
     worksetId: task.worksetId ?? null,
+    llmProfileId: task.llmProfileId ?? "",
     triggerMode:
       task.triggerMode === "message_cursor" ||
       task.triggerMode === "message_threshold" ||
@@ -238,6 +243,7 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
         ? config.analysisStrategyMode
         : null,
     worksetId: config.worksetId ?? null,
+    llmProfileId: config.llmProfileId ?? "",
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     triggerMode: config.triggerMode ?? "schedule",

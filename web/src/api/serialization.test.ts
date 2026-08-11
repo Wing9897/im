@@ -84,21 +84,7 @@ describe("JSON serialization round-trip consistency", () => {
 
   it("SystemSettingsSnapshot survives JSON round-trip", () => {
     const config = {
-      llmProvider: "ollama",
       analysisPaused: false,
-      ollamaBaseUrl: "http://localhost:11434",
-      ollamaModel: "llama3",
-      ollamaThinkingEnabled: false,
-      openaiBaseUrl: "https://api.openai.com",
-      openaiModel: "gpt-4",
-      openaiApiKey: "",
-      openaiJsonMode: "auto",
-      geminiBaseUrl: "https://generativelanguage.googleapis.com",
-      geminiModel: "gemini-pro",
-      geminiApiKey: "",
-      openrouterBaseUrl: "https://openrouter.ai",
-      openrouterModel: "model",
-      openrouterApiKey: "",
       analysisBatchMessageLimit: "50",
       analysisMaxTotalChars: "10000",
       analysisMaxEstimatedInputTokens: "8000",
@@ -113,6 +99,16 @@ describe("JSON serialization round-trip consistency", () => {
       retentionLeaderboardDays: "30",
       retentionAppLogsDays: "14",
       retentionUserEventsDays: "180",
+      autoPauseOnRetriesExhausted: true,
+      weatherLocation: "system",
+      uiLocale: "zh-Hant",
+      agentHistoryMaxMessages: "40",
+      agentHistoryMaxChars: "48000",
+      assistantDisplayName: "",
+      assistantAvatar: "",
+      userDisplayName: "",
+      userAvatar: "",
+      userBackground: "",
     };
     expect(JSON.parse(JSON.stringify(config))).toEqual(config);
   });

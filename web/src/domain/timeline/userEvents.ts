@@ -48,17 +48,15 @@ type AssignableTaskLike = {
   name: string;
   analysisMode?: string | null;
   isActive?: boolean;
-  parentTaskId?: string | null;
 };
 
-/** Filter to event/recurring/project tasks; exclude project children. */
+/** Filter to event/agent analysis tasks that can own timeline provenance. */
 export function filterAssignableTimelineTasks<T extends AssignableTaskLike>(
   tasks: readonly T[],
   opts?: { activeOnly?: boolean },
 ): T[] {
   const activeOnly = Boolean(opts?.activeOnly);
   return tasks.filter((task) => {
-    if (task.parentTaskId) return false;
     if (!isTimelineAssignableAnalysisMode(task.analysisMode)) return false;
     if (activeOnly && !task.isActive) return false;
     return true;

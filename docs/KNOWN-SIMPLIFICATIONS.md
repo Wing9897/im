@@ -29,7 +29,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-28 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-29 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 ## Sources
 
@@ -77,7 +77,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 |-------|--------|
 | Message cursor | `GET /messages/page` → `{ timestamp, id }` |
 | Log cursor | `GET /logs` → `{ time, id }` |
-| Query params | **HTTP is camelCase-only** on the wire (`taskId`, `rangeStart`, `startDate`, `endDate`, `hasTime`, `hasCoords`, `topLevelOnly`, …). Snake_case dual-read is **gone** — do not reintroduce HTTP aliases. See [`ARCHITECTURE.md` Wire conventions](./ARCHITECTURE.md#wire-conventions). Thin `server/api/query_aliases.qalias` is the **camel-only Query helper — keep** (not worth dissolving into per-route `Query(alias=...)` noise) |
+| Query params | **HTTP is camelCase-only** on the wire (`taskId`, `rangeStart`, `startDate`, `endDate`, `hasTime`, `hasCoords`, …). Snake_case dual-read is **gone** — do not reintroduce HTTP aliases. See [`ARCHITECTURE.md` Wire conventions](./ARCHITECTURE.md#wire-conventions). Thin `server/api/query_aliases.qalias` is the **camel-only Query helper — keep** (not worth dissolving into per-route `Query(alias=...)` noise) |
 | LLM tool arguments | **Permanent Agent-boundary tolerance (not HTTP):** schemas expose canonical camelCase, while `server/agent/tool_args.py` accepts selected snake_case pairs and useful semantic aliases (for example `allTime`／`all_time` and `timeRange`／`time_range = "all"`). Model-generated arguments vary, so do not hard-cut this coercion; it stays a separate permanent boundary from the HTTP contract |
 | SSE `collector_status_changed` | payload uses `adapter_name`, `error_summary` (snake_case) |
 | Error bodies | `error_code`, `correlation_id` (snake_case) |
@@ -85,8 +85,8 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v28 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v28-explicit-reset) (wipe-only floor; derive-on-read item expiry; timeline `source=item_remind`; standalone calendar recurring series; `SCHEMA_SEMVER` `0.1.0-beta.29`) |
-| Task catalog vs recurring series | `GET /tasks` returns analysis tasks only. Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides project-owned child series. |
+| Schema stamp v29 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v29-explicit-reset) (wipe-only floor; LLM profiles replace dual-path global／`assistant_llm_*`; derive-on-read item expiry; timeline `source=item_remind`; standalone calendar recurring series; `SCHEMA_SEMVER` `0.1.0-beta.30`) |
+| Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |

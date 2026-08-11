@@ -13,7 +13,7 @@
     "data": "資料維護",
     "api": "API",
     "logs": "系統日誌",
-    "aiProvider": "AI 供應商",
+    "aiProvider": "AI 設定檔",
     "voice": "語音",
     "analysisStrategy": "分析調度",
     "aiStaff": "AI員工介紹"
@@ -168,27 +168,27 @@
     "testSuccess": "AI 測試成功（{latency}ms，{tokens}{preview}）",
     "testPreviewSuffix": "，回覆：{preview}",
     "testFailedDefault": "AI 測試失敗",
-    "loading": "載入 AI 供應商設定中…",
-    "loadError": "無法載入 AI 供應商設定",
-    "testHint": "「AI 測試」只驗證目前表單的 LLM 連線（極短請求），不含聯網搜尋；無需先儲存。",
+    "loading": "載入 AI 設定檔中…",
+    "loadError": "無法載入 AI 設定檔",
+    "testHint": "「AI 測試」只驗證該設定檔的 LLM 連線（極短請求），不含聯網搜尋。",
     "testHintUnsaved": "（含未儲存變更）",
     "testing": "測試中…",
     "testButton": "AI 測試",
-    "saveLabel": "儲存 AI 供應商設定"
+    "saveLabel": "儲存 AI 設定檔"
   },
   "webSearch": {
-    "sectionTitle": "助手聯網",
-    "sectionHelp": "關閉後僅停用助手對話搜尋。「Agent 任務」若開啟網搜仍會搜尋；下方供應商設定與 Agent 網搜共用。",
-    "enabledLabel": "允許助手聯網搜尋",
-    "enabledAria": "允許助手聯網搜尋",
+    "sectionTitle": "聯網搜尋",
+    "sectionHelp": "關閉後此設定檔無法聯網搜尋。綁定此檔的助手與 Agent 任務共用這些設定。",
+    "enabledLabel": "允許聯網搜尋",
+    "enabledAria": "允許聯網搜尋",
     "providerLabel": "搜尋供應商",
-    "providerHelpNative": "自動＝原生搜尋；DuckDuckGo／Brave＝強制自研工具。助手與 Agent 任務共用此設定。",
-    "providerHelpTool": "目前 LLM 無原生搜尋，請選 DuckDuckGo 或 Brave。助手與 Agent 任務共用此設定。",
+    "providerHelpNative": "自動＝原生搜尋；DuckDuckGo／Brave＝強制自研工具。",
+    "providerHelpTool": "目前 LLM 無原生搜尋，請選 DuckDuckGo 或 Brave。",
     "providerAutoNative": "自動（原生搜尋）",
     "providerAutoTool": "工具路徑（DDG／Brave）",
     "providerDuckDuckGo": "DuckDuckGo",
     "providerBrave": "Brave Search",
-    "statusDisabled": "助手聯網已關閉（Agent 排程網搜不受影響）。",
+    "statusDisabled": "此設定檔已關閉聯網搜尋。",
     "statusOpenaiNative": "將使用 OpenAI 原生搜尋。",
     "statusGeminiNative": "將使用 Gemini Google Search。",
     "statusToolDuckDuckGo": "將使用 DuckDuckGo 工具。",
@@ -244,7 +244,8 @@
         "emptyBaseUrlMessage": "OpenRouter API URL 不能為空。",
         "emptyModelMessage": "模型名稱 不能為空。"
       }
-    }
+    },
+    "jsonModeDisabledOption": "關閉"
   },
   "voice": {
     "disclaimer": "語音只作輸入／朗讀；Agent 只處理文字。瀏覽器辨識多依賴雲端；桌面版不支援瀏覽器語音，請改用文字輸入。",
@@ -350,7 +351,7 @@
     },
     "liaison": {
       "title": "客戶經理（A2A）",
-      "body": "`POST /api/v1/a2a/agent`：用自然語言交辦即可（給 OpenClaw／Hermes 等）。與助手共用 LLM＋工具；伺服器內部自己 loop，回傳單次結果＋用過的工具摘要。不存對話歷史（可由第三方自行保存）。需 AI 供應商與客戶經理金鑰（或 `*`）。",
+      "body": "`POST /api/v1/a2a/agent`：用自然語言交辦即可（給 OpenClaw／Hermes 等）。與助手共用 LLM＋工具；伺服器內部自己 loop，回傳單次結果＋用過的工具摘要。不存對話歷史（可由第三方自行保存）。需 AI 設定檔與客戶經理金鑰（或 `*`）。",
       "capabilities": [
         "自然語言輸入，單次回傳 message + toolCalls",
         "查訊息／情報／日程／物品；可建改刪事件與庫存物品",
@@ -389,8 +390,8 @@
     "displayNameLabel": "顯示名稱",
     "displayNameHelp": "留空則使用預設名稱。",
     "editNameAria": "編輯助手顯示名稱",
-    "editLlmAria": "編輯助手 LLM 設定",
-    "llmDialogTitle": "助手 LLM",
+    "editLlmAria": "編輯助手對話保留設定",
+    "llmDialogTitle": "助手對話保留",
     "llmDialogCancel": "取消",
     "llmDialogSave": "儲存",
     "uploadAvatar": "上傳",
@@ -400,8 +401,8 @@
     "avatarTooLarge": "壓縮後圖片仍過大，請換一張更小的圖。",
     "avatarReadFailed": "無法讀取該圖片。",
     "llmProviderLabel": "LLM 供應商",
-    "llmProviderFollow": "跟隨 AI 供應商",
-    "llmProviderHelp": "使用該供應商在「AI 供應商」頁已保存的位址、模型與 API 金鑰。",
+    "llmProviderFollow": "跟隨預設 AI 設定檔",
+    "llmProviderHelp": "LLM 連線請在「AI 設定檔」中配置，並在此綁定員工類別。",
     "historyMaxMessagesLabel": "對話保留則數",
     "historyMaxMessagesHelp": "送入模型時最多保留的近期訊息數（系統提示不計）。超出時省略較早輪次；介面紀錄仍完整保留。預設 40。",
     "historyMaxCharsLabel": "對話字元上限",
@@ -473,6 +474,48 @@
         "金鑰與範例見「系統設定 → API」"
       ],
       "openApiDocs": "查看 API 說明與範例"
-    }
+    },
+    "editHistoryAria": "編輯助手對話保留設定",
+    "historyDialogTitle": "助手對話保留"
+  },
+  "profiles": {
+    "intro": "每個設定檔是可重用的 LLM 連線（供應商、模型、金鑰、聯網搜尋），可供員工類別綁定。請將其中一個設為預設，供新任務與回退使用。",
+    "loading": "載入 AI 設定檔中…",
+    "empty": "尚無設定檔。請先建立一筆以連接 LLM。",
+    "create": "新建設定檔",
+    "edit": "編輯設定檔",
+    "copy": "複製設定檔",
+    "delete": "刪除設定檔",
+    "setDefault": "設為預設",
+    "cancel": "取消",
+    "save": "儲存設定檔",
+    "dialogCreateTitle": "新建 AI 設定檔",
+    "dialogEditTitle": "編輯 AI 設定檔",
+    "nameLabel": "設定檔名稱",
+    "nameHelp": "顯示於員工綁定與任務表單。",
+    "namePlaceholder": "例如：本機 Ollama",
+    "nameRequired": "請填寫設定檔名稱。",
+    "apiKeyRequired": "此供應商需要 API 金鑰。",
+    "defaultLabel": "預設設定檔",
+    "defaultHelp": "任務或員工類別未指定時使用。",
+    "defaultBadge": "預設",
+    "staffClassesLabel": "員工類別",
+    "staffClassesHelp": "哪些員工角色使用此設定檔。同一類別同時只能綁定一個設定檔。",
+    "staffClass": {
+      "leaderboard": "排行榜分析員",
+      "intel_event": "情報事件分析員",
+      "agent": "Agent",
+      "assistant": "助手"
+    },
+    "noStaffClasses": "未綁定員工類別",
+    "noModel": "未設定模型",
+    "editorHint": "顯示為 ******** 的 API 金鑰會保留原值，除非你輸入新金鑰。",
+    "created": "設定檔已建立",
+    "updated": "設定檔已更新",
+    "copied": "設定檔已複製",
+    "deleted": "設定檔已刪除",
+    "setDefaultSuccess": "預設設定檔已更新",
+    "cannotDeleteDefault": "請先將其他設定檔設為預設，再刪除此檔。",
+    "deleteConfirm": "確定刪除設定檔「{name}」？其上的員工綁定會移到預設設定檔。"
   }
 }

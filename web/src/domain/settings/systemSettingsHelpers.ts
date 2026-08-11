@@ -1,45 +1,12 @@
-import type { TFunction } from "i18next";
-import i18n from "../../i18n";
 import type {
-  LlmProvider,
   PersistableSystemSettings,
   SettingsObject,
   SystemSettingsSnapshot,
 } from "../../types";
 import { normalizeEvidenceStyle } from "../../domain/settings/analysisEvidenceStyle";
-import { getLlmProviderConfig } from "./llmProviderConfig";
 
-type Translate = TFunction | typeof i18n.t;
-
-export function getActiveProviderConfig(
-  settings: SystemSettingsSnapshot,
-  t: Translate = i18n.t.bind(i18n),
-): {
-  fields: ReturnType<typeof getLlmProviderConfig>[LlmProvider];
-  baseUrl: string;
-  model: string;
-  apiKey: string;
-} {
-  const fields = getLlmProviderConfig(t)[settings.llmProvider];
+export function buildSettingsObject(snapshot: SystemSettingsSnapshot): SettingsObject {
   return {
-    fields,
-    baseUrl: settings[fields.baseUrlKey] as string,
-    model: settings[fields.modelKey] as string,
-    apiKey: fields.apiKeyKey ? (settings[fields.apiKeyKey] as string) : "",
-  };
-}
-
-export function buildSettingsObject(
-  snapshot: SystemSettingsSnapshot,
-  providerConfig: ReturnType<typeof getActiveProviderConfig>,
-): SettingsObject {
-  return {
-    llmProvider: snapshot.llmProvider,
-    llmBaseUrl: providerConfig.baseUrl,
-    llmModel: providerConfig.model,
-    llmApiKey: providerConfig.apiKey,
-    openaiJsonMode: snapshot.openaiJsonMode,
-    ollamaThinkingEnabled: snapshot.ollamaThinkingEnabled,
     analysisBatchMessageLimit: snapshot.analysisBatchMessageLimit,
     analysisMaxTotalChars: snapshot.analysisMaxTotalChars,
     analysisMaxEstimatedInputTokens: snapshot.analysisMaxEstimatedInputTokens,

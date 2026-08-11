@@ -17,15 +17,8 @@ _ENCRYPTED_PREFIX = "enc:v1:"
 _KEY_FILE_ENV = "INTELLIGENCE_MONITOR_SECRET_KEY_FILE"
 
 MASKED_SECRET = "********"
-SECRET_CONFIG_KEYS = frozenset(
-    {
-        "openai_api_key",
-        "gemini_api_key",
-        "openrouter_api_key",
-        "brave_search_api_key",
-        "assistant_llm_api_key",
-    }
-)
+#: system_config secret keys only. Profile api_key / brave keys are column-encrypted.
+SECRET_CONFIG_KEYS = frozenset()
 
 
 class SecretProtectionError(RuntimeError):

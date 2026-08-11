@@ -103,7 +103,7 @@ async def run_cursor_drain(
     total_messages = 0
     policy = channel_from_agent_spec(spec, stateless=False)
     try:
-        llm = await ConfigurableLlmClient.from_db_for_agent(db)
+        llm = await ConfigurableLlmClient.from_profile(db, str(task.get("llm_profile_id") or "") or None)
         runtime = AgentRuntime(
             db,
             llm,

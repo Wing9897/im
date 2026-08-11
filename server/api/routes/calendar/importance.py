@@ -21,7 +21,7 @@ _IMPORTANCE_RESOURCE_TYPE: dict[str, str] = {
     "analysis": "task",
     "recurring": "recurring",
     "user": "user_event",
-    "item_remind": "item",
+    "item_remind": "item_remind",
 }
 
 

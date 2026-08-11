@@ -10,6 +10,7 @@ export const TIMELINE_CALENDAR_RESOURCE_TYPES = [
   "recurring",
   "user_event",
   "item",
+  "item_remind",
   "item_category",
 ] as const;
 

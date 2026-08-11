@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { defaultSettingsSnapshot } from "../../test/settingsSnapshot";
 import {
   buildSettingsObject,
-  getActiveProviderConfig,
   mergePersistedSnapshot,
   shouldShowConcurrentBatchesWarning,
   toPersistableSettings,
@@ -16,7 +15,7 @@ describe("buildSettingsObject analysis scheduling mapping", () => {
       analysisTriggerThreshold: "1",
       analysisBatchMessageLimit: "50",
     };
-    const settingsObject = buildSettingsObject(snapshot, getActiveProviderConfig(snapshot));
+    const settingsObject = buildSettingsObject(snapshot);
     expect(settingsObject.analysisTriggerThreshold).toBe("1");
     expect(settingsObject.analysisBatchMessageLimit).toBe("50");
   });
@@ -68,7 +67,7 @@ describe("toPersistableSettings", () => {
     const payload = toPersistableSettings(stale);
 
     expect(payload).not.toHaveProperty("analysisPaused");
-    expect(payload.ollamaModel).toBe("llama3");
+    expect(payload.llmGenerationTimeout).toBe("120");
   });
 
   it("preserves other fields when analysisPaused is true in memory", () => {
@@ -95,5 +94,4 @@ describe("toPersistableSettings", () => {
     const payload = toPersistableSettings(snapshot);
     expect(payload.analysisStrategyMode).toBe("balanced");
   });
-
 });

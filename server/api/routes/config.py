@@ -4,6 +4,7 @@
 wire and maps 1:1 onto snake_case ``system_config`` keys. Numeric values
 travel as strings; ``analysisPaused`` / ``analysisTraceVerbose`` as booleans.
 
+LLM connection settings live under ``/api/v1/llm/profiles`` (stamp 29+).
 Household API access keys live under ``/api/v1/access-keys`` (not here).
 """
 
@@ -28,21 +29,7 @@ router = APIRouter(prefix="/api/v1/config", tags=["config"], dependencies=API_DE
 
 #: camelCase wire key -> system_config key.
 _SETTINGS_KEYS: dict[str, str] = {
-    "llmProvider": "llm_provider",
     "analysisPaused": "analysis_paused",
-    "ollamaBaseUrl": "ollama_base_url",
-    "ollamaModel": "ollama_model",
-    "ollamaThinkingEnabled": "ollama_thinking_enabled",
-    "openaiBaseUrl": "openai_base_url",
-    "openaiModel": "openai_model",
-    "openaiApiKey": "openai_api_key",
-    "openaiJsonMode": "openai_json_mode",
-    "geminiBaseUrl": "gemini_base_url",
-    "geminiModel": "gemini_model",
-    "geminiApiKey": "gemini_api_key",
-    "openrouterBaseUrl": "openrouter_base_url",
-    "openrouterModel": "openrouter_model",
-    "openrouterApiKey": "openrouter_api_key",
     "analysisBatchMessageLimit": "analysis_batch_message_limit",
     "analysisMaxTotalChars": "analysis_max_total_chars",
     "analysisMaxEstimatedInputTokens": "analysis_max_estimated_input_tokens",
@@ -60,13 +47,6 @@ _SETTINGS_KEYS: dict[str, str] = {
     "autoPauseOnRetriesExhausted": "auto_pause_on_retries_exhausted",
     "weatherLocation": "weather_location",
     "uiLocale": "ui_locale",
-    "assistantWebSearchEnabled": "assistant_web_search_enabled",
-    "webSearchProvider": "web_search_provider",
-    "braveSearchApiKey": "brave_search_api_key",
-    "assistantLlmProvider": "assistant_llm_provider",
-    "assistantLlmBaseUrl": "assistant_llm_base_url",
-    "assistantLlmModel": "assistant_llm_model",
-    "assistantLlmApiKey": "assistant_llm_api_key",
     "agentHistoryMaxMessages": "agent_history_max_messages",
     "agentHistoryMaxChars": "agent_history_max_chars",
     "assistantDisplayName": "assistant_display_name",
@@ -87,11 +67,8 @@ _BOOL_KEYS = {
     "analysisPaused",
     "analysisTraceVerbose",
     "autoPauseOnRetriesExhausted",
-    "ollamaThinkingEnabled",
-    "assistantWebSearchEnabled",
 }
 
-_WEB_SEARCH_PROVIDERS = frozenset({"auto", "duckduckgo", "brave"})
 _SECRET_WIRE_KEYS = {wire_key for wire_key, config_key in _SETTINGS_KEYS.items() if config_key in SECRET_CONFIG_KEYS}
 
 # Read-only on PUT /settings — analysisPaused: POST /system/analysis/pause.
@@ -131,9 +108,6 @@ async def save_settings(request: Request, body: dict[str, Any]) -> dict:
             updates[config_key] = "true" if value else "false"
         elif config_key == "ui_locale":
             updates[config_key] = normalize_ui_locale("" if value is None else str(value))
-        elif config_key == "web_search_provider":
-            provider = ("" if value is None else str(value)).strip().lower()
-            updates[config_key] = provider if provider in _WEB_SEARCH_PROVIDERS else "auto"
         elif config_key == "assistant_display_name":
             name = ("" if value is None else str(value)).strip()
             updates[config_key] = name[:_ASSISTANT_DISPLAY_NAME_MAX]

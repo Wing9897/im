@@ -99,14 +99,14 @@ def _demo_specs() -> list[ItemSpec]:
                     day="2030-05-20",
                     kind=USER_EVENT_KIND_EXPIRES,
                     remind_before_days=90,
-                    body="primary expires（最早建立 → items.expires_at）",
+                    body="primary expires（最早建立 → wire expiresAt）",
                 ),
                 LinkedEventSpec(
                     title="到期",
                     day="2032-01-15",
                     kind=USER_EVENT_KIND_EXPIRES,
                     remind_before_days=30,
-                    body="第二張 expires — 不應覆寫 expires_at",
+                    body="第二張 expires — 不應成為 derive-on-read 主到期日",
                 ),
                 LinkedEventSpec(
                     title="續簽提醒",
@@ -201,7 +201,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 保固卡（自訂到期標題）",
             category_slug="warranty",
             emoji="🛡️",
-            notes=("序號 WRN-RENAMED。kind=expires 但標題≠「到期」—徽章看 kind / expires_at，不是標題。"),
+            notes=("序號 WRN-RENAMED。kind=expires 但標題≠「到期」—徽章看 kind / wire expiresAt，不是標題。"),
             events=[
                 LinkedEventSpec(
                     title="保固截止日",
@@ -558,7 +558,7 @@ def _print_table(seeded: dict[str, Any]) -> None:
     print("\nExpected /items/finance totals (all purchase_effective):")
     print(f"  expense={fin['total_expense']:.2f}  income={fin['total_income']:.2f}  net={fin['net']:.2f}")
     print("\nManual checklist:")
-    print("  1. /items — milk soon-badge; passport expires_at=2030-05-20 (not 2032)")
+    print("  1. /items — milk soon-badge; passport expiresAt=2030-05-20 (not 2032)")
     print("  2. Open passport / camera / subscription — chips show expires / purchase / normal")
     print("  3. Renamed warranty — badge from kind=expires even though title≠「到期」")
     print("  4. /items/finance — expense 12968 / income 3500 / net 9468 (widen range if needed)")
@@ -583,7 +583,7 @@ async def main() -> None:
     path = Path(args.db) if args.db else default_db_path()
     print(f"DB: {path}")
     if not path.is_file() and not args.verify_only:
-        print("Warning: database file missing; schema will be bootstrapped (stamp 28).")
+        print("Warning: database file missing; schema will be bootstrapped (stamp 29).")
 
     db = Database(str(path))
     await db.connect()
@@ -592,9 +592,9 @@ async def main() -> None:
         stamp = await db.fetch_one("PRAGMA user_version")
         stamp_val = list(stamp.values())[0] if stamp else None
         print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != 28:
+        if int(stamp_val or 0) != 29:
             print(
-                "ERROR: need stamp 28. Run:\n"
+                "ERROR: need stamp 29. Run:\n"
                 "  uv run python scripts/reset_local_databases.py --apply\n"
                 "then re-run this seed.",
                 file=sys.stderr,

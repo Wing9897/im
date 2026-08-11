@@ -12,7 +12,7 @@ Calendar hierarchy (timeline ``source`` vs this ``kind``):
   item_remind            → remind projection only (≠ item-linked user events)
 
 Title presets (到期 / Purchased / …) remain UX defaults; authority for expiry
-cache write-through and finance is ``kind``. Seeds and create payloads must set
+derive-on-read and finance is ``kind``. Seeds and create payloads must set
 ``kind`` explicitly (no title→kind inference).
 """
 

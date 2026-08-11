@@ -32,7 +32,7 @@ describe("resolveTimelineFilterPlan", () => {
       fetchUserEvents: true,
       fetchItems: false,
       analysisTaskIds: ["evt-1"],
-      recurringTaskIds: [],
+      seriesIds: [],
       selectedRealTaskIds: ["evt-1"],
     });
     expect(
@@ -43,7 +43,7 @@ describe("resolveTimelineFilterPlan", () => {
       fetchUserEvents: true,
       fetchItems: true,
       includeGeneralWorksetUserEvents: true,
-      recurringTaskIds: null,
+      seriesIds: null,
     });
     expect(
       resolveTimelineFilterPlan({ taskIds: [], worksetIds: ["ws-a"] }, tasks),
@@ -67,7 +67,7 @@ describe("resolveTimelineFilterPlan", () => {
       fetchCalendar: false,
       fetchItems: false,
       analysisTaskIds: ["web-1"],
-      recurringTaskIds: [],
+      seriesIds: [],
       selectedRealTaskIds: ["web-1"],
     });
   });
