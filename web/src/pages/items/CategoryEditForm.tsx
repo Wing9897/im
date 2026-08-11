@@ -6,9 +6,7 @@ import {
   FormStack,
   SettingsRow,
   TextField,
-  captionClass,
 } from "../../components/ui";
-import type { ItemFieldSchemaEntry } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
 import { EmojiPickerField } from "../../components/items/emoji/EmojiPickerField";
 
@@ -17,18 +15,12 @@ type Props = {
   emoji: string;
   color: string | null;
   defaultRemind: number | null;
-  schema: ItemFieldSchemaEntry[];
-  newKey: string;
-  newLabel: string;
   error: string | null;
   busy: boolean;
   onNameChange: (value: string) => void;
   onEmojiChange: (value: string) => void;
   onColorChange: (value: string | null) => void;
   onDefaultRemindChange: (value: number | null) => void;
-  onSchemaChange: (schema: ItemFieldSchemaEntry[]) => void;
-  onNewKeyChange: (value: string) => void;
-  onNewLabelChange: (value: string) => void;
   onCancel: () => void;
   onSave: () => void;
 };
@@ -39,18 +31,12 @@ export function CategoryEditForm({
   emoji,
   color,
   defaultRemind,
-  schema,
-  newKey,
-  newLabel,
   error,
   busy,
   onNameChange,
   onEmojiChange,
   onColorChange,
   onDefaultRemindChange,
-  onSchemaChange,
-  onNewKeyChange,
-  onNewLabelChange,
   onCancel,
   onSave,
 }: Props) {
@@ -132,78 +118,6 @@ export function CategoryEditForm({
             disabled={busy}
           />
         </SettingsRow>
-
-        <div className="flex flex-col gap-xs">
-          <p className="m-0 text-caption font-medium text-text-primary">
-            {t("fieldSchema")}
-          </p>
-          <p className={`m-0 ${captionClass}`}>{t("fieldSchemaHint")}</p>
-          {schema.map((entry, idx) => (
-            <div key={`${entry.key}-${idx}`} className="flex gap-xs">
-              <TextField
-                className="flex-1"
-                value={entry.key}
-                aria-label={t("schemaFieldKey")}
-                onChange={(e) => {
-                  const next = [...schema];
-                  next[idx] = { ...entry, key: e.target.value };
-                  onSchemaChange(next);
-                }}
-                disabled={busy}
-              />
-              <TextField
-                className="flex-1"
-                value={entry.label}
-                aria-label={t("schemaFieldLabel")}
-                onChange={(e) => {
-                  const next = [...schema];
-                  next[idx] = { ...entry, label: e.target.value };
-                  onSchemaChange(next);
-                }}
-                disabled={busy}
-              />
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => onSchemaChange(schema.filter((_, i) => i !== idx))}
-                aria-label={t("removeSchemaField")}
-              >
-                ×
-              </Button>
-            </div>
-          ))}
-          <div className="flex flex-wrap gap-xs">
-            <TextField
-              className="min-w-[100px] flex-1"
-              placeholder={t("schemaFieldKey")}
-              value={newKey}
-              onChange={(e) => onNewKeyChange(e.target.value)}
-              disabled={busy}
-            />
-            <TextField
-              className="min-w-[100px] flex-1"
-              placeholder={t("schemaFieldLabel")}
-              value={newLabel}
-              onChange={(e) => onNewLabelChange(e.target.value)}
-              disabled={busy}
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                const key = newKey.trim();
-                if (!key) return;
-                onSchemaChange([...schema, { key, label: newLabel.trim() || key }]);
-                onNewKeyChange("");
-                onNewLabelChange("");
-              }}
-            >
-              {t("addSchemaField")}
-            </Button>
-          </div>
-        </div>
 
         {error ? (
           <AlertBanner variant="error" role="alert" className="mb-0">

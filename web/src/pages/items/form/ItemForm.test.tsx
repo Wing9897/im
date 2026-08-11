@@ -161,49 +161,10 @@ describe("ItemForm", () => {
     );
   });
 
-  it("shows friendly extras section with schema labels in field grid", async () => {
+  it("does not render attributes / extras section", async () => {
     await renderForm();
-
-    const extras = document.querySelector('[data-testid="item-form-extras"]');
-    expect(extras?.textContent).toContain("sectionExtras");
-    expect(extras?.textContent).toContain("證件號碼");
-    expect(document.querySelector('[data-testid="item-form-attribute-grid"]')).toBeTruthy();
-  });
-
-  it("hides extras section when item has no suggested or other attributes", async () => {
-    await renderForm({
-      item: makeItem({
-        categoryId: null,
-        attributes: {},
-      }),
-    });
-
     expect(document.querySelector('[data-testid="item-form-extras"]')).toBeNull();
-  });
-
-  async function openAttributeEditor(key: string) {
-    const edit = document.querySelector(
-      `[data-testid="item-form-attribute-edit-${key}"]`,
-    ) as HTMLButtonElement;
-    await act(async () => {
-      edit.click();
-    });
-  }
-
-  it("keeps attributes when switching category (extras move to other)", async () => {
-    await renderForm();
-
-    await openAttributeEditor("id_number");
-    expect(
-      (document.getElementById("item-attr-id_number") as HTMLInputElement).value,
-    ).toBe("A123456");
-
-    await pickCategory("seed_food");
-
-    await openAttributeEditor("id_number");
-    expect(
-      (document.getElementById("item-other-id_number") as HTMLInputElement).value,
-    ).toBe("A123456");
+    expect(document.querySelector('[data-testid="item-form-attribute-grid"]')).toBeNull();
   });
 
   it("create mode shows editable title input directly", async () => {
@@ -216,7 +177,7 @@ describe("ItemForm", () => {
     expect(title.placeholder).toBe("titleField");
   });
 
-  it("create mode seeds category preset keys into submit attributes", async () => {
+  it("create mode submits empty attributes (notes hold free-form text)", async () => {
     const onSave = vi.fn(async () => undefined);
     const { formRef } = await renderForm({
       item: null,
@@ -234,10 +195,7 @@ describe("ItemForm", () => {
       expect.objectContaining({
         title: "證件一",
         categoryId: "seed_passport_docs",
-        attributes: expect.objectContaining({
-          id_number: "",
-          issuer: "",
-        }),
+        attributes: {},
       }),
     );
   });
