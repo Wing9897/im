@@ -13,11 +13,9 @@ import {
   deleteItemCategory,
   updateItemCategory,
   type ItemCategory,
-  type ItemFieldSchemaEntry,
 } from "../../api/items";
 import { CATEGORY_COLOR_PRESETS } from "../../domain/items/categoryAggregates";
 import { resolveCategoryEmoji } from "../../domain/items/itemCalendarProjection";
-import { findReservedAttributeKeys } from "../../domain/items/itemAttributes";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { CategoryEditForm } from "./CategoryEditForm";
 import { ItemEmojiMark } from "../../components/items/emoji/ItemEmojiMark";
@@ -38,9 +36,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
   const [color, setColor] = useState<string | null>(null);
   const [emoji, setEmoji] = useState("");
   const [defaultRemind, setDefaultRemind] = useState<number | null>(null);
-  const [schema, setSchema] = useState<ItemFieldSchemaEntry[]>([]);
-  const [newKey, setNewKey] = useState("");
-  const [newLabel, setNewLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +45,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setColor(cat.color ?? null);
     setEmoji(cat.emoji ?? "");
     setDefaultRemind(cat.defaultRemindBeforeDays ?? null);
-    setSchema([...(cat.fieldSchema ?? [])]);
     setError(null);
   };
 
@@ -60,7 +54,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
     setColor(CATEGORY_COLOR_PRESETS[0]);
     setEmoji("");
     setDefaultRemind(null);
-    setSchema([]);
     setError(null);
   };
 
@@ -70,11 +63,6 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
 
   const save = async () => {
     if (!name.trim() || busy) return;
-    const reserved = findReservedAttributeKeys(schema.map((entry) => entry.key));
-    if (reserved.length > 0) {
-      setError(t("reservedAttributeKeyError"));
-      return;
-    }
     setError(null);
     setBusy(true);
     try {
@@ -84,7 +72,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           name: name.trim(),
           color,
           emoji: emojiValue,
-          fieldSchema: schema,
+          fieldSchema: [],
           defaultRemindBeforeDays: defaultRemind,
           sortOrder: 0,
         });
@@ -93,7 +81,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           name: name.trim(),
           color,
           emoji: emojiValue,
-          fieldSchema: schema,
+          fieldSchema: [],
           defaultRemindBeforeDays: defaultRemind,
         });
       }
@@ -152,7 +140,7 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           >
             <button
               type="button"
-            className="flex min-w-0 flex-1 items-center gap-xs border-none bg-transparent p-0 text-left text-caption font-medium text-text-primary hover:text-accent"
+              className="flex min-w-0 flex-1 items-center gap-xs border-none bg-transparent p-0 text-left text-caption font-medium text-text-primary hover:text-accent"
               onClick={() => startEdit(cat)}
               disabled={busy}
             >
@@ -188,18 +176,12 @@ export function CategoryManageDialog({ categories, onClose, onChanged }: Props) 
           emoji={emoji}
           color={color}
           defaultRemind={defaultRemind}
-          schema={schema}
-          newKey={newKey}
-          newLabel={newLabel}
           error={error}
           busy={busy}
           onNameChange={setName}
           onEmojiChange={setEmoji}
           onColorChange={setColor}
           onDefaultRemindChange={setDefaultRemind}
-          onSchemaChange={setSchema}
-          onNewKeyChange={setNewKey}
-          onNewLabelChange={setNewLabel}
           onCancel={() => setEditingId(null)}
           onSave={() => void save()}
         />

@@ -1,13 +1,8 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UserEventDialog } from "../../../components/calendar/UserEventDialog";
 import { AlertBanner, FormStack } from "../../../components/ui";
 import type { ItemCategory, TrackableItem } from "../../../api/items";
-import {
-  partitionItemAttributes as defaultPartition,
-  seedAttributesFromFieldSchema,
-  type AttributePartitions,
-} from "../../../domain/items/itemAttributes";
 import { formatItemsError } from "../../../domain/items/itemErrors";
 import type { Workset } from "../../../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
@@ -18,10 +13,7 @@ import {
 } from "./ItemFormCvInventory";
 import { ItemFormCvHeader } from "./ItemFormCvHeader";
 import { ItemFormLinkedCalendarsSection } from "./ItemFormLinkedCalendarsSection";
-import {
-  ItemFormAttributesSection,
-  ItemFormNotesSection,
-} from "./ItemFormSections";
+import { ItemFormNotesSection } from "./ItemFormSections";
 import { useItemFormLinkedCalendars } from "./useItemFormLinkedCalendars";
 
 export type ItemSaveDraft = {
@@ -33,6 +25,7 @@ export type ItemSaveDraft = {
   emoji: string | null;
   quantity: number | null;
   unit: string | null;
+  /** Always empty — custom/schema attributes UI removed; use notes. */
   attributes: Record<string, string>;
   status: "active" | "archived";
 };
@@ -60,7 +53,6 @@ type Props = {
   initialWorksetId?: string | null;
   onSave: (draft: ItemSaveDraft, options?: ItemSaveOptions) => Promise<TrackableItem | void>;
   onToolbarStateChange?: (state: { canSubmit: boolean; busy: boolean }) => void;
-  partitionItemAttributes?: typeof defaultPartition;
 };
 
 export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
@@ -73,7 +65,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     initialWorksetId = null,
     onSave,
     onToolbarStateChange,
-    partitionItemAttributes = defaultPartition,
   },
   ref,
 ) {
@@ -89,14 +80,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
   const [emoji, setEmoji] = useState(item?.emoji ?? "");
   const [quantityInput, setQuantityInput] = useState(quantityInputFromValue(item?.quantity));
   const [unit, setUnit] = useState(item?.unit ?? "");
-  const [attributes, setAttributes] = useState<Record<string, string>>(() => {
-    const initial = item?.attributes ?? {};
-    if (item) return initial;
-    const initialCategory = categories.find(
-      (c) => c.id === (initialCategoryId ?? null),
-    );
-    return seedAttributesFromFieldSchema(initial, initialCategory?.fieldSchema);
-  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /** Set after create-mode auto-save before parent item prop catches up. */
@@ -109,17 +92,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
   }, [item]);
 
   const category = categoryId ? categories.find((c) => c.id === categoryId) : undefined;
-  const partitions: AttributePartitions = useMemo(
-    () => partitionItemAttributes(attributes, category?.fieldSchema),
-    [attributes, category?.fieldSchema, partitionItemAttributes],
-  );
-
-  // Create mode only: copy category preset keys into local attributes (empty values).
-  // Edit mode keeps the item's stored keys; category template edits never rewrite them.
-  useEffect(() => {
-    if (item) return;
-    setAttributes((prev) => seedAttributesFromFieldSchema(prev, category?.fieldSchema));
-  }, [item, category?.fieldSchema]);
 
   const buildDraft = useCallback((): ItemSaveDraft => ({
     id: effectiveItem?.id,
@@ -130,9 +102,7 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     emoji: emoji.trim() || null,
     quantity: wireQuantityFromInput(quantityInput),
     unit: unit.trim() || null,
-    attributes: effectiveItem
-      ? attributes
-      : seedAttributesFromFieldSchema(attributes, category?.fieldSchema),
+    attributes: {},
     status: effectiveItem?.status === "archived" ? "archived" : "active",
   }), [
     effectiveItem,
@@ -143,8 +113,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     emoji,
     quantityInput,
     unit,
-    attributes,
-    category?.fieldSchema,
   ]);
 
   const ensureSavedItem = useCallback(async (): Promise<TrackableItem | null> => {
@@ -180,24 +148,6 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
   const busy = saving || linked.linkedCalendarBusy;
   const canSubmit = Boolean(title.trim()) && !busy;
   const canAddLinkedCalendar = Boolean(effectiveItem?.id || title.trim());
-
-  const setAttr = (key: string, value: string) => {
-    setAttributes((prev) => {
-      const next = { ...prev };
-      if (!value) delete next[key];
-      else next[key] = value;
-      return next;
-    });
-  };
-
-  const removeAttr = (key: string) => {
-    setAttributes((prev) => {
-      if (!(key in prev)) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
 
   const onCategoryChange = (nextId: string) => {
     setCategoryId(nextId || null);
@@ -261,35 +211,26 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
             className="min-h-0 min-w-0 flex-1 border-t border-surface-border/55 px-md py-sm sm:px-lg sm:pb-md"
             data-testid="item-form-cv-body"
           >
-            <div className="flex min-w-0 flex-col divide-y divide-surface-border/40">
-              <ItemFormLinkedCalendarsSection
-                itemId={effectiveItem?.id ?? null}
-                itemExpiresAt={effectiveItem?.expiresAt}
-                remindBeforeDays={effectiveItem?.remindBeforeDays}
-                refreshKey={linked.linkedCalendarRefreshKey}
-                disabled={busy}
-                canAdd={canAddLinkedCalendar}
-                categoryDefaultRemindBeforeDays={category?.defaultRemindBeforeDays ?? null}
-                onQuickAdd={(kind) => void linked.openLinkedCalendarCreate(kind)}
-                onEditOneOff={(event) => {
-                  linked.openLinkedCalendarEdit(event);
-                }}
-                onDeleteOneOff={(event) => {
-                  void linked.deleteLinkedOneOff(event);
-                }}
-                onDeleteRecurring={(taskId, title) => {
-                  void linked.deleteLinkedRecurring(taskId, title);
-                }}
-                onActiveExpiryChange={linked.setActiveLinkedExpiry}
-              />
-
-              <ItemFormAttributesSection
-                partitions={partitions}
-                saving={busy}
-                onAttrChange={setAttr}
-                onAttrRemove={removeAttr}
-              />
-            </div>
+            <ItemFormLinkedCalendarsSection
+              itemId={effectiveItem?.id ?? null}
+              itemExpiresAt={effectiveItem?.expiresAt}
+              remindBeforeDays={effectiveItem?.remindBeforeDays}
+              refreshKey={linked.linkedCalendarRefreshKey}
+              disabled={busy}
+              canAdd={canAddLinkedCalendar}
+              categoryDefaultRemindBeforeDays={category?.defaultRemindBeforeDays ?? null}
+              onQuickAdd={(kind) => void linked.openLinkedCalendarCreate(kind)}
+              onEditOneOff={(event) => {
+                linked.openLinkedCalendarEdit(event);
+              }}
+              onDeleteOneOff={(event) => {
+                void linked.deleteLinkedOneOff(event);
+              }}
+              onDeleteRecurring={(taskId, title) => {
+                void linked.deleteLinkedRecurring(taskId, title);
+              }}
+              onActiveExpiryChange={linked.setActiveLinkedExpiry}
+            />
           </div>
 
           <div className="border-t border-surface-border/55 px-md py-sm sm:px-lg sm:pb-md">
