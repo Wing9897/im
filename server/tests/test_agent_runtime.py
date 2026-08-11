@@ -28,13 +28,13 @@ def test_agent_round_and_wall_cap_constants() -> None:
     assert agent_wall_timeout_seconds(200) == float(AGENT_WALL_TIMEOUT_CAP_SECONDS)
 
 
-def test_summarize_soft_delete_as_deactivated() -> None:
+def test_summarize_hard_delete_as_deleted() -> None:
     assert (
         _summarize_tool_result(
-            "calendar.delete_recurring_task",
-            {"deleted": True, "soft": True},
+            "calendar.delete_recurring_series",
+            {"deleted": True, "id": "s1"},
         )
-        == "calendar.delete_recurring_task: deactivated"
+        == "calendar.delete_recurring_series: deleted"
     )
     assert (
         _summarize_tool_result("calendar.delete_event", {"deleted": True, "id": "e1"})

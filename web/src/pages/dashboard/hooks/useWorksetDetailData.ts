@@ -7,7 +7,7 @@ import {
   type ItemCategory,
   type TrackableItem,
 } from "../../../api/items";
-import { listUserEvents, type UserEvent } from "../../../api/userEvents";
+import { listUserEventsPage, type UserEvent } from "../../../api/userEvents";
 import { formatItemsError } from "../../../domain/items/itemErrors";
 import { resolveItemEmoji } from "../../../domain/items/itemCalendarProjection";
 import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
@@ -66,9 +66,9 @@ export function useWorksetDetailData(worksetId: string) {
       setLoadingEvents(true);
       setEventsError(null);
       const { start, end } = worksetEventsQueryWindow();
-      void listUserEvents({ worksetId, start, end })
-        .then((rows) => {
-          if (!cancelled) setEvents(rows);
+      void listUserEventsPage({ worksetId, start, end })
+        .then((page) => {
+          if (!cancelled) setEvents(page.items);
         })
         .catch(() => {
           if (!cancelled) setEventsError(t("workset.detailSummaryEventsError"));

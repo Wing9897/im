@@ -105,6 +105,7 @@ describe("AppSidebar", () => {
     expect(hrefs).toEqual([
       "/monitor",
       "/tasks",
+      "/schedule",
       "/items",
       "/sources",
       "/leaderboard",
@@ -239,6 +240,7 @@ describe("AppSidebar", () => {
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
       "/tasks",
+      "/schedule",
       "/items",
       "/timeline",
       "/actions",

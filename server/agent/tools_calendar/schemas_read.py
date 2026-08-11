@@ -11,13 +11,35 @@ from server.agent.tool_limits import (
 )
 from server.calendar.query import HORIZON_DAYS
 
+_TASK_OR_SERIES_ID = {
+    "type": "string",
+    "description": (
+        "Filter by analysis task id **or** recurring series id (same dual-role "
+        "key as the query layer). Alias: seriesId."
+    ),
+}
+
 READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
     {
         "name": "calendar.list_calendars",
-        "description": "List queryable calendar/event task metadata (no event bodies).",
+        "description": (
+            "List calendar metadata rows (no event bodies): analysis tasks "
+            "(kind=analysis_task, source=analysis) and standalone recurring "
+            "series (kind=recurring_series, source=recurring). Default omits "
+            "paused series (isActive=false); pass includeInactive=true to find "
+            "paused series before update_recurring_series(isActive=true)."
+        ),
         "parameters": {
             "type": "object",
-            "properties": {},
+            "properties": {
+                "includeInactive": {
+                    "type": "boolean",
+                    "description": (
+                        "When true, include paused recurring series "
+                        "(isActive=false). Default false."
+                    ),
+                },
+            },
             "additionalProperties": False,
         },
     },
@@ -40,7 +62,11 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "description": "Look-ahead days from now (e.g. 7 for 未來一週)",
                 },
                 "search": {"type": "string", "description": "Optional title/location filter"},
-                "taskId": {"type": "string"},
+                "taskId": _TASK_OR_SERIES_ID,
+                "seriesId": {
+                    "type": "string",
+                    "description": "Alias of taskId (prefer when filtering a recurring series)",
+                },
             },
             "additionalProperties": False,
         },
@@ -56,7 +82,11 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "properties": {
                 "limit": {"type": "integer", "minimum": 1, "maximum": CALENDAR_RESULT_HARD_CAP},
                 "search": {"type": "string"},
-                "taskId": {"type": "string"},
+                "taskId": _TASK_OR_SERIES_ID,
+                "seriesId": {
+                    "type": "string",
+                    "description": "Alias of taskId (prefer when filtering a recurring series)",
+                },
             },
             "additionalProperties": False,
         },
@@ -83,7 +113,11 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
                 "limit": {"type": "integer", "minimum": 1, "maximum": CALENDAR_RESULT_HARD_CAP},
                 "cursor": {"type": "string", "description": "Opaque offset cursor from nextCursor"},
                 "search": {"type": "string"},
-                "taskId": {"type": "string"},
+                "taskId": _TASK_OR_SERIES_ID,
+                "seriesId": {
+                    "type": "string",
+                    "description": "Alias of taskId (prefer when filtering a recurring series)",
+                },
             },
             "required": ["start", "end"],
             "additionalProperties": False,

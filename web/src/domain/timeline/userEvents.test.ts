@@ -34,27 +34,19 @@ describe("userEvents helpers", () => {
   });
 
   it("filters assignable analysis modes and optional active-only", () => {
-    expect(isTimelineAssignableAnalysisMode("recurring")).toBe(true);
+    expect(isTimelineAssignableAnalysisMode("recurring")).toBe(false);
     expect(isTimelineAssignableAnalysisMode("agent")).toBe(true);
     expect(isTimelineAssignableAnalysisMode("summary")).toBe(false);
     expect(isTimelineAssignableAnalysisMode("leaderboard")).toBe(false);
 
     const tasks = [
       { id: "a", name: "A", analysisMode: "intel_event", isActive: true },
-      { id: "b", name: "B", analysisMode: "recurring", isActive: false },
       { id: "c", name: "C", analysisMode: "summary", isActive: true },
-      {
-        id: "d",
-        name: "Child",
-        analysisMode: "recurring",
-        isActive: true,
-        parentTaskId: "proj-1",
-      },
       { id: "e", name: "Project", analysisMode: "agent", isActive: true },
       { id: "w", name: "Web", analysisMode: "agent", isActive: true },
       { id: "lb", name: "LB", analysisMode: "leaderboard", isActive: true },
     ];
-    expect(filterAssignableTimelineTasks(tasks).map((t) => t.id)).toEqual(["a", "b", "e", "w"]);
+    expect(filterAssignableTimelineTasks(tasks).map((t) => t.id)).toEqual(["a", "e", "w"]);
     expect(filterAssignableTimelineTasks(tasks, { activeOnly: true }).map((t) => t.id)).toEqual([
       "a",
       "e",

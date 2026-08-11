@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     version              INTEGER NOT NULL DEFAULT 1,
     is_active            INTEGER NOT NULL DEFAULT 1,
     -- Trigger-purpose RRULE-shaped string for AI modes (APScheduler next-run only).
-    -- NULL for recurring shells; calendar series live on recurring_schedules.rrule.
+    -- Calendar series live on recurring_schedules (standalone; not analysis tasks).
     -- Never calendar-expanded (hard-gated by analysis_mode / purpose=trigger).
     schedule_rrule       TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
@@ -60,41 +60,6 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
 );
 CREATE INDEX IF NOT EXISTS idx_analysis_tasks_workset
     ON analysis_tasks(workset_id);
-
--- Recurrence is a schedule resource, not an analysis-task concern. ``dtstart``
--- is the real persisted RFC 5545 series anchor (local DATE/DATE-TIME plus TZID),
--- never a synthetic expansion date.
-CREATE TABLE IF NOT EXISTS recurring_schedules (
-    task_id                 TEXT PRIMARY KEY
-                            REFERENCES analysis_tasks(id) ON DELETE CASCADE,
-    rrule                   TEXT NOT NULL,
-    dtstart                 TEXT NOT NULL,
-    dtend                   TEXT DEFAULT NULL,
-    is_all_day              INTEGER NOT NULL DEFAULT 0,
-    location                TEXT DEFAULT NULL,
-    description             TEXT DEFAULT NULL,
-    timezone                TEXT DEFAULT NULL,
-    timezone_ical           TEXT DEFAULT NULL,
-    exdates_json            TEXT NOT NULL DEFAULT '[]',
-    rdates_json             TEXT NOT NULL DEFAULT '[]',
-    ics_uid                 TEXT DEFAULT NULL,
-    ics_source              TEXT DEFAULT NULL,
-    ics_import_fingerprint  TEXT DEFAULT NULL,
-    parent_task_id          TEXT DEFAULT NULL
-                            REFERENCES analysis_tasks(id) ON DELETE CASCADE,
-    -- Optional parent trackable item (child recurring calendar under an inventory Thing).
-    -- No SQL FK: items DDL is applied after tasks in the wipe-only aggregate.
-    item_id                 TEXT DEFAULT NULL,
-    created_at              TEXT NOT NULL,
-    updated_at              TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_recurring_schedules_parent
-    ON recurring_schedules(parent_task_id);
-CREATE INDEX IF NOT EXISTS idx_recurring_schedules_item
-    ON recurring_schedules(item_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_recurring_schedules_ics_source_uid
-    ON recurring_schedules(ics_source, ics_uid)
-    WHERE ics_source IS NOT NULL AND ics_uid IS NOT NULL;
 
 -- Agent message_cursor incremental cursor (not system_config).
 -- last_message_at = ISO timestamp only; last_message_id = same-second tie-break (nullable).

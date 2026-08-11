@@ -38,12 +38,10 @@ export function AgentDetailPage() {
   const {
     project,
     children,
-    childRrules,
     channelLabels,
     events,
     eventsLoading,
     eventsError,
-    childSchedulesError,
     activitySpan,
     tickStatus,
     spanLoading,
@@ -66,7 +64,6 @@ export function AgentDetailPage() {
 
   useErrorToast(catalogError);
   useErrorToast(eventsError);
-  useErrorToast(childSchedulesError);
 
   useEffect(() => {
     setChildrenOpen(children.length > 0);
@@ -239,9 +236,9 @@ export function AgentDetailPage() {
                         </Badge>
                       ) : null}
                     </div>
-                    {childRrules.get(child.id) ? (
+                    {child.rrule.trim() ? (
                       <p className={`${captionClass} mt-0.5 truncate`}>
-                        {childRrules.get(child.id)}
+                        {child.rrule}
                       </p>
                     ) : null}
                   </div>

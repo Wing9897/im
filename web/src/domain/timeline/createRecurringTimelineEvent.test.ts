@@ -3,19 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { createRecurringTimelineEvent } from "./createRecurringTimelineEvent";
 
-const { mockCreateRecurringTask } = vi.hoisted(() => ({
-  mockCreateRecurringTask: vi.fn(),
+const { mockCreateRecurringSeries } = vi.hoisted(() => ({
+  mockCreateRecurringSeries: vi.fn(),
 }));
 
-vi.mock("../../api/tasks", () => ({
-  createRecurringTask: (...args: unknown[]) => mockCreateRecurringTask(...args),
+vi.mock("../../api/recurringSeries", () => ({
+  createRecurringSeries: (...args: unknown[]) => mockCreateRecurringSeries(...args),
 }));
 
 describe("createRecurringTimelineEvent", () => {
   beforeEach(() => {
-    mockCreateRecurringTask.mockReset().mockResolvedValue({
+    mockCreateRecurringSeries.mockReset().mockResolvedValue({
       id: "rec-1",
-      deletedBatchCount: 0,
     });
   });
 
@@ -31,7 +30,7 @@ describe("createRecurringTimelineEvent", () => {
       rrule: "FREQ=WEEKLY;BYDAY=MO",
     });
 
-    expect(mockCreateRecurringTask).toHaveBeenCalledWith({
+    expect(mockCreateRecurringSeries).toHaveBeenCalledWith({
       name: "Standup",
       description: "Daily sync",
       rrule: "FREQ=WEEKLY;BYDAY=MO",
@@ -55,7 +54,7 @@ describe("createRecurringTimelineEvent", () => {
       itemId: " item-9 ",
     });
 
-    expect(mockCreateRecurringTask).toHaveBeenCalledWith(
+    expect(mockCreateRecurringSeries).toHaveBeenCalledWith(
       expect.objectContaining({
         itemId: "item-9",
         eventIsAllDay: true,
@@ -73,7 +72,7 @@ describe("createRecurringTimelineEvent", () => {
       rrule: "FREQ=YEARLY",
     });
 
-    expect(mockCreateRecurringTask).toHaveBeenCalledWith(
+    expect(mockCreateRecurringSeries).toHaveBeenCalledWith(
       expect.objectContaining({
         eventIsAllDay: true,
         eventStartTime: null,
@@ -105,6 +104,6 @@ describe("createRecurringTimelineEvent", () => {
       }),
     ).rejects.toThrow("rrule is required");
 
-    expect(mockCreateRecurringTask).not.toHaveBeenCalled();
+    expect(mockCreateRecurringSeries).not.toHaveBeenCalled();
   });
 });

@@ -24,7 +24,7 @@ from server.calendar.query import (
 from server.calendar.rrule import (
     RruleValidationError,
     expand_calendar_occurrences,
-    expand_task_occurrences,
+    expand_series_occurrences,
     validate_rrule,
 )
 
@@ -39,7 +39,7 @@ __all__ = [
     "clamp_limit",
     "expand_active_calendar_occurrences",
     "expand_calendar_occurrences",
-    "expand_task_occurrences",
+    "expand_series_occurrences",
     "matches_search",
     "parse_cursor",
     "query_upcoming",

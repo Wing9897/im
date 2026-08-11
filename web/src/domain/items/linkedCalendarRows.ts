@@ -1,5 +1,5 @@
 import type { UserEvent } from "../../api/userEvents";
-import type { AnalysisTask } from "../../types";
+import type { RecurringSeries } from "../../types/recurring";
 import { isExpiresCalendarEvent } from "../timeline/userEventCalendarKind";
 import { formatDateOnly, formatDateTime } from "../../utils/dateFormat";
 
@@ -12,7 +12,7 @@ export type LinkedCalendarRowBase = {
 
 export type LinkedCalendarRow =
   | (LinkedCalendarRowBase & { kind: "oneOff"; event: UserEvent })
-  | (LinkedCalendarRowBase & { kind: "recurring"; taskId: string });
+  | (LinkedCalendarRowBase & { kind: "recurring"; seriesId: string });
 
 export function formatLinkedEventWhen(event: UserEvent): string {
   const startMs = Date.parse(event.startTime);
@@ -32,21 +32,21 @@ export function toLinkedOneOffRow(event: UserEvent): LinkedCalendarRow {
   };
 }
 
-export function toLinkedRecurringRow(task: AnalysisTask): LinkedCalendarRow {
+export function toLinkedRecurringRow(series: RecurringSeries): LinkedCalendarRow {
   return {
     kind: "recurring",
-    id: `rs:${task.id}`,
-    title: task.name,
-    detail: task.scheduleRrule?.trim() || "RRULE",
-    sortKey: String(task.createdAt || task.name),
-    taskId: task.id,
+    id: `rs:${series.id}`,
+    title: series.name,
+    detail: series.rrule.trim() || "RRULE",
+    sortKey: String(series.createdAt || series.name),
+    seriesId: series.id,
   };
 }
 
-/** Merge one-off events + recurring tasks (all kinds share one chip list); sort by sortKey. */
+/** Merge one-off events + recurring series (all kinds share one chip list). */
 export function mergeLinkedCalendarRows(
   events: readonly UserEvent[],
-  recurring: readonly AnalysisTask[],
+  recurring: readonly RecurringSeries[],
 ): LinkedCalendarRow[] {
   const merged: LinkedCalendarRow[] = [
     ...events.filter((event) => !event.dismissed).map(toLinkedOneOffRow),

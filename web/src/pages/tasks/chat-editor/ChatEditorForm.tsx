@@ -7,7 +7,6 @@ import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAn
 import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
-import { ChatCalendarFields } from "./ChatCalendarFields";
 import { ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
@@ -127,11 +126,7 @@ export function ChatEditorForm({
         </h2>
 
         <FormGrid className="gap-lg">
-          {vis.isRecurring ? (
-            <div className="md:col-span-2">
-              <ChatCalendarFields formState={formState} updateField={updateField} />
-            </div>
-          ) : !vis.promptFieldsVisible ? (
+          {!vis.promptFieldsVisible ? (
             <p className="m-0 text-caption text-text-muted md:col-span-2">
               {modeMeta.modeDescription}
             </p>

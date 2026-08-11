@@ -1,16 +1,11 @@
 /**
  * Create a recurring calendar plan from the timeline "Add event" dialog.
  *
- * Product model: 「週期任務」is not a user_event row — it is an
- * ``analysisMode=recurring`` task with an RRULE schedule.
- *
- * **Maintenance point**: uses atomic ``POST /api/v1/tasks/recurring``
- * (same writer as agent ``calendar.create_recurring_task``). Do not reintroduce
- * the two-step POST shell + PUT schedule path for timeline creates.
+ * Product model: recurring series are calendar resources, not analysis tasks.
  */
 
-import { createRecurringTask } from "../../api/tasks";
-import type { TaskMutationResult } from "../../types";
+import { createRecurringSeries } from "../../api/recurringSeries";
+import type { RecurringSeries } from "../../types/recurring";
 import { toUserEventFormWorksetId } from "./userEvents";
 
 export type CreateRecurringTimelineEventParams = {
@@ -29,7 +24,7 @@ export type CreateRecurringTimelineEventParams = {
 
 export async function createRecurringTimelineEvent(
   params: CreateRecurringTimelineEventParams,
-): Promise<TaskMutationResult> {
+): Promise<RecurringSeries> {
   const name = params.title.trim();
   const rrule = params.rrule.trim();
   if (!name) {
@@ -51,7 +46,7 @@ export async function createRecurringTimelineEvent(
     throw new Error("eventStartTime is required unless eventIsAllDay is true");
   }
 
-  return createRecurringTask({
+  return createRecurringSeries({
     name,
     description,
     rrule,

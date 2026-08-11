@@ -6,12 +6,11 @@
  * shared catalog to top-level-only.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import { ApiRequestError } from "../../../api/client";
-import { fetchTaskSchedule } from "../../../api/taskSchedule";
-import { listUserEvents, type UserEvent } from "../../../api/userEvents";
+import { listRecurringSeries } from "../../../api/recurringSeries";
+import { listUserEventsPage, type UserEvent } from "../../../api/userEvents";
 import { fetchAgentTickStatus, fetchTaskActivitySpans } from "../../../api/tasks";
 import { buildChannelNameById, resolveChannelLabel } from "../../../components/detail";
 import { isTaskActivelyAnalyzing } from "../../../domain/analysis/analysisStatusModel";
@@ -20,16 +19,12 @@ import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import { pickLatestBatchAttention } from "../../../domain/analysis/batchAttention";
 import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
 import { useChannelsWithSources } from "../../../hooks/useChannelsWithSources";
-import { toErrorMessage } from "../../../utils/errors";
 import { logWarn } from "../../../utils/logger";
 import type { AgentTickStatus, TaskActivitySpan } from "../../../types/analysis";
-import type { AnalysisTask } from "../../../types/tasks";
+import type { RecurringSeries } from "../../../types/recurring";
 import {
   findActivitySpan,
   isAgentCalendarTask,
-  mergeChildRrules,
-  selectProjectChildren,
-  type ChildScheduleFetchResult,
 } from "../../../domain/tasks/agentTaskSelectors";
 
 export function useAgentDetail() {
@@ -44,11 +39,6 @@ export function useAgentDetail() {
     [tasks, taskId],
   );
 
-  const children = useMemo(
-    () => (taskId ? selectProjectChildren(tasks, taskId) : []),
-    [tasks, taskId],
-  );
-
   const channelNameById = useMemo(() => buildChannelNameById(channels), [channels]);
 
   const channelLabels = useMemo(() => {
@@ -57,102 +47,76 @@ export function useAgentDetail() {
   }, [project, channelNameById]);
 
   const [events, setEvents] = useState<UserEvent[]>([]);
+  const [children, setChildren] = useState<RecurringSeries[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
-  const [childSchedulesError, setChildSchedulesError] = useState<string | null>(null);
 
   const [activitySpan, setActivitySpan] = useState<TaskActivitySpan | null>(null);
   const [tickStatus, setTickStatus] = useState<AgentTickStatus | null>(null);
   const [spanLoading, setSpanLoading] = useState(false);
-  const [childRrules, setChildRrules] = useState<ReadonlyMap<string, string>>(
-    () => new Map(),
-  );
-  const childRrulesRef = useRef(childRrules);
-  childRrulesRef.current = childRrules;
 
-  const loadSideData = useCallback(async (id: string, childIds: readonly string[] = []) => {
+  const loadSideData = useCallback(async (id: string) => {
     setEventsLoading(true);
     setSpanLoading(true);
     setEventsError(null);
-    setChildSchedulesError(null);
     try {
-      const [ownedEvents, spans, status, scheduleResults] = await Promise.all([
-        listUserEvents({ taskId: id }),
+      const [ownedEvents, recurringPage, spans, status] = await Promise.all([
+        listUserEventsPage({ taskId: id }).then((page) => page.items),
+        listRecurringSeries({ parentTaskId: id }),
         fetchTaskActivitySpans(),
         fetchAgentTickStatus(id, { limit: 20 }),
-        Promise.all(
-          childIds.map(async (childId): Promise<ChildScheduleFetchResult> => {
-            try {
-              const schedule = await fetchTaskSchedule(childId);
-              return {
-                childId,
-                kind: "ok",
-                rrule: schedule.rrule?.trim() || "",
-              };
-            } catch (err) {
-              if (err instanceof ApiRequestError && err.status === 404) {
-                return { childId, kind: "missing" };
-              }
-              return { childId, kind: "error", message: toErrorMessage(err) };
-            }
-          }),
-        ),
       ]);
       setEvents(ownedEvents);
+      setChildren(recurringPage.items);
       setActivitySpan(findActivitySpan(spans, id));
       setTickStatus(status);
-      const merged = mergeChildRrules(childRrulesRef.current, scheduleResults);
-      setChildRrules(merged.rrules);
-      setChildSchedulesError(merged.error);
     } catch (err) {
-      setEventsError(toErrorMessage(err));
+      setEventsError(err instanceof Error ? err.message : String(err));
       setEvents([]);
+      setChildren([]);
       setActivitySpan(null);
       setTickStatus(null);
-      setChildRrules(new Map());
-      setChildSchedulesError(null);
     } finally {
       setEventsLoading(false);
       setSpanLoading(false);
     }
   }, []);
 
-  const childIdsKey = children.map((child) => child.id).join(",");
-
   useEffect(() => {
     if (!taskId) return;
-    void loadSideData(
-      taskId,
-      childIdsKey ? childIdsKey.split(",") : [],
-    );
-  }, [taskId, childIdsKey, loadSideData]);
+    void loadSideData(taskId);
+  }, [taskId, loadSideData]);
 
   // Refresh catalog + side data when tasks / owned user_events change via SSE.
   useEffect(() => {
     if (!taskId) return;
     return subscribeResourceModified((detail) => {
-      if (detail.resourceType !== "task" && detail.resourceType !== "user_event") {
+      if (
+        detail.resourceType !== "task" &&
+        detail.resourceType !== "user_event" &&
+        detail.resourceType !== "recurring"
+      ) {
         return;
       }
-      void refreshTasks().catch((error) => {
-        logWarn("[agentDetail] catalog refresh after resource_modified failed", error);
-      });
-      const ids = childIdsKey ? childIdsKey.split(",") : [];
-      void loadSideData(taskId, ids).catch((error) => {
+      if (detail.resourceType === "task") {
+        void refreshTasks().catch((error) => {
+          logWarn("[agentDetail] catalog refresh after resource_modified failed", error);
+        });
+      }
+      void loadSideData(taskId).catch((error) => {
         logWarn("[agentDetail] side-data refresh after resource_modified failed", error);
       });
     });
-  }, [taskId, childIdsKey, refreshTasks, loadSideData]);
+  }, [taskId, refreshTasks, loadSideData]);
 
   const reload = useCallback(async () => {
-    const ids = childIdsKey ? childIdsKey.split(",") : [];
     await Promise.all([
       refreshTasks().catch((error) => {
         logWarn("[agentDetail] manual catalog reload failed", error);
       }),
-      taskId ? loadSideData(taskId, ids) : Promise.resolve(),
+      taskId ? loadSideData(taskId) : Promise.resolve(),
     ]);
-  }, [refreshTasks, loadSideData, taskId, childIdsKey]);
+  }, [refreshTasks, loadSideData, taskId]);
 
   const isRunning = useMemo(
     () => (taskId ? isTaskActivelyAnalyzing(activeAnalyses, taskId) : false),
@@ -186,8 +150,8 @@ export function useAgentDetail() {
   }, [navigate, taskId]);
 
   const goEditChild = useCallback(
-    (child: AnalysisTask) => {
-      navigate(`/tasks/${child.id}/edit`);
+    (child: RecurringSeries) => {
+      navigate(`/schedule/recurring/${child.id}/edit`);
     },
     [navigate],
   );
@@ -200,12 +164,10 @@ export function useAgentDetail() {
     taskId,
     project,
     children,
-    childRrules,
     channelLabels,
     events,
     eventsLoading,
     eventsError,
-    childSchedulesError,
     activitySpan,
     tickStatus,
     spanLoading,
@@ -220,7 +182,7 @@ export function useAgentDetail() {
     reload,
     reloadSideData: () =>
       taskId
-        ? loadSideData(taskId, childIdsKey ? childIdsKey.split(",") : [])
+        ? loadSideData(taskId)
         : Promise.resolve(),
     goBack,
     goEdit,

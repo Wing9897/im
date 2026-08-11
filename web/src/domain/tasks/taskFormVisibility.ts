@@ -4,7 +4,6 @@ import {
   analysisModeIsAgent,
   analysisModeRequiresChannels,
   analysisModeShowsOptionalChannels,
-  analysisModeShowsRruleFields,
 } from "./analysisModeCapabilities";
 import type { AgentTaskPolicy } from "./agentTaskPolicy";
 import {
@@ -15,7 +14,6 @@ import {
 } from "./agentTaskPolicy";
 
 export interface TaskModeFieldVisibility {
-  rruleFieldsVisible: boolean;
   promptFieldsVisible: boolean;
   channelFieldsVisible: boolean;
   /** Channels allowed but not required. */
@@ -28,7 +26,6 @@ export interface TaskModeFieldVisibility {
   /** Prompt is required to save (all AI modes with a prompt field). */
   promptRequired: boolean;
   isAgent: boolean;
-  isRecurring: boolean;
   showAgentPolicy: boolean;
   showWaveInterval: boolean;
   showMessageGateOverrides: boolean;
@@ -57,7 +54,6 @@ export function getTaskModeFieldVisibility(
   }
 
   return {
-    rruleFieldsVisible: analysisModeShowsRruleFields(mode),
     promptFieldsVisible,
     channelFieldsVisible:
       !hidesPromptAndChannel && (channelsRequired || channelsOptional),
@@ -67,7 +63,6 @@ export function getTaskModeFieldVisibility(
     timelineToggleVisible: mode === "intel_event" || isAgent,
     promptRequired: promptFieldsVisible,
     isAgent,
-    isRecurring: mode === "recurring",
     showAgentPolicy: isAgent,
     showWaveInterval,
     showMessageGateOverrides,

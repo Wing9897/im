@@ -153,48 +153,6 @@ describe("useTaskEditorState", () => {
       expect(latest.canSave).toBe(false);
     });
 
-    it("returns true in recurring mode when name, rrule, and start time are set", () => {
-      renderHarness();
-      act(() => {
-        latest.updateField("analysisMode", "recurring");
-        latest.updateField("name", "Calendar Task");
-        latest.updateField("rrule", "FREQ=DAILY");
-        latest.updateField("eventStartTime", "09:00");
-      });
-      expect(latest.canSave).toBe(true);
-    });
-
-    it("returns true in recurring all-day mode without start time", () => {
-      renderHarness();
-      act(() => {
-        latest.updateField("analysisMode", "recurring");
-        latest.updateField("name", "Calendar Task");
-        latest.updateField("rrule", "FREQ=DAILY");
-        latest.updateField("eventIsAllDay", true);
-      });
-      expect(latest.canSave).toBe(true);
-    });
-
-    it("returns false in recurring mode when timed start is missing", () => {
-      renderHarness();
-      act(() => {
-        latest.updateField("analysisMode", "recurring");
-        latest.updateField("name", "Calendar Task");
-        latest.updateField("rrule", "FREQ=DAILY");
-      });
-      expect(latest.canSave).toBe(false);
-    });
-
-    it("returns false in recurring mode when rrule is missing", () => {
-      renderHarness();
-      act(() => {
-        latest.updateField("analysisMode", "recurring");
-        latest.updateField("name", "Calendar Task");
-        latest.updateField("eventStartTime", "09:00");
-      });
-      expect(latest.canSave).toBe(false);
-    });
-
     it("requires prompt for agent (channels optional for schedule/threshold)", () => {
       renderHarness();
       act(() => {

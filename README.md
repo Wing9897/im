@@ -7,7 +7,7 @@
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — 統一 trigger-purpose `schedule_rrule`（APScheduler next-run only；FE 預設：10 秒、每小時、每日、每週、自訂秒數 → RRULE）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
 - **時間規劃** — Timeline 合併分析事件、週期任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
-- **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位；到期與提醒走關聯日曆（投影 `source=item`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
+- **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位；到期與提醒走關聯日曆（投影 `source=item_remind`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
@@ -23,7 +23,7 @@
 | 層 | 角色 | 本專案對應 |
 |----|------|------------|
 | **Input** | 多源訊號進統一訊息平面 | Collectors（Telegram、Discord、RSS…）→ `messages` |
-| **Process** | 篩選、排程、AI／非 AI 分析 | `analysis_tasks`（`leaderboard`／`intel_event`／`agent`／`recurring`） |
+| **Process** | 篩選、排程、AI 分析 | `analysis_tasks`（`leaderboard`／`intel_event`／`agent`）；循環日程為獨立 `recurring_schedules`（`/api/v1/calendar/recurring`） |
 | **Output** | 結果消費與外發 | Intelligence、Timeline、Board、提醒、Actions |
 
 **任務（`analysis_tasks`）是通用接口：** 下游多半以 `taskId` 訂閱，因此來源與顯示方式可持續加，不必各搞一套管線。完整圖表、模式表與例外見 [`docs/ARCHITECTURE.md` Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)。
@@ -34,7 +34,8 @@
 |------|------|--------|
 | `leaderboard`／`intel_event` | `execute_batch`（一次性 JSON 分析） | 該任務的 `promptTemplate` 作為 system 主體，再拼共用時間／JSON schema 等尾巴——**各任務可不同** |
 | `agent` | `execute_agent_tick`（`AgentTaskSpec`：游標／閾值／定時 + 工具／輸出權限） | 共用 agent system + 政策條款 + **置頂**該任務目標（`promptTemplate`）；cursor 同輪多波連續 session |
-| `recurring` | 不跑 AI 分析 | — |
+
+循環系列（`recurring_schedules`）不是 analysisMode：查詢時 RRULE 展開，經時間規劃／Schedule 編輯，**不**跑 AI。
 
 Agent／專案調和契約細節：[`docs/agent/agent.md`](docs/agent/agent.md)（URL 僅 `/tasks/:taskId/agent`）。
 
@@ -274,15 +275,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v26**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.27`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-26 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v28**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.29`）——`recurring_schedules` 是獨立日曆系列，不再建立 `analysis_tasks` recurring shell；物品到期 derive-on-read（無 `expires_at`／`remind_before_days` 快取欄）；時間軸投影 `source=item_remind`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-28 庫。
 
-**Wipe-only：** v1–v25 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v27 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v26 explicit reset](docs/ARCHITECTURE.md#schema-v26-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v28 explicit reset](docs/ARCHITECTURE.md#schema-v28-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

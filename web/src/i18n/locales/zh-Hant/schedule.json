@@ -1,22 +1,31 @@
 {
   "pageTitle": "我的日程",
   "toolbarAria": "日程工具列",
-  "tabs": {
-    "oneOff": "一般事件",
-    "recurring": "循環事件"
+  "badge": {
+    "oneOff": "一般",
+    "recurring": "循環"
   },
   "searchPlaceholder": "搜尋標題、內容或地點",
   "searchAria": "搜尋日程",
   "create": "新增",
-  "createOneOff": "新增一般事件",
-  "createRecurring": "新增循環事件",
-  "createOneOffAria": "新增一般事件",
-  "createRecurringAria": "新增循環事件",
+  "createAria": "新增日程事件",
+  "editor": {
+    "title": "編輯循環事件",
+    "back": "返回日程",
+    "save": "儲存",
+    "saving": "儲存中…",
+    "pause": "暫停",
+    "resume": "恢復",
+    "name": "名稱",
+    "rrule": "重複規則",
+    "start": "開始時間",
+    "end": "結束時間",
+    "location": "地點",
+    "itemId": "關聯物品 ID"
+  },
   "empty": {
-    "oneOff": "尚無一般事件",
-    "oneOffHint": "建立手寫日程，或從時間規劃新增。",
-    "recurring": "尚無循環事件",
-    "recurringHint": "建立週期行程，不會再出現在任務設定列表。"
+    "title": "尚無日程事件",
+    "hint": "可新增一般或循環事件——與時間規劃共用同一對話框。"
   },
   "card": {
     "edit": "編輯",
@@ -41,6 +50,9 @@
     "oneOffUpdated": "已更新一般事件",
     "oneOffDeleted": "已刪除一般事件",
     "recurringCreated": "已建立循環事件",
+    "recurringUpdated": "已更新循環事件",
+    "recurringPaused": "已暫停循環事件",
+    "recurringResumed": "已恢復循環事件",
     "recurringDeleted": "已刪除循環事件",
     "saveFailed": "儲存失敗",
     "deleteFailed": "刪除失敗",

@@ -169,6 +169,8 @@ export function toTimedKeyEvents(
   rows: ReadonlyArray<{
     id: string;
     taskId?: string | null;
+    /** Recurring calendar rows use seriesId (mapped into TimedKeyEvent.taskId for filter). */
+    seriesId?: string | null;
     worksetId?: string | null;
     taskName?: string | null;
     title: string;
@@ -181,9 +183,13 @@ export function toTimedKeyEvents(
     if (!row.startTime) {
       continue;
     }
+    const seriesOrTask =
+      kind === "recurring"
+        ? row.seriesId ?? row.taskId ?? null
+        : row.taskId ?? null;
     out.push({
       id: row.id,
-      taskId: row.taskId ?? null,
+      taskId: seriesOrTask,
       worksetId: row.worksetId ?? null,
       taskName: row.taskName?.trim() || "",
       title: row.title,

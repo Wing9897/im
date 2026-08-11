@@ -10,12 +10,13 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SUPPORTED_SCHEDULES = frozenset({"seconds_10", "hourly", "daily", "weekly", "custom_seconds"})
 
 _CHECKED_CONTRACT_PATHS = (
-    "server/api/routes/tasks/schedule.py",
+    "server/api/routes/calendar/recurring.py",
     "server/api/routes/task_helpers.py",
     "server/scheduler/manager.py",
     "server/calendar/rrule.py",
     "web/src/types/tasks.ts",
-    "web/src/pages/tasks/chat-editor/ChatCalendarFields.tsx",
+    "web/src/types/analysisEvent.ts",
+    "web/src/pages/schedule/RecurringSeriesEditor.tsx",
     "README.md",
     "docs/ARCHITECTURE.md",
 )
@@ -90,10 +91,13 @@ _CALENDAR_ONLY_REQUIREMENTS = {
         r"Recurring tasks never run the LLM and never create analysis scheduler jobs",
     ),
     "web/src/types/tasks.ts": (
-        r"Recurring-only recurrence expanded at query time",
-        r"never an AI analysis trigger",
+        r"Standalone recurring calendar series",
+        r"/api/v1/calendar/recurring",
     ),
-    "web/src/pages/tasks/chat-editor/ChatCalendarFields.tsx": (r"tasks\.editor\.rruleHint",),
+    "web/src/types/analysisEvent.ts": (
+        r"calendar RRULE series",
+        r"not an analysis task",
+    ),
     "web/src/i18n/locales/zh-Hant/common.json": (
         r"RRULE 僅用於週期任務重複事件",
         r"不會觸發 AI 分析",
@@ -104,8 +108,8 @@ _CALENDAR_ONLY_REQUIREMENTS = {
         r"不會觸發 AI 分析",
     ),
     "docs/ARCHITECTURE.md": (
-        r"Recurring tasks do not create scheduler jobs or run LLM analysis",
-        r"RRULE never triggers AI analysis",
+        r"Standalone recurring series do not create scheduler jobs or run LLM analysis",
+        r"calendar RRULE never triggers AI analysis",
         r"AI schedules never calendar-expand",
     ),
 }

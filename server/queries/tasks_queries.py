@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 import aiosqlite
@@ -12,30 +11,6 @@ from server.ingestion import upsert_channel
 from server.queries.version_sql import version_matched_batch_on
 from server.worksets_const import SYSTEM_WORKSET_DEFAULT_NAME, SYSTEM_WORKSET_ID
 
-_TASK_WITH_SCHEDULE_SELECT = """
-SELECT t.*,
-       rs.rrule,
-       rs.dtstart AS event_start_time,
-       rs.dtend AS event_end_time,
-       COALESCE(rs.is_all_day, 0) AS event_is_all_day,
-       rs.location AS event_location,
-       rs.description AS event_description,
-       rs.timezone AS event_timezone,
-       rs.timezone_ical AS event_timezone_ical,
-       rs.dtstart AS event_start_local,
-       rs.dtend AS event_end_local,
-       COALESCE(rs.exdates_json, '[]') AS event_exdates_json,
-       COALESCE(rs.rdates_json, '[]') AS event_rdates_json,
-       rs.ics_uid,
-       rs.ics_source,
-       rs.ics_import_fingerprint,
-       rs.parent_task_id,
-       rs.item_id
-FROM analysis_tasks t
-LEFT JOIN recurring_schedules rs ON rs.task_id = t.id
-"""
-
-
 async def fetch_task_channel_rows(db: Any, task_id: str) -> list[dict[str, Any]]:
     return await db.fetch_all(
         "SELECT platform, platform_id FROM task_channels WHERE task_id = ?",
@@ -44,12 +19,11 @@ async def fetch_task_channel_rows(db: Any, task_id: str) -> list[dict[str, Any]]
 
 
 async def fetch_all_task_rows(db: Any) -> list[dict[str, Any]]:
-    return await db.fetch_all(f"{_TASK_WITH_SCHEDULE_SELECT} ORDER BY t.created_at ASC")
+    return await db.fetch_all("SELECT * FROM analysis_tasks ORDER BY created_at ASC")
 
 
 async def fetch_task_row(db: Any, task_id: str) -> dict[str, Any] | None:
-    return await db.fetch_one(f"{_TASK_WITH_SCHEDULE_SELECT} WHERE t.id = ?", (task_id,))
-
+    return await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
 
 async def fetch_task_workset_id(db: Any, task_id: str) -> str | None:
     row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (task_id,))
@@ -192,13 +166,6 @@ async def insert_analysis_task(
     cap_read_items: int = 1,
     output_calendar: int = 0,
     output_analysis_events: int = 0,
-    rrule: str | None = None,
-    event_start_time: str | None = None,
-    event_end_time: str | None = None,
-    event_is_all_day: int = 0,
-    event_location: str | None = None,
-    event_description: str | None = None,
-    parent_task_id: str | None = None,
     now: str,
 ) -> None:
     await tx.execute(
@@ -241,32 +208,6 @@ async def insert_analysis_task(
             now,
         ),
     )
-    if rrule is not None:
-        dtstart = event_start_time
-        if dtstart and len(dtstart.strip()) <= 5:
-            dtstart = f"{datetime.now().astimezone().date().isoformat()}T{dtstart.strip()}:00"
-        if not dtstart:
-            dtstart = datetime.now().astimezone().replace(tzinfo=None, microsecond=0).isoformat()
-        dtend = event_end_time
-        if dtend and len(dtend.strip()) <= 5:
-            dtend = f"{dtstart[:10]}T{dtend.strip()}:00"
-        await tx.execute(
-            "INSERT INTO recurring_schedules "
-            "(task_id, rrule, dtstart, dtend, is_all_day, location, description, timezone, "
-            "parent_task_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'floating', ?, ?, ?)",
-            (
-                task_id,
-                rrule,
-                dtstart,
-                dtend,
-                event_is_all_day,
-                event_location,
-                event_description,
-                parent_task_id,
-                now,
-                now,
-            ),
-        )
 
 
 async def update_analysis_task(
@@ -347,9 +288,4 @@ async def set_task_active(db: Any, task_id: str, is_active: int, now: str) -> No
 
 
 async def delete_analysis_task(db: Any, task_id: str) -> None:
-    # RRULE occurrence dismissals use event_id = "{task_id}:{YYYYMMDDTHHMMSSZ}".
-    await db.execute(
-        "DELETE FROM timeline_dismissals WHERE source = 'recurring' AND event_id LIKE ?",
-        (f"{task_id}:%",),
-    )
     await db.execute("DELETE FROM analysis_tasks WHERE id = ?", (task_id,))

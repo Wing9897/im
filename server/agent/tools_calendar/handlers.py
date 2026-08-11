@@ -15,20 +15,20 @@ from server.agent.tools_calendar.handlers_read import (
 )
 from server.agent.tools_calendar.handlers_write import (
     _tool_create_event,
-    _tool_create_recurring_task,
+    _tool_create_recurring_series,
     _tool_delete_event,
-    _tool_delete_recurring_task,
+    _tool_delete_recurring_series,
     _tool_mark_important,
     _tool_unmark_important,
     _tool_update_event,
-    _tool_update_recurring_task,
+    _tool_update_recurring_series,
 )
 
 __all__ = [
     "_tool_create_event",
-    "_tool_create_recurring_task",
+    "_tool_create_recurring_series",
     "_tool_delete_event",
-    "_tool_delete_recurring_task",
+    "_tool_delete_recurring_series",
     "_tool_get",
     "_tool_list_calendars",
     "_tool_mark_important",
@@ -36,6 +36,6 @@ __all__ = [
     "_tool_unmark_important",
     "_tool_upcoming",
     "_tool_update_event",
-    "_tool_update_recurring_task",
+    "_tool_update_recurring_series",
     "_tool_window",
 ]

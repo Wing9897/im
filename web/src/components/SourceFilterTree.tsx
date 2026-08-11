@@ -87,7 +87,6 @@ export function SourceFilterTree({
   const { t } = useTranslation("common");
   const searching = Boolean(query.trim());
   const unnamedLabel = t("board.common.unnamedTask");
-  const recurringBadge = t("workset.filterRecurringBadge");
 
   return (
     <div className="flex flex-col gap-md">
@@ -177,12 +176,9 @@ export function SourceFilterTree({
                       child.id,
                       unnamedLabel,
                     );
-                    const isRecurring = child.analysisMode === "recurring";
-                    const modeBadge = isRecurring
-                      ? recurringBadge
-                      : child.analysisMode
-                        ? formatAnalysisMode(child.analysisMode)
-                        : null;
+                    const modeBadge = child.analysisMode
+                      ? formatAnalysisMode(child.analysisMode)
+                      : null;
                     return (
                       <li key={child.id}>
                         <label className="flex cursor-pointer items-center gap-sm border-l-2 border-l-accent/55 py-1.5 pl-9 pr-sm hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)]">
@@ -198,11 +194,7 @@ export function SourceFilterTree({
                           {modeBadge ? (
                             <span
                               className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-text-secondary ring-1 ring-inset ring-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))]"
-                              data-testid={
-                                isRecurring
-                                  ? `source-filter-recurring-${child.id}`
-                                  : `source-filter-mode-${child.id}`
-                              }
+                              data-testid={`source-filter-mode-${child.id}`}
                             >
                               {modeBadge}
                             </span>

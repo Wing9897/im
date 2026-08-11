@@ -8,16 +8,19 @@ import {
   updateUserEvent,
   type UserEvent,
 } from "../../api/userEvents";
-import { deleteTask } from "../../api/tasks";
+import {
+  deleteRecurringSeries,
+  patchRecurringSeries,
+} from "../../api/recurringSeries";
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
 import { useTaskCatalog, useWorksetNameById } from "../../context/TaskCatalogContext";
 import { useToast } from "../../context/ToastContext";
 import { createRecurringTimelineEvent } from "../../domain/timeline/createRecurringTimelineEvent";
+import { defaultCreateTimedRange } from "../../domain/timeline/dateUtils";
 import { parseRemindBeforeDays } from "../../domain/timeline/parseRemindBeforeDays";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { toErrorMessage } from "../../utils/errors";
-import type { ScheduleTab } from "./scheduleConfig";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
 
 function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
@@ -40,16 +43,15 @@ function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
 }
 
 export function useSchedulePageDialogs(opts: {
-  tab: ScheduleTab;
   reloadOneOff: () => Promise<void>;
   reloadRecurring: () => Promise<void>;
 }) {
-  const { tab, reloadOneOff, reloadRecurring } = opts;
+  const { reloadOneOff, reloadRecurring } = opts;
   const { t } = useTranslation("schedule");
   const { t: tTimeline } = useTranslation("timeline");
   const { showToast } = useToast();
   const navigate = useNavigate();
-  const { worksets, refreshTasks } = useTaskCatalog();
+  const { worksets } = useTaskCatalog();
   const worksetNameById = useWorksetNameById();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -76,16 +78,21 @@ export function useSchedulePageDialogs(opts: {
     [worksets],
   );
 
+  /** Mirror Timeline create: UserEventDialog with one_off | recurring kind switch. */
   const openCreate = useCallback(() => {
     setDialogMode("create");
     setEditingEvent(null);
     setDialogError(null);
+    const range = defaultCreateTimedRange();
     setDialogInitial({
-      kind: tab === "recurring" ? "recurring" : "one_off",
-      worksetId: SYSTEM_WORKSET_ID,
+      worksetId: toUserEventFormWorksetId(null),
+      startTime: range.startTime,
+      endTime: range.endTime,
+      isAllDay: false,
+      remindBeforeDays: "",
     });
     setDialogOpen(true);
-  }, [tab]);
+  }, []);
 
   const openEditOneOff = useCallback((event: UserEvent) => {
     setDialogMode("edit");
@@ -95,6 +102,7 @@ export function useSchedulePageDialogs(opts: {
     setDialogOpen(true);
   }, []);
 
+  /** Series edit stays on RecurringSeriesEditor (same as Timeline create → series edit elsewhere). */
   const openEditRecurring = useCallback(
     (task: ScheduleRecurringItem) => {
       navigate(`/schedule/recurring/${task.id}/edit`);
@@ -125,7 +133,7 @@ export function useSchedulePageDialogs(opts: {
         }
         const itemId = (values.itemId ?? "").trim() || null;
 
-        if (dialogMode === "create" && (tab === "recurring" || values.kind === "recurring")) {
+        if (dialogMode === "create" && values.kind === "recurring") {
           await createRecurringTimelineEvent({
             title: values.title,
             worksetId,
@@ -137,7 +145,6 @@ export function useSchedulePageDialogs(opts: {
             rrule: values.rrule,
             itemId,
           });
-          await refreshTasks().catch(() => undefined);
           showToast(t("toast.recurringCreated"), "success");
           await reloadRecurring();
         } else if (dialogMode === "create") {
@@ -182,13 +189,11 @@ export function useSchedulePageDialogs(opts: {
     [
       dialogMode,
       editingEvent,
-      refreshTasks,
       reloadOneOff,
       reloadRecurring,
       showToast,
       t,
       tTimeline,
-      tab,
     ],
   );
 
@@ -200,6 +205,22 @@ export function useSchedulePageDialogs(opts: {
     setDeleteTarget({ kind: "recurring", id: task.id, title: task.name });
   }, []);
 
+  const toggleRecurringActive = useCallback(
+    async (series: ScheduleRecurringItem) => {
+      try {
+        await patchRecurringSeries(series.id, { isActive: !series.isActive });
+        showToast(
+          series.isActive ? t("toast.recurringPaused") : t("toast.recurringResumed"),
+          "success",
+        );
+        await reloadRecurring();
+      } catch (error) {
+        showToast(toErrorMessage(error) || t("toast.saveFailed"), "error");
+      }
+    },
+    [reloadRecurring, showToast, t],
+  );
+
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -209,8 +230,7 @@ export function useSchedulePageDialogs(opts: {
         showToast(t("toast.oneOffDeleted"), "success");
         await reloadOneOff();
       } else {
-        await deleteTask(deleteTarget.id);
-        await refreshTasks().catch(() => undefined);
+        await deleteRecurringSeries(deleteTarget.id);
         showToast(t("toast.recurringDeleted"), "success");
         await reloadRecurring();
       }
@@ -220,14 +240,7 @@ export function useSchedulePageDialogs(opts: {
     } finally {
       setDeleting(false);
     }
-  }, [deleteTarget, refreshTasks, reloadOneOff, reloadRecurring, showToast, t]);
-
-  const dialogTitleOverride =
-    dialogMode === "create"
-      ? tab === "recurring"
-        ? t("createRecurring")
-        : t("createOneOff")
-      : undefined;
+  }, [deleteTarget, reloadOneOff, reloadRecurring, showToast, t]);
 
   return {
     worksetOptions,
@@ -237,7 +250,6 @@ export function useSchedulePageDialogs(opts: {
     dialogInitial,
     dialogBusy,
     dialogError,
-    dialogTitleOverride,
     openCreate,
     openEditOneOff,
     openEditRecurring,
@@ -247,6 +259,7 @@ export function useSchedulePageDialogs(opts: {
     deleting,
     requestDeleteOneOff,
     requestDeleteRecurring,
+    toggleRecurringActive,
     confirmDelete,
     cancelDelete: () => setDeleteTarget(null),
   };

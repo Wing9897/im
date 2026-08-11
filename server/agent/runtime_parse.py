@@ -98,8 +98,6 @@ def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
     if result.get("item") is not None:
         return f"{name}: 1 item"
     if result.get("deleted") is True:
-        if result.get("soft") is True:
-            return f"{name}: deactivated"
         return f"{name}: deleted"
     return f"{name}: ok"
 

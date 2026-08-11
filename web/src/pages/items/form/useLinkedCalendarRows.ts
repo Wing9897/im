@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { listTasks } from "../../../api/tasks";
-import { listUserEvents, type UserEvent } from "../../../api/userEvents";
+import { listRecurringSeries } from "../../../api/recurringSeries";
+import { listUserEventsPage, type UserEvent } from "../../../api/userEvents";
 import { findActiveLinkedExpiryEvent } from "../../../domain/items/linkedCalendarQuickCreate";
 import {
   countActiveLinkedExpiryEvents,
@@ -52,11 +52,11 @@ export function useLinkedCalendarRows({
     setLoadError(false);
     try {
       const [events, recurring] = await Promise.all([
-        listUserEvents({ itemId }),
-        listTasks({ itemId, analysisMode: "recurring" }),
+        listUserEventsPage({ itemId }).then((page) => page.items),
+        listRecurringSeries({ itemId }),
       ]);
       const expiryEvent = findActiveLinkedExpiryEvent(events);
-      setRows(mergeLinkedCalendarRows(events, recurring));
+      setRows(mergeLinkedCalendarRows(events, recurring.items));
       setActiveExpiry(expiryEvent);
       setExpiresCount(countActiveLinkedExpiryEvents(events));
       onActiveExpiryChange?.(expiryEvent);

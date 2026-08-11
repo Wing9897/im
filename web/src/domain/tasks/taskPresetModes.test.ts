@@ -8,8 +8,4 @@ describe("analysisModeSupportsTaskPresets", () => {
     expect(analysisModeSupportsTaskPresets("intel_event")).toBe(true);
     expect(analysisModeSupportsTaskPresets("agent")).toBe(true);
   });
-
-  it("hides recurring", () => {
-    expect(analysisModeSupportsTaskPresets("recurring")).toBe(false);
-  });
 });

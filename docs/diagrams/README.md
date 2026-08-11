@@ -121,7 +121,7 @@ flowchart TB
   Q -->|yes| WAVE[Agent wave<br/>≤40 msgs]
   WAVE --> SYS[System pinned:<br/>agent prompt + task goals]
   SYS --> TOOLS[Tools: calendar.* / messages.search<br/>scoped to this project]
-  TOOLS --> WRITE[Create / update / soft-delete<br/>user_events + child recurring]
+  TOOLS --> WRITE[Create / update / hard-delete<br/>user_events + child recurring series]
   WRITE --> ADV[Advance cursor]
   ADV --> MORE{More backlog?}
   MORE -->|yes| STOP{Paused / task off /<br/>optional wave cap?}

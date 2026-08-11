@@ -47,7 +47,7 @@ type Props = {
   /** Soft-delete / dismiss a one-off linked user event (incl. expiry). */
   onDeleteOneOff?: (event: UserEvent) => void;
   /** Soft-delete a recurring analysis task linked to this item. */
-  onDeleteRecurring?: (taskId: string, title: string) => void;
+  onDeleteRecurring?: (seriesId: string, title: string) => void;
   /** Notify parent when primary linked expiry changes. */
   onActiveExpiryChange?: (event: UserEvent | null) => void;
 };
@@ -153,7 +153,7 @@ function LinkedCalendarIconChip({
   disabled: boolean;
   onEdit?: (event: UserEvent) => void;
   onDeleteOneOff?: (event: UserEvent) => void;
-  onDeleteRecurring?: (taskId: string, title: string) => void;
+  onDeleteRecurring?: (seriesId: string, title: string) => void;
 }) {
   const { t } = useTranslation("items");
   const editable = row.kind === "oneOff" && Boolean(onEdit);
@@ -168,7 +168,7 @@ function LinkedCalendarIconChip({
     row.kind === "oneOff" && onDeleteOneOff
       ? () => onDeleteOneOff(row.event)
       : row.kind === "recurring" && onDeleteRecurring
-        ? () => onDeleteRecurring(row.taskId, row.title)
+        ? () => onDeleteRecurring(row.seriesId, row.title)
         : undefined;
 
   const isPrimaryExpiry =

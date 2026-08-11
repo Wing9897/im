@@ -73,33 +73,24 @@ async def _upsert_recurring_task(
     existing_id: str | None,
     now: str,
 ) -> tuple[str, str]:
+    """Upsert a standalone recurring series (wire targetType ``recurring``)."""
     from server.calendar import imports as imports_mod
 
     assert event.rrule is not None
     exdates_json = json.dumps(event.exdates, ensure_ascii=False, separators=(",", ":"))
     rdates_json = json.dumps(event.rdates, ensure_ascii=False, separators=(",", ":"))
     if existing_id is None:
-        task_id = imports_mod.new_id()
-        await conn.execute(
-            "INSERT INTO analysis_tasks "
-            "(id, name, description, prompt_template, analysis_mode, analysis_time_range, version, "
-            "is_active, schedule_rrule, include_in_timeline, workset_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, '', 'recurring', 'all', 1, 1, NULL, 1, NULL, ?, ?)",
-            (
-                task_id,
-                event.title,
-                event.description or None,
-                now,
-                now,
-            ),
-        )
+        series_id = imports_mod.new_id()
         await conn.execute(
             "INSERT INTO recurring_schedules "
-            "(task_id, rrule, dtstart, dtend, is_all_day, location, description, timezone, timezone_ical, "
-            "exdates_json, rdates_json, ics_uid, ics_source, ics_import_fingerprint, parent_task_id, "
-            "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)",
+            "(id, name, workset_id, is_active, rrule, dtstart, dtend, is_all_day, location, description, "
+            "timezone, timezone_ical, exdates_json, rdates_json, ics_uid, ics_source, ics_import_fingerprint, "
+            "parent_task_id, item_id, created_at, updated_at) "
+            "VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?)",
             (
-                task_id,
+                series_id,
+                event.title,
+                SYSTEM_WORKSET_ID,
                 event.rrule,
                 event.start_local or event.start_time,
                 event.end_local or event.end_time,
@@ -117,22 +108,13 @@ async def _upsert_recurring_task(
                 now,
             ),
         )
-        return task_id, "created"
+        return series_id, "created"
     await conn.execute(
-        "UPDATE analysis_tasks SET name = ?, description = ?, is_active = 1, version = version + 1, "
-        "updated_at = ? WHERE id = ?",
+        "UPDATE recurring_schedules SET name = ?, is_active = 1, rrule = ?, dtstart = ?, dtend = ?, "
+        "is_all_day = ?, location = ?, description = ?, timezone = ?, timezone_ical = ?, "
+        "exdates_json = ?, rdates_json = ?, ics_import_fingerprint = ?, updated_at = ? WHERE id = ?",
         (
             event.title,
-            event.description or None,
-            now,
-            existing_id,
-        ),
-    )
-    await conn.execute(
-        "UPDATE recurring_schedules SET rrule = ?, dtstart = ?, dtend = ?, is_all_day = ?, "
-        "location = ?, description = ?, timezone = ?, timezone_ical = ?, exdates_json = ?, "
-        "rdates_json = ?, ics_import_fingerprint = ?, updated_at = ? WHERE task_id = ?",
-        (
             event.rrule,
             event.start_local or event.start_time,
             event.end_local or event.end_time,

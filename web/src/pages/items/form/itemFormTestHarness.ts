@@ -13,8 +13,8 @@ import {
 import {
   createUserEvent,
   listItems,
-  listTasks,
-  listUserEvents,
+  listRecurringSeries,
+  listUserEventsPage,
   showToast,
   updateUserEvent,
 } from "./itemFormTestMocks";
@@ -24,20 +24,20 @@ export { ITEM_FORM_TEST_CATEGORIES as CATEGORIES, ITEM_FORM_TEST_WORKSETS as WOR
 export {
   createUserEvent,
   deleteUserEvent,
-  deleteTask,
+  deleteRecurringSeries,
   listItems,
-  listTasks,
-  listUserEvents,
+  listRecurringSeries,
+  listUserEventsPage,
   showToast,
   updateUserEvent,
 } from "./itemFormTestMocks";
 
 export function resetItemFormTestMocks(): void {
   showToast.mockReset();
-  listUserEvents.mockReset();
-  listUserEvents.mockResolvedValue([]);
-  listTasks.mockReset();
-  listTasks.mockResolvedValue([]);
+  listUserEventsPage.mockReset();
+  listUserEventsPage.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+  listRecurringSeries.mockReset();
+  listRecurringSeries.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
   updateUserEvent.mockReset();
   updateUserEvent.mockResolvedValue({});
   createUserEvent.mockReset();

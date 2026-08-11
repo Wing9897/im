@@ -29,7 +29,7 @@ from server.calendar.query_fetch import (
     _fetch_rrule_in_range,
     _fetch_user_in_range,
     expand_active_calendar_occurrences,
-    fetch_active_recurring_tasks,
+    fetch_active_recurring_series,
     list_calendars,
 )
 from server.calendar.query_merge import merge_calendar_items, source_policy
@@ -50,7 +50,7 @@ __all__ = [
     "HORIZON_DAYS",
     "Source",
     "expand_active_calendar_occurrences",
-    "fetch_active_recurring_tasks",
+    "fetch_active_recurring_series",
     "get_event",
     "list_calendars",
     "query_recent",
@@ -261,8 +261,12 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
 
     item_occ = await get_item_occurrence(db, eid)
     if item_occ is not None:
-        item_occ["dismissed"] = await is_timeline_event_dismissed(db, source="item", event_id=eid)
-        item_occ["important"] = await is_timeline_event_important(db, source="item", event_id=eid)
+        item_occ["dismissed"] = await is_timeline_event_dismissed(
+            db, source="item_remind", event_id=eid
+        )
+        item_occ["important"] = await is_timeline_event_important(
+            db, source="item_remind", event_id=eid
+        )
         return build_item_calendar_item(item_occ, detail="full")
 
     match = OCCURRENCE_ID_RE.match(eid)
@@ -274,7 +278,9 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
         return None
     window_start = occurrence_start - timedelta(seconds=1)
     window_end = occurrence_start + timedelta(seconds=1)
-    for occ in await expand_active_calendar_occurrences(db, window_start, window_end, task_id=task_id):
+    for occ in await expand_active_calendar_occurrences(
+        db, window_start, window_end, series_id=task_id
+    ):
         if occ.get("id") == eid:
             item = build_occurrence_item(
                 occ,

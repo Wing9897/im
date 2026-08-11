@@ -72,3 +72,41 @@ class UserEventPatchBody(BaseModel):
     kind: Literal["normal", "expires", "purchase_effective"] | None = None
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
+
+
+class RecurringSeriesCreateBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    rrule: str
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool = False
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    description: str | None = None
+    worksetId: str | None = None
+    parentTaskId: str | None = Field(
+        default=None,
+        description="Optional agent parent for nested recurring children",
+    )
+    itemId: str | None = Field(
+        default=None,
+        description="Optional parent trackable item for this recurring calendar",
+    )
+
+
+class RecurringSeriesPatchBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = None
+    rrule: str | None = None
+    eventStartTime: str | None = None
+    eventEndTime: str | None = None
+    eventIsAllDay: bool | None = None
+    eventLocation: str | None = None
+    eventDescription: str | None = None
+    description: str | None = None
+    isActive: bool | None = None
+    worksetId: str | None = None
+    itemId: str | None = None

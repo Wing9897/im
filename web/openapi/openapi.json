@@ -462,22 +462,6 @@
               ],
               "title": "Worksetid"
             }
-          },
-          {
-            "name": "itemId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Itemid"
-            }
           }
         ],
         "responses": {
@@ -533,173 +517,6 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tasks/recurring": {
-      "post": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Create Recurring Task Endpoint",
-        "description": "Single-shot recurring create (task + schedule). See ``CreateRecurringTaskBody``.",
-        "operationId": "create_recurring_task_endpoint_api_v1_tasks_recurring_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateRecurringTaskBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tasks/{task_id}/schedule": {
-      "get": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Get Task Schedule",
-        "operationId": "get_task_schedule_api_v1_tasks__task_id__schedule_get",
-        "parameters": [
-          {
-            "name": "task_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Task Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskScheduleResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Put Task Schedule",
-        "operationId": "put_task_schedule_api_v1_tasks__task_id__schedule_put",
-        "parameters": [
-          {
-            "name": "task_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Task Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskScheduleBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TaskScheduleResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "tasks"
-        ],
-        "summary": "Remove Task Schedule",
-        "operationId": "remove_task_schedule_api_v1_tasks__task_id__schedule_delete",
-        "parameters": [
-          {
-            "name": "task_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Task Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -4255,7 +4072,7 @@
             }
           },
           {
-            "name": "taskId",
+            "name": "seriesId",
             "in": "query",
             "required": false,
             "schema": {
@@ -4267,11 +4084,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Taskid"
+              "title": "Seriesid"
             }
           },
           {
-            "name": "taskIds",
+            "name": "seriesIds",
             "in": "query",
             "required": false,
             "schema": {
@@ -4286,7 +4103,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Taskids"
+              "title": "Seriesids"
             }
           },
           {
@@ -4302,10 +4119,10 @@
                   "type": "null"
                 }
               ],
-              "description": "Include trackable-item remind DATE projections (source=item).",
+              "description": "Include trackable-item remind DATE projections (source=item_remind).",
               "title": "Includeitems"
             },
-            "description": "Include trackable-item remind DATE projections (source=item)."
+            "description": "Include trackable-item remind DATE projections (source=item_remind)."
           }
         ],
         "responses": {
@@ -4998,6 +4815,314 @@
             "schema": {
               "type": "string",
               "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/recurring": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Recurring Series",
+        "operationId": "list_recurring_series_api_v1_calendar_recurring_get",
+        "parameters": [
+          {
+            "name": "worksetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Worksetid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Itemid"
+            }
+          },
+          {
+            "name": "parentTaskId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parenttaskid"
+            }
+          },
+          {
+            "name": "topLevelOnly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Toplevelonly"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringSeriesPageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Create Recurring Series Endpoint",
+        "operationId": "create_recurring_series_endpoint_api_v1_calendar_recurring_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringSeriesCreateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringSeriesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/recurring/{series_id}": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Get Recurring Series",
+        "operationId": "get_recurring_series_api_v1_calendar_recurring__series_id__get",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringSeriesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Patch Recurring Series Endpoint",
+        "operationId": "patch_recurring_series_endpoint_api_v1_calendar_recurring__series_id__patch",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringSeriesPatchBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringSeriesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "Delete Recurring Series Endpoint",
+        "operationId": "delete_recurring_series_endpoint_api_v1_calendar_recurring__series_id__delete",
+        "parameters": [
+          {
+            "name": "series_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Series Id"
             }
           }
         ],
@@ -8029,7 +8154,7 @@
             "type": "string",
             "enum": [
               "user_event",
-              "recurring_task"
+              "recurring"
             ],
             "title": "Targettype"
           },
@@ -8130,7 +8255,7 @@
             "type": "string",
             "enum": [
               "user_event",
-              "recurring_task"
+              "recurring"
             ],
             "title": "Targettype"
           },
@@ -8348,9 +8473,9 @@
             "type": "string",
             "title": "Id"
           },
-          "taskId": {
+          "seriesId": {
             "type": "string",
-            "title": "Taskid",
+            "title": "Seriesid",
             "default": ""
           },
           "taskName": {
@@ -8432,7 +8557,7 @@
             "type": "string",
             "enum": [
               "recurring",
-              "item"
+              "item_remind"
             ],
             "title": "Source",
             "default": "recurring"
@@ -8770,120 +8895,6 @@
           "sourceName"
         ],
         "title": "ChannelWithSourceResponse"
-      },
-      "CreateRecurringTaskBody": {
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name"
-          },
-          "rrule": {
-            "type": "string",
-            "title": "Rrule"
-          },
-          "eventStartTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstarttime"
-          },
-          "eventEndTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendtime"
-          },
-          "eventIsAllDay": {
-            "type": "boolean",
-            "title": "Eventisallday",
-            "default": false
-          },
-          "eventLocation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventlocation"
-          },
-          "eventDescription": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventdescription"
-          },
-          "description": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Description"
-          },
-          "worksetId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Worksetid"
-          },
-          "parentTaskId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parenttaskid",
-            "description": "Optional project parent for nested recurring children"
-          },
-          "itemId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Itemid",
-            "description": "Optional parent trackable item: this recurring calendar belongs to the inventory item (not a sub-event of another event)"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "name",
-          "rrule"
-        ],
-        "title": "CreateRecurringTaskBody"
       },
       "DeviceInfoResponse": {
         "properties": {
@@ -11068,6 +11079,481 @@
         ],
         "title": "QueueBatchResponse"
       },
+      "RecurringSeriesCreateBody": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "rrule": {
+            "type": "string",
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "type": "boolean",
+            "title": "Eventisallday",
+            "default": false
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "parentTaskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parenttaskid",
+            "description": "Optional agent parent for nested recurring children"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid",
+            "description": "Optional parent trackable item for this recurring calendar"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "rrule"
+        ],
+        "title": "RecurringSeriesCreateBody"
+      },
+      "RecurringSeriesPageResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RecurringSeriesResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "totalCount": {
+            "type": "integer",
+            "title": "Totalcount"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "title": "Hasmore"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "totalCount",
+          "hasMore"
+        ],
+        "title": "RecurringSeriesPageResponse"
+      },
+      "RecurringSeriesPatchBody": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "rrule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventisallday"
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "isActive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isactive"
+          },
+          "worksetId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worksetid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "RecurringSeriesPatchBody"
+      },
+      "RecurringSeriesResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "rrule": {
+            "type": "string",
+            "title": "Rrule"
+          },
+          "eventStartTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstarttime"
+          },
+          "eventEndTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendtime"
+          },
+          "eventIsAllDay": {
+            "type": "boolean",
+            "title": "Eventisallday",
+            "default": false
+          },
+          "eventLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventlocation"
+          },
+          "eventDescription": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventdescription"
+          },
+          "eventTimezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventtimezone"
+          },
+          "eventStartLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventstartlocal"
+          },
+          "eventEndLocal": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventendlocal"
+          },
+          "eventExdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventexdates"
+          },
+          "eventRdates": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventrdates"
+          },
+          "icsUid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icsuid"
+          },
+          "icsSource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icssource"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive",
+            "default": true
+          },
+          "worksetId": {
+            "type": "string",
+            "title": "Worksetid"
+          },
+          "parentTaskId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parenttaskid"
+          },
+          "itemId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Itemid"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "rrule",
+          "worksetId"
+        ],
+        "title": "RecurringSeriesResponse",
+        "description": "Standalone calendar recurring series (not an analysis task)."
+      },
       "RefreshAllSourcesResponse": {
         "properties": {
           "totalSources": {
@@ -12007,7 +12493,6 @@
                 "enum": [
                   "leaderboard",
                   "intel_event",
-                  "recurring",
                   "agent"
                 ]
               },
@@ -12341,7 +12826,6 @@
                 "enum": [
                   "leaderboard",
                   "intel_event",
-                  "recurring",
                   "agent"
                 ]
               },
@@ -12530,7 +13014,6 @@
             "enum": [
               "leaderboard",
               "intel_event",
-              "recurring",
               "agent"
             ],
             "title": "Analysismode"
@@ -12754,240 +13237,6 @@
           "isActive"
         ],
         "title": "TaskResponse"
-      },
-      "TaskScheduleBody": {
-        "properties": {
-          "rrule": {
-            "type": "string",
-            "title": "Rrule"
-          },
-          "eventStartTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstarttime"
-          },
-          "eventEndTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendtime"
-          },
-          "eventIsAllDay": {
-            "type": "boolean",
-            "title": "Eventisallday",
-            "default": false
-          },
-          "eventLocation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventlocation"
-          },
-          "eventDescription": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventdescription"
-          },
-          "parentTaskId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parenttaskid",
-            "description": "Optional project parent for nested recurring children"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "rrule"
-        ],
-        "title": "TaskScheduleBody"
-      },
-      "TaskScheduleResponse": {
-        "properties": {
-          "taskId": {
-            "type": "string",
-            "title": "Taskid"
-          },
-          "rrule": {
-            "type": "string",
-            "title": "Rrule"
-          },
-          "eventStartTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstarttime"
-          },
-          "eventEndTime": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendtime"
-          },
-          "eventIsAllDay": {
-            "type": "boolean",
-            "title": "Eventisallday",
-            "default": false
-          },
-          "eventLocation": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventlocation"
-          },
-          "eventDescription": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventdescription"
-          },
-          "eventTimezone": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventtimezone"
-          },
-          "eventStartLocal": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventstartlocal"
-          },
-          "eventEndLocal": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventendlocal"
-          },
-          "eventExdates": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Eventexdates"
-          },
-          "eventRdates": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Eventrdates"
-          },
-          "icsUid": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Icsuid"
-          },
-          "icsSource": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Icssource"
-          },
-          "parentTaskId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parenttaskid"
-          },
-          "itemId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Itemid"
-          }
-        },
-        "type": "object",
-        "required": [
-          "taskId",
-          "rrule"
-        ],
-        "title": "TaskScheduleResponse",
-        "description": "Recurring calendar plan for ``analysisMode=recurring`` tasks."
       },
       "Telegram2faBody": {
         "properties": {
@@ -13279,7 +13528,7 @@
               "analysis",
               "user",
               "recurring",
-              "item"
+              "item_remind"
             ],
             "title": "Source"
           },
@@ -13353,7 +13602,7 @@
               "analysis",
               "user",
               "recurring",
-              "item"
+              "item_remind"
             ],
             "title": "Source"
           },

@@ -10,10 +10,7 @@ from typing import Any
 
 from server.db.database import Database, TransactionDb
 from server.queries.tasks_queries import delete_incomplete_batches, set_task_active
-from server.services.task_crud_create import (
-    create_recurring_task_record,
-    create_task_record,
-)
+from server.services.task_crud_create import create_task_record
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     require_task_row_or_lookup,
@@ -47,7 +44,6 @@ async def toggle_task_active_record(db: Database, task_id: str) -> tuple[dict[st
 
 __all__ = [
     "TaskMutationResult",
-    "create_recurring_task_record",
     "create_task_record",
     "delete_task_record",
     "toggle_task_active_record",

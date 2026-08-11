@@ -135,10 +135,12 @@ def _expand_imported_occurrences(
             window_end = range_end_utc.astimezone(zone)
         duration = _imported_duration(task, is_all_day=is_all_day)
         raw_occurrences = rule_set.xafter(window_start - timedelta(seconds=1), count=budget + 2, inc=False)
-        task_id = str(task_value(task, "id") or "")
-        task_name = str(task_value(task, "name") or "")
+        series_id = str(task_value(task, "id") or "")
+        series_name = str(task_value(task, "name") or "")
         raw_item = task_value(task, "item_id")
         item_id = str(raw_item).strip() if isinstance(raw_item, str) and str(raw_item).strip() else None
+        raw_workset = task_value(task, "workset_id")
+        workset_id = str(raw_workset).strip() if raw_workset not in (None, "") else None
         built: list[tuple[Any, dict[str, Any]]] = []
         for occurrence in raw_occurrences:
             if occurrence > window_end + timedelta(seconds=1):
@@ -164,10 +166,10 @@ def _expand_imported_occurrences(
                 (
                     occurrence,
                     {
-                        "id": f"{task_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
-                        "taskId": task_id,
-                        "taskName": task_name,
-                        "title": task_name,
+                        "id": f"{series_id}:{start_dt.strftime('%Y%m%dT%H%M%SZ')}",
+                        "seriesId": series_id,
+                        "taskName": series_name,
+                        "title": series_name,
                         "startTime": rrule_mod._iso_z(start_dt),
                         "endTime": rrule_mod._iso_z(end_dt),
                         "isAllDay": is_all_day,
@@ -179,6 +181,7 @@ def _expand_imported_occurrences(
                         "location": task_value(task, "event_location") or None,
                         "description": task_value(task, "event_description") or None,
                         "rrule": rule,
+                        "worksetId": workset_id,
                         "itemId": item_id,
                     },
                 )

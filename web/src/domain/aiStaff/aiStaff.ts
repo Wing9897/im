@@ -61,8 +61,7 @@ export function getAiStaff(id: AiStaffId): AiStaffDefinition {
   return found;
 }
 
-/** Analysis task mode → back-office staff (calendar has no LLM staff). */
+/** Analysis task mode → back-office staff. */
 export function staffIdForAnalysisMode(mode: AnalysisMode): AiStaffId | null {
-  if (mode === "recurring") return null;
   return mode;
 }

@@ -1,8 +1,8 @@
 /**
- * Manage-area schedule page: one-off user events + recurring calendar tasks.
+ * Manage-area schedule page: unified list of one-off user events + recurring series.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { listItems } from "../../api/items";
@@ -16,16 +16,14 @@ import {
   CardGrid,
   LoadMoreFooter,
 } from "../../components/ui";
-import {
-  SCHEDULE_SEARCH_STORAGE_KEY,
-  SCHEDULE_TAB_STORAGE_KEY,
-} from "../../domain/prefs";
+import { SCHEDULE_SEARCH_STORAGE_KEY } from "../../domain/prefs";
 import { useErrorToast } from "../../hooks/useErrorToast";
-import { usePersistedEnum, usePersistedState } from "../../hooks/usePersistedState";
+import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
+import { usePersistedState } from "../../hooks/usePersistedState";
 import { useSlashFocusSearch } from "../../hooks/useSlashFocusSearch";
 import { ScheduleOneOffCard, ScheduleRecurringCard } from "./ScheduleEventCard";
+import { mergeScheduleList } from "./scheduleList";
 import { ScheduleToolbar } from "./ScheduleToolbar";
-import { isScheduleTab, type ScheduleTab } from "./scheduleConfig";
 import { useScheduleOneOffFeed } from "./useScheduleOneOffFeed";
 import { useSchedulePageDialogs } from "./useSchedulePageDialogs";
 import { useScheduleRecurringFeed } from "./useScheduleRecurringFeed";
@@ -33,17 +31,13 @@ import { useScheduleRecurringFeed } from "./useScheduleRecurringFeed";
 export function SchedulePage() {
   const { t } = useTranslation("schedule");
   const { t: tCommon } = useTranslation("common");
-  const [tab, setTab] = usePersistedEnum<ScheduleTab>(
-    SCHEDULE_TAB_STORAGE_KEY,
-    "oneOff",
-    isScheduleTab,
-  );
   const [searchQuery, setSearchQuery] = usePersistedState(SCHEDULE_SEARCH_STORAGE_KEY, "", {
     persistDebounceMs: 400,
     storage: "session",
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [itemTitleById, setItemTitleById] = useState<Map<string, string>>(new Map());
+  const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
 
   useSlashFocusSearch(true);
 
@@ -74,54 +68,55 @@ export function SchedulePage() {
     };
   }, []);
 
-  const oneOff = useScheduleOneOffFeed({
-    enabled: tab === "oneOff",
-    debouncedSearch,
-  });
-  const recurring = useScheduleRecurringFeed({
-    enabled: tab === "recurring",
-    debouncedSearch,
-  });
+  const oneOff = useScheduleOneOffFeed({ debouncedSearch });
+  const recurring = useScheduleRecurringFeed({ debouncedSearch });
 
   const dialogs = useSchedulePageDialogs({
-    tab,
     reloadOneOff: oneOff.reload,
     reloadRecurring: recurring.reload,
   });
 
-  const feedError = tab === "oneOff" ? oneOff.error : recurring.error;
+  const entries = useMemo(
+    () => mergeScheduleList(oneOff.items, recurring.items),
+    [oneOff.items, recurring.items],
+  );
+
+  const feedError = oneOff.error || recurring.error;
   useErrorToast(feedError);
 
   const loading =
-    tab === "oneOff"
-      ? oneOff.initialLoading && oneOff.items.length === 0
-      : recurring.initialLoading && recurring.items.length === 0;
+    (oneOff.initialLoading || recurring.initialLoading) && entries.length === 0;
+  const itemsEmpty = !loading && entries.length === 0;
+  const hasMore = oneOff.hasMore || recurring.hasMore;
+  const loadingMore = oneOff.loadingMore || recurring.loadingMore;
+  const shownCount = oneOff.items.length + recurring.items.length;
+  const totalCount = oneOff.totalCount + recurring.totalCount;
 
-  const itemsEmpty =
-    tab === "oneOff" ? oneOff.items.length === 0 : recurring.items.length === 0;
+  const loadMore = useCallback(() => {
+    void oneOff.loadMore();
+    void recurring.loadMore();
+  }, [oneOff.loadMore, recurring.loadMore]);
+
+  useInfiniteScroll({
+    triggerNode: loadMoreNode,
+    onLoadMore: loadMore,
+    disabled: loading || !hasMore,
+    root: null,
+    rootMargin: "0px 0px 240px 0px",
+  });
 
   const loadMoreHint = useMemo(() => {
-    if (tab === "oneOff") {
-      return oneOff.hasMore
-        ? t("loadMoreHintHasMore", { shown: oneOff.items.length })
-        : t("loadMoreHint", { shown: oneOff.items.length, total: oneOff.totalCount });
-    }
-    return recurring.hasMore
-      ? t("loadMoreHintHasMore", { shown: recurring.items.length })
-      : t("loadMoreHint", {
-          shown: recurring.items.length,
-          total: recurring.totalCount,
-        });
-  }, [oneOff, recurring, t, tab]);
+    return hasMore
+      ? t("loadMoreHintHasMore", { shown: shownCount })
+      : t("loadMoreHint", { shown: shownCount, total: totalCount });
+  }, [hasMore, shownCount, t, totalCount]);
 
   return (
     <div className="im-schedule-page" data-testid="schedule-page">
       <AppPageShell width="fluid">
         <ScheduleToolbar
           t={t}
-          tab={tab}
           searchQuery={searchQuery}
-          onTabChange={setTab}
           onSearchQueryChange={setSearchQuery}
           onCreate={dialogs.openCreate}
         />
@@ -130,8 +125,8 @@ export function SchedulePage() {
 
         {!loading && itemsEmpty ? (
           <EmptyState
-            title={tab === "oneOff" ? t("empty.oneOff") : t("empty.recurring")}
-            description={tab === "oneOff" ? t("empty.oneOffHint") : t("empty.recurringHint")}
+            title={t("empty.title")}
+            description={t("empty.hint")}
             actions={
               <Button variant="primary" onClick={dialogs.openCreate} data-testid="schedule-empty-create">
                 {t("create")}
@@ -140,68 +135,51 @@ export function SchedulePage() {
           />
         ) : null}
 
-        {!loading && !itemsEmpty && tab === "oneOff" ? (
+        {!loading && !itemsEmpty ? (
           <>
-            <div aria-label={t("gridAria")} data-testid="schedule-one-off-grid">
+            <div aria-label={t("gridAria")} data-testid="schedule-grid">
               <CardGrid>
-                {oneOff.items.map((event) => (
-                  <ScheduleOneOffCard
-                    key={event.id}
-                    event={event}
-                    worksetName={
-                      event.worksetId
-                        ? dialogs.worksetNameById.get(event.worksetId) ?? null
-                        : null
-                    }
-                    itemLabel={
-                      event.itemId ? itemTitleById.get(event.itemId) ?? event.itemId : null
-                    }
-                    onEdit={() => dialogs.openEditOneOff(event)}
-                    onDelete={() => dialogs.requestDeleteOneOff(event)}
-                  />
-                ))}
+                {entries.map((entry) =>
+                  entry.kind === "oneOff" ? (
+                    <ScheduleOneOffCard
+                      key={`oneOff:${entry.event.id}`}
+                      event={entry.event}
+                      worksetName={
+                        entry.event.worksetId
+                          ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
+                          : null
+                      }
+                      itemLabel={
+                        entry.event.itemId
+                          ? itemTitleById.get(entry.event.itemId) ?? entry.event.itemId
+                          : null
+                      }
+                      onEdit={() => dialogs.openEditOneOff(entry.event)}
+                      onDelete={() => dialogs.requestDeleteOneOff(entry.event)}
+                    />
+                  ) : (
+                    <ScheduleRecurringCard
+                      key={`recurring:${entry.series.id}`}
+                      task={entry.series}
+                      worksetName={
+                        entry.series.worksetId
+                          ? dialogs.worksetNameById.get(entry.series.worksetId) ?? null
+                          : null
+                      }
+                      onEdit={() => dialogs.openEditRecurring(entry.series)}
+                      onDelete={() => dialogs.requestDeleteRecurring(entry.series)}
+                      onToggleActive={() => dialogs.toggleRecurringActive(entry.series)}
+                    />
+                  ),
+                )}
               </CardGrid>
             </div>
             <LoadMoreFooter
-              ref={oneOff.setLoadMoreTriggerRef}
+              ref={setLoadMoreNode}
               hint={loadMoreHint}
-              hasMore={oneOff.hasMore}
-              loadingMore={oneOff.loadingMore}
-              onLoadMore={() => {
-                void oneOff.loadMore();
-              }}
-              asDataListFooter={false}
-            />
-          </>
-        ) : null}
-
-        {!loading && !itemsEmpty && tab === "recurring" ? (
-          <>
-            <div aria-label={t("gridAria")} data-testid="schedule-recurring-grid">
-              <CardGrid>
-                {recurring.items.map((task) => (
-                  <ScheduleRecurringCard
-                    key={task.id}
-                    task={task}
-                    worksetName={
-                      task.worksetId
-                        ? dialogs.worksetNameById.get(task.worksetId) ?? null
-                        : null
-                    }
-                    onEdit={() => dialogs.openEditRecurring(task)}
-                    onDelete={() => dialogs.requestDeleteRecurring(task)}
-                  />
-                ))}
-              </CardGrid>
-            </div>
-            <LoadMoreFooter
-              ref={recurring.setLoadMoreTriggerRef}
-              hint={loadMoreHint}
-              hasMore={recurring.hasMore}
-              loadingMore={recurring.loadingMore}
-              onLoadMore={() => {
-                recurring.loadMore();
-              }}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadMore}
               asDataListFooter={false}
             />
           </>
@@ -214,7 +192,6 @@ export function SchedulePage() {
           worksetOptions={dialogs.worksetOptions}
           busy={dialogs.dialogBusy}
           error={dialogs.dialogError}
-          titleOverride={dialogs.dialogTitleOverride}
           parentItemMode="editable"
           onClose={dialogs.closeDialog}
           onSubmit={(values) => {

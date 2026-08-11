@@ -63,7 +63,7 @@ describe("CalendarImportHost", () => {
         {
           uid: "series-1",
           title: "Weekly sync",
-          targetType: "recurring_task",
+          targetType: "recurring",
           action: "update",
           supported: true,
           existingId: "task-1",
@@ -107,7 +107,7 @@ describe("CalendarImportHost", () => {
       results: [
         {
           uid: "series-1",
-          targetType: "recurring_task",
+          targetType: "recurring",
           targetId: "task-1",
           action: "updated",
         },
@@ -177,7 +177,7 @@ describe("CalendarImportHost", () => {
     expect(document.querySelector('[data-testid="calendar-import-results"]')).not.toBeNull();
     expect(document.body.textContent).toMatch(/Weekly sync/);
     expect(mockEmitResourceModified).toHaveBeenCalledWith({
-      resourceType: "task",
+      resourceType: "recurring",
       resourceId: "task-1",
       action: "updated",
     });

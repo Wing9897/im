@@ -48,7 +48,7 @@ describe("eventListCardMeta", () => {
   it("resolves provenance kinds per source/origin", () => {
     expect(
       resolveEventListProvenanceKind(
-        makeTimelineItem({ source: "item", itemDateKind: "remind" }),
+        makeTimelineItem({ source: "item_remind", itemDateKind: "remind" }),
       ),
     ).toBe("item");
     expect(
@@ -143,12 +143,12 @@ describe("eventListCardMeta", () => {
   it("shows unified remind badge for item remind + user remindBeforeDays", () => {
     expect(
       eventShowsRemindBadge(
-        makeTimelineItem({ source: "item", itemDateKind: "remind" }),
+        makeTimelineItem({ source: "item_remind", itemDateKind: "remind" }),
       ),
     ).toBe(true);
     expect(
       eventShowsRemindBadge(
-        makeTimelineItem({ source: "item", itemDateKind: undefined }),
+        makeTimelineItem({ source: "item_remind", itemDateKind: undefined }),
       ),
     ).toBe(false);
 
@@ -200,7 +200,7 @@ describe("eventListCardMeta", () => {
       eventListCardTitle(
         makeTimelineItem({
           title: "提醒 · milk",
-          source: "item",
+          source: "item_remind",
           itemDateKind: "remind",
         }),
         { showRemindBadge: true },
@@ -210,7 +210,7 @@ describe("eventListCardMeta", () => {
       eventListCardTitle(
         makeTimelineItem({
           title: "milk",
-          source: "item",
+          source: "item_remind",
           itemDateKind: undefined,
         }),
         { showRemindBadge: false },
@@ -220,7 +220,7 @@ describe("eventListCardMeta", () => {
       eventListCardTitle(
         makeTimelineItem({
           title: "提醒 · milk",
-          source: "item",
+          source: "item_remind",
           itemDateKind: "remind",
         }),
         { showRemindBadge: false },
@@ -251,7 +251,7 @@ describe("eventListCardMeta", () => {
 
     const importantRemind = makeTimelineItem({
       title: "提醒 · milk",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       important: true,
       isAllDay: true,

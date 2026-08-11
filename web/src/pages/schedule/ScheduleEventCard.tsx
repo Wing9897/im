@@ -1,7 +1,9 @@
 import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { UserEvent } from "../../api/userEvents";
+import { ToggleSwitch } from "../../components/ToggleSwitch";
 import { AccentBarCard, Badge, FeedCard } from "../../components/ui";
 import { cardTitleClass } from "../../components/ui/pageTypography";
 import { rruleFreqKey } from "../../domain/schedule/rruleSummary";
@@ -49,8 +51,11 @@ export function ScheduleOneOffCard({
       density="default"
       style={{ borderLeft: "3px solid var(--accent)" }}
       header={
-        <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={event.title}>
-          {event.title}
+        <div className="flex items-start gap-2">
+          <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={event.title}>
+            {event.title}
+          </div>
+          <Badge tone="neutral">{t("badge.oneOff")}</Badge>
         </div>
       }
       meta={
@@ -94,13 +99,16 @@ export function ScheduleRecurringCard({
   worksetName,
   onEdit,
   onDelete,
+  onToggleActive,
 }: {
   task: ScheduleRecurringItem;
   worksetName: string | null;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleActive: () => Promise<void>;
 }) {
   const { t } = useTranslation("schedule");
+  const [toggling, setToggling] = useState(false);
   const freqKey = rruleFreqKey(task.rrule);
   const rruleLabel = task.rrule.trim()
     ? t(`rruleFreq.${freqKey}`)
@@ -116,7 +124,7 @@ export function ScheduleRecurringCard({
         <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={task.name}>
           {task.name}
         </div>
-        <Badge tone="info">{t("tabs.recurring")}</Badge>
+        <Badge tone="info">{t("badge.recurring")}</Badge>
       </div>
       <div className="flex flex-wrap items-center gap-1.5 text-caption text-text-secondary">
         <span>
@@ -133,6 +141,16 @@ export function ScheduleRecurringCard({
         <p className="line-clamp-3 text-body text-text-secondary">{task.description.trim()}</p>
       ) : null}
       <div className="mt-auto flex items-center justify-end gap-1 pt-1">
+        <ToggleSwitch
+          checked={task.isActive}
+          disabled={toggling}
+          showLabel={false}
+          label={task.isActive ? t("editor.pause") : t("editor.resume")}
+          onChange={() => {
+            setToggling(true);
+            void onToggleActive().finally(() => setToggling(false));
+          }}
+        />
         <button
           type="button"
           className={actionIconBtnClass}

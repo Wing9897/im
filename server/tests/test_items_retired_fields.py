@@ -193,7 +193,7 @@ async def test_patch_item_workset_syncs_linked_calendars(client):
     event_id = ev.json()["id"]
 
     recurring = await client.post(
-        "/api/v1/tasks/recurring",
+        "/api/v1/calendar/recurring",
         json={
             "name": "Weekly check",
             "rrule": "FREQ=WEEKLY;BYDAY=MO",
@@ -217,9 +217,9 @@ async def test_patch_item_workset_syncs_linked_calendars(client):
     assert fetched_ev.json()["worksetId"] == workset_b
 
     fetched_task = await client.get(
-        "/api/v1/tasks",
-        params={"itemId": item_id, "analysisMode": "recurring"},
+        "/api/v1/calendar/recurring",
+        params={"itemId": item_id},
     )
     assert fetched_task.status_code == 200
-    assert len(fetched_task.json()) == 1
-    assert fetched_task.json()[0]["worksetId"] == workset_b
+    assert len(fetched_task.json()["items"]) == 1
+    assert fetched_task.json()["items"][0]["worksetId"] == workset_b

@@ -14,15 +14,14 @@ type ChannelRef = components["schemas"]["ChannelRefResponse"];
 type TaskResponse = components["schemas"]["TaskResponse"];
 
 /**
- * Persisted task returned by list/create/update. Recurring calendar fields live
- * on ``GET/PUT /api/v1/tasks/{id}/schedule``, not on the task body.
- *
- * Recurring-only recurrence expanded at query time — never an AI analysis trigger.
+ * Persisted analysis task returned by list/create/update.
+ * Standalone recurring calendar series use ``/api/v1/calendar/recurring``, not this type.
  */
 export type AnalysisTask = Omit<
   TaskResponse,
   | "description"
   | "analysisTimeRange"
+  | "analysisMode"
   | "channelIds"
   | "includeInTimeline"
   | "createdAt"
@@ -30,6 +29,7 @@ export type AnalysisTask = Omit<
 > & {
   description: string | null;
   analysisTimeRange: TaskAnalysisTimeRange;
+  analysisMode: AnalysisMode;
   channelIds: ChannelRef[];
   includeInTimeline?: boolean | null;
   createdAt: string;
@@ -44,8 +44,6 @@ export type AnalysisTask = Omit<
   capReadItems?: boolean;
   outputCalendar?: boolean;
   outputAnalysisEvents?: boolean;
-  /** Parent inventory item for recurring calendars (``recurring_schedules.item_id``). */
-  itemId?: string | null;
 };
 
 /** Configuration payload for creating/updating an analysis task.

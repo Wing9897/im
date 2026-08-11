@@ -78,7 +78,7 @@ describe("TimelineCalendarView markers", () => {
       const remind = makeEvent({
         id: "item:milk:remind",
         title: "提醒 · milk",
-        source: "item",
+        source: "item_remind",
         itemDateKind: "remind",
         isAllDay: true,
         startTime: "2025-01-05T00:00:00",
@@ -107,7 +107,7 @@ describe("TimelineCalendarView markers", () => {
     const importantPreviewItem = makeEvent({
       id: "item-important-preview",
       title: "提醒 · milk",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       important: true,
       startTime: "2025-01-15T00:00:00",
@@ -116,7 +116,7 @@ describe("TimelineCalendarView markers", () => {
     const importantItem = makeEvent({
       id: "item-important",
       title: "milk",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       important: true,
       startTime: "2025-01-15T00:00:00",
@@ -186,7 +186,7 @@ describe("TimelineCalendarView markers", () => {
       const remind = makeEvent({
         id: "item-remind",
         title: "提醒 · milk",
-        source: "item",
+        source: "item_remind",
         itemDateKind: "remind",
         startTime: "2025-01-15T00:00:00",
         endTime: "2025-01-15T23:59:59",

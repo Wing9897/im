@@ -77,7 +77,7 @@ class TaskResponse(BaseModel):
     includeInTimeline: bool = True
     parentTaskId: str | None = None
     worksetId: str | None = None
-    #: Parent inventory item for ``analysisMode=recurring`` calendars (``recurring_schedules.item_id``).
+    #: Reserved task linkage field; standalone recurring series use ``RecurringSeriesResponse.itemId``.
     itemId: str | None = None
     agentWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
@@ -100,7 +100,7 @@ class TaskResponse(BaseModel):
 
 
 class TaskScheduleResponse(BaseModel):
-    """Recurring calendar plan for ``analysisMode=recurring`` tasks."""
+    """Retired task-schedule shape kept only for internal serializer compatibility."""
 
     taskId: str
     rrule: str

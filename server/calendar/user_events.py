@@ -196,13 +196,7 @@ async def create_user_event(
     kind: Any = None,
     amount: Any = None,
     direction: Any = None,
-    sync_item_dates: bool = True,
 ) -> dict[str, Any]:
-    from server.items.linked_dates import (
-        is_linked_expiry_kind,
-        sync_item_dates_from_linked_calendars,
-    )
-
     clean_title = _require_nonempty_title(title)
     clean_start = _require_start_time(start_time)
     clean_end = _normalize_optional_end(end_time, clean_start)
@@ -264,8 +258,6 @@ async def create_user_event(
             now,
         ),
     )
-    if sync_item_dates and clean_item_id and is_linked_expiry_kind(clean_kind):
-        await sync_item_dates_from_linked_calendars(db, clean_item_id)
     item = await get_user_event(db, event_id)
     assert item is not None
     return item
@@ -288,14 +280,8 @@ async def update_user_event(
     kind: Any = _UNSET,
     amount: Any = _UNSET,
     direction: Any = _UNSET,
-    sync_item_dates: bool = True,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
-    from server.items.linked_dates import (
-        is_linked_expiry_kind,
-        sync_item_dates_from_linked_calendars,
-    )
-
     existing = await get_user_event_row(db, event_id)
     if existing is None:
         return None
@@ -391,12 +377,6 @@ async def update_user_event(
             event_id,
         ),
     )
-    if sync_item_dates:
-        touched_expires = is_linked_expiry_kind(prev_kind) or is_linked_expiry_kind(next_kind)
-        if prev_item_id and touched_expires:
-            await sync_item_dates_from_linked_calendars(db, prev_item_id)
-        if next_item_id and next_item_id != prev_item_id and touched_expires:
-            await sync_item_dates_from_linked_calendars(db, next_item_id)
     item = await get_user_event(db, event_id)
     assert item is not None
     return item
@@ -404,18 +384,8 @@ async def update_user_event(
 
 async def delete_user_event(db: Database, event_id: str) -> bool:
     """Soft-dismiss a user event for the timeline (row retained for restore)."""
-    from server.items.linked_dates import (
-        is_linked_expiry_kind,
-        sync_item_dates_from_linked_calendars,
-    )
-
     existing = await get_user_event_row(db, event_id)
     if existing is None:
         return False
     await dismiss_timeline_event(db, source="user", event_id=event_id)
-    raw_iid = existing.get("item_id")
-    item_id = str(raw_iid).strip() if isinstance(raw_iid, str) and raw_iid.strip() else None
-    kind = str(existing.get("kind") or "")
-    if item_id and is_linked_expiry_kind(kind):
-        await sync_item_dates_from_linked_calendars(db, item_id)
     return True

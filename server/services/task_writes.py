@@ -1,10 +1,7 @@
-"""Task-write validation shared by ``/api/v1/tasks`` and the calendar agent tools.
+"""Task-write validation shared by ``/api/v1/tasks`` and related writers.
 
-Both writers used to carry their own copy of the recurrence rules: the REST
-routes validated RRULE but stored it verbatim, while the agent validated and
-never checked that the mode allowed a recurrence at all. Everything that
-decides *whether* a task write is legal and *what* gets stored now lives here,
-so the two callers can only differ in how they report the rejection.
+Calendar RRULE series live on ``recurring_schedules`` and are validated via
+``normalize_rrule`` / series writers — not via analysis-task mode.
 """
 
 from __future__ import annotations
@@ -14,14 +11,11 @@ from typing import Any
 
 from server.calendar.rrule import RruleValidationError, validate_rrule
 from server.domain.agent_task_spec import TRIGGER_MESSAGE_CURSOR
-from server.domain.analysis_modes import (
-    AGENT_MODE,
-    CHILD_RECURRING_MODE,
-)
+from server.domain.analysis_modes import AGENT_MODE
 from server.time_iso import parse_iso
 
-#: Only ``analysisMode=recurring`` may carry a recurrence; it is never an AI trigger.
-RRULE_RECURRING_ONLY_MESSAGE = "RRULE is recurring-only and cannot schedule analysis tasks"
+#: Calendar RRULE must not be written onto analysis tasks.
+RRULE_RECURRING_ONLY_MESSAGE = "RRULE calendar series use POST /calendar/recurring; analysis tasks use scheduleRrule only"
 
 _RRULE_PREFIX = "RRULE:"
 _CLOCK_RE = re.compile(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$")
@@ -45,21 +39,6 @@ def normalize_rrule(rrule_raw: Any) -> str:
     except RruleValidationError as exc:
         raise TaskWriteError(f"Invalid RRULE ({exc.code}): {exc}") from exc
     return text
-
-
-def validate_task_recurrence(*, effective_mode: str, supplied_rrule: Any | None) -> str | None:
-    """Return the recurrence to store, or raise ``TaskWriteError``.
-
-    ``None`` means the caller supplied no recurrence — for a calendar task that
-    clears the rule, and for any other mode it is simply the normal case.
-    """
-    if effective_mode != CHILD_RECURRING_MODE:
-        if supplied_rrule is not None:
-            raise TaskWriteError(RRULE_RECURRING_ONLY_MESSAGE)
-        return None
-    if supplied_rrule is None:
-        return None
-    return normalize_rrule(supplied_rrule)
 
 
 def normalize_event_clock(value: Any) -> str | None:
@@ -90,12 +69,8 @@ def resolve_include_in_timeline(
     supplied: bool | None,
     existing: bool | int | None = None,
 ) -> int:
-    """Calendar tasks always appear in time planning; others honor the checkbox.
-
-    ``supplied is None`` keeps ``existing`` on update, or defaults to on for create.
-    """
-    if effective_mode == CHILD_RECURRING_MODE:
-        return 1
+    """Honor the checkbox; default on for create when unset."""
+    del effective_mode
     if supplied is not None:
         return 1 if supplied else 0
     if existing is not None:
@@ -131,6 +106,33 @@ def should_reset_agent_message_cursor(
     return channels_changed
 
 
+def resolve_series_parent_task_id(
+    *,
+    series_id: str | None,
+    supplied_parent_task_id: str | None,
+    existing_parent_task_id: str | None = None,
+    parent_mode: str | None = None,
+) -> str | None:
+    """Resolve ``parent_task_id`` for a recurring series, or raise ``TaskWriteError``.
+
+    Invariants:
+    - Parent must be ``analysis_mode=agent`` when ``parent_mode`` is provided.
+    - Self-reference is forbidden (series id ≠ parent task id).
+    """
+    parent = supplied_parent_task_id
+    if parent is None:
+        parent = existing_parent_task_id
+    if parent is None or str(parent).strip() == "":
+        return None
+
+    parent_id = str(parent).strip()
+    if series_id is not None and parent_id == str(series_id):
+        raise TaskWriteError("parent_task_id cannot reference the series itself")
+    if parent_mode is not None and parent_mode != AGENT_MODE:
+        raise TaskWriteError(f"parent_task_id must reference an agent task (got analysis_mode={parent_mode!r})")
+    return parent_id
+
+
 def resolve_parent_task_id(
     *,
     task_id: str | None,
@@ -139,28 +141,9 @@ def resolve_parent_task_id(
     existing_parent_task_id: str | None = None,
     parent_mode: str | None = None,
 ) -> str | None:
-    """Resolve ``parent_task_id`` for create/update, or raise ``TaskWriteError``.
-
-    Invariants:
-    - Only ``recurring`` children may carry a parent; other modes always clear it.
-    - Parent must be ``analysis_mode=agent`` when ``parent_mode`` is provided.
-    - Self-reference is forbidden.
-    """
-    if effective_mode != CHILD_RECURRING_MODE:
-        return None
-
-    parent = supplied_parent_task_id
-    if parent is None:
-        parent = existing_parent_task_id
-    if parent is None or str(parent).strip() == "":
-        return None
-
-    parent_id = str(parent).strip()
-    if task_id is not None and parent_id == str(task_id):
-        raise TaskWriteError("parent_task_id cannot reference the task itself")
-    if parent_mode is not None and parent_mode != AGENT_MODE:
-        raise TaskWriteError(f"parent_task_id must reference an agent task (got analysis_mode={parent_mode!r})")
-    return parent_id
+    """Analysis tasks never carry ``parent_task_id`` (series-only relation)."""
+    del task_id, effective_mode, supplied_parent_task_id, existing_parent_task_id, parent_mode
+    return None
 
 
 async def assert_parent_agent_row(db: Any, parent_task_id: str) -> str:
@@ -178,11 +161,7 @@ async def assert_parent_agent_row(db: Any, parent_task_id: str) -> str:
 
 
 async def clear_children_parent_links(db: Any, parent_task_id: str, *, now: str) -> int:
-    """Clear ``parent_task_id`` on children when an agent parent leaves agent mode.
-
-    Orphan FK pointers at a non-agent parent are not allowed; clearing the
-    link keeps child recurring rows as top-level instead of rejecting the mode change.
-    """
+    """Clear ``parent_task_id`` on child series when an agent parent leaves agent mode."""
     return int(
         await db.execute(
             "UPDATE recurring_schedules SET parent_task_id = NULL, updated_at = ? WHERE parent_task_id = ?",

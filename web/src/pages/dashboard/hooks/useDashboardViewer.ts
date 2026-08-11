@@ -85,9 +85,9 @@ export function useDashboardViewer() {
     return map;
   }, [taskStats, activeAnalysesByTaskId, queueStatus, paused]);
 
-  /** Agent children stay under `/tasks/:id/agent`; recurring lives on `/schedule`. */
+  /** Agent children stay under `/tasks/:id/agent`. */
   const gridTasks = useMemo(
-    () => selectTopLevelTasks(tasks).filter((task) => task.analysisMode !== "recurring"),
+    () => selectTopLevelTasks(tasks),
     [tasks],
   );
 
@@ -128,14 +128,9 @@ export function useDashboardViewer() {
 
   const handleEdit = useCallback(
     (taskId: string) => {
-      const task = tasks.find((row) => row.id === taskId);
-      if (task?.analysisMode === "recurring") {
-        navigate(`/schedule/recurring/${taskId}/edit`);
-        return;
-      }
       navigate(`/tasks/${taskId}/edit`);
     },
-    [navigate, tasks],
+    [navigate],
   );
 
   const handleOpenProject = useCallback(

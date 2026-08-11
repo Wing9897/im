@@ -33,8 +33,8 @@
 |------|------|
 | `calendar.*` 讀 | 預設本專案（含 `parent_task_id` 子 recurring 展開） |
 | `create/update/delete_event` | 強制 `task_id=本專案`（需 `cap_calendar_writes`／`output_calendar`） |
-| `create_recurring_task` | `analysisMode=recurring` 且 `parent_task_id=本專案` |
-| `update/delete_recurring_task` | 僅允許本專案子列（否則 error） |
+| `create_recurring_series` | 建立獨立 recurring series，且 `parent_task_id=本專案` |
+| `update/delete_recurring_series` | 僅允許本專案子列（否則 error） |
 | `messages.search` | 限制在 `task_channels` |
 | `items.list`／`items.list_expiring` | 可依 `cap_read_items` 開啟；**預設由 spec 決定** |
 | `items.create`／`items.update` | **agent channel 一律關閉**（schema 省略 + dispatch 拒絕）。助手／A2A 仍可寫庫存 |

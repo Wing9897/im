@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import type { UserEvent } from "../../api/userEvents";
 import { makeAnalysisTask } from "../../test/context-mocks";
 import type { TaskActivitySpan } from "../../types/analysis";
+import type { RecurringSeries } from "../../types/recurring";
 import {
   findActivitySpan,
   isAgentCalendarTask,
-  mergeChildRrules,
   selectOwnedUserEvents,
   selectProjectChildren,
   selectTopLevelTasks,
@@ -19,58 +19,51 @@ describe("agentTaskSelectors", () => {
     analysisMode: "agent",
     outputCalendar: true,
   });
-  const child = makeAnalysisTask({
+  const child = {
     id: "child-1",
     name: "Standup",
-    analysisMode: "recurring",
     parentTaskId: "proj-1",
-  });
+  } as RecurringSeries;
   const other = makeAnalysisTask({
     id: "event-1",
     name: "Watch",
     analysisMode: "intel_event",
   });
-  const orphanChild = makeAnalysisTask({
+  const orphanChild = {
     id: "child-2",
     name: "Other standup",
-    analysisMode: "recurring",
     parentTaskId: "proj-2",
-  });
+  } as RecurringSeries;
 
   it("detects project mode", () => {
     expect(isAgentCalendarTask(project)).toBe(true);
-    expect(isAgentCalendarTask(child)).toBe(false);
     expect(isAgentCalendarTask(null)).toBe(false);
   });
 
   it("selects only child recurring under the project", () => {
-    expect(selectProjectChildren([project, child, other, orphanChild], "proj-1")).toEqual([
-      child,
-    ]);
+    expect(selectProjectChildren([child, orphanChild], "proj-1")).toEqual([child]);
   });
 
   it("hides parent-linked tasks from the top-level grid", () => {
-    expect(selectTopLevelTasks([project, child, other])).toEqual([project, other]);
+    expect(selectTopLevelTasks([project, other])).toEqual([project, other]);
   });
 
   it("keeps children in the full catalog path: dashboard top-level only, project detail still selects children", () => {
     // Shared catalog loads full GET /tasks (no top_level_only). Both filters
     // run client-side over the same list — do not server-filter the catalog.
-    const catalog = [project, child, other, orphanChild];
+    const catalog = [project, other];
     expect(catalog.map((task) => task.id)).toEqual([
       "proj-1",
-      "child-1",
       "event-1",
-      "child-2",
     ]);
     expect(selectTopLevelTasks(catalog).map((task) => task.id)).toEqual([
       "proj-1",
       "event-1",
     ]);
-    expect(selectProjectChildren(catalog, "proj-1").map((task) => task.id)).toEqual([
+    expect(selectProjectChildren([child, orphanChild], "proj-1").map((task) => task.id)).toEqual([
       "child-1",
     ]);
-    expect(selectProjectChildren(catalog, "proj-2").map((task) => task.id)).toEqual([
+    expect(selectProjectChildren([child, orphanChild], "proj-2").map((task) => task.id)).toEqual([
       "child-2",
     ]);
   });
@@ -151,33 +144,4 @@ describe("agentTaskSelectors", () => {
     expect(findActivitySpan(spans, "proj-1")).toBeNull();
   });
 
-  it("mergeChildRrules: missing schedule stays empty without error", () => {
-    const merged = mergeChildRrules(new Map(), [
-      { childId: "child-1", kind: "missing" },
-      { childId: "child-2", kind: "ok", rrule: "" },
-    ]);
-    expect(merged.rrules.size).toBe(0);
-    expect(merged.error).toBeNull();
-  });
-
-  it("mergeChildRrules: failure preserves last success and surfaces error", () => {
-    const prev = new Map([["child-1", "FREQ=DAILY"], ["child-2", "FREQ=WEEKLY"]]);
-    const merged = mergeChildRrules(prev, [
-      { childId: "child-1", kind: "error", message: "schedule upstream timeout" },
-      { childId: "child-2", kind: "ok", rrule: "FREQ=MONTHLY" },
-      { childId: "child-3", kind: "error", message: "second failure" },
-    ]);
-    expect(merged.rrules.get("child-1")).toBe("FREQ=DAILY");
-    expect(merged.rrules.get("child-2")).toBe("FREQ=MONTHLY");
-    expect(merged.rrules.has("child-3")).toBe(false);
-    expect(merged.error).toBe("schedule upstream timeout");
-  });
-
-  it("mergeChildRrules: failure without prior value does not invent empty RRULE", () => {
-    const merged = mergeChildRrules(new Map(), [
-      { childId: "child-1", kind: "error", message: "boom" },
-    ]);
-    expect(merged.rrules.size).toBe(0);
-    expect(merged.error).toBe("boom");
-  });
 });

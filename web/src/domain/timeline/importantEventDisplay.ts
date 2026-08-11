@@ -17,7 +17,7 @@ export function resolveCalendarLeadingGlyph(event: {
   if (event.important) {
     return { type: "important", emoji: IMPORTANT_EVENT_EMOJI };
   }
-  if (event.source === "item" && event.itemDateKind === "remind") {
+  if (event.source === "item_remind" && event.itemDateKind === "remind") {
     return {
       type: "item",
       emoji: itemDateKindEmoji("remind"),

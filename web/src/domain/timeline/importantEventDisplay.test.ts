@@ -11,7 +11,7 @@ describe("resolveCalendarLeadingGlyph", () => {
     expect(
       resolveCalendarLeadingGlyph({
         important: true,
-        source: "item",
+        source: "item_remind",
         itemDateKind: "remind",
       }),
     ).toEqual({ type: "important", emoji: IMPORTANT_EVENT_EMOJI });
@@ -21,14 +21,14 @@ describe("resolveCalendarLeadingGlyph", () => {
     expect(
       resolveCalendarLeadingGlyph({
         important: false,
-        source: "item",
+        source: "item_remind",
         itemDateKind: undefined,
       }),
     ).toBeNull();
     expect(
       resolveCalendarLeadingGlyph({
         important: false,
-        source: "item",
+        source: "item_remind",
         itemDateKind: "stale",
       }),
     ).toBeNull();
@@ -38,7 +38,7 @@ describe("resolveCalendarLeadingGlyph", () => {
     expect(
       resolveCalendarLeadingGlyph({
         important: false,
-        source: "item",
+        source: "item_remind",
         itemDateKind: "remind",
       }),
     ).toEqual({
@@ -72,14 +72,14 @@ describe("monthPreviewTitle", () => {
     expect(
       monthPreviewTitle({
         title: "milk",
-        source: "item",
+        source: "item_remind",
         itemDateKind: undefined,
       }),
     ).toBe("milk");
     expect(
       monthPreviewTitle({
         title: "提醒 · milk",
-        source: "item",
+        source: "item_remind",
         itemDateKind: "remind",
       }),
     ).toBe("提醒 · milk");

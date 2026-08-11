@@ -1,7 +1,7 @@
 import type { TimelineItem } from "../../types";
 
 /**
- * One Gantt lane: a non-recurring event, or all RRULE occurrences of one task.
+ * One Gantt lane: a non-recurring event, or all RRULE occurrences of one series.
  * Calendar / day / week views keep the flat occurrence list; only Gantt groups.
  */
 export type GanttEventRowModel = {
@@ -12,12 +12,16 @@ export type GanttEventRowModel = {
   dismissed: boolean;
 };
 
-function isRecurringSeries(event: TimelineItem): event is TimelineItem & { taskId: string } {
-  return event.source === "recurring" && typeof event.taskId === "string" && event.taskId.length > 0;
+function isRecurringSeries(event: TimelineItem): event is TimelineItem & { seriesId: string } {
+  return (
+    event.source === "recurring" &&
+    typeof event.seriesId === "string" &&
+    event.seriesId.length > 0
+  );
 }
 
-function seriesRowId(taskId: string): string {
-  return `recurring:${taskId}`;
+function seriesRowId(seriesId: string): string {
+  return `recurring:${seriesId}`;
 }
 
 function rowLabel(occurrences: TimelineItem[]): string {
@@ -33,7 +37,7 @@ function sortOccurrences(occurrences: TimelineItem[]): TimelineItem[] {
 
 /**
  * Group flat timeline events into Gantt rows.
- * - `source === "recurring"` with `taskId` → one row per task (many bars)
+ * - `source === "recurring"` with `seriesId` → one row per series (many bars)
  * - everything else → one row per event
  *
  * Input order is preserved for first-seen series / singleton placement.
@@ -41,16 +45,17 @@ function sortOccurrences(occurrences: TimelineItem[]): TimelineItem[] {
  */
 export function groupRecurringGanttRows(events: TimelineItem[]): GanttEventRowModel[] {
   const seriesBuckets = new Map<string, TimelineItem[]>();
-  const order: Array<{ kind: "series"; taskId: string } | { kind: "single"; event: TimelineItem }> = [];
+  const order: Array<{ kind: "series"; seriesId: string } | { kind: "single"; event: TimelineItem }> =
+    [];
 
   for (const event of events) {
     if (isRecurringSeries(event)) {
-      const existing = seriesBuckets.get(event.taskId);
+      const existing = seriesBuckets.get(event.seriesId);
       if (existing) {
         existing.push(event);
       } else {
-        seriesBuckets.set(event.taskId, [event]);
-        order.push({ kind: "series", taskId: event.taskId });
+        seriesBuckets.set(event.seriesId, [event]);
+        order.push({ kind: "series", seriesId: event.seriesId });
       }
       continue;
     }
@@ -59,9 +64,9 @@ export function groupRecurringGanttRows(events: TimelineItem[]): GanttEventRowMo
 
   const rows: GanttEventRowModel[] = order.map((entry) => {
     if (entry.kind === "series") {
-      const occurrences = sortOccurrences(seriesBuckets.get(entry.taskId)!);
+      const occurrences = sortOccurrences(seriesBuckets.get(entry.seriesId)!);
       return {
-        rowId: seriesRowId(entry.taskId),
+        rowId: seriesRowId(entry.seriesId),
         label: rowLabel(occurrences),
         occurrences,
         dismissed: occurrences.every((item) => Boolean(item.dismissed)),

@@ -46,10 +46,9 @@ export const TaskCard = React.memo(function TaskCard({
   const { t } = useTranslation("common");
   const worksetNameById = useWorksetNameById();
   const [toggling, setToggling] = useState(false);
-  const isRecurringMode = task.analysisMode === "recurring";
   const isAgentMode = task.analysisMode === "agent";
   const isAgentCalendarMode = isAgentCalendarTask(task);
-  const hideAnalysisStats = isAgentMode || isRecurringMode;
+  const hideAnalysisStats = isAgentMode;
   const employeeId = getTaskEmployeeIdForMode(task.analysisMode);
   const employeeName = getTaskEmployeeDisplayName(employeeId);
   const queuedMessageCount = stats.queuedMessageCount;
@@ -114,9 +113,7 @@ export const TaskCard = React.memo(function TaskCard({
       >
         <div className="flex items-start justify-between gap-sm">
           <div className="flex min-w-0 flex-1 items-center gap-sm">
-            {!isRecurringMode ? (
-              <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
-            ) : null}
+            <TaskEmployeeAvatar employeeId={employeeId} size="xs" label={employeeName} />
             <span
               className={`min-w-0 flex-1 truncate ${cardTitleClass}`}
               title={task.name}
@@ -133,9 +130,7 @@ export const TaskCard = React.memo(function TaskCard({
               {t("workset.cardLabel", { name: worksetName })}
             </span>
           ) : null}
-          {isRecurringMode
-            ? t("tasks.card.recurring")
-            : isAgentMode
+          {isAgentMode
               ? t("tasks.card.agent")
               : t("tasks.card.channelsRange", {
                   count: String(task.channelIds.length),
@@ -150,9 +145,7 @@ export const TaskCard = React.memo(function TaskCard({
           >
             {isAgentMode
               ? t("tasks.card.agentProgressHint")
-              : isRecurringMode
-                ? t("tasks.card.recurringProgressHint")
-                : t("tasks.card.calendarTaskProgressHint")}
+              : t("tasks.card.calendarTaskProgressHint")}
             {isAgentCalendarMode && queuedMessageCount > 0 ? (
               <span className="mt-0.5 block tabular-nums text-warning">
                 {t("tasks.card.queued")}: {queuedMessageCount.toLocaleString()}

@@ -20,7 +20,7 @@ vi.mock("../../api/results", () => ({
 }));
 
 vi.mock("../../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) => mockListUserEvents(...args),
+  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
 }));
 
 vi.mock("../../context/TaskCatalogContext", async () =>
@@ -36,7 +36,7 @@ vi.mock("../embeds/CalendarBoardEmbed", () => ({
     occurrences,
     mode,
   }: {
-    occurrences: Array<{ id: string; title: string; taskId: string }>;
+    occurrences: Array<{ id: string; title: string; seriesId: string }>;
     mode: string;
   }) =>
     createElement(
@@ -45,7 +45,7 @@ vi.mock("../embeds/CalendarBoardEmbed", () => ({
       occurrences.map((occ) =>
         createElement(
           "div",
-          { key: occ.id, "data-testid": `board-cal-occ-${occ.id}`, "data-task-id": occ.taskId },
+          { key: occ.id, "data-testid": `board-cal-occ-${occ.id}`, "data-series-id": occ.seriesId },
           occ.title,
         ),
       ),
@@ -66,7 +66,6 @@ describe("CalendarBoardWidget recurring occurrences", () => {
     window.localStorage.setItem(MONITOR_MODE_KEY, "canvas");
     resetTaskCatalogState([
       makeAnalysisTask({ id: "event-task", name: "情報任務", analysisMode: "intel_event" }),
-      makeAnalysisTask({ id: "cal-task", name: "週期任務", analysisMode: "recurring" }),
     ]);
     mockFetchEvents.mockReset().mockResolvedValue({
       items: [
@@ -101,7 +100,7 @@ describe("CalendarBoardWidget recurring occurrences", () => {
     mockFetchCalendarOccurrences.mockReset().mockResolvedValue([
       {
         id: "cal-task:20260722T100000Z",
-        taskId: "cal-task",
+        seriesId: "cal-task",
         taskName: "週期任務",
         title: "RRULE 週會",
         startTime: localIso(2026, 6, 22, 10, 0),
@@ -174,7 +173,7 @@ describe("CalendarBoardWidget recurring occurrences", () => {
       items: [
         {
           id: "cal-task:20260722T100000Z",
-          taskId: "cal-task",
+          seriesId: "cal-task",
           version: 1,
           batchId: "",
           title: "已存在的分析列",

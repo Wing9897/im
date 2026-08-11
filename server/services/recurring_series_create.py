@@ -1,4 +1,4 @@
-"""Create path for recurring tasks + ``recurring_schedules`` row."""
+"""Create path for standalone ``recurring_schedules`` series."""
 
 from __future__ import annotations
 
@@ -6,20 +6,20 @@ from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
-from server.domain.analysis_modes import CHILD_RECURRING_MODE
-from server.queries.tasks_queries import fetch_task_row, insert_analysis_task
+from server.queries.recurring_series_queries import fetch_series_row, insert_series
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
 from server.services.task_writes import (
     TaskWriteError,
     assert_parent_agent_row,
     normalize_event_clock,
     normalize_rrule,
-    resolve_parent_task_id,
+    resolve_series_parent_task_id,
 )
 from server.util import new_id, utc_now_iso
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 
-async def create_recurring_task(
+async def create_recurring_series(
     db: Database,
     *,
     name: str,
@@ -49,59 +49,53 @@ async def create_recurring_task(
     parent_row: dict[str, Any] | None = None
     if parent_task_id:
         parent = await assert_parent_agent_row(db, str(parent_task_id).strip())
-        parent = resolve_parent_task_id(
-            task_id=None,
-            effective_mode=CHILD_RECURRING_MODE,
+        parent = resolve_series_parent_task_id(
+            series_id=None,
             supplied_parent_task_id=parent,
             parent_mode="agent",
         )
         parent_row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (parent,))
 
-    resolved_workset = (
-        str(parent_row["workset_id"])
-        if workset_id is ... and parent_row and parent_row.get("workset_id")
-        else (None if workset_id is ... else (str(workset_id).strip() if workset_id else None))
-    )
-    task_id = new_id()
+    if workset_id is ...:
+        if parent_row and parent_row.get("workset_id"):
+            resolved_workset = str(parent_row["workset_id"])
+        else:
+            resolved_workset = SYSTEM_WORKSET_ID
+    elif workset_id is None or str(workset_id).strip() == "":
+        resolved_workset = SYSTEM_WORKSET_ID
+    else:
+        resolved_workset = str(workset_id).strip()
+
+    series_id = new_id()
     now = utc_now_iso()
     dtstart = manual_anchor(start_clock, is_all_day=is_all_day)
     dtend = manual_end_anchor(dtstart, end_clock, is_all_day=is_all_day)
+    desc = (
+        str(event_description).strip()
+        if event_description not in (None, "")
+        else (str(description).strip() if description not in (None, "") else None)
+    )
 
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        await insert_analysis_task(
+        await insert_series(
             tx,
-            task_id=task_id,
+            series_id=series_id,
             name=cleaned_name,
-            description=description,
-            prompt_template="",
-            analysis_mode=CHILD_RECURRING_MODE,
-            analysis_time_range="all",
-            schedule_rrule=None,
             workset_id=resolved_workset,
+            rrule=rrule_text,
+            dtstart=dtstart,
+            dtend=dtend,
+            is_all_day=is_all_day,
+            location=str(event_location).strip() if event_location else None,
+            description=desc,
+            timezone="floating",
+            parent_task_id=parent,
+            item_id=str(item_id).strip() if item_id else None,
             now=now,
         )
-        await tx.execute(
-            "INSERT INTO recurring_schedules "
-            "(task_id, rrule, dtstart, dtend, is_all_day, location, description, timezone, "
-            "parent_task_id, item_id, created_at, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 'floating', ?, ?, ?, ?)",
-            (
-                task_id,
-                rrule_text,
-                dtstart,
-                dtend,
-                1 if is_all_day else 0,
-                str(event_location).strip() if event_location else None,
-                str(event_description).strip() if event_description else None,
-                parent,
-                str(item_id).strip() if item_id else None,
-                now,
-                now,
-            ),
-        )
 
-    row = await fetch_task_row(db, task_id)
+    row = await fetch_series_row(db, series_id)
     if row is None:
-        raise TaskWriteError("failed to create recurring task")
+        raise TaskWriteError("failed to create recurring series")
     return row

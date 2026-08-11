@@ -2,14 +2,14 @@
  * Shared Calendar/Timeline fetch helpers.
  *
  * RRULE + item DATE projections go through `/api/v1/calendar/items`
- * (`source=recurring` / `source=item`). `source=item` is remind projection
+ * (`source=recurring` / `source=item_remind`). `source=item_remind` is remind projection
  * only — distinct from item-linked `user_events` (`source=user` + itemId +
  * kind). Analysis timed events and user events remain separate endpoints
  * (server contract), but in-flight requests with the same key are coalesced
  * so Board widgets + Timeline do not hammer the API in parallel.
  */
 
-import { listUserEvents, type UserEvent } from "../../api/userEvents";
+import { listUserEventsPage, type UserEvent } from "../../api/userEvents";
 import {
   fetchCalendarOccurrences,
   fetchEvents,
@@ -18,27 +18,27 @@ import {
 import { coalesceAsync } from "../../utils/coalesceAsync";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 
-function taskIdsKey(taskIds: string[] | null | undefined): string {
-  if (taskIds === undefined) return "*";
-  if (taskIds === null) return "*";
-  if (taskIds.length === 0) return "∅";
-  return [...taskIds].sort().join(",");
+function idListKey(ids: string[] | null | undefined): string {
+  if (ids === undefined) return "*";
+  if (ids === null) return "*";
+  if (ids.length === 0) return "∅";
+  return [...ids].sort().join(",");
 }
 
 export function fetchSharedCalendarItems(
   rangeStart: string,
   rangeEnd: string,
-  opts?: { taskId?: string; taskIds?: string[]; includeItems?: boolean },
+  opts?: { seriesId?: string; seriesIds?: string[]; includeItems?: boolean },
 ): Promise<CalendarOccurrence[]> {
   const includeItems = opts?.includeItems !== false;
   const key = [
     "calendar-items",
     rangeStart,
     rangeEnd,
-    opts?.taskIds !== undefined
-      ? `ids:${taskIdsKey(opts.taskIds)}`
-      : opts?.taskId
-        ? `id:${opts.taskId}`
+    opts?.seriesIds !== undefined
+      ? `ids:${idListKey(opts.seriesIds)}`
+      : opts?.seriesId
+        ? `id:${opts.seriesId}`
         : "*",
     includeItems ? "items" : "no-items",
   ].join("|");
@@ -50,7 +50,7 @@ export function fetchSharedUserEvents(opts: {
   end?: string;
 }): Promise<UserEvent[]> {
   const key = ["user-events", opts.start ?? "", opts.end ?? ""].join("|");
-  return coalesceAsync(key, () => listUserEvents(opts));
+  return coalesceAsync(key, async () => (await listUserEventsPage(opts)).items);
 }
 
 export function fetchSharedTimelineEvents(opts: {
@@ -62,7 +62,7 @@ export function fetchSharedTimelineEvents(opts: {
     "timeline-events",
     opts.startDate,
     opts.endDate,
-    taskIdsKey(opts.taskIds ?? null),
+    idListKey(opts.taskIds ?? null),
   ].join("|");
   return coalesceAsync(key, () =>
     fetchTimelineEvents({

@@ -20,9 +20,9 @@ router = APIRouter(prefix="/dismissals", tags=["calendar"])
 # Map dismissal source → resource_modified type already watched by Board / Timeline.
 _DISMISS_RESOURCE_TYPE: dict[str, str] = {
     "analysis": "task",
-    "recurring": "task",
+    "recurring": "recurring",
     "user": "user_event",
-    "item": "item",
+    "item_remind": "item",
 }
 
 

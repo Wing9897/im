@@ -18,8 +18,8 @@ export type UserEvent = Omit<
   remindBeforeDays?: number | null;
   /** Optional parent trackable item (this calendar belongs to the item). */
   itemId?: string | null;
-  /** Special linked-calendar semantics (authority over title presets). */
-  kind?: "normal" | "expires" | "purchase_effective";
+  /** Special linked-calendar semantics (required; title presets are UX only). */
+  kind: "normal" | "expires" | "purchase_effective";
   /** Optional transaction amount (purchase_effective only). */
   amount?: number | null;
   /** expense | income when amount is set. */
@@ -99,12 +99,6 @@ function toListQuery(params?: ListUserEventsParams): Record<string, string> {
 /** Paginated list (items / totalCount / hasMore). */
 export function listUserEventsPage(params?: ListUserEventsParams): Promise<UserEventsPage> {
   return apiClient.get<UserEventsPage>("/api/v1/calendar/user-events", toListQuery(params));
-}
-
-/** Convenience wrapper that returns only the items array. */
-export async function listUserEvents(params?: ListUserEventsParams): Promise<UserEvent[]> {
-  const page = await listUserEventsPage(params);
-  return page.items;
 }
 
 export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent> {

@@ -36,19 +36,19 @@ async def test_mark_unmark_roundtrip(app) -> None:
 async def test_importance_http_roundtrip(client) -> None:
     created = await client.put(
         "/api/v1/calendar/importance",
-        json={"source": "item", "eventId": "item:x:expires"},
+        json={"source": "item_remind", "eventId": "item:x:remind"},
     )
     assert created.status_code == 200
     body = created.json()
-    assert body["source"] == "item"
-    assert body["eventId"] == "item:x:expires"
+    assert body["source"] == "item_remind"
+    assert body["eventId"] == "item:x:remind"
 
-    listed = await client.get("/api/v1/calendar/importance", params={"source": "item"})
+    listed = await client.get("/api/v1/calendar/importance", params={"source": "item_remind"})
     assert listed.status_code == 200
-    assert any(row["eventId"] == "item:x:expires" for row in listed.json())
+    assert any(row["eventId"] == "item:x:remind" for row in listed.json())
 
     deleted = await client.delete(
         "/api/v1/calendar/importance",
-        params={"source": "item", "eventId": "item:x:expires"},
+        params={"source": "item_remind", "eventId": "item:x:remind"},
     )
     assert deleted.status_code == 204

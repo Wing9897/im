@@ -13,7 +13,7 @@ vi.mock("../../../api/items", () => ({
 }));
 
 vi.mock("../../../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) => mockListUserEvents(...args),
+  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -36,7 +36,7 @@ describe("ItemsFinancePage", () => {
     mockListItems.mockResolvedValue([
       makeTrackableItem({ id: "i1", title: "相機" }),
     ]);
-    mockListUserEvents.mockResolvedValue([
+    mockListUserEvents.mockResolvedValue({ items: [
       {
         id: "e1",
         title: "購入",
@@ -51,7 +51,7 @@ describe("ItemsFinancePage", () => {
         createdAt: "",
         updatedAt: "",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
   });
 
   afterEach(() => {

@@ -34,7 +34,7 @@ def _calendar_clause(spec: AgentTaskSpec) -> str:
     )
     return (
         "## 日曆寫入\n"
-        "- 可用 calendar.create_event／update_event／delete_event 與子週期任務工具。\n"
+        "- 可用 calendar.create_event／update_event／delete_event 與 recurring_series／子週期日曆系列工具。\n"
         f"{read_note}"
         "- 流程：先了解現況 → 對照來源與目標 → 新增／調整／停用 → 簡短總結。\n"
     )
@@ -54,7 +54,7 @@ def _output_clause(spec: AgentTaskSpec) -> str:
     if spec.output_calendar and spec.output_analysis_events:
         return (
             "## 輸出（雙寫面）\n"
-            "- 可用工具寫入日曆／子週期任務。\n"
+            "- 可用工具寫入日曆／子週期日曆系列（recurring_series）。\n"
             "- 最終回答若產出情報事件，使用 "
             '{"items":[...]}'
             "（不要包在 message 字串裡）；若本回合僅改日曆，可用 "

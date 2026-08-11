@@ -3,12 +3,16 @@ import { vi } from "vitest";
 import "../../../test/i18nIdentityMock";
 
 export const showToast = vi.fn();
-export const listUserEvents = vi.fn(() => Promise.resolve([] as unknown[]));
-export const listTasks = vi.fn(() => Promise.resolve([] as unknown[]));
+export const listUserEventsPage = vi.fn(() =>
+  Promise.resolve({ items: [] as unknown[], totalCount: 0, hasMore: false }),
+);
+export const listRecurringSeries = vi.fn(() =>
+  Promise.resolve({ items: [] as unknown[], totalCount: 0, hasMore: false }),
+);
 export const updateUserEvent = vi.fn(() => Promise.resolve({}));
 export const createUserEvent = vi.fn(() => Promise.resolve({}));
 export const deleteUserEvent = vi.fn(() => Promise.resolve(undefined));
-export const deleteTask = vi.fn(() => Promise.resolve({}));
+export const deleteRecurringSeries = vi.fn(() => Promise.resolve(undefined));
 export const listItems = vi.fn(() => Promise.resolve([] as unknown[]));
 
 vi.mock("../../../context/ToastContext", () => ({
@@ -16,8 +20,8 @@ vi.mock("../../../context/ToastContext", () => ({
 }));
 
 vi.mock("../../../api/userEvents", () => ({
-  listUserEvents: (...args: unknown[]) =>
-    (listUserEvents as (...a: unknown[]) => unknown)(...args),
+  listUserEventsPage: (...args: unknown[]) =>
+    (listUserEventsPage as (...a: unknown[]) => unknown)(...args),
   createUserEvent: (...args: unknown[]) =>
     (createUserEvent as (...a: unknown[]) => unknown)(...args),
   updateUserEvent: (...args: unknown[]) =>
@@ -35,9 +39,9 @@ vi.mock("../../../api/items", async () => {
   };
 });
 
-vi.mock("../../../api/tasks", () => ({
-  listTasks: (...args: unknown[]) =>
-    (listTasks as (...a: unknown[]) => unknown)(...args),
-  deleteTask: (...args: unknown[]) =>
-    (deleteTask as (...a: unknown[]) => unknown)(...args),
+vi.mock("../../../api/recurringSeries", () => ({
+  listRecurringSeries: (...args: unknown[]) =>
+    (listRecurringSeries as (...a: unknown[]) => unknown)(...args),
+  deleteRecurringSeries: (...args: unknown[]) =>
+    (deleteRecurringSeries as (...a: unknown[]) => unknown)(...args),
 }));

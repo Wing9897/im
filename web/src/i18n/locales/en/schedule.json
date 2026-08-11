@@ -1,22 +1,31 @@
 {
   "pageTitle": "My schedule",
   "toolbarAria": "Schedule toolbar",
-  "tabs": {
-    "oneOff": "One-off events",
-    "recurring": "Recurring events"
+  "badge": {
+    "oneOff": "One-off",
+    "recurring": "Recurring"
   },
   "searchPlaceholder": "Search title, body, or location",
   "searchAria": "Search schedule",
   "create": "Add",
-  "createOneOff": "Add one-off event",
-  "createRecurring": "Add recurring event",
-  "createOneOffAria": "Add one-off event",
-  "createRecurringAria": "Add recurring event",
+  "createAria": "Add calendar event",
+  "editor": {
+    "title": "Edit recurring event",
+    "back": "Back to schedule",
+    "save": "Save",
+    "saving": "Saving…",
+    "pause": "Pause",
+    "resume": "Resume",
+    "name": "Name",
+    "rrule": "Recurrence rule",
+    "start": "Start time",
+    "end": "End time",
+    "location": "Location",
+    "itemId": "Linked item ID"
+  },
   "empty": {
-    "oneOff": "No one-off events yet",
-    "oneOffHint": "Create a handwritten event, or add one from Timeline.",
-    "recurring": "No recurring events yet",
-    "recurringHint": "Create a repeating plan — it no longer appears under Tasks."
+    "title": "No schedule events yet",
+    "hint": "Create a one-off or recurring event — same dialog as Timeline."
   },
   "card": {
     "edit": "Edit",
@@ -41,6 +50,9 @@
     "oneOffUpdated": "One-off event updated",
     "oneOffDeleted": "One-off event deleted",
     "recurringCreated": "Recurring event created",
+    "recurringUpdated": "Recurring event updated",
+    "recurringPaused": "Recurring event paused",
+    "recurringResumed": "Recurring event resumed",
     "recurringDeleted": "Recurring event deleted",
     "saveFailed": "Save failed",
     "deleteFailed": "Delete failed",

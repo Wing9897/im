@@ -5,9 +5,7 @@ import {
   analysisTaskToFormState,
   applyConfigToFormState,
   buildCurrentTaskPayload,
-  formStateToCreateRecurringConfig,
   formStateToTaskConfig,
-  formStateToTaskSchedule,
   roundTripFormState,
   scheduleFieldsFromTask,
 } from "./taskFormUtils";
@@ -342,89 +340,6 @@ describe("formStateToTaskConfig calendar contract", () => {
       }
     },
   );
-
-  it("keeps recurring task body free of schedule fields; schedule is a subresource", () => {
-    const calendarState: TaskFormState = {
-      ...sampleBase,
-      analysisMode: "recurring",
-      promptTemplate: "stale analysis prompt",
-      channelIds: ["stale-channel"],
-      rrule: "  FREQ=WEEKLY;BYDAY=MO,WE  ",
-      eventStartTime: "2025-06-01T09:00:00Z",
-      eventEndTime: "2025-06-01T10:30:00Z",
-      eventIsAllDay: false,
-      eventLocation: "  Conference Room A  ",
-      eventDescription: "  Weekly planning  ",
-    };
-
-    const payload = formStateToTaskConfig(calendarState);
-
-    expect(payload).toEqual({
-      name: sampleBase.name,
-      description: sampleBase.description,
-      analysisMode: "recurring",
-      scheduleRrule: null,
-      promptTemplate: "",
-      channelIds: [],
-      includeInTimeline: true,
-      worksetId: null,
-    });
-    expect(payload).not.toHaveProperty("scheduleType");
-    expect(payload).not.toHaveProperty("scheduleValue");
-    for (const calendarOnlyKey of [
-      "rrule",
-      "eventStartTime",
-      "eventEndTime",
-      "eventIsAllDay",
-      "eventLocation",
-      "eventDescription",
-    ]) {
-      expect(payload).not.toHaveProperty(calendarOnlyKey);
-    }
-  });
-
-  it("formStateToCreateRecurringConfig maps editor fields for atomic create", () => {
-    const calendarState: TaskFormState = {
-      ...sampleBase,
-      analysisMode: "recurring",
-      rrule: "  FREQ=DAILY  ",
-      eventStartTime: "22:00",
-      eventEndTime: "06:00",
-      eventIsAllDay: false,
-      eventLocation: "  Night desk  ",
-      eventDescription: "  Overnight  ",
-      worksetId: "ws-ops",
-    };
-
-    expect(formStateToCreateRecurringConfig(calendarState)).toEqual({
-      name: "Base Task",
-      description: "Base description",
-      rrule: "FREQ=DAILY",
-      eventStartTime: "22:00",
-      eventEndTime: "06:00",
-      eventIsAllDay: false,
-      eventLocation: "Night desk",
-      eventDescription: "Overnight",
-      worksetId: "ws-ops",
-    });
-  });
-
-  it("formStateToTaskSchedule clears clocks when all-day", () => {
-    expect(
-      formStateToTaskSchedule({
-        ...sampleBase,
-        analysisMode: "recurring",
-        rrule: "FREQ=DAILY",
-        eventIsAllDay: true,
-        eventStartTime: "09:00",
-        eventEndTime: "10:00",
-      }),
-    ).toMatchObject({
-      eventIsAllDay: true,
-      eventStartTime: null,
-      eventEndTime: null,
-    });
-  });
 
   it("includes includeInTimeline for event mode payloads", () => {
     const payload = formStateToTaskConfig({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { UserEvent } from "../../api/userEvents";
-import type { AnalysisTask } from "../../types";
+import type { RecurringSeries } from "../../types/recurring";
 import {
   countActiveLinkedExpiryEvents,
   mergeLinkedCalendarRows,
@@ -26,15 +26,30 @@ function makeEvent(overrides: Partial<UserEvent> = {}): UserEvent {
   };
 }
 
-function makeTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
+function makeSeries(overrides: Partial<RecurringSeries> = {}): RecurringSeries {
   return {
     id: "task-1",
     name: "Recurring",
-    analysisMode: "recurring",
-    scheduleRrule: "FREQ=WEEKLY",
+    description: null,
+    rrule: "FREQ=WEEKLY",
+    eventStartTime: "09:00",
+    eventEndTime: null,
+    eventIsAllDay: false,
+    eventLocation: null,
+    eventDescription: null,
+    eventTimezone: null,
+    eventExdates: [],
+    eventRdates: [],
+    icsUid: null,
+    icsSource: null,
+    isActive: true,
+    worksetId: "ws",
+    parentTaskId: null,
+    itemId: "item-1",
     createdAt: "2026-01-02T00:00:00.000Z",
+    updatedAt: "2026-01-02T00:00:00.000Z",
     ...overrides,
-  } as AnalysisTask;
+  };
 }
 
 describe("mergeLinkedCalendarRows", () => {
@@ -66,7 +81,7 @@ describe("mergeLinkedCalendarRows", () => {
       startTime: "2026-07-01T00:00:00.000Z",
       dismissed: true,
     });
-    const recurring = makeTask({ id: "r1", name: "R", createdAt: "2026-08-15T00:00:00.000Z" });
+    const recurring = makeSeries({ id: "r1", name: "R", createdAt: "2026-08-15T00:00:00.000Z" });
 
     const rows = mergeLinkedCalendarRows(
       [primary, secondaryExpiry, kept, dismissed],
@@ -98,12 +113,12 @@ describe("row mappers", () => {
     const oneOff = toLinkedOneOffRow(makeEvent({ title: "Meet" }));
     expect(oneOff).toMatchObject({ kind: "oneOff", title: "Meet", id: "ue:ue-1" });
 
-    const recurring = toLinkedRecurringRow(makeTask({ name: "Weekly" }));
+    const recurring = toLinkedRecurringRow(makeSeries({ name: "Weekly" }));
     expect(recurring).toMatchObject({
       kind: "recurring",
       title: "Weekly",
       detail: "FREQ=WEEKLY",
-      taskId: "task-1",
+      seriesId: "task-1",
     });
   });
 });

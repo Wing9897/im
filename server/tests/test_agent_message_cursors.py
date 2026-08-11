@@ -28,12 +28,6 @@ async def _insert_agent_task(db, task_id: str) -> None:
             analysis_mode=AGENT_MODE,
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
-            rrule=None,
-            event_start_time=None,
-            event_end_time=None,
-            event_is_all_day=0,
-            event_location=None,
-            event_description=None,
             now=now,
             **policy,
         )

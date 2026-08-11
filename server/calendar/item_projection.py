@@ -1,11 +1,10 @@
-"""Project trackable items into calendar wire rows (source=item).
+"""Project trackable items into calendar wire rows (source=item_remind).
 
-Active items with ``expires_at`` and ``remind_before_days > 0`` emit a
-**remind** occurrence on ``expires_at - remind_before_days`` (floating
-all-day DATE semantics). ``expires_at`` is a denormalized cache synced from linked
-milestone user_events titled 到期 / Expires (見 ``server.items.linked_dates``). Cache is
-write-through from linked calendar mutations only; GET list/get does not
-reconcile. API no longer accepts item-level date writes.
+Derive-on-read from the primary linked ``user_events`` row with ``kind=expires``
+(see ``server.queries.items_queries``): when that row yields ``expires_at`` and
+``remind_before_days > 0``, emit a **remind** occurrence on
+``expires_at - remind_before_days`` (floating all-day DATE semantics). Wire
+``source`` is ``item_remind`` (distinct from item-linked ``source=user`` calendars).
 
 All-day times use wall-date ``YYYY-MM-DDT00:00:00`` / ``T23:59:59`` (no ``Z``)
 so FE ``parseAllDayWallDate`` and user_event all-day DATE semantics stay on the
@@ -80,12 +79,12 @@ def build_item_occurrence(
     workset_id = str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
     item: dict[str, Any] = {
         "id": occurrence_id(item_id, kind),
-        "taskId": "",
+        "seriesId": "",
         "title": title,
         "startTime": start_iso,
         "endTime": end_iso,
         "location": None,
-        "source": "item",
+        "source": "item_remind",
         "isAllDay": True,
         "timezone": "floating",
         "worksetId": workset_id,
@@ -112,9 +111,9 @@ def project_item_row(
 ) -> list[dict[str, Any]]:
     """Emit remind occurrences that fall in the DATE window.
 
-    ``expires_at`` stays on the item row for list filters;
-    they are no longer projected as special calendar kinds (use linked
-    user-events / recurring tasks for timeline dates instead).
+    Derived ``expires_at`` / ``remind_before_days`` stay on the joined item row
+    for list filters; they are not projected as special calendar kinds (use
+    linked user-events / recurring series for timeline dates instead).
     """
     if str(row.get("status") or "") != "active":
         return []

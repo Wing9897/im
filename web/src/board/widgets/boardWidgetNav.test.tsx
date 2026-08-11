@@ -132,7 +132,7 @@ vi.mock("../../api/tasks", () => ({
 }));
 
 vi.mock("../../api/userEvents", () => ({
-  listUserEvents: vi.fn(async () => []),
+  listUserEventsPage: vi.fn(async () => ({ items: [], totalCount: 0, hasMore: false })),
 }));
 
 vi.mock("../../context/TaskCatalogContext", async () =>

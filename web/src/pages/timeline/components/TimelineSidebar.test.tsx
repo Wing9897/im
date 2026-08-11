@@ -182,7 +182,7 @@ describe("TimelineSidebar detail provenance", () => {
       makeUserEvent({
         id: "item:r",
         title: "提醒 · milk",
-        source: "item",
+        source: "item_remind",
         origin: undefined,
         itemDateKind: "remind",
         taskId: null,

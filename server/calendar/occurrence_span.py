@@ -2,7 +2,7 @@
 
 **Maintenance point** — change overnight behaviour here once; callers:
 
-- ``server.services.recurring_task_writes`` (``dtend`` on write)
+- ``server.services.recurring_series_writes`` (``dtend`` on write)
 - ``server.calendar.rrule`` synthetic expand path (no ``event_start_local``)
 
 Imported expand (has ``event_start_local``) uses duration from stored

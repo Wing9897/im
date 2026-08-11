@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef } from "react";
 import { fetchCalendarOccurrences, fetchTimelineEvents } from "../api/results";
-import { listUserEvents } from "../api/userEvents";
+import { listUserEventsPage } from "../api/userEvents";
 import { ToastContext } from "../context/ToastContext";
 import { useTaskCatalog, useTaskNameById } from "../context/TaskCatalogContext";
 import {
@@ -145,12 +145,12 @@ export function useVoiceReminderScanner(): void {
               endDate: rangeEnd,
               ...(serverTaskIds !== undefined ? { taskIds: serverTaskIds } : {}),
             }),
-            listUserEvents({ start: rangeStart, end: rangeEnd }),
+            listUserEventsPage({ start: rangeStart, end: rangeEnd }).then((page) => page.items),
             fetchCalendarOccurrences(
               rangeStart,
               rangeEnd,
               {
-                ...(serverTaskIds !== undefined ? { taskIds: serverTaskIds } : {}),
+                ...(serverTaskIds !== undefined ? { seriesIds: serverTaskIds } : {}),
                 includeItems: false,
               },
             ),
@@ -164,9 +164,14 @@ export function useVoiceReminderScanner(): void {
         }
 
         const taskNameById = new Map<string, string>(catalogTaskNamesRef.current);
-        for (const row of [...analysisRows, ...calendarRows]) {
+        for (const row of analysisRows) {
           if (row.taskId && row.taskName) {
             taskNameById.set(row.taskId, row.taskName);
+          }
+        }
+        for (const row of calendarRows) {
+          if (row.seriesId && row.taskName) {
+            taskNameById.set(row.seriesId, row.taskName);
           }
         }
 

@@ -40,11 +40,7 @@ interface UseTimelineDataReturn {
   initialLoading: boolean;
   isRefreshing: boolean;
   pageError: string | null;
-  /**
-   * Refetch merged timeline events.
-   * Pass ``catalogOverride`` after create/refreshTasks so the filter plan includes
-   * newly created recurring tasks before React re-renders the catalog.
-   */
+  /** Refetch merged timeline events, optionally using a fresh task catalog snapshot. */
   refreshEvents: (catalogOverride?: readonly AnalysisTask[]) => Promise<void>;
 
   // Gantt: task activity spans
@@ -106,8 +102,8 @@ export function useTimelineData({
   const pageActive = monitorMode === "pages";
   const { tasks, taskLoadError, tasksLoading, refreshTasks } = useTaskCatalog();
 
-  // `activeOnly` matches the assistant / voice pickers: a soft-deleted calendar
-  // task must not stay assignable in the toolbar or UserEventDialog.
+  // `activeOnly` matches the assistant / voice pickers: paused (`isActive=false`)
+  // analysis tasks must not stay assignable in the toolbar or UserEventDialog.
   const timelineTasks = useMemo(
     () => filterAssignableTimelineTasks(tasks, { activeOnly: true }),
     [tasks],
@@ -133,15 +129,6 @@ export function useTimelineData({
   selectedSourcesRef.current = selectedSources;
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
-
-  const recurringTaskFingerprint = useMemo(
-    () =>
-      tasks
-        .filter((task) => task.analysisMode === "recurring")
-        .map((task) => `${task.id}:${task.updatedAt}:${task.isActive}`)
-        .join("|"),
-    [tasks],
-  );
 
   const fetcher = useCallback(
     (key: TimelineFetchKey) =>
@@ -214,7 +201,6 @@ export function useTimelineData({
     selectedSources,
     planKey,
     filterPlan,
-    recurringTaskFingerprint,
   ]);
 
   useTimelineCalendarRefresh({

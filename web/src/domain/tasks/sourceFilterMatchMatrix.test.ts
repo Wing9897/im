@@ -30,7 +30,6 @@ type UserEventCase = {
 const CATALOG: CatalogTask[] = [
   { id: "memberOfA", analysisMode: "intel_event", worksetId: "ws-A" },
   { id: "memberOfB", analysisMode: "intel_event", worksetId: "ws-B" },
-  { id: "cal-A", analysisMode: "recurring", worksetId: "ws-A" },
   { id: "orphan", analysisMode: "intel_event", worksetId: null },
 ];
 

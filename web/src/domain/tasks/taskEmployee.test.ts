@@ -25,15 +25,13 @@ describe("taskEmployee", () => {
     expect(TASK_EMPLOYEE_ORDER).not.toContain("recurring");
   });
 
-  it("maps AI task types to AiStaff ids and recurring to null", () => {
-    expect(aiStaffIdForTaskEmployee("recurring")).toBeNull();
+  it("maps task types to AiStaff ids", () => {
     expect(aiStaffIdForTaskEmployee("intel_event")).toBe("intel_event");
     expect(aiStaffIdForTaskEmployee("agent")).toBe("agent");
     expect(aiStaffIdForTaskEmployee("leaderboard")).toBe("leaderboard");
   });
 
-  it("marks only non-recurring types as AI", () => {
-    expect(taskEmployeeUsesAi("recurring")).toBe(false);
+  it("marks all analysis task types as AI", () => {
     expect(taskEmployeeUsesAi("intel_event")).toBe(true);
     expect(taskEmployeeUsesAi("agent")).toBe(true);
     expect(taskEmployeeUsesAi("leaderboard")).toBe(true);

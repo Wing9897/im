@@ -4,18 +4,20 @@
  * Keep flags in lockstep with `AnalysisModeSpec` (drift-tested in
  * `server/tests/test_backend_consolidation.py`). Pipeline / capability
  * changes belong on the server Spec first, then here.
+ *
+ * Recurring calendar series are **not** an analysis mode — see
+ * `/api/v1/calendar/recurring` and `RecurringSeries`.
  */
 
 export const ANALYSIS_MODE_ORDER = [
   "leaderboard",
   "intel_event",
-  "recurring",
   "agent",
 ] as const;
 
 export type AnalysisMode = (typeof ANALYSIS_MODE_ORDER)[number];
 
-export type AnalysisPipeline = "message_batch" | "agent_tick" | "rrule_expand";
+export type AnalysisPipeline = "message_batch" | "agent_tick";
 
 export type AnalysisModeCapabilities = {
   ai: boolean;
@@ -40,13 +42,6 @@ export const ANALYSIS_MODE_CAPABILITIES: Record<AnalysisMode, AnalysisModeCapabi
     timelineOwning: true,
     pipeline: "message_batch",
   },
-  recurring: {
-    ai: false,
-    schedulable: false,
-    messageBatch: false,
-    timelineOwning: true,
-    pipeline: "rrule_expand",
-  },
   agent: {
     ai: true,
     schedulable: true,
@@ -65,11 +60,6 @@ export function getAnalysisModeCapabilities(
 ): AnalysisModeCapabilities | null {
   if (!isAnalysisMode(mode)) return null;
   return ANALYSIS_MODE_CAPABILITIES[mode];
-}
-
-/** RRULE editor fields (recurring pipeline only). */
-export function analysisModeShowsRruleFields(mode: AnalysisMode): boolean {
-  return ANALYSIS_MODE_CAPABILITIES[mode].pipeline === "rrule_expand";
 }
 
 /** Schedule-only buckets hide prompt + channel pickers. */
@@ -93,10 +83,6 @@ export function analysisModeIsAgent(mode: AnalysisMode): boolean {
 
 export function isTimelineAssignableAnalysisMode(mode: string | null | undefined): boolean {
   return getAnalysisModeCapabilities(mode)?.timelineOwning === true;
-}
-
-export function isScheduleOnlyAnalysisMode(mode: AnalysisMode): boolean {
-  return !ANALYSIS_MODE_CAPABILITIES[mode].schedulable;
 }
 
 /** Builtin task-template presets — AI / schedulable modes only. */

@@ -1,4 +1,4 @@
-"""Calendar query source fetchers (analysis / RRULE / user / item)."""
+"""Calendar query source fetchers (analysis / RRULE / user / item_remind)."""
 
 from __future__ import annotations
 
@@ -19,8 +19,9 @@ from server.calendar.user_events import list_user_events
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
 from server.queries.calendar_queries import (
-    fetch_active_recurring_task_rows,
+    fetch_active_recurring_series_rows,
     fetch_calendar_rows,
+    fetch_recurring_series_rows,
 )
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
@@ -54,43 +55,77 @@ async def _fetch_user_in_range(
     return [build_user_item(item) for item in items]
 
 
-async def list_calendars(db: Database) -> list[dict[str, Any]]:
-    """Return metadata for tasks that can produce calendar items (no event bodies)."""
-    modes = tuple(sorted(TIMELINE_OWNING_ANALYSIS_MODES))
-    rows = await fetch_calendar_rows(db, modes)
-    return [
-        {
-            "id": str(row["id"]),
-            "name": str(row.get("name") or ""),
-            "analysisMode": str(row.get("analysis_mode") or ""),
-            "isActive": bool(row.get("is_active")),
-            "rrule": row.get("rrule"),
-            "location": row.get("event_location"),
-            "description": row.get("event_description"),
-            "isAllDay": bool(row.get("event_is_all_day")),
-            "eventStartTime": row.get("event_start_time"),
-            "eventEndTime": row.get("event_end_time"),
-            "timezone": row.get("event_timezone"),
-        }
-        for row in rows
-    ]
+def calendar_list_item_from_task_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(row["id"]),
+        "name": str(row.get("name") or ""),
+        "kind": "analysis_task",
+        "source": "analysis",
+        "analysisMode": str(row.get("analysis_mode") or ""),
+        "isActive": bool(row.get("is_active")),
+        "rrule": row.get("rrule"),
+        "location": row.get("event_location"),
+        "description": row.get("event_description"),
+        "isAllDay": bool(row.get("event_is_all_day")),
+        "eventStartTime": row.get("event_start_time"),
+        "eventEndTime": row.get("event_end_time"),
+        "timezone": row.get("event_timezone"),
+    }
 
 
-async def fetch_active_recurring_tasks(
+def calendar_list_item_from_series_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": str(row["id"]),
+        "name": str(row.get("name") or ""),
+        "kind": "recurring_series",
+        "source": "recurring",
+        "analysisMode": "",
+        "isActive": bool(row.get("is_active")),
+        "rrule": row.get("rrule"),
+        "location": row.get("event_location"),
+        "description": row.get("event_description"),
+        "isAllDay": bool(row.get("event_is_all_day")),
+        "eventStartTime": row.get("event_start_time"),
+        "eventEndTime": row.get("event_end_time"),
+        "timezone": row.get("event_timezone"),
+    }
+
+
+async def list_calendars(
     db: Database,
     *,
-    task_id: str | None = None,
-    task_ids: list[str] | None = None,
+    include_inactive: bool = False,
 ) -> list[dict[str, Any]]:
-    """Active ``recurring``-mode tasks (shared by Agent + ``GET /api/v1/calendar/items``).
+    """Return metadata for AI timeline-owning tasks + standalone recurring series.
 
-    When ``task_ids`` is set, include those recurring rows **or** active children
-    whose ``parent_task_id`` is in the list.
-    When ``task_id`` is set (and ``task_ids`` is not), include that recurring row
-    **or** any active child recurring tasks whose ``parent_task_id`` matches
-    (project scope).
+    By default only **active** series are included (paused series are omitted).
+    Pass ``include_inactive=True`` to discover paused series for resume-by-name.
+    Analysis-task rows already include inactive tasks.
     """
-    return await fetch_active_recurring_task_rows(db, task_id=task_id, task_ids=task_ids)
+    modes = tuple(sorted(TIMELINE_OWNING_ANALYSIS_MODES))
+    rows = await fetch_calendar_rows(db, modes)
+    items = [calendar_list_item_from_task_row(row) for row in rows]
+    series_rows = await fetch_recurring_series_rows(db, include_inactive=include_inactive)
+    items.extend(calendar_list_item_from_series_row(row) for row in series_rows)
+    return items
+
+
+async def fetch_active_recurring_series(
+    db: Database,
+    *,
+    series_id: str | None = None,
+    series_ids: list[str] | None = None,
+) -> list[dict[str, Any]]:
+    """Active recurring series (shared by Agent + ``GET /api/v1/calendar/items``).
+
+    ``series_id`` / ``series_ids`` filter by series id **or** ``parent_task_id``
+    (agent project scope).
+    """
+    return await fetch_active_recurring_series_rows(
+        db,
+        series_id=series_id,
+        series_ids=series_ids,
+    )
 
 
 async def expand_active_calendar_occurrences(
@@ -98,16 +133,17 @@ async def expand_active_calendar_occurrences(
     range_start: datetime,
     range_end: datetime,
     *,
-    task_id: str | None = None,
-    task_ids: list[str] | None = None,
+    series_id: str | None = None,
+    series_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Calendar-purpose RRULE occurrences (never AI trigger ``schedule_rrule``)."""
-    from server.domain.schedule import may_calendar_expand
+    from server.domain.schedule import may_calendar_expand_series
 
-    tasks = await fetch_active_recurring_tasks(db, task_id=task_id, task_ids=task_ids)
-    # Defense in depth: SQL already filters analysis_mode=recurring; re-gate by purpose.
-    tasks = [task for task in tasks if may_calendar_expand(str(task.get("analysis_mode") or ""))]
-    return expand_calendar_occurrences(tasks, range_start, range_end)
+    series = await fetch_active_recurring_series(
+        db, series_id=series_id, series_ids=series_ids
+    )
+    series = [row for row in series if may_calendar_expand_series(row)]
+    return expand_calendar_occurrences(series, range_start, range_end)
 
 
 async def _fetch_analysis_in_range(
@@ -146,7 +182,9 @@ async def _fetch_rrule_in_range(
     range_end: datetime,
     task_id: str | None,
 ) -> list[dict[str, Any]]:
-    occurrences = await expand_active_calendar_occurrences(db, range_start, range_end, task_id=task_id)
+    occurrences = await expand_active_calendar_occurrences(
+        db, range_start, range_end, series_id=task_id
+    )
     items = [build_occurrence_item(occ) for occ in occurrences]
     # DB dismissal source is "recurring" for RRULE occurrence ids.
     await attach_dismissed_flag(db, source="recurring", items=items)
@@ -178,6 +216,6 @@ async def _fetch_items_in_range(
         workset_id=workset_id,
     )
     items = [build_item_calendar_item(item) for item in raw]
-    await attach_dismissed_flag(db, source="item", items=items)
-    await attach_important_flag(db, source="item", items=items)
+    await attach_dismissed_flag(db, source="item_remind", items=items)
+    await attach_important_flag(db, source="item_remind", items=items)
     return items

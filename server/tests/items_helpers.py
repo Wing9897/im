@@ -15,15 +15,13 @@ async def seed_item_row(
     title: str = "test item",
     category_id: str | None = None,
     workset_id: str = SYSTEM_WORKSET_ID,
-    expires_at: str | None = None,
-    remind_before_days: int | None = None,
     notes: str = "",
     status: str = "active",
     emoji: str | None = None,
     quantity: float | None = None,
     unit: str | None = None,
 ) -> str:
-    """Insert an item row bypassing HTTP — for cache-column / reconcile tests."""
+    """Insert an item row bypassing HTTP."""
     resolved_id = item_id or new_id()
     now = utc_now_iso()
     async with db.transaction() as conn:
@@ -33,8 +31,6 @@ async def seed_item_row(
             title=title,
             category_id=category_id,
             workset_id=workset_id,
-            expires_at=expires_at,
-            remind_before_days=remind_before_days,
             notes=notes,
             status=status,
             emoji=emoji,

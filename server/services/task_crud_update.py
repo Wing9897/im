@@ -1,4 +1,4 @@
-"""Task update mutation path (analysis + recurring patch)."""
+"""Task update mutation path (AI analysis modes only)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ from server.api.routes.task_helpers import (
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import (
     AGENT_MODE,
-    CHILD_RECURRING_MODE,
     LEADERBOARD_MODE,
 )
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
@@ -26,7 +25,6 @@ from server.queries.tasks_queries import (
     set_task_active,
     update_analysis_task,
 )
-from server.services.recurring_task_writes import patch_recurring_task
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     require_task_row_or_lookup,
@@ -45,31 +43,8 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
     existing = await require_task_row_or_lookup(db, task_id)
     existing_mode = str(existing.get("analysis_mode") or "")
     effective_mode = body.analysisMode or existing_mode or LEADERBOARD_MODE
-    if effective_mode == CHILD_RECURRING_MODE and existing_mode != CHILD_RECURRING_MODE:
-        raise TaskWriteError("Changing an existing task to recurring is not supported; create a recurring task instead")
-
-    if effective_mode == CHILD_RECURRING_MODE and existing_mode == CHILD_RECURRING_MODE:
-        fields_set = body.model_fields_set
-        workset_id = await resolve_workset_id(
-            db,
-            supplied=body.worksetId,
-            existing=existing.get("workset_id"),
-            fields_set=fields_set,
-        )
-        await patch_recurring_task(
-            db,
-            task_id=task_id,
-            name=body.name.strip(),
-            description=(body.description if "description" in fields_set else ...),
-            is_active=body.isActive if "isActive" in fields_set else None,
-            workset_id=workset_id,
-        )
-        row = await require_task_row_or_lookup(db, task_id)
-        return TaskMutationResult(
-            task_id=task_id,
-            payload=task_response(row, await channel_refs_for(db, task_id), deleted=0),
-            register=True,
-        )
+    if effective_mode == "recurring" or existing_mode == "recurring":
+        raise TaskWriteError("analysisMode=recurring is removed; use /api/v1/calendar/recurring")
 
     new_version = int(existing.get("version") or 1) + 1
     now = utc_now_iso()
@@ -164,24 +139,16 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
 
         if leaving_agent_parent or (existing_mode == AGENT_MODE and effective_mode != AGENT_MODE):
             await clear_children_parent_links(tx, task_id, now=now)
-        if existing_mode == CHILD_RECURRING_MODE:
-            await tx.execute("DELETE FROM recurring_schedules WHERE task_id = ?", (task_id,))
 
-    active_after: int | None = None
     if body.isActive is not None:
         desired = 1 if body.isActive else 0
         current = int(existing.get("is_active") or 0)
         if current != desired:
             await set_task_active(db, task_id, desired, utc_now_iso())
-            active_after = desired
 
     row = await require_task_row_or_lookup(db, task_id)
     return TaskMutationResult(
         task_id=task_id,
         payload=task_response(row, await channel_refs_for(db, task_id), deleted=len(deleted)),
         register=True,
-        active_after=active_after,
     )
-
-
-__all__ = ["update_task_record"]

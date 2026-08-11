@@ -7,15 +7,15 @@ from typing import Any, Iterable, Literal, Mapping
 from server.db.database import Database
 from server.util import utc_now_iso
 
-ImportanceSource = Literal["analysis", "user", "recurring", "item"]
-ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring", "item"})
+ImportanceSource = Literal["analysis", "user", "recurring", "item_remind"]
+ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring", "item_remind"})
 
 # Compact calendar-query / agent item ``source`` → ``timeline_importance.source``.
 CALENDAR_ITEM_IMPORTANCE_SOURCE: dict[str, ImportanceSource] = {
     "analysis": "analysis",
     "user": "user",
     "recurring": "recurring",
-    "item": "item",
+    "item_remind": "item_remind",
 }
 
 #: Display glyph for important markers (UI + agent copy).
@@ -29,7 +29,9 @@ class TimelineImportanceValidationError(ValueError):
 def _require_source(source: str) -> ImportanceSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineImportanceValidationError("source must be 'analysis', 'user', 'recurring', or 'item'")
+        raise TimelineImportanceValidationError(
+            "source must be 'analysis', 'user', 'recurring', or 'item_remind'"
+        )
     return value  # type: ignore[return-value]
 
 

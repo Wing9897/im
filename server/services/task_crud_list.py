@@ -19,11 +19,15 @@ async def list_tasks_payload(
     workset_id: Optional[str] = None,
     item_id: Optional[str] = None,
 ) -> list[dict[str, Any]]:
+    del item_id  # recurring item linkage moved to /calendar/recurring
     rows = await fetch_all_task_rows(db)
     if top_level_only:
-        rows = [row for row in rows if not row.get("parent_task_id")]
+        # Analysis tasks are always top-level after the recurring hard-cut.
+        pass
     if analysis_mode is not None:
         mode = analysis_mode.strip()
+        if mode == "recurring":
+            raise TaskWriteError("analysisMode=recurring is removed; use GET /api/v1/calendar/recurring")
         if mode not in ALLOWED_MODES:
             raise TaskWriteError(f"Invalid analysis_mode: {analysis_mode}")
         rows = [row for row in rows if str(row.get("analysis_mode") or "") == mode]
@@ -33,13 +37,6 @@ async def list_tasks_payload(
             rows = [row for row in rows if not row.get("workset_id")]
         else:
             rows = [row for row in rows if str(row.get("workset_id") or "") == wid]
-    if item_id is not None:
-        # ``recurring_schedules.item_id`` (joined); empty string = unbound only.
-        iid = item_id.strip()
-        if not iid:
-            rows = [row for row in rows if not row.get("item_id")]
-        else:
-            rows = [row for row in rows if str(row.get("item_id") or "") == iid]
     links = await fetch_all_task_channel_rows(db)
     by_task: dict[str, list[dict[str, Any]]] = {}
     for link in links:

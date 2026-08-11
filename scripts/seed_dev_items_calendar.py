@@ -97,12 +97,10 @@ async def _link_item_milestone(
     item_id: str,
     title: str,
     day: str,
+    kind: str,
     workset_id: str | None = None,
     remind_before_days: int | None = None,
-    kind: str | None = None,
 ) -> None:
-    from server.calendar.user_event_kinds import infer_user_event_kind_from_title
-
     await create_user_event(
         db,
         title=title,
@@ -111,7 +109,7 @@ async def _link_item_milestone(
         item_id=item_id,
         workset_id=workset_id,
         remind_before_days=remind_before_days,
-        kind=kind or infer_user_event_kind_from_title(title),
+        kind=kind,
         origin="manual",
     )
 
@@ -263,6 +261,7 @@ async def seed(db: Database) -> dict[str, int]:
                 item_id=item_id,
                 title="到期",
                 day=spec["expires_at"],
+                kind="expires",
                 workset_id=workset_id,
                 remind_before_days=spec.get("remind_before_days"),
             )
@@ -378,7 +377,7 @@ async def seed(db: Database) -> dict[str, int]:
         await dismiss_timeline_event(db, source="user", event_id=created_user_ids[-1])
         counts["dismissals"] += 1
     if item_ids:
-        await dismiss_timeline_event(db, source="item", event_id=f"item:{item_ids[0]}:remind")
+        await dismiss_timeline_event(db, source="item_remind", event_id=f"item:{item_ids[0]}:remind")
         counts["dismissals"] += 1
 
     return counts

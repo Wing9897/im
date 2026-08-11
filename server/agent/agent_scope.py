@@ -54,10 +54,10 @@ async def apply_agent_scope(
         args["taskId"] = scope_task_id
         args["_default_task_id"] = scope_task_id
 
-    if name == "calendar.create_recurring_task":
+    if name == "calendar.create_recurring_series":
         args["_parent_task_id"] = scope_task_id
 
-    if name in {"calendar.update_recurring_task", "calendar.delete_recurring_task"}:
+    if name in {"calendar.update_recurring_series", "calendar.delete_recurring_series"}:
         args["_require_parent_task_id"] = scope_task_id
 
     if name == "messages.search":

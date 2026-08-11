@@ -17,14 +17,14 @@ vi.mock("../../api/results", () => ({
 }));
 
 vi.mock("../../api/userEvents", () => ({
-  listUserEvents: vi.fn(),
+  listUserEventsPage: vi.fn(),
 }));
 
 /** Local AnalysisEvent fixture for merge tests (not timelineTestHelpers.makeEvent). */
 function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
   return {
     id: "evt-1",
-    taskId: "task-a",
+    seriesId: "task-a",
     version: 1,
     batchId: "b1",
     title: "分析事件",
@@ -51,7 +51,7 @@ function makeEvent(overrides: Partial<AnalysisEvent> = {}): AnalysisEvent {
 function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOccurrence {
   return {
     id: "cal-task:20260722T090000Z",
-    taskId: "cal-task",
+    seriesId: "cal-task",
     taskName: "週期任務",
     title: "週會",
     startTime: "2026-07-22T09:00:00.000Z",
@@ -66,10 +66,10 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
 }
 
 describe("calendarOccurrenceToBoardEvent", () => {
-  it("marks source as calendar and keeps taskId for filtering", () => {
+  it("marks source as calendar and keeps seriesId for filtering", () => {
     const event = calendarOccurrenceToBoardEvent(makeOccurrence());
     expect(event.source).toBe("recurring");
-    expect(event.taskId).toBe("cal-task");
+    expect(event.seriesId).toBe("cal-task");
     expect(event.body).toBe("RRULE 展開");
     expect(event.isAllDay).toBe(false);
     expect(event.timezone).toBe("Asia/Taipei");
@@ -106,9 +106,9 @@ describe("mergeWithCalendarOccurrences", () => {
     expect(merged).toHaveLength(1);
   });
 
-  it("skips occurrence with the same taskId and startTime", () => {
+  it("skips occurrence with the same seriesId and startTime", () => {
     const merged = mergeWithCalendarOccurrences(
-      [makeEvent({ id: "other-id", taskId: "cal-task", startTime: "2026-07-22T09:00:00.000Z" })],
+      [makeEvent({ id: "other-id", seriesId: "cal-task", startTime: "2026-07-22T09:00:00.000Z" })],
       [makeOccurrence()],
     );
     expect(merged).toHaveLength(1);
@@ -117,16 +117,16 @@ describe("mergeWithCalendarOccurrences", () => {
 
   it("deduplicates equivalent occurrence timestamps with different ISO precision", () => {
     const merged = mergeWithCalendarOccurrences(
-      [makeEvent({ id: "other-id", taskId: "cal-task", startTime: "2026-07-22T09:00:00Z" })],
+      [makeEvent({ id: "other-id", seriesId: "cal-task", startTime: "2026-07-22T09:00:00Z" })],
       [makeOccurrence({ startTime: "2026-07-22T09:00:00.000Z" })],
     );
     expect(merged).toHaveLength(1);
   });
 
-  it("keeps a single bar when user_event provenance matches an RRULE occurrence", () => {
+  it("does not treat user_event taskId provenance as a recurring seriesId", () => {
     const userTimed = userEventToBoardEvent({
       id: "ue-provenance",
-      title: "已落地的循环实例",
+      title: "分析任务溯源事件",
       body: "",
       startTime: "2026-07-22T09:00:00.000Z",
       endTime: "2026-07-22T09:30:00.000Z",
@@ -134,6 +134,7 @@ describe("mergeWithCalendarOccurrences", () => {
       origin: "manual",
       source: "user",
       taskId: "cal-task",
+      kind: "normal",
       worksetId: "ws-1",
       createdAt: "2026-07-21T00:00:00Z",
       updatedAt: "2026-07-21T00:00:00Z",
@@ -141,9 +142,11 @@ describe("mergeWithCalendarOccurrences", () => {
       timezone: "Asia/Taipei",
     });
     const merged = mergeWithCalendarOccurrences([userTimed], [makeOccurrence()]);
-    expect(merged).toHaveLength(1);
-    expect(merged[0].id).toBe("ue-provenance");
-    expect(merged[0].source).toBe("user");
+    // seriesId (recurring) and taskId (analysis provenance) are separate namespaces.
+    expect(merged).toHaveLength(2);
+    expect(merged.map((item) => item.id).sort()).toEqual(
+      ["cal-task:20260722T090000Z", "ue-provenance"].sort(),
+    );
   });
 });
 
@@ -277,10 +280,10 @@ describe("userEventToTimelineItem", () => {
 describe("fetchBoardEventsList", () => {
   beforeEach(async () => {
     const { fetchEvents, fetchCalendarOccurrences } = await import("../../api/results");
-    const { listUserEvents } = await import("../../api/userEvents");
+    const { listUserEventsPage } = await import("../../api/userEvents");
     vi.mocked(fetchEvents).mockReset();
     vi.mocked(fetchCalendarOccurrences).mockReset();
-    vi.mocked(listUserEvents).mockReset();
+    vi.mocked(listUserEventsPage).mockReset();
     vi.mocked(fetchEvents).mockResolvedValue({
       items: [
         makeEvent({
@@ -291,7 +294,7 @@ describe("fetchBoardEventsList", () => {
       ],
       total: 1,
     } as never);
-    vi.mocked(listUserEvents).mockResolvedValue([
+    vi.mocked(listUserEventsPage).mockResolvedValue({ items: [
       {
         id: "ue-1",
         title: "手動",
@@ -306,7 +309,7 @@ describe("fetchBoardEventsList", () => {
         createdAt: "2026-07-22T13:00:00Z",
         updatedAt: "2026-07-22T13:00:00Z",
       },
-    ]);
+    ], totalCount: 0, hasMore: false });
     vi.mocked(fetchCalendarOccurrences).mockResolvedValue([makeOccurrence()]);
   });
 

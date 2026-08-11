@@ -7,7 +7,7 @@ import {
   updateUserEvent,
   type UserEvent,
 } from "../../../api/userEvents";
-import { deleteTask } from "../../../api/tasks";
+import { deleteRecurringSeries } from "../../../api/recurringSeries";
 import type { TrackableItem } from "../../../api/items";
 import { useToast } from "../../../context/ToastContext";
 import { createRecurringTimelineEvent } from "../../../domain/timeline/createRecurringTimelineEvent";
@@ -210,13 +210,13 @@ export function useItemFormLinkedCalendars({
     }
   };
 
-  const deleteLinkedRecurring = async (taskId: string, title: string) => {
+  const deleteLinkedRecurring = async (seriesId: string, title: string) => {
     if (!item || formBusy || linkedCalendarBusy) return;
-    const name = title.trim() || taskId;
+    const name = title.trim() || seriesId;
     if (!window.confirm(t("deleteLinkedCalendarConfirm", { name }))) return;
     setLinkedCalendarBusy(true);
     try {
-      await deleteTask(taskId);
+      await deleteRecurringSeries(seriesId);
       showToast(t("linkedCalendarDeleted"), "success");
       setLinkedCalendarRefreshKey((n) => n + 1);
     } catch (err) {

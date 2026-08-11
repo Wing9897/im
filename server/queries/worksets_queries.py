@@ -46,13 +46,17 @@ async def update_workset(
 
 async def delete_workset(tx: TransactionDb, workset_id: str) -> None:
     # analysis_tasks.workset_id remains ON DELETE SET NULL.
-    # user_events / items.workset_id are NOT NULL — reassign to builtin before delete.
+    # user_events / items / recurring_schedules.workset_id are NOT NULL — reassign first.
     await tx.execute(
         "UPDATE user_events SET workset_id = ? WHERE workset_id = ?",
         (SYSTEM_WORKSET_ID, workset_id),
     )
     await tx.execute(
         "UPDATE items SET workset_id = ? WHERE workset_id = ?",
+        (SYSTEM_WORKSET_ID, workset_id),
+    )
+    await tx.execute(
+        "UPDATE recurring_schedules SET workset_id = ? WHERE workset_id = ?",
         (SYSTEM_WORKSET_ID, workset_id),
     )
     await tx.execute("DELETE FROM worksets WHERE id = ?", (workset_id,))

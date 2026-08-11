@@ -14,7 +14,6 @@ describe("Task mode field visibility", () => {
       const caps = ANALYSIS_MODE_CAPABILITIES[mode];
       const policy = mode === "agent" ? agentPresetPolicy("web_scout") : null;
       const visibility = getTaskModeFieldVisibility(mode, policy);
-      expect(visibility.rruleFieldsVisible).toBe(caps.pipeline === "rrule_expand");
       expect(visibility.promptFieldsVisible).toBe(caps.schedulable);
       expect(visibility.channelFieldsVisible).toBe(
         caps.schedulable &&
@@ -45,7 +44,6 @@ describe("Task mode field visibility", () => {
     expect(analysisModeRequiresChannels("agent")).toBe(false);
     expect(analysisModeShowsOptionalChannels("agent")).toBe(true);
     expect(getTaskModeFieldVisibility("agent", policy)).toEqual({
-      rruleFieldsVisible: false,
       promptFieldsVisible: true,
       channelFieldsVisible: true,
       channelsOptional: true,
@@ -54,7 +52,6 @@ describe("Task mode field visibility", () => {
       timelineToggleVisible: true,
       promptRequired: true,
       isAgent: true,
-      isRecurring: false,
       showAgentPolicy: true,
       showWaveInterval: false,
       showMessageGateOverrides: false,

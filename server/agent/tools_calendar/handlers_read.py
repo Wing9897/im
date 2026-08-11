@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.agent.tool_args import arg, as_optional_int
+from server.agent.tool_args import arg, as_bool, as_optional_int
 from server.agent.tool_limits import (
     CALENDAR_DEFAULT_LIST_LIMIT,
     CALENDAR_DEFAULT_WINDOW_LIMIT,
@@ -17,21 +17,32 @@ from server.calendar.query import (
     query_upcoming,
     query_window,
 )
+from server.calendar.query_fetch import calendar_list_item_from_task_row
 from server.calendar.timeline_dismissals import active_timeline_items
 from server.db.database import Database
 
 
+def _filter_task_or_series_id(args: dict[str, Any]) -> Any:
+    """Shared filter key for upcoming/recent/window.
+
+    ``seriesId`` is an explicit alias of ``taskId``: either may be an analysis
+    task id **or** a recurring series id (RRULE expand accepts both).
+    """
+    return arg(args, "seriesId", "series_id", "taskId", "task_id")
+
+
 async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, Any]:
     scope_task_id = args.get("_agent_scope_task_id") or arg(args, "taskId", "task_id")
-    items = await list_calendars(db)
+    include_inactive = as_bool(arg(args, "includeInactive", "include_inactive"), False)
+    items = await list_calendars(db, include_inactive=include_inactive)
     if scope_task_id:
         tid = str(scope_task_id).strip()
-        # Agent-scope tick: only this task row + its child recurring tasks.
+        # Agent-scope tick: only this task row + its child recurring series.
         scoped: list[dict[str, Any]] = []
         child_ids = {
             str(r["id"])
             for r in await db.fetch_all(
-                "SELECT task_id AS id FROM recurring_schedules WHERE parent_task_id = ?",
+                "SELECT id FROM recurring_schedules WHERE parent_task_id = ?",
                 (tid,),
             )
         }
@@ -48,22 +59,7 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
                 (tid,),
             )
             if row is not None:
-                scoped.insert(
-                    0,
-                    {
-                        "id": str(row["id"]),
-                        "name": str(row.get("name") or ""),
-                        "analysisMode": str(row.get("analysis_mode") or ""),
-                        "isActive": bool(row.get("is_active")),
-                        "rrule": row.get("rrule"),
-                        "location": row.get("event_location"),
-                        "description": row.get("event_description"),
-                        "isAllDay": bool(row.get("event_is_all_day")),
-                        "eventStartTime": row.get("event_start_time"),
-                        "eventEndTime": row.get("event_end_time"),
-                        "timezone": row.get("event_timezone"),
-                    },
-                )
+                scoped.insert(0, calendar_list_item_from_task_row(row))
         items = scoped
     return {"calendars": items, "count": len(items)}
 
@@ -78,7 +74,7 @@ async def _tool_upcoming(db: Database, args: dict[str, Any]) -> dict[str, Any]:
         limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_LIST_LIMIT) or CALENDAR_DEFAULT_LIST_LIMIT,
         days=days,
         search=args.get("search"),
-        task_id=arg(args, "taskId", "task_id"),
+        task_id=_filter_task_or_series_id(args),
         hard_cap=CALENDAR_RESULT_HARD_CAP,
     )
     result["items"] = active_timeline_items(result.get("items") or [])
@@ -90,7 +86,7 @@ async def _tool_recent(db: Database, args: dict[str, Any]) -> dict[str, Any]:
         db,
         limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_LIST_LIMIT) or CALENDAR_DEFAULT_LIST_LIMIT,
         search=args.get("search"),
-        task_id=arg(args, "taskId", "task_id"),
+        task_id=_filter_task_or_series_id(args),
         hard_cap=CALENDAR_RESULT_HARD_CAP,
     )
     result["items"] = active_timeline_items(result.get("items") or [])
@@ -111,7 +107,7 @@ async def _tool_window(db: Database, args: dict[str, Any]) -> dict[str, Any]:
             limit=as_optional_int(args.get("limit"), CALENDAR_DEFAULT_WINDOW_LIMIT) or CALENDAR_DEFAULT_WINDOW_LIMIT,
             cursor=args.get("cursor"),
             search=args.get("search"),
-            task_id=arg(args, "taskId", "task_id"),
+            task_id=_filter_task_or_series_id(args),
             hard_cap=CALENDAR_RESULT_HARD_CAP,
         )
     except ValueError as exc:

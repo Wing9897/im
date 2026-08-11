@@ -49,7 +49,7 @@ describe("EventListPanel", () => {
     const remind = makeTimelineItem({
       id: "item:r",
       title: "提醒 · milk",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       worksetId: SYSTEM_WORKSET_ID,
       startTime: new Date(2026, 6, 14, 12, 0, 0).toISOString(),
@@ -186,7 +186,7 @@ describe("EventListPanel", () => {
     const event = makeTimelineItem({
       id: "item-imp",
       title: "milk",
-      source: "item",
+      source: "item_remind",
       itemDateKind: "remind",
       important: true,
       startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),

@@ -58,7 +58,7 @@ class ParsedIcsEvent:
 
     @property
     def target_type(self) -> str:
-        return "recurring_task" if self.rrule else "user_event"
+        return "recurring" if self.rrule else "user_event"
 
     def comparable(self) -> dict[str, Any]:
         return {

@@ -14,7 +14,6 @@ from server.api.routes.tasks._router import router
 
 # isort: off
 from server.api.routes.tasks import catalog as _catalog  # noqa: F401
-from server.api.routes.tasks import schedule as _schedule  # noqa: F401
 from server.api.routes.tasks import agent_ticks as _agent_ticks  # noqa: F401
 from server.api.routes.tasks import crud as _crud  # noqa: F401
 # isort: on

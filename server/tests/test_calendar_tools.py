@@ -20,9 +20,9 @@ async def test_tool_names_match_plan(app) -> None:
         "calendar.window",
         "calendar.get",
         "calendar.create_event",
-        "calendar.create_recurring_task",
-        "calendar.update_recurring_task",
-        "calendar.delete_recurring_task",
+        "calendar.create_recurring_series",
+        "calendar.update_recurring_series",
+        "calendar.delete_recurring_series",
         "calendar.update_event",
         "calendar.delete_event",
         "calendar.mark_important",
@@ -31,14 +31,76 @@ async def test_tool_names_match_plan(app) -> None:
     result = await execute_calendar_tool(app.state.db, "calendar.list_calendars", {})
     assert result["count"] >= 1
     assert any(c["id"] == seed.TASK_CALENDAR for c in result["calendars"])
+    series = next(c for c in result["calendars"] if c["id"] == seed.TASK_CALENDAR)
+    assert series["kind"] == "recurring_series"
+    assert series["source"] == "recurring"
+    assert series["isActive"] is True
 
 
-async def test_create_recurring_task_weekly(app) -> None:
+async def test_list_calendars_include_inactive_for_resume(app) -> None:
     db = app.state.db
-    before = await db.fetch_all("SELECT id, analysis_mode FROM analysis_tasks WHERE analysis_mode != 'recurring'")
     created = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
+        {
+            "name": "暫停系列可發現",
+            "rrule": "FREQ=WEEKLY;BYDAY=MO",
+            "eventStartTime": "09:00",
+        },
+    )
+    assert "error" not in created
+    series_id = created["series"]["id"]
+
+    paused = await execute_calendar_tool(
+        db,
+        "calendar.update_recurring_series",
+        {"id": series_id, "isActive": False},
+    )
+    assert paused["series"]["isActive"] is False
+
+    default_list = await execute_calendar_tool(db, "calendar.list_calendars", {})
+    assert not any(c["id"] == series_id for c in default_list["calendars"])
+
+    with_inactive = await execute_calendar_tool(
+        db,
+        "calendar.list_calendars",
+        {"includeInactive": True},
+    )
+    match = next(c for c in with_inactive["calendars"] if c["id"] == series_id)
+    assert match["name"] == "暫停系列可發現"
+    assert match["isActive"] is False
+    assert match["kind"] == "recurring_series"
+    assert match["source"] == "recurring"
+
+    resumed = await execute_calendar_tool(
+        db,
+        "calendar.update_recurring_series",
+        {"seriesId": series_id, "isActive": True},
+    )
+    assert resumed["series"]["isActive"] is True
+
+
+async def test_upcoming_accepts_series_id_alias(app) -> None:
+    db = app.state.db
+    via_alias = await execute_calendar_tool(
+        db,
+        "calendar.upcoming",
+        {"days": 14, "seriesId": seed.TASK_CALENDAR, "limit": 50},
+    )
+    assert "error" not in via_alias
+    assert all(
+        item.get("seriesId") == seed.TASK_CALENDAR or item.get("source") != "recurring"
+        for item in via_alias["items"]
+    )
+    assert any(item.get("seriesId") == seed.TASK_CALENDAR for item in via_alias["items"])
+
+
+async def test_create_recurring_series_weekly(app) -> None:
+    db = app.state.db
+    before = await db.fetch_all("SELECT id, analysis_mode FROM analysis_tasks")
+    created = await execute_calendar_tool(
+        db,
+        "calendar.create_recurring_series",
         {
             "name": "睇電視",
             "rrule": "FREQ=WEEKLY;BYDAY=WE",
@@ -47,31 +109,30 @@ async def test_create_recurring_task_weekly(app) -> None:
         },
     )
     assert "error" not in created
-    task = created["task"]
+    task = created["series"]
     assert task["name"] == "睇電視"
-    assert task["analysisMode"] == "recurring"
+    assert "analysisMode" not in task
     assert task["rrule"] == "FREQ=WEEKLY;BYDAY=WE"
     assert task["eventStartTime"] == "10:00"
     assert task["eventEndTime"] == "11:00"
     assert task["isActive"] is True
 
-    row = await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task["id"],))
+    row = await db.fetch_one("SELECT * FROM recurring_schedules WHERE id = ?", (task["id"],))
     assert row is not None
-    assert row["analysis_mode"] == "recurring"
-    assert row["prompt_template"] == ""
+    assert row["name"] == "睇電視"
 
-    after = await db.fetch_all("SELECT id, analysis_mode FROM analysis_tasks WHERE analysis_mode != 'recurring'")
+    after = await db.fetch_all("SELECT id, analysis_mode FROM analysis_tasks")
     assert {(r["id"], r["analysis_mode"]) for r in after} == {(r["id"], r["analysis_mode"]) for r in before}
 
     listed = await execute_calendar_tool(db, "calendar.list_calendars", {})
-    assert any(c["id"] == task["id"] and c["analysisMode"] == "recurring" for c in listed["calendars"])
+    assert any(c["id"] == task["id"] and c["analysisMode"] == "" for c in listed["calendars"])
 
 
-async def test_create_recurring_task_appears_in_upcoming(app) -> None:
+async def test_create_recurring_series_appears_in_upcoming(app) -> None:
     db = app.state.db
     created = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {
             "name": "每日循環測試",
             "rrule": "FREQ=DAILY",
@@ -80,7 +141,7 @@ async def test_create_recurring_task_appears_in_upcoming(app) -> None:
         },
     )
     assert "error" not in created
-    task_id = created["task"]["id"]
+    task_id = created["series"]["id"]
 
     upcoming = await execute_calendar_tool(
         db,
@@ -88,42 +149,42 @@ async def test_create_recurring_task_appears_in_upcoming(app) -> None:
         {"days": 7, "taskId": task_id, "limit": 50},
     )
     assert "error" not in upcoming
-    matches = [item for item in upcoming["items"] if item.get("taskId") == task_id]
+    matches = [item for item in upcoming["items"] if item.get("seriesId") == task_id]
     assert matches, "expected RRULE occurrences from the new calendar task"
     assert any(item.get("title") == "每日循環測試" for item in matches)
 
 
-async def test_create_recurring_task_rejects_bad_rrule_and_missing_time(app) -> None:
+async def test_create_recurring_series_rejects_bad_rrule_and_missing_time(app) -> None:
     db = app.state.db
     bad = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {"name": "壞規則", "rrule": "FREQ=BOGUS", "eventStartTime": "09:00"},
     )
     assert "error" in bad
 
     missing_time = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {"title": "缺時間", "rrule": "FREQ=DAILY"},
     )
     assert "error" in missing_time
 
     all_day = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {"title": "全日", "rrule": "FREQ=WEEKLY;BYDAY=MO", "eventIsAllDay": True},
     )
     assert "error" not in all_day
-    assert all_day["task"]["eventIsAllDay"] is True
-    assert all_day["task"]["eventStartTime"] is None
+    assert all_day["series"]["eventIsAllDay"] is True
+    assert all_day["series"]["eventStartTime"] is None
 
 
 async def test_update_and_delete_recurring_task_tools(app) -> None:
     db = app.state.db
     created = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {
             "name": "週三睇電視",
             "rrule": "FREQ=WEEKLY;BYDAY=WE",
@@ -131,11 +192,11 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
         },
     )
     assert "error" not in created
-    task_id = created["task"]["id"]
+    task_id = created["series"]["id"]
 
     updated = await execute_calendar_tool(
         db,
-        "calendar.update_recurring_task",
+        "calendar.update_recurring_series",
         {
             "id": task_id,
             "name": "週五睇電視",
@@ -144,14 +205,14 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
         },
     )
     assert "error" not in updated
-    assert updated["task"]["name"] == "週五睇電視"
-    assert updated["task"]["rrule"] == "FREQ=WEEKLY;BYDAY=FR"
-    assert updated["task"]["eventStartTime"] == "21:00"
+    assert updated["series"]["name"] == "週五睇電視"
+    assert updated["series"]["rrule"] == "FREQ=WEEKLY;BYDAY=FR"
+    assert updated["series"]["eventStartTime"] == "21:00"
 
     # Refuse to mutate a non-recurring task (seeded event-mode task).
     refused = await execute_calendar_tool(
         db,
-        "calendar.update_recurring_task",
+        "calendar.update_recurring_series",
         {"id": seed.TASK_EVENT, "name": "不該改"},
     )
     assert "error" in refused
@@ -159,17 +220,15 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
 
     deleted = await execute_calendar_tool(
         db,
-        "calendar.delete_recurring_task",
+        "calendar.delete_recurring_series",
         {"id": task_id},
     )
     assert deleted["deleted"] is True
-    assert deleted["soft"] is True
-    assert deleted["task"]["isActive"] is False
-    row = await db.fetch_one("SELECT id, is_active FROM analysis_tasks WHERE id = ?", (task_id,))
-    assert row is not None
-    assert int(row["is_active"]) == 0
+    assert "soft" not in deleted
+    row = await db.fetch_one("SELECT id FROM recurring_schedules WHERE id = ?", (task_id,))
+    assert row is None
 
-    # Soft-deleted series must not expand into occurrences.
+    # Hard-deleted series must not expand into occurrences.
     from datetime import datetime, timezone
 
     from server.calendar.query import expand_active_calendar_occurrences
@@ -178,21 +237,13 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
         db,
         datetime(2026, 7, 1, tzinfo=timezone.utc),
         datetime(2026, 8, 1, tzinfo=timezone.utc),
-        task_id=task_id,
+        series_id=task_id,
     )
     assert occs == []
 
-    # Re-activate via update.
-    resumed = await execute_calendar_tool(
-        db,
-        "calendar.update_recurring_task",
-        {"id": task_id, "isActive": True},
-    )
-    assert resumed["task"]["isActive"] is True
-
     refuse_delete = await execute_calendar_tool(
         db,
-        "calendar.delete_recurring_task",
+        "calendar.delete_recurring_series",
         {"id": seed.TASK_EVENT},
     )
     assert refuse_delete.get("deleted") is False
@@ -201,32 +252,32 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
     assert still is not None
 
 
-async def test_delete_analysis_task_clears_calendar_dismissals(app) -> None:
-    """REST hard-delete path clears RRULE occurrence dismissals for that task."""
-    from server.queries.tasks_queries import delete_analysis_task
+async def test_delete_recurring_series_clears_calendar_dismissals(app) -> None:
+    """Series hard-delete clears only that series' occurrence dismissals."""
+    from server.services.recurring_series_writes import hard_delete_recurring_series
     from server.util import utc_now_iso
 
     db = app.state.db
     created = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {
             "name": "硬刪清理",
             "rrule": "FREQ=DAILY",
             "eventStartTime": "08:00",
         },
     )
-    task_id = created["task"]["id"]
+    task_id = created["series"]["id"]
     other = await execute_calendar_tool(
         db,
-        "calendar.create_recurring_task",
+        "calendar.create_recurring_series",
         {
             "name": "保留",
             "rrule": "FREQ=DAILY",
             "eventStartTime": "09:00",
         },
     )
-    other_id = other["task"]["id"]
+    other_id = other["series"]["id"]
     now = utc_now_iso()
     await db.execute(
         "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
@@ -237,9 +288,9 @@ async def test_delete_analysis_task_clears_calendar_dismissals(app) -> None:
         ("recurring", f"{other_id}:20260723T010000Z", now),
     )
 
-    await delete_analysis_task(db, task_id)
+    await hard_delete_recurring_series(db, series_id=task_id)
 
-    assert await db.fetch_one("SELECT id FROM analysis_tasks WHERE id = ?", (task_id,)) is None
+    assert await db.fetch_one("SELECT id FROM recurring_schedules WHERE id = ?", (task_id,)) is None
     assert (
         await db.fetch_value(
             "SELECT COUNT(*) FROM timeline_dismissals WHERE source = 'recurring' AND event_id LIKE ?",
@@ -380,7 +431,7 @@ async def test_calendar_write_tools_publish_resource_modified(app) -> None:
     try:
         created_task = await execute_tool(
             db,
-            "calendar.create_recurring_task",
+            "calendar.create_recurring_series",
             {
                 "name": "SSE 循環",
                 "rrule": "FREQ=DAILY",
@@ -389,24 +440,24 @@ async def test_calendar_write_tools_publish_resource_modified(app) -> None:
             context={"broadcaster": broadcaster},
         )
         assert "error" not in created_task
-        task_id = created_task["task"]["id"]
+        task_id = created_task["series"]["id"]
 
         updated_task = await execute_tool(
             db,
-            "calendar.update_recurring_task",
+            "calendar.update_recurring_series",
             {"id": task_id, "name": "SSE 循環改"},
             context={"broadcaster": broadcaster},
         )
         assert "error" not in updated_task
 
-        soft_deleted = await execute_tool(
+        hard_deleted = await execute_tool(
             db,
-            "calendar.delete_recurring_task",
+            "calendar.delete_recurring_series",
             {"id": task_id},
             context={"broadcaster": broadcaster},
         )
-        assert soft_deleted.get("deleted") is True
-        assert soft_deleted.get("soft") is True
+        assert hard_deleted.get("deleted") is True
+        assert "soft" not in hard_deleted
 
         created_event = await execute_tool(
             db,
@@ -444,9 +495,9 @@ async def test_calendar_write_tools_publish_resource_modified(app) -> None:
 
     payloads = [json.loads(event["data"])["payload"] for event in events]
     assert payloads == [
-        {"resourceType": "task", "resourceId": task_id, "action": "created"},
-        {"resourceType": "task", "resourceId": task_id, "action": "updated"},
-        {"resourceType": "task", "resourceId": task_id, "action": "updated"},
+        {"resourceType": "recurring", "resourceId": task_id, "action": "created"},
+        {"resourceType": "recurring", "resourceId": task_id, "action": "updated"},
+        {"resourceType": "recurring", "resourceId": task_id, "action": "deleted"},
         {"resourceType": "user_event", "resourceId": event_id, "action": "created"},
         {"resourceType": "user_event", "resourceId": event_id, "action": "updated"},
         {"resourceType": "user_event", "resourceId": event_id, "action": "deleted"},

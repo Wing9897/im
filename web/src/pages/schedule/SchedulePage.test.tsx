@@ -5,13 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mockNavigate = vi.fn();
 const {
   mockListUserEventsPage,
-  mockListTasks,
-  mockFetchTaskSchedule,
+  mockListRecurringSeries,
   mockListItems,
 } = vi.hoisted(() => ({
   mockListUserEventsPage: vi.fn(),
-  mockListTasks: vi.fn(),
-  mockFetchTaskSchedule: vi.fn(),
+  mockListRecurringSeries: vi.fn(),
   mockListItems: vi.fn(),
 }));
 
@@ -36,19 +34,15 @@ vi.mock("../../context/TaskCatalogContext", async () =>
 
 vi.mock("../../api/userEvents", () => ({
   listUserEventsPage: (...args: unknown[]) => mockListUserEventsPage(...args),
-  listUserEvents: vi.fn().mockResolvedValue([]),
   createUserEvent: vi.fn(),
   updateUserEvent: vi.fn(),
   deleteUserEvent: vi.fn(),
 }));
 
-vi.mock("../../api/tasks", () => ({
-  listTasks: (...args: unknown[]) => mockListTasks(...args),
-  deleteTask: vi.fn(),
-}));
-
-vi.mock("../../api/taskSchedule", () => ({
-  fetchTaskSchedule: (...args: unknown[]) => mockFetchTaskSchedule(...args),
+vi.mock("../../api/recurringSeries", () => ({
+  listRecurringSeries: (...args: unknown[]) => mockListRecurringSeries(...args),
+  deleteRecurringSeries: vi.fn(),
+  patchRecurringSeries: vi.fn(),
 }));
 
 vi.mock("../../api/items", () => ({
@@ -100,6 +94,7 @@ describe("SchedulePage", () => {
           taskId: "",
           source: "user",
           dismissed: false,
+          kind: "normal",
           createdAt: "2026-09-01T08:00:00Z",
           updatedAt: "2026-09-01T08:00:00Z",
         },
@@ -107,22 +102,31 @@ describe("SchedulePage", () => {
       totalCount: 1,
       hasMore: false,
     });
-    mockListTasks.mockResolvedValue([
-      {
+    mockListRecurringSeries.mockResolvedValue({
+      items: [{
         id: "rec-1",
         name: "每日站會",
         description: null,
-        analysisMode: "recurring",
-        worksetId: "__user__",
+        rrule: "FREQ=DAILY",
+        eventStartTime: null,
+        eventEndTime: null,
+        eventIsAllDay: false,
+        eventLocation: null,
+        eventDescription: null,
+        eventTimezone: null,
+        eventExdates: [],
+        eventRdates: [],
+        icsUid: null,
+        icsSource: null,
         isActive: true,
-      },
-    ]);
-    mockFetchTaskSchedule.mockResolvedValue({
-      taskId: "rec-1",
-      rrule: "FREQ=DAILY",
-      eventStartTime: "09:00",
-      eventEndTime: null,
-      eventIsAllDay: false,
+        worksetId: "__user__",
+        parentTaskId: null,
+        itemId: null,
+        createdAt: "2026-09-02T08:00:00Z",
+        updatedAt: "2026-09-02T08:00:00Z",
+      }],
+      totalCount: 1,
+      hasMore: false,
     });
     window.sessionStorage.clear();
   });
@@ -136,7 +140,7 @@ describe("SchedulePage", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders toolbar tabs and one-off cards", async () => {
+  it("renders unified list without tab split", async () => {
     await act(async () => {
       root = createRoot(container);
       root.render(createElement(SchedulePage));
@@ -146,14 +150,23 @@ describe("SchedulePage", () => {
 
     expect(container.querySelector('[data-testid="schedule-page"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="schedule-toolbar"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="schedule-tab-one-off"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="schedule-tab-recurring"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="schedule-tab-one-off"]')).toBeNull();
+    expect(container.querySelector('[data-testid="schedule-tab-recurring"]')).toBeNull();
+    expect(container.querySelector('[data-testid="schedule-grid"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="schedule-one-off-card-ue-1"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeTruthy();
     expect(container.textContent).toContain("晨會");
+    expect(container.textContent).toContain("每日站會");
     expect(mockListUserEventsPage).toHaveBeenCalled();
+    expect(mockListRecurringSeries).toHaveBeenCalledWith({
+      topLevelOnly: true,
+      search: undefined,
+      limit: 24,
+      offset: 0,
+    });
   });
 
-  it("loads recurring feed when switching tabs", async () => {
+  it("navigates to series editor when recurring edit is clicked", async () => {
     await act(async () => {
       root = createRoot(container);
       root.render(createElement(SchedulePage));
@@ -161,23 +174,15 @@ describe("SchedulePage", () => {
       await Promise.resolve();
     });
 
-    const recurringTab = container.querySelector(
-      '[data-testid="schedule-tab-recurring"]',
+    const editBtn = container.querySelector(
+      '[data-testid="schedule-recurring-edit-rec-1"]',
     ) as HTMLButtonElement;
-    expect(recurringTab).toBeTruthy();
+    expect(editBtn).toBeTruthy();
 
     await act(async () => {
-      recurringTab.click();
-      await Promise.resolve();
-      await Promise.resolve();
+      editBtn.click();
     });
 
-    expect(mockListTasks).toHaveBeenCalledWith({
-      analysisMode: "recurring",
-      topLevelOnly: true,
-    });
-    expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeTruthy();
-    expect(container.textContent).toContain("每日站會");
-    expect(container.textContent).toContain("FREQ=DAILY");
+    expect(mockNavigate).toHaveBeenCalledWith("/schedule/recurring/rec-1/edit");
   });
 });

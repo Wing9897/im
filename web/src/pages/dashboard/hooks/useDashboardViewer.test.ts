@@ -193,21 +193,4 @@ describe("useDashboardViewer", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/agent");
   });
 
-  it("hides child recurring tasks from the grid", async () => {
-    // Catalog still holds the child (parentTaskId); dashboard grid is top-level only.
-    resetTaskCatalogState([
-      makeAnalysisTask({ id: "proj-1", name: "Launch", analysisMode: "agent", outputCalendar: true }),
-      makeAnalysisTask({
-        id: "child-1",
-        name: "Standup",
-        analysisMode: "recurring",
-        parentTaskId: "proj-1",
-      }),
-      makeAnalysisTask({ id: "event-1", name: "Watch", analysisMode: "intel_event" }),
-    ]);
-    await renderHook();
-
-    expect(latest!.tasks.map((task) => task.id)).toEqual(["proj-1", "event-1"]);
-    expect(latest!.filteredTasks.map((task) => task.id)).toEqual(["proj-1", "event-1"]);
-  });
 });

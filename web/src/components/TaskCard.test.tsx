@@ -142,22 +142,6 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("閒置");
   });
 
-  it("shows recurring task-type badge without avatar for recurring mode tasks", () => {
-    renderCard({ task: createMockTask({ analysisMode: "recurring" }) });
-
-    expect(container.textContent).toContain("週期任務");
-    expect(container.querySelector('[data-testid="task-type-icon-recurring"]')).toBeNull();
-    expect(container.querySelector('[data-testid="task-employee-avatar-recurring"]')).toBeNull();
-    expect(container.querySelector('[data-testid^="ai-staff-avatar-"]')).toBeNull();
-  });
-
-  it("does not show recurring badge for non-recurring mode tasks", () => {
-    renderCard({ task: createMockTask({ analysisMode: "intel_event" }) });
-
-    const allText = container.textContent ?? "";
-    expect(allText).not.toContain("週期任務");
-  });
-
   it("shows the employee badge for every mode", () => {
     renderCard({ task: createMockTask({ analysisMode: "leaderboard" }) });
     expect(container.textContent).toContain("排行榜任務");
@@ -304,21 +288,6 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("Agent 排程");
     expect(container.textContent).not.toContain("3852");
     expect(container.textContent).not.toContain("待分析");
-  });
-
-  it("hides marker stats for recurring mode", () => {
-    renderCard({
-      task: createMockTask({
-        analysisMode: "recurring",
-        name: "Standup",
-        rrule: "FREQ=DAILY",
-      }),
-    });
-    expect(container.querySelector('[data-testid="task-card-schedule-hint-task-1"]')).not.toBeNull();
-    expect(container.textContent).toContain("週期任務");
-    expect(container.textContent).not.toContain("FREQ=DAILY");
-    expect(container.textContent).not.toContain("待分析");
-
   });
 
   it("shows queued message count", () => {

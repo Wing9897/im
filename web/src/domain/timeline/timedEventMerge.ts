@@ -1,5 +1,5 @@
 import type { UserEvent } from "../../api/userEvents";
-import { listUserEvents } from "../../api/userEvents";
+import { listUserEventsPage } from "../../api/userEvents";
 import { fetchEvents } from "../../api/results";
 import { formatItemOccurrenceTitle } from "../items/itemCalendarProjection";
 import { getEventTimestamp } from "../intelligence/mapFilters";
@@ -119,11 +119,13 @@ export function withResolvedUserEventTaskNames(
 export function calendarOccurrenceToBoardEvent(
   occurrence: CalendarOccurrence,
 ): AnalysisEvent {
-  const isItem = occurrence.source === "item";
+  const isItem = occurrence.source === "item_remind";
   const bareTitle = occurrence.title || "";
+  const seriesId = isItem ? null : occurrence.seriesId || null;
   return {
     id: occurrence.id,
-    taskId: isItem ? null : occurrence.taskId || null,
+    taskId: null,
+    seriesId,
     version: 1,
     batchId: "",
     title: isItem
@@ -145,7 +147,7 @@ export function calendarOccurrenceToBoardEvent(
     taskName: isItem ? null : occurrence.taskName || null,
     createdAt: occurrence.startTime,
     updatedAt: occurrence.startTime,
-    source: isItem ? "item" : "recurring",
+    source: isItem ? "item_remind" : "recurring",
     isAllDay: occurrence.isAllDay,
     timezone: occurrence.timezone ?? null,
     dismissed: Boolean(occurrence.dismissed),
@@ -161,19 +163,19 @@ export function calendarOccurrenceToBoardEvent(
 }
 
 function timedKey(
-  taskId: string | null | undefined,
+  seriesOrTaskId: string | null | undefined,
   startTime: string | null | undefined,
 ): string | null {
-  if (!taskId || !startTime) {
+  if (!seriesOrTaskId || !startTime) {
     return null;
   }
   const timestamp = new Date(startTime).getTime();
-  return `${taskId}|${Number.isNaN(timestamp) ? startTime : timestamp}`;
+  return `${seriesOrTaskId}|${Number.isNaN(timestamp) ? startTime : timestamp}`;
 }
 
 /**
  * Append recurring RRULE occurrences after analysis / user events.
- * Skips rows that already match by id or by taskId+startTime to avoid double bars.
+ * Skips rows that already match by id or by seriesId+startTime to avoid double bars.
  */
 export function mergeWithCalendarOccurrences(
   timedEvents: AnalysisEvent[],
@@ -185,7 +187,9 @@ export function mergeWithCalendarOccurrences(
   const ids = new Set(timedEvents.map((event) => event.id));
   const keys = new Set<string>();
   for (const event of timedEvents) {
-    const key = timedKey(event.taskId, event.startTime);
+    // Dedupe against RRULE rows by seriesId only — never taskId
+    // (analysis/user provenance is a separate id namespace).
+    const key = timedKey(event.seriesId, event.startTime);
     if (key) {
       keys.add(key);
     }
@@ -195,7 +199,7 @@ export function mergeWithCalendarOccurrences(
     if (ids.has(occurrence.id)) {
       continue;
     }
-    const key = timedKey(occurrence.taskId, occurrence.startTime);
+    const key = timedKey(occurrence.seriesId, occurrence.startTime);
     if (key && keys.has(key)) {
       continue;
     }
@@ -252,7 +256,7 @@ export async function fetchBoardEventsList(opts: {
       includeTotal: false,
     }).then((page) => page.items),
     // Unbounded list stays small under retention; merge so「一般」filter works.
-    listUserEvents(),
+    listUserEventsPage().then((page) => page.items),
     includeCalendar && startDate && endDate
       ? fetchSharedCalendarItems(startDate, endDate)
       : Promise.resolve([] as CalendarOccurrence[]),
