@@ -2,10 +2,11 @@
  * Shared Calendar/Timeline fetch helpers.
  *
  * RRULE + item DATE projections go through `/api/v1/calendar/items`
- * (`source=recurring` / `source=item`). Analysis timed events and user events
- * remain separate endpoints (server contract), but in-flight requests with the
- * same key are coalesced so Board widgets + Timeline do not hammer the API in
- * parallel.
+ * (`source=recurring` / `source=item`). `source=item` is remind projection
+ * only — distinct from item-linked `user_events` (`source=user` + itemId +
+ * kind). Analysis timed events and user events remain separate endpoints
+ * (server contract), but in-flight requests with the same key are coalesced
+ * so Board widgets + Timeline do not hammer the API in parallel.
  */
 
 import { listUserEvents, type UserEvent } from "../../api/userEvents";

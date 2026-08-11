@@ -1,6 +1,12 @@
 /**
- * Special linked-calendar kinds on ``user_events.kind`` (wire).
- * Distinct from dialog one_off/recurring ``UserEventKind``.
+ * Special kinds on ``user_events.kind`` (wire) for **item-linked** calendars
+ * (`source=user` + ``itemId``). Distinct from dialog one_off/recurring
+ * ``UserEventKind``, and from timeline ``source=item`` remind projections
+ * (those are not ``user_events`` and have no ``kind``).
+ *
+ * Hierarchy: analysis|recurring = AI/task intel; user without itemId = general
+ * calendar; user+itemId = item-linked (this vocabulary); source=item = remind
+ * projection only. ``kind`` drives expiry cache / finance — not UI-only labels.
  */
 
 export const USER_EVENT_CALENDAR_KINDS = [
@@ -10,6 +16,9 @@ export const USER_EVENT_CALENDAR_KINDS = [
 ] as const;
 
 export type UserEventCalendarKind = (typeof USER_EVENT_CALENDAR_KINDS)[number];
+
+/** Same wire values; alias stressing item-linked ``user_events`` usage. */
+export type ItemLinkedCalendarKind = UserEventCalendarKind;
 
 /** Title presets historically used by Items quick-create「到期」. */
 export const LINKED_EXPIRY_TITLES = new Set(["到期", "Expires"]);

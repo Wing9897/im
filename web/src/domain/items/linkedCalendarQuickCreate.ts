@@ -1,6 +1,12 @@
 /**
  * Linked-calendar create/edit form initials for Items (quick chip + add/edit).
- * Quick presets: expiry (all-day), purchase/effective (timed), other (empty title).
+ * These open **item-linked** ``user_events`` (`source=user` + ``itemId``) with
+ * ``UserEventCalendarKind`` / ``ItemLinkedCalendarKind`` — not timeline
+ * ``source=item`` remind projections.
+ *
+ * Quick presets: expiry (all-day → kind=expires), purchase/effective (timed →
+ * purchase_effective), other (empty title → normal). Kind is system authority
+ * (expiry cache / finance); title presets are UX only.
  */
 
 import type { UserEvent } from "../../api/userEvents";

@@ -5,7 +5,8 @@
  * Timeline uses this plan-aware path with the same shared fetch + merge helpers.
  *
  * Item DATE rows come from GET /api/v1/calendar/items (source=item) — same
- * server projection as agent query_window. No FE listItems re-projection.
+ * server projection as agent query_window (remind only; not item-linked
+ * user_events with kind). No FE listItems re-projection.
  */
 
 import type { UserEvent } from "../../api/userEvents";

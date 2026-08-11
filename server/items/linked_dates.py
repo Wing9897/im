@@ -1,9 +1,13 @@
 """Align item expires_at / remind_before_days with linked expiry calendars.
 
 Items API no longer accepts expiry / remind writes. Linked ``user_events`` with
-``kind=expires`` are the source of truth (title presets 到期 / Expires are UX
-only). Item columns are a denormalized cache for list badges, sort, agent
-``list_expiring``, and remind projection — never a standalone SoT.
+``kind=expires`` (timeline ``source=user`` + ``item_id``) are the source of
+truth (title presets 到期 / Expires are UX only). Item columns are a
+denormalized cache for list badges, sort, agent ``list_expiring``, and the
+separate timeline ``source=item`` remind projection — never a standalone SoT.
+
+Do not confuse item-linked user events (``kind`` authority) with ``source=item``
+remind rows. See ``server.calendar.user_event_kinds`` for the calendar hierarchy.
 
 Write-through: calendar create / update / delete calls
 ``sync_item_dates_from_linked_calendars``. GET list/get must not reconcile.

@@ -92,7 +92,7 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind` only）。**到期**写路径 SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填；日历 create／update／delete write-through → [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 回填物品 flat cache）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item`，`itemDateKind`=`remind` only）— 与物品关联日历（`source=user` + `itemId`）不同轨。**到期**写路径 SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填；日历 create／update／delete write-through → [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 回填物品 flat cache）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -152,6 +152,15 @@
 | `calendar.unmark_important` | 清除重要标记；id 词汇同 `mark_important`／`delete_event` | 1 条 |
 
 列表字段：`id`, `taskId`, `title`, `startTime`, `endTime`, `location?`, `source`（`analysis` / `recurring` / `user` / `item`）；`source=item` 仅投影提醒日（`itemDateKind=remind`；无购入／到期投影）。用户事件另带 `origin`、`worksetId`（归属；builtin `__user__`＝「一般」）以及可选溯源 `taskId`（空＝无任务溯源，**不是**「一般」工作集）。
+
+时间轴日历层级（`source` ≠ 物品关联 `kind`）：
+
+- `source=analysis|recurring` → AI／任务情报
+- `source=user` 且无 `itemId` → 一般日历
+- `source=user` + `itemId` → **物品关联日历**（`kind=expires|purchase_effective|normal`；驱动到期 cache／财务，非纯 UI）
+- `source=item` → **提醒日投影**（`itemDateKind=remind` only）— **不是** 物品关联 `user_events`
+
+勿把 `source=item` 与「带 `itemId` 的用户事件」混为一谈；到期／购入生效写路径仍是关联 `user_events`。
 
 来源边界由服务端决定：普通 REST/UI 创建固定为 `origin=manual`，助手通道 `calendar.create_event` 固定为 `origin=assistant`，专案 tick 通道固定为 `origin=agent`，A2A 通道工具写入固定为 `origin=a2a`；客户端不能借由请求字段伪造来源。详见 [`a2a.md`](a2a.md)／[`agent.md`](agent.md)。
 
