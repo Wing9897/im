@@ -5,7 +5,7 @@
 
 import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
-import { daysUntil } from "../items/itemAttributes";
+import { daysUntil } from "../items/itemExpiryTone";
 import { isItemExpiringSoon, isItemOverdue } from "../items/categoryAggregates";
 import { getOsTimeMs } from "../../utils/time";
 

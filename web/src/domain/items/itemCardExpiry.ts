@@ -11,7 +11,7 @@
  */
 
 import type { TrackableItem } from "../../api/items";
-import { daysUntil, expiryTone, type ExpiryTone } from "./itemAttributes";
+import { daysUntil, expiryTone, type ExpiryTone } from "./itemExpiryTone";
 
 export type ItemCardExpiry = {
   /** YYYY-MM-DD from denormalized item.expiresAt (linked「到期」cache). */

@@ -7,7 +7,7 @@ Uses real ``create_item`` + ``create_user_event`` (kind / amount / direction).
   uv run python scripts/seed_items_finance_demo.py --clean
   uv run python scripts/seed_items_finance_demo.py --verify-only
 
-After a stamp-24 (or older) wipe:
+After a stamp wipe (or older local DB):
 
   uv run python scripts/reset_local_databases.py --apply
   uv run python scripts/seed_items_finance_demo.py
@@ -29,18 +29,18 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server.calendar.user_event_kinds import (
+from server.calendar.user_event_kinds import (  # noqa: E402
     USER_EVENT_KIND_EXPIRES,
     USER_EVENT_KIND_NORMAL,
     USER_EVENT_KIND_PURCHASE_EFFECTIVE,
 )
-from server.calendar.user_events import create_user_event
-from server.db.database import Database, TransactionDb
-from server.items.service import create_item
-from server.paths import default_db_path
-from server.queries.items_queries import fetch_category_by_slug
-from server.queries.worksets_queries import insert_workset
-from server.util import utc_now_iso
+from server.calendar.user_events import create_user_event  # noqa: E402
+from server.db.database import Database, TransactionDb  # noqa: E402
+from server.items.service import create_item  # noqa: E402
+from server.paths import default_db_path  # noqa: E402
+from server.queries.items_queries import fetch_category_by_slug  # noqa: E402
+from server.queries.worksets_queries import insert_workset  # noqa: E402
+from server.util import utc_now_iso  # noqa: E402
 
 PREFIX = "[finance-demo]"
 WS_ID = "ws-finance-demo"
@@ -201,10 +201,7 @@ def _demo_specs() -> list[ItemSpec]:
             title=f"{PREFIX} 保固卡（自訂到期標題）",
             category_slug="warranty",
             emoji="🛡️",
-            notes=(
-                "序號 WRN-RENAMED。kind=expires 但標題≠「到期」—"
-                "徽章看 kind / expires_at，不是標題。"
-            ),
+            notes=("序號 WRN-RENAMED。kind=expires 但標題≠「到期」—徽章看 kind / expires_at，不是標題。"),
             events=[
                 LinkedEventSpec(
                     title="保固截止日",
@@ -480,7 +477,7 @@ async def verify(db: Database) -> dict[str, Any]:
     stamp_row = await db.fetch_one("PRAGMA user_version")
     stamp_val = list(stamp_row.values())[0] if stamp_row else None
     if int(stamp_val or -1) != 26:
-        errors.append(f"schema stamp={stamp_val!r} expected 25")
+        errors.append(f"schema stamp={stamp_val!r} expected 26")
 
     result = {
         "ok": not errors,
@@ -511,16 +508,10 @@ def _print_table(seeded: dict[str, Any]) -> None:
             if cal.get("amount") is not None:
                 money = f" {cal['amount']} {cal.get('direction') or ''}".rstrip()
             cal_bits.append(f"{cal['kind']}「{cal['title']}」@{cal['day']}{money}")
-        print(
-            f"{item['key']:<16} {item['id']:<28} {str(item.get('expires_at') or '—'):<12} "
-            + "; ".join(cal_bits)
-        )
+        print(f"{item['key']:<16} {item['id']:<28} {str(item.get('expires_at') or '—'):<12} " + "; ".join(cal_bits))
     fin = _expected_finance()
     print("\nExpected /items/finance totals (all purchase_effective):")
-    print(
-        f"  expense={fin['total_expense']:.2f}  income={fin['total_income']:.2f}  "
-        f"net={fin['net']:.2f}"
-    )
+    print(f"  expense={fin['total_expense']:.2f}  income={fin['total_income']:.2f}  net={fin['net']:.2f}")
     print("\nManual checklist:")
     print("  1. /items — milk soon-badge; passport expires_at=2030-05-20 (not 2032)")
     print("  2. Open passport / camera / subscription — chips show expires / purchase / normal")
@@ -530,12 +521,13 @@ def _print_table(seeded: dict[str, Any]) -> None:
 
 async def main() -> None:
     # Windows consoles often default to a legacy code page; keep TC titles readable.
-    if hasattr(sys.stdout, "reconfigure"):
-        try:
-            sys.stdout.reconfigure(encoding="utf-8")
-            sys.stderr.reconfigure(encoding="utf-8")
-        except Exception:
-            pass
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if callable(reconfigure):
+            try:
+                reconfigure(encoding="utf-8")
+            except Exception:
+                pass
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--clean", action="store_true", help="Remove prior [finance-demo] rows first")

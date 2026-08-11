@@ -347,6 +347,7 @@ describe("TimelinePage user-event CRUD", () => {
       isAllDay: false,
       remindBeforeDays: null,
       itemId: null,
+      kind: "normal",
       worksetId: "__user__",
     });
     expect(mockCreateRecurringTimelineEvent).not.toHaveBeenCalled();

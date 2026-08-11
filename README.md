@@ -7,7 +7,7 @@
 - **多源採集** — Telegram、Discord、RSS、MQTT、Email (IMAP)，統一入庫與即時 SSE 更新
 - **排程 AI 分析** — 統一 trigger-purpose `schedule_rrule`（APScheduler next-run only；FE 預設：10 秒、每小時、每日、每週、自訂秒數 → RRULE）、增量 marker、多 LLM（Ollama / OpenAI / Gemini / OpenRouter）
 - **時間規劃** — Timeline 合併分析事件、週期任務（RRULE 僅於查詢時展開、不會觸發 AI 分析）與用戶事件；可在對話框建立一次性／循環日程
-- **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位／價錢；到期與提醒走關聯日曆（投影 `source=item`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
+- **物品** — `/items` 兩層（分類卡片 → 分類內列表）；數量／單位；到期與提醒走關聯日曆（投影 `source=item`，`itemDateKind=remind`）；無購入日欄位；分類與物品可選 emoji，歸屬工作集
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
@@ -276,13 +276,13 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v26**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.27`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-26 庫。
 
-**Wipe-only：** v1–v24 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v25 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v26 explicit reset](docs/ARCHITECTURE.md#schema-v25-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v26 explicit reset](docs/ARCHITECTURE.md#schema-v26-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

@@ -243,37 +243,8 @@ async def test_newer_schema_version_is_rejected_without_changes(tmp_path):
     assert file_snapshot(path) == before_file
 
 
-# Stamps above CURRENT (pre-restart leftovers) → "newer than supported".
+# Newer-than-supported stamps: ``test_newer_schema_version_is_rejected_without_changes``.
 # Prior wipe-floor hard-reject + lifespan reset log: ``test_schema_wipe_floor``.
-_NEWER_THAN_SUPPORTED = tuple(v for v in (16, 23, 24) if v > CURRENT_SCHEMA_VERSION)
-
-
-@pytest.mark.parametrize(
-    "version",
-    _NEWER_THAN_SUPPORTED,
-    ids=[f"newer-stamped-v{version}" for version in _NEWER_THAN_SUPPORTED],
-)
-async def test_stamps_above_current_are_hard_rejected_without_changes(tmp_path, version: int) -> None:
-    path = str(tmp_path / f"newer-v{version}.db")
-    await make_stamped_db(
-        path,
-        version=version,
-        log_rows=[(f"log-v{version}", "2026-01-01T00:00:00Z", "info", "schema-test")],
-    )
-    before_logical = await logical_snapshot(path)
-    before_file = file_snapshot(path)
-
-    db = Database(path)
-    await db.connect()
-    try:
-        with pytest.raises(SchemaBaselineError, match="newer than supported"):
-            await db.ensure_schema()
-        assert await db.fetch_value("PRAGMA user_version") == version
-    finally:
-        await db.close()
-
-    assert await logical_snapshot(path) == before_logical
-    assert file_snapshot(path) == before_file
 
 
 async def test_ddl_derived_fingerprint_matches_live_introspection():

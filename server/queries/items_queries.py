@@ -113,10 +113,7 @@ async def fetch_item_rows(
     if search and search.strip():
         needle = f"%{search.strip().lower()}%"
         clauses.append(
-            "("
-            "LOWER(title) LIKE ? OR LOWER(notes) LIKE ? "
-            "OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ?"
-            ")"
+            "(LOWER(title) LIKE ? OR LOWER(notes) LIKE ? OR LOWER(unit) LIKE ? OR CAST(quantity AS TEXT) LIKE ?)"
         )
         params.extend([needle, needle, needle, needle])
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""

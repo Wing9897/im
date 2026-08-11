@@ -1,4 +1,4 @@
-"""Items domain tests (categories, date-field reject, worksets)."""
+"""Items domain tests (categories, retired-field reject, worksets)."""
 
 from __future__ import annotations
 
