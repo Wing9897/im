@@ -1,6 +1,6 @@
 """Wipe-only schema bootstrap and validation (no migration registry).
 
-Stamp **25** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
+Stamp **26** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative domain DDL
 aggregated by ``schema.py``. Exact unstamped stamp-26
