@@ -1,8 +1,18 @@
 """Special ``user_events.kind`` vocabulary (expires / purchase_effective / normal).
 
+Applies to **item-linked** calendars: timeline ``source=user`` + ``item_id``.
+Not the same as timeline ``source=item`` remind projections (``itemDateKind=remind``
+only; those rows are not ``user_events`` and have no ``kind``).
+
+Calendar hierarchy (timeline ``source`` vs this ``kind``):
+  analysis | recurring → AI / task intel
+  user + no item_id    → general calendar
+  user + item_id       → item-linked; ``kind`` drives expiry cache / finance
+  item                 → remind projection only (≠ item-linked user events)
+
 Title presets (到期 / Purchased / …) remain UX defaults; authority for expiry
-projection and finance is ``kind``. Stamp 25 added the column and is absorbed
-into the current wipe-only floor (stamp 26); there is no in-place row
+cache write-through and finance is ``kind``. Stamp 25 added the column and is
+absorbed into the current wipe-only floor (stamp 26); there is no in-place row
 migration — seeds and create payloads must set ``kind``.
 """
 

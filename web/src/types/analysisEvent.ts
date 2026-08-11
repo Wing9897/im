@@ -14,7 +14,12 @@ export type AnalysisEvent = Omit<
   location: string | null;
   analysisTimeRange: string | null;
   taskName: string | null;
-  /** Discriminator: "recurring" = RRULE; "user" = user_events; "item" = trackable item DATE */
+  /**
+   * Timeline source discriminator (not ``user_events.kind``):
+   * - analysis | recurring → AI / task intel
+   * - user (no itemId) → general calendar; user + itemId → item-linked calendar
+   * - item → remind DATE projection only (≠ item-linked user_events)
+   */
   source?: "analysis" | "recurring" | "user" | "item";
   /** Frontend-only: indicates an all-day event */
   isAllDay?: boolean;

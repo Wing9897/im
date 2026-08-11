@@ -377,6 +377,19 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `item_categories` | Soft-template categories (`slug`, optional `emoji`, `default_remind_before_days`); seed rows with stable slugs + emoji logos. Categories group items and supply default remind hints only — no `field_schema` / attribute presets. |
 | `items` | Trackable inventory (optional `emoji`; optional `quantity`／`unit`; free-form details in `notes`); ownership via `workset_id`. **No item-level `price` or `attributes_json`** — purchase／effective amounts live on linked `user_events` with `kind=purchase_effective` (`amount` + `direction`). **Items date model:** linked `user_events` with `kind=expires` are the write-path source of truth (title presets 到期／Expires are UX only) via calendar create／update／delete write-through ([`server/items/linked_dates.py`](../server/items/linked_dates.py)). Flat `expires_at`／`remind_before_days` are a denormalized cache for list badges／sort／`list_expiring`／remind projection — never standalone SoT. There is no `purchased_at` column. Calendar `source=item` projects remind DATE (when `remind_before_days` is set) as floating all-day (`itemDateKind=remind` only) |
 
+#### Calendar on timeline (source vs item-linked kind)
+
+Timeline merge rows use wire `source`; item linkage and `user_events.kind` are orthogonal:
+
+| Timeline row | Meaning |
+|--------------|---------|
+| `source=analysis` \| `recurring` | AI / task intel (analysis findings or RRULE occurrences) |
+| `source=user` + no `itemId` | True general calendar (`user_events`) |
+| `source=user` + `itemId` | **Item-linked** calendar on that item; `kind` = `expires` \| `purchase_effective` \| `normal` |
+| `source=item` | **Remind projection only** (`itemDateKind=remind`); derived from item cache / remind-before — **not** the same as item-linked `user_events` |
+
+`kind` on item-linked user events drives system behavior (expiry cache write-through, finance amount/direction), not UI-only labels. Title presets (到期／Expires／购入／…) remain UX defaults. Do not confuse `source=item` (projection) with `source=user` + `itemId` (editable linked calendars).
+
 ### Schema baseline (wipe-only)
 
 Authority: domain fragments in `server/db/schema_domains/`, aggregated only by `server/db/schema.py`. Live inspection: `server/db/schema_inspect.py`. DDL fingerprint derivation: `server/db/schema_fingerprint.py`. Bootstrap and rejection policy: `server/db/schema_bootstrap.py`.
