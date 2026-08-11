@@ -86,11 +86,6 @@ async def _ensure_electronics_category(db: Database) -> str:
         sort_order=25,
         color="#6366F1",
         emoji="💻",
-        field_schema=[
-            {"key": "brand", "label": "品牌"},
-            {"key": "model", "label": "型號"},
-            {"key": "serial", "label": "序號"},
-        ],
         default_remind_before_days=14,
     )
     return str(created["id"])
@@ -143,17 +138,13 @@ async def seed(db: Database) -> dict[str, int]:
     if electronics_before is None:
         counts["categories_created"] += 1
 
-    # ── items: diverse categories, attributes, archived, linked「到期」milestones ──
+    # ── items: diverse categories, notes, archived, linked「到期」milestones ──
     item_specs: list[dict] = [
         {
             "title": f"{PREFIX} 護照（遠期到期）",
             "category_id": cat_passport,
             "emoji": "🛂",
-            "notes": "證件類 fieldSchema：id_number / issuer",
-            "attributes": {
-                "id_number": "K12345678",
-                "issuer": "香港入境事務處",
-            },
+            "notes": "證件：K12345678 · 香港入境事務處",
             "expires_at": "2029-03-14",
             "remind_before_days": 90,
         },
@@ -161,12 +152,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} MacBook Pro 14",
             "category_id": cat_electronics,
             "emoji": "💻",
-            "notes": "電子產品自訂分類 + 保固到期",
-            "attributes": {
-                "brand": "Apple",
-                "model": 'MacBook Pro 14" M3 Pro',
-                "serial": "C02XK9ABCDEF",
-            },
+            "notes": 'Apple MacBook Pro 14" M3 Pro · C02XK9ABCDEF',
             "expires_at": "2027-11-01",
             "remind_before_days": 30,
         },
@@ -174,11 +160,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} iPhone 15 Pro",
             "category_id": cat_warranty,
             "emoji": "📱",
-            "notes": "保固分類 serial / vendor",
-            "attributes": {
-                "serial": "F2LM9Q8R10",
-                "vendor": "Apple Store 銅鑼灣",
-            },
+            "notes": "F2LM9Q8R10 · Apple Store 銅鑼灣",
             "expires_at": "2026-06-20",
             "remind_before_days": 14,
         },
@@ -186,11 +168,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} Netflix 家庭方案",
             "category_id": cat_subscription,
             "emoji": "🎬",
-            "notes": "訂閱類 provider / plan",
-            "attributes": {
-                "provider": "Netflix",
-                "plan": "Premium 4K · 月付",
-            },
+            "notes": "Netflix Premium 4K · 月付",
             "expires_at": "2026-09-10",
             "remind_before_days": 7,
         },
@@ -198,11 +176,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} Spotify Premium",
             "category_id": cat_subscription,
             "emoji": "🎵",
-            "notes": "僅到期、無購入日",
-            "attributes": {
-                "provider": "Spotify",
-                "plan": "Individual",
-            },
+            "notes": "Spotify Individual",
             "expires_at": "2026-08-20",
             "remind_before_days": 3,
         },
@@ -210,11 +184,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} 布洛芬緩釋膠囊",
             "category_id": cat_medicine,
             "emoji": "💊",
-            "notes": "本週過期藥品 — 列表徽章應顯示剩餘天數",
-            "attributes": {
-                "dosage": "每次 1 粒，每日 2 次",
-                "pharmacy": "萬寧 中環店",
-            },
+            "notes": "每次 1 粒，每日 2 次 · 萬寧 中環店",
             "expires_at": "2026-08-10",
             "remind_before_days": 5,
         },
@@ -222,11 +192,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} 維他命 D3（已過期）",
             "category_id": cat_medicine,
             "emoji": "🧴",
-            "notes": "已過期藥品 — 測試過去日期",
-            "attributes": {
-                "dosage": "每日 1 粒",
-                "pharmacy": "屈臣氏",
-            },
+            "notes": "每日 1 粒 · 屈臣氏",
             "expires_at": "2026-07-01",
             "remind_before_days": 7,
         },
@@ -234,11 +200,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} 有機全脂牛奶",
             "category_id": cat_food,
             "emoji": "🥛",
-            "notes": "食物類 brand / storage",
-            "attributes": {
-                "brand": "Organic Valley",
-                "storage": "冷藏 2–4°C",
-            },
+            "notes": "Organic Valley · 冷藏 2–4°C",
             "expires_at": "2026-08-12",
             "remind_before_days": 2,
         },
@@ -246,11 +208,7 @@ async def seed(db: Database) -> dict[str, int]:
             "title": f"{PREFIX} 滙豐 Visa 白金卡",
             "category_id": cat_credit,
             "emoji": "💳",
-            "notes": "信用卡到期（僅到期里程碑）",
-            "attributes": {
-                "issuer": "HSBC",
-                "last_four": "4829",
-            },
+            "notes": "HSBC · 4829",
             "expires_at": "2028-03-31",
             "remind_before_days": 60,
         },
@@ -259,23 +217,14 @@ async def seed(db: Database) -> dict[str, int]:
             "category_id": cat_electronics,
             "emoji": "📱",
             "status": "archived",
-            "notes": "archived 狀態 — 列表篩選用",
-            "attributes": {
-                "brand": "Apple",
-                "model": "iPad Air 4",
-                "serial": "DLXM2ABCDEF",
-            },
+            "notes": "Apple iPad Air 4 · DLXM2ABCDEF",
             "expires_at": None,
         },
         {
             "title": f"{PREFIX} 無到期日",
             "category_id": cat_food,
             "emoji": "📦",
-            "notes": "無關聯到期 — 列表無到期徽章",
-            "attributes": {
-                "brand": "雜牌",
-                "storage": "室溫",
-            },
+            "notes": "雜牌 · 室溫",
             "expires_at": None,
         },
         {
@@ -283,11 +232,7 @@ async def seed(db: Database) -> dict[str, int]:
             "category_id": cat_medicine,
             "workset_id": WS_ID,
             "emoji": "🩹",
-            "notes": "其他 workset 物品",
-            "attributes": {
-                "dosage": "外用",
-                "pharmacy": "社區藥房",
-            },
+            "notes": "外用 · 社區藥房",
             "expires_at": "2026-08-15",
             "remind_before_days": 3,
         },
@@ -303,7 +248,6 @@ async def seed(db: Database) -> dict[str, int]:
             notes=spec.get("notes", ""),
             workset_id=spec.get("workset_id"),
             status=spec.get("status", "active"),
-            attributes=spec.get("attributes"),
         )
         item_id = str(row["id"])
         item_ids.append(item_id)

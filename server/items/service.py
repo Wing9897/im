@@ -8,13 +8,9 @@ from server.db.database import Database, TransactionDb
 from server.items.normalize import (
     _UNSET,
     ItemValidationError,
-    attributes_to_json,
-    field_schema_to_json,
-    normalize_attributes,
     normalize_category_id_wire,
     normalize_color,
     normalize_emoji,
-    normalize_field_schema,
     normalize_notes,
     normalize_quantity,
     normalize_remind_before_days,
@@ -23,11 +19,8 @@ from server.items.normalize import (
     normalize_status,
     normalize_unit,
     normalize_workset_id_wire,
-    parse_field_schema_json,
-    preserve_attributes_json,
     require_category_name,
     require_title,
-    seed_attributes_from_field_schema,
 )
 from server.queries.items_queries import (
     delete_category,
@@ -69,7 +62,6 @@ async def create_category(
     sort_order: int | None = 0,
     color: str | None = None,
     emoji: str | None = None,
-    field_schema: Any = None,
     default_remind_before_days: int | None = None,
 ) -> dict[str, Any]:
     clean_name = require_category_name(name)
@@ -77,7 +69,6 @@ async def create_category(
     clean_sort = normalize_sort_order(sort_order)
     clean_color = normalize_color(color)
     clean_emoji = normalize_emoji(emoji)
-    clean_schema = normalize_field_schema(field_schema)
     clean_remind = normalize_remind_before_days(default_remind_before_days)
     if clean_slug is not None:
         existing = await fetch_category_by_slug(db, clean_slug)
@@ -94,7 +85,6 @@ async def create_category(
             sort_order=clean_sort,
             color=clean_color,
             emoji=clean_emoji,
-            field_schema=field_schema_to_json(clean_schema),
             default_remind_before_days=clean_remind,
             now=now,
         )
@@ -112,11 +102,8 @@ async def patch_category(
     sort_order: Any = _UNSET,
     color: Any = _UNSET,
     emoji: Any = _UNSET,
-    field_schema: Any = _UNSET,
     default_remind_before_days: Any = _UNSET,
 ) -> dict[str, Any]:
-    # field_schema is a create-time preset template only. Updating it must never
-    # rewrite existing items' attributes_json (copy-on-create, not live inheritance).
     existing = await fetch_category_row(db, category_id)
     if existing is None:
         raise ItemValidationError("category not found")
@@ -133,12 +120,6 @@ async def patch_category(
             next_emoji = str(next_emoji) if next_emoji else None
     else:
         next_emoji = normalize_emoji(emoji)
-    if field_schema is _UNSET:
-        next_schema_json = str(existing.get("field_schema") or "[]")
-        next_schema = normalize_field_schema(next_schema_json)
-    else:
-        next_schema = normalize_field_schema(field_schema)
-        next_schema_json = field_schema_to_json(next_schema)
     if default_remind_before_days is _UNSET:
         next_remind = existing.get("default_remind_before_days")
         if next_remind is not None:
@@ -159,7 +140,6 @@ async def patch_category(
             sort_order=next_sort,
             color=str(next_color) if next_color else None,
             emoji=str(next_emoji) if next_emoji else None,
-            field_schema=next_schema_json,
             default_remind_before_days=next_remind,
             now=now,
         )
@@ -187,14 +167,8 @@ async def create_item(
     emoji: Any = None,
     quantity: Any = None,
     unit: Any = None,
-    attributes: Any = None,
 ) -> dict[str, Any]:
-    """Create an item. Date cache columns stay NULL until linked calendars write through.
-
-    When ``category_id`` is set, missing keys from that category's ``field_schema``
-    are copy-on-create seeded into ``attributes`` as empty strings. Later category
-    template edits do not rewrite existing items.
-    """
+    """Create an item. Date cache columns stay NULL until linked calendars write through."""
     clean_title = require_title(title)
     clean_workset = await _require_workset(db, normalize_workset_id_wire(workset_id))
     clean_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
@@ -203,11 +177,6 @@ async def create_item(
     clean_emoji = normalize_emoji(emoji)
     clean_quantity = normalize_quantity(quantity)
     clean_unit = normalize_unit(unit)
-    clean_attrs = normalize_attributes(attributes)
-    if clean_category is not None:
-        category_row = await fetch_category_row(db, clean_category)
-        schema = parse_field_schema_json(category_row.get("field_schema") if category_row is not None else None)
-        clean_attrs = normalize_attributes(seed_attributes_from_field_schema(clean_attrs, schema))
     item_id = new_id()
     now = utc_now_iso()
     async with db.transaction() as conn:
@@ -224,7 +193,6 @@ async def create_item(
             emoji=clean_emoji,
             quantity=clean_quantity,
             unit=clean_unit,
-            attributes_json=attributes_to_json(clean_attrs),
             now=now,
         )
     row = await fetch_item_row(db, item_id)
@@ -244,7 +212,6 @@ async def patch_item(
     emoji: Any = _UNSET,
     quantity: Any = _UNSET,
     unit: Any = _UNSET,
-    attributes: Any = _UNSET,
 ) -> dict[str, Any]:
     """Patch non-date fields. Date cache is write-through from linked calendar mutations only."""
     existing = await fetch_item_row(db, item_id)
@@ -262,7 +229,6 @@ async def patch_item(
     if category_id is _UNSET:
         next_category = prev_category
     else:
-        # Changing category must NOT strip attributes (soft template).
         next_category = await _resolve_category_id(db, normalize_category_id_wire(category_id))
     # Preserve denormalized date cache (SoT remains linked calendars).
     next_expires = existing.get("expires_at")
@@ -290,11 +256,6 @@ async def patch_item(
         next_unit = str(raw_unit).strip() if isinstance(raw_unit, str) and raw_unit.strip() else None
     else:
         next_unit = normalize_unit(unit)
-    if attributes is _UNSET:
-        # Do not re-parse/re-serialize: dirty nested rows must not amplify on unrelated PATCH.
-        next_attrs_json = preserve_attributes_json(existing.get("attributes_json"))
-    else:
-        next_attrs_json = attributes_to_json(normalize_attributes(attributes))
 
     now = utc_now_iso()
     async with db.transaction() as conn:
@@ -311,7 +272,6 @@ async def patch_item(
             emoji=str(next_emoji) if next_emoji else None,
             quantity=next_quantity,
             unit=next_unit,
-            attributes_json=next_attrs_json,
             now=now,
         )
         # Linked calendars follow the item workset (one-off user_events + recurring tasks).

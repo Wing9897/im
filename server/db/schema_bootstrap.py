@@ -3,8 +3,8 @@
 Stamp **25** is the sole supported floor (``CURRENT_SCHEMA_VERSION``). There is
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative domain DDL
-aggregated by ``schema.py``. Exact unstamped stamp-25
-fingerprints are stamped (``PRAGMA user_version=25``). Every other non-empty
+aggregated by ``schema.py``. Exact unstamped stamp-26
+fingerprints are stamped (``PRAGMA user_version=26``). Every other non-empty
 schema is rejected without mutation →
 ``python scripts/reset_local_databases.py --apply`` (does **not** auto-seed).
 

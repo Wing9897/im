@@ -105,7 +105,7 @@ async def test_agent_list_items_with_filters(app):
             "title": "Filter me",
             "quantity": 2,
             "unit": "盒",
-            "attributes": {"brand": "TestCo"},
+            "notes": "brand TestCo",
         },
     )
     assert created.get("created") is True
@@ -117,7 +117,8 @@ async def test_agent_list_items_with_filters(app):
     assert row["quantity"] == 2
     assert row["unit"] == "盒"
     assert "price" not in row
-    assert row["attributes"]["brand"] == "TestCo"
+    assert "attributes" not in row
+    assert row["notes"] == "brand TestCo"
 
     empty = await execute_items_tool(app.state.db, "items.list", {"search": "nomatch-xyz"})
     assert empty["count"] == 0

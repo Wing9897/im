@@ -298,7 +298,6 @@ async def seed(db: Database) -> dict[str, Any]:
             emoji=item_spec.emoji,
             notes=item_spec.notes,
             workset_id=item_spec.workset_id,
-            attributes=None,
         )
         item_id = str(row["id"])
         linked: list[dict[str, Any]] = []
@@ -480,7 +479,7 @@ async def verify(db: Database) -> dict[str, Any]:
     # Stamp sanity
     stamp_row = await db.fetch_one("PRAGMA user_version")
     stamp_val = list(stamp_row.values())[0] if stamp_row else None
-    if int(stamp_val or -1) != 25:
+    if int(stamp_val or -1) != 26:
         errors.append(f"schema stamp={stamp_val!r} expected 25")
 
     result = {
@@ -547,7 +546,7 @@ async def main() -> None:
     path = Path(args.db) if args.db else default_db_path()
     print(f"DB: {path}")
     if not path.is_file() and not args.verify_only:
-        print("Warning: database file missing; schema will be bootstrapped (stamp 25).")
+        print("Warning: database file missing; schema will be bootstrapped (stamp 26).")
 
     db = Database(str(path))
     await db.connect()
@@ -556,9 +555,9 @@ async def main() -> None:
         stamp = await db.fetch_one("PRAGMA user_version")
         stamp_val = list(stamp.values())[0] if stamp else None
         print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != 25:
+        if int(stamp_val or 0) != 26:
             print(
-                "ERROR: need stamp 25. Run:\n"
+                "ERROR: need stamp 26. Run:\n"
                 "  uv run python scripts/reset_local_databases.py --apply\n"
                 "then re-run this seed.",
                 file=sys.stderr,

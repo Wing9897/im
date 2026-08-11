@@ -8497,23 +8497,6 @@
             ],
             "title": "Emoji"
           },
-          "fieldSchema": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fieldschema"
-          },
           "defaultRemindBeforeDays": {
             "anyOf": [
               {
@@ -8591,23 +8574,6 @@
               }
             ],
             "title": "Emoji"
-          },
-          "fieldSchema": {
-            "anyOf": [
-              {
-                "items": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fieldschema"
           },
           "defaultRemindBeforeDays": {
             "anyOf": [
@@ -10104,13 +10070,6 @@
             ],
             "title": "Emoji"
           },
-          "fieldSchema": {
-            "items": {
-              "$ref": "#/components/schemas/ItemFieldSchemaEntry"
-            },
-            "type": "array",
-            "title": "Fieldschema"
-          },
           "defaultRemindBeforeDays": {
             "anyOf": [
               {
@@ -10238,20 +10197,6 @@
               }
             ],
             "title": "Unit"
-          },
-          "attributes": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Attributes"
           }
         },
         "additionalProperties": false,
@@ -10271,24 +10216,6 @@
         },
         "type": "object",
         "title": "ItemDeleteResponse"
-      },
-      "ItemFieldSchemaEntry": {
-        "properties": {
-          "key": {
-            "type": "string",
-            "title": "Key"
-          },
-          "label": {
-            "type": "string",
-            "title": "Label"
-          }
-        },
-        "type": "object",
-        "required": [
-          "key",
-          "label"
-        ],
-        "title": "ItemFieldSchemaEntry"
       },
       "ItemResponse": {
         "properties": {
@@ -10379,13 +10306,6 @@
               }
             ],
             "title": "Unit"
-          },
-          "attributes": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Attributes"
           },
           "createdAt": {
             "anyOf": [
@@ -10509,20 +10429,6 @@
               }
             ],
             "title": "Unit"
-          },
-          "attributes": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Attributes"
           }
         },
         "additionalProperties": false,

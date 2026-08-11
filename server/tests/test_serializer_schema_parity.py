@@ -226,7 +226,6 @@ Serializer = Callable[[], dict[str, Any]]
                     "sort_order": 2,
                     "color": "#112233",
                     "emoji": "📦",
-                    "field_schema": '[{"key":"vendor","label":"Vendor"}]',
                     "default_remind_before_days": 7,
                     "created_at": "2026-07-28T09:00:00Z",
                     "updated_at": "2026-07-28T09:01:00Z",
@@ -250,7 +249,6 @@ Serializer = Callable[[], dict[str, Any]]
                     "emoji": "🧠",
                     "quantity": 2.5,
                     "unit": "kg",
-                    "attributes_json": '{"vendor":"Anysphere"}',
                     "created_at": "2026-07-28T09:00:00Z",
                     "updated_at": "2026-07-28T09:01:00Z",
                 }

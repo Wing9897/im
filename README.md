@@ -274,7 +274,7 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v25**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.26`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-25 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v26**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.27`）——採集連線使用 `sources`／`source_channels`／`messages.source_id`，並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-26 庫。
 
 **Wipe-only：** v1–v24 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
@@ -282,7 +282,7 @@ SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共�
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v25 explicit reset](docs/ARCHITECTURE.md#schema-v25-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v26 explicit reset](docs/ARCHITECTURE.md#schema-v25-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

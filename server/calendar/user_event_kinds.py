@@ -1,7 +1,7 @@
 """Special ``user_events.kind`` vocabulary (expires / purchase_effective / normal).
 
 Title presets (到期 / Purchased / …) remain UX defaults; authority for expiry
-projection and finance is ``kind``. Wipe-only stamp 25 adds the column — there
+projection and finance is ``kind``. Wipe-only stamp 25 added the column — there
 is no in-place row migration; seeds and create payloads must set ``kind``.
 """
 

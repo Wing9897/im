@@ -22,7 +22,6 @@ async def seed_item_row(
     emoji: str | None = None,
     quantity: float | None = None,
     unit: str | None = None,
-    attributes_json: str = "{}",
 ) -> str:
     """Insert an item row bypassing HTTP — for cache-column / reconcile tests."""
     resolved_id = item_id or new_id()
@@ -41,7 +40,6 @@ async def seed_item_row(
             emoji=emoji,
             quantity=quantity,
             unit=unit,
-            attributes_json=attributes_json,
             now=now,
         )
     return resolved_id

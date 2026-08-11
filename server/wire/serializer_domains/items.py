@@ -8,8 +8,6 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 
 
 def serialize_item_category(row: Mapping[str, Any]) -> dict[str, Any]:
-    from server.items.normalize import parse_field_schema_json
-
     remind = row.get("default_remind_before_days")
     raw_emoji = row.get("emoji")
     emoji = str(raw_emoji).strip() if isinstance(raw_emoji, str) and raw_emoji.strip() else None
@@ -20,7 +18,6 @@ def serialize_item_category(row: Mapping[str, Any]) -> dict[str, Any]:
         "sortOrder": int(row.get("sort_order") or 0),
         "color": row.get("color") or None,
         "emoji": emoji,
-        "fieldSchema": parse_field_schema_json(row.get("field_schema")),
         "defaultRemindBeforeDays": int(remind) if remind is not None else None,
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
@@ -28,8 +25,6 @@ def serialize_item_category(row: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
-    from server.items.normalize import parse_attributes_json
-
     remind = row.get("remind_before_days")
     raw_workset = row.get("workset_id")
     workset_id = str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
@@ -53,7 +48,6 @@ def serialize_item(row: Mapping[str, Any]) -> dict[str, Any]:
         "emoji": emoji,
         "quantity": quantity,
         "unit": unit,
-        "attributes": parse_attributes_json(row.get("attributes_json")),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

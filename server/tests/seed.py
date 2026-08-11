@@ -408,17 +408,17 @@ async def seed_database(db: Any) -> None:
     # ── sample items (DDL seed categories + __user__ workset) ─────────
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
-        "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
+        "expires_at, remind_before_days, notes, status, emoji, "
         "created_at, updated_at) VALUES (?, ?, 'seed_passport_docs', '__user__', "
-        "'2029-06-01', 90, 'seed passport', 'active', NULL, ?, ?, ?)",
-        (ITEM_PASSPORT, "護照樣本", json.dumps({"id_number": "A123456789"}, ensure_ascii=False), now, now),
+        "'2029-06-01', 90, 'seed passport id A123456789', 'active', NULL, ?, ?)",
+        (ITEM_PASSPORT, "護照樣本", now, now),
     )
     await db.execute(
         "INSERT INTO items (id, title, category_id, workset_id, "
-        "expires_at, remind_before_days, notes, status, emoji, attributes_json, "
+        "expires_at, remind_before_days, notes, status, emoji, "
         "created_at, updated_at) VALUES (?, ?, 'seed_food', '__user__', "
-        "'2027-03-15', 3, 'seed food', 'active', NULL, ?, ?, ?)",
-        (ITEM_FOOD, "牛奶樣本", json.dumps({"brand": "SeedDairy"}, ensure_ascii=False), now, now),
+        "'2027-03-15', 3, 'seed food brand SeedDairy', 'active', NULL, ?, ?)",
+        (ITEM_FOOD, "牛奶樣本", now, now),
     )
 
     # ── actions + history ─────────────────────────────────────────────

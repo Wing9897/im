@@ -11,7 +11,6 @@ class CategoryCreateBody(BaseModel):
     sortOrder: int | None = 0
     color: str | None = None
     emoji: str | None = None
-    fieldSchema: list[dict[str, str]] | None = None
     defaultRemindBeforeDays: int | None = None
 
 
@@ -23,7 +22,6 @@ class CategoryUpdateBody(BaseModel):
     sortOrder: int | None = None
     color: str | None = None
     emoji: str | None = None
-    fieldSchema: list[dict[str, str]] | None = None
     defaultRemindBeforeDays: int | None = None
 
 
@@ -38,7 +36,6 @@ class ItemCreateBody(BaseModel):
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    attributes: dict[str, str] | None = None
 
 
 class ItemUpdateBody(BaseModel):
@@ -52,4 +49,3 @@ class ItemUpdateBody(BaseModel):
     emoji: str | None = None
     quantity: float | None = None
     unit: str | None = None
-    attributes: dict[str, str] | None = None

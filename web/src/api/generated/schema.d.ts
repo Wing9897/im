@@ -2680,10 +2680,6 @@ export interface components {
             color?: string | null;
             /** Emoji */
             emoji?: string | null;
-            /** Fieldschema */
-            fieldSchema?: {
-                [key: string]: string;
-            }[] | null;
             /** Defaultremindbeforedays */
             defaultRemindBeforeDays?: number | null;
         };
@@ -2699,10 +2695,6 @@ export interface components {
             color?: string | null;
             /** Emoji */
             emoji?: string | null;
-            /** Fieldschema */
-            fieldSchema?: {
-                [key: string]: string;
-            }[] | null;
             /** Defaultremindbeforedays */
             defaultRemindBeforeDays?: number | null;
         };
@@ -3168,8 +3160,6 @@ export interface components {
             color?: string | null;
             /** Emoji */
             emoji?: string | null;
-            /** Fieldschema */
-            fieldSchema?: components["schemas"]["ItemFieldSchemaEntry"][];
             /** Defaultremindbeforedays */
             defaultRemindBeforeDays?: number | null;
             /** Createdat */
@@ -3201,10 +3191,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Attributes */
-            attributes?: {
-                [key: string]: string;
-            } | null;
         };
         /** ItemDeleteResponse */
         ItemDeleteResponse: {
@@ -3213,13 +3199,6 @@ export interface components {
              * @default true
              */
             ok: boolean;
-        };
-        /** ItemFieldSchemaEntry */
-        ItemFieldSchemaEntry: {
-            /** Key */
-            key: string;
-            /** Label */
-            label: string;
         };
         /** ItemResponse */
         ItemResponse: {
@@ -3251,10 +3230,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Attributes */
-            attributes?: {
-                [key: string]: string;
-            };
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -3278,10 +3253,6 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
-            /** Attributes */
-            attributes?: {
-                [key: string]: string;
-            } | null;
         };
         /** LogCreate */
         LogCreate: {
