@@ -12,6 +12,7 @@
     "theme": "外觀主題",
     "data": "資料維護",
     "api": "API",
+    "mcp": "MCP",
     "logs": "系統日誌",
     "aiProvider": "AI 設定檔",
     "voice": "語音",
@@ -122,16 +123,16 @@
     "retention": {
       "categories": {
         "messages": "實時監控",
-        "analysis": "分析結果",
+        "analysis": "分析結果（情報事件）",
         "leaderboard": "排行榜",
         "appLogs": "應用日誌",
-        "userEvents": "用戶／助手事件"
+        "userEvents": "日曆／用戶事件"
       },
       "daysLabel": "{category}保留天數",
       "days": "天",
-      "helpAnalysis": "含情報事件與時間規劃（同一事件資料）。",
+      "helpAnalysis": "含情報事件與時間規劃（同一事件資料）。預設 0＝不自動刪除。",
       "helpAppLogs": "預設較短；設 0 停用自動清理。",
-      "helpUserEvents": "預設較長；手動／助手一筆事件。",
+      "helpUserEvents": "日曆／手動／助手一筆事件。預設 0＝不自動刪除。",
       "invalid": "保留天數必須為 0 或正整數（0 = 停用自動清理）",
       "saveButton": "儲存保留天數",
       "savedCheck": "✓ 已儲存",
@@ -178,7 +179,7 @@
   },
   "webSearch": {
     "sectionTitle": "聯網搜尋",
-    "sectionHelp": "關閉後此設定檔無法聯網搜尋。綁定此檔的助手與 Agent 任務共用這些設定。",
+    "sectionHelp": "關閉後此設定檔無法聯網搜尋。綁定此檔的助手與專案經理任務共用這些設定。",
     "enabledLabel": "允許聯網搜尋",
     "enabledAria": "允許聯網搜尋",
     "providerLabel": "搜尋供應商",
@@ -334,10 +335,14 @@
     }
   },
   "apiDocs": {
-    "intro": "本機 HTTP API 說明與範例：存取金鑰、Webhook 推送、客戶經理（A2A）；另附 Desktop 日曆 deep link。完整契約見倉庫 docs/agent/a2a.md。",
+    "intro": "本機 HTTP API 說明與範例：存取金鑰、Webhook 推送、客戶經理（A2A）、MCP；另附 Desktop 日曆 deep link。完整契約見倉庫 docs/agent/a2a.md 與 docs/agent/mcp.md。",
+    "baseUrl": {
+      "title": "API 基底網址",
+      "body": "目前 API 呼叫與範例使用的 origin（自訂伺服器、環境變數，或本頁 origin）："
+    },
     "accessKeys": {
       "title": "存取金鑰",
-      "body": "用 `Authorization: Bearer <key>` 呼叫自動化 API。完整金鑰（`*`）可用於 Webhook 與客戶經理；僅客戶經理金鑰只能打 `/api/v1/a2a/*`。不可用於 UI 登入。",
+      "body": "用 `Authorization: Bearer <key>` 呼叫自動化 API。完整金鑰（`*`）可用於 Webhook、客戶經理（A2A）與 MCP；僅客戶經理金鑰只能打 `/api/v1/a2a/*`。MCP 需同一把完整 `*` 金鑰。不可用於 UI 登入。",
       "linkKeys": "管理存取金鑰"
     },
     "webhook": {
@@ -380,9 +385,80 @@
       "docsHint": "細節見倉庫 docs/ARCHITECTURE.md（Desktop calendar import）與 docs/KNOWN-SIMPLIFICATIONS.md。"
     }
   },
+  "mcpDocs": {
+    "intro": "給外部 Agent（如 OpenClaw）用的 Streamable HTTP MCP：結構化工具面，涵蓋日曆、訊息、情報與物品。與客戶經理（A2A）不同——這裡是工具協議，不做自然語言 loop，也不走本機 LLM。用下方總開關與能力群組控制；端點靠存取金鑰保護。",
+    "endpoint": {
+      "title": "端點",
+      "body": "以 Streamable HTTP 連線下列 URL（與目前 API base 同源）："
+    },
+    "probe": {
+      "button": "測試連線",
+      "probing": "測試中…",
+      "hint": "用目前登入工作階段呼叫 GET /api/v1/mcp/status（無需貼上存取金鑰），顯示目前能力群組下暴露的工具。",
+      "success": "MCP 已開啟 — {toolCount} 個工具：{names}",
+      "disabled": "MCP 總開關已關閉。請開啟並儲存後再測。",
+      "error": "無法取得 MCP 狀態。請確認 API 在執行且已登入。"
+    },
+    "masterSwitch": {
+      "label": "啟用 MCP",
+      "help": "關閉後，Streamable HTTP `/api/v1/mcp` 回傳 403，list/call 不可用。預設開啟。",
+      "capsInactive": "總開關關閉時，能力群組不會生效。"
+    },
+    "openClaw": {
+      "title": "OpenClaw 設定",
+      "body": "寫入 `~/.openclaw/openclaw.json` 的 `mcp.servers`。Bearer 使用完整存取金鑰（`*`）。金鑰在「帳戶 → 存取金鑰」建立。OpenClaw 也可用 `mcp probe`／設定檢查連到此 URL。",
+      "exampleTitle": "設定範例",
+      "copy": "複製",
+      "copied": "已複製",
+      "copyFailed": "複製失敗"
+    },
+    "capabilityToggles": {
+      "title": "能力群組",
+      "body": "在總開關開啟時，選擇 MCP 可列出與呼叫的工具群組。預設全部啟用（等同完整 19 支 allowlist）。關閉的群組不會出現在 `list_tools`，呼叫時會被拒絕。這是家庭層能力過濾——不是存取金鑰的 scope。",
+      "loading": "載入 MCP 設定中…",
+      "saveLabel": "儲存 MCP 設定",
+      "calendarRead": "日曆讀取",
+      "calendarReadHelp": "`list_calendars`、`upcoming`、`recent`、`window`、`get`",
+      "calendarWrite": "日曆寫入",
+      "calendarWriteHelp": "建立／更新／刪除事件與循環系列；標記／取消重要",
+      "messagesSearch": "訊息搜尋",
+      "messagesSearchHelp": "`messages.search`",
+      "intelligenceSearch": "情報搜尋",
+      "intelligenceSearchHelp": "`intelligence.search_events`",
+      "itemsRead": "物品讀取",
+      "itemsReadHelp": "`items.list`、`items.list_expiring`",
+      "itemsWrite": "物品寫入",
+      "itemsWriteHelp": "`items.create`、`items.update`"
+    },
+    "capabilities": {
+      "title": "Allowlist 總覽",
+      "items": [
+        "日曆：查詢／建立／修改／刪除事件（含循環與標重要）",
+        "訊息：`messages.search`",
+        "情報：`intelligence.search_events`",
+        "物品：`items.list`、`items.list_expiring`、`items.create`、`items.update`"
+      ]
+    },
+    "notExposed": {
+      "title": "不會暴露",
+      "items": [
+        "`web.search`（聯網搜尋）",
+        "`tasks.consult_advisor`（任務顧問）",
+        "分析任務／來源／通知（Actions）／LLM 設定",
+        "專案經理 tick 等留給使用者介面的運維能力"
+      ]
+    },
+    "accessKeys": {
+      "title": "存取金鑰與 A2A",
+      "body": "MCP 與 A2A 同一門檻：家庭存取金鑰且 scope 為 `*`。僅客戶經理金鑰無法呼叫 MCP。若要自然語言單次交辦，請改用客戶經理（A2A）。",
+      "linkKeys": "管理存取金鑰",
+      "linkApi": "開啟 API 說明（A2A）"
+    },
+    "docsHint": "完整契約見倉庫 docs/agent/mcp.md。"
+  },
   "staff": {
     "title": "AI 員工介紹",
-    "intro": "前線兩位：助手、任務顧問。後勤三位：排行榜分析員、情報任務分析員、Agent（由分析任務自動召喚）。另有「客戶經理」接待外部系統（A2A，與助手同組，不跟你聊天）。",
+    "intro": "前線兩位：助手、任務顧問。後勤三位：排行榜分析員、情報任務分析員、專案經理（由分析任務自動召喚）。另有「客戶經理」接待外部系統（A2A，與助手同組，不跟你聊天）。",
     "capabilitiesLabel": "能做什麼",
     "backofficeNote": "後勤員工由分析任務自動召喚，不會出現在對話框。",
     "openAssistant": "開啟助手對話",
@@ -431,7 +507,7 @@
       "summary": "在新增或編輯分析任務時陪你對話，幫你填好左側表單（不是 Agent）。",
       "capabilities": [
         "聽你描述要監控什麼，建議任務名稱與說明",
-        "建議任務類型（排行榜任務／情報任務／Agent 任務／週期任務）與 Prompt 方向",
+        "建議任務類型（排行榜任務／情報任務／專案經理任務／週期任務）與 Prompt 方向",
         "協助調整時間範圍、排程與相關設定",
         "只負責設定任務，不會直接去分析訊息或呼叫工具"
       ]
@@ -455,13 +531,13 @@
       ]
     },
     "agent": {
-      "summary": "後勤可配置 Agent：依觸發與輸出政策做專案調和或網蒐（預設）；詳情在任務下 `/tasks/:id/agent`。",
+      "summary": "後勤可配置專案經理：依觸發與輸出政策做專案調和或網蒐（預設）；詳情在任務下 `/tasks/:id/agent`。",
       "capabilities": [
         "觸發：訊息游標抽乾、訊息閾值或純定時（游標抽乾不可同時開情報事件輸出）",
         "依任務授權：日曆讀寫、網頁搜尋；可選讀物品（查到期／庫存）",
         "不可建立／更新物品（items.create／update 僅助手與客戶經理）",
         "輸出可寫入代理日程（user_events.origin=agent）與／或情報事件（analysis_events）",
-        "不會跟你聊天；由 Agent 任務排程驅動（建議 hourly）"
+        "不會跟你聊天；由專案經理任務排程驅動（建議 hourly）"
       ]
     },
     "liaison": {
@@ -491,6 +567,9 @@
     "save": "儲存設定檔",
     "dialogCreateTitle": "新建 AI 設定檔",
     "dialogEditTitle": "編輯 AI 設定檔",
+    "sectionIdentity": "設定檔",
+    "sectionConnection": "供應商與模型",
+    "sectionStaff": "員工綁定",
     "nameLabel": "設定檔名稱",
     "nameHelp": "顯示於員工綁定與任務表單。",
     "namePlaceholder": "例如：本機 Ollama",
@@ -504,7 +583,7 @@
     "staffClass": {
       "leaderboard": "排行榜分析員",
       "intel_event": "情報事件分析員",
-      "agent": "Agent",
+      "agent": "專案經理",
       "assistant": "助手"
     },
     "noStaffClasses": "未綁定員工類別",

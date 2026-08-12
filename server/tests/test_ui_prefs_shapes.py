@@ -26,6 +26,20 @@ def test_ui_prefs_pydantic_shapes_are_concrete() -> None:
     assert BoardPrefsPutBody.model_json_schema().get("additionalProperties") is False
     sessions_put = AssistantSessionsPutBody.model_json_schema()
     assert {"deviceId", "sessions"} <= set(sessions_put["properties"])
+    session_defs = sessions_put.get("$defs", {})
+    session_schema = session_defs.get("AssistantSessionSchema") or {}
+    # Prefer nested $defs; fall back to properties → items $ref resolution via inline.
+    if not session_schema:
+        # Pydantic may inline as AssistantSessionSchema under $defs with Input/Output split.
+        session_schema = next(
+            (
+                value
+                for key, value in session_defs.items()
+                if "AssistantSession" in key and isinstance(value, dict) and "properties" in value
+            ),
+            {},
+        )
+    assert "llmProfileId" in session_schema.get("properties", {})
     timeline_put = TimelineAnnotationsPutBody.model_json_schema()
     assert {"eventStatuses", "eventTimeOverrides"} <= set(timeline_put["properties"])
     history = VoiceReminderHistoryEntrySchema.model_json_schema()

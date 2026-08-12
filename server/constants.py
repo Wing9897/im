@@ -1,6 +1,8 @@
 """Global constants for the backend."""
 
-#: Fixed service port. The Electron shell and the Vite dev proxy both assume it.
+#: Fixed default listen port (SoT). FE ``DEFAULT_API_PORT``, desktop
+#: ``DEFAULT_SERVER_PORT``, and ``scripts/service-ports.mjs`` must match
+#: (drift-tested). Override bind host via ``HOST_ENV``; the port itself is fixed.
 SERVICE_PORT = 18820
 
 #: Environment variable that overrides the SQLite database file path.

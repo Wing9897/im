@@ -13,12 +13,12 @@ import { RecurrenceRuleEditor } from "../task/RecurrenceRuleEditor";
 import {
   Badge,
   Button,
-  FieldLabel,
   FormStack,
   SegmentedControl,
-  SelectField,
   TextField,
 } from "../ui";
+import { UserEventDialogFinanceFields } from "./UserEventDialogFinanceFields";
+import { UserEventDialogParentItemFields } from "./UserEventDialogParentItemFields";
 import { UserEventTimeSection } from "./UserEventTimeSection";
 import { useUserEventDialogForm } from "./useUserEventDialogForm";
 
@@ -220,42 +220,13 @@ export function UserEventDialog({
           />
         ) : null}
 
-        {parentItemMode === "editable" ? (
-          <div className="flex flex-col gap-xs" data-testid="user-event-parent-item">
-            <FieldLabel className="mb-0" htmlFor="user-event-item">
-              {t("userEvent.parentItem")}
-            </FieldLabel>
-            <SelectField
-              id="user-event-item"
-              aria-label={t("userEvent.parentItemAria")}
-              value={values.itemId}
-              onChange={(event) =>
-                setValues((prev) => ({ ...prev, itemId: event.target.value }))
-              }
-              className="w-full"
-              data-testid="user-event-item-select"
-            >
-              <option value="">{t("userEvent.parentItemNone")}</option>
-              {itemOptions.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.emoji ? `${item.emoji} ` : ""}
-                  {item.title}
-                </option>
-              ))}
-            </SelectField>
-            <p className="m-0 text-caption text-text-muted">{t("userEvent.parentItemHint")}</p>
-          </div>
-        ) : null}
-
-        {parentItemMode === "readonly" && values.itemId.trim() ? (
-          <div className="flex flex-col gap-xs" data-testid="user-event-parent-item-readonly">
-            <FieldLabel className="mb-0">{t("userEvent.parentItem")}</FieldLabel>
-            <p className="m-0 text-body text-text-primary">{lockedItemLabel}</p>
-            <p className="m-0 text-caption text-text-muted">
-              {t("userEvent.parentItemLockedHint")}
-            </p>
-          </div>
-        ) : null}
+        <UserEventDialogParentItemFields
+          mode={parentItemMode}
+          values={values}
+          setValues={setValues}
+          itemOptions={itemOptions}
+          lockedItemLabel={lockedItemLabel}
+        />
 
         <UserEventTimeSection
           values={values}
@@ -271,56 +242,7 @@ export function UserEventDialog({
         />
 
         {showFinance ? (
-          <div className="flex flex-col gap-sm" data-testid="user-event-finance-fields">
-            <div className="flex flex-wrap items-end gap-sm">
-              <div className="flex min-w-[7rem] flex-1 flex-col gap-xs">
-                <FieldLabel className="mb-0" htmlFor="user-event-amount">
-                  {t("userEvent.amount")}
-                </FieldLabel>
-                <div className="relative w-full">
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 left-sm z-[1] flex items-center text-body text-text-secondary"
-                  >
-                    $
-                  </span>
-                  <TextField
-                    id="user-event-amount"
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min={0}
-                    value={values.amountInput}
-                    placeholder={t("userEvent.amountPlaceholder")}
-                    onChange={(event) =>
-                      setValues((prev) => ({ ...prev, amountInput: event.target.value }))
-                    }
-                    className="w-full pl-6"
-                    data-testid="user-event-amount-input"
-                  />
-                </div>
-              </div>
-              <div className="flex min-w-[8rem] flex-col gap-xs" data-testid="user-event-direction">
-                <FieldLabel className="mb-0">{t("userEvent.direction")}</FieldLabel>
-                <SegmentedControl
-                  items={[
-                    { id: "expense", label: t("userEvent.directionExpense") },
-                    { id: "income", label: t("userEvent.directionIncome") },
-                  ]}
-                  value={values.direction}
-                  onChange={(direction) =>
-                    setValues((prev) => ({
-                      ...prev,
-                      direction: direction === "income" ? "income" : "expense",
-                    }))
-                  }
-                  ariaLabel={t("userEvent.directionAria")}
-                  layout="inline"
-                />
-              </div>
-            </div>
-            <p className="m-0 text-caption text-text-muted">{t("userEvent.amountHint")}</p>
-          </div>
+          <UserEventDialogFinanceFields values={values} setValues={setValues} />
         ) : null}
 
         {isRecurring ? (

@@ -19,6 +19,7 @@ export type { ButtonSize, ControlSize } from "./controlStyles";
 export { FeedCard } from "./FeedCard";
 export { FieldLabel } from "./FieldLabel";
 export { FormStack, FormGrid } from "./FormStack";
+export { FormDialogSection } from "./FormDialogSection";
 export { FormField } from "./FormField";
 export { FormActions } from "./FormActions";
 export { PillButton } from "./PillButton";

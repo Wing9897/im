@@ -26,3 +26,6 @@ class AgentChatBody(BaseModel):
     worksetId: str | None = None
     surface: Literal["task_editor"] | None = None
     currentTask: TaskDraftPayload | None = None
+    #: Optional complete ``llm_profiles.id`` override for this turn.
+    #: When omitted, resolve via ``staff_class=assistant`` (same as A2A).
+    llmProfileId: str | None = None

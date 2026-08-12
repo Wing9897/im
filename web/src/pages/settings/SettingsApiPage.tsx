@@ -5,23 +5,14 @@ import {
   calendarDeepLinkExamples,
   webhookIngestExample,
 } from "../../domain/apiDocs/examples";
+import { ResolvedApiBaseUrl } from "../../components/settings/ResolvedApiBaseUrl";
 import { captionClass, cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
-import { SettingsContentCard, SettingsFieldGroup } from "./SettingsShared";
-
-const linkClass = `${captionClass} font-medium text-accent no-underline hover:underline`;
-const examplePreClass =
-  "im-auto-scrollbar m-0 max-h-[min(360px,45vh)] overflow-auto whitespace-pre-wrap break-words rounded-md bg-[rgba(17,17,27,0.5)] px-3 py-2.5 text-[11px] leading-snug text-text-secondary";
-
-function ApiExample({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="mt-sm">
-      <div className={`mb-1 ${captionClass} font-medium text-text-primary`}>{title}</div>
-      <pre className={examplePreClass} data-testid="api-docs-example">
-        {body}
-      </pre>
-    </div>
-  );
-}
+import {
+  SettingsContentCard,
+  SettingsDocsExample,
+  SettingsFieldGroup,
+  settingsDocsLinkClass,
+} from "./SettingsShared";
 
 export function SettingsApiPage() {
   const { t, i18n } = useTranslation("settings");
@@ -34,11 +25,19 @@ export function SettingsApiPage() {
       <p className={`m-0 ${cardBodyClass}`}>{t("apiDocs.intro")}</p>
 
       <SettingsFieldGroup>
+        <ResolvedApiBaseUrl
+          titleKey="apiDocs.baseUrl.title"
+          bodyKey="apiDocs.baseUrl.body"
+          testId="api-docs-base-url"
+        />
+      </SettingsFieldGroup>
+
+      <SettingsFieldGroup showDivider>
         <div>
           <h3 className={`m-0 ${cardTitleClass}`}>{t("apiDocs.accessKeys.title")}</h3>
           <p className={`mt-xs mb-0 ${cardBodyClass}`}>{t("apiDocs.accessKeys.body")}</p>
           <div className="mt-sm flex flex-wrap gap-x-md gap-y-xs">
-            <Link to="/account/keys" className={linkClass}>
+            <Link to="/account/keys" className={settingsDocsLinkClass}>
               {t("apiDocs.accessKeys.linkKeys")}
             </Link>
           </div>
@@ -49,12 +48,12 @@ export function SettingsApiPage() {
         <div>
           <h3 className={`m-0 ${cardTitleClass}`}>{t("apiDocs.webhook.title")}</h3>
           <p className={`mt-xs mb-0 ${cardBodyClass}`}>{t("apiDocs.webhook.body")}</p>
-          <ApiExample title={t("apiDocs.webhook.exampleTitle")} body={webhookExample} />
+          <SettingsDocsExample title={t("apiDocs.webhook.exampleTitle")} body={webhookExample} />
           <div className="mt-sm flex flex-wrap gap-x-md gap-y-xs">
-            <Link to="/account/keys" className={linkClass}>
+            <Link to="/account/keys" className={settingsDocsLinkClass}>
               {t("apiDocs.webhook.linkKeys")}
             </Link>
-            <Link to="/sources?tab=http&mode=webhook" className={linkClass}>
+            <Link to="/sources?tab=http&mode=webhook" className={settingsDocsLinkClass}>
               {t("apiDocs.webhook.linkSources")}
             </Link>
           </div>
@@ -74,12 +73,12 @@ export function SettingsApiPage() {
               <li key={line}>{line}</li>
             ))}
           </ul>
-          <ApiExample title={t("apiDocs.liaison.exampleAgent")} body={liaisonExample} />
+          <SettingsDocsExample title={t("apiDocs.liaison.exampleAgent")} body={liaisonExample} />
           <div className="mt-sm flex flex-wrap gap-x-md gap-y-xs">
-            <Link to="/ai/staff" className={linkClass}>
+            <Link to="/ai/staff" className={settingsDocsLinkClass}>
               {t("apiDocs.liaison.linkStaff")}
             </Link>
-            <Link to="/account/keys" className={linkClass}>
+            <Link to="/account/keys" className={settingsDocsLinkClass}>
               {t("apiDocs.liaison.linkKeys")}
             </Link>
           </div>
@@ -100,7 +99,10 @@ export function SettingsApiPage() {
               <li key={line}>{line}</li>
             ))}
           </ul>
-          <ApiExample title={t("apiDocs.deepLink.exampleBlockTitle")} body={deepLinkExample} />
+          <SettingsDocsExample
+            title={t("apiDocs.deepLink.exampleBlockTitle")}
+            body={deepLinkExample}
+          />
           <p className={`mt-sm mb-0 ${captionClass}`}>{t("apiDocs.deepLink.docsHint")}</p>
         </div>
       </SettingsFieldGroup>

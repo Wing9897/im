@@ -26,6 +26,7 @@ def all_routers() -> list[APIRouter]:
         items,
         llm,
         logs,
+        mcp,
         messages,
         results,
         setup,
@@ -52,6 +53,7 @@ def all_routers() -> list[APIRouter]:
             config.router,
             access_keys.router,
             a2a_agent.router,
+            mcp.router,
             # Public reset (conditional auth) before the authenticated system router.
             system.public_reset_router,
             system.router,

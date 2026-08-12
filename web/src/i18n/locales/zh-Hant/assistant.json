@@ -32,6 +32,17 @@
     "label": "目標歸屬工作集",
     "aria": "助手寫入日程的目標歸屬工作集"
   },
+  "llmProfile": {
+    "label": "LLM 設定檔",
+    "followStaff": "跟隨員工設定檔",
+    "placeholder": "選擇 AI 設定檔",
+    "loading": "正在載入 AI 設定檔…",
+    "empty": "尚無 AI 設定檔。請先建立後再與助手對話。",
+    "allIncomplete": "現有設定檔不完整。請先補齊供應商、模型與必要金鑰。",
+    "createCta": "建立 AI 設定檔",
+    "defaultBadge": "預設",
+    "incompleteBadge": "不完整"
+  },
   "mic": {
     "holdToTalk": "按住說話",
     "releaseToStop": "放開即送出",

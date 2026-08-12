@@ -64,6 +64,7 @@ CALENDAR_READ_TOOL_NAMES = frozenset(
 )
 
 INTELLIGENCE_READ_TOOL_NAMES = frozenset(INTELLIGENCE_HANDLERS)
+MESSAGES_TOOL_NAMES = frozenset(MESSAGES_HANDLERS)
 ITEMS_READ_TOOL_NAMES = frozenset({"items.list", "items.list_expiring"})
 #: Inventory mutation tools — agent ticks omit these; assistant / A2A keep them.
 ITEMS_WRITE_TOOL_NAMES = frozenset({"items.create", "items.update"})
@@ -76,6 +77,7 @@ def build_tool_schemas(
     calendar_writes_enabled: bool = True,
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
+    messages_search_enabled: bool = True,
     items_read_enabled: bool = True,
     items_writes_enabled: bool = True,
 ) -> list[dict[str, Any]]:
@@ -86,6 +88,8 @@ def build_tool_schemas(
         schemas = [s for s in schemas if str(s.get("name") or "") not in CALENDAR_READ_TOOL_NAMES]
     if not analysis_events_read_enabled:
         schemas = [s for s in schemas if str(s.get("name") or "") not in INTELLIGENCE_READ_TOOL_NAMES]
+    if not messages_search_enabled:
+        schemas = [s for s in schemas if str(s.get("name") or "") not in MESSAGES_TOOL_NAMES]
     if not items_read_enabled:
         schemas = [s for s in schemas if str(s.get("name") or "") not in ITEMS_READ_TOOL_NAMES]
     if not items_writes_enabled:

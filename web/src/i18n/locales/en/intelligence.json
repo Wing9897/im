@@ -105,8 +105,8 @@
   },
   "empty": {
     "noTasksTitle": "No intelligence tasks yet",
-    "noTasksDescription": "Create at least one Intel task or Agent task (with analysis output). After analysis finishes, curated highlights will appear here.",
-    "noTasksHint": "If sources and channels are ready, add an Intel task or Agent task under Tasks next.",
+    "noTasksDescription": "Create at least one Intel task or Project Manager task (with analysis output). After analysis finishes, curated highlights will appear here.",
+    "noTasksHint": "If sources and channels are ready, add an Intel task or Project Manager task under Tasks next.",
     "filteredBothTitle": "No intelligence matches",
     "filteredBothDescription": "Your current filters do not match any results.",
     "filteredSearchTitle": "No intelligence matches your search",
@@ -118,7 +118,7 @@
     "filteredHint": "Clear filters to see whether there is no data, or it is just filtered out.",
     "noneTitle": "No intelligence yet",
     "noneDescription": "Data loaded, but there are no intelligence results to show.",
-    "noneHint": "Results appear after a successful Intel task message batch or Agent task with analysis-event output."
+    "noneHint": "Results appear after a successful Intel task message batch or Project Manager task with analysis-event output."
   },
   "cta": {
     "goToTasks": "Go to Tasks",

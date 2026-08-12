@@ -24,7 +24,7 @@ describe("formatAnalysisMode", () => {
   });
 
   it('returns task-type name for "agent"', () => {
-    expect(formatAnalysisMode("agent")).toBe("Agent 任務");
+    expect(formatAnalysisMode("agent")).toBe("專案經理任務");
     expect(formatAnalysisMode("recurring")).toBe("未知");
   });
 
@@ -42,7 +42,7 @@ describe("formatAnalysisMode", () => {
     await i18n.changeLanguage("en");
     expect(formatAnalysisMode("intel_event")).toBe("Intel task");
     expect(formatAnalysisMode("leaderboard")).toBe("Leaderboard task");
-    expect(formatAnalysisMode("agent")).toBe("Agent task");
+    expect(formatAnalysisMode("agent")).toBe("Project Manager task");
     expect(formatAnalysisMode("unknown")).toBe("Unknown");
   });
 });

@@ -22,8 +22,7 @@ function BatchRow({
       : "";
   return (
     <li className="board-widget-list__item">
-      <button
-        type="button"
+      <div
         className="board-widget-list__row"
         data-testid={`board-queue-row-${batch.batchId}`}
       >
@@ -49,7 +48,7 @@ function BatchRow({
             {batch.errorMessage}
           </span>
         ) : null}
-      </button>
+      </div>
     </li>
   );
 }
@@ -81,9 +80,8 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
       <BoardWidgetShell loading={active && !status}>
         {status ? (
           <>
-            <button
-              type="button"
-              className="board-queue-stats board-queue-stats--clickable"
+            <div
+              className="board-queue-stats"
               data-testid="board-queue-stats"
             >
               <div className="board-queue-stat">
@@ -118,7 +116,7 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
                   </Badge>
                 </span>
               </div>
-            </button>
+            </div>
             {listed.length > 0 ? (
               <ul className="board-widget-list">
                 {listed.map((batch) => (

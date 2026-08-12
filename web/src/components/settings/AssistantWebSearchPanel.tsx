@@ -68,10 +68,10 @@ export function AssistantWebSearchPanel({
 
   return (
     <FormStack gap="lg">
-      <SettingsRow label={t("webSearch.sectionTitle")} help={t("webSearch.sectionHelp")}>
+      <SettingsRow label={t("webSearch.enabledLabel")} layout="inline">
         <CheckboxField
           id="assistant-web-search-enabled"
-          label={t("webSearch.enabledLabel")}
+          label={enabled ? t("shared.enabled") : t("shared.disabled")}
           checked={enabled}
           onChange={(event) => onEnabledChange(event.target.checked)}
           aria-label={t("webSearch.enabledAria")}
@@ -79,7 +79,7 @@ export function AssistantWebSearchPanel({
       </SettingsRow>
 
       {enabled ? (
-        <>
+        <FormStack gap="md">
           <SettingsRow
             label={t("webSearch.providerLabel")}
             htmlFor="web-search-provider"
@@ -132,7 +132,7 @@ export function AssistantWebSearchPanel({
               />
             </SettingsRow>
           ) : null}
-        </>
+        </FormStack>
       ) : (
         <p className={`mb-0 ${formHelpClass}`} data-testid="web-search-status">
           {t("webSearch.statusDisabled")}

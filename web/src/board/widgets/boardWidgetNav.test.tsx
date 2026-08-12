@@ -81,6 +81,64 @@ vi.mock("../../api/results", () => ({
     attentionBatches: [],
     analysisPaused: false,
   })),
+  fetchTaskAnalysisStats: vi.fn(async () => [
+    {
+      taskId: "t1",
+      analyzedCount: 1,
+      unanalyzedCount: 0,
+      queuedMessageCount: 0,
+    },
+  ]),
+  fetchTrendingTopics: vi.fn(async () => [
+    {
+      id: "topic-1",
+      topicName: "Topic",
+      rank: 1,
+      score: 10,
+      messageCount: 2,
+      taskName: "任務",
+    },
+  ]),
+}));
+
+vi.mock("../../api/actions", () => ({
+  listActions: vi.fn(async () => [
+    {
+      id: "act-1",
+      name: "Action",
+      actionType: "notify",
+      isEnabled: true,
+      lastTriggeredAt: null,
+    },
+  ]),
+}));
+
+vi.mock("../../api/sources", () => ({
+  listSources: vi.fn(async () => [
+    {
+      id: "src-1",
+      name: "Source",
+      platform: "telegram",
+      status: "connected",
+    },
+  ]),
+}));
+
+vi.mock("../../api/logs", () => ({
+  queryAppLogsPage: vi.fn(async () => ({
+    logs: [
+      {
+        id: "log-1",
+        level: "info",
+        category: "app",
+        message: "hello",
+        time: "2026-01-01T00:00:00.000Z",
+        kind: null,
+      },
+    ],
+    nextCursor: null,
+    hasMore: false,
+  })),
 }));
 
 vi.mock("../../api/messages", () => ({
@@ -201,10 +259,10 @@ vi.mock("../embeds/GanttBoardEmbed", () => ({
 vi.mock("../embeds/CalendarBoardEmbed", () => ({
   CalendarBoardEmbed: ({
     mode,
-    occurrences,
+    events,
   }: {
     mode: "day" | "month";
-    occurrences?: Array<{ title?: string }>;
+    events?: Array<{ title?: string }>;
   }) =>
     createElement(
       "div",
@@ -212,7 +270,7 @@ vi.mock("../embeds/CalendarBoardEmbed", () => ({
         "data-testid": mode === "day" ? "board-calendar-day" : "board-calendar-month",
         className: mode === "day" ? "board-calendar-day" : "board-calendar-month",
       },
-      (occurrences ?? []).map((row, index) =>
+      (events ?? []).map((row, index) =>
         createElement("span", { key: `${row.title ?? "evt"}-${index}` }, row.title ?? ""),
       ),
     ),
@@ -321,15 +379,86 @@ describe("board widget in-frame interactions", () => {
     expect(openInPages).not.toHaveBeenCalled();
   });
 
-  it("Feed row stays on the board", async () => {
+  it("Feed row is display-only (no fake button / no openInPages)", async () => {
     act(() => {
       root.render(wrap(createElement(FeedBoardWidget)));
     });
     await flush();
-    act(() => {
-      (container.querySelector('[data-testid="board-feed-row-msg-1"]') as HTMLButtonElement).click();
-    });
+    const row = container.querySelector('[data-testid="board-feed-row-msg-1"]');
+    expect(row).toBeTruthy();
+    expect(row?.tagName.toLowerCase()).not.toBe("button");
     expect(openInPages).not.toHaveBeenCalled();
+  });
+
+  it("Queue / Stats / Tasks / Actions / Sources / Leaderboard / Logs rows are not buttons", async () => {
+    const { analysisStatusState } = await import("../../test/context-mocks");
+    analysisStatusState.queueStatus = {
+      pendingCount: 1,
+      processingBatches: [
+        {
+          batchId: "b1",
+          taskName: "Task",
+          messageCount: 2,
+          status: "processing",
+          retryCount: 0,
+        },
+      ],
+      attentionBatches: [],
+      analysisPaused: false,
+    };
+
+    const { QueueBoardWidget } = await import("./QueueBoardWidget");
+    const { StatsBoardWidget } = await import("./StatsBoardWidget");
+    const { TasksBoardWidget } = await import("./TasksBoardWidget");
+    const { ActionsBoardWidget } = await import("./ActionsBoardWidget");
+    const { SourcesBoardWidget } = await import("./SourcesBoardWidget");
+    const { LeaderboardBoardWidget } = await import("./LeaderboardBoardWidget");
+    const { LogsBoardWidget } = await import("./LogsBoardWidget");
+
+    const cases: Array<{ node: React.ReactNode; selectors: string[] }> = [
+      {
+        node: createElement(QueueBoardWidget),
+        selectors: ['[data-testid="board-queue-stats"]', '[data-testid="board-queue-row-b1"]'],
+      },
+      {
+        node: createElement(StatsBoardWidget),
+        selectors: ['[data-testid="board-stats-totals"]', '[data-testid="board-stats-row-t1"]'],
+      },
+      {
+        node: createElement(TasksBoardWidget),
+        selectors: ['[data-testid="board-tasks-row-task-1"]'],
+      },
+      {
+        node: createElement(ActionsBoardWidget),
+        selectors: ['[data-testid="board-actions-row-act-1"]'],
+      },
+      {
+        node: createElement(SourcesBoardWidget),
+        selectors: ['[data-testid="board-sources-row-src-1"]'],
+      },
+      {
+        node: createElement(LeaderboardBoardWidget),
+        selectors: ['[data-testid="board-leaderboard-row-topic-1"]'],
+      },
+      {
+        node: createElement(LogsBoardWidget),
+        selectors: ['[data-testid="board-logs-row-log-1"]'],
+      },
+    ];
+
+    for (const { node, selectors } of cases) {
+      act(() => {
+        root.render(wrap(node));
+      });
+      await flush();
+      await flush();
+      for (const selector of selectors) {
+        const el = container.querySelector(selector);
+        expect(el, selector).toBeTruthy();
+        expect(el!.tagName.toLowerCase()).not.toBe("button");
+      }
+      expect(openInPages).not.toHaveBeenCalled();
+    }
   });
 
   it("calendar frames expose source filter without day/month view toggles", async () => {

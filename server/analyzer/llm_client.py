@@ -86,6 +86,8 @@ class ConfigurableLlmClient:
         self.timeout_seconds = timeout_seconds
         self.allow_loopback = allow_loopback
         self.ollama_thinking_enabled = ollama_thinking_enabled
+        #: Set by ``client_from_resolved_config`` so runtime reloads match.
+        self.profile_id: str = ""
         self._session: aiohttp.ClientSession | None = None
 
     @classmethod
@@ -98,9 +100,14 @@ class ConfigurableLlmClient:
         return await client_from_default_profile(cls, db)
 
     @classmethod
-    async def from_assistant_staff(cls, db: Database) -> "ConfigurableLlmClient":
-        """Build a client from the active ``staff_class=assistant`` profile binding."""
-        return await client_from_assistant_staff(cls, db)
+    async def from_assistant_staff(
+        cls,
+        db: Database,
+        *,
+        profile_id: str | None = None,
+    ) -> "ConfigurableLlmClient":
+        """Build a client from assistant staff binding, or an explicit profile override."""
+        return await client_from_assistant_staff(cls, db, profile_id=profile_id)
 
     @classmethod
     async def from_profile(cls, db: Database, profile_id: str | None) -> "ConfigurableLlmClient":

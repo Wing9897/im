@@ -16,6 +16,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+from server.constants import SERVICE_PORT
+
 ROOT = Path(__file__).resolve().parents[1]
 SERVER_RUNTIME = ROOT / "desktop" / "server-runtime" / "intelligence-monitor-server"
 OUT_DIR = ROOT / "dist" / "cli"
@@ -72,7 +74,7 @@ def main() -> int:
         f"Unpack, then run:\n"
         f"  ./{_binary_name()}\n"
         f"\n"
-        f"Default bind: 127.0.0.1:18820\n"
+        f"Default bind: 127.0.0.1:{SERVICE_PORT}\n"
         f"Data root: INTELLIGENCE_MONITOR_DATA_DIR (or OS product userData folder).\n"
         f"This zip is the PyInstaller onedir also used as the Desktop sidecar.\n"
     )

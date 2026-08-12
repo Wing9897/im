@@ -12,6 +12,7 @@
     "theme": "Theme",
     "data": "Data maintenance",
     "api": "API",
+    "mcp": "MCP",
     "logs": "System logs",
     "aiProvider": "AI profiles",
     "voice": "Voice",
@@ -122,16 +123,16 @@
     "retention": {
       "categories": {
         "messages": "Live monitor",
-        "analysis": "Analysis results",
+        "analysis": "Analysis results (Intel events)",
         "leaderboard": "Leaderboard",
         "appLogs": "App logs",
-        "userEvents": "User/assistant events"
+        "userEvents": "Calendar / user events"
       },
       "daysLabel": "{category} retention days",
       "days": "days",
-      "helpAnalysis": "Includes Intel events and time planning (the same event data).",
+      "helpAnalysis": "Includes Intel events and time planning (the same event data). Default 0 = keep forever.",
       "helpAppLogs": "Shorter by default; set to 0 to disable auto cleanup.",
-      "helpUserEvents": "Longer by default; manual/assistant-created events.",
+      "helpUserEvents": "Calendar / manual / assistant one-off events. Default 0 = keep forever.",
       "invalid": "Retention days must be 0 or a positive integer (0 = disable auto cleanup)",
       "saveButton": "Save retention days",
       "savedCheck": "✓ Saved",
@@ -189,6 +190,9 @@
     "save": "Save profile",
     "dialogCreateTitle": "New AI profile",
     "dialogEditTitle": "Edit AI profile",
+    "sectionIdentity": "Profile",
+    "sectionConnection": "Provider & model",
+    "sectionStaff": "Staff bindings",
     "nameLabel": "Profile name",
     "nameHelp": "Shown in staff bindings and task forms.",
     "namePlaceholder": "e.g. Local Ollama",
@@ -202,7 +206,7 @@
     "staffClass": {
       "leaderboard": "Leaderboard analyst",
       "intel_event": "Intel event analyst",
-      "agent": "Agent",
+      "agent": "Project Manager",
       "assistant": "Assistant"
     },
     "noStaffClasses": "No staff classes bound",
@@ -218,7 +222,7 @@
   },
   "webSearch": {
     "sectionTitle": "Web search",
-    "sectionHelp": "When off, this profile cannot search the web. Agent tasks and the assistant that bind this profile share these settings.",
+    "sectionHelp": "When off, this profile cannot search the web. Project Manager tasks and the assistant that bind this profile share these settings.",
     "enabledLabel": "Allow web search",
     "enabledAria": "Allow web search",
     "providerLabel": "Search provider",
@@ -374,10 +378,14 @@
     }
   },
   "apiDocs": {
-    "intro": "Local HTTP API docs and examples: access keys, Webhook ingest, and Account manager (A2A); plus Desktop calendar deep links. Full contract: docs/agent/a2a.md in the repo.",
+    "intro": "Local HTTP API docs and examples: access keys, Webhook ingest, Account manager (A2A), and MCP; plus Desktop calendar deep links. Full contracts: docs/agent/a2a.md and docs/agent/mcp.md in the repo.",
+    "baseUrl": {
+      "title": "API base URL",
+      "body": "Current origin for API calls and examples (custom server, env, or this page’s origin):"
+    },
     "accessKeys": {
       "title": "Access keys",
-      "body": "Call automation APIs with `Authorization: Bearer <key>`. Full keys (`*`) work for Webhook and Account manager; Account-manager-only keys can only call `/api/v1/a2a/*`. Not for UI sign-in.",
+      "body": "Call automation APIs with `Authorization: Bearer <key>`. Full keys (`*`) work for Webhook, Account manager (A2A), and MCP; Account-manager-only keys can only call `/api/v1/a2a/*`. MCP needs the same full `*` key. Not for UI sign-in.",
       "linkKeys": "Manage access keys"
     },
     "webhook": {
@@ -420,9 +428,80 @@
       "docsHint": "Details: docs/ARCHITECTURE.md (Desktop calendar import) and docs/KNOWN-SIMPLIFICATIONS.md in the repo."
     }
   },
+  "mcpDocs": {
+    "intro": "Streamable HTTP MCP for external agents (e.g. OpenClaw): structured tools for calendar, messages, intel, and items. Unlike Account manager (A2A), this is a tool surface—no natural-language loop or server-side LLM. Use the master switch and capability toggles below; protect the endpoint with an access key.",
+    "endpoint": {
+      "title": "Endpoint",
+      "body": "Connect with Streamable HTTP at this URL (same origin as your API base):"
+    },
+    "probe": {
+      "button": "Test connection",
+      "probing": "Testing…",
+      "hint": "Uses your signed-in session to call GET /api/v1/mcp/status (no access key paste). Shows tools currently exposed by capability groups.",
+      "success": "MCP is on — {toolCount} tools: {names}",
+      "disabled": "MCP is off (master switch). Turn it on and save, then test again.",
+      "error": "Could not reach MCP status. Check that the API is running and you are signed in."
+    },
+    "masterSwitch": {
+      "label": "Enable MCP",
+      "help": "When off, Streamable HTTP at /api/v1/mcp returns 403; list/call are unavailable. Default is on.",
+      "capsInactive": "Capability groups are ignored while MCP is off."
+    },
+    "openClaw": {
+      "title": "OpenClaw config",
+      "body": "Add under `mcp.servers` in `~/.openclaw/openclaw.json`. Use a full access key (`*`) as Bearer. Paste the key from Account → Access keys. OpenClaw may also expose an `mcp probe` / config check against this URL.",
+      "exampleTitle": "Config example",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Copy failed"
+    },
+    "capabilityToggles": {
+      "title": "Capability groups",
+      "body": "Choose which tool groups MCP may list and call when the master switch is on. Defaults are all enabled (same as the full 19-tool allowlist). Disabled groups are omitted from `list_tools` and rejected on `call_tool`. These are household capability filters—not access-key scopes.",
+      "loading": "Loading MCP settings…",
+      "saveLabel": "Save MCP settings",
+      "calendarRead": "Calendar read",
+      "calendarReadHelp": "`list_calendars`, `upcoming`, `recent`, `window`, `get`",
+      "calendarWrite": "Calendar write",
+      "calendarWriteHelp": "Create / update / delete events & recurring series; mark / unmark important",
+      "messagesSearch": "Messages search",
+      "messagesSearchHelp": "`messages.search`",
+      "intelligenceSearch": "Intelligence search",
+      "intelligenceSearchHelp": "`intelligence.search_events`",
+      "itemsRead": "Items read",
+      "itemsReadHelp": "`items.list`, `items.list_expiring`",
+      "itemsWrite": "Items write",
+      "itemsWriteHelp": "`items.create`, `items.update`"
+    },
+    "capabilities": {
+      "title": "Allowlist overview",
+      "items": [
+        "Calendar: list / create / update / delete events (including recurring and mark-important)",
+        "Messages: `messages.search`",
+        "Intelligence: `intelligence.search_events`",
+        "Items: `items.list`, `items.list_expiring`, `items.create`, `items.update`"
+      ]
+    },
+    "notExposed": {
+      "title": "Not exposed",
+      "items": [
+        "`web.search` (web search)",
+        "`tasks.consult_advisor` (task advisor)",
+        "Analysis tasks / sources / notifications (Actions) / LLM settings",
+        "Project Manager tick and other ops reserved for the UI"
+      ]
+    },
+    "accessKeys": {
+      "title": "Access keys & A2A",
+      "body": "MCP requires the same bar as A2A: a household access key with scope `*`. Account-manager-only keys cannot call MCP. For natural-language one-shots, use Account manager (A2A) instead.",
+      "linkKeys": "Manage access keys",
+      "linkApi": "Open API docs (A2A)"
+    },
+    "docsHint": "Full contract: docs/agent/mcp.md in the repo."
+  },
   "staff": {
     "title": "AI staff",
-    "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, and Agent (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
+    "intro": "Front-line: Assistant and Task advisor. Back-office: Leaderboard analyst, Intel task analyst, and Project Manager (invoked by analysis tasks). Plus an Account manager for external systems (A2A; same team as the assistant; no chat with you).",
     "capabilitiesLabel": "What they can do",
     "backofficeNote": "Back-office staff are invoked by analysis tasks; they don’t appear in chat.",
     "openAssistant": "Open assistant chat",
@@ -473,7 +552,7 @@
       "summary": "Chats beside new/edit task forms to help fill settings (not an Agent).",
       "capabilities": [
         "Suggest task name and description from what you want to monitor",
-        "Suggest task type (leaderboard / intel / agent / recurring) and prompt direction",
+        "Suggest task type (leaderboard / intel / project manager / recurring) and prompt direction",
         "Help with time range, schedule, and related fields",
         "Only configures tasks—does not analyze messages or call tools"
       ]
@@ -497,13 +576,13 @@
       ]
     },
     "agent": {
-      "summary": "Configurable back-office Agent: project reconcile or web scout by trigger/output policy; detail at `/tasks/:id/agent`.",
+      "summary": "Configurable back-office Project Manager: project reconcile or web scout by trigger/output policy; detail at `/tasks/:id/agent`.",
       "capabilities": [
         "Triggers: message-cursor drain, message threshold, or pure schedule (cursor drain cannot also output analysis events)",
         "Per-task: calendar read/write, web search; optional items read (expiry / inventory)",
         "Cannot create/update items (items.create/update are assistant & Account manager only)",
         "Outputs may write agent calendar (user_events.origin=agent) and/or analysis events",
-        "No chat UI; driven by the agent task schedule (prefer hourly)"
+        "No chat UI; driven by the Project Manager task schedule (prefer hourly)"
       ]
     },
     "liaison": {

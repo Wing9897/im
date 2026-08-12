@@ -80,6 +80,7 @@ export function useAssistantChatStream({
   const {
     messagesRef,
     sessionIdRef,
+    llmProfileIdRef,
     setMessages,
     setSessionId,
     setDraft,
@@ -154,6 +155,9 @@ export function useAssistantChatStream({
             sessionId: priorSessionId,
             locale: getAppLocale(),
             worksetId: worksetIdRef.current,
+            ...(llmProfileIdRef.current
+              ? { llmProfileId: llmProfileIdRef.current }
+              : {}),
             ...taskEditorAgentExtras(),
           },
           {
@@ -202,6 +206,7 @@ export function useAssistantChatStream({
       worksetIdRef,
       draftRef,
       heardTextRef,
+      llmProfileIdRef,
       messagesRef,
       persistMessages,
       sendingRef,

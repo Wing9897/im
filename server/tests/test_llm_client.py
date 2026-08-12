@@ -172,6 +172,47 @@ async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(ap
     assert config["profile_id"] == profile_id
 
 
+async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
+    """Per-session override skips staff_class=assistant and loads that profile."""
+    db = app.state.db
+    now = utc_now_iso()
+    override_id = "profile-session-override"
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        (
+            override_id,
+            "Session override",
+            "openrouter",
+            "https://openrouter.ai/api/v1",
+            "openrouter/auto",
+            protect_text("or-secret"),
+            now,
+            now,
+        ),
+    )
+    await _update_default_profile(
+        db,
+        provider="ollama",
+        model="staff-llama",
+        base_url="http://localhost:11434",
+    )
+
+    config = await load_agent_llm_config(db, profile_id=override_id)
+
+    assert config["provider"] == "openrouter"
+    assert config["model"] == "openrouter/auto"
+    assert config["api_key"] == "or-secret"
+    assert config["profile_id"] == override_id
+
+    staff_config = await load_agent_llm_config(db)
+    assert staff_config["model"] == "staff-llama"
+    assert staff_config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+
+
 async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:
     db = app.state.db
     now = utc_now_iso()

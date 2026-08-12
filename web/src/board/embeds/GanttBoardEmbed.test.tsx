@@ -248,12 +248,13 @@ describe("normalizeGanttEventActivities", () => {
     expect(bar.width).toBeCloseTo((1 / 31) * 100, 5);
   });
 
-  it("merges recurring occurrences with the same taskId into one row with multiple segments", () => {
+  it("merges recurring occurrences with the same seriesId into one row with multiple segments", () => {
     const now = new Date(2026, 6, 22, 18, 0, 0).getTime();
     const rows = normalizeGanttEventActivities([
       makeEvent({
         id: "meet:1",
-        taskId: "meet",
+        seriesId: "meet",
+        taskId: null,
         title: "開會",
         source: "recurring",
         startTime: localIso(2026, 6, 8, 9, 0),
@@ -261,7 +262,8 @@ describe("normalizeGanttEventActivities", () => {
       }),
       makeEvent({
         id: "meet:2",
-        taskId: "meet",
+        seriesId: "meet",
+        taskId: null,
         title: "開會",
         source: "recurring",
         startTime: localIso(2026, 6, 15, 9, 0),

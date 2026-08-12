@@ -1,4 +1,8 @@
-"""Validation and response assembly shared by task routes."""
+"""Validation and response assembly shared by task routes.
+
+HTTP-agnostic body validation lives in ``services.task_crud_mutate_common``;
+routes catch ``TaskWriteError`` and map to 422.
+"""
 
 from __future__ import annotations
 
@@ -6,23 +10,10 @@ from collections.abc import Callable
 from typing import Any
 
 from server.api.schemas.requests import TaskConfigBody
-from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
-from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row, fetch_task_workset_id
 from server.queries.worksets_queries import workset_exists
-from server.scheduler.task_schedule_overrides import (
-    AGENT_WAVE_INTERVAL_MAX,
-    AGENT_WAVE_INTERVAL_MIN,
-    ALLOWED_STRATEGY_MODES,
-    ANALYSIS_BATCH_LIMIT_MAX,
-    ANALYSIS_BATCH_LIMIT_MIN,
-    ANALYSIS_THRESHOLD_MAX,
-    ANALYSIS_THRESHOLD_MIN,
-    BATCH_OVERLAP_MAX,
-    BATCH_OVERLAP_MIN,
-)
 from server.wire.serializers import serialize_channel_ref, serialize_task
 
 ALLOWED_MODES = ALL_ANALYSIS_MODES
@@ -32,78 +23,6 @@ ALLOWED_MODES = ALL_ANALYSIS_MODES
 # Recurring-only recurrence expanded at query time — never an AI analysis trigger.
 # AI trigger schedules use RRULE-shaped strings (purpose=trigger) for APScheduler
 # only and must never calendar-expand.
-
-
-def _validate_optional_int_in_range(
-    label: str,
-    value: int | None,
-    *,
-    minimum: int,
-    maximum: int,
-) -> None:
-    if value is None:
-        return
-    if value < minimum or value > maximum:
-        raise http_error(
-            422,
-            f"{label} must be between {minimum} and {maximum}",
-            error_code=VALIDATION_ERROR,
-        )
-
-
-def validate_task_body(body: TaskConfigBody) -> None:
-    if not body.name.strip():
-        raise http_error(422, "Task name is required", error_code=VALIDATION_ERROR)
-    if body.analysisMode is not None and body.analysisMode not in ALLOWED_MODES:
-        raise http_error(
-            422,
-            f"Invalid analysisMode: {body.analysisMode}",
-            error_code=VALIDATION_ERROR,
-        )
-    if body.analysisTimeRange is not None and body.analysisTimeRange not in ANALYSIS_TIME_RANGE_VALUES:
-        raise http_error(
-            422,
-            f"Invalid analysisTimeRange: {body.analysisTimeRange}",
-            error_code=VALIDATION_ERROR,
-        )
-    if body.scheduleRrule is not None:
-        try:
-            resolve_trigger_rrule(
-                analysis_mode=body.analysisMode,
-                schedule_rrule=body.scheduleRrule,
-            )
-        except (ScheduleValidationError, ValueError, TypeError) as exc:
-            raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
-    if body.analysisStrategyMode is not None and body.analysisStrategyMode not in ALLOWED_STRATEGY_MODES:
-        raise http_error(
-            422,
-            f"Invalid analysisStrategyMode: {body.analysisStrategyMode}",
-            error_code=VALIDATION_ERROR,
-        )
-    _validate_optional_int_in_range(
-        "agentWaveIntervalSeconds",
-        body.agentWaveIntervalSeconds,
-        minimum=AGENT_WAVE_INTERVAL_MIN,
-        maximum=AGENT_WAVE_INTERVAL_MAX,
-    )
-    _validate_optional_int_in_range(
-        "batchOverlapCount",
-        body.batchOverlapCount,
-        minimum=BATCH_OVERLAP_MIN,
-        maximum=BATCH_OVERLAP_MAX,
-    )
-    _validate_optional_int_in_range(
-        "analysisTriggerThreshold",
-        body.analysisTriggerThreshold,
-        minimum=ANALYSIS_THRESHOLD_MIN,
-        maximum=ANALYSIS_THRESHOLD_MAX,
-    )
-    _validate_optional_int_in_range(
-        "analysisBatchMessageLimit",
-        body.analysisBatchMessageLimit,
-        minimum=ANALYSIS_BATCH_LIMIT_MIN,
-        maximum=ANALYSIS_BATCH_LIMIT_MAX,
-    )
 
 
 def schedule_override_write_fields(body: TaskConfigBody) -> dict[str, Any]:

@@ -22,6 +22,7 @@ from server.queries.tasks_queries import (
 from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     validate_agent_prompt,
+    validate_task_config_body,
 )
 from server.services.task_writes import (
     TaskWriteError,
@@ -31,6 +32,7 @@ from server.util import new_id, utc_now_iso
 
 
 async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutationResult:
+    validate_task_config_body(body)
     effective_mode = body.analysisMode or LEADERBOARD_MODE
 
     if effective_mode == "recurring":

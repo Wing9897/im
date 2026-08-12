@@ -18,9 +18,9 @@ import {
 const MIN_MOSAIC_WIDGETS = 6;
 
 export function createDefaultBoardConfig(): BoardConfig {
-  // Dense non-overlapping mosaic (16×10) v15 (same layout as v14):
-  //  top: full-width dual gantt; left: clock/system/actions/leaderboard/logs
-  //  right: month calendar + day schedule (locked); mid/bottom: map/wall/weather/…
+  // Dense non-overlapping mosaic (16×10) v16:
+  //  same skeleton as v15; bottom-right secondary tiles swap to
+  //  schedule / items / llm-health (logs / queue / sources remain addable).
   return {
     version: BOARD_LAYOUT_VERSION,
     widgets: [
@@ -30,7 +30,7 @@ export function createDefaultBoardConfig(): BoardConfig {
       { i: "w-system", type: "system", col: 0, row: 3, sizeId: "3x1", z: 4 },
       { i: "w-actions", type: "actions", col: 0, row: 4, sizeId: "3x2", z: 5 },
       { i: "w-leaderboard", type: "leaderboard", col: 0, row: 6, sizeId: "3x2", z: 6 },
-      { i: "w-logs", type: "logs", col: 0, row: 8, sizeId: "3x2", z: 7 },
+      { i: "w-schedule", type: "schedule", col: 0, row: 8, sizeId: "3x2", z: 7 },
       { i: "w-map", type: "map", col: 3, row: 2, sizeId: "5x3", z: 8 },
       { i: "w-wall", type: "wall", col: 8, row: 2, sizeId: "3x3", z: 9 },
       { i: "w-calendar", type: "calendar", col: 11, row: 2, sizeId: "5x3", z: 10 },
@@ -40,8 +40,8 @@ export function createDefaultBoardConfig(): BoardConfig {
       { i: "w-stats", type: "stats", col: 11, row: 6, sizeId: "5x2", z: 14 },
       { i: "w-events", type: "events", col: 3, row: 7, sizeId: "4x3", z: 15 },
       { i: "w-feed", type: "feed", col: 7, row: 7, sizeId: "4x3", z: 16 },
-      { i: "w-queue", type: "queue", col: 11, row: 8, sizeId: "3x2", z: 17 },
-      { i: "w-sources", type: "sources", col: 14, row: 8, sizeId: "2x2", z: 18 },
+      { i: "w-items", type: "items", col: 11, row: 8, sizeId: "3x2", z: 17 },
+      { i: "w-llm-health", type: "llm-health", col: 14, row: 8, sizeId: "2x2", z: 18 },
     ],
   };
 }
@@ -95,8 +95,24 @@ export function normalizeLayoutWidget(raw: unknown, index: number): BoardWidgetI
 }
 
 /**
- * Parse a board layout. Unknown/older versions and sparse caches reset to the
- * default mosaic; there are no incremental mid-version upgrades.
+ * Migrate a normalized widget list onto the current layout schema version.
+ * Keeps recognized widgets across version bumps; only falls back to the default
+ * mosaic when the layout is empty or sparse/corrupt after cleanup.
+ */
+export function migrateBoardLayout(widgets: BoardWidgetItem[]): BoardConfig {
+  if (widgets.length === 0 || isSparseLayout(widgets)) {
+    return createDefaultBoardConfig();
+  }
+  return {
+    version: BOARD_LAYOUT_VERSION,
+    widgets,
+  };
+}
+
+/**
+ * Parse a board layout. Unknown/retired widget types are dropped; older
+ * versions migrate in place (version bumped). Empty or sparse/corrupt caches
+ * fall back to the default mosaic.
  */
 export function parseBoardConfig(raw: unknown): BoardConfig {
   const fallback = createDefaultBoardConfig();
@@ -104,7 +120,6 @@ export function parseBoardConfig(raw: unknown): BoardConfig {
     return fallback;
   }
   const data = raw as Record<string, unknown>;
-  const version = typeof data.version === "number" ? data.version : 1;
   const widgetsRaw = Array.isArray(data.widgets) ? data.widgets : null;
   if (!widgetsRaw) {
     return fallback;
@@ -113,14 +128,5 @@ export function parseBoardConfig(raw: unknown): BoardConfig {
     .map((item, index) => normalizeLayoutWidget(item, index))
     .filter((item): item is BoardWidgetItem => item !== null);
 
-  // Layout version bump (no mid-version incremental upgrades), or a sparse
-  // cache that only kept a couple frames → filled default mosaic.
-  if (widgets.length === 0 || version < BOARD_LAYOUT_VERSION || isSparseLayout(widgets)) {
-    return fallback;
-  }
-
-  return {
-    version: BOARD_LAYOUT_VERSION,
-    widgets,
-  };
+  return migrateBoardLayout(widgets);
 }

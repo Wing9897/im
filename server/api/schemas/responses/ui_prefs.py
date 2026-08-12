@@ -43,7 +43,7 @@ class BoardWidgetSchema(BaseModel):
 
 
 class BoardLayoutSchema(BaseModel):
-    """Layout blob stored under ``ops_board_layout`` (v15 widgets mosaic)."""
+    """Layout blob stored under ``ops_board_layout`` (v16 widgets mosaic)."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -174,6 +174,9 @@ class AssistantSessionSchema(BaseModel):
     updatedAt: int
     messages: list[AssistantSessionMessageSchema]
     sessionId: str | None = None
+    #: When set, assistant chat for this session uses that complete profile.
+    #: When unset, resolve via active ``staff_class=assistant`` binding.
+    llmProfileId: str | None = None
 
 
 class AssistantSessionsResponse(BaseModel):

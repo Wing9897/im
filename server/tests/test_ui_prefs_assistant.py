@@ -82,6 +82,45 @@ async def test_assistant_sessions_roundtrip_and_delete_via_put(client, app) -> N
     assert await get_config(app.state.db, "assistant_sessions") == ""
 
 
+async def test_assistant_sessions_persist_llm_profile_id(client) -> None:
+    put = await client.put(
+        "/api/v1/ui-prefs/assistant/sessions",
+        json={
+            "deviceId": DEVICE_A,
+            "sessions": [
+                {
+                    "id": "asst-profile",
+                    "title": "Ollama chat",
+                    "updatedAt": 100,
+                    "messages": [],
+                    "llmProfileId": "profile-ollama-1",
+                },
+                {
+                    "id": "asst-follow",
+                    "title": "Follow staff",
+                    "updatedAt": 90,
+                    "messages": [],
+                    "llmProfileId": "   ",
+                },
+            ],
+            "activeSessionId": "asst-profile",
+        },
+    )
+    assert put.status_code == 200
+    by_id = {s["id"]: s for s in put.json()["sessions"]}
+    assert by_id["asst-profile"]["llmProfileId"] == "profile-ollama-1"
+    assert not by_id["asst-follow"].get("llmProfileId")
+
+    got = await client.get(
+        "/api/v1/ui-prefs/assistant/sessions",
+        params={"deviceId": DEVICE_A},
+    )
+    assert got.status_code == 200
+    again = {s["id"]: s for s in got.json()["sessions"]}
+    assert again["asst-profile"]["llmProfileId"] == "profile-ollama-1"
+    assert not again["asst-follow"].get("llmProfileId")
+
+
 async def test_assistant_sessions_two_devices_isolated(client, app) -> None:
     await client.put(
         "/api/v1/ui-prefs/assistant/sessions",

@@ -1,39 +1,15 @@
 // ============================================================
-// Settings Type Definitions
+// Settings Type Definitions (OpenAPI SoT)
 // ============================================================
 
+import type { components } from "../api/generated/schema";
+
 /**
- * GET/PUT /config/settings wire snapshot (Stamp 29).
+ * GET/PUT /config/settings wire snapshot.
  * LLM provider slots / assistant_llm_* / web-search globals live on
  * ``/api/v1/llm/profiles`` (not system_config).
  */
-export type SystemSettingsSnapshot = {
-  analysisPaused: boolean;
-  analysisBatchMessageLimit: string;
-  analysisMaxTotalChars: string;
-  analysisMaxEstimatedInputTokens: string;
-  analysisTraceVerbose: boolean;
-  llmGenerationTimeout: string;
-  maxBatchRetries: string;
-  maxConcurrentBatches: string;
-  analysisStrategyMode: string;
-  analysisTriggerThreshold: string;
-  retentionMessagesDays: string;
-  retentionAnalysisDays: string;
-  retentionLeaderboardDays: string;
-  retentionAppLogsDays: string;
-  retentionUserEventsDays: string;
-  autoPauseOnRetriesExhausted: boolean;
-  weatherLocation: string;
-  uiLocale: string;
-  agentHistoryMaxMessages: string;
-  agentHistoryMaxChars: string;
-  assistantDisplayName: string;
-  assistantAvatar: string;
-  userDisplayName: string;
-  userAvatar: string;
-  userBackground: string;
-};
+export type SystemSettingsSnapshot = components["schemas"]["SystemSettingsSnapshot"];
 
 /** Settings fields writable via PUT /config/settings (excludes runtime-only keys). */
 export type PersistableSystemSettings = Omit<SystemSettingsSnapshot, "analysisPaused">;

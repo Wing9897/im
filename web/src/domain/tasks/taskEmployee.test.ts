@@ -4,7 +4,6 @@ import {
   analysisModeForTaskEmployee,
   aiStaffIdForTaskEmployee,
   taskEmployeeForAnalysisMode,
-  taskEmployeeUsesAi,
 } from "./taskEmployee";
 import { ANALYSIS_MODE_ORDER } from "./analysisModeCapabilities";
 
@@ -29,11 +28,5 @@ describe("taskEmployee", () => {
     expect(aiStaffIdForTaskEmployee("intel_event")).toBe("intel_event");
     expect(aiStaffIdForTaskEmployee("agent")).toBe("agent");
     expect(aiStaffIdForTaskEmployee("leaderboard")).toBe("leaderboard");
-  });
-
-  it("marks all analysis task types as AI", () => {
-    expect(taskEmployeeUsesAi("intel_event")).toBe(true);
-    expect(taskEmployeeUsesAi("agent")).toBe(true);
-    expect(taskEmployeeUsesAi("leaderboard")).toBe(true);
   });
 });

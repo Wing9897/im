@@ -27,8 +27,7 @@ export function TasksBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-widget-list">
             {items.map((task) => (
               <li key={task.id} className="board-widget-list__item">
-                <button
-                  type="button"
+                <div
                   className="board-widget-list__row"
                   data-testid={`board-tasks-row-${task.id}`}
                 >
@@ -44,7 +43,7 @@ export function TasksBoardWidget({ active = true }: BoardWidgetProps) {
                       ? ` · ${t("board.common.channelCount", { count: task.channelIds.length })}`
                       : ""}
                   </span>
-                </button>
+                </div>
               </li>
             ))}
           </ul>

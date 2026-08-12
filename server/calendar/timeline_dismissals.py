@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Literal, Mapping
+from typing import Any, Iterable, Mapping
 
 from server.db.database import Database
+from server.domain.timeline_sources import (
+    ALLOWED_TIMELINE_SOURCES,
+    TIMELINE_SOURCE_ERROR,
+    TimelineSource,
+)
 from server.util import utc_now_iso
 
-DismissSource = Literal["analysis", "user", "recurring", "item_remind"]
-ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring", "item_remind"})
+DismissSource = TimelineSource
+ALLOWED_SOURCES = ALLOWED_TIMELINE_SOURCES
 
 # Compact calendar-query / agent item ``source`` → ``timeline_dismissals.source``.
 CALENDAR_ITEM_DISMISS_SOURCE: dict[str, DismissSource] = {
@@ -31,9 +36,7 @@ def active_timeline_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def _require_source(source: str) -> DismissSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineDismissalValidationError(
-            "source must be 'analysis', 'user', 'recurring', or 'item_remind'"
-        )
+        raise TimelineDismissalValidationError(TIMELINE_SOURCE_ERROR)
     return value  # type: ignore[return-value]
 
 

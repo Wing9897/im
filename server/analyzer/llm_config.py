@@ -129,13 +129,25 @@ async def load_llm_config(db: Database) -> LlmConfig:
     return await load_llm_config_for_profile(db, None)
 
 
-async def load_agent_llm_config(db: Database) -> LlmConfig:
-    """Assistant / A2A: resolve via ``staff_class=assistant`` → ``profile_id``.
+async def load_agent_llm_config(
+    db: Database,
+    *,
+    profile_id: str | None = None,
+) -> LlmConfig:
+    """Assistant / A2A: resolve LLM config for the agent chat path.
 
-    Prefer an active assistant staff instance (any profile). Fall back to the
-    default profile when no assistant instance exists. Never invent a fake
-    ``__default__`` id when the table is empty.
+    When ``profile_id`` is set (per-session override from the UI), load that
+    complete profile directly. Otherwise resolve via ``staff_class=assistant``
+    → ``profile_id``, preferring an active assistant staff instance. Fall back
+    to the default profile when no assistant instance exists. Never invent a
+    fake ``__default__`` id when the table is empty.
+
+    A2A is sessionless and must call without ``profile_id`` (staff / default).
     """
+    override = (profile_id or "").strip()
+    if override:
+        return await load_llm_config_for_profile(db, override)
+
     staff = await db.fetch_one(
         "SELECT profile_id FROM llm_staff_instances "
         "WHERE staff_class = 'assistant' AND is_active = 1 "

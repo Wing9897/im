@@ -89,6 +89,8 @@ describe("commandPaletteCommands", () => {
     expect(voice.some((item) => item.to === "/ai/voice")).toBe(true);
     const api = filterCommandPaletteItems("API");
     expect(api.some((item) => item.to === "/settings/api")).toBe(true);
+    const mcp = filterCommandPaletteItems("MCP");
+    expect(mcp.some((item) => item.to === "/settings/mcp")).toBe(true);
   });
 
   it("includes MQTT and Email source shortcuts", () => {

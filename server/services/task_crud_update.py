@@ -30,6 +30,7 @@ from server.services.task_crud_mutate_common import (
     TaskMutationResult,
     require_task_row_or_lookup,
     validate_agent_prompt,
+    validate_task_config_body,
 )
 from server.services.task_writes import (
     TaskWriteError,
@@ -41,6 +42,7 @@ from server.util import utc_now_iso
 
 
 async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -> TaskMutationResult:
+    validate_task_config_body(body)
     existing = await require_task_row_or_lookup(db, task_id)
     existing_mode = str(existing.get("analysis_mode") or "")
     effective_mode = body.analysisMode or existing_mode or LEADERBOARD_MODE

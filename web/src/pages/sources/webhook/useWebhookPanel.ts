@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchAccessKeys, type AccessKeyPublic } from "../../../api/accessKeys";
 import { resolveBaseUrl } from "../../../api/client";
+import { DEFAULT_API_PORT } from "../../../config/serviceEndpoints";
 import { toErrorMessage } from "../../../utils/errors";
 
 /** Read-only service port derived from the active API base URL. */
 function getWebhookServicePort(): string {
+  const fallback = String(DEFAULT_API_PORT);
   try {
     const url = new URL(resolveBaseUrl());
     if (url.port) return url.port;
-    return "18820";
+    return fallback;
   } catch {
-    return "18820";
+    return fallback;
   }
 }
 

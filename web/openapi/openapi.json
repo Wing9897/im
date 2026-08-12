@@ -3732,6 +3732,28 @@
         }
       }
     },
+    "/api/v1/mcp/status": {
+      "get": {
+        "tags": [
+          "mcp"
+        ],
+        "summary": "Mcp Status",
+        "description": "Return master-switch state and currently exposed tools (capability-filtered).",
+        "operationId": "mcp_status_api_v1_mcp_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/system/rotate-secrets": {
       "post": {
         "tags": [
@@ -7232,6 +7254,17 @@
                 "type": "null"
               }
             ]
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "additionalProperties": false,
@@ -7982,6 +8015,17 @@
               }
             ],
             "title": "Sessionid"
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "additionalProperties": false,
@@ -8025,6 +8069,17 @@
               }
             ],
             "title": "Sessionid"
+          },
+          "llmProfileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmprofileid"
           }
         },
         "additionalProperties": false,
@@ -8236,7 +8291,7 @@
           "widgets"
         ],
         "title": "BoardLayoutSchema",
-        "description": "Layout blob stored under ``ops_board_layout`` (v15 widgets mosaic)."
+        "description": "Layout blob stored under ``ops_board_layout`` (v16 widgets mosaic)."
       },
       "BoardMapViewSchema": {
         "properties": {
@@ -11288,6 +11343,53 @@
         ],
         "title": "LoginBody"
       },
+      "McpStatusResponse": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          },
+          "toolCount": {
+            "type": "integer",
+            "title": "Toolcount"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/McpStatusTool"
+            },
+            "type": "array",
+            "title": "Tools"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "enabled",
+          "toolCount",
+          "tools"
+        ],
+        "title": "McpStatusResponse",
+        "description": "GET ``/api/v1/mcp/status`` — session-auth probe for Settings UI."
+      },
+      "McpStatusTool": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "McpStatusTool"
+      },
       "MessageCursorResponse": {
         "properties": {
           "timestamp": {
@@ -12849,6 +12951,34 @@
           "userBackground": {
             "type": "string",
             "title": "Userbackground"
+          },
+          "mcpEnabled": {
+            "type": "boolean",
+            "title": "Mcpenabled"
+          },
+          "mcpCapCalendarRead": {
+            "type": "boolean",
+            "title": "Mcpcapcalendarread"
+          },
+          "mcpCapCalendarWrite": {
+            "type": "boolean",
+            "title": "Mcpcapcalendarwrite"
+          },
+          "mcpCapMessagesSearch": {
+            "type": "boolean",
+            "title": "Mcpcapmessagessearch"
+          },
+          "mcpCapIntelligenceSearch": {
+            "type": "boolean",
+            "title": "Mcpcapintelligencesearch"
+          },
+          "mcpCapItemsRead": {
+            "type": "boolean",
+            "title": "Mcpcapitemsread"
+          },
+          "mcpCapItemsWrite": {
+            "type": "boolean",
+            "title": "Mcpcapitemswrite"
           }
         },
         "additionalProperties": false,
@@ -12878,7 +13008,14 @@
           "assistantAvatar",
           "userDisplayName",
           "userAvatar",
-          "userBackground"
+          "userBackground",
+          "mcpEnabled",
+          "mcpCapCalendarRead",
+          "mcpCapCalendarWrite",
+          "mcpCapMessagesSearch",
+          "mcpCapIntelligenceSearch",
+          "mcpCapItemsRead",
+          "mcpCapItemsWrite"
         ],
         "title": "SystemSettingsSnapshot",
         "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase).\n\nLLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``."
@@ -14647,7 +14784,8 @@
               "assistant",
               "a2a",
               "agent",
-              "ics"
+              "ics",
+              "mcp"
             ],
             "title": "Origin"
           },

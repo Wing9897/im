@@ -1,5 +1,6 @@
-"""Live smoke test against a running server on :18820.
+"""Live smoke test against a running server (default ``SERVICE_PORT`` / :18820).
 
+Base URL from ``VERIFY_BASE`` / ``DESKTOP_VERIFY_BASE`` (see ``_verify_common``).
 After admin register, loopback is no longer auth-exempt — set VERIFY_BEARER
 or IM_ACCESS_TOKEN (device access token / full-scope API key).
 
@@ -55,8 +56,8 @@ def main() -> int:
         status == 200
         and isinstance(body, dict)
         and body.get("status") == "ok"
-        and body.get("schemaVersion") == 29
-        and body.get("schemaSemver") == "0.1.0-beta.30",
+        and body.get("schemaVersion") == 31
+        and body.get("schemaSemver") == "0.1.0-beta.32",
     )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)
@@ -134,7 +135,7 @@ def main() -> int:
     status, channels = api("GET", "/api/v1/channels/with-sources", timeout=15)
     check("channels auto-created", any(c["id"] == "telegram:smoke-channel" for c in channels))
 
-    # 7. Settings roundtrip (stamp 29: LLM keys retired from system_config)
+    # 7. Settings roundtrip (stamp 29+: LLM keys retired from system_config)
     status, settings = api("GET", "/api/v1/config/settings", timeout=15)
     check(
         "settings fetch",
@@ -167,7 +168,7 @@ def main() -> int:
         status == 200 and restored.get("assistantDisplayName") == original_name,
     )
 
-    # 7b. LLM profiles (stamp 29 — fresh DBs may have zero profiles; no forced __default__)
+    # 7b. LLM profiles (stamp 29+ — fresh DBs may have zero profiles; no forced __default__)
     status, profiles = api("GET", "/api/v1/llm/profiles", timeout=15)
     check("llm profiles list", status == 200 and isinstance(profiles, list))
     profile_id = None

@@ -168,7 +168,7 @@ describe("TaskCard", () => {
     });
 
     expect(container.querySelector('[data-testid="ai-staff-avatar-agent"]')).not.toBeNull();
-    expect(container.textContent).toContain("Agent 任務");
+    expect(container.textContent).toContain("專案經理任務");
     expect(container.textContent).not.toContain("OpenAI pricing");
     expect(container.textContent).not.toContain("待分析");
     expect(container.textContent).not.toContain("個頻道");

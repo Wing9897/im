@@ -12,7 +12,8 @@ from typing import AsyncIterator
 import pytest
 
 from server.collector.adapter_factory import build_adapter
-from server.collector.email_imap import EmailImapAdapter, from_addresses, html_to_text
+from server.collector.email_imap import EmailImapAdapter
+from server.collector.email_imap_fetch import from_addresses, html_to_text
 from server.db.database import Database
 from server.secrets import protect_text, unprotect_text
 from server.source_credentials import mutate_source_credentials

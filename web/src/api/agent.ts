@@ -40,6 +40,11 @@ interface AgentChatRequest {
   surface?: OpenApiAgentChatBody["surface"];
   /** Live Chat Editor draft for ``tasks.consult_advisor`` context. */
   currentTask?: OpenApiAgentChatBody["currentTask"];
+  /**
+   * Optional complete ``llm_profiles`` id for this turn. When omitted, the
+   * server resolves via ``staff_class=assistant``.
+   */
+  llmProfileId?: string | null;
 }
 
 /** Client-normalized final payload (``sessionId`` / ``toolCalls`` always present). */
@@ -54,6 +59,8 @@ export type AgentChatResponse = {
 };
 
 function agentChatRequestBody(body: AgentChatRequest): Record<string, unknown> {
+  const llmProfileId =
+    typeof body.llmProfileId === "string" ? body.llmProfileId.trim() : "";
   return {
     messages: body.messages,
     ...(body.sessionId ? { sessionId: body.sessionId } : {}),
@@ -61,6 +68,7 @@ function agentChatRequestBody(body: AgentChatRequest): Record<string, unknown> {
     ...(body.worksetId != null && body.worksetId !== "" ? { worksetId: body.worksetId } : {}),
     ...(body.surface ? { surface: body.surface } : {}),
     ...(body.currentTask != null ? { currentTask: body.currentTask } : {}),
+    ...(llmProfileId ? { llmProfileId } : {}),
   };
 }
 

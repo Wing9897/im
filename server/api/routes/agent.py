@@ -60,7 +60,10 @@ async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse
     db = get_db(request)
     llm: ConfigurableLlmClient | None = None
     try:
-        llm = await ConfigurableLlmClient.from_assistant_staff(db)
+        llm = await ConfigurableLlmClient.from_assistant_staff(
+            db,
+            profile_id=body.llmProfileId,
+        )
         runtime = AgentRuntime(db, llm, broadcaster=request.app.state.broadcaster)
         per_call = await get_config_int(db, "llm_generation_timeout")
         wall = agent_wall_timeout_seconds(per_call)
@@ -105,7 +108,10 @@ async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingR
     async def event_generator() -> AsyncIterator[bytes]:
         llm: ConfigurableLlmClient | None = None
         try:
-            llm = await ConfigurableLlmClient.from_assistant_staff(db)
+            llm = await ConfigurableLlmClient.from_assistant_staff(
+                db,
+                profile_id=body.llmProfileId,
+            )
             runtime = AgentRuntime(db, llm, broadcaster=request.app.state.broadcaster)
             per_call = await get_config_int(db, "llm_generation_timeout")
             wall = agent_wall_timeout_seconds(per_call)

@@ -7,7 +7,8 @@ Uses real ``create_item`` + ``create_user_event`` (kind / amount / direction).
   uv run python scripts/seed_items_finance_demo.py --clean
   uv run python scripts/seed_items_finance_demo.py --verify-only
 
-After a stamp wipe (or older local DB):
+After a stamp wipe (or older local DB) — current wipe-only floor is stamp 31
+(``SCHEMA_SEMVER`` ``0.1.0-beta.32``; SoT ``server/db/schema_inspect.py``):
 
   uv run python scripts/reset_local_databases.py --apply
   uv run python scripts/seed_items_finance_demo.py
@@ -521,8 +522,8 @@ async def verify(db: Database) -> dict[str, Any]:
     # Stamp sanity
     stamp_row = await db.fetch_one("PRAGMA user_version")
     stamp_val = list(stamp_row.values())[0] if stamp_row else None
-    if int(stamp_val or -1) != 28:
-        errors.append(f"schema stamp={stamp_val!r} expected 28")
+    if int(stamp_val or -1) != 30:
+        errors.append(f"schema stamp={stamp_val!r} expected 30")
 
     result = {
         "ok": not errors,
@@ -583,7 +584,7 @@ async def main() -> None:
     path = Path(args.db) if args.db else default_db_path()
     print(f"DB: {path}")
     if not path.is_file() and not args.verify_only:
-        print("Warning: database file missing; schema will be bootstrapped (stamp 29).")
+        print("Warning: database file missing; schema will be bootstrapped (stamp 31).")
 
     db = Database(str(path))
     await db.connect()
@@ -592,9 +593,9 @@ async def main() -> None:
         stamp = await db.fetch_one("PRAGMA user_version")
         stamp_val = list(stamp.values())[0] if stamp else None
         print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != 29:
+        if int(stamp_val or 0) != 31:
             print(
-                "ERROR: need stamp 29. Run:\n"
+                "ERROR: need stamp 31. Run:\n"
                 "  uv run python scripts/reset_local_databases.py --apply\n"
                 "then re-run this seed.",
                 file=sys.stderr,

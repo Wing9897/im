@@ -114,10 +114,10 @@
 | 情報頁／側欄／widget／事件結果 | **情報事件** | Intel events | 情报事件 |
 | 泛稱資料／地圖無座標等（非產品名） | **情報** | intelligence | 情报 |
 | mode `leaderboard` | 排行榜任務 | Leaderboard task | 排行榜任务 |
-| mode `agent` | **Agent 任務** | Agent task | Agent 任务 |
-| Agent 預設 `project_reconcile` | **專案調和**（預設名；UI 任務類型仍稱 Agent） | Project reconcile | 专案调和 |
+| mode `agent` | **專案經理任務** | Project Manager task | 项目经理任务 |
+| Agent 預設 `project_reconcile` | **專案調和**（預設名；員工／任務類型顯示名為專案經理） | Project reconcile | 项目调和 |
 | Agent 預設 `web_scout` | **網蒐** | Web scout | 网蒐 |
-| Agent 詳情頁（路由仍可含 `project*` 檔名） | **Agent 詳情**／Agent tick（勿對用戶說「開啟專案」） | Agent detail | Agent 详情 |
+| Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
@@ -133,8 +133,8 @@
 
 | 層 | 定稿用語 | 代碼／路徑（勿改） | 說明 |
 |----|----------|-------------------|------|
-| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、Agent）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
-| 任務類型徽章／選擇器 | 員工名（情報任務／排行榜任務／Agent 任務） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`intel_event`／`leaderboard`／`agent`）；員工 id 與 enum token 對齊 |
+| 花名冊頁 | AI 員工介紹 | 路由 `/ai/staff`；i18n `settings:staff.*`／`nav`·`common` 的 `aiStaff`；`web/src/domain/aiStaff/` | 只讀介紹頁；以 `AI_STAFF_ROSTER` 為準（前線：助手、任務顧問；後勤：排行榜分析員、情報任務分析員、專案經理）+ 頁內「客戶經理」（code id `liaison`，非 `AiStaffId` runtime）。**勿**在產品文案寫死「六位／Six AI」等易過時人數 |
+| 任務類型徽章／選擇器 | 員工名（情報任務／排行榜任務／專案經理任務） | FE `TaskEmployeeId` + i18n `common:tasks.employees.*` | 對應 `analysisMode`（`intel_event`／`leaderboard`／`agent`）；員工 id 與 enum token 對齊 |
 | AI 頭像／對話列 | AI Staff | `AiStaffId`、`components/aiStaff/*` | 有 AI 的分析任務才顯示頭像；週期序列不是 analysis task |
 | 介紹文案 | intro | `settings:staff.intro` 等 | 文案 SoT 在 locale JSON；glossary 只鎖「員工／Staff」產品名 |
 

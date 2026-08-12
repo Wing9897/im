@@ -40,6 +40,7 @@ def test_build_tool_schemas_gates_read_tools() -> None:
             web_search_enabled=False,
             calendar_read_enabled=False,
             analysis_events_read_enabled=False,
+            messages_search_enabled=False,
             items_read_enabled=False,
         )
     }
@@ -47,7 +48,7 @@ def test_build_tool_schemas_gates_read_tools() -> None:
     assert "intelligence.search_events" not in names
     assert "items.list_expiring" not in names
     assert "items.list" not in names
-    assert "messages.search" in names
+    assert "messages.search" not in names
     assert "items.create" in names
 
 

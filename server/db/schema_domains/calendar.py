@@ -1,6 +1,11 @@
 """SQLite DDL for the calendar domain."""
 
-DDL = """
+from server.db.schema_domains.vocabulary import (
+    TIMELINE_SOURCE_CHECK_SQL,
+    USER_EVENT_ORIGIN_CHECK_SQL,
+)
+
+DDL = f"""
 -- Standalone recurring calendar series (not analysis_tasks). ``dtstart`` is the
 -- real persisted RFC 5545 series anchor (local DATE/DATE-TIME plus TZID).
 -- ``is_active=1`` participates in expand; pause/resume via PATCH (hard DELETE removes the row).
@@ -27,8 +32,8 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     parent_task_id          TEXT DEFAULT NULL
                             REFERENCES analysis_tasks(id) ON DELETE CASCADE,
     -- Optional parent trackable item (linked recurring calendar under an inventory Thing).
-    -- No SQL FK: items DDL is applied after calendar in the wipe-only aggregate.
-    item_id                 TEXT DEFAULT NULL,
+    item_id                 TEXT DEFAULT NULL
+                            REFERENCES items(id) ON DELETE SET NULL,
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );
@@ -51,7 +56,7 @@ CREATE TABLE IF NOT EXISTS user_events (
     start_time  TEXT NOT NULL,
     end_time    TEXT,
     location    TEXT NOT NULL DEFAULT '',
-    origin      TEXT NOT NULL CHECK (origin IN ('manual', 'assistant', 'a2a', 'agent', 'ics')),
+    origin      TEXT NOT NULL {USER_EVENT_ORIGIN_CHECK_SQL},
     event_is_all_day INTEGER NOT NULL DEFAULT 0,
     event_timezone TEXT DEFAULT NULL,
     -- Optional "remind N days before start" (calendar / voice); NULL = no remind.
@@ -61,8 +66,8 @@ CREATE TABLE IF NOT EXISTS user_events (
     ics_import_fingerprint TEXT DEFAULT NULL,
     task_id     TEXT DEFAULT NULL REFERENCES analysis_tasks(id) ON DELETE SET NULL,
     -- Optional parent trackable item (linked calendar under an inventory Thing).
-    -- No SQL FK: items DDL is applied after calendar in the wipe-only aggregate.
-    item_id     TEXT DEFAULT NULL,
+    item_id     TEXT DEFAULT NULL
+                REFERENCES items(id) ON DELETE SET NULL,
     -- Ownership is always a workset; delete_workset reassigns to __user__ first.
     workset_id  TEXT NOT NULL DEFAULT '__user__' REFERENCES worksets(id),
     -- Special linked-calendar semantics (authority over title presets).
@@ -97,7 +102,7 @@ CREATE INDEX IF NOT EXISTS idx_user_events_effective_time
 
 CREATE TABLE IF NOT EXISTS timeline_dismissals (
     source        TEXT NOT NULL
-                  CHECK (source IN ('analysis', 'user', 'recurring', 'item_remind')),
+                  {TIMELINE_SOURCE_CHECK_SQL},
     event_id      TEXT NOT NULL,
     dismissed_at  TEXT NOT NULL,
     PRIMARY KEY (source, event_id)
@@ -106,10 +111,10 @@ CREATE INDEX IF NOT EXISTS idx_timeline_dismissals_event
     ON timeline_dismissals(event_id);
 
 -- User / agent 「重要事件」 markers (❗). Same source vocabulary as dismissals;
--- item_remind／recurring keys are occurrence ids (e.g. item:{id}:remind).
+-- item_remind／recurring keys are occurrence ids (e.g. item:{{id}}:remind).
 CREATE TABLE IF NOT EXISTS timeline_importance (
     source        TEXT NOT NULL
-                  CHECK (source IN ('analysis', 'user', 'recurring', 'item_remind')),
+                  {TIMELINE_SOURCE_CHECK_SQL},
     event_id      TEXT NOT NULL,
     marked_at     TEXT NOT NULL,
     PRIMARY KEY (source, event_id)

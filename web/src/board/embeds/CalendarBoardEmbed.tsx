@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { CalendarOccurrence, TimelineItem } from "../../types";
-import { calendarOccurrenceToBoardEvent } from "../../domain/timeline/timedEventMerge";
+import type { AnalysisEvent } from "../../types";
+import { asTimedAnalysisEvent } from "../../types/timelineItem";
 import {
   buildCalendarDays,
   eventStartsOnDay,
@@ -12,18 +12,21 @@ import {
 } from "../../domain/timeline/dateUtils";
 
 interface CalendarBoardEmbedProps {
-  occurrences: CalendarOccurrence[];
+  /** Timed board events (analysis / user / recurring / item_remind). */
+  events: AnalysisEvent[];
   mode: "day" | "month";
-  onSelectOccurrence?: (occurrence: CalendarOccurrence) => void;
+  onSelectEvent?: (event: AnalysisEvent) => void;
 }
 
 /**
  * Compact month calendar or today's event list for the ops board.
+ * Consumes AnalysisEvent rows directly — no CalendarOccurrence round-trip
+ * (avoids seriesId←taskId and analysis/user→recurring remaps).
  */
 export function CalendarBoardEmbed({
-  occurrences,
+  events: rawEvents,
   mode,
-  onSelectOccurrence,
+  onSelectEvent,
 }: CalendarBoardEmbedProps) {
   const { t } = useTranslation();
   const weekdayLabels = t("board.calendar.weekdays", { returnObjects: true }) as string[];
@@ -35,28 +38,30 @@ export function CalendarBoardEmbed({
   const monthDays = useMemo(() => buildCalendarDays(monthCursor), [monthCursor]);
 
   const events = useMemo(
-    () => occurrences.map(calendarOccurrenceToBoardEvent) as TimelineItem[],
-    [occurrences],
+    () =>
+      rawEvents
+        .map((event) => asTimedAnalysisEvent(event))
+        .filter((event): event is NonNullable<typeof event> => event !== null),
+    [rawEvents],
   );
   const todayEvents = useMemo(
     () => events.filter((event) => eventStartsOnDay(event, todayStart)),
     [events, todayStart],
   );
 
-  const occurrenceById = useMemo(() => {
-    const map = new Map<string, CalendarOccurrence>();
-    for (const row of occurrences) {
+  const eventById = useMemo(() => {
+    const map = new Map<string, AnalysisEvent>();
+    for (const row of rawEvents) {
       map.set(row.id, row);
     }
     return map;
-  }, [occurrences]);
+  }, [rawEvents]);
 
-  const handleDayClick = (_day: Date, dayEvents: TimelineItem[]) => {
+  const handleDayClick = (_day: Date, dayEvents: typeof events) => {
     if (dayEvents.length > 0) {
-      const first = occurrenceById.get(dayEvents[0].id);
-      if (first && onSelectOccurrence) {
-        onSelectOccurrence(first);
-        return;
+      const first = eventById.get(dayEvents[0].id);
+      if (first && onSelectEvent) {
+        onSelectEvent(first);
       }
     }
   };

@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from server.domain.user_event_origins import UserEventOrigin
+
 
 class UserEventResponse(BaseModel):
     id: str
@@ -14,7 +16,7 @@ class UserEventResponse(BaseModel):
     startTime: str
     endTime: str | None
     location: str | None
-    origin: Literal["manual", "assistant", "a2a", "agent", "ics"]
+    origin: UserEventOrigin
     isAllDay: bool = False
     timezone: str | None = None
     icsUid: str | None = None

@@ -1,7 +1,7 @@
 """Shared HTTP helpers for live verification scripts (smoke / desktop_verify).
 
 Environment:
-  VERIFY_BASE / DESKTOP_VERIFY_BASE — API base (default http://127.0.0.1:18820)
+  VERIFY_BASE / DESKTOP_VERIFY_BASE — API base (default http://127.0.0.1:{SERVICE_PORT})
   VERIFY_BEARER / IM_ACCESS_TOKEN — Bearer after admin register (loopback not exempt)
 """
 
@@ -14,9 +14,12 @@ import urllib.error
 import urllib.request
 from typing import Any
 
+from server.constants import SERVICE_PORT
+
 FAILURES: list[str] = []
 
-BASE = os.environ.get("VERIFY_BASE") or os.environ.get("DESKTOP_VERIFY_BASE") or "http://127.0.0.1:18820"
+_DEFAULT_BASE = f"http://127.0.0.1:{SERVICE_PORT}"
+BASE = os.environ.get("VERIFY_BASE") or os.environ.get("DESKTOP_VERIFY_BASE") or _DEFAULT_BASE
 
 # After admin register, localhost_auth_exempt is false — pass a device access
 # token or full-scope API key so live verify scripts can authenticate.

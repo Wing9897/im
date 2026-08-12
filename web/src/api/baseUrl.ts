@@ -2,11 +2,12 @@
  * Runtime API origin resolution (supports thin-client custom server URL).
  */
 
+import { defaultApiBaseUrl } from "../config/serviceEndpoints";
 import { getConnectionSnapshot } from "../domain/connection/connectionStore";
 
 /**
  * Resolves the API base URL.
- * Priority: persisted custom serverBaseUrl → VITE_API_BASE_URL → window.origin → localhost.
+ * Priority: persisted custom serverBaseUrl → VITE_API_BASE_URL → window.origin → default loopback.
  * Always strips trailing slashes.
  */
 export const resolveBaseUrl = (): string => {
@@ -19,5 +20,5 @@ export const resolveBaseUrl = (): string => {
   if (typeof window !== "undefined" && window.location?.origin) {
     return window.location.origin.replace(/\/+$/, "");
   }
-  return "http://127.0.0.1:18820";
+  return defaultApiBaseUrl();
 };

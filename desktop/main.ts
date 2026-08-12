@@ -27,6 +27,7 @@ import { buildApplicationMenu, refreshApplicationMenu } from './menu';
 import { initAnalysisNotifications, stopAnalysisNotifications } from './notifications';
 import { registerWindowControls, unregisterWindowControls } from './window-controls';
 import { getProductName, getShellCopy, onShellLocaleChange } from './shell-i18n';
+import { DEFAULT_SERVER_PORT, DEFAULT_VITE_DEV_PORT } from './ports';
 
 // macOS may emit open-file / open-url before ready — register early.
 registerCalendarImportOsHandlers();
@@ -34,8 +35,8 @@ registerCalendarImportOsHandlers();
 // --- App Configuration ---
 
 const APP_CONFIG = {
-  serverPort: 18820,
-  viteDevPort: 1420,
+  serverPort: DEFAULT_SERVER_PORT,
+  viteDevPort: DEFAULT_VITE_DEV_PORT,
   windowWidth: 1280,
   windowHeight: 800,
   windowMinWidth: 900,

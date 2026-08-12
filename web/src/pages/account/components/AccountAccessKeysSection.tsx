@@ -7,6 +7,7 @@ import {
   revokeAccessKey,
   type AccessKeyPublic,
 } from "../../../api/accessKeys";
+import { ResolvedApiBaseUrl } from "../../../components/settings/ResolvedApiBaseUrl";
 import { Button, CheckboxField, FormStack, SettingsRow, TextField } from "../../../components/ui";
 import { formHelpClass, sectionTitleClass } from "../../../components/ui/pageTypography";
 import { useToast } from "../../../context/ToastContext";
@@ -96,6 +97,13 @@ export function AccountAccessKeysSection() {
             {t("account.accessKeys.intro")}
           </p>
         </div>
+
+        <ResolvedApiBaseUrl
+          ns="common"
+          titleKey="account.accessKeys.baseUrlTitle"
+          bodyKey="account.accessKeys.baseUrlBody"
+          testId="account-keys-api-base-url"
+        />
 
         <SettingsRow label={t("account.accessKeys.newLabel")} htmlFor="access-key-label">
           <TextField

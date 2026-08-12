@@ -470,7 +470,7 @@ describe("useTimelineData calendar occurrence wiring", () => {
     expect(ids).toEqual(["evt-1", "web-1", "proj-1"]);
   });
 
-  it("merges source=item calendar rows and refreshes on item SSE", async () => {
+  it("merges source=item_remind calendar rows and refreshes on item SSE", async () => {
     mockFetchCalendarOccurrences.mockResolvedValue([
       makeOccurrence({
         id: "item:i1:remind",

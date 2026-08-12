@@ -1,12 +1,13 @@
 import { Notification, BrowserWindow } from 'electron';
 import http from 'node:http';
+import { defaultServerBaseUrl } from './ports';
 import { getProductName, getShellCopy, setShellLocale } from './shell-i18n';
 
 /**
  * Configuration for the analysis notifications module.
  */
 export interface NotificationConfig {
-  /** Base URL of the server SSE endpoint. Default: http://localhost:18820 */
+  /** Base URL of the server SSE endpoint. Default: host-mode loopback origin. */
   serverUrl?: string;
   /** Whether analysis notifications are enabled. Default: true */
   enabled?: boolean;
@@ -51,7 +52,7 @@ let currentRequest: ReturnType<typeof http.get> | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 let enabled = true;
 let mainWindowRef: BrowserWindow | null = null;
-let serverBaseUrl = 'http://localhost:18820';
+let serverBaseUrl = defaultServerBaseUrl();
 let accessToken: string | null = null;
 /** After 401/403, stop reconnect storms until renderer pushes a new token. */
 let authBlocked = false;
@@ -342,5 +343,5 @@ export function stopAnalysisNotifications(): void {
   enabled = true;
   accessToken = null;
   authBlocked = false;
-  serverBaseUrl = 'http://localhost:18820';
+  serverBaseUrl = defaultServerBaseUrl();
 }

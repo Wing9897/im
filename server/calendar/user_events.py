@@ -1,8 +1,7 @@
 """Shared CRUD for user-authored timed events (manual UI + assistant tools).
 
-Field normalization / FK-resolution helpers live in ``user_events_normalize``
-and are re-exported below so existing ``from server.calendar.user_events import ...``
-call sites keep working unchanged.
+Field normalization / FK-resolution helpers live in ``user_events_normalize``;
+import them from there (this module is CRUD-only).
 """
 
 from __future__ import annotations
@@ -13,11 +12,6 @@ from server.calendar.timeline_dismissals import attach_dismissed_flag, dismiss_t
 from server.calendar.timeline_importance import attach_important_flag
 from server.calendar.user_events_normalize import (
     _UNSET,
-    ALLOWED_ORIGINS,
-    USER_EVENT_TASK_MODES,
-    UserEventItemIdError,
-    UserEventTaskIdError,
-    UserEventValidationError,
     UserEventWorksetIdError,
     _normalize_optional_end,
     _normalize_origin,
@@ -28,8 +22,6 @@ from server.calendar.user_events_normalize import (
     normalize_event_amount,
     normalize_remind_before_days,
     normalize_user_event_kind,
-    normalize_user_event_task_id_wire,
-    normalize_user_event_workset_id_wire,
     resolve_user_event_item_id,
     resolve_user_event_task_id,
     resolve_user_event_workset_id,
@@ -40,20 +32,6 @@ from server.wire.serializers import serialize_user_event
 from server.worksets_const import SYSTEM_WORKSET_ID
 
 __all__ = [
-    "ALLOWED_ORIGINS",
-    "USER_EVENT_TASK_MODES",
-    "UserEventValidationError",
-    "UserEventTaskIdError",
-    "UserEventWorksetIdError",
-    "UserEventItemIdError",
-    "normalize_user_event_task_id_wire",
-    "normalize_user_event_workset_id_wire",
-    "normalize_remind_before_days",
-    "normalize_user_event_kind",
-    "resolve_user_event_task_id",
-    "resolve_user_event_workset_id",
-    "resolve_user_event_item_id",
-    "build_user_event_list_filters",
     "get_user_event_row",
     "get_user_event",
     "list_user_events",

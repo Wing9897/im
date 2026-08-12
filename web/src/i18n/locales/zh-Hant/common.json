@@ -42,7 +42,7 @@
       "retryCount": "重試 {count}",
       "analysisPausedHint": "分析已自動或手動暫停",
       "waitingForThreshold": "等待觸發閾值：{count}/{threshold}",
-      "agent": "Agent 任務",
+      "agent": "專案經理任務",
       "agentProgressHint": "Agent 排程（游標抽乾／閾值／定時）— 非 marker 批處理統計"
     },
     "detail": {
@@ -70,7 +70,7 @@
       "childrenEmptyDescription": "Agent 會在每次 tick 視需要建立子週期任務。",
       "eventsTitle": "所屬單次事件",
       "eventsEmptyTitle": "尚無所屬事件",
-      "eventsEmptyDescription": "此 Agent 任務建立的單次時程事件會顯示在這裡。",
+      "eventsEmptyDescription": "此專案經理任務建立的單次時程事件會顯示在這裡。",
       "tickTitle": "最近 Agent tick",
       "tickLastEnd": "上次完成",
       "tickCompletedCount": "已完成次數",
@@ -201,7 +201,7 @@
         "blurb": "比較與追蹤熱門訊息排名"
       },
       "agent": {
-        "name": "Agent 任務",
+        "name": "專案經理任務",
         "blurb": "可配置觸發、工具權限與日曆／情報輸出"
       }
     },
@@ -225,11 +225,11 @@
         "promptHint": ""
       },
       "agent": {
-        "modeDescription": "可配置 Agent：選擇觸發方式、工具權限與日曆／情報輸出",
+        "modeDescription": "可配置專案經理：選擇觸發方式、工具權限與日曆／情報輸出",
         "promptLabel": "任務提示（目標／搜尋／抽取規則）",
         "promptPlaceholder": "例如：根據頻道訊息調和日曆，或透過網搜收集官方公告",
-        "promptHint": "描述 Agent 應完成的工作。預設會填充觸發／權限／輸出，仍可微調。",
-        "scheduleDefaultHint": "建議每小時；切換到 Agent 時會把每 10 秒改為每小時。",
+        "promptHint": "描述專案經理應完成的工作。預設會填充觸發／權限／輸出，仍可微調。",
+        "scheduleDefaultHint": "建議每小時；切換到專案經理時會把每 10 秒改為每小時。",
         "timedModeHint": "無頻道＝純定時觸發。綁定頻道可用於閾值門或訊息游標抽乾。",
         "messageGateHint": "已綁頻道且為訊息閾值：達閾值才跑，並注入訊息供核實／補充。",
         "cursorChannelHint": "訊息游標抽乾至少需要綁定一個來源頻道。"
@@ -574,7 +574,7 @@
     "taskEditor": "任務顧問",
     "leaderboard": "排行榜分析員",
     "intel_event": "情報任務分析員",
-    "agent": "Agent"
+    "agent": "專案經理"
   },
   "ui": {
     "listSep": "、",
@@ -654,6 +654,7 @@
     "theme": "主題設定",
     "settingsData": "資料維護",
     "settingsApi": "API 說明",
+    "settingsMcp": "MCP 說明",
     "newTask": "新增任務",
     "newAction": "新增通知",
     "newActionHint": "開啟通知頁",
@@ -692,7 +693,7 @@
     },
     "events": {
       "title": "情報事件",
-      "description": "最新情報事件"
+      "description": "最近分析與用戶事件（不含循環/物品提醒）"
     },
     "feed": {
       "title": "實時監控",
@@ -745,6 +746,18 @@
     "actions": {
       "title": "通知動作",
       "description": "自動化動作狀態"
+    },
+    "schedule": {
+      "title": "我的日程",
+      "description": "近期一次性事件與循環系列"
+    },
+    "items": {
+      "title": "物品提醒",
+      "description": "近期物品提醒與到期"
+    },
+    "llmHealth": {
+      "title": "AI 設定檔健康",
+      "description": "設定檔數量、完整度與預設項"
     }
   },
   "systemTasks": {
@@ -763,7 +776,7 @@
     },
     "analysisBatch": {
       "title": "分析批次",
-      "shortDescription": "排程器對排行榜／情報事件等標記型任務分批呼叫 LLM，寫入分析結果。Agent 任務不走此路徑（由上方可編輯的 Agent 任務排程驅動）。"
+      "shortDescription": "排程器對排行榜／情報事件等標記型任務分批呼叫 LLM，寫入分析結果。專案經理任務不走此路徑（由上方可編輯的專案經理任務排程驅動）。"
     },
     "outboundNotify": {
       "title": "外發通知",
@@ -1068,6 +1081,24 @@
       "sourceFilterSearchPlaceholder": "搜尋來源…",
       "sourceFilterSearchAria": "依名稱搜尋來源",
       "sourceFilterNoMatches": "沒有符合的來源"
+    },
+    "schedule": {
+      "empty": "暫無日程 — 可到「日程」頁添加",
+      "hint": "完整管理請到「日程」頁"
+    },
+    "items": {
+      "empty": "暫無物品提醒 — 可到「物品」頁查看",
+      "hint": "完整管理請到「物品」頁"
+    },
+    "llmHealth": {
+      "total": "設定檔",
+      "complete": "完整",
+      "incomplete": "不完整",
+      "default": "預設",
+      "noDefault": "無",
+      "alertNone": "尚未配置任何 LLM 設定檔",
+      "alertNoDefault": "尚未選擇預設設定檔",
+      "alertIncomplete": "有設定檔不完整"
     }
   },
   "validation": {
@@ -1180,7 +1211,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 29／SemVer 0.1.0-beta.30；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 31／SemVer 0.1.0-beta.32；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"
@@ -1381,7 +1412,9 @@
     },
     "accessKeys": {
       "title": "API 金鑰（Webhook／自動化）",
-      "intro": "長效金鑰（`Authorization: Bearer`），用於 Webhook、腳本與客戶經理。完整金鑰（`*`）可寫入並呼叫 A2A；唯讀金鑰（`read`）僅限安全 GET/HEAD。不可用於 UI 登入——日常請用管理員帳號密碼。",
+      "intro": "長效金鑰（`Authorization: Bearer`），用於 Webhook、腳本、客戶經理（A2A）與 MCP。完整金鑰（`*`）可寫入、呼叫 A2A，並連線 MCP；唯讀金鑰（`read`）僅限安全 GET/HEAD。MCP 需與 A2A 同一把完整 `*` 金鑰。不可用於 UI 登入——日常請用管理員帳號密碼。",
+      "baseUrlTitle": "API 基底網址",
+      "baseUrlBody": "客戶端與 OpenClaw 請用此 origin（與「設定 → API／MCP」相同）：",
       "defaultLabel": "存取金鑰",
       "newLabel": "新金鑰名稱",
       "newPlaceholder": "例如：Webhook、CI 腳本",
@@ -1392,14 +1425,14 @@
       "revoked": "已撤銷金鑰",
       "revokeAria": "撤銷 {label}",
       "listTitle": "已建立的金鑰",
-      "empty": "尚未建立金鑰。需要 Webhook、腳本或客戶經理時再建立。",
+      "empty": "尚未建立金鑰。需要 Webhook、腳本、客戶經理或 MCP 時再建立。",
       "revealTitle": "新金鑰（只顯示一次）",
       "revealHelp": "請複製並妥善保存；關閉後無法再次檢視完整內容。",
       "copy": "複製",
       "copied": "已複製",
       "copyFailed": "無法複製",
       "readOnly": "唯讀（僅 GET）",
-      "readOnlyHelp": "只能呼叫安全的 GET/HEAD。不勾選則為完整金鑰（*），可用於 Webhook、寫入與 A2A。",
+      "readOnlyHelp": "只能呼叫安全的 GET/HEAD。不勾選則為完整金鑰（*），可用於 Webhook、寫入、A2A 與 MCP。",
       "scopesReadOnly": "權限：唯讀（read）"
     }
   },

@@ -1,6 +1,5 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { runRetentionCleanup } from "../../api/system";
-import { saveSystemSettings } from "../../api/config";
 import { useToast } from "../../context/ToastContext";
 import i18n from "../../i18n";
 import { formatMessage } from "../../i18n/formatMessage";
@@ -10,7 +9,6 @@ import {
   MSG_RETENTION_PART,
 } from "../../i18n/messageKeys";
 import { toErrorMessage } from "../../utils/errors";
-import type { SystemSettingsSnapshot } from "../../types/settings";
 import { useSettingsPageState } from "./SettingsShared";
 
 const RETENTION_FIELDS = [
@@ -25,10 +23,10 @@ type RetentionField = (typeof RETENTION_FIELDS)[number];
 
 const DEFAULT_RETENTION: Record<RetentionField, string> = {
   retentionMessagesDays: "90",
-  retentionAnalysisDays: "90",
+  retentionAnalysisDays: "0",
   retentionLeaderboardDays: "90",
   retentionAppLogsDays: "30",
-  retentionUserEventsDays: "365",
+  retentionUserEventsDays: "0",
 };
 
 function formatRetentionSummary(deleted: Record<string, number>): string {
@@ -52,22 +50,25 @@ function formatRetentionSummary(deleted: Record<string, number>): string {
     : formatMessage(MSG_RETENTION_NONE);
 }
 
+/**
+ * Data-settings page: retention fields share the SystemSettings ``handleSave`` /
+ * dirty pipeline (no parallel ``saveSystemSettings`` path).
+ */
 export function useSettingsDataPage() {
   const { showToast } = useToast();
   const [showFullResetConfirm, setShowFullResetConfirm] = useState(false);
   const [showRetentionRunConfirm, setShowRetentionRunConfirm] = useState(false);
   const [runningRetention, setRunningRetention] = useState(false);
-  const [retentionSaving, setRetentionSaving] = useState(false);
-  const [retentionSaved, setRetentionSaved] = useState(false);
   const [retentionError, setRetentionError] = useState<string | null>(null);
-  const retentionSavedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const {
     settings,
     savedSnapshot,
     updateSettings,
-    applyPersistedSnapshot,
     resettingRuntimeData,
     handleRequestFullReset,
+    handleSave,
+    saving: retentionSaving,
+    saveSuccess: retentionSaved,
   } = useSettingsPageState();
 
   const retentionValues = useMemo<Record<RetentionField, string>>(
@@ -99,43 +100,18 @@ export function useSettingsDataPage() {
     [updateSettings],
   );
 
-  useEffect(() => {
-    return () => {
-      if (retentionSavedTimerRef.current !== null) {
-        clearTimeout(retentionSavedTimerRef.current);
-      }
-    };
-  }, []);
-
   const handleSaveRetentionDays = useCallback(async () => {
-    const payload: Partial<SystemSettingsSnapshot> = {};
     for (const field of RETENTION_FIELDS) {
       const days = parseInt(retentionValues[field], 10);
       if (Number.isNaN(days) || days < 0) {
         setRetentionError(String(i18n.t("settings:data.retention.invalid")));
         return;
       }
-      payload[field] = String(days);
     }
-    setRetentionSaving(true);
     setRetentionError(null);
-    try {
-      const normalized = await saveSystemSettings(payload);
-      applyPersistedSnapshot(normalized);
-      setRetentionSaved(true);
-      if (retentionSavedTimerRef.current !== null) {
-        clearTimeout(retentionSavedTimerRef.current);
-      }
-      retentionSavedTimerRef.current = setTimeout(() => {
-        retentionSavedTimerRef.current = null;
-        setRetentionSaved(false);
-      }, 2000);
-    } catch (e) {
-      setRetentionError(toErrorMessage(e));
-    } finally {
-      setRetentionSaving(false);
-    }
-  }, [retentionValues, applyPersistedSnapshot]);
+    // Same PUT / dirty pipeline as Analysis / MCP / General settings pages.
+    await handleSave();
+  }, [retentionValues, handleSave]);
 
   const retentionChanged = RETENTION_FIELDS.some(
     (field) => settings?.[field] !== savedSnapshot?.[field],

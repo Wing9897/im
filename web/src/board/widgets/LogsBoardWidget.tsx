@@ -62,8 +62,7 @@ export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-widget-list">
             {visibleLogs.map((entry) => (
               <li key={entry.id} className="board-widget-list__item">
-                <button
-                  type="button"
+                <div
                   className="board-widget-list__row"
                   data-testid={`board-logs-row-${entry.id}`}
                 >
@@ -76,7 +75,7 @@ export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
                   <span className="board-widget-list__meta">
                     {entry.category} · {formatLogTime(entry.time)}
                   </span>
-                </button>
+                </div>
               </li>
             ))}
           </ul>

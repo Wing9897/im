@@ -38,8 +38,7 @@ export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-widget-list">
             {sources.map((source) => (
               <li key={source.id} className="board-widget-list__item">
-                <button
-                  type="button"
+                <div
                   className="board-widget-list__row board-sources-row"
                   data-testid={`board-sources-row-${source.id}`}
                 >
@@ -54,7 +53,7 @@ export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
                   <Badge tone={statusTone(source.status)}>
                     {formatStatusLabel(source.status)}
                   </Badge>
-                </button>
+                </div>
               </li>
             ))}
           </ul>

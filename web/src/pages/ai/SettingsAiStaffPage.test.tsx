@@ -115,6 +115,7 @@ describe("SettingsAiStaffPage", () => {
     const assistantCard = container.querySelector('[data-testid="ai-staff-card-assistant"]');
     expect(assistantCard?.textContent).toContain("可追蹤物品");
     const agentCard = container.querySelector('[data-testid="ai-staff-card-agent"]');
+    expect(agentCard?.textContent).toContain("專案經理");
     expect(agentCard?.textContent).toContain("不可建立／更新物品");
     expect(agentCard?.textContent).toContain("游標抽乾不可同時開情報事件輸出");
   });

@@ -1,6 +1,6 @@
-import { lazy, Suspense, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import type { AnalysisEvent, CalendarOccurrence } from "../../types";
+import type { AnalysisEvent } from "../../types";
 import {
   dayWindowIso,
   paddedMonthWindowIso,
@@ -13,38 +13,9 @@ import { BOARD_POLL_MS } from "../useBoardWidgetPoll";
 import { focusBoardEvent } from "../boardFocusStore";
 import type { BoardWidgetProps } from "../types";
 import { isMappableCoordinate } from "../../domain/intelligence/mapFilters";
-import i18n from "../../i18n";
+import { CalendarBoardEmbed } from "../embeds/CalendarBoardEmbed";
 
-const LazyCalendarBoardEmbed = lazy(() =>
-  import("../embeds/CalendarBoardEmbed").then((m) => ({ default: m.CalendarBoardEmbed })),
-);
 type CalendarMode = "day" | "month";
-
-function eventToCalendarOccurrence(event: AnalysisEvent): CalendarOccurrence | null {
-  if (!event.startTime) {
-    return null;
-  }
-  return {
-    id: event.id,
-    seriesId: event.seriesId ?? event.taskId ?? "",
-    taskName: event.taskName?.trim() || String(i18n.t("board.common.unassignedTask")),
-    title: event.title || String(i18n.t("board.common.untitledEvent")),
-    startTime: event.startTime,
-    endTime: event.endTime ?? event.startTime,
-    isAllDay: event.isAllDay ?? false,
-    timezone: event.timezone ?? null,
-    location: event.location,
-    description: event.body || null,
-    rrule: "",
-    source: event.source === "item_remind" ? "item_remind" : "recurring",
-    worksetId: event.worksetId ?? null,
-    itemId: event.itemId ?? null,
-    itemDateKind: event.itemDateKind ?? null,
-    dismissed: Boolean(event.dismissed),
-    important: Boolean(event.important),
-    isLastOccurrence: false,
-  };
-}
 
 /** Compact calendar for timed intelligence events; mounts only while `active`. */
 function CalendarBoardWidgetContent({
@@ -72,27 +43,20 @@ function CalendarBoardWidgetContent({
       ariaLabelPrefix: modeAria,
     });
 
-  const handleSelectOccurrence = useCallback(
-    (occurrence: CalendarOccurrence) => {
-      const event = events?.find((item) => item.id === occurrence.id);
-      focusBoardEvent({
-        eventId: occurrence.id,
-        title: occurrence.title,
-        body: occurrence.description,
-        location: occurrence.location,
-        ...(event && isMappableCoordinate(event.latitude, event.longitude)
-          ? { lat: event.latitude, lon: event.longitude! }
-          : {}),
-      });
-    },
-    [events],
-  );
+  const handleSelectEvent = useCallback((event: AnalysisEvent) => {
+    focusBoardEvent({
+      eventId: event.id,
+      title: event.title,
+      body: event.body,
+      location: event.location,
+      ...(isMappableCoordinate(event.latitude, event.longitude)
+        ? { lat: event.latitude, lon: event.longitude! }
+        : {}),
+    });
+  }, []);
 
-  const occurrences = useMemo(
-    () =>
-      filteredEvents
-        .map(eventToCalendarOccurrence)
-        .filter((event): event is CalendarOccurrence => event !== null),
+  const timedEvents = useMemo(
+    () => filteredEvents.filter((event) => Boolean(event.startTime)),
     [filteredEvents],
   );
 
@@ -105,7 +69,7 @@ function CalendarBoardWidgetContent({
         loading={loading && !events}
         error={!events ? error : null}
         onRetry={refresh}
-        empty={Array.isArray(events) && occurrences.length === 0}
+        empty={Array.isArray(events) && timedEvents.length === 0}
         emptyLabel={
           isEmptySourceFilter(selection)
             ? t("board.common.noTaskSelected")
@@ -114,13 +78,11 @@ function CalendarBoardWidgetContent({
               : t("board.calendarWidget.emptyDay")
         }
       >
-        <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingCalendar")}</p>}>
-          <LazyCalendarBoardEmbed
-            occurrences={occurrences}
-            mode={mode}
-            onSelectOccurrence={handleSelectOccurrence}
-          />
-        </Suspense>
+        <CalendarBoardEmbed
+          events={timedEvents}
+          mode={mode}
+          onSelectEvent={handleSelectEvent}
+        />
       </BoardWidgetShell>
     </div>
   );

@@ -7,6 +7,7 @@ import {
   getActiveSessionId,
   getSession,
   hydrateAssistantSessions,
+  setSessionLlmProfileId,
   upsertSession,
   type AssistantSessionMessage,
 } from "../../domain/assistant/assistantSessions";
@@ -18,21 +19,33 @@ interface ActiveChatSnapshot {
   activeSessionId: string | null;
   messages: AssistantUiMessage[];
   sessionId: string | undefined;
+  llmProfileId: string | undefined;
 }
 
 function loadActiveChat(): ActiveChatSnapshot {
   const activeSessionId = getActiveSessionId();
   if (!activeSessionId) {
-    return { activeSessionId: null, messages: [], sessionId: undefined };
+    return {
+      activeSessionId: null,
+      messages: [],
+      sessionId: undefined,
+      llmProfileId: undefined,
+    };
   }
   const session = getSession(activeSessionId);
   if (!session) {
-    return { activeSessionId, messages: [], sessionId: undefined };
+    return {
+      activeSessionId,
+      messages: [],
+      sessionId: undefined,
+      llmProfileId: undefined,
+    };
   }
   return {
     activeSessionId,
     messages: session.messages,
     sessionId: session.sessionId ?? undefined,
+    llmProfileId: session.llmProfileId ?? undefined,
   };
 }
 
@@ -46,6 +59,10 @@ export interface AssistantChatSession {
   sessionId: string | undefined;
   sessionIdRef: MutableRefObject<string | undefined>;
   setSessionId: (sessionId: string | undefined) => void;
+  /** Optional per-session LLM profile override (undefined → follow staff). */
+  llmProfileId: string | undefined;
+  llmProfileIdRef: MutableRefObject<string | undefined>;
+  setLlmProfileId: (llmProfileId: string | null) => void;
   draft: string;
   draftRef: MutableRefObject<string>;
   setDraft: (value: string | ((prev: string) => string)) => void;
@@ -76,6 +93,9 @@ export function useAssistantChatSession(
   );
   const [messages, setMessages] = useState<AssistantUiMessage[]>(initial.messages);
   const [sessionId, setSessionId] = useState<string | undefined>(initial.sessionId);
+  const [llmProfileId, setLlmProfileIdState] = useState<string | undefined>(
+    initial.llmProfileId,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const [draftBySession, setDraftBySession] = usePersistedState<Record<string, string>>(
@@ -87,6 +107,7 @@ export function useAssistantChatSession(
   const activeSessionIdRef = useRef(activeSessionId);
   const messagesRef = useRef(messages);
   const sessionIdRef = useRef(sessionId);
+  const llmProfileIdRef = useRef(llmProfileId);
 
   const draftSessionKey = activeSessionId ?? "none";
   const draft = draftBySession[draftSessionKey] ?? "";
@@ -95,6 +116,7 @@ export function useAssistantChatSession(
   activeSessionIdRef.current = activeSessionId;
   messagesRef.current = messages;
   sessionIdRef.current = sessionId;
+  llmProfileIdRef.current = llmProfileId;
   draftRef.current = draft;
 
   const setDraft = useCallback(
@@ -122,17 +144,33 @@ export function useAssistantChatSession(
         if (!sendingRef.current) {
           setMessages(next.messages);
           setSessionId(next.sessionId);
+          setLlmProfileIdState(next.llmProfileId);
         }
         return;
       }
       setActiveSessionId(next.activeSessionId);
       setMessages(next.messages);
       setSessionId(next.sessionId);
+      setLlmProfileIdState(next.llmProfileId);
       setError(null);
     };
     window.addEventListener(ASSISTANT_SESSIONS_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(ASSISTANT_SESSIONS_CHANGED_EVENT, onChange);
   }, [sendingRef]);
+
+  const setLlmProfileId = useCallback((next: string | null) => {
+    let id = activeSessionIdRef.current;
+    if (!id) {
+      const created = createEmptySession();
+      id = created.id;
+      setActiveSessionId(id);
+      activeSessionIdRef.current = id;
+    }
+    const trimmed = typeof next === "string" ? next.trim() : "";
+    const saved = setSessionLlmProfileId(id, trimmed ? trimmed : null);
+    setLlmProfileIdState(saved?.llmProfileId);
+    llmProfileIdRef.current = saved?.llmProfileId;
+  }, []);
 
   const persistMessages = useCallback(
     (nextMessages: AssistantUiMessage[], nextServerSessionId: string | undefined) => {
@@ -147,6 +185,7 @@ export function useAssistantChatSession(
         id,
         messages: nextMessages,
         sessionId: nextServerSessionId,
+        // Preserve existing llmProfileId (omit).
       });
       return id;
     },
@@ -159,6 +198,8 @@ export function useAssistantChatSession(
     activeSessionIdRef.current = created.id;
     setMessages([]);
     setSessionId(undefined);
+    setLlmProfileIdState(undefined);
+    llmProfileIdRef.current = undefined;
     setError(null);
     setDraft("");
   }, [setDraft]);
@@ -172,6 +213,9 @@ export function useAssistantChatSession(
     sessionId,
     sessionIdRef,
     setSessionId,
+    llmProfileId,
+    llmProfileIdRef,
+    setLlmProfileId,
     draft,
     draftRef,
     setDraft,

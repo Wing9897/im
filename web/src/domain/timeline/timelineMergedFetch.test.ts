@@ -153,7 +153,7 @@ describe("mergeTimelineFilterSources", () => {
     expect(merged.every((e) => e.source !== "item_remind")).toBe(true);
   });
 
-  it("merges source=item rows from the unified calendar fetch", () => {
+  it("merges source=item_remind rows from the unified calendar fetch", () => {
     const plan = resolveTimelineFilterPlan(null, catalog);
     const merged = mergeTimelineFilterSources({
       selectedSources: null,
@@ -245,7 +245,7 @@ describe("fetchMergedTimelineEvents", () => {
     expect(events.map((e) => e.id).sort()).toEqual(["a-1", "ue-match"]);
   });
 
-  it("fetches unified calendar items (incl. source=item) for workset selection", async () => {
+  it("fetches unified calendar items (incl. source=item_remind) for workset selection", async () => {
     const plan = resolveTimelineFilterPlan(
       { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID] },
       [],

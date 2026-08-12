@@ -90,6 +90,31 @@ describe("postAgentChat", () => {
     });
   });
 
+  it("forwards llmProfileId when set and omits blank", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({
+      message: "ok",
+      sessionId: "new",
+      toolCalls: [],
+    });
+
+    await postAgentChat({
+      messages: [{ role: "user", content: "hi" }],
+      llmProfileId: "profile-or",
+    });
+    expect(apiClient.post).toHaveBeenCalledWith("/api/v1/agent/chat", {
+      messages: [{ role: "user", content: "hi" }],
+      llmProfileId: "profile-or",
+    });
+
+    await postAgentChat({
+      messages: [{ role: "user", content: "hi" }],
+      llmProfileId: "  ",
+    });
+    expect(apiClient.post).toHaveBeenLastCalledWith("/api/v1/agent/chat", {
+      messages: [{ role: "user", content: "hi" }],
+    });
+  });
+
   it("forwards surface and currentTask when provided", async () => {
     vi.mocked(apiClient.post).mockResolvedValue({
       message: "ok",

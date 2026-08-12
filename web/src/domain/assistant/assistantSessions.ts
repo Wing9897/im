@@ -56,6 +56,10 @@ function normalizeSession(raw: unknown): AssistantSession | null {
     updatedAt: item.updatedAt,
     messages: item.messages,
     sessionId: typeof item.sessionId === "string" ? item.sessionId : undefined,
+    llmProfileId:
+      typeof item.llmProfileId === "string" && item.llmProfileId.trim()
+        ? item.llmProfileId.trim()
+        : undefined,
   };
 }
 
@@ -90,6 +94,7 @@ function toPayload(sessions: AssistantSession[]): AssistantSessionPayload[] {
       ...(message.toolCalls ? { toolCalls: message.toolCalls } : {}),
     })),
     ...(session.sessionId ? { sessionId: session.sessionId } : {}),
+    ...(session.llmProfileId ? { llmProfileId: session.llmProfileId } : {}),
   }));
 }
 
@@ -162,22 +167,56 @@ export function setActiveSessionId(
 }
 
 export function upsertSession(
-  session: Omit<AssistantSession, "title" | "updatedAt"> & {
+  session: Omit<AssistantSession, "title" | "updatedAt" | "llmProfileId" | "sessionId"> & {
     title?: string;
     updatedAt?: number;
+    sessionId?: string;
+    /**
+     * Set a string to override; ``null`` clears (follow staff); omit keeps
+     * the existing session value.
+     */
+    llmProfileId?: string | null;
   },
 ): AssistantSession {
+  const current = ensureCache();
+  const existing = current.sessions.find((s) => s.id === session.id);
+  const resolvedSessionId =
+    session.sessionId !== undefined ? session.sessionId : existing?.sessionId;
+  let resolvedProfileId: string | undefined;
+  if (session.llmProfileId === null) {
+    resolvedProfileId = undefined;
+  } else if (typeof session.llmProfileId === "string") {
+    const trimmed = session.llmProfileId.trim();
+    resolvedProfileId = trimmed || undefined;
+  } else {
+    resolvedProfileId = existing?.llmProfileId;
+  }
   const next: AssistantSession = {
     id: session.id,
     title: session.title ?? titleFromMessages(session.messages),
     updatedAt: session.updatedAt ?? Date.now(),
     messages: session.messages,
-    sessionId: session.sessionId,
+    ...(resolvedSessionId ? { sessionId: resolvedSessionId } : {}),
+    ...(resolvedProfileId ? { llmProfileId: resolvedProfileId } : {}),
   };
-  const current = ensureCache();
   const others = current.sessions.filter((s) => s.id !== next.id);
   writeAll([next, ...others], current.activeSessionId);
   return next;
+}
+
+/** Set or clear the per-session LLM profile override (null → follow staff). */
+export function setSessionLlmProfileId(
+  sessionId: string,
+  llmProfileId: string | null,
+): AssistantSession | undefined {
+  const existing = getSession(sessionId);
+  if (!existing) return undefined;
+  return upsertSession({
+    id: existing.id,
+    messages: existing.messages,
+    sessionId: existing.sessionId,
+    llmProfileId,
+  });
 }
 
 /** Delete a session (still supported — PUT without that session). */

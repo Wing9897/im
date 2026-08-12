@@ -6,6 +6,7 @@ import { LlmProfileConnectionPanel } from "../settings/LlmProfileConnectionPanel
 import {
   Button,
   CheckboxField,
+  FormDialogSection,
   FormGrid,
   FormStack,
   SettingsRow,
@@ -74,9 +75,7 @@ export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
         ? webProvider
         : "auto",
     braveSearchApiKey: profile.braveSearchApiKey,
-    staffClasses: profile.staffClasses.filter((c): c is LlmStaffClass =>
-      (LLM_STAFF_CLASSES as readonly string[]).includes(c),
-    ),
+    staffClasses: [...profile.staffClasses],
     isDefault: profile.isDefault,
   };
 }
@@ -144,8 +143,9 @@ export function LlmProfileEditorDialog({
       open={open}
       title={mode === "create" ? t("profiles.dialogCreateTitle") : t("profiles.dialogEditTitle")}
       onClose={onClose}
-      size="wide"
+      size="form"
       testId="llm-profile-editor-dialog"
+      bodyClassName="flex flex-col gap-lg"
       footer={
         <>
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
@@ -162,48 +162,62 @@ export function LlmProfileEditorDialog({
         </>
       }
     >
-      <FormStack gap="lg">
-        <FormGrid>
-          <SettingsRow label={t("profiles.nameLabel")} htmlFor="llm-profile-name" help={t("profiles.nameHelp")}>
-            <TextField
-              id="llm-profile-name"
-              data-testid="llm-profile-name"
-              value={draft.name}
-              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder={t("profiles.namePlaceholder")}
-            />
-          </SettingsRow>
-          <SettingsRow label={t("profiles.defaultLabel")} help={t("profiles.defaultHelp")}>
-            <CheckboxField
-              id="llm-profile-is-default"
-              data-testid="llm-profile-is-default"
-              label={draft.isDefault ? t("shared.enabled") : t("shared.disabled")}
-              checked={draft.isDefault}
-              onChange={(e) => setDraft((prev) => ({ ...prev, isDefault: e.target.checked }))}
-              aria-label={t("profiles.defaultLabel")}
-            />
-          </SettingsRow>
-        </FormGrid>
+      <FormStack gap="xl">
+        <FormDialogSection title={t("profiles.sectionIdentity")}>
+          <FormGrid>
+            <SettingsRow
+              label={t("profiles.nameLabel")}
+              htmlFor="llm-profile-name"
+              help={t("profiles.nameHelp")}
+            >
+              <TextField
+                id="llm-profile-name"
+                data-testid="llm-profile-name"
+                value={draft.name}
+                onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder={t("profiles.namePlaceholder")}
+              />
+            </SettingsRow>
+            <SettingsRow label={t("profiles.defaultLabel")} help={t("profiles.defaultHelp")}>
+              <CheckboxField
+                id="llm-profile-is-default"
+                data-testid="llm-profile-is-default"
+                label={draft.isDefault ? t("shared.enabled") : t("shared.disabled")}
+                checked={draft.isDefault}
+                onChange={(e) => setDraft((prev) => ({ ...prev, isDefault: e.target.checked }))}
+                aria-label={t("profiles.defaultLabel")}
+              />
+            </SettingsRow>
+          </FormGrid>
+        </FormDialogSection>
 
-        <LlmProfileConnectionPanel
-          llmProvider={draft.provider}
-          llmBaseUrl={draft.baseUrl}
-          llmModel={draft.model}
-          llmApiKey={draft.apiKey}
-          openaiJsonMode={draft.jsonMode}
-          ollamaThinkingEnabled={draft.thinkingEnabled}
-          onLlmProviderChange={(v) => setDraft((prev) => ({ ...prev, provider: v }))}
-          onLlmBaseUrlChange={(v) => setDraft((prev) => ({ ...prev, baseUrl: v }))}
-          onLlmModelChange={(v) => setDraft((prev) => ({ ...prev, model: v }))}
-          onLlmApiKeyChange={(v) => setDraft((prev) => ({ ...prev, apiKey: v }))}
-          onOpenaiJsonModeChange={(v) => setDraft((prev) => ({ ...prev, jsonMode: v }))}
-          onOllamaThinkingEnabledChange={(v) =>
-            setDraft((prev) => ({ ...prev, thinkingEnabled: v }))
-          }
-        />
+        <FormDialogSection title={t("profiles.sectionConnection")}>
+          <LlmProfileConnectionPanel
+            llmProvider={draft.provider}
+            llmBaseUrl={draft.baseUrl}
+            llmModel={draft.model}
+            llmApiKey={draft.apiKey}
+            openaiJsonMode={draft.jsonMode}
+            ollamaThinkingEnabled={draft.thinkingEnabled}
+            onLlmProviderChange={(v) => setDraft((prev) => ({ ...prev, provider: v }))}
+            onLlmBaseUrlChange={(v) => setDraft((prev) => ({ ...prev, baseUrl: v }))}
+            onLlmModelChange={(v) => setDraft((prev) => ({ ...prev, model: v }))}
+            onLlmApiKeyChange={(v) => setDraft((prev) => ({ ...prev, apiKey: v }))}
+            onOpenaiJsonModeChange={(v) => setDraft((prev) => ({ ...prev, jsonMode: v }))}
+            onOllamaThinkingEnabledChange={(v) =>
+              setDraft((prev) => ({ ...prev, thinkingEnabled: v }))
+            }
+          />
+        </FormDialogSection>
 
-        <SettingsRow label={t("profiles.staffClassesLabel")} help={t("profiles.staffClassesHelp")}>
-          <div className="flex flex-col gap-xs" data-testid="llm-profile-staff-classes">
+        <FormDialogSection
+          title={t("profiles.sectionStaff")}
+          note={t("profiles.staffClassesHelp")}
+        >
+          <div
+            className="grid grid-cols-1 gap-sm sm:grid-cols-2"
+            data-testid="llm-profile-staff-classes"
+          >
             {LLM_STAFF_CLASSES.map((staffClass) => (
               <CheckboxField
                 key={staffClass}
@@ -214,22 +228,24 @@ export function LlmProfileEditorDialog({
               />
             ))}
           </div>
-        </SettingsRow>
+        </FormDialogSection>
 
-        <AssistantWebSearchPanel
-          enabled={draft.webSearchEnabled}
-          provider={draft.webSearchProvider}
-          braveApiKey={draft.braveSearchApiKey}
-          llmProvider={draft.provider}
-          llmBaseUrl={draft.baseUrl}
-          onEnabledChange={(value) => setDraft((prev) => ({ ...prev, webSearchEnabled: value }))}
-          onProviderChange={(value) =>
-            setDraft((prev) => ({ ...prev, webSearchProvider: value }))
-          }
-          onBraveApiKeyChange={(value) =>
-            setDraft((prev) => ({ ...prev, braveSearchApiKey: value }))
-          }
-        />
+        <FormDialogSection title={t("webSearch.sectionTitle")} note={t("webSearch.sectionHelp")}>
+          <AssistantWebSearchPanel
+            enabled={draft.webSearchEnabled}
+            provider={draft.webSearchProvider}
+            braveApiKey={draft.braveSearchApiKey}
+            llmProvider={draft.provider}
+            llmBaseUrl={draft.baseUrl}
+            onEnabledChange={(value) => setDraft((prev) => ({ ...prev, webSearchEnabled: value }))}
+            onProviderChange={(value) =>
+              setDraft((prev) => ({ ...prev, webSearchProvider: value }))
+            }
+            onBraveApiKeyChange={(value) =>
+              setDraft((prev) => ({ ...prev, braveSearchApiKey: value }))
+            }
+          />
+        </FormDialogSection>
 
         <p className={`mb-0 ${formHelpClass}`}>{t("profiles.editorHint")}</p>
       </FormStack>

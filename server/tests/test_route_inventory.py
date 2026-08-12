@@ -40,24 +40,28 @@ _CALLER_SKIP_DIRS = frozenset({"node_modules", "dist", "build", "generated", "ou
 
 #: Routes with no in-repo caller on purpose. Server tests do NOT count as callers
 #: — a route whose only user is its own contract test is exactly what this guards.
+#:
+#: Protocol ASGI mounts that are **not** FastAPI/OpenAPI routes (e.g. Streamable
+#: HTTP ``/api/v1/mcp`` beyond ``GET /status``) are out of scope here — see
+#: ``docs/agent/mcp.md``. Only OpenAPI-listed ``/api/v1`` paths are checked.
 _EXTERNAL_ONLY_PATHS = frozenset(
     {
         # Third-party agents (OpenClaw / Hermes) post here with an access key.
         "/api/v1/a2a/agent",
         # External HTTP ingest (Webhook / scripts); no in-app UI caller.
         "/api/v1/messages/batch",
-        # Backend contract is landed before the separately owned calendar-import UI.
-        "/api/v1/calendar/imports/commit",
-        "/api/v1/calendar/imports/preview",
     }
 )
 
 # Paths that must stay documented after Wave A API refresh.
+# ``/api/v1/mcp/status`` is the OpenAPI surface; Streamable HTTP protocol traffic
+# is an ASGI mount and intentionally absent from openapi.json.
 _REQUIRED_OPENAPI_PREFIXES = (
     "/api/v1/setup/",
     "/api/v1/access-keys",
     "/api/v1/a2a/",
     "/api/v1/calendar/imports/",
+    "/api/v1/mcp",
     "/api/v1/sources",
     "/api/v1/ui-prefs/",
 )

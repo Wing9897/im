@@ -1127,6 +1127,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mcp/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mcp Status
+         * @description Return master-switch state and currently exposed tools (capability-filtered).
+         */
+        get: operations["mcp_status_api_v1_mcp_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/rotate-secrets": {
         parameters: {
             query?: never;
@@ -2170,6 +2190,8 @@ export interface components {
             /** Surface */
             surface?: "task_editor" | null;
             currentTask?: components["schemas"]["TaskDraftPayload"] | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /**
          * AgentChatResponse
@@ -2397,6 +2419,8 @@ export interface components {
             messages: components["schemas"]["AssistantSessionMessageSchema"][];
             /** Sessionid */
             sessionId?: string | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /** AssistantSessionSchema */
         "AssistantSessionSchema-Output": {
@@ -2410,6 +2434,8 @@ export interface components {
             messages: components["schemas"]["AssistantSessionMessageSchema"][];
             /** Sessionid */
             sessionId?: string | null;
+            /** Llmprofileid */
+            llmProfileId?: string | null;
         };
         /** AssistantSessionsPutBody */
         AssistantSessionsPutBody: {
@@ -2490,7 +2516,7 @@ export interface components {
         };
         /**
          * BoardLayoutSchema
-         * @description Layout blob stored under ``ops_board_layout`` (v15 widgets mosaic).
+         * @description Layout blob stored under ``ops_board_layout`` (v16 widgets mosaic).
          */
         BoardLayoutSchema: {
             /** Version */
@@ -3493,6 +3519,28 @@ export interface components {
              */
             label: string;
         };
+        /**
+         * McpStatusResponse
+         * @description GET ``/api/v1/mcp/status`` — session-auth probe for Settings UI.
+         */
+        McpStatusResponse: {
+            /** Enabled */
+            enabled: boolean;
+            /** Toolcount */
+            toolCount: number;
+            /** Tools */
+            tools: components["schemas"]["McpStatusTool"][];
+        };
+        /** McpStatusTool */
+        McpStatusTool: {
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+        };
         /** MessageCursorResponse */
         MessageCursorResponse: {
             /** Timestamp */
@@ -3972,6 +4020,20 @@ export interface components {
             userAvatar: string;
             /** Userbackground */
             userBackground: string;
+            /** Mcpenabled */
+            mcpEnabled: boolean;
+            /** Mcpcapcalendarread */
+            mcpCapCalendarRead: boolean;
+            /** Mcpcapcalendarwrite */
+            mcpCapCalendarWrite: boolean;
+            /** Mcpcapmessagessearch */
+            mcpCapMessagesSearch: boolean;
+            /** Mcpcapintelligencesearch */
+            mcpCapIntelligenceSearch: boolean;
+            /** Mcpcapitemsread */
+            mcpCapItemsRead: boolean;
+            /** Mcpcapitemswrite */
+            mcpCapItemsWrite: boolean;
         };
         /** TaskActivitySpanResponse */
         TaskActivitySpanResponse: {
@@ -4482,7 +4544,7 @@ export interface components {
              * Origin
              * @enum {string}
              */
-            origin: "manual" | "assistant" | "a2a" | "agent" | "ics";
+            origin: "manual" | "assistant" | "a2a" | "agent" | "ics" | "mcp";
             /**
              * Isallday
              * @default false
@@ -7286,6 +7348,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mcp_status_api_v1_mcp_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["McpStatusResponse"];
                 };
             };
         };

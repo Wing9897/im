@@ -32,6 +32,17 @@
     "label": "Ownership workset",
     "aria": "Ownership workset for schedule creates"
   },
+  "llmProfile": {
+    "label": "LLM profile",
+    "followStaff": "Follow staff profile",
+    "placeholder": "Select an AI profile",
+    "loading": "Loading AI profiles…",
+    "empty": "No AI profiles yet. Create one before chatting.",
+    "allIncomplete": "Existing profiles are incomplete. Finish a profile (provider, model, and key when required) first.",
+    "createCta": "Create AI profile",
+    "defaultBadge": "Default",
+    "incompleteBadge": "Incomplete"
+  },
   "mic": {
     "holdToTalk": "Hold to talk",
     "releaseToStop": "Release to send",

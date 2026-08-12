@@ -42,7 +42,7 @@
       "retryCount": "Retry {count}",
       "analysisPausedHint": "Analysis paused (auto or manual)",
       "waitingForThreshold": "Waiting for threshold: {count}/{threshold}",
-      "agent": "Agent task",
+      "agent": "Project Manager task",
       "agentProgressHint": "Agent tick (cursor drain / threshold / schedule) — not marker batch stats"
     },
     "detail": {
@@ -70,7 +70,7 @@
       "childrenEmptyDescription": "The Agent creates child recurring tasks on each tick when needed.",
       "eventsTitle": "Owned timed events",
       "eventsEmptyTitle": "No owned events yet",
-      "eventsEmptyDescription": "One-off timed events created by this Agent task appear here.",
+      "eventsEmptyDescription": "One-off timed events created by this Project Manager task appear here.",
       "tickTitle": "Last Agent tick",
       "tickLastEnd": "Last completed",
       "tickCompletedCount": "Completed ticks",
@@ -201,7 +201,7 @@
         "blurb": "Compare and track top message rankings"
       },
       "agent": {
-        "name": "Agent task",
+        "name": "Project Manager task",
         "blurb": "Configurable trigger, tools, and calendar / intel outputs"
       }
     },
@@ -225,11 +225,11 @@
         "promptHint": ""
       },
       "agent": {
-        "modeDescription": "Configurable Agent: choose trigger, tool permissions, and calendar / analysis outputs",
+        "modeDescription": "Configurable Project Manager: choose trigger, tool permissions, and calendar / analysis outputs",
         "promptLabel": "Task prompt (goals / search / extraction rules)",
         "promptPlaceholder": "e.g. reconcile calendar from channel messages, or gather official announcements via web search",
-        "promptHint": "Describe what the Agent should do. Presets fill trigger/permissions/outputs; you can still fine-tune.",
-        "scheduleDefaultHint": "Hourly recommended; switching to Agent remaps every-10-seconds to hourly.",
+        "promptHint": "Describe what the Project Manager should do. Presets fill trigger/permissions/outputs; you can still fine-tune.",
+        "scheduleDefaultHint": "Hourly recommended; switching to Project Manager remaps every-10-seconds to hourly.",
         "timedModeHint": "No channels = timed fire on schedule. Bind channels for threshold gate or cursor drain.",
         "messageGateHint": "Channels bound with message-threshold: runs at threshold; messages are injected for verify/supplement.",
         "cursorChannelHint": "Message-cursor drain requires at least one bound source channel."
@@ -574,7 +574,7 @@
     "taskEditor": "Task advisor",
     "leaderboard": "Leaderboard analyst",
     "intel_event": "Intel task analyst",
-    "agent": "Agent"
+    "agent": "Project Manager"
   },
   "ui": {
     "listSep": ", ",
@@ -654,6 +654,7 @@
     "theme": "Theme",
     "settingsData": "Data maintenance",
     "settingsApi": "API docs",
+    "settingsMcp": "MCP docs",
     "newTask": "New task",
     "newAction": "New notification",
     "newActionHint": "Open notifications",
@@ -692,7 +693,7 @@
     },
     "events": {
       "title": "Intelligence events",
-      "description": "Latest intel events"
+      "description": "Latest analysis + user events (not RRULE / item reminds)"
     },
     "feed": {
       "title": "Live Monitor",
@@ -745,6 +746,18 @@
     "actions": {
       "title": "Notification actions",
       "description": "Automation action status"
+    },
+    "schedule": {
+      "title": "My schedule",
+      "description": "Upcoming one-shot events and recurring series"
+    },
+    "items": {
+      "title": "Item reminds",
+      "description": "Upcoming item remind / expiry dates"
+    },
+    "llmHealth": {
+      "title": "AI profile health",
+      "description": "Profile count, completeness, and default"
     }
   },
   "systemTasks": {
@@ -763,7 +776,7 @@
     },
     "analysisBatch": {
       "title": "Analysis batch",
-      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, intel events) in LLM batches and writes analysis results. Agent tasks do not use this path — they are driven by editable Agent task schedules above."
+      "shortDescription": "Scheduler runs marker-based tasks (leaderboard, intel events) in LLM batches and writes analysis results. Project Manager tasks do not use this path — they are driven by editable Project Manager task schedules above."
     },
     "outboundNotify": {
       "title": "Outbound notifications",
@@ -1068,6 +1081,24 @@
       "sourceFilterSearchPlaceholder": "Search sources…",
       "sourceFilterSearchAria": "Search sources by name",
       "sourceFilterNoMatches": "No matching sources"
+    },
+    "schedule": {
+      "empty": "No schedule yet — add events on /schedule",
+      "hint": "See /schedule for full calendar management"
+    },
+    "items": {
+      "empty": "No item reminds yet — check Items",
+      "hint": "See Items for inventory and linked calendars"
+    },
+    "llmHealth": {
+      "total": "Profiles",
+      "complete": "Complete",
+      "incomplete": "Incomplete",
+      "default": "Default",
+      "noDefault": "None",
+      "alertNone": "No LLM profiles configured",
+      "alertNoDefault": "No default profile selected",
+      "alertIncomplete": "Some profiles are incomplete"
     }
   },
   "validation": {
@@ -1180,7 +1211,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 29 / SemVer 0.1.0-beta.30 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 31 / SemVer 0.1.0-beta.32 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"
@@ -1381,7 +1412,9 @@
     },
     "accessKeys": {
       "title": "API keys (Webhook / automation)",
-      "intro": "Long-lived keys (`Authorization: Bearer`) for Webhooks, scripts, and Account manager. Full keys (`*`) can write and call A2A; read-only keys (`read`) are limited to safe GET/HEAD. Not for UI sign-in — use the admin username and password for that.",
+      "intro": "Long-lived keys (`Authorization: Bearer`) for Webhooks, scripts, Account manager (A2A), and MCP. Full keys (`*`) can write, call A2A, and connect MCP; read-only keys (`read`) are limited to safe GET/HEAD. MCP needs the same full `*` key as A2A. Not for UI sign-in — use the admin username and password for that.",
+      "baseUrlTitle": "API base URL",
+      "baseUrlBody": "Use this origin in clients and OpenClaw (same as Settings → API / MCP):",
       "defaultLabel": "Access key",
       "newLabel": "New key label",
       "newPlaceholder": "e.g. Webhook, CI script",
@@ -1392,14 +1425,14 @@
       "revoked": "Key revoked",
       "revokeAria": "Revoke {label}",
       "listTitle": "Active keys",
-      "empty": "No keys yet. Create one for Webhook, scripts, or Account manager.",
+      "empty": "No keys yet. Create one for Webhook, scripts, Account manager, or MCP.",
       "revealTitle": "New key (shown once)",
       "revealHelp": "Copy and store it safely; the full secret cannot be shown again.",
       "copy": "Copy",
       "copied": "Copied",
       "copyFailed": "Copy failed",
       "readOnly": "Read-only (GET only)",
-      "readOnlyHelp": "Can only call safe GET/HEAD endpoints. Leave unchecked for a full key (*), usable for Webhook, writes, and A2A.",
+      "readOnlyHelp": "Can only call safe GET/HEAD endpoints. Leave unchecked for a full key (*), usable for Webhook, writes, A2A, and MCP.",
       "scopesReadOnly": "Scopes: read-only (read)"
     }
   },
