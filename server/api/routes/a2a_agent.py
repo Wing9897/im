@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Request
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
-from server.api.a2a_auth import require_a2a_agent
+from server.api.a2a_auth import require_full_access_key
 from server.api.deps import get_db
 from server.api.schemas.requests import A2aAgentBody
 from server.api.schemas.responses import AgentChatResponse
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/v1/a2a",
     tags=["a2a"],
-    dependencies=[Depends(require_a2a_agent)],
+    dependencies=[Depends(require_full_access_key)],
 )
 
 

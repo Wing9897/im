@@ -3,9 +3,8 @@
  *
  * `connectSSE` owns the whole reconnect loop — backoff schedule, the
  * token gate that stops a 401 storm, the abort signal handed to
- * `onBeforeReconnect`, and the timer bookkeeping in `close()`. `client.test.ts`
- * only reaches this module through `ApiClient`, so the timer state is asserted
- * here directly.
+ * `onBeforeReconnect`, and the timer bookkeeping in `close()`. `client.sse.test.ts`
+ * covers ApiClient wiring; timer state is asserted here directly.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {

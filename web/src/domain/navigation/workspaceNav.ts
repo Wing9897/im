@@ -5,6 +5,7 @@ export const settingsWorkspaceNavItems = [
   { to: "/settings/theme", labelKey: "tabs.theme" },
   { to: "/settings/data", labelKey: "tabs.data" },
   { to: "/settings/api", labelKey: "tabs.api" },
+  { to: "/settings/mcp", labelKey: "tabs.mcp" },
   { to: "/settings/logs", labelKey: "tabs.logs" },
 ] as const satisfies readonly WorkspaceNavItem[];
 

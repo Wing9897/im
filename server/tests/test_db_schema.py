@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-29 / prior hard-reject): ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-31 / prior hard-reject): ``test_schema_wipe_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -27,7 +27,7 @@ from server.tests.schema_fixtures import (
     make_stamped_db,
 )
 
-_REQUIRED_TABLE_COUNT = 28
+_REQUIRED_TABLE_COUNT = 30
 _SCHEMA_DEFECT = Literal["column", "index", "foreign_key"]
 
 

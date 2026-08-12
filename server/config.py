@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Optional
 
 from server.db.database import Database
+from server.domain.mcp_capabilities import MCP_CAPABILITY_CONFIG_DEFAULTS
 from server.secrets import SECRET_CONFIG_KEYS, protect_text, unprotect_text
 from server.util import parse_bool, utc_now_iso
 
@@ -28,10 +29,12 @@ CONFIG_DEFAULTS: dict[str, str] = {
     # Set true on first successful register / password login.
     "setup_complete": "false",
     "retention_messages_days": "90",
-    "retention_analysis_days": "90",
+    # 0 = disable auto-delete (product default: keep intel/analysis events forever).
+    "retention_analysis_days": "0",
     "retention_leaderboard_days": "90",
     "retention_app_logs_days": "30",
-    "retention_user_events_days": "365",
+    # 0 = disable auto-delete (product default: keep calendar user_events forever).
+    "retention_user_events_days": "0",
     "auto_pause_on_retries_exhausted": "true",
     # "system" resolves the renderer's OS timezone to a nearby city for weather.
     "weather_location": "system",
@@ -55,6 +58,10 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "user_avatar": "",
     # Free-text user background / bio injected into agent system prompts; empty = unset.
     "user_background": "",
+    # MCP master switch + capability groups (settings/mcp); defaults on.
+    # Capability keys derive from ``MCP_CAPABILITY_CONFIG_DEFAULTS``.
+    "mcp_enabled": "true",
+    **MCP_CAPABILITY_CONFIG_DEFAULTS,
     # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }
 

@@ -8,6 +8,7 @@ import pytest
 
 from server.config import set_configs
 from server.db.database import Database
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.scheduler.retention import cleanup_expired_data
 from server.util import new_id, utc_now_iso
 
@@ -44,13 +45,35 @@ async def _insert_message(
     )
 
 
-async def _seed_task_and_batch(db: Database) -> None:
+async def _ensure_llm_profile(db: Database) -> str:
+    """Stamp-29: analysis_tasks.llm_profile_id is NOT NULL; schema no longer bootstraps a default."""
+    exists = await db.fetch_value(
+        "SELECT id FROM llm_profiles WHERE id = ?",
+        (DEFAULT_LLM_PROFILE_ID,),
+    )
+    if exists:
+        return DEFAULT_LLM_PROFILE_ID
     now = utc_now_iso()
     await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "created_at, updated_at"
+        ") VALUES (?, 'Retention Test', 'ollama', 'http://localhost:11434', 'llama-test', '', "
+        "0, 'disabled', 1, 'auto', '', 1, ?, ?)",
+        (DEFAULT_LLM_PROFILE_ID, now, now),
+    )
+    return DEFAULT_LLM_PROFILE_ID
+
+
+async def _seed_task_and_batch(db: Database) -> None:
+    now = utc_now_iso()
+    profile_id = await _ensure_llm_profile(db)
+    await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        ("task-1", "Task", "prompt", now, now),
+        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        ("task-1", "Task", "prompt", profile_id, now, now),
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "
@@ -415,11 +438,12 @@ async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None
     )
     now = utc_now_iso()
     old = "2020-01-01T00:00:00+00:00"
+    profile_id = await _ensure_llm_profile(db)
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        ("task-batch", "Task", "prompt", now, now),
+        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        ("task-batch", "Task", "prompt", profile_id, now, now),
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "

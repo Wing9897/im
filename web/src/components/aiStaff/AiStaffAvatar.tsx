@@ -14,7 +14,8 @@ const AVATAR_SRC: Record<AiStaffId, string> = {
   agent: agentSrc,
 };
 
-const SIZE_PX = {
+/** Shared pixel sizes for AI staff / task-employee avatars. */
+export const AI_STAFF_AVATAR_SIZE_PX = {
   xs: 22,
   sm: 28,
   md: 36,
@@ -22,7 +23,7 @@ const SIZE_PX = {
 
 type AiStaffAvatarProps = {
   staffId: AiStaffId;
-  size?: keyof typeof SIZE_PX;
+  size?: keyof typeof AI_STAFF_AVATAR_SIZE_PX;
   className?: string;
   /** Accessible name; decorative when omitted. */
   label?: string;
@@ -38,7 +39,7 @@ export function AiStaffAvatar({
   src,
 }: AiStaffAvatarProps) {
   const staff = getAiStaff(staffId);
-  const px = SIZE_PX[size];
+  const px = AI_STAFF_AVATAR_SIZE_PX[size];
   const style = {
     width: px,
     height: px,

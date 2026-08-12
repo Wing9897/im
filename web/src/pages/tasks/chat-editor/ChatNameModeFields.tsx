@@ -277,7 +277,6 @@ export function ChatNameModeFields({
                     employeeId={employeeId}
                     size="sm"
                     label={nameLabel}
-                    showRecurringIcon
                   />
                   <span className="leading-snug">{nameLabel}</span>
                 </span>

@@ -4,15 +4,17 @@ import pytest
 
 from server.analyzer import geocoding as geocoding_mod
 from server.analyzer.geocoding import (
+    _apply_sentinel,
+    _geocode_items_sync,
+    geocode_analysis_items,
+)
+from server.analyzer.geocoding_location import (
     UNKNOWN_LOCATION,
     UNSPECIFIC_COORDINATES,
-    _apply_sentinel,
     _build_geocode_query,
     _disambiguate_location,
     _extract_fallback_location,
-    _geocode_items_sync,
     _parse_literal_coordinates,
-    geocode_analysis_items,
 )
 
 

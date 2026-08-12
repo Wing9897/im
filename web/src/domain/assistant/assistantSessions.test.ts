@@ -96,6 +96,36 @@ describe("assistantSessions", () => {
     expect(getActiveSessionId()).toBeNull();
   });
 
+  it("stores and clears per-session llmProfileId without wiping on message upsert", async () => {
+    const { putAssistantSessions } = await import("../../api/uiPrefs");
+    const session = createEmptySession();
+    upsertSession({
+      id: session.id,
+      messages: [],
+      llmProfileId: "profile-or",
+    });
+    expect(getSession(session.id)?.llmProfileId).toBe("profile-or");
+
+    upsertSession({
+      id: session.id,
+      messages: [{ id: "u1", role: "user", content: "你好" }],
+      sessionId: "srv-1",
+    });
+    expect(getSession(session.id)?.llmProfileId).toBe("profile-or");
+    expect(getSession(session.id)?.sessionId).toBe("srv-1");
+
+    upsertSession({
+      id: session.id,
+      messages: [{ id: "u1", role: "user", content: "你好" }],
+      llmProfileId: null,
+    });
+    expect(getSession(session.id)?.llmProfileId).toBeUndefined();
+
+    expect(putAssistantSessions).toHaveBeenCalled();
+    const lastCall = vi.mocked(putAssistantSessions).mock.calls.at(-1)?.[0];
+    expect(lastCall?.sessions[0]).not.toHaveProperty("llmProfileId");
+  });
+
   it("prunes other empty sessions when creating a new one", () => {
     createEmptySession();
     const second = createEmptySession();

@@ -115,6 +115,15 @@ def test_settings_keys_align_across_config_api_and_response_model():
     assert api_config_keys == exposed_defaults
 
 
+def test_retention_defaults_keep_analysis_and_calendar():
+    """Intel/analysis events and calendar user_events default to keep-forever (0)."""
+    assert CONFIG_DEFAULTS["retention_messages_days"] == "90"
+    assert CONFIG_DEFAULTS["retention_analysis_days"] == "0"
+    assert CONFIG_DEFAULTS["retention_leaderboard_days"] == "90"
+    assert CONFIG_DEFAULTS["retention_app_logs_days"] == "30"
+    assert CONFIG_DEFAULTS["retention_user_events_days"] == "0"
+
+
 async def test_settings_snapshot_and_roundtrip(client):
     resp = await client.get("/api/v1/config/settings")
     snapshot = resp.json()

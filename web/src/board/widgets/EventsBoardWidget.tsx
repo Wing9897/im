@@ -25,7 +25,10 @@ function eventBodyPreview(body: string | null | undefined): string {
   return (body ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Events list: title + body + time (no channel/source line). */
+/**
+ * Events list: analysis + user_events only (title + body + time).
+ * Does not include RRULE / `item_remind` — schedule + items widgets cover those.
+ */
 export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();
   const selectedEvent = useSyncExternalStore(
@@ -35,7 +38,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
   );
   const selectedRowRef = useRef<HTMLButtonElement | null>(null);
   const fetcher = useCallback(
-    () => fetchBoardEventsList({ includeCalendar: false, limit: EVENTS_LIMIT }),
+    () => fetchBoardEventsList({ limit: EVENTS_LIMIT }),
     [],
   );
   const { selection, events: items, filteredEvents, loading, error, refresh } =

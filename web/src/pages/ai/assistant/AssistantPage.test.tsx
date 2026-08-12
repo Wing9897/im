@@ -14,6 +14,29 @@ vi.mock("../../../api/agent", () => ({
   postAgentChat: vi.fn(),
 }));
 
+vi.mock("../../../api/llmProfiles", () => ({
+  listLlmProfiles: vi.fn(async () => [
+    {
+      id: "profile-default",
+      name: "Default",
+      provider: "ollama",
+      baseUrl: "http://localhost:11434",
+      model: "llama3",
+      apiKey: "",
+      thinkingEnabled: false,
+      jsonMode: "disabled",
+      webSearchEnabled: true,
+      webSearchProvider: "auto",
+      braveSearchApiKey: "",
+      isDefault: true,
+      staffClasses: ["assistant"],
+      staffInstances: [],
+      createdAt: null,
+      updatedAt: null,
+    },
+  ]),
+}));
+
 vi.mock("../../../api/tasks", () => ({
   listTasks: vi.fn(async () => []),
 }));

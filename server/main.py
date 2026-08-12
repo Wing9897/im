@@ -181,9 +181,39 @@ async def _lifespan_impl(
         raise
 
     logger.info("Startup complete; service ready on port %d", SERVICE_PORT)
+    mcp_session_manager = getattr(app.state, "mcp_session_manager", None)
+    mcp_runner: asyncio.Task[None] | None = None
     try:
+        if mcp_session_manager is not None:
+            # Run the MCP session manager in its own task so anyio cancel scopes
+            # enter/exit on the same task (pytest-asyncio + FastAPI nested
+            # lifespans otherwise tear down across tasks).
+            ready = asyncio.Event()
+
+            async def _run_mcp_session_manager() -> None:
+                try:
+                    async with mcp_session_manager.run():
+                        ready.set()
+                        # Block until this task is cancelled on shutdown.
+                        await asyncio.get_running_loop().create_future()
+                except BaseException:
+                    ready.set()
+                    raise
+
+            mcp_runner = asyncio.create_task(_run_mcp_session_manager())
+            await ready.wait()
+            if mcp_runner.done():
+                await mcp_runner  # re-raise startup failure
         yield
     finally:
+        if mcp_runner is not None:
+            mcp_runner.cancel()
+            try:
+                await mcp_runner
+            except CancelledError:
+                pass
+            except Exception as exc:  # noqa: BLE001 — best-effort shutdown
+                logger.warning("MCP session manager shutdown error: %s", exc)
         if backfill_task is not None:
             if not backfill_task.done():
                 backfill_task.cancel()
@@ -271,6 +301,10 @@ def create_app(
 
     for router in all_routers():
         app.include_router(router)
+
+    from server.api.routes.mcp import attach_mcp
+
+    attach_mcp(app)
 
     if serve_static:
         mount_static_files(app)

@@ -1,5 +1,6 @@
 /**
- * REST client for user-authored timed events (manual / assistant).
+ * REST client for user-authored timed events (manual / assistant / mcp / …).
+ * Wire shape is OpenAPI ``UserEventResponse`` (origin includes ``mcp``).
  */
 
 import { apiClient } from "./client";

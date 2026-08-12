@@ -3,15 +3,21 @@ import { listUserEventsPage } from "../../api/userEvents";
 import { fetchEvents } from "../../api/results";
 import { formatItemOccurrenceTitle } from "../items/itemCalendarProjection";
 import { getEventTimestamp } from "../intelligence/mapFilters";
+import { userEventMatchesSourceSelection } from "../tasks/sourceFilterSelection";
+import type { SourceFilterSelection } from "../tasks/sourceFilterSelection";
 import {
   fetchSharedCalendarItems,
   fetchSharedTimedAnalysisPage,
+  fetchSharedTimelineEvents,
   fetchSharedUserEvents,
 } from "./sharedCalendarFetch";
+import type { TimelineFilterPlan } from "./timelineFilterPlan";
 import { resolveUserEventTaskName } from "./userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import type { AnalysisEvent, CalendarOccurrence, TimelineItem } from "../../types";
 import { asTimedAnalysisEvent } from "../../types/timelineItem";
+
+const EMPTY_EVENTS: TimelineItem[] = [];
 
 export function sortEventsByTimeDesc(events: AnalysisEvent[]): AnalysisEvent[] {
   return [...events].sort(
@@ -153,9 +159,10 @@ export function calendarOccurrenceToBoardEvent(
     dismissed: Boolean(occurrence.dismissed),
     important: Boolean(occurrence.important),
     isLastOccurrence: isItem ? undefined : Boolean(occurrence.isLastOccurrence),
+    // Keep worksetId for source-filter alignment with Timeline (RRULE + items).
     worksetId: isItem
       ? occurrence.worksetId?.trim() || SYSTEM_WORKSET_ID
-      : undefined,
+      : occurrence.worksetId?.trim() || undefined,
     itemId: occurrence.itemId?.trim() || null,
     // Server projects remind only.
     itemDateKind: isItem ? "remind" : undefined,
@@ -212,8 +219,271 @@ export function mergeWithCalendarOccurrences(
   return extras.length === 0 ? timedEvents : [...timedEvents, ...extras];
 }
 
+function isItemOccurrence(occurrence: CalendarOccurrence): boolean {
+  return occurrence.source === "item_remind";
+}
+
+function itemOccurrenceToTimelineItem(occurrence: CalendarOccurrence): TimelineItem | null {
+  return asTimedAnalysisEvent(calendarOccurrenceToBoardEvent(occurrence));
+}
+
 /**
- * Shared board fetch: timed analysis events + user_events + RRULE calendar.
+ * Client-filter + RRULE merge for Timeline (same id / taskId|startTime dedupe as Board).
+ */
+export function mergeTimelineFilterSources(opts: {
+  selectedSources: SourceFilterSelection;
+  filterPlan: TimelineFilterPlan;
+  analysisEvents: readonly TimelineItem[];
+  calendarOccurrences: readonly CalendarOccurrence[];
+  userEvents: readonly TimelineItem[];
+}): TimelineItem[] {
+  const {
+    selectedSources,
+    filterPlan,
+    analysisEvents,
+    calendarOccurrences,
+    userEvents,
+  } = opts;
+
+  if (
+    selectedSources !== null &&
+    selectedSources.taskIds.length === 0 &&
+    selectedSources.worksetIds.length === 0
+  ) {
+    return EMPTY_EVENTS;
+  }
+
+  const analysis = filterPlan.fetchAnalysis ? [...analysisEvents] : EMPTY_EVENTS;
+  const allow = new Set(filterPlan.selectedRealTaskIds);
+  const allowWorksets = new Set(filterPlan.selectedWorksetIds);
+  const allowExplicitTasks = new Set(filterPlan.explicitTaskIds);
+  const isAll = selectedSources === null;
+
+  const recurringOccurrences = calendarOccurrences.filter((row) => !isItemOccurrence(row));
+  const itemOccurrences = calendarOccurrences.filter(isItemOccurrence);
+
+  const calendarFiltered = filterPlan.fetchCalendar
+    ? isAll
+      ? [...recurringOccurrences]
+      : recurringOccurrences.filter(
+          (occurrence) =>
+            (occurrence.seriesId != null &&
+              occurrence.seriesId !== "" &&
+              allow.has(occurrence.seriesId)) ||
+            (occurrence.worksetId != null &&
+              allowWorksets.has(occurrence.worksetId)),
+        )
+    : [];
+
+  const users = filterPlan.fetchUserEvents
+    ? isAll
+      ? [...userEvents]
+      : userEvents.filter((event) =>
+          userEventMatchesSourceSelection(event, allowWorksets, allowExplicitTasks),
+        )
+    : EMPTY_EVENTS;
+
+  const itemEvents = filterPlan.fetchItems
+    ? (isAll
+        ? itemOccurrences
+        : itemOccurrences.filter((occurrence) => {
+            const wid =
+              typeof occurrence.worksetId === "string" && occurrence.worksetId.trim()
+                ? occurrence.worksetId.trim()
+                : SYSTEM_WORKSET_ID;
+            return allowWorksets.has(wid);
+          })
+      )
+        .map(itemOccurrenceToTimelineItem)
+        .filter((event): event is TimelineItem => event !== null)
+    : EMPTY_EVENTS;
+
+  return mergeWithCalendarOccurrences(
+    [...analysis, ...users, ...itemEvents],
+    calendarFiltered,
+  ) as TimelineItem[];
+}
+
+export type UserEventLabelOpts = {
+  taskNameById?: ReadonlyMap<string, string>;
+  generalWorksetLabel?: string;
+  worksetNameById?: ReadonlyMap<string, string>;
+};
+
+/**
+ * Shared planner+merge core for Timeline and Board timed-event surfaces.
+ *
+ * Options:
+ * - ``filterPlan`` — Timeline source-filter aware fetch + client merge
+ * - ``includeRrule`` — pull RRULE / item calendar rows (Board window = true; events list = false)
+ * - ``sort`` — optional ``time_desc`` (events-list widget)
+ */
+export type FetchMergedTimedEventsOpts = {
+  startIso?: string;
+  endIso?: string;
+  /** Timed analysis page limit (board window) or recent-list limit. */
+  limit?: number;
+  /**
+   * Analysis fetch style:
+   * - ``timed`` — hasTime window page (Board calendar/gantt)
+   * - ``timeline`` — timeline task-filtered window (requires filterPlan)
+   * - ``recent`` — analyzed_at list (Events board widget)
+   * - ``none`` — skip analysis
+   */
+  analysis?: "timed" | "timeline" | "recent" | "none";
+  includeUserEvents?: boolean | "unbounded";
+  /** When false, skip calendar/items. Object form passes series filter to shared fetch. */
+  includeRrule?:
+    | boolean
+    | {
+        seriesIds?: string[] | null;
+        includeItems?: boolean;
+      };
+  filterPlan?: {
+    selectedSources: SourceFilterSelection;
+    plan: TimelineFilterPlan;
+  };
+  userEventLabels?: UserEventLabelOpts;
+  sort?: "time_desc" | "none";
+};
+
+function resolveIncludeRrule(
+  includeRrule: FetchMergedTimedEventsOpts["includeRrule"],
+): false | { seriesIds?: string[] | null; includeItems?: boolean } {
+  if (includeRrule === false || includeRrule === undefined) return false;
+  if (includeRrule === true) return {};
+  return includeRrule;
+}
+
+/**
+ * Single fetch+merge entry used by Timeline and Board thin wrappers.
+ */
+export async function fetchMergedTimedEvents(
+  opts: FetchMergedTimedEventsOpts,
+): Promise<AnalysisEvent[]> {
+  const {
+    startIso,
+    endIso,
+    limit = 15,
+    analysis = "timed",
+    includeUserEvents = true,
+    includeRrule = true,
+    filterPlan,
+    userEventLabels,
+    sort = "none",
+  } = opts;
+
+  if (filterPlan) {
+    const { selectedSources, plan } = filterPlan;
+    if (
+      selectedSources !== null &&
+      selectedSources.taskIds.length === 0 &&
+      selectedSources.worksetIds.length === 0
+    ) {
+      return EMPTY_EVENTS;
+    }
+    if (
+      !plan.fetchAnalysis &&
+      !plan.fetchCalendar &&
+      !plan.fetchUserEvents &&
+      !plan.fetchItems
+    ) {
+      return EMPTY_EVENTS;
+    }
+    if (!startIso || !endIso) {
+      return EMPTY_EVENTS;
+    }
+
+    const needCalendar = plan.fetchCalendar || plan.fetchItems;
+    const [analysisEvents, calendarOccurrences, rawUserEvents] = await Promise.all([
+      plan.fetchAnalysis
+        ? fetchSharedTimelineEvents({
+            taskIds: plan.analysisTaskIds,
+            startDate: startIso,
+            endDate: endIso,
+          })
+        : Promise.resolve(EMPTY_EVENTS),
+      needCalendar
+        ? fetchSharedCalendarItems(
+            startIso,
+            endIso,
+            plan.fetchCalendar
+              ? plan.seriesIds === null
+                ? { includeItems: true }
+                : { seriesIds: plan.seriesIds, includeItems: true }
+              : { seriesIds: [], includeItems: true },
+          )
+        : Promise.resolve([] as CalendarOccurrence[]),
+      plan.fetchUserEvents
+        ? fetchSharedUserEvents({ start: startIso, end: endIso })
+        : Promise.resolve([] as UserEvent[]),
+    ]);
+
+    const userEvents = rawUserEvents
+      .map((event) =>
+        userEventToTimelineItem(
+          event,
+          userEventLabels?.taskNameById,
+          userEventLabels?.generalWorksetLabel,
+          userEventLabels?.worksetNameById,
+        ),
+      )
+      .filter((event): event is TimelineItem => event !== null);
+
+    return mergeTimelineFilterSources({
+      selectedSources,
+      filterPlan: plan,
+      analysisEvents,
+      calendarOccurrences,
+      userEvents,
+    });
+  }
+
+  const rruleOpts = resolveIncludeRrule(includeRrule);
+  const wantUser = includeUserEvents !== false;
+  const unboundedUser = includeUserEvents === "unbounded";
+
+  const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
+    analysis === "timed" && startIso && endIso
+      ? fetchSharedTimedAnalysisPage({ startDate: startIso, endDate: endIso, limit })
+      : analysis === "recent"
+        ? fetchEvents({
+            limit,
+            offset: 0,
+            sort: "analyzed_at",
+            includeTotal: false,
+          }).then((page) => page.items)
+        : Promise.resolve([] as AnalysisEvent[]),
+    wantUser
+      ? unboundedUser
+        ? listUserEventsPage().then((page) => page.items)
+        : startIso && endIso
+          ? fetchSharedUserEvents({ start: startIso, end: endIso })
+          : listUserEventsPage().then((page) => page.items)
+      : Promise.resolve([] as UserEvent[]),
+    rruleOpts && startIso && endIso
+      ? fetchSharedCalendarItems(startIso, endIso, rruleOpts)
+      : Promise.resolve([] as CalendarOccurrence[]),
+  ]);
+
+  const projectedUsers = userEvents.map((event) =>
+    userEventToBoardEvent(
+      event,
+      userEventLabels?.taskNameById,
+      userEventLabels?.generalWorksetLabel,
+      userEventLabels?.worksetNameById,
+    ),
+  );
+
+  const merged = rruleOpts
+    ? mergeWithCalendarOccurrences([...analysisEvents, ...projectedUsers], calendarOccurrences)
+    : [...analysisEvents, ...projectedUsers];
+
+  return sort === "time_desc" ? sortEventsByTimeDesc(merged) : merged;
+}
+
+/**
+ * Board calendar/gantt: timed analysis + user_events + RRULE calendar.
  * User-event task names are left unresolved here — callers apply
  * `withResolvedUserEventTaskNames` with the shared task catalog.
  */
@@ -222,50 +492,29 @@ export async function fetchMergedTimedBoardEvents(opts: {
   endDate: string;
   limit: number;
 }): Promise<AnalysisEvent[]> {
-  const { startDate, endDate, limit } = opts;
-  // Shared coalesced fetchers — CalendarBoard + GanttEvents widgets on the same
-  // window share one /calendar/items + user-events + timed-analysis round-trip.
-  const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
-    fetchSharedTimedAnalysisPage({ startDate, endDate, limit }),
-    fetchSharedUserEvents({ start: startDate, end: endDate }),
-    fetchSharedCalendarItems(startDate, endDate),
-  ]);
-  return mergeWithCalendarOccurrences(
-    [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))],
-    calendarOccurrences,
-  );
+  return fetchMergedTimedEvents({
+    startIso: opts.startDate,
+    endIso: opts.endDate,
+    limit: opts.limit,
+    analysis: "timed",
+    includeUserEvents: true,
+    includeRrule: true,
+    sort: "none",
+  });
 }
 
 /**
- * Events-list board widget fetch: recent analysis events (analyzed_at) + all
- * user_events. Does not include RRULE calendar unless `includeCalendar` is set
- * with a date window (not used by the events list today).
+ * Events-list board widget: recent analysis (analyzed_at) + all user_events.
+ * Intentionally omits RRULE / `item_remind` (schedule + items widgets own those).
  */
 export async function fetchBoardEventsList(opts: {
-  includeCalendar?: boolean;
   limit?: number;
-  startDate?: string;
-  endDate?: string;
 } = {}): Promise<AnalysisEvent[]> {
-  const { includeCalendar = false, limit = 15, startDate, endDate } = opts;
-  const [analysisEvents, userEvents, calendarOccurrences] = await Promise.all([
-    fetchEvents({
-      limit,
-      offset: 0,
-      sort: "analyzed_at",
-      includeTotal: false,
-    }).then((page) => page.items),
-    // Unbounded list stays small under retention; merge so「一般」filter works.
-    listUserEventsPage().then((page) => page.items),
-    includeCalendar && startDate && endDate
-      ? fetchSharedCalendarItems(startDate, endDate)
-      : Promise.resolve([] as CalendarOccurrence[]),
-  ]);
-  const merged = includeCalendar
-    ? mergeWithCalendarOccurrences(
-        [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))],
-        calendarOccurrences,
-      )
-    : [...analysisEvents, ...userEvents.map((event) => userEventToBoardEvent(event))];
-  return sortEventsByTimeDesc(merged);
+  return fetchMergedTimedEvents({
+    limit: opts.limit ?? 15,
+    analysis: "recent",
+    includeUserEvents: "unbounded",
+    includeRrule: false,
+    sort: "time_desc",
+  });
 }

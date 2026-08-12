@@ -29,8 +29,6 @@ from server.collector.email_imap_fetch import (
     FetchedEmail,
     FolderPollResult,
     fetch_folder,
-    from_addresses,
-    html_to_text,
     parse_imap_message,
     sender_allowed,
 )
@@ -47,13 +45,10 @@ from server.sse import SseBroadcaster
 
 logger = logging.getLogger(__name__)
 
-# Re-export parse helpers for tests / callers that import from this module.
 __all__ = [
     "EmailImapAdapter",
     "FetchedEmail",
     "FolderPollResult",
-    "from_addresses",
-    "html_to_text",
 ]
 
 _IMAP_DRAIN_TIMEOUT_SECONDS = 6

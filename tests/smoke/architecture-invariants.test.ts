@@ -597,7 +597,7 @@ describe("Retired dual-track paths stay absent", () => {
   });
 });
 
-describe("Stamp 29 LLM + recurring series invariants", () => {
+describe("LLM profiles + recurring series invariants", () => {
   it("product code has no calendar.*_recurring_task tool names", () => {
     const pattern = /calendar\.\w*_recurring_task\b/;
     const offenders: string[] = [];
@@ -647,7 +647,9 @@ describe("Stamp 29 LLM + recurring series invariants", () => {
       path.resolve(ROOT_DIR, "server", "api", "routes", "config.py"),
       "utf-8",
     );
-    const wireBlock = configRoutes.match(/_SETTINGS_KEYS:\s*dict\[str,\s*str\]\s*=\s*\{([^}]+)\}/s);
+    const wireBlock = configRoutes.match(
+      /_SETTINGS_KEYS:\s*dict\[str,\s*str\]\s*=\s*\{([\s\S]*?)\n\}/,
+    );
     expect(wireBlock, "_SETTINGS_KEYS not found").toBeTruthy();
     expect(wireBlock![1]).not.toMatch(/assistantLlm|assistant_llm_|llmProvider|"llm_provider"/);
   });

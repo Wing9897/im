@@ -19,6 +19,9 @@ import { StatsBoardWidget } from "./widgets/StatsBoardWidget";
 import { SystemBoardWidget } from "./widgets/SystemBoardWidget";
 import { ClockBoardWidget } from "./widgets/ClockBoardWidget";
 import { WeatherBoardWidget } from "./widgets/WeatherBoardWidget";
+import { ScheduleBoardWidget } from "./widgets/ScheduleBoardWidget";
+import { ItemsBoardWidget } from "./widgets/ItemsBoardWidget";
+import { LlmHealthBoardWidget } from "./widgets/LlmHealthBoardWidget";
 
 interface BoardWidgetDescriptor {
   titleKey: string;
@@ -203,6 +206,27 @@ export const BOARD_WIDGET_DESCRIPTORS: Record<BoardWidgetType, BoardWidgetDescri
     component: ActionsBoardWidget,
     sizeOptions: withUniversalSizes(["2x2", "3x3", "5x1"]),
     defaultSizeId: "3x2",
+  },
+  schedule: {
+    titleKey: "widgets.schedule.title",
+    descriptionKey: "widgets.schedule.description",
+    component: ScheduleBoardWidget,
+    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3", "5x1"]),
+    defaultSizeId: "3x2",
+  },
+  items: {
+    titleKey: "widgets.items.title",
+    descriptionKey: "widgets.items.description",
+    component: ItemsBoardWidget,
+    sizeOptions: withUniversalSizes(["2x2", "3x3", "4x3", "5x1"]),
+    defaultSizeId: "3x2",
+  },
+  "llm-health": {
+    titleKey: "widgets.llmHealth.title",
+    descriptionKey: "widgets.llmHealth.description",
+    component: LlmHealthBoardWidget,
+    sizeOptions: withUniversalSizes(["2x2", "3x2", "5x1"]),
+    defaultSizeId: "2x2",
   },
 };
 

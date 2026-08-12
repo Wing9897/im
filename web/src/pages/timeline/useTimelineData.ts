@@ -87,8 +87,9 @@ function filterPlanKey(plan: ReturnType<typeof resolveTimelineFilterPlan>): stri
  * INVARIANTS:
  * - Pages shell stays keep-mounted under canvas — pause expensive Timeline
  *   fetches/subscriptions while the board is the visible shell (`pageActive`).
- * - Fetch + merge go through {@link fetchMergedTimelineEvents} (sharedCalendarFetch
- *   + timedEventMerge). Board keeps {@link fetchMergedTimedBoardEvents} separately.
+ * - Fetch + merge go through {@link fetchMergedTimelineEvents} (shared
+ *   {@link fetchMergedTimedEvents} core). Board uses the same core via
+ *   {@link fetchMergedTimedBoardEvents} / {@link fetchBoardEventsList}.
  */
 export function useTimelineData({
   selectedSources,

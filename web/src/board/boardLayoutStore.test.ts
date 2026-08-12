@@ -73,10 +73,10 @@ describe("boardLayoutStore", () => {
         "leaderboard",
         "stats",
         "tasks",
-        "queue",
-        "logs",
+        "schedule",
+        "items",
+        "llm-health",
         "actions",
-        "sources",
       ]),
     );
   });
@@ -150,7 +150,7 @@ describe("boardLayoutStore", () => {
       row: 6,
       sizeId: "3x2",
     });
-    expect(config.widgets.find((w) => w.type === "logs")).toMatchObject({
+    expect(config.widgets.find((w) => w.type === "schedule")).toMatchObject({
       col: 0,
       row: 8,
       sizeId: "3x2",
@@ -181,8 +181,29 @@ describe("boardLayoutStore", () => {
       sizeId: "5x2",
     });
     expect(config.widgets.find((w) => w.type === "events")?.sizeId).toBe("4x3");
+    expect(config.widgets.find((w) => w.type === "items")).toMatchObject({
+      col: 11,
+      row: 8,
+      sizeId: "3x2",
+    });
+    expect(config.widgets.find((w) => w.type === "llm-health")).toMatchObject({
+      col: 14,
+      row: 8,
+      sizeId: "2x2",
+    });
     expect(config.widgets.map((w) => w.type)).toEqual(
-      expect.arrayContaining(["map", "wall", "weather", "gantt", "gantt-events", "events", "stats", "queue", "sources"]),
+      expect.arrayContaining([
+        "map",
+        "wall",
+        "weather",
+        "gantt",
+        "gantt-events",
+        "events",
+        "stats",
+        "schedule",
+        "items",
+        "llm-health",
+      ]),
     );
     for (let i = 0; i < rects.length; i += 1) {
       for (let j = i + 1; j < rects.length; j += 1) {
@@ -191,16 +212,50 @@ describe("boardLayoutStore", () => {
     }
   });
 
-  it("parseBoardConfig resets sparse older layouts to current defaults", () => {
+  it("parseBoardConfig migrates older non-sparse layouts in place", () => {
+    const customWidgets = [
+      { i: "w-map", type: "map", col: 5, row: 0, sizeId: "5x3", z: 1 },
+      { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 2 },
+      { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 3 },
+      { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 4 },
+      { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 5 },
+      { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 6 },
+    ];
+    const parsed = parseBoardConfig({
+      version: 13,
+      widgets: customWidgets,
+    });
+    expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
+    expect(parsed.widgets).toHaveLength(customWidgets.length);
+    expect(parsed.widgets.find((widget) => widget.type === "map")).toMatchObject({
+      col: 5,
+      row: 0,
+      sizeId: "5x3",
+    });
+    expect(parsed.widgets.map((w) => w.type)).toEqual(customWidgets.map((w) => w.type));
+  });
+
+  it("parseBoardConfig preserves custom placement across older versions", () => {
+    const parsed = parseBoardConfig({
+      version: 12,
+      widgets: createDefaultBoardConfig().widgets.map((widget) =>
+        widget.type === "map" ? { ...widget, col: 5, sizeId: "5x5" } : widget,
+      ),
+    });
+    expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
+    expect(parsed.widgets.find((widget) => widget.type === "map")).toMatchObject({
+      col: 5,
+      row: 2,
+      sizeId: "5x5",
+    });
+  });
+
+  it("parseBoardConfig resets sparse layouts to current defaults", () => {
     const parsed = parseBoardConfig({
       version: 13,
       widgets: [
         { i: "w-map", type: "map", col: 5, row: 0, sizeId: "5x3", z: 1 },
         { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 2 },
-        { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 3 },
-        { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 4 },
-        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 5 },
-        { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 6 },
       ],
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
@@ -212,19 +267,39 @@ describe("boardLayoutStore", () => {
     });
   });
 
-  it("parseBoardConfig resets older version layouts to current defaults", () => {
+  it("parseBoardConfig drops unknown types and keeps recognized widgets", () => {
     const parsed = parseBoardConfig({
-      version: 12,
-      widgets: createDefaultBoardConfig().widgets.map((widget) =>
-        widget.type === "map" ? { ...widget, col: 5, sizeId: "5x5" } : widget,
-      ),
+      version: 10,
+      widgets: [
+        { i: "w-retired", type: "legacy-radar", col: 0, row: 0, sizeId: "3x2", z: 1 },
+        { i: "w-map", type: "map", col: 4, row: 1, sizeId: "5x3", z: 2 },
+        { i: "w-wall", type: "wall", col: 0, row: 0, sizeId: "4x3", z: 3 },
+        { i: "w-weather", type: "weather", col: 0, row: 3, sizeId: "5x2", z: 4 },
+        { i: "w-gantt", type: "gantt", col: 0, row: 0, sizeId: "16x1", z: 5 },
+        { i: "w-gantt-events", type: "gantt-events", col: 0, row: 1, sizeId: "16x1", z: 6 },
+        { i: "w-clock", type: "clock", col: 0, row: 2, sizeId: "3x1", z: 7 },
+      ],
     });
     expect(parsed.version).toBe(BOARD_LAYOUT_VERSION);
-    expect(parsed.widgets.find((widget) => widget.type === "map")).toMatchObject({
-      col: 3,
-      row: 2,
-      sizeId: "5x3",
+    expect(parsed.widgets).toHaveLength(6);
+    expect(parsed.widgets.every((w) => w.type !== "legacy-radar")).toBe(true);
+    expect(parsed.widgets.find((w) => w.type === "map")).toMatchObject({
+      i: "w-map",
+      col: 4,
+      row: 1,
     });
+  });
+
+  it("default mosaic includes schedule, items, and llm-health", () => {
+    const config = createDefaultBoardConfig();
+    expect(config.version).toBe(BOARD_LAYOUT_VERSION);
+    const types = new Set(config.widgets.map((w) => w.type));
+    expect(types.has("schedule")).toBe(true);
+    expect(types.has("items")).toBe(true);
+    expect(types.has("llm-health")).toBe(true);
+    expect(types.has("logs")).toBe(false);
+    expect(types.has("queue")).toBe(false);
+    expect(types.has("sources")).toBe(false);
   });
 
   it("persists and reloads a filled custom config via memory cache", () => {
@@ -266,7 +341,7 @@ describe("boardLayoutStore", () => {
     expect(loadBoardConfig()).toEqual(existing);
   });
 
-  it("rejects unknown widget types when parsing", () => {
+  it("drops all-unknown widgets then reseeds default mosaic (soft-migrate)", () => {
     const parsed = parseBoardConfig({
       version: BOARD_LAYOUT_VERSION,
       widgets: [{ i: "x", type: "nope", col: 0, row: 0, sizeId: "3x2" }],
@@ -353,7 +428,18 @@ describe("boardLayoutStore", () => {
     const reset = resetBoardConfig();
     expect(reset.widgets).toHaveLength(createDefaultBoardConfig().widgets.length);
     expect(reset.widgets.map((w) => w.type)).toEqual(
-      expect.arrayContaining(["map", "wall", "weather", "gantt", "gantt-events", "events", "clock", "queue", "sources"]),
+      expect.arrayContaining([
+        "map",
+        "wall",
+        "weather",
+        "gantt",
+        "gantt-events",
+        "events",
+        "clock",
+        "schedule",
+        "items",
+        "llm-health",
+      ]),
     );
   });
 });

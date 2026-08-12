@@ -1,4 +1,8 @@
-"""A2A route auth: full household access key required (no device session)."""
+"""Shared auth for A2A / MCP protocol surfaces: full household access key.
+
+Device sessions are rejected. Loopback exemption does **not** apply — external
+agents must present a household access key with full scope ``*``.
+"""
 
 from __future__ import annotations
 
@@ -34,8 +38,8 @@ async def require_household_access_key(request: Request) -> dict[str, object]:
     return resolved
 
 
-async def require_a2a_agent(request: Request) -> None:
-    """Access key must be full-scope ``*`` (read-only keys cannot call A2A)."""
+async def require_full_access_key(request: Request) -> None:
+    """Access key must be full-scope ``*`` (read-only keys cannot call A2A/MCP)."""
     await require_household_access_key(request)
     scopes = list(getattr(request.state, "access_key_scopes", None) or [])
     if not scopes_allow_full(scopes):
@@ -44,3 +48,7 @@ async def require_a2a_agent(request: Request) -> None:
             "Access key missing required scope: *",
             error_code=FORBIDDEN,
         )
+
+
+#: Backward-compatible alias — prefer :func:`require_full_access_key`.
+require_a2a_agent = require_full_access_key

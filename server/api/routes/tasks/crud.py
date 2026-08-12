@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import Request
 
 from server.api.deps import get_db
-from server.api.routes.task_helpers import TaskConfigBody, validate_task_body
+from server.api.routes.task_helpers import TaskConfigBody
 from server.api.routes.tasks._common import notify, register_task, unregister_task
 from server.api.routes.tasks._router import router
 from server.api.schemas.responses import TaskDeleteResponse, TaskResponse
@@ -20,7 +20,6 @@ from server.services.task_writes import TaskWriteError
 
 @router.put("/{task_id}", response_model=TaskResponse)
 async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> dict:
-    validate_task_body(body)
     try:
         result = await update_task_record(get_db(request), task_id, body)
     except LookupError as exc:

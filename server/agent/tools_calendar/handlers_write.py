@@ -17,11 +17,15 @@ from server.calendar.timeline_importance import (
     unmark_timeline_important,
 )
 from server.calendar.user_events import (
-    UserEventValidationError,
     create_user_event,
     update_user_event,
 )
+from server.calendar.user_events_normalize import UserEventValidationError
 from server.db.database import Database
+from server.domain.user_event_origins import (
+    ORIGIN_ASSISTANT,
+    TOOL_WRITE_USER_EVENT_ORIGINS,
+)
 from server.services.recurring_series_writes import (
     create_recurring_series,
     hard_delete_recurring_series,
@@ -52,9 +56,10 @@ async def _tool_create_event(db: Database, args: dict[str, Any]) -> dict[str, An
         return {"error": "title and startTime are required"}
     end = arg(args, "endTime", "end", "end_time")
     try:
-        origin = str(args.get("_origin") or "assistant").strip() or "assistant"
-        if origin not in {"assistant", "a2a", "manual", "agent"}:
-            origin = "assistant"
+        origin = str(args.get("_origin") or ORIGIN_ASSISTANT).strip() or ORIGIN_ASSISTANT
+        # Tool writes use an explicit allow-subset (excludes ``ics`` imports).
+        if origin not in TOOL_WRITE_USER_EVENT_ORIGINS:
+            origin = ORIGIN_ASSISTANT
         workset_id = _tool_workset_id(args)
         create_kwargs: dict[str, Any] = {
             "title": str(title),

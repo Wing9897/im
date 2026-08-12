@@ -36,8 +36,7 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-widget-list">
             {ranked.map((topic) => (
               <li key={topic.id} className="board-widget-list__item">
-                <button
-                  type="button"
+                <div
                   className="board-widget-list__row"
                   data-testid={`board-leaderboard-row-${topic.id}`}
                 >
@@ -52,7 +51,7 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
                       ? t("board.leaderboard.messages", { count: topic.messageCount })
                       : ""}
                   </span>
-                </button>
+                </div>
               </li>
             ))}
           </ul>

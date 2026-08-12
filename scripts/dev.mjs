@@ -3,7 +3,7 @@
  *
  * Avoids ECONNREFUSED proxy noise by waiting for the backend before
  * starting the frontend processes. On Windows, also frees a stale server
- * on ports 18820 / 1420 from a previous session.
+ * on SERVICE_PORT / VITE_PORT (from service-ports.mjs) from a previous session.
  *
  * Auto-restarts the Python server on crash or repeated health-check failure
  * (common on Windows after WinError 64 / sleep / VPN) so Vite does not sit

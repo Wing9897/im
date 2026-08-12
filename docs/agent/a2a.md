@@ -3,9 +3,12 @@
 對外只暴露 **一條自然語言 Agent API**。OpenClaw、Hermes 等第三方只需在 prompt 裡說明「可呼叫本機這個 agent」，用日常語言交辦即可——**不必**為本產品設計專用 events CRUD。
 
 人類通道：`POST /api/v1/agent/chat`（見 [`assistant.md`](assistant.md)）。  
-A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
+A2A 通道：`POST /api/v1/a2a/agent`（本文件）。  
+結構化工具門面（無本機 LLM）：Streamable HTTP `/api/v1/mcp`（見 [`mcp.md`](mcp.md)）。
 
-兩者共用同一 `AgentRuntime` + 工具 + LLM key（含訊息／情報／日程／物品寫入；與後勤 `analysis_mode=agent` tick **不同**——tick 不開 `items.create`／`items.update`）；**system prompt 不同**；A2A **不在伺服器保存對話 session**。
+兩者共用同一 `AgentRuntime` + 工具 + LLM（含訊息／情報／日程／物品寫入；與後勤 `analysis_mode=agent` tick **不同**——tick 不開 `items.create`／`items.update`）；**system prompt 不同**；A2A **不在伺服器保存對話 session**。
+
+**LLM 解析：** A2A 為 sessionless，一律走 `staff_class=assistant`（或預設檔）解析，**不**接受／不儲存 per-session `llmProfileId`。人類助手聊天可在請求／`ui-prefs` session 上帶可選 `llmProfileId` 覆蓋。
 
 ## 認證
 

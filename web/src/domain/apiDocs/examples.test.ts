@@ -1,4 +1,9 @@
-import { a2aAgentExample, calendarDeepLinkExamples, webhookIngestExample } from "./examples";
+import {
+  a2aAgentExample,
+  calendarDeepLinkExamples,
+  openClawMcpExample,
+  webhookIngestExample,
+} from "./examples";
 
 describe("apiDocs examples", () => {
   const t = (key: string) => {
@@ -41,4 +46,18 @@ describe("apiDocs examples", () => {
     expect(body).toContain("Fetch remote ICS:");
     expect(body).toContain("Inline event (no ICS):");
   });
+
+  it("builds OpenClaw streamable-http MCP config with Bearer placeholder", () => {
+    const body = openClawMcpExample("http://127.0.0.1:18820/api/v1/mcp");
+    const parsed = JSON.parse(body) as {
+      mcp: { servers: Record<string, { url: string; transport: string }> };
+    };
+    expect(parsed.mcp.servers["intelligence-monitor"]).toMatchObject({
+      url: "http://127.0.0.1:18820/api/v1/mcp",
+      transport: "streamable-http",
+    });
+    expect(body).toContain('"Authorization": "Bearer <access_key>"');
+    expect(body).not.toContain("mcpServers");
+  });
 });
+

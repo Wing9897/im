@@ -1,8 +1,13 @@
 /**
  * Client-side item filtering against hierarchical source selection.
  * Shared by board widgets and match-matrix tests (with timeline filter plan).
+ *
+ * Recurring / item_remind rules mirror Timeline
+ * {@link resolveTimelineFilterPlan} + merge client filter:
+ * workset ownership (+ seriesId against expanded task ids for legacy rows).
  */
 
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   isEmptySourceFilter,
   userEventMatchesSourceSelection,
@@ -16,6 +21,8 @@ export type SourceFilterItem = {
   sourceKind?: string | null;
   /** Timed-event discriminator; `"user"` uses ownership / provenance rules. */
   source?: string | null;
+  /** Recurring series id (not analysis taskId). */
+  seriesId?: string | null;
 };
 
 /**
@@ -54,6 +61,20 @@ export function filterItemsBySourceSelection<T extends SourceFilterItem>(
     // user_events: ownership workset only; provenance via explicit taskIds.
     if (item.source === "user") {
       return userEventMatchesSourceSelection(item, allowWorksets, allowExplicitTasks);
+    }
+    // Item remind DATE projections: workset ownership only (default __user__).
+    if (item.source === "item_remind") {
+      const wid = item.worksetId?.trim() || SYSTEM_WORKSET_ID;
+      return allowWorksets.has(wid);
+    }
+    // RRULE rows: workset ownership, or seriesId in expanded task allow-set
+    // (Timeline merge parity for legacy series keyed like task ids).
+    if (item.source === "recurring") {
+      const worksetId = item.worksetId?.trim();
+      if (worksetId && allowWorksets.has(worksetId)) return true;
+      const seriesId = item.seriesId?.trim();
+      if (seriesId && allowTasks.has(seriesId)) return true;
+      return false;
     }
     const worksetId = item.worksetId?.trim();
     if (worksetId && allowWorksets.has(worksetId)) return true;

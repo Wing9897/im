@@ -17,10 +17,15 @@ from server.calendar.user_event_kinds import (
 )
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
+from server.domain.user_event_origins import (
+    ALLOWED_USER_EVENT_ORIGINS,
+    USER_EVENT_ORIGIN_ERROR,
+)
 from server.time_iso import parse_iso, to_iso_z
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-ALLOWED_ORIGINS = frozenset({"manual", "assistant", "a2a", "agent", "ics"})
+#: Re-export SoT for callers that historically imported from this module.
+ALLOWED_ORIGINS = ALLOWED_USER_EVENT_ORIGINS
 #: Tasks that may own a user_event (filter / timeline attribution).
 USER_EVENT_TASK_MODES = TIMELINE_OWNING_ANALYSIS_MODES
 ALLOWED_EVENT_DIRECTIONS = frozenset({"expense", "income"})
@@ -130,7 +135,7 @@ def _normalize_optional_end(end_time: str | None, start_time: str) -> str | None
 def _normalize_origin(origin: str) -> str:
     value = (origin or "").strip()
     if value not in ALLOWED_ORIGINS:
-        raise UserEventValidationError("origin must be 'manual', 'assistant', 'a2a', 'agent', or 'ics'")
+        raise UserEventValidationError(USER_EVENT_ORIGIN_ERROR)
     return value
 
 

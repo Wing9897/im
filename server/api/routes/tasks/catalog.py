@@ -8,7 +8,7 @@ from fastapi import Request
 
 from server.api.deps import get_db
 from server.api.query_aliases import qalias
-from server.api.routes.task_helpers import TaskConfigBody, validate_task_body
+from server.api.routes.task_helpers import TaskConfigBody
 from server.api.routes.tasks._common import notify, register_task
 from server.api.routes.tasks._router import router
 from server.api.schemas.responses import TaskActivitySpanResponse, TaskResponse
@@ -62,7 +62,6 @@ async def list_tasks(
 
 @router.post("", status_code=201, response_model=TaskResponse)
 async def create_task(request: Request, body: TaskConfigBody) -> dict:
-    validate_task_body(body)
     try:
         result = await create_task_record(get_db(request), body)
     except TaskWriteError as exc:

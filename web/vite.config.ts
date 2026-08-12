@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { SERVICE_PORT, VITE_PORT } from "../scripts/service-ports.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const appVersion = readFileSync(resolve(__dirname, "../VERSION"), "utf8").trim();
@@ -15,11 +16,11 @@ export default defineConfig({
   },
   clearScreen: false,
   server: {
-    port: 1420,
+    port: VITE_PORT,
     strictPort: true,
     proxy: {
       "/api": {
-        target: "http://localhost:18820",
+        target: `http://localhost:${SERVICE_PORT}`,
         changeOrigin: true,
       },
     },

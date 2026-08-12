@@ -72,3 +72,27 @@ intelligencemonitor://calendar/import?url=https%3A%2F%2Fexample.com%2Fmeet.ics
 # ${inlineComment}
 intelligencemonitor://calendar/import?title=${title}&start=2026-07-29T10%3A00%3A00Z&end=2026-07-29T11%3A00%3A00Z&location=A&body=Hi&worksetId=ws-1`;
 }
+
+/**
+ * OpenClaw `~/.openclaw/openclaw.json` MCP server snippet.
+ * Protocol keys stay English; `mcpUrl` is the resolved Streamable HTTP endpoint.
+ */
+export function openClawMcpExample(mcpUrl: string): string {
+  return JSON.stringify(
+    {
+      mcp: {
+        servers: {
+          "intelligence-monitor": {
+            url: mcpUrl,
+            transport: "streamable-http",
+            headers: {
+              Authorization: "Bearer <access_key>",
+            },
+          },
+        },
+      },
+    },
+    null,
+    2,
+  );
+}

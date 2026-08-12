@@ -140,4 +140,58 @@ describe("filterItemsBySourceSelection", () => {
     );
     expect(filtered.map((item) => item.id)).toEqual(["ue-tagged"]);
   });
+
+  it("keeps RRULE rows when worksetId matches (not taskId provenance)", () => {
+    const items = [
+      {
+        id: "rrule-a",
+        source: "recurring",
+        seriesId: "series-a",
+        taskId: null as string | null,
+        worksetId: "ws-A",
+      },
+      {
+        id: "rrule-b",
+        source: "recurring",
+        seriesId: "series-b",
+        taskId: null as string | null,
+        worksetId: "ws-B",
+      },
+    ];
+    const filtered = filterItemsBySourceSelection(
+      items,
+      { taskIds: [], worksetIds: ["ws-A"] },
+      new Set(["memberOfA"]),
+    );
+    expect(filtered.map((item) => item.id)).toEqual(["rrule-a"]);
+  });
+
+  it("matches item_remind by workset ownership (default __user__)", () => {
+    const items = [
+      {
+        id: "item-user",
+        source: "item_remind",
+        worksetId: null as string | null,
+      },
+      {
+        id: "item-a",
+        source: "item_remind",
+        worksetId: "ws-A",
+      },
+    ];
+    expect(
+      filterItemsBySourceSelection(
+        items,
+        { taskIds: [], worksetIds: ["__user__"] },
+        new Set(),
+      ).map((item) => item.id),
+    ).toEqual(["item-user"]);
+    expect(
+      filterItemsBySourceSelection(
+        items,
+        { taskIds: [], worksetIds: ["ws-A"] },
+        new Set(),
+      ).map((item) => item.id),
+    ).toEqual(["item-a"]);
+  });
 });

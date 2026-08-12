@@ -19,6 +19,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/ai/staff": () => import("../pages/ai/SettingsAiStaffPage"),
   "/settings": () => import("../pages/settings/SettingsShared"),
   "/settings/api": () => import("../pages/settings/SettingsApiPage"),
+  "/settings/mcp": () => import("../pages/settings/SettingsMcpPage"),
   "/settings/logs": () => import("../pages/logs/LogPage"),
 };
 

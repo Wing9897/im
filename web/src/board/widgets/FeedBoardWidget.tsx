@@ -45,13 +45,12 @@ export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-feed-cards">
             {messages.map((msg) => (
               <li key={msg.id} className="board-feed-cards__item">
-                <button
-                  type="button"
+                <div
                   className="board-feed-cards__hit"
                   data-testid={`board-feed-row-${msg.id}`}
                 >
                   <MessageCard message={msg} />
-                </button>
+                </div>
               </li>
             ))}
           </ul>

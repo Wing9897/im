@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Literal, Mapping
+from typing import Any, Iterable, Mapping
 
 from server.db.database import Database
+from server.domain.timeline_sources import (
+    ALLOWED_TIMELINE_SOURCES,
+    TIMELINE_SOURCE_ERROR,
+    TimelineSource,
+)
 from server.util import utc_now_iso
 
-ImportanceSource = Literal["analysis", "user", "recurring", "item_remind"]
-ALLOWED_SOURCES = frozenset({"analysis", "user", "recurring", "item_remind"})
+ImportanceSource = TimelineSource
+ALLOWED_SOURCES = ALLOWED_TIMELINE_SOURCES
 
 # Compact calendar-query / agent item ``source`` → ``timeline_importance.source``.
 CALENDAR_ITEM_IMPORTANCE_SOURCE: dict[str, ImportanceSource] = {
@@ -29,9 +34,7 @@ class TimelineImportanceValidationError(ValueError):
 def _require_source(source: str) -> ImportanceSource:
     value = (source or "").strip()
     if value not in ALLOWED_SOURCES:
-        raise TimelineImportanceValidationError(
-            "source must be 'analysis', 'user', 'recurring', or 'item_remind'"
-        )
+        raise TimelineImportanceValidationError(TIMELINE_SOURCE_ERROR)
     return value  # type: ignore[return-value]
 
 

@@ -2,16 +2,26 @@
 
 Independent category TTLs (0 disables that category):
   - retention_messages_days → messages (+ analysis_markers; FK SET NULL on results)
+    default 90
   - retention_analysis_days → analysis_events + completed analysis_batches
+    (情报／分析结果); default 0 = keep forever
   - retention_leaderboard_days → trending_topics (CASCADE topic_messages)
+    default 90
   - retention_app_logs_days → app_logs
-  - retention_user_events_days → user_events
+    default 30
+  - retention_user_events_days → user_events (日历／用户／助手一笔事件);
+    default 0 = keep forever
 
 ``action_trigger_history`` follows the messages TTL.
+``recurring_schedules`` are not purged by retention (standalone calendar series).
 
 Always-on (not gated by retention_*_days):
   - orphan ``timeline_dismissals`` (source event row gone)
   - device session / access-token rows by their own ``expires_at``
+
+Defaults live in ``CONFIG_DEFAULTS`` (fallback when the key is absent from
+``system_config``). Existing DBs that already stored old TTL values keep
+those until the user changes Settings → Data retention (no wipe／stamp bump).
 """
 
 from __future__ import annotations

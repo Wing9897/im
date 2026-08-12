@@ -107,7 +107,9 @@ class AgentRuntime:
         route = web_route or await self._resolve_web_search_route(force_enabled=force_web_search)
         from server.analyzer.llm_config import load_agent_llm_config
 
-        llm_cfg = await load_agent_llm_config(self.db)
+        override = getattr(self.llm, "profile_id", None)
+        profile_id = override.strip() if isinstance(override, str) and override.strip() else None
+        llm_cfg = await load_agent_llm_config(self.db, profile_id=profile_id)
         brave_key = str(llm_cfg.get("brave_search_api_key") or "")
         return {
             "web_search_enabled": route.enabled and route.inject_web_search_tool,

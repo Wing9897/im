@@ -6,8 +6,22 @@ from dataclasses import dataclass
 from typing import Any
 
 from server.api.routes.task_helpers import require_task_row
+from server.api.schemas.requests import TaskConfigBody
 from server.db.database import Database
-from server.domain.analysis_modes import AGENT_MODE
+from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
+from server.domain.analysis_modes import AGENT_MODE, ALL_ANALYSIS_MODES
+from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
+from server.scheduler.task_schedule_overrides import (
+    AGENT_WAVE_INTERVAL_MAX,
+    AGENT_WAVE_INTERVAL_MIN,
+    ALLOWED_STRATEGY_MODES,
+    ANALYSIS_BATCH_LIMIT_MAX,
+    ANALYSIS_BATCH_LIMIT_MIN,
+    ANALYSIS_THRESHOLD_MAX,
+    ANALYSIS_THRESHOLD_MIN,
+    BATCH_OVERLAP_MAX,
+    BATCH_OVERLAP_MIN,
+)
 from server.services.task_writes import TaskWriteError
 
 
@@ -37,8 +51,66 @@ def validate_agent_prompt(*, effective_mode: str, prompt: str) -> None:
         )
 
 
+def _validate_optional_int_in_range(
+    label: str,
+    value: int | None,
+    *,
+    minimum: int,
+    maximum: int,
+) -> None:
+    if value is None:
+        return
+    if value < minimum or value > maximum:
+        raise TaskWriteError(f"{label} must be between {minimum} and {maximum}")
+
+
+def validate_task_config_body(body: TaskConfigBody) -> None:
+    """HTTP-agnostic TaskConfigBody checks; raises ``TaskWriteError`` (routes map to 422)."""
+    if not body.name.strip():
+        raise TaskWriteError("Task name is required")
+    if body.analysisMode is not None and body.analysisMode not in ALL_ANALYSIS_MODES:
+        raise TaskWriteError(f"Invalid analysisMode: {body.analysisMode}")
+    if body.analysisTimeRange is not None and body.analysisTimeRange not in ANALYSIS_TIME_RANGE_VALUES:
+        raise TaskWriteError(f"Invalid analysisTimeRange: {body.analysisTimeRange}")
+    if body.scheduleRrule is not None:
+        try:
+            resolve_trigger_rrule(
+                analysis_mode=body.analysisMode,
+                schedule_rrule=body.scheduleRrule,
+            )
+        except (ScheduleValidationError, ValueError, TypeError) as exc:
+            raise TaskWriteError(str(exc)) from exc
+    if body.analysisStrategyMode is not None and body.analysisStrategyMode not in ALLOWED_STRATEGY_MODES:
+        raise TaskWriteError(f"Invalid analysisStrategyMode: {body.analysisStrategyMode}")
+    _validate_optional_int_in_range(
+        "agentWaveIntervalSeconds",
+        body.agentWaveIntervalSeconds,
+        minimum=AGENT_WAVE_INTERVAL_MIN,
+        maximum=AGENT_WAVE_INTERVAL_MAX,
+    )
+    _validate_optional_int_in_range(
+        "batchOverlapCount",
+        body.batchOverlapCount,
+        minimum=BATCH_OVERLAP_MIN,
+        maximum=BATCH_OVERLAP_MAX,
+    )
+    _validate_optional_int_in_range(
+        "analysisTriggerThreshold",
+        body.analysisTriggerThreshold,
+        minimum=ANALYSIS_THRESHOLD_MIN,
+        maximum=ANALYSIS_THRESHOLD_MAX,
+    )
+    _validate_optional_int_in_range(
+        "analysisBatchMessageLimit",
+        body.analysisBatchMessageLimit,
+        minimum=ANALYSIS_BATCH_LIMIT_MIN,
+        maximum=ANALYSIS_BATCH_LIMIT_MAX,
+    )
+
+
 __all__ = [
     "TaskMutationResult",
     "require_task_row_or_lookup",
     "validate_agent_prompt",
+    "validate_task_config_body",
 ]

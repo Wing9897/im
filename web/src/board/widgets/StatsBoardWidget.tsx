@@ -37,9 +37,8 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
       >
         {rows ? (
           <>
-            <button
-              type="button"
-              className="board-queue-stats board-queue-stats--clickable"
+            <div
+              className="board-queue-stats"
               data-testid="board-stats-totals"
             >
               <div className="board-queue-stat">
@@ -70,12 +69,11 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
                   {totals.queued}
                 </span>
               </div>
-            </button>
+            </div>
             <ul className="board-widget-list">
               {rows.slice(0, 8).map((row) => (
                 <li key={row.taskId} className="board-widget-list__item">
-                  <button
-                    type="button"
+                  <div
                     className="board-widget-list__row"
                     data-testid={`board-stats-row-${row.taskId}`}
                   >
@@ -89,7 +87,7 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
                         ? t("board.stats.rowQueued", { count: row.queuedMessageCount })
                         : ""}
                     </span>
-                  </button>
+                  </div>
                 </li>
               ))}
             </ul>

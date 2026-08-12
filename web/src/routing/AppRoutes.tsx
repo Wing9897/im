@@ -80,6 +80,7 @@ const SettingsGeneralPage = lazyNamed(() => import("../pages/settings/SettingsGe
 const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThemePage"), "SettingsThemePage");
 const SettingsDataPage = lazyNamed(() => import("../pages/settings/SettingsDataPage"), "SettingsDataPage");
 const SettingsApiPage = lazyNamed(() => import("../pages/settings/SettingsApiPage"), "SettingsApiPage");
+const SettingsMcpPage = lazyNamed(() => import("../pages/settings/SettingsMcpPage"), "SettingsMcpPage");
 const LogPage = lazyNamed(() => import("../pages/logs/LogPage"), "LogPage");
 const AccountShell = lazyNamed(() => import("../pages/account/AccountShell"), "AccountShell");
 const AccountIdentityPage = lazyNamed(
@@ -144,6 +145,7 @@ export function AppRoutes() {
             <Route path="theme" element={<LazyPage Page={SettingsThemePage} />} />
             <Route path="data" element={<LazyPage Page={SettingsDataPage} />} />
             <Route path="api" element={<LazyPage Page={SettingsApiPage} />} />
+            <Route path="mcp" element={<LazyPage Page={SettingsMcpPage} />} />
             <Route path="logs" element={<LazyPage Page={LogPage} />} />
           </Route>
         </Route>

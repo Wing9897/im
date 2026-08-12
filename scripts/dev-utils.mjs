@@ -4,10 +4,9 @@
 
 import { execSync } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
+import { HEALTH_URL, SERVICE_PORT, VITE_PORT } from "./service-ports.mjs";
 
-export const HEALTH_URL = "http://localhost:18820/api/v1/health";
-export const SERVICE_PORT = 18820;
-export const VITE_PORT = 1420;
+export { HEALTH_URL, SERVICE_PORT, VITE_PORT };
 export const MAX_WAIT_MS = 90_000;
 export const POLL_INTERVAL_MS = 500;
 

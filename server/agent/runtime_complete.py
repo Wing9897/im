@@ -27,12 +27,20 @@ class LlmCompleter(Protocol):
     async def close(self) -> None: ...
 
 
+def _profile_id_from_llm(llm: LlmCompleter) -> str | None:
+    """Prefer the profile already bound on the live client (session override)."""
+    raw = getattr(llm, "profile_id", None)
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
 async def prefer_json_mode(db: Database, llm: LlmCompleter) -> bool:
     """Match analysis engine: Ollama always uses format=json; others follow profile json_mode."""
     provider = getattr(llm, "provider", None)
     if provider == "ollama":
         return True
-    llm_cfg = await load_agent_llm_config(db)
+    llm_cfg = await load_agent_llm_config(db, profile_id=_profile_id_from_llm(llm))
     return is_openai_json_mode_enabled(llm_cfg.get("json_mode") or "disabled")
 
 
@@ -43,7 +51,7 @@ async def resolve_web_search_route_for_runtime(
     force_enabled: bool = False,
     force_disabled: bool = False,
 ) -> WebSearchRoute:
-    llm_cfg = await load_agent_llm_config(db)
+    llm_cfg = await load_agent_llm_config(db, profile_id=_profile_id_from_llm(llm))
     if force_disabled:
         web_enabled = False
     elif force_enabled:

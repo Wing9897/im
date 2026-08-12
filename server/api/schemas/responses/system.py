@@ -73,3 +73,10 @@ class SystemSettingsSnapshot(BaseModel):
     userDisplayName: str
     userAvatar: str
     userBackground: str
+    mcpEnabled: bool
+    mcpCapCalendarRead: bool
+    mcpCapCalendarWrite: bool
+    mcpCapMessagesSearch: bool
+    mcpCapIntelligenceSearch: bool
+    mcpCapItemsRead: bool
+    mcpCapItemsWrite: bool

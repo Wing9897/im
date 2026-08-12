@@ -2,8 +2,8 @@
  * Task-type identity aligned 1:1 with analysis_mode enum token.
  * Task-type labels use `tasks.employees.*.name` (not AI staff titles).
  *
- * `TaskEmployeeId` is now a direct alias of `AnalysisMode` — the mapping functions
- * are kept as an abstraction boundary so call sites stay stable if the two diverge.
+ * `TaskEmployeeId` is an intentional display alias of `AnalysisMode` — keep the
+ * named helpers so call sites stay stable if the two ever diverge.
  */
 import type { AnalysisMode } from "../../types/common";
 import type { AiStaffId } from "../aiStaff/aiStaff";
@@ -17,29 +17,12 @@ export const TASK_EMPLOYEE_ORDER: readonly TaskEmployeeId[] = [
   "agent",
 ] as const;
 
-const MODE_BY_EMPLOYEE: Record<TaskEmployeeId, AnalysisMode> = {
-  intel_event: "intel_event",
-  leaderboard: "leaderboard",
-  agent: "agent",
-};
-
-const EMPLOYEE_BY_MODE: Record<AnalysisMode, TaskEmployeeId> = {
-  intel_event: "intel_event",
-  leaderboard: "leaderboard",
-  agent: "agent",
-};
-
 export function taskEmployeeForAnalysisMode(mode: AnalysisMode): TaskEmployeeId {
-  return EMPLOYEE_BY_MODE[mode];
+  return mode;
 }
 
 export function analysisModeForTaskEmployee(employeeId: TaskEmployeeId): AnalysisMode {
-  return MODE_BY_EMPLOYEE[employeeId];
-}
-
-/** True when the task type uses AI staff (avatar + AI roster). */
-export function taskEmployeeUsesAi(_employeeId: TaskEmployeeId): boolean {
-  return true;
+  return employeeId;
 }
 
 /** AI roster id for a task type. */

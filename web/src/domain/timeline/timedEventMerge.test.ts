@@ -67,9 +67,10 @@ function makeOccurrence(overrides: Partial<CalendarOccurrence> = {}): CalendarOc
 
 describe("calendarOccurrenceToBoardEvent", () => {
   it("marks source as calendar and keeps seriesId for filtering", () => {
-    const event = calendarOccurrenceToBoardEvent(makeOccurrence());
+    const event = calendarOccurrenceToBoardEvent(makeOccurrence({ worksetId: "ws-cal" }));
     expect(event.source).toBe("recurring");
     expect(event.seriesId).toBe("cal-task");
+    expect(event.worksetId).toBe("ws-cal");
     expect(event.body).toBe("RRULE 展開");
     expect(event.isAllDay).toBe(false);
     expect(event.timezone).toBe("Asia/Taipei");
@@ -313,9 +314,9 @@ describe("fetchBoardEventsList", () => {
     vi.mocked(fetchCalendarOccurrences).mockResolvedValue([makeOccurrence()]);
   });
 
-  it("merges analysis + user events, sorts by time desc, skips calendar by default", async () => {
+  it("merges analysis + user events, sorts by time desc, skips calendar", async () => {
     const { fetchCalendarOccurrences } = await import("../../api/results");
-    const items = await fetchBoardEventsList({ includeCalendar: false, limit: 15 });
+    const items = await fetchBoardEventsList({ limit: 15 });
     expect(fetchCalendarOccurrences).not.toHaveBeenCalled();
     expect(items.map((e) => e.id)).toEqual(["ue-1", "a1"]);
     expect(items[0].source).toBe("user");

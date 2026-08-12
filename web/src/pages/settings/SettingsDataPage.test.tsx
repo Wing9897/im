@@ -27,22 +27,25 @@ vi.mock("./SettingsShared", () => ({
   useSettingsPageState: () => ({
     settings: {
       retentionMessagesDays: "90",
-      retentionAnalysisDays: "90",
+      retentionAnalysisDays: "0",
       retentionLeaderboardDays: "90",
       retentionAppLogsDays: "30",
-      retentionUserEventsDays: "365",
+      retentionUserEventsDays: "0",
     },
     savedSnapshot: {
       retentionMessagesDays: "90",
-      retentionAnalysisDays: "90",
+      retentionAnalysisDays: "0",
       retentionLeaderboardDays: "90",
       retentionAppLogsDays: "30",
-      retentionUserEventsDays: "365",
+      retentionUserEventsDays: "0",
     },
     updateSettings: vi.fn(),
     applyPersistedSnapshot: vi.fn(),
     resettingRuntimeData: false,
     handleRequestFullReset: vi.fn(async () => {}),
+    handleSave: vi.fn(async () => {}),
+    saving: false,
+    saveSuccess: false,
   }),
 }));
 
@@ -73,10 +76,10 @@ describe("SettingsDataPage", () => {
 
     expect(harness.container.textContent).not.toContain("定期清理");
     expect(harness.container.querySelector('[aria-label="實時監控保留天數"]')).toBeTruthy();
-    expect(harness.container.querySelector('[aria-label="分析結果保留天數"]')).toBeTruthy();
+    expect(harness.container.querySelector('[aria-label="分析結果（情報事件）保留天數"]')).toBeTruthy();
     expect(harness.container.querySelector('[aria-label="排行榜保留天數"]')).toBeTruthy();
     expect(harness.container.querySelector('[aria-label="應用日誌保留天數"]')).toBeTruthy();
-    expect(harness.container.querySelector('[aria-label="用戶／助手事件保留天數"]')).toBeTruthy();
+    expect(harness.container.querySelector('[aria-label="日曆／用戶事件保留天數"]')).toBeTruthy();
   });
 
   it('renders the "立即清理" button', async () => {

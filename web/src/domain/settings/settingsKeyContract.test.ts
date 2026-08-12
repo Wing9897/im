@@ -11,6 +11,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { defaultSettingsSnapshot } from "../../test/settingsSnapshot";
 import type { SystemSettingsSnapshot } from "../../types/settings";
+import {
+  parseConfigDefaultsKeys,
+  parseGeneratedSettingsSnapshotKeys,
+  parseMcpCapabilitySettingsKeys,
+  parseSettingsWireMap,
+} from "./settingsKeyContract";
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../");
 
@@ -64,46 +70,6 @@ const RETIRED_CONFIG_KEYS = new Set([
   "brave_search_api_key",
 ]);
 
-function linesOf(block: string): string[] {
-  return block.split(/\r?\n/);
-}
-
-function parseGeneratedSettingsSnapshotKeys(source: string): Set<string> {
-  const match = source.match(
-    /SystemSettingsSnapshot:\s*\{([\s\S]*?)^\s{8}\};/m,
-  );
-  if (!match) throw new Error("generated SystemSettingsSnapshot schema not found");
-  return new Set(
-    linesOf(match[1])
-      .map((line) => line.match(/^\s{12}([A-Za-z]\w*)\??:/)?.[1])
-      .filter((key): key is string => Boolean(key)),
-  );
-}
-
-function parseSettingsWireMap(source: string): Map<string, string> {
-  const match = source.match(/_SETTINGS_KEYS:\s*dict\[str,\s*str\]\s*=\s*\{([^}]+)\}/s);
-  if (!match) throw new Error("_SETTINGS_KEYS not found in config routes");
-  const map = new Map<string, string>();
-  for (const line of linesOf(match[1])) {
-    const m = line.match(/"(\w+)":\s*"(\w+)"/);
-    if (m) map.set(m[1]!, m[2]!);
-  }
-  if (map.size === 0) throw new Error("_SETTINGS_KEYS parsed empty");
-  return map;
-}
-
-function parseConfigDefaultsKeys(source: string): Set<string> {
-  const match = source.match(/CONFIG_DEFAULTS:\s*dict\[str,\s*str\]\s*=\s*\{([\s\S]*?)\n\}/);
-  if (!match) throw new Error("CONFIG_DEFAULTS not found");
-  const keys = new Set<string>();
-  for (const line of linesOf(match[1])) {
-    const m = line.match(/^\s*"([a-z0-9_]+)":/);
-    if (m) keys.add(m[1]!);
-  }
-  if (keys.size === 0) throw new Error("CONFIG_DEFAULTS parsed empty");
-  return keys;
-}
-
 describe("settings key contract", () => {
   const generatedSchema = readFileSync(
     resolve(REPO_ROOT, "web/src/api/generated/schema.d.ts"),
@@ -114,12 +80,24 @@ describe("settings key contract", () => {
     "utf8",
   );
   const configDefaults = readFileSync(resolve(REPO_ROOT, "server/config.py"), "utf8");
+  const mcpCapabilities = readFileSync(
+    resolve(REPO_ROOT, "server/domain/mcp_capabilities.py"),
+    "utf8",
+  );
 
   const snapshotKeys = parseGeneratedSettingsSnapshotKeys(generatedSchema);
   const wireMap = parseSettingsWireMap(configRoutes);
+  const mcpWireMap = parseMcpCapabilitySettingsKeys(mcpCapabilities);
+  // Capability toggles are spread via ``**MCP_CAPABILITY_SETTINGS_KEYS``.
+  for (const [wireKey, configKey] of mcpWireMap) {
+    wireMap.set(wireKey, configKey);
+  }
   const wireKeys = new Set(wireMap.keys());
   const configKeys = new Set(wireMap.values());
   const defaultsKeys = parseConfigDefaultsKeys(configDefaults);
+  for (const configKey of mcpWireMap.values()) {
+    defaultsKeys.add(configKey);
+  }
 
   it("generated SystemSettingsSnapshot keys match Settings wire keys", () => {
     expect(snapshotKeys).toEqual(wireKeys);

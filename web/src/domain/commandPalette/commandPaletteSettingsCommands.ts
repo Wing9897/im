@@ -1,5 +1,6 @@
 import {
   Bot,
+  Cable,
   Code2,
   Gauge,
   Palette,
@@ -61,6 +62,21 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
       "account manager",
       "liaison",
       "keys",
+    ],
+  },
+  {
+    id: "settings-mcp",
+    labelKey: "commandPalette.settingsMcp",
+    to: "/settings/mcp",
+    icon: Cable,
+    groupId: "settings",
+    keywords: [
+      "mcp",
+      "openclaw",
+      "streamable-http",
+      "model context protocol",
+      "工具",
+      "控制面",
     ],
   },
   { id: "logs", labelKey: "logs", labelNs: "nav", to: "/settings/logs", icon: ScrollText, groupId: "settings" },

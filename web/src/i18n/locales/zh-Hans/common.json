@@ -42,7 +42,7 @@
       "retryCount": "重试 {count}",
       "analysisPausedHint": "分析已自动或手动暂停",
       "waitingForThreshold": "等待触发阈值：{count}/{threshold}",
-      "agent": "Agent 任务",
+      "agent": "项目经理任务",
       "agentProgressHint": "Agent 调度（游标抽干／阈值／定时）— 非 marker 批处理统计"
     },
     "detail": {
@@ -70,7 +70,7 @@
       "childrenEmptyDescription": "Agent 会在每次 tick 视需要创建子周期任务。",
       "eventsTitle": "所属单次事件",
       "eventsEmptyTitle": "暂无所属事件",
-      "eventsEmptyDescription": "此 Agent 任务创建的单次时程事件会显示在这里。",
+      "eventsEmptyDescription": "此项目经理任务建立的单次时程事件会显示在这里。",
       "tickTitle": "最近 Agent tick",
       "tickLastEnd": "上次完成",
       "tickCompletedCount": "已完成次数",
@@ -201,7 +201,7 @@
         "blurb": "比较与追踪热门消息排名"
       },
       "agent": {
-        "name": "Agent 任务",
+        "name": "项目经理任务",
         "blurb": "可配置触发、工具权限与日历／情报输出"
       }
     },
@@ -225,11 +225,11 @@
         "promptHint": ""
       },
       "agent": {
-        "modeDescription": "可配置 Agent：选择触发方式、工具权限与日历／情报输出",
+        "modeDescription": "可配置项目经理：选择触发方式、工具权限与日历／情报输出",
         "promptLabel": "任务提示（目标／搜索／抽取规则）",
         "promptPlaceholder": "例如：根据频道消息调和日历，或通过网搜收集官方公告",
-        "promptHint": "描述 Agent 应完成的工作。预设会填充触发／权限／输出，仍可微调。",
-        "scheduleDefaultHint": "建议每小时；切换到 Agent 时会把每 10 秒改为每小时。",
+        "promptHint": "描述项目经理应完成的工作。预设会填充触发／权限／输出，仍可微调。",
+        "scheduleDefaultHint": "建议每小时；切换到项目经理时会把每 10 秒改为每小时。",
         "timedModeHint": "无频道＝纯定时触发。绑定频道可用于阈值门或消息游标抽干。",
         "messageGateHint": "已绑频道且为消息阈值：达阈值才跑，并注入消息供核实／补充。",
         "cursorChannelHint": "消息游标抽干至少需要绑定一个来源频道。"
@@ -574,7 +574,7 @@
     "taskEditor": "任务顾问",
     "leaderboard": "排行榜分析员",
     "intel_event": "情报任务分析员",
-    "agent": "Agent"
+    "agent": "项目经理"
   },
   "ui": {
     "listSep": "、",
@@ -654,6 +654,7 @@
     "theme": "主题设定",
     "settingsData": "资料维护",
     "settingsApi": "API 说明",
+    "settingsMcp": "MCP 说明",
     "newTask": "新增任务",
     "newAction": "新增通知",
     "newActionHint": "开启通知页",
@@ -692,7 +693,7 @@
     },
     "events": {
       "title": "情报事件",
-      "description": "最新情报事件"
+      "description": "最近分析与用户事件（不含循环/物品提醒）"
     },
     "feed": {
       "title": "实时监控",
@@ -745,6 +746,18 @@
     "actions": {
       "title": "通知动作",
       "description": "自动化动作状态"
+    },
+    "schedule": {
+      "title": "我的日程",
+      "description": "近期一次性事件与循环系列"
+    },
+    "items": {
+      "title": "物品提醒",
+      "description": "近期物品提醒与到期"
+    },
+    "llmHealth": {
+      "title": "AI 设定档健康",
+      "description": "设定档数量、完整度与默认项"
     }
   },
   "systemTasks": {
@@ -763,7 +776,7 @@
     },
     "analysisBatch": {
       "title": "分析批次",
-      "shortDescription": "排程器对排行榜／情报事件等标记型任务分批呼叫 LLM，写入分析结果。Agent 任务不走此路径（由上方可编辑的 Agent 任务排程驱动）。"
+      "shortDescription": "排程器对排行榜／情报事件等标记型任务分批呼叫 LLM，写入分析结果。项目经理任务不走此路径（由上方可编辑的项目经理任务排程驱动）。"
     },
     "outboundNotify": {
       "title": "外发通知",
@@ -1068,6 +1081,24 @@
       "sourceFilterSearchPlaceholder": "搜索来源…",
       "sourceFilterSearchAria": "按名称搜索来源",
       "sourceFilterNoMatches": "没有匹配的来源"
+    },
+    "schedule": {
+      "empty": "暂无日程 — 可到「日程」页添加",
+      "hint": "完整管理请到「日程」页"
+    },
+    "items": {
+      "empty": "暂无物品提醒 — 可到「物品」页查看",
+      "hint": "完整管理请到「物品」页"
+    },
+    "llmHealth": {
+      "total": "设定档",
+      "complete": "完整",
+      "incomplete": "不完整",
+      "default": "默认",
+      "noDefault": "无",
+      "alertNone": "尚未配置任何 LLM 设定档",
+      "alertNoDefault": "尚未选择默认设定档",
+      "alertIncomplete": "有设定档不完整"
     }
   },
   "validation": {
@@ -1180,7 +1211,7 @@
   },
   "boot": {
     "unavailableTitle": "无法连线到本机服务",
-    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 29／SemVer 0.1.0-beta.30；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
+    "unavailableHint": "常见原因：后端尚未启动完成，或本机数据库 schema 不兼容。当前 baseline 为 wipe-only stamp 31／SemVer 0.1.0-beta.32；其他 stamp 均须重置。请执行 {script} 重置本机数据库后再重试。",
     "retry": "重新检查",
     "serviceUnavailable": "服务暂时无法回应",
     "starting": "正在启动…"
@@ -1381,7 +1412,9 @@
     },
     "accessKeys": {
       "title": "API 密钥（Webhook／自动化）",
-      "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本与客户经理。完整密钥（`*`）可写入并调用 A2A；只读密钥（`read`）仅限安全 GET/HEAD。不可用于 UI 登录——日常请用管理员账号密码。",
+      "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本、客户经理（A2A）与 MCP。完整密钥（`*`）可写入、调用 A2A，并连接 MCP；只读密钥（`read`）仅限安全 GET/HEAD。MCP 需与 A2A 同一把完整 `*` 密钥。不可用于 UI 登录——日常请用管理员账号密码。",
+      "baseUrlTitle": "API 基底网址",
+      "baseUrlBody": "客户端与 OpenClaw 请用此 origin（与「设置 → API／MCP」相同）：",
       "defaultLabel": "访问密钥",
       "newLabel": "新密钥名称",
       "newPlaceholder": "例如：Webhook、CI 脚本",
@@ -1392,14 +1425,14 @@
       "revoked": "已撤销密钥",
       "revokeAria": "撤销 {label}",
       "listTitle": "已创建的密钥",
-      "empty": "尚未创建密钥。需要 Webhook、脚本或客户经理时再创建。",
+      "empty": "尚未创建密钥。需要 Webhook、脚本、客户经理或 MCP 时再创建。",
       "revealTitle": "新密钥（只显示一次）",
       "revealHelp": "请复制并妥善保存；关闭后无法再次查看完整内容。",
       "copy": "复制",
       "copied": "已复制",
       "copyFailed": "无法复制",
       "readOnly": "只读（仅 GET）",
-      "readOnlyHelp": "只能调用安全的 GET/HEAD。不勾选则为完整密钥（*），可用于 Webhook、写入与 A2A。",
+      "readOnlyHelp": "只能调用安全的 GET/HEAD。不勾选则为完整密钥（*），可用于 Webhook、写入、A2A 与 MCP。",
       "scopesReadOnly": "权限：只读（read）"
     }
   },

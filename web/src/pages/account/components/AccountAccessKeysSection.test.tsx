@@ -73,6 +73,17 @@ describe("AccountAccessKeysSection", () => {
     expect(container.querySelector('[data-testid="advanced-api-key-toggle"]')).toBeNull();
   });
 
+  it("shows the resolved API base URL for clients / MCP", async () => {
+    renderSection();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const base = container.querySelector('[data-testid="account-keys-api-base-url"]');
+    expect(base?.textContent).toMatch(/^https?:\/\//);
+    const help = container.textContent ?? "";
+    expect(help).toMatch(/MCP/i);
+  });
+
   it("create key reveals secret once", async () => {
     createAccessKey.mockResolvedValue({
       id: "k2",

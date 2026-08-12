@@ -9,8 +9,8 @@ import { resolveSizePreset, type BoardSizePresetId } from "./boardSizePresets";
 import { getWidgetDefaultSizeId, getWidgetSizeOptions } from "./widgetRegistry";
 import {
   createDefaultBoardConfig,
+  migrateBoardLayout,
   normalizeLayoutWidget,
-  parseBoardConfig,
 } from "./boardLayoutParse";
 import { findFreePlacement } from "./boardLayoutPlacement";
 import {
@@ -79,7 +79,8 @@ export function importBoardConfig(json: string): BoardConfig {
   if (normalized.length === 0) {
     throw new Error(String(i18n.t("board.shell.importNoValid")));
   }
-  const config = parseBoardConfig(raw);
+  // Soft-migrate the already-normalized list (no second parse pass).
+  const config = migrateBoardLayout(normalized);
   saveBoardConfig(config);
   return config;
 }

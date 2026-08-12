@@ -112,6 +112,11 @@ def sanitize_assistant_sessions_payload(raw: Any) -> dict[str, Any]:
         server_session = item.get("sessionId")
         if isinstance(server_session, str) and server_session.strip():
             clean["sessionId"] = server_session.strip()
+        # Optional per-session LLM profile override (complete profile id).
+        # Unset / blank → follow staff_class=assistant resolution at chat time.
+        llm_profile = item.get("llmProfileId")
+        if isinstance(llm_profile, str) and llm_profile.strip():
+            clean["llmProfileId"] = llm_profile.strip()[:128]
         seen_ids.add(clean["id"])
         sessions.append(clean)
         if len(sessions) >= MAX_ASSISTANT_SESSIONS:

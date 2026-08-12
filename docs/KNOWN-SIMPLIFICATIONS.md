@@ -2,7 +2,15 @@
 
 Intentional product／ops **deltas** vs naive “full platform” expectations. Live shapes: `server/tests/test_contract_*.py` and `server/tests/test_dead_endpoints.py`. **Do not** recreate removed historical integrations unless a user-visible bug requires it.
 
-SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent: [`agent/assistant.md`](./agent/assistant.md)、[`agent/a2a.md`](./agent/a2a.md)。
+SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent: [`agent/assistant.md`](./agent/assistant.md)、[`agent/a2a.md`](./agent/a2a.md)、[`agent/mcp.md`](./agent/mcp.md)。
+
+## MCP control plane
+
+Streamable HTTP at `/api/v1/mcp` (see [`agent/mcp.md`](./agent/mcp.md)). Household **master switch** `mcp_enabled` (default on) and **capability groups** `mcp_cap_*` live on `/settings/mcp`; session-auth `GET /api/v1/mcp/status` is for the Settings probe UI. MCP-only delete confirm (`confirm=true`) applies to `calendar.delete_event` / `calendar.delete_recurring_series`. Intentional v1 limits — do **not** “complete” these without a product decision:
+
+- **No stdio** (or other local-subprocess MCP transports); HTTP + Bearer only.
+- **No fine-grained access-key scopes** (`calendar:write` 等); same gate as A2A — household key with `scopes: ["*"]`. Household capability groups filter which allowlist tools MCP may list/call; that is **not** per-key scope.
+- **No config-class MCP tools** (tasks／sources／Actions／LLM／agent tick／system settings as MCP tools). Allowlist is the base 19 calendar／messages／intelligence／items tools only (`web.search`／`tasks.consult_advisor` stay out); capability toggles only subset that allowlist.
 
 ## API / stats deltas
 
@@ -29,7 +37,19 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-29 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-31 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+
+**Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
+
+| Key | Bucket | Default |
+|-----|--------|---------|
+| `retention_messages_days` | `messages` (+ markers / action trigger history) | `90` |
+| `retention_analysis_days` | `analysis_events` + completed `analysis_batches`（情报／分析结果） | `0`（默认不删除） |
+| `retention_leaderboard_days` | `trending_topics` | `90` |
+| `retention_app_logs_days` | `app_logs` | `30` |
+| `retention_user_events_days` | `user_events`（日历／用户／助手一笔事件） | `0`（默认不删除） |
+
+`recurring_schedules` are not TTL-purged. Orphan `timeline_dismissals` and device-auth expiry always run. Keys absent from `system_config` fall back to `CONFIG_DEFAULTS`; **already-stored values are not rewritten** (no stamp bump) — set Settings → Data retention to `0` (or wipe DB) to opt into the new keep-forever defaults on existing installs.
 
 ## Sources
 
@@ -85,11 +105,15 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v29 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v29-explicit-reset) (wipe-only floor; LLM profiles replace dual-path global／`assistant_llm_*`; derive-on-read item expiry; timeline `source=item_remind`; standalone calendar recurring series; `SCHEMA_SEMVER` `0.1.0-beta.30`) |
+| Schema stamp v31 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v31-explicit-reset) (wipe-only floor; origin／timeline `source` CHECK from Python SoT; `item_id` FK `ON DELETE SET NULL`; `user_events.origin` includes `mcp`; LLM profiles replace dual-path global／`assistant_llm_*`; derive-on-read item expiry; timeline `source=item_remind`; standalone calendar recurring series; `SCHEMA_SEMVER` `0.1.0-beta.32`) |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
+| Board widgets display-only | Board tiles do **not** navigate via `openInPages` / click-to-page. Regression: `web/src/board/widgets/boardWidgetNav.test.tsx` (keep) |
+| `TaskEmployeeId` | Intentional display alias of `AnalysisMode` (`web/src/domain/tasks/taskEmployee.ts`) — named helpers kept even though mapping is 1:1 |
+| `server/llm_profiles_const.py` | Thin re-export of DDL `DEFAULT_LLM_PROFILE_ID` / `LLM_STAFF_CLASSES` for import ergonomics — keep (not a second SoT) |
+| FE `MASKED_SECRET` | Same `"********"` literal in `utils/configValidation` and `types/llmProfiles` (and `server.secrets`) — keep local copies; do not re-export across types↔utils (cycle) |
 | Device-local browser state | UI-only state that must remain per browser／Electron profile stays in localStorage or sessionStorage: locale/theme/background, shell chrome and last path, drafts, view/filter/read state, runtime-log cache, and the stable assistant client-instance id. These are active stores, not migration bridges |
 | Desktop STT / browser-only IO | Electron hides mic and disables browser STT direct mode; use text input. Provider ids are hard-cut to `browser` only (no Whisper/Doubao reserved ids); local Whisper / cloud STT-TTS stay out of scope — see [`agent/assistant.md`](./agent/assistant.md) |
 
@@ -123,6 +147,7 @@ Map mode passes its time window to the API so background sync needs fewer pages;
 
 - API field shapes: `server/tests/test_contract_*.py`
 - Frontend path literals vs FastAPI routes: `server/tests/test_route_inventory.py` — both directions. Server tests deliberately do **not** count as callers; genuinely external routes go in `_EXTERNAL_ONLY_PATHS`.
+- Default listen port: `server/constants.py` `SERVICE_PORT` (SoT) ↔ FE `web/src/config/serviceEndpoints.ts` `DEFAULT_API_PORT` ↔ desktop `desktop/ports.ts` `DEFAULT_SERVER_PORT` ↔ `scripts/service-ports.mjs` (drift-tested in `serviceEndpoints.drift.test.ts` / `service-port-drift.test.ts`)
 - Post-deploy live check: `npm run verify:deploy` (`smoke` is an alias)
 - Root vitest: `tests/smoke/` + security tests
 - Analysis batch failures → `app_logs` via `AppLog.record` / `record_batch_failure` (category `analysis`, kind `batch.failure`) with envelope v1 `details` (includes capped HTTP/parse response snippets on AI failures; not full prompt dumps). Other curated Settings→Logs events: `scheduler.paused`／`scheduler.resumed`, `source.error`, `retention.cleanup`. Stdlib loggers stay stdout-only.
@@ -156,7 +181,7 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 
 ## Deploy verify
 
-`npm run verify:deploy` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:18820`. After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
+`npm run verify:deploy` runs `scripts/smoke.py` against a live server at `http://127.0.0.1:{SERVICE_PORT}` (default **18820**; override via `VERIFY_BASE` / `DESKTOP_VERIFY_BASE`). After admin register, set `VERIFY_BEARER` or `IM_ACCESS_TOKEN`.
 
 ## Removed / not restored
 

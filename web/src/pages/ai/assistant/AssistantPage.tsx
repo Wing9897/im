@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
 import { EmptyState } from "../../../components/common/EmptyState";
 import { WorksetTargetSelect } from "../../../components/assistant/WorksetTargetSelect";
+import { AssistantSessionLlmProfileSelect } from "../../../components/assistant/AssistantSessionLlmProfileSelect";
 import { AssistantMicButton } from "../../../components/assistant/AssistantMicButton";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { useAssistantSpacePtt } from "../../../hooks/useAssistantSpacePtt";
@@ -55,6 +56,8 @@ export function AssistantPage() {
     spacePttMode,
     worksetId,
     setWorksetId,
+    llmProfileId,
+    setLlmProfileId,
     sendDraft,
     startListening,
     stopListening,
@@ -250,6 +253,21 @@ export function AssistantPage() {
               className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs"
               data-testid="assistant-calendar-workset"
             />
+          </div>
+          <div className="mb-sm flex flex-wrap items-center gap-sm">
+            <label
+              className={`${captionClass} shrink-0 text-text-muted`}
+              htmlFor="assistant-llm-profile"
+            >
+              {t("llmProfile.label")}
+            </label>
+            <div className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs">
+              <AssistantSessionLlmProfileSelect
+                value={llmProfileId}
+                onChange={setLlmProfileId}
+                disabled={sending}
+              />
+            </div>
           </div>
           <label className="sr-only" htmlFor="assistant-draft">
             {t("draft.label")}

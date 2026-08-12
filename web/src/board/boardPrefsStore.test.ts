@@ -192,10 +192,13 @@ describe("boardPrefsStore hydrate / save", () => {
     expect(loadBoardGanttViewModeFromCache("w-gantt")).toBe("month");
   });
 
-  it("write-backs default mosaic when server layout version is older", async () => {
+  it("write-backs bumped version when server layout version is older", async () => {
+    const customWidgets = createDefaultBoardConfig().widgets.map((widget) =>
+      widget.type === "map" ? { ...widget, col: 5, sizeId: "5x5" } : widget,
+    );
     const stale = {
       version: BOARD_LAYOUT_VERSION - 1,
-      widgets: createDefaultBoardConfig().widgets,
+      widgets: customWidgets,
     };
     vi.mocked(fetchBoardPrefs).mockResolvedValue({
       configured: true,
@@ -209,8 +212,17 @@ describe("boardPrefsStore hydrate / save", () => {
     });
     const loaded = await hydrateBoardPrefs();
     expect(loaded.version).toBe(BOARD_LAYOUT_VERSION);
+    expect(loaded.widgets.find((w) => w.type === "map")).toMatchObject({
+      col: 5,
+      sizeId: "5x5",
+    });
     expect(putBoardPrefs).toHaveBeenCalledWith({
-      layout: expect.objectContaining({ version: BOARD_LAYOUT_VERSION }),
+      layout: expect.objectContaining({
+        version: BOARD_LAYOUT_VERSION,
+        widgets: expect.arrayContaining([
+          expect.objectContaining({ type: "map", col: 5, sizeId: "5x5" }),
+        ]),
+      }),
       widgetState: { mapViews: {}, sourceFilters: {}, ganttViewModes: {} },
     });
   });

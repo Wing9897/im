@@ -20,8 +20,8 @@ DDL_PARTS = (
     analysis.DDL,
     system.DDL,
     actions.DDL,
+    items.DDL,  # before calendar: user_events / recurring_schedules item_id FK
     calendar.DDL,
-    items.DDL,
     auth.DDL,
     ui.DDL,
 )

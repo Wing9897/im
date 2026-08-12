@@ -50,7 +50,7 @@ export function LlmProfileConnectionPanel({
 
   return (
     <FormStack gap="lg">
-      <SelectTileGrid>
+      <SelectTileGrid columns="repeat(auto-fit, minmax(150px, 1fr))" className="gap-md">
         {providerOptions.map((opt) => (
           <SelectTile
             key={opt.id}
@@ -117,41 +117,41 @@ export function LlmProfileConnectionPanel({
             aria-label={t("llm.apiKeyLabel")}
           />
         </SettingsRow>
+
+        {llmProvider === "openai_compatible" ? (
+          <SettingsRow
+            label={t("llm.jsonModeLabel")}
+            htmlFor="openai-json-mode"
+            help={t("llm.jsonModeHelp")}
+          >
+            <MenuSelect
+              id="openai-json-mode"
+              variant="field"
+              value={openaiJsonMode || "disabled"}
+              options={[
+                { value: "disabled", label: t("llm.jsonModeDisabledOption") },
+                { value: "json_schema", label: t("llm.jsonModeSchemaOption") },
+                { value: "json_object", label: t("llm.jsonModeObjectOption") },
+              ]}
+              onChange={onOpenaiJsonModeChange}
+              aria-label={t("llm.jsonModeLabel")}
+              data-testid="openai-json-mode"
+            />
+          </SettingsRow>
+        ) : null}
+
+        {llmProvider === "ollama" ? (
+          <SettingsRow label={t("llm.thinkingModeLabel")} help={t("llm.thinkingModeHelp")}>
+            <CheckboxField
+              id="ollama-thinking-enabled"
+              label={ollamaThinkingEnabled ? t("shared.enabled") : t("shared.disabled")}
+              checked={ollamaThinkingEnabled}
+              onChange={(e) => onOllamaThinkingEnabledChange(e.target.checked)}
+              aria-label={t("llm.thinkingModeAria")}
+            />
+          </SettingsRow>
+        ) : null}
       </FormGrid>
-
-      {llmProvider === "openai_compatible" ? (
-        <SettingsRow
-          label={t("llm.jsonModeLabel")}
-          htmlFor="openai-json-mode"
-          help={t("llm.jsonModeHelp")}
-        >
-          <MenuSelect
-            id="openai-json-mode"
-            variant="field"
-            value={openaiJsonMode || "disabled"}
-            options={[
-              { value: "disabled", label: t("llm.jsonModeDisabledOption") },
-              { value: "json_schema", label: t("llm.jsonModeSchemaOption") },
-              { value: "json_object", label: t("llm.jsonModeObjectOption") },
-            ]}
-            onChange={onOpenaiJsonModeChange}
-            aria-label={t("llm.jsonModeLabel")}
-            data-testid="openai-json-mode"
-          />
-        </SettingsRow>
-      ) : null}
-
-      {llmProvider === "ollama" ? (
-        <SettingsRow label={t("llm.thinkingModeLabel")} help={t("llm.thinkingModeHelp")}>
-          <CheckboxField
-            id="ollama-thinking-enabled"
-            label={ollamaThinkingEnabled ? t("shared.enabled") : t("shared.disabled")}
-            checked={ollamaThinkingEnabled}
-            onChange={(e) => onOllamaThinkingEnabledChange(e.target.checked)}
-            aria-label={t("llm.thinkingModeAria")}
-          />
-        </SettingsRow>
-      ) : null}
     </FormStack>
   );
 }

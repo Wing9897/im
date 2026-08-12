@@ -21,6 +21,10 @@ from server.config import (
     get_config,
     set_configs,
 )
+from server.domain.mcp_capabilities import (
+    MCP_CAPABILITY_SETTINGS_KEYS,
+    MCP_CAPABILITY_WIRE_KEYS,
+)
 from server.prompts.locale import normalize_ui_locale
 from server.secrets import MASKED_SECRET, SECRET_CONFIG_KEYS
 from server.util import parse_bool
@@ -28,6 +32,7 @@ from server.util import parse_bool
 router = APIRouter(prefix="/api/v1/config", tags=["config"], dependencies=API_DEPS)
 
 #: camelCase wire key -> system_config key.
+#: MCP capability toggles derive from ``MCP_CAPABILITY_SETTINGS_KEYS``.
 _SETTINGS_KEYS: dict[str, str] = {
     "analysisPaused": "analysis_paused",
     "analysisBatchMessageLimit": "analysis_batch_message_limit",
@@ -54,6 +59,8 @@ _SETTINGS_KEYS: dict[str, str] = {
     "userDisplayName": "user_display_name",
     "userAvatar": "user_avatar",
     "userBackground": "user_background",
+    "mcpEnabled": "mcp_enabled",
+    **MCP_CAPABILITY_SETTINGS_KEYS,
 }
 
 #: Match web ``AVATAR_MAX_DATA_URL_CHARS`` / display-name field limits.
@@ -67,6 +74,8 @@ _BOOL_KEYS = {
     "analysisPaused",
     "analysisTraceVerbose",
     "autoPauseOnRetriesExhausted",
+    "mcpEnabled",
+    *MCP_CAPABILITY_WIRE_KEYS,
 }
 
 _SECRET_WIRE_KEYS = {wire_key for wire_key, config_key in _SETTINGS_KEYS.items() if config_key in SECRET_CONFIG_KEYS}

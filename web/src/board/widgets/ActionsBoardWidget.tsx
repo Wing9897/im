@@ -45,8 +45,7 @@ export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
           <ul className="board-widget-list">
             {items.map((action) => (
               <li key={action.id} className="board-widget-list__item">
-                <button
-                  type="button"
+                <div
                   className="board-widget-list__row"
                   data-testid={`board-actions-row-${action.id}`}
                 >
@@ -60,7 +59,7 @@ export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
                     {action.actionType} ·{" "}
                     {formatTriggeredAt(action.lastTriggeredAt, t("board.actions.neverTriggered"))}
                   </span>
-                </button>
+                </div>
               </li>
             ))}
           </ul>

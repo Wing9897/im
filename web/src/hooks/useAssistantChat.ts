@@ -113,6 +113,8 @@ export function useAssistantChatHost() {
     spacePttMode: voice.spacePttMode,
     worksetId: voice.worksetId,
     setWorksetId: voice.setWorksetId,
+    llmProfileId: session.llmProfileId,
+    setLlmProfileId: session.setLlmProfileId,
     sendDraft,
     startListening: voice.startListening,
     stopListening,

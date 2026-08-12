@@ -1,6 +1,8 @@
 import type { components } from "../api/generated/schema";
 
 type AnalysisEventResponse = components["schemas"]["AnalysisEventResponse"];
+/** Wire origin from ``user_events`` (OpenAPI SoT — includes ``mcp``). */
+type UserEventOrigin = components["schemas"]["UserEventResponse"]["origin"];
 
 /**
  * Unified timeline/intelligence event. Most fields come from the generated
@@ -28,8 +30,8 @@ export type AnalysisEvent = Omit<
   isAllDay?: boolean;
   /** Original calendar timezone identity when supplied by the wire contract. */
   timezone?: string | null;
-  /** Present when source === "user": wire origin from user_events */
-  origin?: "manual" | "assistant" | "a2a" | "agent" | "ics";
+  /** Present when source === "user": wire origin from user_events (OpenAPI). */
+  origin?: UserEventOrigin;
   /** Ownership workset (user_events / items / board projections); builtin `__user__` when system. */
   worksetId?: string | null;
   /** Timeline soft-dismiss marker (older local fixtures may omit it). */

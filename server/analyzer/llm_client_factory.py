@@ -20,7 +20,7 @@ def client_from_resolved_config(cls: Any, config: LlmConfig, timeout_seconds: in
     base_url = config["base_url"]
     if not base_url:
         base_url = DEFAULT_PROVIDER_BASE_URLS.get(config["provider"], "")
-    return cls(
+    client = cls(
         provider=config["provider"],
         model=config["model"],
         api_key=config["api_key"],
@@ -29,6 +29,9 @@ def client_from_resolved_config(cls: Any, config: LlmConfig, timeout_seconds: in
         allow_loopback=config["provider_raw"] in ("ollama", "openai_compatible"),
         ollama_thinking_enabled=config["ollama_thinking_enabled"],
     )
+    # Stash so runtime_complete / tool ctx re-load the same profile for flags.
+    client.profile_id = str(config.get("profile_id") or "")
+    return client
 
 
 async def client_from_default_profile(cls: Any, db: Database) -> Any:
@@ -38,9 +41,14 @@ async def client_from_default_profile(cls: Any, db: Database) -> Any:
     return client_from_resolved_config(cls, config, timeout)
 
 
-async def client_from_assistant_staff(cls: Any, db: Database) -> Any:
-    """Build a client from the active ``staff_class=assistant`` profile binding."""
-    config = await load_agent_llm_config(db)
+async def client_from_assistant_staff(
+    cls: Any,
+    db: Database,
+    *,
+    profile_id: str | None = None,
+) -> Any:
+    """Build a client from assistant staff binding, or an explicit profile override."""
+    config = await load_agent_llm_config(db, profile_id=profile_id)
     timeout = await get_config_int(db, "llm_generation_timeout")
     return client_from_resolved_config(cls, config, timeout)
 

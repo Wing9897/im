@@ -19,7 +19,10 @@ export type BoardWidgetType =
   | "stats"
   | "system"
   | "clock"
-  | "weather";
+  | "weather"
+  | "schedule"
+  | "items"
+  | "llm-health";
 
 /**
  * Props passed from BoardCanvas to every widget.
@@ -49,7 +52,7 @@ export interface BoardWidgetItem {
   z?: number;
 }
 
-/** Persisted board configuration (current = v15; same mosaic as v14). */
+/** Persisted board configuration (current = v16). */
 export interface BoardConfig {
   version: typeof BOARD_LAYOUT_VERSION;
   widgets: BoardWidgetItem[];
@@ -58,4 +61,4 @@ export interface BoardConfig {
 export type BoardEditMode = "view" | "edit";
 
 /** Current layout schema version written to server ui-prefs. */
-export const BOARD_LAYOUT_VERSION = 15 as const;
+export const BOARD_LAYOUT_VERSION = 16 as const;
