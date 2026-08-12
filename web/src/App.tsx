@@ -23,6 +23,7 @@ import { AssistantChatProvider } from "./hooks/useAssistantChat";
 import { isElectronDesktop } from "./electron/electronWindow";
 import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
 import { prefetchRoute } from "./routing/prefetchRoute";
+import { useFocalBackgroundAutoRefresh } from "./hooks/useFocalBackgroundAutoRefresh";
 import { applyTheme, getStoredThemeId, loadBgForTheme } from "./styles/themeData";
 import { useVoiceReminderScanner } from "./voiceReminder/useVoiceReminderScanner";
 
@@ -65,7 +66,8 @@ function shellVisibilityProps(
   };
 }
 
-// Apply theme before first render to avoid FOUC
+// Apply stored theme before first React paint (full data-theme / personalization).
+// index.html already sets early data-theme-bg from localStorage.
 applyTheme(getStoredThemeId());
 loadBgForTheme(getStoredThemeId());
 
@@ -88,6 +90,7 @@ function AppShellBody() {
   const desktopShell = isElectronDesktop();
   const { monitorMode } = useMonitorMode();
   const mainScrollRef = useRef<HTMLDivElement>(null);
+  useFocalBackgroundAutoRefresh();
   const [boardImmersive, setBoardImmersive] = useState(false);
   useRevealScrollbarOnScroll(mainScrollRef);
   useVoiceReminderScanner();
@@ -120,7 +123,7 @@ function AppShellBody() {
 
   return (
     <div
-      className="flex h-screen min-h-screen flex-col overflow-hidden bg-surface-base text-text-primary"
+      className="im-app-shell flex h-screen min-h-screen flex-col overflow-hidden text-text-primary"
       data-testid={isCanvas ? "app-shell-canvas" : "app-shell-pages"}
       data-monitor-mode={monitorMode}
       data-shell-mount="dual"

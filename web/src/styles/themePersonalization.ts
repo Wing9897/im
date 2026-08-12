@@ -38,8 +38,15 @@ export const DEFAULT_COLOR_OPACITY = 1;
 export const MIN_COLOR_OPACITY = 0.15;
 export const MAX_COLOR_OPACITY = 1;
 
-/** Catalog / CSS :root default for glass panel fill when surfaceCard opacity unset. */
-export const DEFAULT_PANEL_OPACITY = 0.96;
+/**
+ * When surfaceCard opacity is unset, CSS owns panel strength
+ * (opaque under data-theme-bg=none; softened under custom/focal).
+ * This helper returns 1 so the settings slider matches "no override".
+ */
+export const DEFAULT_PANEL_OPACITY = 1;
+
+/** Photo BG floor for personalized ``--surface-panel`` (matches theme.css 63%). */
+export const PHOTO_SURFACE_PANEL_FLOOR = 0.63;
 
 type StoredThemeColors = ThemeColorOverrides & {
   opacity?: ThemeColorOpacityMap;
@@ -53,8 +60,7 @@ const COLOR_CSS_VAR: Record<ThemeColorOverrideKey, string> = {
   surfaceOverlay: "--surface-overlay",
 };
 
-const PANEL_OPACITY_CSS_VAR = "--im-panel-opacity";
-const PANEL_OPACITY_PCT_CSS_VAR = "--im-panel-opacity-pct";
+const SURFACE_PANEL_CSS_VAR = "--surface-panel";
 
 const MOTIF_SET = new Set<string>(THEME_MOTIFS);
 
@@ -308,6 +314,15 @@ function applyInlineColorOverrides(
     // Only write when color and/or opacity is customized.
     if (!hex && alpha == null) continue;
     const resolvedHex = hex ?? defaults[field];
+    // Panel fill strength is SoT on --surface-panel (see applyPanelOpacityVars).
+    // Keep --surface-card as solid hex so color-mix(panel) is not double-softened.
+    if (field === "surfaceCard") {
+      root.style.setProperty(
+        COLOR_CSS_VAR[field],
+        normalizeHexColor(resolvedHex) ?? resolvedHex,
+      );
+      continue;
+    }
     const resolvedAlpha = alpha ?? DEFAULT_COLOR_OPACITY;
     root.style.setProperty(
       COLOR_CSS_VAR[field],
@@ -337,21 +352,29 @@ function applyPanelOpacityVars(root: HTMLElement, themeId: string): void {
   const id = resolveThemeId(themeId);
   const cardOpacity = loadThemeColorOpacities(id).surfaceCard;
 
-  // No surfaceCard override → CSS :root default (0.96). Fully opaque card → same.
+  // No surfaceCard override → unlayered theme.css --surface-panel. Fully opaque → same.
   if (
     cardOpacity == null ||
     Math.abs(cardOpacity - DEFAULT_COLOR_OPACITY) < 0.001
   ) {
-    root.style.removeProperty(PANEL_OPACITY_CSS_VAR);
-    root.style.removeProperty(PANEL_OPACITY_PCT_CSS_VAR);
+    root.style.removeProperty(SURFACE_PANEL_CSS_VAR);
     return;
   }
 
-  const resolved = clampColorOpacity(cardOpacity);
-  root.style.setProperty(PANEL_OPACITY_CSS_VAR, String(resolved));
+  let strength = clampColorOpacity(cardOpacity);
+  // Photo BG: do not let personalization thin panels below the system readable floor.
+  const bgMode = root.getAttribute("data-theme-bg");
+  if (
+    (bgMode === "custom" || bgMode === "focal") &&
+    strength < PHOTO_SURFACE_PANEL_FLOOR
+  ) {
+    strength = PHOTO_SURFACE_PANEL_FLOOR;
+  }
+  const pct = Math.round(strength * 100);
+  // Single SoT for panel strength (--surface-panel only).
   root.style.setProperty(
-    PANEL_OPACITY_PCT_CSS_VAR,
-    `${Math.round(resolved * 100)}%`,
+    SURFACE_PANEL_CSS_VAR,
+    `color-mix(in srgb, var(--surface-card) ${pct}%, transparent)`,
   );
 }
 

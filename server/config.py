@@ -48,6 +48,11 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "agent_max_tool_rounds": "28",
     # Max message-drain waves per agent schedule fire (40 msgs/wave). 0 = unlimited.
     "agent_max_drain_waves": "0",
+    # Singleton LLM profile bindings (AI profiles → global slots). Empty = unbound.
+    # Connection settings stay on llm_profiles; these keys are profile-id pointers only.
+    "llm_global_slot_assistant": "",
+    "llm_global_slot_liaison": "",
+    "llm_global_slot_task_editor": "",
     # Assistant display identity (UI); empty name → client i18n default.
     "assistant_display_name": "",
     # JPEG/PNG data URL (capped on write); empty → built-in avatar asset.

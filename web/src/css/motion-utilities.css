@@ -43,6 +43,37 @@
   }
 }
 
+/*
+ * Photo BG: enter motion is disabled (see rules below). These keyframes stay as
+ * no-op references — never reintroduce opacity/transform/filter here: opacity
+ * fade reads glass→cardboard, and transform/filter on an ancestor breaks
+ * descendant backdrop-filter until the animation settles (same flash).
+ */
+@keyframes im-fade-in-photo {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+@keyframes im-enter-rise-photo {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+@keyframes im-enter-rise-soft-photo {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+@keyframes im-enter-glow-photo {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
+@keyframes im-fade-in-scale-photo {
+  from { opacity: 1; }
+  to { opacity: 1; }
+}
+
 @keyframes toast-in {
   from { transform: translateX(30px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
@@ -98,6 +129,33 @@
 
 [data-theme="cyberpunk"] .im-enter-rise {
   animation-name: im-enter-glow;
+}
+
+/*
+ * Photo BG enter: disable entirely. Remapping to transform-only keyframes still
+ * flashes — a non-none transform/filter on .app-main-content > * (or cards)
+ * prevents child .im-surface-panel / .im-material-* backdrop-filter from
+ * sampling the photo until the animation ends (brief glass → denser frost).
+ * shared-layout.css repeats animation:none on .app-main-content > * because
+ * that file loads after this one and owns the page-root enter shorthand.
+ */
+html[data-theme-bg="custom"] .im-animate-in,
+html[data-theme-bg="focal"] .im-animate-in,
+html[data-theme-bg="custom"] .im-animate-in-scale,
+html[data-theme-bg="focal"] .im-animate-in-scale,
+html[data-theme-bg="custom"] .im-enter-rise,
+html[data-theme-bg="focal"] .im-enter-rise,
+html[data-theme-bg="custom"] .im-enter-rise-soft,
+html[data-theme-bg="focal"] .im-enter-rise-soft,
+html[data-theme-bg="custom"] .im-enter-glow,
+html[data-theme-bg="focal"] .im-enter-glow,
+html[data-theme-bg="custom"] .app-main-content > *,
+html[data-theme-bg="focal"] .app-main-content > *,
+html[data-theme-bg="custom"][data-theme="sakura"] .im-enter-rise,
+html[data-theme-bg="focal"][data-theme="sakura"] .im-enter-rise,
+html[data-theme-bg="custom"][data-theme="cyberpunk"] .im-enter-rise,
+html[data-theme-bg="focal"][data-theme="cyberpunk"] .im-enter-rise {
+  animation: none;
 }
 
 .im-toast-in {

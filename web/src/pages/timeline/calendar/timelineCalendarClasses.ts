@@ -34,28 +34,24 @@ export function monthDayCellClass({
   isCurrentMonth,
   activeDay,
   today,
-  isWeekend,
 }: MonthDayCellParams): string {
   const base =
     "flex h-full min-h-0 cursor-pointer flex-col items-stretch justify-start gap-0.5 overflow-hidden rounded-md border p-[3px_5px] transition-[border-color,box-shadow,background] duration-150";
 
   if (activeDay) {
-    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-card))] shadow-sm ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
+    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-panel))] shadow-sm ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
   }
 
   if (today) {
-    return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-card))] ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
-  }
-
-  if (isWeekend && isCurrentMonth) {
-    return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] bg-[color-mix(in_srgb,var(--surface-base)_28%,var(--surface-card))] opacity-100`;
+    return `${base} border-[color-mix(in_srgb,var(--accent)_40%,var(--surface-border))] im-surface-inset ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
   }
 
   if (isCurrentMonth) {
-    return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] bg-surface-card opacity-100`;
+    return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] im-surface-inset opacity-100`;
   }
 
-  return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_32%,transparent)] opacity-[0.72]`;
+  // Out-of-month: use panel directly (no extra 32% dilution over an already soft token).
+  return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] im-surface-panel opacity-[0.72]`;
 }
 
 export const monthDayHeaderClass =

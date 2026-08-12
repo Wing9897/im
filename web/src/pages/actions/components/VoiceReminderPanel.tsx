@@ -39,7 +39,7 @@ export function VoiceReminderPanel() {
 
   return (
     <div className="flex flex-col gap-lg">
-      <div className="flex flex-wrap items-center gap-sm rounded-[12px] border border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] bg-[color-mix(in_srgb,var(--surface-base)_55%,transparent)] px-md py-sm">
+      <div className="im-surface-panel flex flex-wrap items-center gap-sm rounded-[12px] border border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] px-md py-sm">
         <p className="m-0 text-body font-medium text-text-primary">{t("voice.title")}</p>
         <InfoTooltip
           ariaLabel={t("voice.tooltipAria")}
@@ -101,13 +101,13 @@ export function VoiceReminderPanel() {
             }
           />
           <div
-            className="flex flex-wrap items-end gap-md rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] bg-[color-mix(in_srgb,var(--surface-base)_40%,transparent)] px-md py-sm"
+            className="im-surface-inset flex flex-wrap items-end gap-md rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] px-md py-sm"
             aria-disabled={!settings.quietHours.enabled}
           >
             <label className="flex min-w-[140px] flex-col gap-xs text-body text-text-secondary">
               {t("voice.quietStart")}
               <input
-                className="min-h-10 rounded-md border border-surface-border bg-surface-raised px-sm text-body text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                className="im-surface-inset min-h-10 rounded-md border border-surface-border px-sm text-body text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 type="time"
                 value={settings.quietHours.start}
                 aria-label={t("voice.quietStartAria")}
@@ -120,7 +120,7 @@ export function VoiceReminderPanel() {
             <label className="flex min-w-[140px] flex-col gap-xs text-body text-text-secondary">
               {t("voice.quietEnd")}
               <input
-                className="min-h-10 rounded-md border border-surface-border bg-surface-raised px-sm text-body text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                className="im-surface-inset min-h-10 rounded-md border border-surface-border px-sm text-body text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                 type="time"
                 value={settings.quietHours.end}
                 aria-label={t("voice.quietEndAria")}

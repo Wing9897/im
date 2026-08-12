@@ -29,7 +29,7 @@ const BODY_CLAMP_CLASS = `line-clamp-3 min-w-0 flex-1 break-words ${cardBodyClas
 
 /**
  * Discrete content tile for card grids.
- * Solid surface + rounded border + internal padding; designed to sit with gaps in CardGrid.
+ * Panel material (--surface-panel + blur); no overflow-hidden (clips backdrop-filter).
  */
 export function FeedCard({
   header,
@@ -53,10 +53,10 @@ export function FeedCard({
   };
 
   const cls = [
-    "im-feed-tile flex h-full min-h-[96px] min-w-0 flex-col overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_82%,transparent)] bg-surface-card shadow-[inset_0_1px_0_color-mix(in_srgb,#fff_4%,transparent)] transition-[border-color,background,box-shadow,transform] duration-[var(--im-duration-fast)] ease-[var(--im-easing-out)]",
+    "im-feed-tile im-material-panel flex h-full min-h-[96px] min-w-0 flex-col rounded-lg transition-[border-color,background,box-shadow,transform] duration-[var(--im-duration-fast)] ease-[var(--im-easing-out)]",
     densityClass[density],
     onClick
-      ? "cursor-pointer hover:border-[color-mix(in_srgb,var(--accent)_32%,var(--surface-border))] hover:bg-[color-mix(in_srgb,var(--surface-card)_96%,var(--accent))] hover:shadow-[0_3px_12px_color-mix(in_srgb,var(--text-primary)_7%,transparent)] motion-safe:hover:-translate-y-px"
+      ? "cursor-pointer hover:border-[color-mix(in_srgb,var(--accent)_32%,var(--surface-border))] hover:bg-[color-mix(in_srgb,var(--surface-panel)_94%,var(--accent)_6%)] hover:shadow-[0_3px_12px_color-mix(in_srgb,var(--text-primary)_7%,transparent)] motion-safe:hover:-translate-y-px"
       : "",
     className ?? "",
   ]

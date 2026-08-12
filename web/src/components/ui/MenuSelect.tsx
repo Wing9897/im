@@ -259,7 +259,7 @@ export function MenuSelect({
       id={listId}
       role="listbox"
       aria-label={ariaLabel}
-      className="im-menu-surface rounded-md border border-surface-border bg-surface-card shadow-md"
+      className="im-menu-surface rounded-md border border-surface-border shadow-md"
       style={listBoxStyle}
       data-testid={testId ? `${testId}-list` : undefined}
     >
@@ -321,7 +321,7 @@ export function MenuSelect({
               ]
                 .filter(Boolean)
                 .join(" ")
-            : "rounded-md border border-surface-border bg-surface-card px-sm py-1.5 text-caption font-medium leading-snug text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            : "im-surface-inset rounded-md border border-surface-border px-sm py-1.5 text-caption font-medium leading-snug text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
         }
         style={isField ? fieldTriggerStyle : isToolbar ? toolbarTriggerStyle : triggerStyle}
         onClick={() => {

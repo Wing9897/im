@@ -134,6 +134,21 @@ describe("AssistantDirectBubbles", () => {
     expect(document.querySelector("[data-testid='assistant-direct-user-avatar']")).not.toBeNull();
   });
 
+  it("shows assistant presence when the text composer is open", () => {
+    render({
+      active: true,
+      composer: createElement("div", { "data-testid": "assistant-caption-composer" }),
+    });
+    const presence = document.querySelector("[data-testid='assistant-direct-presence']");
+    expect(presence).not.toBeNull();
+    expect(presence?.querySelector("[data-testid='ai-staff-avatar-assistant']")).not.toBeNull();
+    expect(presence?.querySelector("[data-testid='ai-staff-avatar-taskEditor']")).toBeNull();
+    expect(document.querySelector("[data-testid='assistant-task-advisor-presence']")).toBeNull();
+
+    render({ active: true });
+    expect(document.querySelector("[data-testid='assistant-direct-presence']")).toBeNull();
+  });
+
   it("shows dual staff presence only when taskAdvisorPresence is enabled", () => {
     render({ active: true, taskAdvisorPresence: true });
     const presence = document.querySelector("[data-testid='assistant-task-advisor-presence']");
@@ -143,6 +158,7 @@ describe("AssistantDirectBubbles", () => {
 
     render({ active: true, taskAdvisorPresence: false });
     expect(document.querySelector("[data-testid='assistant-task-advisor-presence']")).toBeNull();
+    expect(document.querySelector("[data-testid='assistant-direct-presence']")).toBeNull();
   });
 
   it("clears the sending flash when the turn fails without an assistant reply", () => {

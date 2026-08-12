@@ -96,8 +96,8 @@ function MapViewComponent({
   } = useMapView({ items, onFetchWindowChange });
 
   const fullContainerClassName = isFullscreen
-    ? "relative flex h-screen w-screen flex-col bg-surface-base"
-    : mapContainerClass;
+    ? "im-fs-atmosphere relative flex h-screen w-screen flex-col"
+    : `im-fs-atmosphere ${mapContainerClass}`;
 
   return (
     <div ref={containerRef} className={fullContainerClassName}>

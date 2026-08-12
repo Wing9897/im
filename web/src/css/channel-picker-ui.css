@@ -39,7 +39,7 @@
   width: 100%;
   height: 36px;
   padding: 0 12px 0 36px;
-  background: var(--surface-card);
+  background: var(--surface-inset);
   border: 1px solid var(--surface-border);
   border-radius: 8px;
   color: var(--text-primary);
@@ -118,7 +118,7 @@
 .im-picker-platform-section {
   border: 1px solid var(--surface-border-alpha, var(--surface-border));
   border-radius: 10px;
-  background: color-mix(in srgb, var(--surface-card) 35%, transparent);
+  background: var(--surface-panel);
   flex-shrink: 0;
 }
 
@@ -159,7 +159,7 @@
 }
 
 .im-picker-platform-toggle:hover {
-  background: color-mix(in srgb, var(--surface-card) 80%, transparent);
+  background: color-mix(in srgb, var(--surface-inset) 80%, transparent);
 }
 
 .im-picker-platform-toggle {
@@ -230,7 +230,7 @@
 }
 
 .im-picker-row:hover {
-  background: color-mix(in srgb, var(--surface-card) 85%, transparent);
+  background: color-mix(in srgb, var(--surface-inset) 85%, transparent);
 }
 
 .im-picker-row.is-selected {

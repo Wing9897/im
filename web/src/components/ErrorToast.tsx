@@ -77,7 +77,7 @@ export function ErrorToast({
 
   return (
     <div
-      className="animate-[toast-in_0.3s_ease-out_forwards] pointer-events-auto relative flex max-w-[380px] flex-col gap-sm rounded-md border border-error bg-surface-card p-md shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
+      className="animate-[toast-in_0.3s_ease-out_forwards] im-surface-panel pointer-events-auto relative flex max-w-[380px] flex-col gap-sm rounded-md border border-error p-md shadow-[0_8px_24px_rgba(0,0,0,0.3)]"
       role="alert"
       aria-live="assertive"
       data-testid="error-toast"

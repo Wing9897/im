@@ -23,7 +23,7 @@ export function MasterDetailSplit({ list, detail, split }: MasterDetailSplitProp
     >
       <div className="min-w-0 flex-1">{list}</div>
       <aside
-        className="im-preview-panel sticky top-0 flex h-[min(78vh,720px)] w-[min(420px,38vw)] shrink-0 flex-col overflow-hidden rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] shadow-[var(--shadow-sm)]"
+        className="im-preview-panel im-surface-panel sticky top-0 flex h-[min(78vh,720px)] w-[min(420px,38vw)] shrink-0 flex-col rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] shadow-[var(--shadow-sm)]"
       >
         {detail}
       </aside>

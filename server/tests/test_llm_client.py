@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from server.analyzer.llm_client import ConfigurableLlmClient, load_agent_llm_config, load_llm_config
+from server.analyzer.llm_config import load_liaison_llm_config, load_task_editor_llm_config
+from server.llm_global_slots import set_global_slot
 from server.analyzer.llm_config import (
     DEFAULT_PROVIDER_BASE_URLS,
     config_from_draft_fields,
@@ -130,7 +132,7 @@ async def test_load_agent_llm_config_follows_default_assistant_staff(app) -> Non
 
 
 async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(app) -> None:
-    """Assistant staff may live on a non-default profile — resolve by staff_class."""
+    """Assistant runtime follows ``llm_global_slot_assistant`` (not staff fallback)."""
     db = app.state.db
     now = utc_now_iso()
     profile_id = "profile-assistant-elsewhere"
@@ -151,12 +153,7 @@ async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(ap
             now,
         ),
     )
-    # Move the sole active assistant staff instance off the default profile.
-    await db.execute(
-        "UPDATE llm_staff_instances SET profile_id = ?, updated_at = ? "
-        "WHERE staff_class = 'assistant'",
-        (profile_id, now),
-    )
+    await set_global_slot(db, "assistant", profile_id)
     await _update_default_profile(
         db,
         provider="ollama",
@@ -173,7 +170,7 @@ async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(ap
 
 
 async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
-    """Per-session override skips staff_class=assistant and loads that profile."""
+    """Per-session override skips the assistant global slot and loads that profile."""
     db = app.state.db
     now = utc_now_iso()
     override_id = "profile-session-override"
@@ -211,6 +208,44 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
     staff_config = await load_agent_llm_config(db)
     assert staff_config["model"] == "staff-llama"
     assert staff_config["profile_id"] == DEFAULT_LLM_PROFILE_ID
+
+
+async def test_global_slots_resolve_assistant_liaison_task_editor_separately(app) -> None:
+    db = app.state.db
+    now = utc_now_iso()
+
+    async def _insert(profile_id: str, model: str) -> None:
+        await db.execute(
+            "INSERT INTO llm_profiles ("
+            "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+            "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+            "created_at, updated_at"
+            ") VALUES (?, ?, 'ollama', 'http://localhost:11434', ?, '', 0, 'disabled', "
+            "1, 'auto', '', 0, ?, ?)",
+            (profile_id, profile_id, model, now, now),
+        )
+
+    await _insert("slot-assistant", "model-assistant")
+    await _insert("slot-liaison", "model-liaison")
+    await _insert("slot-task-editor", "model-task-editor")
+    await set_global_slot(db, "assistant", "slot-assistant")
+    await set_global_slot(db, "liaison", "slot-liaison")
+    await set_global_slot(db, "taskEditor", "slot-task-editor")
+
+    assert (await load_agent_llm_config(db))["profile_id"] == "slot-assistant"
+    assert (await load_liaison_llm_config(db))["profile_id"] == "slot-liaison"
+    assert (await load_task_editor_llm_config(db))["profile_id"] == "slot-task-editor"
+
+    # Clearing liaison must not fall back to assistant.
+    await set_global_slot(db, "liaison", None)
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc:
+        await load_liaison_llm_config(db)
+    assert exc.value.status_code == 400
+    detail = exc.value.detail
+    message = detail["message"] if isinstance(detail, dict) else str(detail)
+    assert "account manager" in message.lower() or "a2a" in message.lower()
 
 
 async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:

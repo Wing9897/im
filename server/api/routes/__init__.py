@@ -33,6 +33,7 @@ def all_routers() -> list[APIRouter]:
         sources,
         system,
         tasks,
+        theme,
         ui_prefs,
         viewer,
         weather,
@@ -65,6 +66,7 @@ def all_routers() -> list[APIRouter]:
             events.router,
             agent.router,
             weather.router,
+            theme.router,
         ]
     )
     return routers

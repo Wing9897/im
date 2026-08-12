@@ -24,7 +24,11 @@ import type {
   LlmStaffClass,
   LlmWebSearchProvider,
 } from "../../types/llmProfiles";
-import { LLM_STAFF_CLASSES, isMaskedSecret } from "../../types/llmProfiles";
+import {
+  LLM_TASK_STAFF_CLASSES,
+  isMaskedSecret,
+  normalizeTaskStaffClasses,
+} from "../../types/llmProfiles";
 
 export type LlmProfileDraft = {
   name: string;
@@ -75,7 +79,7 @@ export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
         ? webProvider
         : "auto",
     braveSearchApiKey: profile.braveSearchApiKey,
-    staffClasses: [...profile.staffClasses],
+    staffClasses: normalizeTaskStaffClasses(profile.staffClasses),
     isDefault: profile.isDefault,
   };
 }
@@ -134,7 +138,10 @@ export function LlmProfileEditorDialog({
       const next = new Set(prev.staffClasses);
       if (checked) next.add(staffClass);
       else next.delete(staffClass);
-      return { ...prev, staffClasses: LLM_STAFF_CLASSES.filter((c) => next.has(c)) };
+      return {
+        ...prev,
+        staffClasses: LLM_TASK_STAFF_CLASSES.filter((c) => next.has(c)),
+      };
     });
   };
 
@@ -218,7 +225,7 @@ export function LlmProfileEditorDialog({
             className="grid grid-cols-1 gap-sm sm:grid-cols-2"
             data-testid="llm-profile-staff-classes"
           >
-            {LLM_STAFF_CLASSES.map((staffClass) => (
+            {LLM_TASK_STAFF_CLASSES.map((staffClass) => (
               <CheckboxField
                 key={staffClass}
                 id={`llm-profile-staff-${staffClass}`}

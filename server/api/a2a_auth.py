@@ -48,7 +48,3 @@ async def require_full_access_key(request: Request) -> None:
             "Access key missing required scope: *",
             error_code=FORBIDDEN,
         )
-
-
-#: Backward-compatible alias — prefer :func:`require_full_access_key`.
-require_a2a_agent = require_full_access_key

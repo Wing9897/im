@@ -1,9 +1,26 @@
 <!doctype html>
-<html lang="zh-Hant" data-theme="command-center" data-theme-mode="dark" data-theme-family="desk">
+<html lang="zh-Hant" data-theme="command-center" data-theme-mode="dark" data-theme-family="desk" data-theme-bg="none">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Intelligence Monitor</title>
+    <script>
+      /* Early data-theme-bg from localStorage (keys match themeData / prefs). */
+      (function () {
+        try {
+          var theme = localStorage.getItem("im:theme") || "command-center";
+          var mode = localStorage.getItem("im:theme-bg-mode:" + theme);
+          if (mode === "custom" || mode === "focal") {
+            document.documentElement.setAttribute("data-theme-bg", mode);
+            return;
+          }
+          if (mode === "none") return;
+          if (localStorage.getItem("im:theme-bg:" + theme)) {
+            document.documentElement.setAttribute("data-theme-bg", "custom");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

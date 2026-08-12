@@ -13,11 +13,11 @@ interface SelectTileProps {
 }
 
 const tileBase =
-  "min-h-8 cursor-pointer rounded-md border border-surface-border bg-surface-card text-left font-medium text-text-primary shadow-sm transition-[border-color,background,box-shadow,transform] duration-200 ease-[var(--im-easing-out)] motion-safe:active:scale-[1.01] hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-surface-border disabled:hover:shadow-sm disabled:active:scale-100";
+  "im-surface-inset min-h-8 cursor-pointer rounded-md border border-surface-border text-left font-medium text-text-primary shadow-sm transition-[border-color,background,box-shadow,transform] duration-200 ease-[var(--im-easing-out)] motion-safe:active:scale-[1.01] hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-surface-border disabled:hover:shadow-sm disabled:active:scale-100";
 
 /** Selected: inset accent frame (visible inside overflow scroll) + tint. */
 const tileActive =
-  "border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] font-semibold text-accent shadow-md ring-2 ring-inset ring-accent";
+  "border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-panel))] font-semibold text-accent shadow-md ring-2 ring-inset ring-accent";
 
 /** Single selectable tile card (provider, action type, etc.). */
 export function SelectTile({

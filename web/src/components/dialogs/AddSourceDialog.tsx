@@ -4,6 +4,7 @@ import { Button } from "../../components/ui";
 import { sectionTitleClass } from "../../components/ui/pageTypography";
 import { OverlayPortal } from "../common/OverlayPortal";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { compactSourceDialogShellClass } from "./dialogShellClasses";
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -47,7 +48,7 @@ export function AddSourceDialog({
         ref={focusTrapRef}
         role="dialog"
         aria-modal="true"
-        className="im-material-glass im-animate-in-scale w-[380px] max-w-[90vw] rounded-xl border border-surface-border bg-surface-base p-lg shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+        className={`${compactSourceDialogShellClass} im-animate-in-scale`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`mb-md ${sectionTitleClass}`}>{title}</div>

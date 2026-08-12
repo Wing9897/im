@@ -35,7 +35,7 @@ export function RuntimeResetPanel({
   }
 
   return (
-    <SurfaceCard className="border-[color-mix(in_srgb,var(--error)_30%,transparent)] bg-[color-mix(in_srgb,var(--error)_6%,transparent)]">
+    <SurfaceCard className="border-[color-mix(in_srgb,var(--error)_30%,transparent)]">
       {content}
     </SurfaceCard>
   );

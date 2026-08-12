@@ -41,11 +41,11 @@ export const ganttErrorContainerClass = "px-lg py-10 text-center";
 export const ganttErrorTextClass = "mb-md text-sm text-error";
 
 export const ganttRetryButtonClass =
-  "cursor-pointer rounded-lg border border-surface-border bg-[color-mix(in_srgb,var(--surface-base)_45%,transparent)] px-lg py-sm text-body text-text-primary";
+  "im-surface-panel cursor-pointer rounded-lg border border-surface-border px-lg py-sm text-body text-text-primary";
 
-/** Sticky with page surface so scrolling rows do not show through. */
+/** Sticky chrome frost so scrolling rows do not punch through under photo BG. */
 export const ganttHeaderLabelClass =
-  "sticky top-0 z-[3] mb-2 flex h-5 items-center bg-[color-mix(in_srgb,var(--surface-page)_96%,transparent)] pl-0.5 text-xs text-text-muted";
+  "im-surface-chrome sticky top-0 z-[3] mb-2 flex h-5 items-center pl-0.5 text-xs text-text-muted";
 
 export const ganttLegendContainerClass =
   "mt-lg flex shrink-0 flex-wrap gap-lg border-t border-surface-border pt-md";
@@ -67,8 +67,8 @@ export function ganttEventNameClass(isHovered: boolean, dismissed = false): stri
       ? `${dismissedTitleClass} opacity-70`
       : "text-text-primary",
     isHovered
-      ? "bg-[color-mix(in_srgb,var(--accent-pink)_12%,color-mix(in_srgb,var(--surface-card)_42%,transparent))]"
-      : "bg-transparent hover:bg-[color-mix(in_srgb,var(--surface-card)_35%,transparent)]",
+      ? "bg-[color-mix(in_srgb,var(--accent-pink)_12%,var(--surface-panel))]"
+      : "bg-transparent hover:bg-[color-mix(in_srgb,var(--surface-panel)_72%,transparent)]",
   ].join(" ");
 }
 

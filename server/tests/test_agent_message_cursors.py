@@ -11,6 +11,7 @@ from server.queries.agent_tick_queries import (
     load_agent_message_cursor,
     store_agent_message_cursor,
 )
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.tasks_queries import insert_analysis_task
 from server.util import new_id, utc_now_iso
 
@@ -28,6 +29,7 @@ async def _insert_agent_task(db, task_id: str) -> None:
             analysis_mode=AGENT_MODE,
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
+            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
             now=now,
             **policy,
         )

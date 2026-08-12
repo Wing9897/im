@@ -242,7 +242,7 @@ export function EmojiPickerDialog({
           <EmojiPickerPanel onChange={handleGridPick} disabled={disabled} height={height} />
         ) : (
           <div
-            className="flex items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--surface-raised)_35%,transparent)] text-caption text-text-muted"
+            className="im-surface-inset flex items-center justify-center rounded-md text-caption text-text-muted"
             style={{ height }}
             data-testid="emoji-picker-deferred"
             aria-hidden="true"

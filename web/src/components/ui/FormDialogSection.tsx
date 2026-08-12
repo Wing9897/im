@@ -16,7 +16,7 @@ export function FormDialogSection({
 }) {
   return (
     <section
-      className="flex flex-col gap-md rounded-xl border border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)] p-lg shadow-sm"
+      className="im-surface-panel flex flex-col gap-md rounded-xl border border-surface-border/80 p-lg shadow-sm"
       aria-label={title}
     >
       <div className="flex items-start gap-md">

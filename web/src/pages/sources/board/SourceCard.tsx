@@ -96,7 +96,8 @@ export function SourceCard({
       selectAriaLabel={
         selectAriaLabel ?? (onSelect ? t("card.viewDetailAria", { title }) : undefined)
       }
-      className="sources-card relative mb-0 h-full overflow-hidden"
+      /* No overflow-hidden: clips backdrop-filter and kills frosted glass under photo BG. */
+      className="sources-card relative mb-0 h-full"
     >
       <AccentBarCard accentClass={accentByStatus[status]} interactive>
         <div className="flex items-center gap-sm">

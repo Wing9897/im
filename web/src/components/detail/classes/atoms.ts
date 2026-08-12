@@ -4,7 +4,7 @@ export const detailMetricsRowClass =
   "grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-[10px]";
 
 export const detailMetricsTileClass =
-  "rounded-[10px] border border-[color-mix(in_srgb,var(--accent)_18%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-card))] px-md py-[10px] text-center";
+  "rounded-[10px] border border-[color-mix(in_srgb,var(--accent)_18%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-panel))] px-md py-[10px] text-center";
 
 export const detailMetricsLabelClass =
   "mb-1 text-[11px] font-semibold text-text-muted";
@@ -21,7 +21,7 @@ export const detailMetaGridClass =
   "grid grid-cols-2 gap-[10px] max-[560px]:grid-cols-1";
 
 export const detailMetaGridItemClass =
-  "min-w-0 rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_65%,transparent)] p-[10px_12px]";
+  "im-surface-inset min-w-0 rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[10px_12px]";
 
 export const detailMetaGridItemWideClass = "col-span-full";
 

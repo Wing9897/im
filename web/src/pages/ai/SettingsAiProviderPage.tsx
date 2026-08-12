@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Copy, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { testAiEngine } from "../../api/system";
 import {
+  bindLlmGlobalSlot,
   copyLlmProfile,
   createLlmProfile,
   deleteLlmProfile,
+  listLlmGlobalSlots,
   listLlmProfiles,
   patchLlmProfile,
   setDefaultLlmProfile,
+  type LlmGlobalSlotBinding,
   type LlmProfile,
 } from "../../api/llmProfiles";
+import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
+import { LlmGlobalSlotsPanel } from "../../components/settings/LlmGlobalSlotsPanel";
 import {
   draftToUpsertBody,
   emptyProfileDraft,
@@ -20,23 +24,17 @@ import {
   validateProfileDraft,
   type LlmProfileDraft,
 } from "../../components/settings/LlmProfileEditorDialog";
+import { LlmTaskProfilesSection } from "../../components/settings/LlmTaskProfilesSection";
 import {
   SettingsContentCard,
+  SettingsFieldGroup,
 } from "../../components/settings/SettingsFormLayout";
-import { Badge, Button, FormActions, SurfaceCard } from "../../components/ui";
-import {
-  cardBodyClass,
-  cardMetaClass,
-  cardTitleClass,
-  captionClass,
-  formHelpClass,
-} from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
 import { useCollectorStatus } from "../../context/CollectorStatusContext";
 import {
   getLlmProviderConfig,
-  normalizeLlmProvider,
 } from "../../domain/settings/llmProviderConfig";
+import type { LlmGlobalSlotId } from "../../types/llmProfiles";
 import { toErrorMessage } from "../../utils/errors";
 
 type EditorState =
@@ -50,17 +48,23 @@ export function SettingsAiProviderPage() {
   const { requestAiStatusRefresh } = useCollectorStatus();
 
   const [profiles, setProfiles] = useState<LlmProfile[]>([]);
+  const [slots, setSlots] = useState<LlmGlobalSlotBinding[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savingSlot, setSavingSlot] = useState<LlmGlobalSlotId | null>(null);
   const [testingId, setTestingId] = useState<string | "new" | null>(null);
   const [editor, setEditor] = useState<EditorState>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
     try {
-      const rows = await listLlmProfiles();
+      const [rows, slotRows] = await Promise.all([
+        listLlmProfiles(),
+        listLlmGlobalSlots(),
+      ]);
       setProfiles(rows);
+      setSlots(slotRows);
       setLoadError(null);
     } catch (error) {
       setLoadError(toErrorMessage(error));
@@ -110,6 +114,24 @@ export function SettingsAiProviderPage() {
       showToast(toErrorMessage(error), "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleBindSlot = async (slot: LlmGlobalSlotId, profileId: string | null) => {
+    setSavingSlot(slot);
+    try {
+      const next = await bindLlmGlobalSlot(slot, profileId);
+      setSlots((prev) => prev.map((row) => (row.slot === slot ? next : row)));
+      showToast(t("globalSlots.boundSuccess"), "success");
+      // Assistant slot syncs staff instances — refresh profile badges.
+      if (slot === "assistant") {
+        await reload();
+      }
+      requestAiStatusRefresh(true);
+    } catch (error) {
+      showToast(toErrorMessage(error), "error");
+    } finally {
+      setSavingSlot(null);
     }
   };
 
@@ -198,137 +220,42 @@ export function SettingsAiProviderPage() {
     }
   };
 
-  if (loading && profiles.length === 0) {
+  if (loading && profiles.length === 0 && slots.length === 0 && !loadError) {
     return <LoadingSpinner text={t("profiles.loading")} />;
   }
 
-  if (loadError && profiles.length === 0) {
-    return <LoadingSpinner text={loadError} />;
+  if (loadError && profiles.length === 0 && slots.length === 0) {
+    return (
+      <ErrorRetryBanner
+        error={loadError}
+        retrying={loading}
+        onRetry={() => void reload()}
+      />
+    );
   }
 
   return (
     <SettingsContentCard>
-      <div className="flex flex-col gap-md">
-        <div className="flex flex-wrap items-start justify-between gap-sm">
-          <p className={`mb-0 max-w-3xl ${formHelpClass}`}>{t("profiles.intro")}</p>
-          <Button type="button" variant="primary" size="sm" onClick={openCreate}>
-            <Plus size={14} aria-hidden />
-            {t("profiles.create")}
-          </Button>
-        </div>
+      <LlmGlobalSlotsPanel
+        slots={slots}
+        profiles={profiles}
+        savingSlot={savingSlot}
+        onBind={(slot, profileId) => void handleBindSlot(slot, profileId)}
+      />
 
-        {profiles.length === 0 ? (
-          <div className="flex flex-col items-start gap-sm" data-testid="llm-profiles-empty">
-            <p className={`mb-0 ${cardBodyClass}`}>{t("profiles.empty")}</p>
-            <Button type="button" variant="primary" size="sm" onClick={openCreate}>
-              <Plus size={14} aria-hidden />
-              {t("profiles.create")}
-            </Button>
-          </div>
-        ) : (
-          <div className="grid gap-sm">
-            {profiles.map((profile) => {
-              const provider = normalizeLlmProvider(String(profile.provider));
-              const providerLabel = providerLabels[provider]?.label ?? profile.provider;
-              return (
-                <SurfaceCard
-                  key={profile.id}
-                  material="solid"
-                  density="compact"
-                  className="flex flex-col gap-sm"
-                  data-testid={`llm-profile-card-${profile.id}`}
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-sm">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-xs">
-                        <h3 className={`m-0 ${cardTitleClass}`}>{profile.name}</h3>
-                        {profile.isDefault ? (
-                          <Badge tone="info">{t("profiles.defaultBadge")}</Badge>
-                        ) : null}
-                        <Badge tone="neutral">{providerLabel}</Badge>
-                      </div>
-                      <p className={`mt-xs mb-0 ${cardBodyClass}`}>
-                        {profile.model || t("profiles.noModel")}
-                        {profile.baseUrl ? (
-                          <span className={` block ${captionClass}`}>{profile.baseUrl}</span>
-                        ) : null}
-                      </p>
-                      {profile.staffClasses.length > 0 ? (
-                        <div className={`mt-xs flex flex-wrap gap-xs ${cardMetaClass}`}>
-                          {profile.staffClasses.map((staffClass) => (
-                            <Badge key={staffClass} tone="neutral">
-                              {t(`profiles.staffClass.${staffClass}`, {
-                                defaultValue: staffClass,
-                              })}
-                            </Badge>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className={`mt-xs mb-0 ${cardMetaClass}`}>
-                          {t("profiles.noStaffClasses")}
-                        </p>
-                      )}
-                    </div>
-
-                    <FormActions inline>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => void handleTest(profileToDraft(profile), profile.id)}
-                        disabled={testingId === profile.id}
-                        aria-label={t("provider.testButton")}
-                      >
-                        {testingId === profile.id
-                          ? t("provider.testing")
-                          : t("provider.testButton")}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(profile)}
-                        aria-label={t("profiles.edit")}
-                      >
-                        <Pencil size={14} aria-hidden />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void handleCopy(profile)}
-                        aria-label={t("profiles.copy")}
-                      >
-                        <Copy size={14} aria-hidden />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void handleSetDefault(profile)}
-                        disabled={profile.isDefault}
-                        aria-label={t("profiles.setDefault")}
-                      >
-                        <Star size={14} aria-hidden />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => void handleDelete(profile)}
-                        disabled={profile.isDefault}
-                        aria-label={t("profiles.delete")}
-                      >
-                        <Trash2 size={14} aria-hidden />
-                      </Button>
-                    </FormActions>
-                  </div>
-                </SurfaceCard>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      <SettingsFieldGroup showDivider>
+        <LlmTaskProfilesSection
+          profiles={profiles}
+          providerLabels={providerLabels}
+          testingId={testingId}
+          onCreate={openCreate}
+          onEdit={openEdit}
+          onCopy={(profile) => void handleCopy(profile)}
+          onSetDefault={(profile) => void handleSetDefault(profile)}
+          onDelete={(profile) => void handleDelete(profile)}
+          onTest={(draft, profileId) => void handleTest(draft, profileId)}
+        />
+      </SettingsFieldGroup>
 
       {editor ? (
         <LlmProfileEditorDialog

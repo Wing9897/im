@@ -1,45 +1,88 @@
-/* Surface materials: glass / elevated / solid panels, page canvas, control bar. */
+/* Surface materials: panel / elevated panels, page canvas, control bar.
+   Layer tokens (--surface-chrome / --surface-panel / --surface-inset) live on html
+   in theme.css (opaque defaults + photo BG softens). This file only owns the
+   class rules that consume those tokens — keep token overrides unlayered in
+   theme.css so @layer components cannot lose to unlayered html defaults.
 
-.im-material-glass {
-  background: color-mix(
-    in srgb,
-    var(--surface-card) var(--im-panel-opacity-pct, 96%),
-    transparent
-  );
-  border: 1px solid var(--surface-border-alpha, var(--surface-border));
+   Model (custom / focal): photo is ambient on .im-page-canvas + .im-shell-sidebar
+   (+ .im-fs-atmosphere:fullscreen when Fullscreen API lifts a host off the canvas);
+   chrome / panels are frosted layers; nested page shells stay transparent so they
+   do not paint a solid island over the photo. data-theme-bg=none stays dense/opaque.
+   Never pair im-surface-* / im-material-* / im-menu-surface with bg-surface-card.
+   Shell fill lives here (not Tailwind bg-surface-*) so photo-mode transparent
+   can win in the same @layer without utilities beating components. */
+
+.im-app-shell {
+  background-color: var(--surface-base);
+}
+
+.im-surface-chrome {
+  background: var(--surface-chrome);
+  backdrop-filter: blur(var(--surface-blur-chrome));
+  -webkit-backdrop-filter: blur(var(--surface-blur-chrome));
+}
+
+.im-surface-panel {
+  background: var(--surface-panel);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
+}
+
+.im-surface-inset {
+  background: var(--surface-inset);
+}
+
+/* Photo BG: inset inputs / calendar cells need blur for readability over photo. */
+html[data-theme-bg="custom"] .im-surface-inset,
+html[data-theme-bg="focal"] .im-surface-inset {
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
+}
+
+/* Nested shells (Items / chat editor / …): layout only — canvas owns atmosphere. */
+.im-page-shell {
+  background: transparent;
+}
+
+/* Sidebar base fill (motif / none). Photo modes clear this in theme-textures.css. */
+.im-shell-sidebar {
+  background-color: var(--surface-sidebar, var(--surface-base));
+}
+
+.im-material-panel {
+  background: var(--surface-panel);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(var(--blur-glass));
-  -webkit-backdrop-filter: blur(var(--blur-glass));
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
 }
 
 .im-menu-surface {
-  background: color-mix(
-    in srgb,
-    var(--surface-raised, var(--surface-card)) var(--im-panel-opacity-pct, 96%),
-    transparent
-  );
+  background: var(--surface-panel);
   border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent),
     0 12px 32px color-mix(in srgb, var(--text-primary) 16%, transparent),
     var(--shadow-lg);
-  backdrop-filter: blur(var(--blur-glass));
-  -webkit-backdrop-filter: blur(var(--blur-glass));
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
 }
 
 .im-material-elevated {
+  /* Avoid clipping the frosted backdrop (clipping breaks glass over photo BG).
+     Do not create a stacking isolate — it can make backdrop-filter sample blank. */
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
   background:
     linear-gradient(
       180deg,
       color-mix(in srgb, #fff 3.5%, transparent),
       transparent 40%
     ),
-    var(--surface-raised, var(--surface-card));
+    var(--surface-panel);
   border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
   box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
   transition:
     box-shadow var(--im-duration-normal) var(--im-easing-out),
     border-color var(--im-duration-normal) var(--im-easing-out),
@@ -74,14 +117,22 @@
       color-mix(in srgb, #fff 4.5%, transparent),
       transparent 42%
     ),
-    color-mix(in srgb, var(--surface-raised, var(--surface-card)) 97%, var(--accent) 3%);
+    color-mix(in srgb, var(--surface-panel) 97%, var(--accent) 3%);
   box-shadow: 0 4px 14px color-mix(in srgb, var(--text-primary) 8%, transparent);
 }
 
-.im-material-solid {
-  background: var(--surface-card);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
-  box-shadow: none;
+/* Photo BG: elevated resting fill = panel frost (same --surface-panel + blur).
+   Drop the white sheen gradient that reads denser than .im-surface-panel.
+   Texture ::after is already paused via --texture-opacity: 0. data-theme-bg=none
+   keeps the denser elevated sheen. */
+html[data-theme-bg="custom"] .im-material-elevated,
+html[data-theme-bg="focal"] .im-material-elevated {
+  background: var(--surface-panel);
+}
+
+html[data-theme-bg="custom"] .im-material-elevated:hover,
+html[data-theme-bg="focal"] .im-material-elevated:hover {
+  background: color-mix(in srgb, var(--surface-panel) 94%, var(--accent) 6%);
 }
 
 .im-page-canvas {
@@ -91,19 +142,14 @@
 }
 
 .im-control-bar {
+  /* No overflow-hidden: it kills backdrop-filter frosted glass under photo BG. */
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  background: color-mix(
-    in srgb,
-    var(--surface-card) var(--im-panel-opacity-pct, 96%),
-    transparent
-  );
+  background: var(--surface-panel);
   border: 1px solid var(--surface-border);
   border-radius: var(--radius-lg, 12px);
   box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--surface-blur-panel, 4px));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel, 4px));
 }
 
 .im-control-bar::after {

@@ -128,7 +128,8 @@ export function generateThemeCss(): string {
     "  z-index: 0;",
     "}",
     "",
-    '[data-theme-family="special"] :is(.im-card-hover) {',
+    /* Photo BG uses --surface-panel SoT; do not paint opaque --glass-bg over it. */
+    '[data-theme-family="special"]:not([data-theme-bg="custom"]):not([data-theme-bg="focal"]) :is(.im-card-hover) {',
     "  background: var(--glass-bg);",
     "  border-color: var(--glass-border);",
     "  -webkit-backdrop-filter: blur(var(--glass-blur));",

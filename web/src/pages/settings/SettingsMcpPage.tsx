@@ -9,7 +9,7 @@ import {
 } from "./SettingsMcpDocsSections";
 import { SettingsMcpProbeSection } from "./SettingsMcpProbeSection";
 
-/** Settings → MCP: probe, docs, and capability toggles (behavior unchanged). */
+/** Settings → MCP: probe + toggles first; long docs collapsed. */
 export function SettingsMcpPage() {
   const { t } = useTranslation("settings");
   const {
@@ -26,7 +26,6 @@ export function SettingsMcpPage() {
     <SettingsContentCard>
       <p className={`m-0 ${cardBodyClass}`}>{t("mcpDocs.intro")}</p>
       <SettingsMcpProbeSection mcpUrl={mcpUrl} />
-      <SettingsMcpOpenClawSection mcpUrl={mcpUrl} />
       <SettingsMcpCapabilityToggles
         settings={settings}
         settingsInitialLoading={settingsInitialLoading}
@@ -35,6 +34,7 @@ export function SettingsMcpPage() {
         saving={saving}
         saveSuccess={saveSuccess}
       />
+      <SettingsMcpOpenClawSection mcpUrl={mcpUrl} />
       <SettingsMcpReferenceDocs />
     </SettingsContentCard>
   );

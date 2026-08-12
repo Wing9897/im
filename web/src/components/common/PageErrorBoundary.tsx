@@ -49,7 +49,7 @@ export class PageErrorBoundary extends React.Component<
           role="alert"
           className="flex min-h-[240px] flex-col items-center justify-center p-3xl"
         >
-          <div className="max-w-[420px] rounded-lg border border-surface-border bg-surface-card p-3xl text-center">
+          <div className="im-material-panel max-w-[420px] rounded-lg p-3xl text-center">
             <div className="mb-md text-section-title font-semibold text-error">
               {i18n.t("ui.pageError.title")}
             </div>

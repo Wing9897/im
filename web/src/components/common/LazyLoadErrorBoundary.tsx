@@ -47,7 +47,7 @@ export class LazyLoadErrorBoundary extends React.Component<
         <div
           data-testid="lazy-load-error-boundary"
           style={heightStyle}
-          className={`flex flex-col items-center justify-center rounded-md border border-surface-border bg-surface-card p-2xl text-center${
+          className={`im-material-panel flex flex-col items-center justify-center rounded-md p-2xl text-center${
             fallbackHeight == null ? " min-h-[120px]" : ""
           }`}
         >

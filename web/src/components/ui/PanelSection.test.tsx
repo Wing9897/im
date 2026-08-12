@@ -48,4 +48,16 @@ describe("PanelSection", () => {
     });
     expect(container.querySelector("section")!.getAttribute("aria-label")).toBe("RSS 來源");
   });
+
+  it("surface=none omits im-surface-panel for nested board columns", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(PanelSection, { title: "List", surface: "none" }, null),
+      );
+    });
+    const cls = container.querySelector("section")!.className;
+    expect(cls).not.toContain("im-surface-panel");
+    expect(cls).toContain("bg-transparent");
+  });
 });

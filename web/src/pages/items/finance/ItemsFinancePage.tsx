@@ -149,7 +149,7 @@ export function ItemsFinancePage() {
           {!loading ? (
             <div className={paneClass} data-testid="items-finance-pane">
               <div
-                className="mb-md flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-border/60 bg-surface/40 px-md py-sm"
+                className="im-surface-panel mb-md flex flex-wrap items-baseline justify-between gap-2 rounded-lg border border-surface-border/60 px-md py-sm"
                 data-testid="items-finance-summary"
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
@@ -182,9 +182,9 @@ export function ItemsFinancePage() {
                   }
                 />
               ) : (
-                <div className="overflow-x-auto rounded-lg border border-border/60">
+                <div className="im-surface-panel overflow-x-auto rounded-lg border border-surface-border/60">
                   <table className="w-full min-w-[36rem] text-left text-sm" data-testid="items-finance-table">
-                    <thead className="border-b border-border/60 bg-surface/50 text-xs text-text-muted">
+                    <thead className="border-b border-surface-border/60 bg-[color-mix(in_srgb,var(--surface-inset)_80%,transparent)] text-xs text-text-muted">
                       <tr>
                         <th className="px-md py-2 font-medium">{t("finance.colItem")}</th>
                         <th className="px-md py-2 font-medium">{t("finance.colPurchase")}</th>

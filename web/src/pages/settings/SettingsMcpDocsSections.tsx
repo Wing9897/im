@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Copy } from "lucide-react";
 import { openClawMcpExample } from "../../domain/apiDocs/examples";
-import { Button } from "../../components/ui";
+import { Button, CollapsePanel } from "../../components/ui";
 import { captionClass, cardBodyClass, cardTitleClass } from "../../components/ui/pageTypography";
 import {
   SettingsFieldGroup,
@@ -25,11 +25,12 @@ type SettingsMcpDocsSectionsProps = {
   mcpUrl: string;
 };
 
-/** OpenClaw config example + copy (sits above capability toggles). */
+/** OpenClaw config example + copy — collapsed by default (secondary docs). */
 export function SettingsMcpOpenClawSection({ mcpUrl }: SettingsMcpDocsSectionsProps) {
   const { t } = useTranslation("settings");
   const openClawExample = openClawMcpExample(mcpUrl);
   const [copyState, setCopyState] = useState<"idle" | "ok" | "fail">("idle");
+  const [open, setOpen] = useState(false);
 
   const onCopyConfig = useCallback(async () => {
     try {
@@ -42,10 +43,14 @@ export function SettingsMcpOpenClawSection({ mcpUrl }: SettingsMcpDocsSectionsPr
 
   return (
     <SettingsFieldGroup showDivider>
-      <div>
-        <h3 className={`m-0 ${cardTitleClass}`}>{t("mcpDocs.openClaw.title")}</h3>
-        <p className={`mt-xs mb-0 ${cardBodyClass}`}>{t("mcpDocs.openClaw.body")}</p>
-        <div className="mt-sm">
+      <CollapsePanel
+        nested
+        title={t("mcpDocs.openClaw.title")}
+        open={open}
+        onToggle={() => setOpen((value) => !value)}
+      >
+        <p className={`m-0 ${cardBodyClass}`}>{t("mcpDocs.openClaw.body")}</p>
+        <div>
           <div className="mb-1 flex flex-wrap items-center gap-x-md gap-y-xs">
             <div className={`${captionClass} font-medium text-text-primary`}>
               {t("mcpDocs.openClaw.exampleTitle")}
@@ -75,18 +80,24 @@ export function SettingsMcpOpenClawSection({ mcpUrl }: SettingsMcpDocsSectionsPr
             {openClawExample}
           </pre>
         </div>
-      </div>
+      </CollapsePanel>
     </SettingsFieldGroup>
   );
 }
 
-/** Capability / not-exposed bullets + access-key links (below toggles). */
+/** Capability / not-exposed bullets + access-key links — collapsed by default. */
 export function SettingsMcpReferenceDocs() {
   const { t } = useTranslation("settings");
+  const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <SettingsFieldGroup showDivider>
+    <SettingsFieldGroup showDivider>
+      <CollapsePanel
+        nested
+        title={t("mcpDocs.referenceSectionTitle")}
+        open={open}
+        onToggle={() => setOpen((value) => !value)}
+      >
         <div>
           <h3 className={`m-0 ${cardTitleClass}`}>{t("mcpDocs.capabilities.title")}</h3>
           <DocsBulletList
@@ -97,9 +108,7 @@ export function SettingsMcpReferenceDocs() {
             }
           />
         </div>
-      </SettingsFieldGroup>
 
-      <SettingsFieldGroup showDivider>
         <div>
           <h3 className={`m-0 ${cardTitleClass}`}>{t("mcpDocs.notExposed.title")}</h3>
           <DocsBulletList
@@ -110,9 +119,7 @@ export function SettingsMcpReferenceDocs() {
             }
           />
         </div>
-      </SettingsFieldGroup>
 
-      <SettingsFieldGroup showDivider>
         <div>
           <h3 className={`m-0 ${cardTitleClass}`}>{t("mcpDocs.accessKeys.title")}</h3>
           <p className={`mt-xs mb-0 ${cardBodyClass}`}>{t("mcpDocs.accessKeys.body")}</p>
@@ -126,7 +133,7 @@ export function SettingsMcpReferenceDocs() {
           </div>
           <p className={`mt-sm mb-0 ${captionClass}`}>{t("mcpDocs.docsHint")}</p>
         </div>
-      </SettingsFieldGroup>
-    </>
+      </CollapsePanel>
+    </SettingsFieldGroup>
   );
 }

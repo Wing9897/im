@@ -87,7 +87,7 @@ export function AppSidebar() {
   return (
     <nav
       className={[
-        "im-shell-sidebar relative z-20 flex h-full shrink-0 flex-col items-stretch gap-0.5 overflow-x-hidden overflow-y-auto border-r border-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] bg-[var(--surface-sidebar,var(--surface-base))] pb-3 pt-3 [-webkit-app-region:no-drag] [pointer-events:auto] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "im-shell-sidebar relative z-20 flex h-full shrink-0 flex-col items-stretch gap-0.5 overflow-x-hidden overflow-y-auto border-r border-[color-mix(in_srgb,var(--surface-border)_55%,transparent)] pb-3 pt-3 [-webkit-app-region:no-drag] [pointer-events:auto] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         collapsed ? "w-[var(--app-sidebar-width-collapsed,56px)] px-1.5" : "w-[var(--app-sidebar-width,200px)] px-2",
         "max-[780px]:w-14 max-[780px]:px-1.5",
       ].join(" ")}

@@ -25,6 +25,7 @@ from server.domain.mcp_capabilities import (
     MCP_CAPABILITY_SETTINGS_KEYS,
     MCP_CAPABILITY_WIRE_KEYS,
 )
+from server.errors import VALIDATION_ERROR, http_error
 from server.prompts.locale import normalize_ui_locale
 from server.secrets import MASKED_SECRET, SECRET_CONFIG_KEYS
 from server.util import parse_bool
@@ -105,6 +106,15 @@ async def fetch_settings(request: Request) -> dict:
 
 @router.put("/settings", response_model=SystemSettingsSnapshot)
 async def save_settings(request: Request, body: dict[str, Any]) -> dict:
+    """Partial PUT: known ``SystemSettingsSnapshot`` keys only; unknown → 422."""
+    unknown = sorted(set(body) - set(SystemSettingsSnapshot.model_fields))
+    if unknown:
+        raise http_error(
+            422,
+            f"Unknown settings key: {unknown[0]}",
+            error_code=VALIDATION_ERROR,
+            details={"unknownKeys": unknown},
+        )
     db = get_db(request)
     updates: dict[str, str] = {}
     for wire_key, config_key in _SETTINGS_KEYS.items():

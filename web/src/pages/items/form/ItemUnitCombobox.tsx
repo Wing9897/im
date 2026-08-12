@@ -41,7 +41,7 @@ export function ItemUnitCombobox({ id, value, placeholder, disabled, onChange }:
     <div ref={rootRef} className="relative min-w-0">
       <div
         className={[
-          "flex h-8 min-h-8 w-full items-stretch rounded-md border bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] transition-[border-color,box-shadow] duration-200",
+          "im-surface-inset flex h-8 min-h-8 w-full items-stretch rounded-md border transition-[border-color,box-shadow] duration-200",
           shellFocused
             ? "border-[color-mix(in_srgb,var(--accent)_55%,var(--surface-border))] shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_14%,transparent)]"
             : "border-surface-border",
@@ -94,7 +94,7 @@ export function ItemUnitCombobox({ id, value, placeholder, disabled, onChange }:
                 type="button"
                 role="option"
                 aria-selected={value === preset}
-                className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))]"
+                className="block w-full cursor-pointer rounded-sm border-none bg-transparent px-sm py-sm text-left text-body text-text-primary hover:bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-panel))]"
                 onClick={() => {
                   onChange(preset);
                   setOpen(false);

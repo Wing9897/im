@@ -265,7 +265,7 @@ function LinkedCalendarAddControl({
             role="menu"
             aria-label={t("linkedCalendarModeMenuAria")}
             data-testid="item-form-linked-calendar-mode-menu"
-            className="im-menu-surface fixed z-[3000] m-0 min-w-[11rem] list-none rounded-md border border-surface-border bg-surface-card p-1 shadow-md"
+            className="im-menu-surface fixed z-[3000] m-0 min-w-[11rem] list-none rounded-md border border-surface-border p-1 shadow-md"
             style={
               menuPos
                 ? { top: menuPos.top, left: menuPos.left }

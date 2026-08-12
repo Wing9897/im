@@ -57,7 +57,7 @@ function PickerFallback({ height }: { height: number }) {
   const { t } = useTranslation("items");
   return (
     <div
-      className="flex items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--surface-raised)_35%,transparent)] text-caption text-text-muted"
+      className="im-surface-inset flex items-center justify-center rounded-md text-caption text-text-muted"
       style={{ height }}
       data-testid="emoji-picker-loading"
       aria-busy="true"
@@ -96,8 +96,7 @@ export const EmojiPickerPanel = memo(function EmojiPickerPanel({
   return (
     <div
       className={[
-        "im-emoji-picker-host overflow-hidden rounded-md border border-surface-border/70",
-        "bg-[color-mix(in_srgb,var(--surface-card)_88%,transparent)]",
+        "im-emoji-picker-host im-menu-surface overflow-hidden rounded-md border border-surface-border/70",
         "[&_.EmojiPickerReact]:!border-0 [&_.EmojiPickerReact]:!bg-transparent",
         disabled ? "pointer-events-none" : "",
       ]

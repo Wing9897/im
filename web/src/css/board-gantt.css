@@ -107,7 +107,7 @@
   border-radius: 2px;
   border: none;
   padding: 0;
-  background-color: color-mix(in srgb, var(--surface-card) 42%, transparent);
+  background-color: color-mix(in srgb, var(--surface-panel) 72%, transparent);
   background-image: linear-gradient(
     to right,
     transparent calc(100% - 1px),

@@ -21,6 +21,6 @@ export function assistantChatBubbleClass(maxWidthRem: 36 | 42 | "full" = 42): st
     width,
     BUBBLE_BASE,
     "border border-surface-border",
-    "bg-[color-mix(in_srgb,var(--surface-card)_70%,var(--text-primary)_4%)]",
+    "bg-[color-mix(in_srgb,var(--surface-panel)_85%,var(--text-primary)_4%)]",
   ].join(" ");
 }

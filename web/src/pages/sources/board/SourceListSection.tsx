@@ -48,7 +48,7 @@ export function SourceListSection({
       title={title}
       itemCount={itemCount}
       showCount={showCountBadge}
-      className="rounded-none border-0 bg-transparent shadow-none"
+      surface="none"
       headerActions={
         <>
           {isRefreshing ? <RefreshIndicator label={resolvedRefreshing} /> : null}

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 export function MapPlaceholder() {
   const { t } = useTranslation("intelligence");
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center rounded-md border border-surface-border bg-surface-card">
+    <div className="im-surface-panel relative flex flex-1 flex-col items-center justify-center rounded-md border border-surface-border">
       <span className="text-body text-text-muted">{t("map.loading")}</span>
     </div>
   );

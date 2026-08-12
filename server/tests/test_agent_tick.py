@@ -12,6 +12,7 @@ from server.config import set_configs
 from server.db.database import Database, TransactionDb
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.tasks_queries import insert_analysis_task
 from server.scheduler.agent_tick import (
     MESSAGE_SUMMARY_LIMIT,
@@ -45,6 +46,7 @@ async def _insert_agent_task(
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
             agent_wave_interval_seconds=agent_wave_interval_seconds,
+            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
             now=now,
             **policy,
         )

@@ -59,7 +59,7 @@ export function SetupStepIndicator({
               ? "border border-accent bg-[color-mix(in_srgb,var(--accent)_16%,var(--surface-card))] text-accent"
               : isComplete
                 ? "border border-[color-mix(in_srgb,var(--accent)_45%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_10%,var(--surface-card))] text-accent"
-                : "border border-surface-border bg-surface-card text-text-muted",
+                : "im-surface-inset border border-surface-border text-text-muted",
           ].join(" ");
 
           const labelCls = [

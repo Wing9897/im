@@ -4,7 +4,6 @@ import { Badge } from "../../../components/ui";
 import type { TaskActivitySpan } from "../../../types/analysis";
 import { formatOsDateTime } from "../../../utils/time";
 import { truncateLabel } from "../gantt/ganttEventPositioning";
-import { timelinePanelClass } from "../timelineViewLayout";
 
 type TaskDetailPanelProps = {
   span: TaskActivitySpan;
@@ -13,6 +12,7 @@ type TaskDetailPanelProps = {
 
 /**
  * Detail panel displayed when a user clicks a Task_Bar in the Gantt view.
+ * Uses panel frost (not transparent ``im-timeline-panel``) so photo BG stays readable.
  */
 export function TaskDetailPanel({ span, onClose }: TaskDetailPanelProps) {
   const { t } = useTranslation("timeline");
@@ -23,7 +23,7 @@ export function TaskDetailPanel({ span, onClose }: TaskDetailPanelProps) {
   const formattedRange = formatGanttAnalysisRange(span.analysisTimeRange);
 
   return (
-    <div className={`${timelinePanelClass} relative`}>
+    <div className="im-surface-panel relative flex min-h-0 flex-1 flex-col">
       <button
         type="button"
         onClick={onClose}

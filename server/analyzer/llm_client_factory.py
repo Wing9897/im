@@ -9,8 +9,10 @@ from server.analyzer.llm_config import (
     LlmConfig,
     config_from_draft_fields,
     load_agent_llm_config,
+    load_liaison_llm_config,
     load_llm_config,
     load_llm_config_for_profile,
+    load_task_editor_llm_config,
 )
 from server.config import get_config_int
 from server.db.database import Database
@@ -47,8 +49,22 @@ async def client_from_assistant_staff(
     *,
     profile_id: str | None = None,
 ) -> Any:
-    """Build a client from assistant staff binding, or an explicit profile override."""
+    """Build a client from the assistant global slot, or an explicit profile override."""
     config = await load_agent_llm_config(db, profile_id=profile_id)
+    timeout = await get_config_int(db, "llm_generation_timeout")
+    return client_from_resolved_config(cls, config, timeout)
+
+
+async def client_from_liaison_slot(cls: Any, db: Database) -> Any:
+    """Build a client from the A2A / account-manager global slot."""
+    config = await load_liaison_llm_config(db)
+    timeout = await get_config_int(db, "llm_generation_timeout")
+    return client_from_resolved_config(cls, config, timeout)
+
+
+async def client_from_task_editor_slot(cls: Any, db: Database) -> Any:
+    """Build a client from the task-advisor global slot."""
+    config = await load_task_editor_llm_config(db)
     timeout = await get_config_int(db, "llm_generation_timeout")
     return client_from_resolved_config(cls, config, timeout)
 

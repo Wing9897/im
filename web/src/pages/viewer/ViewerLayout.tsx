@@ -21,9 +21,9 @@ export function ViewerLayout() {
   const { t } = useTranslation("common");
 
   return (
-    <div className="min-h-screen bg-surface-base">
+    <div className="im-page-shell min-h-screen bg-surface-base">
       <nav
-        className="flex items-center gap-lg border-b border-surface-border bg-surface-card px-2xl py-md"
+        className="im-surface-chrome flex items-center gap-lg border-b border-surface-border px-2xl py-md"
         aria-label={t("viewer.navAria")}
       >
         <span className="mr-lg flex min-w-0 flex-col leading-tight">

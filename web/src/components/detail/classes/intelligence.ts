@@ -14,7 +14,7 @@ export const intelligenceDetailBodyClass =
   `flex flex-col gap-lg px-md py-md ${detailDialogScrollBodyClass}`;
 
 export const intelligenceDetailContentHeroClass =
-  "whitespace-pre-wrap break-words rounded-md border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_72%,transparent)] px-md py-[14px] text-body leading-relaxed text-text-primary";
+  "im-surface-inset whitespace-pre-wrap break-words rounded-md border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] px-md py-[14px] text-body leading-relaxed text-text-primary";
 
 export const intelligenceDetailMetaListClass = "flex flex-col gap-sm";
 

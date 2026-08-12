@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from server.db.database import TransactionDb
-from server.llm_profiles_const import LLM_STAFF_CLASSES
+from server.llm_profiles_const import LLM_TASK_STAFF_CLASSES
 from server.secrets import protect_text
 from server.util import new_id
 
@@ -214,14 +214,20 @@ async def upsert_staff_classes(
     staff_classes: Sequence[str],
     now: str,
 ) -> None:
-    """Ensure exactly ``staff_classes`` instances exist for this profile."""
-    wanted = {c for c in staff_classes if c in LLM_STAFF_CLASSES}
+    """Sync task-mode staff classes for this profile.
+
+    ``assistant`` is a global singleton slot (see ``server.llm_global_slots``) and
+    is never created/deleted here — leave existing assistant rows untouched.
+    """
+    wanted = {c for c in staff_classes if c in LLM_TASK_STAFF_CLASSES}
     existing = await tx.fetch_all(
         "SELECT id, staff_class FROM llm_staff_instances WHERE profile_id = ?",
         (profile_id,),
     )
     existing_by_class = {str(row["staff_class"]): str(row["id"]) for row in existing}
     for staff_class, staff_id in list(existing_by_class.items()):
+        if staff_class == "assistant":
+            continue
         if staff_class not in wanted:
             await tx.execute("DELETE FROM llm_staff_instances WHERE id = ?", (staff_id,))
     for staff_class in sorted(wanted):

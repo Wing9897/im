@@ -4,6 +4,7 @@ import { Button } from "../ui";
 import { sectionTitleClass } from "../ui/pageTypography";
 import { OverlayPortal } from "../common/OverlayPortal";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { dialogShellClass } from "./dialogShellClasses";
 
 interface ConfirmDialogProps {
   title: string;
@@ -43,7 +44,7 @@ export function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="im-dialog-shell im-material-glass im-animate-in-scale w-full max-w-[400px] rounded-lg p-md"
+        className={`${dialogShellClass} im-animate-in-scale w-full max-w-[400px] rounded-lg p-md`}
         style={{
           border: `1px solid color-mix(in srgb, ${accentColor} 40%, transparent)`,
         }}

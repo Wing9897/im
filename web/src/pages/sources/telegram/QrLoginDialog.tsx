@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AlertBanner, Button, FormActions } from "../../../components/ui";
 import { useFocusTrap } from "../../../hooks/useFocusTrap";
 import { OverlayPortal } from "../../../components/common/OverlayPortal";
+import { compactSourceDialogShellClass } from "../../../components/dialogs/dialogShellClasses";
 
 /** Quiet-zone modules for qrcode.toDataURL (not CSS spacing). */
 const QR_CODE_MARGIN_MODULES = 2;
@@ -62,7 +63,7 @@ export function QrLoginDialog({
     <OverlayPortal onOverlayClick={onClose} lockBodyScroll>
       <div
         ref={focusTrapRef}
-        className="w-[380px] max-w-[90vw] rounded-xl border border-surface-border bg-surface-base p-lg shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+        className={`${compactSourceDialogShellClass} im-animate-in-scale`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-md text-base font-semibold text-text-primary">
@@ -82,7 +83,7 @@ export function QrLoginDialog({
               className="h-[240px] w-[240px] rounded-md bg-white p-sm"
             />
           ) : (
-            <div className="flex h-[240px] w-[240px] items-center justify-center rounded-md border border-surface-border bg-surface-raised text-body text-text-muted">
+            <div className="im-surface-inset flex h-[240px] w-[240px] items-center justify-center rounded-md border border-surface-border text-body text-text-muted">
               {t("verify.qrLoading")}
             </div>
           )}

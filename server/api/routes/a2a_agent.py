@@ -38,10 +38,11 @@ def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:
     "/agent",
     response_model=AgentChatResponse,
     description=(
-        "A2A natural-language agent (客户经理). Same LLM + tools as the assistant; "
-        "different system prompt. Server runs an internal tool loop; response is a "
-        "single shot: final `message` + `toolCalls` summary. No session storage. "
-        'Requires a full household access key (`["*"]`).'
+        "A2A natural-language agent (客户经理). Uses the dedicated liaison LLM "
+        "global slot (separate from the assistant slot); same tool surface as the "
+        "assistant with a different system prompt. Server runs an internal tool "
+        "loop; response is a single shot: final `message` + `toolCalls` summary. "
+        "No session storage. Requires a full household access key (`[\"*\"]`)."
     ),
 )
 async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
@@ -49,7 +50,7 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
     messages = _messages_from_body(body)
     llm: ConfigurableLlmClient | None = None
     try:
-        llm = await ConfigurableLlmClient.from_assistant_staff(db)
+        llm = await ConfigurableLlmClient.from_liaison_slot(db)
         runtime = AgentRuntime(db, llm, broadcaster=request.app.state.broadcaster)
         per_call = await get_config_int(db, "llm_generation_timeout")
         wall = agent_wall_timeout_seconds(per_call)

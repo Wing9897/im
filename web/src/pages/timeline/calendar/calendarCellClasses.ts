@@ -2,12 +2,12 @@ export function getWeekCellClass({ isActive, isToday }: { isActive: boolean; isT
   const base =
     "flex min-h-[11rem] cursor-pointer flex-col rounded-lg border p-2 transition-[border-color,background-color] duration-150";
   if (isActive) {
-    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]`;
+    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-panel))]`;
   }
   if (isToday) {
-    return `${base} im-card-hover border-surface-border bg-[color-mix(in_srgb,var(--accent)_5%,transparent)]`;
+    return `${base} im-card-hover border-[color-mix(in_srgb,var(--accent)_40%,var(--surface-border))] im-surface-inset`;
   }
-  return `${base} im-card-hover border-surface-border bg-surface-card`;
+  return `${base} im-card-hover im-surface-panel border-surface-border`;
 }
 
 export const weekCellHeaderClass =
@@ -29,8 +29,8 @@ export const weekCellEmptyClass = "mt-auto py-1 text-center text-[11px] text-tex
 /** Compact week-view event chip (accent rail + title + time). */
 export function weekEventChipClass(hovered: boolean): string {
   return [
-    "group relative w-full cursor-pointer overflow-hidden rounded-md border border-solid p-0 text-left",
-    "bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]",
+    "group relative w-full cursor-pointer rounded-md border border-solid p-0 text-left",
+    "im-surface-inset",
     "transition-[border-color,box-shadow] duration-150",
     hovered
       ? "border-[color-mix(in_srgb,var(--accent)_35%,transparent)] shadow-sm"
@@ -56,8 +56,8 @@ export const weekCellOverflowClass =
 /** Day-view event card shell (left accent rail + hover lift). */
 export function dayEventCardClass(hovered: boolean): string {
   return [
-    "group relative cursor-pointer overflow-hidden rounded-lg border border-solid",
-    "bg-surface-card p-0 text-left text-text-primary",
+    "group relative cursor-pointer rounded-lg border border-solid",
+    "im-material-panel p-0 text-left text-text-primary",
     "transition-[border-color,box-shadow,transform] duration-150",
     hovered
       ? "-translate-y-px border-[color-mix(in_srgb,var(--accent)_40%,transparent)] shadow-md"
@@ -79,7 +79,7 @@ export const dayCardTitleClass =
   "min-w-0 flex-1 text-sm font-semibold leading-snug text-text-primary";
 
 export const dayCardTimeChipClass =
-  "shrink-0 rounded-md bg-[color-mix(in_srgb,var(--surface-border)_45%,transparent)] px-1.5 py-0.5 text-[11px] font-medium tabular-nums leading-none text-text-secondary";
+  "im-surface-inset shrink-0 rounded-md border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] px-1.5 py-0.5 text-[11px] font-medium tabular-nums leading-none text-text-secondary";
 
 export const dayCardSummaryClass =
   "mb-1.5 line-clamp-2 text-xs font-normal leading-snug text-text-secondary";

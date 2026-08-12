@@ -47,7 +47,7 @@ describe("DetailDialogShell", () => {
     });
 
     expect(container.textContent).toContain("Dialog body");
-    expect(container.querySelector(".im-material-glass")).toBeTruthy();
+    expect(container.querySelector(".im-material-panel")).toBeTruthy();
     expect(container.querySelector(".im-animate-in-scale")).toBeTruthy();
     const closeButton = container.querySelector("[aria-label='關閉']");
     expect(closeButton).toBeTruthy();

@@ -126,7 +126,7 @@ function ToastItem({
   return (
     <div
       className={[
-        "im-toast-in pointer-events-auto flex cursor-pointer items-start gap-md rounded-[10px] border bg-surface-card px-lg py-md shadow-[0_8px_24px_rgba(0,0,0,0.3)]",
+        "im-toast-in im-surface-panel pointer-events-auto flex cursor-pointer items-start gap-md rounded-[10px] border px-lg py-md shadow-[0_8px_24px_rgba(0,0,0,0.3)]",
         toneBorderClass[toast.tone],
       ].join(" ")}
       style={{ marginTop: stackIndex > 0 ? 4 : undefined }}

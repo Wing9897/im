@@ -10,7 +10,7 @@ export function WebhookAccessKeysNotice({
 }) {
   const { t } = useTranslation("sources");
   return (
-    <div className="mb-md rounded-md border border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] p-md">
+    <div className="im-surface-inset mb-md rounded-md border border-surface-border p-md">
       <p className="mb-sm text-body leading-snug text-text-secondary">
         {t("webhook.keysProfileIntro")}{" "}
         <Link to="/source/keys" className="text-info no-underline">

@@ -134,41 +134,49 @@ async def load_agent_llm_config(
     *,
     profile_id: str | None = None,
 ) -> LlmConfig:
-    """Assistant / A2A: resolve LLM config for the agent chat path.
+    """Assistant chat path: session override, else global assistant slot.
 
     When ``profile_id`` is set (per-session override from the UI), load that
-    complete profile directly. Otherwise resolve via ``staff_class=assistant``
-    → ``profile_id``, preferring an active assistant staff instance. Fall back
-    to the default profile when no assistant instance exists. Never invent a
-    fake ``__default__`` id when the table is empty.
+    complete profile directly. Otherwise resolve the singleton assistant slot
+    (``llm_global_slot_assistant``, with legacy ``staff_class=assistant``
+    fallback). Fall back to the default profile only when the slot is empty
+    but profiles exist. Never invent a fake ``__default__`` id when empty.
 
-    A2A is sessionless and must call without ``profile_id`` (staff / default).
+    A2A must use :func:`load_liaison_llm_config` (separate global slot).
     """
+    from server.llm_global_slots import resolve_assistant_profile_id, slot_unbound_message
+
     override = (profile_id or "").strip()
     if override:
         return await load_llm_config_for_profile(db, override)
 
-    staff = await db.fetch_one(
-        "SELECT profile_id FROM llm_staff_instances "
-        "WHERE staff_class = 'assistant' AND is_active = 1 "
-        "ORDER BY updated_at DESC LIMIT 1",
-    )
-    if staff is None:
-        staff = await db.fetch_one(
-            "SELECT profile_id FROM llm_staff_instances "
-            "WHERE staff_class = 'assistant' "
-            "ORDER BY updated_at DESC LIMIT 1",
-        )
-    if staff is not None:
-        return await load_llm_config_for_profile(db, str(staff["profile_id"]))
+    slot_profile_id = await resolve_assistant_profile_id(db)
+    if slot_profile_id is not None:
+        return await load_llm_config_for_profile(db, slot_profile_id)
     count = await db.fetch_value("SELECT COUNT(*) FROM llm_profiles")
     if int(count or 0) == 0:
         raise http_error(
             400,
-            "No usable assistant LLM profile; create an AI profile and bind the assistant staff class",
+            slot_unbound_message("assistant"),
             error_code=VALIDATION_ERROR,
         )
     return await load_llm_config_for_profile(db, None)
+
+
+async def load_liaison_llm_config(db: Database) -> LlmConfig:
+    """A2A / account manager: dedicated global ``liaison`` slot (no assistant borrow)."""
+    from server.llm_global_slots import require_slot_profile_id
+
+    profile_id = await require_slot_profile_id(db, "liaison")
+    return await load_llm_config_for_profile(db, profile_id)
+
+
+async def load_task_editor_llm_config(db: Database) -> LlmConfig:
+    """Task advisor: dedicated global ``taskEditor`` slot."""
+    from server.llm_global_slots import require_slot_profile_id
+
+    profile_id = await require_slot_profile_id(db, "taskEditor")
+    return await load_llm_config_for_profile(db, profile_id)
 
 
 async def load_llm_config_for_task(db: Database, task: Mapping[str, Any]) -> LlmConfig:

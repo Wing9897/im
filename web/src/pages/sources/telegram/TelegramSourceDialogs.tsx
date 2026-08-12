@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { AlertBanner, Button, FormActions, PasswordField, SettingsRow, TextField } from "../../../components/ui";
 import { useFocusTrap } from "../../../hooks/useFocusTrap";
 import { OverlayPortal } from "../../../components/common/OverlayPortal";
+import { compactSourceDialogShellClass } from "../../../components/dialogs/dialogShellClasses";
 
 interface VerificationDialogProps {
   step: "code_required" | "2fa_required";
@@ -38,7 +39,7 @@ export function VerificationDialog({
     <OverlayPortal onOverlayClick={onClose} lockBodyScroll>
       <div
         ref={focusTrapRef}
-        className="w-[380px] max-w-[90vw] rounded-xl border border-surface-border bg-surface-base p-lg shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+        className={`${compactSourceDialogShellClass} im-animate-in-scale`}
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-md text-base font-semibold text-text-primary">

@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.llm_global_slots import LlmGlobalSlotWire
+
 LlmProviderWire = Literal["ollama", "openai_compatible", "gemini_compatible", "openrouter"]
 StaffClassWire = Literal["leaderboard", "intel_event", "agent", "assistant"]
 
@@ -49,3 +51,20 @@ class LlmProfileResponse(BaseModel):
 
 class LlmProfileDeleteResponse(BaseModel):
     ok: bool
+
+
+class LlmGlobalSlotBindingResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    slot: LlmGlobalSlotWire
+    profileId: str | None = None
+    profileName: str | None = None
+    profileProvider: str | None = None
+    profileModel: str | None = None
+    profileIsDefault: bool | None = None
+
+
+class LlmGlobalSlotsResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    slots: list[LlmGlobalSlotBindingResponse] = Field(default_factory=list)

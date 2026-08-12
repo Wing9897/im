@@ -67,6 +67,7 @@
     "lanAccessEnabled": "已開啟區域網路存取（即將重啟）",
     "lanAccessDisabled": "已關閉區域網路存取（即將重啟）",
     "lanAccessRestarting": "正在重啟以套用綁定位址…",
+    "advancedSectionTitle": "進階與維運",
     "debug": {
       "sectionTitle": "除錯與診斷",
       "traceVerboseLabel": "伺服器分析 Trace",
@@ -80,14 +81,30 @@
     "bgReadFailed": "讀取圖片失敗",
     "deskSectionTitle": "工作台",
     "classicSectionTitle": "經典／自然／風格",
-    "bgImageLabel": "背景圖片",
-    "bgImageHelp": "任選主題皆可上傳；有自訂圖時頁面紋理會暫停，移除圖片後恢復。",
+    "bgImageLabel": "背景",
+    "bgImageHelp": "任選主題皆可設定；有照片背景時頁面紋理會暫停，清除後恢復。",
+    "bgModeLabel": "背景模式",
+    "bgModeHelp": "無背景保留主題紋理；自訂為本機上傳；焦點背景使用 Bing 每日一圖（經本機伺服器代理）。",
+    "bgModeNone": "無（僅紋理）",
+    "bgModeCustom": "自訂上傳",
+    "bgModeFocal": "焦點背景（Bing 每日）",
+    "bgModeFocalHelp": "經本機伺服器向 Bing 取得壁紙（無需 API 金鑰）。重新整理會循環近日圖片（今日→昨日→…）。離線時使用上次成功快取，若無則顯示紋理。",
+    "focalLoading": "正在載入今日焦點背景…",
+    "focalFetchFailed": "無法載入今日焦點背景。將顯示紋理（若有上次快取則沿用）。",
+    "focalRefresh": "重新整理",
+    "focalRefreshing": "正在重新整理…",
+    "focalRefreshHelp": "重新整理會切換到下一張近日 Bing 圖（idx 0–7）。自動重新整理間隔存在本機；到點且頁面可見時會換圖並重新套用。",
+    "focalRefreshIntervalLabel": "自動重新整理間隔",
+    "focalRefreshOff": "關閉自動重新整理",
+    "focalRefreshHours": "每 {count} 小時",
     "bgImageNone": "尚未上傳",
     "chooseImage": "選擇圖片",
     "removeImage": "移除圖片",
     "bgPreviewAlt": "背景預覽",
     "opacity": "透明度",
     "customizeHeading": "自訂此主題",
+    "personalizationSectionTitle": "個人化",
+    "colorsHeading": "顏色與不透明度",
     "colorAccent": "強調色",
     "colorSurfaceBase": "頁面底色",
     "colorSurfaceCard": "卡片底色",
@@ -97,7 +114,7 @@
     "textureDefaultWithName": "跟隨預設（{name}）",
     "textureNone": "無紋理",
     "textureEffective": "實際套用：{name}",
-    "texturePausedForBg": "（已上傳背景圖，紋理暫停顯示）",
+    "texturePausedForBg": "（照片背景啟用中，紋理暫停顯示）",
     "colorOpacityLabel": "不透明度",
     "colorOpacityHelp": "每個色票可單獨調色與不透明度；調低卡片底色也會讓玻璃選單更通透。",
     "resetPersonalization": "恢復主題預設",
@@ -412,6 +429,7 @@
       "copied": "已複製",
       "copyFailed": "複製失敗"
     },
+    "referenceSectionTitle": "參考說明",
     "capabilityToggles": {
       "title": "能力群組",
       "body": "在總開關開啟時，選擇 MCP 可列出與呼叫的工具群組。預設全部啟用（等同完整 19 支 allowlist）。關閉的群組不會出現在 `list_tools`，呼叫時會被拒絕。這是家庭層能力過濾——不是存取金鑰的 scope。",
@@ -554,10 +572,39 @@
     "editHistoryAria": "編輯助手對話保留設定",
     "historyDialogTitle": "助手對話保留"
   },
+  "globalSlots": {
+    "title": "全局 AI 角色",
+    "intro": "每戶三個固定綁定——助手、A2A 客戶經理、任務顧問。各選一個完整設定檔；不在任務頁挑選。",
+    "unbound": "尚未綁定",
+    "placeholder": "選擇完整的設定檔",
+    "boundBadge": "已綁定",
+    "needsSetupBadge": "待設定",
+    "boundProfile": "{name} · {model}",
+    "noProfiles": "請先在下方「任務模式設定檔」建立設定檔，再於此綁定。",
+    "incompleteBadge": "不完整",
+    "incompleteHint": "此設定檔尚未完成——請補齊供應商、模型與必要金鑰。",
+    "boundSuccess": "全局角色綁定已更新",
+    "slot": {
+      "assistant": {
+        "title": "助手",
+        "help": "應用內助手對話（對話可覆寫）。"
+      },
+      "liaison": {
+        "title": "A2A／客戶經理",
+        "help": "外部 A2A agent API——與助手分開。"
+      },
+      "taskEditor": {
+        "title": "任務顧問",
+        "help": "任務編輯頁委派顧問時使用。"
+      }
+    }
+  },
   "profiles": {
-    "intro": "每個設定檔是可重用的 LLM 連線（供應商、模型、金鑰、聯網搜尋），可供員工類別綁定。請將其中一個設為預設，供新任務與回退使用。",
+    "listTitle": "任務模式設定檔",
+    "intro": "供排行榜、情報事件、專案經理使用的可重用 LLM 連線。在各設定檔綁定任務員工類別；任務仍須自行挑選設定檔。",
     "loading": "載入 AI 設定檔中…",
-    "empty": "尚無設定檔。請先建立一筆以連接 LLM。",
+    "emptyTitle": "尚無設定檔",
+    "empty": "先建立設定檔以連接 LLM，再綁定上方全局角色或此處的任務員工類別。",
     "create": "新建設定檔",
     "edit": "編輯設定檔",
     "copy": "複製設定檔",
@@ -569,24 +616,24 @@
     "dialogEditTitle": "編輯 AI 設定檔",
     "sectionIdentity": "設定檔",
     "sectionConnection": "供應商與模型",
-    "sectionStaff": "員工綁定",
+    "sectionStaff": "任務員工綁定",
     "nameLabel": "設定檔名稱",
-    "nameHelp": "顯示於員工綁定與任務表單。",
+    "nameHelp": "顯示於任務表單與任務員工綁定。",
     "namePlaceholder": "例如：本機 Ollama",
     "nameRequired": "請填寫設定檔名稱。",
     "apiKeyRequired": "此供應商需要 API 金鑰。",
     "defaultLabel": "預設設定檔",
-    "defaultHelp": "任務或員工類別未指定時使用。",
+    "defaultHelp": "新任務未指定設定檔時使用。",
     "defaultBadge": "預設",
-    "staffClassesLabel": "員工類別",
-    "staffClassesHelp": "哪些員工角色使用此設定檔。同一類別同時只能綁定一個設定檔。",
+    "staffClassesLabel": "任務員工類別",
+    "staffClassesHelp": "哪些任務模式角色可使用此設定檔。任務仍須在表單挑選 llmProfileId。助手／A2A／任務顧問請用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析員",
       "intel_event": "情報事件分析員",
       "agent": "專案經理",
       "assistant": "助手"
     },
-    "noStaffClasses": "未綁定員工類別",
+    "noStaffClasses": "未綁定任務員工類別",
     "noModel": "未設定模型",
     "editorHint": "顯示為 ******** 的 API 金鑰會保留原值，除非你輸入新金鑰。",
     "created": "設定檔已建立",
@@ -595,6 +642,6 @@
     "deleted": "設定檔已刪除",
     "setDefaultSuccess": "預設設定檔已更新",
     "cannotDeleteDefault": "請先將其他設定檔設為預設，再刪除此檔。",
-    "deleteConfirm": "確定刪除設定檔「{name}」？其上的員工綁定會移到預設設定檔。"
+    "deleteConfirm": "確定刪除設定檔「{name}」？其上的任務員工綁定會移除；若全局槽位使用此檔也會解除。"
   }
 }

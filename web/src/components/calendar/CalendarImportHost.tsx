@@ -65,7 +65,7 @@ function CalendarImportHostInner() {
     >
       <div className="flex flex-col gap-md">
         {payload ? (
-          <section className="rounded-lg border border-surface-border bg-surface-card p-md">
+          <section className="im-surface-panel rounded-lg border border-surface-border p-md">
             <p className="m-0 text-body font-medium text-text-primary">
               {payload.sourceLabel}
             </p>

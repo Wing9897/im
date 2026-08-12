@@ -5,10 +5,10 @@ interface SettingsContentCardProps {
   children?: React.ReactNode;
 }
 
-/** Compact settings form surface — no section hero titles. */
+/** Compact settings form surface — panel tokens (frosted under photo BG). */
 export function SettingsContentCard({ children }: SettingsContentCardProps) {
   return (
-    <SurfaceCard material="solid" density="field" className="relative z-[21] isolate">
+    <SurfaceCard material="panel" density="field" className="relative z-[21]">
       <FormStack gap="lg">{children}</FormStack>
     </SurfaceCard>
   );

@@ -14,7 +14,7 @@ export function StatCard({ label, value, hint, ...rest }: StatCardProps) {
   return (
     <SurfaceCard
       density="compact"
-      material="solid"
+      material="panel"
       className="flex min-w-0 flex-col gap-0.5"
       {...rest}
     >

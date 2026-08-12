@@ -85,12 +85,6 @@ def schedule_purpose_for_mode(analysis_mode: str | None) -> SchedulePurpose | No
     return None
 
 
-def may_calendar_expand(analysis_mode: str | None) -> bool:
-    """Deprecated: analysis modes never calendar-expand. Always False."""
-    del analysis_mode
-    return False
-
-
 def may_calendar_expand_series(row: dict | None) -> bool:
     """Hard gate: active standalone series expand into occurrences."""
     if not row:

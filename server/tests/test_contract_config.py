@@ -17,6 +17,10 @@ _INTERNAL_CONFIG_KEYS = frozenset(
         # Project tick knobs — server-owned; not on SystemSettingsSnapshot yet.
         "agent_max_tool_rounds",
         "agent_max_drain_waves",
+        # AI profile global slots — managed via /api/v1/llm/global-slots, not Settings wire.
+        "llm_global_slot_assistant",
+        "llm_global_slot_liaison",
+        "llm_global_slot_task_editor",
     }
 )
 
@@ -207,48 +211,38 @@ async def test_settings_put_ignores_analysis_paused(client):
     assert again["analysisPaused"] is True
 
 
-async def test_settings_put_ignores_analysis_paused_and_retired_retention(client, app):
-    """Retired dataRetentionDays wire key is ignored on PUT and absent from GET."""
+async def test_settings_put_rejects_retired_retention_key(client, app):
+    """Retired dataRetentionDays wire key → 422; never stored."""
     before = (await client.get("/api/v1/config/settings")).json()
     messages = before["retentionMessagesDays"]
     probe = "1" if messages != "1" else "2"
 
-    saved = (
-        await client.put(
-            "/api/v1/config/settings",
-            json={**before, "dataRetentionDays": probe},
-        )
-    ).json()
-    assert "dataRetentionDays" not in saved
-    assert saved["retentionMessagesDays"] == messages
+    resp = await client.put(
+        "/api/v1/config/settings",
+        json={**before, "dataRetentionDays": probe},
+    )
+    assert resp.status_code == 422
+    again = (await client.get("/api/v1/config/settings")).json()
+    assert again["retentionMessagesDays"] == messages
     stored = await app.state.db.fetch_value("SELECT COUNT(*) FROM system_config WHERE key = 'data_retention_days'")
     assert stored == 0
 
 
-async def test_settings_put_ignores_retired_llm_provider_keys(client, app):
-    """Stamp-29: llmProvider / openaiApiKey etc. are ignored and never stored in system_config."""
+async def test_settings_put_rejects_retired_llm_provider_keys(client, app):
+    """Stamp-29: retired LLM wire keys on settings PUT → 422."""
     before = (await client.get("/api/v1/config/settings")).json()
-    saved = (
-        await client.put(
-            "/api/v1/config/settings",
-            json={
-                **before,
-                "llmProvider": "openai_compatible",
-                "openaiApiKey": "sk-should-not-store",
-                "openaiModel": "gpt-ignored",
-                "assistantLlmProvider": "openai",
-                "braveSearchApiKey": "brave-ignored",
-            },
-        )
-    ).json()
-    for retired in (
-        "llmProvider",
-        "openaiApiKey",
-        "openaiModel",
-        "assistantLlmProvider",
-        "braveSearchApiKey",
-    ):
-        assert retired not in saved
+    resp = await client.put(
+        "/api/v1/config/settings",
+        json={
+            **before,
+            "llmProvider": "openai_compatible",
+            "openaiApiKey": "sk-should-not-store",
+            "openaiModel": "gpt-ignored",
+            "assistantLlmProvider": "openai",
+            "braveSearchApiKey": "brave-ignored",
+        },
+    )
+    assert resp.status_code == 422
 
     for key in (
         "llm_provider",

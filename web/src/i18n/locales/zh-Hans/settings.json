@@ -67,6 +67,7 @@
     "lanAccessEnabled": "已开启局域网访问（即将重启）",
     "lanAccessDisabled": "已关闭局域网访问（即将重启）",
     "lanAccessRestarting": "正在重启以应用绑定地址…",
+    "advancedSectionTitle": "进阶与维运",
     "debug": {
       "sectionTitle": "调试与诊断",
       "traceVerboseLabel": "服务器分析 Trace",
@@ -80,14 +81,30 @@
     "bgReadFailed": "读取图片失败",
     "deskSectionTitle": "工作台",
     "classicSectionTitle": "经典／自然／风格",
-    "bgImageLabel": "背景图片",
-    "bgImageHelp": "任意主题都可上传；有自定义图时页面纹理会暂停，移除图片后恢复。",
+    "bgImageLabel": "背景",
+    "bgImageHelp": "任意主题都可设置；有照片背景时页面纹理会暂停，清除后恢复。",
+    "bgModeLabel": "背景模式",
+    "bgModeHelp": "无背景保留主题纹理；自定义为本地上传；焦点背景使用 Bing 每日一图（经本地服务器代理）。",
+    "bgModeNone": "无（仅纹理）",
+    "bgModeCustom": "自定义上传",
+    "bgModeFocal": "焦点背景（Bing 每日）",
+    "bgModeFocalHelp": "经本地服务器向 Bing 获取壁纸（无需 API 密钥）。刷新会循环近几日图片（今日→昨日→…）。离线时使用上次成功缓存，若无则显示纹理。",
+    "focalLoading": "正在加载今日焦点背景…",
+    "focalFetchFailed": "无法加载今日焦点背景。将显示纹理（若有上次缓存则沿用）。",
+    "focalRefresh": "刷新",
+    "focalRefreshing": "正在刷新…",
+    "focalRefreshHelp": "刷新会切换到下一张近日 Bing 图（idx 0–7）。自动刷新间隔保存在本机；到点且页面可见时会换图并重新套用。",
+    "focalRefreshIntervalLabel": "自动刷新间隔",
+    "focalRefreshOff": "关闭自动刷新",
+    "focalRefreshHours": "每 {count} 小时",
     "bgImageNone": "尚未上传",
     "chooseImage": "选择图片",
     "removeImage": "移除图片",
     "bgPreviewAlt": "背景预览",
     "opacity": "透明度",
     "customizeHeading": "自定义此主题",
+    "personalizationSectionTitle": "个性化",
+    "colorsHeading": "颜色与不透明度",
     "colorAccent": "强调色",
     "colorSurfaceBase": "页面底色",
     "colorSurfaceCard": "卡片底色",
@@ -97,7 +114,7 @@
     "textureDefaultWithName": "跟随默认（{name}）",
     "textureNone": "无纹理",
     "textureEffective": "实际套用：{name}",
-    "texturePausedForBg": "（已上传背景图，纹理暂停显示）",
+    "texturePausedForBg": "（照片背景启用中，纹理暂停显示）",
     "colorOpacityLabel": "不透明度",
     "colorOpacityHelp": "每个色票可单独调色与不透明度；调低卡片底色也会让玻璃菜单更通透。",
     "resetPersonalization": "恢复主题默认",
@@ -412,6 +429,7 @@
       "copied": "已复制",
       "copyFailed": "复制失败"
     },
+    "referenceSectionTitle": "参考说明",
     "capabilityToggles": {
       "title": "能力分组",
       "body": "在总开关开启时，选择 MCP 可列出与调用的工具分组。默认全部启用（等同完整 19 支 allowlist）。关闭的分组不会出现在 `list_tools`，调用时会被拒绝。这是家庭层能力过滤——不是访问密钥的 scope。",
@@ -554,10 +572,39 @@
     "editHistoryAria": "编辑助手对话保留设定",
     "historyDialogTitle": "助手对话保留"
   },
+  "globalSlots": {
+    "title": "全局 AI 角色",
+    "intro": "每户三个固定绑定——助手、A2A 客户经理、任务顾问。各选一个完整设定档；不在任务页挑选。",
+    "unbound": "尚未绑定",
+    "placeholder": "选择完整的设定档",
+    "boundBadge": "已绑定",
+    "needsSetupBadge": "待设定",
+    "boundProfile": "{name} · {model}",
+    "noProfiles": "请先在下方「任务模式设定档」建立设定档，再于此绑定。",
+    "incompleteBadge": "不完整",
+    "incompleteHint": "此设定档尚未完成——请补齐供应商、模型与必要密钥。",
+    "boundSuccess": "全局角色绑定已更新",
+    "slot": {
+      "assistant": {
+        "title": "助手",
+        "help": "应用内助手对话（对话可覆盖）。"
+      },
+      "liaison": {
+        "title": "A2A／客户经理",
+        "help": "外部 A2A agent API——与助手分开。"
+      },
+      "taskEditor": {
+        "title": "任务顾问",
+        "help": "任务编辑页委派顾问时使用。"
+      }
+    }
+  },
   "profiles": {
-    "intro": "每个设定档是可复用的 LLM 连线（供应商、模型、密钥、联网搜索），可供员工类别绑定。请将其中一个设为默认，供新任务与回退使用。",
+    "listTitle": "任务模式设定档",
+    "intro": "供排行榜、情报事件、项目经理使用的可复用 LLM 连线。在各设定档绑定任务员工类别；任务仍须自行挑选设定档。",
     "loading": "载入 AI 设定档中…",
-    "empty": "尚无设定档。请先建立一笔以连接 LLM。",
+    "emptyTitle": "尚无设定档",
+    "empty": "先建立设定档以连接 LLM，再绑定上方全局角色或此处的任务员工类别。",
     "create": "新建设定档",
     "edit": "编辑设定档",
     "copy": "复制设定档",
@@ -569,24 +616,24 @@
     "dialogEditTitle": "编辑 AI 设定档",
     "sectionIdentity": "设定档",
     "sectionConnection": "供应商与模型",
-    "sectionStaff": "员工绑定",
+    "sectionStaff": "任务员工绑定",
     "nameLabel": "设定档名称",
-    "nameHelp": "显示于员工绑定与任务表单。",
+    "nameHelp": "显示于任务表单与任务员工绑定。",
     "namePlaceholder": "例如：本机 Ollama",
     "nameRequired": "请填写设定档名称。",
     "apiKeyRequired": "此供应商需要 API 密钥。",
     "defaultLabel": "默认设定档",
-    "defaultHelp": "任务或员工类别未指定时使用。",
+    "defaultHelp": "新任务未指定设定档时使用。",
     "defaultBadge": "默认",
-    "staffClassesLabel": "员工类别",
-    "staffClassesHelp": "哪些员工角色使用此设定档。同一类别同时只能绑定一个设定档。",
+    "staffClassesLabel": "任务员工类别",
+    "staffClassesHelp": "哪些任务模式角色可使用此设定档。任务仍须在表单挑选 llmProfileId。助手／A2A／任务顾问请用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析员",
       "intel_event": "情报事件分析员",
       "agent": "项目经理",
       "assistant": "助手"
     },
-    "noStaffClasses": "未绑定员工类别",
+    "noStaffClasses": "未绑定任务员工类别",
     "noModel": "未设定模型",
     "editorHint": "显示为 ******** 的 API 密钥会保留原值，除非你输入新密钥。",
     "created": "设定档已建立",
@@ -595,6 +642,6 @@
     "deleted": "设定档已删除",
     "setDefaultSuccess": "默认设定档已更新",
     "cannotDeleteDefault": "请先将其他设定档设为默认，再删除此档。",
-    "deleteConfirm": "确定删除设定档「{name}」？其上的员工绑定会移到默认设定档。"
+    "deleteConfirm": "确定删除设定档「{name}」？其上的任务员工绑定会移除；若全局槽位使用此档也会解除。"
   }
 }

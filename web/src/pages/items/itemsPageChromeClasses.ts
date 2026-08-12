@@ -6,11 +6,12 @@ import {
   pageChromeOuterClass,
   pageChromeTitleClass,
   pageChromeTitleClusterClass,
+  pageShellGridClass,
 } from "../../components/ui/pageChrome";
 
 /**
- * Items page chrome — shared sticky tokens live in ``components/ui/pageChrome``;
- * Items-only layout/search/filter classes stay here.
+ * Items page chrome — shared sticky tokens + ``pageShellGridClass`` live in
+ * ``components/ui/pageChrome``; Items-only layout/search/filter classes stay here.
  */
 
 /** Items form body width — matches Items list (`max-w-[1280px]`). Do not change global `formPageMaxWidthClass` (768). */
@@ -108,8 +109,12 @@ export const itemsPageChromeActionsClass = pageChromeActionsClass;
 /** Keep primary save from collapsing while the busy spinner shows. */
 export const itemsPageChromePrimaryActionClass = "min-w-[4.5rem]";
 
-const itemsChromePageFillBase =
-  "grid h-full min-h-0 w-full min-w-0 grid-rows-[auto_1fr] overflow-hidden bg-[var(--surface-page,var(--surface-base))]";
+/**
+ * Layout shell only — atmosphere comes from `.im-page-canvas` (no opaque page island).
+ * Composes shared ``pageShellGridClass`` (no overflow-hidden — see pageChrome).
+ * Canvas/main already clip via ``:has(.items-page-fill)``; body scrolls in the inner pane.
+ */
+const itemsChromePageFillBase = `${pageShellGridClass} h-full`;
 
 /** Browse page fill marker — paired with shared-layout.css `:has(.items-page-fill)`. */
 export const itemsPageFillClass = `items-page-fill ${itemsChromePageFillBase}`;

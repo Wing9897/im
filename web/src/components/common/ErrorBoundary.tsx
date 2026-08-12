@@ -72,7 +72,7 @@ export class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-surface-base p-3xl">
-          <div className="max-w-[480px] rounded-lg border border-error bg-surface-card p-3xl text-center">
+          <div className="im-surface-panel max-w-[480px] rounded-lg border border-error p-3xl text-center">
             <div className="mb-md text-page-title font-bold text-error">
               {i18n.t("ui.errorBoundary.title")}
             </div>

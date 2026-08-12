@@ -486,7 +486,7 @@ describe("SourceManagementPage visual updates", () => {
       // Verify Tailwind form field classes are applied
       for (const input of inputs) {
         expect(input.className).toContain("h-8");
-        expect(input.className).toContain("bg-surface-card");
+        expect(input.className).toContain("im-surface-inset");
         expect(input.className).toContain("border-surface-border");
         expect(input.className).toContain("rounded-md");
         expect(input.className).toContain("text-text-primary");

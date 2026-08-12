@@ -7,6 +7,7 @@
  * - Advanced sections collapsed by default; evidence style under 常用
  * - No spatiotemporal mode selector (policy is built into the analyzer)
  * - Loading state when settings are not yet available
+ * - Load failure shows ErrorRetryBanner (not a stuck spinner)
  * - Batch overlap lives on the event task form only (not global AI settings)
  */
 import { act, createElement } from "react";
@@ -44,15 +45,22 @@ const mockSettingsObject = vi.hoisted(() =>
   })),
 );
 
+const mockPageState = vi.hoisted(() => ({
+  settingsInitialLoading: false,
+  error: null as string | null,
+  reloadSettings: vi.fn(async () => undefined),
+}));
+
 vi.mock("./useSettingsAnalysisStrategyPage", () => ({
   useSettingsAnalysisStrategyPage: () => ({
     settingsObject: mockSettingsObject(),
-    settingsInitialLoading: mockSettingsObject() === null,
-    error: null,
+    settingsInitialLoading: mockPageState.settingsInitialLoading,
+    error: mockPageState.error,
     saving: false,
     saveSuccess: false,
     handleSettingChange: vi.fn(),
     handleSave: vi.fn(),
+    reloadSettings: mockPageState.reloadSettings,
     evidenceStyle: "balanced",
   }),
 }));
@@ -75,6 +83,9 @@ describe("SettingsAnalysisStrategyPage", () => {
     await i18n.changeLanguage("zh-Hant");
     container = document.createElement("div");
     document.body.appendChild(container);
+    mockPageState.settingsInitialLoading = false;
+    mockPageState.error = null;
+    mockPageState.reloadSettings.mockReset();
     mockSettingsObject.mockReturnValue({
       analysisBatchMessageLimit: "50",
       analysisMaxTotalChars: "100000",
@@ -185,8 +196,9 @@ describe("SettingsAnalysisStrategyPage", () => {
     expect(container.textContent).toContain("儲存分析調度");
   });
 
-  it("renders loading spinner when settingsObject is null", () => {
+  it("renders loading spinner when settings are still loading", () => {
     mockSettingsObject.mockReturnValue(null);
+    mockPageState.settingsInitialLoading = true;
 
     act(() => {
       root = createRoot(container);
@@ -194,5 +206,27 @@ describe("SettingsAnalysisStrategyPage", () => {
     });
 
     expect(container.textContent).toContain("載入分析調度設定中");
+  });
+
+  it("shows ErrorRetryBanner on load failure instead of a spinner", async () => {
+    mockSettingsObject.mockReturnValue(null);
+    mockPageState.settingsInitialLoading = false;
+    mockPageState.error = "網路錯誤";
+
+    act(() => {
+      root = createRoot(container);
+      root.render(createElement(SettingsAnalysisStrategyPage));
+    });
+
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain("網路錯誤");
+    expect(container.textContent).not.toContain("載入分析調度設定中");
+    const retry = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "重試",
+    );
+    expect(retry).toBeTruthy();
+    await act(async () => {
+      retry!.click();
+    });
+    expect(mockPageState.reloadSettings).toHaveBeenCalledOnce();
   });
 });

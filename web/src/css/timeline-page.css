@@ -68,7 +68,7 @@
   padding: 4px 8px;
   border-radius: var(--radius-md, 8px);
   border: 1px solid var(--surface-border);
-  background: color-mix(in srgb, var(--surface-card) 55%, transparent);
+  background: var(--surface-panel);
   color: var(--text-secondary);
   font-size: 11px;
   line-height: 1.35;
