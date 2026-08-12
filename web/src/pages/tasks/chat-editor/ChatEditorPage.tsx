@@ -12,6 +12,7 @@ import type { TemplateUsageMap } from "../../../components/task/taskTemplateType
 import { usePersistedState } from "../../../hooks/usePersistedState";
 import { CHAT_EDITOR_TEMPLATE_USAGE_KEY } from "../../../domain/prefs";
 import { analysisModeSupportsTaskPresets } from "../../../domain/tasks/taskPresetModes";
+import { stickyChromePageFillClass } from "../../../components/ui/pageChrome";
 
 export function ChatEditorPage() {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ export function ChatEditorPage() {
   };
 
   return (
-    <div className="grid h-[calc(100vh-var(--app-top-bar-height,48px))] grid-rows-[auto_1fr] overflow-hidden bg-[var(--surface-page,var(--surface-base))]">
+    <div className={stickyChromePageFillClass}>
       <ChatEditorToolbar
         isEditMode={isEditMode}
         canSaveForm={canSaveForm}

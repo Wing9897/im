@@ -70,7 +70,7 @@ async def test_create_patch_copy_set_default_profile_roundtrip(client, app):
             "jsonMode": "disabled",
             "webSearchEnabled": True,
             "webSearchProvider": "auto",
-            "staffClasses": ["assistant"],
+            "staffClasses": ["agent"],
             "isDefault": False,
         },
     )
@@ -80,7 +80,9 @@ async def test_create_patch_copy_set_default_profile_roundtrip(client, app):
     profile_id = created["id"]
     assert created["apiKey"] == MASKED_SECRET
     assert created["isDefault"] is False
-    assert "assistant" in created["staffClasses"]
+    assert created["staffClasses"] == ["agent"]
+    # ``assistant`` on upsert is ignored — bind via global slots instead.
+    assert "assistant" not in created["staffClasses"]
 
     raw = await app.state.db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (profile_id,))
     assert str(raw).startswith("enc:v1:")
@@ -98,7 +100,7 @@ async def test_create_patch_copy_set_default_profile_roundtrip(client, app):
             "jsonMode": "disabled",
             "webSearchEnabled": False,
             "webSearchProvider": "brave",
-            "staffClasses": ["assistant", "agent"],
+            "staffClasses": ["agent", "leaderboard"],
         },
     )
     assert patch.status_code == 200
@@ -106,7 +108,7 @@ async def test_create_patch_copy_set_default_profile_roundtrip(client, app):
     assert patched["name"] == "OpenAI pack v2"
     assert patched["model"] == "gpt-test-2"
     assert patched["webSearchEnabled"] is False
-    assert set(patched["staffClasses"]) == {"assistant", "agent"}
+    assert set(patched["staffClasses"]) == {"agent", "leaderboard"}
     # Masked key must preserve prior ciphertext.
     assert await app.state.db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (profile_id,)) == raw
 
@@ -228,15 +230,62 @@ async def test_task_create_rejects_when_no_profiles(client, app):
     assert first.json()["isDefault"] is True
 
 
-async def test_settings_put_with_llm_provider_does_not_store(client, app):
+async def test_settings_put_with_llm_provider_rejected(client, app):
     before = (await client.get("/api/v1/config/settings")).json()
-    saved = (
-        await client.put(
-            "/api/v1/config/settings",
-            json={**before, "llmProvider": "openai_compatible", "openaiApiKey": "sk-nope"},
-        )
-    ).json()
-    assert "llmProvider" not in saved
-    assert "openaiApiKey" not in saved
+    resp = await client.put(
+        "/api/v1/config/settings",
+        json={**before, "llmProvider": "openai_compatible", "openaiApiKey": "sk-nope"},
+    )
+    assert resp.status_code == 422
     assert await app.state.db.fetch_value("SELECT COUNT(*) FROM system_config WHERE key = 'llm_provider'") == 0
     assert await app.state.db.fetch_value("SELECT COUNT(*) FROM system_config WHERE key = 'openai_api_key'") == 0
+
+
+async def test_global_slots_list_and_rebind(client, app):
+    listed = await client.get("/api/v1/llm/global-slots")
+    assert listed.status_code == 200
+    payload = listed.json()
+    assert {row["slot"] for row in payload["slots"]} == {"assistant", "liaison", "taskEditor"}
+    for row in payload["slots"]:
+        assert row["profileId"] == DEFAULT_LLM_PROFILE_ID
+
+    create = await client.post(
+        "/api/v1/llm/profiles",
+        json={
+            "name": "Liaison pack",
+            "provider": "ollama",
+            "baseUrl": "http://localhost:11434",
+            "model": "llama-liaison",
+            "staffClasses": [],
+        },
+    )
+    assert create.status_code == 201
+    other_id = create.json()["id"]
+
+    bind = await client.put(
+        "/api/v1/llm/global-slots/liaison",
+        json={"profileId": other_id},
+    )
+    assert bind.status_code == 200
+    assert bind.json()["slot"] == "liaison"
+    assert bind.json()["profileId"] == other_id
+
+    clear = await client.put(
+        "/api/v1/llm/global-slots/taskEditor",
+        json={"profileId": None},
+    )
+    assert clear.status_code == 200
+    assert clear.json()["profileId"] is None
+
+    rebound = await client.put(
+        "/api/v1/llm/global-slots/assistant",
+        json={"profileId": other_id},
+    )
+    assert rebound.status_code == 200
+    assert rebound.json()["profileId"] == other_id
+    # Singleton: only one assistant staff instance remains.
+    staff = await app.state.db.fetch_all(
+        "SELECT profile_id FROM llm_staff_instances WHERE staff_class = 'assistant'",
+    )
+    assert len(staff) == 1
+    assert staff[0]["profile_id"] == other_id

@@ -41,7 +41,7 @@ export function GeminiBaseUrlField({
     <div ref={rootRef} className="relative">
       <div
         className={[
-          "flex h-8 min-h-8 w-full items-stretch rounded-md border bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] transition-[border-color,box-shadow] duration-200",
+          "im-surface-inset flex h-8 min-h-8 w-full items-stretch rounded-md border transition-[border-color,box-shadow] duration-200",
           shellFocused
             ? "border-[color-mix(in_srgb,var(--accent)_55%,var(--surface-border))] shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_14%,transparent)]"
             : "border-surface-border",

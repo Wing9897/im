@@ -155,10 +155,9 @@ describe("Timeline Calendar Rendering — Requirement 9.1, 9.2: Distinct indicat
         container.querySelectorAll('[data-testid="timeline-week-event-chip"]'),
       ).find((btn) => btn.textContent?.includes(expectCardTitle));
       expect(calendarCard).toBeDefined();
-      // Compact week chip uses a translucent surface-card mix (not solid bg-surface-card).
-      expect((calendarCard as HTMLElement).className).toContain(
-        "bg-[color-mix(in_srgb,var(--surface-card)_92%,transparent)]",
-      );
+      // Compact week chip uses inset frost token (not solid bg-surface-card).
+      expect((calendarCard as HTMLElement).className).toContain("im-surface-inset");
+      expect((calendarCard as HTMLElement).className).not.toContain("bg-surface-card");
       const statusRail = calendarCard!.querySelector('[aria-hidden="true"]') as HTMLElement | null;
       expect(statusRail).not.toBeNull();
       expect(statusRail!.style.backgroundColor).toBe("var(--warning)");

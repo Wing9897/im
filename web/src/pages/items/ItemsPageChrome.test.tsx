@@ -3,12 +3,15 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { ItemsPageChrome } from "./ItemsPageChrome";
+import { stickyChromePageFillClass } from "../../components/ui/pageChrome";
 import {
+  itemFormPageFillClass,
   itemsPageChromeActionsClass,
   itemsPageChromeInnerClass,
   itemsPageChromeOuterClass,
   itemsPageChromeTitleClass,
   itemsPageChromeTitleClusterClass,
+  itemsPageFillClass,
 } from "./itemsPageChromeClasses";
 
 describe("ItemsPageChrome", () => {
@@ -44,7 +47,7 @@ describe("ItemsPageChrome", () => {
     expect(toolbar!.className).toBe(itemsPageChromeOuterClass);
     expect(toolbar!.className).toContain("sticky");
     expect(toolbar!.className).toContain("border-b");
-    expect(toolbar!.className).toContain("backdrop-blur");
+    expect(toolbar!.className).toContain("im-surface-chrome");
     expect(toolbar!.querySelector("h1")?.textContent).toBe("物品");
     expect(toolbar!.querySelector("h1")?.className).toBe(itemsPageChromeTitleClass);
 
@@ -63,5 +66,16 @@ describe("ItemsPageChrome", () => {
     expect(actions.className).toBe(itemsPageChromeActionsClass);
     expect(actions.className).toContain("relative");
     expect(actions.className).toContain("z-[1]");
+  });
+
+  it("page fill shells stay transparent (no opaque surface-page island over photo BG)", () => {
+    expect(itemsPageFillClass).toContain("im-page-shell");
+    expect(itemFormPageFillClass).toContain("im-page-shell");
+    expect(itemsPageFillClass).not.toMatch(/bg-\[var\(--surface-page/);
+    expect(itemFormPageFillClass).not.toMatch(/bg-\[var\(--surface-page/);
+    expect(itemsPageFillClass).not.toContain("overflow-hidden");
+    expect(itemFormPageFillClass).not.toContain("overflow-hidden");
+    expect(stickyChromePageFillClass).toContain("im-page-shell");
+    expect(stickyChromePageFillClass).not.toContain("overflow-hidden");
   });
 });

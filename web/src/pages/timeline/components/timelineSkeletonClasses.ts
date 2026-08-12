@@ -11,7 +11,7 @@ export const timelineSkeletonCalendarHeaderRowClass =
   `${timelineSkeletonCalendarGridClass} mb-sm`;
 
 export const timelineSkeletonCalendarCellClass =
-  "flex min-h-[160px] flex-col gap-sm rounded-[14px] border border-surface-border bg-[color-mix(in_srgb,var(--surface-base)_45%,transparent)] p-2.5";
+  "im-surface-panel flex min-h-[160px] flex-col gap-sm rounded-[14px] border border-surface-border p-2.5";
 
 export const timelineSkeletonCellHeaderClass =
   "flex items-center justify-between";

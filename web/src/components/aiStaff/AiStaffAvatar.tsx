@@ -5,13 +5,20 @@ import taskEditorSrc from "../../assets/ai-staff/taskEditor.png";
 import leaderboardSrc from "../../assets/ai-staff/leaderboard.png";
 import intelEventSrc from "../../assets/ai-staff/intel_event.png";
 import agentSrc from "../../assets/ai-staff/agent.png";
+import liaisonSrc from "../../assets/ai-staff/liaison.png";
 
-const AVATAR_SRC: Record<AiStaffId, string> = {
+/**
+ * Avatar keys include page-local `liaison` (A2A) which is not an AiStaffId / roster member.
+ */
+export type AiStaffAvatarId = AiStaffId | "liaison";
+
+const AVATAR_SRC: Record<AiStaffAvatarId, string> = {
   assistant: assistantSrc,
   taskEditor: taskEditorSrc,
   leaderboard: leaderboardSrc,
   intel_event: intelEventSrc,
   agent: agentSrc,
+  liaison: liaisonSrc,
 };
 
 /** Shared pixel sizes for AI staff / task-employee avatars. */
@@ -22,7 +29,7 @@ export const AI_STAFF_AVATAR_SIZE_PX = {
 } as const;
 
 type AiStaffAvatarProps = {
-  staffId: AiStaffId;
+  staffId: AiStaffAvatarId;
   size?: keyof typeof AI_STAFF_AVATAR_SIZE_PX;
   className?: string;
   /** Accessible name; decorative when omitted. */
@@ -38,7 +45,7 @@ export function AiStaffAvatar({
   label,
   src,
 }: AiStaffAvatarProps) {
-  const staff = getAiStaff(staffId);
+  const staff = staffId === "liaison" ? null : getAiStaff(staffId);
   const px = AI_STAFF_AVATAR_SIZE_PX[size];
   const style = {
     width: px,
@@ -59,8 +66,8 @@ export function AiStaffAvatar({
       aria-label={label}
       aria-hidden={label ? undefined : true}
       data-testid={`ai-staff-avatar-${staffId}`}
-      data-staff-kind={staff.kind}
-      data-staff-surface={staff.surface}
+      data-staff-kind={staff?.kind}
+      data-staff-surface={staff?.surface}
       data-custom-src={src?.trim() ? "true" : undefined}
     >
       <img

@@ -49,7 +49,7 @@ export class SectionErrorBoundary extends React.Component<
       }
 
       return (
-        <div className="rounded-md border border-error bg-surface-card p-2xl text-center">
+        <div className="im-surface-panel rounded-md border border-error p-2xl text-center">
           <div className="mb-sm text-section-title font-semibold text-error">
             {i18n.t("sectionError.loadFailed", { name: this.props.sectionName })}
           </div>

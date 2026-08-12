@@ -149,9 +149,6 @@ class AnalysisEngine:
         system_prompt = CHAT_ASSISTANT_SYSTEM_PROMPT + "\n\n" + output_language_directive(resolved_locale)
         user_content = message
         draft = self._sanitize_current_task(current_task)
-        profile_id = None
-        if draft and draft.get("llmProfileId"):
-            profile_id = str(draft["llmProfileId"])
         if draft:
             user_content = (
                 "Current task form draft (JSON). Use this as context; do not "
@@ -159,7 +156,11 @@ class AnalysisEngine:
                 f"{json.dumps(draft, ensure_ascii=False, indent=2)}\n\n"
                 f"User message:\n{message}"
             )
-        client = await self._ensure_client(profile_id)
+        # Task advisor uses its fixed global slot (not the task form's llmProfileId).
+        from server.llm_global_slots import require_slot_profile_id
+
+        advisor_profile_id = await require_slot_profile_id(self._db, "taskEditor")
+        client = await self._ensure_client(advisor_profile_id)
         result = await client.complete(
             [
                 {"role": "system", "content": system_prompt},

@@ -73,6 +73,18 @@ async def seed_database(db: Any) -> None:
             ") VALUES (?, ?, ?, NULL, 1, ?, ?)",
             (f"staff-default-{staff_class}", staff_class, DEFAULT_LLM_PROFILE_ID, now, now),
         )
+    # Singleton global slots (assistant / A2A / task advisor) → default test profile.
+    for key in (
+        "llm_global_slot_assistant",
+        "llm_global_slot_liaison",
+        "llm_global_slot_task_editor",
+    ):
+        await db.execute(
+            "INSERT INTO system_config (key, value, updated_at) VALUES (?, ?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+            "updated_at = excluded.updated_at",
+            (key, DEFAULT_LLM_PROFILE_ID, now),
+        )
 
     # ── sources ──────────────────────────────────────────────────────
     email_creds = build_email_credentials(

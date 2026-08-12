@@ -3,10 +3,15 @@ import { useTranslation } from "react-i18next";
 import { MenuSelect } from "../ui";
 import { buttonBaseClass, buttonSizeClass } from "../ui/controlStyles";
 import { formHelpClass } from "../ui/pageTypography";
-import { listLlmProfiles, type LlmProfile } from "../../api/llmProfiles";
+import {
+  listLlmGlobalSlots,
+  listLlmProfiles,
+  type LlmGlobalSlotBinding,
+  type LlmProfile,
+} from "../../api/llmProfiles";
 import { isLlmProfileComplete } from "../../domain/settings/llmProfileCompleteness";
 
-/** Sentinel value: clear session override and follow staff_class=assistant. */
+/** Sentinel value: clear session override and follow the assistant global slot. */
 export const ASSISTANT_LLM_FOLLOW_STAFF = "";
 
 type AssistantSessionLlmProfileSelectProps = {
@@ -17,9 +22,20 @@ type AssistantSessionLlmProfileSelectProps = {
   className?: string;
 };
 
+function assistantSlotBoundAndComplete(
+  slots: LlmGlobalSlotBinding[],
+  profiles: LlmProfile[],
+): boolean {
+  const binding = slots.find((s) => s.slot === "assistant");
+  const profileId = (binding?.profileId ?? "").trim();
+  if (!profileId) return false;
+  const profile = profiles.find((p) => p.id === profileId);
+  return Boolean(profile && isLlmProfileComplete(profile));
+}
+
 /**
  * Per-session LLM profile picker for assistant chat chrome.
- * Incomplete profiles are disabled; empty list → CTA to ``/ai/provider``.
+ * When the assistant global slot is unbound / incomplete → CTA to ``/ai/provider``.
  */
 export function AssistantSessionLlmProfileSelect({
   value,
@@ -30,19 +46,22 @@ export function AssistantSessionLlmProfileSelect({
 }: AssistantSessionLlmProfileSelectProps) {
   const { t } = useTranslation("assistant");
   const [profiles, setProfiles] = useState<LlmProfile[]>([]);
+  const [slots, setSlots] = useState<LlmGlobalSlotBinding[]>([]);
   const [profilesLoading, setProfilesLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setProfilesLoading(true);
-    listLlmProfiles()
-      .then((list) => {
+    Promise.all([listLlmProfiles(), listLlmGlobalSlots()])
+      .then(([list, slotRows]) => {
         if (cancelled) return;
         setProfiles(list);
+        setSlots(slotRows);
       })
       .catch(() => {
         if (cancelled) return;
         setProfiles([]);
+        setSlots([]);
       })
       .finally(() => {
         if (!cancelled) setProfilesLoading(false);
@@ -63,8 +82,8 @@ export function AssistantSessionLlmProfileSelect({
     }
   }, [profiles, profilesLoading, value, onChange]);
 
+  const slotReady = assistantSlotBoundAndComplete(slots, profiles);
   const hasCompleteProfile = profiles.some(isLlmProfileComplete);
-  const profilesEmpty = !profilesLoading && profiles.length === 0;
   const profilesAllIncomplete =
     !profilesLoading && profiles.length > 0 && !hasCompleteProfile;
 
@@ -99,23 +118,23 @@ export function AssistantSessionLlmProfileSelect({
     );
   }
 
-  if (profilesEmpty) {
+  if (!slotReady) {
     return (
       <div
         className="flex flex-col items-start gap-sm"
-        data-testid="assistant-llm-profile-empty"
+        data-testid="assistant-llm-profile-unbound"
       >
-        <p className={`m-0 ${formHelpClass}`}>{t("llmProfile.empty")}</p>
+        <p className={`m-0 ${formHelpClass}`}>{t("llmProfile.slotUnbound")}</p>
         <a
           href="/ai/provider"
-          data-testid="assistant-llm-profile-create-cta"
+          data-testid="assistant-llm-profile-slot-cta"
           className={[
             buttonBaseClass,
             buttonSizeClass.sm,
             "inline-flex no-underline bg-accent border-accent text-[var(--text-on-accent)] font-medium hover:bg-[color-mix(in_srgb,var(--accent)_88%,var(--text-primary))]",
           ].join(" ")}
         >
-          {t("llmProfile.createCta")}
+          {t("llmProfile.slotCta")}
         </a>
       </div>
     );
@@ -153,7 +172,7 @@ export function AssistantSessionLlmProfileSelect({
               "inline-flex no-underline bg-accent border-accent text-[var(--text-on-accent)] font-medium hover:bg-[color-mix(in_srgb,var(--accent)_88%,var(--text-primary))]",
             ].join(" ")}
           >
-            {t("llmProfile.createCta")}
+            {t("llmProfile.slotCta")}
           </a>
         </div>
       ) : null}

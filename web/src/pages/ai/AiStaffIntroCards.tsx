@@ -26,7 +26,7 @@ export function LiaisonIntroCard() {
 
   return (
     <SurfaceCard
-      material="solid"
+      material="panel"
       density="compact"
       className="flex flex-col gap-xs"
       data-testid="ai-staff-card-liaison"
@@ -88,7 +88,7 @@ export function RosterStaffCard({ staff }: { staff: AiStaffDefinition }) {
 
   return (
     <SurfaceCard
-      material="solid"
+      material="panel"
       density="compact"
       className="flex flex-col gap-xs"
       data-testid={`ai-staff-card-${staff.id}`}

@@ -165,9 +165,14 @@ describe("AssistantQuick smoke", () => {
 
     openComposerViaChrome();
     expect(document.querySelector('[data-testid="assistant-caption-composer"]')).not.toBeNull();
+    const presence = document.querySelector('[data-testid="assistant-direct-presence"]');
+    expect(presence).not.toBeNull();
+    expect(presence?.querySelector('[data-testid="ai-staff-avatar-assistant"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="assistant-task-advisor-presence"]')).toBeNull();
 
     dispatchKey("keydown", { key: "Escape" });
     expect(document.querySelector('[data-testid="assistant-caption-composer"]')).toBeNull();
+    expect(document.querySelector('[data-testid="assistant-direct-presence"]')).toBeNull();
     // Idle voice keeps working even if the bubble portal has nothing to show.
     startListening.mockClear();
     const voiceDown = dispatchKey("keydown", { key: " ", code: "Space" });

@@ -13,7 +13,7 @@ export function AppTopBar() {
 
   return (
     <header
-      className="z-10 flex h-[var(--app-top-bar-height,52px)] shrink-0 items-center gap-md border-b border-[var(--surface-border-alpha,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-page)_92%,transparent)] px-2xl backdrop-blur-md"
+      className="im-surface-chrome z-10 flex h-[var(--app-top-bar-height,52px)] shrink-0 items-center gap-md border-b border-[var(--surface-border-alpha,var(--surface-border))] px-2xl"
       data-testid="app-top-bar"
     >
       <ShellChromeCore layout="web" showCollapse />

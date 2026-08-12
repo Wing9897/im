@@ -7,7 +7,14 @@ import { CollectorRestartPanel } from "../../components/settings/CollectorRestar
 import { LanguageSwitcher } from "../../components/settings/LanguageSwitcher";
 import { SystemVersionPanel } from "../../components/settings/SystemVersionPanel";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
-import { Button, CheckboxField, FormStack, SettingsRow, TextField } from "../../components/ui";
+import {
+  Button,
+  CheckboxField,
+  CollapsePanel,
+  FormStack,
+  SettingsRow,
+  TextField,
+} from "../../components/ui";
 import { formHelpClass } from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
 import { useSimpleMode } from "../../context/SimpleModeContext";
@@ -34,6 +41,7 @@ export function SettingsGeneralPage() {
   const isDesktopHost = Boolean(getElectronConnection());
   const [allowLanAccess, setAllowLanAccess] = useState(false);
   const [lanBusy, setLanBusy] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     setWeatherLocation(settings?.weatherLocation || SYSTEM_LOCATION);
@@ -209,19 +217,26 @@ export function SettingsGeneralPage() {
       </SettingsFieldGroup>
 
       <SettingsFieldGroup showDivider>
-        <AnalysisDebugPanel
-          analysisTraceVerbose={analysisTraceVerbose}
-          busy={debugSaving}
-          onAnalysisTraceVerboseChange={onTraceVerboseChange}
-        />
-      </SettingsFieldGroup>
-
-      <SettingsFieldGroup showDivider>
-        <CollectorRestartPanel
-          restarting={restartingCollector}
-          onRequestConfirm={() => setShowCollectorRestartConfirm(true)}
-          embedded
-        />
+        <CollapsePanel
+          nested
+          title={t("general.advancedSectionTitle")}
+          open={advancedOpen}
+          onToggle={() => setAdvancedOpen((value) => !value)}
+        >
+          <FormStack>
+            <AnalysisDebugPanel
+              analysisTraceVerbose={analysisTraceVerbose}
+              busy={debugSaving}
+              onAnalysisTraceVerboseChange={onTraceVerboseChange}
+              embedded
+            />
+            <CollectorRestartPanel
+              restarting={restartingCollector}
+              onRequestConfirm={() => setShowCollectorRestartConfirm(true)}
+              embedded
+            />
+          </FormStack>
+        </CollapsePanel>
       </SettingsFieldGroup>
 
       {showCollectorRestartConfirm ? (

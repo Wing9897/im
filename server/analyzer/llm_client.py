@@ -21,8 +21,10 @@ from server.analyzer.llm_client_factory import (
     client_from_assistant_staff,
     client_from_default_profile,
     client_from_draft,
+    client_from_liaison_slot,
     client_from_profile,
     client_from_resolved_config,
+    client_from_task_editor_slot,
 )
 from server.analyzer.llm_client_handlers import (
     complete_gemini_bound,
@@ -106,8 +108,18 @@ class ConfigurableLlmClient:
         *,
         profile_id: str | None = None,
     ) -> "ConfigurableLlmClient":
-        """Build a client from assistant staff binding, or an explicit profile override."""
+        """Build a client from the assistant global slot, or an explicit profile override."""
         return await client_from_assistant_staff(cls, db, profile_id=profile_id)
+
+    @classmethod
+    async def from_liaison_slot(cls, db: Database) -> "ConfigurableLlmClient":
+        """Build a client from the A2A / account-manager global slot."""
+        return await client_from_liaison_slot(cls, db)
+
+    @classmethod
+    async def from_task_editor_slot(cls, db: Database) -> "ConfigurableLlmClient":
+        """Build a client from the task-advisor global slot."""
+        return await client_from_task_editor_slot(cls, db)
 
     @classmethod
     async def from_profile(cls, db: Database, profile_id: str | None) -> "ConfigurableLlmClient":

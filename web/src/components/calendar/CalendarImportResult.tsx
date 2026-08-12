@@ -33,7 +33,7 @@ export function CalendarImportResult({
         {result.results.map((item) => (
           <li
             key={`${item.uid}-${item.targetId}`}
-            className="rounded-lg border border-surface-border bg-surface-card px-md py-sm text-caption"
+            className="im-surface-inset rounded-lg border border-surface-border px-md py-sm text-caption"
           >
             <span className="font-medium text-text-primary">
               {titles.get(item.uid) || t("calendarImport.unnamedEvent")}

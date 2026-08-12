@@ -32,7 +32,7 @@ export const logDetailPreLabelClass =
   "mb-1.5 font-sans text-[10px] font-bold uppercase tracking-wider text-text-muted";
 
 export const logDetailPreBlockClass =
-  "m-0 overflow-x-auto whitespace-pre-wrap break-words rounded-md border border-[color-mix(in_srgb,var(--surface-border)_85%,transparent)] bg-[color-mix(in_srgb,var(--surface-base)_82%,var(--surface-card))] p-[12px_14px] font-mono text-[11px] leading-normal text-text-primary";
+  "im-surface-inset m-0 overflow-x-auto whitespace-pre-wrap break-words rounded-md border border-[color-mix(in_srgb,var(--surface-border)_85%,transparent)] p-[12px_14px] font-mono text-[11px] leading-normal text-text-primary";
 
 export const logDetailFooterClass =
   "flex justify-end border-t border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] px-md pb-md pt-md";

@@ -7,7 +7,7 @@ export type ButtonSize = ControlSize | "icon" | "inline";
 
 /** Base chrome shared by text inputs and selects. */
 export const controlBaseClass =
-  "box-border w-full rounded-md border border-surface-border bg-surface-card px-sm text-body text-text-primary outline-none transition-[border-color,box-shadow,background] duration-200 ease-out focus:border-[color-mix(in_srgb,var(--accent)_55%,var(--surface-border))] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_14%,transparent)] disabled:opacity-50";
+  "im-surface-inset box-border w-full rounded-md border border-surface-border px-sm text-body text-text-primary outline-none transition-[border-color,box-shadow,background] duration-200 ease-out focus:border-[color-mix(in_srgb,var(--accent)_55%,var(--surface-border))] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent)_14%,transparent)] disabled:opacity-50";
 
 export const controlSizeClass: Record<ControlSize, string> = {
   sm: "h-8 min-h-8 text-caption",

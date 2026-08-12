@@ -1,6 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-export type SurfaceCardMaterial = "solid" | "glass" | "elevated";
+export type SurfaceCardMaterial = "panel" | "elevated";
 export type SurfaceCardDensity = "default" | "compact" | "field";
 export type SurfaceCardEnter = boolean | "rise" | "rise-soft" | "glow";
 
@@ -30,8 +30,7 @@ const paddingClass: Record<SurfaceCardDensity, string> = {
 } as const;
 
 const materialClass: Record<SurfaceCardMaterial, string> = {
-  solid: "im-material-solid",
-  glass: "im-material-glass",
+  panel: "im-material-panel",
   elevated: "im-material-elevated",
 };
 
@@ -46,14 +45,14 @@ const enterClass = (enter: SurfaceCardEnter | undefined): string => {
 };
 
 /**
- * Surface card aligned with polishedCardStyle / settings field cards.
- * Colors follow data-theme via semantic Tailwind tokens.
+ * Surface card — panel (frosted fill via --surface-panel) or elevated (sheen/texture).
+ * Colors follow data-theme via semantic tokens; do not add bg-surface-card on this node.
  */
 export function SurfaceCard({
   children,
   density = "default",
   padding = "density",
-  material = "solid",
+  material = "panel",
   interactive = false,
   enter,
   className,
@@ -62,9 +61,10 @@ export function SurfaceCard({
   const hasPaddingOverride = className != null && PADDING_OVERRIDE_RE.test(className);
   const applyDensityPadding = padding === "density" && !hasPaddingOverride;
 
-  const fieldDensity =
+  /* Field density = compact border only; material always applies (--surface-panel). */
+  const fieldBorder =
     density === "field"
-      ? "border border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] bg-surface-card"
+      ? "border border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)]"
       : "";
 
   const interactiveClass = interactive ? "cursor-pointer im-card-hover" : "";
@@ -72,7 +72,8 @@ export function SurfaceCard({
   const cls = [
     radiusClass[density],
     applyDensityPadding ? paddingClass[density] : "",
-    density !== "field" ? materialClass[material] : fieldDensity,
+    fieldBorder,
+    materialClass[material],
     interactiveClass,
     enterClass(enter),
     className ?? "",

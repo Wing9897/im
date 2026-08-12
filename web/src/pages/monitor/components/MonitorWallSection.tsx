@@ -107,7 +107,7 @@ export function MonitorWallSection({
   return (
     <div
       ref={containerRef}
-      className="im-wall-fs-host"
+      className="im-wall-fs-host im-fs-atmosphere"
       data-testid="monitor-wall-root"
     >
       <MonitorToolbar

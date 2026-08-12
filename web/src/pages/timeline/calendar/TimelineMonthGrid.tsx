@@ -306,7 +306,7 @@ export function TimelineMonthGrid({
           role="menu"
           aria-label={t("calendar.dayContextMenuAria")}
           data-testid="timeline-month-day-context-menu"
-          className="fixed z-[200] min-w-[11rem] overflow-hidden rounded-md border border-surface-border bg-surface-card py-1 shadow-lg"
+          className="im-menu-surface fixed z-[200] min-w-[11rem] rounded-md py-1"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <button

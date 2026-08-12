@@ -8,12 +8,22 @@ import { apiClient } from "./client";
 import type { components } from "./generated/schema";
 import {
   normalizeLlmProfile,
+  type LlmGlobalSlotId,
   type LlmProfile,
   type LlmProfileUpsert,
   type LlmStaffInstance,
 } from "../types/llmProfiles";
 
-export type { LlmProfile, LlmProfileUpsert, LlmStaffInstance };
+export type { LlmProfile, LlmProfileUpsert, LlmStaffInstance, LlmGlobalSlotId };
+
+export type LlmGlobalSlotBinding = {
+  slot: LlmGlobalSlotId;
+  profileId: string | null;
+  profileName: string | null;
+  profileProvider: string | null;
+  profileModel: string | null;
+  profileIsDefault: boolean | null;
+};
 
 type LlmProfileResponse = components["schemas"]["LlmProfileResponse"];
 
@@ -88,4 +98,21 @@ export function setDefaultLlmProfile(profileId: string): Promise<LlmProfile> {
 
 export function listLlmStaffInstances(): Promise<LlmStaffInstance[]> {
   return apiClient.get<LlmStaffInstance[]>("/api/v1/llm/staff-instances");
+}
+
+export async function listLlmGlobalSlots(): Promise<LlmGlobalSlotBinding[]> {
+  const raw = await apiClient.get<{ slots: LlmGlobalSlotBinding[] }>(
+    "/api/v1/llm/global-slots",
+  );
+  return raw.slots ?? [];
+}
+
+export function bindLlmGlobalSlot(
+  slot: LlmGlobalSlotId,
+  profileId: string | null,
+): Promise<LlmGlobalSlotBinding> {
+  return apiClient.put<LlmGlobalSlotBinding>(
+    `/api/v1/llm/global-slots/${encodeURIComponent(slot)}`,
+    { profileId },
+  );
 }

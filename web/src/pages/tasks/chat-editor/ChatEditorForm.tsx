@@ -66,7 +66,7 @@ export function ChatEditorForm({
   return (
     <div className="flex flex-col gap-sm" data-testid="task-editor-form">
       <SurfaceCard
-        material="glass"
+        material="panel"
         density="compact"
         className="shrink-0"
         aria-label={t("tasks.editor.requiredAria")}
@@ -119,7 +119,7 @@ export function ChatEditorForm({
       </SurfaceCard>
 
       <SurfaceCard
-        material="glass"
+        material="panel"
         density="compact"
         className="shrink-0"
         aria-label={t("tasks.editor.skillsAria")}

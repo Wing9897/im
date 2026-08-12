@@ -14,6 +14,7 @@ export function useSettingsAnalysisStrategyPage() {
     saveSuccess,
     handleSettingChange,
     handleSave: saveSettings,
+    reloadSettings,
   } = useSettingsPageState();
 
   const evidenceStyle: EvidenceStyle = normalizeEvidenceStyle(
@@ -32,6 +33,7 @@ export function useSettingsAnalysisStrategyPage() {
     saveSuccess,
     handleSettingChange,
     handleSave,
+    reloadSettings,
     evidenceStyle,
   };
 }

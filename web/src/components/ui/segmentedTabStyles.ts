@@ -6,11 +6,11 @@ export const segmentedNavClass = "mb-xl w-full";
 export const segmentedNavInlineClass = "w-auto shrink-0";
 
 export const segmentedTrackClass =
-  "relative flex w-full gap-0.5 overflow-hidden rounded-md border border-surface-border bg-[color-mix(in_srgb,var(--surface-base)_88%,transparent)] p-0.5";
+  "im-surface-chrome relative flex w-full gap-0.5 overflow-hidden rounded-md border border-surface-border p-0.5";
 
 /** Compact track aligned to dense toolbar / form controls. */
 export const segmentedTrackInlineClass =
-  "relative inline-flex h-7 shrink-0 items-stretch gap-0.5 overflow-hidden rounded-md border border-surface-border bg-[color-mix(in_srgb,var(--surface-base)_88%,transparent)] p-0.5";
+  "im-surface-chrome relative inline-flex h-7 shrink-0 items-stretch gap-0.5 overflow-hidden rounded-md border border-surface-border p-0.5";
 
 export const segmentedIndicatorClass =
   "pointer-events-none absolute top-0.5 bottom-0.5 left-0 z-[1] rounded-[5px] bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-card))] shadow-[inset_0_1px_0_color-mix(in_srgb,#fff_8%,transparent)] transition-[transform,width] duration-200 ease-[var(--im-easing-out)] motion-reduce:transition-none";

@@ -10,11 +10,31 @@ type LlmProfileUpsertBody = components["schemas"]["LlmProfileUpsertBody"];
 /** Staff classes that can bind to an LLM profile. */
 export type LlmStaffClass = NonNullable<LlmProfileUpsertBody["staffClasses"]>[number];
 
+/** All DDL staff classes (includes legacy ``assistant`` rows). */
 export const LLM_STAFF_CLASSES: readonly LlmStaffClass[] = [
   "leaderboard",
   "intel_event",
   "agent",
   "assistant",
+] as const;
+
+/**
+ * Task-mode classes shown as profile checkboxes.
+ * Global trio (assistant / liaison / taskEditor) use singleton slots instead.
+ */
+export const LLM_TASK_STAFF_CLASSES: readonly LlmStaffClass[] = [
+  "leaderboard",
+  "intel_event",
+  "agent",
+] as const;
+
+/** Singleton global slots on `/ai/provider` (wire ids). */
+export type LlmGlobalSlotId = "assistant" | "liaison" | "taskEditor";
+
+export const LLM_GLOBAL_SLOTS: readonly LlmGlobalSlotId[] = [
+  "assistant",
+  "liaison",
+  "taskEditor",
 ] as const;
 
 const STAFF_CLASS_SET = new Set<string>(LLM_STAFF_CLASSES);
@@ -25,6 +45,14 @@ export function normalizeLlmStaffClasses(
 ): LlmStaffClass[] {
   if (!raw || raw.length === 0) return [];
   return LLM_STAFF_CLASSES.filter((c) => raw.includes(c));
+}
+
+/** Keep task-mode classes only (strip ``assistant`` from editor drafts). */
+export function normalizeTaskStaffClasses(
+  raw: readonly string[] | null | undefined,
+): LlmStaffClass[] {
+  if (!raw || raw.length === 0) return [];
+  return LLM_TASK_STAFF_CLASSES.filter((c) => raw.includes(c));
 }
 
 export function isLlmStaffClass(value: string): value is LlmStaffClass {

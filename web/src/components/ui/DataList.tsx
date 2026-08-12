@@ -26,7 +26,7 @@ export const DataList = forwardRef<HTMLDivElement, DataListProps>(function DataL
     variant === "flush"
       ? ["min-w-0", className ?? ""].filter(Boolean).join(" ")
       : [
-          "im-auto-scrollbar overflow-y-auto overflow-x-hidden rounded-lg border border-[var(--surface-border-alpha,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-card)_60%,transparent)] shadow-sm",
+          "im-auto-scrollbar im-surface-panel overflow-y-auto overflow-x-hidden rounded-lg border border-[var(--surface-border-alpha,var(--surface-border))] shadow-sm",
           maxHeightClass,
           className ?? "",
         ]

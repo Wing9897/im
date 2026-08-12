@@ -113,6 +113,10 @@ describe("SettingsContentCard visual styles", () => {
     expect(card.tagName).toBe("DIV");
     expect(card.className).toContain("rounded-lg");
     expect(card.className).toContain("border");
+    expect(card.className).toContain("im-material-panel");
+    expect(card.className).not.toContain("isolate");
+    expect(card.className).not.toContain("bg-surface-card");
+    expect(card.className).not.toContain("bg-white");
   });
 
   it("renders children content inside the card", () => {

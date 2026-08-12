@@ -9,6 +9,13 @@
   animation: im-fade-in var(--im-duration-normal) var(--im-easing-out);
 }
 
+/* Photo BG: must win over the shorthand above (this file loads after motion-utilities).
+   Enter transform/opacity on the page root breaks frosted panels — see motion-utilities. */
+html[data-theme-bg="custom"] .app-main-content > *,
+html[data-theme-bg="focal"] .app-main-content > * {
+  animation: none;
+}
+
 /* Full-height Items browse / form pages — same canvas contract as timeline-page-fill. */
 .im-page-canvas:has(.item-form-page-fill),
 .im-page-canvas:has(.items-page-fill) {
@@ -64,6 +71,14 @@
 .im-card-hover:hover {
   background: var(--surface-raised, var(--surface-card));
   border-color: color-mix(in srgb, var(--accent) 24%, var(--surface-border)) !important;
+}
+
+/* Photo BG: deepen resting frost slightly — never swap in opaque raised.
+   Elevated cards use the same accent-tint mix via surface-materials.css
+   (sheen gradient dropped under photo so they match .im-surface-panel). */
+html[data-theme-bg="custom"] .im-card-hover:not(.im-material-elevated):hover,
+html[data-theme-bg="focal"] .im-card-hover:not(.im-material-elevated):hover {
+  background: color-mix(in srgb, var(--surface-panel) 94%, var(--accent) 6%);
 }
 
 /* ── Shared data list rows (monitor / intelligence / generic) ── */

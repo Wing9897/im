@@ -122,6 +122,7 @@ from server.api.schemas.responses.viewer import (
     ViewerStatusResponse,
     ViewerTaskResponse,
 )
+from server.api.schemas.responses.theme import FocalBackgroundResponse
 from server.api.schemas.responses.weather import (
     WeatherDailyResponse,
     WeatherForecastResponse,
@@ -227,6 +228,7 @@ __all__ = [
     "VoiceSettingsBody",
     "WeatherDailyResponse",
     "WeatherForecastResponse",
+    "FocalBackgroundResponse",
     "WorksetDeleteResponse",
     "WorksetResponse",
 ]

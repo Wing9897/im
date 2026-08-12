@@ -53,6 +53,8 @@ describe("AdvancedSettingsPanel", () => {
     expect(container.textContent).not.toContain("除錯");
     expect(container.textContent).not.toContain("AI 生成超時（秒）");
     expect(container.textContent).not.toContain("全域每批上限");
+    // nested inside SettingsContentCard — no second SurfaceCard frost slab
+    expect(container.querySelector(".im-material-panel")).toBeNull();
   });
 
   it("shows batch fields when 批次與重試 is expanded", () => {

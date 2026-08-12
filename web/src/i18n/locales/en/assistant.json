@@ -34,10 +34,12 @@
   },
   "llmProfile": {
     "label": "LLM profile",
-    "followStaff": "Follow staff profile",
+    "followStaff": "Follow assistant slot",
     "placeholder": "Select an AI profile",
     "loading": "Loading AI profiles…",
     "empty": "No AI profiles yet. Create one before chatting.",
+    "slotUnbound": "The Assistant role has no complete AI profile yet. Bind one under AI profiles → Global AI roles.",
+    "slotCta": "Open AI profiles",
     "allIncomplete": "Existing profiles are incomplete. Finish a profile (provider, model, and key when required) first.",
     "createCta": "Create AI profile",
     "defaultBadge": "Default",

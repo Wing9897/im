@@ -52,6 +52,18 @@ function renderPage(root: Root) {
   });
 }
 
+function expandSection(container: HTMLElement, title: string) {
+  const toggle = Array.from(container.querySelectorAll("button")).find(
+    (btn) =>
+      btn.getAttribute("aria-expanded") === "false" &&
+      btn.closest("div")?.textContent?.includes(title),
+  );
+  expect(toggle).toBeTruthy();
+  act(() => {
+    toggle!.click();
+  });
+}
+
 describe("SettingsMcpPage", () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -71,31 +83,44 @@ describe("SettingsMcpPage", () => {
     container.remove();
   });
 
-  it("renders endpoint, OpenClaw example, capability lists, and key links", () => {
+  it("keeps probe and capability toggles visible while collapsing OpenClaw and reference docs", () => {
     renderPage(root);
 
     const endpoint = container.querySelector('[data-testid="mcp-endpoint-url"]');
     expect(endpoint?.textContent).toBe("http://127.0.0.1:18820/api/v1/mcp");
+    expect(container.querySelector('[data-testid="mcp-master-switch"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="mcp-probe-connection"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="mcp-capability-toggles"]')).not.toBeNull();
 
+    expect(container.textContent).toContain("OpenClaw 設定");
+    expect(container.textContent).toContain("參考說明");
+    expect(container.querySelector('[data-testid="mcp-docs-example"]')).toBeNull();
+    expect(container.querySelector('[data-testid="mcp-link-keys"]')).toBeNull();
+    expect(container.textContent).not.toContain("Allowlist 總覽");
+    expect(container.textContent).not.toContain("不會暴露");
+  });
+
+  it("reveals OpenClaw example and reference lists after expanding collapsed sections", () => {
+    renderPage(root);
+
+    expandSection(container, "OpenClaw 設定");
     const example = container.querySelector('[data-testid="mcp-docs-example"]');
     expect(example?.textContent).toContain('"transport": "streamable-http"');
     expect(example?.textContent).toContain("Authorization");
     expect(example?.textContent).toContain("Bearer <access_key>");
     expect(example?.textContent).toContain("http://127.0.0.1:18820/api/v1/mcp");
 
+    expandSection(container, "參考說明");
     expect(container.textContent).toContain("Allowlist 總覽");
     expect(container.textContent).toContain("不會暴露");
     expect(container.textContent).toContain("messages.search");
     expect(container.textContent).toContain("web.search");
-
     expect(container.querySelector('[data-testid="mcp-link-keys"]')?.getAttribute("href")).toBe(
       "/account/keys",
     );
     expect(container.querySelector('[data-testid="mcp-link-api"]')?.getAttribute("href")).toBe(
       "/settings/api",
     );
-    expect(container.querySelector('[data-testid="mcp-master-switch"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="mcp-probe-connection"]')).not.toBeNull();
   });
 
   it("shows capability checkboxes and saves via settings draft flow", async () => {
@@ -177,6 +202,7 @@ describe("SettingsMcpPage", () => {
     });
 
     renderPage(root);
+    expandSection(container, "OpenClaw 設定");
 
     const button = container.querySelector<HTMLButtonElement>('[data-testid="mcp-copy-config"]');
     expect(button).toBeTruthy();

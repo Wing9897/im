@@ -36,7 +36,7 @@ export function RetentionCleanupPanel({
   }
 
   return (
-    <SurfaceCard className="border-[color-mix(in_srgb,var(--info)_30%,transparent)] bg-[color-mix(in_srgb,var(--info)_6%,transparent)]">
+    <SurfaceCard className="border-[color-mix(in_srgb,var(--info)_30%,transparent)]">
       {content}
     </SurfaceCard>
   );

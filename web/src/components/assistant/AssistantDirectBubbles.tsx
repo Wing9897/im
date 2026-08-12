@@ -46,8 +46,9 @@ type AssistantDirectBubblesProps = {
   /** Optional composer row rendered under the bubble stack. */
   composer?: ReactNode;
   /**
-   * Task create/edit only: show assistant + task-advisor presence chrome and
-   * attribute ``tasks.consult_advisor`` steps to the advisor.
+   * Task create/edit only: add task-advisor next to the assistant in presence
+   * chrome and attribute ``tasks.consult_advisor`` steps to the advisor.
+   * Assistant-only presence still shows whenever ``composer`` is open.
    */
   taskAdvisorPresence?: boolean;
 };
@@ -110,6 +111,8 @@ export function AssistantDirectBubbles({
   });
 
   const showPortal = active || showFlashes;
+  // Text composer chrome (any route) shows assistant presence; task editor adds advisor.
+  const showPresence = Boolean(composer) || taskAdvisorPresence;
 
   if (!showPortal || typeof document === "undefined") return null;
 
@@ -134,19 +137,25 @@ export function AssistantDirectBubbles({
       aria-label={t("direct.aria")}
     >
       <div className="im-assistant-direct__stack pointer-events-none">
-        {taskAdvisorPresence ? (
+        {showPresence ? (
           <div
             className="im-assistant-direct__presence"
-            data-testid="assistant-task-advisor-presence"
+            data-testid={
+              taskAdvisorPresence
+                ? "assistant-task-advisor-presence"
+                : "assistant-direct-presence"
+            }
           >
             <span className="im-assistant-direct__presence-staff">
               <DirectAssistantAvatar label={displayName} src={identity.avatarDataUrl} />
               <span className="im-assistant-direct__presence-name">{displayName}</span>
             </span>
-            <span className="im-assistant-direct__presence-staff">
-              <DirectStaffAvatar staffId="taskEditor" label={taskAdvisorName} />
-              <span className="im-assistant-direct__presence-name">{taskAdvisorName}</span>
-            </span>
+            {taskAdvisorPresence ? (
+              <span className="im-assistant-direct__presence-staff">
+                <DirectStaffAvatar staffId="taskEditor" label={taskAdvisorName} />
+                <span className="im-assistant-direct__presence-name">{taskAdvisorName}</span>
+              </span>
+            ) : null}
           </div>
         ) : null}
 

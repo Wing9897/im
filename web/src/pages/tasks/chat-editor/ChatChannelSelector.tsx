@@ -60,7 +60,7 @@ export function ChatChannelSelector({
         />
 
         {selectedChannels.length > 0 && (
-          <div className="mt-xs rounded-md border border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_65%,transparent)] px-sm py-xs">
+          <div className="im-surface-inset mt-xs rounded-md border border-surface-border px-sm py-xs">
             <div className="mb-xs text-[10px] font-semibold uppercase tracking-wide text-text-muted">
               {t("tasks.editor.channelsPreview")}
             </div>

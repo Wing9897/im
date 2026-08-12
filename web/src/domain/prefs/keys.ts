@@ -34,6 +34,20 @@ export function storageBgOpacityKey(themeId: string): string {
   return `im:theme-bg-opacity:${themeId}`;
 }
 
+/** Per-theme background mode: none | custom | focal (Bing daily). */
+export function storageBgModeKey(themeId: string): string {
+  return `im:theme-bg-mode:${themeId}`;
+}
+
+/** Shared day cache for focal (Bing) wallpaper URL + credits (+ idx). */
+export const THEME_FOCAL_CACHE_KEY = "im:theme-focal-cache";
+
+/**
+ * Device-local auto-refresh interval for focal BG (hours).
+ * ``0`` / missing = off; allowed: 1 / 6 / 12 / 24.
+ */
+export const THEME_FOCAL_REFRESH_HOURS_KEY = "im:theme-focal-refresh-hours";
+
 export function storageThemeColorsKey(themeId: string): string {
   return `im:theme-colors:${themeId}`;
 }

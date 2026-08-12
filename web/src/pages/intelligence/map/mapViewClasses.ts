@@ -11,7 +11,7 @@ export const mapStageFullscreenClass =
 export const mapLeafletFillClass = "h-full w-full";
 
 export const mapResetViewBtnClass =
-  "absolute bottom-7 right-2.5 z-[1100] flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-surface-border bg-[rgba(30,30,46,0.85)] text-base leading-none text-text-secondary backdrop-blur-[4px] transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";
+  "im-surface-panel absolute bottom-7 right-2.5 z-[1100] flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-surface-border text-base leading-none text-text-secondary transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";
 
 export const mapPopupBodyClass = "text-body text-text-primary";
 
@@ -21,7 +21,7 @@ export const mapEmptyOverlayClass =
   "pointer-events-none absolute inset-0 z-[1000] flex items-center justify-center";
 
 export const mapEmptyMsgClass =
-  "pointer-events-auto rounded-lg border border-surface-border bg-[color-mix(in_srgb,var(--surface-base)_85%,transparent)] px-lg py-lg text-sm text-text-secondary";
+  "im-surface-panel pointer-events-auto rounded-lg border border-surface-border px-lg py-lg text-sm text-text-secondary";
 
 export const mapDetailPanelClass =
   "im-map-overlay-panel absolute right-3 top-3 z-[1100] flex max-h-[calc(100%-24px)] w-[340px] flex-col overflow-hidden";
@@ -94,7 +94,7 @@ export const mapEventDetailTitleClass =
   "mb-1.5 break-words pr-lg text-xs font-semibold leading-snug text-text-primary";
 
 export const mapEventDetailContentClass =
-  "mb-sm break-words rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_20%,transparent)] bg-[color-mix(in_srgb,var(--surface-base)_18%,transparent)] px-sm py-1.5 text-card-meta leading-normal text-text-secondary";
+  "im-surface-inset mb-sm break-words rounded-lg border border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] px-sm py-1.5 text-card-meta leading-normal text-text-secondary";
 
 export const mapEventDetailMetaClass =
   "flex flex-col gap-0.5 overflow-hidden text-card-meta text-text-muted";
@@ -117,10 +117,10 @@ export const mapLiveInfoTransientContainerClass =
   "pointer-events-none absolute left-3 top-3 z-[1050] flex max-w-[360px] flex-col gap-1";
 
 export const mapTransientItemClass =
-  "danmaku-transient rounded-lg border-l-[3px] border-l-accent-pink bg-[color-mix(in_srgb,var(--surface-base)_14%,transparent)] px-md py-1.5 backdrop-blur-[2px]";
+  "im-surface-panel danmaku-transient rounded-lg border-l-[3px] border-l-accent-pink px-md py-1.5";
 
 export const mapLiveInfoTransientItemClass =
-  "danmaku-transient rounded-lg border-l-2 border-l-[rgba(245,224,220,0.45)] bg-[color-mix(in_srgb,var(--surface-base)_38%,transparent)] px-2.5 py-1 backdrop-blur-[2px]";
+  "im-surface-panel danmaku-transient rounded-lg border-l-2 border-l-[rgba(245,224,220,0.45)] px-2.5 py-1";
 
 export const mapTransientPanelRowClass =
   "pointer-events-none flex flex-row items-stretch gap-0";
@@ -128,7 +128,7 @@ export const mapTransientPanelRowClass =
 export const mapTransientItemsColumnClass = "flex min-w-0 flex-1 flex-col gap-1";
 
 export const mapBottomBarClass =
-  "shrink-0 border-t border-surface-border bg-surface-card";
+  "im-surface-chrome shrink-0 border-t border-surface-border";
 
 export const mapSmallBtnClass =
   "cursor-pointer whitespace-nowrap rounded-md border border-surface-border bg-transparent px-2.5 py-1 text-caption font-medium text-text-secondary transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";

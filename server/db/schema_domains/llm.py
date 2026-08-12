@@ -3,8 +3,14 @@
 #: Legacy / test fixture id only — fresh DDL no longer seeds this row.
 DEFAULT_LLM_PROFILE_ID = "__default__"
 
-#: Staff classes that bind to a profile (taskEditor is display-only, not materialized).
+#: Staff classes that may appear on ``llm_staff_instances`` (DDL CHECK).
+#: ``assistant`` is a singleton global slot (synced from ``llm_global_slot_assistant``);
+#: task-mode classes are multi-bind checkboxes on profile cards.
+#: ``liaison`` / ``taskEditor`` are global slots in system_config only (not DDL classes).
 LLM_STAFF_CLASSES = ("leaderboard", "intel_event", "agent", "assistant")
+
+#: Profile-editor checkbox classes (task picks ``llmProfileId``; not global slots).
+LLM_TASK_STAFF_CLASSES = ("leaderboard", "intel_event", "agent")
 
 DDL = """
 -- Packaged LLM connection settings (URL / provider / model / key / web search).

@@ -304,7 +304,7 @@
   gap: 8px;
   padding: 8px;
   overflow: hidden;
-  background: var(--surface-base);
+  /* Atmosphere (photo / motif / solid) comes from .im-fs-atmosphere in theme-textures.css */
 }
 
 .im-wall-fs-host:fullscreen .im-control-bar {

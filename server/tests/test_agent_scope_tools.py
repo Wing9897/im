@@ -8,6 +8,7 @@ from server.agent.tools_registry import execute_tool
 from server.db.database import Database, TransactionDb
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.tasks_queries import insert_analysis_task
 from server.services.recurring_series_writes import create_recurring_series
 from server.util import utc_now_iso
@@ -36,6 +37,7 @@ async def _insert_task(
             analysis_mode=mode,
             analysis_time_range="all",
             schedule_rrule="FREQ=HOURLY",
+            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
             now=now,
             **policy,
         )

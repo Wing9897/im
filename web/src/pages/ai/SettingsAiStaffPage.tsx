@@ -112,7 +112,7 @@ function AssistantStaffCard() {
 
   return (
     <SurfaceCard
-      material="solid"
+      material="panel"
       density="compact"
       className="flex flex-col gap-sm"
       data-testid="ai-staff-card-assistant"

@@ -23,7 +23,7 @@ export const actionDetailTypeBadgeClass =
 export const actionDetailEnabledClass = "mt-[10px] text-[11px] text-text-muted";
 
 export const actionDetailCardClass =
-  "rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_68%,transparent)] p-[12px_14px]";
+  "im-surface-inset rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[12px_14px]";
 
 export const actionDetailCardTitleClass = sourceDetailCardTitleClass;
 

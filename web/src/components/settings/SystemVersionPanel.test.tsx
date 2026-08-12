@@ -10,7 +10,7 @@ vi.mock("../../api/system", () => ({ fetchHealth }));
 
 const { SystemVersionPanel } = await import("./SystemVersionPanel");
 
-const SCHEMA_SEMVER = "0.1.0-beta.13";
+const SCHEMA_SEMVER = "0.1.0-beta.32";
 
 describe("SystemVersionPanel", () => {
   let harness: TestHarness;
@@ -24,7 +24,7 @@ describe("SystemVersionPanel", () => {
       version: __APP_VERSION__,
       runtimeReady: true,
       secretsReady: true,
-      schemaVersion: 11,
+      schemaVersion: 31,
       schemaSemver: SCHEMA_SEMVER,
       bindHost: "127.0.0.1",
       lanAccessEnabled: false,

@@ -47,6 +47,13 @@ describe("TaskDetailPanel", () => {
     expect(container.textContent).toContain("我的分析任務");
   });
 
+  it("uses im-surface-panel frost shell (not transparent timeline panel)", () => {
+    const { container } = render(makeSpan());
+    const root = container.firstElementChild as HTMLElement | null;
+    expect(root?.className).toContain("im-surface-panel");
+    expect(root?.className).not.toContain("im-timeline-panel");
+  });
+
   it("renders description truncated to 200 chars with ellipsis when longer", () => {
     const longDescription = "A".repeat(250);
     const { container } = render(makeSpan({ description: longDescription }));

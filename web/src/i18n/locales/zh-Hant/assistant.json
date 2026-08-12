@@ -34,10 +34,12 @@
   },
   "llmProfile": {
     "label": "LLM 設定檔",
-    "followStaff": "跟隨員工設定檔",
+    "followStaff": "跟隨助手槽位",
     "placeholder": "選擇 AI 設定檔",
     "loading": "正在載入 AI 設定檔…",
     "empty": "尚無 AI 設定檔。請先建立後再與助手對話。",
+    "slotUnbound": "助手角色尚未綁定完整的 AI 設定檔。請到「AI 設定檔 → 全局 AI 角色」綁定。",
+    "slotCta": "前往 AI 設定檔",
     "allIncomplete": "現有設定檔不完整。請先補齊供應商、模型與必要金鑰。",
     "createCta": "建立 AI 設定檔",
     "defaultBadge": "預設",

@@ -122,6 +122,12 @@ describe("TimelineSidebar detail provenance", () => {
     });
   }
 
+  it("frosts the detail aside with im-surface-panel", () => {
+    renderSidebar(makeUserEvent());
+    const aside = container.querySelector("aside");
+    expect(aside?.className).toContain("im-surface-panel");
+  });
+
   it("shows workset + assistant provenance for unassigned user events", () => {
     renderSidebar(makeUserEvent());
     expect(

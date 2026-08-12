@@ -23,4 +23,4 @@ export function taskColor(taskName: string | null): string {
 
 /** Applied to intelligence feed cards when the item has been read. */
 export const cardReadClass =
-  "opacity-[0.55] bg-[color-mix(in_srgb,var(--surface-card)_55%,transparent)]";
+  "opacity-[0.55] bg-[color-mix(in_srgb,var(--surface-panel)_70%,transparent)]";

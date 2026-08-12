@@ -39,6 +39,7 @@ export function AdvancedSettingsPanel({
   return (
     <FormStack gap="lg">
       <CollapsePanel
+        nested
         title={t("analysis.advanced.batchSectionTitle")}
         open={batchOpen}
         onToggle={() => setBatchOpen((v) => !v)}
@@ -107,6 +108,7 @@ export function AdvancedSettingsPanel({
       </CollapsePanel>
 
       <CollapsePanel
+        nested
         title={t("analysis.advanced.limitsSectionTitle")}
         open={limitsOpen}
         onToggle={() => setLimitsOpen((v) => !v)}

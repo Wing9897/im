@@ -16,6 +16,11 @@ interface PanelSectionProps {
   className?: string;
   bodyClassName?: string;
   "aria-label"?: string;
+  /**
+   * ``panel`` (default) — frosted shell via ``im-surface-panel``.
+   * ``none`` — layout/header only; nest inside an outer board/panel (avoid double blur).
+   */
+  surface?: "panel" | "none";
   /** When set, body can be toggled. */
   collapsible?: boolean;
   /** Uncontrolled initial open state (ignored when ``open`` is provided). */
@@ -38,6 +43,7 @@ export function PanelSection({
   className,
   bodyClassName,
   "aria-label": ariaLabel,
+  surface = "panel",
   collapsible = false,
   defaultOpen = true,
   open: openProp,
@@ -56,7 +62,9 @@ export function PanelSection({
   const bodyVisible = !collapsible || open;
 
   const rootCls = [
-    "rounded-xl border border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_55%,transparent)] shadow-sm",
+    surface === "panel"
+      ? "im-surface-panel rounded-xl border border-surface-border shadow-sm"
+      : "rounded-none border-0 bg-transparent shadow-none",
     className ?? "",
   ]
     .filter(Boolean)

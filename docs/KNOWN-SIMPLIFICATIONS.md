@@ -112,9 +112,12 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
 | Board widgets display-only | Board tiles do **not** navigate via `openInPages` / click-to-page. Regression: `web/src/board/widgets/boardWidgetNav.test.tsx` (keep) |
 | `TaskEmployeeId` | Intentional display alias of `AnalysisMode` (`web/src/domain/tasks/taskEmployee.ts`) — named helpers kept even though mapping is 1:1 |
-| `server/llm_profiles_const.py` | Thin re-export of DDL `DEFAULT_LLM_PROFILE_ID` / `LLM_STAFF_CLASSES` for import ergonomics — keep (not a second SoT) |
+| `server/llm_profiles_const.py` | Thin re-export of DDL `DEFAULT_LLM_PROFILE_ID` / `LLM_STAFF_CLASSES` / `LLM_TASK_STAFF_CLASSES` for import ergonomics — keep (not a second SoT) |
+| Global LLM slots | Assistant／A2A／task advisor singletons live in `system_config` (`llm_global_slot_*`) via `server/llm_global_slots.py` — profile-id pointers only (no stamp wipe). **Reads** use the config slot only (no `staff_class=assistant` fallback). Writes to the assistant slot still sync one `llm_staff_instances` row for staff-list UI. `liaison`／`taskEditor` are **not** DDL staff classes |
 | FE `MASKED_SECRET` | Same `"********"` literal in `utils/configValidation` and `types/llmProfiles` (and `server.secrets`) — keep local copies; do not re-export across types↔utils (cycle) |
 | Device-local browser state | UI-only state that must remain per browser／Electron profile stays in localStorage or sessionStorage: locale/theme/background, shell chrome and last path, drafts, view/filter/read state, runtime-log cache, and the stable assistant client-instance id. These are active stores, not migration bridges |
+| Theme focal (Bing daily) BG | Optional `data-theme-bg=focal` — not required for core offline use. Server proxies Bing HPImageArchive (`GET /api/v1/theme/focal-background?idx=0..7`) and image bytes (`…/image`). `idx` 0=today … 7=recent days (not infinite random). SPA Settings **Refresh** advances idx (cycle 0–7) and rewrites device `im:theme-focal-cache` (includes `idx` + `fetchedAt`). Optional auto-refresh interval (`im:theme-focal-refresh-hours`: 0/1/6/12/24) uses a visibility-aware FE timer. Apply via CSS vars `--theme-bg-image` / `--theme-bg-wash-pct` on `.im-page-canvas` + `.im-shell-sidebar`. Prefers same-origin blob URL; Bing hotlink is metadata/fallback. Upstream must use `format=js` (JSON); `format=json` returns XML — server XML-falls-back. Failure → last cache or motif/`none`. Unsplash deferred. Privacy: focal causes outbound Bing from the local server. |
+| Photo-BG surface layers | **Done:** photo ambient on `.im-page-canvas` + `.im-shell-sidebar`; chrome / panels / insets via `--surface-chrome` / `--surface-panel` / `--surface-inset` (+ `.im-material-panel`). Nested `.im-page-shell` stays transparent. `data-theme-bg=none` stays dense/opaque. Prefer layer helpers over `bg-surface-card` exceptions. **Readable glass defaults (photo):** panel 63% / chrome 70% / inset 86%; blur panel 22px / chrome 18px; wash bias −8pp with min wash 40%; personalization `--surface-panel` floor 63% under photo BG; sidebar uses chrome frost over photo; map overlays / danmaku / EmojiPicker host consume surface tokens. **Retired shims (debt cleanup):** `--im-panel-opacity*` `removeProperty` in `themePersonalization`; `#im-theme-bg` DOM strip in `applyBgImage`. |
 | Desktop STT / browser-only IO | Electron hides mic and disables browser STT direct mode; use text input. Provider ids are hard-cut to `browser` only (no Whisper/Doubao reserved ids); local Whisper / cloud STT-TTS stay out of scope — see [`agent/assistant.md`](./agent/assistant.md) |
 
 ## Intelligence / Events time semantics
@@ -186,6 +189,8 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 ## Removed / not restored
 
 Legacy Tauri migration guards were retired with the delivery slim-down and stay removed. Windows／macOS／Linux Desktop + Docker/Web are first-class delivery surfaces. Do not revive Tauri IPC.
+
+Theme glass shims retired with the photo-BG surface pass: do not reintroduce `--im-panel-opacity` / `--im-panel-opacity-pct` parallel CSS vars, or a body-level `#im-theme-bg` DOM layer (photo paints into `.im-page-canvas` / `.im-shell-sidebar` via `--theme-bg-image`).
 
 ## Agent workspace hygiene
 

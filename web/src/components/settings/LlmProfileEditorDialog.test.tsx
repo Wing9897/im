@@ -34,11 +34,14 @@ describe("LlmProfileEditorDialog", () => {
 
     expect(dialog?.querySelector('[aria-label="設定檔"]')).toBeTruthy();
     expect(dialog?.querySelector('[aria-label="供應商與模型"]')).toBeTruthy();
-    expect(dialog?.querySelector('[aria-label="員工綁定"]')).toBeTruthy();
+    expect(dialog?.querySelector('[aria-label="任務員工綁定"]')).toBeTruthy();
     expect(dialog?.querySelector('[aria-label="聯網搜尋"]')).toBeTruthy();
 
     const staff = dialog?.querySelector('[data-testid="llm-profile-staff-classes"]');
     expect(staff?.className ?? "").toContain("sm:grid-cols-2");
+    // Task-mode only — assistant is a global slot, not a checkbox.
+    expect(staff?.querySelector("#llm-profile-staff-assistant")).toBeNull();
+    expect(staff?.querySelector("#llm-profile-staff-agent")).toBeTruthy();
 
     const save = Array.from(dialog?.querySelectorAll("button") ?? []).find((btn) =>
       (btn.textContent ?? "").includes("儲存"),

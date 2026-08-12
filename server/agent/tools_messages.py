@@ -91,7 +91,7 @@ async def _tool_messages_search(db: Database, args: dict[str, Any]) -> dict[str,
     except MessagesQueryError as exc:
         return {"error": str(exc), "items": [], "count": 0}
     platform = args.get("platform")
-    source_ids = _as_csv(arg(args, "sourceIds", "source_ids", "accountIds", "account_ids"))
+    source_ids = _as_csv(arg(args, "sourceIds", "source_ids"))
     channel_ids = _as_csv(arg(args, "channelIds", "channel_ids"))
 
     try:
@@ -163,11 +163,6 @@ TOOL_SCHEMAS: list[dict[str, Any]] = [
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Optional source id filter",
-                },
-                "accountIds": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Legacy LLM spelling accepted as sourceIds",
                 },
                 "channelIds": {
                     "type": "array",

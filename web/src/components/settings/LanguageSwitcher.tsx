@@ -17,7 +17,7 @@ const optionSelectedClass =
   "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-card))] font-medium text-text-primary shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_28%,transparent)]";
 
 const optionIdleClass =
-  "border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_96%,transparent)] text-text-secondary hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:text-text-primary";
+  "im-surface-inset border-surface-border text-text-secondary hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:text-text-primary";
 
 export type LanguageSwitcherVariant = "settings" | "compact";
 

@@ -162,7 +162,7 @@ export function EmojiPickerField({
             aria-label={t("emojiClear")}
             className={[
               "absolute -right-0.5 -top-0.5 z-10 inline-flex h-6 w-6 items-center justify-center",
-              "rounded-full border border-surface-border/70 bg-surface-card text-text-secondary shadow-sm",
+              "im-surface-panel rounded-full border border-surface-border/70 text-text-secondary shadow-sm",
               "opacity-0 transition-opacity duration-150",
               "hover:border-surface-border hover:text-text-primary",
               "focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2",
@@ -191,8 +191,8 @@ export function EmojiPickerField({
           aria-label={ariaLabel}
           data-testid="emoji-picker-trigger"
           className={[
-            "inline-flex items-center gap-xs rounded-md border border-surface-border/70",
-            "bg-[color-mix(in_srgb,var(--surface-raised)_40%,var(--surface-card))] px-xs py-0.5",
+            "im-surface-inset inline-flex items-center gap-xs rounded-md border border-surface-border/70",
+            "px-xs py-0.5",
             "text-caption text-text-secondary transition-[border-color,background,color,opacity] duration-150 ease-out",
             "hover:border-surface-border hover:text-text-primary",
             "active:scale-[0.98]",

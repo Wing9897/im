@@ -172,7 +172,7 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
     <>
       <FormStack gap="md" className="min-h-0 flex-1" data-testid="item-form">
         <div
-          className="flex min-h-0 flex-1 flex-col rounded-xl border border-surface-border/80 bg-[color-mix(in_srgb,var(--surface-card)_72%,transparent)] shadow-sm"
+          className="im-surface-panel flex min-h-0 flex-1 flex-col rounded-xl border border-surface-border/80 shadow-sm"
           data-testid="item-form-cv"
         >
           <div className="px-md py-sm sm:px-lg sm:py-md">

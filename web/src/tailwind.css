@@ -94,7 +94,7 @@
   --ease-out: var(--im-easing-out);
   --ease-default: var(--im-easing-default);
 
-  --blur-glass: 16px;
+  /* Dialog / command-palette blur (panels use --surface-blur-panel). */
   --blur-glass-strong: 24px;
 
   --app-sidebar-width: 200px;

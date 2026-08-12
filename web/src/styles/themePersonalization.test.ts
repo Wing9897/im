@@ -20,6 +20,7 @@ import {
   storageThemeColorsKey,
   storageThemeTextureKey,
   DEFAULT_PANEL_OPACITY,
+  PHOTO_SURFACE_PANEL_FLOOR,
 } from "./themeData";
 import { getThemeDefinition } from "./themeCatalog";
 
@@ -35,8 +36,7 @@ function clearPersonalizationDom(): void {
     "--surface-card",
     "--surface-border",
     "--surface-overlay",
-    "--im-panel-opacity",
-    "--im-panel-opacity-pct",
+    "--surface-panel",
   ]) {
     root.style.removeProperty(prop);
   }
@@ -156,15 +156,26 @@ describe("applyTheme personalization overlay", () => {
     expect(root.style.getPropertyValue("--surface-card")).toBe("#040506");
   });
 
-  it("applies rgba when token opacity is set", () => {
+  it("applies panel SoT via --surface-panel when surfaceCard opacity is set", () => {
     setThemeColorOpacity("moss", "surfaceCard", 0.55);
     applyTheme("moss");
     const defaults = getCatalogColorDefaults("moss");
+    // --surface-card stays solid hex; panel strength is color-mix on --surface-panel.
     expect(document.documentElement.style.getPropertyValue("--surface-card")).toBe(
-      formatCssColorWithOpacity(defaults.surfaceCard, 0.55),
+      defaults.surfaceCard,
     );
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity")).toBe("0.55");
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity-pct")).toBe("55%");
+    expect(document.documentElement.style.getPropertyValue("--surface-panel")).toBe(
+      "color-mix(in srgb, var(--surface-card) 55%, transparent)",
+    );
+  });
+
+  it("still applies rgba for non-panel token opacity", () => {
+    setThemeColorOpacity("moss", "accent", 0.4);
+    applyTheme("moss");
+    const defaults = getCatalogColorDefaults("moss");
+    expect(document.documentElement.style.getPropertyValue("--accent")).toBe(
+      formatCssColorWithOpacity(defaults.accent, 0.4),
+    );
   });
 
   it("applies texture none / default / motif override", () => {
@@ -259,6 +270,24 @@ describe("applyTheme personalization overlay", () => {
     setThemeColorOpacity("moss", "surfaceCard", 0.7);
     expect(getEffectivePanelOpacity("moss")).toBe(0.7);
     applyThemePersonalization("moss");
-    expect(document.documentElement.style.getPropertyValue("--im-panel-opacity")).toBe("0.7");
+    expect(document.documentElement.style.getPropertyValue("--surface-panel")).toBe(
+      "color-mix(in srgb, var(--surface-card) 70%, transparent)",
+    );
+  });
+
+  it("floors personalized --surface-panel at 63% under photo BG", () => {
+    setThemeColorOpacity("moss", "surfaceCard", 0.4);
+    document.documentElement.setAttribute("data-theme-bg", "focal");
+    applyThemePersonalization("moss");
+    const floorPct = Math.round(PHOTO_SURFACE_PANEL_FLOOR * 100);
+    expect(document.documentElement.style.getPropertyValue("--surface-panel")).toBe(
+      `color-mix(in srgb, var(--surface-card) ${floorPct}%, transparent)`,
+    );
+
+    document.documentElement.setAttribute("data-theme-bg", "none");
+    applyThemePersonalization("moss");
+    expect(document.documentElement.style.getPropertyValue("--surface-panel")).toBe(
+      "color-mix(in srgb, var(--surface-card) 40%, transparent)",
+    );
   });
 });

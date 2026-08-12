@@ -69,7 +69,7 @@ function EventListItem({
     <SurfaceCard
       density="field"
       interactive
-      className={`im-timeline-event-list-item min-w-0 shrink-0 cursor-pointer overflow-hidden p-md text-left ${
+      className={`im-timeline-event-list-item min-w-0 shrink-0 cursor-pointer p-md text-left ${
         dismissed ? dismissedSurfaceClass : ""
       }`}
     >

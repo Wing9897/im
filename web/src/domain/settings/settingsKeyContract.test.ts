@@ -26,6 +26,10 @@ const INTERNAL_CONFIG_KEYS = new Set([
   "setup_complete",
   "agent_max_tool_rounds",
   "agent_max_drain_waves",
+  // AI profile global slots — /api/v1/llm/global-slots, not Settings wire.
+  "llm_global_slot_assistant",
+  "llm_global_slot_liaison",
+  "llm_global_slot_task_editor",
 ]);
 
 /** Retired CONFIG_DEFAULTS keys that must stay absent (mirror server _RETIRED_CONFIG_KEYS). */

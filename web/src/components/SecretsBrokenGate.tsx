@@ -44,7 +44,7 @@ export function SecretsBrokenGate({
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-base p-xl text-text-primary">
       <div
-        className="w-full max-w-[480px] rounded-lg border border-surface-border bg-surface-card p-2xl shadow-md"
+        className="im-material-panel w-full max-w-[480px] rounded-lg p-2xl"
         role="dialog"
         aria-modal="true"
         aria-label={t("secretsBroken.dialogAria")}

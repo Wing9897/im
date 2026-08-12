@@ -44,7 +44,7 @@ export function AccentBarCard({
       interactive={interactive}
       enter={enter}
       padding="none"
-      className={["relative flex h-full min-w-0 overflow-hidden", className ?? ""]
+      className={["relative flex h-full min-w-0", className ?? ""]
         .filter(Boolean)
         .join(" ")}
       {...rest}

@@ -1,6 +1,6 @@
 export function timelineEventCardClass(hovered: boolean): string {
   return [
-    "cursor-pointer rounded-md border border-solid bg-surface-card p-md text-left text-caption text-text-primary transition-[border-color,box-shadow,transform] duration-150",
+    "im-surface-panel cursor-pointer rounded-md border border-solid p-md text-left text-caption text-text-primary transition-[border-color,box-shadow,transform] duration-150",
     hovered
       ? "-translate-y-px border-[color-mix(in_srgb,var(--accent)_35%,transparent)] shadow-sm"
       : "translate-y-0 border-surface-border shadow-none",

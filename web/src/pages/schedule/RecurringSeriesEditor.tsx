@@ -23,6 +23,7 @@ import {
   pageChromeOuterClass,
   pageChromeTitleClass,
   pageChromeTitleClusterClass,
+  stickyChromePageFillClass,
 } from "../../components/ui/pageChrome";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { toErrorMessage } from "../../utils/errors";
@@ -118,7 +119,7 @@ export function RecurringSeriesEditor() {
   };
 
   return (
-    <div className="grid h-[calc(100vh-var(--app-top-bar-height,48px))] grid-rows-[auto_1fr] overflow-hidden bg-[var(--surface-page,var(--surface-base))]">
+    <div className={stickyChromePageFillClass}>
       <header className={pageChromeOuterClass} data-testid="recurring-series-editor-toolbar">
         <div className={pageChromeInnerClass}>
           <div className={pageChromeTitleClusterClass}>

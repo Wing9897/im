@@ -78,6 +78,11 @@ describe("ItemsCategoryCard", () => {
     expect(container.querySelector('[data-testid="item-emoji-avatar"]')).toBeTruthy();
     const card = container.querySelector('[data-testid="items-category-card-c1"]');
     expect(card).toBeTruthy();
+    // Elevated class kept for accent/hover; photo BG CSS flattens resting fill
+    // to var(--surface-panel) so it matches .im-surface-panel frost (see surfaceLayers).
+    expect(card!.className).toContain("im-material-elevated");
+    expect(card!.className).toContain("im-card-hover");
+    expect(card!.className).not.toContain("im-material-panel");
     act(() => {
       (card as HTMLElement).click();
     });

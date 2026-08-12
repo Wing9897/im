@@ -50,5 +50,7 @@ describe("EmojiPickerPanel", () => {
     expect(mock).toBeTruthy();
     // Guard against regressing to apple/google (jsDelivr CDN PNGs).
     expect(mock?.getAttribute("data-emoji-style")).toBe("native");
+    const host = container.querySelector('[data-testid="emoji-picker-grid"]');
+    expect(host?.className).toContain("im-menu-surface");
   });
 });

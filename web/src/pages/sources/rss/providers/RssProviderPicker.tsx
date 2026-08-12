@@ -31,7 +31,7 @@ export function RssProviderPicker({
       </label>
       <div className="flex min-w-0 items-center gap-md">
         <span
-          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-surface-border bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)]"
+          className="im-surface-inset inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-surface-border"
           aria-hidden="true"
         >
           <PlatformIcon platform={activeProvider.iconPlatform} size={16} />

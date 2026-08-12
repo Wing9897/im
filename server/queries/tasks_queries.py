@@ -8,7 +8,6 @@ import aiosqlite
 
 from server.db.database import TransactionDb
 from server.ingestion import upsert_channel
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.version_sql import version_matched_batch_on
 from server.worksets_const import SYSTEM_WORKSET_DEFAULT_NAME, SYSTEM_WORKSET_ID
 
@@ -167,7 +166,7 @@ async def insert_analysis_task(
     cap_read_items: int = 1,
     output_calendar: int = 0,
     output_analysis_events: int = 0,
-    llm_profile_id: str = DEFAULT_LLM_PROFILE_ID,
+    llm_profile_id: str,
     now: str,
 ) -> None:
     await tx.execute(

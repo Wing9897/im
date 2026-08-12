@@ -68,18 +68,20 @@
 
 .im-map-overlay-panel {
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface-base) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 12%, transparent);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: var(--surface-panel);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
+  box-shadow: var(--shadow-sm);
 }
 
 .im-map-danmaku-panel {
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface-base) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 12%, transparent);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: var(--surface-panel);
+  border: 1px solid color-mix(in srgb, var(--surface-border) 88%, transparent);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
+  box-shadow: var(--shadow-sm);
 }
 
 .danmaku-body-hide-scrollbar {

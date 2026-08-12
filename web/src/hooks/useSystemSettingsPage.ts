@@ -51,6 +51,17 @@ export function useSystemSettingsPage() {
     }
   }, []);
 
+  const reloadSettings = useCallback(async () => {
+    try {
+      const snapshot = await fetchSystemSettings();
+      setSettings(snapshot);
+      setSavedSnapshot(snapshot);
+      setError(null);
+    } catch (e) {
+      setError(toErrorMessage(e));
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -222,6 +233,7 @@ export function useSystemSettingsPage() {
     applyPersistedSnapshot,
     handleSettingChange,
     handleSave,
+    reloadSettings,
     handleRequestFullReset,
     confirmConcurrentBatchesSave,
     cancelConcurrentBatchesSave,

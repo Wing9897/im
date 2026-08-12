@@ -66,7 +66,7 @@ function PreviewItem({
     : t("calendarImport.timed");
   return (
     <article
-      className="flex flex-col gap-xs rounded-lg border border-surface-border bg-surface-card p-md"
+      className="im-surface-panel flex flex-col gap-xs rounded-lg border border-surface-border p-md"
       data-testid={`calendar-import-item-${item.uid}`}
     >
       <CheckboxField

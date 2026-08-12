@@ -38,10 +38,6 @@
   --platform-email: #67e8f9;
   --platform-default: #19c37d;
   --text-on-accent: #ffffff;
-  /* Panel / menu / glass fill strength (1 = opaque). Overridable per theme. */
-  --im-panel-opacity: 0.96;
-  /* Percentage twin for color-mix (avoids calc(unitless * %) quirks). */
-  --im-panel-opacity-pct: 96%;
 }
 
 /* Themes inherit accent-tinted defaults; named themes may override. */
@@ -66,6 +62,40 @@ html {
   --surface-page: color-mix(in srgb, var(--surface-base) 97%, #fff);
   --surface-sidebar: color-mix(in srgb, var(--surface-base) 94%, #000);
   --surface-raised: color-mix(in srgb, var(--surface-card) 90%, #fff);
+  /*
+   * Surface layers (opaque defaults). Photo BG modes (custom / focal) soften
+   * below on the same unlayered html selector chain — must NOT live only in
+   * @layer components (surface-materials.css), or unlayered html defaults win
+   * and resting panels stay cardboard-opaque while hover hardcodes glass.
+   *   chrome  — top bar / sticky page strips / segmented tracks
+   *   panel   — elevated cards, source boards, settings content cards
+   *   inset   — inputs / selects (slightly denser for readability)
+   * Page atmosphere lives on .im-page-canvas / .im-shell-sidebar; nested
+   * .im-page-shell regions stay transparent (no solid content islands).
+   */
+  --surface-chrome: color-mix(in srgb, var(--surface-page, var(--surface-base)) 96%, transparent);
+  --surface-panel: var(--surface-card);
+  --surface-inset: var(--surface-card);
+  --surface-blur-chrome: 0px;
+  --surface-blur-panel: 0px;
+}
+
+/*
+ * Photo BG frosted layers — unlayered so they override the html defaults above.
+ * Class rules (.im-surface-panel / .im-material-*) stay in surface-materials.css.
+ */
+html[data-theme-bg="custom"],
+html[data-theme-bg="focal"] {
+  --surface-chrome: color-mix(
+    in srgb,
+    var(--surface-page, var(--surface-base)) 70%,
+    transparent
+  );
+  /* ~63% readable glass over wash+photo (52% too thin; 68% reads as cardboard). */
+  --surface-panel: color-mix(in srgb, var(--surface-card) 63%, transparent);
+  --surface-inset: color-mix(in srgb, var(--surface-card) 86%, transparent);
+  --surface-blur-chrome: 18px;
+  --surface-blur-panel: 22px;
 }
 
 html[data-theme-mode="light"] {

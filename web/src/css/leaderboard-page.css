@@ -5,18 +5,15 @@
 }
 
 .im-leaderboard-row-btn:hover:not(.im-leaderboard-row-expanded) {
-  background: color-mix(in srgb, var(--surface-card) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-panel) 70%, transparent);
 }
 
 .im-leaderboard-board {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-card) 96%, transparent),
-    color-mix(in srgb, var(--surface-base) 40%, transparent)
-  );
+  background: var(--surface-panel);
+  backdrop-filter: blur(var(--surface-blur-panel));
+  -webkit-backdrop-filter: blur(var(--surface-blur-panel));
   border: 1px solid color-mix(in srgb, var(--surface-border) 85%, transparent);
   border-radius: 10px;
-  overflow: hidden;
 }
 
 .im-leaderboard-header {
@@ -93,7 +90,7 @@
 }
 
 .im-leaderboard-row-btn.im-leaderboard-row-expanded {
-  background: color-mix(in srgb, var(--surface-card) 80%, transparent);
+  background: color-mix(in srgb, var(--surface-inset) 80%, transparent);
 }
 
 .im-leaderboard-rank {

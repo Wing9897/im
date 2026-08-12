@@ -85,7 +85,7 @@
   gap: 6px;
   border-radius: var(--radius-md);
   border: 1px solid var(--surface-border-alpha, var(--surface-border));
-  background: color-mix(in srgb, var(--surface-card) 80%, transparent);
+  background: var(--surface-inset);
   padding: 4px 8px;
   font: inherit;
   font-size: 12px;

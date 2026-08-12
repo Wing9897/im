@@ -34,12 +34,16 @@ import { useTimelineFullscreen } from "./useTimelineFullscreen";
 import { useTimelinePageContainer } from "./useTimelinePageContainer";
 import { useTimelinePageDialogs } from "./useTimelinePageDialogs";
 
-/** Fill main canvas height; do not use 100vh (that overflows titlebar/topbar and scrolls the whole page). */
+/** Fill main canvas height; do not use 100vh (that overflows titlebar/topbar and scrolls the whole page).
+ * No overflow-hidden on the fill — canvas/main clip via `:has(.timeline-page-fill)`;
+ * overflow-hidden on this shell kills child backdrop-filter over photo BG. */
 const timelinePageShellClass =
-  "timeline-page-fill flex !min-h-0 h-full max-h-full flex-col overflow-hidden";
+  "timeline-page-fill flex !min-h-0 h-full max-h-full flex-col";
 
 const timelineFullscreenShellClass =
-  "flex h-full min-h-0 w-full flex-col overflow-hidden bg-surface-base p-md text-text-primary";
+  "im-fs-atmosphere im-page-shell flex h-full min-h-0 w-full flex-col p-md text-text-primary";
+
+const timelineWindowedShellClass = "im-fs-atmosphere flex h-full min-h-0 flex-col";
 
 const scrollAreaClass = "flex min-h-0 flex-1 flex-col overflow-hidden";
 
@@ -202,12 +206,12 @@ export function TimelinePage() {
     <TimelinePageProvider value={contextValue}>
       <div
         ref={containerRef}
-        className={isFullscreen ? timelineFullscreenShellClass : "flex h-full min-h-0 flex-col"}
+        className={isFullscreen ? timelineFullscreenShellClass : timelineWindowedShellClass}
         data-timeline-fullscreen={isFullscreen ? "true" : undefined}
       >
         <AppPageShell
           width="fluid"
-          className={isFullscreen ? "flex min-h-0 flex-1 flex-col overflow-hidden !p-0" : timelinePageShellClass}
+          className={isFullscreen ? "flex min-h-0 flex-1 flex-col !p-0" : timelinePageShellClass}
         >
           <div className="shrink-0">
             <TimelineControlBar

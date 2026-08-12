@@ -10,6 +10,7 @@ import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { OverlayPortal } from "./common/OverlayPortal";
+import { dialogShellClass } from "./dialogs/dialogShellClasses";
 import { useFocusTrap } from "../hooks/useFocusTrap";
 
 interface ModalDialogProps {
@@ -139,7 +140,7 @@ export function ModalDialog({
 
   const shellCls = [
     MODAL_SHELL[size],
-    "im-dialog-shell im-material-glass flex flex-col overflow-hidden",
+    `${dialogShellClass} flex flex-col`,
     parked ? "" : exiting ? "im-animate-out-scale" : "im-animate-in-scale",
   ]
     .filter(Boolean)

@@ -7,15 +7,29 @@ from typing import Any
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified, require_row
-from server.api.schemas.requests.llm_profiles import LlmProfileCopyBody, LlmProfileUpsertBody
+from server.api.schemas.requests.llm_profiles import (
+    LlmGlobalSlotBindBody,
+    LlmProfileCopyBody,
+    LlmProfileUpsertBody,
+)
 from server.api.schemas.responses.llm_profiles import (
+    LlmGlobalSlotBindingResponse,
+    LlmGlobalSlotsResponse,
     LlmProfileDeleteResponse,
     LlmProfileResponse,
     LlmStaffInstanceResponse,
 )
 from server.db.database import TransactionDb
 from server.errors import FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, http_error
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES
+from server.llm_global_slots import (
+    LLM_GLOBAL_SLOTS,
+    clear_slots_for_profile,
+    is_global_slot_id,
+    list_global_slots,
+    serialize_slot_binding,
+    set_global_slot,
+)
+from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES, LLM_TASK_STAFF_CLASSES
 from server.queries import llm_profiles_queries as q
 from server.secrets import MASKED_SECRET
 from server.util import new_id, utc_now_iso
@@ -41,22 +55,40 @@ def _clean_name(name: str) -> str:
 
 
 def _normalize_staff_classes(raw: list[str] | None) -> list[str]:
+    """Normalize task-mode staff classes; ``assistant`` is ignored (global slot)."""
     if not raw:
         return []
     out: list[str] = []
     seen: set[str] = set()
     for item in raw:
         value = str(item).strip()
-        if value not in LLM_STAFF_CLASSES:
-            raise http_error(
-                422,
-                f"Invalid staff class: {value}",
-                error_code=VALIDATION_ERROR,
-            )
+        if value == "assistant":
+            # Global singleton — bind via /llm/global-slots/assistant.
+            continue
+        if value not in LLM_TASK_STAFF_CLASSES:
+            if value not in LLM_STAFF_CLASSES:
+                raise http_error(
+                    422,
+                    f"Invalid staff class: {value}",
+                    error_code=VALIDATION_ERROR,
+                )
+            continue
         if value not in seen:
             seen.add(value)
             out.append(value)
     return out
+
+
+async def _serialize_global_slots(db: Any) -> dict[str, Any]:
+    bindings = await list_global_slots(db)
+    slots: list[dict[str, Any]] = []
+    for slot in LLM_GLOBAL_SLOTS:
+        profile_id = bindings.get(slot)
+        row = await q.fetch_profile_row(db, profile_id) if profile_id else None
+        if profile_id and row is None:
+            profile_id = None
+        slots.append(serialize_slot_binding(slot, profile_id, row))
+    return {"slots": slots}
 
 
 def _normalize_web_search_provider(raw: str | None) -> str:
@@ -190,6 +222,7 @@ async def delete_profile(request: Request, profile_id: str) -> dict[str, bool]:
         )
     async with db.transaction() as conn:
         await q.delete_profile(TransactionDb(conn), profile_id)
+    await clear_slots_for_profile(db, profile_id)
     _notify_profile(request, profile_id, "deleted")
     return {"ok": True}
 
@@ -250,6 +283,26 @@ async def set_default_profile(request: Request, profile_id: str) -> dict[str, An
 async def list_staff_instances(request: Request) -> list[dict[str, Any]]:
     rows = await q.fetch_all_staff_rows(get_db(request))
     return [serialize_llm_staff_instance(row) for row in rows]
+
+
+@router.get("/global-slots", response_model=LlmGlobalSlotsResponse)
+async def get_global_slots(request: Request) -> dict[str, Any]:
+    """Singleton bindings: assistant, A2A (liaison), task advisor (taskEditor)."""
+    return await _serialize_global_slots(get_db(request))
+
+
+@router.put("/global-slots/{slot}", response_model=LlmGlobalSlotBindingResponse)
+async def put_global_slot(
+    request: Request,
+    slot: str,
+    body: LlmGlobalSlotBindBody,
+) -> dict[str, Any]:
+    if not is_global_slot_id(slot):
+        raise http_error(404, f"Unknown global slot: {slot}", error_code=NOT_FOUND)
+    db = get_db(request)
+    profile_id = await set_global_slot(db, slot, body.profileId)  # type: ignore[arg-type]
+    row = await q.fetch_profile_row(db, profile_id) if profile_id else None
+    return serialize_slot_binding(slot, profile_id, row)  # type: ignore[arg-type]
 
 
 __all__ = ["DEFAULT_LLM_PROFILE_ID", "router"]

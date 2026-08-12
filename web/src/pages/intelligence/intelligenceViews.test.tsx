@@ -323,7 +323,7 @@ describe("IntelligenceDetailDialog coordinate display", () => {
       );
     });
 
-    const dialog = document.body.querySelector(".im-material-glass");
+    const dialog = document.body.querySelector(".im-material-panel");
     expect(dialog?.textContent).toContain("位置");
     expect(dialog?.textContent).toContain("台北");
     expect(dialog?.textContent).toContain("25.0330, 121.5654");
@@ -345,7 +345,7 @@ describe("IntelligenceDetailDialog coordinate display", () => {
       );
     });
 
-    const dialog = document.body.querySelector(".im-material-glass");
+    const dialog = document.body.querySelector(".im-material-panel");
     expect(dialog?.textContent).toContain("無具體地理位置（不上地圖）");
     expect(dialog?.textContent).not.toContain("0.0000");
   });

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AdvancedSettingsPanel } from "../../components/settings/AdvancedSettingsPanel";
 import { AnalysisSchedulingFields } from "../../components/settings/AnalysisSchedulingFields";
+import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
 import { CheckboxField, FormStack, SettingsRow } from "../../components/ui";
@@ -16,6 +18,7 @@ import { useSettingsAnalysisStrategyPage } from "./useSettingsAnalysisStrategyPa
 
 export function SettingsAnalysisStrategyPage() {
   const { t } = useTranslation("settings");
+  const [isRetrying, setIsRetrying] = useState(false);
   const {
     settingsObject,
     settingsInitialLoading,
@@ -24,6 +27,7 @@ export function SettingsAnalysisStrategyPage() {
     saveSuccess,
     handleSettingChange,
     handleSave,
+    reloadSettings,
     evidenceStyle,
   } = useSettingsAnalysisStrategyPage();
 
@@ -33,7 +37,14 @@ export function SettingsAnalysisStrategyPage() {
 
   if (!settingsObject) {
     return (
-      <LoadingSpinner text={settingsLoadError ?? t("analysis.loadError")} />
+      <ErrorRetryBanner
+        error={settingsLoadError ?? t("analysis.loadError")}
+        retrying={isRetrying}
+        onRetry={() => {
+          setIsRetrying(true);
+          void reloadSettings().finally(() => setIsRetrying(false));
+        }}
+      />
     );
   }
 

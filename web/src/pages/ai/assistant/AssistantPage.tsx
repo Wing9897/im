@@ -116,7 +116,7 @@ export function AssistantPage() {
       onPointerDown={blurDraftIfOutsideEditable}
     >
       <SurfaceCard
-        material="solid"
+        material="panel"
         density="field"
         className="flex min-h-[280px] flex-1 flex-col overflow-hidden"
       >

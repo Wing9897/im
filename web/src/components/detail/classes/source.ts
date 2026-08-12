@@ -23,7 +23,7 @@ export const sourceDetailCardTitleClass =
   "mb-sm text-[10px] font-bold uppercase tracking-wide text-text-muted";
 
 export const rssDetailHeroClass =
-  "rounded-md border border-[color-mix(in_srgb,var(--accent)_25%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_8%,var(--surface-card))] p-[14px_16px]";
+  "im-surface-inset rounded-md border border-[color-mix(in_srgb,var(--accent)_25%,var(--surface-border))] p-[14px_16px]";
 
 export const rssDetailHeroLabelClass = sourceDetailCardTitleClass;
 
@@ -37,13 +37,13 @@ export const discordDetailGuildClass =
   "overflow-hidden rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] [&+&]:mt-[10px]";
 
 export const discordDetailGuildNameClass =
-  "border-b border-[color-mix(in_srgb,var(--surface-border)_85%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)] px-md py-sm text-[11px] font-bold text-text-primary";
+  "im-surface-inset border-b border-[color-mix(in_srgb,var(--surface-border)_85%,transparent)] px-md py-sm text-[11px] font-bold text-text-primary";
 
 export const discordDetailChannelListClass =
   "m-0 list-disc py-sm pl-6 pr-md text-[11px] leading-normal text-text-secondary";
 
 export const emailDetailHeroClass =
-  "rounded-[10px] border border-[color-mix(in_srgb,var(--accent)_22%,var(--surface-border))] bg-[color-mix(in_srgb,var(--accent)_6%,var(--surface-card))] p-[12px_14px]";
+  "im-surface-inset rounded-[10px] border border-[color-mix(in_srgb,var(--accent)_22%,var(--surface-border))] p-[12px_14px]";
 
 export const emailDetailHeroLabelClass = rssDetailHeroLabelClass;
 
@@ -54,9 +54,9 @@ export const emailDetailFolderListClass =
   "m-0 flex list-none flex-col gap-1.5 p-0";
 
 export const emailDetailFolderItemClass =
-  "flex justify-between gap-sm rounded-md border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_65%,transparent)] p-[8px_10px] text-[11px]";
+  "im-surface-inset flex justify-between gap-sm rounded-md border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[8px_10px] text-[11px]";
 
 export const emailDetailFolderCursorClass = "font-mono text-text-muted";
 
 export const sourceDetailMonoHeroClass =
-  "break-all rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] bg-[color-mix(in_srgb,var(--surface-card)_70%,transparent)] p-[12px_14px] font-mono text-body";
+  "im-surface-inset break-all rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[12px_14px] font-mono text-body";

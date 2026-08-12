@@ -11,6 +11,7 @@ import {
   loadBgForTheme,
   resolveThemeId,
 } from "./themeData";
+import { storageBgModeKey } from "../domain/prefs";
 import { THEME_CATALOG, SPECIAL_THEME_IDS } from "./themeCatalog";
 
 /**
@@ -152,6 +153,14 @@ describe("applyTheme sets DOM attribute and localStorage", () => {
     applyBgImage(null, 0);
     expect(document.documentElement.getAttribute("data-theme-bg")).toBe("none");
   });
+
+  it("sets data-theme-bg focal for Bing daily photo and preserves it across applyTheme", () => {
+    applyTheme("moss");
+    applyBgImage("https://www.bing.com/th?id=OHR.Test", 0.3, "focal");
+    expect(document.documentElement.getAttribute("data-theme-bg")).toBe("focal");
+    applyTheme("nord");
+    expect(document.documentElement.getAttribute("data-theme-bg")).toBe("focal");
+  });
 });
 
 describe("resolveThemeId unknown → default", () => {
@@ -226,67 +235,79 @@ describe("special theme classification consistency", () => {
   });
 });
 
-describe("applyBgImage DOM operations", () => {
+describe("applyBgImage CSS variable apply path", () => {
   beforeEach(() => {
-    const el = document.getElementById("im-theme-bg");
-    if (el) el.remove();
+    document.documentElement.style.removeProperty("--theme-bg-image");
+    document.documentElement.style.removeProperty("--theme-bg-wash-pct");
+    document.documentElement.removeAttribute("data-theme-bg");
   });
 
   afterEach(() => {
-    const el = document.getElementById("im-theme-bg");
-    if (el) el.remove();
+    document.documentElement.style.removeProperty("--theme-bg-image");
+    document.documentElement.style.removeProperty("--theme-bg-wash-pct");
+    document.documentElement.removeAttribute("data-theme-bg");
   });
 
-  it("creates background element with correct URL and opacity", () => {
+  it("sets --theme-bg-image and wash pct from URL + opacity", () => {
     applyBgImage("https://example.com/bg.png", 0.3);
-    const el = document.getElementById("im-theme-bg");
-    expect(el).not.toBeNull();
-    expect(el!.style.backgroundImage).toContain("https://example.com/bg.png");
-    expect(el!.style.opacity).toBe("0.3");
-    expect(el!.style.display).toBe("block");
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain(
+      "https://example.com/bg.png",
+    );
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("62%");
+    expect(root.getAttribute("data-theme-bg")).toBe("custom");
   });
 
-  it("updates existing element instead of creating duplicate", () => {
+  it("updates CSS vars in place for successive applies", () => {
     applyBgImage("url-one", 0.2);
     applyBgImage("url-two", 0.5);
-    const elements = document.querySelectorAll("#im-theme-bg");
-    expect(elements.length).toBe(1);
-    expect(elements[0]!.getAttribute("style")).toContain("url-two");
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain("url-two");
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("42%");
   });
 
-  it("hides the background element when URL is null", () => {
+  it("clears CSS vars when URL is null", () => {
     applyBgImage("test-url", 0.3);
-    const el = document.getElementById("im-theme-bg");
-    expect(el).not.toBeNull();
-
     applyBgImage(null, 0);
-    expect(el!.style.display).toBe("none");
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue("--theme-bg-image")).toBe("");
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("");
+    expect(root.getAttribute("data-theme-bg")).toBe("none");
   });
 
-  it("handles data URL strings", () => {
+  it("handles data URL strings via CSS vars", () => {
     const dataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
-    applyBgImage(dataUrl, 0.4);
-    const el = document.getElementById("im-theme-bg");
-    expect(el).not.toBeNull();
-    expect(el!.style.backgroundImage).toContain(dataUrl);
-    expect(el!.style.opacity).toBe("0.4");
+    applyBgImage(dataUrl, 0.4, "custom");
+    const root = document.documentElement;
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain(dataUrl);
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("52%");
+  });
+
+  it("writes focal mode attribute and max-opacity wash for Bing URL", () => {
+    applyBgImage("https://www.bing.com/th?id=OHR.Test", 0.6, "focal");
+    const root = document.documentElement;
+    expect(root.getAttribute("data-theme-bg")).toBe("focal");
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain("bing.com");
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("40%");
   });
 });
 
 describe("loadBgForTheme load and hide behavior", () => {
   beforeEach(() => {
     localStorage.clear();
-    const el = document.getElementById("im-theme-bg");
-    if (el) el.remove();
+    document.documentElement.style.removeProperty("--theme-bg-image");
+    document.documentElement.style.removeProperty("--theme-bg-wash-pct");
+    document.documentElement.removeAttribute("data-theme-bg");
   });
 
   afterEach(() => {
     localStorage.clear();
-    const el = document.getElementById("im-theme-bg");
-    if (el) el.remove();
+    document.documentElement.style.removeProperty("--theme-bg-image");
+    document.documentElement.style.removeProperty("--theme-bg-wash-pct");
+    document.documentElement.removeAttribute("data-theme-bg");
   });
 
-  it("returns null and hides bg when no image is stored (any theme)", () => {
+  it("returns null and clears photo vars when no image is stored (any theme)", () => {
     const ids = [
       "command-center",
       "latte",
@@ -298,14 +319,11 @@ describe("loadBgForTheme load and hide behavior", () => {
     for (const id of ids) {
       const result = loadBgForTheme(id);
       expect(result).toBeNull();
-      const el = document.getElementById("im-theme-bg");
-      if (el) {
-        expect(el.style.display).toBe("none");
-      }
+      expect(document.documentElement.getAttribute("data-theme-bg")).toBe("none");
     }
   });
 
-  it("returns stored data URL and applies with stored opacity for any theme", () => {
+  it("returns stored data URL and applies CSS vars with stored opacity", () => {
     const themeId = "orchard";
     const fakeDataUrl = "data:image/png;base64,orchardAAAA";
     const opacity = 0.25;
@@ -316,10 +334,10 @@ describe("loadBgForTheme load and hide behavior", () => {
     const result = loadBgForTheme(themeId);
     expect(result).toBe(fakeDataUrl);
 
-    const el = document.getElementById("im-theme-bg");
-    expect(el).not.toBeNull();
-    expect(el!.style.backgroundImage).toContain(fakeDataUrl);
-    expect(el!.style.opacity).toBe(String(opacity));
+    const root = document.documentElement;
+    expect(root.getAttribute("data-theme-bg")).toBe("custom");
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain(fakeDataUrl);
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("67%");
   });
 
   it("returns null for theme with no stored data URL", () => {
@@ -327,7 +345,7 @@ describe("loadBgForTheme load and hide behavior", () => {
     expect(result).toBeNull();
   });
 
-  it("uses default opacity 0.3 when no opacity is stored", () => {
+  it("uses default opacity 0.3 wash when no opacity is stored", () => {
     const themeId = "moss";
     const fakeDataUrl = "data:image/png;base64,mossAAAA";
 
@@ -336,9 +354,32 @@ describe("loadBgForTheme load and hide behavior", () => {
     const result = loadBgForTheme(themeId);
     expect(result).toBe(fakeDataUrl);
 
-    const el = document.getElementById("im-theme-bg");
-    expect(el).not.toBeNull();
-    expect(el!.style.opacity).toBe("0.3");
+    expect(document.documentElement.style.getPropertyValue("--theme-bg-wash-pct")).toBe(
+      "62%",
+    );
+  });
+
+  it("applies focal cache URL to CSS vars immediately", () => {
+    const themeId = "latte";
+    localStorage.setItem(storageBgModeKey(themeId), "focal");
+    localStorage.setItem(
+      "im:theme-focal-cache",
+      JSON.stringify({
+        day: "2099-01-01",
+        locale: "en",
+        imageUrl: "https://www.bing.com/th?id=OHR.CachedApply",
+        title: "Cached",
+        copyright: "Cached",
+      }),
+    );
+    localStorage.setItem(storageBgOpacityKey(themeId), "0.6");
+
+    const result = loadBgForTheme(themeId);
+    expect(result).toContain("OHR.CachedApply");
+    const root = document.documentElement;
+    expect(root.getAttribute("data-theme-bg")).toBe("focal");
+    expect(root.style.getPropertyValue("--theme-bg-image")).toContain("OHR.CachedApply");
+    expect(root.style.getPropertyValue("--theme-bg-wash-pct")).toBe("40%");
   });
 });
 

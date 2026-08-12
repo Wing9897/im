@@ -25,7 +25,7 @@ export function StatsStrip({ items, className }: StatsStripProps) {
       {items.map((item, index) => (
         <div
           key={`${item.label}-${index}`}
-          className="flex min-w-0 flex-col gap-0.5 rounded-lg border border-surface-border bg-surface-card px-md py-sm"
+          className="im-surface-panel flex min-w-0 flex-col gap-0.5 rounded-lg border border-surface-border px-md py-sm"
         >
           <span className="truncate text-card-meta font-medium text-text-muted">
             {item.label}

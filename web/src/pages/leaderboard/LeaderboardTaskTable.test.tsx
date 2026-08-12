@@ -112,6 +112,30 @@ describe("LeaderboardTaskTable visual updates", () => {
     });
   });
 
+  describe("board header", () => {
+    it("shows a small leaderboard staff avatar beside the board title", () => {
+      act(() => {
+        root = createRoot(container);
+        root.render(
+          tableTree({
+            taskName: "Test Task",
+            topics: mockTopics,
+            expandedTopicId: null,
+            topicMessages: {} as Record<string, Message[]>,
+            loadingMessages: {},
+            topicMessageErrors: {},
+            onToggleTopic: () => {},
+          }),
+        );
+      });
+
+      const header = container.querySelector(".im-leaderboard-header");
+      expect(header).not.toBeNull();
+      expect(header?.querySelector('[data-testid="ai-staff-avatar-leaderboard"]')).not.toBeNull();
+      expect(header?.querySelector(".im-leaderboard-title")?.textContent).toBe("Test Task");
+    });
+  });
+
   describe("row hover styles", () => {
     it("applies CSS hover class on row button", () => {
       act(() => {

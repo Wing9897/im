@@ -5,7 +5,6 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from server.domain.schedule import (
-    may_calendar_expand,
     may_calendar_expand_series,
     may_register_trigger,
     preset_to_trigger_rrule,
@@ -35,10 +34,6 @@ def test_purpose_gates():
     assert may_register_trigger("leaderboard")
     assert may_register_trigger("agent")
     assert not may_register_trigger("recurring")
-    assert not may_calendar_expand("recurring")
-    assert not may_calendar_expand("intel_event")
-    assert not may_calendar_expand("leaderboard")
-    assert not may_calendar_expand("agent")
     assert may_calendar_expand_series({"is_active": 1, "rrule": "FREQ=DAILY"})
     assert not may_calendar_expand_series({"is_active": 0, "rrule": "FREQ=DAILY"})
 

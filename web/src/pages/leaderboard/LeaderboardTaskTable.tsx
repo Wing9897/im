@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { AiStaffAvatar } from "../../components/aiStaff/AiStaffAvatar";
 import type { Message, TrendingTopic } from "../../types";
 import { platformDisplayLabel } from "../../utils/platformRegistry";
 import { formatOsDateTime } from "../../utils/time";
@@ -45,9 +46,16 @@ export const LeaderboardTaskTable = memo(function LeaderboardTaskTable({
   return (
     <section className="im-leaderboard-board" aria-label={t("leaderboard.boardAria", { name: taskName })}>
       <header className="im-leaderboard-header">
-        <h3 className="im-leaderboard-title" title={taskName}>
-          {taskName}
-        </h3>
+        <div className="flex min-w-0 items-center gap-sm">
+          <AiStaffAvatar
+            staffId="leaderboard"
+            size="xs"
+            label={t("aiStaff.leaderboard")}
+          />
+          <h3 className="im-leaderboard-title" title={taskName}>
+            {taskName}
+          </h3>
+        </div>
         <div className="im-leaderboard-meta">
           <span>Top {Math.min(topics.length, 10)}</span>
           {latestUpdatedAt && (

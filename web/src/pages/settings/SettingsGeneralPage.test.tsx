@@ -105,16 +105,32 @@ describe("SettingsGeneralPage", () => {
     expect(saveSystemSettings).toHaveBeenCalledWith({ weatherLocation: "臺北" });
   });
 
-  it("hosts analysis debug controls under system general settings", async () => {
-    await harness.render(SettingsGeneralPageWithProviders);
-    expect(harness.container.textContent).toContain("除錯與診斷");
+  async function expandAdvancedSection() {
     const toggle = Array.from(harness.container.querySelectorAll("button")).find(
       (btn) =>
         btn.getAttribute("aria-expanded") === "false" &&
-        btn.closest("div")?.textContent?.includes("除錯與診斷"),
+        btn.getAttribute("aria-label")?.includes("進階與維運"),
     );
     expect(toggle).toBeTruthy();
     await act(async () => toggle!.click());
+  }
+
+  it("keeps everyday prefs visible while advanced ops stay collapsed", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+    expect(harness.container.textContent).toContain("簡化模式");
+    expect(harness.container.textContent).toContain("進階與維運");
+    expect(harness.container.textContent).not.toContain("伺服器分析 Trace");
+    expect(
+      Array.from(harness.container.querySelectorAll("button")).some(
+        (button) => button.textContent === "重啟收集器",
+      ),
+    ).toBe(false);
+  });
+
+  it("hosts analysis debug controls under the advanced section", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+    await expandAdvancedSection();
+    expect(harness.container.textContent).toContain("除錯與診斷");
     expect(harness.container.textContent).toContain("伺服器分析 Trace");
     expect(harness.container.querySelector('[role="switch"]')).toBeTruthy();
   });
@@ -125,12 +141,7 @@ describe("SettingsGeneralPage", () => {
       analysisTraceVerbose: true,
     });
     await harness.render(SettingsGeneralPageWithProviders);
-    const sectionToggle = Array.from(harness.container.querySelectorAll("button")).find(
-      (btn) =>
-        btn.getAttribute("aria-expanded") === "false" &&
-        btn.closest("div")?.textContent?.includes("除錯與診斷"),
-    );
-    await act(async () => sectionToggle!.click());
+    await expandAdvancedSection();
     const switchEl = harness.container.querySelector<HTMLElement>('[role="switch"]')!;
     await act(async () => switchEl.click());
     expect(saveSystemSettings).toHaveBeenCalledWith({ analysisTraceVerbose: true });
@@ -139,6 +150,7 @@ describe("SettingsGeneralPage", () => {
 
   it("keeps the collector restart action wired", async () => {
     await harness.render(SettingsGeneralPageWithProviders);
+    await expandAdvancedSection();
     const restart = Array.from(harness.container.querySelectorAll("button")).find(
       (button) => button.textContent === "重啟收集器",
     )!;

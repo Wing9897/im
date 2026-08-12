@@ -9,8 +9,10 @@
   height: var(--desktop-title-bar-height);
   flex-shrink: 0;
   padding: 0 0 0 12px;
-  background: color-mix(in srgb, var(--surface-base) 94%, transparent);
+  background: var(--surface-chrome);
   border-bottom: 1px solid var(--surface-border-alpha, var(--surface-border));
+  backdrop-filter: blur(var(--surface-blur-chrome));
+  -webkit-backdrop-filter: blur(var(--surface-blur-chrome));
   -webkit-app-region: drag;
   user-select: none;
   z-index: 1100;

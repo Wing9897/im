@@ -1222,6 +1222,80 @@
         }
       }
     },
+    "/api/v1/llm/global-slots": {
+      "get": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Get Global Slots",
+        "description": "Singleton bindings: assistant, A2A (liaison), task advisor (taskEditor).",
+        "operationId": "get_global_slots_api_v1_llm_global_slots_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmGlobalSlotsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/llm/global-slots/{slot}": {
+      "put": {
+        "tags": [
+          "llm"
+        ],
+        "summary": "Put Global Slot",
+        "operationId": "put_global_slot_api_v1_llm_global_slots__slot__put",
+        "parameters": [
+          {
+            "name": "slot",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slot"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LlmGlobalSlotBindBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LlmGlobalSlotBindingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/items/categories": {
       "get": {
         "tags": [
@@ -3696,7 +3770,7 @@
           "a2a"
         ],
         "summary": "A2A Agent",
-        "description": "A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`[\"*\"]`).",
+        "description": "A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`[\"*\"]`).",
         "operationId": "a2a_agent_api_v1_a2a_agent_post",
         "requestBody": {
           "content": {
@@ -6345,6 +6419,125 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WeatherForecastResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/theme/focal-background": {
+      "get": {
+        "tags": [
+          "theme"
+        ],
+        "summary": "Focal Background",
+        "description": "Proxy Bing HPImageArchive JSON; returns absolute https image URL + credits.",
+        "operationId": "focal_background_api_v1_theme_focal_background_get",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US).",
+              "title": "Locale"
+            },
+            "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FocalBackgroundResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/theme/focal-background/image": {
+      "get": {
+        "tags": [
+          "theme"
+        ],
+        "summary": "Focal Background Image",
+        "description": "Proxy today's Bing wallpaper bytes for same-origin CSS / preview use.",
+        "operationId": "focal_background_image_api_v1_theme_focal_background_image_get",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 32
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US).",
+              "title": "Locale"
+            },
+            "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -9802,6 +9995,67 @@
         "type": "object",
         "title": "EmailMailboxPatchBody"
       },
+      "FocalBackgroundResponse": {
+        "properties": {
+          "imageUrl": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Imageurl"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "copyright": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Copyright"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date",
+            "description": "Bing start date YYYYMMDD when provided by the archive."
+          },
+          "locale": {
+            "type": "string",
+            "title": "Locale",
+            "description": "Resolved Bing mkt locale (e.g. en-US)."
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Upstream provider id.",
+            "default": "bing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "imageUrl",
+          "locale"
+        ],
+        "title": "FocalBackgroundResponse",
+        "description": "Daily focal wallpaper metadata (Bing HPImageArchive via server proxy)."
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -10855,6 +11109,113 @@
         "additionalProperties": false,
         "type": "object",
         "title": "ItemUpdateBody"
+      },
+      "LlmGlobalSlotBindBody": {
+        "properties": {
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LlmGlobalSlotBindBody",
+        "description": "Bind or clear a singleton global slot (``profileId`` null/empty clears)."
+      },
+      "LlmGlobalSlotBindingResponse": {
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": [
+              "assistant",
+              "liaison",
+              "taskEditor"
+            ],
+            "title": "Slot"
+          },
+          "profileId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileid"
+          },
+          "profileName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profilename"
+          },
+          "profileProvider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileprovider"
+          },
+          "profileModel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profilemodel"
+          },
+          "profileIsDefault": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profileisdefault"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slot"
+        ],
+        "title": "LlmGlobalSlotBindingResponse"
+      },
+      "LlmGlobalSlotsResponse": {
+        "properties": {
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/LlmGlobalSlotBindingResponse"
+            },
+            "type": "array",
+            "title": "Slots"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LlmGlobalSlotsResponse"
       },
       "LlmProfileCopyBody": {
         "properties": {

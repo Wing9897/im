@@ -65,4 +65,17 @@ describe("AiStaffAvatar", () => {
     expect(node.className).toContain("overflow-hidden");
     expect(node.className).toContain("rounded-full");
   });
+
+  it("renders page-local liaison avatar without roster kind/surface attrs", () => {
+    act(() => {
+      root.render(
+        wrapWithI18n(createElement(AiStaffAvatar, { staffId: "liaison", label: "客戶經理" })),
+      );
+    });
+    const node = container.querySelector('[data-testid="ai-staff-avatar-liaison"]');
+    expect(node).not.toBeNull();
+    expect(node?.getAttribute("data-staff-kind")).toBeNull();
+    expect(node?.getAttribute("data-staff-surface")).toBeNull();
+    expect(node?.querySelector("img")?.getAttribute("src")).toBeTruthy();
+  });
 });

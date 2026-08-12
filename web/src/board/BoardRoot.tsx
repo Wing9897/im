@@ -95,12 +95,17 @@ export function BoardRoot({ onImmersiveChange }: BoardRootProps) {
 
   if (!config) {
     return (
-      <div ref={containerRef} className="board-root" data-testid="board-root" data-board-hydrating="true" />
+      <div
+        ref={containerRef}
+        className="board-root im-fs-atmosphere"
+        data-testid="board-root"
+        data-board-hydrating="true"
+      />
     );
   }
 
   return (
-    <div ref={containerRef} className="board-root" data-testid="board-root">
+    <div ref={containerRef} className="board-root im-fs-atmosphere" data-testid="board-root">
       <BoardCanvas
         key={canvasEpoch}
         config={config}

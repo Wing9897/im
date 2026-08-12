@@ -412,6 +412,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/llm/global-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Global Slots
+         * @description Singleton bindings: assistant, A2A (liaison), task advisor (taskEditor).
+         */
+        get: operations["get_global_slots_api_v1_llm_global_slots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/llm/global-slots/{slot}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Put Global Slot */
+        put: operations["put_global_slot_api_v1_llm_global_slots__slot__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/items/categories": {
         parameters: {
             query?: never;
@@ -1118,7 +1155,7 @@ export interface paths {
         put?: never;
         /**
          * A2A Agent
-         * @description A2A natural-language agent (客户经理). Same LLM + tools as the assistant; different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`["*"]`).
+         * @description A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`["*"]`).
          */
         post: operations["a2a_agent_api_v1_a2a_agent_post"];
         delete?: never;
@@ -1901,6 +1938,46 @@ export interface paths {
         };
         /** Forecast */
         get: operations["forecast_api_v1_weather_forecast_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/theme/focal-background": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Focal Background
+         * @description Proxy Bing HPImageArchive JSON; returns absolute https image URL + credits.
+         */
+        get: operations["focal_background_api_v1_theme_focal_background_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/theme/focal-background/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Focal Background Image
+         * @description Proxy today's Bing wallpaper bytes for same-origin CSS / preview use.
+         */
+        get: operations["focal_background_image_api_v1_theme_focal_background_image_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3037,6 +3114,34 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /**
+         * FocalBackgroundResponse
+         * @description Daily focal wallpaper metadata (Bing HPImageArchive via server proxy).
+         */
+        FocalBackgroundResponse: {
+            /** Imageurl */
+            imageUrl: string;
+            /** Title */
+            title?: string | null;
+            /** Copyright */
+            copyright?: string | null;
+            /**
+             * Date
+             * @description Bing start date YYYYMMDD when provided by the archive.
+             */
+            date?: string | null;
+            /**
+             * Locale
+             * @description Resolved Bing mkt locale (e.g. en-US).
+             */
+            locale: string;
+            /**
+             * Source
+             * @description Upstream provider id.
+             * @default bing
+             */
+            source: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -3333,6 +3438,37 @@ export interface components {
             quantity?: number | null;
             /** Unit */
             unit?: string | null;
+        };
+        /**
+         * LlmGlobalSlotBindBody
+         * @description Bind or clear a singleton global slot (``profileId`` null/empty clears).
+         */
+        LlmGlobalSlotBindBody: {
+            /** Profileid */
+            profileId?: string | null;
+        };
+        /** LlmGlobalSlotBindingResponse */
+        LlmGlobalSlotBindingResponse: {
+            /**
+             * Slot
+             * @enum {string}
+             */
+            slot: "assistant" | "liaison" | "taskEditor";
+            /** Profileid */
+            profileId?: string | null;
+            /** Profilename */
+            profileName?: string | null;
+            /** Profileprovider */
+            profileProvider?: string | null;
+            /** Profilemodel */
+            profileModel?: string | null;
+            /** Profileisdefault */
+            profileIsDefault?: boolean | null;
+        };
+        /** LlmGlobalSlotsResponse */
+        LlmGlobalSlotsResponse: {
+            /** Slots */
+            slots?: components["schemas"]["LlmGlobalSlotBindingResponse"][];
         };
         /** LlmProfileCopyBody */
         LlmProfileCopyBody: {
@@ -5715,6 +5851,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LlmStaffInstanceResponse"][];
+                };
+            };
+        };
+    };
+    get_global_slots_api_v1_llm_global_slots_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmGlobalSlotsResponse"];
+                };
+            };
+        };
+    };
+    put_global_slot_api_v1_llm_global_slots__slot__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slot: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LlmGlobalSlotBindBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LlmGlobalSlotBindingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -9131,6 +9322,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WeatherForecastResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    focal_background_api_v1_theme_focal_background_get: {
+        parameters: {
+            query?: {
+                /** @description UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US). */
+                locale?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FocalBackgroundResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    focal_background_image_api_v1_theme_focal_background_image_get: {
+        parameters: {
+            query?: {
+                /** @description UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US). */
+                locale?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
                 };
             };
             /** @description Validation Error */

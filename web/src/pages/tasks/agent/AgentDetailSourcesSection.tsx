@@ -104,7 +104,7 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
               {channelLabels.map((label) => (
                 <li
                   key={label}
-                  className="min-w-0 break-words rounded-lg border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-card)_65%,transparent)] px-sm py-xs text-body leading-relaxed text-text-primary [overflow-wrap:anywhere]"
+                  className="im-surface-inset min-w-0 break-words rounded-lg border border-surface-border/70 px-sm py-xs text-body leading-relaxed text-text-primary [overflow-wrap:anywhere]"
                 >
                   {label}
                 </li>
