@@ -15,7 +15,9 @@ from server.domain.analysis_modes import AGENT_MODE
 from server.time_iso import parse_iso
 
 #: Calendar RRULE must not be written onto analysis tasks.
-RRULE_RECURRING_ONLY_MESSAGE = "RRULE calendar series use POST /calendar/recurring; analysis tasks use scheduleRrule only"
+RRULE_RECURRING_ONLY_MESSAGE = (
+    "RRULE calendar series use POST /calendar/recurring; analysis tasks use scheduleRrule only"
+)
 
 _RRULE_PREFIX = "RRULE:"
 _CLOCK_RE = re.compile(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$")

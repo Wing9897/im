@@ -49,7 +49,11 @@ from server.api.schemas.requests.sources import (
     TelegramQrCredentials,
     TelegramQrWaitBody,
 )
-from server.api.schemas.requests.system import AiEngineTestBody, AnalysisPauseBody
+from server.api.schemas.requests.system import (
+    AiEngineTestBody,
+    AnalysisPauseBody,
+    SystemSettingsUpdateBody,
+)
 from server.api.schemas.requests.tasks import TaskConfigBody
 from server.api.schemas.requests.worksets import WorksetCreateBody, WorksetUpdateBody
 
@@ -89,6 +93,7 @@ __all__ = [
     "RecurringSeriesCreateBody",
     "RecurringSeriesPatchBody",
     "RotateSecretsBody",
+    "SystemSettingsUpdateBody",
     "TaskConfigBody",
     "Telegram2faBody",
     "TelegramCodeBody",

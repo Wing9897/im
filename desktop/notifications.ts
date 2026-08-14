@@ -2,6 +2,11 @@ import { Notification, BrowserWindow } from 'electron';
 import http from 'node:http';
 import { defaultServerBaseUrl } from './ports';
 import { getProductName, getShellCopy, setShellLocale } from './shell-i18n';
+import type {
+  AnalysisCompletedPayload,
+  AnalysisFailedPayload,
+  SseMessage,
+} from './sse-payloads';
 
 /**
  * Configuration for the analysis notifications module.
@@ -20,32 +25,11 @@ export interface NotificationConfig {
   locale?: string | null;
 }
 
-/** Parsed SSE event from the server stream */
-export interface SseMessage {
-  event: string;
-  data: string;
-}
-
-/** Payload for analysis_completed SSE event */
-export interface AnalysisCompletedPayload {
-  taskId: string;
-  taskName?: string;
-  batchId: string;
-  analysisMode?: string;
-  findingsCount?: number;
-  hasFindings?: boolean;
-}
-
-/** Payload for analysis_failed SSE event */
-export interface AnalysisFailedPayload {
-  taskId: string;
-  taskName?: string;
-  batchId: string;
-  error: string;
-  retrying?: boolean;
-  currentRetry?: number;
-  maxRetries?: number;
-}
+export type {
+  AnalysisCompletedPayload,
+  AnalysisFailedPayload,
+  SseMessage,
+} from './sse-payloads';
 
 /** Internal state for the notification listener */
 let currentRequest: ReturnType<typeof http.get> | null = null;

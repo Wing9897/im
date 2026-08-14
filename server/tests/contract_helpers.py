@@ -7,7 +7,8 @@ ACTUALLY READ" lists). Extra keys are allowed; missing keys fail.
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 
 def assert_keys(obj: dict[str, Any], required: Iterable[str], where: str) -> None:

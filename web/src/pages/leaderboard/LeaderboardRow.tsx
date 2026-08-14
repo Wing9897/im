@@ -30,7 +30,7 @@ export const LeaderboardRow = memo(function LeaderboardRow({
           .join(" ")}
         onClick={() => onToggleTopic(topic.id)}
         aria-expanded={expanded}
-        aria-label={t("leaderboard.rowAria", {
+        aria-label={t("leaderboard:rowAria", {
           rank,
           topic: topic.topicName,
           score: topic.score.toFixed(1),

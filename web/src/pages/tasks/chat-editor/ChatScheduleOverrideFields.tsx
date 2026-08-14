@@ -53,17 +53,17 @@ export function ChatScheduleOverrideFields({
 
   return (
     <div className="md:col-span-2 flex flex-col gap-lg" data-testid="task-schedule-overrides">
-      <p className={`m-0 ${formHelpClass}`}>{t("tasks.editor.scheduleOverridesHint")}</p>
+      <p className={`m-0 ${formHelpClass}`}>{t("tasks:editor.scheduleOverridesHint")}</p>
 
       {showEventOverlap ? (
         <div>
           <OverlapSlider
             value={String(overlapValue)}
             onChange={(val) => updateField("batchOverlapCount", Number(val))}
-            label={t("tasks.editor.batchOverlapLabel")}
-            ariaLabel={t("tasks.editor.batchOverlapAria")}
+            label={t("tasks:editor.batchOverlapLabel")}
+            ariaLabel={t("tasks:editor.batchOverlapAria")}
           />
-          <p className={`mb-0 ${formHelpClass}`}>{t("tasks.editor.batchOverlapHelp")}</p>
+          <p className={`mb-0 ${formHelpClass}`}>{t("tasks:editor.batchOverlapHelp")}</p>
         </div>
       ) : null}
 
@@ -89,13 +89,13 @@ export function ChatScheduleOverrideFields({
           labels={{
             // Labels shared with AI Settings; help stays task-override specific.
             triggerThreshold: t("analysis.triggerThresholdLabel", { ns: "settings" }),
-            triggerThresholdHelp: t("tasks.editor.triggerThresholdHelp"),
+            triggerThresholdHelp: t("tasks:editor.triggerThresholdHelp"),
             batchLimit: t("analysis.batchLimitLabel", { ns: "settings" }),
-            batchLimitHelp: t("tasks.editor.batchLimitHelp"),
+            batchLimitHelp: t("tasks:editor.batchLimitHelp"),
             evidenceStyle: t("analysis.evidenceStyleLabel", { ns: "settings" }),
-            evidenceStyleHelp: t("tasks.editor.evidenceStyleHelp"),
-            followGlobal: t("tasks.editor.followGlobal"),
-            followGlobalPlaceholder: t("tasks.editor.followGlobalPlaceholder"),
+            evidenceStyleHelp: t("tasks:editor.evidenceStyleHelp"),
+            followGlobal: t("tasks:editor.followGlobal"),
+            followGlobalPlaceholder: t("tasks:editor.followGlobalPlaceholder"),
           }}
         />
       ) : null}

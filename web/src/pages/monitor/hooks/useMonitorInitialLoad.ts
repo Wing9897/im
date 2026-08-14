@@ -7,7 +7,7 @@ import i18n from "../../../i18n";
 import { captureError } from "../../../utils/errorReporter";
 import { MONITOR_VIEW_MODE_STORAGE_KEY } from "../../../domain/monitor/monitorViewMode";
 import { MONITOR_FILTERS_STORAGE_KEY } from "../../../domain/prefs";
-import { normalizeMonitorFilters } from "../monitorPageModel";
+import { normalizeMonitorFilters } from "../../../domain/monitor/monitorPageModel";
 
 /**
  * Sources / channels metadata, filters, and view-mode state for Monitor.

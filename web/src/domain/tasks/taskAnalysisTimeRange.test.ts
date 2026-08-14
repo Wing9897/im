@@ -19,7 +19,7 @@ describe("taskAnalysisTimeRange", () => {
 
   it("exposes an i18n key for every legal task window", () => {
     for (const value of TASK_ANALYSIS_TIME_RANGE_VALUES) {
-      expect(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]).toMatch(/^tasks\.editor\.time/);
+      expect(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]).toMatch(/^tasks:editor\.time/);
     }
   });
 

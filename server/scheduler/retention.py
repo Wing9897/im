@@ -16,7 +16,7 @@ Independent category TTLs (0 disables that category):
 ``recurring_schedules`` are not purged by retention (standalone calendar series).
 
 Always-on (not gated by retention_*_days):
-  - orphan ``timeline_dismissals`` (source event row gone)
+  - orphan ``timeline_dismissals`` / ``timeline_importance`` (source event row gone)
   - device session / access-token rows by their own ``expires_at``
 
 Defaults live in ``CONFIG_DEFAULTS`` (fallback when the key is absent from
@@ -43,6 +43,7 @@ from server.queries.retention_queries import (
     cleanup_leaderboard_batch,
     cleanup_messages_batch,
     cleanup_orphan_timeline_dismissals_batch,
+    cleanup_orphan_timeline_importance_batch,
     cleanup_user_events_batch,
 )
 
@@ -59,6 +60,7 @@ class RetentionCounts(TypedDict):
     app_logs: int
     user_events: int
     timeline_dismissals: int
+    timeline_importance: int
     device_access_tokens: int
     device_sessions: int
 
@@ -77,6 +79,7 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
         "app_logs": 0,
         "user_events": 0,
         "timeline_dismissals": 0,
+        "timeline_importance": 0,
         "device_access_tokens": 0,
         "device_sessions": 0,
     }
@@ -150,6 +153,13 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             break
         await asyncio.sleep(0)
 
+    while True:
+        deleted = await cleanup_orphan_timeline_importance_batch(db)
+        counts["timeline_importance"] += deleted
+        if deleted == 0:
+            break
+        await asyncio.sleep(0)
+
     # Always on: these rows expire by their own TTL, not by a configured
     # retention window. Tokens are drained before sessions so the session FK
     # cascade never swallows rows that belong in the token count.
@@ -176,6 +186,7 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             counts["app_logs"],
             counts["user_events"],
             counts["timeline_dismissals"],
+            counts["timeline_importance"],
             counts["device_access_tokens"],
             counts["device_sessions"],
         )
@@ -184,7 +195,7 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
         logger.info(
             "Retention cleanup removed messages=%d analysis=%d leaderboard=%d "
             "action_trigger_history=%d app_logs=%d user_events=%d "
-            "timeline_dismissals=%d "
+            "timeline_dismissals=%d timeline_importance=%d "
             "device_access_tokens=%d device_sessions=%d",
             counts["messages"],
             counts["analysis"],
@@ -193,6 +204,7 @@ async def cleanup_expired_data(db: Database) -> RetentionCounts:
             counts["app_logs"],
             counts["user_events"],
             counts["timeline_dismissals"],
+            counts["timeline_importance"],
             counts["device_access_tokens"],
             counts["device_sessions"],
         )

@@ -13,7 +13,7 @@ export function ViewerResultsPage() {
   const { t } = useTranslation("common");
   const { data: stats, initialLoading, isRefreshing, error, retry } = useViewerResource<ViewerStats>(
     fetchViewerStats,
-    t("viewer.resultsLoadError"),
+    t("viewer:resultsLoadError"),
   );
 
   if (!initialLoading && !error && !stats) {
@@ -23,20 +23,20 @@ export function ViewerResultsPage() {
         isRefreshing={isRefreshing}
         error={null}
         retry={retry}
-        refreshLabel={t("viewer.resultsRefreshing")}
+        refreshLabel={t("viewer:resultsRefreshing")}
       >
-        <p className="text-body text-text-secondary">{t("viewer.noData")}</p>
+        <p className="text-body text-text-secondary">{t("viewer:noData")}</p>
       </ViewerShell>
     );
   }
 
   const statCards = stats
     ? [
-        { label: t("viewer.totalTasks"), value: stats.totalTasks },
-        { label: t("viewer.activeTasks"), value: stats.activeTasks },
-        { label: t("viewer.totalBatches"), value: stats.totalBatches },
-        { label: t("viewer.completedBatches"), value: stats.completedBatches },
-        { label: t("viewer.totalResults"), value: stats.totalResults },
+        { label: t("viewer:totalTasks"), value: stats.totalTasks },
+        { label: t("viewer:activeTasks"), value: stats.activeTasks },
+        { label: t("viewer:totalBatches"), value: stats.totalBatches },
+        { label: t("viewer:completedBatches"), value: stats.completedBatches },
+        { label: t("viewer:totalResults"), value: stats.totalResults },
       ]
     : [];
 
@@ -46,7 +46,7 @@ export function ViewerResultsPage() {
       isRefreshing={isRefreshing}
       error={error}
       retry={retry}
-      refreshLabel={t("viewer.resultsRefreshing")}
+      refreshLabel={t("viewer:resultsRefreshing")}
     >
       <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-lg">
         {statCards.map((card) => (

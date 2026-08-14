@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from server.agent.tools_calendar import (
     HARD_CAP,
     TOOL_NAMES,
@@ -13,7 +15,7 @@ from server.tests import seed
 
 
 async def test_tool_names_match_plan(app) -> None:
-    assert TOOL_NAMES == {
+    assert {
         "calendar.list_calendars",
         "calendar.upcoming",
         "calendar.recent",
@@ -27,7 +29,7 @@ async def test_tool_names_match_plan(app) -> None:
         "calendar.delete_event",
         "calendar.mark_important",
         "calendar.unmark_important",
-    }
+    } == TOOL_NAMES
     result = await execute_calendar_tool(app.state.db, "calendar.list_calendars", {})
     assert result["count"] >= 1
     assert any(c["id"] == seed.TASK_CALENDAR for c in result["calendars"])
@@ -89,8 +91,7 @@ async def test_upcoming_filters_series_id_separately_from_task_id(app) -> None:
     )
     assert "error" not in via_series
     assert all(
-        item.get("seriesId") == seed.TASK_CALENDAR or item.get("source") != "recurring"
-        for item in via_series["items"]
+        item.get("seriesId") == seed.TASK_CALENDAR or item.get("source") != "recurring" for item in via_series["items"]
     )
     assert any(item.get("seriesId") == seed.TASK_CALENDAR for item in via_series["items"])
 
@@ -229,14 +230,14 @@ async def test_update_and_delete_recurring_task_tools(app) -> None:
     assert row is None
 
     # Hard-deleted series must not expand into occurrences.
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from server.calendar.query import expand_active_calendar_occurrences
 
     occs = await expand_active_calendar_occurrences(
         db,
-        datetime(2026, 7, 1, tzinfo=timezone.utc),
-        datetime(2026, 8, 1, tzinfo=timezone.utc),
+        datetime(2026, 7, 1, tzinfo=UTC),
+        datetime(2026, 8, 1, tzinfo=UTC),
         series_id=task_id,
     )
     assert occs == []

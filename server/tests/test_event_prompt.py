@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC
+
 from server.analyzer.prompt import (
     build_analysis_prompt,
     build_json_instruction,
@@ -42,7 +44,7 @@ def test_format_messages_includes_timestamp():
 
 
 def test_event_prompt_assembly_appends_schema_after_template():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     prompt = build_analysis_prompt(
         prompt_template="提取關鍵情報。",
@@ -56,7 +58,7 @@ def test_event_prompt_assembly_appends_schema_after_template():
         ],
         max_tokens=1000,
         strategy_mode="balanced",
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc),
+        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
     )
     assert prompt.system_prompt.startswith("提取關鍵情報。")
     assert "當前時間（權威" in prompt.system_prompt

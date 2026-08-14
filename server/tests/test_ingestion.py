@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import pytest
 
@@ -112,14 +113,14 @@ async def test_insert_message_persists_row(db: Database):
 
 
 async def test_insert_message_dedup_returns_none(db: Database):
-    kwargs: dict[str, Any] = dict(
-        source_id=None,
-        platform="rss",
-        platform_id="feed-1",
-        content="hello",
-        timestamp="2026-01-01T00:00:00+00:00",
-        platform_message_id="entry-1",
-    )
+    kwargs: dict[str, Any] = {
+        "source_id": None,
+        "platform": "rss",
+        "platform_id": "feed-1",
+        "content": "hello",
+        "timestamp": "2026-01-01T00:00:00+00:00",
+        "platform_message_id": "entry-1",
+    }
     first = await insert_message(db, message_id="msg-1", **kwargs)
     duplicate = await insert_message(db, message_id="msg-2", **kwargs)
     assert first is not None
@@ -130,14 +131,14 @@ async def test_insert_message_dedup_returns_none(db: Database):
 
 async def test_insert_message_null_platform_message_ids_are_distinct(db: Database):
     """SQLite unique index treats NULLs as distinct; both rows must insert."""
-    kwargs: dict[str, Any] = dict(
-        source_id=None,
-        platform="mqtt",
-        platform_id="broker-1",
-        content="payload",
-        timestamp="2026-01-01T00:00:00+00:00",
-        platform_message_id=None,
-    )
+    kwargs: dict[str, Any] = {
+        "source_id": None,
+        "platform": "mqtt",
+        "platform_id": "broker-1",
+        "content": "payload",
+        "timestamp": "2026-01-01T00:00:00+00:00",
+        "platform_message_id": None,
+    }
     assert await insert_message(db, message_id="msg-1", **kwargs) is not None
     assert await insert_message(db, message_id="msg-2", **kwargs) is not None
     count = await db.fetch_value("SELECT COUNT(*) FROM messages")

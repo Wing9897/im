@@ -23,8 +23,8 @@ export function OverlapSlider({
   return (
     <LabeledRange
       id={id}
-      label={label ?? t("tasks.editor.batchOverlapLabel")}
-      ariaLabel={ariaLabel ?? t("tasks.editor.batchOverlapAria")}
+      label={label ?? t("tasks:editor.batchOverlapLabel")}
+      ariaLabel={ariaLabel ?? t("tasks:editor.batchOverlapAria")}
       value={numericValue}
       min={0}
       max={10}

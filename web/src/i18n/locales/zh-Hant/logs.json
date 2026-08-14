@@ -69,7 +69,8 @@
     "frontendUnhandledRejection": "未處理的 Promise 拒絕",
     "frontendReact": "React 渲染錯誤",
     "frontendCritical": "前端嚴重錯誤",
-    "sourceError": "來源錯誤（{platform}）：{sourceName} — {summary}"
+    "sourceError": "來源錯誤（{platform}）：{sourceName} — {summary}",
+    "actionHistoryFailed": "動作已送出，但觸發紀錄沒有寫入：{actionId} — {summary}"
   },
   "section": {
     "loadingTitle": "正在載入系統日誌",

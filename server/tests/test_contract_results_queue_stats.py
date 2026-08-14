@@ -41,9 +41,10 @@ async def test_queue_attention_batches_include_error_message(app, client):
 
 
 async def test_stats(client):
-    resp = await client.get("/api/v1/results/stats", params={"time_range": "all"})
+    resp = await client.get("/api/v1/results/stats", params={"timeRange": "all"})
     body = resp.json()
-    assert len(body) == 6
+    # Seed has five analysis_tasks (calendar series is not included).
+    assert len(body) == 5
     for entry in body:
         assert_keys(
             entry,

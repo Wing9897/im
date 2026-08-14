@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from server.db.database import Database
 from server.domain.analysis_modes import LEADERBOARD_MODE

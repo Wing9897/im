@@ -16,8 +16,9 @@ import asyncio
 import logging
 import os
 from asyncio import CancelledError
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Optional
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,7 +45,7 @@ from server.static_files import mount_static_files
 logger = logging.getLogger(__name__)
 
 
-def _resolve_db_path(db_path: Optional[str]) -> str:
+def _resolve_db_path(db_path: str | None) -> str:
     env = os.environ.get(DB_PATH_ENV, "").strip()
     if db_path:
         return db_path
@@ -83,7 +84,7 @@ async def _start_runtime_services(
         await scheduler.recover_orphan_batches()
         await scheduler.start()
 
-    collector: Optional[Any] = None
+    collector: Any | None = None
     if start_collector:
         try:
             from server.collector.manager import CollectorManager
@@ -111,7 +112,7 @@ async def _start_runtime_services(
 async def _lifespan_impl(
     app: FastAPI,
     *,
-    injected_db: Optional[Database],
+    injected_db: Database | None,
     db_path: str,
     start_collector: bool,
     start_scheduler: bool,
@@ -169,11 +170,10 @@ async def _lifespan_impl(
         # process and the SQLite file lock alive — which in turn blocks the
         # explicit-reset recovery path.
         if isinstance(exc, SchemaBaselineError):
-            logger.error(
-                "%s — this database cannot be upgraded in place. "
+            logger.exception(
+                "This database cannot be upgraded in place. "
                 "Reset the local database, then re-collect: python scripts/reset_local_databases.py --apply "
                 "(database: %s)",
-                exc,
                 db_path,
             )
         if injected_db is None:
@@ -258,8 +258,8 @@ async def _lifespan_impl(
 
 def create_app(
     *,
-    db: Optional[Database] = None,
-    db_path: Optional[str] = None,
+    db: Database | None = None,
+    db_path: str | None = None,
     start_collector: bool = True,
     start_scheduler: bool = True,
     serve_static: bool = True,
@@ -301,6 +301,10 @@ def create_app(
 
     for router in all_routers():
         app.include_router(router)
+
+    from server.api.openapi_ext import install_openapi_extensions
+
+    install_openapi_extensions(app)
 
     from server.api.routes.mcp import attach_mcp
 

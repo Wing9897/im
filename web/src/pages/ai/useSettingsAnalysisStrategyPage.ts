@@ -3,7 +3,7 @@ import {
   normalizeEvidenceStyle,
   type EvidenceStyle,
 } from "../../domain/settings/analysisEvidenceStyle";
-import { useSettingsPageState } from "../settings/SettingsShared";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
 
 export function useSettingsAnalysisStrategyPage() {
   const {

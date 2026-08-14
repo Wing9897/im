@@ -107,8 +107,8 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
         <button
           type="button"
           className="board-widget-frame__btn"
-          title={t("board.mapWidget.resetView")}
-          aria-label={t("board.mapWidget.resetView")}
+          title={t("board:mapWidget.resetView")}
+          aria-label={t("board:mapWidget.resetView")}
           data-testid="board-map-reset-view"
           onClick={resetWorldView}
         >
@@ -121,8 +121,8 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
               ? "board-widget-frame__btn board-widget-frame__btn--active"
               : "board-widget-frame__btn"
           }
-          title={t("board.mapWidget.saveView")}
-          aria-label={t("board.mapWidget.saveView")}
+          title={t("board:mapWidget.saveView")}
+          aria-label={t("board:mapWidget.saveView")}
           data-testid="board-map-save-view"
           onClick={saveView}
         >
@@ -138,13 +138,13 @@ export function MapBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
     <div className="board-widget-body board-widget-map" data-testid="board-map-widget">
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.paused", { name: t("board.mapWidget.pausedName") })}
+        pausedLabel={t("board:common.paused", { name: t("board:mapWidget.pausedName") })}
         pausedTestId="board-map-paused"
         loading={loading && !items}
         error={!items ? error : null}
         onRetry={refresh}
       >
-        <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingMap")}</p>}>
+        <Suspense fallback={<p className="board-widget-muted">{t("board:common.loadingMap")}</p>}>
           <LazyMapBoardEmbed
             widgetId={widgetId}
             items={items ?? []}

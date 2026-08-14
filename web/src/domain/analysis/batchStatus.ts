@@ -12,7 +12,7 @@ export function batchStatusTone(
 
 /** Short status label aligned with tasks / dashboard queue rows. */
 export function batchStatusLabel(batch: ProcessingBatchInfo): string {
-  if (batch.errorMessage) return String(i18n.t("board.queue.attention"));
-  if (batch.status === "pending") return String(i18n.t("board.queue.retryPending"));
-  return String(i18n.t("board.queue.processingBadge"));
+  if (batch.errorMessage) return String(i18n.t("board:queue.attention"));
+  if (batch.status === "pending") return String(i18n.t("board:queue.retryPending"));
+  return String(i18n.t("board:queue.processingBadge"));
 }

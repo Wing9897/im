@@ -18,12 +18,9 @@ import {
 import { formHelpClass } from "../../components/ui/pageTypography";
 import { useToast } from "../../context/ToastContext";
 import { useSimpleMode } from "../../context/SimpleModeContext";
-import {
-  getElectronConnection,
-  setDesktopAllowLanAccess,
-} from "../../electron/electronConnection";
 import { toErrorMessage } from "../../utils/errors";
-import { SettingsContentCard, SettingsFieldGroup, useSettingsPageState } from "./SettingsShared";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
+import { SettingsContentCard, SettingsFieldGroup } from "./SettingsShared";
 
 const SYSTEM_LOCATION = "system";
 
@@ -38,9 +35,6 @@ export function SettingsGeneralPage() {
   const [analysisTraceVerbose, setAnalysisTraceVerbose] = useState(false);
   const [restartingCollector, setRestartingCollector] = useState(false);
   const [showCollectorRestartConfirm, setShowCollectorRestartConfirm] = useState(false);
-  const isDesktopHost = Boolean(getElectronConnection());
-  const [allowLanAccess, setAllowLanAccess] = useState(false);
-  const [lanBusy, setLanBusy] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
@@ -50,33 +44,6 @@ export function SettingsGeneralPage() {
   useEffect(() => {
     setAnalysisTraceVerbose(Boolean(settings?.analysisTraceVerbose));
   }, [settings?.analysisTraceVerbose]);
-
-  useEffect(() => {
-    const api = getElectronConnection();
-    if (!api) return;
-    void api.getConnection().then((cfg) => {
-      setAllowLanAccess(Boolean(cfg.allowLanAccess) && cfg.mode === "host");
-    });
-  }, []);
-
-  const onToggleLanAccess = async (next: boolean) => {
-    setLanBusy(true);
-    try {
-      const restarted = await setDesktopAllowLanAccess(next);
-      setAllowLanAccess(next);
-      showToast(
-        next ? t("general.lanAccessEnabled") : t("general.lanAccessDisabled"),
-        "success",
-      );
-      if (restarted) {
-        showToast(t("general.lanAccessRestarting"), "info");
-      }
-    } catch (error) {
-      showToast(toErrorMessage(error), "error");
-    } finally {
-      setLanBusy(false);
-    }
-  };
 
   const followsSystem = weatherLocation === SYSTEM_LOCATION;
   const saveWeatherLocation = async () => {
@@ -154,25 +121,6 @@ export function SettingsGeneralPage() {
           />
         </SettingsRow>
       </SettingsFieldGroup>
-
-      {isDesktopHost ? (
-        <SettingsFieldGroup showDivider>
-          <SettingsRow
-            label={t("general.lanAccessLabel")}
-            help={t("general.lanAccessHelp")}
-          >
-            <CheckboxField
-              id="allow-lan-access-toggle"
-              label={allowLanAccess ? t("shared.enabled") : t("shared.disabled")}
-              checked={allowLanAccess}
-              disabled={lanBusy}
-              onChange={(e) => void onToggleLanAccess(e.target.checked)}
-              aria-label={t("general.lanAccessLabel")}
-              data-testid="allow-lan-access-toggle"
-            />
-          </SettingsRow>
-        </SettingsFieldGroup>
-      ) : null}
 
       <SettingsFieldGroup showDivider>
         <FormStack>

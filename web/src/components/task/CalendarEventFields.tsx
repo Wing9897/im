@@ -54,18 +54,18 @@ export function CalendarEventFields({
     <SurfaceCard className="p-xl" data-testid="calendar-event-fields">
       <div className={`mb-lg flex items-center gap-sm ${sectionTitleClass}`}>
         <CalendarDays size={20} strokeWidth={2} aria-hidden="true" />
-        <span>{t("tasks.calendarFields.section")}</span>
-        <InfoTooltip content={t("tasks.calendarFields.tooltip")} />
+        <span>{t("tasks:calendarFields.section")}</span>
+        <InfoTooltip content={t("tasks:calendarFields.tooltip")} />
       </div>
 
       <div className="flex flex-col gap-2xl">
         <div>
-          <FieldLabel htmlFor="calendar-event-title">{t("tasks.calendarFields.title")}</FieldLabel>
+          <FieldLabel htmlFor="calendar-event-title">{t("tasks:calendarFields.title")}</FieldLabel>
           <TextField
             id="calendar-event-title"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder={t("tasks.calendarFields.titlePlaceholder")}
+            placeholder={t("tasks:calendarFields.titlePlaceholder")}
             disabled={isBusy}
             maxLength={200}
           />
@@ -80,7 +80,7 @@ export function CalendarEventFields({
             disabled={isBusy}
           />
           <FieldLabel htmlFor="calendar-event-all-day" className="mb-0">
-            {t("tasks.calendarFields.allDay")}
+            {t("tasks:calendarFields.allDay")}
           </FieldLabel>
         </div>
 
@@ -88,7 +88,7 @@ export function CalendarEventFields({
           <div className="flex flex-col gap-sm">
             <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-2xl">
               <div>
-                <FieldLabel htmlFor="calendar-event-start">{t("tasks.calendarFields.start")}</FieldLabel>
+                <FieldLabel htmlFor="calendar-event-start">{t("tasks:calendarFields.start")}</FieldLabel>
                 <TextField
                   id="calendar-event-start"
                   type="time"
@@ -98,7 +98,7 @@ export function CalendarEventFields({
                 />
               </div>
               <div>
-                <FieldLabel htmlFor="calendar-event-end">{t("tasks.calendarFields.end")}</FieldLabel>
+                <FieldLabel htmlFor="calendar-event-end">{t("tasks:calendarFields.end")}</FieldLabel>
                 <TextField
                   id="calendar-event-end"
                   type="time"
@@ -117,12 +117,12 @@ export function CalendarEventFields({
         )}
 
         <div>
-          <FieldLabel htmlFor="calendar-event-location">{t("tasks.calendarFields.location")}</FieldLabel>
+          <FieldLabel htmlFor="calendar-event-location">{t("tasks:calendarFields.location")}</FieldLabel>
           <TextField
             id="calendar-event-location"
             value={eventLocation}
             onChange={(e) => onEventLocationChange(e.target.value)}
-            placeholder={t("tasks.calendarFields.locationPlaceholder")}
+            placeholder={t("tasks:calendarFields.locationPlaceholder")}
             disabled={isBusy}
             maxLength={500}
           />
@@ -130,13 +130,13 @@ export function CalendarEventFields({
 
         <div>
           <FieldLabel htmlFor="calendar-event-description">
-            {t("tasks.calendarFields.description")}
+            {t("tasks:calendarFields.description")}
           </FieldLabel>
           <TextArea
             id="calendar-event-description"
             value={eventDescription}
             onChange={(e) => onEventDescriptionChange(e.target.value)}
-            placeholder={t("tasks.calendarFields.descriptionPlaceholder")}
+            placeholder={t("tasks:calendarFields.descriptionPlaceholder")}
             disabled={isBusy}
             maxLength={10000}
           />
@@ -145,7 +145,7 @@ export function CalendarEventFields({
 
       {eventIsAllDay && (
         <p className="mt-md text-xs leading-normal text-text-muted">
-          {t("tasks.calendarFields.allDayHint")}
+          {t("tasks:calendarFields.allDayHint")}
         </p>
       )}
     </SurfaceCard>

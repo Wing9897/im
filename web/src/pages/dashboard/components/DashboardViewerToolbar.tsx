@@ -94,7 +94,7 @@ export function DashboardViewerToolbar({
   return (
     <OpsControlBar
       sticky
-      ariaLabel={t("tasks.toolbarAria")}
+      ariaLabel={t("tasks:toolbarAria")}
       data-testid="tasks-toolbar"
       className="flex-wrap"
     >
@@ -107,10 +107,10 @@ export function DashboardViewerToolbar({
               startTransition(() => onGroupingViewChange(id));
             }
           }}
-          ariaLabel={t("workset.groupingAria")}
+          ariaLabel={t("workset:groupingAria")}
           items={[
-            { id: "by_task", label: t("workset.viewByTask") },
-            { id: "by_workset", label: t("workset.viewByWorkset") },
+            { id: "by_task", label: t("workset:viewByTask") },
+            { id: "by_workset", label: t("workset:viewByWorkset") },
           ]}
         />
         {isTaskView && taskCount > 0 ? (
@@ -120,7 +120,7 @@ export function DashboardViewerToolbar({
               active={modeFilter === "all"}
               onClick={() => startTransition(() => onModeFilterChange("all"))}
             >
-              {t("tasks.allModes")}
+              {t("tasks:allModes")}
             </FilterChip>
             {taskFormAnalysisModeOrder.map((mode) => (
               <FilterChip
@@ -140,8 +140,8 @@ export function DashboardViewerToolbar({
           type="text"
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.target.value)}
-          placeholder={t("tasks.searchPlaceholder")}
-          aria-label={t("tasks.searchAria")}
+          placeholder={t("tasks:searchPlaceholder")}
+          aria-label={t("tasks:searchAria")}
           data-im-search
           className={`${pageOpsControlClass} min-w-[160px] max-w-[260px] flex-1 basis-40`}
         />
@@ -170,8 +170,8 @@ export function DashboardViewerToolbar({
           <>
             <VisibilityEyeButton
               visible={showSystemWorksets}
-              showLabel={t("workset.showSystemWorksets")}
-              hideLabel={t("workset.hideSystemWorksets")}
+              showLabel={t("workset:showSystemWorksets")}
+              hideLabel={t("workset:hideSystemWorksets")}
               testId="toggle-system-worksets"
               onToggle={onToggleSystemWorksets}
             />
@@ -181,7 +181,7 @@ export function DashboardViewerToolbar({
               onClick={onCreateWorkset}
               data-testid="dashboard-create-workset"
             >
-              {t("workset.create")}
+              {t("workset:create")}
             </Button>
           </>
         ) : null}

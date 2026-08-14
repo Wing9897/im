@@ -23,7 +23,7 @@ interface UseViewerResourceResult<T> {
 function viewerErrorMessage(genericMessage: string) {
   return (err: unknown): string => {
     if (err instanceof ApiRequestError && err.status === 401) {
-      return String(i18n.t("viewer.authFailed"));
+      return String(i18n.t("viewer:authFailed"));
     }
     return genericMessage;
   };

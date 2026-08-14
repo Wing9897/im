@@ -189,7 +189,7 @@ export function upsertSession(
     const trimmed = session.llmProfileId.trim();
     resolvedProfileId = trimmed || undefined;
   } else {
-    resolvedProfileId = existing?.llmProfileId;
+    resolvedProfileId = existing?.llmProfileId ?? undefined;
   }
   const next: AssistantSession = {
     id: session.id,
@@ -202,21 +202,6 @@ export function upsertSession(
   const others = current.sessions.filter((s) => s.id !== next.id);
   writeAll([next, ...others], current.activeSessionId);
   return next;
-}
-
-/** Set or clear the per-session LLM profile override (null → follow staff). */
-export function setSessionLlmProfileId(
-  sessionId: string,
-  llmProfileId: string | null,
-): AssistantSession | undefined {
-  const existing = getSession(sessionId);
-  if (!existing) return undefined;
-  return upsertSession({
-    id: existing.id,
-    messages: existing.messages,
-    sessionId: existing.sessionId,
-    llmProfileId,
-  });
 }
 
 /** Delete a session (still supported — PUT without that session). */

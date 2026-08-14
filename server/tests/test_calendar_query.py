@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.calendar.query import (
     HORIZON_DAYS,
@@ -84,7 +84,8 @@ async def test_query_window_merges_analysis_events_and_rrule(app) -> None:
 
 
 async def test_query_window_merges_user_events(app) -> None:
-    from server.calendar.user_events import create_user_event, list_user_events
+    from server.calendar.user_events_read import list_user_events
+    from server.calendar.user_events_write import create_user_event
 
     db = app.state.db
     created = await create_user_event(
@@ -176,7 +177,7 @@ async def test_query_window_cursor_pages(app) -> None:
 
 async def test_query_upcoming_respects_now_and_hard_cap(app) -> None:
     db = app.state.db
-    now = datetime(2026, 7, 10, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 10, 0, 0, tzinfo=UTC)
     result = await query_upcoming(db, limit=500, now=now, hard_cap=100)
     assert result["limit"] == 100
     assert len(result["items"]) <= 100
@@ -200,7 +201,7 @@ async def test_query_window_date_only_end_includes_whole_day(app) -> None:
 
 async def test_query_upcoming_days_clamps_to_horizon(app) -> None:
     db = app.state.db
-    now = datetime(2026, 7, 10, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 10, 0, 0, tzinfo=UTC)
     over = await query_upcoming(db, limit=50, days=HORIZON_DAYS + 1, now=now)
     assert over["days"] == HORIZON_DAYS
     at_cap = await query_upcoming(db, limit=50, days=HORIZON_DAYS, now=now)
@@ -226,7 +227,7 @@ async def test_query_upcoming_days_includes_local_midnight_plus08(app) -> None:
         ("ev-risex", seed.TASK_EVENT_TIMED, seed.BATCH_EVENT_TIMED),
     )
     # 2026-07-19 20:00 +08 = 2026-07-19 12:00 UTC — before event UTC instant.
-    now = datetime(2026, 7, 19, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 19, 12, 0, tzinfo=UTC)
     result = await query_upcoming(db, limit=50, days=7, now=now)
     titles = [i["title"] for i in result["items"]]
     assert "RiseX 點數計" in titles
@@ -266,7 +267,7 @@ async def test_get_event_analysis_and_rrule_occurrence(app) -> None:
 
 
 async def test_get_event_returns_user_event_detail(app) -> None:
-    from server.calendar.user_events import create_user_event
+    from server.calendar.user_events_write import create_user_event
 
     created = await create_user_event(
         app.state.db,
@@ -308,7 +309,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
 
 
 async def test_query_window_filters_by_workset_id(app) -> None:
-    from server.calendar.user_events import create_user_event
+    from server.calendar.user_events_write import create_user_event
     from server.db.database import TransactionDb
     from server.queries.worksets_queries import insert_workset
     from server.util import utc_now_iso

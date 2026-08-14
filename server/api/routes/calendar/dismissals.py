@@ -41,23 +41,24 @@ def _notify_dismissal(request: Request, source: str, event_id: str, action: str)
 async def list_dismissals(
     request: Request,
     source: str | None = None,
-) -> list[dict]:
+) -> list[TimelineDismissalResponse]:
     db = get_db(request)
     try:
-        return await list_timeline_dismissals(db, source=source)
+        rows = await list_timeline_dismissals(db, source=source)
     except TimelineDismissalValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return [TimelineDismissalResponse.model_validate(row) for row in rows]
 
 
 @router.put("", response_model=TimelineDismissalResponse)
-async def put_dismissal(request: Request, body: TimelineDismissalBody) -> dict:
+async def put_dismissal(request: Request, body: TimelineDismissalBody) -> TimelineDismissalResponse:
     db = get_db(request)
     try:
         payload = await dismiss_timeline_event(db, source=body.source, event_id=body.eventId)
     except TimelineDismissalValidationError as exc:
         raise _http_from_validation(exc) from exc
     _notify_dismissal(request, str(payload["source"]), str(payload["eventId"]), "dismissed")
-    return payload
+    return TimelineDismissalResponse.model_validate(payload)
 
 
 @router.delete("", status_code=204)

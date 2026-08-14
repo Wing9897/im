@@ -1,16 +1,31 @@
-"""SSE contract: the 8 named event types and {type, payload} wire envelope."""
+"""SSE contract: the 8 named event types, {type, payload} wire envelope, and
+payload-schema drift guards (OpenAPI components in ``responses/sse.py``)."""
 
 from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, cast
+from typing import Any, cast, get_args
 
 import pytest
 from fastapi import Request
+from pydantic import BaseModel
 
 from server.api.routes.events import events
+from server.api.schemas.responses.sse import (
+    SseAnalysisCompletedPayload,
+    SseAnalysisFailedPayload,
+    SseAnalysisPausedChangedPayload,
+    SseAnalysisStartedPayload,
+    SseCollectorStatusChangedPayload,
+    SseEventEnvelope,
+    SseEventType,
+    SseMessagesUpdatedPayload,
+    SseResourceModifiedPayload,
+    SseSourceStatusChangedPayload,
+)
 from server.sse import _MAX_SUBSCRIBERS, EVENT_TYPES, SseBroadcaster, SseCapacityError, event_stream
+from server.wire.serializers import serialize_message
 
 FRONTEND_EVENT_TYPES = {
     "messages_updated",
@@ -126,7 +141,7 @@ async def test_collector_status_payload_shape():
     finally:
         broadcaster.unsubscribe(queue)
     payload = json.loads(event["data"])["payload"]
-    assert payload["status"] in {"running", "stopped", "error", "starting", "stopping", "restarting"}
+    assert payload["status"] in {"running", "stopped", "error"}
 
 
 @pytest.mark.parametrize(
@@ -189,3 +204,219 @@ async def test_user_event_crud_publishes_resource_modified(client, app):
         {"resourceType": "user_event", "resourceId": event_id, "action": "deleted"},
     ]
     assert all(event["event"] == "resource_modified" for event in events)
+
+
+# ── payload schema drift guards ──────────────────────────────────────────────
+
+
+def _serialized_message() -> dict[str, Any]:
+    return serialize_message(
+        {
+            "id": "message-1",
+            "source_id": "account-1",
+            "platform": "telegram",
+            "platform_id": "channel-1",
+            "channel_name": "Announcements",
+            "platform_message_id": "42",
+            "sender_id": "user-1",
+            "sender_name": "Alice",
+            "content": "Hello",
+            "timestamp": "2026-07-28T09:00:00Z",
+            "raw_data": None,
+            "created_at": "2026-07-28T09:00:01Z",
+        }
+    )
+
+
+#: One entry per publish-site variant; models use extra="forbid", so a field
+#: added at a publish site without a schema update fails here.
+_PUBLISH_SITE_PAYLOADS: tuple[tuple[str, type[BaseModel], dict[str, Any]], ...] = (
+    # collector/base.py _insert_message / routes/messages.py
+    ("messages_updated", SseMessagesUpdatedPayload, {"messages": [_serialized_message()]}),
+    # collector/manager.py shutdown + _publish_aggregate_collector_status
+    ("collector_status_changed", SseCollectorStatusChangedPayload, {"status": "stopped"}),
+    (
+        "collector_status_changed",
+        SseCollectorStatusChangedPayload,
+        {"status": "error", "adapter_name": "rss:feed-1", "error_summary": "boom", "correlation_id": "abc123"},
+    ),
+    # collector/base.py _broadcast_status_change (incl. transient reconnect)
+    ("source_status_changed", SseSourceStatusChangedPayload, {"sourceId": "source-1", "status": "connected"}),
+    (
+        "source_status_changed",
+        SseSourceStatusChangedPayload,
+        {"sourceId": "source-1", "status": "connecting", "lastError": "retrying"},
+    ),
+    # scheduler/batch_process.py
+    (
+        "analysis_started",
+        SseAnalysisStartedPayload,
+        {
+            "taskId": "task-1",
+            "taskName": "Task 1",
+            "batchId": "batch-1",
+            "messageCount": 5,
+            "estimatedTokens": 1200,
+            "llmProvider": "ollama",
+            "llmModel": "llama3",
+        },
+    ),
+    # scheduler/agent_tick_schedule.py
+    (
+        "analysis_started",
+        SseAnalysisStartedPayload,
+        {
+            "taskId": "task-1",
+            "taskName": "Task 1",
+            "batchId": "batch-1",
+            "messageCount": 0,
+            "estimatedTokens": 0,
+            "llmProvider": "ollama",
+            "llmModel": "llama3",
+            "webSearchMode": "brave",
+            "analysisMode": "agent",
+        },
+    ),
+    # scheduler/batch_process.py (message-batch completion with overlap stats)
+    (
+        "analysis_completed",
+        SseAnalysisCompletedPayload,
+        {
+            "taskId": "task-1",
+            "batchId": "batch-1",
+            "analysisMode": "intel_event",
+            "findingsCount": 3,
+            "hasFindings": True,
+            "overlapStatistics": {
+                "overlapUsedCount": 2,
+                "overlapTrimmedCount": 0,
+                "overlapTokens": 100,
+                "primaryTokens": 900,
+                "totalTokens": 1000,
+            },
+        },
+    ),
+    # scheduler/agent_tick_schedule.py (agent tick completion)
+    (
+        "analysis_completed",
+        SseAnalysisCompletedPayload,
+        {
+            "taskId": "task-1",
+            "batchId": "batch-1",
+            "analysisMode": "agent",
+            "findingsCount": 0,
+            "hasFindings": False,
+            "webSearchMode": "agent:brave",
+            "messageCount": 4,
+        },
+    ),
+    # scheduler/agent_batches.py (skipped tick)
+    (
+        "analysis_completed",
+        SseAnalysisCompletedPayload,
+        {
+            "taskId": "task-1",
+            "batchId": "batch-1",
+            "analysisMode": "agent",
+            "findingsCount": 0,
+            "hasFindings": False,
+            "skipped": True,
+            "skipReason": "skipped: no messages",
+        },
+    ),
+    # scheduler/batch_failure.py (retry-in-place)
+    (
+        "analysis_failed",
+        SseAnalysisFailedPayload,
+        {
+            "taskId": "task-1",
+            "taskName": "Task 1",
+            "batchId": "batch-1",
+            "error": "LLM timeout",
+            "retrying": True,
+            "currentRetry": 1,
+            "maxRetries": 3,
+            "retriesExhausted": False,
+        },
+    ),
+    # scheduler/agent_batches.py complete_agent_failure
+    (
+        "analysis_failed",
+        SseAnalysisFailedPayload,
+        {
+            "taskId": "task-1",
+            "taskName": "Task 1",
+            "batchId": "batch-1",
+            "error": "boom",
+            "analysisMode": "agent",
+            "retrying": False,
+            "currentRetry": 3,
+            "maxRetries": 3,
+            "retriesExhausted": True,
+            "taskDeactivated": True,
+        },
+    ),
+    # scheduler/batch_failure.py auto-pause
+    (
+        "analysis_paused_changed",
+        SseAnalysisPausedChangedPayload,
+        {
+            "analysisPaused": True,
+            "reason": "batch_retries_exhausted",
+            "taskId": "task-1",
+            "taskName": "Task 1",
+            "batchId": "batch-1",
+        },
+    ),
+    # server/sse.py publish_resource_modified
+    (
+        "resource_modified",
+        SseResourceModifiedPayload,
+        {"resourceType": "user_event", "resourceId": "event-1", "action": "created"},
+    ),
+)
+
+
+def test_event_type_literal_matches_broadcaster_vocabulary():
+    assert get_args(SseEventType) == EVENT_TYPES
+
+
+@pytest.mark.parametrize(
+    ("event_type", "model", "payload"),
+    _PUBLISH_SITE_PAYLOADS,
+    ids=lambda value: value if isinstance(value, str) else None,
+)
+def test_publish_site_payloads_match_schema(event_type, model, payload):
+    validated = model.model_validate(payload)
+    assert validated.model_dump(exclude_unset=True) == payload
+
+    envelope = SseEventEnvelope.model_validate({"type": event_type, "payload": payload})
+    assert envelope.type == event_type
+
+
+async def test_openapi_exports_sse_and_action_config_components(app):
+    schema = cast(Any, app).openapi()
+    components = schema["components"]["schemas"]
+    expected = {
+        "SseEventEnvelope",
+        "SseMessagesUpdatedPayload",
+        "SseCollectorStatusChangedPayload",
+        "SseSourceStatusChangedPayload",
+        "SseAnalysisStartedPayload",
+        "SseAnalysisCompletedPayload",
+        "SseAnalysisFailedPayload",
+        "SseAnalysisPausedChangedPayload",
+        "SseResourceModifiedPayload",
+        "SseOverlapStatistics",
+        "TelegramBotConfig",
+        "DiscordWebhookConfig",
+        "HttpWebhookConfig",
+        "MqttConfig",
+        "ActionTriggerConditions",
+    }
+    missing = expected - set(components)
+    assert not missing, f"OpenAPI components missing: {sorted(missing)}"
+
+    stream_response = schema["paths"]["/api/v1/events"]["get"]["responses"]["200"]
+    stream_schema = stream_response["content"]["text/event-stream"]["schema"]
+    assert stream_schema == {"$ref": "#/components/schemas/SseEventEnvelope"}

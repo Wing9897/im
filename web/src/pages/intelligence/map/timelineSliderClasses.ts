@@ -32,4 +32,4 @@ export const mapSliderLiveBtnIdleClass =
   "border border-surface-border bg-transparent text-text-secondary hover:border-surface-overlay hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary";
 
 export const mapSliderCalInputClass =
-  "cursor-pointer rounded-md border border-surface-border bg-surface-base px-sm py-1 text-xs text-text-primary outline-none";
+  "im-surface-inset cursor-pointer rounded-md border border-surface-border px-sm py-1 text-xs text-text-primary outline-none";

@@ -16,16 +16,16 @@ function formatUptime(
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
-    return t("viewer.uptimeHours", { hours, minutes });
+    return t("viewer:uptimeHours", { hours, minutes });
   }
-  return t("viewer.uptimeMinutes", { minutes });
+  return t("viewer:uptimeMinutes", { minutes });
 }
 
 export function ViewerStatusPage() {
   const { t } = useTranslation("common");
   const { data: status, initialLoading, isRefreshing, error, retry } = useViewerResource<ViewerStatus>(
     fetchViewerStatus,
-    t("viewer.statusLoadError"),
+    t("viewer:statusLoadError"),
   );
 
   if (!initialLoading && !error && !status) {
@@ -35,9 +35,9 @@ export function ViewerStatusPage() {
         isRefreshing={isRefreshing}
         error={null}
         retry={retry}
-        refreshLabel={t("viewer.statusRefreshing")}
+        refreshLabel={t("viewer:statusRefreshing")}
       >
-        <p className="text-body text-text-secondary">{t("viewer.noData")}</p>
+        <p className="text-body text-text-secondary">{t("viewer:noData")}</p>
       </ViewerShell>
     );
   }
@@ -45,30 +45,30 @@ export function ViewerStatusPage() {
   const statusItems = status
     ? [
         {
-          label: t("viewer.queueDepth"),
+          label: t("viewer:queueDepth"),
           value: String(status.queueDepth),
-          description: t("viewer.queueDepthDesc"),
+          description: t("viewer:queueDepthDesc"),
         },
         {
-          label: t("viewer.collectorStatus"),
+          label: t("viewer:collectorStatus"),
           value: status.collectorAlive
-            ? t("viewer.collectorRunning")
-            : t("viewer.collectorStopped"),
-          description: t("viewer.collectorDesc"),
+            ? t("viewer:collectorRunning")
+            : t("viewer:collectorStopped"),
+          description: t("viewer:collectorDesc"),
           isGood: status.collectorAlive,
         },
         {
-          label: t("viewer.analysisStatus"),
+          label: t("viewer:analysisStatus"),
           value: status.analysisPaused
-            ? t("viewer.analysisPaused")
-            : t("viewer.analysisRunning"),
-          description: t("viewer.analysisDesc"),
+            ? t("viewer:analysisPaused")
+            : t("viewer:analysisRunning"),
+          description: t("viewer:analysisDesc"),
           isGood: !status.analysisPaused,
         },
         {
-          label: t("viewer.uptime"),
+          label: t("viewer:uptime"),
           value: formatUptime(status.uptimeSeconds, t),
-          description: t("viewer.uptimeDesc"),
+          description: t("viewer:uptimeDesc"),
         },
       ]
     : [];
@@ -79,7 +79,7 @@ export function ViewerStatusPage() {
       isRefreshing={isRefreshing}
       error={error}
       retry={retry}
-      refreshLabel={t("viewer.statusRefreshing")}
+      refreshLabel={t("viewer:statusRefreshing")}
     >
       <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-lg">
         {statusItems.map((item) => (
@@ -89,7 +89,7 @@ export function ViewerStatusPage() {
               {item.isGood !== undefined && (
                 <span
                   className={`h-2 w-2 rounded-full ${item.isGood ? "bg-success" : "bg-error"}`}
-                  aria-label={item.isGood ? t("viewer.statusOk") : t("viewer.statusBad")}
+                  aria-label={item.isGood ? t("viewer:statusOk") : t("viewer:statusBad")}
                 />
               )}
             </div>

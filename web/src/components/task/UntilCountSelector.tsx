@@ -33,18 +33,18 @@ export function UntilCountSelector({
   return (
     <>
       <div className="min-w-[200px] flex-1">
-        <FieldLabel htmlFor="recurrence-end-type">{t("tasks.recurrence.endLabel")}</FieldLabel>
+        <FieldLabel htmlFor="recurrence-end-type">{t("tasks:recurrence.endLabel")}</FieldLabel>
         {/* Native select: recurrence editor stays on SelectField for native form density. */}
         <SelectField
           id="recurrence-end-type"
           value={end.type}
           onChange={(e) => onEndTypeChange(e.target.value as RecurrenceEndType)}
           disabled={disabled}
-          aria-label={t("tasks.recurrence.endLabel")}
+          aria-label={t("tasks:recurrence.endLabel")}
         >
           {END_VALUES.map((value) => (
             <option key={value} value={value}>
-              {t(`tasks.recurrence.${value}`)}
+              {t(`tasks:recurrence.${value}`)}
             </option>
           ))}
         </SelectField>
@@ -52,7 +52,7 @@ export function UntilCountSelector({
 
       {end.type === "until" && (
         <div className="min-w-[200px] flex-1">
-          <FieldLabel htmlFor="recurrence-until">{t("tasks.recurrence.untilDate")}</FieldLabel>
+          <FieldLabel htmlFor="recurrence-until">{t("tasks:recurrence.untilDate")}</FieldLabel>
           <TextField
             id="recurrence-until"
             type="date"
@@ -61,14 +61,14 @@ export function UntilCountSelector({
             onFocus={onUntilFocus}
             onBlur={onUntilBlur}
             disabled={disabled}
-            aria-label={t("tasks.recurrence.untilDate")}
+            aria-label={t("tasks:recurrence.untilDate")}
           />
         </div>
       )}
 
       {end.type === "count" && (
         <div className="min-w-[200px] flex-1">
-          <FieldLabel htmlFor="recurrence-count">{t("tasks.recurrence.countLabel")}</FieldLabel>
+          <FieldLabel htmlFor="recurrence-count">{t("tasks:recurrence.countLabel")}</FieldLabel>
           <TextField
             id="recurrence-count"
             type="number"
@@ -80,7 +80,7 @@ export function UntilCountSelector({
             onFocus={onCountFocus}
             onBlur={onCountBlur}
             disabled={disabled}
-            aria-label={t("tasks.recurrence.countLabel")}
+            aria-label={t("tasks:recurrence.countLabel")}
           />
         </div>
       )}

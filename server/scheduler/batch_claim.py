@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from server.analyzer.incremental import (
     MARKER_INSERT_SQL,
@@ -13,7 +13,7 @@ from server.db.database import Database
 from server.util import new_id, utc_now_iso
 
 
-async def load_task(db: Database, task_id: str) -> Optional[dict[str, Any]]:
+async def load_task(db: Database, task_id: str) -> dict[str, Any] | None:
     return await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
 
 
@@ -22,7 +22,7 @@ async def task_has_channels(db: Database, task_id: str) -> bool:
     return int(value or 0) > 0
 
 
-async def find_pending_batch(db: Database, task_id: str, version: int) -> Optional[dict[str, Any]]:
+async def find_pending_batch(db: Database, task_id: str, version: int) -> dict[str, Any] | None:
     return await db.fetch_one(
         "SELECT * FROM analysis_batches "
         "WHERE task_id = ? AND version = ? AND status = 'pending' "

@@ -6,7 +6,8 @@ import json
 from typing import Any
 
 from server.collector.email_config import build_email_credentials, email_channel_platform_id
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
+from server.domain.llm_staff_classes import LLM_STAFF_CLASSES
 from server.secrets import protect_text
 
 NOW = "2026-07-01T12:00:00+00:00"
@@ -51,19 +52,42 @@ MESSAGE_1 = "msg-1"
 ACTION_1 = "act-1"
 
 
+async def ensure_default_llm_profile(db: Any) -> str:
+    """Stamp-29: analysis_tasks.llm_profile_id is NOT NULL; schema no longer bootstraps a default.
+
+    Tests that insert analysis_tasks directly into a bare (unseeded) database
+    must first ensure a usable profile row exists.
+    """
+    exists = await db.fetch_value(
+        "SELECT id FROM llm_profiles WHERE id = ?",
+        (DEFAULT_LLM_PROFILE_ID,),
+    )
+    if exists:
+        return DEFAULT_LLM_PROFILE_ID
+    await db.execute(
+        "INSERT INTO llm_profiles ("
+        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, "
+        "created_at, updated_at"
+        ") VALUES (?, 'Test Ollama', 'ollama', 'http://localhost:11434', 'llama-test', '', "
+        "0, 'disabled', 1, 'auto', '', ?, ?)",
+        (DEFAULT_LLM_PROFILE_ID, NOW, NOW),
+    )
+    return DEFAULT_LLM_PROFILE_ID
+
+
 async def seed_database(db: Any) -> None:
     now = NOW
 
     # ── LLM profile (not DDL-seeded; tests need a complete usable default) ──
-    from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES
 
     await db.execute(
         "INSERT INTO llm_profiles ("
         "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, "
         "created_at, updated_at"
         ") VALUES (?, ?, 'ollama', 'http://localhost:11434', 'llama-test', '', 0, 'disabled', "
-        "1, 'auto', '', 1, ?, ?)",
+        "1, 'auto', '', ?, ?)",
         (DEFAULT_LLM_PROFILE_ID, "Test Ollama", now, now),
     )
     for staff_class in LLM_STAFF_CLASSES:

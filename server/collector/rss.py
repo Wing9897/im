@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import calendar
 import logging
-from datetime import datetime, timezone
+from contextlib import suppress
+from datetime import UTC, datetime
 from urllib.parse import urljoin
 
 import aiohttp
@@ -45,7 +46,7 @@ class RssAdapter(BasePlatformAdapter):
     ) -> None:
         super().__init__(source_id, db, broadcaster)
         self._feed_url = feed_url
-        self._poll_interval = clamp_poll_interval(poll_interval)
+        self._poll_interval: float = clamp_poll_interval(poll_interval)
         self._seen_entries: set[str] = set()
         self._poll_task: asyncio.Task | None = None
         self._subscribed_platform_ids: list[str] = []
@@ -106,10 +107,8 @@ class RssAdapter(BasePlatformAdapter):
     async def disconnect(self) -> None:
         if self._poll_task is not None and not self._poll_task.done():
             self._poll_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass
             self._poll_task = None
 
         if self._session is not None:
@@ -160,7 +159,7 @@ class RssAdapter(BasePlatformAdapter):
                 continue
             except asyncio.CancelledError:
                 raise
-            except (OSError, asyncio.TimeoutError, OutboundUrlError, ValueError) as exc:
+            except (TimeoutError, OSError, OutboundUrlError, ValueError) as exc:
                 await self._record_poll_failure("fetch", exc)
                 continue
 
@@ -256,7 +255,7 @@ class RssAdapter(BasePlatformAdapter):
         if published_parsed:
             try:
                 timestamp = calendar.timegm(published_parsed)
-                return to_iso_z(datetime.fromtimestamp(timestamp, tz=timezone.utc))
+                return to_iso_z(datetime.fromtimestamp(timestamp, tz=UTC))
             except (ValueError, OverflowError, OSError):
                 pass
         return utc_now_iso()

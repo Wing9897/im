@@ -5,9 +5,9 @@ import { PageBreadcrumb, SegmentedTabs, type SegmentedTabItem } from "../../comp
 import { pageShellRootClass } from "../../components/ui/pageLayout";
 
 const TAB_ITEMS = [
-  { to: "/account/identity", labelKey: "account.tabs.identity", Icon: UserRound },
-  { to: "/account/devices", labelKey: "account.tabs.devices", Icon: Smartphone },
-  { to: "/account/keys", labelKey: "account.tabs.keys", Icon: KeyRound },
+  { to: "/account/identity", labelKey: "account:tabs.identity", Icon: UserRound },
+  { to: "/account/devices", labelKey: "account:tabs.devices", Icon: Smartphone },
+  { to: "/account/keys", labelKey: "account:tabs.keys", Icon: KeyRound },
 ] as const;
 
 /** Multi-device account workspace: identity / devices / access keys. */
@@ -29,11 +29,11 @@ export function AccountShell() {
     <div className={`${pageShellRootClass} max-w-[1200px]`} data-testid="account-shell">
       <PageBreadcrumb
         items={[
-          { label: t("account.root"), to: "/account/identity" },
-          { label: current ? t(current.labelKey) : t("account.root") },
+          { label: t("account:root"), to: "/account/identity" },
+          { label: current ? t(current.labelKey) : t("account:root") },
         ]}
       />
-      <SegmentedTabs items={tabs} ariaLabel={t("account.tabsAria")} />
+      <SegmentedTabs items={tabs} ariaLabel={t("account:tabsAria")} />
       <div className="mt-lg">
         <Outlet />
       </div>

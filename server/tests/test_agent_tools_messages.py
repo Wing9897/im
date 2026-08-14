@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from server.agent.tools_messages import HARD_CAP, execute_messages_tool
 from server.agent.tools_registry import execute_tool
@@ -68,7 +68,7 @@ async def test_messages_search_rejects_removed_full_history_alias(app) -> None:
 
 
 async def test_messages_search_7d_finds_recent_message(app) -> None:
-    recent_ts = to_iso_z(datetime.now(timezone.utc) - timedelta(days=1))
+    recent_ts = to_iso_z(datetime.now(UTC) - timedelta(days=1))
     await app.state.db.execute(
         "INSERT INTO messages (id, source_id, platform, platform_id, "
         "platform_message_id, sender_id, sender_name, content, timestamp, "

@@ -7,8 +7,8 @@ Uses real ``create_item`` + ``create_user_event`` (kind / amount / direction).
   uv run python scripts/seed_items_finance_demo.py --clean
   uv run python scripts/seed_items_finance_demo.py --verify-only
 
-After a stamp wipe (or older local DB) — current wipe-only floor is stamp 31
-(``SCHEMA_SEMVER`` ``0.1.0-beta.32``; SoT ``server/db/schema_inspect.py``):
+After a stamp wipe (or older local DB) — current wipe-only floor is stamp 33
+(``SCHEMA_SEMVER`` ``0.1.0-beta.34``; SoT ``server/db/schema_inspect.py``):
 
   uv run python scripts/reset_local_databases.py --apply
   uv run python scripts/seed_items_finance_demo.py
@@ -16,32 +16,34 @@ After a stamp wipe (or older local DB) — current wipe-only floor is stamp 31
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import json
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
-from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from _seed_common import (
+    build_seed_parser,
+    builtin_category_id,
+    clean_calendar_fixtures,
+    create_linked_milestone,
+    delete_workset,
+    ensure_workset,
+    open_seed_db,
+    resolve_db_path,
+    utf8_stdio,
+)
 
 from server.calendar.user_event_kinds import (  # noqa: E402
     USER_EVENT_KIND_EXPIRES,
     USER_EVENT_KIND_NORMAL,
     USER_EVENT_KIND_PURCHASE_EFFECTIVE,
 )
-from server.calendar.user_events import create_user_event  # noqa: E402
-from server.db.database import Database, TransactionDb  # noqa: E402
+from server.db.database import Database  # noqa: E402
+from server.db.schema_inspect import CURRENT_SCHEMA_VERSION  # noqa: E402
 from server.items.service import create_item  # noqa: E402
-from server.paths import default_db_path  # noqa: E402
-from server.queries.items_queries import fetch_category_by_slug  # noqa: E402
-from server.queries.worksets_queries import insert_workset  # noqa: E402
-from server.util import utc_now_iso  # noqa: E402
 
 PREFIX = "[finance-demo]"
 WS_ID = "ws-finance-demo"
@@ -217,78 +219,17 @@ def _demo_specs() -> list[ItemSpec]:
 
 
 async def _clean(db: Database) -> None:
-    await db.execute(
-        "DELETE FROM timeline_importance WHERE event_id IN "
-        "(SELECT id FROM user_events WHERE title LIKE ? OR id LIKE 'fin-demo-%')",
-        (f"{PREFIX}%",),
-    )
-    await db.execute(
-        "DELETE FROM timeline_dismissals WHERE event_id IN "
-        "(SELECT id FROM user_events WHERE title LIKE ? OR id LIKE 'fin-demo-%')",
-        (f"{PREFIX}%",),
-    )
-    await db.execute(
-        "DELETE FROM user_events WHERE title LIKE ? OR id LIKE 'fin-demo-%'",
-        (f"{PREFIX}%",),
-    )
-    await db.execute(
-        "DELETE FROM user_events WHERE item_id IN (SELECT id FROM items WHERE title LIKE ?)",
-        (f"{PREFIX}%",),
-    )
-    await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
-    await db.execute("DELETE FROM worksets WHERE id = ?", (WS_ID,))
-
-
-async def _ensure_workset(db: Database) -> None:
-    existing = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (WS_ID,))
-    if existing:
-        return
-    async with db.transaction() as conn:
-        await insert_workset(
-            TransactionDb(conn),
-            workset_id=WS_ID,
-            name="Finance Demo 測試組",
-            now=utc_now_iso(),
-        )
-
-
-async def _category_id(db: Database, slug: str) -> str:
-    row = await fetch_category_by_slug(db, slug)
-    if row is None:
-        raise RuntimeError(f"built-in category slug missing: {slug}")
-    return str(row["id"])
-
-
-async def _link_event(
-    db: Database,
-    *,
-    item_id: str,
-    workset_id: str | None,
-    spec: LinkedEventSpec,
-) -> dict[str, Any]:
-    return await create_user_event(
-        db,
-        title=spec.title,
-        start_time=f"{spec.day}T00:00:00Z",
-        is_all_day=True,
-        item_id=item_id,
-        workset_id=workset_id,
-        remind_before_days=spec.remind_before_days,
-        kind=spec.kind,
-        amount=spec.amount,
-        direction=spec.direction,
-        body=spec.body,
-        origin="manual",
-    )
+    await clean_calendar_fixtures(db, title_prefix=PREFIX, event_id_prefix="fin-demo-")
+    await delete_workset(db, WS_ID)
 
 
 async def seed(db: Database) -> dict[str, Any]:
-    await _ensure_workset(db)
+    await ensure_workset(db, ws_id=WS_ID, name="Finance Demo 測試組")
     summary_items: list[dict[str, Any]] = []
     event_count = 0
 
     for item_spec in _demo_specs():
-        cat_id = await _category_id(db, item_spec.category_slug)
+        cat_id = await builtin_category_id(db, item_spec.category_slug)
         row = await create_item(
             db,
             title=item_spec.title,
@@ -300,11 +241,17 @@ async def seed(db: Database) -> dict[str, Any]:
         item_id = str(row["id"])
         linked: list[dict[str, Any]] = []
         for idx, ev_spec in enumerate(item_spec.events):
-            created = await _link_event(
+            created = await create_linked_milestone(
                 db,
                 item_id=item_id,
                 workset_id=item_spec.workset_id,
-                spec=ev_spec,
+                title=ev_spec.title,
+                day=ev_spec.day,
+                kind=ev_spec.kind,
+                remind_before_days=ev_spec.remind_before_days,
+                amount=ev_spec.amount,
+                direction=ev_spec.direction,
+                body=ev_spec.body,
             )
             event_count += 1
             linked.append(
@@ -522,8 +469,8 @@ async def verify(db: Database) -> dict[str, Any]:
     # Stamp sanity
     stamp_row = await db.fetch_one("PRAGMA user_version")
     stamp_val = list(stamp_row.values())[0] if stamp_row else None
-    if int(stamp_val or -1) != 30:
-        errors.append(f"schema stamp={stamp_val!r} expected 30")
+    if int(stamp_val or -1) != CURRENT_SCHEMA_VERSION:
+        errors.append(f"schema stamp={stamp_val!r} expected {CURRENT_SCHEMA_VERSION}")
 
     result = {
         "ok": not errors,
@@ -567,35 +514,24 @@ def _print_table(seeded: dict[str, Any]) -> None:
 
 async def main() -> None:
     # Windows consoles often default to a legacy code page; keep TC titles readable.
-    for stream in (sys.stdout, sys.stderr):
-        reconfigure = getattr(stream, "reconfigure", None)
-        if callable(reconfigure):
-            try:
-                reconfigure(encoding="utf-8")
-            except Exception:
-                pass
+    utf8_stdio()
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--clean", action="store_true", help="Remove prior [finance-demo] rows first")
+    parser = build_seed_parser(__doc__, prefix=PREFIX)
     parser.add_argument("--verify-only", action="store_true", help="Only run asserts (no seed)")
-    parser.add_argument("--db", type=str, default="", help="Override SQLite path")
     args = parser.parse_args()
 
-    path = Path(args.db) if args.db else default_db_path()
+    path = resolve_db_path(args.db)
     print(f"DB: {path}")
     if not path.is_file() and not args.verify_only:
-        print("Warning: database file missing; schema will be bootstrapped (stamp 31).")
+        print(f"Warning: database file missing; schema will be bootstrapped (stamp {CURRENT_SCHEMA_VERSION}).")
 
-    db = Database(str(path))
-    await db.connect()
-    try:
-        await db.ensure_schema()
+    async with open_seed_db(path) as db:
         stamp = await db.fetch_one("PRAGMA user_version")
         stamp_val = list(stamp.values())[0] if stamp else None
         print(f"Schema stamp: {stamp_val}")
-        if int(stamp_val or 0) != 31:
+        if int(stamp_val or 0) != CURRENT_SCHEMA_VERSION:
             print(
-                "ERROR: need stamp 31. Run:\n"
+                f"ERROR: need stamp {CURRENT_SCHEMA_VERSION}. Run:\n"
                 "  uv run python scripts/reset_local_databases.py --apply\n"
                 "then re-run this seed.",
                 file=sys.stderr,
@@ -617,8 +553,6 @@ async def main() -> None:
         print("\nVERIFY OK:", json.dumps(result["finance"], ensure_ascii=False))
         print(f"Seeded items={len(seeded['items'])} user_events={seeded['user_events']}")
         print("Filter titles starting with [finance-demo] or workset「Finance Demo 測試組」")
-    finally:
-        await db.close()
 
 
 if __name__ == "__main__":

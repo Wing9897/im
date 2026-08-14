@@ -6,10 +6,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-LlmProviderWire = Literal["ollama", "openai_compatible", "gemini_compatible", "openrouter"]
-#: Task-mode classes only on profile upsert; ``assistant`` is a global slot.
-StaffClassWire = Literal["leaderboard", "intel_event", "agent", "assistant"]
-WebSearchProviderWire = Literal["auto", "duckduckgo", "brave"]
+from server.domain.json_modes import JsonModeWire
+from server.domain.llm_providers import LlmProviderWire
+from server.domain.web_search_providers import WebSearchProviderWire
+
+#: Task-mode classes only on profile upsert (global slots are separate).
+StaffClassWire = Literal["leaderboard", "intel_event", "agent"]
 
 
 class LlmProfileUpsertBody(BaseModel):
@@ -21,12 +23,11 @@ class LlmProfileUpsertBody(BaseModel):
     model: str = ""
     apiKey: str | None = None
     thinkingEnabled: bool = False
-    jsonMode: str = "disabled"
+    jsonMode: JsonModeWire = "disabled"
     webSearchEnabled: bool = True
     webSearchProvider: WebSearchProviderWire = "auto"
     braveSearchApiKey: str | None = None
     staffClasses: list[StaffClassWire] = Field(default_factory=list)
-    isDefault: bool | None = None
 
 
 class LlmProfileCopyBody(BaseModel):

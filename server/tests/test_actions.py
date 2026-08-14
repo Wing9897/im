@@ -3,7 +3,8 @@ ActionExecutor history recording, and trigger-condition evaluation."""
 
 from __future__ import annotations
 
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import pytest
 
@@ -11,6 +12,7 @@ import server.actions.handlers as handlers
 from server.action_config import protect_action_configuration
 from server.actions import ActionExecutor
 from server.db.database import Database
+from server.tests.seed import ensure_default_llm_profile
 from server.util import utc_now_iso
 
 
@@ -226,11 +228,12 @@ async def test_execute_unknown_action_type_records_failure(db):
 async def test_execute_success_records_history_and_last_triggered(db, monkeypatch):
     # v12: action_trigger_history.task_id / batch_id are FKs (ON DELETE SET NULL).
     now = utc_now_iso()
+    profile_id = await ensure_default_llm_profile(db)
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        ("t-1", "Task", "prompt", now, now),
+        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        ("t-1", "Task", "prompt", profile_id, now, now),
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "

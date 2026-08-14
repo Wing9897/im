@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from server.secrets import MASKED_SECRET, unprotect_text
 
@@ -23,8 +24,6 @@ def serialize_llm_staff_instance(row: Mapping[str, Any]) -> dict[str, Any]:
         payload["profileProvider"] = row.get("profile_provider") or ""
     if "profile_model" in row:
         payload["profileModel"] = row.get("profile_model") or ""
-    if "profile_is_default" in row:
-        payload["profileIsDefault"] = bool(row.get("profile_is_default"))
     return payload
 
 
@@ -47,7 +46,6 @@ def serialize_llm_profile(
         "webSearchEnabled": bool(int(row.get("web_search_enabled") or 0)),
         "webSearchProvider": row.get("web_search_provider") or "auto",
         "braveSearchApiKey": MASKED_SECRET if brave_key else "",
-        "isDefault": bool(int(row.get("is_default") or 0)),
         "staffClasses": sorted({str(s.get("staff_class") or "") for s in (staff_rows or ()) if s.get("staff_class")}),
         "staffInstances": staff,
         "createdAt": row.get("created_at"),

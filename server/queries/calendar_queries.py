@@ -5,7 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import Database
+from server.queries.recurring_series_queries import SERIES_SELECT
 from server.queries.version_sql import task_version_join
+
+#: Synthetic NULL event_* columns so analysis tasks share the calendar-list shape.
+TASK_CALENDAR_NULL_EVENT_COLS = (
+    "NULL AS rrule, NULL AS event_location, NULL AS event_description, "
+    "0 AS event_is_all_day, NULL AS event_start_time, NULL AS event_end_time, "
+    "NULL AS event_timezone"
+)
 
 
 async def fetch_calendar_rows(
@@ -15,9 +23,8 @@ async def fetch_calendar_rows(
     """Metadata for AI timeline-owning tasks (recurring series are listed separately)."""
     placeholders = ",".join("?" for _ in analysis_modes)
     return await db.fetch_all(
-        "SELECT t.id, t.name, t.analysis_mode, t.is_active, NULL AS rrule, "
-        "NULL AS event_location, NULL AS event_description, 0 AS event_is_all_day, "
-        "NULL AS event_start_time, NULL AS event_end_time, NULL AS event_timezone, "
+        "SELECT t.id, t.name, t.analysis_mode, t.is_active, "
+        f"{TASK_CALENDAR_NULL_EVENT_COLS}, "
         "t.created_at, t.updated_at "
         "FROM analysis_tasks t "
         f"WHERE t.analysis_mode IN ({placeholders}) "
@@ -45,17 +52,7 @@ async def fetch_recurring_series_rows(
     when it is used as a parent-task filter key (same dual role as before).
     """
     where_active = "" if include_inactive else " WHERE is_active = 1"
-    base = (
-        "SELECT id, name, workset_id, is_active, rrule, "
-        "dtstart AS event_start_time, dtend AS event_end_time, "
-        "is_all_day AS event_is_all_day, location AS event_location, "
-        "description AS event_description, timezone AS event_timezone, "
-        "timezone_ical AS event_timezone_ical, dtstart AS event_start_local, "
-        "dtend AS event_end_local, exdates_json AS event_exdates_json, "
-        "rdates_json AS event_rdates_json, ics_source, parent_task_id, item_id, "
-        "created_at, updated_at "
-        f"FROM recurring_schedules{where_active}"
-    )
+    base = f"{SERIES_SELECT}{where_active}"
     joiner = " AND " if where_active else " WHERE "
     if series_ids is not None:
         cleaned = [str(value).strip() for value in series_ids if str(value).strip()]
@@ -94,6 +91,8 @@ async def fetch_active_recurring_series_rows(
         parent_task_id=parent_task_id,
         include_inactive=False,
     )
+
+
 async def fetch_analysis_event_detail(
     db: Database,
     event_id: str,

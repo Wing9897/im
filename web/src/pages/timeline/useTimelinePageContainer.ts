@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -7,44 +7,49 @@ import { findActivitySpan } from "../../domain/tasks/agentTaskSelectors";
 import { timelineSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
 import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import {
-  addDays,
-  addMonths,
-  addQuarters,
-  addYears,
-  startOfDay,
-} from "../../domain/timeline/dateUtils";
-import { usePersistedState } from "../../hooks/usePersistedState";
+  usePersistedSourceFilter,
+  usePruneSourceFilterToCatalog,
+} from "../../hooks/usePersistedSourceFilter";
 import { useTimelineAnnotations } from "./useTimelineAnnotations";
+import { useTimelineCursorActions } from "./useTimelineCursorActions";
 import { useTimelineData } from "./useTimelineData";
 import { useTimelineFiltering } from "./useTimelineFiltering";
-import {
-  parsePersistedTimelineDay,
-  useTimelineNavigation,
-} from "./useTimelineNavigation";
+import { useTimelineNavigation } from "./useTimelineNavigation";
+import { useTimelinePagePrefs } from "./useTimelinePagePrefs";
 import { useTimelineSelection } from "./useTimelineSelection";
 import { useTimelineViewDeepLink } from "./useTimelineViewDeepLink";
-import {
-  TIMELINE_FOCUSED_DAY_STORAGE_KEY,
-  TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
-  TIMELINE_SHOW_DISMISSED_STORAGE_KEY,
-  TIMELINE_SHOW_ENDING_STORAGE_KEY,
-  TIMELINE_SHOW_ONGOING_STORAGE_KEY,
-  TIMELINE_VIEW_MODE_STORAGE_KEY,
-} from "../../domain/prefs";
 
 export {
   TIMELINE_FOCUSED_DAY_STORAGE_KEY,
   TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
 } from "../../domain/prefs";
 
-const VALID_VIEW_MODES = ["calendar", "gantt"] as const;
+/** Empty-state copy key for the current source selection / catalog state. */
+function emptyStateKey(
+  selectedSources: SourceFilterSelection,
+  hasTimelineTasks: boolean,
+): string {
+  if (
+    selectedSources !== null &&
+    selectedSources.taskIds.length === 0 &&
+    selectedSources.worksetIds.length === 1 &&
+    selectedSources.worksetIds[0] === SYSTEM_WORKSET_ID
+  ) {
+    return "empty.noUserEvents";
+  }
+  if (selectedSources !== null && isEmptySourceFilter(selectedSources)) {
+    return "empty.needData";
+  }
+  return hasTimelineTasks ? "empty.needData" : "empty.noTasks";
+}
 
 /**
  * Timeline composed state (sources / data / navigation / filters / selection / gantt).
  *
  * INVARIANTS:
  * - Navigation cursors (`timeCursor` / `rangeStart` / `monthCursor` / `focusedDay`)
- *   stay in `useTimelineNavigation` — do not merge into selection or one mega-store.
+ *   stay in `useTimelineNavigation` / `useTimelinePagePrefs` — do not merge into
+ *   selection or one mega-store.
  * - `showDismissed` gates soft-dismiss visibility for calendar + gantt; default on.
  * - `showOngoing` / `showEnding` gate month-cell「+N 进行中」／「+N 结束」chips; default on.
  * - Client `eventStatuses` / `eventTimeOverrides` are SQLite ui-prefs (not soft-dismiss).
@@ -55,34 +60,7 @@ const VALID_VIEW_MODES = ["calendar", "gantt"] as const;
 export function useTimelinePageContainer() {
   const { t } = useTranslation("timeline");
 
-  // ─── Persisted UI state ────────────────────────────────────────────────────
-  const [selectedSources, setSelectedSourcesState] = useState<SourceFilterSelection>(
-    () => timelineSelectedSourcesFilter.load(),
-  );
-  const setSelectedSources = useCallback((ids: SourceFilterSelection) => {
-    setSelectedSourcesState(ids);
-    timelineSelectedSourcesFilter.save(ids);
-  }, []);
-  const [rawViewMode, setViewMode] = usePersistedState<"calendar" | "gantt">(
-    TIMELINE_VIEW_MODE_STORAGE_KEY,
-    "calendar",
-  );
-  const viewMode: "calendar" | "gantt" =
-    (VALID_VIEW_MODES as readonly string[]).includes(rawViewMode) ? rawViewMode : "calendar";
-  useEffect(() => { if (rawViewMode !== viewMode) setViewMode("calendar"); }, [rawViewMode, viewMode, setViewMode]);
-
-  const [showDismissed, setShowDismissed] = usePersistedState(
-    TIMELINE_SHOW_DISMISSED_STORAGE_KEY,
-    true,
-  );
-  const [showOngoing, setShowOngoing] = usePersistedState(
-    TIMELINE_SHOW_ONGOING_STORAGE_KEY,
-    true,
-  );
-  const [showEnding, setShowEnding] = usePersistedState(
-    TIMELINE_SHOW_ENDING_STORAGE_KEY,
-    true,
-  );
+  const prefs = useTimelinePagePrefs();
   const {
     eventStatuses,
     eventTimeOverrides,
@@ -90,34 +68,23 @@ export function useTimelinePageContainer() {
     setEventTimeOverrides,
     setEventStatus,
   } = useTimelineAnnotations();
-  const [focusedDayIso, setFocusedDayIso] = usePersistedState<string | null>(
-    TIMELINE_FOCUSED_DAY_STORAGE_KEY,
-    startOfDay(new Date()).toISOString(),
-  );
-  const focusedDay = useMemo(() => {
-    if (focusedDayIso === null || focusedDayIso === "") {
-      // Legacy null / cleared → today so the sidebar stays day-scoped.
-      return startOfDay(new Date());
-    }
-    return parsePersistedTimelineDay(focusedDayIso) ?? startOfDay(new Date());
-  }, [focusedDayIso]);
-  const setFocusedDay = useCallback((day: Date | null) => {
-    // null means "reset to today" (sidebar never shows the full view range).
-    setFocusedDayIso(startOfDay(day ?? new Date()).toISOString());
-  }, [setFocusedDayIso]);
 
-  const [selectedGanttTaskId, setSelectedGanttTaskId] = usePersistedState<string | null>(
-    TIMELINE_SELECTED_GANTT_TASK_ID_STORAGE_KEY,
-    null,
-  );
-
-  // ─── Composed hooks ────────────────────────────────────────────────────────
   const navigation = useTimelineNavigation();
+
+  const { selectedSources, setSelectedSources } = usePersistedSourceFilter(
+    timelineSelectedSourcesFilter,
+  );
   const data = useTimelineData({
     selectedSources,
-    viewMode,
+    viewMode: prefs.viewMode,
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
+  });
+  usePruneSourceFilterToCatalog(timelineSelectedSourcesFilter, {
+    selectedSources,
+    setSelectedSources,
+    catalog: data.timelineTasks,
+    catalogLoading: data.tasksLoading,
   });
 
   const filtering = useTimelineFiltering({
@@ -126,8 +93,8 @@ export function useTimelinePageContainer() {
     rangeStart: navigation.rangeStart,
     rangeEnd: navigation.rangeEnd,
     monthCursor: navigation.monthCursor,
-    showDismissed,
-    focusedDay,
+    showDismissed: prefs.showDismissed,
+    focusedDay: prefs.focusedDay,
   });
 
   const selection = useTimelineSelection({
@@ -139,113 +106,46 @@ export function useTimelinePageContainer() {
     setEventTimeOverrides,
   });
 
-  // ─── Glue logic ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (data.tasksLoading) return;
-    const catalogIds = data.timelineTasks.map((t) => t.id);
-    const worksetIds = [
-      SYSTEM_WORKSET_ID,
-      ...new Set(
-        data.timelineTasks
-          .map((t) => t.worksetId)
-          .filter((id): id is string => typeof id === "string" && id.length > 0),
-      ),
-    ];
-    const pruned = timelineSelectedSourcesFilter.prune(selectedSources, catalogIds, worksetIds);
-    if (pruned !== selectedSources) {
-      setSelectedSources(pruned);
-    }
-  }, [
-    selectedSources,
-    setSelectedSources,
-    data.tasksLoading,
-    data.timelineTasks,
-  ]);
+  const clearSelectedEvent = useCallback(
+    () => selection.setSelectedEvent(null),
+    [selection],
+  );
+  const actions = useTimelineCursorActions({
+    navigation,
+    setViewMode: prefs.setViewMode,
+    setFocusedDay: prefs.setFocusedDay,
+    clearSelectedEvent,
+  });
 
-  const handleSetViewMode = useCallback((mode: "calendar" | "gantt") => {
-    setViewMode(mode);
-    if (mode === "calendar" && (navigation.timeScale === "quarter" || navigation.timeScale === "year")) {
-      navigation.setTimeScale("month");
-    }
-  }, [setViewMode, navigation]);
-
-  useTimelineViewDeepLink(handleSetViewMode);
+  useTimelineViewDeepLink(actions.handleSetViewMode);
 
   const handleSelectGanttTask = useCallback(
-    (taskId: string) => setSelectedGanttTaskId((prev) => (prev === taskId ? null : taskId)),
-    [setSelectedGanttTaskId],
+    (taskId: string) =>
+      prefs.setSelectedGanttTaskId((prev) => (prev === taskId ? null : taskId)),
+    [prefs],
   );
   const selectedGanttSpan =
-    selectedGanttTaskId !== null
-      ? findActivitySpan(data.taskSpans, selectedGanttTaskId)
+    prefs.selectedGanttTaskId !== null
+      ? findActivitySpan(data.taskSpans, prefs.selectedGanttTaskId)
       : null;
 
-  const focusDay = useCallback((day: Date) => {
-    selection.setSelectedEvent(null);
-    if (navigation.timeScale === "day") navigation.setTimeCursor(startOfDay(day));
-    setFocusedDay(startOfDay(day));
-  }, [navigation, selection, setFocusedDay]);
-
-  /** Jump calendar cursor + focused day (deep-links from workset summary). */
-  const goToDay = useCallback(
-    (day: Date) => {
-      const normalized = startOfDay(day);
-      navigation.setTimeCursor(normalized);
-      setFocusedDay(normalized);
-    },
-    [navigation, setFocusedDay],
+  const emptyState = useMemo(
+    () => t(emptyStateKey(selectedSources, data.timelineTasks.length > 0)),
+    [t, selectedSources, data.timelineTasks.length],
   );
-
-  const handleJumpTo = useCallback(
-    (scale: Parameters<typeof navigation.jumpTo>[0]) => {
-      // Jump snaps the cursor to today — keep the sidebar on today too.
-      setFocusedDay(startOfDay(new Date()));
-      navigation.jumpTo(scale);
-    },
-    [navigation, setFocusedDay],
-  );
-
-  const handleMoveCursor = useCallback(
-    (delta: number) => {
-      const scale = navigation.timeScale;
-      const cursor = navigation.timeCursor;
-      let nextFocus = cursor;
-      if (scale === "day") nextFocus = addDays(cursor, delta);
-      else if (scale === "week") nextFocus = addDays(cursor, delta * 7);
-      else if (scale === "quarter") nextFocus = addQuarters(cursor, delta);
-      else if (scale === "year") nextFocus = addYears(cursor, delta);
-      else nextFocus = addMonths(cursor, delta);
-      navigation.moveCursor(delta);
-      // Sidebar stays day-scoped: follow the navigated cursor day.
-      setFocusedDay(startOfDay(nextFocus));
-    },
-    [navigation, setFocusedDay],
-  );
-
-  const emptyState =
-    selectedSources !== null &&
-    selectedSources.taskIds.length === 0 &&
-    selectedSources.worksetIds.length === 1 &&
-    selectedSources.worksetIds[0] === SYSTEM_WORKSET_ID
-      ? t("empty.noUserEvents")
-      : selectedSources !== null && isEmptySourceFilter(selectedSources)
-        ? t("empty.needData")
-        : data.timelineTasks.length === 0
-          ? t("empty.noTasks")
-          : t("empty.needData");
 
   return {
     sources: {
       selectedSources,
       setSelectedSources,
       timelineTasks: data.timelineTasks,
-      viewMode,
-      setViewMode: handleSetViewMode,
+      viewMode: prefs.viewMode,
+      setViewMode: actions.handleSetViewMode,
       emptyState,
       eventStatuses,
       setEventStatus,
-      focusDay,
-      goToDay,
+      focusDay: actions.focusDay,
+      goToDay: actions.goToDay,
     },
     data: {
       events: data.events,
@@ -275,18 +175,18 @@ export function useTimelinePageContainer() {
       monthDays: navigation.monthDays,
       monthEvents: filtering.monthEvents,
       ganttColumns: navigation.ganttColumns,
-      focusedDay,
-      moveCursor: handleMoveCursor,
-      jumpTo: handleJumpTo,
+      focusedDay: prefs.focusedDay,
+      moveCursor: actions.handleMoveCursor,
+      jumpTo: actions.handleJumpTo,
       visibleRangeLabel: navigation.visibleRangeLabel,
     },
     filters: {
-      showDismissed,
-      setShowDismissed,
-      showOngoing,
-      setShowOngoing,
-      showEnding,
-      setShowEnding,
+      showDismissed: prefs.showDismissed,
+      setShowDismissed: prefs.setShowDismissed,
+      showOngoing: prefs.showOngoing,
+      setShowOngoing: prefs.setShowOngoing,
+      showEnding: prefs.showEnding,
+      setShowEnding: prefs.setShowEnding,
       filteredEvents: filtering.filteredEvents,
       sidebarEvents: filtering.sidebarEvents,
     },
@@ -301,10 +201,10 @@ export function useTimelinePageContainer() {
       resetTimeOverride: selection.resetTimeOverride,
     },
     gantt: {
-      selectedGanttTaskId,
+      selectedGanttTaskId: prefs.selectedGanttTaskId,
       handleSelectGanttTask,
       selectedGanttSpan,
-      setSelectedGanttTaskId,
+      setSelectedGanttTaskId: prefs.setSelectedGanttTaskId,
     },
   };
 }

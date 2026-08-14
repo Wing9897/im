@@ -68,7 +68,7 @@ export function useTaskPersistence({
     if (tasksLoading) return;
     if (taskLoadError) {
       hydratedTaskIdRef.current = taskId;
-      showToast(String(i18n.t("common:tasks.toast.loadFailedBlank")), "error");
+      showToast(String(i18n.t("tasks:toast.loadFailedBlank")), "error");
       return;
     }
     const task = safeArray(tasks).find((t) => t.id === taskId);
@@ -100,11 +100,11 @@ export function useTaskPersistence({
       if (taskId) {
         const result = await updateTask(taskId, taskConfig);
         if (!isMountedRef.current) return;
-        showToast(String(i18n.t("common:tasks.toast.updated")), "success");
+        showToast(String(i18n.t("tasks:toast.updated")), "success");
         if (result.deletedBatchCount > 0) {
           showToast(
             String(
-              i18n.t("common:tasks.toast.clearedBatches", {
+              i18n.t("tasks:toast.clearedBatches", {
                 count: result.deletedBatchCount,
               }),
             ),
@@ -114,7 +114,7 @@ export function useTaskPersistence({
       } else {
         await createTask(taskConfig);
         if (!isMountedRef.current) return;
-        showToast(String(i18n.t("common:tasks.toast.created")), "success");
+        showToast(String(i18n.t("tasks:toast.created")), "success");
       }
 
       if (!isMountedRef.current) return;

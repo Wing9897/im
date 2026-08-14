@@ -59,32 +59,32 @@ export function AgentDetailTickSection({
           : outcome === "running"
             ? "tickOutcomeRunning"
             : "tickOutcomeError";
-    return t(`tasks.agentDetail.${key}`);
+    return t(`tasks:agentDetail.${key}`);
   };
 
   return (
     <>
-      <PanelSection title={t("tasks.agentDetail.tickTitle")}>
+      <PanelSection title={t("tasks:agentDetail.tickTitle")}>
         {spanLoading && !activitySpan && !tickStatus ? (
           <p className={captionClass}>{t("ui.loading")}</p>
         ) : (
           <div className="flex min-w-0 flex-col gap-sm" data-testid="project-detail-tick">
             <dl className="grid gap-sm text-body sm:grid-cols-2">
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickLastEnd")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickLastEnd")}</dt>
                 <dd className="break-words text-text-primary">
                   {formatIsoLocal(latestTick?.completedAt ?? activitySpan?.latestBatchEnd) ||
                     t("emDash")}
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickCompletedCount")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickCompletedCount")}</dt>
                 <dd className="text-text-primary tabular-nums">
                   {activitySpan?.completedBatchCount ?? 0}
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickOutcome")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickOutcome")}</dt>
                 <dd className="text-text-primary" data-testid="project-detail-tick-outcome">
                   {lastOutcome ? (
                     <Badge
@@ -99,7 +99,7 @@ export function AgentDetailTickSection({
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickMessageCount")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickMessageCount")}</dt>
                 <dd
                   className="text-text-primary tabular-nums"
                   data-testid="project-detail-tick-message-count"
@@ -108,7 +108,7 @@ export function AgentDetailTickSection({
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickPendingCursor")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickPendingCursor")}</dt>
                 <dd
                   className="text-text-primary tabular-nums"
                   data-testid="project-detail-pending-cursor"
@@ -119,7 +119,7 @@ export function AgentDetailTickSection({
                 </dd>
               </div>
               <div className="min-w-0">
-                <dt className={captionClass}>{t("tasks.agentDetail.tickCursorAt")}</dt>
+                <dt className={captionClass}>{t("tasks:agentDetail.tickCursorAt")}</dt>
                 <dd className="break-words text-text-primary">
                   {formatIsoLocal(tickStatus?.cursorAt) || t("emDash")}
                 </dd>
@@ -130,7 +130,7 @@ export function AgentDetailTickSection({
                 className="min-w-0 rounded-md border border-[color-mix(in_srgb,var(--error)_35%,transparent)] bg-[color-mix(in_srgb,var(--error)_8%,transparent)] px-sm py-xs text-caption leading-relaxed text-error"
                 data-testid="project-detail-tick-error"
               >
-                <span className="font-medium">{t("tasks.agentDetail.tickError")}: </span>
+                <span className="font-medium">{t("tasks:agentDetail.tickError")}: </span>
                 <ExpandableErrorText text={lastTickError} />
               </div>
             ) : null}
@@ -145,20 +145,20 @@ export function AgentDetailTickSection({
                 data-testid="project-detail-tick-extras-toggle"
               >
                 {tickExtrasOpen
-                  ? t("tasks.agentDetail.hideTickExtras")
-                  : t("tasks.agentDetail.showTickExtras")}
+                  ? t("tasks:agentDetail.hideTickExtras")
+                  : t("tasks:agentDetail.showTickExtras")}
               </Button>
               {tickExtrasOpen ? (
                 <div className="mt-sm flex min-w-0 flex-col gap-sm">
                   <div data-testid="project-detail-tick-message">
-                    <div className={captionClass}>{t("tasks.agentDetail.tickMessage")}</div>
+                    <div className={captionClass}>{t("tasks:agentDetail.tickMessage")}</div>
                     {agentMessage ? (
                       <p className="mt-0.5 break-words whitespace-pre-wrap text-body leading-relaxed text-text-primary">
                         {agentMessage}
                       </p>
                     ) : (
                       <p className={`mt-0.5 ${captionClass}`}>
-                        {t("tasks.agentDetail.tickNoMessage")}
+                        {t("tasks:agentDetail.tickNoMessage")}
                       </p>
                     )}
                   </div>
@@ -176,9 +176,9 @@ export function AgentDetailTickSection({
                       />
                     ) : (
                       <>
-                        <div className={captionClass}>{t("tasks.agentDetail.tickTools")}</div>
+                        <div className={captionClass}>{t("tasks:agentDetail.tickTools")}</div>
                         <p className={`mt-0.5 ${captionClass}`}>
-                          {t("tasks.agentDetail.tickNoTools")}
+                          {t("tasks:agentDetail.tickNoTools")}
                         </p>
                       </>
                     )}
@@ -191,7 +191,7 @@ export function AgentDetailTickSection({
       </PanelSection>
 
       <PanelSection
-        title={t("tasks.agentDetail.tickLogTitle")}
+        title={t("tasks:agentDetail.tickLogTitle")}
         showCount={!spanLoading}
         itemCount={tickLog.length}
         collapsible
@@ -203,8 +203,8 @@ export function AgentDetailTickSection({
         ) : tickLog.length === 0 ? (
           <p className={captionClass} data-testid="project-detail-tick-log-empty">
             {inFlight
-              ? t("tasks.agentDetail.tickLogEmptyInFlight")
-              : t("tasks.agentDetail.tickLogEmpty")}
+              ? t("tasks:agentDetail.tickLogEmptyInFlight")
+              : t("tasks:agentDetail.tickLogEmpty")}
           </p>
         ) : (
           <ul className="flex flex-col gap-sm" data-testid="project-detail-tick-log">

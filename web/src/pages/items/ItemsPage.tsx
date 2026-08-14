@@ -14,7 +14,7 @@ import {
   itemsPageChromeSelectClass,
   itemsPageFillClass,
 } from "./itemsPageChromeClasses";
-import type { ItemsSortKey } from "./itemsListModel";
+import type { ItemsSortKey } from "../../domain/items/itemsListModel";
 import { useItemsPage } from "./useItemsPage";
 
 export function ItemsPage() {
@@ -114,7 +114,6 @@ export function ItemsPage() {
         />
       ) : (
         <ItemsPageChrome
-          title={t("pageTitle")}
           controlsAriaLabel={t("categorySearchAria")}
           controls={
             <div className={itemsPageChromeEntryToolsClass}>

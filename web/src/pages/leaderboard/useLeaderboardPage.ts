@@ -200,7 +200,7 @@ export function useLeaderboardPage() {
       const taskName =
         (topic.taskId ? taskNameMap.get(topic.taskId) : null) ??
         topic.taskName ??
-        String(i18n.t("leaderboard.unnamed"));
+        String(i18n.t("leaderboard:unnamed"));
       const existing = groups.get(taskId);
       if (existing) {
         existing.topics.push(topic);

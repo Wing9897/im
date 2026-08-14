@@ -10,7 +10,7 @@ import { taskEmployeeForAnalysisMode } from "../domain/tasks/taskEmployee";
 export function formatAnalysisMode(value: string | null | undefined): string {
   if (isAnalysisMode(value)) {
     const employeeId = taskEmployeeForAnalysisMode(value);
-    return String(i18n.t(`tasks.employees.${employeeId}.name`));
+    return String(i18n.t(`tasks:employees.${employeeId}.name`));
   }
   return String(i18n.t("ui.unknownMode"));
 }
@@ -23,7 +23,7 @@ export function formatAnalysisMode(value: string | null | undefined): string {
  */
 export function formatAnalysisTimeRange(value: string | null | undefined): string {
   if (value == null || value === "") {
-    return String(i18n.t("tasks.editor.timeAll"));
+    return String(i18n.t("tasks:editor.timeAll"));
   }
   if (isTaskAnalysisTimeRange(value)) {
     return String(i18n.t(TASK_ANALYSIS_TIME_RANGE_I18N_KEYS[value]));

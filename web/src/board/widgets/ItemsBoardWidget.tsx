@@ -54,7 +54,7 @@ export function ItemsBoardWidget({ active = true }: BoardWidgetProps) {
         error={!rows ? error : null}
         onRetry={refresh}
         empty={Array.isArray(rows) && rows.length === 0}
-        emptyLabel={t("board.items.empty")}
+        emptyLabel={t("board:items.empty")}
       >
         {rows && rows.length > 0 ? (
           <ul className="board-widget-list">
@@ -72,7 +72,7 @@ export function ItemsBoardWidget({ active = true }: BoardWidgetProps) {
           </ul>
         ) : null}
         <p className="board-widget-muted" data-testid="board-items-hint">
-          {t("board.items.hint")}
+          {t("board:items.hint")}
         </p>
       </BoardWidgetShell>
     </div>

@@ -25,13 +25,13 @@ export const taskFormAnalysisModeOrder: AnalysisMode[] = TASK_EMPLOYEE_ORDER.map
 
 /** Neutral product name for a task type (not AI staff job title). */
 export function getTaskEmployeeDisplayName(employeeId: TaskEmployeeId): string {
-  return String(i18n.t(`tasks.employees.${employeeId}.name`));
+  return String(i18n.t(`tasks:employees.${employeeId}.name`));
 }
 
 export function getTaskFormAnalysisModeMeta(
   analysisMode: AnalysisMode,
 ): TaskFormAnalysisModeMeta {
-  const prefix = `tasks.modes.${analysisMode}`;
+  const prefix = `tasks:modes.${analysisMode}`;
   return {
     // Cards / filters / badges share task-type product names.
     displayLabel: getTaskEmployeeDisplayName(taskEmployeeForAnalysisMode(analysisMode)),
@@ -45,7 +45,7 @@ export function getTaskFormAnalysisModeMeta(
 
 /** One-line capability blurb for task-type picker cards. */
 export function getTaskEmployeeBlurb(employeeId: TaskEmployeeId): string {
-  return String(i18n.t(`tasks.employees.${employeeId}.blurb`));
+  return String(i18n.t(`tasks:employees.${employeeId}.blurb`));
 }
 
 export function getTaskEmployeeIdForMode(mode: AnalysisMode): TaskEmployeeId {

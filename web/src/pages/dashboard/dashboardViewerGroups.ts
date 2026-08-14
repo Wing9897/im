@@ -23,7 +23,7 @@ export function buildDashboardWorksetGroups(opts: {
   const groups = new Map<string, DashboardWorksetGroup>();
 
   for (const ws of worksets) {
-    const title = ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name;
+    const title = ws.id === SYSTEM_WORKSET_ID ? t("workset:generalName") : ws.name;
     groups.set(ws.id, {
       key: ws.id,
       title,
@@ -37,7 +37,7 @@ export function buildDashboardWorksetGroups(opts: {
     if (key === "__unassigned__") {
       const group = groups.get("__unassigned__") ?? {
         key: "__unassigned__",
-        title: t("workset.unassignedGroup"),
+        title: t("workset:unassignedGroup"),
         isSystem: false,
         tasks: [],
       };
@@ -52,7 +52,7 @@ export function buildDashboardWorksetGroups(opts: {
       const ws = byId.get(key);
       groups.set(key, {
         key,
-        title: ws?.name ?? t("workset.unknownGroup"),
+        title: ws?.name ?? t("workset:unknownGroup"),
         isSystem: Boolean(ws?.isSystem),
         tasks: [task],
       });

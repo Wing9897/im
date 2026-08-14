@@ -7,7 +7,7 @@ Fetch helpers live in ``server.calendar.query_fetch``.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from server.calendar.item_projection import get_item_occurrence
@@ -59,38 +59,26 @@ __all__ = [
 ]
 
 
-async def query_window(
+async def _fetch_window_sources(
     db: Database,
     *,
-    start: str | datetime,
-    end: str | datetime,
-    limit: int = 50,
-    cursor: str | None = None,
-    search: str | None = None,
-    task_id: str | None = None,
-    series_id: str | None = None,
-    workset_id: str | None = None,
-    hard_cap: int = 100,
-) -> dict[str, Any]:
-    """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources.
+    range_start: datetime,
+    range_end: datetime,
+    search: str | None,
+    task_id: str | None,
+    series_id: str | None,
+    workset_id: str | None,
+    ascending: bool,
+) -> tuple[list[dict[str, Any]], ...]:
+    """Fetch the four calendar sources for one time range (shared by window/recent).
 
-    ``task_id`` filters analysis events + user-event provenance.
-    ``series_id`` filters RRULE series (id or parent_task_id child match).
+    Ownership/provenance filters decide which sources contribute at all:
+    items are workset-scoped only, so a bare ``task_id`` filter skips them.
     """
-    range_start = start if isinstance(start, datetime) else parse_iso(start)
-    range_end = end if isinstance(end, datetime) else parse_iso(end, end_of_day=True)
-    if range_start is None or range_end is None:
-        raise ValueError("start and end must be valid ISO-8601 datetimes")
-    if range_end < range_start:
-        raise ValueError("end must be >= start")
-
-    capped = clamp_limit(limit, default=50, hard_cap=hard_cap)
-    offset = parse_cursor(cursor)
     policy = source_policy(task_id=task_id, workset_id=workset_id)
-    if not policy.include_analysis_and_recurrence:
-        analysis: list[dict[str, Any]] = []
-        rrule_items: list[dict[str, Any]] = []
-    else:
+    analysis: list[dict[str, Any]] = []
+    rrule_items: list[dict[str, Any]] = []
+    if policy.include_analysis_and_recurrence:
         analysis = await _fetch_analysis_in_range(
             db,
             range_start=range_start,
@@ -98,6 +86,7 @@ async def query_window(
             task_id=task_id,
             search=search,
             fetch_limit=_FETCH_CAP,
+            ascending=ascending,
         )
         await _annotate_analysis_dismissed(db, analysis)
         rrule_items = await _fetch_rrule_in_range(
@@ -113,23 +102,62 @@ async def query_window(
         task_id=task_id,
         workset_id=workset_id,
     )
-    # Items are ownership-scoped by workset only (no task provenance).
-    # When filtering by task_id alone with no workset, skip item projections.
-    if not policy.include_items:
-        item_items: list[dict[str, Any]] = []
-    else:
+    item_items: list[dict[str, Any]] = []
+    if policy.include_items:
         item_items = await _fetch_items_in_range(
             db,
             range_start=range_start,
             range_end=range_end,
             workset_id=workset_id,
         )
+    return (analysis, rrule_items, user_items, item_items)
+
+
+async def query_window(
+    db: Database,
+    *,
+    start: str | datetime,
+    end: str | datetime,
+    limit: int = 50,
+    cursor: str | None = None,
+    search: str | None = None,
+    task_id: str | None = None,
+    series_id: str | None = None,
+    workset_id: str | None = None,
+    hard_cap: int = 100,
+    ascending: bool = True,
+) -> dict[str, Any]:
+    """Events whose sort-time falls in ``[start, end]`` (inclusive), merged sources.
+
+    ``task_id`` filters analysis events + user-event provenance.
+    ``series_id`` filters RRULE series (id or parent_task_id child match).
+    ``ascending`` is chronological (window / upcoming); ``False`` is newest-first (recent).
+    """
+    range_start = start if isinstance(start, datetime) else parse_iso(start)
+    range_end = end if isinstance(end, datetime) else parse_iso(end, end_of_day=True)
+    if range_start is None or range_end is None:
+        raise ValueError("start and end must be valid ISO-8601 datetimes")
+    if range_end < range_start:
+        raise ValueError("end must be >= start")
+
+    capped = clamp_limit(limit, default=50, hard_cap=hard_cap)
+    offset = parse_cursor(cursor)
+    sources = await _fetch_window_sources(
+        db,
+        range_start=range_start,
+        range_end=range_end,
+        search=search,
+        task_id=task_id,
+        series_id=series_id,
+        workset_id=workset_id,
+        ascending=ascending,
+    )
     items, next_cursor = merge_calendar_items(
-        (analysis, rrule_items, user_items, item_items),
+        sources,
         search=search,
         limit=capped,
         offset=offset,
-        ascending=True,
+        ascending=ascending,
     )
     return {
         "items": items,
@@ -152,9 +180,9 @@ async def query_upcoming(
     hard_cap: int = 100,
 ) -> dict[str, Any]:
     """Future events from ``now``. Prefer ``days`` for relative「未來 N 天」queries."""
-    moment = now or datetime.now(timezone.utc)
+    moment = now or datetime.now(UTC)
     if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=timezone.utc)
+        moment = moment.replace(tzinfo=UTC)
     capped = clamp_limit(limit, default=20, hard_cap=hard_cap)
     if days is None:
         horizon = timedelta(days=HORIZON_DAYS)
@@ -189,57 +217,24 @@ async def query_recent(
     hard_cap: int = 100,
 ) -> dict[str, Any]:
     """Past events in the one-year look-back window, newest first."""
-    moment = now or datetime.now(timezone.utc)
+    moment = now or datetime.now(UTC)
     if moment.tzinfo is None:
-        moment = moment.replace(tzinfo=timezone.utc)
+        moment = moment.replace(tzinfo=UTC)
     capped = clamp_limit(limit, default=20, hard_cap=hard_cap)
-    range_start = moment - timedelta(days=HORIZON_DAYS)
-    range_end = moment - timedelta(seconds=1)
-    policy = source_policy(task_id=task_id, workset_id=workset_id)
-    if not policy.include_analysis_and_recurrence:
-        analysis: list[dict[str, Any]] = []
-        rrule_items: list[dict[str, Any]] = []
-    else:
-        analysis = await _fetch_analysis_in_range(
-            db,
-            range_start=range_start,
-            range_end=range_end,
-            task_id=task_id,
-            search=search,
-            fetch_limit=_FETCH_CAP,
-            ascending=False,
-        )
-        await _annotate_analysis_dismissed(db, analysis)
-        rrule_items = await _fetch_rrule_in_range(
-            db,
-            range_start=range_start,
-            range_end=range_end,
-            series_id=series_id,
-        )
-    user_items = await _fetch_user_in_range(
+    result = await query_window(
         db,
-        range_start=range_start,
-        range_end=range_end,
-        task_id=task_id,
-        workset_id=workset_id,
-    )
-    if not policy.include_items:
-        item_items: list[dict[str, Any]] = []
-    else:
-        item_items = await _fetch_items_in_range(
-            db,
-            range_start=range_start,
-            range_end=range_end,
-            workset_id=workset_id,
-        )
-    items, _ = merge_calendar_items(
-        (analysis, rrule_items, user_items, item_items),
-        search=search,
+        start=moment - timedelta(days=HORIZON_DAYS),
+        end=moment - timedelta(seconds=1),
         limit=capped,
-        offset=0,
+        cursor=None,
+        search=search,
+        task_id=task_id,
+        series_id=series_id,
+        workset_id=workset_id,
+        hard_cap=hard_cap,
         ascending=False,
     )
-    return {"items": items, "limit": capped}
+    return {"items": result["items"], "limit": capped}
 
 
 async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
@@ -269,12 +264,8 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
 
     item_occ = await get_item_occurrence(db, eid)
     if item_occ is not None:
-        item_occ["dismissed"] = await is_timeline_event_dismissed(
-            db, source="item_remind", event_id=eid
-        )
-        item_occ["important"] = await is_timeline_event_important(
-            db, source="item_remind", event_id=eid
-        )
+        item_occ["dismissed"] = await is_timeline_event_dismissed(db, source="item_remind", event_id=eid)
+        item_occ["important"] = await is_timeline_event_important(db, source="item_remind", event_id=eid)
         return build_item_calendar_item(item_occ, detail="full")
 
     match = OCCURRENCE_ID_RE.match(eid)
@@ -286,9 +277,7 @@ async def get_event(db: Database, *, event_id: str) -> dict[str, Any] | None:
         return None
     window_start = occurrence_start - timedelta(seconds=1)
     window_end = occurrence_start + timedelta(seconds=1)
-    for occ in await expand_active_calendar_occurrences(
-        db, window_start, window_end, series_id=task_id
-    ):
+    for occ in await expand_active_calendar_occurrences(db, window_start, window_end, series_id=task_id):
         if occ.get("id") == eid:
             item = build_occurrence_item(
                 occ,

@@ -5,8 +5,8 @@ import {
   fromAllDayDateInput,
   fromDateTimeLocalInput,
 } from "../../domain/timeline/dateUtils";
-import { parseRRule } from "../../utils/rrule";
-import { validateRRuleConfig } from "../../utils/rruleValidation";
+import { parseRRule } from "../../domain/schedule/rrule";
+import { validateRRuleConfig } from "../../domain/schedule/rruleValidation";
 import {
   USER_EVENT_CLOCK_RE,
   type UserEventFormValues,

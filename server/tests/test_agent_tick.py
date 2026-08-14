@@ -10,9 +10,9 @@ import pytest
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.config import set_configs
 from server.db.database import Database, TransactionDb
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.tasks_queries import insert_analysis_task
 from server.scheduler.agent_tick import (
     MESSAGE_SUMMARY_LIMIT,

@@ -154,7 +154,7 @@ export function fetchTaskAnalysisStats(
   timeRange: string,
 ): Promise<TaskAnalysisStats[]> {
   return apiClient.get<TaskAnalysisStats[]>("/api/v1/results/stats", {
-    time_range: timeRange,
+    timeRange,
   });
 }
 

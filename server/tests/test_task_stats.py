@@ -22,16 +22,16 @@ async def test_stats_pending_markers_not_counted_as_analyzed(app, client):
         (new_id(), "msg-2", seed.TASK_LEADERBOARD, pending_batch_id, now),
     )
 
-    resp = await client.get("/api/v1/results/stats", params={"time_range": "all"})
+    resp = await client.get("/api/v1/results/stats", params={"timeRange": "all"})
     lb = next(e for e in resp.json() if e["taskId"] == seed.TASK_LEADERBOARD)
     assert lb["analyzedCount"] == 1
     assert lb["queuedMessageCount"] == 3
 
 
-async def test_stats_project_mode_zeros_marker_counts(app, client):
-    """Project progress is cursor-based; marker stats must stay zero."""
+async def test_stats_agent_mode_zeros_marker_counts(app, client):
+    """Agent progress is cursor-based; marker stats must stay zero."""
     from server.db.database import TransactionDb
-    from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+    from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
     from server.queries.tasks_queries import insert_analysis_task
 
     db = app.state.db
@@ -68,7 +68,7 @@ async def test_stats_project_mode_zeros_marker_counts(app, client):
         (new_id(), "rss", "feed-stats", "hello", now, now),
     )
 
-    resp = await client.get("/api/v1/results/stats", params={"time_range": "all"})
+    resp = await client.get("/api/v1/results/stats", params={"timeRange": "all"})
     row = next(e for e in resp.json() if e["taskId"] == task_id)
     assert row["analyzedCount"] == 0
     assert row["unanalyzedCount"] == 0

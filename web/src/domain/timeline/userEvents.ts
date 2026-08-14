@@ -15,7 +15,7 @@ export { isTimelineAssignableAnalysisMode } from "../tasks/analysisModeCapabilit
 
 /** Localized display name for builtin workset `__user__`. */
 export function getGeneralWorksetLabel(): string {
-  return String(i18n.t("common:workset.generalName"));
+  return String(i18n.t("workset:generalName"));
 }
 
 /**

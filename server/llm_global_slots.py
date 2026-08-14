@@ -1,20 +1,19 @@
 """Singleton LLM profile bindings for assistant / A2A / task advisor.
 
 Stored as ``system_config`` scalar profile-id pointers (not connection settings).
-No schema stamp bump — avoids wipe. Writes to the assistant slot also sync a
-single ``llm_staff_instances`` row (``staff_class=assistant``) for staff-list
-UI; **reads** use ``llm_global_slot_assistant`` only (no staff fallback).
+Trio UI reads/writes only these slots (no ``llm_staff_instances`` assistant row).
 """
 
 from __future__ import annotations
 
-from typing import Any, Final, Literal, Mapping
+from collections.abc import Mapping
+from typing import Any, Final, Literal
 
 from server.config import get_config
 from server.db.database import Database, TransactionDb
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.secrets import SECRET_CONFIG_KEYS, protect_text
-from server.util import new_id, utc_now_iso
+from server.util import utc_now_iso
 
 
 async def _upsert_config(tx: TransactionDb, key: str, value: str, *, now: str) -> None:
@@ -26,9 +25,9 @@ async def _upsert_config(tx: TransactionDb, key: str, value: str, *, now: str) -
         (key, stored, now),
     )
 
+
 #: Wire + domain id for the three singleton global slots (single SoT).
 LlmGlobalSlotId = Literal["assistant", "liaison", "taskEditor"]
-LlmGlobalSlotWire = LlmGlobalSlotId
 
 LLM_GLOBAL_SLOTS: Final[tuple[LlmGlobalSlotId, ...]] = (
     "assistant",
@@ -60,11 +59,6 @@ async def get_slot_profile_id(db: Database, slot: LlmGlobalSlotId) -> str | None
     return raw or None
 
 
-async def resolve_assistant_profile_id(db: Database) -> str | None:
-    """Assistant slot profile id from ``llm_global_slot_assistant`` only."""
-    return await get_slot_profile_id(db, "assistant")
-
-
 async def list_global_slots(db: Database) -> dict[str, str | None]:
     """Effective profile ids for all three slots (config pointers only)."""
     return {
@@ -72,24 +66,6 @@ async def list_global_slots(db: Database) -> dict[str, str | None]:
         "liaison": await get_slot_profile_id(db, "liaison"),
         "taskEditor": await get_slot_profile_id(db, "taskEditor"),
     }
-
-
-async def _sync_assistant_staff_singleton(
-    tx: TransactionDb,
-    *,
-    profile_id: str | None,
-    now: str,
-) -> None:
-    """Ensure at most one active ``assistant`` staff instance (matches the slot)."""
-    await tx.execute("DELETE FROM llm_staff_instances WHERE staff_class = 'assistant'")
-    if not profile_id:
-        return
-    await tx.execute(
-        "INSERT INTO llm_staff_instances ("
-        "id, staff_class, profile_id, display_name, is_active, created_at, updated_at"
-        ") VALUES (?, 'assistant', ?, NULL, 1, ?, ?)",
-        (new_id(), profile_id, now, now),
-    )
 
 
 async def set_global_slot(
@@ -109,8 +85,6 @@ async def set_global_slot(
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
         await _upsert_config(tx, key, cleaned or "", now=now)
-        if slot == "assistant":
-            await _sync_assistant_staff_singleton(tx, profile_id=cleaned, now=now)
     return cleaned
 
 
@@ -119,16 +93,11 @@ async def clear_slots_for_profile(db: Database, profile_id: str) -> None:
     now = utc_now_iso()
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        cleared_assistant = False
-        for slot, key in SLOT_CONFIG_KEYS.items():
+        for key in SLOT_CONFIG_KEYS.values():
             current = (await get_config(db, key)).strip()
             if current != profile_id:
                 continue
             await _upsert_config(tx, key, "", now=now)
-            if slot == "assistant":
-                cleared_assistant = True
-        if cleared_assistant:
-            await _sync_assistant_staff_singleton(tx, profile_id=None, now=now)
 
 
 def slot_unbound_message(slot: LlmGlobalSlotId) -> str:
@@ -137,17 +106,11 @@ def slot_unbound_message(slot: LlmGlobalSlotId) -> str:
         "liaison": "A2A (account manager)",
         "taskEditor": "task advisor",
     }
-    return (
-        f"No LLM profile bound for {labels[slot]}; "
-        "set it under AI profiles → global slots"
-    )
+    return f"No LLM profile bound for {labels[slot]}; set it under AI profiles → global slots"
 
 
 async def require_slot_profile_id(db: Database, slot: LlmGlobalSlotId) -> str:
-    if slot == "assistant":
-        resolved = await resolve_assistant_profile_id(db)
-    else:
-        resolved = await get_slot_profile_id(db, slot)
+    resolved = await get_slot_profile_id(db, slot)
     if not resolved:
         raise http_error(400, slot_unbound_message(slot), error_code=VALIDATION_ERROR)
     return resolved
@@ -164,7 +127,4 @@ def serialize_slot_binding(
         "profileName": str(profile_row["name"]) if profile_row is not None else None,
         "profileProvider": str(profile_row["provider"]) if profile_row is not None else None,
         "profileModel": str(profile_row["model"]) if profile_row is not None else None,
-        "profileIsDefault": (
-            bool(int(profile_row["is_default"] or 0)) if profile_row is not None else None
-        ),
     }

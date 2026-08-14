@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   type AnimationEvent,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { X } from "lucide-react";
@@ -18,6 +19,12 @@ interface ModalDialogProps {
   title?: string;
   ariaLabel?: string;
   closeAriaLabel?: string;
+  /** Inner shell role. Confirm / destructive prompts use ``alertdialog``. */
+  role?: "dialog" | "alertdialog";
+  /** Hide the header X when the footer already has an explicit dismiss action. */
+  hideCloseButton?: boolean;
+  titleStyle?: CSSProperties;
+  shellStyle?: CSSProperties;
   onClose: () => void;
   /**
    * Fires after the exit animation finishes (or immediately when reduced-motion /
@@ -33,7 +40,9 @@ interface ModalDialogProps {
    * - default / wide / xl: compact pickers
    * - form: wider create/edit forms (e.g. notifications)
    */
-  size?: "default" | "wide" | "xl" | "form";
+  size?: "default" | "wide" | "xl" | "form" | "compact";
+  /** Replaces the size preset shell width/height classes when set. */
+  shellClassName?: string;
   /** Extra class on the scrollable body (e.g. picker flex layout). */
   bodyClassName?: string;
   /** Body padding preset. ``none`` for full-bleed filter/picker content. */
@@ -48,6 +57,7 @@ interface ModalDialogProps {
 
 const MODAL_SHELL: Record<NonNullable<ModalDialogProps["size"]>, string> = {
   default: "w-[400px] max-w-[min(92vw,400px)] max-h-[min(78vh,640px)]",
+  compact: "w-[380px] max-w-[min(90vw,380px)] max-h-[min(78vh,640px)]",
   wide: "w-[480px] max-w-[min(92vw,480px)] max-h-[min(78vh,640px)]",
   xl: "w-[560px] max-w-[min(92vw,560px)] max-h-[min(78vh,640px)]",
   form: "w-[720px] max-w-[min(94vw,720px)] max-h-[min(86vh,780px)]",
@@ -66,6 +76,10 @@ export function ModalDialog({
   title,
   ariaLabel,
   closeAriaLabel,
+  role = "dialog",
+  hideCloseButton = false,
+  titleStyle,
+  shellStyle,
   onClose,
   onExited,
   children,
@@ -73,6 +87,7 @@ export function ModalDialog({
   footerJustify = "flex-end",
   testId,
   size = "default",
+  shellClassName,
   bodyClassName,
   bodyPadding = "default",
   keepMounted = false,
@@ -139,8 +154,7 @@ export function ModalDialog({
   if (!present) return null;
 
   const shellCls = [
-    MODAL_SHELL[size],
-    `${dialogShellClass} flex flex-col`,
+    shellClassName ?? `${MODAL_SHELL[size]} ${dialogShellClass} flex flex-col`,
     parked ? "" : exiting ? "im-animate-out-scale" : "im-animate-in-scale",
   ]
     .filter(Boolean)
@@ -178,31 +192,37 @@ export function ModalDialog({
       <div
         ref={focusTrapRef}
         className={shellCls}
-        role="dialog"
+        style={shellStyle}
+        role={role}
         aria-modal={parked ? undefined : "true"}
         aria-labelledby={title && !parked ? titleId : undefined}
         aria-label={title || parked ? undefined : ariaLabel}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className={headerCls}>
-          {title ? (
-            <h2
-              id={titleId}
-              className="m-0 text-section-title font-semibold tracking-tight text-text-primary"
-            >
-              {title}
-            </h2>
-          ) : null}
-          <button
-            type="button"
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-text-muted transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
-            aria-label={resolvedCloseAria}
-            disabled={exiting || parked}
-            onClick={onClose}
-          >
-            <X size={16} aria-hidden="true" />
-          </button>
-        </div>
+        {title || !hideCloseButton ? (
+          <div className={headerCls}>
+            {title ? (
+              <h2
+                id={titleId}
+                className="m-0 text-section-title font-semibold tracking-tight text-text-primary"
+                style={titleStyle}
+              >
+                {title}
+              </h2>
+            ) : null}
+            {hideCloseButton ? null : (
+              <button
+                type="button"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-none bg-transparent text-text-muted transition-colors hover:bg-[color-mix(in_srgb,var(--surface-overlay)_60%,transparent)] hover:text-text-primary"
+                aria-label={resolvedCloseAria}
+                disabled={exiting || parked}
+                onClick={onClose}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        ) : null}
         <div className={bodyCls}>{children}</div>
         <div
           className={`flex gap-sm border-t border-surface-border/80 px-lg py-md ${footerJustifyClass[footerJustify]}`}

@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from contextlib import suppress
 
 from telethon import TelegramClient, events
 from telethon.tl.custom.qrlogin import QRLogin
@@ -93,10 +94,8 @@ class TelegramAdapter(BasePlatformAdapter):
     async def disconnect(self) -> None:
         if self._startup_task is not None:
             self._startup_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._startup_task
-            except asyncio.CancelledError:
-                pass
             self._startup_task = None
 
         self._qr_login = None

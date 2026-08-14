@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
@@ -14,13 +14,14 @@ from server.collector import telegram_ingest
 from server.collector.telegram import TelegramAdapter
 from server.db.database import Database
 from server.sse import SseBroadcaster
+from server.tests.db_helpers import insert_source_with_channels
 
 
 def _tg_message(msg_id: int, text: str = "hello") -> SimpleNamespace:
     return SimpleNamespace(
         id=msg_id,
         message=text,
-        date=datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc),
+        date=datetime(2026, 1, 1, 12, 0, tzinfo=UTC),
         sender=SimpleNamespace(id=42, username="alice", first_name=None, title=None),
         photo=None,
         video=None,
@@ -31,21 +32,14 @@ def _tg_message(msg_id: int, text: str = "hello") -> SimpleNamespace:
 
 
 async def _setup_source(db: Database, source_id: str, channel_ids: list[str]) -> TelegramAdapter:
-    await db.execute(
-        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-        "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (source_id,),
+    await insert_source_with_channels(
+        db,
+        source_id,
+        "telegram",
+        channel_ids,
+        name="+123",
+        credentials="{}",
     )
-    for cid in channel_ids:
-        await db.execute(
-            "INSERT INTO channels (platform, platform_id, channel_name, created_at) "
-            "VALUES ('telegram', ?, ?, '2026-01-01T00:00:00Z')",
-            (cid, f"Channel {cid}"),
-        )
-        await db.execute(
-            "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', ?)",
-            (source_id, cid),
-        )
     adapter = TelegramAdapter(
         source_id,
         db,

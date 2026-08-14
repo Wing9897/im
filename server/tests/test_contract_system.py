@@ -52,8 +52,8 @@ async def test_collector_status_adapter_source_id(client, app):
 async def test_ai_engine_status(client):
     resp = await client.get("/api/v1/system/ai-engine/status")
     body = resp.json()
-    assert_keys(body, ["status", "reason", "provider"], "AiEngineHealthStatus")
-    assert body["status"] in ("available", "unavailable", "unknown")
+    assert_keys(body, ["status", "reason", "provider"], "AiEngineHealthStatusResponse")
+    assert body["status"] in ("available", "unavailable")
 
 
 async def test_ai_engine_test_contract(client):
@@ -72,9 +72,12 @@ async def test_ai_engine_test_contract(client):
             "preview",
             "error",
         ],
-        "AiEngineTestResult",
+        "AiEngineTestResultResponse",
     )
     assert isinstance(body["success"], bool)
+    assert isinstance(body["latencyMs"], int)
+    assert isinstance(body["promptTokens"], int)
+    assert isinstance(body["completionTokens"], int)
 
 
 async def test_emergency_abort_and_resume(client):
@@ -155,6 +158,7 @@ async def test_retention_run_returns_delete_summary(client, app):
             "app_logs",
             "user_events",
             "timeline_dismissals",
+            "timeline_importance",
             "device_access_tokens",
             "device_sessions",
         ],
@@ -186,8 +190,8 @@ async def test_logs_page_and_cursor(client):
             "/api/v1/logs",
             params={
                 "limit": "2",
-                "cursor_time": body["nextCursor"]["time"],
-                "cursor_id": body["nextCursor"]["id"],
+                "cursorTime": body["nextCursor"]["time"],
+                "cursorId": body["nextCursor"]["id"],
             },
         )
     ).json()

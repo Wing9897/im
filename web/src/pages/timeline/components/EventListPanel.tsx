@@ -69,7 +69,7 @@ function EventListItem({
     <SurfaceCard
       density="field"
       interactive
-      className={`im-timeline-event-list-item min-w-0 shrink-0 cursor-pointer p-md text-left ${
+      className={`im-timeline-event-list-item min-w-0 shrink-0 cursor-pointer rounded-xl p-md text-left ${
         dismissed ? dismissedSurfaceClass : ""
       }`}
     >
@@ -172,12 +172,12 @@ function EventListGroup({
   if (events.length === 0) return null;
   return (
     <section className="flex min-w-0 shrink-0 flex-col gap-sm" data-testid={testId}>
-      <div className="flex min-w-0 shrink-0 items-center gap-sm">
+      <div className="flex min-w-0 shrink-0 items-center gap-sm px-0.5">
         <h3 className={`${captionClass} m-0 shrink-0 font-medium text-text-secondary`}>
           {title}
         </h3>
         <div
-          className="h-px min-w-0 flex-1 bg-surface-border"
+          className="h-px min-w-0 flex-1 rounded-full bg-surface-border"
           aria-hidden="true"
           data-testid={`${testId}-divider`}
         />
@@ -247,10 +247,13 @@ export function EventListPanel({
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-hidden">
-      <div className="flex w-full shrink-0 items-center gap-1.5">
+      <div
+        className="flex w-full shrink-0 flex-wrap items-center justify-between gap-x-sm gap-y-1.5"
+        data-testid="timeline-event-list-header"
+      >
         {rangeEvents.length > 0 ? (
           <div
-            className="flex min-w-0 shrink-0 flex-wrap gap-1.5"
+            className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5"
             role="group"
             aria-label={t("eventList.phaseFilterAria")}
             data-testid="timeline-event-phase-filter"
@@ -273,16 +276,18 @@ export function EventListPanel({
               </FilterChip>
             ))}
           </div>
-        ) : null}
+        ) : (
+          <span className="min-w-0 flex-1" aria-hidden="true" />
+        )}
         <p
-          className={`${captionClass} m-0 ml-auto shrink-0 font-medium`}
+          className={`${captionClass} m-0 shrink-0 self-center font-medium tabular-nums`}
           data-testid="timeline-event-list-day-label"
         >
           {dayLabel}
         </p>
       </div>
       <div
-        className="im-auto-scrollbar im-timeline-event-list flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-x-hidden overflow-y-auto pr-0.5"
+        className="im-auto-scrollbar im-timeline-event-list flex min-h-0 min-w-0 flex-1 flex-col gap-md overflow-x-hidden overflow-y-auto"
         data-testid="timeline-event-list-scroll"
       >
         {rangeEvents.length === 0 ? (

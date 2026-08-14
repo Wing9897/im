@@ -86,25 +86,25 @@ export function SourceFilterTree({
 }: SourceFilterTreeProps) {
   const { t } = useTranslation("common");
   const searching = Boolean(query.trim());
-  const unnamedLabel = t("board.common.unnamedTask");
+  const unnamedLabel = t("board:common.unnamedTask");
 
   return (
     <div className="flex flex-col gap-md">
       <p className="m-0 text-caption leading-relaxed text-text-secondary">
-        {t("workset.filterHint")}
+        {t("workset:filterHint")}
       </p>
       <TextField
         type="search"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
-        placeholder={t("workset.filterSearchPlaceholder")}
-        aria-label={t("workset.filterSearchPlaceholder")}
+        placeholder={t("workset:filterSearchPlaceholder")}
+        aria-label={t("workset:filterSearchPlaceholder")}
         data-testid="source-filter-dialog-search"
-        className="border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] bg-surface-raised placeholder:text-text-secondary/80"
+        className="im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_28%,var(--surface-border))] placeholder:text-text-secondary/80"
       />
       <ul
         className="m-0 flex max-h-[44vh] list-none flex-col gap-1.5 overflow-auto p-0"
-        aria-label={t("workset.filterBrowseAria")}
+        aria-label={t("workset:filterBrowseAria")}
       >
         {rows.map((row) => {
           const childCount = row.children.length;
@@ -130,7 +130,7 @@ export function SourceFilterTree({
                 // Virtual “未歸屬” group: muted solid + left rail (not dashed focus-lookalike).
                 isUnassigned
                   ? "border-[color-mix(in_srgb,var(--text-primary)_22%,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-raised)_55%,transparent)] border-l-[3px] border-l-[color-mix(in_srgb,var(--text-secondary)_55%,var(--surface-border))]"
-                  : "border-[color-mix(in_srgb,var(--text-primary)_26%,var(--surface-border))] bg-surface-raised",
+                  : "im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_26%,var(--surface-border))]",
               ].join(" ")}
             >
               <div className="flex items-center gap-1 px-1.5 py-1.5">
@@ -147,7 +147,7 @@ export function SourceFilterTree({
                     isOpen ? "rotate-90" : "",
                   ].join(" ")}
                   aria-expanded={canExpand ? isOpen : undefined}
-                  aria-label={t("workset.expandWorksetAria", { name: row.name })}
+                  aria-label={t("workset:expandWorksetAria", { name: row.name })}
                   data-testid={`board-workset-expand-${row.id}`}
                   onClick={() => onToggleExpanded(row.id)}
                   disabled={!canExpand}
@@ -164,7 +164,7 @@ export function SourceFilterTree({
                     {row.name}
                   </span>
                   <span className="shrink-0 rounded-md bg-[color-mix(in_srgb,var(--text-primary)_10%,transparent)] px-1.5 py-0.5 text-caption font-semibold tabular-nums text-text-secondary">
-                    {t("workset.filterChildCount", { count: childCount })}
+                    {t("workset:filterChildCount", { count: childCount })}
                   </span>
                 </label>
               </div>
@@ -210,7 +210,7 @@ export function SourceFilterTree({
         })}
       </ul>
       {rows.length === 0 ? (
-        <p className="m-0 text-sm text-text-secondary">{t("workset.emptyList")}</p>
+        <p className="m-0 text-sm text-text-secondary">{t("workset:emptyList")}</p>
       ) : null}
     </div>
   );

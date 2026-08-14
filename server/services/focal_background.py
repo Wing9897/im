@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urljoin
 
@@ -58,6 +58,7 @@ def clamp_focal_idx(idx: int | None) -> int:
         return 0
     return max(_FOCAL_IDX_MIN, min(_FOCAL_IDX_MAX, value))
 
+
 _LOCALE_TO_MKT: dict[str, str] = {
     "en": "en-US",
     "en-US": "en-US",
@@ -84,7 +85,7 @@ def resolve_bing_mkt(locale: str | None) -> str:
 
 
 def _utc_day() -> str:
-    return datetime.now(timezone.utc).date().isoformat()
+    return datetime.now(UTC).date().isoformat()
 
 
 def _clear_cache_for_tests() -> None:
@@ -105,7 +106,7 @@ def parse_bing_archive(payload: dict[str, Any], *, mkt: str) -> FocalBackgroundR
         raise ValueError("Bing archive missing images")
     first = images[0]
     if not isinstance(first, dict):
-        raise ValueError("Bing archive image entry invalid")
+        raise TypeError("Bing archive image entry invalid")
     rel = first.get("url") or first.get("urlbase")
     if not isinstance(rel, str) or not rel.strip():
         raise ValueError("Bing archive missing image url")
@@ -133,9 +134,7 @@ def parse_bing_archive_xml(body: str, *, mkt: str) -> FocalBackgroundResponse:
         raise ValueError("Bing archive XML missing image")
     url_el = image.find("url")
     urlbase_el = image.find("urlBase")
-    rel = (url_el.text if url_el is not None else None) or (
-        urlbase_el.text if urlbase_el is not None else None
-    )
+    rel = (url_el.text if url_el is not None else None) or (urlbase_el.text if urlbase_el is not None else None)
     if not isinstance(rel, str) or not rel.strip():
         raise ValueError("Bing archive XML missing image url")
     title_el = image.find("title")
@@ -191,14 +190,14 @@ async def fetch_focal_background(
     }
     try:
         timeout = _REQUEST_TIMEOUT
-        async with aiohttp.ClientSession(timeout=timeout, headers=_BING_HEADERS) as session:
-            async with session.get(_BING_ARCHIVE_URL, params=params) as response:
-                body = await response.text()
-                content_type = response.headers.get("Content-Type")
-                if response.status >= 400:
-                    raise RuntimeError(
-                        f"HTTP {response.status} ct={content_type!r}: {body[:200]!r}"
-                    )
+        async with (
+            aiohttp.ClientSession(timeout=timeout, headers=_BING_HEADERS) as session,
+            session.get(_BING_ARCHIVE_URL, params=params) as response,
+        ):
+            body = await response.text()
+            content_type = response.headers.get("Content-Type")
+            if response.status >= 400:
+                raise RuntimeError(f"HTTP {response.status} ct={content_type!r}: {body[:200]!r}")
     except Exception as exc:
         _LOGGER.warning("Bing focal background fetch failed (mkt=%s): %s", mkt, exc)
         raise http_error(
@@ -210,7 +209,7 @@ async def fetch_focal_background(
 
     try:
         result = _decode_archive_body(body, content_type=content_type, mkt=mkt)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         _LOGGER.warning(
             "Bing focal background payload incomplete (mkt=%s, ct=%s): %s; body=%r",
             mkt,
@@ -256,19 +255,20 @@ async def fetch_focal_background_image(
     url = meta.imageUrl
     try:
         timeout = _REQUEST_TIMEOUT
-        async with aiohttp.ClientSession(timeout=timeout, headers=_BING_HEADERS) as session:
-            async with session.get(url) as response:
-                if response.status >= 400:
-                    body_preview = (await response.text())[:200]
-                    raise RuntimeError(
-                        f"HTTP {response.status} ct={response.headers.get('Content-Type')!r}: "
-                        f"{body_preview!r}"
-                    )
-                data = await response.read()
-                if not data:
-                    raise RuntimeError("empty image body")
-                media_type = _guess_image_media_type(url, response.headers.get("Content-Type"))
-                return data, media_type
+        async with (
+            aiohttp.ClientSession(timeout=timeout, headers=_BING_HEADERS) as session,
+            session.get(url) as response,
+        ):
+            if response.status >= 400:
+                body_preview = (await response.text())[:200]
+                raise RuntimeError(
+                    f"HTTP {response.status} ct={response.headers.get('Content-Type')!r}: {body_preview!r}"
+                )
+            data = await response.read()
+            if not data:
+                raise RuntimeError("empty image body")
+            media_type = _guess_image_media_type(url, response.headers.get("Content-Type"))
+            return data, media_type
     except Exception as exc:
         _LOGGER.warning("Bing focal image byte fetch failed (url=%s): %s", url, exc)
         raise http_error(

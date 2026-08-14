@@ -52,7 +52,7 @@ export function WorksetSummaryCard({
             }
           : undefined
       }
-      aria-label={t("workset.openDetailAria", { name: title })}
+      aria-label={t("workset:openDetailAria", { name: title })}
     >
       <div className="flex items-start justify-between gap-sm">
         <span className={`flex min-w-0 flex-1 items-center gap-xs ${cardTitleClass}`}>
@@ -67,16 +67,16 @@ export function WorksetSummaryCard({
           </span>
         </span>
         {isSystem ? (
-          <Badge tone="info">{t("workset.systemBadge")}</Badge>
+          <Badge tone="info">{t("workset:systemBadge")}</Badge>
         ) : (
-          <Badge tone="neutral">{t("workset.label")}</Badge>
+          <Badge tone="neutral">{t("workset:label")}</Badge>
         )}
       </div>
       {isSystem ? (
-        <p className={cardBodyClass}>{t("workset.systemDescription")}</p>
+        <p className={cardBodyClass}>{t("workset:systemDescription")}</p>
       ) : null}
       <p className={`${cardBodyClass} ${isSystem ? "opacity-90" : ""}`}>
-        {t("workset.assetSummary", {
+        {t("workset:assetSummary", {
           tasks: taskCount,
           items: itemCount ?? 0,
         })}
@@ -89,12 +89,12 @@ export function WorksetSummaryCard({
         >
           {onRename ? (
             <Button variant="secondary" size="sm" onClick={onRename}>
-              {t("workset.rename")}
+              {t("workset:rename")}
             </Button>
           ) : null}
           {onDelete ? (
             <Button variant="secondary" size="sm" onClick={onDelete}>
-              {t("workset.delete")}
+              {t("workset:delete")}
             </Button>
           ) : null}
         </div>

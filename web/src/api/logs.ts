@@ -23,8 +23,8 @@ export function queryAppLogsPage(query: {
   const params: Record<string, string> = {};
   params.limit = String(query.limit);
   if (query.cursor) {
-    params.cursor_time = query.cursor.time;
-    params.cursor_id = query.cursor.id;
+    params.cursorTime = query.cursor.time;
+    params.cursorId = query.cursor.id;
   }
   if (query.kind) {
     params.kind = query.kind;

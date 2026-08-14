@@ -9,6 +9,7 @@ function makeAnalysis(overrides: Partial<ActiveAnalysisState> = {}): ActiveAnaly
     batchId: "batch-1",
     messageCount: 10,
     estimatedTokens: 1000,
+    llmProvider: "openai",
     llmModel: "gpt-4",
     startedAt: "2026-01-01T00:00:00.000Z",
     ...overrides,
@@ -41,7 +42,7 @@ describe("mapActiveAnalysesToTasks", () => {
 
   it("entries without taskId are excluded from the output", () => {
     const withTaskId = makeAnalysis({ taskId: "task-1", batchId: "batch-1" });
-    const withoutTaskId = makeAnalysis({ taskId: undefined, batchId: "batch-2" });
+    const withoutTaskId = makeAnalysis({ taskId: "", batchId: "batch-2" });
 
     const input = new Map([
       [withTaskId.batchId, withTaskId],

@@ -37,7 +37,7 @@ export function ExpandableErrorText({
           className="mt-xs text-caption font-medium text-accent hover:underline"
           onClick={() => setExpanded((value) => !value)}
         >
-          {expanded ? t("tasks.agentDetail.showLess") : t("tasks.agentDetail.showMore")}
+          {expanded ? t("tasks:agentDetail.showLess") : t("tasks:agentDetail.showMore")}
         </button>
       ) : null}
     </div>

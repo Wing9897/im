@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.calendar import rrule as calendar_module
 from server.tests import seed
@@ -88,7 +88,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
 
     def utc_at(day: int, hour: int) -> datetime:
         local = datetime(2000, 1, day, hour, 0, tzinfo=local_tz)
-        return local.astimezone(timezone.utc)
+        return local.astimezone(UTC)
 
     def wire(moment: datetime) -> str:
         return moment.strftime("%Y-%m-%dT%H:%M:%SZ")

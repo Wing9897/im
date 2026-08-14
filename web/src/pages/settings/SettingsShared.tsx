@@ -1,13 +1,12 @@
-import { useOutletContext } from "react-router-dom";
-import type { SystemSettingsPageState } from "../../hooks/useSystemSettingsPage";
 import { captionClass } from "../../components/ui/pageTypography";
 import { settingsTabItems } from "../shared/WorkspaceShell";
 import { createWorkspacePage } from "../shared/createWorkspacePage";
 
 /**
- * Settings shell + outlet hook. Shared form surfaces live in
- * ``components/settings/SettingsFormLayout`` — prefer importing those
- * directly from account / logs / ai (and any non-settings feature).
+ * Settings shell + docs chrome. Shared form surfaces live in
+ * ``components/settings/SettingsFormLayout`` and the outlet accessor in
+ * ``components/settings/useSettingsPageState`` — import those directly from
+ * account / logs / ai (and any non-settings feature).
  */
 export {
   SettingsContentCard,
@@ -38,12 +37,6 @@ export function SettingsDocsExample({
       </pre>
     </div>
   );
-}
-
-type SettingsPageState = SystemSettingsPageState;
-
-export function useSettingsPageState() {
-  return useOutletContext<SettingsPageState>();
 }
 
 export const SettingsShellPage = createWorkspacePage(

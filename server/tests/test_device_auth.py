@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -57,7 +57,7 @@ async def test_expired_session_rejects_its_unexpired_access_token(app):
     """Session lifetime bounds every token it issued, even one inside its own TTL."""
     db = app.state.db
     tokens = await create_device_session(db, label="A")
-    past = to_iso_z(datetime.now(timezone.utc) - timedelta(days=1))
+    past = to_iso_z(datetime.now(UTC) - timedelta(days=1))
     await db.execute("UPDATE device_sessions SET expires_at = ?", (past,))
     assert (
         await db.fetch_value("SELECT COUNT(*) FROM device_access_tokens WHERE datetime(expires_at) > datetime('now')")
@@ -127,5 +127,5 @@ async def test_issue_tokens_rolls_back_a_session_without_its_access_token(app, m
 
 @pytest.mark.asyncio
 async def test_access_ttl_constant():
-    assert ACCESS_TTL == timedelta(hours=1)
+    assert timedelta(hours=1) == ACCESS_TTL
     assert utc_now_iso()

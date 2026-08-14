@@ -46,7 +46,7 @@ async def _get_json(
                     raise WeatherProviderError("回應不是 JSON 物件")
         except WeatherProviderError:
             raise
-        except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as exc:
+        except (TimeoutError, aiohttp.ClientError, ValueError) as exc:
             last_error = exc
         if attempt == 0:
             await asyncio.sleep(0.2)

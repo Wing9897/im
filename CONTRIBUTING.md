@@ -63,7 +63,7 @@ against:
 
 | Artifact | Source | Regenerate with |
 |----------|--------|-----------------|
-| `server/api/routes/task_preset_data.py`, `tasks.presets.*` in the three `common.json` locales | `shared/task_presets.json` | `npm run sync:presets` |
+| `presets.*` in the three `web/src/i18n/locales/*/tasks.json` locales | `shared/task_presets.json` | `npm run sync:presets` |
 | `web/openapi/openapi.json`, `web/src/api/generated/schema.d.ts` | FastAPI route definitions | `npm run openapi:generate` |
 | `web/src/theme.generated.css` | theme catalog under `web/src/styles/` | `npm run gen:themes` |
 | `web/src/css/theme-textures.css` | texture generator | `npm run gen:textures` |

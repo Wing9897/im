@@ -7,7 +7,8 @@ Discord / RSS / MQTT / Email create+update helpers share ManagerPlatformHost
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Protocol, cast
+from collections.abc import Awaitable, Callable
+from typing import Protocol, cast
 
 from server.collector.base import BasePlatformAdapter
 from server.collector.capabilities import as_discord

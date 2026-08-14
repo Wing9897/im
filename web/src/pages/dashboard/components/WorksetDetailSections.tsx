@@ -36,16 +36,16 @@ export function WorksetExpiringSummarySection({
   return (
     <div data-testid="workset-summary-expiring">
       <PanelSection
-        title={t("workset.detailSummaryExpiringHeading")}
+        title={t("workset:detailSummaryExpiringHeading")}
         showCount={!loading}
         itemCount={items.length}
-        aria-label={t("workset.detailSummaryExpiringHeading")}
+        aria-label={t("workset:detailSummaryExpiringHeading")}
         className="!shadow-none"
       >
         {loading ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
+          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
         ) : items.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryExpiringEmpty")}</p>
+          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryExpiringEmpty")}</p>
         ) : (
           <CardGrid density="compact">
             {items.map((item) => (
@@ -79,20 +79,20 @@ export function WorksetEventsSummarySection({
   return (
     <div data-testid="workset-summary-events">
       <PanelSection
-        title={t("workset.detailSummaryEventsHeading")}
+        title={t("workset:detailSummaryEventsHeading")}
         showCount={!loading}
         itemCount={events.length}
-        aria-label={t("workset.detailSummaryEventsHeading")}
+        aria-label={t("workset:detailSummaryEventsHeading")}
         className="!shadow-none"
       >
         {loading ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
+          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
         ) : error ? (
           <p className={`m-0 ${captionClass}`} role="status">
             {error}
           </p>
         ) : events.length === 0 ? (
-          <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryEventsEmpty")}</p>
+          <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryEventsEmpty")}</p>
         ) : (
           <CardGrid density="compact">
             {events.map((row) => (
@@ -112,7 +112,7 @@ export function WorksetEventsSummarySection({
                     onOpenEvent(row);
                   }
                 }}
-                aria-label={t("workset.openEventAria", { name: row.title })}
+                aria-label={t("workset:openEventAria", { name: row.title })}
               >
                 <span className={`min-w-0 truncate ${cardTitleClass}`} title={row.title}>
                   {row.title}
@@ -127,7 +127,7 @@ export function WorksetEventsSummarySection({
                 </p>
                 {row.isAllDay ? (
                   <Badge tone="neutral" className="normal-case tracking-normal w-fit">
-                    {t("workset.eventAllDay")}
+                    {t("workset:eventAllDay")}
                   </Badge>
                 ) : null}
               </AccentBarCard>
@@ -149,14 +149,14 @@ export function WorksetTasksSection({
   const { t } = useTranslation();
   return (
     <PanelSection
-      title={t("workset.detailTasksHeading")}
+      title={t("workset:detailTasksHeading")}
       showCount
       itemCount={tasks.length}
-      aria-label={t("workset.detailTasksHeading")}
+      aria-label={t("workset:detailTasksHeading")}
       className="!shadow-none"
     >
       {tasks.length === 0 ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset.detailTasksEmpty")}</p>
+        <p className={`m-0 ${captionClass}`}>{t("workset:detailTasksEmpty")}</p>
       ) : (
         <CardGrid density="compact">
           {tasks.map((task) => (
@@ -176,7 +176,7 @@ export function WorksetTasksSection({
                   onOpenTask(task);
                 }
               }}
-              aria-label={t("workset.openTaskAria", { name: task.name })}
+              aria-label={t("workset:openTaskAria", { name: task.name })}
             >
               <div className="flex items-start justify-between gap-sm">
                 <span className={`min-w-0 flex-1 truncate ${cardTitleClass}`} title={task.name}>
@@ -211,16 +211,16 @@ export function WorksetItemsSection({
   const { t } = useTranslation();
   return (
     <PanelSection
-      title={t("workset.detailItemsHeading")}
+      title={t("workset:detailItemsHeading")}
       showCount={!loading}
       itemCount={items.length}
-      aria-label={t("workset.detailItemsHeading")}
+      aria-label={t("workset:detailItemsHeading")}
       className="!shadow-none"
     >
       {loading ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset.detailSummaryLoading")}</p>
+        <p className={`m-0 ${captionClass}`}>{t("workset:detailSummaryLoading")}</p>
       ) : items.length === 0 ? (
-        <p className={`m-0 ${captionClass}`}>{t("workset.detailItemsEmpty")}</p>
+        <p className={`m-0 ${captionClass}`}>{t("workset:detailItemsEmpty")}</p>
       ) : (
         <CardGrid density="compact">
           {items.map((item) => (

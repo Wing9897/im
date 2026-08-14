@@ -1,0 +1,38 @@
+{
+  "toolbarAria": "Leaderboard filters",
+  "selectTaskAria": "Select leaderboard task",
+  "allBoards": "All leaderboards",
+  "refreshing": "Updating leaderboard",
+  "empty": {
+    "noTasks": {
+      "title": "No leaderboard tasks yet",
+      "description": "Create at least one leaderboard task. After analysis finishes, topic rankings appear here.",
+      "hint": "If you already have sources and channels, add a leaderboard task under Tasks next."
+    },
+    "filtered": {
+      "title": "This leaderboard task has no results",
+      "description": "The selected task has no leaderboard data yet, or filters removed every result.",
+      "hint": "Switch back to all leaderboards to check whether only this task is empty for now."
+    },
+    "noResults": {
+      "title": "No leaderboard results yet",
+      "description": "After analysis batches complete, the hottest topics and scores show up here.",
+      "hint": "Leaderboards need a completed leaderboard analysis batch first."
+    }
+  },
+  "goToTasks": "Go to Tasks",
+  "viewAll": "View all leaderboards",
+  "viewAllAria": "View all leaderboards",
+  "boardAria": "{name} leaderboard",
+  "detailAria": "{name} leaderboard details",
+  "rowAria": "#{rank} {topic}, score {score}",
+  "unnamed": "Untitled leaderboard",
+  "summary": "Event summary",
+  "noSummary": "No summary yet",
+  "loadingMessages": "Loading related messages…",
+  "relatedMessages_one": "Related message ({count})",
+  "relatedMessages_other": "Related messages ({count})",
+  "noMessagesTitle": "No related messages",
+  "noMessagesDescription": "This ranking item has no source messages to expand.",
+  "loadMessagesFailed": "Failed to load messages: {error}"
+}

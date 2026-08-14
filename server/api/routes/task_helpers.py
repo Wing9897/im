@@ -138,12 +138,12 @@ async def resolve_llm_profile_id(
     fields_set: set[str] | None = None,
     require_complete: bool = True,
 ) -> str:
-    """Resolve required llm_profile_id; fall back to is_default when omitted.
+    """Resolve required llm_profile_id; fall back to oldest profile when omitted.
 
     Never invents a fake ``__default__`` id. When no profiles exist (or the
     chosen profile is incomplete), raises 400 with a clear message.
     """
-    from server.analyzer.llm_config import fetch_default_profile_id, require_complete_profile_row
+    from server.analyzer.llm_config import fetch_first_profile_id, require_complete_profile_row
     from server.queries.llm_profiles_queries import fetch_profile_row
 
     explicit = fields_set is None or "llmProfileId" in fields_set
@@ -155,7 +155,7 @@ async def resolve_llm_profile_id(
     elif existing and str(existing).strip():
         profile_id = str(existing).strip()
     else:
-        profile_id = await fetch_default_profile_id(db)
+        profile_id = await fetch_first_profile_id(db)
 
     if require_complete:
         await require_complete_profile_row(db, profile_id)
@@ -181,11 +181,6 @@ async def require_task_row(
             raise missing(message)
         raise missing(message)
     return row
-
-
-async def get_task_row(db: Any, task_id: str) -> dict[str, Any]:
-    """HTTP helper: missing task → 404 ``http_error``."""
-    return await require_task_row(db, task_id, missing=lambda msg: http_error(404, msg))
 
 
 async def channel_refs_for(db: Any, task_id: str) -> list[dict[str, Any]]:

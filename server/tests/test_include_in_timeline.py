@@ -8,7 +8,8 @@ from server.tests import seed
 
 
 def test_resolve_include_in_timeline_modes() -> None:
-    assert resolve_include_in_timeline(effective_mode="recurring", supplied=False) == 1
+    # The checkbox is honored for every mode; recurring series no longer live
+    # on analysis_tasks, so no mode forces include_in_timeline on.
     assert resolve_include_in_timeline(effective_mode="intel_event", supplied=False) == 0
     assert resolve_include_in_timeline(effective_mode="intel_event", supplied=True) == 1
     assert resolve_include_in_timeline(effective_mode="intel_event", supplied=None, existing=0) == 0

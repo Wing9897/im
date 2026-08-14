@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useTranslation } from "react-i18next";
-import { AlertBanner, Button, FormActions } from "../../../components/ui";
-import { useFocusTrap } from "../../../hooks/useFocusTrap";
-import { OverlayPortal } from "../../../components/common/OverlayPortal";
-import { compactSourceDialogShellClass } from "../../../components/dialogs/dialogShellClasses";
+import { AlertBanner, Button } from "../../../components/ui";
+import { ModalDialog } from "../../../components/ModalDialog";
 
 /** Quiet-zone modules for qrcode.toDataURL (not CSS spacing). */
 const QR_CODE_MARGIN_MODULES = 2;
@@ -25,7 +23,6 @@ export function QrLoginDialog({
   onClose,
 }: QrLoginDialogProps) {
   const { t } = useTranslation("sources");
-  const focusTrapRef = useFocusTrap({ active: true, onEscape: onClose });
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
 
@@ -60,48 +57,44 @@ export function QrLoginDialog({
     : null;
 
   return (
-    <OverlayPortal onOverlayClick={onClose} lockBodyScroll>
-      <div
-        ref={focusTrapRef}
-        className={`${compactSourceDialogShellClass} im-animate-in-scale`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-md text-base font-semibold text-text-primary">
-          {t("verify.qrTitle")}
-        </h2>
-        <p className="mb-md text-body text-text-secondary">{t("verify.qrHint")}</p>
-        {error || qrError ? (
-          <AlertBanner variant="error" role="alert" className="mb-sm">
-            {error || qrError}
-          </AlertBanner>
+    <ModalDialog
+      open
+      title={t("verify.qrTitle")}
+      onClose={onClose}
+      size="compact"
+      footer={
+        <Button variant="secondary" onClick={onClose}>
+          {t("shared.cancel")}
+        </Button>
+      }
+    >
+      <p className="mb-md text-body text-text-secondary">{t("verify.qrHint")}</p>
+      {error || qrError ? (
+        <AlertBanner variant="error" role="alert" className="mb-sm">
+          {error || qrError}
+        </AlertBanner>
+      ) : null}
+      <div className="flex flex-col items-center gap-sm">
+        {dataUrl ? (
+          <img
+            src={dataUrl}
+            alt={t("verify.qrAlt")}
+            className="h-[240px] w-[240px] rounded-md bg-white p-sm"
+          />
+        ) : (
+          <div className="im-surface-inset flex h-[240px] w-[240px] items-center justify-center rounded-md border border-surface-border text-body text-text-muted">
+            {t("verify.qrLoading")}
+          </div>
+        )}
+        {expiresLabel ? (
+          <p className="text-xs text-text-muted">
+            {t("verify.qrExpires", { time: expiresLabel })}
+          </p>
         ) : null}
-        <div className="mb-md flex flex-col items-center gap-sm">
-          {dataUrl ? (
-            <img
-              src={dataUrl}
-              alt={t("verify.qrAlt")}
-              className="h-[240px] w-[240px] rounded-md bg-white p-sm"
-            />
-          ) : (
-            <div className="im-surface-inset flex h-[240px] w-[240px] items-center justify-center rounded-md border border-surface-border text-body text-text-muted">
-              {t("verify.qrLoading")}
-            </div>
-          )}
-          {expiresLabel ? (
-            <p className="text-xs text-text-muted">
-              {t("verify.qrExpires", { time: expiresLabel })}
-            </p>
-          ) : null}
-          {waiting ? (
-            <p className="text-center text-xs text-text-muted">{t("verify.qrWaiting")}</p>
-          ) : null}
-        </div>
-        <FormActions inline className="mt-md">
-          <Button variant="secondary" onClick={onClose}>
-            {t("shared.cancel")}
-          </Button>
-        </FormActions>
+        {waiting ? (
+          <p className="text-center text-xs text-text-muted">{t("verify.qrWaiting")}</p>
+        ) : null}
       </div>
-    </OverlayPortal>
+    </ModalDialog>
   );
 }

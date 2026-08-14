@@ -8,8 +8,9 @@ fail and provide the lifecycle event trace as their counterexample.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from types import SimpleNamespace
-from typing import Any, Coroutine
+from typing import Any
 
 import server.analysis_control as analysis_control
 import server.analyzer.geocoding as geocoding
@@ -84,7 +85,13 @@ async def test_lifespan_awaits_blocked_geocode_before_database_close(tmp_path, m
     monkeypatch.setattr(
         main_module,
         "asyncio",
-        SimpleNamespace(create_task=recording_create_task, sleep=asyncio.sleep),
+        SimpleNamespace(
+            Event=asyncio.Event,
+            Task=asyncio.Task,
+            create_task=recording_create_task,
+            get_running_loop=asyncio.get_running_loop,
+            sleep=asyncio.sleep,
+        ),
     )
     monkeypatch.setattr(Database, "close", recording_close)
 
@@ -124,7 +131,7 @@ async def _start_blocked_scheduler_batch(
             events.append("batch:done")
 
     async def fake_fetch_one(*_args, **_kwargs):
-        # Non-project mode so `_execute_scheduled` routes to execute_batch.
+        # Non-agent mode so `_execute_scheduled` routes to execute_batch.
         return {"analysis_mode": "intel_event"}
 
     monkeypatch.setattr(manager_pipelines, "execute_batch", blocked_execute_batch)
@@ -181,7 +188,7 @@ async def test_scheduler_timeout_cancels_and_awaits_before_invalidation_and_clos
     async def immediate_timeout(awaitable, *, timeout: float):
         observed_timeouts.append(timeout)
         awaitable.close()
-        raise asyncio.TimeoutError
+        raise TimeoutError
 
     async def recording_invalidation(_db) -> list[str]:
         events.append("processing:invalidate")

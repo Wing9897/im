@@ -6,8 +6,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import AsyncIterator
 from types import SimpleNamespace
-from typing import AsyncIterator
 
 import pytest
 
@@ -160,14 +160,14 @@ async def test_base_insert_message_publishes_and_dedups(db, broadcaster):
     adapter = _FakeAdapter("a-1", db, broadcaster)
     queue = broadcaster.subscribe()
     try:
-        kwargs = dict(
-            platform="rss",
-            platform_id="feed-1",
-            content="entry body",
-            message_time="2026-01-01T00:00:00+00:00",
-            platform_message_id="entry-1",
-            channel_name="Feed",
-        )
+        kwargs = {
+            "platform": "rss",
+            "platform_id": "feed-1",
+            "content": "entry body",
+            "message_time": "2026-01-01T00:00:00+00:00",
+            "platform_message_id": "entry-1",
+            "channel_name": "Feed",
+        }
         await adapter._insert_message(**kwargs)
         await adapter._insert_message(**kwargs)  # duplicate — no second event
     finally:
@@ -296,7 +296,7 @@ async def test_rss_adapter_connect_ingest_disconnect(db, broadcaster, monkeypatc
         await adapter.connect()
         assert await adapter.is_connected()
         assert adapter.state.status == "connected"
-        setattr(adapter, "_poll_interval", 0.01)
+        adapter._poll_interval = 0.01
 
         # The connect-time entry is marked seen; only "entry-2" from the next
         # poll cycle is ingested.

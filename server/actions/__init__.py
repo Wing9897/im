@@ -4,6 +4,7 @@ auto-trigger on analysis completion."""
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from server.action_config import action_configuration_for_execution
@@ -14,10 +15,45 @@ from server.actions.handlers import (
     send_mqtt,
     send_telegram_bot,
 )
+from server.app_logging import record, summarize_error_message
 from server.db.database import Database
+from server.domain.action_types import (
+    ACTION_TYPE_DISCORD_WEBHOOK,
+    ACTION_TYPE_HTTP_WEBHOOK,
+    ACTION_TYPE_MQTT,
+    ACTION_TYPE_TELEGRAM_BOT,
+)
 from server.util import new_id, parse_json_dict, utc_now_iso
 
 logger = logging.getLogger(__name__)
+
+_ActionHandler = Callable[[dict[str, Any], str, dict[str, Any] | None], Awaitable[dict[str, Any]]]
+
+
+async def _run_telegram_bot(config: dict[str, Any], message: str, _raw: dict[str, Any] | None) -> dict[str, Any]:
+    return await send_telegram_bot(config, message)
+
+
+async def _run_discord_webhook(config: dict[str, Any], message: str, _raw: dict[str, Any] | None) -> dict[str, Any]:
+    return await send_discord_webhook(config, message)
+
+
+async def _run_http_webhook(config: dict[str, Any], message: str, raw: dict[str, Any] | None) -> dict[str, Any]:
+    return await send_http_webhook(config, message, raw)
+
+
+async def _run_mqtt(config: dict[str, Any], message: str, _raw: dict[str, Any] | None) -> dict[str, Any]:
+    return await send_mqtt(config, message)
+
+
+#: Registry keyed by the ``action_type`` domain vocabulary (drift-tested
+#: against ``server.domain.action_types.ALL_ACTION_TYPES``).
+ACTION_HANDLERS: dict[str, _ActionHandler] = {
+    ACTION_TYPE_TELEGRAM_BOT: _run_telegram_bot,
+    ACTION_TYPE_DISCORD_WEBHOOK: _run_discord_webhook,
+    ACTION_TYPE_HTTP_WEBHOOK: _run_http_webhook,
+    ACTION_TYPE_MQTT: _run_mqtt,
+}
 
 
 class ActionExecutor:
@@ -45,17 +81,12 @@ class ActionExecutor:
         action_type = str(action.get("action_type") or "")
         config = action_configuration_for_execution(action.get("configuration"))
 
+        handler = ACTION_HANDLERS.get(action_type)
         try:
-            if action_type == "telegram_bot":
-                result = await send_telegram_bot(config, message)
-            elif action_type == "discord_webhook":
-                result = await send_discord_webhook(config, message)
-            elif action_type == "http_webhook":
-                result = await send_http_webhook(config, message, raw_data)
-            elif action_type == "mqtt":
-                result = await send_mqtt(config, message)
-            else:
+            if handler is None:
                 result = {"success": False, "error": f"Unknown action type: {action_type}"}
+            else:
+                result = await handler(config, message, raw_data)
         except Exception as exc:  # noqa: BLE001 — handler bug must not crash callers
             logger.exception("Action execution error (%s)", action_type)
             result = {"success": False, "error": f"Action execution error: {exc}"}
@@ -103,8 +134,27 @@ class ActionExecutor:
                 "UPDATE actions SET last_triggered_at = ?, updated_at = ? WHERE id = ?",
                 (now, now, action_id),
             )
-        except Exception:  # noqa: BLE001 — history is best-effort
+        except Exception as exc:  # noqa: BLE001 — the action already went out; cannot roll back
             logger.exception("Failed to record action history for %s", action_id)
+            await self._record_history_write_failure(action_id, exc)
+
+    async def _record_history_write_failure(self, action_id: str, exc: BaseException) -> None:
+        """Surface a lost audit row in Settings→Logs; stdout alone hides it from users."""
+        summary = summarize_error_message(str(exc))
+        try:
+            await record(
+                self._db,
+                level="error",
+                category="system",
+                kind="action.history_failed",
+                message=f"Action fired but its trigger history row was not saved: {action_id} — {summary}",
+                message_key="logs:templates.actionHistoryFailed",
+                message_params={"actionId": action_id, "summary": summary},
+                source="server.actions",
+                payload={"actionId": action_id, "error": str(exc)},
+            )
+        except Exception:  # noqa: BLE001 — the same database is already failing
+            logger.exception("Failed to log the action-history write failure for %s", action_id)
 
     # ── auto trigger on analysis completion ─────────────────────────────
 

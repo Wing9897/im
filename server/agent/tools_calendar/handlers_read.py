@@ -20,6 +20,7 @@ from server.calendar.query import (
 from server.calendar.query_fetch import calendar_list_item_from_task_row
 from server.calendar.timeline_dismissals import active_timeline_items
 from server.db.database import Database
+from server.queries.calendar_queries import TASK_CALENDAR_NULL_EVENT_COLS
 
 
 def _filter_task_id(args: dict[str, Any]) -> Any:
@@ -54,9 +55,9 @@ async def _tool_list_calendars(db: Database, args: dict[str, Any]) -> dict[str, 
         # Ensure the scoped task itself appears even if list_calendars omitted it.
         if not any(str(i.get("id")) == tid for i in scoped):
             row = await db.fetch_one(
-                "SELECT id, name, analysis_mode, is_active, NULL AS rrule, NULL AS event_location, "
-                "NULL AS event_description, 0 AS event_is_all_day, NULL AS event_start_time, "
-                "NULL AS event_end_time, NULL AS event_timezone FROM analysis_tasks WHERE id = ?",
+                "SELECT id, name, analysis_mode, is_active, "
+                f"{TASK_CALENDAR_NULL_EVENT_COLS} "
+                "FROM analysis_tasks WHERE id = ?",
                 (tid,),
             )
             if row is not None:

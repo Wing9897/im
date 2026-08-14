@@ -16,8 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SurfaceCard } from "../ui/SurfaceCard";
 import { sectionTitleClass } from "../ui/pageTypography";
-import { buildRRule, WEEKDAY_CODES } from "../../utils/rrule";
-import { validateRRuleConfig, type RRuleValidationErrors } from "../../utils/rruleValidation";
+import { buildRRule, WEEKDAY_CODES } from "../../domain/schedule/rrule";
+import { validateRRuleConfig, type RRuleValidationErrors } from "../../domain/schedule/rruleValidation";
 import type {
   RecurrenceConfig,
   RecurrenceEndType,
@@ -177,7 +177,7 @@ export function RecurrenceRuleEditor({
 
   return (
     <SurfaceCard density="field" className="mt-md flex flex-col gap-lg">
-      <div className={sectionTitleClass}>{t("tasks.recurrence.sectionTitle")}</div>
+      <div className={sectionTitleClass}>{t("tasks:recurrence.sectionTitle")}</div>
 
       <div className="flex flex-wrap items-end gap-md">
         <FrequencySelector
@@ -223,7 +223,7 @@ export function RecurrenceRuleEditor({
 
       <ValidationHint errors={validationErrors} />
       <div className="break-all font-mono text-[11px] text-text-muted">
-        {t("tasks.recurrence.rrulePreview", { value: buildRRule(config) })}
+        {t("tasks:recurrence.rrulePreview", { value: buildRRule(config) })}
       </div>
     </SurfaceCard>
   );

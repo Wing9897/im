@@ -39,10 +39,7 @@ def _compact_item_summary(item: dict[str, Any], *, today: date | None = None) ->
 
 async def _tool_list(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
     workset_id = arguments.get("worksetId") or arguments.get("workset_id")
-    if isinstance(workset_id, str):
-        workset_id = workset_id.strip() or None
-    else:
-        workset_id = None
+    workset_id = workset_id.strip() or None if isinstance(workset_id, str) else None
     category_id = arguments.get("categoryId") or arguments.get("category_id")
     if isinstance(category_id, str):
         category_id = category_id.strip()
@@ -53,10 +50,7 @@ async def _tool_list(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
     else:
         category_id = None
     status = arguments.get("status")
-    if isinstance(status, str):
-        status = status.strip().lower() or None
-    else:
-        status = None
+    status = status.strip().lower() or None if isinstance(status, str) else None
     if status is not None and status not in {"active", "archived"}:
         return {"error": "status must be active or archived"}
     search = arguments.get("search")
@@ -94,10 +88,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
     except (TypeError, ValueError):
         return {"error": "limit must be an integer"}
     workset_id = arguments.get("worksetId") or arguments.get("workset_id")
-    if isinstance(workset_id, str):
-        workset_id = workset_id.strip() or None
-    else:
-        workset_id = None
+    workset_id = workset_id.strip() or None if isinstance(workset_id, str) else None
     search = arguments.get("search")
     search_needle = str(search).strip().lower() if search else ""
 

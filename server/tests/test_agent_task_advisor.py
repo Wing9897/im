@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from server.agent.runtime import AgentRuntime, build_system_prompt
@@ -23,9 +24,9 @@ def test_build_tool_schemas_includes_task_advisor_when_enabled() -> None:
 
 
 def test_build_system_prompt_includes_task_advisor_only_when_enabled() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 21, 2, 30, tzinfo=UTC)
     off = build_system_prompt(now=now, task_advisor_enabled=False)
     on = build_system_prompt(now=now, task_advisor_enabled=True)
     assert '"name": "tasks.consult_advisor"' not in off

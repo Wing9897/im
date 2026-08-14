@@ -12,8 +12,9 @@ import asyncio
 import logging
 import time
 from collections import deque
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -77,9 +78,9 @@ class SchedulerManager:
         self._in_flight = 0
         self._in_flight_tasks: dict[asyncio.Task[None], str] = {}
         self._dispatch_event = asyncio.Event()
-        self._drain_event: Optional[asyncio.Event] = None
-        self._dispatch_task: Optional[asyncio.Task] = None
-        self._retention_task: Optional[asyncio.Task] = None
+        self._drain_event: asyncio.Event | None = None
+        self._dispatch_task: asyncio.Task | None = None
+        self._retention_task: asyncio.Task | None = None
         self._started = False
 
     # ── startup / recovery ──────────────────────────────────────────────
@@ -136,8 +137,8 @@ class SchedulerManager:
             return
         try:
             trigger = schedule_trigger_from_rrule(str(schedule_rrule))
-        except (ValueError, KeyError, ScheduleValidationError) as exc:
-            logger.error("Invalid schedule for task %s: %s", task_id, exc)
+        except (ValueError, KeyError, ScheduleValidationError):
+            logger.exception("Invalid schedule for task %s", task_id)
             return
         self._scheduler.add_job(
             self._on_timer_fire,
@@ -283,16 +284,14 @@ class SchedulerManager:
         for task in (self._dispatch_task, self._retention_task):
             if task is not None:
                 task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await task
-                except asyncio.CancelledError:
-                    pass
 
         if self._in_flight > 0:
             self._drain_event = asyncio.Event()
             try:
                 await asyncio.wait_for(self._drain_event.wait(), timeout=_SHUTDOWN_GRACE_SECONDS)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning("Shutdown grace expired with %d batches in flight", self._in_flight)
                 await self.abort_in_flight(self._db)
         self._wait_queue.clear()

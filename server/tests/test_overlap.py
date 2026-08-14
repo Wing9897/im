@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import pytest
 
 from server.analyzer.overlap import fetch_overlap_context
 from server.db.database import Database
+from server.tests.seed import ensure_default_llm_profile
 from server.util import new_id, utc_now_iso
 
 
@@ -28,15 +30,16 @@ async def _seed_overlap_fixture(
     analysis_mode: str = "intel_event",
 ) -> list[str]:
     now = utc_now_iso()
+    profile_id = await ensure_default_llm_profile(db)
     await db.execute(
         "INSERT INTO channels (platform, platform_id, channel_name, created_at) VALUES (?, ?, ?, ?)",
         ("rss", "feed-1", "Feed", now),
     )
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, ?, 'all', 1, 1, "
-        "'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        (task_id, "Overlap Task", "prompt", analysis_mode, now, now),
+        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        (task_id, "Overlap Task", "prompt", analysis_mode, profile_id, now, now),
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "
@@ -95,11 +98,12 @@ async def test_fetch_overlap_context_returns_empty_for_invalid_overlap_count(
 async def test_fetch_overlap_context_returns_empty_without_completed_batch(db: Database) -> None:
     now = utc_now_iso()
     task_id = new_id()
+    profile_id = await ensure_default_llm_profile(db)
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, created_at, updated_at) VALUES (?, ?, ?, 'intel_event', "
-        "'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        (task_id, "No Batch", "prompt", now, now),
+        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        (task_id, "No Batch", "prompt", profile_id, now, now),
     )
     task = await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
 

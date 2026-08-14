@@ -21,31 +21,34 @@ export function TasksBoardWidget({ active = true }: BoardWidgetProps) {
           void refreshTasks();
         }}
         empty={!tasksLoading && tasks.length === 0}
-        emptyLabel={t("board.tasks.empty")}
+        emptyLabel={t("board:tasks.empty")}
       >
         {items.length > 0 ? (
           <ul className="board-widget-list">
-            {items.map((task) => (
+            {items.map((task) => {
+              const channelCount = (task.channelIds ?? []).length;
+              return (
               <li key={task.id} className="board-widget-list__item">
                 <div
                   className="board-widget-list__row"
                   data-testid={`board-tasks-row-${task.id}`}
                 >
                   <span className="board-widget-list__primary">
-                    {task.name || t("board.common.unnamed")}
+                    {task.name || t("board:common.unnamed")}
                     <Badge tone={task.isActive ? "success" : "neutral"}>
-                      {task.isActive ? t("board.common.enabled") : t("board.common.disabled")}
+                      {task.isActive ? t("board:common.enabled") : t("board:common.disabled")}
                     </Badge>
                   </span>
                   <span className="board-widget-list__meta">
                     {formatAnalysisMode(task.analysisMode)}
-                    {task.channelIds.length > 0
-                      ? ` · ${t("board.common.channelCount", { count: task.channelIds.length })}`
+                    {channelCount > 0
+                      ? ` · ${t("board:common.channelCount", { count: channelCount })}`
                       : ""}
                   </span>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         ) : null}
       </BoardWidgetShell>

@@ -6,7 +6,8 @@ from typing import Any
 
 from server.db.database import TransactionDb
 
-_SERIES_SELECT = """
+#: Shared projection for calendar expand + series CRUD (single SoT).
+SERIES_SELECT = """
 SELECT id,
        name,
        workset_id,
@@ -33,6 +34,9 @@ SELECT id,
        updated_at
 FROM recurring_schedules
 """
+
+# Backward-compatible private alias for in-module call sites.
+_SERIES_SELECT = SERIES_SELECT
 
 
 async def fetch_series_row(db: Any, series_id: str) -> dict[str, Any] | None:

@@ -60,13 +60,13 @@ def _map_validation(exc: ItemValidationError) -> None:
 
 
 @router.get("/categories", response_model=list[ItemCategoryResponse])
-async def list_categories(request: Request) -> list[dict[str, Any]]:
+async def list_categories(request: Request) -> list[ItemCategoryResponse]:
     rows = await fetch_all_category_rows(get_db(request))
-    return [serialize_item_category(row) for row in rows]
+    return [ItemCategoryResponse.model_validate(serialize_item_category(row)) for row in rows]
 
 
 @router.post("/categories", status_code=201, response_model=ItemCategoryResponse)
-async def post_category(request: Request, body: CategoryCreateBody) -> dict[str, Any]:
+async def post_category(request: Request, body: CategoryCreateBody) -> ItemCategoryResponse:
     try:
         result = await create_category(
             get_db(request),
@@ -81,19 +81,19 @@ async def post_category(request: Request, body: CategoryCreateBody) -> dict[str,
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_category(request, str(result["id"]), "created")
-    return result
+    return ItemCategoryResponse.model_validate(result)
 
 
 @router.get("/categories/{category_id}", response_model=ItemCategoryResponse)
-async def get_category(request: Request, category_id: str) -> dict[str, Any]:
+async def get_category(request: Request, category_id: str) -> ItemCategoryResponse:
     row = await fetch_category_row(get_db(request), category_id)
     if row is None:
         raise http_error(404, "category not found", error_code=NOT_FOUND)
-    return serialize_item_category(row)
+    return ItemCategoryResponse.model_validate(serialize_item_category(row))
 
 
 @router.patch("/categories/{category_id}", response_model=ItemCategoryResponse)
-async def patch_category_route(request: Request, category_id: str, body: CategoryUpdateBody) -> dict[str, Any]:
+async def patch_category_route(request: Request, category_id: str, body: CategoryUpdateBody) -> ItemCategoryResponse:
     fields = body.model_dump(exclude_unset=True)
     kwargs: dict[str, Any] = {}
     mapping = {
@@ -113,18 +113,18 @@ async def patch_category_route(request: Request, category_id: str, body: Categor
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_category(request, category_id, "updated")
-    return result
+    return ItemCategoryResponse.model_validate(result)
 
 
 @router.delete("/categories/{category_id}", response_model=ItemCategoryDeleteResponse)
-async def delete_category_route(request: Request, category_id: str) -> dict[str, bool]:
+async def delete_category_route(request: Request, category_id: str) -> ItemCategoryDeleteResponse:
     try:
         await remove_category(get_db(request), category_id)
     except ItemValidationError as exc:
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_category(request, category_id, "deleted")
-    return {"ok": True}
+    return ItemCategoryDeleteResponse(ok=True)
 
 
 # --- Items ---
@@ -137,7 +137,7 @@ async def list_items(
     category_id: str | None = qalias("categoryId", default=None),
     status: str | None = Query(default=None),
     search: str | None = Query(default=None),
-) -> list[dict[str, Any]]:
+) -> list[ItemResponse]:
     """List items; date cache columns are read-only (SoT = linked calendars)."""
     rows = await fetch_item_rows(
         get_db(request),
@@ -146,11 +146,11 @@ async def list_items(
         status=status,
         search=search,
     )
-    return [serialize_item(row) for row in rows]
+    return [ItemResponse.model_validate(serialize_item(row)) for row in rows]
 
 
 @router.post("", status_code=201, response_model=ItemResponse)
-async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
+async def post_item(request: Request, body: ItemCreateBody) -> ItemResponse:
     try:
         result = await create_item(
             get_db(request),
@@ -167,19 +167,19 @@ async def post_item(request: Request, body: ItemCreateBody) -> dict[str, Any]:
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_item(request, str(result["id"]), "created")
-    return result
+    return ItemResponse.model_validate(result)
 
 
 @router.get("/{item_id}", response_model=ItemResponse)
-async def get_item(request: Request, item_id: str) -> dict[str, Any]:
+async def get_item(request: Request, item_id: str) -> ItemResponse:
     row = await fetch_item_row(get_db(request), item_id)
     if row is None:
         raise http_error(404, "item not found", error_code=NOT_FOUND)
-    return serialize_item(row)
+    return ItemResponse.model_validate(serialize_item(row))
 
 
 @router.patch("/{item_id}", response_model=ItemResponse)
-async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody) -> dict[str, Any]:
+async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody) -> ItemResponse:
     fields = body.model_dump(exclude_unset=True)
     mapping = {
         "title": "title",
@@ -198,15 +198,15 @@ async def patch_item_route(request: Request, item_id: str, body: ItemUpdateBody)
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_item(request, item_id, "updated")
-    return result
+    return ItemResponse.model_validate(result)
 
 
 @router.delete("/{item_id}", response_model=ItemDeleteResponse)
-async def delete_item_route(request: Request, item_id: str) -> dict[str, bool]:
+async def delete_item_route(request: Request, item_id: str) -> ItemDeleteResponse:
     try:
         await remove_item(get_db(request), item_id)
     except ItemValidationError as exc:
         _map_validation(exc)
         raise  # pragma: no cover
     _notify_item(request, item_id, "deleted")
-    return {"ok": True}
+    return ItemDeleteResponse(ok=True)

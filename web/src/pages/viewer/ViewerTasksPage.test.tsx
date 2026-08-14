@@ -54,7 +54,7 @@ describe("ViewerTasksPage selection persistence", () => {
 
     await act(async () => {
       await vi.waitFor(() => {
-        expect(container.querySelector('[aria-label="viewer.viewTaskAria"]')).toBeTruthy();
+        expect(container.querySelector('[aria-label="viewer:viewTaskAria"]')).toBeTruthy();
       });
     });
 

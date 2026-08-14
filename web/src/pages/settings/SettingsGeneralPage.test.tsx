@@ -19,6 +19,8 @@ vi.mock("../../hooks/useFocusTrap", () => ({ useFocusTrap: () => ({ current: nul
 vi.mock("./SettingsShared", () => ({
   SettingsContentCard: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
   SettingsFieldGroup: ({ children }: { children: React.ReactNode }) => createElement("div", null, children),
+}));
+vi.mock("../../components/settings/useSettingsPageState", () => ({
   useSettingsPageState: () => ({
     settings: {
       weatherLocation: "system",

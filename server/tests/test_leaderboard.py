@@ -77,12 +77,13 @@ async def db(app):
 
 async def _insert_leaderboard_task(db, *, task_id: str, batch_id: str) -> dict:
     now = utc_now_iso()
+    profile_id = await seed.ensure_default_llm_profile(db)
     await db.execute(
         "INSERT INTO analysis_tasks (id, name, description, prompt_template, "
         "analysis_mode, analysis_time_range, version, is_active, schedule_rrule, "
-        "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, 'leaderboard', '1d', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?)",
-        (task_id, "Cap Test", "desc", "分析", now, now),
+        "llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, 'leaderboard', '1d', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
+        (task_id, "Cap Test", "desc", "分析", profile_id, now, now),
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, "

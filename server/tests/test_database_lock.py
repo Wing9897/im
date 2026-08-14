@@ -7,6 +7,7 @@ import asyncio
 import pytest
 
 from server.db.database import Database
+from server.tests.seed import ensure_default_llm_profile
 from server.util import new_id, utc_now_iso
 
 
@@ -20,12 +21,13 @@ async def test_concurrent_transactions_do_not_nested_begin(db: Database) -> None
     """Parallel batch paths must not raise 'transaction within a transaction'."""
     task_id = new_id()
     now = utc_now_iso()
+    profile_id = await ensure_default_llm_profile(db)
     await db.execute(
         "INSERT INTO analysis_tasks "
         "(id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "schedule_rrule, version, is_active, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 'FREQ=SECONDLY;INTERVAL=60', 1, 1, ?, ?)",
-        (task_id, "lock-test", "prompt", now, now),
+        "schedule_rrule, version, is_active, llm_profile_id, created_at, updated_at) "
+        "VALUES (?, ?, ?, 'intel_event', 'all', 'FREQ=SECONDLY;INTERVAL=60', 1, 1, ?, ?, ?)",
+        (task_id, "lock-test", "prompt", profile_id, now, now),
     )
 
     async def write_batch(suffix: str) -> None:

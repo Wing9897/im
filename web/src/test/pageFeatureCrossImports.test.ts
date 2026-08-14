@@ -1,18 +1,29 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * Cheap guard: production code under pages/{dashboard,timeline,items,tasks}
- * must not import another of those feature folders.
+ * Cheap guard: production code under a `pages/<feature>` directory must not
+ * import another feature's directory. Every directory under `pages/` counts as
+ * a feature except `shared`, which is the deliberate cross-feature chrome
+ * (workspace shell, route helpers, empty-state presets).
  * Tests are excluded (e.g. chrome-unity locks may compare across pages).
  *
- * Also: account/logs must import settings form surfaces from
- * ``components/settings`` — not ``pages/settings/SettingsShared``.
+ * Also: no feature may reach into `pages/settings/SettingsShared` — the settings
+ * form kit lives in `components/settings` and the outlet accessor in
+ * `components/settings/useSettingsPageState`.
  */
 const PAGES_DIR = resolve(__dirname, "../pages");
-const FEATURES = ["dashboard", "timeline", "items", "tasks"] as const;
-const SETTINGS_UI_FEATURES = ["account", "logs"] as const;
+/** Deliberate cross-feature chrome; not a feature of its own. */
+const SHARED_DIRS = new Set(["shared"]);
+
+function featureDirs(): string[] {
+  return readdirSync(PAGES_DIR)
+    .filter((name) => statSync(join(PAGES_DIR, name)).isDirectory())
+    .filter((name) => !SHARED_DIRS.has(name));
+}
+
+const FEATURES = featureDirs();
 
 const IMPORT_RE =
   /(?:from|import\()\s*['"]([^'"]+)['"]/g;
@@ -33,19 +44,30 @@ function walkSourceFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-function resolveCrossFeature(fromFeature: string, spec: string): string | null {
-  for (const other of FEATURES) {
-    if (other === fromFeature) continue;
-    if (
-      spec === `../${other}` ||
-      spec.startsWith(`../${other}/`) ||
-      spec.includes(`/pages/${other}/`) ||
-      spec.endsWith(`/pages/${other}`)
-    ) {
-      return other;
-    }
+/**
+ * Resolve the spec to a path and report the owning feature when it is a
+ * different one. Resolving (rather than string matching) keeps nested folders
+ * named after a feature — e.g. `sources/rss/providers/shared` — from tripping
+ * the guard.
+ */
+function resolveCrossFeature(
+  fromFile: string,
+  fromFeature: string,
+  spec: string,
+): string | null {
+  let absolute: string;
+  if (spec.startsWith(".")) {
+    absolute = resolve(dirname(fromFile), spec);
+  } else if (spec.includes("/pages/")) {
+    absolute = resolve(PAGES_DIR, spec.slice(spec.indexOf("/pages/") + "/pages/".length));
+  } else {
+    return null;
   }
-  return null;
+  const rel = relative(PAGES_DIR, absolute).replace(/\\/g, "/");
+  if (rel === "" || rel.startsWith("..")) return null;
+  const owner = rel.split("/")[0];
+  if (owner === fromFeature) return null;
+  return FEATURES.includes(owner) ? owner : null;
 }
 
 function importsSettingsShared(spec: string): boolean {
@@ -56,59 +78,59 @@ function importsSettingsShared(spec: string): boolean {
   );
 }
 
+function eachImport(feature: string, visit: (file: string, spec: string) => void): void {
+  const featureRoot = join(PAGES_DIR, feature);
+  let files: string[];
+  try {
+    files = walkSourceFiles(featureRoot);
+  } catch {
+    return;
+  }
+  for (const file of files) {
+    const source = readFileSync(file, "utf8");
+    IMPORT_RE.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = IMPORT_RE.exec(source)) !== null) {
+      visit(file, match[1]);
+    }
+  }
+}
+
+function displayPath(file: string): string {
+  return relative(resolve(__dirname, ".."), file).replace(/\\/g, "/");
+}
+
 describe("page feature cross-imports", () => {
-  it("dashboard/timeline/items/tasks production code stays feature-local", () => {
+  it("covers every page directory except the shared chrome", () => {
+    expect(FEATURES.length).toBeGreaterThanOrEqual(15);
+    expect(FEATURES).not.toContain("shared");
+  });
+
+  it("page feature production code stays feature-local", () => {
     const violations: string[] = [];
 
     for (const feature of FEATURES) {
-      const featureRoot = join(PAGES_DIR, feature);
-      let files: string[];
-      try {
-        files = walkSourceFiles(featureRoot);
-      } catch {
-        continue;
-      }
-
-      for (const file of files) {
-        const source = readFileSync(file, "utf8");
-        const rel = relative(resolve(__dirname, ".."), file).replace(/\\/g, "/");
-        IMPORT_RE.lastIndex = 0;
-        let match: RegExpExecArray | null;
-        while ((match = IMPORT_RE.exec(source)) !== null) {
-          const other = resolveCrossFeature(feature, match[1]);
-          if (other) {
-            violations.push(`${rel} → ${match[1]} (${other})`);
-          }
+      eachImport(feature, (file, spec) => {
+        const other = resolveCrossFeature(file, feature, spec);
+        if (other) {
+          violations.push(`${displayPath(file)} → ${spec} (${other})`);
         }
-      }
+      });
     }
 
     expect(violations).toEqual([]);
   });
 
-  it("account/logs use components/settings form kit, not SettingsShared", () => {
+  it("no feature imports the settings page shell — use components/settings", () => {
     const violations: string[] = [];
 
-    for (const feature of SETTINGS_UI_FEATURES) {
-      const featureRoot = join(PAGES_DIR, feature);
-      let files: string[];
-      try {
-        files = walkSourceFiles(featureRoot);
-      } catch {
-        continue;
-      }
-
-      for (const file of files) {
-        const source = readFileSync(file, "utf8");
-        const rel = relative(resolve(__dirname, ".."), file).replace(/\\/g, "/");
-        IMPORT_RE.lastIndex = 0;
-        let match: RegExpExecArray | null;
-        while ((match = IMPORT_RE.exec(source)) !== null) {
-          if (importsSettingsShared(match[1])) {
-            violations.push(`${rel} → ${match[1]}`);
-          }
+    for (const feature of FEATURES) {
+      if (feature === "settings") continue;
+      eachImport(feature, (file, spec) => {
+        if (importsSettingsShared(spec)) {
+          violations.push(`${displayPath(file)} → ${spec}`);
         }
-      }
+      });
     }
 
     expect(violations).toEqual([]);

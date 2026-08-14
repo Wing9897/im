@@ -139,7 +139,9 @@ export function toActiveAnalysisState(
       taskName: "",
       batchId: "",
       messageCount: 0,
-      estimatedTokens: null,
+      estimatedTokens: 0,
+      llmProvider: "",
+      llmModel: "",
       startedAt: new Date().toISOString(),
     };
   }
@@ -148,7 +150,9 @@ export function toActiveAnalysisState(
     taskName: source.taskName ?? "",
     batchId: source.batchId ?? "",
     messageCount: source.messageCount ?? 0,
-    estimatedTokens: source.estimatedTokens ?? null,
+    estimatedTokens: source.estimatedTokens ?? 0,
+    llmProvider: source.llmProvider ?? "",
+    llmModel: source.llmModel ?? "",
     startedAt:
       previous?.batchId === source.batchId && previous?.startedAt
         ? previous.startedAt

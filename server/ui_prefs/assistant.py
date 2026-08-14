@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from server.db.database import Database
 from server.ui_prefs.common import (
@@ -113,7 +114,7 @@ def sanitize_assistant_sessions_payload(raw: Any) -> dict[str, Any]:
         if isinstance(server_session, str) and server_session.strip():
             clean["sessionId"] = server_session.strip()
         # Optional per-session LLM profile override (complete profile id).
-        # Unset / blank → follow staff_class=assistant resolution at chat time.
+        # Unset / blank → hard-bound global assistant slot.
         llm_profile = item.get("llmProfileId")
         if isinstance(llm_profile, str) and llm_profile.strip():
             clean["llmProfileId"] = llm_profile.strip()[:128]

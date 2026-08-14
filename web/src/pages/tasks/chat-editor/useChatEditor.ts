@@ -93,7 +93,7 @@ export function useChatEditor(): UseChatEditorReturn {
 
   useEffect(() => {
     if (channelsError) {
-      setError(String(i18n.t("tasks.editor.channelsLoadError")));
+      setError(String(i18n.t("tasks:editor.channelsLoadError")));
     }
   }, [channelsError]);
 

@@ -13,6 +13,10 @@ from server.wire.serializer_domains.items import (
     serialize_item,
     serialize_item_category,
 )
+from server.wire.serializer_domains.llm_profiles import (
+    serialize_llm_profile,
+    serialize_llm_staff_instance,
+)
 from server.wire.serializer_domains.operations import (
     serialize_action,
     serialize_action_trigger_history,
@@ -23,17 +27,13 @@ from server.wire.serializer_domains.operations import (
     serialize_batch_tool_calls,
     serialize_queue_batch,
 )
+from server.wire.serializer_domains.recurring import serialize_recurring_series
 from server.wire.serializer_domains.sources import (
     channel_key,
     serialize_channel,
     serialize_channel_ref,
     serialize_message,
     serialize_source,
-)
-from server.wire.serializer_domains.recurring import serialize_recurring_series
-from server.wire.serializer_domains.llm_profiles import (
-    serialize_llm_profile,
-    serialize_llm_staff_instance,
 )
 from server.wire.serializer_domains.tasks import (
     serialize_task,

@@ -32,7 +32,7 @@ export const itemsPageChromeInnerClass = pageChromeInnerClass;
  * Below sm: title + actions on row 1, full-width controls on row 2 (no orphan sort).
  */
 export const itemsPageChromeEntryInnerClass =
-  `mx-auto grid w-full min-w-0 ${itemsFormPageMaxWidthClass} items-center gap-x-sm gap-y-sm px-page-x py-sm grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:grid-rows-[auto_auto]`;
+  `mx-auto grid w-full min-w-0 ${itemsFormPageMaxWidthClass} items-center gap-x-sm gap-y-sm px-md py-sm grid-cols-[minmax(0,auto)_minmax(0,1fr)_auto] max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:grid-rows-[auto_auto]`;
 
 /** Entry-list outer — same sticky band as category/form (clip lives on controls, not actions). */
 export const itemsPageChromeEntryOuterClass = itemsPageChromeOuterClass;

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from server.db.database import Database
 from server.web_search.execution import ASSISTANT_TOOL_DEFAULT_COUNT, WebSearchExecutionService

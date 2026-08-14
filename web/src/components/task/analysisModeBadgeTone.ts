@@ -5,7 +5,6 @@ import type { AnalysisMode } from "../../types/common";
 export const MODE_BADGE_TONE: Record<AnalysisMode, BadgeTone> = {
   leaderboard: "accent",
   intel_event: "info",
-  recurring: "success",
   agent: "warning",
 };
 
@@ -13,6 +12,5 @@ export const MODE_BADGE_TONE: Record<AnalysisMode, BadgeTone> = {
 export const MODE_ACCENT_CLASS: Record<AnalysisMode, string> = {
   leaderboard: "bg-accent",
   intel_event: "bg-info",
-  recurring: "bg-success",
   agent: "bg-warning",
 };

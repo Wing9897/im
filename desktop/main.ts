@@ -55,7 +55,7 @@ let processManager: ProcessManager | null = null;
 let isQuitting = false;
 let activeConnection: ConnectionConfig = { mode: 'host' };
 
-// --- Single Instance Lock (Requirement 1.1, 1.2, 1.3, 1.4) ---
+// --- Single Instance Lock ---
 // Dev mode skips the lock so `npm run dev` always opens a window even if a
 // stale Electron process is still in the tray from a previous session.
 
@@ -82,7 +82,7 @@ if (!gotLock) {
   app.whenReady().then(() => handleAppReady());
 }
 
-// --- Window Creation (Requirements 4.1–4.5, 11.1–11.3) ---
+// --- Window Creation ---
 
 // Frameless window — native title bar hidden; custom in-app title bar via preload API.
 const FRAMELESS_WINDOW_OPTS: BrowserWindowConstructorOptions = {
@@ -203,10 +203,7 @@ async function startHostSidecar(): Promise<boolean> {
       : 'intelligence-monitor-server'
   );
   const userData = app.getPath('userData');
-  const connection = loadConnection(userData);
-  // host + allowLanAccess → bind all interfaces; default remains loopback-only.
-  const bindHost =
-    connection.mode === 'host' && connection.allowLanAccess === true ? '0.0.0.0' : '127.0.0.1';
+  // Always bind all interfaces so LAN clients can reach the API (auth still required).
   processManager = new ProcessManager({
     command: serverExecutable,
     args: [],
@@ -217,7 +214,7 @@ async function startHostSidecar(): Promise<boolean> {
       INTELLIGENCE_MONITOR_DATA_DIR: userData,
       INTELLIGENCE_MONITOR_DB: path.join(userData, 'intelligence_monitor.db'),
       INTELLIGENCE_MONITOR_SECRET_KEY_FILE: path.join(userData, 'secret.key'),
-      INTELLIGENCE_MONITOR_HOST: bindHost,
+      INTELLIGENCE_MONITOR_HOST: '0.0.0.0',
     },
     healthUrl: `http://localhost:${APP_CONFIG.serverPort}/api/v1/health`,
     healthTimeout: 30000,
@@ -225,7 +222,7 @@ async function startHostSidecar(): Promise<boolean> {
     killTimeout: 5000,
   });
 
-  // Wire onUnexpectedExit for notification purposes (Requirement 2.5)
+  // Wire onUnexpectedExit for notification purposes
   processManager.onUnexpectedExit((code) => {
     console.warn(`[main] Server exited unexpectedly with code ${code}`);
     if (Notification.isSupported()) {
@@ -236,7 +233,7 @@ async function startHostSidecar(): Promise<boolean> {
     }
   });
 
-  // Start the server; on failure show error dialog and exit (Requirements 2.1, 3.3, 4.1)
+  // Start the server; on failure show error dialog and exit
   try {
     await processManager.start();
     return true;
@@ -297,7 +294,7 @@ async function handleAppReady(): Promise<void> {
   const retryOnFail = devMode || isClient;
   mainWindow = createWindow(loadUrl, retryOnFail);
 
-  // Register global shortcut: Ctrl+Q triggers quit sequence (Requirements 7.4, 7.5)
+  // Register global shortcut: Ctrl+Q triggers quit sequence
   globalShortcut.register('CommandOrControl+Q', () => {
     app.quit();
   });
@@ -348,7 +345,7 @@ async function handleAppReady(): Promise<void> {
   }
 }
 
-// --- Before Quit (Requirements 7.4, 7.5) ---
+// --- Before Quit ---
 
 app.on('before-quit', (event) => {
   if (!isQuitting) {

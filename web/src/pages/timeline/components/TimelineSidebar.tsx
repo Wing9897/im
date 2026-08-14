@@ -30,7 +30,7 @@ import { useGeneralWorksetLabel } from "../../../domain/timeline/useGeneralWorks
 import { IMPORTANT_EVENT_EMOJI } from "../../../api/timelineImportance";
 
 const asideClass =
-  "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-l border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] pl-lg";
+  "im-surface-panel relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] p-md";
 
 type TimelineSidebarProps = {
   rangeEvents: TimelineItem[];

@@ -14,8 +14,9 @@ calendar day (UTC ``…Z`` conversion would shift East-8 by one day).
 from __future__ import annotations
 
 import re
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from datetime import UTC, date, datetime, timedelta
+from typing import Any, Literal
 
 from server.db.database import Database
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
@@ -125,8 +126,8 @@ def project_item_row(
 
 
 def _window_dates(range_start: datetime, range_end: datetime) -> tuple[str, str, date, date]:
-    start_utc = range_start.astimezone(timezone.utc) if range_start.tzinfo else range_start.replace(tzinfo=timezone.utc)
-    end_utc = range_end.astimezone(timezone.utc) if range_end.tzinfo else range_end.replace(tzinfo=timezone.utc)
+    start_utc = range_start.astimezone(UTC) if range_start.tzinfo else range_start.replace(tzinfo=UTC)
+    end_utc = range_end.astimezone(UTC) if range_end.tzinfo else range_end.replace(tzinfo=UTC)
     # Pad one day so ISO window edges near midnight do not clip DATE rows.
     start_date = (start_utc - timedelta(days=1)).date()
     end_date = (end_utc + timedelta(days=1)).date()

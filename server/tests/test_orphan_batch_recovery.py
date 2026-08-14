@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from server.config import set_configs
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.scheduler.batch_failure import decide_batch_error_outcome
 from server.scheduler.manager import SchedulerManager
 from server.sse import SseBroadcaster

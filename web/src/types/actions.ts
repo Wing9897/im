@@ -9,39 +9,25 @@ type ActionResponse = components["schemas"]["ActionResponse"];
 /** Action type discriminator */
 export type ActionType = ActionResponse["actionType"];
 
+// Embedded-JSON config shapes (OpenAPI components, snake_case = stored JSON):
+// SoT is server/api/schemas/action_configs.py; the wire carries them inside
+// the `configuration` / `triggerConditions` string fields. Normalization of
+// untrusted parses stays in `pages/actions/actionConfigParsers.ts`.
+
 /** Telegram Bot configuration */
-export interface TelegramBotConfig {
-  bot_token: string;
-  chat_id: string;
-}
+export type TelegramBotConfig = components["schemas"]["TelegramBotConfig"];
 
 /** Discord Webhook configuration */
-export interface DiscordWebhookConfig {
-  webhook_url: string;
-}
+export type DiscordWebhookConfig = components["schemas"]["DiscordWebhookConfig"];
 
 /** HTTP Webhook configuration */
-export interface HttpWebhookConfig {
-  url: string;
-  method: "POST" | "PUT";
-  headers: Record<string, string>;
-  include_raw_data: boolean;
-}
+export type HttpWebhookConfig = components["schemas"]["HttpWebhookConfig"];
 
 /** MQTT configuration */
-export interface MqttConfig {
-  broker_url: string;
-  topic: string;
-  username: string;
-  password: string;
-  qos: 0 | 1 | 2;
-}
+export type MqttConfig = components["schemas"]["MqttConfig"];
 
 /** Trigger conditions for an action */
-export interface TriggerConditions {
-  score_threshold?: number;
-  task_id?: string;
-}
+export type TriggerConditions = components["schemas"]["ActionTriggerConditions"];
 
 /** A configured action */
 export type Action = ActionResponse;

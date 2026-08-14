@@ -39,13 +39,12 @@ describe("system API", () => {
     it("fetches public health status", async () => {
       const response = {
         status: "ok",
-        version: "0.1.0-beta.32",
+        version: "0.1.0-beta.33",
         runtimeReady: true,
         schemaVersion: 31,
-        schemaSemver: "0.1.0-beta.32",
+        schemaSemver: "0.1.0-beta.33",
         secretsReady: true,
-        bindHost: "127.0.0.1",
-        lanAccessEnabled: false,
+        bindHost: "0.0.0.0",
       };
       vi.mocked(apiClient.get).mockResolvedValue(response);
 
@@ -120,10 +119,10 @@ describe("system API", () => {
   describe("testAiEngine", () => {
     it("posts draft settings for a minimal generation probe", async () => {
       const draft = {
-        llmProvider: "gemini_compatible" as const,
-        llmBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
-        llmModel: "gemini-3.1-flash-lite",
-        llmApiKey: "test-key",
+        provider: "gemini_compatible" as const,
+        baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+        model: "gemini-3.1-flash-lite",
+        apiKey: "test-key",
       };
       const response = {
         success: true,

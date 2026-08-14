@@ -12,7 +12,8 @@ Semantics:
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from server.db.database import Database
 from server.util import new_id, task_value, utc_now_iso

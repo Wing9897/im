@@ -40,7 +40,7 @@ export function ViewerShell({
         <AlertBanner variant="error" role="alert" className="flex-col items-start">
           <p>{error}</p>
           <Button type="button" variant="primary" size="sm" className="mt-md" onClick={retry}>
-            {t("viewer.reload")}
+            {t("viewer:reload")}
           </Button>
         </AlertBanner>
       </div>

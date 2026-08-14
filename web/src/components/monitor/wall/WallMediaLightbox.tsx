@@ -19,7 +19,7 @@ interface WallMediaLightboxProps {
   onClose: () => void;
 }
 
-/** Full-screen preview for wall carousel media. */
+/** Full-screen media preview — ModalDialog is a card+header+footer shell and cannot represent a chrome-less z-[3000] lightbox. */
 export function WallMediaLightbox({
   open,
   imageUrl,

@@ -6,16 +6,18 @@ import asyncio
 import logging
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.api.a2a_auth import require_full_access_key
+from server.api.agent_errors import agent_http_error, agent_timeout_http_error
 from server.api.deps import get_db
 from server.api.schemas.requests import A2aAgentBody
 from server.api.schemas.responses import AgentChatResponse
 from server.config import get_config_int
+from server.errors import VALIDATION_ERROR, http_error
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +29,12 @@ router = APIRouter(
 
 
 def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:
+    """Flatten the typed body into the plain-dict turns the runtime consumes."""
     text = (body.input or "").strip()
-    prior = list(body.messages or [])
+    messages: list[dict[str, Any]] = [message.model_dump() for message in body.messages]
     if text:
-        return [*prior, {"role": "user", "content": text}]
-    return prior
+        messages.append({"role": "user", "content": text})
+    return messages
 
 
 @router.post(
@@ -42,12 +45,21 @@ def _messages_from_body(body: A2aAgentBody) -> list[dict[str, Any]]:
         "global slot (separate from the assistant slot); same tool surface as the "
         "assistant with a different system prompt. Server runs an internal tool "
         "loop; response is a single shot: final `message` + `toolCalls` summary. "
-        "No session storage. Requires a full household access key (`[\"*\"]`)."
+        'No session storage. Requires a full household access key (`["*"]`). '
+        "Failures are real HTTP errors: 422 empty input, 400/404 liaison slot "
+        "misconfigured, 503 `ai_engine_unreachable`, 502 `ai_engine_failed`, "
+        "504 `agent_timeout`."
     ),
 )
 async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
     db = get_db(request)
     messages = _messages_from_body(body)
+    if not any(str(m.get("role") or "") == "user" for m in messages):
+        raise http_error(
+            422,
+            "Provide `input` text or at least one message with role `user`",
+            error_code=VALIDATION_ERROR,
+        )
     llm: ConfigurableLlmClient | None = None
     try:
         llm = await ConfigurableLlmClient.from_liaison_slot(db)
@@ -58,30 +70,21 @@ async def a2a_agent(request: Request, body: A2aAgentBody) -> AgentChatResponse:
             runtime.chat(messages, locale=body.locale, channel="a2a"),
             timeout=wall,
         )
-        payload = {
-            "message": result.get("message") or "",
-            "sessionId": None,
-            "toolCalls": result.get("toolCalls") or [],
-            "error": result.get("error"),
-        }
-        return AgentChatResponse.model_validate(payload)
-    except asyncio.TimeoutError:
+        return AgentChatResponse.model_validate(
+            {
+                "message": result.get("message") or "",
+                "sessionId": None,
+                "toolCalls": result.get("toolCalls") or [],
+            }
+        )
+    except TimeoutError as exc:
         logger.warning("A2A agent wall-clock timeout")
-        return AgentChatResponse(
-            message="Agent request timed out",
-            sessionId=None,
-            toolCalls=[],
-            error="agent_timeout",
-        )
-    except Exception as exc:  # noqa: BLE001 — agent must degrade gracefully
+        raise agent_timeout_http_error() from exc
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 — classified into 502 / 503
         logger.warning("A2A agent failed: %s", exc)
-        detail = str(exc).strip() or exc.__class__.__name__
-        return AgentChatResponse(
-            message=f"A2A agent failed: {detail}",
-            sessionId=None,
-            toolCalls=[],
-            error=detail,
-        )
+        raise agent_http_error(exc) from exc
     finally:
         if llm is not None:
             await llm.close()

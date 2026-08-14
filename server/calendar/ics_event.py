@@ -5,8 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, Iterable
+from collections.abc import Iterable
+from datetime import UTC, date, datetime, timedelta
+from typing import Any
 
 from server.calendar.rrule import RruleValidationError, validate_rrule
 from server.time_iso import to_iso_z
@@ -47,7 +48,7 @@ def _canonical_value(
         return f"{local}T00:00:00Z", local, True
     local = _local_string(value)
     if value.tzinfo is None:
-        local_zone = datetime.now().astimezone().tzinfo or timezone.utc
+        local_zone = datetime.now().astimezone().tzinfo or UTC
         value = value.replace(tzinfo=local_zone)
         warnings.append(
             IcsWarning(
@@ -84,11 +85,7 @@ def _date_values(component: Any, name: str, warnings: list[Any]) -> tuple[str, .
         properties = [] if raw is None else (raw if isinstance(raw, list) else [raw])
     for prop in properties:
         dts = getattr(prop, "dts", None)
-        entries: Iterable[Any]
-        if dts is not None:
-            entries = dts
-        else:
-            entries = [prop]
+        entries: Iterable[Any] = dts if dts is not None else [prop]
         for entry in entries:
             value = getattr(entry, "dt", entry)
             if isinstance(value, tuple):

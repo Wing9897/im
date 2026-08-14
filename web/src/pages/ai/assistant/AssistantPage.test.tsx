@@ -4,10 +4,59 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
-const { mockStreamAgentChat, mockCreateSpeechPorts } = vi.hoisted(() => ({
+const {
+  mockStreamAgentChat,
+  mockCreateSpeechPorts,
+  mockListLlmProfiles,
+  mockListLlmGlobalSlots,
+} = vi.hoisted(() => ({
   mockStreamAgentChat: vi.fn(),
   mockCreateSpeechPorts: vi.fn(),
+  mockListLlmProfiles: vi.fn(),
+  mockListLlmGlobalSlots: vi.fn(),
 }));
+
+const boundAssistantSlots = [
+  {
+    slot: "assistant" as const,
+    profileId: "profile-default",
+    profileName: "Default",
+    profileProvider: "ollama",
+    profileModel: "llama3",
+  },
+  {
+    slot: "liaison" as const,
+    profileId: null,
+    profileName: null,
+    profileProvider: null,
+    profileModel: null,
+  },
+  {
+    slot: "taskEditor" as const,
+    profileId: null,
+    profileName: null,
+    profileProvider: null,
+    profileModel: null,
+  },
+];
+
+const defaultProfile = {
+  id: "profile-default",
+  name: "Default",
+  provider: "ollama",
+  baseUrl: "http://localhost:11434",
+  model: "llama3",
+  apiKey: "",
+  thinkingEnabled: false,
+  jsonMode: "disabled",
+  webSearchEnabled: true,
+  webSearchProvider: "auto",
+  braveSearchApiKey: "",
+  staffClasses: [],
+  staffInstances: [],
+  createdAt: null,
+  updatedAt: null,
+};
 
 vi.mock("../../../api/agent", () => ({
   streamAgentChat: mockStreamAgentChat,
@@ -15,26 +64,8 @@ vi.mock("../../../api/agent", () => ({
 }));
 
 vi.mock("../../../api/llmProfiles", () => ({
-  listLlmProfiles: vi.fn(async () => [
-    {
-      id: "profile-default",
-      name: "Default",
-      provider: "ollama",
-      baseUrl: "http://localhost:11434",
-      model: "llama3",
-      apiKey: "",
-      thinkingEnabled: false,
-      jsonMode: "disabled",
-      webSearchEnabled: true,
-      webSearchProvider: "auto",
-      braveSearchApiKey: "",
-      isDefault: true,
-      staffClasses: ["assistant"],
-      staffInstances: [],
-      createdAt: null,
-      updatedAt: null,
-    },
-  ]),
+  listLlmProfiles: mockListLlmProfiles,
+  listLlmGlobalSlots: mockListLlmGlobalSlots,
 }));
 
 vi.mock("../../../api/tasks", () => ({
@@ -108,6 +139,10 @@ describe("AssistantPage", () => {
     await ensureZhHantLocale();
     mockStreamAgentChat.mockReset();
     mockCreateSpeechPorts.mockReset();
+    mockListLlmProfiles.mockReset();
+    mockListLlmGlobalSlots.mockReset();
+    mockListLlmProfiles.mockResolvedValue([defaultProfile]);
+    mockListLlmGlobalSlots.mockResolvedValue(boundAssistantSlots);
     collectorStatusState.collectorStatus = "running";
     collectorStatusState.aiEngineStatus = "available";
     collectorStatusState.requestAiStatusRefresh.mockReset();
@@ -161,6 +196,40 @@ describe("AssistantPage", () => {
     ) as HTMLAnchorElement | null;
     expect(link).toBeTruthy();
     expect(link?.getAttribute("href")).toBe("/ai/provider");
+  });
+
+  it("keeps composer usable and has no dedicated LLM profile section", async () => {
+    await renderPage();
+
+    expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
+    expect(container.querySelector("[data-testid='assistant-llm-profile']")).toBeNull();
+    expect(container.querySelector("[data-testid='assistant-llm-profile-unbound']")).toBeNull();
+    expect(container.querySelector("[data-testid='assistant-session-llm-profile']")).toBeNull();
+    expect(container.textContent).not.toContain("LLM 設定檔");
+    expect(container.textContent).not.toContain("前往 AI 設定檔");
+    expect(container.textContent).not.toContain("跟隨助手槽位");
+  });
+
+  it("shows a short unbound-slot banner linking to AI settings", async () => {
+    mockListLlmGlobalSlots.mockResolvedValue(
+      boundAssistantSlots.map((row) =>
+        row.slot === "assistant" ? { ...row, profileId: null } : row,
+      ),
+    );
+
+    await renderPage();
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    const banner = container.querySelector("[data-testid='assistant-slot-unbound']");
+    expect(banner).toBeTruthy();
+    const link = container.querySelector(
+      "[data-testid='assistant-slot-settings-link']",
+    ) as HTMLAnchorElement | null;
+    expect(link?.getAttribute("href")).toBe("/ai/provider");
+    expect(container.querySelector("[data-testid='assistant-draft']")).toBeTruthy();
   });
 
   it("puts chrome inside the card and omits OpsControlBar", async () => {

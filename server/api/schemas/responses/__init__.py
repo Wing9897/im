@@ -19,7 +19,10 @@ from server.api.schemas.responses.auth import (
     AccessKeyListResponse,
     AccessKeyPublicResponse,
     DeviceInfoResponse,
+    DeviceListEntryResponse,
+    DeviceListResponse,
     DeviceSessionTokensResponse,
+    SetupOkResponse,
     SetupStatusResponse,
 )
 from server.api.schemas.responses.events import (
@@ -72,10 +75,32 @@ from server.api.schemas.responses.sources import (
     SourceResponse,
     UpdateTelegramSourceResponse,
 )
+from server.api.schemas.responses.sse import (
+    SseAnalysisCompletedPayload,
+    SseAnalysisFailedPayload,
+    SseAnalysisPausedChangedPayload,
+    SseAnalysisStartedPayload,
+    SseCollectorStatusChangedPayload,
+    SseEventEnvelope,
+    SseMessagesUpdatedPayload,
+    SseOverlapStatistics,
+    SseResourceModifiedPayload,
+    SseSourceStatusChangedPayload,
+)
 from server.api.schemas.responses.system import (
+    AiEngineHealthStatusResponse,
+    AiEngineTestResultResponse,
+    AnalysisAbortResponse,
+    AnalysisPauseResponse,
+    CollectorAdapterStatusResponse,
+    CollectorRestartResponse,
+    CollectorStatusResponse,
     HealthResponse,
     RetentionDeletedCounts,
     RetentionRunResponse,
+    RotateSecretsResponse,
+    RotateSecretsScrubbedCounts,
+    SystemMessageResponse,
     SystemSettingsSnapshot,
 )
 from server.api.schemas.responses.tasks import (
@@ -92,7 +117,9 @@ from server.api.schemas.responses.tasks import (
     TaskDeleteResponse,
     TaskDraftPayload,
     TaskResponse,
+    TaskTemplateResponse,
 )
+from server.api.schemas.responses.theme import FocalBackgroundResponse
 from server.api.schemas.responses.ui_prefs import (
     AssistantSessionSchema,
     AssistantSessionsPutBody,
@@ -122,7 +149,6 @@ from server.api.schemas.responses.viewer import (
     ViewerStatusResponse,
     ViewerTaskResponse,
 )
-from server.api.schemas.responses.theme import FocalBackgroundResponse
 from server.api.schemas.responses.weather import (
     WeatherDailyResponse,
     WeatherForecastResponse,
@@ -134,6 +160,18 @@ __all__ = [
     "AccessKeyDeleteResponse",
     "AccessKeyListResponse",
     "AccessKeyPublicResponse",
+    "AiEngineHealthStatusResponse",
+    "AiEngineTestResultResponse",
+    "AnalysisAbortResponse",
+    "AnalysisPauseResponse",
+    "CollectorAdapterStatusResponse",
+    "CollectorRestartResponse",
+    "CollectorStatusResponse",
+    "RotateSecretsResponse",
+    "RotateSecretsScrubbedCounts",
+    "SetupOkResponse",
+    "SystemMessageResponse",
+    "TaskTemplateResponse",
     "SourceResponse",
     "ActionResponse",
     "ActionTestResponse",
@@ -174,6 +212,8 @@ __all__ = [
     "ChannelResponse",
     "ChannelWithSourceResponse",
     "DeviceInfoResponse",
+    "DeviceListEntryResponse",
+    "DeviceListResponse",
     "DeviceSessionTokensResponse",
     "DiscordBotInfoResponse",
     "DiscordChannelInfoResponse",
@@ -198,6 +238,16 @@ __all__ = [
     "RssFeedInfoResponse",
     "SetupStatusResponse",
     "SourceFilterSelectionSchema",
+    "SseAnalysisCompletedPayload",
+    "SseAnalysisFailedPayload",
+    "SseAnalysisPausedChangedPayload",
+    "SseAnalysisStartedPayload",
+    "SseCollectorStatusChangedPayload",
+    "SseEventEnvelope",
+    "SseMessagesUpdatedPayload",
+    "SseOverlapStatistics",
+    "SseResourceModifiedPayload",
+    "SseSourceStatusChangedPayload",
     "SystemSettingsSnapshot",
     "TaskActivitySpanResponse",
     "TaskAnalysisStatsResponse",

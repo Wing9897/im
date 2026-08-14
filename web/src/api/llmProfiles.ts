@@ -1,6 +1,6 @@
 /**
- * LLM profiles + staff instances — CRUD under /api/v1/llm.
- * Wire types live in `types/llmProfiles` (OpenAPI-aligned); this module is transport only.
+ * LLM profiles + global slots — transport under /api/v1/llm.
+ * Wire types live in `types/llmProfiles` (OpenAPI-aligned).
  * ``staffClasses`` are normalized to ``LlmStaffClass[]`` once at the API boundary.
  */
 
@@ -22,15 +22,9 @@ export type LlmGlobalSlotBinding = {
   profileName: string | null;
   profileProvider: string | null;
   profileModel: string | null;
-  profileIsDefault: boolean | null;
 };
 
 type LlmProfileResponse = components["schemas"]["LlmProfileResponse"];
-
-async function getNormalizedProfile(path: string): Promise<LlmProfile> {
-  const raw = await apiClient.get<LlmProfileResponse>(path);
-  return normalizeLlmProfile(raw);
-}
 
 async function postNormalizedProfile(
   path: string,
@@ -57,12 +51,6 @@ export function createLlmProfile(body: LlmProfileUpsert): Promise<LlmProfile> {
   return postNormalizedProfile("/api/v1/llm/profiles", body);
 }
 
-export function getLlmProfile(profileId: string): Promise<LlmProfile> {
-  return getNormalizedProfile(
-    `/api/v1/llm/profiles/${encodeURIComponent(profileId)}`,
-  );
-}
-
 export function patchLlmProfile(
   profileId: string,
   body: Partial<LlmProfileUpsert>,
@@ -87,17 +75,6 @@ export function copyLlmProfile(
     `/api/v1/llm/profiles/${encodeURIComponent(profileId)}/copy`,
     name ? { name } : {},
   );
-}
-
-export function setDefaultLlmProfile(profileId: string): Promise<LlmProfile> {
-  return postNormalizedProfile(
-    `/api/v1/llm/profiles/${encodeURIComponent(profileId)}/set-default`,
-    {},
-  );
-}
-
-export function listLlmStaffInstances(): Promise<LlmStaffInstance[]> {
-  return apiClient.get<LlmStaffInstance[]>("/api/v1/llm/staff-instances");
 }
 
 export async function listLlmGlobalSlots(): Promise<LlmGlobalSlotBinding[]> {

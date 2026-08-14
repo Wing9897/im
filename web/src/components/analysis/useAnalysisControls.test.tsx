@@ -239,9 +239,13 @@ describe("useAnalysisControls pause with active analyses", () => {
         "batch-1",
         {
           taskId: "task-1",
+          taskName: "",
           batchId: "batch-1",
           startedAt: new Date(Date.now() - 5000).toISOString(),
           messageCount: 10,
+          estimatedTokens: 0,
+          llmProvider: "",
+          llmModel: "",
         },
       ],
     ]);

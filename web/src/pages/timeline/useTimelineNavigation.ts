@@ -51,7 +51,7 @@ function getScaleStart(scale: TimelineScale, date: Date): Date {
   return startOfDay(date);
 }
 
-interface UseTimelineNavigationReturn {
+export interface UseTimelineNavigationReturn {
   /** Current time scale (day / week / month / quarter / year). */
   timeScale: TimelineScale;
   /** Update the time scale. */

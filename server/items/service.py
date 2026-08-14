@@ -108,10 +108,7 @@ async def patch_category(
     if existing is None:
         raise ItemValidationError("category not found")
     next_name = require_category_name(name) if name is not _UNSET else str(existing["name"])
-    if slug is _UNSET:
-        next_slug = existing.get("slug")
-    else:
-        next_slug = normalize_slug(slug)
+    next_slug = existing.get("slug") if slug is _UNSET else normalize_slug(slug)
     next_sort = normalize_sort_order(sort_order) if sort_order is not _UNSET else int(existing.get("sort_order") or 0)
     next_color = normalize_color(color) if color is not _UNSET else existing.get("color")
     if emoji is _UNSET:

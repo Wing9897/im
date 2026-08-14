@@ -7,7 +7,7 @@ import os
 
 import uvicorn
 
-from server.constants import HOST_ENV, SERVICE_PORT
+from server.constants import DEFAULT_BIND_HOST, HOST_ENV, SERVICE_PORT
 from server.main import app
 
 
@@ -20,7 +20,7 @@ def main() -> None:
     # sidecars do not rely on a dynamic module import string.
     uvicorn.run(
         app,
-        host=os.environ.get(HOST_ENV, "127.0.0.1"),
+        host=os.environ.get(HOST_ENV, DEFAULT_BIND_HOST),
         port=SERVICE_PORT,
         log_level="info",
         # Recycle idle HTTP connections; reduces half-open sockets on long Windows dev runs.

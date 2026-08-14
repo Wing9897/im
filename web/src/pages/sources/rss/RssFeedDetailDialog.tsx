@@ -4,8 +4,8 @@ import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
+  detailChromeCardTitleClass,
   rssDetailHeroClass,
-  rssDetailHeroLabelClass,
   rssDetailHeroUrlClass,
   rssDetailPollStatusClass,
 } from "../../../components/detail/classes";
@@ -38,7 +38,7 @@ export function RssFeedDetailDialog({ feed, onClose, onEdit }: RssFeedDetailDial
       onEdit={onEdit}
     >
       <div className={rssDetailHeroClass}>
-        <div className={rssDetailHeroLabelClass}>{t("rss.feedUrlLabel")}</div>
+        <div className={detailChromeCardTitleClass}>{t("rss.feedUrlLabel")}</div>
         <div className={rssDetailHeroUrlClass}>{feed.feedUrl}</div>
       </div>
       <div className={rssDetailPollStatusClass}>

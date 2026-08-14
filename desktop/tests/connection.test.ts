@@ -57,6 +57,23 @@ describe('connection helpers', () => {
         }),
       ).toEqual({ mode: 'host' });
     });
+
+    it('ignores legacy allowLanAccess and does not persist it', () => {
+      expect(
+        normalizeConnection({ mode: 'host', allowLanAccess: true }),
+      ).toEqual({ mode: 'host' });
+      fs.writeFileSync(
+        connectionFilePath(tmpDir),
+        JSON.stringify({ mode: 'host', allowLanAccess: true }, null, 2),
+        'utf8',
+      );
+      expect(loadConnection(tmpDir)).toEqual({ mode: 'host' });
+      const saved = saveConnection(tmpDir, { mode: 'host' });
+      expect(saved).toEqual({ mode: 'host' });
+      expect(JSON.parse(fs.readFileSync(connectionFilePath(tmpDir), 'utf8'))).toEqual({
+        mode: 'host',
+      });
+    });
   });
 
   describe('load/save', () => {

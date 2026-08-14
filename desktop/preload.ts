@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('electronWindow', {
   },
 });
 
-/** Minimal IPC for Wave 1/3 FirstRunWizard / Profile to switch host vs client. */
+/** Minimal IPC for FirstRunWizard / Profile to switch host vs client. */
 contextBridge.exposeInMainWorld('electronConnection', {
   getConnection: () =>
     ipcRenderer.invoke(CONNECTION_CHANNELS.getConnection) as Promise<{

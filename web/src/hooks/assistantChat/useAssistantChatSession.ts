@@ -7,7 +7,6 @@ import {
   getActiveSessionId,
   getSession,
   hydrateAssistantSessions,
-  setSessionLlmProfileId,
   upsertSession,
   type AssistantSessionMessage,
 } from "../../domain/assistant/assistantSessions";
@@ -59,10 +58,9 @@ export interface AssistantChatSession {
   sessionId: string | undefined;
   sessionIdRef: MutableRefObject<string | undefined>;
   setSessionId: (sessionId: string | undefined) => void;
-  /** Optional per-session LLM profile override (undefined → follow staff). */
+  /** Optional persisted per-session override (undefined → global assistant slot). No UI setter. */
   llmProfileId: string | undefined;
   llmProfileIdRef: MutableRefObject<string | undefined>;
-  setLlmProfileId: (llmProfileId: string | null) => void;
   draft: string;
   draftRef: MutableRefObject<string>;
   setDraft: (value: string | ((prev: string) => string)) => void;
@@ -158,20 +156,6 @@ export function useAssistantChatSession(
     return () => window.removeEventListener(ASSISTANT_SESSIONS_CHANGED_EVENT, onChange);
   }, [sendingRef]);
 
-  const setLlmProfileId = useCallback((next: string | null) => {
-    let id = activeSessionIdRef.current;
-    if (!id) {
-      const created = createEmptySession();
-      id = created.id;
-      setActiveSessionId(id);
-      activeSessionIdRef.current = id;
-    }
-    const trimmed = typeof next === "string" ? next.trim() : "";
-    const saved = setSessionLlmProfileId(id, trimmed ? trimmed : null);
-    setLlmProfileIdState(saved?.llmProfileId);
-    llmProfileIdRef.current = saved?.llmProfileId;
-  }, []);
-
   const persistMessages = useCallback(
     (nextMessages: AssistantUiMessage[], nextServerSessionId: string | undefined) => {
       let id = activeSessionIdRef.current;
@@ -215,7 +199,6 @@ export function useAssistantChatSession(
     setSessionId,
     llmProfileId,
     llmProfileIdRef,
-    setLlmProfileId,
     draft,
     draftRef,
     setDraft,

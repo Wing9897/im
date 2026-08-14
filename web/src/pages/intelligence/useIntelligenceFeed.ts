@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { intelligenceSelectedSourcesFilter } from "../../domain/ui/namedSourceFilters";
-import type { SourceFilterSelection } from "../../domain/tasks/sourceFilterSelection";
 import { ANALYSIS_EVENTS_MODES, taskWritesAnalysisEvents } from "../../domain/tasks/analysisModeCapabilities";
 import { resolveAnalysisTaskIdsFromFilter } from "../../domain/tasks/sourceFilterSelection";
-import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
+import {
+  usePersistedSourceFilter,
+  usePruneSourceFilterToCatalog,
+} from "../../hooks/usePersistedSourceFilter";
 import { usePersistedState, usePersistedViewMode } from "../../hooks/usePersistedState";
 import { useRefreshOnAnalysisEvent } from "../../hooks/useRefreshOnAnalysisEvent";
 import { useTimeFilter } from "../../hooks/useTimeFilter";
@@ -54,12 +56,9 @@ export function useIntelligenceFeed() {
     persistDebounceMs: 400,
     storage: "session",
   });
-  const [selectedSources, setSelectedSourcesState] =
-    useState<SourceFilterSelection>(() => intelligenceSelectedSourcesFilter.load());
-  const setSelectedSources = useCallback((ids: SourceFilterSelection) => {
-    setSelectedSourcesState(ids);
-    intelligenceSelectedSourcesFilter.save(ids);
-  }, []);
+  const { selectedSources, setSelectedSources } = usePersistedSourceFilter(
+    intelligenceSelectedSourcesFilter,
+  );
   const [sortMode, setSortMode] = usePersistedState<IntelligenceSortMode>(
     INTELLIGENCE_SORT_STORAGE_KEY,
     "event_time",
@@ -77,22 +76,12 @@ export function useIntelligenceFeed() {
     [tasks],
   );
 
-  useEffect(() => {
-    if (tasksLoading) return;
-    const catalogIds = intelligenceTasks.map((task) => task.id);
-    const worksetIds = [
-      SYSTEM_WORKSET_ID,
-      ...new Set(
-        intelligenceTasks
-          .map((task) => task.worksetId)
-          .filter((id): id is string => typeof id === "string" && id.length > 0),
-      ),
-    ];
-    const pruned = intelligenceSelectedSourcesFilter.prune(selectedSources, catalogIds, worksetIds);
-    if (pruned !== selectedSources) {
-      setSelectedSources(pruned);
-    }
-  }, [intelligenceTasks, selectedSources, setSelectedSources, tasksLoading]);
+  usePruneSourceFilterToCatalog(intelligenceSelectedSourcesFilter, {
+    selectedSources,
+    setSelectedSources,
+    catalog: intelligenceTasks,
+    catalogLoading: tasksLoading,
+  });
 
   const resolvedApiTaskIds = useMemo(() => {
     const fromFilter = resolveAnalysisTaskIdsFromFilter(selectedSources, intelligenceTasks);

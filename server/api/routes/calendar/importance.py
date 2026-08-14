@@ -40,23 +40,24 @@ def _notify_importance(request: Request, source: str, event_id: str, action: str
 async def list_importance(
     request: Request,
     source: str | None = None,
-) -> list[dict]:
+) -> list[TimelineImportanceResponse]:
     db = get_db(request)
     try:
-        return await list_timeline_importance(db, source=source)
+        rows = await list_timeline_importance(db, source=source)
     except TimelineImportanceValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return [TimelineImportanceResponse.model_validate(row) for row in rows]
 
 
 @router.put("", response_model=TimelineImportanceResponse)
-async def put_importance(request: Request, body: TimelineImportanceBody) -> dict:
+async def put_importance(request: Request, body: TimelineImportanceBody) -> TimelineImportanceResponse:
     db = get_db(request)
     try:
         payload = await mark_timeline_important(db, source=body.source, event_id=body.eventId)
     except TimelineImportanceValidationError as exc:
         raise _http_from_validation(exc) from exc
     _notify_importance(request, str(payload["source"]), str(payload["eventId"]), "important")
-    return payload
+    return TimelineImportanceResponse.model_validate(payload)
 
 
 @router.delete("", status_code=204)

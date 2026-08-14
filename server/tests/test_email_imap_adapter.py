@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import json
 import threading
-from datetime import datetime, timezone
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from typing import AsyncIterator
 
 import pytest
 
@@ -154,7 +154,7 @@ def _make_message(*, uid: int, subject: str = "Subject", body: str = "Body", msg
         html="",
         msg_id=msg_id or f"<msg-{uid}@example.com>",
         message_id=msg_id or f"<msg-{uid}@example.com>",
-        date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        date=datetime(2026, 1, 1, tzinfo=UTC),
         from_values=SimpleNamespace(name="Sender", email="sender@example.com"),
         attachments=[],
     )

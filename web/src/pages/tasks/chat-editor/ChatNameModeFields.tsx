@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   SettingsRow,
@@ -23,19 +23,10 @@ import { analysisModeForTaskEmployee } from "../../../domain/tasks/taskEmployee"
 import { WorksetNameDialog } from "../../../components/dialogs/WorksetNameDialog";
 import { useTaskCatalog } from "../../../context/TaskCatalogContext";
 import { createWorkset } from "../../../api/worksets";
-import { listLlmProfiles, type LlmProfile } from "../../../api/llmProfiles";
-import {
-  firstCompleteDefaultProfile,
-  isLlmProfileComplete,
-} from "../../../domain/settings/llmProfileCompleteness";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { useToast } from "../../../context/ToastContext";
 import { toError } from "../../../utils/errors";
-
-export type LlmProfileGate = {
-  ready: boolean;
-  reason: string | null;
-};
+import { useChatEditorLlmProfiles, type LlmProfileGate } from "./useChatEditorLlmProfiles";
 
 interface ChatNameModeFieldsProps {
   name: string;
@@ -66,125 +57,29 @@ export function ChatNameModeFields({
   const { showToast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
-  const [profiles, setProfiles] = useState<LlmProfile[]>([]);
-  const [profilesLoading, setProfilesLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setProfilesLoading(true);
-    listLlmProfiles()
-      .then((list) => {
-        if (cancelled) return;
-        setProfiles(list);
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        showToast(toError(error).message, "error");
-        setProfiles([]);
-      })
-      .finally(() => {
-        if (!cancelled) setProfilesLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [showToast]);
-
-  // Create path: preselect only a *complete* default (never invent a fake selection).
-  useEffect(() => {
-    if (llmProfileId.trim() || profilesLoading) return;
-    const pick = firstCompleteDefaultProfile(profiles);
-    if (pick) onLlmProfileIdChange(pick.id);
-  }, [llmProfileId, profiles, profilesLoading, onLlmProfileIdChange]);
-
-  // If the stored id points at an incomplete / missing profile, clear it on create-like empty pick.
-  useEffect(() => {
-    if (profilesLoading || !llmProfileId.trim()) return;
-    const selected = profiles.find((p) => p.id === llmProfileId);
-    if (selected && !isLlmProfileComplete(selected)) {
-      // Keep id so edit mode can show the incomplete selection + block save;
-      // do not auto-clear — user must pick a complete profile.
-      return;
-    }
-    if (!selected && profiles.length > 0) {
-      // Stale id after profile delete — clear so placeholder shows.
-      onLlmProfileIdChange("");
-    }
-  }, [llmProfileId, profiles, profilesLoading, onLlmProfileIdChange]);
+  const {
+    profilesLoading,
+    profilesEmpty,
+    profilesAllIncomplete,
+    profileOptions,
+    selectedProfile,
+    selectedComplete,
+  } = useChatEditorLlmProfiles({
+    llmProfileId,
+    onLlmProfileIdChange,
+    onLlmProfileGateChange,
+  });
 
   const worksetOptions = useMemo(
     () => [
-      { value: "", label: t("workset.unassigned") },
+      { value: "", label: t("workset:unassigned") },
       ...worksets.map((ws) => ({
         value: ws.id,
-        label: ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name,
+        label: ws.id === SYSTEM_WORKSET_ID ? t("workset:generalName") : ws.name,
       })),
     ],
     [t, worksets],
   );
-
-  const profileOptions = useMemo(
-    () =>
-      profiles.map((profile) => {
-        const complete = isLlmProfileComplete(profile);
-        const base = profile.isDefault
-          ? `${profile.name} (${t("tasks.editor.llmProfileDefaultBadge")})`
-          : profile.name;
-        return {
-          value: profile.id,
-          label: complete
-            ? base
-            : `${base} — ${t("tasks.editor.llmProfileIncompleteBadge")}`,
-          disabled: !complete,
-        };
-      }),
-    [profiles, t],
-  );
-
-  const selectedProfile = profiles.find((p) => p.id === llmProfileId) ?? null;
-  const selectedComplete = selectedProfile ? isLlmProfileComplete(selectedProfile) : false;
-  const hasCompleteProfile = profiles.some(isLlmProfileComplete);
-  const profilesEmpty = !profilesLoading && profiles.length === 0;
-  const profilesAllIncomplete =
-    !profilesLoading && profiles.length > 0 && !hasCompleteProfile;
-
-  useEffect(() => {
-    if (!onLlmProfileGateChange) return;
-    if (profilesLoading) {
-      onLlmProfileGateChange({ ready: false, reason: t("tasks.editor.saveNeeds.llmProfileLoading") });
-      return;
-    }
-    if (profilesEmpty) {
-      onLlmProfileGateChange({
-        ready: false,
-        reason: t("tasks.editor.saveNeeds.llmProfileEmpty"),
-      });
-      return;
-    }
-    if (!llmProfileId.trim() || !selectedProfile) {
-      onLlmProfileGateChange({
-        ready: false,
-        reason: t("tasks.editor.saveNeeds.llmProfile"),
-      });
-      return;
-    }
-    if (!selectedComplete) {
-      onLlmProfileGateChange({
-        ready: false,
-        reason: t("tasks.editor.saveNeeds.llmProfileIncomplete"),
-      });
-      return;
-    }
-    onLlmProfileGateChange({ ready: true, reason: null });
-  }, [
-    llmProfileId,
-    onLlmProfileGateChange,
-    profilesEmpty,
-    profilesLoading,
-    selectedComplete,
-    selectedProfile,
-    t,
-  ]);
 
   const handleCreateWorkset = async (cleaned: string) => {
     setCreateBusy(true);
@@ -192,7 +87,7 @@ export function ChatNameModeFields({
       const created = await createWorkset(cleaned);
       await refreshWorksets();
       onWorksetIdChange(created.id);
-      showToast(t("workset.createdToast", { name: created.name }), "success");
+      showToast(t("workset:createdToast", { name: created.name }), "success");
       setCreateOpen(false);
     } catch (error) {
       showToast(toError(error).message, "error");
@@ -205,21 +100,21 @@ export function ChatNameModeFields({
     <>
       <div className="flex flex-col gap-xs md:col-span-2">
         <span className="text-caption font-semibold tracking-wide text-text-secondary">
-          {t("tasks.editor.foundationTitle")}
+          {t("tasks:editor.foundationTitle")}
         </span>
-        <p className={`m-0 ${formHelpClass}`}>{t("tasks.editor.foundationHint")}</p>
+        <p className={`m-0 ${formHelpClass}`}>{t("tasks:editor.foundationHint")}</p>
       </div>
 
-      <SettingsRow label={t("tasks.editor.nameLabel")} htmlFor="chat-task-name">
+      <SettingsRow label={t("tasks:editor.nameLabel")} htmlFor="chat-task-name">
         <TextField
           id="chat-task-name"
           type="text"
-          placeholder={t("tasks.editor.namePlaceholder")}
+          placeholder={t("tasks:editor.namePlaceholder")}
           value={name}
           onChange={(e) => onNameChange(e.target.value)}
         />
       </SettingsRow>
-      <SettingsRow label={t("workset.ownershipLabel")} htmlFor="chat-workset">
+      <SettingsRow label={t("workset:ownershipLabel")} htmlFor="chat-workset">
         <div className="flex flex-wrap items-center gap-sm">
           <MenuSelect
             id="chat-workset"
@@ -229,7 +124,7 @@ export function ChatNameModeFields({
             options={worksetOptions}
             onChange={(next) => onWorksetIdChange(next || null)}
             className="min-w-0 flex-1"
-            aria-label={t("workset.ownershipLabel")}
+            aria-label={t("workset:ownershipLabel")}
           />
           <Button
             type="button"
@@ -237,7 +132,7 @@ export function ChatNameModeFields({
             size="sm"
             onClick={() => setCreateOpen(true)}
           >
-            {t("workset.create")}
+            {t("workset:create")}
           </Button>
         </div>
       </SettingsRow>
@@ -245,11 +140,11 @@ export function ChatNameModeFields({
       <div
         className="flex flex-col gap-sm md:col-span-2"
         role="group"
-        aria-label={t("tasks.editor.taskTypeLabel")}
+        aria-label={t("tasks:editor.taskTypeLabel")}
         data-testid="task-employee-picker"
       >
         <span className="text-caption font-medium text-text-primary">
-          {t("tasks.editor.taskTypeLabel")}
+          {t("tasks:editor.taskTypeLabel")}
         </span>
         <SelectTileGrid
           columns="repeat(auto-fit, minmax(148px, 1fr))"
@@ -288,20 +183,20 @@ export function ChatNameModeFields({
 
       <div className="md:col-span-2">
         <SettingsRow
-          label={t("tasks.editor.llmProfileLabel")}
+          label={t("tasks:editor.llmProfileLabel")}
           htmlFor={profilesEmpty ? undefined : "chat-llm-profile"}
-          help={t("tasks.editor.llmProfileHint")}
+          help={t("tasks:editor.llmProfileHint")}
         >
           {profilesLoading ? (
             <p className={`m-0 ${formHelpClass}`} data-testid="task-llm-profile-loading">
-              {t("tasks.editor.llmProfileLoading")}
+              {t("tasks:editor.llmProfileLoading")}
             </p>
           ) : profilesEmpty ? (
             <div
               className="flex flex-col items-start gap-sm"
               data-testid="task-llm-profile-empty"
             >
-              <p className={`m-0 ${formHelpClass}`}>{t("tasks.editor.llmProfileEmpty")}</p>
+              <p className={`m-0 ${formHelpClass}`}>{t("tasks:editor.llmProfileEmpty")}</p>
               <a
                 href="/ai/provider"
                 data-testid="task-llm-profile-create-cta"
@@ -311,7 +206,7 @@ export function ChatNameModeFields({
                   "inline-flex no-underline bg-accent border-accent text-[var(--text-on-accent)] font-medium hover:bg-[color-mix(in_srgb,var(--accent)_88%,var(--text-primary))]",
                 ].join(" ")}
               >
-                {t("tasks.editor.llmProfileCreateCta")}
+                {t("tasks:editor.llmProfileCreateCta")}
               </a>
             </div>
           ) : (
@@ -323,21 +218,16 @@ export function ChatNameModeFields({
                   menuPortal
                   value={llmProfileId}
                   options={profileOptions}
-                  placeholder={t("tasks.editor.llmProfilePlaceholder")}
+                  placeholder={t("tasks:editor.llmProfilePlaceholder")}
                   onChange={onLlmProfileIdChange}
                   className="min-w-0 flex-1"
-                  aria-label={t("tasks.editor.llmProfileLabel")}
+                  aria-label={t("tasks:editor.llmProfileLabel")}
                   data-testid="task-llm-profile"
                   disabled={profilesAllIncomplete}
                 />
-                {selectedProfile?.isDefault && selectedComplete ? (
-                  <Badge tone="accent" data-testid="task-llm-profile-default-badge">
-                    {t("tasks.editor.llmProfileDefaultBadge")}
-                  </Badge>
-                ) : null}
                 {selectedProfile && !selectedComplete ? (
                   <Badge tone="warning" data-testid="task-llm-profile-incomplete-badge">
-                    {t("tasks.editor.llmProfileIncompleteBadge")}
+                    {t("tasks:editor.llmProfileIncompleteBadge")}
                   </Badge>
                 ) : null}
               </div>
@@ -347,7 +237,7 @@ export function ChatNameModeFields({
                   data-testid="task-llm-profile-all-incomplete"
                 >
                   <p className={`m-0 ${formHelpClass}`}>
-                    {t("tasks.editor.llmProfileAllIncomplete")}
+                    {t("tasks:editor.llmProfileAllIncomplete")}
                   </p>
                   <a
                     href="/ai/provider"
@@ -357,7 +247,7 @@ export function ChatNameModeFields({
                       "inline-flex no-underline bg-accent border-accent text-[var(--text-on-accent)] font-medium hover:bg-[color-mix(in_srgb,var(--accent)_88%,var(--text-primary))]",
                     ].join(" ")}
                   >
-                    {t("tasks.editor.llmProfileCreateCta")}
+                    {t("tasks:editor.llmProfileCreateCta")}
                   </a>
                 </div>
               ) : null}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isLinkedExpiryTitle } from "../timeline/userEventCalendarKind";
+import { LINKED_EXPIRY_TITLES } from "../timeline/userEventCalendarKind";
 import {
   buildLinkedCalendarCreateInitial,
   buildLinkedCalendarEditInitial,
@@ -22,10 +22,10 @@ describe("linkedCalendarQuickCreate", () => {
     }
   });
 
-  it("detects linked expiry titles and picks primary by createdAt", () => {
-    expect(isLinkedExpiryTitle("到期")).toBe(true);
-    expect(isLinkedExpiryTitle("Expires")).toBe(true);
-    expect(isLinkedExpiryTitle("Renewal")).toBe(false);
+  it("documents linked expiry title presets and picks primary by createdAt", () => {
+    expect(LINKED_EXPIRY_TITLES.has("到期")).toBe(true);
+    expect(LINKED_EXPIRY_TITLES.has("Expires")).toBe(true);
+    expect(LINKED_EXPIRY_TITLES.has("Renewal")).toBe(false);
 
     const events = [
       { id: "b", title: "Expires", kind: "expires", dismissed: false, createdAt: "2026-02-01T00:00:00Z" },

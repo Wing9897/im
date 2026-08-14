@@ -115,15 +115,6 @@
   color: inherit;
 }
 
-.board-queue-stats--clickable {
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.board-queue-stats--clickable:hover .board-queue-stat {
-  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
-}
-
 .board-queue-stat {
   display: flex;
   flex-direction: column;

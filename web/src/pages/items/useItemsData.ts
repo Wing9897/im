@@ -10,7 +10,7 @@ import { listWorksets } from "../../api/worksets";
 import type { Workset } from "../../types/worksets";
 import { formatItemsError } from "../../domain/items/itemErrors";
 import { subscribeResourceModified } from "../../domain/sse/resourceModified";
-import type { ItemsListFetchParams } from "./itemsListModel";
+import type { ItemsListFetchParams } from "../../domain/items/itemsListModel";
 
 export type ItemsReloadOptions = { background?: boolean };
 

@@ -2,10 +2,10 @@ import { useTranslation } from "react-i18next";
 import { Badge, Button } from "../../components/ui";
 import { DetailPresentationShell } from "../../components/detail";
 import {
+  detailChromeBodyGapFieldClass,
+  detailChromeFooterClass,
+  detailChromeHeaderClass,
   detailDialogShellClass,
-  sourceDetailBodyClass,
-  sourceDetailFooterClass,
-  sourceDetailHeaderClass,
   sourceDetailSubtitleClass,
   sourceDetailTitleClass,
 } from "../../components/detail/classes";
@@ -27,31 +27,31 @@ export function ViewerTaskDetailView({
   const { t } = useTranslation("common");
   const content = (
     <>
-      <header className={sourceDetailHeaderClass}>
+      <header className={detailChromeHeaderClass}>
         <h2 className={sourceDetailTitleClass}>{task.name}</h2>
         <div className={sourceDetailSubtitleClass}>
           <Badge tone={task.isActive ? "success" : "neutral"}>
-            {task.isActive ? t("viewer.active") : t("viewer.inactive")}
+            {task.isActive ? t("viewer:active") : t("viewer:inactive")}
           </Badge>
         </div>
       </header>
-      <div className={sourceDetailBodyClass}>
+      <div className={detailChromeBodyGapFieldClass}>
         <div className="text-[11px] text-text-secondary">
-          <div>{t("viewer.taskId", { id: task.id })}</div>
+          <div>{t("viewer:taskId", { id: task.id })}</div>
           <div className="mt-1.5">
-            {t("viewer.lastAnalysis")}
+            {t("viewer:lastAnalysis")}
             {task.lastAnalysisAt
               ? formatOsDateTime(task.lastAnalysisAt)
-              : t("viewer.neverRun")}
+              : t("viewer:neverRun")}
           </div>
           {task.scheduleRrule ? (
             <div className="mt-1.5 font-mono">
-              {t("viewer.schedule", { schedule: task.scheduleRrule })}
+              {t("viewer:schedule", { schedule: task.scheduleRrule })}
             </div>
           ) : null}
         </div>
       </div>
-      <footer className={sourceDetailFooterClass}>
+      <footer className={detailChromeFooterClass}>
         <Button variant="secondary" onClick={onClose}>
           {t("dialog.close")}
         </Button>
@@ -64,7 +64,7 @@ export function ViewerTaskDetailView({
       presentation={presentation === "inline" ? "inline" : "drawer"}
       onClose={onClose}
       className={detailDialogShellClass}
-      aria-label={t("viewer.taskDetailAria", { name: task.name })}
+      aria-label={t("viewer:taskDetailAria", { name: task.name })}
     >
       {content}
     </DetailPresentationShell>

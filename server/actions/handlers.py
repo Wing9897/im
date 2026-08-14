@@ -11,7 +11,6 @@ Every handler returns {"success": bool, "error"?: str} and never raises.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -57,7 +56,7 @@ async def send_telegram_bot(config: dict[str, Any], message: str) -> dict[str, A
                 "success": False,
                 "error": data.get("description", f"HTTP {resp.status}"),
             }
-    except (aiohttp.ClientError, asyncio.TimeoutError) as exc:
+    except (TimeoutError, aiohttp.ClientError) as exc:
         return {"success": False, "error": f"Telegram request failed: {exc}"}
 
 
@@ -81,7 +80,7 @@ async def send_discord_webhook(config: dict[str, Any], message: str) -> dict[str
             except Exception:  # noqa: BLE001 — best-effort error body parse
                 error_msg = f"HTTP {resp.status}"
             return {"success": False, "error": f"Discord webhook error: {error_msg}"}
-    except (aiohttp.ClientError, asyncio.TimeoutError, OutboundUrlError) as exc:
+    except (TimeoutError, aiohttp.ClientError, OutboundUrlError) as exc:
         return {"success": False, "error": f"Discord request failed: {exc}"}
 
 
@@ -112,7 +111,7 @@ async def send_http_webhook(
                 return {"success": True}
             body = await resp.text()
             return {"success": False, "error": f"HTTP {resp.status}: {body[:200]}"}
-    except (aiohttp.ClientError, asyncio.TimeoutError, OutboundUrlError) as exc:
+    except (TimeoutError, aiohttp.ClientError, OutboundUrlError) as exc:
         return {"success": False, "error": f"HTTP webhook request failed: {exc}"}
 
 

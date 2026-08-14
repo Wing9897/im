@@ -4,7 +4,7 @@
 wire and maps 1:1 onto snake_case ``system_config`` keys. Numeric values
 travel as strings; ``analysisPaused`` / ``analysisTraceVerbose`` as booleans.
 
-LLM connection settings live under ``/api/v1/llm/profiles`` (stamp 29+).
+LLM connection settings live under ``/api/v1/llm/profiles``.
 Household API access keys live under ``/api/v1/access-keys`` (not here).
 """
 
@@ -15,6 +15,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
+from server.api.schemas.requests import SystemSettingsUpdateBody
 from server.api.schemas.responses import SystemSettingsSnapshot
 from server.config import (
     get_auto_pause_on_retries_exhausted,
@@ -84,8 +85,11 @@ _SECRET_WIRE_KEYS = {wire_key for wire_key, config_key in _SETTINGS_KEYS.items()
 # Read-only on PUT /settings — analysisPaused: POST /system/analysis/pause.
 _READ_ONLY_WRITE_KEYS = frozenset({"analysisPaused"})
 
+# Update body must stay an all-optional mirror of the snapshot model.
+assert set(SystemSettingsUpdateBody.model_fields) == set(SystemSettingsSnapshot.model_fields)
 
-async def _settings_snapshot(db: Any) -> dict[str, Any]:
+
+async def _settings_snapshot(db: Any) -> SystemSettingsSnapshot:
     snapshot: dict[str, Any] = {}
     for wire_key, config_key in _SETTINGS_KEYS.items():
         if wire_key == "autoPauseOnRetriesExhausted":
@@ -96,60 +100,69 @@ async def _settings_snapshot(db: Any) -> dict[str, Any]:
             snapshot[wire_key] = MASKED_SECRET if raw else ""
         else:
             snapshot[wire_key] = parse_bool(raw) if wire_key in _BOOL_KEYS else raw
-    return snapshot
+    return SystemSettingsSnapshot.model_validate(snapshot)
 
 
 @router.get("/settings", response_model=SystemSettingsSnapshot)
-async def fetch_settings(request: Request) -> dict:
+async def fetch_settings(request: Request) -> SystemSettingsSnapshot:
     return await _settings_snapshot(get_db(request))
 
 
-@router.put("/settings", response_model=SystemSettingsSnapshot)
-async def save_settings(request: Request, body: dict[str, Any]) -> dict:
-    """Partial PUT: known ``SystemSettingsSnapshot`` keys only; unknown → 422."""
-    unknown = sorted(set(body) - set(SystemSettingsSnapshot.model_fields))
-    if unknown:
+def _validated_avatar(wire_key: str, value: Any, max_chars: int) -> str:
+    """Empty clears; otherwise require a bounded ``data:image/`` URL (422)."""
+    avatar = "" if value is None else str(value).strip()
+    if not avatar:
+        return ""
+    if not avatar.startswith("data:image/") or len(avatar) > max_chars:
         raise http_error(
             422,
-            f"Unknown settings key: {unknown[0]}",
+            f"Invalid {wire_key}: must be a data:image/ URL of at most {max_chars} chars",
             error_code=VALIDATION_ERROR,
-            details={"unknownKeys": unknown},
         )
+    return avatar
+
+
+def _validated_max_concurrent_batches(value: Any) -> str:
+    text = ("" if value is None else str(value)).strip()
+    try:
+        int(text)
+    except ValueError:
+        raise http_error(
+            422,
+            "Invalid maxConcurrentBatches: must be an integer",
+            error_code=VALIDATION_ERROR,
+        ) from None
+    return text
+
+
+@router.put("/settings", response_model=SystemSettingsSnapshot)
+async def save_settings(request: Request, body: SystemSettingsUpdateBody) -> SystemSettingsSnapshot:
+    """Partial PUT: known ``SystemSettingsSnapshot`` keys only; unknown → 422 (extra=forbid)."""
+    provided = body.model_dump(exclude_unset=True)
     db = get_db(request)
     updates: dict[str, str] = {}
     for wire_key, config_key in _SETTINGS_KEYS.items():
-        if wire_key not in body or wire_key in _READ_ONLY_WRITE_KEYS:
+        if wire_key not in provided or wire_key in _READ_ONLY_WRITE_KEYS:
             continue
-        value = body[wire_key]
+        value = provided[wire_key]
         if wire_key in _SECRET_WIRE_KEYS and value == MASKED_SECRET:
             continue
         if wire_key in _BOOL_KEYS:
             updates[config_key] = "true" if value else "false"
         elif config_key == "ui_locale":
             updates[config_key] = normalize_ui_locale("" if value is None else str(value))
+        elif config_key == "max_concurrent_batches":
+            updates[config_key] = _validated_max_concurrent_batches(value)
         elif config_key == "assistant_display_name":
             name = ("" if value is None else str(value)).strip()
             updates[config_key] = name[:_ASSISTANT_DISPLAY_NAME_MAX]
         elif config_key == "assistant_avatar":
-            avatar = "" if value is None else str(value).strip()
-            if not avatar:
-                updates[config_key] = ""
-            elif not avatar.startswith("data:image/") or len(avatar) > _ASSISTANT_AVATAR_MAX_CHARS:
-                # Keep previous value by skipping invalid writes.
-                continue
-            else:
-                updates[config_key] = avatar
+            updates[config_key] = _validated_avatar(wire_key, value, _ASSISTANT_AVATAR_MAX_CHARS)
         elif config_key == "user_display_name":
             name = ("" if value is None else str(value)).strip()
             updates[config_key] = name[:_USER_DISPLAY_NAME_MAX]
         elif config_key == "user_avatar":
-            avatar = "" if value is None else str(value).strip()
-            if not avatar:
-                updates[config_key] = ""
-            elif not avatar.startswith("data:image/") or len(avatar) > _USER_AVATAR_MAX_CHARS:
-                continue
-            else:
-                updates[config_key] = avatar
+            updates[config_key] = _validated_avatar(wire_key, value, _USER_AVATAR_MAX_CHARS)
         elif config_key == "user_background":
             text = "" if value is None else str(value)
             updates[config_key] = text[:_USER_BACKGROUND_MAX]
@@ -158,11 +171,8 @@ async def save_settings(request: Request, body: dict[str, Any]) -> dict:
     if updates:
         await set_configs(db, updates)
 
-    # Apply hot-swappable runtime knobs immediately.
+    # Apply hot-swappable runtime knobs immediately (already validated above).
     scheduler = getattr(request.app.state, "scheduler", None)
-    if scheduler is not None and "maxConcurrentBatches" in body:
-        try:
-            await scheduler.update_concurrency_limit(int(body["maxConcurrentBatches"]))
-        except (TypeError, ValueError):
-            pass
+    if scheduler is not None and "max_concurrent_batches" in updates:
+        await scheduler.update_concurrency_limit(int(updates["max_concurrent_batches"]))
     return await _settings_snapshot(db)

@@ -52,7 +52,7 @@ export function PresetGroupSection({
               </div>
               {preset.analysisMode === preferredAnalysisMode && (
                 <div className="mb-1 text-left text-[10px] text-info">
-                  {t("tasks.template.suitable")}
+                  {t("tasks:template.suitable")}
                 </div>
               )}
               <div className="mb-1.5 line-clamp-2 text-[11px] leading-snug text-text-secondary">

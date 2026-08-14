@@ -28,8 +28,7 @@ vi.mock("../../../api/llmProfiles", () => ({
       webSearchEnabled: true,
       webSearchProvider: "auto",
       braveSearchApiKey: "",
-      isDefault: true,
-      staffClasses: [],
+        staffClasses: [],
       staffInstances: [],
       createdAt: null,
       updatedAt: null,
@@ -56,7 +55,7 @@ describe("ChatEditorForm analysis-task contract", () => {
   it.each(["leaderboard", "intel_event", "agent"] as const)(
     "does not show calendar recurrence controls in %s mode",
     async (analysisMode) => {
-      const helperCopy = String(i18n.t("tasks.editor.rruleHint"));
+      const helperCopy = String(i18n.t("tasks:editor.rruleHint"));
       await act(async () => {
         root.render(
           wrapWithI18n(createElement(ChatEditorForm, {

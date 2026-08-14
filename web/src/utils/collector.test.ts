@@ -12,10 +12,13 @@ describe("collector utils", () => {
     it("returns a valid CollectorStatus for known values", () => {
       expect(normalizeCollectorStatus("running")).toBe("running");
       expect(normalizeCollectorStatus("stopped")).toBe("stopped");
-      expect(normalizeCollectorStatus("starting")).toBe("starting");
-      expect(normalizeCollectorStatus("stopping")).toBe("stopping");
-      expect(normalizeCollectorStatus("restarting")).toBe("restarting");
       expect(normalizeCollectorStatus("error")).toBe("error");
+    });
+
+    it("falls back for transition tokens the server never reports", () => {
+      expect(normalizeCollectorStatus("starting")).toBe("stopped");
+      expect(normalizeCollectorStatus("stopping")).toBe("stopped");
+      expect(normalizeCollectorStatus("restarting")).toBe("stopped");
     });
 
     it("trims and lowercases the input", () => {

@@ -7,14 +7,16 @@ import type { AiEngineHealthStatus, AiEngineTestDraft, AiEngineTestResult } from
 
 export type HealthStatus = components["schemas"]["HealthResponse"];
 
+type CollectorStatusResponse = components["schemas"]["CollectorStatusResponse"];
+
 /** Public health probe (backend version + runtime readiness). */
 export function fetchHealth(): Promise<HealthStatus> {
   return apiClient.get<HealthStatus>("/api/v1/health");
 }
 
 /** Fetches the current collector process status. */
-export async function fetchCollectorStatus(): Promise<string> {
-  const response = await apiClient.get<{ status: string }>("/api/v1/system/collector/status");
+export async function fetchCollectorStatus(): Promise<CollectorStatusResponse["status"]> {
+  const response = await apiClient.get<CollectorStatusResponse>("/api/v1/system/collector/status");
   return response.status;
 }
 

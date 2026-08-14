@@ -24,30 +24,30 @@ export function FrequencySelector({
   disabled,
 }: FrequencySelectorProps) {
   const { t } = useTranslation();
-  const unit = t(`tasks.recurrence.intervalUnit.${freq}`);
+  const unit = t(`tasks:recurrence.intervalUnit.${freq}`);
 
   return (
     <>
       <div className="min-w-[160px] flex-1">
-        <FieldLabel htmlFor="recurrence-freq">{t("tasks.recurrence.freqLabel")}</FieldLabel>
+        <FieldLabel htmlFor="recurrence-freq">{t("tasks:recurrence.freqLabel")}</FieldLabel>
         {/* Native select: recurrence editor stays on SelectField for native form density. */}
         <SelectField
           id="recurrence-freq"
           value={freq}
           onChange={(e) => onFreqChange(e.target.value as RecurrenceFreq)}
           disabled={disabled}
-          aria-label={t("tasks.recurrence.freqLabel")}
+          aria-label={t("tasks:recurrence.freqLabel")}
         >
           {FREQ_VALUES.map((value) => (
             <option key={value} value={value}>
-              {t(`tasks.recurrence.${value}`)}
+              {t(`tasks:recurrence.${value}`)}
             </option>
           ))}
         </SelectField>
       </div>
       <div className="min-w-[160px] flex-1">
         <FieldLabel htmlFor="recurrence-interval">
-          {t("tasks.recurrence.intervalLabel", { unit })}
+          {t("tasks:recurrence.intervalLabel", { unit })}
         </FieldLabel>
         <TextField
           id="recurrence-interval"
@@ -60,7 +60,7 @@ export function FrequencySelector({
           onFocus={onFocus}
           onBlur={onBlur}
           disabled={disabled}
-          aria-label={t("tasks.recurrence.intervalAria")}
+          aria-label={t("tasks:recurrence.intervalAria")}
         />
       </div>
     </>

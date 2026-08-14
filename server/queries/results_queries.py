@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from server.analyzer.incremental import count_unanalyzed_messages_by_task, time_range_condition
 from server.db.database import Database
@@ -179,7 +179,7 @@ async def fetch_attention_batches(db: Any) -> list[dict[str, Any]]:
 async def fetch_task_analysis_stats(
     db: Database,
     *,
-    time_range: Optional[str] = None,
+    time_range: str | None = None,
 ) -> list[dict[str, Any]]:
     tasks = await db.fetch_all("SELECT * FROM analysis_tasks ORDER BY created_at ASC")
     if not tasks:

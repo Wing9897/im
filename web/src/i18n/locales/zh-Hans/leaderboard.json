@@ -1,0 +1,37 @@
+{
+  "toolbarAria": "排行榜筛选",
+  "selectTaskAria": "选择排行榜任务",
+  "allBoards": "全部排行榜",
+  "refreshing": "正在更新排行榜",
+  "empty": {
+    "noTasks": {
+      "title": "尚未建立排行榜任务",
+      "description": "先建立至少一个排行榜型任务，系统完成分析后，这里才会出现主题排行。",
+      "hint": "如果你已经有来源和频道，下一步通常是到任务设定新增排行榜任务。"
+    },
+    "filtered": {
+      "title": "这个排行榜任务还没有结果",
+      "description": "目前选取的任务尚未产生排行榜资料，或已被筛选到没有结果。",
+      "hint": "你可以先切回全部排行榜，确认是否只有目前任务暂时没有资料。"
+    },
+    "noResults": {
+      "title": "目前还没有排行榜结果",
+      "description": "等分析批次完成后，这里会整理出最热门的主题与分数。",
+      "hint": "排行榜需要先有成功完成的 leaderboard 分析批次。"
+    }
+  },
+  "goToTasks": "前往任务设定",
+  "viewAll": "查看全部排行榜",
+  "viewAllAria": "查看全部排行榜",
+  "boardAria": "{name} 排行榜",
+  "detailAria": "{name} 排行榜详细内容",
+  "rowAria": "#{rank} {topic}，分数 {score}",
+  "unnamed": "未命名排行榜",
+  "summary": "事件摘要",
+  "noSummary": "尚无摘要",
+  "loadingMessages": "载入相关讯息中…",
+  "relatedMessages": "相关讯息 ({count})",
+  "noMessagesTitle": "尚无相关讯息",
+  "noMessagesDescription": "这个排行项目目前没有可展开的来源讯息。",
+  "loadMessagesFailed": "载入讯息失败：{error}"
+}

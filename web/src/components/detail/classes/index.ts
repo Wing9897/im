@@ -1,4 +1,5 @@
 export * from "./shell";
+export * from "./chrome";
 export * from "./preview";
 export * from "./task";
 export * from "./intelligence";

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from server.agent.runtime import (
@@ -169,9 +170,9 @@ async def test_agent_one_tool_round_then_final_answer(app) -> None:
 
 
 def test_build_system_prompt_includes_injected_clock() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    prompt = build_system_prompt(now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc))
+    prompt = build_system_prompt(now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC))
     assert "2026-07-21T02:30:00Z" in prompt
     assert "系統本地" in prompt
     assert "本輪對話開始時由本機系統時鐘注入一次" in prompt
@@ -187,10 +188,10 @@ def test_build_system_prompt_includes_injected_clock() -> None:
 
 
 def test_build_system_prompt_omits_web_search_when_disabled() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc),
+        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
         web_search_enabled=False,
     )
     assert '"name": "messages.search"' in prompt
@@ -199,10 +200,10 @@ def test_build_system_prompt_omits_web_search_when_disabled() -> None:
 
 
 def test_build_system_prompt_omits_web_search_tool_for_openai_native() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc),
+        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
         web_search_enabled=True,
         web_search_mode="openai_native",
         inject_web_search_tool=False,
@@ -212,10 +213,10 @@ def test_build_system_prompt_omits_web_search_tool_for_openai_native() -> None:
 
 
 def test_build_system_prompt_appends_english_output_directive() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     prompt = build_system_prompt(
-        now=datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc),
+        now=datetime(2026, 7, 21, 2, 30, tzinfo=UTC),
         locale="en",
     )
     assert "Write all user-facing text in English." in prompt
@@ -223,9 +224,9 @@ def test_build_system_prompt_appends_english_output_directive() -> None:
 
 
 def test_build_system_prompt_injects_user_background_when_set() -> None:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    now = datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 21, 2, 30, tzinfo=UTC)
     with_bg = build_system_prompt(now=now, user_background="  Ops lead, SE Asia routes  ")
     assert "（用戶背景：Ops lead, SE Asia routes）" in with_bg
 
@@ -257,7 +258,7 @@ async def test_agent_chat_uses_request_locale_for_system_prompt(app) -> None:
 
 async def test_conversation_clock_frozen_across_turns(app) -> None:
     """New chat samples once; follow-ups with the same sessionId reuse that clock."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     clear_session_clocks()
     db = app.state.db
@@ -270,7 +271,7 @@ async def test_conversation_clock_frozen_across_turns(app) -> None:
         ]
     )
 
-    frozen = datetime(2026, 7, 21, 2, 30, tzinfo=timezone.utc)
+    frozen = datetime(2026, 7, 21, 2, 30, tzinfo=UTC)
     runtime = AgentRuntime(db, mock_llm)
 
     with patch(
@@ -278,7 +279,7 @@ async def test_conversation_clock_frozen_across_turns(app) -> None:
         side_effect=[
             frozen,
             frozen,
-            datetime(2026, 7, 22, 4, 0, tzinfo=timezone.utc),
+            datetime(2026, 7, 22, 4, 0, tzinfo=UTC),
         ],
     ) as clock_mock:
         first = await runtime.chat(
@@ -323,7 +324,7 @@ async def test_agent_retries_without_json_mode_when_provider_rejects_it(app) -> 
 
     runtime = AgentRuntime(db, mock_llm)
     await db.execute(
-        "UPDATE llm_profiles SET json_mode = 'enabled', updated_at = ? WHERE id = ?",
+        "UPDATE llm_profiles SET json_mode = 'json_schema', updated_at = ? WHERE id = ?",
         ("2026-07-01T12:00:00+00:00", "__default__"),
     )
     result = await runtime.chat([{"role": "user", "content": "你好"}])
@@ -344,7 +345,7 @@ async def test_agent_chat_endpoint_with_mocked_llm(app, client) -> None:
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_slot", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat",
             json={"messages": [{"role": "user", "content": "未來有什麼？"}], "sessionId": "s2"},
@@ -380,12 +381,13 @@ async def test_iter_chat_events_emits_tool_progress(app) -> None:
     )
 
     runtime = AgentRuntime(db, mock_llm)
-    events: list[dict] = []
-    async for event in runtime.iter_chat_events(
-        [{"role": "user", "content": "未來有什麼？"}],
-        session_id="sess-stream-1",
-    ):
-        events.append(event)
+    events = [
+        event
+        async for event in runtime.iter_chat_events(
+            [{"role": "user", "content": "未來有什麼？"}],
+            session_id="sess-stream-1",
+        )
+    ]
 
     types = [event["type"] for event in events]
     assert types[0] == "llm_start"
@@ -406,7 +408,7 @@ async def test_agent_chat_stream_endpoint_with_mocked_llm(app, client) -> None:
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_slot", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat/stream",
             json={"messages": [{"role": "user", "content": "未來有什麼？"}], "sessionId": "s-stream"},

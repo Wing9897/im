@@ -9,7 +9,7 @@ import {
   PAGE_SIZE,
   matchesFilters,
   mergeUniqueMessages,
-} from "../monitorPageModel";
+} from "../../../domain/monitor/monitorPageModel";
 import { useMonitorInitialLoad } from "./useMonitorInitialLoad";
 import { useMonitorPaging } from "./useMonitorPaging";
 import { useMonitorSseMerge } from "./useMonitorSseMerge";

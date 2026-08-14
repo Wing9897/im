@@ -25,7 +25,7 @@ function CalendarBoardWidgetContent({
 }: BoardWidgetProps & { mode: CalendarMode }) {
   const { t } = useTranslation();
   const modeAria =
-    mode === "month" ? t("board.calendarWidget.monthAria") : t("board.calendarWidget.dayAria");
+    mode === "month" ? t("board:calendarWidget.monthAria") : t("board:calendarWidget.dayAria");
   const fetcher = useCallback(() => {
     const { startDate, endDate } = mode === "day" ? dayWindowIso() : paddedMonthWindowIso();
     return fetchMergedTimedBoardEvents({
@@ -64,7 +64,7 @@ function CalendarBoardWidgetContent({
     <div className="board-widget-body board-widget-calendar" data-testid="board-calendar-widget">
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.paused", { name: modeAria })}
+        pausedLabel={t("board:common.paused", { name: modeAria })}
         pausedTestId="board-calendar-paused"
         loading={loading && !events}
         error={!events ? error : null}
@@ -72,10 +72,10 @@ function CalendarBoardWidgetContent({
         empty={Array.isArray(events) && timedEvents.length === 0}
         emptyLabel={
           isEmptySourceFilter(selection)
-            ? t("board.common.noTaskSelected")
+            ? t("board:common.noTaskSelected")
             : mode === "month"
-              ? t("board.calendarWidget.emptyMonth")
-              : t("board.calendarWidget.emptyDay")
+              ? t("board:calendarWidget.emptyMonth")
+              : t("board:calendarWidget.emptyDay")
         }
       >
         <CalendarBoardEmbed

@@ -1,6 +1,6 @@
 """Reusable Hypothesis strategies for scheduling-contract property tests."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TypeAlias
 
 import pytest
@@ -62,7 +62,7 @@ def _utc_windows(draw: st.DrawFn) -> UtcWindow:
         st.datetimes(
             min_value=datetime(2000, 1, 1),
             max_value=datetime(2098, 12, 31, 23, 59, 59),
-            timezones=st.just(timezone.utc),
+            timezones=st.just(UTC),
         )
     )
     duration = draw(st.timedeltas(min_value=timedelta(0), max_value=timedelta(days=366)))

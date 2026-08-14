@@ -12,22 +12,22 @@ import {
 } from "../../../components/detail";
 import {
   actionDetailCardClass,
-  actionDetailCardTitleClass,
   actionDetailCardValueClass,
   actionDetailConfigGridClass,
   actionDetailConfigLabelClass,
   actionDetailConfigRowClass,
   actionDetailConfigValueClass,
   actionDetailEnabledClass,
-  actionDetailFooterClass,
-  actionDetailHeaderClass,
-  actionDetailMetaLineClass,
-  actionDetailTitleClass,
-  actionDetailTitleRowClass,
   actionDetailTypeBadgeClass,
+  detailChromeBodyGapFieldClass,
+  detailChromeCardTitleClass,
+  detailChromeFooterClass,
+  detailChromeHeaderClass,
+  detailChromeMetaLineClass,
+  detailChromeTitleClass,
+  detailChromeTitleRowClass,
   detailDialogFlexColClass,
   detailDialogShellClass,
-  sourceDetailBodyClass,
 } from "../../../components/detail/classes";
 import { formatOptionalOsDateTime, formatOsDateTime } from "../../../utils/time";
 
@@ -50,9 +50,9 @@ export function ActionDetailView({
 
   const content = (
     <>
-      <header className={actionDetailHeaderClass}>
-        <div className={actionDetailTitleRowClass}>
-          <h2 className={actionDetailTitleClass}>{action.name}</h2>
+      <header className={detailChromeHeaderClass}>
+        <div className={detailChromeTitleRowClass}>
+          <h2 className={detailChromeTitleClass}>{action.name}</h2>
           <span className={actionDetailTypeBadgeClass}>
             {ACTION_TYPE_LABELS[action.actionType] ?? action.actionType}
           </span>
@@ -62,9 +62,9 @@ export function ActionDetailView({
         </div>
       </header>
 
-      <div className={sourceDetailBodyClass}>
+      <div className={detailChromeBodyGapFieldClass}>
         <div className={actionDetailCardClass}>
-          <div className={actionDetailCardTitleClass}>{t("detail.triggerConditions")}</div>
+          <div className={detailChromeCardTitleClass}>{t("detail.triggerConditions")}</div>
           <div className={actionDetailCardValueClass}>
             {formatTriggerSummary(action, (key, options) =>
               key === "specificTask"
@@ -76,7 +76,7 @@ export function ActionDetailView({
 
         {configFields.length > 0 ? (
           <div className={actionDetailCardClass}>
-            <div className={actionDetailCardTitleClass}>{t("detail.configMasked")}</div>
+            <div className={detailChromeCardTitleClass}>{t("detail.configMasked")}</div>
             <div className={actionDetailConfigGridClass}>
               {configFields.map((field) => (
                 <div key={field.label} className={actionDetailConfigRowClass}>
@@ -88,11 +88,11 @@ export function ActionDetailView({
           </div>
         ) : null}
 
-        <div className={actionDetailMetaLineClass}>
+        <div className={detailChromeMetaLineClass}>
           {t("detail.lastTriggeredPrefix")}
           {formatOptionalOsDateTime(action.lastTriggeredAt, undefined, t("card.never"))}
         </div>
-        <div className={actionDetailMetaLineClass}>
+        <div className={detailChromeMetaLineClass}>
           {t("detail.createdUpdated", {
             created: formatOsDateTime(action.createdAt),
             updated: formatOsDateTime(action.updatedAt),
@@ -100,7 +100,7 @@ export function ActionDetailView({
         </div>
       </div>
 
-      <footer className={actionDetailFooterClass}>
+      <footer className={detailChromeFooterClass}>
         <Button variant="secondary" onClick={onEdit}>
           {t("detail.edit")}
         </Button>

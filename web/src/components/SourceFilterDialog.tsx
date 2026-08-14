@@ -39,7 +39,7 @@ export function SourceFilterDialog({
   variant = "toolbar",
 }: SourceFilterDialogProps) {
   const { t } = useTranslation("common");
-  const prefix = ariaLabelPrefix ?? t("board.shell.sourceFilterPrefix");
+  const prefix = ariaLabelPrefix ?? t("board:shell.sourceFilterPrefix");
   const state = useSourceFilterDialogState({
     tasks,
     worksets,
@@ -55,8 +55,8 @@ export function SourceFilterDialog({
         aria-expanded={state.open}
         aria-haspopup="dialog"
         aria-pressed={state.isFiltering}
-        aria-label={t("board.shell.sourceFilterSelectAria", { prefix })}
-        title={t("board.shell.sourceFilterSelect")}
+        aria-label={t("board:shell.sourceFilterSelectAria", { prefix })}
+        title={t("board:shell.sourceFilterSelect")}
         onClick={() => state.setOpen(true)}
         className={variant === "toolbar" ? "relative" : "relative size-8 p-0"}
         data-testid="board-source-filter"
@@ -75,7 +75,7 @@ export function SourceFilterDialog({
 
       <ModalDialog
         open={state.open}
-        title={t("workset.filterTitle")}
+        title={t("workset:filterTitle")}
         closeAriaLabel={t("dialog.close")}
         onClose={() => state.setOpen(false)}
         testId="source-filter-dialog"
@@ -85,10 +85,10 @@ export function SourceFilterDialog({
           <>
             <div className="flex gap-sm">
               <Button type="button" variant="secondary" onClick={state.selectAll}>
-                {t("workset.selectAll")}
+                {t("workset:selectAll")}
               </Button>
               <Button type="button" variant="secondary" onClick={state.clearAll}>
-                {t("workset.clearAll")}
+                {t("workset:clearAll")}
               </Button>
             </div>
             <Button
@@ -97,7 +97,7 @@ export function SourceFilterDialog({
               onClick={state.apply}
               disabled={state.applyDisabled}
             >
-              {t("workset.apply")}
+              {t("workset:apply")}
             </Button>
           </>
         }

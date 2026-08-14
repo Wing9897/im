@@ -11,7 +11,7 @@ import {
   countActiveMessageFilters,
   describeActiveMessageFilters,
   type ActiveMessageFilterChipKey,
-} from "../monitorPageModel";
+} from "../../../domain/monitor/monitorPageModel";
 import { MONITOR_FILTER_BAR_OPEN_STORAGE_KEY } from "../../../domain/prefs";
 import { FilterPanel } from "./FilterPanel";
 

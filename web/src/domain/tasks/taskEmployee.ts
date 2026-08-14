@@ -1,6 +1,6 @@
 /**
  * Task-type identity aligned 1:1 with analysis_mode enum token.
- * Task-type labels use `tasks.employees.*.name` (not AI staff titles).
+ * Task-type labels use `tasks:employees.*.name` (not AI staff titles).
  *
  * `TaskEmployeeId` is an intentional display alias of `AnalysisMode` — keep the
  * named helpers so call sites stay stable if the two ever diverge.

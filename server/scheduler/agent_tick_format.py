@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from contextlib import suppress
 from typing import Any
 
 from server.analyzer.llm_json import normalize_items, parse_json_response
@@ -70,10 +71,8 @@ def parse_agent_items(final_message: str) -> list[dict[str, Any]]:
     if isinstance(parsed, dict) and "items" not in parsed:
         nested = parsed.get("message")
         if isinstance(nested, str) and nested.strip():
-            try:
+            with suppress(ValueError):
                 parsed = parse_json_response(nested)
-            except ValueError:
-                pass
     return [item for item in normalize_items(parsed) if isinstance(item, dict)]
 
 
@@ -87,10 +86,7 @@ def build_agent_tick_seed(
     wave_total_hint: str | None = None,
 ) -> str:
     """User-turn seed for one drain wave (compat helper for tests)."""
-    if isinstance(cursor, AgentMessageCursor):
-        cursor_label = cursor.timestamp
-    else:
-        cursor_label = cursor
+    cursor_label = cursor.timestamp if isinstance(cursor, AgentMessageCursor) else cursor
     try:
         spec = agent_task_spec_from_row(task, has_channels=True)
     except AgentTaskSpecError:

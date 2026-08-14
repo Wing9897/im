@@ -23,7 +23,7 @@ export function localizeTaskPreset(
   preset: TaskTemplatePreset,
   t: TFunction,
 ): TaskTemplatePreset {
-  const base = `tasks.presets.${preset.id}`;
+  const base = `tasks:presets.${preset.id}`;
   return {
     ...preset,
     name: String(t(`${base}.name`, { defaultValue: preset.name })),

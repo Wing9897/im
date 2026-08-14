@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException
 
@@ -30,11 +30,11 @@ async def message_source_exists(db: Database, source_id: str) -> bool:
 
 
 def build_message_filters(
-    source_ids: Optional[str],
-    time_range: Optional[str],
-    search: Optional[str],
-    platform: Optional[str],
-    channel_ids: Optional[str],
+    source_ids: str | None,
+    time_range: str | None,
+    search: str | None,
+    platform: str | None,
+    channel_ids: str | None,
 ) -> tuple[str, list[Any]]:
     clauses: list[str] = []
     params: list[Any] = []
@@ -75,13 +75,13 @@ def build_message_filters(
 async def fetch_messages_page(
     db: Database,
     *,
-    source_ids: Optional[str] = None,
-    time_range: Optional[str] = None,
-    search: Optional[str] = None,
-    platform: Optional[str] = None,
-    channel_ids: Optional[str] = None,
-    cursor_time: Optional[str] = None,
-    cursor_id: Optional[str] = None,
+    source_ids: str | None = None,
+    time_range: str | None = None,
+    search: str | None = None,
+    platform: str | None = None,
+    channel_ids: str | None = None,
+    cursor_time: str | None = None,
+    cursor_id: str | None = None,
     limit: int = 50,
     include_total: bool = True,
 ) -> dict[str, Any]:

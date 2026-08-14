@@ -7,7 +7,7 @@ It does **not** auto-seed demo data — run seed scripts manually when needed.
 
 Restart after ``--apply`` creates a fresh wipe-only schema at the current stamp
 (SoT: ``server/db/schema_inspect.py`` ``CURRENT_SCHEMA_VERSION`` /
-``SCHEMA_SEMVER``; presently stamp 31 / ``0.1.0-beta.32``).
+``SCHEMA_SEMVER``; presently stamp 33 / ``0.1.0-beta.34``).
 
 ``npm run dev`` / ``npm run dev:server`` start Python without Electron env
 overrides, so the active DB is ``server.paths.default_db_path()``
@@ -33,7 +33,6 @@ from server.paths import (  # noqa: E402
     PRODUCT_DATA_DIRNAME,
     default_data_dir,
     default_db_path,
-    legacy_home_dir,
 )
 
 _DEFAULT_DB_NAME = "intelligence_monitor.db"
@@ -76,7 +75,6 @@ def _candidate_db_paths() -> list[Path]:
         default_db_path(),
         default_data_dir() / "dev-runtime" / _DEFAULT_DB_NAME,
         _REPO_ROOT / _DEFAULT_DB_NAME,
-        legacy_home_dir() / _DEFAULT_DB_NAME,
     ]
 
     env_db = os.environ.get("INTELLIGENCE_MONITOR_DB", "").strip()
@@ -104,12 +102,9 @@ def _sidecar_paths(database: Path) -> list[Path]:
 
 
 def _collect_targets() -> list[Path]:
-    targets: list[Path] = []
-    for database in _candidate_db_paths():
-        for candidate in _sidecar_paths(database):
-            if candidate.is_file():
-                targets.append(candidate)
-    return targets
+    return [
+        candidate for database in _candidate_db_paths() for candidate in _sidecar_paths(database) if candidate.is_file()
+    ]
 
 
 def _print_candidate_inventory() -> Path:

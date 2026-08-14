@@ -6,9 +6,10 @@ Pure and synchronous — operates on already-fetched message dicts.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from server.analyzer.token_budget import apply_token_budget, estimate_tokens
 from server.domain.analysis_modes import LEADERBOARD_MODE
@@ -25,10 +26,7 @@ from server.prompts.locale import normalize_ui_locale, output_language_directive
 
 def build_json_instruction(analysis_mode: str) -> str:
     """Mode-specific strict-JSON output instruction."""
-    if analysis_mode == LEADERBOARD_MODE:
-        schema = LEADERBOARD_SCHEMA_INSTRUCTION
-    else:
-        schema = EVENT_SCHEMA_INSTRUCTION
+    schema = LEADERBOARD_SCHEMA_INSTRUCTION if analysis_mode == LEADERBOARD_MODE else EVENT_SCHEMA_INSTRUCTION
     return JSON_OUTPUT_PREAMBLE + schema
 
 

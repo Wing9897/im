@@ -12,7 +12,6 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -39,7 +38,7 @@ class _CachedStaticFiles(StaticFiles):
         return response
 
 
-def resolve_frontend_dist() -> Optional[Path]:
+def resolve_frontend_dist() -> Path | None:
     """Locate the built frontend: env var first, then the sibling web/dist."""
     env_value = os.environ.get(FRONTEND_DIST_ENV)
     candidates = []

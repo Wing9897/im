@@ -33,7 +33,7 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
         error={!rows ? error : null}
         onRetry={refresh}
         empty={Array.isArray(rows) && rows.length === 0}
-        emptyLabel={t("board.stats.empty")}
+        emptyLabel={t("board:stats.empty")}
       >
         {rows ? (
           <>
@@ -42,11 +42,11 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
               data-testid="board-stats-totals"
             >
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.stats.analyzed")}</span>
+                <span className="board-queue-stat__label">{t("board:stats.analyzed")}</span>
                 <span className="board-queue-stat__value">{totals.analyzed}</span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.stats.unanalyzed")}</span>
+                <span className="board-queue-stat__label">{t("board:stats.unanalyzed")}</span>
                 <span
                   className={
                     totals.unanalyzed > 0
@@ -58,7 +58,7 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
                 </span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.stats.queued")}</span>
+                <span className="board-queue-stat__label">{t("board:stats.queued")}</span>
                 <span
                   className={
                     totals.queued > 0
@@ -79,12 +79,12 @@ export function StatsBoardWidget({ active = true }: BoardWidgetProps) {
                   >
                     <span className="board-widget-list__primary">{row.taskId}</span>
                     <span className="board-widget-list__meta">
-                      {t("board.stats.rowMeta", {
+                      {t("board:stats.rowMeta", {
                         analyzed: row.analyzedCount,
                         unanalyzed: row.unanalyzedCount,
                       })}
                       {row.queuedMessageCount > 0
-                        ? t("board.stats.rowQueued", { count: row.queuedMessageCount })
+                        ? t("board:stats.rowQueued", { count: row.queuedMessageCount })
                         : ""}
                     </span>
                   </div>

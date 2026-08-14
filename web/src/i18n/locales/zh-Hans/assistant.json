@@ -32,18 +32,9 @@
     "label": "目标归属工作集",
     "aria": "助手写入日程的目标归属工作集"
   },
-  "llmProfile": {
-    "label": "LLM 设定档",
-    "followStaff": "跟随助手槽位",
-    "placeholder": "选择 AI 设定档",
-    "loading": "正在加载 AI 设定档…",
-    "empty": "尚无 AI 设定档。请先创建后再与助手对话。",
-    "slotUnbound": "助手角色尚未绑定完整的 AI 设定档。请到「AI 设定档 → 全局 AI 角色」绑定。",
-    "slotCta": "前往 AI 设定档",
-    "allIncomplete": "现有设定档不完整。请先补齐供应商、模型与必要密钥。",
-    "createCta": "创建 AI 设定档",
-    "defaultBadge": "默认",
-    "incompleteBadge": "不完整"
+  "slotUnbound": {
+    "message": "助手全局槽位尚未绑定完整的 AI 设定档。",
+    "link": "前往 AI 设定"
   },
   "mic": {
     "holdToTalk": "按住说话",

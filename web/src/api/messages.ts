@@ -14,17 +14,17 @@ export function queryMessagesPage(query: {
 }): Promise<MessagePage> {
   const params: Record<string, string> = {};
   if (query.filters.sourceIds?.length)
-    params.source_ids = query.filters.sourceIds.join(",");
+    params.sourceIds = query.filters.sourceIds.join(",");
   if (query.filters.channelIds?.length)
-    params.channel_ids = query.filters.channelIds.join(",");
-  if (query.filters.timeRange) params.time_range = query.filters.timeRange;
+    params.channelIds = query.filters.channelIds.join(",");
+  if (query.filters.timeRange) params.timeRange = query.filters.timeRange;
   if (query.filters.search) params.search = query.filters.search;
   if (query.filters.platform) params.platform = query.filters.platform;
   params.limit = String(query.limit);
-  if (query.includeTotal === false) params.include_total = "false";
+  if (query.includeTotal === false) params.includeTotal = "false";
   if (query.cursor) {
-    params.cursor_time = query.cursor.timestamp;
-    params.cursor_id = query.cursor.id;
+    params.cursorTime = query.cursor.timestamp;
+    params.cursorId = query.cursor.id;
   }
   return apiClient.get<MessagePage>("/api/v1/messages/page", params);
 }

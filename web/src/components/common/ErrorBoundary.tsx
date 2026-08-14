@@ -80,7 +80,7 @@ export class ErrorBoundary extends React.Component<
               {i18n.t("ui.errorBoundary.body")}
             </div>
             {this.state.error ? (
-              <pre className="mb-lg max-h-[120px] overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface-base p-md text-left text-caption text-text-muted">
+              <pre className="im-surface-inset mb-lg max-h-[120px] overflow-auto whitespace-pre-wrap break-words rounded-md p-md text-left text-caption text-text-muted">
                 {this.state.error.message}
               </pre>
             ) : null}
@@ -108,7 +108,7 @@ export class ErrorBoundary extends React.Component<
                 {this.state.showStack ? (
                   <pre
                     data-testid="component-stack"
-                    className="mt-xs max-h-[200px] overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface-base p-md text-[10px] text-text-muted"
+                    className="im-surface-inset mt-xs max-h-[200px] overflow-auto whitespace-pre-wrap break-words rounded-md p-md text-[10px] text-text-muted"
                   >
                     {this.state.componentStack}
                   </pre>

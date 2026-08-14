@@ -1,29 +1,9 @@
-/** Task detail dialog class strings. */
+/** Task detail dialog class strings (domain-unique only). */
 
-import { detailDialogScrollBodyClass } from "./shell";
-
-export const taskDetailHeaderClass =
-  "border-b border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] px-md pb-sm pt-md pr-10";
-
-export const taskDetailTitleRowClass =
-  "flex flex-wrap items-start justify-between gap-md";
-
-export const taskDetailTitleClass =
-  "m-0 break-words text-card-title font-bold leading-snug text-text-primary";
-
-export const taskDetailBadgesClass =
-  "mt-[10px] flex flex-wrap items-center gap-sm";
-
-export const taskDetailStatusPillClass =
-  "im-surface-inset inline-flex items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] px-[10px] py-[3px] text-[10px] font-semibold text-text-secondary";
-
-export const taskDetailBodyClass =
-  `flex flex-col gap-md px-md py-md ${detailDialogScrollBodyClass}`;
+import { badgePillBaseClass } from "../../../styles/badgeClasses";
 
 export const taskDetailDescriptionClass =
   "im-surface-inset whitespace-pre-wrap rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[12px_14px] text-body leading-relaxed text-text-primary";
-
-export const taskDetailMetaLineClass = "text-[11px] text-text-muted";
 
 export const taskDetailChannelsClass =
   "overflow-hidden rounded-[10px] border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)]";
@@ -34,5 +14,5 @@ export const taskDetailChannelsToggleClass =
 export const taskDetailChannelsListClass =
   "m-0 list-disc py-sm pl-7 pr-md text-[11px] leading-normal text-text-secondary";
 
-export const taskDetailFooterClass =
-  "im-surface-chrome flex justify-end gap-sm border-t border-[color-mix(in_srgb,var(--surface-border)_80%,transparent)] px-md pb-md pt-md";
+export const taskDetailStatusPillClass =
+  `im-surface-inset ${badgePillBaseClass} gap-1.5 border border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] px-[10px] py-[3px] text-[10px] font-semibold text-text-secondary`;

@@ -48,54 +48,28 @@ export function isWorksetActivitySpan(
 }
 
 /** One completed agent-tick batch for the detail log. */
-export interface AgentTickLogEntry {
-  batchId: string;
-  status: string;
-  /** Server sends a free-form string; `success` / `skipped` / `error` are the known values. */
-  outcome: string;
-  messageCount: number;
-  agentMessage?: string | null;
-  errorMessage?: string | null;
-  toolCalls?: Array<{
-    name: string;
-    arguments?: Record<string, unknown>;
-    resultSummary?: string;
-  }>;
-  createdAt?: string | null;
-  completedAt?: string | null;
-}
+export type AgentTickLogEntry = components["schemas"]["AgentTickLogEntryResponse"];
 
 /** Schedule fire still draining waves (pending/processing batch). */
-export interface AgentTickInFlight {
-  batchId: string;
-  status: string;
-  messageCount: number;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
+export type AgentTickInFlight = components["schemas"]["AgentTickInFlightResponse"];
 
-/** Cursor backlog + recent ticks for a project task. */
-export interface AgentTickStatus {
-  taskId: string;
-  cursorAt: string | null;
-  pendingSinceCursor: number;
-  ticks: AgentTickLogEntry[];
-  inFlight?: AgentTickInFlight | null;
-}
+/** Cursor backlog + recent ticks for an agent task. */
+export type AgentTickStatus = components["schemas"]["AgentTickStatusResponse"];
 
 /** Per-task analysis statistics returned by `/results/stats`. */
 export type TaskAnalysisStats = components["schemas"]["TaskAnalysisStatsResponse"];
 
-/** State of an active (in-progress) analysis */
-export interface ActiveAnalysisState {
-  taskId?: string;
-  taskName?: string;
-  batchId: string;
-  messageCount: number;
-  estimatedTokens?: number | null;
-  llmModel?: string | null;
+/** State of an active (in-progress) analysis.
+ *  Wire fields follow ``SseAnalysisStartedPayload``; ``startedAt`` is a local
+ *  elapsed-time clock and is not on the SSE payload.
+ *  ``webSearchMode`` / ``analysisMode`` from the payload are unused in the UI.
+ */
+export type ActiveAnalysisState = Pick<
+  components["schemas"]["SseAnalysisStartedPayload"],
+  "taskId" | "taskName" | "batchId" | "messageCount" | "estimatedTokens" | "llmProvider" | "llmModel"
+> & {
   startedAt: string;
-}
+};
 
 /** Input type for creating an active analysis state (startedAt is auto-generated) */
 export type ActiveAnalysisInput = Omit<ActiveAnalysisState, "startedAt">;

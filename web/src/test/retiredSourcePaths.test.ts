@@ -71,6 +71,10 @@ const RETIRED_SOURCE_PATHS = [
   "pages/tasks/project",
   "components/task/recurrenceRuleUtils.ts",
   "components/calendar/userEventFormModel.ts",
+  // Wave — rrule helpers moved to domain/schedule/
+  "utils/rrule.ts",
+  "utils/rruleValidation.ts",
+  "utils/rrule.test.ts",
   // Wave H — actions/monitor flat roots nested under hooks/ + components/
   "pages/actions/ActionCard.tsx",
   "pages/actions/ActionTypesTab.tsx",
@@ -86,7 +90,13 @@ const RETIRED_SOURCE_PATHS = [
   "pages/monitor/useMonitorPage.ts",
   "pages/monitor/useMonitorData.ts",
   "pages/monitor/useMonitorHandlers.ts",
+  // Assistant page — per-session LLM profile picker retired (global AI slots only)
+  "components/assistant/AssistantSessionLlmProfileSelect.tsx",
+  "components/assistant/AssistantSessionLlmProfileSelect.test.tsx",
 ] as const;
+
+// Settings → General LAN bind toggle lived inline (no dedicated module).
+// Content bans: retiredUiGuards.test.ts + FORBIDDEN_KEYS general.lanAccess*.
 
 describe("retired source paths", () => {
   it.each(RETIRED_SOURCE_PATHS)("%s stays retired", (relativePath) => {

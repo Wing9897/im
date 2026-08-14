@@ -39,7 +39,7 @@
 - 写入 `user_events` 的 `startTime`/`endTime` 会规范为 UTC `...Z`。
 - `worksetId`：可选；作为本轮 `calendar.create_event` 未显式传 `worksetId` 时的默认归属工作集。`__user__`／空／省略 → builtin 系统工作集「一般」；真实 id 须为已存在的 workset。可选 `taskId` 仅作溯源，不得传 `__user__`。
 - `sessionId`：可选；省略时服务端生成新 id，后续多轮可回传以延续会话标识（历史仍由客户端在 `messages` 中带上；本机纪录另存 SQLite `ui-prefs`／`GET/PUT /api/v1/ui-prefs/assistant/sessions`）。
-- `llmProfileId`：可选；完整的 `llm_profiles.id`。**有值**时本轮助手／runtime 用该档（须完整）；**省略／空**时走全局助手槽位（`llm_global_slot_assistant`，兼容旧 `staff_class=assistant`）。A2A 使用独立的 `liaison` 槽位，不借用助手。会话 JSON 可持久化同名字段作 per-session 覆盖；UI 提供「跟随助手槽位」清除覆盖。任务顾问走 `taskEditor` 全局槽位（见 `/ai/provider`）。
+- `llmProfileId`：可选；完整的 `llm_profiles.id`。**有值**时本轮助手／runtime 用该档（须完整）；**省略／空**时硬绑全局助手槽位（`llm_global_slot_assistant`；未绑定 → 400）。A2A 使用独立的 `liaison` 槽位，不借用助手。会话 JSON／`ui-prefs` 仍可持久化同名字段作 per-session 覆盖，但**助手页 UI 不再提供设定档选择器**（已退役 `AssistantSessionLlmProfileSelect`；绑定请到 `/ai/provider` 全局槽位）。任务顾问走 `taskEditor` 全局槽位（见 `/ai/provider`）。
 - `surface`／`currentTask`：仅任务创建／编辑页的全局助手请求可带 `surface: "task_editor"` 与当前表单草稿 `currentTask`（见下节）。其他路由与 A2A **不**传。
 - **送入模型的上下文压缩（仅助手聊天 Agent）**：服务端在调用 LLM 前按 `agent_history_max_messages`（默认 40）与 `agent_history_max_chars`（默认 48000）省略较旧对话轮次，并插入一行省略提示。UI／SQLite 会话纪录**不裁剪**。可在 **AI 员工介绍 → 助手 LLM** 调整。与「分析调度」无关，也不作用于任务顾问／排行榜分析员／情报任务分析员／后勤 Agent（`analysis_mode=agent` ticks）等其他员工路径。
 
@@ -60,7 +60,20 @@
 }
 ```
 
-`taskConfig` 可选：仅在任务页助手成功委派顾问（`tasks.consult_advisor`）并得到非空表单补丁时出现。LLM 不可用时仍返回上述形状，`message` 为友好错误文案，并可能带 `error` 字段。前端：`web/src/api/agent.ts`（`postAgentChat` / `streamAgentChat`）。
+`taskConfig` 可选：仅在任务页助手成功委派顾问（`tasks.consult_advisor`）并得到非空表单补丁时出现。前端：`web/src/api/agent.ts`（`postAgentChat` / `streamAgentChat`）。
+
+#### 错误（真 HTTP 错误码）
+
+200 只代表成功。LLM／运行期失败回标准结构化错误体 `{error_code, message, details, correlation_id}`，映射集中在 `server/api/agent_errors.py`（与 A2A 共用）：
+
+| Status | `error_code` | 情境 |
+|--------|--------------|------|
+| 400／404 | `VALIDATION_ERROR`／`NOT_FOUND` | 助手槽位未绑定、`llmProfileId` 不存在或设定档不完整 |
+| 502 | `ai_engine_failed` | 上游 LLM 呼叫失败 |
+| 503 | `ai_engine_unreachable` | 供应商主机连不上（本机 Ollama 未启动、埠号错误） |
+| 504 | `agent_timeout` | 整体 wall-clock 逾时 |
+
+前端 `toErrorMessage` 以 `error_code` 查 `web/src/i18n/errorCodes.ts` 取本地化文案。
 
 ### 任务页委派任务顾问 + 双头像
 
@@ -78,13 +91,15 @@
 
 请求体与 `/chat` 相同。响应为 `application/x-ndjson`：每行一个 JSON 事件，**不是** LLM token 流式；LLM 仍按轮 `complete` 等待整段 JSON。
 
+设定档解析在串流开始**之前**完成，所以设定错误与「引擎连不上」同样是真 HTTP 错误码（同上表）；状态码送出后才发生的失败只能走下表的 in-band `error` 行。
+
 | `type` | 含义 |
 |--------|------|
 | `llm_start` | 开始新一轮 LLM 调用（`round` 从 0 起） |
 | `tool_start` | 即将执行工具（`name`, `arguments`） |
 | `tool_done` | 工具执行完成（含 `resultSummary`） |
 | `final` | 最终回答（与 `/chat` 响应同形：`message`, `sessionId`, `toolCalls`） |
-| `error` | 降级/超时（仍可能带 `message`, `error`） |
+| `error` | 串流开始后才发生的失败／逾时（`message` + `error` 码：`ai_engine_unreachable`／`ai_engine_failed`／`agent_timeout`） |
 
 助手 UI 通过 `streamAgentChat` 订阅上述事件，在对话中实时展示工具步骤；最终 `final` 仍写入消息历史。
 
@@ -94,7 +109,7 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item_remind`，`itemDateKind`=`remind` only；occurrence ids 仍为 `item:{id}:remind`）— 与物品关联日历（`source=user` + `itemId`）不同轨。**到期** SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填）；wire `expiresAt`／`remindBeforeDays` **derive-on-read**（非 dismissed、最早 `created_at` 的主关联 expires 事件），无 `items.expires_at`／`remind_before_days` 缓存列、无 write-through — [`server/items/linked_dates.py`](../../server/items/linked_dates.py) 仅有 `is_linked_expiry_kind`；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item_remind`，`itemDateKind`=`remind` only；occurrence ids 仍为 `item:{id}:remind`）— 与物品关联日历（`source=user` + `itemId`）不同轨。**到期** SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填）；wire `expiresAt`／`remindBeforeDays` **derive-on-read**（非 dismissed、最早 `created_at` 的主关联 expires 事件），无 `items.expires_at`／`remind_before_days` 缓存列、无 write-through — 权威为 `user_events.kind=expires`（`server/calendar/user_event_kinds.py` + items derive-on-read）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -135,7 +150,7 @@
 
 ### 日历
 
-统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/calendar/user_events.py`（与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers_read.py`／`handlers_write.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；周期系列写入与 REST 共用 `server/services/recurring_series_writes.py`（单次用户事件仍走 `user_events`）。
+统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/calendar/user_events_write.py`（读取在 `user_events_read.py`；与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers_read.py`／`handlers_write.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；周期系列写入与 REST 共用 `server/services/recurring_series_writes.py`（单次用户事件仍走 `user_events`）。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -171,7 +186,7 @@
 
 ### 联网搜索（可选）
 
-实现：`server/agent/web_search_routing.py`（路由）+ `server/agent/tools_web_search.py` + `server/web_search/` + OpenAI Responses／Gemini grounding（原生路径）。设定来自助手全局槽位绑定的 **`llm_profiles`** 行（`llm_global_slot_assistant`，兼容旧 `staff_class=assistant`），不是 flat 连接型 `system_config`：
+实现：`server/agent/web_search_routing.py`（路由）+ `server/agent/tools_web_search.py` + `server/web_search/` + OpenAI Responses／Gemini grounding（原生路径）。设定来自助手全局槽位绑定的 **`llm_profiles`** 行（`llm_global_slot_assistant`；槽位空 → 400），不是 flat 连接型 `system_config`：
 
 - `web_search_enabled`（默认 `true`）— **总闸**：关闭则不注入 `web.search`，也不开启供应商原生 search tools
 - `web_search_provider`：

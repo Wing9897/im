@@ -100,8 +100,8 @@ class CollectorRetryOrchestrator:
     async def _safe_disconnect(self, source_id: str, adapter: BasePlatformAdapter) -> None:
         try:
             await adapter.disconnect()
-        except Exception as exc:  # noqa: BLE001 — retry cleanup must continue
-            logger.error("Error disconnecting adapter %s: %s", source_id, exc)
+        except Exception:  # noqa: BLE001 — retry cleanup must continue
+            logger.exception("Error disconnecting adapter %s", source_id)
 
     async def _connect_with_db_lock_retry(self, adapter: BasePlatformAdapter) -> None:
         for attempt in range(_AUTO_CONNECT_LOCK_RETRIES):

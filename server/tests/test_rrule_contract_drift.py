@@ -98,7 +98,7 @@ _CALENDAR_ONLY_REQUIREMENTS = {
         r"calendar RRULE series",
         r"not an analysis task",
     ),
-    "web/src/i18n/locales/zh-Hant/common.json": (
+    "web/src/i18n/locales/zh-Hant/tasks.json": (
         r"RRULE 僅用於週期任務重複事件",
         r"不會觸發 AI 分析",
     ),
@@ -171,9 +171,11 @@ def test_rrule_calendar_only_wording_is_present_across_layers() -> None:
     missing: list[str] = []
     for relative_path, required_patterns in _CALENDAR_ONLY_REQUIREMENTS.items():
         text = _read(relative_path)
-        for pattern in required_patterns:
-            if re.search(pattern, text, re.IGNORECASE | re.DOTALL) is None:
-                missing.append(f"{relative_path}: missing recurring-only contract /{pattern}/")
+        missing.extend(
+            f"{relative_path}: missing recurring-only contract /{pattern}/"
+            for pattern in required_patterns
+            if re.search(pattern, text, re.IGNORECASE | re.DOTALL) is None
+        )
 
     assert not missing, "RRULE recurring-only wording drift:\n" + "\n".join(missing)
 

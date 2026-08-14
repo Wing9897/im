@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { TrackableItem } from "../../api/items";
 import type { UserEvent } from "../../api/userEvents";
 import { makeTrackableItem } from "../../test/fixtures/trackableItem";
-import { isLinkedPurchaseEffectiveTitle } from "../timeline/userEventCalendarKind";
+import { LINKED_PURCHASE_EFFECTIVE_TITLES } from "../timeline/userEventCalendarKind";
 import {
   buildItemsFinanceRows,
   financePresetRange,
@@ -23,14 +23,17 @@ function event(overrides: Partial<UserEvent> & { id: string }): UserEvent {
     startTime: overrides.startTime ?? "2026-08-05T10:00:00",
     endTime: overrides.endTime ?? null,
     body: "",
-    location: "",
+    location: null,
     origin: "manual",
     isAllDay: false,
+    taskId: "",
     itemId: overrides.itemId ?? "a",
     worksetId: "__user__",
+    source: "user",
     createdAt: "",
     updatedAt: "",
     dismissed: false,
+    important: false,
     amount: overrides.amount ?? null,
     direction: overrides.direction ?? null,
     ...overrides,
@@ -38,11 +41,11 @@ function event(overrides: Partial<UserEvent> & { id: string }): UserEvent {
 }
 
 describe("itemFinance", () => {
-  it("recognizes purchase/effective linked titles", () => {
-    expect(isLinkedPurchaseEffectiveTitle("Purchased")).toBe(true);
-    expect(isLinkedPurchaseEffectiveTitle("購入")).toBe(true);
-    expect(isLinkedPurchaseEffectiveTitle("生效")).toBe(true);
-    expect(isLinkedPurchaseEffectiveTitle("Expires")).toBe(false);
+  it("documents purchase/effective linked title presets", () => {
+    expect(LINKED_PURCHASE_EFFECTIVE_TITLES.has("Purchased")).toBe(true);
+    expect(LINKED_PURCHASE_EFFECTIVE_TITLES.has("購入")).toBe(true);
+    expect(LINKED_PURCHASE_EFFECTIVE_TITLES.has("生效")).toBe(true);
+    expect(LINKED_PURCHASE_EFFECTIVE_TITLES.has("Expires")).toBe(false);
   });
 
   it("builds rows from event amount and direction", () => {

@@ -333,7 +333,7 @@ async def test_complete_ollama_timeout_propagates() -> None:
     class _SlowResponse:
         async def __aenter__(self) -> _SlowResponse:
             await asyncio.sleep(0.2)
-            raise asyncio.TimeoutError()
+            raise TimeoutError()
 
         async def __aexit__(self, *_args: object) -> bool:
             return False

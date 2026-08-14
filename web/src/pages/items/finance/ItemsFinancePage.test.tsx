@@ -71,7 +71,20 @@ describe("ItemsFinancePage", () => {
       await Promise.resolve();
     });
     expect(container.querySelector('[data-testid="items-finance-page"]')).toBeTruthy();
-    expect(container.querySelector('[data-testid="items-finance-toolbar"]')).toBeTruthy();
+    const toolbar = container.querySelector('[data-testid="items-finance-toolbar"]');
+    expect(toolbar).toBeTruthy();
+    // Same as category hub: omit redundant page title; keep back + filter controls.
+    expect(toolbar!.querySelector("h1")).toBeNull();
+    expect(toolbar!.querySelector("h2")).toBeNull();
+    expect(toolbar!.textContent).not.toContain("物品財務");
+    expect(toolbar!.textContent).not.toContain("Items finance");
+    const headings = Array.from(toolbar!.querySelectorAll("h1, h2, h3")).map(
+      (el) => el.textContent?.trim() ?? "",
+    );
+    expect(headings).not.toContain("物品財務");
+    expect(headings).not.toContain("物品财务");
+    expect(container.querySelector('[data-testid="items-finance-preset"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="items-finance-summary"]')).toBeTruthy();
   });
 });
+

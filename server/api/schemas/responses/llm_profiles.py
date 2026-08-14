@@ -6,10 +6,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from server.llm_global_slots import LlmGlobalSlotWire
+from server.domain.json_modes import JsonModeWire
+from server.domain.llm_providers import LlmProviderWire
+from server.domain.web_search_providers import WebSearchProviderWire
+from server.llm_global_slots import LlmGlobalSlotId
 
-LlmProviderWire = Literal["ollama", "openai_compatible", "gemini_compatible", "openrouter"]
-StaffClassWire = Literal["leaderboard", "intel_event", "agent", "assistant"]
+StaffClassWire = Literal["leaderboard", "intel_event", "agent"]
 
 
 class LlmStaffInstanceResponse(BaseModel):
@@ -25,7 +27,6 @@ class LlmStaffInstanceResponse(BaseModel):
     profileName: str | None = None
     profileProvider: str | None = None
     profileModel: str | None = None
-    profileIsDefault: bool | None = None
 
 
 class LlmProfileResponse(BaseModel):
@@ -38,11 +39,10 @@ class LlmProfileResponse(BaseModel):
     model: str = ""
     apiKey: str = ""
     thinkingEnabled: bool = False
-    jsonMode: str = "disabled"
+    jsonMode: JsonModeWire | str = "disabled"
     webSearchEnabled: bool = True
-    webSearchProvider: str = "auto"
+    webSearchProvider: WebSearchProviderWire | str = "auto"
     braveSearchApiKey: str = ""
-    isDefault: bool = False
     staffClasses: list[str] = Field(default_factory=list)
     staffInstances: list[LlmStaffInstanceResponse] = Field(default_factory=list)
     createdAt: str | None = None
@@ -56,12 +56,11 @@ class LlmProfileDeleteResponse(BaseModel):
 class LlmGlobalSlotBindingResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    slot: LlmGlobalSlotWire
+    slot: LlmGlobalSlotId
     profileId: str | None = None
     profileName: str | None = None
     profileProvider: str | None = None
     profileModel: str | None = None
-    profileIsDefault: bool | None = None
 
 
 class LlmGlobalSlotsResponse(BaseModel):

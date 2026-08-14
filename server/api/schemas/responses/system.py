@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -14,14 +16,118 @@ class HealthResponse(BaseModel):
     schemaVersion: int
     schemaSemver: str
     bindHost: str
-    lanAccessEnabled: bool
+
+
+class AiEngineHealthStatusResponse(BaseModel):
+    """GET ``/system/ai-engine/status`` — LLM provider connectivity probe."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["available", "unavailable"]
+    reason: str | None = None
+    provider: str | None = None
+
+
+class AiEngineTestResultResponse(BaseModel):
+    """POST ``/system/ai-engine/test`` — minimal-token generation probe result."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    success: bool
+    provider: str | None = None
+    model: str | None = None
+    latencyMs: int
+    promptTokens: int
+    completionTokens: int
+    preview: str | None = None
+    error: str | None = None
+
+
+class CollectorAdapterStatusResponse(BaseModel):
+    """One adapter row in ``GET /system/collector/status``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str
+    sourceId: str
+    connected: bool
+    lastError: str | None = None
+    lastConnectedAt: str | None = None
+
+
+class CollectorStatusResponse(BaseModel):
+    """GET ``/system/collector/status`` — aggregate status plus adapter details."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: Literal["running", "stopped", "error"]
+    adapters: list[CollectorAdapterStatusResponse]
+
+
+class CollectorRestartResponse(BaseModel):
+    """POST ``/system/collector/restart`` — message plus pre-restart status."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+    previousStatus: str
+
+
+class AnalysisAbortResponse(BaseModel):
+    """POST ``/system/analysis/abort`` — batches failed by the emergency abort."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    analysisPaused: bool
+    abortedBatchIds: list[str]
+
+
+class AnalysisPauseResponse(BaseModel):
+    """POST ``/system/analysis/pause`` — scheduler pause state after the call."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    analysisPaused: bool
+
+
+class RotateSecretsScrubbedCounts(BaseModel):
+    """Per-category scrub counts, mirroring ``scrub_undecryptable_secrets``."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    system_config: int
+    llm_profiles: int
+    sources: int
+    stale_connected: int
+    actions: int
+
+
+class RotateSecretsResponse(BaseModel):
+    """POST ``/system/rotate-secrets`` — recovery result (data-preserving)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+    secretsReady: bool
+    #: False when the gate cleared but background services could not be
+    #: restarted — the caller must prompt for an application restart.
+    runtimeStarted: bool
+    scrubbed: RotateSecretsScrubbedCounts
+
+
+class SystemMessageResponse(BaseModel):
+    """Message-only ops acknowledgements (reset / restart)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
 
 
 class RetentionDeletedCounts(BaseModel):
     """Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.
 
-    Device-auth and orphan timeline dismissals always run, independent of the
-    configured ``retention_*_days`` windows.
+    Device-auth and orphan timeline dismissals / importance markers always run,
+    independent of the configured ``retention_*_days`` windows.
     """
 
     messages: int
@@ -31,6 +137,7 @@ class RetentionDeletedCounts(BaseModel):
     app_logs: int
     user_events: int
     timeline_dismissals: int
+    timeline_importance: int
     device_access_tokens: int
     device_sessions: int
 

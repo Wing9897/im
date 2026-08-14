@@ -16,7 +16,7 @@ and ``rrule_expand_synthetic``; this module remains the stable public facade.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, tzinfo
+from datetime import UTC, datetime, tzinfo
 
 from dateutil import rrule as du_rrule
 from dateutil import tz as du_tz
@@ -51,4 +51,4 @@ __all__ = [
 
 def _system_tzinfo() -> tzinfo:
     """Host system timezone (same authority as assistant / analysis clocks)."""
-    return datetime.now().astimezone().tzinfo or timezone.utc
+    return datetime.now().astimezone().tzinfo or UTC

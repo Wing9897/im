@@ -49,10 +49,32 @@ describe("EventListPanel", () => {
     expect(dayLabel).not.toBeNull();
     expect(dayLabel?.textContent).not.toContain("本日");
     expect(dayLabel?.textContent).toMatch(/14/);
-    expect(dayLabel?.className).toContain("ml-auto");
+    expect(dayLabel?.className).toContain("self-center");
     expect(filter).not.toBeNull();
-    expect(dayLabel?.parentElement).toBe(filter?.parentElement);
+    const header = container.querySelector(
+      '[data-testid="timeline-event-list-header"]',
+    );
+    expect(header).not.toBeNull();
+    expect(header?.className).toContain("items-center");
+    expect(header?.className).toContain("justify-between");
+    expect(dayLabel?.parentElement).toBe(header);
+    expect(filter?.parentElement).toBe(header);
     expect(container.textContent).not.toContain("全範圍");
+  });
+
+  it("keeps sidebar cards rounded and filter/date row vertically aligned", () => {
+    const dayEvent = makeEvent("day", "Day Event");
+    const { container } = renderPanel({
+      rangeEvents: [dayEvent],
+      focusedDay: new Date(2026, 6, 14),
+    });
+
+    const card = container.querySelector(".im-timeline-event-list-item");
+    expect(card?.className).toContain("rounded-xl");
+    const header = container.querySelector(
+      '[data-testid="timeline-event-list-header"]',
+    );
+    expect(header?.className).toContain("items-center");
   });
 
 

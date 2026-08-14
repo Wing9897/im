@@ -1,9 +1,8 @@
+import { dialogShellClass } from "../dialogs/dialogShellClasses";
+
 /** Wider / taller shell so more compact template cards fit on screen. */
 export const presetDialogContainerClass =
-  "im-dialog-shell im-surface-panel flex max-h-[min(88vh,860px)] w-[min(960px,calc(100vw-32px))] max-w-[min(960px,calc(100vw-32px))] flex-col p-md";
-
-export const presetDialogTitleClass =
-  "mb-sm border-b border-surface-border pb-sm text-[13px] font-semibold text-text-primary";
+  `${dialogShellClass} flex max-h-[min(88vh,860px)] w-[min(960px,calc(100vw-32px))] max-w-[min(960px,calc(100vw-32px))] flex-col`;
 
 export const presetDialogFilterGridClass = "mb-md grid gap-sm";
 
@@ -22,6 +21,3 @@ export const presetDialogGroupGridClass = "grid gap-md";
 /** Dense auto-fill grid for template cards. */
 export const presetDialogTileGridColumns =
   "repeat(auto-fill, minmax(200px, 1fr))";
-
-export const presetDialogFooterClass =
-  "mt-md flex justify-end gap-2.5 border-t border-surface-border pt-md";

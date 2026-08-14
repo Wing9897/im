@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Button } from "../../ui";
 import { DetailDialogShell } from "./DetailDialogShell";
 import {
+  detailChromeBodyGapFieldClass,
+  detailChromeFooterClass,
+  detailChromeHeaderClass,
   detailDialogShellClass,
-  sourceDetailBodyClass,
   sourceDetailErrorBannerClass,
-  sourceDetailFooterClass,
-  sourceDetailHeaderClass,
   sourceDetailSubtitleClass,
   sourceDetailTitleClass,
 } from "../classes";
@@ -41,15 +41,15 @@ export function SourceDetailDialogLayout({
       onClose={onClose}
       aria-label={ariaLabel}
     >
-      <header className={sourceDetailHeaderClass}>
+      <header className={detailChromeHeaderClass}>
         <h2 className={sourceDetailTitleClass}>{title}</h2>
         <div className={sourceDetailSubtitleClass}>{subtitle}</div>
       </header>
-      <div className={sourceDetailBodyClass}>
+      <div className={detailChromeBodyGapFieldClass}>
         {error ? <div className={sourceDetailErrorBannerClass} role="alert">{error}</div> : null}
         {children}
       </div>
-      <footer className={sourceDetailFooterClass}>
+      <footer className={detailChromeFooterClass}>
         {onEdit ? (
           <Button variant="secondary" onClick={onEdit}>
             {t("shared.edit")}

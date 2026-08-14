@@ -60,7 +60,7 @@ export function WorksetNameDialog({
   return (
     <ModalDialog
       open={open}
-      title={mode === "create" ? t("workset.createTitle") : t("workset.renameTitle")}
+      title={mode === "create" ? t("workset:createTitle") : t("workset:renameTitle")}
       closeAriaLabel={t("dialog.close")}
       onClose={() => {
         if (!disabled) onClose();
@@ -78,24 +78,24 @@ export function WorksetNameDialog({
             disabled={disabled || !canSubmit}
             data-testid="workset-name-submit"
           >
-            {mode === "create" ? t("workset.createSubmit") : t("workset.renameSubmit")}
+            {mode === "create" ? t("workset:createSubmit") : t("workset:renameSubmit")}
           </Button>
         </>
       }
     >
       <div className="flex flex-col gap-sm">
         {mode === "create" ? (
-          <p className="m-0 text-caption text-text-muted">{t("workset.createHint")}</p>
+          <p className="m-0 text-caption text-text-muted">{t("workset:createHint")}</p>
         ) : null}
         <label className="text-caption text-text-secondary" htmlFor={fieldId}>
-          {t("workset.nameLabel")}
+          {t("workset:nameLabel")}
         </label>
         <TextField
           id={fieldId}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={t("workset.namePlaceholder")}
-          aria-label={t("workset.nameAria")}
+          placeholder={t("workset:namePlaceholder")}
+          aria-label={t("workset:nameAria")}
           className="w-full"
           autoFocus
           disabled={disabled}

@@ -107,7 +107,7 @@ export function normalizeGanttActivities(spans: TaskActivitySpan[], now = Date.n
       id: rowId,
       label: isWorkset
         ? worksetLabel
-        : span.taskName.trim() || i18n.t("common:board.gantt.unnamedTask"),
+        : span.taskName.trim() || i18n.t("board:gantt.unnamedTask"),
       start,
       end: Math.max(start, end),
       status: span.isActive ? "active" : "complete",
@@ -130,7 +130,7 @@ function eventToSegment(event: TimelineItem, now: number): GanttActivity | null 
       : rawEnd;
   return {
     id: event.id,
-    label: (event.title || "").trim() || i18n.t("common:board.gantt.untitled"),
+    label: (event.title || "").trim() || i18n.t("board:gantt.untitled"),
     start,
     end: Math.max(start, end),
     status: ganttActivityStatusFromRange(end, now),

@@ -27,7 +27,7 @@ import {
   sortItemsList,
   type ItemsFilterKey,
   type ItemsSortKey,
-} from "./itemsListModel";
+} from "../../domain/items/itemsListModel";
 import { buildItemsEditPath, buildItemsNewPath } from "./itemsNavigation";
 import { useItemsData } from "./useItemsData";
 import { useItemsDeepLinks } from "./useItemsDeepLinks";

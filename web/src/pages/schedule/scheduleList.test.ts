@@ -16,6 +16,7 @@ function oneOff(partial: Partial<UserEvent> & Pick<UserEvent, "id" | "title">): 
     taskId: "",
     source: "user",
     dismissed: false,
+    important: false,
     kind: "normal",
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",

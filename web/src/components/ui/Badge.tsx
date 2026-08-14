@@ -1,5 +1,7 @@
 import type { HTMLAttributes } from "react";
 
+import { badgePillBaseClass } from "../../styles/badgeClasses";
+
 export type BadgeTone =
   | "neutral"
   | "accent"
@@ -25,7 +27,7 @@ const toneClass: Record<BadgeTone, string> = {
 /** Compact pill badge for status and mode labels. */
 export function Badge({ tone = "neutral", className, ...rest }: BadgeProps) {
   const cls = [
-    "inline-flex items-center rounded-full px-sm py-0.5 text-card-meta font-semibold uppercase tracking-wide",
+    `${badgePillBaseClass} px-sm py-0.5 text-card-meta font-semibold uppercase tracking-wide`,
     toneClass[tone],
     className ?? "",
   ]

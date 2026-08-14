@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db, publish_resource_modified, require_row
@@ -38,13 +36,13 @@ def _clean_name(name: str) -> str:
 
 
 @router.get("", response_model=list[WorksetResponse])
-async def list_worksets(request: Request) -> list[dict[str, Any]]:
+async def list_worksets(request: Request) -> list[WorksetResponse]:
     rows = await fetch_all_workset_rows(get_db(request))
-    return [serialize_workset(row) for row in rows]
+    return [WorksetResponse.model_validate(serialize_workset(row)) for row in rows]
 
 
 @router.post("", status_code=201, response_model=WorksetResponse)
-async def create_workset(request: Request, body: WorksetCreateBody) -> dict[str, Any]:
+async def create_workset(request: Request, body: WorksetCreateBody) -> WorksetResponse:
     name = _clean_name(body.name)
     workset_id = new_id()
     if workset_id == SYSTEM_WORKSET_ID:
@@ -55,17 +53,17 @@ async def create_workset(request: Request, body: WorksetCreateBody) -> dict[str,
         await insert_workset(TransactionDb(conn), workset_id=workset_id, name=name, now=now)
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "created")
-    return serialize_workset(row)
+    return WorksetResponse.model_validate(serialize_workset(row))
 
 
 @router.get("/{workset_id}", response_model=WorksetResponse)
-async def get_workset(request: Request, workset_id: str) -> dict[str, Any]:
+async def get_workset(request: Request, workset_id: str) -> WorksetResponse:
     row = await require_row(get_db(request), "worksets", "Workset", workset_id)
-    return serialize_workset(row)
+    return WorksetResponse.model_validate(serialize_workset(row))
 
 
 @router.put("/{workset_id}", response_model=WorksetResponse)
-async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody) -> dict[str, Any]:
+async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody) -> WorksetResponse:
     name = _clean_name(body.name)
     db = get_db(request)
     existing = await fetch_workset_row(db, workset_id)
@@ -82,11 +80,11 @@ async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody
         await update_workset(TransactionDb(conn), workset_id=workset_id, name=name, now=now)
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "updated")
-    return serialize_workset(row)
+    return WorksetResponse.model_validate(serialize_workset(row))
 
 
 @router.delete("/{workset_id}", response_model=WorksetDeleteResponse)
-async def remove_workset(request: Request, workset_id: str) -> dict[str, bool]:
+async def remove_workset(request: Request, workset_id: str) -> WorksetDeleteResponse:
     db = get_db(request)
     existing = await fetch_workset_row(db, workset_id)
     if existing is None:
@@ -100,4 +98,4 @@ async def remove_workset(request: Request, workset_id: str) -> dict[str, bool]:
     async with db.transaction() as conn:
         await delete_workset(TransactionDb(conn), workset_id)
     _notify(request, workset_id, "deleted")
-    return {"ok": True}
+    return WorksetDeleteResponse(ok=True)

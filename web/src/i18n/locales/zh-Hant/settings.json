@@ -62,11 +62,6 @@
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
     "versionLoading": "載入中…",
     "versionUnavailable": "無法取得",
-    "lanAccessLabel": "允許區域網路存取",
-    "lanAccessHelp": "將本機服務綁定到所有網卡（0.0.0.0），以便區網其他裝置以遠端用戶端連線。預設僅本機迴環（127.0.0.1）。變更後會重啟應用。若經 port-forward 暴露到公網，須在前面加 Caddy/Nginx 等 TLS 反向代理——應用本身不處理 HTTPS。",
-    "lanAccessEnabled": "已開啟區域網路存取（即將重啟）",
-    "lanAccessDisabled": "已關閉區域網路存取（即將重啟）",
-    "lanAccessRestarting": "正在重啟以套用綁定位址…",
     "advancedSectionTitle": "進階與維運",
     "debug": {
       "sectionTitle": "除錯與診斷",
@@ -609,7 +604,6 @@
     "edit": "編輯設定檔",
     "copy": "複製設定檔",
     "delete": "刪除設定檔",
-    "setDefault": "設為預設",
     "cancel": "取消",
     "save": "儲存設定檔",
     "dialogCreateTitle": "新建 AI 設定檔",
@@ -622,16 +616,12 @@
     "namePlaceholder": "例如：本機 Ollama",
     "nameRequired": "請填寫設定檔名稱。",
     "apiKeyRequired": "此供應商需要 API 金鑰。",
-    "defaultLabel": "預設設定檔",
-    "defaultHelp": "新任務未指定設定檔時使用。",
-    "defaultBadge": "預設",
     "staffClassesLabel": "任務員工類別",
     "staffClassesHelp": "哪些任務模式角色可使用此設定檔。任務仍須在表單挑選 llmProfileId。助手／A2A／任務顧問請用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析員",
       "intel_event": "情報事件分析員",
-      "agent": "專案經理",
-      "assistant": "助手"
+      "agent": "專案經理"
     },
     "noStaffClasses": "未綁定任務員工類別",
     "noModel": "未設定模型",
@@ -640,8 +630,6 @@
     "updated": "設定檔已更新",
     "copied": "設定檔已複製",
     "deleted": "設定檔已刪除",
-    "setDefaultSuccess": "預設設定檔已更新",
-    "cannotDeleteDefault": "請先將其他設定檔設為預設，再刪除此檔。",
     "deleteConfirm": "確定刪除設定檔「{name}」？其上的任務員工綁定會移除；若全局槽位使用此檔也會解除。"
   }
 }

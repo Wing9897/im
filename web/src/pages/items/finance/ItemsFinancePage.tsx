@@ -65,7 +65,6 @@ export function ItemsFinancePage() {
   return (
     <div className={itemsPageFillClass} data-testid="items-finance-page">
       <ItemsPageChrome
-        title={t("finance.pageTitle")}
         back={{
           onClick: () => navigate("/items"),
           ariaLabel: t("backToCategories"),

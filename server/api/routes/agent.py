@@ -5,14 +5,20 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from starlette.responses import StreamingResponse
 
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
+from server.api.agent_errors import (
+    agent_http_error,
+    agent_stream_error_event,
+    agent_stream_timeout_event,
+    agent_timeout_http_error,
+)
 from server.api.deps import API_DEPS, get_db
 from server.api.schemas.requests import AgentChatBody
 from server.api.schemas.responses import AgentChatResponse
@@ -22,45 +28,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/agent", tags=["agent"], dependencies=API_DEPS)
 
-_UNREACHABLE_MARKERS = (
-    "cannot connect",
-    "connection refused",
-    "connect call failed",
-    "name or service not known",
-    "nodename nor servname",
-    "failed to establish a new connection",
-    "server disconnected",
-    "clientconnectorerror",
-    "客户端连接",
-    "遠端電腦拒絕",
-    "远程计算机拒绝",
-)
-
-
-def _agent_error_payload(exc: BaseException, *, session_id: Optional[str]) -> dict[str, Any]:
-    detail = str(exc).strip() or exc.__class__.__name__
-    lowered = f"{detail} {exc.__class__.__name__}".lower()
-    unreachable = any(marker in lowered for marker in _UNREACHABLE_MARKERS)
-    error_code = "ai_engine_unreachable" if unreachable else detail
-    message = (
-        "AI 引擎目前無法完成助手請求（設定頁「AI 測試」成功仍可能失敗："
-        "助手需要較長對話與 JSON 工具協議）。"
-        f" 詳情：{detail}"
-    )
-    return {
-        "message": message,
-        "sessionId": session_id,
-        "toolCalls": [],
-        "error": error_code,
-    }
-
 
 @router.post("/chat", response_model=AgentChatResponse)
 async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse:
+    """Run one assistant turn.
+
+    LLM failures are real HTTP errors (504 timeout / 503 unreachable / 502
+    other upstream failure); profile problems keep their own 400 / 404.
+    """
     db = get_db(request)
     llm: ConfigurableLlmClient | None = None
     try:
-        llm = await ConfigurableLlmClient.from_assistant_staff(
+        llm = await ConfigurableLlmClient.from_assistant_slot(
             db,
             profile_id=body.llmProfileId,
         )
@@ -69,7 +48,7 @@ async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse
         wall = agent_wall_timeout_seconds(per_call)
         result = await asyncio.wait_for(
             runtime.chat(
-                body.messages,
+                [message.model_dump() for message in body.messages],
                 session_id=body.sessionId,
                 locale=body.locale,
                 workset_id=body.worksetId,
@@ -79,17 +58,14 @@ async def agent_chat(request: Request, body: AgentChatBody) -> AgentChatResponse
             timeout=wall,
         )
         return AgentChatResponse.model_validate(result)
-    except asyncio.TimeoutError:
+    except TimeoutError as exc:
         logger.warning("Agent chat wall-clock timeout (session=%s)", body.sessionId)
-        return AgentChatResponse(
-            message="Agent request timed out",
-            sessionId=body.sessionId,
-            toolCalls=[],
-            error="agent_timeout",
-        )
-    except Exception as exc:  # noqa: BLE001 — chat must degrade gracefully
+        raise agent_timeout_http_error() from exc
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 — classified into 502 / 503 below
         logger.warning("Agent chat failed: %s", exc)
-        return AgentChatResponse.model_validate(_agent_error_payload(exc, session_id=body.sessionId))
+        raise agent_http_error(exc) from exc
     finally:
         if llm is not None:
             await llm.close()
@@ -102,16 +78,26 @@ async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingR
     Each line is one JSON object with a ``type`` field:
     ``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.
     LLM providers stay non-streaming; only tool execution progress is streamed.
+
+    Resolving the profile happens before the response starts, so configuration
+    errors are real HTTP errors. Once the 200 is committed, later failures can
+    only be reported in band as an ``error`` line.
     """
     db = get_db(request)
 
+    try:
+        llm = await ConfigurableLlmClient.from_assistant_slot(
+            db,
+            profile_id=body.llmProfileId,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 — classified into 502 / 503
+        logger.warning("Agent chat stream setup failed: %s", exc)
+        raise agent_http_error(exc) from exc
+
     async def event_generator() -> AsyncIterator[bytes]:
-        llm: ConfigurableLlmClient | None = None
         try:
-            llm = await ConfigurableLlmClient.from_assistant_staff(
-                db,
-                profile_id=body.llmProfileId,
-            )
             runtime = AgentRuntime(db, llm, broadcaster=request.app.state.broadcaster)
             per_call = await get_config_int(db, "llm_generation_timeout")
             wall = agent_wall_timeout_seconds(per_call)
@@ -119,7 +105,7 @@ async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingR
             try:
                 async with asyncio.timeout(wall):
                     async for event in runtime.iter_chat_events(
-                        body.messages,
+                        [message.model_dump() for message in body.messages],
                         session_id=body.sessionId,
                         locale=body.locale,
                         workset_id=body.worksetId,
@@ -131,21 +117,14 @@ async def agent_chat_stream(request: Request, body: AgentChatBody) -> StreamingR
                         yield (json.dumps(event, ensure_ascii=False) + "\n").encode("utf-8")
             except TimeoutError:
                 logger.warning("Agent chat stream wall-clock timeout (session=%s)", body.sessionId)
-                payload = {
-                    "type": "error",
-                    "message": "Agent request timed out",
-                    "sessionId": body.sessionId,
-                    "toolCalls": [],
-                    "error": "agent_timeout",
-                }
+                payload = agent_stream_timeout_event(session_id=body.sessionId)
                 yield (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
-        except Exception as exc:  # noqa: BLE001 — stream must degrade gracefully
+        except Exception as exc:  # noqa: BLE001 — status is committed; report in band
             logger.warning("Agent chat stream failed: %s", exc)
-            payload = {"type": "error", **_agent_error_payload(exc, session_id=body.sessionId)}
+            payload = agent_stream_error_event(exc, session_id=body.sessionId)
             yield (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
         finally:
-            if llm is not None:
-                await llm.close()
+            await llm.close()
 
     return StreamingResponse(
         event_generator(),

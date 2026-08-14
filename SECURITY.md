@@ -21,10 +21,10 @@ release authority and is not rewritten by CI bots.
 Intelligence Monitor is a self-hosted, single-household application. It is designed
 to run on the operator's own machine, not as a multi-tenant service.
 
-- **Network exposure** — the server binds `127.0.0.1` by default. It is only reachable
-  from other machines if you deliberately set `INTELLIGENCE_MONITOR_HOST=0.0.0.0`
-  (or a specific NIC) and open the firewall for port `18820`. There is no built-in TLS;
-  if you expose it beyond loopback, put it behind a reverse proxy you control.
+- **Network exposure** — the server binds `0.0.0.0` by default (LAN-reachable when the
+  firewall allows port `18820`). Remote clients still need a device session or API key.
+  There is no built-in TLS; LAN-only use does not require TLS. If you expose it to the
+  public internet (port-forward), put it behind a reverse proxy you control.
 - **Data at rest** — everything lives in one SQLite file under the local data root
   (`{DATA_DIR}/intelligence_monitor.db`). Source credentials (Telegram sessions, IMAP,
   MQTT, provider keys) are encrypted with Fernet using `{DATA_DIR}/secret.key`, and the

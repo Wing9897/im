@@ -8,6 +8,14 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any
 
+from geopy.exc import (
+    GeocoderQueryError,
+    GeocoderServiceError,
+    GeocoderTimedOut,
+    GeocoderUnavailable,
+    GeopyError,
+)
+
 from server.analyzer.geocoding_location import (
     UNKNOWN_LOCATION,
     UNSPECIFIC_COORDINATES,
@@ -69,24 +77,15 @@ def _ensure_geocoder() -> Any:
     return _rate_limited_geocode
 
 
-def _geocode_single(location: str, rate_limited_geocode: Any) -> tuple[float, float]:
+def _geocode_single(location: str, rate_limited_geocode: Any) -> tuple[float, float] | None:
+    """Resolve one query, or ``None`` when the place could not be geocoded."""
     if _is_unknown_location_token(location):
         return UNSPECIFIC_COORDINATES
     try:
-        from geopy.exc import (
-            GeocoderQueryError,
-            GeocoderServiceError,
-            GeocoderTimedOut,
-            GeocoderUnavailable,
-            GeopyError,
-        )
-
         result = rate_limited_geocode(location)
         if result is not None:
             return (result.latitude, result.longitude)
-        return UNSPECIFIC_COORDINATES
-    except ImportError:
-        return UNSPECIFIC_COORDINATES
+        return None
     except (
         GeocoderTimedOut,
         GeocoderServiceError,
@@ -94,10 +93,10 @@ def _geocode_single(location: str, rate_limited_geocode: Any) -> tuple[float, fl
         GeocoderQueryError,
         GeopyError,
         OSError,
-        asyncio.TimeoutError,
+        TimeoutError,
     ):
         logger.warning("Geocoding failed for location %r", location, exc_info=True)
-        return UNSPECIFIC_COORDINATES
+        return None
 
 
 def _resolve_location(item: dict[str, Any]) -> str:
@@ -165,12 +164,10 @@ def _geocode_item(item: dict[str, Any], geocode_fn: Any) -> Any:
         geocode_fn = _ensure_geocoder()
 
     with _geocoder_lock:
-        cached = _geocode_cache.get(query)
-        if cached is not None:
-            lat, lng = cached
-        else:
+        coordinates = _geocode_cache.get(query)
+        if coordinates is None:
             try:
-                lat, lng = _geocode_single(query, geocode_fn)
+                coordinates = _geocode_single(query, geocode_fn)
             except Exception:
                 logger.warning(
                     "Geocoding failed for location %r (query=%r)",
@@ -178,10 +175,16 @@ def _geocode_item(item: dict[str, Any], geocode_fn: Any) -> Any:
                     query,
                     exc_info=True,
                 )
-                lat, lng = UNSPECIFIC_COORDINATES
-            _geocode_cache[query] = (lat, lng)
-    item["latitude"] = lat
-    item["longitude"] = lng
+                coordinates = None
+            if coordinates is not None:
+                _geocode_cache[query] = coordinates
+    if coordinates is None:
+        # Leave the item without coordinates rather than plotting Null Island;
+        # unresolved places are retried by the next backfill pass.
+        item["latitude"] = None
+        item["longitude"] = None
+        return geocode_fn
+    item["latitude"], item["longitude"] = coordinates
     return geocode_fn
 
 

@@ -5,7 +5,7 @@
 // Extracted helper functions used by the RecurrenceRuleEditor and its
 // sub-components. These are pure functions with no React dependencies.
 
-import { buildRRule, parseRRule } from "../../utils/rrule";
+import { buildRRule, parseRRule } from "../schedule/rrule";
 import type { RecurrenceConfig } from "../../types/calendar";
 
 // ── Default configuration ─────────────────────────────────────────────────────

@@ -5,14 +5,14 @@ import { Button, CollapsePanel } from "../../../components/ui";
 import { formatOsDateTime } from "../../../utils/time";
 import { DetailPresentationShell, type DetailPresentation } from "../../../components/detail";
 import {
+  detailChromeFooterPlainClass,
+  detailChromeHeaderMonoClass,
+  detailChromeTitleClass,
   logDetailBodyClass,
   logDetailEyebrowClass,
-  logDetailFooterClass,
-  logDetailHeaderClass,
   logDetailPreBlockClass,
   logDetailPreLabelClass,
   logDetailShellClass,
-  logDetailTitleClass,
   logLevelBarClass,
 } from "../../../components/detail/classes";
 import { parseAppLogDetails } from "../../../logging/appLogClient";
@@ -61,13 +61,13 @@ export function LogDetailView({
     <>
       <div className={logLevelBarClass(selectedLog.level)} aria-hidden="true" />
 
-      <header className={logDetailHeaderClass}>
+      <header className={detailChromeHeaderMonoClass}>
         <div className={logDetailEyebrowClass}>
           {selectedLog.level.toUpperCase()} · {selectedLog.category}
           {selectedLog.kind ? ` · ${selectedLog.kind}` : ""} ·{" "}
           {formatOsDateTime(selectedLog.time)}
         </div>
-        <h2 className={logDetailTitleClass}>{displayMessage}</h2>
+        <h2 className={detailChromeTitleClass}>{displayMessage}</h2>
       </header>
 
       <div className={logDetailBodyClass}>
@@ -86,7 +86,7 @@ export function LogDetailView({
         ) : null}
       </div>
 
-      <footer className={logDetailFooterClass}>
+      <footer className={detailChromeFooterPlainClass}>
         <Button variant="secondary" onClick={onClose}>
           {t("detail.close")}
         </Button>

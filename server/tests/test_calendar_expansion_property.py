@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from datetime import datetime, time, timedelta, timezone, tzinfo
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime, time, timedelta, tzinfo
+from typing import Any
 
 import pytest
 from dateutil import rrule as reference_rrule
@@ -63,7 +64,7 @@ def _recurring_task(
         # Absolute ISO whose local clock face equals hour:minute on the host TZ.
         local_tz = calendar_module._system_tzinfo()
         local_dt = datetime(2024, 6, 15, hour, minute, tzinfo=local_tz)
-        start_value = local_dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        start_value = local_dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     return {
         "id": task_id,
         "name": f"Recurring {task_id}",
@@ -91,7 +92,7 @@ def _reference_time_of_day(value: Any, *, local_tz: tzinfo | None = None) -> tim
                 parsed = None
             if parsed is not None:
                 if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
+                    parsed = parsed.replace(tzinfo=UTC)
                 local = parsed.astimezone(zone)
                 return time(local.hour, local.minute)
             match = _TIME_RE.fullmatch(text)
@@ -103,7 +104,7 @@ def _reference_time_of_day(value: Any, *, local_tz: tzinfo | None = None) -> tim
 
 
 def _reference_iso_z(value: datetime) -> str:
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return value.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _full_reference_task_sequence(
@@ -126,8 +127,8 @@ def _full_reference_task_sequence(
         recurrence = reference_rrule.rrulestr(
             f"DTSTART:{_REFERENCE_ANCHOR_DATE}T{start_tod.hour:02d}{start_tod.minute:02d}00\nRRULE:{naive_rule}"
         )
-        range_start_utc = range_start.astimezone(timezone.utc)
-        range_end_utc = range_end.astimezone(timezone.utc)
+        range_start_utc = range_start.astimezone(UTC)
+        range_end_utc = range_end.astimezone(UTC)
         range_start_local = range_start.astimezone(local_tz)
         range_end_local = range_end.astimezone(local_tz)
         candidates = recurrence.between(
@@ -147,10 +148,10 @@ def _full_reference_task_sequence(
     for candidate in candidates:
         date_part = candidate.date()
         if is_all_day:
-            start_dt = datetime.combine(date_part, time(0, 0), tzinfo=local_tz).astimezone(timezone.utc)
-            end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(timezone.utc)
+            start_dt = datetime.combine(date_part, time(0, 0), tzinfo=local_tz).astimezone(UTC)
+            end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(UTC)
         else:
-            start_dt = datetime.combine(date_part, start_tod, tzinfo=local_tz).astimezone(timezone.utc)
+            start_dt = datetime.combine(date_part, start_tod, tzinfo=local_tz).astimezone(UTC)
             if end_tod is None:
                 end_dt = start_dt
             else:
@@ -159,7 +160,7 @@ def _full_reference_task_sequence(
                     start_local,
                     datetime.combine(date_part, end_tod, tzinfo=local_tz),
                 )
-                end_dt = end_local.astimezone(timezone.utc)
+                end_dt = end_local.astimezone(UTC)
         if start_dt < range_start_utc or start_dt > range_end_utc:
             continue
         result.append(
@@ -244,8 +245,8 @@ def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
     local_tz = calendar_module._system_tzinfo()
     first_local = datetime(2000, 1, 1, hour, minute, tzinfo=local_tz) + timedelta(days=interval * occurrence_index)
     last_local = first_local + timedelta(days=interval * boundary_span)
-    first = first_local.astimezone(timezone.utc)
-    last = last_local.astimezone(timezone.utc)
+    first = first_local.astimezone(UTC)
+    last = last_local.astimezone(UTC)
     boundary_occurrences = expand_calendar_occurrences(
         [_recurring_task("boundary", boundary_rule, hour, minute)], first_local, last_local
     )
@@ -264,7 +265,7 @@ def test_property_3_calendar_expansion_is_bounded_ordered_and_range_safe(
 def test_occurrence_id_is_stable_across_overlapping_query_windows():
     local_tz = calendar_module._system_tzinfo()
     task = _recurring_task("stable-series", "FREQ=DAILY", 9, 30)
-    shared_start = datetime(2026, 7, 15, 9, 30, tzinfo=local_tz).astimezone(timezone.utc)
+    shared_start = datetime(2026, 7, 15, 9, 30, tzinfo=local_tz).astimezone(UTC)
 
     wider = expand_series_occurrences(
         task,

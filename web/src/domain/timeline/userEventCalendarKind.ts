@@ -17,10 +17,10 @@ export const USER_EVENT_CALENDAR_KINDS = [
 
 export type UserEventCalendarKind = (typeof USER_EVENT_CALENDAR_KINDS)[number];
 
-/** Title presets historically used by Items quick-create「到期」. */
+/** Title presets for Items quick-create「到期」(UX only; ``kind`` is authority). */
 export const LINKED_EXPIRY_TITLES = new Set(["到期", "Expires"]);
 
-/** Title presets historically used by purchase/effective quick-create. */
+/** Title presets for purchase/effective quick-create (UX only; ``kind`` is authority). */
 export const LINKED_PURCHASE_EFFECTIVE_TITLES = new Set([
   "Purchased",
   "购入",
@@ -28,14 +28,6 @@ export const LINKED_PURCHASE_EFFECTIVE_TITLES = new Set([
   "Effective",
   "生效",
 ]);
-
-export function isLinkedExpiryTitle(title: string | null | undefined): boolean {
-  return LINKED_EXPIRY_TITLES.has(String(title ?? "").trim());
-}
-
-export function isLinkedPurchaseEffectiveTitle(title: string | null | undefined): boolean {
-  return LINKED_PURCHASE_EFFECTIVE_TITLES.has(String(title ?? "").trim());
-}
 
 export function normalizeUserEventCalendarKind(
   value: string | null | undefined,

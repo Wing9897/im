@@ -24,23 +24,23 @@ export function ViewerLayout() {
     <div className="im-page-shell min-h-screen bg-surface-base">
       <nav
         className="im-surface-chrome flex items-center gap-lg border-b border-surface-border px-2xl py-md"
-        aria-label={t("viewer.navAria")}
+        aria-label={t("viewer:navAria")}
       >
         <span className="mr-lg flex min-w-0 flex-col leading-tight">
-          <span className="text-body text-text-primary">{t("viewer.brand")}</span>
+          <span className="text-body text-text-primary">{t("viewer:brand")}</span>
           <span className="text-[10px] font-normal text-text-muted">
-            {t("viewer.brandHint")}
+            {t("viewer:brandHint")}
           </span>
         </span>
         <div className="flex flex-1 gap-sm">
           <NavLink to="/viewer/tasks" className={({ isActive }) => navLinkClass(isActive)}>
-            {t("viewer.navTasks")}
+            {t("viewer:navTasks")}
           </NavLink>
           <NavLink to="/viewer/results" className={({ isActive }) => navLinkClass(isActive)}>
-            {t("viewer.navResults")}
+            {t("viewer:navResults")}
           </NavLink>
           <NavLink to="/viewer/status" className={({ isActive }) => navLinkClass(isActive)}>
-            {t("viewer.navStatus")}
+            {t("viewer:navStatus")}
           </NavLink>
         </div>
       </nav>

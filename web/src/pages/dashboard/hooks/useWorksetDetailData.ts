@@ -71,7 +71,7 @@ export function useWorksetDetailData(worksetId: string) {
           if (!cancelled) setEvents(page.items);
         })
         .catch(() => {
-          if (!cancelled) setEventsError(t("workset.detailSummaryEventsError"));
+          if (!cancelled) setEventsError(t("workset:detailSummaryEventsError"));
         })
         .finally(() => {
           if (!cancelled) setLoadingEvents(false);

@@ -129,7 +129,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 納入 `mcp` 對應 wipe-only stamp **30**（與現有策略一致：非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`）。整庫 stamp／`SCHEMA_SEMVER` 矩陣仍以 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix) 為準。`mcp_enabled`／`mcp_cap_*` 為 `system_config` 鍵，**不**需 stamp bump。
+**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **33**／`SCHEMA_SEMVER` `0.1.0-beta.34`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`mcp_cap_*` 為 `system_config` 鍵，**不**需 stamp bump。
 
 ## 非目標
 

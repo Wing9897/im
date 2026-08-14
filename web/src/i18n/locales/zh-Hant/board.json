@@ -1,0 +1,288 @@
+{
+  "gantt": {
+    "defaultLabelHeader": "任務",
+    "defaultEmptyLabel": "尚無任務活動",
+    "emptyFiltered": "目前範圍內尚無可顯示活動",
+    "unnamedTask": "未命名任務",
+    "untitled": "(無標題)",
+    "axisDayAria": "日時間軸",
+    "axisMonthAria": "月時間軸",
+    "rowsAria": "甘特活動列表",
+    "activeAria": "活動中",
+    "trackAria": "{label} 活動跨度 {range}"
+  },
+  "calendar": {
+    "weekdays": [
+      "日",
+      "一",
+      "二",
+      "三",
+      "四",
+      "五",
+      "六"
+    ],
+    "today": "今天",
+    "noSchedule": "無行程",
+    "dayCountAria": "{count} 件"
+  },
+  "map": {
+    "noCoordEvents": "尚無具體地理位置事件"
+  },
+  "wall": {
+    "sectionName": "訊息牆組件",
+    "noChannelsTitle": "尚未選擇頻道",
+    "noChannelsDescription": "點標頭「選擇範圍」勾選要輪播的頻道。",
+    "loadingAria": "載入訊息牆"
+  },
+  "system": {
+    "collector": "收集器",
+    "aiEngine": "AI 引擎",
+    "aiAvailable": "可用",
+    "aiUnavailable": "不可用",
+    "aiUnknown": "未知"
+  },
+  "common": {
+    "unnamed": "(未命名)",
+    "unnamedTask": "未命名任務",
+    "untitled": "(無標題)",
+    "enabled": "啟用",
+    "disabled": "停用",
+    "noTaskSelected": "尚未選擇任務",
+    "paused": "{name}已暫停（其他組件最大化）",
+    "pausedWall": "訊息牆已暫停（其他組件最大化中）",
+    "channelCount": "{count} 頻道",
+    "dayView": "日檢視",
+    "monthView": "月檢視",
+    "viewModeAria": "{prefix}：{mode}",
+    "loadingGantt": "載入甘特…",
+    "loadingMap": "載入地圖…"
+  },
+  "stats": {
+    "empty": "尚無分析統計",
+    "analyzed": "已分析",
+    "unanalyzed": "未分析",
+    "queued": "佇列中",
+    "rowMeta": "已析 {analyzed} · 未析 {unanalyzed}",
+    "rowQueued": " · 佇列 {count}"
+  },
+  "logs": {
+    "empty": "尚無日誌"
+  },
+  "actions": {
+    "empty": "尚未設定通知動作",
+    "neverTriggered": "尚未觸發"
+  },
+  "tasks": {
+    "empty": "尚未設定任務"
+  },
+  "leaderboard": {
+    "empty": "尚無排行主題",
+    "score": "分數 {score}",
+    "messages": " · {count} 則"
+  },
+  "mapWidget": {
+    "resetView": "還原全世界視圖",
+    "saveView": "儲存地圖位置",
+    "pausedName": "地圖"
+  },
+  "weather": {
+    "refresh": "重新整理天氣",
+    "errorPrefix": "天氣：",
+    "pausedName": "天氣",
+    "emptyForecast": "尚無天氣預報",
+    "emptyLocation": "尚未設定天氣地區",
+    "clear": "晴朗",
+    "cloudy": "多雲",
+    "overcast": "陰天",
+    "fog": "霧",
+    "rain": "雨",
+    "snow": "雪",
+    "thunder": "雷雨",
+    "generic": "天氣"
+  },
+  "queue": {
+    "pending": "待處理",
+    "processing": "處理中",
+    "status": "狀態",
+    "paused": "已暫停",
+    "running": "運作中",
+    "noBatches": "目前無處理中批次",
+    "messages": "{count} 則訊息",
+    "retry": " · 重試 {count}",
+    "attention": "需注意",
+    "retryPending": "待重試",
+    "processingBadge": "處理中"
+  },
+  "feed": {
+    "empty": "尚無監控訊息"
+  },
+  "wallWidget": {
+    "empty": "尚無頻道"
+  },
+  "sources": {
+    "empty": "尚未設定來源"
+  },
+  "events": {
+    "empty": "尚無情報事件",
+    "ariaPrefix": "情報事件"
+  },
+  "calendarWidget": {
+    "monthAria": "月曆",
+    "dayAria": "日程",
+    "emptyMonth": "本月尚無符合任務的事件",
+    "emptyDay": "今天尚無符合任務的行程"
+  },
+  "ganttWidget": {
+    "byTaskAria": "甘特／按任務",
+    "byEventAria": "甘特／按事件",
+    "pausedName": "甘特",
+    "labelTask": "任務",
+    "labelEvent": "事件",
+    "emptyEvents": "尚無事件",
+    "worksetSpanLegend": "工作集條 = 手動/助手事件包絡（與任務分析條並排，非重複）"
+  },
+  "shell": {
+    "loadFailed": "載入失敗，請重試",
+    "retry": "重試",
+    "toolsAria": "沉浸畫布工具",
+    "toolbarAria": "畫布操作",
+    "addWidget": "新增組件",
+    "exportLayout": "匯出版面",
+    "importLayout": "匯入版面",
+    "importFileAria": "選擇版面 JSON 檔",
+    "resetLayout": "重置為預設版面",
+    "resetLayoutAria": "重置佈局",
+    "doneEdit": "完成編輯",
+    "fullscreen": "全螢幕",
+    "exitFullscreen": "退出全螢幕",
+    "edit": "編輯",
+    "resetConfirmTitle": "重置為預設版面？",
+    "resetConfirmBody": "目前自訂佈局將被覆蓋，此操作無法復原。",
+    "resetConfirm": "確認重置",
+    "resetConfirmBusy": "重置中…",
+    "selectSize": "選擇尺寸",
+    "selectSizeAria": "{title}：選擇尺寸",
+    "maximize": "最大化",
+    "restore": "還原",
+    "maximizeWidget": "最大化組件",
+    "restoreWidget": "還原組件",
+    "removeWidget": "移除組件",
+    "removeWidgetAria": "移除 {title}",
+    "emptyTitle": "尚未新增組件",
+    "emptyHint": "點畫布右下角浮鍵進入編輯後新增組件。",
+    "exported": "版面已匯出",
+    "imported": "版面已匯入",
+    "importFailed": "無法匯入版面",
+    "importInvalidJson": "版面 JSON 格式無效",
+    "importMissingWidgets": "版面檔缺少 widgets",
+    "importNeedOne": "版面至少需包含一個有效組件",
+    "importNoValid": "版面未包含有效組件",
+    "sourceFilterPrefix": "篩選來源",
+    "sourceFilterSelect": "選擇來源",
+    "sourceFilterSelectAria": "{prefix}：選擇來源"
+  },
+  "schedule": {
+    "empty": "暫無日程 — 可到「日程」頁添加",
+    "hint": "完整管理請到「日程」頁"
+  },
+  "items": {
+    "empty": "暫無物品提醒 — 可到「物品」頁查看",
+    "hint": "完整管理請到「物品」頁"
+  },
+  "llmHealth": {
+    "total": "設定檔",
+    "complete": "完整",
+    "incomplete": "不完整",
+    "default": "可用設定檔",
+    "noDefault": "無",
+    "alertNone": "尚未配置任何 LLM 設定檔",
+    "alertNoDefault": "沒有可用的完整設定檔",
+    "alertIncomplete": "有設定檔不完整"
+  },
+  "widgets": {
+    "map": {
+      "title": "情報地圖",
+      "description": "地理標記概覽（大型）"
+    },
+    "wall": {
+      "title": "訊息牆",
+      "description": "多頻道輪播（可大可小）"
+    },
+    "gantt": {
+      "title": "甘特／按任務",
+      "description": "任務活動跨度；工作集條為手動/助手事件包絡（與任務條並排）"
+    },
+    "ganttEvents": {
+      "title": "甘特／按事件",
+      "description": "事件時間跨度（長條）"
+    },
+    "events": {
+      "title": "情報事件",
+      "description": "最近分析與用戶事件（不含循環/物品提醒）"
+    },
+    "feed": {
+      "title": "實時監控",
+      "description": "實時監控訊息縮圖"
+    },
+    "calendar": {
+      "title": "月曆",
+      "description": "本月行程"
+    },
+    "calendarDay": {
+      "title": "日程",
+      "description": "今日行程"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "description": "熱門主題排行"
+    },
+    "stats": {
+      "title": "分析統計",
+      "description": "七日分析量"
+    },
+    "queue": {
+      "title": "分析佇列",
+      "description": "佇列與處理中"
+    },
+    "system": {
+      "title": "系統狀態",
+      "description": "收集器／AI"
+    },
+    "clock": {
+      "title": "時鐘",
+      "description": "本地時間"
+    },
+    "weather": {
+      "title": "天氣",
+      "description": "地區天氣與七日預報"
+    },
+    "sources": {
+      "title": "來源狀態",
+      "description": "來源連線"
+    },
+    "logs": {
+      "title": "系統日誌",
+      "description": "近期應用日誌"
+    },
+    "tasks": {
+      "title": "任務",
+      "description": "分析任務狀態"
+    },
+    "actions": {
+      "title": "通知動作",
+      "description": "自動化動作狀態"
+    },
+    "schedule": {
+      "title": "我的日程",
+      "description": "近期一次性事件與循環系列"
+    },
+    "items": {
+      "title": "物品提醒",
+      "description": "近期物品提醒與到期"
+    },
+    "llmHealth": {
+      "title": "AI 設定檔健康",
+      "description": "設定檔數量、完整度與可用項"
+    }
+  }
+}

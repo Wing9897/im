@@ -4,6 +4,9 @@ from server.db.schema_domains.vocabulary import (
     ANALYSIS_MODE_CHECK_SQL,
     ANALYSIS_TIME_RANGE_CHECK_SQL,
 )
+from server.domain.agent_task_spec import TRIGGER_MODE_CHECK_SQL
+from server.domain.analysis_strategy_modes import ANALYSIS_STRATEGY_MODE_CHECK_SQL
+from server.domain.batch_statuses import BATCH_STATUS_CHECK_SQL
 
 DDL = f"""
 -- Optional ownership dimension for analysis tasks (orthogonal to analysis_mode).
@@ -43,10 +46,12 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     batch_overlap_count           INTEGER DEFAULT NULL,
     analysis_trigger_threshold    INTEGER DEFAULT NULL,
     analysis_batch_message_limit  INTEGER DEFAULT NULL,
-    analysis_strategy_mode        TEXT DEFAULT NULL,
+    -- NULL = use system_config default (SQLite IN-CHECK passes NULL through).
+    analysis_strategy_mode        TEXT DEFAULT NULL
+                                  {ANALYSIS_STRATEGY_MODE_CHECK_SQL},
     -- Agent-mode policy (ignored for non-agent modes; wipe-only stamp 20+).
     trigger_mode              TEXT NOT NULL DEFAULT 'schedule'
-                              CHECK (trigger_mode IN ('schedule','message_cursor','message_threshold')),
+                              {TRIGGER_MODE_CHECK_SQL},
     cap_calendar_read         INTEGER NOT NULL DEFAULT 1,
     cap_calendar_writes       INTEGER NOT NULL DEFAULT 0,
     cap_web_search            INTEGER NOT NULL DEFAULT 0,
@@ -55,7 +60,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     cap_read_items            INTEGER NOT NULL DEFAULT 1,
     output_calendar           INTEGER NOT NULL DEFAULT 0,
     output_analysis_events    INTEGER NOT NULL DEFAULT 0,
-    -- LLM connection profile (stamp 29+); tasks always bind a profile.
+    -- LLM connection profile; tasks always bind a profile.
     llm_profile_id       TEXT NOT NULL
                          REFERENCES llm_profiles(id),
     created_at           TEXT NOT NULL,
@@ -90,7 +95,7 @@ CREATE TABLE IF NOT EXISTS analysis_batches (
     task_id                TEXT NOT NULL REFERENCES analysis_tasks(id) ON DELETE CASCADE,
     version                INTEGER NOT NULL DEFAULT 1,
     status                 TEXT NOT NULL DEFAULT 'pending'
-                           CHECK (status IN ('pending','processing','completed')),
+                           {BATCH_STATUS_CHECK_SQL},
     message_count          INTEGER NOT NULL DEFAULT 0,
     retry_count            INTEGER NOT NULL DEFAULT 0,
     error_message          TEXT,

@@ -1,88 +1,47 @@
 // ============================================================
-// SSE Event Payload Type Definitions
+// SSE Event Payload Type Definitions (OpenAPI-generated aliases)
 // ============================================================
+//
+// Source of truth: server/api/schemas/responses/sse.py, exported to OpenAPI
+// components by server/api/openapi_ext.py. The wire envelope for every named
+// event is `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`);
+// `sseClient.ts` unwraps `payload` before these types apply.
+//
+// `collector_status_changed` deliberately uses snake_case adapter fields
+// (`adapter_name` / `error_summary` / `correlation_id`) — wire contract,
+// documented in the schema; do not camelize.
 
-import type { CollectorStatus, ConnectionStatus } from "./common";
-import type { Message } from "./messages";
+import type { components } from "../api/generated/schema";
 
 /** Payload for the `messages_updated` event */
-export interface MessagesUpdatedPayload {
-  messages: Message[];
-}
-
-/** Overlap statistics returned from the backend after batch analysis */
-interface OverlapStatistics {
-  overlapUsedCount: number;
-  overlapTrimmedCount: number;
-  overlapTokens: number;
-  primaryTokens: number;
-  totalTokens: number;
-}
-
-/** Payload for the `analysis_completed` event */
-export interface AnalysisCompletedPayload {
-  taskId: string;
-  batchId: string;
-  analysisMode: string;
-  findingsCount: number;
-  hasFindings: boolean;
-  overlapStatistics: OverlapStatistics | null;
-}
+export type MessagesUpdatedPayload = components["schemas"]["SseMessagesUpdatedPayload"];
 
 /** Payload for the `analysis_started` event */
-export interface AnalysisStartedPayload {
-  taskId: string;
-  taskName: string;
-  batchId: string;
-  messageCount: number;
-  estimatedTokens: number;
-  llmProvider: string;
-  llmModel: string;
-}
+export type AnalysisStartedPayload = components["schemas"]["SseAnalysisStartedPayload"];
+
+/** Payload for the `analysis_completed` event */
+export type AnalysisCompletedPayload = components["schemas"]["SseAnalysisCompletedPayload"];
+
+/** Overlap statistics attached to message-batch `analysis_completed` events */
+export type OverlapStatistics = components["schemas"]["SseOverlapStatistics"];
 
 /** Payload for the `analysis_failed` event */
-export interface AnalysisFailedPayload {
-  taskId: string;
-  taskName: string;
-  batchId: string;
-  error: string;
-  retrying: boolean;
-  currentRetry: number;
-  maxRetries: number;
-  retriesExhausted: boolean;
-}
+export type AnalysisFailedPayload = components["schemas"]["SseAnalysisFailedPayload"];
 
 /** Payload emitted when exhausted retries auto-pause global analysis. */
-export interface AnalysisPausedChangedPayload {
-  analysisPaused: boolean;
-  reason: "batch_retries_exhausted";
-  taskId: string;
-  taskName: string;
-  batchId: string;
-}
+export type AnalysisPausedChangedPayload =
+  components["schemas"]["SseAnalysisPausedChangedPayload"];
 
 /** Payload for the `collector_status_changed` event (aggregate CollectorStatus). */
-export interface CollectorStatusChangedPayload {
-  status: CollectorStatus;
-  /** Present when a specific adapter connection fails */
-  adapter_name?: string;
-  /** Error summary when adapter connection fails */
-  error_summary?: string;
-  /** Optional trace id for error toast correlation */
-  correlation_id?: string;
-}
+export type CollectorStatusChangedPayload =
+  components["schemas"]["SseCollectorStatusChangedPayload"];
 
 /** Payload for the `source_status_changed` event */
-export interface SourceStatusChangedPayload {
-  sourceId: string;
-  /** Adapter reconnect emits this transient state before persisted connection settles. */
-  status: ConnectionStatus;
-  lastError?: string | null;
-}
+export type SourceStatusChangedPayload =
+  components["schemas"]["SseSourceStatusChangedPayload"];
 
 /** Payload for resource CRUD invalidations. */
-export interface ResourceModifiedPayload {
-  resourceType: string;
-  resourceId: string;
-  action: "created" | "updated" | "deleted";
-}
+export type ResourceModifiedPayload = components["schemas"]["SseResourceModifiedPayload"];
+
+/** `data` envelope of each named SSE frame (see `sseClient.ts`). */
+export type SseEventEnvelope = components["schemas"]["SseEventEnvelope"];

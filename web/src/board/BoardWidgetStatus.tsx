@@ -11,7 +11,7 @@ interface BoardWidgetErrorProps {
 function BoardWidgetError({ detail, onRetry }: BoardWidgetErrorProps) {
   return (
     <div className="board-widget-status board-widget-status--error" data-testid="board-widget-error">
-      <p className="board-widget-muted">{String(i18n.t("board.shell.loadFailed"))}</p>
+      <p className="board-widget-muted">{String(i18n.t("board:shell.loadFailed"))}</p>
       {detail ? (
         <p className="board-widget-status__detail" title={detail}>
           {detail}
@@ -23,7 +23,7 @@ function BoardWidgetError({ detail, onRetry }: BoardWidgetErrorProps) {
         data-testid="board-widget-retry"
         onClick={onRetry}
       >
-        {String(i18n.t("board.shell.retry"))}
+        {String(i18n.t("board:shell.retry"))}
       </button>
     </div>
   );

@@ -26,7 +26,7 @@ export function ChatAnalysisFields({
 
   return (
     <div className="flex min-w-0 flex-col gap-sm">
-      <FieldLabel id="analysis-time-range-label">{t("tasks.editor.timeRangeLabel")}</FieldLabel>
+      <FieldLabel id="analysis-time-range-label">{t("tasks:editor.timeRangeLabel")}</FieldLabel>
       <div
         className="flex min-w-0 flex-wrap gap-sm"
         role="group"

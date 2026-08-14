@@ -46,7 +46,9 @@ describe("ItemFormToolbar", () => {
     expect(toolbar).not.toBeNull();
     expect(toolbar!.className).toBe(itemsPageChromeOuterClass);
     expect(toolbar!.className).toContain("sticky");
-    expect(toolbar!.className).toContain("border-b");
+    expect(toolbar!.className).toContain("rounded-xl");
+    expect(toolbar!.className).toContain("mx-page-x");
+    expect(toolbar!.className).toContain("border");
 
     const row = toolbar!.firstElementChild as HTMLElement;
     expect(row.className).toBe(itemsPageChromeInnerClass);

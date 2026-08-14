@@ -82,7 +82,7 @@ describe("CollectorStatusContext", () => {
       root = createRoot(container);
       root.render(
         <CollectorStatusProvider
-          collectorStatus="starting"
+          collectorStatus="stopped"
           aiEngineStatus="unknown"
           requestAiStatusRefresh={mockRefresh}
         >
@@ -91,7 +91,7 @@ describe("CollectorStatusContext", () => {
       );
     });
 
-    expect(latestValue!.collectorStatus).toBe("starting");
+    expect(latestValue!.collectorStatus).toBe("stopped");
     expect(latestValue!.aiEngineStatus).toBe("unknown");
 
     act(() => {

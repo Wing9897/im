@@ -1,21 +1,10 @@
 import type { CollectorStatus } from "../types";
 import i18n from "../i18n";
 
-const TRANSITION_STATUSES = new Set<CollectorStatus>([
-  "starting",
-  "stopping",
-  "restarting",
-]);
-const STABLE_STATUSES = new Set<CollectorStatus>(["running", "stopped", "error"]);
+/** Every aggregate value the server can report (OpenAPI-aligned). */
+const COLLECTOR_STATUSES: CollectorStatus[] = ["running", "stopped", "error"];
 
-const COLLECTOR_STATUSES: CollectorStatus[] = [
-  "starting",
-  "running",
-  "stopping",
-  "stopped",
-  "restarting",
-  "error",
-];
+const ALL_STATUSES = new Set<CollectorStatus>(COLLECTOR_STATUSES);
 
 /** Top-bar tooltip labels (long form with collector prefix). */
 export function getCollectorStatusLabelsLong(): Record<CollectorStatus, string> {
@@ -37,11 +26,6 @@ export function getCollectorStatusLabelsShort(): Record<CollectorStatus, string>
   ) as Record<CollectorStatus, string>;
 }
 
-const ALL_STATUSES = new Set<CollectorStatus>([
-  ...TRANSITION_STATUSES,
-  ...STABLE_STATUSES,
-]);
-
 /** Per-adapter connection wire values on collector_status_changed (not aggregate). */
 const WIRE_ADAPTER_STATUSES = new Set(["connected", "disconnected", "connecting"]);
 
@@ -59,7 +43,7 @@ export function isAggregateCollectorStatus(value: string): boolean {
 /** Whether collector SSE should refetch REST instead of normalizing payload.status. */
 export function shouldRefetchCollectorStatus(payload: {
   status: string;
-  adapter_name?: string;
+  adapter_name?: string | null;
 }): boolean {
   if (isWireAdapterCollectorEvent(payload.status)) {
     return true;

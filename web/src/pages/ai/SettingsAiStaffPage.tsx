@@ -25,7 +25,7 @@ import {
   LiaisonIntroCard,
   RosterStaffCard,
 } from "./AiStaffIntroCards";
-import { useSettingsPageState } from "../settings/SettingsShared";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
 
 const titleIconBtnClass =
   "im-icon-btn !h-7 !w-7 !rounded-md text-text-secondary transition-colors";

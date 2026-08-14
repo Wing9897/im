@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from contextlib import suppress
+from datetime import UTC, datetime
 from typing import Any
 
 from telethon import errors
@@ -91,7 +92,7 @@ async def wait_qr_login(adapter: Any, timeout: float | None = None) -> dict:
         except errors.SessionPasswordNeededError:
             logger.info("2FA required after QR login for source %s", adapter._source_id)
             return {"next_step": "2fa_required"}
-        except asyncio.TimeoutError:
+        except TimeoutError:
             if qr_expires_in_seconds(adapter) <= 1.0:
                 await adapter._qr_login.recreate()
                 logger.info("Telegram QR login token refreshed for source %s", adapter._source_id)
@@ -105,8 +106,8 @@ def qr_expires_in_seconds(adapter: Any) -> float:
         return 0.0
     expires = adapter._qr_login.expires
     if expires.tzinfo is None:
-        expires = expires.replace(tzinfo=timezone.utc)
-    return (expires - datetime.now(timezone.utc)).total_seconds()
+        expires = expires.replace(tzinfo=UTC)
+    return (expires - datetime.now(UTC)).total_seconds()
 
 
 def qr_login_payload(adapter: Any) -> dict[str, Any]:
@@ -114,7 +115,7 @@ def qr_login_payload(adapter: Any) -> dict[str, Any]:
         raise RuntimeError("QR login not started. Call start_qr_login first.")
     expires = adapter._qr_login.expires
     if expires.tzinfo is None:
-        expires = expires.replace(tzinfo=timezone.utc)
+        expires = expires.replace(tzinfo=UTC)
     return {
         "next_step": "qr_required",
         "qr_url": adapter._qr_login.url,
@@ -152,10 +153,8 @@ async def on_login_success(adapter: Any) -> None:
     adapter._broadcast_status_change("connected")
     if adapter._startup_task is not None:
         adapter._startup_task.cancel()
-        try:
+        with suppress(asyncio.CancelledError):
             await adapter._startup_task
-        except asyncio.CancelledError:
-            pass
         adapter._startup_task = None
     adapter._history_backfill_done = False
     adapter._startup_task = asyncio.create_task(adapter._finish_startup())

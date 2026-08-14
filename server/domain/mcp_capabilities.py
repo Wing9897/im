@@ -38,18 +38,12 @@ MCP_CAPABILITY_SPECS: Final[tuple[McpCapabilitySpec, ...]] = (
 MCP_CAPABILITY_IDS: Final[tuple[str, ...]] = tuple(spec.id for spec in MCP_CAPABILITY_SPECS)
 
 #: ``system_config`` defaults for capability toggles (all on).
-MCP_CAPABILITY_CONFIG_DEFAULTS: Final[dict[str, str]] = {
-    spec.config_key: "true" for spec in MCP_CAPABILITY_SPECS
-}
+MCP_CAPABILITY_CONFIG_DEFAULTS: Final[dict[str, str]] = {spec.config_key: "true" for spec in MCP_CAPABILITY_SPECS}
 
 #: Settings wire key → ``system_config`` key.
-MCP_CAPABILITY_SETTINGS_KEYS: Final[dict[str, str]] = {
-    spec.wire_key: spec.config_key for spec in MCP_CAPABILITY_SPECS
-}
+MCP_CAPABILITY_SETTINGS_KEYS: Final[dict[str, str]] = {spec.wire_key: spec.config_key for spec in MCP_CAPABILITY_SPECS}
 
 #: ``system_config`` key → capability id (for loaders).
-MCP_CAPABILITY_CONFIG_KEYS: Final[dict[str, str]] = {
-    spec.config_key: spec.id for spec in MCP_CAPABILITY_SPECS
-}
+MCP_CAPABILITY_CONFIG_KEYS: Final[dict[str, str]] = {spec.config_key: spec.id for spec in MCP_CAPABILITY_SPECS}
 
 MCP_CAPABILITY_WIRE_KEYS: Final[frozenset[str]] = frozenset(MCP_CAPABILITY_SETTINGS_KEYS)

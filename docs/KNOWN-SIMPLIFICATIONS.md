@@ -16,7 +16,7 @@ Streamable HTTP at `/api/v1/mcp` (see [`agent/mcp.md`](./agent/mcp.md)). Househo
 
 `GET /api/v1/results/stats` is dashboard-only (`TaskAnalysisStats`: `taskId` / `analyzedCount` / `unanalyzedCount` / `queuedMessageCount`). Per-task `failedBatches`／`completedBatches` are **not** on that route; viewer `GET /api/v1/viewer/stats` exposes global batch totals only (no `failedBatches`).
 
-**Batch failure model:** see [Batch retries and auto-pause](#batch-retries-and-auto-pause). Schema／gate SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
+**Batch failure model:** see [Batch retries and auto-pause](#batch-retries-and-auto-pause). Schema／gate SoT: [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix).
 
 ## Frontend usage deltas
 
@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-31 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-33 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -64,14 +64,40 @@ Still update sources routes／OpenAPI／pipeline／UI when adding — registry i
 
 ## Schema baseline
 
-Pointer only — stamp / semver / wipe-floor SoT: [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix).
+Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEMA-BASELINE.md).
+
+## Stamp 33 LLM simplifications (intentional)
+
+Wipe-floor **33** / `SCHEMA_SEMVER` `0.1.0-beta.34`. These are product decisions — do **not** “restore” without an explicit new contract:
+
+| Simplification | Keep / do not reintroduce |
+|----------------|---------------------------|
+| LLM `provider`／`staff_class` CHECK DDL from Python SoT (+ drift tests) | No second DDL literal vocabulary |
+| Calendar `kind`／`direction` CHECK from domain SoT | Same pattern as origin／timeline `source` |
+| No `llm_profiles.is_default` column; no make-default API | Resolve via **hard-bound global slots** only |
+| No `assistant` in `llm_staff_instances` | Staff table = task modes (`leaderboard`／`intel_event`／`agent`) only |
+| Global slots hard-bind (assistant／liaison／taskEditor) | Unbound slot → hard-fail (assistant same as liaison); UI on `/ai/provider` + `GET/PUT /api/v1/llm/global-slots` |
+| Fresh DDL seeds **zero** profiles | Tests use ephemeral profile ids; production never invents `__default__` |
+
+**Intentional keeps (not debt):** `qalias` camel-only Query helper; agent `tool_args` snake tolerance; MCP v1 limits (see [MCP control plane](#mcp-control-plane)); ports four-mirror + drift tests; `test_dead_endpoints` / `retiredSourcePaths` locks; photo-BG surface system; FE `LINKED_*_TITLES` UX presets (kind remains authority); fixture `__default__` test id; `cryptg` pinned dependency (optional Telethon crypto accelerator — no import site in `server/`, Telethon picks it up at runtime); `recurring_schedules.timezone_ical` storing the raw `VTIMEZONE` block verbatim (expansion re-parses it; deliberately not normalized into columns).
+
+### Debt purge notes (post stamp 33)
+
+Removed without stamp bump (no leftover DDL / API columns); do not revive:
+
+| Category | Removed |
+|----------|---------|
+| Dead modules / helpers | `server/items/linked_dates.py`; unused `resolve_assistant_profile_id`／`count_profiles`／`get_task_row`／`child_mode` |
+| Title-preset helpers | Python `LINKED_*_TITLES` frozensets; FE `isLinked*Title` helpers |
+| Hand DTO mirrors → OpenAPI | `RecurringSeries`／`UserEvent`; AiEngine status/test DTOs (`AiEngineHealthStatusResponse`／`AiEngineTestResultResponse`／`AiEngineTestBody`) |
+| Misc dead code | mid-move `web/src/utils/rrule*`; identity keys in `PROVIDER_ALIASES`; duplicate LLM INSERT SQL + calendar NULL-event SELECT fragment; pre-beta `LEGACY_HOME`／`~/.intelligence-monitor` wipe scans |
 
 ## Calendar / RRULE expansion
 
 One builder (`server/calendar/normalize.py`); RRULE stored without optional `RRULE:` prefix (`server/services/task_writes.py`). Validation／expansion live in `server/calendar/rrule.py` (not under `analyzer/`).
 
 - **Sub-day frequencies are rejected on write:** `validate_rrule` only allows `FREQ ∈ {DAILY, WEEKLY, MONTHLY, YEARLY}` (`unsupported_freq`). `SECONDLY`／`MINUTELY`／`HOURLY` (and any other FREQ) fail task create／update. Query-time expansion still snaps wall clocks and budgets dense windows for legacy／synthetic rows used in budget tests — writers never emit those freqs.
-- **Desktop ICS／deep-link import:** one-shot multi-VEVENT preview and atomic commit; no webcal／CalDAV／provider OAuth or bidirectional sync. RRULE entries become standalone calendar series, one-time items become user events; unsupported overrides stay visible but unselectable. Public-HTTP(S)-only remote URL policy, supported RFC 5545 subset, size/event limits, and floating-time behavior: [`ARCHITECTURE.md` ICS import support](./ARCHITECTURE.md#ics-import-support-and-limits).
+- **Desktop ICS／deep-link import:** one-shot multi-VEVENT preview and atomic commit; no webcal／CalDAV／provider OAuth or bidirectional sync. RRULE entries become standalone calendar series, one-time items become user events; unsupported overrides stay visible but unselectable. Public-HTTP(S)-only remote URL policy, supported RFC 5545 subset, size/event limits, and floating-time behavior: [`DESKTOP-ICS.md`](./DESKTOP-ICS.md).
 
 ## Batch stats semantics (version-aware)
 
@@ -105,19 +131,18 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v31 | See [`ARCHITECTURE.md` Schema support matrix](./ARCHITECTURE.md#schema-support-matrix) and [reset procedure](./ARCHITECTURE.md#schema-v31-explicit-reset) (wipe-only floor; origin／timeline `source` CHECK from Python SoT; `item_id` FK `ON DELETE SET NULL`; `user_events.origin` includes `mcp`; LLM profiles replace dual-path global／`assistant_llm_*`; derive-on-read item expiry; timeline `source=item_remind`; standalone calendar recurring series; `SCHEMA_SEMVER` `0.1.0-beta.32`) |
+| Schema stamp v33 | See [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix) and [reset procedure](./SCHEMA-BASELINE.md#schema-v33-explicit-reset) (wipe-only floor; every DB enum CHECK clause is generated in its `server/domain/` Python SoT with drift tests — collector platform, analysis_mode, provider／staff_class／json_mode／web_search_provider, calendar kind／direction／origin, timeline source, action_type + trigger-history status, trigger_mode, batch／source／item status, analysis_time_range, app log level, nullable analysis_strategy_mode. `server/db/schema_domains/vocabulary.py` is a pure re-export hub (no assembly) that some fragments import through; the rest import their domain module directly. No `is_default`／no assistant staff row; hard-bound global slots; `item_id` FK `ON DELETE SET NULL`; `SCHEMA_SEMVER` `0.1.0-beta.34`) |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |
 | Timeline / board `calendar` ids | UI `viewMode:"calendar"` and board widget `"calendar"` are **layout** ids — not `analysisMode:"recurring"`. Do not rename these layout wire ids |
 | Board widgets display-only | Board tiles do **not** navigate via `openInPages` / click-to-page. Regression: `web/src/board/widgets/boardWidgetNav.test.tsx` (keep) |
 | `TaskEmployeeId` | Intentional display alias of `AnalysisMode` (`web/src/domain/tasks/taskEmployee.ts`) — named helpers kept even though mapping is 1:1 |
-| `server/llm_profiles_const.py` | Thin re-export of DDL `DEFAULT_LLM_PROFILE_ID` / `LLM_STAFF_CLASSES` / `LLM_TASK_STAFF_CLASSES` for import ergonomics — keep (not a second SoT) |
-| Global LLM slots | Assistant／A2A／task advisor singletons live in `system_config` (`llm_global_slot_*`) via `server/llm_global_slots.py` — profile-id pointers only (no stamp wipe). **Reads** use the config slot only (no `staff_class=assistant` fallback). Writes to the assistant slot still sync one `llm_staff_instances` row for staff-list UI. `liaison`／`taskEditor` are **not** DDL staff classes |
+| Global LLM slots | Assistant／A2A／task advisor singletons live in `system_config` (`llm_global_slot_*`) via `server/llm_global_slots.py` — profile-id pointers only. Trio UI is global-slots only; `llm_staff_instances` holds task-mode classes (`leaderboard`／`intel_event`／`agent`) exclusively. Unbound slots hard-fail (assistant same as liaison). No `is_default` column or make-default API |
 | FE `MASKED_SECRET` | Same `"********"` literal in `utils/configValidation` and `types/llmProfiles` (and `server.secrets`) — keep local copies; do not re-export across types↔utils (cycle) |
 | Device-local browser state | UI-only state that must remain per browser／Electron profile stays in localStorage or sessionStorage: locale/theme/background, shell chrome and last path, drafts, view/filter/read state, runtime-log cache, and the stable assistant client-instance id. These are active stores, not migration bridges |
 | Theme focal (Bing daily) BG | Optional `data-theme-bg=focal` — not required for core offline use. Server proxies Bing HPImageArchive (`GET /api/v1/theme/focal-background?idx=0..7`) and image bytes (`…/image`). `idx` 0=today … 7=recent days (not infinite random). SPA Settings **Refresh** advances idx (cycle 0–7) and rewrites device `im:theme-focal-cache` (includes `idx` + `fetchedAt`). Optional auto-refresh interval (`im:theme-focal-refresh-hours`: 0/1/6/12/24) uses a visibility-aware FE timer. Apply via CSS vars `--theme-bg-image` / `--theme-bg-wash-pct` on `.im-page-canvas` + `.im-shell-sidebar`. Prefers same-origin blob URL; Bing hotlink is metadata/fallback. Upstream must use `format=js` (JSON); `format=json` returns XML — server XML-falls-back. Failure → last cache or motif/`none`. Unsplash deferred. Privacy: focal causes outbound Bing from the local server. |
-| Photo-BG surface layers | **Done:** photo ambient on `.im-page-canvas` + `.im-shell-sidebar`; chrome / panels / insets via `--surface-chrome` / `--surface-panel` / `--surface-inset` (+ `.im-material-panel`). Nested `.im-page-shell` stays transparent. `data-theme-bg=none` stays dense/opaque. Prefer layer helpers over `bg-surface-card` exceptions. **Readable glass defaults (photo):** panel 63% / chrome 70% / inset 86%; blur panel 22px / chrome 18px; wash bias −8pp with min wash 40%; personalization `--surface-panel` floor 63% under photo BG; sidebar uses chrome frost over photo; map overlays / danmaku / EmojiPicker host consume surface tokens. **Retired shims (debt cleanup):** `--im-panel-opacity*` `removeProperty` in `themePersonalization`; `#im-theme-bg` DOM strip in `applyBgImage`. |
+| Photo-BG surface layers | **Done:** photo ambient on `.im-page-canvas` + `.im-shell-sidebar`; chrome / panels / insets via `--surface-chrome` / `--surface-panel` / `--surface-inset` (+ `.im-material-panel`). Nested `.im-page-shell` stays transparent. `data-theme-bg=none` stays dense/opaque. Prefer layer helpers over `bg-surface-card` exceptions. **Readable glass defaults (photo):** panel 63% / chrome 70% / inset 86%; blur panel 22px / chrome 18px; wash bias −8pp with min wash 40%; personalization `--surface-panel` floor 63% under photo BG; sidebar uses chrome frost over photo; map overlays / danmaku / EmojiPicker host consume surface tokens. Do **not** reintroduce `--im-panel-opacity*` or body-level `#im-theme-bg` (see [Removed / not restored](#removed--not-restored)). |
 | Desktop STT / browser-only IO | Electron hides mic and disables browser STT direct mode; use text input. Provider ids are hard-cut to `browser` only (no Whisper/Doubao reserved ids); local Whisper / cloud STT-TTS stay out of scope — see [`agent/assistant.md`](./agent/assistant.md) |
 
 ## Intelligence / Events time semantics
@@ -191,6 +216,14 @@ Email channel IDs use the host-qualified shape `host:port/username/folder` (`ema
 Legacy Tauri migration guards were retired with the delivery slim-down and stay removed. Windows／macOS／Linux Desktop + Docker/Web are first-class delivery surfaces. Do not revive Tauri IPC.
 
 Theme glass shims retired with the photo-BG surface pass: do not reintroduce `--im-panel-opacity` / `--im-panel-opacity-pct` parallel CSS vars, or a body-level `#im-theme-bg` DOM layer (photo paints into `.im-page-canvas` / `.im-shell-sidebar` via `--theme-bg-image`).
+
+`server/items/linked_dates.py` (`is_linked_expiry_kind`) was unused and removed — expiry authority stays `user_events.kind=expires` + items derive-on-read. Do not revive a second helper module for that boolean.
+
+Desktop `connection.json` `allowLanAccess` and Settings → General 「允許區域網路存取」toggle were removed — bind is always `0.0.0.0` (`DEFAULT_BIND_HOST` / Desktop sidecar env). Legacy key is ignored on read and not rewritten. Auth still required; TLS only for public internet exposure. Do not reintroduce a user-facing LAN bind toggle (`general.lanAccess*` i18n／`allow-lan-access-toggle`／`setDesktopAllowLanAccess` stay banned).
+
+Assistant page per-session 「LLM 設定檔」block (`AssistantSessionLlmProfileSelect` + `assistant.llmProfile.*` keys) was removed — binding is global assistant slot on `/ai/provider` only. Wire／`ui-prefs` may still carry optional `llmProfileId`; do not restore the picker UI.
+
+Items category hub and finance chrome omit redundant top-bar titles 「物品」／「物品財務」(`items:pageTitle`／`items:finance.pageTitle` forbidden). Nav already labels the page; keep titles only on entry／form chrome when needed.
 
 ## Agent workspace hygiene
 

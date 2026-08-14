@@ -9,7 +9,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any, Awaitable, Callable, Optional, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import Any, TypeVar
 
 from fastapi import Request
 
@@ -138,7 +139,7 @@ async def connect_source(
     name: str,
     credentials: dict[str, Any],
     connect: Callable[[Any, str], Awaitable[dict[str, Any]]],
-) -> tuple[str, Optional[dict[str, Any]], Optional[str]]:
+) -> tuple[str, dict[str, Any] | None, str | None]:
     """Create the source row and run the collector connect flow.
 
     Returns ``(source_id, result, error)`` — ``result`` is the collector's

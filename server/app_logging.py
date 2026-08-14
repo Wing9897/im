@@ -11,11 +11,12 @@ import re
 from typing import Any
 
 from server.db.database import Database
+from server.domain.app_log_categories import ALLOWED_APP_LOG_CATEGORIES
+from server.domain.app_log_levels import ALLOWED_APP_LOG_LEVELS as _ALLOWED_LEVELS
 from server.queries.logs_queries import fetch_app_log
 from server.util import new_id, utc_now_iso
 
-_ALLOWED_LEVELS = frozenset({"info", "success", "warning", "error"})
-ALLOWED_LOG_CATEGORIES = frozenset({"analysis", "collector", "source", "system", "frontend"})
+ALLOWED_LOG_CATEGORIES = ALLOWED_APP_LOG_CATEGORIES
 _ALLOWED_CATEGORIES = ALLOWED_LOG_CATEGORIES
 
 #: Cap for response bodies stored in envelope ``payload`` (failure forensics).

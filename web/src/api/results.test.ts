@@ -307,7 +307,7 @@ describe("results API", () => {
 
       const result = await fetchTaskAnalysisStats("7d");
 
-      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/stats", { time_range: "7d" });
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/results/stats", { timeRange: "7d" });
       expect(result).toEqual(stats);
     });
 

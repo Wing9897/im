@@ -378,23 +378,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/llm/profiles/{profile_id}/set-default": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set Default Profile */
-        post: operations["set_default_profile_api_v1_llm_profiles__profile_id__set_default_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/llm/staff-instances": {
         parameters: {
             query?: never;
@@ -1100,7 +1083,10 @@ export interface paths {
         };
         /** Fetch Settings */
         get: operations["fetch_settings_api_v1_config_settings_get"];
-        /** Save Settings */
+        /**
+         * Save Settings
+         * @description Partial PUT: known ``SystemSettingsSnapshot`` keys only; unknown → 422 (extra=forbid).
+         */
         put: operations["save_settings_api_v1_config_settings_put"];
         post?: never;
         delete?: never;
@@ -1155,7 +1141,7 @@ export interface paths {
         put?: never;
         /**
          * A2A Agent
-         * @description A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`["*"]`).
+         * @description A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`["*"]`). Failures are real HTTP errors: 422 empty input, 400/404 liaison slot misconfigured, 503 `ai_engine_unreachable`, 502 `ai_engine_failed`, 504 `agent_timeout`.
          */
         post: operations["a2a_agent_api_v1_a2a_agent_post"];
         delete?: never;
@@ -1297,7 +1283,7 @@ export interface paths {
         put?: never;
         /**
          * Ai Engine Test
-         * @description Run a minimal-token generation probe against saved or draft LLM settings.
+         * @description Run a minimal-token generation probe against a profile-shaped draft (or bound slot).
          */
         post: operations["ai_engine_test_api_v1_system_ai_engine_test_post"];
         delete?: never;
@@ -1878,6 +1864,9 @@ export interface paths {
          * Events
          * @description SSE stream. EventSource cannot send headers; verify_auth (via API_DEPS)
          *     accepts ?token= and the loopback bypass.
+         *
+         *     Frame contract (``SseEventEnvelope`` + the 8 ``Sse*Payload`` components) is
+         *     injected into OpenAPI by ``server/api/openapi_ext.py``.
          */
         get: operations["events_api_v1_events_get"];
         put?: never;
@@ -1897,7 +1886,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Agent Chat */
+        /**
+         * Agent Chat
+         * @description Run one assistant turn.
+         *
+         *     LLM failures are real HTTP errors (504 timeout / 503 unreachable / 502
+         *     other upstream failure); profile problems keep their own 400 / 404.
+         */
         post: operations["agent_chat_api_v1_agent_chat_post"];
         delete?: never;
         options?: never;
@@ -1921,6 +1916,10 @@ export interface paths {
          *     Each line is one JSON object with a ``type`` field:
          *     ``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.
          *     LLM providers stay non-streaming; only tool execution progress is streamed.
+         *
+         *     Resolving the profile happens before the response starts, so configuration
+         *     errors are real HTTP errors. Once the 200 is committed, later failures can
+         *     only be reported in band as an ``error`` line.
          */
         post: operations["agent_chat_stream_api_v1_agent_chat_stream_post"];
         delete?: never;
@@ -1975,7 +1974,7 @@ export interface paths {
         };
         /**
          * Focal Background Image
-         * @description Proxy today's Bing wallpaper bytes for same-origin CSS / preview use.
+         * @description Proxy Bing wallpaper bytes for same-origin CSS / preview use.
          */
         get: operations["focal_background_image_api_v1_theme_focal_background_image_get"];
         put?: never;
@@ -1998,9 +1997,7 @@ export interface components {
              */
             input: string;
             /** Messages */
-            messages?: {
-                [key: string]: unknown;
-            }[];
+            messages?: components["schemas"]["AgentChatMessage"][];
             /** Locale */
             locale?: string | null;
         };
@@ -2081,8 +2078,11 @@ export interface components {
         ActionBody: {
             /** Name */
             name: string;
-            /** Actiontype */
-            actionType: string;
+            /**
+             * Actiontype
+             * @enum {string}
+             */
+            actionType: "telegram_bot" | "discord_webhook" | "http_webhook" | "mqtt";
             /** Configuration */
             configuration: string;
             /** Triggerconditions */
@@ -2255,9 +2255,7 @@ export interface components {
         /** AgentChatBody */
         AgentChatBody: {
             /** Messages */
-            messages?: {
-                [key: string]: unknown;
-            }[];
+            messages?: components["schemas"]["AgentChatMessage"][];
             /** Sessionid */
             sessionId?: string | null;
             /** Locale */
@@ -2271,8 +2269,30 @@ export interface components {
             llmProfileId?: string | null;
         };
         /**
+         * AgentChatMessage
+         * @description One turn of client-supplied chat history.
+         *
+         *     Client ``system`` turns are accepted but dropped before the prompt is built
+         *     (``server.agent.runtime_parse.messages_for_channel``) — the server owns the
+         *     system prompt.
+         */
+        AgentChatMessage: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant" | "system";
+            /** Content */
+            content: string;
+        };
+        /**
          * AgentChatResponse
          * @description Agent chat final payload (non-stream and stream ``type=final``).
+         *
+         *     Success only: LLM and runtime failures are HTTP errors (see
+         *     ``server/api/agent_errors.py``), not a 200 carrying an ``error`` field.
+         *     The NDJSON stream keeps a separate in-band ``type=error`` line for
+         *     failures that happen after the status is committed.
          */
         AgentChatResponse: {
             /** Type */
@@ -2283,8 +2303,6 @@ export interface components {
             sessionId?: string | null;
             /** Toolcalls */
             toolCalls?: components["schemas"]["AgentToolCallSummary"][];
-            /** Error */
-            error?: string | null;
             taskConfig?: components["schemas"]["TaskDraftPayload"] | null;
         };
         /**
@@ -2350,20 +2368,74 @@ export interface components {
              */
             resultSummary: string;
         };
-        /** AiEngineTestBody */
+        /**
+         * AiEngineHealthStatusResponse
+         * @description GET ``/system/ai-engine/status`` — LLM provider connectivity probe.
+         */
+        AiEngineHealthStatusResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "available" | "unavailable";
+            /** Reason */
+            reason?: string | null;
+            /** Provider */
+            provider?: string | null;
+        };
+        /**
+         * AiEngineTestBody
+         * @description Unsaved profile-shaped draft for ``POST /system/ai-engine/test``.
+         *
+         *     Same wire fields as ``LlmProfileUpsertBody`` connection card
+         *     (``provider``／``baseUrl``／``model``／``apiKey``／``thinkingEnabled``),
+         *     plus optional ``llmProfileId`` for masked-secret fallback.
+         */
         AiEngineTestBody: {
-            /** Llmprovider */
-            llmProvider?: string | null;
-            /** Llmbaseurl */
-            llmBaseUrl?: string | null;
-            /** Llmmodel */
-            llmModel?: string | null;
-            /** Llmapikey */
-            llmApiKey?: string | null;
-            /** Ollamathinkingenabled */
-            ollamaThinkingEnabled?: boolean | null;
+            /** Provider */
+            provider?: ("ollama" | "openai_compatible" | "gemini_compatible" | "openrouter") | null;
+            /** Baseurl */
+            baseUrl?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Apikey */
+            apiKey?: string | null;
+            /** Thinkingenabled */
+            thinkingEnabled?: boolean | null;
             /** Llmprofileid */
             llmProfileId?: string | null;
+        };
+        /**
+         * AiEngineTestResultResponse
+         * @description POST ``/system/ai-engine/test`` — minimal-token generation probe result.
+         */
+        AiEngineTestResultResponse: {
+            /** Success */
+            success: boolean;
+            /** Provider */
+            provider?: string | null;
+            /** Model */
+            model?: string | null;
+            /** Latencyms */
+            latencyMs: number;
+            /** Prompttokens */
+            promptTokens: number;
+            /** Completiontokens */
+            completionTokens: number;
+            /** Preview */
+            preview?: string | null;
+            /** Error */
+            error?: string | null;
+        };
+        /**
+         * AnalysisAbortResponse
+         * @description POST ``/system/analysis/abort`` — batches failed by the emergency abort.
+         */
+        AnalysisAbortResponse: {
+            /** Analysispaused */
+            analysisPaused: boolean;
+            /** Abortedbatchids */
+            abortedBatchIds: string[];
         };
         /** AnalysisEventResponse */
         AnalysisEventResponse: {
@@ -2436,6 +2508,14 @@ export interface components {
             /** Paused */
             paused: boolean;
         };
+        /**
+         * AnalysisPauseResponse
+         * @description POST ``/system/analysis/pause`` — scheduler pause state after the call.
+         */
+        AnalysisPauseResponse: {
+            /** Analysispaused */
+            analysisPaused: boolean;
+        };
         /** AppLogCursorResponse */
         AppLogCursorResponse: {
             /** Time */
@@ -2449,10 +2529,16 @@ export interface components {
             id: string;
             /** Time */
             time: string;
-            /** Level */
-            level: string;
-            /** Category */
-            category: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "info" | "success" | "warning" | "error";
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "analysis" | "collector" | "source" | "system" | "frontend";
             /** Kind */
             kind: string;
             /** Message */
@@ -2937,6 +3023,45 @@ export interface components {
             /** Sourcename */
             sourceName: string | null;
         };
+        /**
+         * CollectorAdapterStatusResponse
+         * @description One adapter row in ``GET /system/collector/status``.
+         */
+        CollectorAdapterStatusResponse: {
+            /** Name */
+            name: string;
+            /** Sourceid */
+            sourceId: string;
+            /** Connected */
+            connected: boolean;
+            /** Lasterror */
+            lastError?: string | null;
+            /** Lastconnectedat */
+            lastConnectedAt?: string | null;
+        };
+        /**
+         * CollectorRestartResponse
+         * @description POST ``/system/collector/restart`` — message plus pre-restart status.
+         */
+        CollectorRestartResponse: {
+            /** Message */
+            message: string;
+            /** Previousstatus */
+            previousStatus: string;
+        };
+        /**
+         * CollectorStatusResponse
+         * @description GET ``/system/collector/status`` — aggregate status plus adapter details.
+         */
+        CollectorStatusResponse: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "stopped" | "error";
+            /** Adapters */
+            adapters: components["schemas"]["CollectorAdapterStatusResponse"][];
+        };
         /** DeviceInfoResponse */
         DeviceInfoResponse: {
             /** Id */
@@ -2949,6 +3074,35 @@ export interface components {
             lastSeenAt: string;
             /** Expiresat */
             expiresAt: string;
+        };
+        /**
+         * DeviceListEntryResponse
+         * @description One row of GET ``/setup/devices``; ``current`` marks the caller's own session.
+         */
+        DeviceListEntryResponse: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Createdat */
+            createdAt: string;
+            /** Lastseenat */
+            lastSeenAt: string;
+            /** Expiresat */
+            expiresAt: string;
+            /**
+             * Current
+             * @default false
+             */
+            current: boolean;
+        };
+        /**
+         * DeviceListResponse
+         * @description GET ``/setup/devices`` — active device sessions for this household.
+         */
+        DeviceListResponse: {
+            /** Devices */
+            devices: components["schemas"]["DeviceListEntryResponse"][];
         };
         /** DeviceSessionTokensResponse */
         DeviceSessionTokensResponse: {
@@ -3165,8 +3319,6 @@ export interface components {
             schemaSemver: string;
             /** Bindhost */
             bindHost: string;
-            /** Lanaccessenabled */
-            lanAccessEnabled: boolean;
         };
         /** HttpSourceBody */
         HttpSourceBody: {
@@ -3462,8 +3614,6 @@ export interface components {
             profileProvider?: string | null;
             /** Profilemodel */
             profileModel?: string | null;
-            /** Profileisdefault */
-            profileIsDefault?: boolean | null;
         };
         /** LlmGlobalSlotsResponse */
         LlmGlobalSlotsResponse: {
@@ -3512,7 +3662,7 @@ export interface components {
              * Jsonmode
              * @default disabled
              */
-            jsonMode: string;
+            jsonMode: ("disabled" | "json_schema" | "json_object") | string;
             /**
              * Websearchenabled
              * @default true
@@ -3522,17 +3672,12 @@ export interface components {
              * Websearchprovider
              * @default auto
              */
-            webSearchProvider: string;
+            webSearchProvider: ("auto" | "duckduckgo" | "brave") | string;
             /**
              * Bravesearchapikey
              * @default
              */
             braveSearchApiKey: string;
-            /**
-             * Isdefault
-             * @default false
-             */
-            isDefault: boolean;
             /** Staffclasses */
             staffClasses?: string[];
             /** Staffinstances */
@@ -3572,8 +3717,9 @@ export interface components {
             /**
              * Jsonmode
              * @default disabled
+             * @enum {string}
              */
-            jsonMode: string;
+            jsonMode: "disabled" | "json_schema" | "json_object";
             /**
              * Websearchenabled
              * @default true
@@ -3588,16 +3734,14 @@ export interface components {
             /** Bravesearchapikey */
             braveSearchApiKey?: string | null;
             /** Staffclasses */
-            staffClasses?: ("leaderboard" | "intel_event" | "agent" | "assistant")[];
-            /** Isdefault */
-            isDefault?: boolean | null;
+            staffClasses?: ("leaderboard" | "intel_event" | "agent")[];
         };
         /** LlmStaffInstanceResponse */
         LlmStaffInstanceResponse: {
             /** Id */
             id: string;
             /** Staffclass */
-            staffClass: ("leaderboard" | "intel_event" | "agent" | "assistant") | string;
+            staffClass: ("leaderboard" | "intel_event" | "agent") | string;
             /** Profileid */
             profileId: string;
             /** Displayname */
@@ -3617,8 +3761,6 @@ export interface components {
             profileProvider?: string | null;
             /** Profilemodel */
             profileModel?: string | null;
-            /** Profileisdefault */
-            profileIsDefault?: boolean | null;
         };
         /** LogCreate */
         LogCreate: {
@@ -3979,8 +4121,8 @@ export interface components {
          * RetentionDeletedCounts
          * @description Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.
          *
-         *     Device-auth and orphan timeline dismissals always run, independent of the
-         *     configured ``retention_*_days`` windows.
+         *     Device-auth and orphan timeline dismissals / importance markers always run,
+         *     independent of the configured ``retention_*_days`` windows.
          */
         RetentionDeletedCounts: {
             /** Messages */
@@ -3997,6 +4139,8 @@ export interface components {
             user_events: number;
             /** Timeline Dismissals */
             timeline_dismissals: number;
+            /** Timeline Importance */
+            timeline_importance: number;
             /** Device Access Tokens */
             device_access_tokens: number;
             /** Device Sessions */
@@ -4014,6 +4158,35 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+        };
+        /**
+         * RotateSecretsResponse
+         * @description POST ``/system/rotate-secrets`` — recovery result (data-preserving).
+         */
+        RotateSecretsResponse: {
+            /** Message */
+            message: string;
+            /** Secretsready */
+            secretsReady: boolean;
+            /** Runtimestarted */
+            runtimeStarted: boolean;
+            scrubbed: components["schemas"]["RotateSecretsScrubbedCounts"];
+        };
+        /**
+         * RotateSecretsScrubbedCounts
+         * @description Per-category scrub counts, mirroring ``scrub_undecryptable_secrets``.
+         */
+        RotateSecretsScrubbedCounts: {
+            /** System Config */
+            system_config: number;
+            /** Llm Profiles */
+            llm_profiles: number;
+            /** Sources */
+            sources: number;
+            /** Stale Connected */
+            stale_connected: number;
+            /** Actions */
+            actions: number;
         };
         /** RssFeedBody */
         RssFeedBody: {
@@ -4048,6 +4221,14 @@ export interface components {
             pollIntervalSeconds?: number | null;
             /** Name */
             name?: string | null;
+        };
+        /**
+         * SetupOkResponse
+         * @description Boolean acknowledgement for setup password routes (change / reset).
+         */
+        SetupOkResponse: {
+            /** Ok */
+            ok: boolean;
         };
         /** SetupStatusResponse */
         SetupStatusResponse: {
@@ -4098,6 +4279,14 @@ export interface components {
             createdAt: string;
             /** Updatedat */
             updatedAt: string;
+        };
+        /**
+         * SystemMessageResponse
+         * @description Message-only ops acknowledgements (reset / restart).
+         */
+        SystemMessageResponse: {
+            /** Message */
+            message: string;
         };
         /**
          * SystemSettingsSnapshot
@@ -4170,6 +4359,79 @@ export interface components {
             mcpCapItemsRead: boolean;
             /** Mcpcapitemswrite */
             mcpCapItemsWrite: boolean;
+        };
+        /**
+         * SystemSettingsUpdateBody
+         * @description Partial ``PUT /config/settings`` body.
+         *
+         *     All-optional mirror of ``SystemSettingsSnapshot`` (drift asserted in
+         *     ``server/api/routes/config.py``); unknown keys → 422 via ``extra="forbid"``.
+         */
+        SystemSettingsUpdateBody: {
+            /** Analysispaused */
+            analysisPaused?: boolean | null;
+            /** Analysisbatchmessagelimit */
+            analysisBatchMessageLimit?: string | null;
+            /** Analysismaxtotalchars */
+            analysisMaxTotalChars?: string | null;
+            /** Analysismaxestimatedinputtokens */
+            analysisMaxEstimatedInputTokens?: string | null;
+            /** Analysistraceverbose */
+            analysisTraceVerbose?: boolean | null;
+            /** Llmgenerationtimeout */
+            llmGenerationTimeout?: string | null;
+            /** Maxbatchretries */
+            maxBatchRetries?: string | null;
+            /** Maxconcurrentbatches */
+            maxConcurrentBatches?: string | null;
+            /** Analysisstrategymode */
+            analysisStrategyMode?: string | null;
+            /** Analysistriggerthreshold */
+            analysisTriggerThreshold?: string | null;
+            /** Retentionmessagesdays */
+            retentionMessagesDays?: string | null;
+            /** Retentionanalysisdays */
+            retentionAnalysisDays?: string | null;
+            /** Retentionleaderboarddays */
+            retentionLeaderboardDays?: string | null;
+            /** Retentionapplogsdays */
+            retentionAppLogsDays?: string | null;
+            /** Retentionusereventsdays */
+            retentionUserEventsDays?: string | null;
+            /** Autopauseonretriesexhausted */
+            autoPauseOnRetriesExhausted?: boolean | null;
+            /** Weatherlocation */
+            weatherLocation?: string | null;
+            /** Uilocale */
+            uiLocale?: string | null;
+            /** Agenthistorymaxmessages */
+            agentHistoryMaxMessages?: string | null;
+            /** Agenthistorymaxchars */
+            agentHistoryMaxChars?: string | null;
+            /** Assistantdisplayname */
+            assistantDisplayName?: string | null;
+            /** Assistantavatar */
+            assistantAvatar?: string | null;
+            /** Userdisplayname */
+            userDisplayName?: string | null;
+            /** Useravatar */
+            userAvatar?: string | null;
+            /** Userbackground */
+            userBackground?: string | null;
+            /** Mcpenabled */
+            mcpEnabled?: boolean | null;
+            /** Mcpcapcalendarread */
+            mcpCapCalendarRead?: boolean | null;
+            /** Mcpcapcalendarwrite */
+            mcpCapCalendarWrite?: boolean | null;
+            /** Mcpcapmessagessearch */
+            mcpCapMessagesSearch?: boolean | null;
+            /** Mcpcapintelligencesearch */
+            mcpCapIntelligenceSearch?: boolean | null;
+            /** Mcpcapitemsread */
+            mcpCapItemsRead?: boolean | null;
+            /** Mcpcapitemswrite */
+            mcpCapItemsWrite?: boolean | null;
         };
         /** TaskActivitySpanResponse */
         TaskActivitySpanResponse: {
@@ -4256,7 +4518,7 @@ export interface components {
             /** Analysisbatchmessagelimit */
             analysisBatchMessageLimit?: number | null;
             /** Analysisstrategymode */
-            analysisStrategyMode?: string | null;
+            analysisStrategyMode?: ("conservative" | "balanced" | "aggressive") | null;
             /** Worksetid */
             worksetId?: string | null;
             /** Triggermode */
@@ -4432,6 +4694,32 @@ export interface components {
             channelIds?: components["schemas"]["ChannelRefResponse"][] | null;
             /** Deletedbatchcount */
             deletedBatchCount?: number | null;
+        };
+        /**
+         * TaskTemplateResponse
+         * @description One built-in preset from ``GET /tasks/templates`` (``shared/task_presets.json``).
+         */
+        TaskTemplateResponse: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /**
+             * Analysismode
+             * @enum {string}
+             */
+            analysisMode: "leaderboard" | "intel_event" | "agent";
+            /** Prompttemplate */
+            promptTemplate: string;
+            /**
+             * Defaultanalysistimerange
+             * @enum {string}
+             */
+            defaultAnalysisTimeRange: "all" | "today" | "1h" | "6h" | "48h" | "1d" | "7d" | "30d";
+            /** Badge */
+            badge: string;
         };
         /** Telegram2faBody */
         Telegram2faBody: {
@@ -4937,6 +5225,271 @@ export interface components {
             /** Name */
             name: string;
         };
+        /**
+         * SseMessagesUpdatedPayload
+         * @description ``messages_updated`` — newly inserted messages (collector / ingest).
+         */
+        SseMessagesUpdatedPayload: {
+            /** Messages */
+            messages: components["schemas"]["MessageResponse"][];
+        };
+        /**
+         * SseCollectorStatusChangedPayload
+         * @description ``collector_status_changed`` — aggregate collector process status.
+         */
+        SseCollectorStatusChangedPayload: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "running" | "stopped" | "error";
+            /**
+             * Adapter Name
+             * @description Failing adapter name. Deliberately snake_case (wire contract).
+             */
+            adapter_name?: string | null;
+            /**
+             * Error Summary
+             * @description Error summary when an adapter connection fails. Deliberately snake_case.
+             */
+            error_summary?: string | null;
+            /**
+             * Correlation Id
+             * @description Trace id for error-toast correlation. Deliberately snake_case.
+             */
+            correlation_id?: string | null;
+        };
+        /**
+         * SseSourceStatusChangedPayload
+         * @description ``source_status_changed`` — per-source adapter connection changes.
+         *
+         *     ``connecting`` is a transient reconnect state that is never persisted to
+         *     ``sources.status`` (DB CHECK allows connected/disconnected/error only).
+         */
+        SseSourceStatusChangedPayload: {
+            /** Sourceid */
+            sourceId: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "connected" | "connecting" | "disconnected" | "error";
+            /** Lasterror */
+            lastError?: string | null;
+        };
+        /**
+         * SseAnalysisStartedPayload
+         * @description ``analysis_started`` — a batch (or agent tick) entered the LLM call.
+         */
+        SseAnalysisStartedPayload: {
+            /** Taskid */
+            taskId: string;
+            /** Taskname */
+            taskName: string;
+            /** Batchid */
+            batchId: string;
+            /** Messagecount */
+            messageCount: number;
+            /** Estimatedtokens */
+            estimatedTokens: number;
+            /** Llmprovider */
+            llmProvider: string;
+            /** Llmmodel */
+            llmModel: string;
+            /** Websearchmode */
+            webSearchMode?: string | null;
+            /** Analysismode */
+            analysisMode?: ("leaderboard" | "intel_event" | "agent") | null;
+        };
+        /**
+         * SseOverlapStatistics
+         * @description Overlap token statistics attached to message-batch completions.
+         */
+        SseOverlapStatistics: {
+            /** Overlapusedcount */
+            overlapUsedCount: number;
+            /** Overlaptrimmedcount */
+            overlapTrimmedCount: number;
+            /** Overlaptokens */
+            overlapTokens: number;
+            /** Primarytokens */
+            primaryTokens: number;
+            /** Totaltokens */
+            totalTokens: number;
+        };
+        /**
+         * SseAnalysisCompletedPayload
+         * @description ``analysis_completed`` — batch / agent tick finished (or was skipped).
+         */
+        SseAnalysisCompletedPayload: {
+            /** Taskid */
+            taskId: string;
+            /** Batchid */
+            batchId: string;
+            /**
+             * Analysismode
+             * @enum {string}
+             */
+            analysisMode: "leaderboard" | "intel_event" | "agent";
+            /** Findingscount */
+            findingsCount: number;
+            /** Hasfindings */
+            hasFindings: boolean;
+            overlapStatistics?: components["schemas"]["SseOverlapStatistics"] | null;
+            /** Websearchmode */
+            webSearchMode?: string | null;
+            /** Messagecount */
+            messageCount?: number | null;
+            /** Skipped */
+            skipped?: boolean | null;
+            /** Skipreason */
+            skipReason?: string | null;
+        };
+        /**
+         * SseAnalysisFailedPayload
+         * @description ``analysis_failed`` — batch error (retry-in-place) or agent tick failure.
+         */
+        SseAnalysisFailedPayload: {
+            /** Taskid */
+            taskId: string;
+            /** Taskname */
+            taskName: string;
+            /** Batchid */
+            batchId: string;
+            /** Error */
+            error: string;
+            /** Retrying */
+            retrying: boolean;
+            /** Currentretry */
+            currentRetry: number;
+            /** Maxretries */
+            maxRetries: number;
+            /** Retriesexhausted */
+            retriesExhausted: boolean;
+            /** Analysismode */
+            analysisMode?: ("leaderboard" | "intel_event" | "agent") | null;
+            /** Taskdeactivated */
+            taskDeactivated?: boolean | null;
+        };
+        /**
+         * SseAnalysisPausedChangedPayload
+         * @description ``analysis_paused_changed`` — exhausted retries auto-paused global analysis.
+         */
+        SseAnalysisPausedChangedPayload: {
+            /** Analysispaused */
+            analysisPaused: boolean;
+            /**
+             * Reason
+             * @constant
+             */
+            reason: "batch_retries_exhausted";
+            /** Taskid */
+            taskId: string;
+            /** Taskname */
+            taskName: string;
+            /** Batchid */
+            batchId: string;
+        };
+        /**
+         * SseResourceModifiedPayload
+         * @description ``resource_modified`` — resource CRUD invalidation (see ``publish_resource_modified``).
+         */
+        SseResourceModifiedPayload: {
+            /** Resourcetype */
+            resourceType: string;
+            /** Resourceid */
+            resourceId: string;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "created" | "updated" | "deleted";
+        };
+        /**
+         * SseEventEnvelope
+         * @description ``data`` field of each named SSE frame: ``{"type": <event>, "payload": {...}}``.
+         */
+        SseEventEnvelope: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "messages_updated" | "collector_status_changed" | "source_status_changed" | "analysis_started" | "analysis_completed" | "analysis_failed" | "analysis_paused_changed" | "resource_modified";
+            /** Payload */
+            payload: components["schemas"]["SseMessagesUpdatedPayload"] | components["schemas"]["SseCollectorStatusChangedPayload"] | components["schemas"]["SseSourceStatusChangedPayload"] | components["schemas"]["SseAnalysisStartedPayload"] | components["schemas"]["SseAnalysisCompletedPayload"] | components["schemas"]["SseAnalysisFailedPayload"] | components["schemas"]["SseAnalysisPausedChangedPayload"] | components["schemas"]["SseResourceModifiedPayload"];
+        };
+        /**
+         * TelegramBotConfig
+         * @description ``telegram_bot`` configuration JSON (``bot_token`` masked on read).
+         */
+        TelegramBotConfig: {
+            /** Bot Token */
+            bot_token: string;
+            /** Chat Id */
+            chat_id: string;
+        };
+        /**
+         * DiscordWebhookConfig
+         * @description ``discord_webhook`` configuration JSON (``webhook_url`` masked on read).
+         */
+        DiscordWebhookConfig: {
+            /** Webhook Url */
+            webhook_url: string;
+        };
+        /**
+         * HttpWebhookConfig
+         * @description ``http_webhook`` configuration JSON (``url`` and header values masked on read).
+         */
+        HttpWebhookConfig: {
+            /** Url */
+            url: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "POST" | "PUT";
+            /** Headers */
+            headers: {
+                [key: string]: string;
+            };
+            /** Include Raw Data */
+            include_raw_data: boolean;
+        };
+        /**
+         * MqttConfig
+         * @description ``mqtt`` configuration JSON (``password`` masked on read).
+         */
+        MqttConfig: {
+            /** Broker Url */
+            broker_url: string;
+            /** Topic */
+            topic: string;
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+            /**
+             * Qos
+             * @enum {integer}
+             */
+            qos: 0 | 1 | 2;
+        };
+        /**
+         * ActionTriggerConditions
+         * @description ``triggerConditions`` JSON — optional trigger filters for an action.
+         */
+        ActionTriggerConditions: {
+            /**
+             * Score Threshold
+             * @description Minimum leaderboard score required to trigger.
+             */
+            score_threshold?: number | null;
+            /**
+             * Task Id
+             * @description Restrict triggering to one analysis task.
+             */
+            task_id?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -5071,9 +5624,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: boolean;
-                    };
+                    "application/json": components["schemas"]["SetupOkResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5106,9 +5657,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: boolean;
-                    };
+                    "application/json": components["schemas"]["SetupOkResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5170,9 +5719,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: boolean;
-                    };
+                    "application/json": components["schemas"]["SetupOkResponse"];
                 };
             };
         };
@@ -5192,9 +5739,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["DeviceListResponse"];
                 };
             };
         };
@@ -5216,9 +5761,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: boolean;
-                    };
+                    "application/json": components["schemas"]["SetupOkResponse"];
                 };
             };
             /** @description Validation Error */
@@ -5247,9 +5790,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    }[];
+                    "application/json": components["schemas"]["TaskTemplateResponse"][];
                 };
             };
         };
@@ -5786,37 +6327,6 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LlmProfileResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    set_default_profile_api_v1_llm_profiles__profile_id__set_default_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profile_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7153,7 +7663,7 @@ export interface operations {
     fetch_stats_api_v1_results_stats_get: {
         parameters: {
             query?: {
-                time_range?: string | null;
+                timeRange?: string | null;
             };
             header?: never;
             path?: never;
@@ -7215,15 +7725,15 @@ export interface operations {
     get_messages_page_api_v1_messages_page_get: {
         parameters: {
             query?: {
-                source_ids?: string | null;
-                time_range?: string | null;
+                sourceIds?: string | null;
+                timeRange?: string | null;
                 search?: string | null;
                 platform?: string | null;
-                channel_ids?: string | null;
-                cursor_time?: string | null;
-                cursor_id?: string | null;
+                channelIds?: string | null;
+                cursorTime?: string | null;
+                cursorId?: string | null;
                 limit?: number;
-                include_total?: boolean;
+                includeTotal?: boolean;
             };
             header?: never;
             path?: never;
@@ -7400,9 +7910,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["SystemSettingsUpdateBody"];
             };
         };
         responses: {
@@ -7582,9 +8090,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["RotateSecretsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7613,9 +8119,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["SystemMessageResponse"];
                 };
             };
         };
@@ -7635,9 +8139,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["CollectorStatusResponse"];
                 };
             };
         };
@@ -7657,9 +8159,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["CollectorRestartResponse"];
                 };
             };
         };
@@ -7679,9 +8179,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AiEngineHealthStatusResponse"];
                 };
             };
         };
@@ -7705,9 +8203,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AiEngineTestResultResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7736,9 +8232,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AnalysisAbortResponse"];
                 };
             };
         };
@@ -7762,9 +8256,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["AnalysisPauseResponse"];
                 };
             };
             /** @description Validation Error */
@@ -7813,9 +8305,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["SystemMessageResponse"];
                 };
             };
         };
@@ -9071,8 +9561,8 @@ export interface operations {
     query_logs_page_api_v1_logs_get: {
         parameters: {
             query?: {
-                cursor_time?: string | null;
-                cursor_id?: string | null;
+                cursorTime?: string | null;
+                cursorId?: string | null;
                 limit?: number;
                 kind?: string | null;
                 excludeKind?: string | null;
@@ -9223,13 +9713,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
+            /** @description Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{"type": <event>, "payload": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. `collector_status_changed` deliberately uses snake_case adapter fields (`adapter_name`, `error_summary`, `correlation_id`). */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "text/event-stream": components["schemas"]["SseEventEnvelope"];
                 };
             };
         };
@@ -9340,6 +9830,8 @@ export interface operations {
             query?: {
                 /** @description UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US). */
                 locale?: string | null;
+                /** @description Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7. */
+                idx?: number;
             };
             header?: never;
             path?: never;
@@ -9372,6 +9864,8 @@ export interface operations {
             query?: {
                 /** @description UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US). */
                 locale?: string | null;
+                /** @description Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7. */
+                idx?: number;
             };
             header?: never;
             path?: never;
@@ -9385,9 +9879,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "image/jpeg": string;
-                    "image/png": string;
-                    "image/webp": string;
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

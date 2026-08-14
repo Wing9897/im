@@ -52,6 +52,4 @@ USER_EVENT_ORIGIN_CHECK_SQL = "CHECK (origin IN ({}))".format(
     ",".join(f"'{value}'" for value in ALL_USER_EVENT_ORIGINS)
 )
 
-USER_EVENT_ORIGIN_ERROR = (
-    "origin must be 'manual', 'assistant', 'a2a', 'agent', 'ics', or 'mcp'"
-)
+USER_EVENT_ORIGIN_ERROR = "origin must be 'manual', 'assistant', 'a2a', 'agent', 'ics', or 'mcp'"

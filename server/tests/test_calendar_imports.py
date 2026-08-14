@@ -373,7 +373,7 @@ async def test_imported_rrule_uses_real_anchor_timezone_exdate_and_rdate(client,
         app.state.db,
         start="2026-08-01T00:00:00Z",
         end="2026-08-31T23:59:59Z",
-        task_id=series_id,
+        series_id=series_id,
         limit=50,
     )
     starts = [item["startTime"] for item in window["items"] if item["source"] == "recurring"]
@@ -408,7 +408,7 @@ async def test_all_day_until_exdate_and_rdate_keep_calendar_dates(client, app) -
         app.state.db,
         start="2026-08-01T00:00:00Z",
         end="2026-08-05T23:59:59Z",
-        task_id=series_id,
+        series_id=series_id,
         limit=20,
     )
     recurring = [event for event in window["items"] if event["source"] == "recurring"]
@@ -478,9 +478,7 @@ async def test_api_commit_is_visible_to_user_event_calendar_and_agent_consumers(
         params={"start": "2026-08-01T00:00:00Z", "end": "2026-08-31T23:59:59Z"},
     )
     assert user_events.status_code == 200
-    imported_user = next(
-        item for item in user_events.json()["items"] if item["id"] == ids["single-1@example.test"]
-    )
+    imported_user = next(item for item in user_events.json()["items"] if item["id"] == ids["single-1@example.test"])
     assert imported_user["origin"] == "ics"
     assert imported_user["icsUid"] == "single-1@example.test"
 

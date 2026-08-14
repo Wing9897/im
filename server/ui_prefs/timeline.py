@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from server.db.database import Database
 from server.ui_prefs.common import (
@@ -48,7 +49,7 @@ def sanitize_timeline_annotations(raw: Any) -> dict[str, Any]:
             end = value.get("endTime")
             if not _is_iso_time(start):
                 continue
-            end_clean: Optional[str]
+            end_clean: str | None
             if end is None or end == "":
                 end_clean = None
             elif _is_iso_time(end):

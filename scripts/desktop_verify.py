@@ -84,8 +84,7 @@ def _packaged_server_candidates() -> list[Path]:
         RELEASE_DIR / "mac-x64" / "Intelligence Monitor.app" / "Contents" / "Resources" / rel_mac,
     ]
     # electron-builder may nest under arch folders on some versions
-    for unpacked in RELEASE_DIR.glob("*-unpacked"):
-        candidates.append(unpacked / rel_unpacked)
+    candidates.extend(unpacked / rel_unpacked for unpacked in RELEASE_DIR.glob("*-unpacked"))
     return candidates
 
 

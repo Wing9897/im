@@ -38,7 +38,7 @@ describe("TimelineCalendarView markers", () => {
   });
 
   describe("day view — card location + layout", () => {
-    it("always shows location, using N/A when missing", () => {
+    it("shows location when present and omits literal N/A when missing", () => {
       const events = [
         makeEvent({
           id: "with-loc",
@@ -69,7 +69,7 @@ describe("TimelineCalendarView markers", () => {
         container.querySelectorAll('[data-testid="timeline-day-event-location"]'),
       ).map((node) => node.textContent ?? "");
       expect(locations.some((text) => text.includes("會議室 A"))).toBe(true);
-      expect(locations.some((text) => text.includes("N/A"))).toBe(true);
+      expect(locations.every((text) => !text.includes("N/A"))).toBe(true);
     });
   });
 

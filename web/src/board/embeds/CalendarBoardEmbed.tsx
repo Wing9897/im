@@ -29,7 +29,7 @@ export function CalendarBoardEmbed({
   onSelectEvent,
 }: CalendarBoardEmbedProps) {
   const { t } = useTranslation();
-  const weekdayLabels = t("board.calendar.weekdays", { returnObjects: true }) as string[];
+  const weekdayLabels = t("board:calendar.weekdays", { returnObjects: true }) as string[];
   const now = useMemo(() => new Date(), []);
   // eventStartsOnDay expects a midnight day boundary; passing `now` would
   // exclude earlier-today events once the clock moves past their startTime.
@@ -99,7 +99,7 @@ export function CalendarBoardEmbed({
                   {dayEvents.length > 0 ? (
                     <span
                       className="board-calendar-month__dots"
-                      aria-label={t("board.calendar.dayCountAria", { count: dayEvents.length })}
+                      aria-label={t("board:calendar.dayCountAria", { count: dayEvents.length })}
                     >
                       {dayEvents.slice(0, 3).map((event) => (
                         <span key={event.id} className="board-calendar-month__dot" />
@@ -114,10 +114,10 @@ export function CalendarBoardEmbed({
       ) : (
         <div className="board-calendar-day" data-testid="board-calendar-day">
           <div className="board-calendar-day__label">
-            {weekdayLabels[now.getDay()]} {now.getDate()} · {t("board.calendar.today")}
+            {weekdayLabels[now.getDay()]} {now.getDate()} · {t("board:calendar.today")}
           </div>
           {todayEvents.length === 0 ? (
-            <span className="board-calendar-day__empty">{t("board.calendar.noSchedule")}</span>
+            <span className="board-calendar-day__empty">{t("board:calendar.noSchedule")}</span>
           ) : (
             <div className="board-calendar-day__list" data-testid="board-calendar-day-list">
               {todayEvents.map((event) => (

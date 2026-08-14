@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import tempfile
+from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -72,16 +73,15 @@ def disarm_local_password_reset() -> bool:
             suffix=".tmp",
             dir=str(path.parent),
         )
+        tmp_path = Path(tmp_name)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 handle.write(payload)
-            os.replace(tmp_name, path)
+            tmp_path.replace(path)
         finally:
-            if os.path.exists(tmp_name):
-                try:
-                    os.remove(tmp_name)
-                except OSError:
-                    pass
+            if tmp_path.exists():
+                with suppress(OSError):
+                    tmp_path.unlink()
         logger.info("Disarmed %s after local password reset", RESET_PASSWORD_FOR_LOCAL_KEY)
         return True
     except OSError as exc:

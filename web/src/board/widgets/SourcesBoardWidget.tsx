@@ -2,18 +2,12 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { listSources } from "../../api/sources";
 import { Badge } from "../../components/ui";
-import { formatStatusLabel } from "../../styles/statusDot";
-import type { Source, ConnectionStatus } from "../../types";
+import { formatStatusLabel, connectionStatusBadgeTone } from "../../styles/statusDot";
+import type { Source } from "../../types";
 import { platformDisplayLabel } from "../../utils/platformRegistry";
 import { BoardWidgetShell } from "../BoardWidgetStatus";
 import { BOARD_POLL_MS, useBoardWidgetPoll } from "../useBoardWidgetPoll";
 import type { BoardWidgetProps } from "../types";
-
-function statusTone(status: ConnectionStatus): "success" | "danger" | "neutral" {
-  if (status === "connected") return "success";
-  if (status === "error") return "danger";
-  return "neutral";
-}
 
 /** Compact source status list for ops board. */
 export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
@@ -32,7 +26,7 @@ export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
         error={!sources ? error : null}
         onRetry={refresh}
         empty={Array.isArray(sources) && sources.length === 0}
-        emptyLabel={t("board.sources.empty")}
+        emptyLabel={t("board:sources.empty")}
       >
         {sources && sources.length > 0 ? (
           <ul className="board-widget-list">
@@ -50,7 +44,7 @@ export function SourcesBoardWidget({ active = true }: BoardWidgetProps) {
                       {platformDisplayLabel(source.platform)}
                     </Badge>
                   </span>
-                  <Badge tone={statusTone(source.status)}>
+                  <Badge tone={connectionStatusBadgeTone(source.status)}>
                     {formatStatusLabel(source.status)}
                   </Badge>
                 </div>

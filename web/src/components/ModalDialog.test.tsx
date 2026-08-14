@@ -275,4 +275,29 @@ describe("ModalDialog", () => {
       matchMediaSpy.mockRestore();
     }
   });
+
+  it("supports alertdialog role without a header close button", () => {
+    act(() => {
+      root.render(
+        createElement(
+          ModalDialog,
+          {
+            open: true,
+            title: "Confirm",
+            role: "alertdialog",
+            hideCloseButton: true,
+            onClose: vi.fn(),
+            testId: "alert-modal",
+            footer: createElement("button", { type: "button" }, "OK"),
+          },
+          createElement("p", null, "Body"),
+        ),
+      );
+    });
+
+    const dialog = document.body.querySelector('[role="alertdialog"]') as HTMLElement;
+    expect(dialog).not.toBeNull();
+    expect(dialog.querySelectorAll("button")).toHaveLength(1);
+    expect(dialog.querySelectorAll("button")[0].textContent).toBe("OK");
+  });
 });

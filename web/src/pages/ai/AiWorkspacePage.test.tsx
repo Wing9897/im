@@ -89,7 +89,11 @@ function renderAiWorkspaceRoute() {
   );
 }
 
-describe("AiWorkspacePage unsaved changes indicator", () => {
+// NOTE: the /ai/provider page now edits LLM profiles via a dialog with direct
+// API saves (see SettingsAiProviderPage.test.tsx) and no longer feeds the
+// shared system-settings draft, so the old unsaved-changes-indicator tests
+// against provider inputs were retired.
+describe("AiWorkspacePage provider route", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 
@@ -110,7 +114,7 @@ describe("AiWorkspacePage unsaved changes indicator", () => {
     container.remove();
   });
 
-  it("shows the unsaved changes indicator after a setting is modified", async () => {
+  it("renders the provider sub-route inside the workspace shell", async () => {
     setupInvokeMock();
 
     await act(async () => {
@@ -121,64 +125,7 @@ describe("AiWorkspacePage unsaved changes indicator", () => {
     });
 
     expect(container.textContent).not.toContain("未儲存變更");
-
-    const inputs = container.querySelectorAll<HTMLInputElement>("input:not([type='password'])");
-    const baseUrlInput = inputs[0];
-    expect(baseUrlInput).toBeTruthy();
-
-    await act(async () => {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      nativeInputValueSetter.call(baseUrlInput!, "http://new-url:11434");
-      baseUrlInput!.dispatchEvent(new Event("input", { bubbles: true }));
-      baseUrlInput!.dispatchEvent(new Event("change", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("未儲存變更");
-  });
-
-  it("hides the unsaved changes indicator after saving successfully", async () => {
-    setupInvokeMock();
-
-    await act(async () => {
-      root = createRoot(container);
-      root.render(renderSettingsRoute());
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    const inputs = container.querySelectorAll<HTMLInputElement>("input:not([type='password'])");
-    const baseUrlInput = inputs[0];
-    expect(baseUrlInput).toBeTruthy();
-
-    await act(async () => {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      nativeInputValueSetter.call(baseUrlInput!, "http://new-url:11434");
-      baseUrlInput!.dispatchEvent(new Event("input", { bubbles: true }));
-      baseUrlInput!.dispatchEvent(new Event("change", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("未儲存變更");
-
-    const saveButton = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent === "儲存 AI 供應商設定",
-    );
-    expect(saveButton).toBeTruthy();
-
-    await act(async () => {
-      saveButton!.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).not.toContain("未儲存變更");
+    expect(container.querySelector('nav[aria-label="設定分頁"]')).toBeTruthy();
   });
 });
 
@@ -230,7 +177,8 @@ describe("AiWorkspacePage layout", () => {
     const nav = container.querySelector('nav[aria-label="設定分頁"]');
     expect(nav).toBeTruthy();
     expect(container.textContent).not.toContain("助手");
-    expect(container.textContent).toContain("AI 供應商");
+    // Provider tab was renamed to "AI 設定檔" with the profile-based editor.
+    expect(container.textContent).toContain("AI 設定檔");
     expect(container.querySelector('[data-testid="segmented-indicator"]')).toBeTruthy();
     expect(container.querySelector(".relative.flex.w-full.overflow-hidden.rounded-md")).toBeTruthy();
   });

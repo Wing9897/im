@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
-from server.analyzer.llm_config import WIRE_PROVIDERS, normalize_wire_provider
+from server.analyzer.llm_config import WIRE_PROVIDERS
 from server.secrets import unprotect_text
 
 #: Providers that require a non-empty API key before a profile is usable.
-_API_KEY_REQUIRED_PROVIDERS = frozenset(
-    {"openai_compatible", "gemini_compatible", "openrouter"}
-)
+_API_KEY_REQUIRED_PROVIDERS = frozenset({"openai_compatible", "gemini_compatible", "openrouter"})
 
 
 def profile_incompleteness_reason(row: Mapping[str, Any] | None) -> str | None:
@@ -28,7 +27,9 @@ def profile_incompleteness_reason(row: Mapping[str, Any] | None) -> str | None:
     name = str(row.get("name") or "").strip()
     if not name:
         return "LLM profile name is required"
-    provider = normalize_wire_provider(str(row.get("provider") or ""))
+    # Direct membership check (no normalize): unknown provider marks the
+    # profile incomplete instead of raising, so callers get a 400 with reason.
+    provider = str(row.get("provider") or "").strip()
     if provider not in WIRE_PROVIDERS:
         return f"LLM profile has unknown provider: {provider or '(empty)'}"
     model = str(row.get("model") or "").strip()

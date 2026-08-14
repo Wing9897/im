@@ -9,7 +9,8 @@ from server.tests.contract_helpers import assert_keys
 async def test_viewer_tasks(client):
     resp = await client.get("/api/v1/viewer/tasks")
     body = resp.json()
-    assert len(body) == 6
+    # Seed has 5 analysis tasks; the calendar series lives on recurring_schedules.
+    assert len(body) == 5
     for task in body:
         assert_keys(task, ["id", "name", "isActive"], "viewer task")
     lb = next(t for t in body if t["id"] == seed.TASK_LEADERBOARD)

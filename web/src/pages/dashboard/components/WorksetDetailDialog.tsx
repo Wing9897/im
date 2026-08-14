@@ -85,7 +85,7 @@ export function WorksetDetailDialog({
     <ModalDialog
       open
       size="form"
-      title={t("workset.detailTitle", { name: workset.title })}
+      title={t("workset:detailTitle", { name: workset.title })}
       onClose={onClose}
       testId="workset-detail-dialog"
       bodyClassName="flex flex-col gap-md"
@@ -93,12 +93,12 @@ export function WorksetDetailDialog({
         <FormActions inline>
           {!workset.isSystem && onRename ? (
             <Button variant="secondary" size="sm" onClick={onRename}>
-              {t("workset.rename")}
+              {t("workset:rename")}
             </Button>
           ) : null}
           {!workset.isSystem && onDelete ? (
             <Button variant="secondary" size="sm" onClick={onDelete}>
-              {t("workset.delete")}
+              {t("workset:delete")}
             </Button>
           ) : null}
           <Button
@@ -107,7 +107,7 @@ export function WorksetDetailDialog({
             onClick={goCreateItem}
             data-testid="workset-detail-add-item"
           >
-            {t("workset.addItem")}
+            {t("workset:addItem")}
           </Button>
           <Button
             variant="secondary"
@@ -115,7 +115,7 @@ export function WorksetDetailDialog({
             onClick={goCreateEvent}
             data-testid="workset-detail-add-event"
           >
-            {t("workset.addEvent")}
+            {t("workset:addEvent")}
           </Button>
           <Button
             variant="secondary"
@@ -125,7 +125,7 @@ export function WorksetDetailDialog({
               navigate("/items");
             }}
           >
-            {t("workset.openItems")}
+            {t("workset:openItems")}
           </Button>
           <Button
             variant="primary"
@@ -136,7 +136,7 @@ export function WorksetDetailDialog({
             }}
             data-testid="workset-detail-add-task"
           >
-            {t("tasks.addTask")}
+            {t("tasks:addTask")}
           </Button>
           <Button variant="secondary" onClick={onClose}>
             {t("dialog.close")}
@@ -144,7 +144,7 @@ export function WorksetDetailDialog({
         </FormActions>
       }
     >
-      <p className={`m-0 ${captionClass}`}>{t("workset.detailSubtitle")}</p>
+      <p className={`m-0 ${captionClass}`}>{t("workset:detailSubtitle")}</p>
 
       {itemsError ? (
         <AlertBanner variant="error" role="alert" className="mb-0">

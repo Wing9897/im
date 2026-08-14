@@ -11,7 +11,7 @@ fields). Expansion / item_projection rows are coerced directly — no private
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Request
 
@@ -51,11 +51,11 @@ def _occurrence_wire(row: dict[str, Any], *, source: str) -> dict[str, Any]:
 @router.get("/items", response_model=list[CalendarOccurrenceResponse])
 async def list_calendar_items(
     request: Request,
-    range_start: Optional[str] = qalias("rangeStart", default=None),
-    range_end: Optional[str] = qalias("rangeEnd", default=None),
-    series_id: Optional[str] = qalias("seriesId", default=None),
-    series_ids: Optional[list[str]] = qalias("seriesIds", default=None),
-    include_items: Optional[bool] = qalias(
+    range_start: str | None = qalias("rangeStart", default=None),
+    range_end: str | None = qalias("rangeEnd", default=None),
+    series_id: str | None = qalias("seriesId", default=None),
+    series_ids: list[str] | None = qalias("seriesIds", default=None),
+    include_items: bool | None = qalias(
         "includeItems",
         default=None,
         description="Include trackable-item remind DATE projections (source=item_remind).",

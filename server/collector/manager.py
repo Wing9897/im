@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from server.collector import telegram_login
 from server.collector.adapter_factory import build_adapter
@@ -60,7 +60,7 @@ class CollectorManager:
         return self._default_session_dir()
 
     @classmethod
-    async def create(cls, db: Database, broadcaster: SseBroadcaster) -> "CollectorManager":
+    async def create(cls, db: Database, broadcaster: SseBroadcaster) -> CollectorManager:
         """Load stored sources; connect adapters in the background."""
         manager = cls(db, broadcaster)
         await manager._load_connected_sources()
@@ -82,7 +82,7 @@ class CollectorManager:
 
         try:
             await asyncio.wait_for(_disconnect_all(), timeout=10.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning("Collector shutdown timed out after 10 seconds")
         self._adapters.clear()
         self._broadcaster.publish("collector_status_changed", {"status": "stopped"})
@@ -304,5 +304,5 @@ class CollectorManager:
     async def _safe_disconnect(self, source_id: str, adapter: BasePlatformAdapter) -> None:
         try:
             await adapter.disconnect()
-        except Exception as exc:  # noqa: BLE001 — shutdown must not raise
-            logger.error("Error disconnecting adapter %s: %s", source_id, exc)
+        except Exception:  # noqa: BLE001 — shutdown must not raise
+            logger.exception("Error disconnecting adapter %s", source_id)

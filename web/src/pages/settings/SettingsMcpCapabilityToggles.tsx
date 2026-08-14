@@ -15,8 +15,6 @@ export const MCP_CAP_TOGGLES = [
   ["mcpCapItemsWrite", "itemsWrite"],
 ] as const;
 
-type McpCapKey = (typeof MCP_CAP_TOGGLES)[number][0];
-
 function enabledLabel(t: (key: string) => string, on: boolean): string {
   return on ? t("shared.enabled") : t("shared.disabled");
 }
@@ -86,7 +84,7 @@ export function SettingsMcpCapabilityToggles({
                       label={enabledLabel(t, checked)}
                       checked={checked}
                       disabled={capsDisabled}
-                      onChange={(e) => updateSettings(key as McpCapKey, e.target.checked)}
+                      onChange={(e) => updateSettings(key, e.target.checked)}
                       data-testid={`mcp-cap-${key}`}
                       aria-label={label}
                     />

@@ -114,10 +114,7 @@ async def _run_one_wave(
     calendar_summary = (
         await _calendar_summary(db, task_id) if resolved_spec.cap_calendar_read else "(calendar read disabled)"
     )
-    if isinstance(cursor, AgentMessageCursor):
-        cursor_label = cursor.timestamp
-    else:
-        cursor_label = cursor
+    cursor_label = cursor.timestamp if isinstance(cursor, AgentMessageCursor) else cursor
     seed = build_agent_seed_message(
         task_name=str(task.get("name") or task_id),
         task_id=task_id,
@@ -143,7 +140,7 @@ async def _run_one_wave(
             ),
             timeout=wave_timeout,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         reason = f"wave hard timeout ({wave_timeout}s)"
         logger.warning(
             "Agent tick %s wave %s exceeded hard timeout (%ss)",

@@ -107,6 +107,9 @@ SKIP_BATCH_ANALYSIS_MODES: Final[frozenset[str]] = frozenset(
 )
 
 
+ANALYSIS_MODE_CHECK_SQL = "CHECK (analysis_mode IN ({}))".format(",".join(f"'{value}'" for value in ALL_ANALYSIS_MODES))
+
+
 def get_analysis_mode_spec(mode: str | None) -> AnalysisModeSpec | None:
     """Lookup registry entry; unknown / empty → None."""
     if not mode:

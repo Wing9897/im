@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock
@@ -18,7 +17,7 @@ from server.collector.telegram import TelegramAdapter
 class _FakeQrLogin:
     def __init__(self, *, url: str = "tg://login?token=demo", expires_in: float = 60.0) -> None:
         self.url = url
-        self.expires = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+        self.expires = datetime.now(UTC) + timedelta(seconds=expires_in)
         self.wait = AsyncMock()
         self.recreate = AsyncMock()
 
@@ -52,7 +51,7 @@ async def test_start_qr_login_returns_qr_payload(monkeypatch):
 async def test_wait_qr_login_timeout_keeps_same_qr(monkeypatch):
     adapter = TelegramAdapter("acc-1", MagicMock(), MagicMock(), 1, "hash", session_dir=".")
     fake_qr = _FakeQrLogin(expires_in=40.0)
-    fake_qr.wait.side_effect = asyncio.TimeoutError()
+    fake_qr.wait.side_effect = TimeoutError()
     _attach_qr(adapter, fake_qr)
 
     result = await adapter.wait_qr_login(timeout=5)
@@ -65,11 +64,11 @@ async def test_wait_qr_login_timeout_keeps_same_qr(monkeypatch):
 async def test_wait_qr_login_expired_recreates(monkeypatch):
     adapter = TelegramAdapter("acc-1", MagicMock(), MagicMock(), 1, "hash", session_dir=".")
     fake_qr = _FakeQrLogin(expires_in=-1.0)
-    fake_qr.wait.side_effect = asyncio.TimeoutError()
+    fake_qr.wait.side_effect = TimeoutError()
 
     async def _recreate() -> None:
         fake_qr.url = "tg://login?token=refreshed"
-        fake_qr.expires = datetime.now(timezone.utc) + timedelta(seconds=60)
+        fake_qr.expires = datetime.now(UTC) + timedelta(seconds=60)
 
     fake_qr.recreate.side_effect = _recreate
     _attach_qr(adapter, fake_qr)

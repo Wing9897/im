@@ -16,11 +16,11 @@ from server.calendar.timeline_importance import (
     mark_timeline_important,
     unmark_timeline_important,
 )
-from server.calendar.user_events import (
+from server.calendar.user_events_normalize import UserEventValidationError
+from server.calendar.user_events_write import (
     create_user_event,
     update_user_event,
 )
-from server.calendar.user_events_normalize import UserEventValidationError
 from server.db.database import Database
 from server.domain.user_event_origins import (
     ORIGIN_ASSISTANT,

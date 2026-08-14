@@ -10,18 +10,17 @@ from server.api.deps import get_db, publish_resource_modified
 from server.api.query_aliases import qalias
 from server.api.schemas.requests import UserEventCreateBody, UserEventPatchBody
 from server.api.schemas.responses import UserEventResponse, UserEventsPageResponse
-from server.calendar.user_events import (
-    create_user_event,
-    delete_user_event,
-    get_user_event,
-    list_user_events_page,
-    update_user_event,
-)
 from server.calendar.user_events_normalize import (
     UserEventItemIdError,
     UserEventTaskIdError,
     UserEventValidationError,
     UserEventWorksetIdError,
+)
+from server.calendar.user_events_read import get_user_event, list_user_events_page
+from server.calendar.user_events_write import (
+    create_user_event,
+    delete_user_event,
+    update_user_event,
 )
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 

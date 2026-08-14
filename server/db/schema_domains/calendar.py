@@ -2,6 +2,8 @@
 
 from server.db.schema_domains.vocabulary import (
     TIMELINE_SOURCE_CHECK_SQL,
+    USER_EVENT_DIRECTION_CHECK_SQL,
+    USER_EVENT_KIND_CHECK_SQL,
     USER_EVENT_ORIGIN_CHECK_SQL,
 )
 
@@ -73,11 +75,11 @@ CREATE TABLE IF NOT EXISTS user_events (
     -- Special linked-calendar semantics (authority over title presets).
     -- normal = generic; expires = primary expiry projection; purchase_effective = finance.
     kind        TEXT NOT NULL DEFAULT 'normal'
-                CHECK (kind IN ('normal', 'expires', 'purchase_effective')),
+                {USER_EVENT_KIND_CHECK_SQL},
     -- Optional finance fields — only meaningful when kind=purchase_effective.
     amount      REAL DEFAULT NULL,
     direction   TEXT DEFAULT NULL
-                CHECK (direction IS NULL OR direction IN ('expense', 'income')),
+                {USER_EVENT_DIRECTION_CHECK_SQL},
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );

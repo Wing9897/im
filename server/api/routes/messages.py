@@ -8,12 +8,13 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Request
 from fastapi.responses import Response
 
 from server.api.deps import API_DEPS, get_broadcaster, get_collector, get_db
+from server.api.query_aliases import qalias
 from server.api.schemas.requests import IngestBatchBody, IngestMessageBody
 from server.api.schemas.responses import (
     MessageResponse,
@@ -52,19 +53,19 @@ async def get_message_media(request: Request, message_id: str) -> Response:
 @router.get("/page", response_model=MessagesPageResponse)
 async def get_messages_page(
     request: Request,
-    source_ids: Optional[str] = None,
-    time_range: Optional[str] = None,
-    search: Optional[str] = None,
-    platform: Optional[str] = None,
-    channel_ids: Optional[str] = None,
-    cursor_time: Optional[str] = None,
-    cursor_id: Optional[str] = None,
+    source_ids: str | None = qalias("sourceIds", default=None),
+    time_range: str | None = qalias("timeRange", default=None),
+    search: str | None = None,
+    platform: str | None = None,
+    channel_ids: str | None = qalias("channelIds", default=None),
+    cursor_time: str | None = qalias("cursorTime", default=None),
+    cursor_id: str | None = qalias("cursorId", default=None),
     limit: int = 50,
-    include_total: bool = True,
-) -> dict:
+    include_total: bool = qalias("includeTotal", default=True),
+) -> MessagesPageResponse:
     db = get_db(request)
     try:
-        return await fetch_messages_page(
+        page = await fetch_messages_page(
             db,
             source_ids=source_ids,
             time_range=time_range,
@@ -78,12 +79,13 @@ async def get_messages_page(
         )
     except MessagesQueryError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    return MessagesPageResponse.model_validate(page)
 
 
 # ── external ingestion (documented under 來源 → HTTP → Webhook /sources?tab=http&mode=webhook) ──
 
 
-async def _insert_ingested(db: Any, body: IngestMessageBody) -> Optional[dict]:
+async def _insert_ingested(db: Any, body: IngestMessageBody) -> dict | None:
     platform_id = body.channelId or body.platformId
     if not platform_id:
         raise http_error(
@@ -115,17 +117,17 @@ async def _insert_ingested(db: Any, body: IngestMessageBody) -> Optional[dict]:
 
 
 @router.post("", status_code=201, response_model=MessageResponse)
-async def ingest_message(request: Request, body: IngestMessageBody) -> dict:
+async def ingest_message(request: Request, body: IngestMessageBody) -> MessageResponse:
     db = get_db(request)
     message = await _insert_ingested(db, body)
     if message is None:
         raise http_error(409, "Duplicate message", error_code=VALIDATION_ERROR)
     get_broadcaster(request).publish("messages_updated", {"messages": [message]})
-    return message
+    return MessageResponse.model_validate(message)
 
 
 @router.post("/batch", response_model=MessagesIngestBatchResponse)
-async def ingest_messages_batch(request: Request, body: IngestBatchBody) -> dict:
+async def ingest_messages_batch(request: Request, body: IngestBatchBody) -> MessagesIngestBatchResponse:
     db = get_db(request)
     inserted: list[dict] = []
     # All-or-nothing: the whole batch commits in one transaction.
@@ -137,4 +139,4 @@ async def ingest_messages_batch(request: Request, body: IngestBatchBody) -> dict
                 inserted.append(message)
     if inserted:
         get_broadcaster(request).publish("messages_updated", {"messages": inserted})
-    return {"count": len(inserted)}
+    return MessagesIngestBatchResponse(count=len(inserted))

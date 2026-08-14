@@ -158,7 +158,7 @@ export function useDashboardViewer() {
       setDeleteTarget(null);
       await refreshTasks();
       refreshTaskStats();
-      showToast(String(i18n.t("tasks.deleted")), "success");
+      showToast(String(i18n.t("tasks:deleted")), "success");
     } catch (e) {
       showToast(toErrorMessage(e), "error");
     } finally {

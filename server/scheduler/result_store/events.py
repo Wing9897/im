@@ -78,18 +78,21 @@ def _participants_json(item: dict[str, Any]) -> str:
     return json.dumps([str(p) for p in participants], ensure_ascii=False)
 
 
-def _coords(item: dict[str, Any]) -> tuple[float, float]:
-    """Return lat/lng; missing or invalid coordinates become Null Island (0, 0)."""
+def _coords(item: dict[str, Any]) -> tuple[float | None, float | None]:
+    """Return lat/lng, or ``(None, None)`` when the item has no usable coordinates.
+
+    Geocoding writes ``0, 0`` itself for deliberately unspecific places
+    (``N/A`` / online / worldwide). Anything still missing here failed to
+    resolve, so it is stored as NULL and stays off the map.
+    """
+    lat_raw = item.get("latitude")
+    lng_raw = item.get("longitude")
+    if lat_raw is None or lng_raw is None:
+        return None, None
     try:
-        lat_raw = item.get("latitude")
-        lng_raw = item.get("longitude")
-        if lat_raw is None and lng_raw is None:
-            return 0.0, 0.0
-        latitude = float(lat_raw) if lat_raw is not None else 0.0
-        longitude = float(lng_raw) if lng_raw is not None else 0.0
+        return float(lat_raw), float(lng_raw)
     except (TypeError, ValueError):
-        return 0.0, 0.0
-    return latitude, longitude
+        return None, None
 
 
 async def store_analysis_events(

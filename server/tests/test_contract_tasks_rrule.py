@@ -44,7 +44,7 @@ async def test_calendar_invalid_rrule_retains_detail_shape_without_persistence(c
     series_id = created.json()["id"]
     before_schedules = await db.fetch_value("SELECT COUNT(*) FROM recurring_schedules")
 
-    for name, rrule, expected_detail in (
+    for _name, rrule, expected_detail in (
         ("empty calendar rrule", "", "Invalid RRULE (empty): RRULE is empty"),
         (
             "bad calendar frequency",

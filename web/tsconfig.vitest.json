@@ -8,6 +8,8 @@
     "src/vite-env.d.ts",
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
+    "src/**/*.testHarness.ts",
+    "src/**/*.testHarness.tsx",
     "src/test/**/*.ts"
   ]
 }

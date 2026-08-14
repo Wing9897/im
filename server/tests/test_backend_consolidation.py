@@ -84,20 +84,30 @@ def test_collector_adapter_registry_matches_schema_platforms() -> None:
         ADAPTER_BUILDERS,
         REGISTERED_COLLECTOR_PLATFORMS,
     )
-    from server.db.schema_domains.vocabulary import (
-        ANALYSIS_MODE_CHECK_VALUES,
-        PLATFORM_CHECK_VALUES,
-    )
     from server.domain.collector_platforms import (
         COLLECTOR_PLATFORMS,
         COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT,
     )
 
-    assert COLLECTOR_PLATFORMS == PLATFORM_CHECK_VALUES == REGISTERED_COLLECTOR_PLATFORMS
+    assert COLLECTOR_PLATFORMS == REGISTERED_COLLECTOR_PLATFORMS
     assert tuple(ADAPTER_BUILDERS) == COLLECTOR_PLATFORMS
-    assert ANALYSIS_MODE_CHECK_VALUES == ALL_ANALYSIS_MODES
     assert tuple(typing_get_args(SourcePlatform)) == COLLECTOR_PLATFORMS
-    assert COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT == frozenset(COLLECTOR_PLATFORMS) - {"telegram"}
+    assert frozenset(COLLECTOR_PLATFORMS) - {"telegram"} == COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT
+
+
+def test_platform_and_analysis_mode_checks_are_generated_from_domain() -> None:
+    from server.db.schema_domains import sources as sources_ddl
+    from server.db.schema_domains import tasks as tasks_ddl
+    from server.domain.analysis_modes import ANALYSIS_MODE_CHECK_SQL
+    from server.domain.collector_platforms import (
+        COLLECTOR_PLATFORMS,
+        PLATFORM_CHECK_SQL,
+    )
+
+    assert PLATFORM_CHECK_SQL in sources_ddl.DDL
+    assert ANALYSIS_MODE_CHECK_SQL in tasks_ddl.DDL
+    assert frozenset(re.findall(r"'([^']+)'", PLATFORM_CHECK_SQL)) == frozenset(COLLECTOR_PLATFORMS)
+    assert frozenset(re.findall(r"'([^']+)'", ANALYSIS_MODE_CHECK_SQL)) == frozenset(ALL_ANALYSIS_MODES)
 
 
 def _parse_ts_string_array(path: Path, const_name: str) -> tuple[str, ...]:
@@ -140,8 +150,8 @@ def _parse_ts_capability_booleans(path: Path) -> dict[str, dict[str, bool | str]
 
 
 def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
-    from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
     from server.domain.analysis_modes import ANALYSIS_MODE_SPECS
+    from server.domain.analysis_time_ranges import ALL_ANALYSIS_TIME_RANGES
 
     root = Path(__file__).resolve().parents[2]
     mode_caps_path = root / "web" / "src" / "domain" / "tasks" / "analysisModeCapabilities.ts"
@@ -157,10 +167,10 @@ def test_fe_mirrors_analysis_mode_and_collector_registries() -> None:
     )
 
     fe_task_ranges = _parse_ts_string_array(task_range_path, "TASK_ANALYSIS_TIME_RANGE_VALUES")
-    assert fe_task_ranges == ANALYSIS_TIME_RANGE_VALUES
+    assert fe_task_ranges == ALL_ANALYSIS_TIME_RANGES
     assert "12h" not in fe_task_ranges
     assert "24h" not in fe_task_ranges
-    for value in ANALYSIS_TIME_RANGE_VALUES:
+    for value in ALL_ANALYSIS_TIME_RANGES:
         assert repr(value) in TASK_CONFIG_SCHEMA_PROMPT
 
     fe_caps = _parse_ts_capability_booleans(mode_caps_path)

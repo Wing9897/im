@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from server.db.database import TransactionDb
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE
 from server.queries.agent_tick_queries import (
@@ -11,7 +12,6 @@ from server.queries.agent_tick_queries import (
     load_agent_message_cursor,
     store_agent_message_cursor,
 )
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.tasks_queries import insert_analysis_task
 from server.util import new_id, utc_now_iso
 

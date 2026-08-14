@@ -1,6 +1,6 @@
 """Unit checks for shared property-based testing infrastructure."""
 
-from datetime import timezone
+from datetime import UTC
 
 import pytest
 from hypothesis import find, settings
@@ -38,8 +38,8 @@ def test_rrule_strategy_generates_validator_accepted_rules():
 def test_utc_window_strategy_generates_ordered_aware_windows():
     start, end = find(utc_windows, lambda value: value[0] == value[1])
 
-    assert start.tzinfo is timezone.utc
-    assert end.tzinfo is timezone.utc
+    assert start.tzinfo is UTC
+    assert end.tzinfo is UTC
     assert start <= end
 
 

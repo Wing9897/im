@@ -10,7 +10,6 @@ from server.analyzer.geocoding import (
 )
 from server.analyzer.geocoding_location import (
     UNKNOWN_LOCATION,
-    UNSPECIFIC_COORDINATES,
     _build_geocode_query,
     _disambiguate_location,
     _extract_fallback_location,
@@ -96,13 +95,15 @@ def test_geocode_items_sync_unknown_location_writes_zero_coords(location: str):
     assert out[0]["longitude"] == 0.0
 
 
-def test_geocode_items_sync_geocode_failure_writes_zero_coords():
+def test_geocode_items_sync_geocode_failure_leaves_coordinates_empty():
+    """A place that cannot be resolved must not be plotted at Null Island."""
     items = [{"title": "t", "content": "c", "location": "Nowhereville XYZ"}]
     mock_geocode = MagicMock(return_value=None)
     with patch("server.analyzer.geocoding._ensure_geocoder", return_value=mock_geocode):
         out = _geocode_items_sync(items)
-    assert out[0]["latitude"] == UNSPECIFIC_COORDINATES[0]
-    assert out[0]["longitude"] == UNSPECIFIC_COORDINATES[1]
+    assert out[0]["latitude"] is None
+    assert out[0]["longitude"] is None
+    assert geocoding_mod._geocode_cache == {}
 
 
 def test_geocode_items_sync_batch_timeout_applies_sentinel_to_remaining():
@@ -123,7 +124,7 @@ def test_geocode_items_sync_batch_timeout_applies_sentinel_to_remaining():
     ):
         out = _geocode_items_sync(items)
 
-    assert out[0]["latitude"] == 0.0
+    assert out[0]["latitude"] is None
     assert out[1]["location"] == UNKNOWN_LOCATION
     assert out[1]["latitude"] == 0.0
     assert out[1]["longitude"] == 0.0

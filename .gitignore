@@ -34,9 +34,12 @@ __pycache__/
 /build-log*.txt
 /repair-out.txt
 /tmp-check*.txt
+.tmp-*
 /web/*.txt
 !/web/**/*.md
 /scripts/*-out.txt
+/*-out.txt
+/.parity-out.txt
 
 # Sweep-slice audit scratch outputs
 /ruff_findings.json
