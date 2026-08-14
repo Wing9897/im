@@ -6,8 +6,8 @@ orchestration stays in ``server.analyzer.engine`` (``tasks.consult_advisor``).
 
 from __future__ import annotations
 
-from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import ALL_ANALYSIS_MODES
+from server.domain.analysis_time_ranges import ALL_ANALYSIS_TIME_RANGES
 
 #: Calendar / messages / optional web search agent (POST /assistant); tools JSON appended at runtime.
 AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 助手。能力涵蓋本機已採集訊息、分析情報事件／情報、日程／用戶事件，
@@ -114,7 +114,7 @@ A2A_AGENT_SYSTEM_PROMPT = """你是 IntelligenceMonitor 的客戶經理（對外
 
 #: taskConfig field list embedded in the task-advisor system prompt.
 _ANALYSIS_MODE_PROMPT_VALUES = ", ".join(repr(mode) for mode in ALL_ANALYSIS_MODES)
-_ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(repr(value) for value in ANALYSIS_TIME_RANGE_VALUES)
+_ANALYSIS_TIME_RANGE_PROMPT_VALUES = ", ".join(repr(value) for value in ALL_ANALYSIS_TIME_RANGES)
 
 TASK_CONFIG_SCHEMA_PROMPT = (
     "- name: short task name (string)\n"

@@ -82,7 +82,7 @@ describe("boardLayoutStore", () => {
   });
 
   it("exposes Traditional Chinese display titles for events and feed", () => {
-    expect(BOARD_WIDGET_DESCRIPTORS.events.titleKey).toBe("widgets.events.title");
+    expect(BOARD_WIDGET_DESCRIPTORS.events.titleKey).toBe("board:widgets.events.title");
     expect(getWidgetMeta("events").title).toBe("情報事件");
     expect(getWidgetMeta("feed").title).toBe("實時監控");
     expect(getWidgetMeta("wall").title).toBe("訊息牆");

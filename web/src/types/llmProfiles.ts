@@ -7,29 +7,24 @@ import type { components } from "../api/generated/schema";
 type LlmProfileResponse = components["schemas"]["LlmProfileResponse"];
 type LlmProfileUpsertBody = components["schemas"]["LlmProfileUpsertBody"];
 
-/** Staff classes that can bind to an LLM profile. */
+/** Staff classes that can bind to an LLM profile (task-mode only). */
 export type LlmStaffClass = NonNullable<LlmProfileUpsertBody["staffClasses"]>[number];
 
-/** All DDL staff classes (includes legacy ``assistant`` rows). */
+/** DDL staff classes (task-mode; assistant is a global slot, not a staff row). */
 export const LLM_STAFF_CLASSES: readonly LlmStaffClass[] = [
   "leaderboard",
   "intel_event",
   "agent",
-  "assistant",
 ] as const;
 
 /**
  * Task-mode classes shown as profile checkboxes.
  * Global trio (assistant / liaison / taskEditor) use singleton slots instead.
  */
-export const LLM_TASK_STAFF_CLASSES: readonly LlmStaffClass[] = [
-  "leaderboard",
-  "intel_event",
-  "agent",
-] as const;
+export const LLM_TASK_STAFF_CLASSES: readonly LlmStaffClass[] = LLM_STAFF_CLASSES;
 
-/** Singleton global slots on `/ai/provider` (wire ids). */
-export type LlmGlobalSlotId = "assistant" | "liaison" | "taskEditor";
+/** Singleton global slots on `/ai/provider` (OpenAPI `LlmGlobalSlotBindingResponse.slot`). */
+export type LlmGlobalSlotId = components["schemas"]["LlmGlobalSlotBindingResponse"]["slot"];
 
 export const LLM_GLOBAL_SLOTS: readonly LlmGlobalSlotId[] = [
   "assistant",
@@ -47,12 +42,11 @@ export function normalizeLlmStaffClasses(
   return LLM_STAFF_CLASSES.filter((c) => raw.includes(c));
 }
 
-/** Keep task-mode classes only (strip ``assistant`` from editor drafts). */
+/** Keep task-mode classes only. */
 export function normalizeTaskStaffClasses(
   raw: readonly string[] | null | undefined,
 ): LlmStaffClass[] {
-  if (!raw || raw.length === 0) return [];
-  return LLM_TASK_STAFF_CLASSES.filter((c) => raw.includes(c));
+  return normalizeLlmStaffClasses(raw);
 }
 
 export function isLlmStaffClass(value: string): value is LlmStaffClass {
@@ -60,6 +54,9 @@ export function isLlmStaffClass(value: string): value is LlmStaffClass {
 }
 
 export type LlmWebSearchProvider = LlmProfileUpsertBody["webSearchProvider"];
+
+/** Server-side vocabulary for `jsonMode` (stamp 33 CHECK: disabled / json_schema / json_object). */
+export type LlmJsonMode = LlmProfileUpsertBody["jsonMode"];
 
 /** Wire shape from GET /api/v1/llm/staff-instances. */
 export type LlmStaffInstance = components["schemas"]["LlmStaffInstanceResponse"];
@@ -90,8 +87,14 @@ export function normalizeLlmProfile(raw: LlmProfileResponse): LlmProfile {
   };
 }
 
-/** Body for POST /api/v1/llm/profiles and PATCH fields. */
-export type LlmProfileUpsert = LlmProfileUpsertBody;
+/**
+ * Body for POST /api/v1/llm/profiles and PATCH fields.
+ * `jsonMode` stays draft-friendly (`string`) on the client; the editor select
+ * only emits `LlmJsonMode` values and the server 422s anything else.
+ */
+export type LlmProfileUpsert = Omit<LlmProfileUpsertBody, "jsonMode"> & {
+  jsonMode: LlmJsonMode | (string & {});
+};
 
 /**
  * Wire secret mask — same literal as `utils/configValidation` / `server.secrets`.

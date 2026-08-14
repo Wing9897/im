@@ -65,9 +65,9 @@ function CreateTaskTile({ navigate, t, createLabel, style }: CreateTaskTileProps
       className="im-enter-rise"
       style={style}
       onClick={() => navigate("/tasks/new")}
-      aria-label={t("tasks.createNewAria", { label: createLabel })}
+      aria-label={t("tasks:createNewAria", { label: createLabel })}
       icon={<Plus size={16} aria-hidden="true" />}
-      label={t("tasks.createNew")}
+      label={t("tasks:createNew")}
     />
   );
 }
@@ -86,9 +86,9 @@ function CreateWorksetTile({
       className="im-enter-rise"
       style={style}
       onClick={onCreateWorkset}
-      aria-label={t("workset.createNewAria")}
+      aria-label={t("workset:createNewAria")}
       icon={<Plus size={16} aria-hidden="true" />}
-      label={t("workset.createNew")}
+      label={t("workset:createNew")}
       data-testid="dashboard-create-workset-card"
     />
   );
@@ -156,9 +156,9 @@ export function DashboardByWorksetList({
 
   return (
     <div className="flex flex-col gap-lg" data-testid="dashboard-by-workset">
-      <section aria-label={t("workset.viewByWorkset")}>
-        <h2 className={`${sectionTitleClass} mb-sm`}>{t("workset.catalogTitle")}</h2>
-        <p className={`${captionClass} mb-md`}>{t("workset.catalogSubtitle")}</p>
+      <section aria-label={t("workset:viewByWorkset")}>
+        <h2 className={`${sectionTitleClass} mb-sm`}>{t("workset:catalogTitle")}</h2>
+        <p className={`${captionClass} mb-md`}>{t("workset:catalogSubtitle")}</p>
         <TaskGrid>
           {worksetCards.map((group) => (
             <WorksetSummaryCard
@@ -189,7 +189,7 @@ export function DashboardByWorksetList({
         group.tasks.length > 0 ? (
           <section key={`tasks-${group.key}`} aria-label={group.title}>
             <h2 className={`${sectionTitleClass} mb-sm`}>
-              {t("workset.memberTasksTitle", { name: group.title })}
+              {t("workset:memberTasksTitle", { name: group.title })}
             </h2>
             <TaskGrid>
               {group.tasks.map((task, index) => (
@@ -203,7 +203,7 @@ export function DashboardByWorksetList({
       {unassigned && unassigned.tasks.length > 0 ? (
         <section aria-label={unassigned.title}>
           <h2 className={`${sectionTitleClass} mb-sm`}>{unassigned.title}</h2>
-          <p className={`${captionClass} mb-md`}>{t("workset.unassignedHint")}</p>
+          <p className={`${captionClass} mb-md`}>{t("workset:unassignedHint")}</p>
           <TaskGrid>
             {unassigned.tasks.map((task, index) => (
               <TaskCardTile key={task.id} task={task} index={index} {...actions} />

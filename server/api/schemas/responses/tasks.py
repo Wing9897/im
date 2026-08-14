@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.domain.analysis_modes import AnalysisMode
+from server.domain.analysis_time_ranges import AnalysisTimeRange
+
+
+class TaskTemplateResponse(BaseModel):
+    """One built-in preset from ``GET /tasks/templates`` (``shared/task_presets.json``)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    name: str
+    description: str
+    analysisMode: AnalysisMode
+    promptTemplate: str
+    defaultAnalysisTimeRange: AnalysisTimeRange
+    badge: str
 
 
 class TaskDraftPayload(BaseModel):
@@ -24,7 +39,7 @@ class TaskDraftPayload(BaseModel):
     scheduleRrule: str | None = None
     analysisMode: AnalysisMode | None = None
     analysisTimeRange: str | None = None
-    channelIds: list[Union[str, dict[str, Any]]] | None = None
+    channelIds: list[str | dict[str, Any]] | None = None
     #: Event / agent time-planning visibility; omitted / null = leave form unchanged.
     includeInTimeline: bool | None = None
     triggerMode: str | None = None
@@ -46,7 +61,13 @@ class AgentToolCallSummary(BaseModel):
 
 
 class AgentChatResponse(BaseModel):
-    """Agent chat final payload (non-stream and stream ``type=final``)."""
+    """Agent chat final payload (non-stream and stream ``type=final``).
+
+    Success only: LLM and runtime failures are HTTP errors (see
+    ``server/api/agent_errors.py``), not a 200 carrying an ``error`` field.
+    The NDJSON stream keeps a separate in-band ``type=error`` line for
+    failures that happen after the status is committed.
+    """
 
     model_config = ConfigDict(extra="ignore")
 
@@ -54,7 +75,6 @@ class AgentChatResponse(BaseModel):
     message: str
     sessionId: str | None = None
     toolCalls: list[AgentToolCallSummary] = Field(default_factory=list)
-    error: str | None = None
     #: Present when the task-editor advisor returned a non-empty config this turn.
     taskConfig: TaskDraftPayload | None = None
 

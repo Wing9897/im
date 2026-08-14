@@ -57,7 +57,7 @@ export class PageErrorBoundary extends React.Component<
               {i18n.t("ui.pageError.body")}
             </div>
             {this.state.error ? (
-              <pre className="mb-lg max-h-[100px] overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface-base p-md text-left text-caption text-text-muted">
+              <pre className="im-surface-inset mb-lg max-h-[100px] overflow-auto whitespace-pre-wrap break-words rounded-md p-md text-left text-caption text-text-muted">
                 {this.state.error.message}
               </pre>
             ) : null}

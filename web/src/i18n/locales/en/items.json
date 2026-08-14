@@ -1,11 +1,11 @@
 {
   "emptyValue": "—",
-  "pageTitle": "Items",
   "allCategories": "All types",
   "backToCategories": "Back to types",
   "openCategoryAria": "Open type {name}",
   "openItemAria": "Open item {name}",
-  "categoryItemCount": "{count} items",
+  "categoryItemCount_one": "{count} item",
+  "categoryItemCount_other": "{count} items",
   "categoryExpiringCount": "{count} soon",
   "categoryOverdueCount": "{count} overdue",
   "categoryEmptyHint": "No items yet",
@@ -162,7 +162,6 @@
   "finance": {
     "open": "Finance",
     "openAria": "Open items finance",
-    "pageTitle": "Items finance",
     "controlsAria": "Finance filters",
     "presetAria": "Date range preset",
     "preset": {
@@ -187,7 +186,8 @@
       "amountAsc": "Amount (low to high)"
     },
     "summaryTitle": "Period summary",
-    "summaryCount": "{count} purchases",
+    "summaryCount_one": "{count} purchase",
+    "summaryCount_other": "{count} purchases",
     "summaryWithAmount": "{count} with amount",
     "summaryExpense": "Expense {total}",
     "summaryIncome": "Income {total}",

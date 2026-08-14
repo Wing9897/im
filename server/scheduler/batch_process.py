@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from server.analyzer.leaderboard import load_leaderboard_context
 from server.analyzer.overlap import fetch_overlap_context
@@ -32,7 +32,7 @@ class Engine(Protocol):
     provider: str
     model: str
 
-    async def analyze(self, prompt: Any) -> dict[str, Any]: ...
+    async def analyze(self, prompt: Any, *, profile_id: str | None = None) -> dict[str, Any]: ...
 
 
 async def process_batch(
@@ -166,7 +166,7 @@ async def process_batch(
             analysis_engine.analyze(prompt, profile_id=str(task.get("llm_profile_id") or "") or None),
             timeout=llm_timeout * 2,
         )
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         await handle_batch_failure(
             db=db,
             broadcaster=broadcaster,
@@ -268,7 +268,7 @@ async def process_batch(
             logger.exception("Action trigger evaluation failed for batch %s", batch_id)
 
 
-def _max_score(items: list[dict[str, Any]]) -> Optional[float]:
+def _max_score(items: list[dict[str, Any]]) -> float | None:
     scores = []
     for item in items:
         if isinstance(item, dict) and item.get("score") is not None:

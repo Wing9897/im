@@ -28,7 +28,7 @@ export function parseSettingsWireMap(source: string): Map<string, string> {
   const map = new Map<string, string>();
   for (const line of linesOf(match[1])) {
     const m = line.match(/"(\w+)":\s*"(\w+)"/);
-    if (m) map.set(m[1]!, m[2]!);
+    if (m) map.set(m[1], m[2]);
   }
   if (map.size === 0) throw new Error("_SETTINGS_KEYS parsed empty");
   return map;
@@ -51,14 +51,14 @@ export function parseMcpCapabilitySettingsKeys(source: string): Map<string, stri
     for (const line of linesOf(dictMatch[1])) {
       // Literal ``"wire": "config"`` entries (not ``spec.wire_key:`` comprehensions).
       const m = line.match(/^\s*"(\w+)":\s*"([a-z0-9_]+)"/);
-      if (m) map.set(m[1]!, m[2]!);
+      if (m) map.set(m[1], m[2]);
     }
   }
   if (map.size === 0) {
     const ctorRe =
       /McpCapabilitySpec\(\s*"([^"]+)"\s*,\s*"([a-z0-9_]+)"\s*,\s*"(\w+)"\s*,?\s*\)/gs;
     for (const m of source.matchAll(ctorRe)) {
-      map.set(m[3]!, m[2]!);
+      map.set(m[3], m[2]);
     }
   }
   if (map.size === 0) throw new Error("MCP capability settings keys parsed empty");
@@ -71,7 +71,7 @@ export function parseConfigDefaultsKeys(source: string): Set<string> {
   const keys = new Set<string>();
   for (const line of linesOf(match[1])) {
     const m = line.match(/^\s*"([a-z0-9_]+)":/);
-    if (m) keys.add(m[1]!);
+    if (m) keys.add(m[1]);
   }
   if (keys.size === 0) throw new Error("CONFIG_DEFAULTS parsed empty");
   return keys;

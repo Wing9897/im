@@ -57,8 +57,8 @@ export function ChatEditorToolbar({
             size="icon"
             className={pageChromeBackButtonClass}
             onClick={onBack}
-            aria-label={t("tasks.editor.back")}
-            title={t("tasks.editor.back")}
+            aria-label={t("tasks:editor.back")}
+            title={t("tasks:editor.back")}
           >
             <ArrowLeft size={16} strokeWidth={2.25} aria-hidden="true" />
           </Button>
@@ -77,7 +77,7 @@ export function ChatEditorToolbar({
                 data-testid="preset-button"
               >
                 <Sparkles size={14} aria-hidden="true" />
-                <span>{t("tasks.editor.presets")}</span>
+                <span>{t("tasks:editor.presets")}</span>
               </Button>
             ) : null}
             <Button
@@ -88,11 +88,11 @@ export function ChatEditorToolbar({
               data-testid="task-editor-save"
               title={
                 !canSaveForm || isSaving
-                  ? (saveBlockReason ?? t("tasks.editor.saveNeeds.generic"))
+                  ? (saveBlockReason ?? t("tasks:editor.saveNeeds.generic"))
                   : undefined
               }
             >
-              {isEditMode ? t("tasks.editor.updateTask") : t("tasks.editor.createTask")}
+              {isEditMode ? t("tasks:editor.updateTask") : t("tasks:editor.createTask")}
             </Button>
           </div>
         )}

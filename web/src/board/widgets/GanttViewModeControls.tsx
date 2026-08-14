@@ -20,8 +20,8 @@ export function GanttViewModeControls({
   testIdPrefix,
 }: GanttViewModeControlsProps) {
   const { t } = useTranslation();
-  const dayLabel = t("board.common.dayView");
-  const monthLabel = t("board.common.monthView");
+  const dayLabel = t("board:common.dayView");
+  const monthLabel = t("board:common.monthView");
 
   return (
     <>
@@ -33,7 +33,7 @@ export function GanttViewModeControls({
             : "board-widget-frame__btn"
         }
         title={dayLabel}
-        aria-label={t("board.common.viewModeAria", { prefix: ariaLabelPrefix, mode: dayLabel })}
+        aria-label={t("board:common.viewModeAria", { prefix: ariaLabelPrefix, mode: dayLabel })}
         aria-pressed={viewMode === "day"}
         data-testid={`${testIdPrefix}-view-day`}
         onClick={() => onChange("day")}
@@ -48,7 +48,7 @@ export function GanttViewModeControls({
             : "board-widget-frame__btn"
         }
         title={monthLabel}
-        aria-label={t("board.common.viewModeAria", { prefix: ariaLabelPrefix, mode: monthLabel })}
+        aria-label={t("board:common.viewModeAria", { prefix: ariaLabelPrefix, mode: monthLabel })}
         aria-pressed={viewMode === "month"}
         data-testid={`${testIdPrefix}-view-month`}
         onClick={() => onChange("month")}

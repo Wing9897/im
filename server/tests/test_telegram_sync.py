@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
@@ -10,6 +11,21 @@ import pytest
 from server.collector.telegram import TelegramAdapter
 from server.db.database import Database
 from server.sse import SseBroadcaster
+from server.tests.db_helpers import insert_channel, insert_minimal_source, link_source_channel
+
+
+async def _tg_source(
+    db: Database,
+    source_id: str,
+    *,
+    channel_id: str | None = None,
+    channel_name: str = "Alpha",
+) -> None:
+    await insert_minimal_source(db, source_id, "telegram", name="+123", credentials="{}")
+    if channel_id is None:
+        return
+    await insert_channel(db, "telegram", channel_id, channel_name=channel_name)
+    await link_source_channel(db, source_id, "telegram", channel_id)
 
 
 class _FakeDialog:
@@ -20,12 +36,12 @@ class _FakeDialog:
 
 
 async def _fake_iter_dialogs():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from telethon.tl.types import Channel as TgChannel
     from telethon.tl.types import Chat, ChatPhotoEmpty
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     photo = ChatPhotoEmpty()
     yield _FakeDialog(
         -1001,
@@ -47,11 +63,7 @@ async def test_sync_dialog_channels_persists_groups_and_links(tmp_path) -> None:
     await db.ensure_schema()
 
     source_id = "acc-telegram-1"
-    await db.execute(
-        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-        "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (source_id,),
-    )
+    await _tg_source(db, source_id)
 
     adapter = TelegramAdapter(
         source_id,
@@ -114,19 +126,7 @@ async def test_register_message_handlers_clears_before_reregister(tmp_path) -> N
     await db.ensure_schema()
 
     source_id = "acc-telegram-handlers"
-    await db.execute(
-        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-        "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (source_id,),
-    )
-    await db.execute(
-        "INSERT INTO channels (platform, platform_id, channel_name, created_at) "
-        "VALUES ('telegram', '-1001', 'Alpha', '2026-01-01T00:00:00Z')",
-    )
-    await db.execute(
-        "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', '-1001')",
-        (source_id,),
-    )
+    await _tg_source(db, source_id, channel_id="-1001", channel_name="Alpha")
 
     adapter = TelegramAdapter(
         source_id,
@@ -154,19 +154,7 @@ async def test_disconnect_clears_message_handlers(tmp_path) -> None:
     await db.ensure_schema()
 
     source_id = "acc-telegram-disconnect"
-    await db.execute(
-        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-        "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (source_id,),
-    )
-    await db.execute(
-        "INSERT INTO channels (platform, platform_id, channel_name, created_at) "
-        "VALUES ('telegram', '-1002', 'Beta', '2026-01-01T00:00:00Z')",
-    )
-    await db.execute(
-        "INSERT INTO source_channels (source_id, platform, platform_id) VALUES (?, 'telegram', '-1002')",
-        (source_id,),
-    )
+    await _tg_source(db, source_id, channel_id="-1002", channel_name="Beta")
 
     adapter = TelegramAdapter(
         source_id,
@@ -222,11 +210,7 @@ async def test_connect_succeeds_when_background_dialog_sync_is_locked(tmp_path, 
     await db.ensure_schema()
 
     source_id = "acc-telegram-connect"
-    await db.execute(
-        "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-        "VALUES (?, 'telegram', '+123', 'connected', '{}', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')",
-        (source_id,),
-    )
+    await _tg_source(db, source_id)
 
     adapter = TelegramAdapter(
         source_id,

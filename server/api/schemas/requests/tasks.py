@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from server.domain.agent_task_spec import TriggerMode
 from server.domain.analysis_modes import AnalysisMode
+from server.domain.analysis_strategy_modes import AnalysisStrategyMode
 from server.scheduler.task_schedule_overrides import (
     AGENT_WAVE_INTERVAL_MAX,
     AGENT_WAVE_INTERVAL_MIN,
@@ -44,7 +45,7 @@ class TaskConfigBody(BaseModel):
     analysisBatchMessageLimit: int | None = Field(
         default=None, ge=ANALYSIS_BATCH_LIMIT_MIN, le=ANALYSIS_BATCH_LIMIT_MAX
     )
-    analysisStrategyMode: str | None = None
+    analysisStrategyMode: AnalysisStrategyMode | None = None
     worksetId: str | None = None
     #: Agent-mode policy (ignored unless analysisMode=agent).
     triggerMode: TriggerMode | None = None
@@ -56,5 +57,5 @@ class TaskConfigBody(BaseModel):
     capReadItems: bool | None = None
     outputCalendar: bool | None = None
     outputAnalysisEvents: bool | None = None
-    #: LLM profile id (stamp 29+). Omitted / null → inject default profile on create.
+    #: LLM profile id. Omitted / null on create → oldest complete profile (else 400).
     llmProfileId: str | None = None

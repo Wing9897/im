@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any
 
 from server.errors import VALIDATION_ERROR, http_error
 
@@ -40,7 +40,7 @@ def parse_channel_key_csv(
 
 
 def parse_channel_refs(
-    channel_ids: Optional[list[Union[str, dict[str, Any]]]],
+    channel_ids: list[str | dict[str, Any]] | None,
 ) -> list[tuple[str, str]]:
     """Accepts ``platform:platformId`` strings or ChannelRef objects."""
     refs: list[tuple[str, str]] = []

@@ -30,7 +30,7 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
         error={!topics ? error : null}
         onRetry={refresh}
         empty={Boolean(topics) && ranked.length === 0}
-        emptyLabel={t("board.leaderboard.empty")}
+        emptyLabel={t("board:leaderboard.empty")}
       >
         {ranked.length > 0 ? (
           <ul className="board-widget-list">
@@ -42,13 +42,13 @@ export function LeaderboardBoardWidget({ active = true }: BoardWidgetProps) {
                 >
                   <span className="board-widget-list__primary">
                     <span className="board-rank-chip">#{topic.rank}</span>
-                    {topic.topicName || t("board.common.untitled")}
+                    {topic.topicName || t("board:common.untitled")}
                   </span>
                   <span className="board-widget-list__meta">
                     {topic.taskName ? `${topic.taskName} · ` : ""}
-                    {t("board.leaderboard.score", { score: topic.score })}
+                    {t("board:leaderboard.score", { score: topic.score })}
                     {topic.messageCount != null
-                      ? t("board.leaderboard.messages", { count: topic.messageCount })
+                      ? t("board:leaderboard.messages", { count: topic.messageCount })
                       : ""}
                   </span>
                 </div>

@@ -8,13 +8,14 @@ when NULL, except task-owned fields:
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from server.config import get_config, get_config_int
 from server.db.database import Database
-from server.prompts.analysis import STRATEGY_INSTRUCTIONS
+from server.domain.analysis_strategy_modes import ALLOWED_ANALYSIS_STRATEGY_MODES
 
-ALLOWED_STRATEGY_MODES = frozenset(STRATEGY_INSTRUCTIONS.keys())
+ALLOWED_STRATEGY_MODES = ALLOWED_ANALYSIS_STRATEGY_MODES
 
 DEFAULT_BATCH_OVERLAP_COUNT = 0
 DEFAULT_AGENT_WAVE_INTERVAL_SECONDS = 20

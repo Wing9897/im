@@ -101,8 +101,8 @@ export function AgentDetailPage() {
           size="icon"
           className="shrink-0"
           onClick={goBack}
-          aria-label={t("tasks.editor.back")}
-          title={t("tasks.editor.back")}
+          aria-label={t("tasks:editor.back")}
+          title={t("tasks:editor.back")}
         >
           <ArrowLeft size={16} strokeWidth={2.25} aria-hidden="true" />
         </Button>
@@ -120,15 +120,15 @@ export function AgentDetailPage() {
             onClick={() => {
               void reload();
             }}
-            aria-label={t("tasks.agentDetail.reload")}
-            title={t("tasks.agentDetail.reload")}
+            aria-label={t("tasks:agentDetail.reload")}
+            title={t("tasks:agentDetail.reload")}
             data-testid="project-detail-reload"
           >
             <RefreshCw size={14} aria-hidden="true" />
-            {t("tasks.agentDetail.reload")}
+            {t("tasks:agentDetail.reload")}
           </Button>
           <Button variant="secondary" size="md" onClick={goTimeline}>
-            {t("tasks.agentDetail.openTimeline")}
+            {t("tasks:agentDetail.openTimeline")}
           </Button>
           <Button variant="primary" size="md" onClick={goEdit}>
             <Pencil size={14} aria-hidden="true" />
@@ -138,7 +138,7 @@ export function AgentDetailPage() {
       </header>
 
       <div className="flex min-w-0 flex-col gap-md" data-testid="project-detail-body">
-        <PanelSection title={t("tasks.agentDetail.metaTitle")}>
+        <PanelSection title={t("tasks:agentDetail.metaTitle")}>
           <div className="flex min-w-0 flex-col gap-sm text-body text-text-secondary">
             <div className="flex flex-wrap items-center gap-sm leading-normal">
               <span className="inline-flex items-center gap-xs">
@@ -157,7 +157,7 @@ export function AgentDetailPage() {
                   )}
                   aria-hidden="true"
                 />
-                {isRunning ? t("tasks.card.running") : t("tasks.card.idle")}
+                {isRunning ? t("tasks:card.running") : t("tasks:card.idle")}
               </span>
             </div>
             {project.description?.trim() ? (
@@ -165,14 +165,14 @@ export function AgentDetailPage() {
                 {project.description.trim()}
               </p>
             ) : (
-              <p className={captionClass}>{t("tasks.agentDetail.noDescription")}</p>
+              <p className={captionClass}>{t("tasks:agentDetail.noDescription")}</p>
             )}
             <p className="break-words">
-              {t("tasks.detail.timeRange", { range: timeRange || t("emDash") })}
+              {t("tasks:detail.timeRange", { range: timeRange || t("emDash") })}
             </p>
             {scheduleLabel ? (
               <p className="break-words">
-                {t("tasks.agentDetail.schedule", { schedule: scheduleLabel })}
+                {t("tasks:agentDetail.schedule", { schedule: scheduleLabel })}
               </p>
             ) : null}
             {lastErrorMessage || batchRetryCount > 0 || showAnalysisPaused ? (
@@ -183,7 +183,7 @@ export function AgentDetailPage() {
                 {lastErrorMessage ? (
                   <div className="text-error" data-testid="project-detail-batch-error">
                     <span className="font-medium">
-                      {t("tasks.agentDetail.batchAttentionTitle")}
+                      {t("tasks:agentDetail.batchAttentionTitle")}
                       {": "}
                     </span>
                     <ExpandableErrorText text={lastErrorMessage} />
@@ -191,12 +191,12 @@ export function AgentDetailPage() {
                 ) : null}
                 {batchRetryCount > 0 ? (
                   <div className="text-warning" data-testid="project-detail-batch-retry">
-                    {t("tasks.agentDetail.batchRetry", { count: batchRetryCount })}
+                    {t("tasks:agentDetail.batchRetry", { count: batchRetryCount })}
                   </div>
                 ) : null}
                 {showAnalysisPaused ? (
                   <div className="text-warning" data-testid="project-detail-analysis-paused">
-                    {t("tasks.agentDetail.analysisPausedHint")}
+                    {t("tasks:agentDetail.analysisPausedHint")}
                   </div>
                 ) : null}
               </div>
@@ -207,7 +207,7 @@ export function AgentDetailPage() {
         <AgentDetailSourcesSection channelLabels={channelLabels} />
 
         <PanelSection
-          title={t("tasks.agentDetail.childrenTitle")}
+          title={t("tasks:agentDetail.childrenTitle")}
           showCount
           itemCount={children.length}
           collapsible
@@ -216,8 +216,8 @@ export function AgentDetailPage() {
         >
           {children.length === 0 ? (
             <EmptyState
-              title={t("tasks.agentDetail.childrenEmptyTitle")}
-              description={t("tasks.agentDetail.childrenEmptyDescription")}
+              title={t("tasks:agentDetail.childrenEmptyTitle")}
+              description={t("tasks:agentDetail.childrenEmptyDescription")}
             />
           ) : (
             <ul className="flex flex-col gap-sm" data-testid="project-detail-children">
@@ -232,7 +232,7 @@ export function AgentDetailPage() {
                       <span className="truncate font-medium text-text-primary">{child.name}</span>
                       {!child.isActive ? (
                         <Badge tone="neutral" className="shrink-0 normal-case tracking-normal">
-                          {t("tasks.card.disabled")}
+                          {t("tasks:card.disabled")}
                         </Badge>
                       ) : null}
                     </div>
@@ -246,7 +246,7 @@ export function AgentDetailPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => goEditChild(child)}
-                    aria-label={t("tasks.card.editAria", { name: child.name })}
+                    aria-label={t("tasks:card.editAria", { name: child.name })}
                   >
                     <Pencil size={14} aria-hidden="true" />
                   </Button>
@@ -257,7 +257,7 @@ export function AgentDetailPage() {
         </PanelSection>
 
         <PanelSection
-          title={t("tasks.agentDetail.eventsTitle")}
+          title={t("tasks:agentDetail.eventsTitle")}
           showCount={!eventsLoading}
           itemCount={events.length}
           collapsible
@@ -268,8 +268,8 @@ export function AgentDetailPage() {
             <p className={captionClass}>{t("ui.loading")}</p>
           ) : events.length === 0 ? (
             <EmptyState
-              title={t("tasks.agentDetail.eventsEmptyTitle")}
-              description={t("tasks.agentDetail.eventsEmptyDescription")}
+              title={t("tasks:agentDetail.eventsEmptyTitle")}
+              description={t("tasks:agentDetail.eventsEmptyDescription")}
             />
           ) : (
             <ul className="flex flex-col gap-sm" data-testid="project-detail-events">

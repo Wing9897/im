@@ -74,7 +74,7 @@ def main() -> int:
         f"Unpack, then run:\n"
         f"  ./{_binary_name()}\n"
         f"\n"
-        f"Default bind: 127.0.0.1:{SERVICE_PORT}\n"
+        f"Default bind: 0.0.0.0:{SERVICE_PORT}\n"
         f"Data root: INTELLIGENCE_MONITOR_DATA_DIR (or OS product userData folder).\n"
         f"This zip is the PyInstaller onedir also used as the Desktop sidecar.\n"
     )

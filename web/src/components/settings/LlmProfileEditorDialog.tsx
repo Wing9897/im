@@ -7,7 +7,6 @@ import {
   Button,
   CheckboxField,
   FormDialogSection,
-  FormGrid,
   FormStack,
   SettingsRow,
   TextField,
@@ -42,10 +41,9 @@ export type LlmProfileDraft = {
   webSearchProvider: LlmWebSearchProvider;
   braveSearchApiKey: string;
   staffClasses: LlmStaffClass[];
-  isDefault: boolean;
 };
 
-export function emptyProfileDraft(isFirst = false): LlmProfileDraft {
+export function emptyProfileDraft(_isFirst = false): LlmProfileDraft {
   return {
     name: "",
     provider: "ollama",
@@ -58,7 +56,6 @@ export function emptyProfileDraft(isFirst = false): LlmProfileDraft {
     webSearchProvider: "auto",
     braveSearchApiKey: "",
     staffClasses: [],
-    isDefault: isFirst,
   };
 }
 
@@ -80,7 +77,6 @@ export function profileToDraft(profile: LlmProfile): LlmProfileDraft {
         : "auto",
     braveSearchApiKey: profile.braveSearchApiKey,
     staffClasses: normalizeTaskStaffClasses(profile.staffClasses),
-    isDefault: profile.isDefault,
   };
 }
 
@@ -96,7 +92,6 @@ export function draftToUpsertBody(draft: LlmProfileDraft): LlmProfileUpsert {
     webSearchEnabled: draft.webSearchEnabled,
     webSearchProvider: draft.webSearchProvider,
     staffClasses: [...draft.staffClasses],
-    isDefault: draft.isDefault,
   };
   if (!isMaskedSecret(draft.apiKey)) {
     body.apiKey = draft.apiKey;
@@ -171,31 +166,19 @@ export function LlmProfileEditorDialog({
     >
       <FormStack gap="xl">
         <FormDialogSection title={t("profiles.sectionIdentity")}>
-          <FormGrid>
-            <SettingsRow
-              label={t("profiles.nameLabel")}
-              htmlFor="llm-profile-name"
-              help={t("profiles.nameHelp")}
-            >
-              <TextField
-                id="llm-profile-name"
-                data-testid="llm-profile-name"
-                value={draft.name}
-                onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder={t("profiles.namePlaceholder")}
-              />
-            </SettingsRow>
-            <SettingsRow label={t("profiles.defaultLabel")} help={t("profiles.defaultHelp")}>
-              <CheckboxField
-                id="llm-profile-is-default"
-                data-testid="llm-profile-is-default"
-                label={draft.isDefault ? t("shared.enabled") : t("shared.disabled")}
-                checked={draft.isDefault}
-                onChange={(e) => setDraft((prev) => ({ ...prev, isDefault: e.target.checked }))}
-                aria-label={t("profiles.defaultLabel")}
-              />
-            </SettingsRow>
-          </FormGrid>
+          <SettingsRow
+            label={t("profiles.nameLabel")}
+            htmlFor="llm-profile-name"
+            help={t("profiles.nameHelp")}
+          >
+            <TextField
+              id="llm-profile-name"
+              data-testid="llm-profile-name"
+              value={draft.name}
+              onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder={t("profiles.namePlaceholder")}
+            />
+          </SettingsRow>
         </FormDialogSection>
 
         <FormDialogSection title={t("profiles.sectionConnection")}>
@@ -267,7 +250,9 @@ export function validateProfileDraft(
   if (!draft.name.trim()) {
     return t("profiles.nameRequired");
   }
-  const meta = getLlmProviderConfig(t)[draft.provider];
+  // Provider config uses fully-qualified "settings:llm.*" keys, so the global
+  // i18n binding resolves identically to the caller's namespaced `t`.
+  const meta = getLlmProviderConfig()[draft.provider];
   if (!draft.baseUrl.trim()) {
     return meta.emptyBaseUrlMessage;
   }

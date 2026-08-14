@@ -2,11 +2,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 import type { AnalysisMode, TaskTemplatePreset } from "../../types";
-import { OverlayPortal } from "../common/OverlayPortal";
+import { ModalDialog } from "../ModalDialog";
 import { Button } from "../ui";
 import { formatAnalysisMode } from "../../utils/analysis";
 import { localizeTaskPreset } from "../../domain/tasks/localizeTaskPreset";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
 import type { TemplateUsageMap } from "./taskTemplateTypes";
 import { getTaskFormAnalysisModeMeta, taskFormAnalysisModeOrder } from "./taskFormAnalysisModeMeta";
 import { analysisModeSupportsTaskPresets } from "../../domain/tasks/taskPresetModes";
@@ -17,12 +16,10 @@ import {
   presetDialogContainerClass,
   presetDialogFilterChipRowClass,
   presetDialogFilterGridClass,
-  presetDialogFooterClass,
   presetDialogGroupGridClass,
   presetDialogScrollableClass,
   presetDialogSearchGridClass,
   presetDialogSearchInputClass,
-  presetDialogTitleClass,
 } from "./taskTemplatePresetDialogClasses";
 
 type TaskTemplatePresetDialogProps = {
@@ -47,7 +44,6 @@ export function TaskTemplatePresetDialog({
   onClose,
 }: TaskTemplatePresetDialogProps) {
   const { t } = useTranslation();
-  const focusTrapRef = useFocusTrap({ active: true, onEscape: onClose });
   const resolvedAnalysisMode: AnalysisMode = preferredAnalysisMode ?? "leaderboard";
   const defaultFilter: AnalysisMode | "all" = analysisModeSupportsTaskPresets(
     resolvedAnalysisMode,
@@ -158,26 +154,33 @@ export function TaskTemplatePresetDialog({
   }, [presetsLoading, selectedPresetId, setSelectedPresetId, visiblePresets]);
 
   return (
-    <OverlayPortal onOverlayClick={onClose} lockBodyScroll>
-      <div
-        ref={focusTrapRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="preset-dialog-title"
-        className={presetDialogContainerClass}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div id="preset-dialog-title" className={presetDialogTitleClass}>
-          {t("tasks.template.title")}
-        </div>
-
+    <ModalDialog
+      open
+      title={t("tasks:template.title")}
+      onClose={onClose}
+      shellClassName={presetDialogContainerClass}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            {t("dialog.cancel")}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={onApply}
+            disabled={!selectedPresetId || presetsLoading || visiblePresets.length === 0}
+          >
+            {t("tasks:template.apply")}
+          </Button>
+        </>
+      }
+    >
         <div className={presetDialogFilterGridClass}>
           <div className={presetDialogFilterChipRowClass}>
             <FilterChip
               active={filter === "all"}
               onClick={() => setFilter("all")}
             >
-              {t("tasks.template.all")}
+              {t("tasks:template.all")}
             </FilterChip>
             {displayTypeOrder.map((displayType) => (
               <FilterChip
@@ -194,40 +197,40 @@ export function TaskTemplatePresetDialog({
             <input
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={t("tasks.template.searchPlaceholder")}
+              placeholder={t("tasks:template.searchPlaceholder")}
               className={presetDialogSearchInputClass}
             />
             <div className="text-xs text-text-muted">
-              {t("tasks.template.showing", {
+              {t("tasks:template.showing", {
                 visible: visiblePresets.length,
                 total: presets.length,
               })}
               {filter !== "all" &&
-                t("tasks.template.filteredMode", { mode: formatAnalysisMode(filter) })}
+                t("tasks:template.filteredMode", { mode: formatAnalysisMode(filter) })}
             </div>
           </div>
         </div>
 
         <div className={presetDialogScrollableClass}>
           {presetsLoading ? (
-            <StateMessage>{t("tasks.template.loading")}</StateMessage>
+            <StateMessage>{t("tasks:template.loading")}</StateMessage>
           ) : presets.length === 0 ? (
-            <StateMessage>{t("tasks.template.empty")}</StateMessage>
+            <StateMessage>{t("tasks:template.empty")}</StateMessage>
           ) : visiblePresets.length === 0 ? (
-            <StateMessage detail={t("tasks.template.noMatchHint")}>
-              {t("tasks.template.noMatch")}
+            <StateMessage detail={t("tasks:template.noMatchHint")}>
+              {t("tasks:template.noMatch")}
             </StateMessage>
           ) : (
             <div className={presetDialogGroupGridClass}>
               {filter === "all" && featuredPresets.length > 0 && (
                 <PresetGroupSection
-                  title={t("tasks.template.commonTitle")}
+                  title={t("tasks:template.commonTitle")}
                   description={
                     usageRankedPresets.length > 0
-                      ? t("tasks.template.sortedWithMode", {
+                      ? t("tasks:template.sortedWithMode", {
                           mode: formatAnalysisMode(resolvedAnalysisMode),
                         })
-                      : t("tasks.template.pinnedMode", {
+                      : t("tasks:template.pinnedMode", {
                           mode: formatAnalysisMode(resolvedAnalysisMode),
                         })
                   }
@@ -243,7 +246,7 @@ export function TaskTemplatePresetDialog({
                   <PresetGroupSection
                     key={displayType}
                     title={formatAnalysisMode(displayType)}
-                    description={t("tasks.template.viewMode", {
+                    description={t("tasks:template.viewMode", {
                       mode: formatAnalysisMode(displayType),
                     })}
                     presets={groupPresets}
@@ -256,20 +259,6 @@ export function TaskTemplatePresetDialog({
             </div>
           )}
         </div>
-
-        <div className={presetDialogFooterClass}>
-          <Button variant="secondary" onClick={onClose}>
-            {t("dialog.cancel")}
-          </Button>
-          <Button
-            variant="primary"
-            onClick={onApply}
-            disabled={!selectedPresetId || presetsLoading || visiblePresets.length === 0}
-          >
-            {t("tasks.template.apply")}
-          </Button>
-        </div>
-      </div>
-    </OverlayPortal>
+    </ModalDialog>
   );
 }

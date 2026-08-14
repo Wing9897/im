@@ -18,34 +18,67 @@ function log(partial: Partial<AppLogEntry> & Pick<AppLogEntry, "id" | "message">
   };
 }
 
+function analysisInput(
+  partial: Partial<Parameters<typeof toActiveAnalysisState>[0]> &
+    Pick<Parameters<typeof toActiveAnalysisState>[0], "batchId" | "messageCount">,
+): Parameters<typeof toActiveAnalysisState>[0] {
+  return {
+    taskId: "",
+    taskName: "",
+    estimatedTokens: 0,
+    llmProvider: "",
+    llmModel: "",
+    ...partial,
+  };
+}
+
 describe("appRuntimeShared", () => {
   it("preserves startedAt when updating the same active batch", () => {
-    const previous = {
+    const previous = analysisInput({
       batchId: "batch-1",
       messageCount: 3,
-      startedAt: "2026-04-15T03:00:00.000Z",
-    };
+    });
+    const previousState = { ...previous, startedAt: "2026-04-15T03:00:00.000Z" };
 
     const next = toActiveAnalysisState(
-      {
+      analysisInput({
         batchId: "batch-1",
         messageCount: 4,
-      },
-      previous,
+      }),
+      previousState,
     );
 
-    expect(next.startedAt).toBe(previous.startedAt);
+    expect(next.startedAt).toBe(previousState.startedAt);
     expect(next.messageCount).toBe(4);
+  });
+
+  it("copies llmProvider from the SSE start payload", () => {
+    const next = toActiveAnalysisState(
+      analysisInput({
+        batchId: "batch-3",
+        messageCount: 1,
+        taskId: "t1",
+        taskName: "Watch",
+        llmProvider: "ollama",
+        llmModel: "qwen3",
+        estimatedTokens: 120,
+      }),
+    );
+    expect(next.llmProvider).toBe("ollama");
+    expect(next.llmModel).toBe("qwen3");
+    expect(next.taskId).toBe("t1");
   });
 
   it("assigns a fresh startedAt when the batch changes", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-04-15T03:14:08.000Z"));
 
-    const next = toActiveAnalysisState({
-      batchId: "batch-2",
-      messageCount: 2,
-    });
+    const next = toActiveAnalysisState(
+      analysisInput({
+        batchId: "batch-2",
+        messageCount: 2,
+      }),
+    );
 
     expect(next.startedAt).toBe("2026-04-15T03:14:08.000Z");
     vi.useRealTimers();

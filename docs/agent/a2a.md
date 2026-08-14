@@ -8,7 +8,7 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 兩者共用同一 `AgentRuntime` + 工具 + LLM（含訊息／情報／日程／物品寫入；與後勤 `analysis_mode=agent` tick **不同**——tick 不開 `items.create`／`items.update`）；**system prompt 不同**；A2A **不在伺服器保存對話 session**。
 
-**LLM 解析：** A2A 為 sessionless，一律走 `staff_class=assistant`（或預設檔）解析，**不**接受／不儲存 per-session `llmProfileId`。人類助手聊天可在請求／`ui-prefs` session 上帶可選 `llmProfileId` 覆蓋。
+**LLM 解析：** A2A 為 sessionless，一律硬綁全局 **`liaison`** 槽位（`llm_global_slot_liaison`；槽位空 → 400），**不**借用助手槽、**不**接受／不儲存 per-session `llmProfileId`。人類助手聊天另走 `assistant` 槽；可在請求／`ui-prefs` session 上帶可選 `llmProfileId` 覆蓋。
 
 ## 認證
 
@@ -36,9 +36,23 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 ### Response（單次）
 
-與 `/agent/chat` **final** 同形（`message`／`sessionId`／`toolCalls`／`error`）；契約見 [`assistant.md`](./assistant.md)。`toolCalls` 僅供說明／除錯，不是逐步重放協議。無串流進度要求。
+與 `/agent/chat` **final** 同形（`message`／`sessionId`／`toolCalls`）；契約見 [`assistant.md`](./assistant.md)。`toolCalls` 僅供說明／除錯，不是逐步重放協議。無串流進度要求。
 
 需要本機已設定可用的 **AI 供應商**。
+
+### 錯誤（真 HTTP 錯誤碼）
+
+成功才回 200；失敗一律走標準結構化錯誤體 `{error_code, message, details, correlation_id}`，**不再**用 200 + `error` 欄位。
+
+| Status | `error_code` | 情境 |
+|--------|--------------|------|
+| 422 | `VALIDATION_ERROR` | `input` 空白且 `messages` 沒有 `role=user` 的一輪 |
+| 400／404 | `VALIDATION_ERROR`／`NOT_FOUND` | `liaison` 槽位未設定、設定檔不存在或不完整 |
+| 502 | `ai_engine_failed` | 上游 LLM 呼叫失敗（回應無法解析、供應商錯誤等） |
+| 503 | `ai_engine_unreachable` | 供應商主機連不上（本機 Ollama 未啟動、埠號錯誤） |
+| 504 | `agent_timeout` | 整體 wall-clock 逾時 |
+
+映射集中在 `server/api/agent_errors.py`，與 `/agent/chat` 共用。
 
 經工具建立的用戶事件 `origin=a2a`。呼叫結果寫入應用日誌（不再使用獨立 `a2a_audit_log` 表）。
 

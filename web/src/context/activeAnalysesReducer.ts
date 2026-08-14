@@ -19,6 +19,9 @@ export function applyActiveAnalysisEvent(
         taskName: event.taskName,
         messageCount: event.messageCount,
         taskId: "",
+        estimatedTokens: 0,
+        llmProvider: "",
+        llmModel: "",
       };
       next.set(event.batchId, toActiveAnalysisState(input, state.get(event.batchId)));
       break;

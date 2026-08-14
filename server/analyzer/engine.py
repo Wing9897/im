@@ -15,7 +15,7 @@ import logging
 from typing import Any
 
 from server.analyzer.llm_client import ConfigurableLlmClient
-from server.analyzer.llm_config import load_llm_config, load_llm_config_for_profile
+from server.analyzer.llm_config import load_llm_config_for_profile
 from server.analyzer.llm_json import normalize_items, parse_json_response
 from server.analyzer.prompt import AssembledPrompt
 from server.config import get_config, get_config_int
@@ -222,7 +222,7 @@ class AnalysisEngine:
         return is_openai_json_mode_enabled(config.get("json_mode") or "disabled")
 
     async def _ensure_client(self, profile_id: str | None) -> ConfigurableLlmClient:
-        """Create/reload the client for a profile id (None → default profile)."""
+        """Create/reload the client for a profile id (None → first complete profile)."""
         async with self._client_lock:
             resolved_id, new_hash = await self._config_hash_for_profile(self._db, profile_id)
             existing = self._clients.get(resolved_id)

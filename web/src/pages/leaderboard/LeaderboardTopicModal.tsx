@@ -27,14 +27,14 @@ export function LeaderboardTopicModal({
 }) {
   const { t } = useTranslation("common");
   useErrorToast(
-    messageError ? t("leaderboard.loadMessagesFailed", { error: messageError }) : null,
+    messageError ? t("leaderboard:loadMessagesFailed", { error: messageError }) : null,
   );
 
   return (
     <ModalDialog
       open
       size="wide"
-      ariaLabel={t("leaderboard.detailAria", { name: taskName })}
+      ariaLabel={t("leaderboard:detailAria", { name: taskName })}
       onClose={onClose}
       footer={<></>}
       bodyClassName="flex flex-col gap-sm"
@@ -55,24 +55,24 @@ export function LeaderboardTopicModal({
 
       <SurfaceCard density="field">
         <div className="text-[10px] font-bold tracking-wide text-text-secondary">
-          {t("leaderboard.summary")}
+          {t("leaderboard:summary")}
         </div>
         <div className="mt-1 text-[11px] leading-snug text-text-primary">
-          {topic.summary || t("leaderboard.noSummary")}
+          {topic.summary || t("leaderboard:noSummary")}
         </div>
       </SurfaceCard>
 
       <div className="text-[11px] text-text-muted">
         {isLoadingMessages
-          ? t("leaderboard.loadingMessages")
-          : t("leaderboard.relatedMessages", { count: messages.length })}
+          ? t("leaderboard:loadingMessages")
+          : t("leaderboard:relatedMessages", { count: messages.length })}
       </div>
 
       {!isLoadingMessages && !messageError && messages.length === 0 ? (
         <EmptyState
           compact
-          title={t("leaderboard.noMessagesTitle")}
-          description={t("leaderboard.noMessagesDescription")}
+          title={t("leaderboard:noMessagesTitle")}
+          description={t("leaderboard:noMessagesDescription")}
         />
       ) : null}
 

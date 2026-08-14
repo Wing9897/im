@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, time, timedelta, timezone, tzinfo
+from collections.abc import Mapping
+from datetime import UTC, date, datetime, time, timedelta, tzinfo
 from io import StringIO
-from typing import Any, Mapping
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dateutil import tz as du_tz
@@ -25,7 +26,7 @@ def _task_timezone(task: Mapping[str, Any]) -> tzinfo:
     if not raw or raw == "floating":
         return rrule_mod._system_tzinfo()
     if raw.upper() in {"UTC", "ETC/UTC", "GMT"}:
-        return timezone.utc
+        return UTC
     try:
         return ZoneInfo(raw)
     except (ZoneInfoNotFoundError, ValueError):
@@ -125,8 +126,8 @@ def _expand_imported_occurrences(
                     included = included.replace(tzinfo=None)
                 rule_set.rdate(included)
 
-        range_start_utc = range_start.astimezone(timezone.utc)
-        range_end_utc = range_end.astimezone(timezone.utc)
+        range_start_utc = range_start.astimezone(UTC)
+        range_end_utc = range_end.astimezone(UTC)
         if is_all_day:
             window_start = range_start_utc.replace(tzinfo=None)
             window_end = range_end_utc.replace(tzinfo=None)
@@ -152,14 +153,14 @@ def _expand_imported_occurrences(
                 # all-day plans use the host local wall (match the non-import path).
                 imported = bool(str(task_value(task, "ics_source") or "").strip())
                 if imported:
-                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=timezone.utc)
+                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=UTC)
                     end_dt = start_dt + duration
                 else:
-                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=zone).astimezone(timezone.utc)
-                    end_dt = datetime.combine(occurrence.date(), time(23, 59, 59), tzinfo=zone).astimezone(timezone.utc)
+                    start_dt = datetime.combine(occurrence.date(), time(0, 0), tzinfo=zone).astimezone(UTC)
+                    end_dt = datetime.combine(occurrence.date(), time(23, 59, 59), tzinfo=zone).astimezone(UTC)
             else:
-                start_dt = occurrence.astimezone(timezone.utc)
-                end_dt = (occurrence + duration).astimezone(timezone.utc)
+                start_dt = occurrence.astimezone(UTC)
+                end_dt = (occurrence + duration).astimezone(UTC)
             if start_dt < range_start_utc or start_dt > range_end_utc:
                 continue
             built.append(

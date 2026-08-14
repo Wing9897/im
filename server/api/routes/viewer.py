@@ -23,23 +23,23 @@ _STARTED_AT = time.monotonic()
 
 
 @router.get("/stats", response_model=ViewerStatsResponse)
-async def viewer_stats(request: Request) -> dict:
+async def viewer_stats(request: Request) -> ViewerStatsResponse:
     """Aggregate stats. Result counts are version-aware (matching results.py)."""
-    return await fetch_viewer_stats(get_db(request))
+    return ViewerStatsResponse.model_validate(await fetch_viewer_stats(get_db(request)))
 
 
 @router.get("/status", response_model=ViewerStatusResponse)
-async def viewer_status(request: Request) -> dict:
+async def viewer_status(request: Request) -> ViewerStatusResponse:
     db = get_db(request)
     scheduler = get_scheduler(request)
     collector_alive = (await resolve_collector_status(get_collector(request))) == "running"
     pending = await count_pending_current_batches(db)
-    return {
-        "queueDepth": pending + (scheduler.queue_size if scheduler else 0),
-        "collectorAlive": collector_alive,
-        "analysisPaused": await get_config_bool(db, "analysis_paused"),
-        "uptimeSeconds": int(time.monotonic() - _STARTED_AT),
-    }
+    return ViewerStatusResponse(
+        queueDepth=pending + (scheduler.queue_size if scheduler else 0),
+        collectorAlive=collector_alive,
+        analysisPaused=await get_config_bool(db, "analysis_paused"),
+        uptimeSeconds=int(time.monotonic() - _STARTED_AT),
+    )
 
 
 @router.get(
@@ -47,5 +47,6 @@ async def viewer_status(request: Request) -> dict:
     response_model=list[ViewerTaskResponse],
     response_model_exclude_none=True,
 )
-async def viewer_tasks(request: Request) -> list[dict]:
-    return await fetch_viewer_tasks(get_db(request))
+async def viewer_tasks(request: Request) -> list[ViewerTaskResponse]:
+    rows = await fetch_viewer_tasks(get_db(request))
+    return [ViewerTaskResponse.model_validate(row) for row in rows]

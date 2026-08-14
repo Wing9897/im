@@ -210,7 +210,7 @@ CI 只在明確執行 **`workflow_dispatch`** 發版時推送到 `ghcr.io/<owner
 | `INTELLIGENCE_MONITOR_DB` | SQLite 路徑（預設：`{DATA_DIR}/intelligence_monitor.db`） |
 | `INTELLIGENCE_MONITOR_DATA_DIR` | 本機資料根（DB／`secret.key`／`sessions/`／`connection.json`）。Desktop → Electron userData；CLI 預設與 packaged Desktop 相同（Win：`%APPDATA%\Intelligence Monitor`） |
 | `INTELLIGENCE_MONITOR_SESSIONS_DIR` | 可選；覆寫 Telegram sessions 目錄（預設：`{DATA_DIR}/sessions`） |
-| `INTELLIGENCE_MONITOR_HOST` | Server 綁定 host（預設：`127.0.0.1`；容器映像設為 `0.0.0.0`） |
+| `INTELLIGENCE_MONITOR_HOST` | Server 綁定 host（預設：`0.0.0.0`；可覆寫為特定網卡 IP） |
 | `INTELLIGENCE_MONITOR_SECRET_KEY_FILE` | 加密金鑰檔路徑（由 desktop shell 自動設定；未設時為 `{DATA_DIR}/secret.key`） |
 | `IM_FRONTEND_DIST` | 建置後前端靜態檔路徑（由 desktop shell 自動設定） |
 
@@ -225,8 +225,8 @@ CI 只在明確執行 **`workflow_dispatch`** 發版時推送到 `ghcr.io/<owner
 
 - **新安裝**：`localhost_auth_exempt` 預設為 true，僅便於本機首次 `POST /api/v1/setup/register`。
 - **註冊／登入之後**：設為 `false`；**本機 loopback 也不再豁免**——與遠端一樣須帶有效 Bearer（裝置 access 或 API 金鑰）。
-- **LAN**：預設只綁 `127.0.0.1`。Desktop **設定 → 一般** 可開「允許區域網路存取」（寫入 `connection.json` 的 `allowLanAccess`，sidecar 以 `INTELLIGENCE_MONITOR_HOST=0.0.0.0` 重啟）；純 Web／Docker 則設環境變數 `INTELLIGENCE_MONITOR_HOST=0.0.0.0`（或具體網卡 IP）並開防火牆放行 `18820`。瀏覽器／桌面用同一組 admin 帳密登入取得裝置 session；Webhook／腳本／A2A 另用可撤銷 API 金鑰（`*` 完整，或 `read` 只讀）。**經 port-forward 暴露到公網時，必須在前面加 Caddy／Nginx 等 TLS 反代**——應用本身不終止 HTTPS。
-- **忘碼**：僅 loopback 可 `POST /api/v1/setup/reset-password`（不需舊密碼）。
+- **LAN**：服務預設綁定 `0.0.0.0`（區網可連；仍須登入／憑證）。開防火牆放行 `18820`。瀏覽器／桌面用同一組 admin 帳密登入取得裝置 session；Webhook／腳本／A2A 另用可撤銷 API 金鑰（`*` 完整，或 `read` 只讀）。僅區網使用不需要 TLS；**經 port-forward 暴露到公網時，必須在前面加 Caddy／Nginx 等 TLS 反代**——應用本身不終止 HTTPS。
+- **忘碼**：預設關閉。須先用具寫入權限的系統帳號把資料目錄 `connection.json` 的 `resetPasswordForLocal` 設為 `true`，之後才能由 loopback 呼叫 `POST /api/v1/setup/reset-password`（不需舊密碼）；成功後該旗標自動關回 `false`（一次性）。詳見下方 [Desktop host vs client](#desktop-host-vs-client) 與 [`docs/AUTH.md`](docs/AUTH.md)。
 
 #### Live verify 必設：`VERIFY_BEARER`／`IM_ACCESS_TOKEN`
 
@@ -241,7 +241,7 @@ $env:IM_ACCESS_TOKEN = "<token>"
 npm run verify:deploy
 ```
 
-權威細節與完整手動清單見 [`docs/ARCHITECTURE.md` Authentication](docs/ARCHITECTURE.md#authentication)／[Manual verification checklist](docs/ARCHITECTURE.md#manual-verification-checklist)（SoT）。
+權威細節與完整手動清單見 [`docs/AUTH.md`](docs/AUTH.md)／[Manual verification checklist](docs/AUTH.md#manual-verification-checklist)（SoT）。
 
 ### 首次設定流程（摘要）
 
@@ -275,17 +275,17 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v31**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.32`）——origin／timeline `source` CHECK 由 Python SoT 生成；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`（既有庫保留舊列直到刪除）；任務／助手需完整可用設定檔；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-31 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v33**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.34`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode）由 `server/domain/` Python SoT 生成並配 drift 測試；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-33 庫。
 
-**Wipe-only：** v1–v30 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v32 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`ARCHITECTURE.md` Schema support matrix](docs/ARCHITECTURE.md#schema-support-matrix)／[Schema v31 explicit reset](docs/ARCHITECTURE.md#schema-v31-explicit-reset)。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v33-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
 
-本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
+本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`、`uv run python scripts/seed_items_finance_demo.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 
 ### 連接埠
 
@@ -298,7 +298,7 @@ uv run python scripts/reset_local_databases.py --apply
 
 | 文件 | 內容 |
 |------|------|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 系統架構；[Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)、[Schema matrix](docs/ARCHITECTURE.md#schema-support-matrix)、[API contract](docs/ARCHITECTURE.md#api-contract)、[Ops board](docs/ARCHITECTURE.md#ops-board)、[Frontend layers](docs/ARCHITECTURE.md#frontend-layering) |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 系統架構；[Core design](docs/ARCHITECTURE.md#core-design-task-as-universal-interface)、[Schema matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)、[API contract](docs/ARCHITECTURE.md#api-contract)、[Ops board](docs/ARCHITECTURE.md#ops-board)、[Frontend layers](docs/ARCHITECTURE.md#frontend-layering) |
 | [`docs/KNOWN-SIMPLIFICATIONS.md`](docs/KNOWN-SIMPLIFICATIONS.md) | 有意差異／quirks；契約細節見 ARCHITECTURE／`docs/agent/*` |
 | [`docs/I18N-GLOSSARY.md`](docs/I18N-GLOSSARY.md) | UI 用語／error_code 詞彙表 |
 | [`docs/agent/assistant.md`](docs/agent/assistant.md) | 內建助手（Agent + 瀏覽器語音）使用與契約 |

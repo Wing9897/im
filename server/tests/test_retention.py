@@ -1,15 +1,16 @@
-"""Unit tests for server/scheduler/retention.py."""
+"""Retention TTL cleanup: messages, analysis, logs, batches."""
 
 from __future__ import annotations
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import pytest
 
 from server.config import set_configs
 from server.db.database import Database
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.scheduler.retention import cleanup_expired_data
+from server.tests.db_helpers import insert_direct_analysis_task
+from server.tests.retention_helpers import insert_message, seed_channel, seed_task_and_batch
 from server.util import new_id, utc_now_iso
 
 
@@ -20,89 +21,6 @@ async def db(tmp_path) -> AsyncIterator[Database]:
     await database.ensure_schema()
     yield database
     await database.close()
-
-
-async def _seed_channel(db: Database, platform: str = "rss", platform_id: str = "feed-1") -> None:
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO channels (platform, platform_id, channel_name, created_at) VALUES (?, ?, ?, ?)",
-        (platform, platform_id, "Test Feed", now),
-    )
-
-
-async def _insert_message(
-    db: Database,
-    message_id: str,
-    *,
-    timestamp: str,
-    platform: str = "rss",
-    platform_id: str = "feed-1",
-) -> None:
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO messages (id, platform, platform_id, content, timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-        (message_id, platform, platform_id, "hello", timestamp, now),
-    )
-
-
-async def _ensure_llm_profile(db: Database) -> str:
-    """Stamp-29: analysis_tasks.llm_profile_id is NOT NULL; schema no longer bootstraps a default."""
-    exists = await db.fetch_value(
-        "SELECT id FROM llm_profiles WHERE id = ?",
-        (DEFAULT_LLM_PROFILE_ID,),
-    )
-    if exists:
-        return DEFAULT_LLM_PROFILE_ID
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
-        "created_at, updated_at"
-        ") VALUES (?, 'Retention Test', 'ollama', 'http://localhost:11434', 'llama-test', '', "
-        "0, 'disabled', 1, 'auto', '', 1, ?, ?)",
-        (DEFAULT_LLM_PROFILE_ID, now, now),
-    )
-    return DEFAULT_LLM_PROFILE_ID
-
-
-async def _seed_task_and_batch(db: Database) -> None:
-    now = utc_now_iso()
-    profile_id = await _ensure_llm_profile(db)
-    await db.execute(
-        "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
-        ("task-1", "Task", "prompt", profile_id, now, now),
-    )
-    await db.execute(
-        "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "
-        "created_at, updated_at) VALUES (?, ?, 1, 'completed', 1, 0, ?, ?)",
-        ("batch-1", "task-1", now, now),
-    )
-
-
-async def _insert_device_session(
-    db: Database,
-    session_id: str,
-    *,
-    expires_at: str,
-    revoked_at: str | None = None,
-) -> None:
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO device_sessions (id, label, refresh_token_hash, created_at, last_seen_at, "
-        "expires_at, revoked_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (session_id, "Device", f"refresh-{session_id}", now, now, expires_at, revoked_at),
-    )
-
-
-async def _insert_access_token(db: Database, token_id: str, session_id: str, *, expires_at: str) -> None:
-    await db.execute(
-        "INSERT INTO device_access_tokens (id, session_id, token_hash, created_at, expires_at, revoked_at) "
-        "VALUES (?, ?, ?, ?, ?, NULL)",
-        (token_id, session_id, f"access-{token_id}", utc_now_iso(), expires_at),
-    )
 
 
 async def test_cleanup_disabled_when_all_retention_days_zero(db: Database) -> None:
@@ -121,8 +39,8 @@ async def test_cleanup_disabled_when_all_retention_days_zero(db: Database) -> No
             "retention_user_events_days": "0",
         },
     )
-    await _seed_channel(db)
-    await _insert_message(db, "old-msg", timestamp="2020-01-01T00:00:00+00:00")
+    await seed_channel(db)
+    await insert_message(db, "old-msg", timestamp="2020-01-01T00:00:00+00:00")
 
     counts = await cleanup_expired_data(db)
 
@@ -133,6 +51,7 @@ async def test_cleanup_disabled_when_all_retention_days_zero(db: Database) -> No
     assert counts["app_logs"] == 0
     assert counts["user_events"] == 0
     assert counts["timeline_dismissals"] == 0
+    assert counts["timeline_importance"] == 0
     assert await db.fetch_value("SELECT COUNT(*) FROM messages") == 1
 
 
@@ -147,13 +66,13 @@ async def test_cleanup_messages_preserves_analysis_results(db: Database) -> None
             "retention_user_events_days": "0",
         },
     )
-    await _seed_channel(db)
-    await _seed_task_and_batch(db)
+    await seed_channel(db)
+    await seed_task_and_batch(db)
 
     old_ts = "2020-01-01T00:00:00+00:00"
     recent_ts = utc_now_iso()
-    await _insert_message(db, "old-msg", timestamp=old_ts)
-    await _insert_message(db, "new-msg", timestamp=recent_ts)
+    await insert_message(db, "old-msg", timestamp=old_ts)
+    await insert_message(db, "new-msg", timestamp=recent_ts)
 
     now = utc_now_iso()
     await db.execute(
@@ -202,9 +121,9 @@ async def test_category_ttls_are_independent(db: Database) -> None:
             "retention_user_events_days": "0",
         },
     )
-    await _seed_channel(db)
-    await _seed_task_and_batch(db)
-    await _insert_message(db, "msg-1", timestamp="2020-01-01T00:00:00+00:00")
+    await seed_channel(db)
+    await seed_task_and_batch(db)
+    await insert_message(db, "msg-1", timestamp="2020-01-01T00:00:00+00:00")
 
     now = utc_now_iso()
     old = "2020-01-01T00:00:00+00:00"
@@ -267,7 +186,7 @@ async def test_zero_disables_analysis_only(db: Database) -> None:
             "retention_user_events_days": "0",
         },
     )
-    await _seed_task_and_batch(db)
+    await seed_task_and_batch(db)
     old = "2020-01-01T00:00:00+00:00"
     await db.execute(
         "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, content_hash, "
@@ -368,63 +287,6 @@ async def test_cleanup_app_logs_and_user_events(db: Database) -> None:
     assert "Retention cleanup" in summary["message"]
 
 
-async def test_expired_device_auth_rows_are_cleaned_with_all_retention_days_zero(db: Database) -> None:
-    await set_configs(
-        db,
-        {
-            "retention_messages_days": "0",
-            "retention_analysis_days": "0",
-            "retention_leaderboard_days": "0",
-            "retention_app_logs_days": "0",
-            "retention_user_events_days": "0",
-        },
-    )
-    old = "2020-01-01T00:00:00+00:00"
-    future = "2999-01-01T00:00:00+00:00"
-    await _insert_device_session(db, "sess-live", expires_at=future)
-    await _insert_device_session(db, "sess-old", expires_at=old)
-    await _insert_access_token(db, "tok-live", "sess-live", expires_at=future)
-    await _insert_access_token(db, "tok-old", "sess-live", expires_at=old)
-
-    counts = await cleanup_expired_data(db)
-
-    assert counts["device_access_tokens"] == 1
-    assert counts["device_sessions"] == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_sessions WHERE id = 'sess-old'") == 0
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_sessions WHERE id = 'sess-live'") == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_access_tokens WHERE id = 'tok-old'") == 0
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_access_tokens WHERE id = 'tok-live'") == 1
-
-
-async def test_expired_device_session_takes_its_access_tokens_with_it(db: Database) -> None:
-    """A session past its refresh window drops unexpired tokens through FK CASCADE."""
-    old = "2020-01-01T00:00:00+00:00"
-    await _insert_device_session(db, "sess-old", expires_at=old)
-    await _insert_access_token(db, "tok-unexpired", "sess-old", expires_at="2999-01-01T00:00:00+00:00")
-
-    counts = await cleanup_expired_data(db)
-
-    assert counts["device_sessions"] == 1
-    # Cascade-removed rows are not attributed to the token category.
-    assert counts["device_access_tokens"] == 0
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_access_tokens") == 0
-
-
-async def test_revoked_but_unexpired_device_session_survives_cleanup(db: Database) -> None:
-    """Revocation state is not a retention trigger; the refresh window is."""
-    await _insert_device_session(
-        db,
-        "sess-revoked",
-        expires_at="2999-01-01T00:00:00+00:00",
-        revoked_at=utc_now_iso(),
-    )
-
-    counts = await cleanup_expired_data(db)
-
-    assert counts["device_sessions"] == 0
-    assert await db.fetch_value("SELECT COUNT(*) FROM device_sessions WHERE id = 'sess-revoked'") == 1
-
-
 async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None:
     await set_configs(
         db,
@@ -438,12 +300,13 @@ async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None
     )
     now = utc_now_iso()
     old = "2020-01-01T00:00:00+00:00"
-    profile_id = await _ensure_llm_profile(db)
-    await db.execute(
-        "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-        "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, 'intel_event', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, ?, ?)",
-        ("task-batch", "Task", "prompt", profile_id, now, now),
+    await insert_direct_analysis_task(
+        db,
+        "task-batch",
+        analysis_mode="intel_event",
+        name="Task",
+        prompt_template="prompt",
+        schedule_rrule="FREQ=SECONDLY;INTERVAL=10",
     )
     await db.execute(
         "INSERT INTO analysis_batches (id, task_id, version, status, message_count, retry_count, "
@@ -461,91 +324,3 @@ async def test_cleanup_completed_batches_with_analysis_ttl(db: Database) -> None
     assert counts["analysis"] >= 1
     assert await db.fetch_value("SELECT COUNT(*) FROM analysis_batches WHERE id = 'batch-old'") == 0
     assert await db.fetch_value("SELECT COUNT(*) FROM analysis_batches WHERE id = 'batch-new'") == 1
-
-
-async def test_cleanup_orphan_timeline_dismissals(db: Database) -> None:
-    await set_configs(
-        db,
-        {
-            "retention_messages_days": "0",
-            "retention_analysis_days": "0",
-            "retention_leaderboard_days": "0",
-            "retention_app_logs_days": "0",
-            "retention_user_events_days": "0",
-        },
-    )
-    now = utc_now_iso()
-    await _seed_task_and_batch(db)
-    await db.execute(
-        "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, content_hash, "
-        "semantic_hash, location, created_at, updated_at) "
-        "VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)",
-        ("ev-live", "task-1", "batch-1", "Live", "b", "h-live", "s-live", "N/A", now, now),
-    )
-    await db.execute(
-        "INSERT INTO user_events (id, title, body, start_time, end_time, location, origin, created_at, updated_at) "
-        "VALUES (?, ?, '', ?, NULL, '', 'manual', ?, ?)",
-        ("ue-live", "Live", now, now, now),
-    )
-    await db.execute(
-        "INSERT INTO items (id, title, notes, status, created_at, updated_at) VALUES (?, ?, '', 'active', ?, ?)",
-        ("item-live", "Live item", now, now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("analysis", "ev-live", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("analysis", "ev-gone", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("user", "ue-live", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("user", "ue-gone", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("item_remind", "item:item-live:remind", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("item_remind", "item:item-gone:remind", now),
-    )
-    await db.execute(
-        "INSERT INTO recurring_schedules "
-        "(id, name, workset_id, is_active, rrule, dtstart, timezone, created_at, updated_at) "
-        "VALUES (?, ?, '__user__', 1, 'FREQ=DAILY', ?, 'floating', ?, ?)",
-        ("task-cal-live", "Cal Live", "2026-07-23T10:00:00", now, now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("recurring", "task-cal-live:20260723T100000Z", now),
-    )
-    await db.execute(
-        "INSERT INTO timeline_dismissals (source, event_id, dismissed_at) VALUES (?, ?, ?)",
-        ("recurring", "task-cal-gone:20260724T100000Z", now),
-    )
-
-    counts = await cleanup_expired_data(db)
-
-    assert counts["timeline_dismissals"] == 4
-    assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'ev-live'") == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'ue-live'") == 1
-    assert await db.fetch_value("SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'item:item-live:remind'") == 1
-    assert (
-        await db.fetch_value(
-            "SELECT COUNT(*) FROM timeline_dismissals WHERE event_id = 'task-cal-live:20260723T100000Z'"
-        )
-        == 1
-    )
-    assert (
-        await db.fetch_value(
-            "SELECT COUNT(*) FROM timeline_dismissals WHERE event_id IN ("
-            "'ev-gone', 'ue-gone', 'item:item-gone:remind', 'task-cal-gone:20260724T100000Z')"
-        )
-        == 0
-    )

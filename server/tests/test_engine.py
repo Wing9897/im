@@ -10,7 +10,7 @@ import pytest
 from server.analyzer.engine import AnalysisEngine
 from server.analyzer.llm_client import ConfigurableLlmClient
 from server.analyzer.prompt import AssembledPrompt
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.prompts.assistant import TASK_CONFIG_SCHEMA_PROMPT
 from server.util import utc_now_iso
 
@@ -64,18 +64,21 @@ async def test_json_mode_for_analyze_honors_profile_json_mode(app) -> None:
     mock_client = MagicMock(spec=ConfigurableLlmClient)
     mock_client.provider = "openai"
 
-    for value in ("", "disabled", "off", "false", "0", "FALSE"):
+    # Stored vocabulary is CHECK-constrained (stamp 33): disabled / json_schema /
+    # json_object. Legacy sentinel collapse ("off" / "0" / …) stays unit-tested
+    # against is_openai_json_mode_enabled in test_util.py.
+    await db.execute(
+        "UPDATE llm_profiles SET json_mode = 'disabled', updated_at = ? WHERE id = ?",
+        (utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
+    )
+    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is False
+
+    for value in ("json_schema", "json_object"):
         await db.execute(
             "UPDATE llm_profiles SET json_mode = ?, updated_at = ? WHERE id = ?",
             (value, utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
         )
-        assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is False
-
-    await db.execute(
-        "UPDATE llm_profiles SET json_mode = ?, updated_at = ? WHERE id = ?",
-        ("true", utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
-    )
-    assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
+        assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True
 
     mock_client.provider = "ollama"
     assert await engine._json_mode_for_analyze(mock_client, DEFAULT_LLM_PROFILE_ID) is True

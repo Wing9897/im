@@ -10,6 +10,17 @@ function analyses(
   return new Map(items.map((item) => [item.batchId, item]));
 }
 
+function analysis(
+  partial: Pick<ActiveAnalysisState, "taskName" | "messageCount" | "taskId" | "batchId" | "startedAt">,
+): ActiveAnalysisState {
+  return {
+    estimatedTokens: 0,
+    llmProvider: "",
+    llmModel: "",
+    ...partial,
+  };
+}
+
 describe("buildSystemStatus", () => {
   beforeEach(async () => {
     setAppLocale("zh-Hant");
@@ -21,13 +32,15 @@ describe("buildSystemStatus", () => {
       collectorStatus: "running",
       aiEngineStatus: "available",
       analysisPaused: false,
-      activeAnalyses: analyses({
-        taskName: "熱門話題",
-        messageCount: 50,
-        taskId: "t1",
-        batchId: "b1",
-        startedAt: "2026-07-03T00:00:00Z",
-      }),
+      activeAnalyses: analyses(
+        analysis({
+          taskName: "熱門話題",
+          messageCount: 50,
+          taskId: "t1",
+          batchId: "b1",
+          startedAt: "2026-07-03T00:00:00Z",
+        }),
+      ),
     });
     expect(view.label).toContain("分析中");
     expect(view.label).toContain("熱門話題");
@@ -42,20 +55,20 @@ describe("buildSystemStatus", () => {
       aiEngineStatus: "available",
       analysisPaused: false,
       activeAnalyses: analyses(
-        {
+        analysis({
           taskName: "熱門話題",
           messageCount: 50,
           taskId: "t1",
           batchId: "b1",
           startedAt: "2026-07-03T00:00:00Z",
-        },
-        {
+        }),
+        analysis({
           taskName: "地震監控",
           messageCount: 12,
           taskId: "t2",
           batchId: "b2",
           startedAt: "2026-07-03T00:01:00Z",
-        },
+        }),
       ),
     });
     expect(view.label).toContain("熱門話題");
@@ -132,17 +145,5 @@ describe("buildSystemStatus", () => {
     expect(view.label).toBe("AI 無法連線");
     expect(view.title).toContain("收集器已停止，且 AI 引擎無法連線");
     expect(view.title).toContain("AI 設定");
-  });
-
-  it("shows collector transition states without claiming a stable stop", () => {
-    const view = buildSystemStatus({
-      collectorStatus: "restarting",
-      aiEngineStatus: "available",
-      analysisPaused: true,
-      activeAnalyses: new Map(),
-    });
-    expect(view.label).toBe("重啟中…");
-    expect(view.title).toContain("收集器重啟中");
-    expect(view.title).not.toContain("收集器已停止");
   });
 });

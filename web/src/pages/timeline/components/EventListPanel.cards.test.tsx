@@ -176,10 +176,12 @@ describe("EventListPanel", () => {
       rangeEvents: [emptyLoc],
       focusedDay: new Date(2026, 6, 14),
     });
-    expect(
-      emptyContainer.querySelector('[data-testid="timeline-event-list-location"]')
-        ?.textContent,
-    ).toContain("地點：N/A");
+    // Empty / legacy "N/A" locations render without a literal N/A placeholder.
+    const emptyLocText = emptyContainer.querySelector(
+      '[data-testid="timeline-event-list-location"]',
+    )?.textContent;
+    expect(emptyLocText).toContain("地點：");
+    expect(emptyLocText).not.toContain("N/A");
   });
 
   it("important item rows use ❗ leading marker instead of kind emoji", () => {

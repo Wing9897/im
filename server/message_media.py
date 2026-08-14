@@ -56,7 +56,7 @@ class MessageMediaService:
                     fetch_media(str(row["platform_id"]), str(platform_message_id)),
                     timeout=_DOWNLOAD_TIMEOUT_SECONDS,
                 )
-        except asyncio.TimeoutError as exc:
+        except TimeoutError as exc:
             raise MediaServiceError(504, "Media download timed out") from exc
         except RuntimeError as exc:
             raise MediaServiceError(503, str(exc)) from exc

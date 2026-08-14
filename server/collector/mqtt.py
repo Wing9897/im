@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from contextlib import suppress
 
 import aiomqtt
 
@@ -77,10 +78,8 @@ class MqttAdapter(BasePlatformAdapter):
     async def disconnect(self) -> None:
         if self._listen_task is not None and not self._listen_task.done():
             self._listen_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._listen_task
-            except asyncio.CancelledError:
-                pass
             self._listen_task = None
 
         if self._client is not None:
@@ -128,12 +127,11 @@ class MqttAdapter(BasePlatformAdapter):
                         sender_name=topic,
                         channel_name=self._broker_url,
                     )
-                except (OSError, RuntimeError) as exc:
-                    logger.error(
-                        "Failed to insert MQTT message for source %s, topic %s: %s",
+                except (OSError, RuntimeError):
+                    logger.exception(
+                        "Failed to insert MQTT message for source %s, topic %s",
                         self._source_id,
                         topic,
-                        exc,
                     )
         except aiomqtt.MqttError as exc:
             logger.warning(

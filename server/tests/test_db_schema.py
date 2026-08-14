@@ -1,6 +1,6 @@
 """Schema lifecycle tests for server/db/database.py.
 
-Wipe-floor SoT (stamp-31 / prior hard-reject): ``test_schema_wipe_floor.py``.
+Wipe-floor SoT (stamp-33 / prior hard-reject): ``test_schema_wipe_floor.py``.
 This module covers fingerprint validation, unstamped current, and newer-than-supported.
 """
 
@@ -186,9 +186,9 @@ def test_analysis_time_range_values_are_canonical_offset_keys() -> None:
     ``_TIME_RANGE_OFFSETS`` (monitor／agent send ``7d``／``30d`` only).
     """
     from server.analyzer.incremental import _TIME_RANGE_OFFSETS
-    from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
+    from server.domain.analysis_time_ranges import ALL_ANALYSIS_TIME_RANGES
 
-    values = set(ANALYSIS_TIME_RANGE_VALUES)
+    values = set(ALL_ANALYSIS_TIME_RANGES)
     assert values - {"all", "today"} <= set(_TIME_RANGE_OFFSETS)
     assert not values & {"7days", "30days"}
     assert not {"7days", "30days"} & set(_TIME_RANGE_OFFSETS)
@@ -276,7 +276,7 @@ def test_schema_fingerprint_is_immutable_and_order_independent():
     expected = CURRENT_SCHEMA_FINGERPRINT
     permuted = SchemaFingerprint(
         version=expected.version,
-        tables=frozenset(reversed(sorted(expected.tables))),
+        tables=frozenset(sorted(expected.tables, reverse=True)),
         columns=dict(reversed(list(expected.columns.items()))),
         indexes=dict(reversed(list(expected.indexes.items()))),
         foreign_keys=dict(reversed(list(expected.foreign_keys.items()))),

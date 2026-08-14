@@ -76,10 +76,10 @@ export const TaskCard = React.memo(function TaskCard({
   );
 
   const toggleLabel = task.isActive
-    ? t("tasks.card.disable")
-    : t("tasks.card.enable");
+    ? t("tasks:card.disable")
+    : t("tasks:card.enable");
 
-  const analyzingLabel = t("tasks.card.analyzingAria", { name: task.name });
+  const analyzingLabel = t("tasks:card.analyzingAria", { name: task.name });
 
   return (
     <SelectableSurface
@@ -88,8 +88,8 @@ export const TaskCard = React.memo(function TaskCard({
       selectAriaLabel={
         onSelect
           ? isAgentCalendarMode
-            ? t("tasks.card.openAgentAria", { name: task.name })
-            : t("tasks.card.viewDetailAria", { name: task.name })
+            ? t("tasks:card.openAgentAria", { name: task.name })
+            : t("tasks:card.viewDetailAria", { name: task.name })
           : undefined
       }
       className={`relative h-full transition-opacity ${task.isActive ? "opacity-100" : "opacity-[0.72]"}`}
@@ -127,13 +127,13 @@ export const TaskCard = React.memo(function TaskCard({
         <div className="text-[11px] text-text-muted">
           {worksetName ? (
             <span className="mb-0.5 block truncate" title={worksetName}>
-              {t("workset.cardLabel", { name: worksetName })}
+              {t("workset:cardLabel", { name: worksetName })}
             </span>
           ) : null}
           {isAgentMode
-              ? t("tasks.card.agent")
-              : t("tasks.card.channelsRange", {
-                  count: String(task.channelIds.length),
+              ? t("tasks:card.agent")
+              : t("tasks:card.channelsRange", {
+                  count: (task.channelIds ?? []).length,
                   range: task.analysisTimeRange,
                 })}
         </div>
@@ -144,11 +144,11 @@ export const TaskCard = React.memo(function TaskCard({
             data-testid={`task-card-schedule-hint-${task.id}`}
           >
             {isAgentMode
-              ? t("tasks.card.agentProgressHint")
-              : t("tasks.card.calendarTaskProgressHint")}
+              ? t("tasks:card.agentProgressHint")
+              : t("tasks:card.calendarTaskProgressHint")}
             {isAgentCalendarMode && queuedMessageCount > 0 ? (
               <span className="mt-0.5 block tabular-nums text-warning">
-                {t("tasks.card.queued")}: {queuedMessageCount.toLocaleString()}
+                {t("tasks:card.queued")}: {queuedMessageCount.toLocaleString()}
               </span>
             ) : null}
           </div>
@@ -156,14 +156,14 @@ export const TaskCard = React.memo(function TaskCard({
           <>
             <div className="grid grid-cols-3 gap-sm text-[11px]">
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted">{t("tasks.card.unanalyzed")}</span>
+                <span className="text-text-muted">{t("tasks:card.unanalyzed")}</span>
                 <span className="tabular-nums font-medium text-text-primary">
                   {stats.unanalyzedCount.toLocaleString()}
                 </span>
               </div>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted" title={t("tasks.card.queuedTitle")}>
-                  {t("tasks.card.queued")}
+                <span className="text-text-muted" title={t("tasks:card.queuedTitle")}>
+                  {t("tasks:card.queued")}
                 </span>
                 <span
                   className={`tabular-nums font-medium ${
@@ -174,7 +174,7 @@ export const TaskCard = React.memo(function TaskCard({
                 </span>
               </div>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted">{t("tasks.card.analyzed")}</span>
+                <span className="text-text-muted">{t("tasks:card.analyzed")}</span>
                 <span className="tabular-nums font-medium text-text-primary">
                   {stats.analyzedCount.toLocaleString()}
                 </span>
@@ -188,7 +188,7 @@ export const TaskCard = React.memo(function TaskCard({
                 className="text-[11px] leading-snug text-text-muted"
                 data-testid={`task-card-waiting-threshold-${task.id}`}
               >
-                {t("tasks.card.waitingForThreshold", {
+                {t("tasks:card.waitingForThreshold", {
                   count: stats.unanalyzedCount,
                   threshold: stats.triggerThreshold,
                 })}
@@ -210,22 +210,22 @@ export const TaskCard = React.memo(function TaskCard({
                 data-testid={`task-card-error-${task.id}`}
               >
                 <Badge tone="danger" className="mr-1 align-middle">
-                  {t("board.queue.attention")}
+                  {t("board:queue.attention")}
                 </Badge>
                 {stats.lastErrorMessage}
               </div>
             ) : null}
             {(stats.retryCount ?? 0) > 0 ? (
               <span className="text-warning" data-testid={`task-card-retry-${task.id}`}>
-                {t("tasks.card.retryCount", { count: stats.retryCount })}
+                {t("tasks:card.retryCount", { count: stats.retryCount })}
               </span>
             ) : null}
             {stats.analysisPaused ? (
               <span className="text-warning" data-testid={`task-card-paused-${task.id}`}>
                 <Badge tone="warning" className="mr-1 align-middle">
-                  {t("board.queue.paused")}
+                  {t("board:queue.paused")}
                 </Badge>
-                {t("tasks.card.analysisPausedHint")}
+                {t("tasks:card.analysisPausedHint")}
               </span>
             ) : null}
           </div>
@@ -240,8 +240,8 @@ export const TaskCard = React.memo(function TaskCard({
             {!task.isActive ? (
               <span
                 className="inline-flex shrink-0 text-text-muted"
-                title={t("tasks.card.disabled")}
-                aria-label={t("tasks.card.disabled")}
+                title={t("tasks:card.disabled")}
+                aria-label={t("tasks:card.disabled")}
                 data-testid={`task-card-inactive-icon-${task.id}`}
               >
                 <PowerOff size={14} strokeWidth={2} aria-hidden="true" />
@@ -263,9 +263,9 @@ export const TaskCard = React.memo(function TaskCard({
             >
               {task.isActive
                 ? isAnalyzing
-                  ? t("tasks.card.running")
-                  : t("tasks.card.idle")
-                : t("tasks.card.disabled")}
+                  ? t("tasks:card.running")
+                  : t("tasks:card.idle")
+                : t("tasks:card.disabled")}
             </span>
           </div>
 
@@ -281,8 +281,8 @@ export const TaskCard = React.memo(function TaskCard({
               type="button"
               className={actionIconBtnClass}
               onClick={handleEdit}
-              aria-label={t("tasks.card.editAria", { name: task.name })}
-              title={t("tasks.card.edit")}
+              aria-label={t("tasks:card.editAria", { name: task.name })}
+              title={t("tasks:card.edit")}
             >
               <Pencil size={14} strokeWidth={2} aria-hidden="true" />
             </button>
@@ -290,8 +290,8 @@ export const TaskCard = React.memo(function TaskCard({
               type="button"
               className={actionIconBtnClass}
               onClick={handleDelete}
-              aria-label={t("tasks.card.deleteAria", { name: task.name })}
-              title={t("tasks.card.delete")}
+              aria-label={t("tasks:card.deleteAria", { name: task.name })}
+              title={t("tasks:card.delete")}
             >
               <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
             </button>

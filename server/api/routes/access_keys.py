@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
@@ -20,13 +18,13 @@ router = APIRouter(prefix="/api/v1/access-keys", tags=["access-keys"], dependenc
 
 
 @router.get("", response_model=AccessKeyListResponse)
-async def fetch_access_keys(request: Request) -> dict[str, Any]:
+async def fetch_access_keys(request: Request) -> AccessKeyListResponse:
     keys = await list_access_keys_public(get_db(request))
-    return {"keys": keys}
+    return AccessKeyListResponse.model_validate({"keys": keys})
 
 
 @router.post("", response_model=AccessKeyCreatedResponse)
-async def add_access_key(request: Request, body: AccessKeyCreateBody) -> dict[str, Any]:
+async def add_access_key(request: Request, body: AccessKeyCreateBody) -> AccessKeyCreatedResponse:
     if body.scopes is not None:
         scopes = body.scopes
     elif body.readOnly:
@@ -34,14 +32,15 @@ async def add_access_key(request: Request, body: AccessKeyCreateBody) -> dict[st
     else:
         scopes = None
     try:
-        return await create_access_key(get_db(request), body.label, scopes=scopes)
+        created = await create_access_key(get_db(request), body.label, scopes=scopes)
     except ValueError as exc:
         raise http_error(422, str(exc), error_code=VALIDATION_ERROR) from exc
+    return AccessKeyCreatedResponse.model_validate(created)
 
 
 @router.delete("/{key_id}", response_model=AccessKeyDeleteResponse)
-async def delete_access_key(request: Request, key_id: str) -> dict[str, bool]:
+async def delete_access_key(request: Request, key_id: str) -> AccessKeyDeleteResponse:
     removed = await revoke_access_key(get_db(request), key_id)
     if not removed:
         raise http_error(404, "Access key not found", error_code=NOT_FOUND)
-    return {"ok": True}
+    return AccessKeyDeleteResponse(ok=True)

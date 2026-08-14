@@ -8,16 +8,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from server.analyzer.llm_client import ConfigurableLlmClient, load_agent_llm_config, load_llm_config
-from server.analyzer.llm_config import load_liaison_llm_config, load_task_editor_llm_config
-from server.llm_global_slots import set_global_slot
 from server.analyzer.llm_config import (
     DEFAULT_PROVIDER_BASE_URLS,
     config_from_draft_fields,
+    load_liaison_llm_config,
     load_llm_config_for_profile,
+    load_task_editor_llm_config,
 )
 from server.analyzer.llm_json import extract_json_from_markdown, normalize_items, parse_json_response
 from server.analyzer.llm_providers import LlmClientError
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
+from server.llm_global_slots import set_global_slot
 from server.secrets import protect_text
 from server.util import utc_now_iso
 
@@ -56,7 +57,7 @@ def test_normalize_items_from_list_and_singleton() -> None:
     assert normalize_items({"id": "solo"}) == [{"id": "solo"}]
 
 
-async def _update_default_profile(
+async def _update_fixture_profile(
     db,
     *,
     provider: str,
@@ -64,9 +65,9 @@ async def _update_default_profile(
     api_key: str = "",
     base_url: str = "",
 ) -> None:
+    """Patch the seeded fixture profile (``DEFAULT_LLM_PROFILE_ID`` / ``__default__``)."""
     await db.execute(
-        "UPDATE llm_profiles SET provider = ?, model = ?, api_key = ?, base_url = ?, updated_at = ? "
-        "WHERE id = ?",
+        "UPDATE llm_profiles SET provider = ?, model = ?, api_key = ?, base_url = ?, updated_at = ? WHERE id = ?",
         (
             provider,
             model,
@@ -78,9 +79,9 @@ async def _update_default_profile(
     )
 
 
-async def test_load_llm_config_uses_default_profile(app) -> None:
+async def test_load_llm_config_uses_fixture_profile(app) -> None:
     db = app.state.db
-    await _update_default_profile(
+    await _update_fixture_profile(
         db,
         provider="ollama",
         model="llama-default",
@@ -98,7 +99,7 @@ async def test_load_llm_config_uses_default_profile(app) -> None:
 
 async def test_load_llm_config_resolves_provider_aliases(app) -> None:
     db = app.state.db
-    await _update_default_profile(
+    await _update_fixture_profile(
         db,
         provider="gemini_compatible",
         model="gemini-test",
@@ -115,9 +116,9 @@ async def test_load_llm_config_resolves_provider_aliases(app) -> None:
     assert config["base_url"] == "https://example.test/v1beta"
 
 
-async def test_load_agent_llm_config_follows_default_assistant_staff(app) -> None:
+async def test_load_agent_llm_config_follows_assistant_global_slot(app) -> None:
     db = app.state.db
-    await _update_default_profile(
+    await _update_fixture_profile(
         db,
         provider="ollama",
         model="llama-agent",
@@ -131,17 +132,17 @@ async def test_load_agent_llm_config_follows_default_assistant_staff(app) -> Non
     assert config["profile_id"] == DEFAULT_LLM_PROFILE_ID
 
 
-async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(app) -> None:
-    """Assistant runtime follows ``llm_global_slot_assistant`` (not staff fallback)."""
+async def test_load_agent_llm_config_follows_assistant_slot_elsewhere(app) -> None:
+    """Assistant runtime follows ``llm_global_slot_assistant`` (hard-bound slot only)."""
     db = app.state.db
     now = utc_now_iso()
     profile_id = "profile-assistant-elsewhere"
     await db.execute(
         "INSERT INTO llm_profiles ("
         "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
         (
             profile_id,
             "Assistant elsewhere",
@@ -154,7 +155,7 @@ async def test_load_agent_llm_config_follows_assistant_on_non_default_profile(ap
         ),
     )
     await set_global_slot(db, "assistant", profile_id)
-    await _update_default_profile(
+    await _update_fixture_profile(
         db,
         provider="ollama",
         model="should-not-use",
@@ -177,9 +178,9 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
     await db.execute(
         "INSERT INTO llm_profiles ("
         "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
         (
             override_id,
             "Session override",
@@ -191,7 +192,7 @@ async def test_load_agent_llm_config_honors_profile_id_override(app) -> None:
             now,
         ),
     )
-    await _update_default_profile(
+    await _update_fixture_profile(
         db,
         provider="ollama",
         model="staff-llama",
@@ -218,10 +219,10 @@ async def test_global_slots_resolve_assistant_liaison_task_editor_separately(app
         await db.execute(
             "INSERT INTO llm_profiles ("
             "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-            "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+            "web_search_enabled, web_search_provider, brave_search_api_key, "
             "created_at, updated_at"
             ") VALUES (?, ?, 'ollama', 'http://localhost:11434', ?, '', 0, 'disabled', "
-            "1, 'auto', '', 0, ?, ?)",
+            "1, 'auto', '', ?, ?)",
             (profile_id, profile_id, model, now, now),
         )
 
@@ -243,7 +244,7 @@ async def test_global_slots_resolve_assistant_liaison_task_editor_separately(app
     with pytest.raises(HTTPException) as exc:
         await load_liaison_llm_config(db)
     assert exc.value.status_code == 400
-    detail = exc.value.detail
+    detail: Any = exc.value.detail
     message = detail["message"] if isinstance(detail, dict) else str(detail)
     assert "account manager" in message.lower() or "a2a" in message.lower()
 
@@ -255,9 +256,9 @@ async def test_load_llm_config_for_profile_reads_dedicated_row(app) -> None:
     await db.execute(
         "INSERT INTO llm_profiles ("
         "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
+        "web_search_enabled, web_search_provider, brave_search_api_key, "
         "created_at, updated_at"
-        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', 0, ?, ?)",
+        ") VALUES (?, ?, ?, ?, ?, ?, 0, 'disabled', 1, 'auto', '', ?, ?)",
         (
             profile_id,
             "OpenAI test",
@@ -354,9 +355,9 @@ async def test_complete_attaches_provider_on_http_error() -> None:
     with (
         patch("server.analyzer.llm_client.validate_outbound_url", new=AsyncMock()),
         patch.object(ConfigurableLlmClient, "_COMPLETE_HANDLERS", handlers),
+        pytest.raises(LlmClientError) as caught,
     ):
-        with pytest.raises(LlmClientError) as caught:
-            await client.complete([{"role": "user", "content": "ping"}])
+        await client.complete([{"role": "user", "content": "ping"}])
 
     assert caught.value.provider == "openai"
     assert caught.value.status_code == 429

@@ -209,11 +209,10 @@ async def execute_tool(
             default_wid = context.get("default_workset_id")
             if default_wid is not None:
                 args["_default_workset_id"] = default_wid
-    if name == "items.create" and context:
-        if "worksetId" not in args and "workset_id" not in args:
-            default_wid = context.get("default_workset_id")
-            if default_wid is not None:
-                args["_default_workset_id"] = default_wid
+    if name == "items.create" and context and "worksetId" not in args and "workset_id" not in args:
+        default_wid = context.get("default_workset_id")
+        if default_wid is not None:
+            args["_default_workset_id"] = default_wid
     if name in WEB_TOOL_NAMES:
         return await execute_web_search_tool(db, name, args, context=ctx)
     if name in TASKS_TOOL_NAMES:

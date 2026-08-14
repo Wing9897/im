@@ -5,17 +5,17 @@ import { Button } from "../../../components/ui";
 import { PlatformTag } from "../../../components/common/PlatformTag";
 import { DetailPresentationShell, type DetailPresentation } from "../../../components/detail";
 import {
+  detailChromeBodyGapFieldClass,
+  detailChromeFooterClass,
+  detailChromeHeaderClass,
   detailDialogFlexColClass,
   detailDialogShellClass,
   messageDetailBubbleClass,
   messageDetailCompactMetaClass,
-  messageDetailFooterClass,
-  messageDetailHeaderClass,
   messageDetailMetaClass,
   messageDetailSenderClass,
   messageDetailTechPanelClass,
   messageDetailTechToggleClass,
-  sourceDetailBodyClass,
 } from "../../../components/detail/classes";
 import { formatOsDateTime } from "../../../utils/time";
 
@@ -42,7 +42,7 @@ export function MessageDetailView({
 
   const content = (
     <>
-      <header className={messageDetailHeaderClass}>
+      <header className={detailChromeHeaderClass}>
         <h2 className={messageDetailSenderClass}>{senderLabel}</h2>
         <div className={messageDetailMetaClass}>
           <span>{formatOsDateTime(message.timestamp)}</span>
@@ -50,7 +50,7 @@ export function MessageDetailView({
         </div>
       </header>
 
-      <div className={sourceDetailBodyClass}>
+      <div className={detailChromeBodyGapFieldClass}>
         <div className={messageDetailBubbleClass} data-testid="message-detail-bubble">
           <pre>{message.content || t("message.noContent")}</pre>
         </div>
@@ -103,7 +103,7 @@ export function MessageDetailView({
         ) : null}
       </div>
 
-      <footer className={messageDetailFooterClass}>
+      <footer className={detailChromeFooterClass}>
         <Button variant="secondary" onClick={onClose}>
           {tc("dialog.close")}
         </Button>

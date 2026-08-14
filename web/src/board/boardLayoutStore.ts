@@ -64,20 +64,20 @@ export function importBoardConfig(json: string): BoardConfig {
   try {
     raw = JSON.parse(json);
   } catch {
-    throw new Error(String(i18n.t("board.shell.importInvalidJson")));
+    throw new Error(String(i18n.t("board:shell.importInvalidJson")));
   }
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as { widgets?: unknown }).widgets)) {
-    throw new Error(String(i18n.t("board.shell.importMissingWidgets")));
+    throw new Error(String(i18n.t("board:shell.importMissingWidgets")));
   }
   const rawWidgets = (raw as { widgets: unknown[] }).widgets;
   if (rawWidgets.length === 0) {
-    throw new Error(String(i18n.t("board.shell.importNeedOne")));
+    throw new Error(String(i18n.t("board:shell.importNeedOne")));
   }
   const normalized = rawWidgets
     .map((item, index) => normalizeLayoutWidget(item, index))
     .filter((item): item is BoardWidgetItem => item !== null);
   if (normalized.length === 0) {
-    throw new Error(String(i18n.t("board.shell.importNoValid")));
+    throw new Error(String(i18n.t("board:shell.importNoValid")));
   }
   // Soft-migrate the already-normalized list (no second parse pass).
   const config = migrateBoardLayout(normalized);

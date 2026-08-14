@@ -21,13 +21,13 @@ export function WallBoardWidget({ active = true }: BoardWidgetProps) {
     <div className="board-widget-body board-widget-wall" data-testid="board-wall-widget">
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.pausedWall")}
+        pausedLabel={t("board:common.pausedWall")}
         pausedTestId="board-wall-paused"
         loading={loading && !channels}
         error={!channels ? error : null}
         onRetry={refresh}
         empty={Array.isArray(channels) && channels.length === 0}
-        emptyLabel={t("board.wallWidget.empty")}
+        emptyLabel={t("board:wallWidget.empty")}
       >
         {channels && channels.length > 0 ? <WallBoardEmbed channels={channels} /> : null}
       </BoardWidgetShell>

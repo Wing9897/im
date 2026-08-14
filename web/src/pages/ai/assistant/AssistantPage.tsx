@@ -1,11 +1,10 @@
-import { useEffect, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { Link } from "react-router-dom";
 import { Eraser, Volume2, VolumeX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
 import { EmptyState } from "../../../components/common/EmptyState";
 import { WorksetTargetSelect } from "../../../components/assistant/WorksetTargetSelect";
-import { AssistantSessionLlmProfileSelect } from "../../../components/assistant/AssistantSessionLlmProfileSelect";
 import { AssistantMicButton } from "../../../components/assistant/AssistantMicButton";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import { useAssistantSpacePtt } from "../../../hooks/useAssistantSpacePtt";
@@ -28,11 +27,14 @@ import {
 } from "../../../domain/aiStaff/assistantIdentity";
 import { isEditableTarget } from "../../../utils/isEditableTarget";
 import { isAssistantDirectModeSupported } from "../../../domain/assistant/directModeSupport";
+import { listLlmGlobalSlots, listLlmProfiles } from "../../../api/llmProfiles";
+import { isLlmProfileComplete } from "../../../domain/settings/llmProfileCompleteness";
 
 /**
  * Built-in assistant: text chat + optional browser PTT / TTS.
  * PTT release sends STT text only (empty recognition does not send the draft).
  * Space talk (when draft is unfocused) follows voice settings — same as quick dialog.
+ * LLM binding is global-slot only (AI Provider settings) — no per-session profile UI.
  */
 export function AssistantPage() {
   const { t } = useTranslation(["assistant", "common"]);
@@ -56,8 +58,6 @@ export function AssistantPage() {
     spacePttMode,
     worksetId,
     setWorksetId,
-    llmProfileId,
-    setLlmProfileId,
     sendDraft,
     startListening,
     stopListening,
@@ -67,6 +67,7 @@ export function AssistantPage() {
   useErrorToast(error);
   const { aiEngineStatus, requestAiStatusRefresh } = useCollectorStatus();
   const aiUnavailable = aiEngineStatus === "unavailable";
+  const [assistantSlotReady, setAssistantSlotReady] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (aiUnavailable) requestAiStatusRefresh(true);
@@ -83,6 +84,28 @@ export function AssistantPage() {
       requestAiStatusRefresh(true);
     }
   }, [error, requestAiStatusRefresh]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([listLlmProfiles(), listLlmGlobalSlots()])
+      .then(([profiles, slots]) => {
+        if (cancelled) return;
+        const binding = slots.find((s) => s.slot === "assistant");
+        const profileId = (binding?.profileId ?? "").trim();
+        if (!profileId) {
+          setAssistantSlotReady(false);
+          return;
+        }
+        const profile = profiles.find((p) => p.id === profileId);
+        setAssistantSlotReady(Boolean(profile && isLlmProfileComplete(profile)));
+      })
+      .catch(() => {
+        if (!cancelled) setAssistantSlotReady(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useAssistantSpacePtt({
     sttAvailable,
@@ -178,6 +201,25 @@ export function AssistantPage() {
           </AlertBanner>
         ) : null}
 
+        {assistantSlotReady === false ? (
+          <AlertBanner
+            variant="warning"
+            className="mx-md mt-sm text-caption"
+            data-testid="assistant-slot-unbound"
+          >
+            <span>
+              {t("slotUnbound.message")}{" "}
+              <Link
+                to="/ai/provider"
+                className="underline underline-offset-2"
+                data-testid="assistant-slot-settings-link"
+              >
+                {t("slotUnbound.link")}
+              </Link>
+            </span>
+          </AlertBanner>
+        ) : null}
+
         <div
           ref={messagesRef as RefObject<HTMLDivElement>}
           className="flex min-h-0 flex-1 flex-col gap-md overflow-y-auto px-md py-md"
@@ -253,21 +295,6 @@ export function AssistantPage() {
               className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs"
               data-testid="assistant-calendar-workset"
             />
-          </div>
-          <div className="mb-sm flex flex-wrap items-center gap-sm">
-            <label
-              className={`${captionClass} shrink-0 text-text-muted`}
-              htmlFor="assistant-llm-profile"
-            >
-              {t("llmProfile.label")}
-            </label>
-            <div className="min-w-[10rem] max-w-full flex-1 sm:max-w-xs">
-              <AssistantSessionLlmProfileSelect
-                value={llmProfileId}
-                onChange={setLlmProfileId}
-                disabled={sending}
-              />
-            </div>
           </div>
           <label className="sr-only" htmlFor="assistant-draft">
             {t("draft.label")}

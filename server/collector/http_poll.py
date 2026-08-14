@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from contextlib import suppress
 from typing import Any
 from urllib.parse import urljoin
 
@@ -111,10 +112,8 @@ class HttpPollAdapter(BasePlatformAdapter):
     async def disconnect(self) -> None:
         if self._poll_task is not None and not self._poll_task.done():
             self._poll_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._poll_task
-            except asyncio.CancelledError:
-                pass
             self._poll_task = None
 
         if self._session is not None:
@@ -147,7 +146,7 @@ class HttpPollAdapter(BasePlatformAdapter):
                     self._creds["url"],
                     exc,
                 )
-            except (OSError, asyncio.TimeoutError, OutboundUrlError, ValueError, json.JSONDecodeError) as exc:
+            except (TimeoutError, OSError, OutboundUrlError, ValueError, json.JSONDecodeError) as exc:
                 logger.warning("HTTP poll fetch error for source %s: %s", self._source_id, exc)
 
     async def _poll_once(self) -> None:

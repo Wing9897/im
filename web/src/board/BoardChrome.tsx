@@ -97,7 +97,7 @@ export function BoardChrome({
       className={chromeClass}
       data-testid="board-chrome"
       data-chrome-revealed={revealed || isEdit ? "true" : "false"}
-      aria-label={t("board.shell.toolsAria")}
+      aria-label={t("board:shell.toolsAria")}
     >
       <div
         className="board-chrome__hotspot"
@@ -107,7 +107,7 @@ export function BoardChrome({
         onFocusCapture={onHotspotFocusCapture}
         onBlurCapture={onHotspotBlurCapture}
       >
-        <div className="board-chrome__fab-stack" role="toolbar" aria-label={t("board.shell.toolbarAria")}>
+        <div className="board-chrome__fab-stack" role="toolbar" aria-label={t("board:shell.toolbarAria")}>
           {isEdit ? (
             <div
               className="board-chrome__fab-actions board-chrome__fab-actions--open"
@@ -118,8 +118,8 @@ export function BoardChrome({
                   type="button"
                   className="board-chrome__fab"
                   data-testid="board-add-widget"
-                  title={t("board.shell.addWidget")}
-                  aria-label={t("board.shell.addWidget")}
+                  title={t("board:shell.addWidget")}
+                  aria-label={t("board:shell.addWidget")}
                   aria-expanded={addOpen}
                   onClick={() => setAddOpen((v) => !v)}
                 >
@@ -152,8 +152,8 @@ export function BoardChrome({
                 type="button"
                 className="board-chrome__fab"
                 data-testid="board-export-layout"
-                title={t("board.shell.exportLayout")}
-                aria-label={t("board.shell.exportLayout")}
+                title={t("board:shell.exportLayout")}
+                aria-label={t("board:shell.exportLayout")}
                 onClick={onExportLayout}
               >
                 <Download size={16} strokeWidth={2} aria-hidden="true" />
@@ -162,8 +162,8 @@ export function BoardChrome({
                 type="button"
                 className="board-chrome__fab"
                 data-testid="board-import-layout"
-                title={t("board.shell.importLayout")}
-                aria-label={t("board.shell.importLayout")}
+                title={t("board:shell.importLayout")}
+                aria-label={t("board:shell.importLayout")}
                 onClick={() => importInputRef.current?.click()}
               >
                 <Upload size={16} strokeWidth={2} aria-hidden="true" />
@@ -173,7 +173,7 @@ export function BoardChrome({
                 type="file"
                 accept="application/json,.json"
                 className="sr-only"
-                aria-label={t("board.shell.importFileAria")}
+                aria-label={t("board:shell.importFileAria")}
                 onChange={(event) => {
                   const file = event.currentTarget.files?.[0];
                   if (file) void onImportLayout(file);
@@ -184,8 +184,8 @@ export function BoardChrome({
                 type="button"
                 className="board-chrome__fab"
                 data-testid="board-reset-layout"
-                title={t("board.shell.resetLayout")}
-                aria-label={t("board.shell.resetLayoutAria")}
+                title={t("board:shell.resetLayout")}
+                aria-label={t("board:shell.resetLayoutAria")}
                 onClick={() => setResetConfirmOpen(true)}
               >
                 <RotateCcw size={16} strokeWidth={2} aria-hidden="true" />
@@ -194,8 +194,8 @@ export function BoardChrome({
                 type="button"
                 className="board-chrome__fab board-chrome__fab--primary"
                 data-testid="board-done-edit"
-                title={t("board.shell.doneEdit")}
-                aria-label={t("board.shell.doneEdit")}
+                title={t("board:shell.doneEdit")}
+                aria-label={t("board:shell.doneEdit")}
                 onClick={() => {
                   onEditModeChange("view");
                   setAddOpen(false);
@@ -211,9 +211,9 @@ export function BoardChrome({
               type="button"
               className="board-chrome__fab"
               data-testid="board-toggle-fullscreen"
-              title={isFullscreen ? t("board.shell.exitFullscreen") : t("board.shell.fullscreen")}
+              title={isFullscreen ? t("board:shell.exitFullscreen") : t("board:shell.fullscreen")}
               aria-label={
-                isFullscreen ? t("board.shell.exitFullscreen") : t("board.shell.fullscreen")
+                isFullscreen ? t("board:shell.exitFullscreen") : t("board:shell.fullscreen")
               }
               aria-pressed={isFullscreen}
               onClick={() => onToggleFullscreen()}
@@ -234,8 +234,8 @@ export function BoardChrome({
                 : "board-chrome__fab board-chrome__fab--anchor"
             }
             data-testid="board-fab-toggle"
-            title={t("board.shell.edit")}
-            aria-label={t("board.shell.edit")}
+            title={t("board:shell.edit")}
+            aria-label={t("board:shell.edit")}
             aria-pressed={isEdit}
             aria-expanded={isEdit}
             onClick={handleAnchorClick}
@@ -246,11 +246,11 @@ export function BoardChrome({
       </div>
       {resetConfirmOpen ? (
         <ConfirmDialog
-          title={t("board.shell.resetConfirmTitle")}
+          title={t("board:shell.resetConfirmTitle")}
           accentColor="var(--warning)"
-          body={t("board.shell.resetConfirmBody")}
-          confirmLabel={t("board.shell.resetConfirm")}
-          confirmBusyLabel={t("board.shell.resetConfirmBusy")}
+          body={t("board:shell.resetConfirmBody")}
+          confirmLabel={t("board:shell.resetConfirm")}
+          confirmBusyLabel={t("board:shell.resetConfirmBusy")}
           onCancel={() => setResetConfirmOpen(false)}
           onConfirm={() => {
             onResetLayout();

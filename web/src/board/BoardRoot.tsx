@@ -61,7 +61,7 @@ export function BoardRoot({ onImmersiveChange }: BoardRootProps) {
     anchor.download = "intelligencemonitor-board-layout.json";
     anchor.click();
     URL.revokeObjectURL(url);
-    toast?.showToast(t("board.shell.exported"), "success");
+    toast?.showToast(t("board:shell.exported"), "success");
   }, [config, t, toast]);
 
   const handleImportLayout = useCallback(
@@ -71,10 +71,10 @@ export function BoardRoot({ onImmersiveChange }: BoardRootProps) {
         setMaximizedId(null);
         setConfig(imported);
         setCanvasEpoch((epoch) => epoch + 1);
-        toast?.showToast(t("board.shell.imported"), "success");
+        toast?.showToast(t("board:shell.imported"), "success");
       } catch (error) {
         toast?.showToast(
-          error instanceof Error ? error.message : t("board.shell.importFailed"),
+          error instanceof Error ? error.message : t("board:shell.importFailed"),
           "error",
         );
       }

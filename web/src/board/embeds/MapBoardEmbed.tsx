@@ -171,7 +171,7 @@ export function MapBoardEmbed({
       </MapContainer>
       {withCoords.length === 0 ? (
         <div className="board-widget-map__empty" aria-live="polite">
-          {t("board.map.noCoordEvents")}
+          {t("board:map.noCoordEvents")}
         </div>
       ) : null}
     </div>

@@ -2,21 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Request, Response
 
 from server.api.deps import API_DEPS, get_db
 from server.api.query_aliases import qalias
 from server.api.schemas.requests import LogCreate
-from server.api.schemas.responses import AppLogEntryResponse, AppLogPageResponse
+from server.api.schemas.responses import AppLogCursorResponse, AppLogEntryResponse, AppLogPageResponse
 from server.app_logging import (
     ALLOWED_LOG_CATEGORIES,
     clear_app_logs,
     is_valid_log_kind,
     record_and_fetch,
 )
-from server.db.schema_domains.vocabulary import APP_LOG_LEVEL_VALUES
+from server.domain.app_log_levels import ALLOWED_APP_LOG_LEVELS
 from server.errors import VALIDATION_ERROR, http_error
 from server.queries.logs_queries import fetch_app_logs_page
 from server.wire.serializers import serialize_app_log
@@ -27,12 +25,12 @@ router = APIRouter(prefix="/api/v1/logs", tags=["logs"], dependencies=API_DEPS)
 @router.get("", response_model=AppLogPageResponse)
 async def query_logs_page(
     request: Request,
-    cursor_time: Optional[str] = None,
-    cursor_id: Optional[str] = None,
+    cursor_time: str | None = qalias("cursorTime", default=None),
+    cursor_id: str | None = qalias("cursorId", default=None),
     limit: int = 50,
-    kind: Optional[str] = None,
-    exclude_kind: Optional[str] = qalias("excludeKind", default=None),
-) -> dict:
+    kind: str | None = None,
+    exclude_kind: str | None = qalias("excludeKind", default=None),
+) -> AppLogPageResponse:
     db = get_db(request)
     rows, has_more, total_count = await fetch_app_logs_page(
         db,
@@ -45,18 +43,18 @@ async def query_logs_page(
     next_cursor = None
     if has_more and rows:
         last = rows[-1]
-        next_cursor = {"time": last["time"], "id": last["id"]}
-    return {
-        "logs": [serialize_app_log(row) for row in rows],
-        "nextCursor": next_cursor,
-        "hasMore": has_more,
-        "totalCount": total_count,
-    }
+        next_cursor = AppLogCursorResponse(time=str(last["time"]), id=str(last["id"]))
+    return AppLogPageResponse(
+        logs=[AppLogEntryResponse.model_validate(serialize_app_log(row)) for row in rows],
+        nextCursor=next_cursor,
+        hasMore=has_more,
+        totalCount=total_count,
+    )
 
 
 @router.post("", status_code=201, response_model=AppLogEntryResponse)
-async def append_log(request: Request, body: LogCreate) -> dict:
-    if body.level not in APP_LOG_LEVEL_VALUES:
+async def append_log(request: Request, body: LogCreate) -> AppLogEntryResponse:
+    if body.level not in ALLOWED_APP_LOG_LEVELS:
         raise http_error(
             422,
             f"Invalid level: {body.level}",
@@ -92,7 +90,7 @@ async def append_log(request: Request, body: LogCreate) -> dict:
         source=body.source or "client.http",
         payload=body.payload,
     )
-    return serialize_app_log(row)
+    return AppLogEntryResponse.model_validate(serialize_app_log(row))
 
 
 @router.delete("", status_code=204)

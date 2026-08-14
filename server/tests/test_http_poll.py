@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import pytest
 

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, time, timedelta, timezone, tzinfo
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from datetime import UTC, datetime, time, timedelta, tzinfo
+from typing import Any
 
 from server.calendar.occurrence_span import roll_end_if_overnight
 from server.calendar.rrule_expand_imported import _expand_imported_occurrences
@@ -100,8 +101,8 @@ def expand_series_occurrences(
         )
         # Preserve the legacy one-second widened window while acquiring only
         # the bounded chronological prefix needed by this request's budget.
-        range_start_utc = range_start.astimezone(timezone.utc)
-        range_end_utc = range_end.astimezone(timezone.utc)
+        range_start_utc = range_start.astimezone(UTC)
+        range_end_utc = range_end.astimezone(UTC)
         range_start_local = range_start.astimezone(local_tz)
         range_end_local = range_end.astimezone(local_tz)
         window_start = range_start_local.replace(tzinfo=None)
@@ -120,17 +121,17 @@ def expand_series_occurrences(
 
             date_part = occurrence.date()
             if is_all_day:
-                start_dt = datetime.combine(date_part, time(0, 0), tzinfo=local_tz).astimezone(timezone.utc)
-                end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(timezone.utc)
+                start_dt = datetime.combine(date_part, time(0, 0), tzinfo=local_tz).astimezone(UTC)
+                end_dt = datetime.combine(date_part, time(23, 59, 59), tzinfo=local_tz).astimezone(UTC)
             else:
                 start_local = datetime.combine(date_part, start_tod, tzinfo=local_tz)
-                start_dt = start_local.astimezone(timezone.utc)
+                start_dt = start_local.astimezone(UTC)
                 if end_tod is not None:
                     end_local = roll_end_if_overnight(
                         start_local,
                         datetime.combine(date_part, end_tod, tzinfo=local_tz),
                     )
-                    end_dt = end_local.astimezone(timezone.utc)
+                    end_dt = end_local.astimezone(UTC)
                 else:
                     end_dt = start_dt
             # The acquisition window is widened by one second to preserve

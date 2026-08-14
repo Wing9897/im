@@ -52,17 +52,17 @@ export function WallBoardEmbed({ channels }: WallBoardEmbedProps) {
 
   return (
     <div className="board-wall-embed" data-testid="board-wall-embed">
-      <SectionErrorBoundary sectionName={t("board.wall.sectionName")}>
+      <SectionErrorBoundary sectionName={t("board:wall.sectionName")}>
         {selectedChannelIds.length === 0 ? (
           <EmptyState
-            title={t("board.wall.noChannelsTitle")}
-            description={t("board.wall.noChannelsDescription")}
+            title={t("board:wall.noChannelsTitle")}
+            description={t("board:wall.noChannelsDescription")}
           />
         ) : initialLoading ? (
           <div
             className="board-wall-embed__grid"
             aria-busy="true"
-            aria-label={t("board.wall.loadingAria")}
+            aria-label={t("board:wall.loadingAria")}
           >
             {selectedChannelIds.map((channelId) => (
               <div key={channelId} className={MONITOR_WALL_SKELETON_CLASS} />

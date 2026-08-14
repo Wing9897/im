@@ -138,7 +138,7 @@ def build_request_headers(creds: dict[str, Any]) -> dict[str, str]:
     elif auth_type == "basic":
         username = str(creds.get("basic_username") or "")
         password = str(creds.get("basic_password") or "")
-        token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+        token = base64.b64encode(f"{username}:{password}".encode()).decode("ascii")
         headers["Authorization"] = f"Basic {token}"
 
     body_type = str(creds.get("body_type") or "none").lower()

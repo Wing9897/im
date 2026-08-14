@@ -41,7 +41,7 @@
 
 **政策約束（`normalize_agent_task_spec`）：** `trigger_mode=message_cursor` **不可**同時開 `output_analysis_events`（cursor 抽乾只做日曆調和；情報輸出請用 `schedule`／`message_threshold`）。
 
-**Origin：** Agent 日曆寫入透過 `channel_from_agent_spec(...).user_event_origin="agent"` 寫入 `user_events.origin=agent`（DDL CHECK：`manual`／`assistant`／`a2a`／`agent`／`ics`）。此處 `origin=agent` 是 **provenance**，**不是**已退役的 `analysis_mode=project`。聊天助手仍寫 `assistant`；A2A 寫 `a2a`。情報輸出走 `analysis_events`，不是 `user_events.origin`。
+**Origin：** Agent 日曆寫入透過 `channel_from_agent_spec(...).user_event_origin="agent"` 寫入 `user_events.origin=agent`（DDL CHECK：`manual`／`assistant`／`a2a`／`agent`／`mcp`／`ics`）。此處 `origin=agent` 是 **provenance**，**不是**已退役的 `analysis_mode=project`。聊天助手仍寫 `assistant`；A2A 寫 `a2a`；MCP 工具通道寫 `mcp`。情報輸出走 `analysis_events`，不是 `user_events.origin`。
 
 助手／A2A **不會**自動帶上專案 scope；子週期語意僅 agent calendar-output tick 強制。
 
@@ -52,5 +52,5 @@
 - Prompt：[`server/prompts/agent_task.py`](../../server/prompts/agent_task.py)（`build_agent_base_prompt`）
 - Channel：`server/agent/channels.py` → `AGENT_CHANNEL` / `channel_from_agent_spec`（tick 內連續；不持久化跨次排程 UI session）
 - Policy：`server/domain/agent_task_spec.py`（`project_reconcile`／`web_scout` 預設）
-- Schema：見 [`ARCHITECTURE.md` Schema support matrix](../ARCHITECTURE.md#schema-support-matrix)
+- Schema：見 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix)
 - UI：任務底下的 Agent 詳情 **僅** `/tasks/:taskId/agent`（`analysisMode=agent` + `outputCalendar`；產品名「專案調和」；舊路徑 `/tasks/:taskId/project` 已退役、不再 redirect）；**不是**與 Sources／Assistant 同層的頂層導航。

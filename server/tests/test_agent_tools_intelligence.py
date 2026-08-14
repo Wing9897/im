@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from server.agent.tools_intelligence import HARD_CAP, execute_intelligence_tool
 from server.agent.tools_registry import build_tool_schemas, execute_tool
@@ -70,7 +70,7 @@ async def test_intelligence_search_preserves_snake_case_argument_alias(app) -> N
 
 
 async def test_intelligence_search_7d_finds_recent_event(app) -> None:
-    recent = to_iso_z(datetime.now(timezone.utc) - timedelta(days=1))
+    recent = to_iso_z(datetime.now(UTC) - timedelta(days=1))
     await app.state.db.execute(
         "INSERT INTO analysis_events (id, task_id, version, batch_id, title, body, "
         "content_hash, semantic_hash, location, source_message_id, created_at, updated_at) "

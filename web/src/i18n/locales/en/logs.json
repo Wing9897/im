@@ -69,7 +69,8 @@
     "frontendUnhandledRejection": "Unhandled promise rejection",
     "frontendReact": "React render error",
     "frontendCritical": "Critical frontend error",
-    "sourceError": "Source error ({platform}): {sourceName} — {summary}"
+    "sourceError": "Source error ({platform}): {sourceName} — {summary}",
+    "actionHistoryFailed": "Action fired but its trigger history row was not saved: {actionId} — {summary}"
   },
   "section": {
     "loadingTitle": "Loading system logs",
@@ -88,7 +89,8 @@
     "filteredTitle": "No logs match the current filters",
     "noneDescription": "Records will accumulate here once analysis, source connections, collector status changes, or frontend errors occur.",
     "filteredDescriptionMore": "Loaded {summary} logs, but the search or filters haven't matched this batch yet.",
-    "filteredDescriptionAll": "Loaded {count} logs, but the search or filters are hiding all of them.",
+    "filteredDescriptionAll_one": "Loaded {count} log, but the search or filters are hiding it.",
+    "filteredDescriptionAll_other": "Loaded {count} logs, but the search or filters are hiding all of them.",
     "filteredDescriptionNone": "No logs to show under the current conditions.",
     "noneHint": "The logs page refreshes automatically; you can also refresh manually to confirm.",
     "filteredHintMore": "Try loading more older logs, or reset filters to check whether the latest events already exist.",

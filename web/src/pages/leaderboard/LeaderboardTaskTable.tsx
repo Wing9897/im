@@ -44,7 +44,7 @@ export const LeaderboardTaskTable = memo(function LeaderboardTaskTable({
   const expandedIndex = expandedTopic ? topics.indexOf(expandedTopic) : -1;
 
   return (
-    <section className="im-leaderboard-board" aria-label={t("leaderboard.boardAria", { name: taskName })}>
+    <section className="im-leaderboard-board" aria-label={t("leaderboard:boardAria", { name: taskName })}>
       <header className="im-leaderboard-header">
         <div className="flex min-w-0 items-center gap-sm">
           <AiStaffAvatar

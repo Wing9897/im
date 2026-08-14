@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 from server.collector.http_poll import DEFAULT_MAX_CONTENT_CHARS, DEFAULT_TIMEOUT_SECONDS
@@ -16,12 +14,12 @@ class _SourceRequest(BaseModel):
 
 class DiscordBotBody(_SourceRequest):
     botToken: str
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class DiscordBotPatchBody(_SourceRequest):
-    botToken: Optional[str] = None
-    name: Optional[str] = None
+    botToken: str | None = None
+    name: str | None = None
 
 
 class DiscordSubscribeBody(_SourceRequest):
@@ -40,84 +38,84 @@ class EmailMailboxBody(_SourceRequest):
     initialSyncMaxMessages: int = 100
     senderAllowlist: list[str] = Field(default_factory=list)
     markAsRead: bool = False
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class EmailMailboxPatchBody(_SourceRequest):
-    imapHost: Optional[str] = None
-    imapPort: Optional[int] = None
-    useSsl: Optional[bool] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    folders: Optional[list[str]] = None
-    pollIntervalSeconds: Optional[int] = None
-    initialSyncDays: Optional[int] = None
-    initialSyncMaxMessages: Optional[int] = None
-    senderAllowlist: Optional[list[str]] = None
-    markAsRead: Optional[bool] = None
+    imapHost: str | None = None
+    imapPort: int | None = None
+    useSsl: bool | None = None
+    username: str | None = None
+    password: str | None = None
+    folders: list[str] | None = None
+    pollIntervalSeconds: int | None = None
+    initialSyncDays: int | None = None
+    initialSyncMaxMessages: int | None = None
+    senderAllowlist: list[str] | None = None
+    markAsRead: bool | None = None
     resetCursors: bool = False
-    name: Optional[str] = None
+    name: str | None = None
 
 
 class MqttBrokerBody(_SourceRequest):
     brokerUrl: str
     topics: list[str]
-    username: Optional[str] = None
-    password: Optional[str] = None
-    clientId: Optional[str] = None
+    username: str | None = None
+    password: str | None = None
+    clientId: str | None = None
 
 
 class MqttBrokerPatchBody(_SourceRequest):
-    brokerUrl: Optional[str] = None
-    topics: Optional[list[str]] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
-    clientId: Optional[str] = None
-    name: Optional[str] = None
+    brokerUrl: str | None = None
+    topics: list[str] | None = None
+    username: str | None = None
+    password: str | None = None
+    clientId: str | None = None
+    name: str | None = None
 
 
 class RssFeedBody(_SourceRequest):
     feedUrl: str
-    name: Optional[str] = None
+    name: str | None = None
     pollIntervalSeconds: int = DEFAULT_POLL_INTERVAL
 
 
 class RssFeedPatchBody(_SourceRequest):
-    feedUrl: Optional[str] = None
-    pollIntervalSeconds: Optional[int] = None
-    name: Optional[str] = None
+    feedUrl: str | None = None
+    pollIntervalSeconds: int | None = None
+    name: str | None = None
 
 
 class HttpSourceBody(_SourceRequest):
     url: str
-    name: Optional[str] = None
+    name: str | None = None
     method: str = "GET"
     authType: str = "none"
-    bearerToken: Optional[str] = None
-    basicUsername: Optional[str] = None
-    basicPassword: Optional[str] = None
+    bearerToken: str | None = None
+    basicUsername: str | None = None
+    basicPassword: str | None = None
     headers: dict[str, str] = Field(default_factory=dict)
     bodyType: str = "none"
-    body: Optional[str] = None
+    body: str | None = None
     pollIntervalSeconds: int = DEFAULT_POLL_INTERVAL
     maxContentChars: int = DEFAULT_MAX_CONTENT_CHARS
     timeoutSeconds: int = DEFAULT_TIMEOUT_SECONDS
 
 
 class HttpSourcePatchBody(_SourceRequest):
-    url: Optional[str] = None
-    name: Optional[str] = None
-    method: Optional[str] = None
-    authType: Optional[str] = None
-    bearerToken: Optional[str] = None
-    basicUsername: Optional[str] = None
-    basicPassword: Optional[str] = None
-    headers: Optional[dict[str, str]] = None
-    bodyType: Optional[str] = None
-    body: Optional[str] = None
-    pollIntervalSeconds: Optional[int] = None
-    maxContentChars: Optional[int] = None
-    timeoutSeconds: Optional[int] = None
+    url: str | None = None
+    name: str | None = None
+    method: str | None = None
+    authType: str | None = None
+    bearerToken: str | None = None
+    basicUsername: str | None = None
+    basicPassword: str | None = None
+    headers: dict[str, str] | None = None
+    bodyType: str | None = None
+    body: str | None = None
+    pollIntervalSeconds: int | None = None
+    maxContentChars: int | None = None
+    timeoutSeconds: int | None = None
 
 
 class TelegramCredentials(_SourceRequest):
@@ -132,25 +130,25 @@ class TelegramQrCredentials(_SourceRequest):
 
 
 class TelegramQrWaitBody(_SourceRequest):
-    timeoutSeconds: Optional[float] = Field(default=None, ge=5, le=55)
+    timeoutSeconds: float | None = Field(default=None, ge=5, le=55)
 
 
 class TelegramCodeBody(_SourceRequest):
     code: str
-    pendingLoginStage: Optional[str] = None
-    phoneCodeHash: Optional[str] = None
+    pendingLoginStage: str | None = None
+    phoneCodeHash: str | None = None
 
 
 class Telegram2faBody(_SourceRequest):
     password: str
-    pendingLoginStage: Optional[str] = None
-    phoneCodeHash: Optional[str] = None
+    pendingLoginStage: str | None = None
+    phoneCodeHash: str | None = None
 
 
 class TelegramPatchBody(_SourceRequest):
     """Safe display-name and stored-credential edits."""
 
-    name: Optional[str] = None
-    apiId: Optional[int] = None
-    apiHash: Optional[str] = None
-    phone: Optional[str] = None
+    name: str | None = None
+    apiId: int | None = None
+    apiHash: str | None = None
+    phone: str | None = None

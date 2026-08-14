@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 _DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -19,7 +19,7 @@ def parse_iso(value: Any, *, end_of_day: bool = False) -> datetime | None:
         return None
     text = value.strip()
     if _DATE_ONLY_RE.match(text):
-        parsed = datetime.fromisoformat(text).replace(tzinfo=timezone.utc)
+        parsed = datetime.fromisoformat(text).replace(tzinfo=UTC)
         if end_of_day:
             return parsed.replace(hour=23, minute=59, second=59)
         return parsed
@@ -30,10 +30,10 @@ def parse_iso(value: Any, *, end_of_day: bool = False) -> datetime | None:
     except ValueError:
         return None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def to_iso_z(dt: datetime) -> str:
     """Format a datetime as ``YYYY-MM-DDTHH:MM:SSZ`` (UTC)."""
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

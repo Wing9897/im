@@ -11,36 +11,30 @@ type LlmHealthSummary = {
   total: number;
   complete: number;
   incomplete: number;
-  hasDefault: boolean;
-  defaultName: string | null;
+  sampleName: string | null;
 };
 
 function summarizeProfiles(profiles: LlmProfile[]): LlmHealthSummary {
   let complete = 0;
   let incomplete = 0;
-  let defaultName: string | null = null;
-  let hasDefault = false;
+  let sampleName: string | null = null;
   for (const profile of profiles) {
     if (isLlmProfileComplete(profile)) {
       complete += 1;
+      if (sampleName == null) sampleName = profile.name;
     } else {
       incomplete += 1;
-    }
-    if (profile.isDefault) {
-      hasDefault = true;
-      defaultName = profile.name;
     }
   }
   return {
     total: profiles.length,
     complete,
     incomplete,
-    hasDefault,
-    defaultName,
+    sampleName,
   };
 }
 
-/** AI profile health: count, completeness, default presence. */
+/** AI profile health: count and completeness (slots bind profiles separately). */
 export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
   const { t } = useTranslation();
   const fetcher = useCallback(
@@ -53,8 +47,7 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
     { active },
   );
 
-  const alert =
-    data != null && (data.total === 0 || data.incomplete > 0 || !data.hasDefault);
+  const alert = data != null && (data.total === 0 || data.incomplete > 0 || data.complete === 0);
 
   return (
     <div className="board-widget-body board-widget-llm-health" data-testid="board-llm-health-widget">
@@ -67,15 +60,15 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
           <>
             <div className="board-queue-stats" data-testid="board-llm-health-stats">
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.llmHealth.total")}</span>
+                <span className="board-queue-stat__label">{t("board:llmHealth.total")}</span>
                 <span className="board-queue-stat__value">{data.total}</span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.llmHealth.complete")}</span>
+                <span className="board-queue-stat__label">{t("board:llmHealth.complete")}</span>
                 <span className="board-queue-stat__value">{data.complete}</span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.llmHealth.incomplete")}</span>
+                <span className="board-queue-stat__label">{t("board:llmHealth.incomplete")}</span>
                 <span
                   className={
                     data.incomplete > 0
@@ -89,11 +82,11 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
             </div>
             <div className="board-system-grid" data-testid="board-llm-health-default">
               <div className="board-system-tile">
-                <span className="board-system-tile__label">{t("board.llmHealth.default")}</span>
-                <Badge tone={data.hasDefault ? "success" : "warning"}>
-                  {data.hasDefault
-                    ? data.defaultName || t("board.common.unnamed")
-                    : t("board.llmHealth.noDefault")}
+                <span className="board-system-tile__label">{t("board:llmHealth.default")}</span>
+                <Badge tone={data.complete > 0 ? "success" : "warning"}>
+                  {data.complete > 0
+                    ? data.sampleName || t("board:common.unnamed")
+                    : t("board:llmHealth.noDefault")}
                 </Badge>
               </div>
             </div>
@@ -103,10 +96,10 @@ export function LlmHealthBoardWidget({ active = true }: BoardWidgetProps) {
                 data-testid="board-llm-health-alert"
               >
                 {data.total === 0
-                  ? t("board.llmHealth.alertNone")
-                  : !data.hasDefault
-                    ? t("board.llmHealth.alertNoDefault")
-                    : t("board.llmHealth.alertIncomplete")}
+                  ? t("board:llmHealth.alertNone")
+                  : data.complete === 0
+                    ? t("board:llmHealth.alertNoDefault")
+                    : t("board:llmHealth.alertIncomplete")}
               </p>
             ) : null}
           </>

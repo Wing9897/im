@@ -33,6 +33,15 @@ export const statusDotStyle = (
   marginRight: 6,
 });
 
+/** Badge tone aligned with the connection-status dot colors. */
+export function connectionStatusBadgeTone(
+  status: ConnectionStatus,
+): "success" | "danger" | "neutral" {
+  if (status === "connected") return "success";
+  if (status === "error") return "danger";
+  return "neutral";
+}
+
 /** Localized labels for each connection status (used by tests / sync snapshot). */
 export const statusLabels: Record<ConnectionStatus, string> = {
   get connected() {

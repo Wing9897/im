@@ -111,10 +111,8 @@ async def fetch_agent_messages_since(
 async def fetch_agent_calendar_children(
     db: Database,
     task_id: str,
-    child_mode: str | None = None,
 ) -> list[dict[str, Any]]:
     """Child recurring series owned by an agent task (``parent_task_id``)."""
-    del child_mode  # series are not analysis modes; kept for call-site compat
     return await db.fetch_all(
         "SELECT id, name, rrule, is_active, dtstart AS event_start_time, "
         "is_all_day AS event_is_all_day "

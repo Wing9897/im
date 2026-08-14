@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 async def complete_ollama_bound(
-    client: "ConfigurableLlmClient",
+    client: ConfigurableLlmClient,
     session: aiohttp.ClientSession,
     messages: list[dict],
     temperature: float,
@@ -46,7 +46,7 @@ async def complete_ollama_bound(
 
 
 async def complete_openai_style_bound(
-    client: "ConfigurableLlmClient",
+    client: ConfigurableLlmClient,
     session: aiohttp.ClientSession,
     messages: list[dict],
     temperature: float,
@@ -78,7 +78,7 @@ async def complete_openai_style_bound(
 
 
 async def complete_gemini_bound(
-    client: "ConfigurableLlmClient",
+    client: ConfigurableLlmClient,
     session: aiohttp.ClientSession,
     messages: list[dict],
     temperature: float,
@@ -99,13 +99,13 @@ async def complete_gemini_bound(
     )
 
 
-async def probe_ollama_bound(client: "ConfigurableLlmClient", session: aiohttp.ClientSession) -> None:
+async def probe_ollama_bound(client: ConfigurableLlmClient, session: aiohttp.ClientSession) -> None:
     await probe_ollama(session, base_url=client.base_url)
 
 
-async def probe_openai_style_bound(client: "ConfigurableLlmClient", session: aiohttp.ClientSession) -> None:
+async def probe_openai_style_bound(client: ConfigurableLlmClient, session: aiohttp.ClientSession) -> None:
     await probe_openai_style(session, base_url=client.base_url, api_key=client.api_key)
 
 
-async def probe_gemini_bound(client: "ConfigurableLlmClient", session: aiohttp.ClientSession) -> None:
+async def probe_gemini_bound(client: ConfigurableLlmClient, session: aiohttp.ClientSession) -> None:
     await probe_gemini(session, base_url=client.base_url, api_key=client.api_key)

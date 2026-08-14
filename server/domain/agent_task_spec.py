@@ -6,8 +6,9 @@ Single SoT for ``analysis_mode=agent`` policy fields persisted on
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Final, Literal, Mapping
+from typing import Any, Final, Literal
 
 TriggerMode = Literal["schedule", "message_cursor", "message_threshold"]
 AgentPresetId = Literal["project_reconcile", "web_scout"]
@@ -21,6 +22,9 @@ ALL_TRIGGER_MODES: Final[tuple[TriggerMode, ...]] = (
     TRIGGER_MESSAGE_CURSOR,
     TRIGGER_MESSAGE_THRESHOLD,
 )
+
+#: Embedded by ``server/db/schema_domains/tasks.py`` (drift-tested).
+TRIGGER_MODE_CHECK_SQL = "CHECK (trigger_mode IN ({}))".format(",".join(f"'{value}'" for value in ALL_TRIGGER_MODES))
 
 PRESET_PROJECT_RECONCILE: Final = "project_reconcile"
 PRESET_WEB_SCOUT: Final = "web_scout"
@@ -82,10 +86,7 @@ def normalize_agent_task_spec(
     out_ae = _as_bool(output_analysis_events, default=False)
 
     # Rule 2/3: calendar output ↔ calendar writes.
-    if out_cal:
-        cal_writes = True
-    else:
-        cal_writes = False
+    cal_writes = out_cal
 
     # Merged UX: web search on ⇒ force-enabled for agent ticks (either flag implies both).
     web_search = web_search or force_search

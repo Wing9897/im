@@ -24,7 +24,20 @@ from server.api.deps import (
     get_scheduler,
 )
 from server.api.schemas.requests import AiEngineTestBody, AnalysisPauseBody, RotateSecretsBody
-from server.api.schemas.responses import RetentionDeletedCounts, RetentionRunResponse
+from server.api.schemas.responses import (
+    AiEngineHealthStatusResponse,
+    AiEngineTestResultResponse,
+    AnalysisAbortResponse,
+    AnalysisPauseResponse,
+    CollectorAdapterStatusResponse,
+    CollectorRestartResponse,
+    CollectorStatusResponse,
+    RetentionDeletedCounts,
+    RetentionRunResponse,
+    RotateSecretsResponse,
+    RotateSecretsScrubbedCounts,
+    SystemMessageResponse,
+)
 from server.auth import verify_auth, verify_write_access
 from server.auth.admin_auth import verify_admin_credentials
 from server.errors import INVALID_CREDENTIALS, http_error
@@ -43,47 +56,54 @@ router = APIRouter(prefix="/api/v1/system", tags=["system"], dependencies=API_DE
 public_reset_router = APIRouter(prefix="/api/v1/system", tags=["system"])
 
 
-async def _refresh_secrets_gate(request: Request, db) -> tuple[bool, str | None]:
-    """Re-probe stored secrets and start runtime when the gate can clear."""
+async def _refresh_secrets_gate(request: Request, db) -> tuple[bool, str | None, bool]:
+    """Re-probe stored secrets and start runtime when the gate can clear.
+
+    Returns ``(secrets_ready, secrets_error, runtime_started)``. The gate still
+    clears when startup fails, but ``runtime_started`` stays False so callers
+    report it instead of letting the UI assume a healthy runtime.
+    """
     ready, err = await probe_stored_secrets(db)
     request.app.state.secrets_ready = ready
     request.app.state.secrets_error = err
     if not ready:
-        return ready, err
+        return ready, err, False
     ensure = getattr(request.app.state, "ensure_runtime_started", None)
-    if ensure is not None:
-        try:
-            await ensure()
-        except Exception:  # noqa: BLE001 — gate must clear even if services lag
-            logger.exception("Starting runtime services after secrets recovery failed")
-    return ready, err
+    if ensure is None:
+        return ready, err, True
+    try:
+        await ensure()
+    except Exception:  # noqa: BLE001 — reported via runtime_started, not raised
+        logger.exception("Starting runtime services after secrets recovery failed")
+        return ready, err, False
+    return ready, err, True
 
 
 async def _collector_status(request: Request) -> str:
     return await resolve_collector_status(get_collector(request))
 
 
-@router.get("/collector/status")
-async def collector_status(request: Request) -> dict:
+@router.get("/collector/status", response_model=CollectorStatusResponse)
+async def collector_status(request: Request) -> CollectorStatusResponse:
     status = await _collector_status(request)
     collector = get_collector(request)
-    adapters = []
+    adapters: list[CollectorAdapterStatusResponse] = []
     if collector is not None:
-        for adapter in collector.get_adapter_statuses():
-            adapters.append(
-                {
-                    "name": adapter.name,
-                    "sourceId": adapter.source_id,
-                    "connected": adapter.connected,
-                    "lastError": adapter.last_error,
-                    "lastConnectedAt": adapter.last_connected_at,
-                }
+        adapters.extend(
+            CollectorAdapterStatusResponse(
+                name=adapter.name,
+                sourceId=adapter.source_id,
+                connected=adapter.connected,
+                lastError=adapter.last_error,
+                lastConnectedAt=adapter.last_connected_at,
             )
-    return {"status": status, "adapters": adapters}
+            for adapter in collector.get_adapter_statuses()
+        )
+    return CollectorStatusResponse.model_validate({"status": status, "adapters": adapters})
 
 
-@router.post("/collector/restart")
-async def collector_restart(request: Request) -> dict:
+@router.post("/collector/restart", response_model=CollectorRestartResponse)
+async def collector_restart(request: Request) -> CollectorRestartResponse:
     previous = await _collector_status(request)
     collector = get_collector(request)
     if collector is None:
@@ -91,74 +111,74 @@ async def collector_restart(request: Request) -> dict:
 
         try:
             request.app.state.collector = await CollectorManager.create(get_db(request), get_broadcaster(request))
-            return {"message": "Collector started", "previousStatus": previous}
+            return CollectorRestartResponse(message="Collector started", previousStatus=previous)
         except Exception as exc:  # noqa: BLE001 — report instead of 500
             logger.exception("Collector start failed")
-            return {
-                "message": f"Collector start failed: {exc}",
-                "previousStatus": previous,
-            }
+            return CollectorRestartResponse(
+                message=f"Collector start failed: {exc}",
+                previousStatus=previous,
+            )
     await collector.restart()
-    return {"message": "Collector restarted", "previousStatus": previous}
+    return CollectorRestartResponse(message="Collector restarted", previousStatus=previous)
 
 
-@router.get("/ai-engine/status")
-async def ai_engine_status(request: Request) -> dict:
+@router.get("/ai-engine/status", response_model=AiEngineHealthStatusResponse)
+async def ai_engine_status(request: Request) -> AiEngineHealthStatusResponse:
     engine = get_analysis_engine(request)
     health = await engine.health_check()
     if health.get("status") == "ok":
-        return {
-            "status": "available",
-            "reason": None,
-            "provider": health.get("provider"),
-        }
-    return {
-        "status": "unavailable",
-        "reason": health.get("error"),
-        "provider": health.get("provider"),
-    }
+        return AiEngineHealthStatusResponse(
+            status="available",
+            reason=None,
+            provider=health.get("provider"),
+        )
+    return AiEngineHealthStatusResponse(
+        status="unavailable",
+        reason=health.get("error"),
+        provider=health.get("provider"),
+    )
 
 
-@router.post("/ai-engine/test")
-async def ai_engine_test(request: Request, body: AiEngineTestBody | None = None) -> dict:
-    """Run a minimal-token generation probe against saved or draft LLM settings."""
+@router.post("/ai-engine/test", response_model=AiEngineTestResultResponse)
+async def ai_engine_test(request: Request, body: AiEngineTestBody | None = None) -> AiEngineTestResultResponse:
+    """Run a minimal-token generation probe against a profile-shaped draft (or bound slot)."""
     engine = get_analysis_engine(request)
     draft = body.model_dump(exclude_none=True) if body is not None else None
     started = time.monotonic()
     result = await engine.test_completion(draft)
     latency_ms = int((time.monotonic() - started) * 1000)
-    return {
-        "success": bool(result.get("success")),
-        "provider": result.get("provider"),
-        "model": result.get("model"),
-        "latencyMs": latency_ms,
-        "promptTokens": int(result.get("prompt_tokens") or 0),
-        "completionTokens": int(result.get("completion_tokens") or 0),
-        "preview": result.get("preview"),
-        "error": result.get("error"),
-    }
+    return AiEngineTestResultResponse(
+        success=bool(result.get("success")),
+        provider=result.get("provider"),
+        model=result.get("model"),
+        latencyMs=latency_ms,
+        promptTokens=int(result.get("prompt_tokens") or 0),
+        completionTokens=int(result.get("completion_tokens") or 0),
+        preview=result.get("preview"),
+        error=result.get("error"),
+    )
 
 
-@router.post("/analysis/abort")
-async def analysis_abort(request: Request) -> dict:
+@router.post("/analysis/abort", response_model=AnalysisAbortResponse)
+async def analysis_abort(request: Request) -> AnalysisAbortResponse:
     """Abort all in-flight batches and pause analysis."""
     result = await emergency_abort(get_db(request), get_scheduler(request))
     logger.info(
         "Emergency abort: %d batch(es) failed",
         len(result.get("abortedBatchIds", [])),
     )
-    return result
+    return AnalysisAbortResponse.model_validate(result)
 
 
-@router.post("/analysis/pause")
-async def analysis_pause(request: Request, body: AnalysisPauseBody) -> dict:
+@router.post("/analysis/pause", response_model=AnalysisPauseResponse)
+async def analysis_pause(request: Request, body: AnalysisPauseBody) -> AnalysisPauseResponse:
     """Pause or resume the analysis scheduler (runtime control)."""
     paused = await set_analysis_paused(
         get_db(request),
         get_scheduler(request),
         paused=body.paused,
     )
-    return {"analysisPaused": paused}
+    return AnalysisPauseResponse(analysisPaused=paused)
 
 
 @router.post("/retention/run", response_model=RetentionRunResponse)
@@ -175,8 +195,8 @@ async def retention_run(request: Request) -> RetentionRunResponse:
     )
 
 
-@public_reset_router.post("/rotate-secrets")
-async def rotate_secrets(request: Request, body: RotateSecretsBody) -> dict:
+@public_reset_router.post("/rotate-secrets", response_model=RotateSecretsResponse)
+async def rotate_secrets(request: Request, body: RotateSecretsBody) -> RotateSecretsResponse:
     """Rotate ``secret.key`` and scrub undecryptable ciphertext; keep business data.
 
     Only allowed while ``secrets_ready`` is False. Requires admin username +
@@ -202,28 +222,39 @@ async def rotate_secrets(request: Request, body: RotateSecretsBody) -> dict:
             error_code=INVALID_CREDENTIALS,
         )
 
+    # Abort before scrubbing: a surviving secret.key would silently keep the
+    # unusable encryption key on disk while the ciphertext is already gone.
     try:
         wipe_secret_key_files()
-    except Exception:  # noqa: BLE001 — still scrub so probe can clear the gate
+    except Exception as exc:
         logger.exception("Clearing secret.key during rotate-secrets failed")
+        raise http_error(
+            500,
+            f"Could not delete the old secret.key, so rotation was aborted and no data was changed: {exc}",
+        ) from exc
 
-    scrubbed = await scrub_undecryptable_secrets(db)
+    scrubbed = RotateSecretsScrubbedCounts.model_validate(await scrub_undecryptable_secrets(db))
 
     try:
         clear_telegram_session_files()
     except Exception:  # noqa: BLE001 — credentials are scrubbed; sessions are best-effort
         logger.exception("Clearing Telegram session files during rotate-secrets failed")
 
-    ready, _err = await _refresh_secrets_gate(request, db)
-    return {
-        "message": "Secrets rotated",
-        "secretsReady": ready,
-        "scrubbed": scrubbed,
-    }
+    ready, _err, runtime_started = await _refresh_secrets_gate(request, db)
+    return RotateSecretsResponse(
+        message=(
+            "Secrets rotated"
+            if runtime_started
+            else "Secrets rotated, but background services failed to start; restart the application"
+        ),
+        secretsReady=ready,
+        runtimeStarted=runtime_started,
+        scrubbed=scrubbed,
+    )
 
 
-@public_reset_router.post("/reset/database")
-async def reset_database(request: Request) -> dict:
+@public_reset_router.post("/reset/database", response_model=SystemMessageResponse)
+async def reset_database(request: Request) -> SystemMessageResponse:
     """Full wipe: rebuild schema and clear every local runtime artifact.
 
     Removes SQLite data, Telegram sessions, ``secret.key``, and
@@ -272,11 +303,11 @@ async def reset_database(request: Request) -> dict:
             await collector.start()
         except Exception:  # noqa: BLE001 — collector restart is best-effort
             logger.exception("Collector restart after database reset failed")
-    return {"message": "Database reset complete"}
+    return SystemMessageResponse(message="Database reset complete")
 
 
-@router.post("/restart")
-async def restart_application() -> dict:
+@router.post("/restart", response_model=SystemMessageResponse)
+async def restart_application() -> SystemMessageResponse:
     """Exit the process; the Electron shell's process manager respawns it."""
 
     def _terminate() -> None:
@@ -285,4 +316,4 @@ async def restart_application() -> dict:
     import asyncio
 
     asyncio.get_running_loop().call_later(0.5, _terminate)
-    return {"message": "Restarting"}
+    return SystemMessageResponse(message="Restarting")

@@ -17,7 +17,7 @@ class FailingEngine:
         self.message = message
         self.calls = 0
 
-    async def analyze(self, prompt):  # noqa: ANN001, ANN201
+    async def analyze(self, prompt, *, profile_id=None):  # noqa: ANN001, ANN201
         self.calls += 1
         raise RuntimeError(self.message)
 

@@ -211,6 +211,21 @@ async def test_settings_put_ignores_analysis_paused(client):
     assert again["analysisPaused"] is True
 
 
+async def test_settings_put_rejects_invalid_max_concurrent_batches(client):
+    """Non-integer maxConcurrentBatches → 422 (was: silent try/except pass)."""
+    before = (await client.get("/api/v1/config/settings")).json()
+    stored = before["maxConcurrentBatches"]
+
+    resp = await client.put(
+        "/api/v1/config/settings",
+        json={"maxConcurrentBatches": "not-a-number"},
+    )
+    assert resp.status_code == 422
+
+    again = (await client.get("/api/v1/config/settings")).json()
+    assert again["maxConcurrentBatches"] == stored
+
+
 async def test_settings_put_rejects_retired_retention_key(client, app):
     """Retired dataRetentionDays wire key → 422; never stored."""
     before = (await client.get("/api/v1/config/settings")).json()
@@ -278,14 +293,13 @@ async def test_assistant_identity_settings_roundtrip(client):
     assert again["assistantDisplayName"] == "Helix"
     assert again["assistantAvatar"] == avatar
 
-    # Invalid avatar (not a data URL) is ignored; previous value kept.
-    rejected = (
-        await client.put(
-            "/api/v1/config/settings",
-            json={**again, "assistantAvatar": "https://example.com/x.png"},
-        )
-    ).json()
-    assert rejected["assistantAvatar"] == avatar
+    # Invalid avatar (not a data URL) → 422; previous value kept.
+    rejected = await client.put(
+        "/api/v1/config/settings",
+        json={**again, "assistantAvatar": "https://example.com/x.png"},
+    )
+    assert rejected.status_code == 422
+    assert (await client.get("/api/v1/config/settings")).json()["assistantAvatar"] == avatar
 
     cleared = (
         await client.put(
@@ -324,13 +338,12 @@ async def test_user_profile_settings_roundtrip(client):
     assert again["userAvatar"] == avatar
     assert again["userBackground"] == "  Ops lead  "
 
-    rejected = (
-        await client.put(
-            "/api/v1/config/settings",
-            json={**again, "userAvatar": "https://example.com/x.png"},
-        )
-    ).json()
-    assert rejected["userAvatar"] == avatar
+    rejected = await client.put(
+        "/api/v1/config/settings",
+        json={**again, "userAvatar": "https://example.com/x.png"},
+    )
+    assert rejected.status_code == 422
+    assert (await client.get("/api/v1/config/settings")).json()["userAvatar"] == avatar
 
     cleared = (
         await client.put(

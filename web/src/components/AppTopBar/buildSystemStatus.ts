@@ -14,8 +14,6 @@ interface SystemStatusView {
   pulse: boolean;
 }
 
-const COLLECTOR_TRANSITIONS = new Set<CollectorStatus>(["starting", "stopping", "restarting"]);
-
 /**
  * Collapses collector + AI + analysis into one top-bar status pill.
  *
@@ -42,26 +40,21 @@ export function buildSystemStatus(input: {
     const taskLabel = primaryAnalysis.taskName || t("unnamedTask");
     const batchLabel = formatBatchMessageCount(primaryAnalysis.messageCount);
     const concurrent = concurrentCount > 1;
+    const analyzingTitle = concurrent
+      ? t("analyzingTitleConcurrent", {
+          task: taskLabel,
+          batch: batchLabel,
+          count: concurrentCount,
+        })
+      : t("analyzingTitle", { task: taskLabel, batch: batchLabel });
     return {
       color: "var(--info)",
       label: concurrent
         ? t("analyzingLabelConcurrent", { task: taskLabel, count: concurrentCount })
         : t("analyzingLabel", { task: taskLabel }),
       title: analysisPaused
-        ? concurrent
-          ? t("analyzingTitlePausedConcurrent", {
-              task: taskLabel,
-              batch: batchLabel,
-              count: concurrentCount,
-            })
-          : t("analyzingTitlePaused", { task: taskLabel, batch: batchLabel })
-        : concurrent
-          ? t("analyzingTitleConcurrent", {
-              task: taskLabel,
-              batch: batchLabel,
-              count: concurrentCount,
-            })
-          : t("analyzingTitle", { task: taskLabel, batch: batchLabel }),
+        ? t("analyzingTitlePausedWrap", { title: analyzingTitle })
+        : analyzingTitle,
       pulse: true,
     };
   }
@@ -81,16 +74,6 @@ export function buildSystemStatus(input: {
       color: "var(--error)",
       label: t("aiUnavailable"),
       title: collectorRunning ? t("aiUnavailableTitle") : t("aiUnavailableTitleCollectorDown"),
-      pulse: false,
-    };
-  }
-
-  // Brief collector transitions — avoid labeling them as a stable "stopped".
-  if (COLLECTOR_TRANSITIONS.has(collectorStatus)) {
-    return {
-      color: statusColorsByCollectorState[collectorStatus],
-      label: statusShortLabelsByCollectorState()[collectorStatus],
-      title: statusLabelsByCollectorState()[collectorStatus],
       pulse: false,
     };
   }

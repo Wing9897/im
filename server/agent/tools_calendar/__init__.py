@@ -9,7 +9,8 @@ still import the short alias from this package.
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from server.agent.tool_limits import CALENDAR_RESULT_HARD_CAP as HARD_CAP
 from server.agent.tools_calendar.handlers import (

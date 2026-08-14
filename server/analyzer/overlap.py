@@ -7,7 +7,8 @@ completed batch, or on any fetch error — overlap must never fail a batch.
 from __future__ import annotations
 
 import logging
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from server.analyzer.incremental import MESSAGE_COLUMNS
 from server.db.database import Database

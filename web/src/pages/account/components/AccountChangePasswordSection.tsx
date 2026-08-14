@@ -32,7 +32,7 @@ export function AccountChangePasswordSection() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      showToast(t("account.password.changed"), "success");
+      showToast(t("account:password.changed"), "success");
     } catch (err) {
       const message = toErrorMessage(err);
       setError(message);
@@ -46,14 +46,14 @@ export function AccountChangePasswordSection() {
     <section id="change-password" data-testid="profile-change-password">
       <FormStack gap="lg">
         <div>
-          <h2 className={`${sectionTitleClass} m-0`}>{t("account.password.title")}</h2>
+          <h2 className={`${sectionTitleClass} m-0`}>{t("account:password.title")}</h2>
           <p className={`mb-0 mt-xs max-w-[56ch] ${formHelpClass}`}>
-            {t("account.password.help")}
+            {t("account:password.help")}
           </p>
         </div>
 
         <SettingsRow
-          label={t("account.password.current")}
+          label={t("account:password.current")}
           htmlFor="change-password-current"
         >
           <TextField
@@ -67,7 +67,7 @@ export function AccountChangePasswordSection() {
           />
         </SettingsRow>
 
-        <SettingsRow label={t("account.password.new")} htmlFor="change-password-new">
+        <SettingsRow label={t("account:password.new")} htmlFor="change-password-new">
           <TextField
             id="change-password-new"
             type="password"
@@ -80,7 +80,7 @@ export function AccountChangePasswordSection() {
         </SettingsRow>
 
         <SettingsRow
-          label={t("account.password.confirm")}
+          label={t("account:password.confirm")}
           htmlFor="change-password-confirm"
         >
           <TextField
@@ -111,7 +111,7 @@ export function AccountChangePasswordSection() {
             onClick={() => void onSubmit()}
             data-testid="change-password-submit"
           >
-            {pending ? t("account.password.saving") : t("account.password.submit")}
+            {pending ? t("account:password.saving") : t("account:password.submit")}
           </Button>
         </div>
       </FormStack>

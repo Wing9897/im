@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  firstCompleteDefaultProfile,
+  firstCompleteProfile,
   isLlmProfileComplete,
 } from "./llmProfileCompleteness";
 import type { LlmProfile } from "../../types/llmProfiles";
@@ -19,7 +19,6 @@ function profile(partial: Partial<LlmProfile>): LlmProfile {
     webSearchEnabled: true,
     webSearchProvider: "auto",
     braveSearchApiKey: "",
-    isDefault: false,
     staffClasses: [],
     staffInstances: [],
     createdAt: null,
@@ -59,11 +58,11 @@ describe("isLlmProfileComplete", () => {
   });
 });
 
-describe("firstCompleteDefaultProfile", () => {
-  it("prefers complete default, else first complete", () => {
-    const incomplete = profile({ id: "a", model: "", isDefault: true });
-    const complete = profile({ id: "b", isDefault: false });
-    expect(firstCompleteDefaultProfile([incomplete, complete])?.id).toBe("b");
-    expect(firstCompleteDefaultProfile([incomplete])).toBeNull();
+describe("firstCompleteProfile", () => {
+  it("returns first complete profile in list order", () => {
+    const incomplete = profile({ id: "a", model: "" });
+    const complete = profile({ id: "b" });
+    expect(firstCompleteProfile([incomplete, complete])?.id).toBe("b");
+    expect(firstCompleteProfile([incomplete])).toBeNull();
   });
 });

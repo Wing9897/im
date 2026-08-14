@@ -11,7 +11,8 @@ from server.tests.contract_helpers import assert_keys
 async def test_activity_spans(client):
     resp = await client.get("/api/v1/tasks/activity-spans")
     body = resp.json()
-    assert len(body) == 6
+    # Seed has 5 analysis tasks; the calendar series lives on recurring_schedules.
+    assert len(body) == 5
     for span in body:
         assert_keys(
             span,

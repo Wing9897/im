@@ -45,7 +45,11 @@ export function useFocalBackgroundAutoRefresh(): void {
 
     const tick = () => {
       if (cancelled) return;
-      void maybeRefreshFocal();
+      // Soft-fail: transient fetch errors retry next tick; also prevents an
+      // unhandled rejection when the async chain outlives a jsdom teardown.
+      maybeRefreshFocal().catch((err: unknown) => {
+        console.warn("[theme] focal background auto-refresh tick failed", err);
+      });
     };
 
     tick();

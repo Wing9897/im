@@ -39,7 +39,7 @@ export function FeedBoardWidget({ active = true }: BoardWidgetProps) {
         error={!messages ? error : null}
         onRetry={refresh}
         empty={Array.isArray(messages) && messages.length === 0}
-        emptyLabel={t("board.feed.empty")}
+        emptyLabel={t("board:feed.empty")}
       >
         {messages && messages.length > 0 ? (
           <ul className="board-feed-cards">

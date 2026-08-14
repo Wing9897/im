@@ -2,7 +2,7 @@
 
 Single source of truth for builtin task templates. This script writes:
 
-- ``web/src/i18n/locales/{zh-Hant,en,zh-Hans}/common.json`` → ``tasks.presets.*``
+- ``web/src/i18n/locales/{zh-Hant,en,zh-Hans}/tasks.json`` → ``presets.*``
 
 The API catalog is loaded at runtime from ``shared/task_presets.json``
 (see :mod:`server.presets.task_presets`); no generated Python catalog.
@@ -42,12 +42,11 @@ def _build_locale_presets(source: list[dict[str, Any]], locale: str) -> dict[str
 
 
 def _write_locale(locale: str, presets: dict[str, dict[str, str]]) -> bool:
-    path = LOCALE_ROOT / locale / "common.json"
+    path = LOCALE_ROOT / locale / "tasks.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    existing = data.get("tasks", {}).get("presets")
-    if existing == presets:
+    if data.get("presets") == presets:
         return False
-    data.setdefault("tasks", {})["presets"] = presets
+    data["presets"] = presets
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     return True
 
@@ -66,9 +65,9 @@ def main(argv: list[str] | None = None) -> int:
 
     drift = False
     for locale in LOCALES:
-        path = LOCALE_ROOT / locale / "common.json"
+        path = LOCALE_ROOT / locale / "tasks.json"
         data = json.loads(path.read_text(encoding="utf-8"))
-        if data.get("tasks", {}).get("presets") != locale_maps[locale]:
+        if data.get("presets") != locale_maps[locale]:
             drift = True
 
     if not drift:
@@ -86,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     wrote_locales = [_write_locale(locale, locale_maps[locale]) for locale in LOCALES]
     for locale, changed in zip(LOCALES, wrote_locales, strict=True):
         if changed:
-            print(f"Updated {LOCALE_ROOT.relative_to(REPO_ROOT)}/{locale}/common.json")
+            print(f"Updated {LOCALE_ROOT.relative_to(REPO_ROOT)}/{locale}/tasks.json")
     print(f"Synced {len(source)} preset(s) from {SOURCE_PATH.relative_to(REPO_ROOT)}")
     return 0
 

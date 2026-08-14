@@ -26,14 +26,7 @@ logger = logging.getLogger(__name__)
 #: Must match ``desktop/electron-builder.yml`` ``productName``.
 PRODUCT_DATA_DIRNAME = "Intelligence Monitor"
 
-#: Pre-beta home — only scanned on full reset wipe, never the default root.
-LEGACY_HOME_DIRNAME = ".intelligence-monitor"
-
 _SESSION_SUFFIXES = (".session.txt", ".session")
-
-
-def legacy_home_dir() -> Path:
-    return Path.home() / LEGACY_HOME_DIRNAME
 
 
 def default_data_dir() -> Path:
@@ -77,10 +70,6 @@ def default_secret_key_path() -> Path:
     return data_dir() / "secret.key"
 
 
-def legacy_sessions_dir() -> Path:
-    return legacy_home_dir() / "sessions"
-
-
 def ensure_sessions_dir() -> Path:
     """Create the active sessions directory (no copy from other locations)."""
     dest = sessions_dir()
@@ -101,39 +90,30 @@ def _is_telegram_session_file(name: str) -> bool:
 
 def clear_telegram_session_files() -> int:
     """
-    Delete Telegram session tokens under the active sessions dir and the
-    pre-beta home sessions dir (full reset).
+    Delete Telegram session tokens under the active sessions dir (full reset).
 
     Removes ``*.session.txt`` (StringSession) and leftover Telethon ``*.session``
     SQLite files. Returns the number of files removed.
     """
     removed = 0
-    dirs: list[Path] = []
     try:
-        dirs.append(sessions_dir())
+        directory = sessions_dir()
     except OSError:
-        pass
-    try:
-        legacy = legacy_sessions_dir()
-        if legacy not in dirs and (not dirs or legacy.resolve() != dirs[0].resolve()):
-            dirs.append(legacy)
-    except OSError:
-        pass
+        return 0
 
-    for directory in dirs:
-        try:
-            if not directory.is_dir():
+    try:
+        if not directory.is_dir():
+            return 0
+        for item in directory.iterdir():
+            if not item.is_file() or not _is_telegram_session_file(item.name):
                 continue
-            for item in directory.iterdir():
-                if not item.is_file() or not _is_telegram_session_file(item.name):
-                    continue
-                try:
-                    item.unlink()
-                    removed += 1
-                except OSError as exc:
-                    logger.warning("Failed to delete Telegram session %s: %s", item, exc)
-        except OSError as exc:
-            logger.warning("Failed to clear Telegram sessions in %s: %s", directory, exc)
+            try:
+                item.unlink()
+                removed += 1
+            except OSError as exc:
+                logger.warning("Failed to delete Telegram session %s: %s", item, exc)
+    except OSError as exc:
+        logger.warning("Failed to clear Telegram sessions in %s: %s", directory, exc)
 
     if removed:
         logger.info("Cleared %d Telegram session file(s)", removed)
@@ -157,14 +137,9 @@ def _unique_existing_files(candidates: Iterable[Path]) -> list[Path]:
 
 
 def clear_connection_json_files() -> int:
-    """Delete Desktop ``connection.json`` under active + pre-beta data roots."""
+    """Delete Desktop ``connection.json`` under the active data root."""
     removed = 0
-    for path in _unique_existing_files(
-        (
-            data_dir() / "connection.json",
-            legacy_home_dir() / "connection.json",
-        )
-    ):
+    for path in _unique_existing_files((data_dir() / "connection.json",)):
         try:
             path.unlink()
             removed += 1
@@ -176,10 +151,9 @@ def clear_connection_json_files() -> int:
 
 
 def clear_secret_key_files(*extra: Path) -> int:
-    """Delete ``secret.key`` under active data root, pre-beta home, and extras."""
+    """Delete ``secret.key`` under the active data root and extras."""
     candidates: list[Path] = [
         default_secret_key_path(),
-        legacy_home_dir() / "secret.key",
         *extra,
     ]
     configured = os.environ.get("INTELLIGENCE_MONITOR_SECRET_KEY_FILE", "").strip()

@@ -33,14 +33,14 @@ export const TASK_ANALYSIS_TIME_RANGE_CHIP_ORDER: readonly TaskAnalysisTimeRange
 ];
 
 export const TASK_ANALYSIS_TIME_RANGE_I18N_KEYS: Record<TaskAnalysisTimeRange, string> = {
-  all: "tasks.editor.timeAll",
-  today: "tasks.editor.timeToday",
-  "1h": "tasks.editor.time1h",
-  "6h": "tasks.editor.time6h",
-  "48h": "tasks.editor.time48h",
-  "1d": "tasks.editor.time1d",
-  "7d": "tasks.editor.time7d",
-  "30d": "tasks.editor.time30d",
+  all: "tasks:editor.timeAll",
+  today: "tasks:editor.timeToday",
+  "1h": "tasks:editor.time1h",
+  "6h": "tasks:editor.time6h",
+  "48h": "tasks:editor.time48h",
+  "1d": "tasks:editor.time1d",
+  "7d": "tasks:editor.time7d",
+  "30d": "tasks:editor.time30d",
 };
 
 const TASK_ANALYSIS_TIME_RANGE_SET = new Set<string>(TASK_ANALYSIS_TIME_RANGE_VALUES);

@@ -55,14 +55,13 @@ describe("Items page chrome unity", () => {
     expect(itemsPageChromeEntryOuterClass).toBe(pageChromeOuterClass);
   });
 
-  it("category · entry · form share identical outer/inner chrome classes", () => {
+  it("category · entry · form · finance share identical outer/inner chrome classes", () => {
     act(() => {
       root.render(
         createElement(
           "div",
           null,
           createElement(ItemsPageChrome, {
-            title: "pageTitle",
             actions: createElement("button", { type: "button" }, "add"),
             "data-testid": "items-category-toolbar",
           }),
@@ -90,6 +89,12 @@ describe("Items page chrome unity", () => {
             onBack: vi.fn(),
             onSave: vi.fn(),
           }),
+          createElement(ItemsPageChrome, {
+            back: { onClick: vi.fn(), ariaLabel: "back" },
+            controls: createElement("div", null, "filters"),
+            controlsAriaLabel: "finance controls",
+            "data-testid": "items-finance-toolbar",
+          }),
         ),
       );
     });
@@ -98,6 +103,7 @@ describe("Items page chrome unity", () => {
       "items-category-toolbar",
       "items-entry-toolbar",
       "item-form-toolbar",
+      "items-finance-toolbar",
     ] as const;
 
     const outers = ids.map((id) => {
@@ -124,5 +130,13 @@ describe("Items page chrome unity", () => {
     expect((outers[2]!.firstElementChild as HTMLElement).className).toBe(
       pageChromeInnerClass,
     );
+    expect((outers[3]!.firstElementChild as HTMLElement).className).toBe(
+      pageChromeInnerClass,
+    );
+    // Category hub + finance omit page titles (nav / route already label the page).
+    expect(outers[0]!.querySelector("h1")).toBeNull();
+    expect(outers[3]!.querySelector("h1")).toBeNull();
+    expect(outers[0]!.textContent).not.toContain("物品");
+    expect(outers[3]!.textContent).not.toContain("物品財務");
   });
 });

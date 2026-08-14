@@ -2,55 +2,40 @@
 // Common / Shared Type Definitions
 // ============================================================
 
+import type { components } from "../api/generated/schema";
+
 /** Supported messaging platforms */
 export type Platform = string;
 
 /** Account connection status */
 export type ConnectionStatus = "connected" | "connecting" | "disconnected" | "error";
 
-/** Collector process status */
-export type CollectorStatus =
-  | "starting"
-  | "running"
-  | "stopping"
-  | "stopped"
-  | "restarting"
-  | "error";
+/**
+ * Aggregate collector status (OpenAPI ``CollectorStatusResponse.status``).
+ * ``CollectorManager.get_status()`` never reports transitional states.
+ */
+export type CollectorStatus = components["schemas"]["CollectorStatusResponse"]["status"];
 
-/** AI engine service status */
-export type AiEngineStatus = "available" | "unavailable" | "unknown";
+/** GET ``/system/ai-engine/status`` wire payload (OpenAPI). */
+export type AiEngineHealthStatus = components["schemas"]["AiEngineHealthStatusResponse"];
 
-export interface AiEngineHealthStatus {
-  status: AiEngineStatus;
-  reason?: string | null;
-  provider?: string | null;
-}
+/** POST ``/system/ai-engine/test`` result (OpenAPI). */
+export type AiEngineTestResult = components["schemas"]["AiEngineTestResultResponse"];
 
-/** Result from POST /api/v1/system/ai-engine/test */
-export interface AiEngineTestResult {
-  success: boolean;
-  provider?: string | null;
-  model?: string | null;
-  latencyMs?: number;
-  promptTokens?: number;
-  completionTokens?: number;
-  preview?: string | null;
-  error?: string | null;
-}
+/**
+ * Unsaved profile-card draft for ``POST /system/ai-engine/test`` (OpenAPI body).
+ * Wire field names match ``LlmProfileUpsert`` connection fields.
+ */
+export type AiEngineTestDraft = components["schemas"]["AiEngineTestBody"];
 
-/** Draft LLM settings for an unsaved AI test run */
-export interface AiEngineTestDraft {
-  llmProvider: LlmProvider;
-  llmBaseUrl: string;
-  llmModel: string;
-  llmApiKey: string;
-  ollamaThinkingEnabled?: boolean;
-  /** When set, masked apiKey falls back to this saved profile's secret. */
-  llmProfileId?: string;
-}
+/**
+ * AI engine service status for UI/runtime — includes client-only ``unknown``
+ * before the first successful probe (API only returns available／unavailable).
+ */
+export type AiEngineStatus = AiEngineHealthStatus["status"] | "unknown";
 
-/** LLM Provider options */
-export type LlmProvider = "ollama" | "openai_compatible" | "gemini_compatible" | "openrouter";
+/** LLM Provider options (OpenAPI `LlmProfileUpsertBody.provider` — stamp 33 CHECK vocabulary). */
+export type LlmProvider = components["schemas"]["LlmProfileUpsertBody"]["provider"];
 
 /** Analysis mode — see `domain/tasks/analysisModeCapabilities` (FE SoT / BE drift-tested). */
 export type { AnalysisMode } from "../domain/tasks/analysisModeCapabilities";

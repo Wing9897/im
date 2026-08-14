@@ -18,7 +18,8 @@ be added or renamed in one place.
 from __future__ import annotations
 
 import re
-from typing import Any, Iterable, Literal, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any, Literal
 
 from server.util import parse_json_list
 

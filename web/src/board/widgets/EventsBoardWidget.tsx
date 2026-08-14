@@ -47,7 +47,7 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
       active,
       fetcher,
       pollMs: BOARD_POLL_MS.standard,
-      ariaLabelPrefix: t("board.events.ariaPrefix"),
+      ariaLabelPrefix: t("board:events.ariaPrefix"),
     });
   // Filter first so「一般」is not squeezed out of the recent-15 cap.
   const cappedItems = useMemo(
@@ -71,8 +71,8 @@ export function EventsBoardWidget({ active = true, widgetId }: BoardWidgetProps)
         empty={Array.isArray(items) && cappedItems.length === 0}
         emptyLabel={
           isEmptySourceFilter(selection)
-            ? t("board.common.noTaskSelected")
-            : t("board.events.empty")
+            ? t("board:common.noTaskSelected")
+            : t("board:events.empty")
         }
       >
         {cappedItems.length > 0 ? (

@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { resolveBaseUrl } from "../../api/baseUrl";
 import { cardBodyClass } from "../../components/ui/pageTypography";
-import { SettingsContentCard, useSettingsPageState } from "./SettingsShared";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
+import { SettingsContentCard } from "./SettingsShared";
 import { SettingsMcpCapabilityToggles } from "./SettingsMcpCapabilityToggles";
 import {
   SettingsMcpOpenClawSection,

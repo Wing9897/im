@@ -19,7 +19,7 @@ from server.services.task_writes import TaskWriteError
 
 
 @router.put("/{task_id}", response_model=TaskResponse)
-async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> dict:
+async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> TaskResponse:
     try:
         result = await update_task_record(get_db(request), task_id, body)
     except LookupError as exc:
@@ -36,11 +36,11 @@ async def update_task(request: Request, task_id: str, body: TaskConfigBody) -> d
         await register_task(request, task_id)
 
     notify(request, task_id, "updated")
-    return result.payload
+    return TaskResponse.model_validate(result.payload)
 
 
 @router.delete("/{task_id}", response_model=TaskDeleteResponse)
-async def delete_task(request: Request, task_id: str) -> dict:
+async def delete_task(request: Request, task_id: str) -> TaskDeleteResponse:
     await unregister_task(request, task_id)
     try:
         payload = await delete_task_record(get_db(request), task_id)
@@ -52,11 +52,11 @@ async def delete_task(request: Request, task_id: str) -> dict:
         raise
 
     notify(request, task_id, "deleted")
-    return payload
+    return TaskDeleteResponse.model_validate(payload)
 
 
 @router.patch("/{task_id}/active", response_model=TaskResponse)
-async def toggle_task_active(request: Request, task_id: str) -> dict:
+async def toggle_task_active(request: Request, task_id: str) -> TaskResponse:
     try:
         payload, new_active = await toggle_task_active_record(get_db(request), task_id)
     except LookupError as exc:
@@ -66,4 +66,4 @@ async def toggle_task_active(request: Request, task_id: str) -> dict:
     else:
         await unregister_task(request, task_id)
     notify(request, task_id, "updated")
-    return payload
+    return TaskResponse.model_validate(payload)

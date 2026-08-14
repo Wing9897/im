@@ -19,7 +19,7 @@ import {
   itemsPageChromeEntryActionLabelClass,
   itemsPageChromeSelectClass,
 } from "./itemsPageChromeClasses";
-import { ITEMS_SORT_OPTION_KEYS, type ItemsFilterKey, type ItemsSortKey } from "./itemsListModel";
+import { ITEMS_SORT_OPTION_KEYS, type ItemsFilterKey, type ItemsSortKey } from "../../domain/items/itemsListModel";
 
 type Props = {
   listTitle: string;

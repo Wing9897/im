@@ -76,8 +76,8 @@ export function DashboardViewerDialogs({
 
       {worksetDeleteTarget ? (
         <ConfirmDialog
-          title={t("workset.deleteTitle")}
-          body={t("workset.deleteConfirm", { name: worksetDeleteTarget.name })}
+          title={t("workset:deleteTitle")}
+          body={t("workset:deleteConfirm", { name: worksetDeleteTarget.name })}
           confirmLabel={t("dialog.confirmDelete")}
           confirmBusyLabel={t("dialog.deleting")}
           busy={worksetDeleting}

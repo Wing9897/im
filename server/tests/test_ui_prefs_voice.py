@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from server.config import get_config
 from server.tests.ui_prefs_helpers import ui_pref_payload
@@ -77,7 +77,7 @@ def test_sanitize_voice_history_caps_at_100() -> None:
 
 
 def test_sanitize_fired_keys_prunes_old() -> None:
-    now = datetime(2026, 7, 24, tzinfo=timezone.utc)
+    now = datetime(2026, 7, 24, tzinfo=UTC)
     fresh_start = (now - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
     old_start = (now - timedelta(days=5)).isoformat().replace("+00:00", "Z")
     keys = [
@@ -120,7 +120,7 @@ async def test_voice_settings_empty_and_roundtrip(client, app) -> None:
 
 
 async def test_voice_fired_claim_dedupes_across_clients(client, app) -> None:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fresh = (now + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
     key = f"ev-1::60::{fresh}"
     first = await client.post(
@@ -145,7 +145,7 @@ async def test_voice_fired_empty_roundtrip_and_prune(client, app) -> None:
     assert empty.status_code == 200
     assert empty.json() == {"configured": False, "keys": None}
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fresh = (now - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
     stale = (now - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
     put = await client.put(

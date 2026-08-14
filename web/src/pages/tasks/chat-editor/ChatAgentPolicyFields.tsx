@@ -49,9 +49,9 @@ function applyPolicy(
 }
 
 const TRIGGER_OPTIONS: { value: AgentTriggerMode; key: string }[] = [
-  { value: "schedule", key: "tasks.agent.trigger.schedule" },
-  { value: "message_cursor", key: "tasks.agent.trigger.message_cursor" },
-  { value: "message_threshold", key: "tasks.agent.trigger.message_threshold" },
+  { value: "schedule", key: "tasks:agent.trigger.schedule" },
+  { value: "message_cursor", key: "tasks:agent.trigger.message_cursor" },
+  { value: "message_threshold", key: "tasks:agent.trigger.message_threshold" },
 ];
 
 export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolicyFieldsProps) {
@@ -106,7 +106,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
   return (
     <div className="md:col-span-2 flex flex-col gap-md" data-testid="task-agent-policy">
       <div className="flex flex-col gap-xs">
-        <span className={formLabelClass}>{t("tasks.agent.presetsLabel")}</span>
+        <span className={formLabelClass}>{t("tasks:agent.presetsLabel")}</span>
         <div className="flex flex-wrap gap-sm">
           <button
             type="button"
@@ -114,7 +114,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
             data-testid="task-agent-preset-project"
             onClick={() => applyPreset(AGENT_PRESET_PROJECT_RECONCILE)}
           >
-            {t("tasks.agent.presets.project_reconcile")}
+            {t("tasks:agent.presets.project_reconcile")}
           </button>
           <button
             type="button"
@@ -122,15 +122,15 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
             data-testid="task-agent-preset-web"
             onClick={() => applyPreset(AGENT_PRESET_WEB_SCOUT)}
           >
-            {t("tasks.agent.presets.web_scout")}
+            {t("tasks:agent.presets.web_scout")}
           </button>
         </div>
-        <p className={`m-0 ${formHelpClass}`}>{t("tasks.agent.presetsHint")}</p>
+        <p className={`m-0 ${formHelpClass}`}>{t("tasks:agent.presetsHint")}</p>
       </div>
 
       <div className="flex flex-col gap-xs">
         <label className={formLabelClass} htmlFor="task-agent-trigger">
-          {t("tasks.agent.triggerLabel")}
+          {t("tasks:agent.triggerLabel")}
         </label>
         {/* Native select: agent policy form keeps SelectField for native dense editor rows. */}
         <SelectField
@@ -148,7 +148,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
       </div>
 
       <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
-        <legend className={formLabelClass}>{t("tasks.agent.capsLabel")}</legend>
+        <legend className={formLabelClass}>{t("tasks:agent.capsLabel")}</legend>
         <div className="flex flex-wrap items-center gap-sm">
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -157,7 +157,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               onChange={(e) => patchPolicy({ capCalendarRead: e.target.checked })}
               data-testid="task-agent-cap-calendar-read"
             />
-            {t("tasks.agent.caps.calendarRead")}
+            {t("tasks:agent.caps.calendarRead")}
           </label>
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -166,7 +166,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               onChange={(e) => patchPolicy({ capReadAnalysisEvents: e.target.checked })}
               data-testid="task-agent-cap-read-analysis-events"
             />
-            {t("tasks.agent.caps.readAnalysisEvents")}
+            {t("tasks:agent.caps.readAnalysisEvents")}
           </label>
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -175,7 +175,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               onChange={(e) => patchPolicy({ capReadItems: e.target.checked })}
               data-testid="task-agent-cap-read-items"
             />
-            {t("tasks.agent.caps.readItems")}
+            {t("tasks:agent.caps.readItems")}
           </label>
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -189,13 +189,13 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               }
               data-testid="task-agent-cap-web-search"
             />
-            {t("tasks.agent.caps.webSearch")}
+            {t("tasks:agent.caps.webSearch")}
           </label>
         </div>
       </fieldset>
 
       <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
-        <legend className={formLabelClass}>{t("tasks.agent.outputLabel")}</legend>
+        <legend className={formLabelClass}>{t("tasks:agent.outputLabel")}</legend>
         <div className="flex flex-wrap items-center gap-sm">
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -204,7 +204,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               onChange={(e) => patchPolicy({ outputCalendar: e.target.checked })}
               data-testid="task-agent-output-calendar"
             />
-            {t("tasks.agent.output.calendar")}
+            {t("tasks:agent.output.calendar")}
           </label>
           <label className="flex items-center gap-sm text-caption">
             <input
@@ -214,13 +214,13 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
               onChange={(e) => patchPolicy({ outputAnalysisEvents: e.target.checked })}
               data-testid="task-agent-output-analysis"
             />
-            {t("tasks.agent.output.analysisEvents")}
+            {t("tasks:agent.output.analysisEvents")}
           </label>
         </div>
         <p className={`m-0 ${formHelpClass}`}>
           {formState.triggerMode === "message_cursor"
-            ? t("tasks.agent.outputHintCursor")
-            : t("tasks.agent.outputHint")}
+            ? t("tasks:agent.outputHintCursor")
+            : t("tasks:agent.outputHint")}
         </p>
       </fieldset>
     </div>

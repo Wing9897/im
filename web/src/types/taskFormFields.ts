@@ -62,7 +62,7 @@ export interface TaskFormState
   worksetId: string | null;
   /**
    * LLM profile id for this task's connection.
-   * Empty on create → backend injects the default profile (or UI may preselect it).
+   * Empty on create → backend uses the oldest complete profile (or UI may preselect).
    */
   llmProfileId: string;
   /** Agent-mode policy fields (ignored unless analysisMode=agent). */

@@ -15,12 +15,8 @@ vi.mock("../../api/config", () => ({
   saveSystemSettings: (...args: unknown[]) => mockSaveSystemSettings(...args),
 }));
 
-vi.mock("../settings/SettingsShared", async () => {
-  const actual = await vi.importActual<typeof import("../settings/SettingsShared")>(
-    "../settings/SettingsShared",
-  );
+vi.mock("../../components/settings/useSettingsPageState", () => {
   return {
-    ...actual,
     useSettingsPageState: () => ({
       settings: { ...defaultSettingsSnapshot },
       updateSettings: mockUpdateSettings,

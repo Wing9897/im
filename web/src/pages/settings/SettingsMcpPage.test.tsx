@@ -17,10 +17,8 @@ vi.mock("../../api/mcp", () => ({
 const updateSettings = vi.fn();
 const handleSave = vi.fn();
 
-vi.mock("./SettingsShared", async () => {
-  const actual = await vi.importActual<typeof import("./SettingsShared")>("./SettingsShared");
+vi.mock("../../components/settings/useSettingsPageState", () => {
   return {
-    ...actual,
     useSettingsPageState: () => ({
       settings: {
         mcpEnabled: true,

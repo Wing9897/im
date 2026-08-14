@@ -71,7 +71,7 @@ export function ScheduleBoardWidget({ active = true }: BoardWidgetProps) {
         error={!data ? error : null}
         onRetry={refresh}
         empty={empty}
-        emptyLabel={t("board.schedule.empty")}
+        emptyLabel={t("board:schedule.empty")}
       >
         {data && !empty ? (
           <>
@@ -101,8 +101,8 @@ export function ScheduleBoardWidget({ active = true }: BoardWidgetProps) {
                       <span className="board-widget-list__primary">{row.name}</span>
                       <span className="board-widget-list__meta">
                         {row.active
-                          ? t("board.common.enabled")
-                          : t("board.common.disabled")}
+                          ? t("board:common.enabled")
+                          : t("board:common.disabled")}
                       </span>
                     </div>
                   </li>
@@ -110,13 +110,13 @@ export function ScheduleBoardWidget({ active = true }: BoardWidgetProps) {
               </ul>
             ) : null}
             <p className="board-widget-muted" data-testid="board-schedule-hint">
-              {t("board.schedule.hint")}
+              {t("board:schedule.hint")}
             </p>
           </>
         ) : null}
         {empty ? (
           <p className="board-widget-muted" data-testid="board-schedule-hint">
-            {t("board.schedule.hint")}
+            {t("board:schedule.hint")}
           </p>
         ) : null}
       </BoardWidgetShell>

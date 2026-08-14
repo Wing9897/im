@@ -30,7 +30,13 @@ vi.mock("../api/results", () => ({
 }));
 
 vi.mock("../api/userEvents", () => ({
-  listUserEventsPage: (...args: unknown[]) => mockListUserEvents(...args),
+  // The scanner consumes the paged shape ({ items }); test fixtures below stay
+  // as plain arrays and are wrapped here.
+  listUserEventsPage: (...args: unknown[]) =>
+    Promise.resolve(mockListUserEvents(...args)).then((items) => ({
+      items: items ?? [],
+      nextCursor: null,
+    })),
 }));
 
 vi.mock("../api/tasks", () => ({
@@ -105,14 +111,14 @@ describe("useVoiceReminderScanner pagination consumer", () => {
     mockFetchTimelineEvents.mockResolvedValue([
       {
         id: "page-1",
-        seriesId: "task-1",
+        taskId: "task-1",
         taskName: "Tracked task",
         title: "First paged event",
         startTime: "2026-07-20T10:00:00.000Z",
       },
       {
         id: "page-2",
-        seriesId: "task-1",
+        taskId: "task-1",
         taskName: "Tracked task",
         title: "Second paged event",
         startTime: "2026-07-20T10:00:00.000Z",

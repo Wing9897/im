@@ -56,8 +56,8 @@ def main() -> int:
         status == 200
         and isinstance(body, dict)
         and body.get("status") == "ok"
-        and body.get("schemaVersion") == 31
-        and body.get("schemaSemver") == "0.1.0-beta.32",
+        and body.get("schemaVersion") == 33
+        and body.get("schemaSemver") == "0.1.0-beta.34",
     )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)
@@ -135,7 +135,7 @@ def main() -> int:
     status, channels = api("GET", "/api/v1/channels/with-sources", timeout=15)
     check("channels auto-created", any(c["id"] == "telegram:smoke-channel" for c in channels))
 
-    # 7. Settings roundtrip (stamp 29+: LLM keys retired from system_config)
+    # 7. Settings roundtrip (LLM connection keys live on /llm/profiles, not system_config)
     status, settings = api("GET", "/api/v1/config/settings", timeout=15)
     check(
         "settings fetch",
@@ -146,9 +146,7 @@ def main() -> int:
     )
     check(
         "settings retired LLM keys absent",
-        isinstance(settings, dict)
-        and "llmProvider" not in settings
-        and "ollamaModel" not in settings,
+        isinstance(settings, dict) and "llmProvider" not in settings and "ollamaModel" not in settings,
     )
     original_name = settings.get("assistantDisplayName", "")
     settings["assistantDisplayName"] = "smoke-assistant"
@@ -168,13 +166,12 @@ def main() -> int:
         status == 200 and restored.get("assistantDisplayName") == original_name,
     )
 
-    # 7b. LLM profiles (stamp 29+ — fresh DBs may have zero profiles; no forced __default__)
+    # 7b. LLM profiles (stamp 33 — fresh DBs may have zero profiles; no forced __default__)
     status, profiles = api("GET", "/api/v1/llm/profiles", timeout=15)
     check("llm profiles list", status == 200 and isinstance(profiles, list))
     profile_id = None
     if isinstance(profiles, list):
-        default = next((p for p in profiles if isinstance(p, dict) and p.get("isDefault")), None)
-        usable = default or next(
+        usable = next(
             (
                 p
                 for p in profiles
@@ -196,7 +193,8 @@ def main() -> int:
                 isinstance(usable.get("name"), str)
                 and isinstance(usable.get("provider"), str)
                 and isinstance(usable.get("model"), str)
-                and isinstance(usable.get("staffClasses"), list),
+                and isinstance(usable.get("staffClasses"), list)
+                and "isDefault" not in usable,
             )
     if not profile_id:
         status, created_profile = api(
@@ -207,8 +205,7 @@ def main() -> int:
                 "provider": "ollama",
                 "baseUrl": "http://localhost:11434",
                 "model": "llama-smoke",
-                "staffClasses": ["assistant"],
-                "isDefault": True,
+                "staffClasses": ["leaderboard"],
             },
             timeout=15,
         )
@@ -216,7 +213,7 @@ def main() -> int:
             "llm profile create for empty db",
             status == 201
             and isinstance(created_profile, dict)
-            and created_profile.get("isDefault") is True
+            and "isDefault" not in created_profile
             and created_profile.get("model") == "llama-smoke",
         )
         profile_id = created_profile.get("id") if isinstance(created_profile, dict) else None
@@ -240,15 +237,17 @@ def main() -> int:
     )
     check(
         "task create",
-        status == 201
-        and isinstance(task, dict)
-        and task.get("channelIds")
-        and task["channelIds"][0]["id"] == "telegram:smoke-channel"
-        and task.get("llmProfileId") == profile_id,
+        bool(
+            status == 201
+            and isinstance(task, dict)
+            and task.get("channelIds")
+            and task["channelIds"][0]["id"] == "telegram:smoke-channel"
+            and task.get("llmProfileId") == profile_id
+        ),
     )
     task_id = task["id"] if isinstance(task, dict) else None
 
-    status, stats = api("GET", "/api/v1/results/stats?time_range=all", timeout=15)
+    status, stats = api("GET", "/api/v1/results/stats?timeRange=all", timeout=15)
     entry = next((s for s in stats if s["taskId"] == task_id), None)
     check("stats includes new task", entry is not None and entry["unanalyzedCount"] >= 1)
 
@@ -284,7 +283,7 @@ def main() -> int:
     status, collector = api("GET", "/api/v1/system/collector/status", timeout=15)
     check(
         "collector status",
-        status == 200 and collector["status"] in ("running", "stopped", "error", "starting"),
+        status == 200 and collector["status"] in ("running", "stopped", "error"),
     )
 
     # 11. Structured error body

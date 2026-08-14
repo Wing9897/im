@@ -7,32 +7,8 @@ import { apiClient } from "./client";
 import type { components } from "./generated/schema";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
-export type UserEvent = Omit<
-  components["schemas"]["UserEventResponse"],
-  "dismissed"
-> & {
-  /** Optional only for legacy in-memory fixtures; API responses always include it. */
-  dismissed?: boolean;
-  /** User/agent important marker (❗). */
-  important?: boolean;
-  /** Optional remind-N-days-before-start (stamp 17+). */
-  remindBeforeDays?: number | null;
-  /** Optional parent trackable item (this calendar belongs to the item). */
-  itemId?: string | null;
-  /** Special linked-calendar semantics (required; title presets are UX only). */
-  kind: "normal" | "expires" | "purchase_effective";
-  /** Optional transaction amount (purchase_effective only). */
-  amount?: number | null;
-  /** expense | income when amount is set. */
-  direction?: "expense" | "income" | null;
-};
-
-export type UserEventsPage = {
-  items: UserEvent[];
-  totalCount: number;
-  hasMore: boolean;
-};
-
+export type UserEvent = components["schemas"]["UserEventResponse"];
+export type UserEventsPage = components["schemas"]["UserEventsPageResponse"];
 export type UserEventOrigin = UserEvent["origin"];
 
 interface UserEventWriteParams {

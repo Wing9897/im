@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
 import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
-import { ChatNameModeFields, type LlmProfileGate } from "./ChatNameModeFields";
+import { ChatNameModeFields } from "./ChatNameModeFields";
+import type { LlmProfileGate } from "./useChatEditorLlmProfiles";
 import { ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
@@ -69,11 +70,11 @@ export function ChatEditorForm({
         material="panel"
         density="compact"
         className="shrink-0"
-        aria-label={t("tasks.editor.requiredAria")}
+        aria-label={t("tasks:editor.requiredAria")}
         role="region"
       >
         <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
-          {t("tasks.editor.settingsTitle")}
+          {t("tasks:editor.settingsTitle")}
         </h2>
 
         <FormGrid className="gap-lg">
@@ -122,12 +123,12 @@ export function ChatEditorForm({
         material="panel"
         density="compact"
         className="shrink-0"
-        aria-label={t("tasks.editor.skillsAria")}
+        aria-label={t("tasks:editor.skillsAria")}
         role="region"
         data-testid="task-skills-section"
       >
         <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
-          {t("tasks.editor.skillsTitle")}
+          {t("tasks:editor.skillsTitle")}
         </h2>
 
         <FormGrid className="gap-lg">
@@ -196,7 +197,7 @@ export function ChatEditorForm({
                         className={`m-0 ${formHelpClass}`}
                         data-testid="task-agent-schedule-hint"
                       >
-                        {t("tasks.modes.agent.scheduleDefaultHint")}
+                        {t("tasks:modes.agent.scheduleDefaultHint")}
                       </p>
                     ) : null}
                   </div>
@@ -218,10 +219,10 @@ export function ChatEditorForm({
                       data-testid="task-agent-channel-hint"
                     >
                       {formState.triggerMode === "message_cursor"
-                        ? t("tasks.modes.agent.cursorChannelHint")
+                        ? t("tasks:modes.agent.cursorChannelHint")
                         : formState.channelIds.length > 0
-                          ? t("tasks.modes.agent.messageGateHint")
-                          : t("tasks.modes.agent.timedModeHint")}
+                          ? t("tasks:modes.agent.messageGateHint")
+                          : t("tasks:modes.agent.timedModeHint")}
                     </p>
                   ) : null}
                 </div>
@@ -232,9 +233,9 @@ export function ChatEditorForm({
       </SurfaceCard>
 
       {vis.promptFieldsVisible && (
-        <div role="region" aria-label={t("tasks.editor.optionalAria")}>
+        <div role="region" aria-label={t("tasks:editor.optionalAria")}>
           <CollapsePanel
-            title={t("tasks.editor.optionalTitle")}
+            title={t("tasks:editor.optionalTitle")}
             open={optionalOpen}
             onToggle={() => setOptionalOpen((v) => !v)}
           >
@@ -256,12 +257,12 @@ export function ChatEditorForm({
                     checked={formState.includeInTimeline}
                     onChange={(e) => updateField("includeInTimeline", e.target.checked)}
                     data-testid="task-include-in-timeline"
-                    aria-label={t("tasks.editor.includeInTimelineAria")}
+                    aria-label={t("tasks:editor.includeInTimelineAria")}
                   />
                   <span>
-                    <span className={formLabelClass}>{t("tasks.editor.includeInTimelineLabel")}</span>
+                    <span className={formLabelClass}>{t("tasks:editor.includeInTimelineLabel")}</span>
                     <span className={`block ${formHelpClass}`}>
-                      {t("tasks.editor.includeInTimelineHint")}
+                      {t("tasks:editor.includeInTimelineHint")}
                     </span>
                   </span>
                 </label>

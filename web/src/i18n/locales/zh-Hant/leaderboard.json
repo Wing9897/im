@@ -1,0 +1,37 @@
+{
+  "toolbarAria": "排行榜篩選",
+  "selectTaskAria": "選擇排行榜任務",
+  "allBoards": "全部排行榜",
+  "refreshing": "正在更新排行榜",
+  "empty": {
+    "noTasks": {
+      "title": "尚未建立排行榜任務",
+      "description": "先建立至少一個排行榜型任務，系統完成分析後，這裡才會出現主題排行。",
+      "hint": "如果你已經有來源和頻道，下一步通常是到任務設定新增排行榜任務。"
+    },
+    "filtered": {
+      "title": "這個排行榜任務還沒有結果",
+      "description": "目前選取的任務尚未產生排行榜資料，或已被篩選到沒有結果。",
+      "hint": "你可以先切回全部排行榜，確認是否只有目前任務暫時沒有資料。"
+    },
+    "noResults": {
+      "title": "目前還沒有排行榜結果",
+      "description": "等分析批次完成後，這裡會整理出最熱門的主題與分數。",
+      "hint": "排行榜需要先有成功完成的 leaderboard 分析批次。"
+    }
+  },
+  "goToTasks": "前往任務設定",
+  "viewAll": "查看全部排行榜",
+  "viewAllAria": "查看全部排行榜",
+  "boardAria": "{name} 排行榜",
+  "detailAria": "{name} 排行榜詳細內容",
+  "rowAria": "#{rank} {topic}，分數 {score}",
+  "unnamed": "未命名排行榜",
+  "summary": "事件摘要",
+  "noSummary": "尚無摘要",
+  "loadingMessages": "載入相關訊息中…",
+  "relatedMessages": "相關訊息 ({count})",
+  "noMessagesTitle": "尚無相關訊息",
+  "noMessagesDescription": "這個排行項目目前沒有可展開的來源訊息。",
+  "loadMessagesFailed": "載入訊息失敗：{error}"
+}

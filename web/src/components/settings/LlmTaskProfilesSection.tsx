@@ -1,4 +1,4 @@
-import { Copy, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { LlmProfile } from "../../api/llmProfiles";
 import { EmptyState } from "../common/EmptyState";
@@ -18,11 +18,11 @@ import { profileToDraft, type LlmProfileDraft } from "./LlmProfileEditorDialog";
 type LlmTaskProfilesSectionProps = {
   profiles: LlmProfile[];
   providerLabels: Record<LlmProvider, { label: string }>;
-  testingId: string | "new" | null;
+  /** Profile id being tested, `"new"` for an unsaved draft, or null. */
+  testingId: string | null;
   onCreate: () => void;
   onEdit: (profile: LlmProfile) => void;
   onCopy: (profile: LlmProfile) => void;
-  onSetDefault: (profile: LlmProfile) => void;
   onDelete: (profile: LlmProfile) => void;
   onTest: (draft: LlmProfileDraft, profileId: string) => void;
 };
@@ -40,7 +40,6 @@ export function LlmTaskProfilesSection({
   onCreate,
   onEdit,
   onCopy,
-  onSetDefault,
   onDelete,
   onTest,
 }: LlmTaskProfilesSectionProps) {
@@ -96,9 +95,6 @@ export function LlmTaskProfilesSection({
                       <h3 className="m-0 text-card-title font-medium leading-snug text-text-primary">
                         {profile.name}
                       </h3>
-                      {profile.isDefault ? (
-                        <Badge tone="info">{t("profiles.defaultBadge")}</Badge>
-                      ) : null}
                       <Badge tone="neutral">{providerLabel}</Badge>
                     </div>
                     <p className={`mt-xs mb-0 ${cardBodyClass}`}>
@@ -171,18 +167,7 @@ export function LlmTaskProfilesSection({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => onSetDefault(profile)}
-                      disabled={profile.isDefault}
-                      aria-label={t("profiles.setDefault")}
-                    >
-                      <Star size={14} aria-hidden />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
                       onClick={() => onDelete(profile)}
-                      disabled={profile.isDefault}
                       aria-label={t("profiles.delete")}
                     >
                       <Trash2 size={14} aria-hidden />

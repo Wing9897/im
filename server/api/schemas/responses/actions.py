@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import BaseModel
+
+from server.domain.action_statuses import ActionTriggerStatus
+from server.domain.action_types import ActionTypeWire
 
 
 class ActionResponse(BaseModel):
     id: str
     name: str
-    actionType: Literal["telegram_bot", "discord_webhook", "http_webhook", "mqtt"]
+    actionType: ActionTypeWire
     configuration: str
     triggerConditions: str | None
     isEnabled: bool
@@ -25,7 +26,7 @@ class ActionTriggerHistoryEntryResponse(BaseModel):
     taskId: str | None
     batchId: str | None
     triggerReason: str
-    status: Literal["success", "failure"]
+    status: ActionTriggerStatus
     errorMessage: str | None
     triggeredAt: str
 

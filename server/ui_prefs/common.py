@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from server.db.database import Database
 from server.util import utc_now_iso
@@ -57,7 +58,7 @@ def _encode_json(value: Any, *, max_chars: int = MAX_PREF_JSON_CHARS) -> str:
     return encoded
 
 
-async def _read_json(db: Database, key: str) -> Optional[Any]:
+async def _read_json(db: Database, key: str) -> Any | None:
     row = await db.fetch_one("SELECT payload_json FROM ui_prefs WHERE key = ?", (key,))
     if row is None:
         return None

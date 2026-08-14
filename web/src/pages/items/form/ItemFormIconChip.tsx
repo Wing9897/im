@@ -22,7 +22,7 @@ export const ITEM_FORM_CHIP_SHELL_CLASS =
 const ICON_CIRCLE_BASE =
   "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition-colors";
 
-const ICON_CIRCLE_SOLID = `${ICON_CIRCLE_BASE} border-surface-border/60 bg-surface-raised text-text-secondary`;
+const ICON_CIRCLE_SOLID = `${ICON_CIRCLE_BASE} im-surface-inset border-surface-border/60 text-text-secondary`;
 
 const ICON_CIRCLE_EXPIRY =
   `${ICON_CIRCLE_BASE} border-[color-mix(in_srgb,var(--warning)_42%,transparent)] ` +

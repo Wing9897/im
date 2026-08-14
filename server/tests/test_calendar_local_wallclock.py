@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 from server.calendar import rrule as calendar_module
 from server.calendar.rrule import expand_series_occurrences
@@ -24,8 +24,8 @@ def test_hhmm_expands_in_system_local_timezone(monkeypatch) -> None:
         "event_description": None,
     }
     # Window in UTC that covers 2026-07-01 10:00 +08 (= 02:00Z).
-    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
     items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
@@ -50,8 +50,8 @@ def test_finite_rrule_marks_final_occurrence(monkeypatch) -> None:
         "event_description": None,
     }
     # Anchor is 2000-01-01 — query the first few days so COUNT=3 is in-window.
-    range_start = datetime(2000, 1, 1, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2000, 1, 5, 23, 59, tzinfo=timezone.utc)
+    range_start = datetime(2000, 1, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2000, 1, 5, 23, 59, tzinfo=UTC)
     items = expand_series_occurrences(task, range_start, range_end, budget=10)
     assert len(items) == 3
     assert [item["isLastOccurrence"] for item in items] == [False, False, True]
@@ -73,8 +73,8 @@ def test_iso_event_start_uses_local_clock_face(monkeypatch) -> None:
         "event_location": None,
         "event_description": None,
     }
-    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
     items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     assert items[0]["startTime"] == "2026-07-01T02:00:00Z"
@@ -97,8 +97,8 @@ def test_overnight_hhmm_rolls_end_to_next_local_day(monkeypatch) -> None:
         "event_location": None,
         "event_description": None,
     }
-    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
     items = expand_series_occurrences(task, range_start, range_end, budget=5)
     assert len(items) == 1
     # 22:00 +08 = 14:00Z; 06:00 next day +08 = 22:00Z.
@@ -138,8 +138,8 @@ def test_overnight_imported_and_synthetic_paths_agree(monkeypatch) -> None:
         "event_timezone": "floating",
         "ics_source": None,
     }
-    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=timezone.utc)
+    range_start = datetime(2026, 7, 1, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 7, 1, 23, 59, tzinfo=UTC)
     syn_items = expand_series_occurrences(synthetic, range_start, range_end, budget=5)
     imp_items = expand_series_occurrences(imported, range_start, range_end, budget=5)
     assert len(syn_items) == 1 and len(imp_items) == 1
@@ -173,8 +173,8 @@ def test_all_day_floating_with_until_z_expands(monkeypatch) -> None:
         "event_description": None,
     }
     # August 2026 in UTC+8 (month window used by the timeline month grid).
-    range_start = datetime(2026, 7, 31, 16, 0, 0, tzinfo=timezone.utc)
-    range_end = datetime(2026, 8, 31, 15, 59, 59, tzinfo=timezone.utc)
+    range_start = datetime(2026, 7, 31, 16, 0, 0, tzinfo=UTC)
+    range_end = datetime(2026, 8, 31, 15, 59, 59, tzinfo=UTC)
     items = expand_series_occurrences(task, range_start, range_end, budget=100)
     assert len(items) >= 28
     assert items[0]["startTime"] == "2026-07-31T16:00:00Z"

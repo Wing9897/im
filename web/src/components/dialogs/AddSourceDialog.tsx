@@ -1,10 +1,7 @@
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../components/ui";
-import { sectionTitleClass } from "../../components/ui/pageTypography";
-import { OverlayPortal } from "../common/OverlayPortal";
-import { useFocusTrap } from "../../hooks/useFocusTrap";
-import { compactSourceDialogShellClass } from "./dialogShellClasses";
+import { ModalDialog } from "../ModalDialog";
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -33,30 +30,16 @@ export function AddSourceDialog({
   children,
 }: AddSourceDialogProps) {
   const { t } = useTranslation("common");
-  const focusTrapRef = useFocusTrap({
-    active: open,
-    onEscape: onCancel,
-  });
-
-  if (!open) return null;
-
   const resolvedSubmit = submitLabel ?? t("ui.confirm");
 
   return (
-    <OverlayPortal onOverlayClick={onCancel} lockBodyScroll>
-      <div
-        ref={focusTrapRef}
-        role="dialog"
-        aria-modal="true"
-        className={`${compactSourceDialogShellClass} im-animate-in-scale`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={`mb-md ${sectionTitleClass}`}>{title}</div>
-        {error ? (
-          <div className="mb-sm text-caption text-error">{error}</div>
-        ) : null}
-        {children}
-        <div className="mt-lg flex justify-end gap-sm">
+    <ModalDialog
+      open={open}
+      title={title}
+      onClose={onCancel}
+      size="compact"
+      footer={
+        <>
           <Button variant="secondary" onClick={onCancel} disabled={submitting}>
             {t("dialog.cancel")}
           </Button>
@@ -67,8 +50,11 @@ export function AddSourceDialog({
           >
             {submitting && submittingLabel ? submittingLabel : resolvedSubmit}
           </Button>
-        </div>
-      </div>
-    </OverlayPortal>
+        </>
+      }
+    >
+      {error ? <div className="mb-sm text-caption text-error">{error}</div> : null}
+      {children}
+    </ModalDialog>
   );
 }

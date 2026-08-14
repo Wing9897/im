@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
-from typing import Any, Optional
+from typing import Any
 
 from telethon.tl.types import DocumentAttributeAnimated, Message
 
 MediaKind = str  # photo | video | gif | sticker | audio | file
 
 
-def extract_telegram_media(message: Message) -> Optional[dict[str, Any]]:
+def extract_telegram_media(message: Message) -> dict[str, Any] | None:
     """Return a lightweight media descriptor for ``raw_data``, or None for text-only."""
     photo = getattr(message, "photo", None)
     video = getattr(message, "video", None)
@@ -37,7 +37,7 @@ def extract_telegram_media(message: Message) -> Optional[dict[str, Any]]:
     return None
 
 
-def build_telegram_raw_data(message: Message) -> Optional[str]:
+def build_telegram_raw_data(message: Message) -> str | None:
     """Serialize optional media metadata into the messages.raw_data JSON column."""
     media = extract_telegram_media(message)
     if media is None:

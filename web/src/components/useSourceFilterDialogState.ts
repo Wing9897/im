@@ -118,11 +118,11 @@ export function useSourceFilterDialogState({
 
   const treeRows = useMemo(
     () =>
-      buildFilterTreeRows(displayWorksets, memberTasks, t("workset.unassignedGroup")),
+      buildFilterTreeRows(displayWorksets, memberTasks, t("workset:unassignedGroup")),
     [displayWorksets, memberTasks, t],
   );
 
-  const unnamedLabel = t("board.common.unnamedTask");
+  const unnamedLabel = t("board:common.unnamedTask");
 
   const visibleRows = useMemo(() => {
     return filterSourceFilterTreeRows(treeRows, query, (child) => {

@@ -8,8 +8,8 @@ from typing import Any
 from server.api.routes.task_helpers import require_task_row
 from server.api.schemas.requests import TaskConfigBody
 from server.db.database import Database
-from server.db.schema_domains.vocabulary import ANALYSIS_TIME_RANGE_VALUES
 from server.domain.analysis_modes import AGENT_MODE, ALL_ANALYSIS_MODES
+from server.domain.analysis_time_ranges import ALLOWED_ANALYSIS_TIME_RANGES
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.scheduler.task_schedule_overrides import (
     AGENT_WAVE_INTERVAL_MAX,
@@ -70,7 +70,7 @@ def validate_task_config_body(body: TaskConfigBody) -> None:
         raise TaskWriteError("Task name is required")
     if body.analysisMode is not None and body.analysisMode not in ALL_ANALYSIS_MODES:
         raise TaskWriteError(f"Invalid analysisMode: {body.analysisMode}")
-    if body.analysisTimeRange is not None and body.analysisTimeRange not in ANALYSIS_TIME_RANGE_VALUES:
+    if body.analysisTimeRange is not None and body.analysisTimeRange not in ALLOWED_ANALYSIS_TIME_RANGES:
         raise TaskWriteError(f"Invalid analysisTimeRange: {body.analysisTimeRange}")
     if body.scheduleRrule is not None:
         try:

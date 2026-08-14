@@ -46,8 +46,8 @@ describe("logs API", () => {
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/logs", {
         limit: "25",
-        cursor_time: "2024-01-01T00:00:00Z",
-        cursor_id: "cursor-id",
+        cursorTime: "2024-01-01T00:00:00Z",
+        cursorId: "cursor-id",
       });
     });
 

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from server.agent.tools_items.handlers import _tool_create, _tool_list, _tool_list_expiring, _tool_update
 from server.agent.tools_items.schemas import TOOL_SCHEMAS

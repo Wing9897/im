@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 
 from server.calendar.timeline_dismissals import dismiss_timeline_event, restore_timeline_event
-from server.calendar.user_events import create_user_event, get_user_event_row, list_user_events
+from server.calendar.user_events_read import list_user_events
+from server.calendar.user_events_write import create_user_event
+from server.queries.calendar_queries import fetch_user_event
 
 
 async def test_dismiss_restore_publishes_resource_modified(client, app) -> None:
@@ -110,7 +112,7 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
     assert deleted.status_code == 204
 
-    row = await get_user_event_row(app.state.db, event_id)
+    row = await fetch_user_event(app.state.db, event_id)
     assert row is not None
 
     listed = await client.get("/api/v1/calendar/user-events")

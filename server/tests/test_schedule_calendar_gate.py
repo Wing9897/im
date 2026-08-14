@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.calendar.rrule import expand_calendar_occurrences
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.domain.schedule import (
     may_calendar_expand_series,
     may_register_trigger,
     preset_to_trigger_rrule,
 )
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
 from server.queries.calendar_queries import fetch_active_recurring_series_rows
 from server.util import utc_now_iso
 
@@ -50,8 +50,8 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
 
     occurrences = expand_calendar_occurrences(
         rows,
-        datetime(2026, 7, 1, tzinfo=timezone.utc),
-        datetime(2026, 8, 1, tzinfo=timezone.utc),
+        datetime(2026, 7, 1, tzinfo=UTC),
+        datetime(2026, 8, 1, tzinfo=UTC),
     )
     occ_series_ids = {str(item["seriesId"]) for item in occurrences}
     assert ai_id not in occ_series_ids

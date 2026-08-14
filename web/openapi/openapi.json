@@ -153,11 +153,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "type": "object",
-                  "title": "Response Setup Change Password Api V1 Setup Change Password Post"
+                  "$ref": "#/components/schemas/SetupOkResponse"
                 }
               }
             }
@@ -199,11 +195,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "type": "object",
-                  "title": "Response Setup Reset Password Api V1 Setup Reset Password Post"
+                  "$ref": "#/components/schemas/SetupOkResponse"
                 }
               }
             }
@@ -275,11 +267,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "type": "object",
-                  "title": "Response Setup Logout Api V1 Setup Logout Post"
+                  "$ref": "#/components/schemas/SetupOkResponse"
                 }
               }
             }
@@ -300,9 +288,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Setup List Devices Api V1 Setup Devices Get"
+                  "$ref": "#/components/schemas/DeviceListResponse"
                 }
               }
             }
@@ -334,11 +320,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "boolean"
-                  },
-                  "title": "Response Setup Revoke Device Api V1 Setup Devices  Device Id  Delete"
+                  "$ref": "#/components/schemas/SetupOkResponse"
                 }
               }
             }
@@ -370,8 +352,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/TaskTemplateResponse"
                   },
                   "type": "array",
                   "title": "Response List Templates Api V1 Tasks Templates Get"
@@ -1133,48 +1114,6 @@
         },
         "responses": {
           "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LlmProfileResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/llm/profiles/{profile_id}/set-default": {
-      "post": {
-        "tags": [
-          "llm"
-        ],
-        "summary": "Set Default Profile",
-        "operationId": "set_default_profile_api_v1_llm_profiles__profile_id__set_default_post",
-        "parameters": [
-          {
-            "name": "profile_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "title": "Profile Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -3182,7 +3121,7 @@
         "operationId": "fetch_stats_api_v1_results_stats_get",
         "parameters": [
           {
-            "name": "time_range",
+            "name": "timeRange",
             "in": "query",
             "required": false,
             "schema": {
@@ -3194,7 +3133,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Time Range"
+              "title": "Timerange"
             }
           }
         ],
@@ -3276,7 +3215,7 @@
         "operationId": "get_messages_page_api_v1_messages_page_get",
         "parameters": [
           {
-            "name": "source_ids",
+            "name": "sourceIds",
             "in": "query",
             "required": false,
             "schema": {
@@ -3288,11 +3227,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Source Ids"
+              "title": "Sourceids"
             }
           },
           {
-            "name": "time_range",
+            "name": "timeRange",
             "in": "query",
             "required": false,
             "schema": {
@@ -3304,7 +3243,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Time Range"
+              "title": "Timerange"
             }
           },
           {
@@ -3340,7 +3279,7 @@
             }
           },
           {
-            "name": "channel_ids",
+            "name": "channelIds",
             "in": "query",
             "required": false,
             "schema": {
@@ -3352,11 +3291,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Channel Ids"
+              "title": "Channelids"
             }
           },
           {
-            "name": "cursor_time",
+            "name": "cursorTime",
             "in": "query",
             "required": false,
             "schema": {
@@ -3368,11 +3307,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Cursor Time"
+              "title": "Cursortime"
             }
           },
           {
-            "name": "cursor_id",
+            "name": "cursorId",
             "in": "query",
             "required": false,
             "schema": {
@@ -3384,7 +3323,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Cursor Id"
+              "title": "Cursorid"
             }
           },
           {
@@ -3398,13 +3337,13 @@
             }
           },
           {
-            "name": "include_total",
+            "name": "includeTotal",
             "in": "query",
             "required": false,
             "schema": {
               "type": "boolean",
               "default": true,
-              "title": "Include Total"
+              "title": "Includetotal"
             }
           }
         ],
@@ -3625,14 +3564,13 @@
           "config"
         ],
         "summary": "Save Settings",
+        "description": "Partial PUT: known ``SystemSettingsSnapshot`` keys only; unknown → 422 (extra=forbid).",
         "operationId": "save_settings_api_v1_config_settings_put",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Body"
+                "$ref": "#/components/schemas/SystemSettingsUpdateBody"
               }
             }
           },
@@ -3770,7 +3708,7 @@
           "a2a"
         ],
         "summary": "A2A Agent",
-        "description": "A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`[\"*\"]`).",
+        "description": "A2A natural-language agent (客户经理). Uses the dedicated liaison LLM global slot (separate from the assistant slot); same tool surface as the assistant with a different system prompt. Server runs an internal tool loop; response is a single shot: final `message` + `toolCalls` summary. No session storage. Requires a full household access key (`[\"*\"]`). Failures are real HTTP errors: 422 empty input, 400/404 liaison slot misconfigured, 503 `ai_engine_unreachable`, 502 `ai_engine_failed`, 504 `agent_timeout`.",
         "operationId": "a2a_agent_api_v1_a2a_agent_post",
         "requestBody": {
           "content": {
@@ -3852,9 +3790,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Rotate Secrets Api V1 System Rotate Secrets Post"
+                  "$ref": "#/components/schemas/RotateSecretsResponse"
                 }
               }
             }
@@ -3886,9 +3822,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Reset Database Api V1 System Reset Database Post"
+                  "$ref": "#/components/schemas/SystemMessageResponse"
                 }
               }
             }
@@ -3909,9 +3843,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Collector Status Api V1 System Collector Status Get"
+                  "$ref": "#/components/schemas/CollectorStatusResponse"
                 }
               }
             }
@@ -3932,9 +3864,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Collector Restart Api V1 System Collector Restart Post"
+                  "$ref": "#/components/schemas/CollectorRestartResponse"
                 }
               }
             }
@@ -3955,9 +3885,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Ai Engine Status Api V1 System Ai Engine Status Get"
+                  "$ref": "#/components/schemas/AiEngineHealthStatusResponse"
                 }
               }
             }
@@ -3971,7 +3899,7 @@
           "system"
         ],
         "summary": "Ai Engine Test",
-        "description": "Run a minimal-token generation probe against saved or draft LLM settings.",
+        "description": "Run a minimal-token generation probe against a profile-shaped draft (or bound slot).",
         "operationId": "ai_engine_test_api_v1_system_ai_engine_test_post",
         "requestBody": {
           "content": {
@@ -3996,9 +3924,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Ai Engine Test Api V1 System Ai Engine Test Post"
+                  "$ref": "#/components/schemas/AiEngineTestResultResponse"
                 }
               }
             }
@@ -4030,9 +3956,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Analysis Abort Api V1 System Analysis Abort Post"
+                  "$ref": "#/components/schemas/AnalysisAbortResponse"
                 }
               }
             }
@@ -4064,9 +3988,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Analysis Pause Api V1 System Analysis Pause Post"
+                  "$ref": "#/components/schemas/AnalysisPauseResponse"
                 }
               }
             }
@@ -4120,9 +4042,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Restart Application Api V1 System Restart Post"
+                  "$ref": "#/components/schemas/SystemMessageResponse"
                 }
               }
             }
@@ -6040,7 +5960,7 @@
         "operationId": "query_logs_page_api_v1_logs_get",
         "parameters": [
           {
-            "name": "cursor_time",
+            "name": "cursorTime",
             "in": "query",
             "required": false,
             "schema": {
@@ -6052,11 +5972,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Cursor Time"
+              "title": "Cursortime"
             }
           },
           {
-            "name": "cursor_id",
+            "name": "cursorId",
             "in": "query",
             "required": false,
             "schema": {
@@ -6068,7 +5988,7 @@
                   "type": "null"
                 }
               ],
-              "title": "Cursor Id"
+              "title": "Cursorid"
             }
           },
           {
@@ -6263,15 +6183,15 @@
           "events"
         ],
         "summary": "Events",
-        "description": "SSE stream. EventSource cannot send headers; verify_auth (via API_DEPS)\naccepts ?token= and the loopback bypass.",
+        "description": "SSE stream. EventSource cannot send headers; verify_auth (via API_DEPS)\naccepts ?token= and the loopback bypass.\n\nFrame contract (``SseEventEnvelope`` + the 8 ``Sse*Payload`` components) is\ninjected into OpenAPI by ``server/api/openapi_ext.py``.",
         "operationId": "events_api_v1_events_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "Server-Sent Events stream. Each named event's `data` field is the JSON envelope `{\"type\": <event>, \"payload\": {...}}` (`SseEventEnvelope`); clients unwrap `payload` per event type. `collector_status_changed` deliberately uses snake_case adapter fields (`adapter_name`, `error_summary`, `correlation_id`).",
             "content": {
-              "application/json": {
+              "text/event-stream": {
                 "schema": {
-                  "title": "Response Events Api V1 Events Get"
+                  "$ref": "#/components/schemas/SseEventEnvelope"
                 }
               }
             }
@@ -6285,6 +6205,7 @@
           "agent"
         ],
         "summary": "Agent Chat",
+        "description": "Run one assistant turn.\n\nLLM failures are real HTTP errors (504 timeout / 503 unreachable / 502\nother upstream failure); profile problems keep their own 400 / 404.",
         "operationId": "agent_chat_api_v1_agent_chat_post",
         "requestBody": {
           "content": {
@@ -6326,7 +6247,7 @@
           "agent"
         ],
         "summary": "Agent Chat Stream",
-        "description": "Stream agent progress as NDJSON (tool steps + final answer).\n\nEach line is one JSON object with a ``type`` field:\n``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.\nLLM providers stay non-streaming; only tool execution progress is streamed.",
+        "description": "Stream agent progress as NDJSON (tool steps + final answer).\n\nEach line is one JSON object with a ``type`` field:\n``llm_start`` | ``tool_start`` | ``tool_done`` | ``final`` | ``error``.\nLLM providers stay non-streaming; only tool execution progress is streamed.\n\nResolving the profile happens before the response starts, so configuration\nerrors are real HTTP errors. Once the 200 is committed, later failures can\nonly be reported in band as an ``error`` line.",
         "operationId": "agent_chat_stream_api_v1_agent_chat_stream_post",
         "requestBody": {
           "content": {
@@ -6463,6 +6384,20 @@
               "title": "Locale"
             },
             "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US)."
+          },
+          {
+            "name": "idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 7,
+              "minimum": 0,
+              "description": "Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7.",
+              "default": 0,
+              "title": "Idx"
+            },
+            "description": "Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7."
           }
         ],
         "responses": {
@@ -6495,7 +6430,7 @@
           "theme"
         ],
         "summary": "Focal Background Image",
-        "description": "Proxy today's Bing wallpaper bytes for same-origin CSS / preview use.",
+        "description": "Proxy Bing wallpaper bytes for same-origin CSS / preview use.",
         "operationId": "focal_background_image_api_v1_theme_focal_background_image_get",
         "parameters": [
           {
@@ -6516,29 +6451,28 @@
               "title": "Locale"
             },
             "description": "UI locale (en / zh-Hans / zh-Hant) or Bing mkt (en-US)."
+          },
+          {
+            "name": "idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 7,
+              "minimum": 0,
+              "description": "Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7.",
+              "default": 0,
+              "title": "Idx"
+            },
+            "description": "Bing HPImageArchive idx: 0=today, 1=yesterday, … up to 7."
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
-              "image/jpeg": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              },
-              "image/png": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              },
-              "image/webp": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -6568,8 +6502,7 @@
           },
           "messages": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/AgentChatMessage"
             },
             "type": "array",
             "title": "Messages"
@@ -6766,6 +6699,12 @@
           },
           "actionType": {
             "type": "string",
+            "enum": [
+              "telegram_bot",
+              "discord_webhook",
+              "http_webhook",
+              "mqtt"
+            ],
             "title": "Actiontype"
           },
           "configuration": {
@@ -7387,8 +7326,7 @@
         "properties": {
           "messages": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/AgentChatMessage"
             },
             "type": "array",
             "title": "Messages"
@@ -7464,6 +7402,31 @@
         "type": "object",
         "title": "AgentChatBody"
       },
+      "AgentChatMessage": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant",
+              "system"
+            ],
+            "title": "Role"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "AgentChatMessage",
+        "description": "One turn of client-supplied chat history.\n\nClient ``system`` turns are accepted but dropped before the prompt is built\n(``server.agent.runtime_parse.messages_for_channel``) — the server owns the\nsystem prompt."
+      },
       "AgentChatResponse": {
         "properties": {
           "type": {
@@ -7500,17 +7463,6 @@
             "type": "array",
             "title": "Toolcalls"
           },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
           "taskConfig": {
             "anyOf": [
               {
@@ -7527,7 +7479,7 @@
           "message"
         ],
         "title": "AgentChatResponse",
-        "description": "Agent chat final payload (non-stream and stream ``type=final``)."
+        "description": "Agent chat final payload (non-stream and stream ``type=final``).\n\nSuccess only: LLM and runtime failures are HTTP errors (see\n``server/api/agent_errors.py``), not a 200 carrying an ``error`` field.\nThe NDJSON stream keeps a separate in-band ``type=error`` line for\nfailures that happen after the status is committed."
       },
       "AgentTickInFlightResponse": {
         "properties": {
@@ -7723,9 +7675,67 @@
         ],
         "title": "AgentToolCallSummary"
       },
+      "AiEngineHealthStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "AiEngineHealthStatusResponse",
+        "description": "GET ``/system/ai-engine/status`` — LLM provider connectivity probe."
+      },
       "AiEngineTestBody": {
         "properties": {
-          "llmProvider": {
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "ollama",
+                  "openai_compatible",
+                  "gemini_compatible",
+                  "openrouter"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "baseUrl": {
             "anyOf": [
               {
                 "type": "string"
@@ -7734,9 +7744,9 @@
                 "type": "null"
               }
             ],
-            "title": "Llmprovider"
+            "title": "Baseurl"
           },
-          "llmBaseUrl": {
+          "model": {
             "anyOf": [
               {
                 "type": "string"
@@ -7745,9 +7755,9 @@
                 "type": "null"
               }
             ],
-            "title": "Llmbaseurl"
+            "title": "Model"
           },
-          "llmModel": {
+          "apiKey": {
             "anyOf": [
               {
                 "type": "string"
@@ -7756,20 +7766,9 @@
                 "type": "null"
               }
             ],
-            "title": "Llmmodel"
+            "title": "Apikey"
           },
-          "llmApiKey": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Llmapikey"
-          },
-          "ollamaThinkingEnabled": {
+          "thinkingEnabled": {
             "anyOf": [
               {
                 "type": "boolean"
@@ -7778,7 +7777,7 @@
                 "type": "null"
               }
             ],
-            "title": "Ollamathinkingenabled"
+            "title": "Thinkingenabled"
           },
           "llmProfileId": {
             "anyOf": [
@@ -7794,7 +7793,105 @@
         },
         "additionalProperties": false,
         "type": "object",
-        "title": "AiEngineTestBody"
+        "title": "AiEngineTestBody",
+        "description": "Unsaved profile-shaped draft for ``POST /system/ai-engine/test``.\n\nSame wire fields as ``LlmProfileUpsertBody`` connection card\n(``provider``／``baseUrl``／``model``／``apiKey``／``thinkingEnabled``),\nplus optional ``llmProfileId`` for masked-secret fallback."
+      },
+      "AiEngineTestResultResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "latencyMs": {
+            "type": "integer",
+            "title": "Latencyms"
+          },
+          "promptTokens": {
+            "type": "integer",
+            "title": "Prompttokens"
+          },
+          "completionTokens": {
+            "type": "integer",
+            "title": "Completiontokens"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "success",
+          "latencyMs",
+          "promptTokens",
+          "completionTokens"
+        ],
+        "title": "AiEngineTestResultResponse",
+        "description": "POST ``/system/ai-engine/test`` — minimal-token generation probe result."
+      },
+      "AnalysisAbortResponse": {
+        "properties": {
+          "analysisPaused": {
+            "type": "boolean",
+            "title": "Analysispaused"
+          },
+          "abortedBatchIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Abortedbatchids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "analysisPaused",
+          "abortedBatchIds"
+        ],
+        "title": "AnalysisAbortResponse",
+        "description": "POST ``/system/analysis/abort`` — batches failed by the emergency abort."
       },
       "AnalysisEventResponse": {
         "properties": {
@@ -8030,6 +8127,21 @@
         ],
         "title": "AnalysisPauseBody"
       },
+      "AnalysisPauseResponse": {
+        "properties": {
+          "analysisPaused": {
+            "type": "boolean",
+            "title": "Analysispaused"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "analysisPaused"
+        ],
+        "title": "AnalysisPauseResponse",
+        "description": "POST ``/system/analysis/pause`` — scheduler pause state after the call."
+      },
       "AppLogCursorResponse": {
         "properties": {
           "time": {
@@ -8060,10 +8172,23 @@
           },
           "level": {
             "type": "string",
+            "enum": [
+              "info",
+              "success",
+              "warning",
+              "error"
+            ],
             "title": "Level"
           },
           "category": {
             "type": "string",
+            "enum": [
+              "analysis",
+              "collector",
+              "source",
+              "system",
+              "frontend"
+            ],
             "title": "Category"
           },
           "kind": {
@@ -9461,6 +9586,101 @@
         ],
         "title": "ChannelWithSourceResponse"
       },
+      "CollectorAdapterStatusResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "sourceId": {
+            "type": "string",
+            "title": "Sourceid"
+          },
+          "connected": {
+            "type": "boolean",
+            "title": "Connected"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          },
+          "lastConnectedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastconnectedat"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "sourceId",
+          "connected"
+        ],
+        "title": "CollectorAdapterStatusResponse",
+        "description": "One adapter row in ``GET /system/collector/status``."
+      },
+      "CollectorRestartResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "previousStatus": {
+            "type": "string",
+            "title": "Previousstatus"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "previousStatus"
+        ],
+        "title": "CollectorRestartResponse",
+        "description": "POST ``/system/collector/restart`` — message plus pre-restart status."
+      },
+      "CollectorStatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "stopped",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "adapters": {
+            "items": {
+              "$ref": "#/components/schemas/CollectorAdapterStatusResponse"
+            },
+            "type": "array",
+            "title": "Adapters"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status",
+          "adapters"
+        ],
+        "title": "CollectorStatusResponse",
+        "description": "GET ``/system/collector/status`` — aggregate status plus adapter details."
+      },
       "DeviceInfoResponse": {
         "properties": {
           "id": {
@@ -9493,6 +9713,62 @@
           "expiresAt"
         ],
         "title": "DeviceInfoResponse"
+      },
+      "DeviceListEntryResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "title": "Lastseenat"
+          },
+          "expiresAt": {
+            "type": "string",
+            "title": "Expiresat"
+          },
+          "current": {
+            "type": "boolean",
+            "title": "Current",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "createdAt",
+          "lastSeenAt",
+          "expiresAt"
+        ],
+        "title": "DeviceListEntryResponse",
+        "description": "One row of GET ``/setup/devices``; ``current`` marks the caller's own session."
+      },
+      "DeviceListResponse": {
+        "properties": {
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceListEntryResponse"
+            },
+            "type": "array",
+            "title": "Devices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "devices"
+        ],
+        "title": "DeviceListResponse",
+        "description": "GET ``/setup/devices`` — active device sessions for this household."
       },
       "DeviceSessionTokensResponse": {
         "properties": {
@@ -10109,10 +10385,6 @@
           "bindHost": {
             "type": "string",
             "title": "Bindhost"
-          },
-          "lanAccessEnabled": {
-            "type": "boolean",
-            "title": "Lanaccessenabled"
           }
         },
         "type": "object",
@@ -10123,8 +10395,7 @@
           "secretsReady",
           "schemaVersion",
           "schemaSemver",
-          "bindHost",
-          "lanAccessEnabled"
+          "bindHost"
         ],
         "title": "HealthResponse"
       },
@@ -11183,17 +11454,6 @@
               }
             ],
             "title": "Profilemodel"
-          },
-          "profileIsDefault": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profileisdefault"
           }
         },
         "additionalProperties": false,
@@ -11298,7 +11558,19 @@
             "default": false
           },
           "jsonMode": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "disabled",
+                  "json_schema",
+                  "json_object"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ],
             "title": "Jsonmode",
             "default": "disabled"
           },
@@ -11308,7 +11580,19 @@
             "default": true
           },
           "webSearchProvider": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "duckduckgo",
+                  "brave"
+                ]
+              },
+              {
+                "type": "string"
+              }
+            ],
             "title": "Websearchprovider",
             "default": "auto"
           },
@@ -11316,11 +11600,6 @@
             "type": "string",
             "title": "Bravesearchapikey",
             "default": ""
-          },
-          "isDefault": {
-            "type": "boolean",
-            "title": "Isdefault",
-            "default": false
           },
           "staffClasses": {
             "items": {
@@ -11415,6 +11694,11 @@
           },
           "jsonMode": {
             "type": "string",
+            "enum": [
+              "disabled",
+              "json_schema",
+              "json_object"
+            ],
             "title": "Jsonmode",
             "default": "disabled"
           },
@@ -11450,23 +11734,11 @@
               "enum": [
                 "leaderboard",
                 "intel_event",
-                "agent",
-                "assistant"
+                "agent"
               ]
             },
             "type": "array",
             "title": "Staffclasses"
-          },
-          "isDefault": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Isdefault"
           }
         },
         "additionalProperties": false,
@@ -11489,8 +11761,7 @@
                 "enum": [
                   "leaderboard",
                   "intel_event",
-                  "agent",
-                  "assistant"
+                  "agent"
                 ]
               },
               {
@@ -11573,17 +11844,6 @@
               }
             ],
             "title": "Profilemodel"
-          },
-          "profileIsDefault": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Profileisdefault"
           }
         },
         "additionalProperties": false,
@@ -12886,6 +13146,10 @@
             "type": "integer",
             "title": "Timeline Dismissals"
           },
+          "timeline_importance": {
+            "type": "integer",
+            "title": "Timeline Importance"
+          },
           "device_access_tokens": {
             "type": "integer",
             "title": "Device Access Tokens"
@@ -12904,11 +13168,12 @@
           "app_logs",
           "user_events",
           "timeline_dismissals",
+          "timeline_importance",
           "device_access_tokens",
           "device_sessions"
         ],
         "title": "RetentionDeletedCounts",
-        "description": "Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.\n\nDevice-auth and orphan timeline dismissals always run, independent of the\nconfigured ``retention_*_days`` windows."
+        "description": "Per-category delete counts; keys are table names, mirroring ``RetentionCounts``.\n\nDevice-auth and orphan timeline dismissals / importance markers always run,\nindependent of the configured ``retention_*_days`` windows."
       },
       "RetentionRunResponse": {
         "properties": {
@@ -12948,6 +13213,70 @@
           "password"
         ],
         "title": "RotateSecretsBody"
+      },
+      "RotateSecretsResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "secretsReady": {
+            "type": "boolean",
+            "title": "Secretsready"
+          },
+          "runtimeStarted": {
+            "type": "boolean",
+            "title": "Runtimestarted"
+          },
+          "scrubbed": {
+            "$ref": "#/components/schemas/RotateSecretsScrubbedCounts"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message",
+          "secretsReady",
+          "runtimeStarted",
+          "scrubbed"
+        ],
+        "title": "RotateSecretsResponse",
+        "description": "POST ``/system/rotate-secrets`` — recovery result (data-preserving)."
+      },
+      "RotateSecretsScrubbedCounts": {
+        "properties": {
+          "system_config": {
+            "type": "integer",
+            "title": "System Config"
+          },
+          "llm_profiles": {
+            "type": "integer",
+            "title": "Llm Profiles"
+          },
+          "sources": {
+            "type": "integer",
+            "title": "Sources"
+          },
+          "stale_connected": {
+            "type": "integer",
+            "title": "Stale Connected"
+          },
+          "actions": {
+            "type": "integer",
+            "title": "Actions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "system_config",
+          "llm_profiles",
+          "sources",
+          "stale_connected",
+          "actions"
+        ],
+        "title": "RotateSecretsScrubbedCounts",
+        "description": "Per-category scrub counts, mirroring ``scrub_undecryptable_secrets``."
       },
       "RssFeedBody": {
         "properties": {
@@ -13075,6 +13404,20 @@
         "additionalProperties": false,
         "type": "object",
         "title": "RssFeedPatchBody"
+      },
+      "SetupOkResponse": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ok"
+        ],
+        "title": "SetupOkResponse",
+        "description": "Boolean acknowledgement for setup password routes (change / reset)."
       },
       "SetupStatusResponse": {
         "properties": {
@@ -13210,6 +13553,21 @@
           "updatedAt"
         ],
         "title": "SourceResponse"
+      },
+      "SystemMessageResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "SystemMessageResponse",
+        "description": "Message-only ops acknowledgements (reset / restart)."
       },
       "SystemSettingsSnapshot": {
         "properties": {
@@ -13380,6 +13738,366 @@
         ],
         "title": "SystemSettingsSnapshot",
         "description": "GET/PUT ``/config/settings`` wire snapshot (camelCase).\n\nLLM provider slots / assistant_llm_* retired in stamp 29 — use ``/api/v1/llm/profiles``."
+      },
+      "SystemSettingsUpdateBody": {
+        "properties": {
+          "analysisPaused": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysispaused"
+          },
+          "analysisBatchMessageLimit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysisbatchmessagelimit"
+          },
+          "analysisMaxTotalChars": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysismaxtotalchars"
+          },
+          "analysisMaxEstimatedInputTokens": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysismaxestimatedinputtokens"
+          },
+          "analysisTraceVerbose": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysistraceverbose"
+          },
+          "llmGenerationTimeout": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llmgenerationtimeout"
+          },
+          "maxBatchRetries": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxbatchretries"
+          },
+          "maxConcurrentBatches": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxconcurrentbatches"
+          },
+          "analysisStrategyMode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysisstrategymode"
+          },
+          "analysisTriggerThreshold": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysistriggerthreshold"
+          },
+          "retentionMessagesDays": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retentionmessagesdays"
+          },
+          "retentionAnalysisDays": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retentionanalysisdays"
+          },
+          "retentionLeaderboardDays": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retentionleaderboarddays"
+          },
+          "retentionAppLogsDays": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retentionapplogsdays"
+          },
+          "retentionUserEventsDays": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retentionusereventsdays"
+          },
+          "autoPauseOnRetriesExhausted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Autopauseonretriesexhausted"
+          },
+          "weatherLocation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Weatherlocation"
+          },
+          "uiLocale": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uilocale"
+          },
+          "agentHistoryMaxMessages": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agenthistorymaxmessages"
+          },
+          "agentHistoryMaxChars": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Agenthistorymaxchars"
+          },
+          "assistantDisplayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistantdisplayname"
+          },
+          "assistantAvatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistantavatar"
+          },
+          "userDisplayName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userdisplayname"
+          },
+          "userAvatar": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useravatar"
+          },
+          "userBackground": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Userbackground"
+          },
+          "mcpEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpenabled"
+          },
+          "mcpCapCalendarRead": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapcalendarread"
+          },
+          "mcpCapCalendarWrite": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapcalendarwrite"
+          },
+          "mcpCapMessagesSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapmessagessearch"
+          },
+          "mcpCapIntelligenceSearch": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapintelligencesearch"
+          },
+          "mcpCapItemsRead": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapitemsread"
+          },
+          "mcpCapItemsWrite": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mcpcapitemswrite"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SystemSettingsUpdateBody",
+        "description": "Partial ``PUT /config/settings`` body.\n\nAll-optional mirror of ``SystemSettingsSnapshot`` (drift asserted in\n``server/api/routes/config.py``); unknown keys → 422 via ``extra=\"forbid\"``."
       },
       "TaskActivitySpanResponse": {
         "properties": {
@@ -13706,7 +14424,12 @@
           "analysisStrategyMode": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                  "conservative",
+                  "balanced",
+                  "aggressive"
+                ]
               },
               {
                 "type": "null"
@@ -14324,6 +15047,66 @@
           "llmProfileId"
         ],
         "title": "TaskResponse"
+      },
+      "TaskTemplateResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "analysisMode": {
+            "type": "string",
+            "enum": [
+              "leaderboard",
+              "intel_event",
+              "agent"
+            ],
+            "title": "Analysismode"
+          },
+          "promptTemplate": {
+            "type": "string",
+            "title": "Prompttemplate"
+          },
+          "defaultAnalysisTimeRange": {
+            "type": "string",
+            "enum": [
+              "all",
+              "today",
+              "1h",
+              "6h",
+              "48h",
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "title": "Defaultanalysistimerange"
+          },
+          "badge": {
+            "type": "string",
+            "title": "Badge"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "analysisMode",
+          "promptTemplate",
+          "defaultAnalysisTimeRange",
+          "badge"
+        ],
+        "title": "TaskTemplateResponse",
+        "description": "One built-in preset from ``GET /tasks/templates`` (``shared/task_presets.json``)."
       },
       "Telegram2faBody": {
         "properties": {
@@ -15887,6 +16670,660 @@
           "name"
         ],
         "title": "WorksetUpdateBody"
+      },
+      "SseMessagesUpdatedPayload": {
+        "additionalProperties": false,
+        "description": "``messages_updated`` — newly inserted messages (collector / ingest).",
+        "properties": {
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/MessageResponse"
+            },
+            "title": "Messages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "messages"
+        ],
+        "title": "SseMessagesUpdatedPayload",
+        "type": "object"
+      },
+      "SseCollectorStatusChangedPayload": {
+        "additionalProperties": false,
+        "description": "``collector_status_changed`` — aggregate collector process status.",
+        "properties": {
+          "status": {
+            "enum": [
+              "running",
+              "stopped",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "adapter_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Failing adapter name. Deliberately snake_case (wire contract).",
+            "title": "Adapter Name"
+          },
+          "error_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Error summary when an adapter connection fails. Deliberately snake_case.",
+            "title": "Error Summary"
+          },
+          "correlation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Trace id for error-toast correlation. Deliberately snake_case.",
+            "title": "Correlation Id"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "SseCollectorStatusChangedPayload",
+        "type": "object"
+      },
+      "SseSourceStatusChangedPayload": {
+        "additionalProperties": false,
+        "description": "``source_status_changed`` — per-source adapter connection changes.\n\n``connecting`` is a transient reconnect state that is never persisted to\n``sources.status`` (DB CHECK allows connected/disconnected/error only).",
+        "properties": {
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "connected",
+              "connecting",
+              "disconnected",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "lastError": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lasterror"
+          }
+        },
+        "required": [
+          "sourceId",
+          "status"
+        ],
+        "title": "SseSourceStatusChangedPayload",
+        "type": "object"
+      },
+      "SseAnalysisStartedPayload": {
+        "additionalProperties": false,
+        "description": "``analysis_started`` — a batch (or agent tick) entered the LLM call.",
+        "properties": {
+          "taskId": {
+            "title": "Taskid",
+            "type": "string"
+          },
+          "taskName": {
+            "title": "Taskname",
+            "type": "string"
+          },
+          "batchId": {
+            "title": "Batchid",
+            "type": "string"
+          },
+          "messageCount": {
+            "title": "Messagecount",
+            "type": "integer"
+          },
+          "estimatedTokens": {
+            "title": "Estimatedtokens",
+            "type": "integer"
+          },
+          "llmProvider": {
+            "title": "Llmprovider",
+            "type": "string"
+          },
+          "llmModel": {
+            "title": "Llmmodel",
+            "type": "string"
+          },
+          "webSearchMode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Websearchmode"
+          },
+          "analysisMode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leaderboard",
+                  "intel_event",
+                  "agent"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysismode"
+          }
+        },
+        "required": [
+          "taskId",
+          "taskName",
+          "batchId",
+          "messageCount",
+          "estimatedTokens",
+          "llmProvider",
+          "llmModel"
+        ],
+        "title": "SseAnalysisStartedPayload",
+        "type": "object"
+      },
+      "SseOverlapStatistics": {
+        "additionalProperties": false,
+        "description": "Overlap token statistics attached to message-batch completions.",
+        "properties": {
+          "overlapUsedCount": {
+            "title": "Overlapusedcount",
+            "type": "integer"
+          },
+          "overlapTrimmedCount": {
+            "title": "Overlaptrimmedcount",
+            "type": "integer"
+          },
+          "overlapTokens": {
+            "title": "Overlaptokens",
+            "type": "integer"
+          },
+          "primaryTokens": {
+            "title": "Primarytokens",
+            "type": "integer"
+          },
+          "totalTokens": {
+            "title": "Totaltokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "overlapUsedCount",
+          "overlapTrimmedCount",
+          "overlapTokens",
+          "primaryTokens",
+          "totalTokens"
+        ],
+        "title": "SseOverlapStatistics",
+        "type": "object"
+      },
+      "SseAnalysisCompletedPayload": {
+        "additionalProperties": false,
+        "description": "``analysis_completed`` — batch / agent tick finished (or was skipped).",
+        "properties": {
+          "taskId": {
+            "title": "Taskid",
+            "type": "string"
+          },
+          "batchId": {
+            "title": "Batchid",
+            "type": "string"
+          },
+          "analysisMode": {
+            "enum": [
+              "leaderboard",
+              "intel_event",
+              "agent"
+            ],
+            "title": "Analysismode",
+            "type": "string"
+          },
+          "findingsCount": {
+            "title": "Findingscount",
+            "type": "integer"
+          },
+          "hasFindings": {
+            "title": "Hasfindings",
+            "type": "boolean"
+          },
+          "overlapStatistics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SseOverlapStatistics"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "webSearchMode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Websearchmode"
+          },
+          "messageCount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messagecount"
+          },
+          "skipped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipped"
+          },
+          "skipReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skipreason"
+          }
+        },
+        "required": [
+          "taskId",
+          "batchId",
+          "analysisMode",
+          "findingsCount",
+          "hasFindings"
+        ],
+        "title": "SseAnalysisCompletedPayload",
+        "type": "object"
+      },
+      "SseAnalysisFailedPayload": {
+        "additionalProperties": false,
+        "description": "``analysis_failed`` — batch error (retry-in-place) or agent tick failure.",
+        "properties": {
+          "taskId": {
+            "title": "Taskid",
+            "type": "string"
+          },
+          "taskName": {
+            "title": "Taskname",
+            "type": "string"
+          },
+          "batchId": {
+            "title": "Batchid",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "retrying": {
+            "title": "Retrying",
+            "type": "boolean"
+          },
+          "currentRetry": {
+            "title": "Currentretry",
+            "type": "integer"
+          },
+          "maxRetries": {
+            "title": "Maxretries",
+            "type": "integer"
+          },
+          "retriesExhausted": {
+            "title": "Retriesexhausted",
+            "type": "boolean"
+          },
+          "analysisMode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "leaderboard",
+                  "intel_event",
+                  "agent"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysismode"
+          },
+          "taskDeactivated": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taskdeactivated"
+          }
+        },
+        "required": [
+          "taskId",
+          "taskName",
+          "batchId",
+          "error",
+          "retrying",
+          "currentRetry",
+          "maxRetries",
+          "retriesExhausted"
+        ],
+        "title": "SseAnalysisFailedPayload",
+        "type": "object"
+      },
+      "SseAnalysisPausedChangedPayload": {
+        "additionalProperties": false,
+        "description": "``analysis_paused_changed`` — exhausted retries auto-paused global analysis.",
+        "properties": {
+          "analysisPaused": {
+            "title": "Analysispaused",
+            "type": "boolean"
+          },
+          "reason": {
+            "const": "batch_retries_exhausted",
+            "title": "Reason",
+            "type": "string"
+          },
+          "taskId": {
+            "title": "Taskid",
+            "type": "string"
+          },
+          "taskName": {
+            "title": "Taskname",
+            "type": "string"
+          },
+          "batchId": {
+            "title": "Batchid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "analysisPaused",
+          "reason",
+          "taskId",
+          "taskName",
+          "batchId"
+        ],
+        "title": "SseAnalysisPausedChangedPayload",
+        "type": "object"
+      },
+      "SseResourceModifiedPayload": {
+        "additionalProperties": false,
+        "description": "``resource_modified`` — resource CRUD invalidation (see ``publish_resource_modified``).",
+        "properties": {
+          "resourceType": {
+            "title": "Resourcetype",
+            "type": "string"
+          },
+          "resourceId": {
+            "title": "Resourceid",
+            "type": "string"
+          },
+          "action": {
+            "enum": [
+              "created",
+              "updated",
+              "deleted"
+            ],
+            "title": "Action",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceType",
+          "resourceId",
+          "action"
+        ],
+        "title": "SseResourceModifiedPayload",
+        "type": "object"
+      },
+      "SseEventEnvelope": {
+        "additionalProperties": false,
+        "description": "``data`` field of each named SSE frame: ``{\"type\": <event>, \"payload\": {...}}``.",
+        "properties": {
+          "type": {
+            "enum": [
+              "messages_updated",
+              "collector_status_changed",
+              "source_status_changed",
+              "analysis_started",
+              "analysis_completed",
+              "analysis_failed",
+              "analysis_paused_changed",
+              "resource_modified"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "payload": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SseMessagesUpdatedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseCollectorStatusChangedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseSourceStatusChangedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseAnalysisStartedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseAnalysisCompletedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseAnalysisFailedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseAnalysisPausedChangedPayload"
+              },
+              {
+                "$ref": "#/components/schemas/SseResourceModifiedPayload"
+              }
+            ],
+            "title": "Payload"
+          }
+        },
+        "required": [
+          "type",
+          "payload"
+        ],
+        "title": "SseEventEnvelope",
+        "type": "object"
+      },
+      "TelegramBotConfig": {
+        "additionalProperties": false,
+        "description": "``telegram_bot`` configuration JSON (``bot_token`` masked on read).",
+        "properties": {
+          "bot_token": {
+            "title": "Bot Token",
+            "type": "string"
+          },
+          "chat_id": {
+            "title": "Chat Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bot_token",
+          "chat_id"
+        ],
+        "title": "TelegramBotConfig",
+        "type": "object"
+      },
+      "DiscordWebhookConfig": {
+        "additionalProperties": false,
+        "description": "``discord_webhook`` configuration JSON (``webhook_url`` masked on read).",
+        "properties": {
+          "webhook_url": {
+            "title": "Webhook Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "webhook_url"
+        ],
+        "title": "DiscordWebhookConfig",
+        "type": "object"
+      },
+      "HttpWebhookConfig": {
+        "additionalProperties": false,
+        "description": "``http_webhook`` configuration JSON (``url`` and header values masked on read).",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "POST",
+              "PUT"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Headers",
+            "type": "object"
+          },
+          "include_raw_data": {
+            "title": "Include Raw Data",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "url",
+          "method",
+          "headers",
+          "include_raw_data"
+        ],
+        "title": "HttpWebhookConfig",
+        "type": "object"
+      },
+      "MqttConfig": {
+        "additionalProperties": false,
+        "description": "``mqtt`` configuration JSON (``password`` masked on read).",
+        "properties": {
+          "broker_url": {
+            "title": "Broker Url",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "qos": {
+            "enum": [
+              0,
+              1,
+              2
+            ],
+            "title": "Qos",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "broker_url",
+          "topic",
+          "username",
+          "password",
+          "qos"
+        ],
+        "title": "MqttConfig",
+        "type": "object"
+      },
+      "ActionTriggerConditions": {
+        "additionalProperties": false,
+        "description": "``triggerConditions`` JSON — optional trigger filters for an action.",
+        "properties": {
+          "score_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Minimum leaderboard score required to trigger.",
+            "title": "Score Threshold"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Restrict triggering to one analysis task.",
+            "title": "Task Id"
+          }
+        },
+        "title": "ActionTriggerConditions",
+        "type": "object"
       }
     }
   }

@@ -33,9 +33,9 @@ function BatchRow({
           </Badge>
         </span>
         <span className="board-widget-list__meta">
-          {String(i18n.t("board.queue.messages", { count: batch.messageCount }))}
+          {String(i18n.t("board:queue.messages", { count: batch.messageCount }))}
           {(batch.retryCount ?? 0) > 0
-            ? String(i18n.t("board.queue.retry", { count: batch.retryCount }))
+            ? String(i18n.t("board:queue.retry", { count: batch.retryCount }))
             : ""}
           {tokens}
         </span>
@@ -85,7 +85,7 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
               data-testid="board-queue-stats"
             >
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.queue.pending")}</span>
+                <span className="board-queue-stat__label">{t("board:queue.pending")}</span>
                 <span
                   className={
                     status.pendingCount > 0
@@ -97,7 +97,7 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
                 </span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.queue.processing")}</span>
+                <span className="board-queue-stat__label">{t("board:queue.processing")}</span>
                 <span
                   className={
                     processing.length > 0
@@ -109,10 +109,10 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
                 </span>
               </div>
               <div className="board-queue-stat">
-                <span className="board-queue-stat__label">{t("board.queue.status")}</span>
+                <span className="board-queue-stat__label">{t("board:queue.status")}</span>
                 <span className="board-queue-stat__badge">
                   <Badge tone={paused ? "warning" : "success"}>
-                    {paused ? t("board.queue.paused") : t("board.queue.running")}
+                    {paused ? t("board:queue.paused") : t("board:queue.running")}
                   </Badge>
                 </span>
               </div>
@@ -127,7 +127,7 @@ export function QueueBoardWidget({ active = true }: BoardWidgetProps) {
                 ))}
               </ul>
             ) : (
-              <BoardWidgetEmpty>{t("board.queue.noBatches")}</BoardWidgetEmpty>
+              <BoardWidgetEmpty>{t("board:queue.noBatches")}</BoardWidgetEmpty>
             )}
           </>
         ) : null}

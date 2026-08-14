@@ -175,7 +175,7 @@ class AssistantSessionSchema(BaseModel):
     messages: list[AssistantSessionMessageSchema]
     sessionId: str | None = None
     #: When set, assistant chat for this session uses that complete profile.
-    #: When unset, resolve via active ``staff_class=assistant`` binding.
+    #: When unset: hard-bound global assistant slot.
     llmProfileId: str | None = None
 
 

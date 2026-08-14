@@ -11,6 +11,7 @@ from server.ingestion import upsert_channel
 from server.queries.version_sql import version_matched_batch_on
 from server.worksets_const import SYSTEM_WORKSET_DEFAULT_NAME, SYSTEM_WORKSET_ID
 
+
 async def fetch_task_channel_rows(db: Any, task_id: str) -> list[dict[str, Any]]:
     return await db.fetch_all(
         "SELECT platform, platform_id FROM task_channels WHERE task_id = ?",
@@ -24,6 +25,7 @@ async def fetch_all_task_rows(db: Any) -> list[dict[str, Any]]:
 
 async def fetch_task_row(db: Any, task_id: str) -> dict[str, Any] | None:
     return await db.fetch_one("SELECT * FROM analysis_tasks WHERE id = ?", (task_id,))
+
 
 async def fetch_task_workset_id(db: Any, task_id: str) -> str | None:
     row = await db.fetch_one("SELECT workset_id FROM analysis_tasks WHERE id = ?", (task_id,))

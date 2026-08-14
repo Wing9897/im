@@ -8,8 +8,8 @@ import {
   MSG_RETENTION_NONE,
   MSG_RETENTION_PART,
 } from "../../i18n/messageKeys";
+import { useSettingsPageState } from "../../components/settings/useSettingsPageState";
 import { toErrorMessage } from "../../utils/errors";
-import { useSettingsPageState } from "./SettingsShared";
 
 const RETENTION_FIELDS = [
   "retentionMessagesDays",

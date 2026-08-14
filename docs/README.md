@@ -3,7 +3,10 @@
 | Doc | When to read |
 |-----|----------------|
 | [../README.md](../README.md) | Install, run, ports, desktop host/client, product overview |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, schema matrix, API contract, frontend layering, auth |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | System design, API contract, frontend layering |
+| [SCHEMA-BASELINE.md](SCHEMA-BASELINE.md) | Schema wipe-only contract: stamp/semver, support matrix, explicit reset |
+| [AUTH.md](AUTH.md) | Authentication: device sessions, API keys, setup routes, manual checklist |
+| [DESKTOP-ICS.md](DESKTOP-ICS.md) | Desktop one-shot ICS import: supported subset, limits, remote-URL policy |
 | [KNOWN-SIMPLIFICATIONS.md](KNOWN-SIMPLIFICATIONS.md) | Intentional deltas／quirks only; contract detail → ARCHITECTURE／`docs/agent/*` |
 | [I18N-GLOSSARY.md](I18N-GLOSSARY.md) | UI locale keys, error_code vocabulary, preset display Sot |
 | [agent/assistant.md](agent/assistant.md) | Built-in Agent + voice assistant contract |
@@ -15,6 +18,6 @@
 | [../Dockerfile](../Dockerfile)／[../docker-compose.yml](../docker-compose.yml) | Headless server+SPA container (GHCR) |
 | [../desktop/resources/README.md](../desktop/resources/README.md) | Packaged icon assets |
 
-**Do not** create `docs/api/`, `docs/schema/`, or `docs/frontend/` trees — keep those topics as sections inside ARCHITECTURE.
+**Do not** create `docs/api/`, `docs/schema/`, or `docs/frontend/` trees — big topics live as flat standalone files in `docs/` (like SCHEMA-BASELINE／AUTH／DESKTOP-ICS) or as sections inside ARCHITECTURE.
 
 Drift checks: `npm run check`, `npm run verify:deploy`, `server/tests/test_contract_*.py`, `server/tests/test_dead_endpoints.py`.

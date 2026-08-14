@@ -1,6 +1,8 @@
 """SQLite DDL for the items domain."""
 
-DDL = """
+from server.domain.item_statuses import ITEM_STATUS_CHECK_SQL
+
+DDL = f"""
 -- Soft-template categories for trackable items (global; ownership is via workset).
 CREATE TABLE IF NOT EXISTS item_categories (
     id                          TEXT PRIMARY KEY,
@@ -31,7 +33,7 @@ CREATE TABLE IF NOT EXISTS items (
                          REFERENCES worksets(id),
     notes                TEXT NOT NULL DEFAULT '',
     status               TEXT NOT NULL DEFAULT 'active'
-                         CHECK (status IN ('active', 'archived')),
+                         {ITEM_STATUS_CHECK_SQL},
     emoji                TEXT DEFAULT NULL,
     quantity             REAL DEFAULT NULL,
     unit                 TEXT DEFAULT NULL,

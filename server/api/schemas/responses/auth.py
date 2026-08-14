@@ -7,6 +7,12 @@ from pydantic import BaseModel, Field
 _SCOPES_DESCRIPTION = 'Capability scopes; `["*"]` = full household, `["read"]` = GET-only.'
 
 
+class SetupOkResponse(BaseModel):
+    """Boolean acknowledgement for setup password routes (change / reset)."""
+
+    ok: bool
+
+
 class SetupStatusResponse(BaseModel):
     bootstrapped: bool
     hasAdmin: bool
@@ -23,6 +29,18 @@ class DeviceInfoResponse(BaseModel):
     createdAt: str
     lastSeenAt: str
     expiresAt: str
+
+
+class DeviceListEntryResponse(DeviceInfoResponse):
+    """One row of GET ``/setup/devices``; ``current`` marks the caller's own session."""
+
+    current: bool = False
+
+
+class DeviceListResponse(BaseModel):
+    """GET ``/setup/devices`` — active device sessions for this household."""
+
+    devices: list[DeviceListEntryResponse]
 
 
 class DeviceSessionTokensResponse(BaseModel):

@@ -34,19 +34,19 @@ export function ChatPromptFields({
   promptRequired = false,
 }: ChatPromptFieldsProps) {
   const { t } = useTranslation("common");
-  const baseLabel = promptLabel?.trim() || t("tasks.editor.promptLabel");
+  const baseLabel = promptLabel?.trim() || t("tasks:editor.promptLabel");
   const label = promptRequired
-    ? `${baseLabel}${t("tasks.editor.requiredSuffix")}`
+    ? `${baseLabel}${t("tasks:editor.requiredSuffix")}`
     : baseLabel;
-  const placeholder = promptPlaceholder?.trim() || t("tasks.editor.promptPlaceholder");
+  const placeholder = promptPlaceholder?.trim() || t("tasks:editor.promptPlaceholder");
 
   return (
     <>
-      <SettingsRow label={t("tasks.editor.descriptionLabel")} htmlFor="chat-task-description">
+      <SettingsRow label={t("tasks:editor.descriptionLabel")} htmlFor="chat-task-description">
         <TextField
           id="chat-task-description"
           type="text"
-          placeholder={t("tasks.editor.descriptionPlaceholder")}
+          placeholder={t("tasks:editor.descriptionPlaceholder")}
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
         />
@@ -74,7 +74,7 @@ export function ChatPromptFields({
               className={`mt-xs mb-0 ${formHelpClass} text-error`}
               data-testid="task-prompt-required"
             >
-              {t("tasks.editor.saveNeeds.prompt")}
+              {t("tasks:editor.saveNeeds.prompt")}
             </p>
           ) : null}
         </SettingsRow>

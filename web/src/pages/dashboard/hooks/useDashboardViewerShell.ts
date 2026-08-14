@@ -130,11 +130,11 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
         if (worksetNameDialog.mode === "create") {
           await createWorkset(cleaned);
           await refreshWorksets();
-          showToast(t("workset.createdToast", { name: cleaned }), "success");
+          showToast(t("workset:createdToast", { name: cleaned }), "success");
         } else {
           await renameWorkset(worksetNameDialog.id, cleaned);
           await refreshWorksets();
-          showToast(t("workset.renamedToast", { name: cleaned }), "success");
+          showToast(t("workset:renamedToast", { name: cleaned }), "success");
         }
         setWorksetNameDialog(null);
       } catch (error) {
@@ -152,7 +152,7 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     try {
       await deleteWorkset(worksetDeleteTarget.id);
       await refreshWorksets();
-      showToast(t("workset.deletedToast", { name: worksetDeleteTarget.name }), "success");
+      showToast(t("workset:deletedToast", { name: worksetDeleteTarget.name }), "success");
       setWorksetDeleteTarget(null);
     } catch (error) {
       showToast(toError(error).message, "error");
@@ -191,7 +191,7 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     if (!ws) return null;
     return {
       id: ws.id,
-      title: ws.id === SYSTEM_WORKSET_ID ? t("workset.generalName") : ws.name,
+      title: ws.id === SYSTEM_WORKSET_ID ? t("workset:generalName") : ws.name,
       isSystem: Boolean(ws.isSystem) || ws.id === SYSTEM_WORKSET_ID,
       tasks: visibleTasks.filter((task) => task.worksetId === ws.id),
     };

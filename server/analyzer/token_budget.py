@@ -8,7 +8,8 @@ ascending) and stops before the first message that would exceed the budget.
 from __future__ import annotations
 
 import math
-from typing import Any, Iterable, Mapping, NamedTuple
+from collections.abc import Iterable, Mapping
+from typing import Any, NamedTuple
 
 #: Fallback token budget when the configured value is missing or invalid.
 DEFAULT_TOKEN_BUDGET = 30000

@@ -198,7 +198,7 @@ async def get_forecast(
             response.model_dump(),
         )
         return response
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         _LOGGER.warning("天氣預報總逾時（地區=%r）", normalized_location)
         raise http_error(502, "Weather provider timed out", error_code="weather_timeout") from exc
     except (KeyError, TypeError, ValueError, WeatherProviderError) as exc:

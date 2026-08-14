@@ -38,7 +38,7 @@
 | 函式庫 | `i18next` + `react-i18next`（`web/src/i18n/i18n.ts`） |
 | Locale | `zh-Hant`（預設手動）／`zh-Hans`／`en`；偏好另含 `auto` |
 | 切換 UI | **設定 → 一般**（`LanguageSwitcher`：自動／繁中／簡中／English；整站介面跟隨選擇）。主題頁僅主題，不含語言 |
-| Namespaces | `common`、`nav`、`actions`、`intelligence`、`monitor`、`sources`、`timeline`、`settings`、`assistant`、`logs`、`items` |
+| Namespaces | `common`、`tasks`、`board`、`nav`、`actions`、`intelligence`、`monitor`、`sources`、`timeline`、`settings`、`assistant`、`logs`、`items`、`schedule`、`account`、`workset`、`viewer`、`leaderboard`（SoT：`i18n.ts` 的 `NAMESPACES`；parity 腳本以 `locales/zh-Hant/*.json` 自動發現，新增檔案不需改腳本） |
 | Interpolation | `{name}`（非 `{{name}}`）；見 `i18n.ts` `prefix`／`suffix` |
 | 列表分隔 | `joinList`／`common:ui.listSep`（中文 `、`、英文 `, `） |
 | 產品 chrome | 主路徑 UI（側欄／設定／Actions／Intelligence／Monitor／Sources／Timeline／Items／Logs／Assistant／board／任務表單／語音提醒／排行榜等）已三語；UAT 就緒 |
@@ -81,6 +81,7 @@
 4. 變更 locale：`setAppLocale(locale)` 或 `setAppLocalePreference(pref)` → 寫入 storage + `applyDocumentLang` + `i18n.changeLanguage` + 同步 server `ui_locale`（具體值）。
 5. 測試：需要可見文案時包 `I18nextProvider` + `setAppLocale("zh-Hant")`（或目標 locale）。新測試優先 `import { … } from "../../i18n"`。
 6. **對齊檢查**：`npm run i18n:check`（`scripts/check-i18n-parity.mjs`）比對三語 leaf key；納入 `npm run check`。
+7. **複數鍵（plural family）**：`key`／`key_one`／`key_other`（及其他 CLDR 後綴 `_zero`／`_two`／`_few`／`_many`）視為**同一複數族**，以基鍵歸一比對——中文只有單一複數類別，用裸 `key`；en 可展開 `key_one`／`key_other`（i18next 依 `count` 自動選形）。任一 locale 用了後綴形就**必須含 `_other`**，否則 parity 直接判 fail。範例：`settings:theme.focalRefreshHours`、`common:ui.itemsCount`、`tasks:detail.channelCount`（zh 裸鍵、en `_one`+`_other`）。只在**英文數詞一致性真的會出錯**時展開（`1 items`）；像 `+{count} more`／`Retry {count}` 這種無可數名詞的字串維持單一裸鍵。呼叫端**必須傳數字型 `count`**——傳字串會讓 i18next 跳過複數選形，只查得到裸鍵。
 
 ## 標籤單一來源（避免平行翻譯）
 
@@ -103,7 +104,7 @@
 - **顯示文案 SoT**：[`shared/task_presets.json`](../shared/task_presets.json) — 各 preset 的 `i18n.{zh-Hant,en,zh-Hans}.{name,description,promptTemplate}`。UI 經 `localizeTaskPreset()` 查 locale key。
 - **API fallback**：[`server/presets/task_presets.py`](../server/presets/task_presets.py) 執行時從 JSON 載入 `BUILTIN_PRESETS`（zh-Hant 切片）。`webSearchQuery` 已於 stamp 20 從 schema／OpenAPI／FE 移除（Agent 從 prompt 自行選關鍵字）。
 - **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。
-- **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `common.json` → `tasks.presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
+- **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `tasks.json` → `presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。
 
 ## 產品用語
@@ -125,6 +126,7 @@
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
 | 收集子系統 | **收集器**（勿用「採集器」） | Collector | 收集器 |
 | 物品頁／trackable inventory | **物品**（namespace `items`） | Items | 物品 |
+| 我的日程頁（管理區） | **我的日程**（namespace `schedule`；`schedule.json`） | My schedule | 我的日程 | 與任務 `scheduleRrule`／時間規劃 timeline 文案分離；頁面用 `useTranslation("schedule")` |
 | 監控模式 `canvas`（自由排版儀表） | **畫布** | Ops Board | 画布 | UI 顯示名**單一**（勿再寫「畫布／Ops Board」）；代碼 mode=`canvas`、prefs=`ops_board_*`、目錄 `board/` **勿改** |
 
 ## AI 員工（staff／employees／intro）

@@ -21,7 +21,7 @@ export function ViewerTasksPage() {
   const { t } = useTranslation("common");
   const { data: tasks, initialLoading, isRefreshing, error, retry } = useViewerResource<ViewerTask[]>(
     fetchViewerTasks,
-    t("viewer.tasksLoadError"),
+    t("viewer:tasksLoadError"),
   );
 
   const taskList = useMemo(() => tasks ?? [], [tasks]);
@@ -78,7 +78,7 @@ export function ViewerTasksPage() {
   ) : null;
 
   const list = taskList.length === 0 ? (
-    <p className="py-3xl text-center text-body text-text-subtle">{t("viewer.tasksEmpty")}</p>
+    <p className="py-3xl text-center text-body text-text-subtle">{t("viewer:tasksEmpty")}</p>
   ) : (
     <div className="flex flex-col gap-md">
       {taskList.map((task) => {
@@ -101,7 +101,7 @@ export function ViewerTasksPage() {
             }}
             role="button"
             tabIndex={0}
-            aria-label={t("viewer.viewTaskAria", { name: task.name })}
+            aria-label={t("viewer:viewTaskAria", { name: task.name })}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -112,14 +112,14 @@ export function ViewerTasksPage() {
             <div className="flex items-center justify-between gap-sm">
               <span className="text-body font-semibold text-text-primary">{task.name}</span>
               <Badge tone={task.isActive ? "success" : "neutral"}>
-                {task.isActive ? t("viewer.active") : t("viewer.inactive")}
+                {task.isActive ? t("viewer:active") : t("viewer:inactive")}
               </Badge>
             </div>
             <div className="text-caption text-text-muted">
-              {t("viewer.lastAnalysis")}
+              {t("viewer:lastAnalysis")}
               {task.lastAnalysisAt
                 ? formatOsDateTime(task.lastAnalysisAt)
-                : t("viewer.neverRun")}
+                : t("viewer:neverRun")}
             </div>
           </SurfaceCard>
         );
@@ -133,7 +133,7 @@ export function ViewerTasksPage() {
       isRefreshing={isRefreshing}
       error={error}
       retry={retry}
-      refreshLabel={t("viewer.tasksRefreshing")}
+      refreshLabel={t("viewer:tasksRefreshing")}
     >
       <MasterDetailSplit
         split={presentation === "inline" && selected != null}

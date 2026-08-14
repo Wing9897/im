@@ -59,8 +59,7 @@ async def scrub_undecryptable_secrets(db: Any) -> dict[str, int]:
         (_CIPHER_LIKE,),
     )
     logger.info(
-        "Scrubbed undecryptable secrets: system_config=%d llm_profiles=%d sources=%d "
-        "stale_connected=%d actions=%d",
+        "Scrubbed undecryptable secrets: system_config=%d llm_profiles=%d sources=%d stale_connected=%d actions=%d",
         config_count,
         profiles_count,
         sources_count,
@@ -133,7 +132,7 @@ async def probe_stored_secrets(db: Any) -> tuple[bool, str | None]:
             unprotect_text(sample)
         except SecretProtectionError as exc:
             message = str(exc) or "Stored secret cannot be decrypted"
-            logger.error("Stored secrets probe failed: %s", message)
+            logger.exception("Stored secrets probe failed")
             return False, message
 
     return True, None

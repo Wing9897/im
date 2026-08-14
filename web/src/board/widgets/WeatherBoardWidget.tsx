@@ -42,18 +42,18 @@ function weekdayLabel(date: string): string {
 }
 
 function weatherLabel(code: number): string {
-  if (code === 0) return String(i18n.t("board.weather.clear"));
-  if (code <= 2) return String(i18n.t("board.weather.cloudy"));
-  if (code === 3) return String(i18n.t("board.weather.overcast"));
-  if (code <= 48) return String(i18n.t("board.weather.fog"));
+  if (code === 0) return String(i18n.t("board:weather.clear"));
+  if (code <= 2) return String(i18n.t("board:weather.cloudy"));
+  if (code === 3) return String(i18n.t("board:weather.overcast"));
+  if (code <= 48) return String(i18n.t("board:weather.fog"));
   if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-    return String(i18n.t("board.weather.rain"));
+    return String(i18n.t("board:weather.rain"));
   }
   if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) {
-    return String(i18n.t("board.weather.snow"));
+    return String(i18n.t("board:weather.snow"));
   }
-  if (code >= 95) return String(i18n.t("board.weather.thunder"));
-  return String(i18n.t("board.weather.generic"));
+  if (code >= 95) return String(i18n.t("board:weather.thunder"));
+  return String(i18n.t("board:weather.generic"));
 }
 
 async function loadBoardWeather(): Promise<BoardWeatherSnapshot> {
@@ -93,15 +93,15 @@ export function WeatherBoardWidget({ active = true }: BoardWidgetProps) {
     { active },
   );
 
-  useErrorToast(error, t("board.weather.errorPrefix"));
+  useErrorToast(error, t("board:weather.errorPrefix"));
 
   const headerActions = useMemo(
     () => (
       <button
         type="button"
         className="board-widget-frame__btn"
-        title={t("board.weather.refresh")}
-        aria-label={t("board.weather.refresh")}
+        title={t("board:weather.refresh")}
+        aria-label={t("board:weather.refresh")}
         data-testid="board-weather-refresh"
         onClick={refresh}
       >
@@ -119,12 +119,12 @@ export function WeatherBoardWidget({ active = true }: BoardWidgetProps) {
     <div className="board-widget-body board-widget-weather" data-testid="board-weather-widget">
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.paused", { name: t("board.weather.pausedName") })}
+        pausedLabel={t("board:common.paused", { name: t("board:weather.pausedName") })}
         pausedTestId="board-weather-paused"
         loading={loading && !data}
         empty={Boolean(data) && data!.days.length === 0}
         emptyLabel={
-          data?.location ? t("board.weather.emptyForecast") : t("board.weather.emptyLocation")
+          data?.location ? t("board:weather.emptyForecast") : t("board:weather.emptyLocation")
         }
       >
         {data && today ? (

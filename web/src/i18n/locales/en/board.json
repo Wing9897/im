@@ -1,0 +1,292 @@
+{
+  "gantt": {
+    "defaultLabelHeader": "Tasks",
+    "defaultEmptyLabel": "No task activity yet",
+    "emptyFiltered": "No activity to show in the current range",
+    "unnamedTask": "Unnamed task",
+    "untitled": "(Untitled)",
+    "axisDayAria": "Day timeline",
+    "axisMonthAria": "Month timeline",
+    "rowsAria": "Gantt activity list",
+    "activeAria": "Active",
+    "trackAria": "{label} activity span {range}"
+  },
+  "calendar": {
+    "weekdays": [
+      "Sun",
+      "Mon",
+      "Tue",
+      "Wed",
+      "Thu",
+      "Fri",
+      "Sat"
+    ],
+    "today": "Today",
+    "noSchedule": "No schedule",
+    "dayCountAria_one": "{count} item",
+    "dayCountAria_other": "{count} items"
+  },
+  "map": {
+    "noCoordEvents": "No events with a specific location yet"
+  },
+  "wall": {
+    "sectionName": "Message wall widget",
+    "noChannelsTitle": "No channels selected",
+    "noChannelsDescription": "Click “Select channels” in the header to choose which channels rotate.",
+    "loadingAria": "Loading message wall"
+  },
+  "system": {
+    "collector": "Collector",
+    "aiEngine": "AI engine",
+    "aiAvailable": "Available",
+    "aiUnavailable": "Unavailable",
+    "aiUnknown": "Unknown"
+  },
+  "common": {
+    "unnamed": "(Unnamed)",
+    "unnamedTask": "Unnamed task",
+    "untitled": "(Untitled)",
+    "enabled": "On",
+    "disabled": "Off",
+    "noTaskSelected": "No tasks selected",
+    "paused": "{name} paused (another widget maximized)",
+    "pausedWall": "Wall paused (another widget maximized)",
+    "channelCount_one": "{count} channel",
+    "channelCount_other": "{count} channels",
+    "dayView": "Day view",
+    "monthView": "Month view",
+    "viewModeAria": "{prefix}: {mode}",
+    "loadingGantt": "Loading Gantt…",
+    "loadingMap": "Loading map…"
+  },
+  "stats": {
+    "empty": "No analysis stats yet",
+    "analyzed": "Analyzed",
+    "unanalyzed": "Pending",
+    "queued": "Queued",
+    "rowMeta": "Done {analyzed} · Pending {unanalyzed}",
+    "rowQueued": " · Queue {count}"
+  },
+  "logs": {
+    "empty": "No logs yet"
+  },
+  "actions": {
+    "empty": "No notification actions yet",
+    "neverTriggered": "Never triggered"
+  },
+  "tasks": {
+    "empty": "No tasks yet"
+  },
+  "leaderboard": {
+    "empty": "No ranked topics yet",
+    "score": "Score {score}",
+    "messages_one": " · {count} msg",
+    "messages_other": " · {count} msgs"
+  },
+  "mapWidget": {
+    "resetView": "Reset world view",
+    "saveView": "Save map position",
+    "pausedName": "Map"
+  },
+  "weather": {
+    "refresh": "Refresh weather",
+    "errorPrefix": "Weather: ",
+    "pausedName": "Weather",
+    "emptyForecast": "No weather forecast",
+    "emptyLocation": "Weather location not set",
+    "clear": "Clear",
+    "cloudy": "Cloudy",
+    "overcast": "Overcast",
+    "fog": "Fog",
+    "rain": "Rain",
+    "snow": "Snow",
+    "thunder": "Thunderstorm",
+    "generic": "Weather"
+  },
+  "queue": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "status": "Status",
+    "paused": "Paused",
+    "running": "Running",
+    "noBatches": "No batches processing",
+    "messages_one": "{count} message",
+    "messages_other": "{count} messages",
+    "retry": " · Retry {count}",
+    "attention": "Attention",
+    "retryPending": "Retry pending",
+    "processingBadge": "Processing"
+  },
+  "feed": {
+    "empty": "No monitor messages yet"
+  },
+  "wallWidget": {
+    "empty": "No channels yet"
+  },
+  "sources": {
+    "empty": "No sources yet"
+  },
+  "events": {
+    "empty": "No intelligence events yet",
+    "ariaPrefix": "Intelligence events"
+  },
+  "calendarWidget": {
+    "monthAria": "Month calendar",
+    "dayAria": "Day schedule",
+    "emptyMonth": "No events this month for selected tasks",
+    "emptyDay": "No schedule today for selected tasks"
+  },
+  "ganttWidget": {
+    "byTaskAria": "Gantt by task",
+    "byEventAria": "Gantt by event",
+    "pausedName": "Gantt",
+    "labelTask": "Tasks",
+    "labelEvent": "Events",
+    "emptyEvents": "No events yet",
+    "worksetSpanLegend": "Workset bar = manual/assistant event envelope (alongside task analysis bars, not a duplicate)"
+  },
+  "shell": {
+    "loadFailed": "Failed to load — retry",
+    "retry": "Retry",
+    "toolsAria": "Immersive canvas tools",
+    "toolbarAria": "Canvas actions",
+    "addWidget": "Add widget",
+    "exportLayout": "Export layout",
+    "importLayout": "Import layout",
+    "importFileAria": "Choose layout JSON file",
+    "resetLayout": "Reset to default layout",
+    "resetLayoutAria": "Reset layout",
+    "doneEdit": "Done editing",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "edit": "Edit",
+    "resetConfirmTitle": "Reset to default layout?",
+    "resetConfirmBody": "Your custom layout will be overwritten. This cannot be undone.",
+    "resetConfirm": "Reset",
+    "resetConfirmBusy": "Resetting…",
+    "selectSize": "Choose size",
+    "selectSizeAria": "{title}: choose size",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "maximizeWidget": "Maximize widget",
+    "restoreWidget": "Restore widget",
+    "removeWidget": "Remove widget",
+    "removeWidgetAria": "Remove {title}",
+    "emptyTitle": "No widgets yet",
+    "emptyHint": "Use the floating button at the bottom-right to enter edit mode and add widgets.",
+    "exported": "Layout exported",
+    "imported": "Layout imported",
+    "importFailed": "Could not import layout",
+    "importInvalidJson": "Invalid layout JSON",
+    "importMissingWidgets": "Layout file is missing widgets",
+    "importNeedOne": "Layout must include at least one valid widget",
+    "importNoValid": "Layout contains no valid widgets",
+    "sourceFilterPrefix": "Filter sources",
+    "sourceFilterSelect": "Select sources",
+    "sourceFilterSelectAria": "{prefix}: select sources"
+  },
+  "schedule": {
+    "empty": "No schedule yet — add events on /schedule",
+    "hint": "See /schedule for full calendar management"
+  },
+  "items": {
+    "empty": "No item reminds yet — check Items",
+    "hint": "See Items for inventory and linked calendars"
+  },
+  "llmHealth": {
+    "total": "Profiles",
+    "complete": "Complete",
+    "incomplete": "Incomplete",
+    "default": "Usable profile",
+    "noDefault": "None",
+    "alertNone": "No LLM profiles configured",
+    "alertNoDefault": "No complete profile available",
+    "alertIncomplete": "Some profiles are incomplete"
+  },
+  "widgets": {
+    "map": {
+      "title": "Intelligence map",
+      "description": "Geographic markers overview (large)"
+    },
+    "wall": {
+      "title": "Message wall",
+      "description": "Multi-channel carousel"
+    },
+    "gantt": {
+      "title": "Gantt / by task",
+      "description": "Task activity spans; workset bars are the manual/assistant event envelope (shown alongside task bars)"
+    },
+    "ganttEvents": {
+      "title": "Gantt / by event",
+      "description": "Event time spans"
+    },
+    "events": {
+      "title": "Intelligence events",
+      "description": "Latest analysis + user events (not RRULE / item reminds)"
+    },
+    "feed": {
+      "title": "Live Monitor",
+      "description": "Live monitor message thumbnails"
+    },
+    "calendar": {
+      "title": "Month calendar",
+      "description": "This month's schedule"
+    },
+    "calendarDay": {
+      "title": "Day schedule",
+      "description": "Today's schedule"
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "description": "Trending topics"
+    },
+    "stats": {
+      "title": "Analysis stats",
+      "description": "7-day analysis volume"
+    },
+    "queue": {
+      "title": "Analysis queue",
+      "description": "Queue and in progress"
+    },
+    "system": {
+      "title": "System status",
+      "description": "Collectors / AI"
+    },
+    "clock": {
+      "title": "Clock",
+      "description": "Local time"
+    },
+    "weather": {
+      "title": "Weather",
+      "description": "Local weather and 7-day forecast"
+    },
+    "sources": {
+      "title": "Source status",
+      "description": "Source connections"
+    },
+    "logs": {
+      "title": "System logs",
+      "description": "Recent application logs"
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Analysis task status"
+    },
+    "actions": {
+      "title": "Notification actions",
+      "description": "Automation action status"
+    },
+    "schedule": {
+      "title": "My schedule",
+      "description": "Upcoming one-shot events and recurring series"
+    },
+    "items": {
+      "title": "Item reminds",
+      "description": "Upcoming item remind / expiry dates"
+    },
+    "llmHealth": {
+      "title": "AI profile health",
+      "description": "Profile count, completeness, and a usable profile"
+    }
+  }
+}

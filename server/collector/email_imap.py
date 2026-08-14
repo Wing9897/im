@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable
+from contextlib import suppress
 from typing import Any
 
 from server.collector.base import BasePlatformAdapter
@@ -84,7 +85,7 @@ class EmailImapAdapter(BasePlatformAdapter):
         self._password = password
         self._use_ssl = bool(use_ssl)
         self._folders = folders if folders else list(DEFAULT_FOLDERS)
-        self._poll_interval = clamp_poll_interval(poll_interval_seconds)
+        self._poll_interval: float = clamp_poll_interval(poll_interval_seconds)
         self._initial_sync_days = clamp_initial_sync_days(initial_sync_days)
         self._initial_sync_max = clamp_initial_sync_max_messages(initial_sync_max_messages)
         self._sender_allowlist = sender_allowlist or []
@@ -119,7 +120,7 @@ class EmailImapAdapter(BasePlatformAdapter):
                 asyncio.gather(*pending, return_exceptions=True),
                 timeout=_IMAP_DRAIN_TIMEOUT_SECONDS,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(
                 "Timed out draining %d IMAP operation(s) for source %s",
                 len(pending),
@@ -153,10 +154,8 @@ class EmailImapAdapter(BasePlatformAdapter):
         self._poll_task = None
         if poll_task is not None and not poll_task.done():
             poll_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await poll_task
-            except asyncio.CancelledError:
-                pass
         await self._drain_blocking_tasks()
         self._state.status = "disconnected"
         logger.info("Email IMAP adapter disconnected for source %s", self._source_id)

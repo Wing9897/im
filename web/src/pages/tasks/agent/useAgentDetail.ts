@@ -42,7 +42,7 @@ export function useAgentDetail() {
 
   const channelLabels = useMemo(() => {
     if (!project) return [];
-    return project.channelIds.map((ref) => resolveChannelLabel(ref, channelNameById));
+    return (project.channelIds ?? []).map((ref) => resolveChannelLabel(ref, channelNameById));
   }, [project, channelNameById]);
 
   const [events, setEvents] = useState<UserEvent[]>([]);

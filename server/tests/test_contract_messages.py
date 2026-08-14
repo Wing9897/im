@@ -23,8 +23,8 @@ async def test_messages_page(client):
         "/api/v1/messages/page",
         params={
             "limit": "2",
-            "cursor_time": body["nextCursor"]["timestamp"],
-            "cursor_id": body["nextCursor"]["id"],
+            "cursorTime": body["nextCursor"]["timestamp"],
+            "cursorId": body["nextCursor"]["id"],
         },
     )
     page2 = resp2.json()
@@ -37,7 +37,7 @@ async def test_messages_page(client):
 async def test_messages_page_can_skip_expensive_total_count(client):
     resp = await client.get(
         "/api/v1/messages/page",
-        params={"limit": "2", "include_total": "false"},
+        params={"limit": "2", "includeTotal": "false"},
     )
     assert resp.status_code == 200
     assert resp.json()["totalCount"] is None
@@ -50,7 +50,7 @@ async def test_messages_page_filters_by_channel_keys(client):
 
     telegram = await client.get(
         "/api/v1/messages/page",
-        params={"channel_ids": telegram_key},
+        params={"channelIds": telegram_key},
     )
     assert telegram.status_code == 200
     assert telegram.json()["totalCount"] == 2
@@ -58,20 +58,20 @@ async def test_messages_page_filters_by_channel_keys(client):
 
     both = await client.get(
         "/api/v1/messages/page",
-        params={"channel_ids": f"{telegram_key},{discord_key}"},
+        params={"channelIds": f"{telegram_key},{discord_key}"},
     )
     assert both.status_code == 200
     assert both.json()["totalCount"] == 3
 
     invalid = await client.get(
         "/api/v1/messages/page",
-        params={"channel_ids": "missing-separator"},
+        params={"channelIds": "missing-separator"},
     )
     assert invalid.status_code == 422
 
     too_many_channels = await client.get(
         "/api/v1/messages/page",
-        params={"channel_ids": ",".join(f"telegram:{index}" for index in range(101))},
+        params={"channelIds": ",".join(f"telegram:{index}" for index in range(101))},
     )
     assert too_many_channels.status_code == 422
 

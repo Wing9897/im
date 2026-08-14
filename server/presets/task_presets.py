@@ -11,7 +11,7 @@ system/schema prompt strings. This module is a static, user-facing catalog
 served over ``GET /api/v1/tasks/templates``.
 
 **Display-text source of truth**: the zh-Hant UI locale
-(``web/src/i18n/locales/zh-Hant/common.json`` → ``tasks.presets.<id>``).
+(``web/src/i18n/locales/zh-Hant/tasks.json`` → ``presets.<id>``).
 The Chinese strings here are the API **fallback** (zh-Hant slice of the shared
 JSON). Sync locales with ``uv run python scripts/sync_task_presets.py``;
 ``server/tests/test_task_preset_i18n_parity.py`` guards against drift.

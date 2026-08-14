@@ -49,14 +49,11 @@ export function LlmGlobalSlotsPanel({
       { value: UNBOUND, label: t("globalSlots.unbound") },
       ...profiles.map((profile) => {
         const complete = isLlmProfileComplete(profile);
-        const base = profile.isDefault
-          ? `${profile.name} (${t("profiles.defaultBadge")})`
-          : profile.name;
         return {
           value: profile.id,
           label: complete
-            ? base
-            : `${base} — ${t("globalSlots.incompleteBadge")}`,
+            ? profile.name
+            : `${profile.name} — ${t("globalSlots.incompleteBadge")}`,
           disabled: !complete,
         };
       }),

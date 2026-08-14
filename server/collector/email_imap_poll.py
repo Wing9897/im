@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from server.collector.email_imap_fetch import FetchedEmail, FolderPollResult
 from server.db.database import Database

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from server.agent.tool_args import arg, as_int, as_optional_bool, as_optional_str
 from server.agent.tool_limits import (
@@ -34,7 +35,7 @@ def _wants_all_time(args: dict[str, Any]) -> bool:
 
 
 def _default_start_date() -> str:
-    return to_iso_z(datetime.now(timezone.utc) - timedelta(days=DEFAULT_LOOKBACK_DAYS))
+    return to_iso_z(datetime.now(UTC) - timedelta(days=DEFAULT_LOOKBACK_DAYS))
 
 
 def _compact_event(item: dict[str, Any]) -> dict[str, Any]:

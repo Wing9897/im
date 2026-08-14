@@ -20,7 +20,8 @@ from server.api.schemas.responses.llm_profiles import (
     LlmStaffInstanceResponse,
 )
 from server.db.database import TransactionDb
-from server.errors import FORBIDDEN, NOT_FOUND, VALIDATION_ERROR, http_error
+from server.domain.llm_staff_classes import LLM_STAFF_CLASSES, LLM_TASK_STAFF_CLASSES
+from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.llm_global_slots import (
     LLM_GLOBAL_SLOTS,
     clear_slots_for_profile,
@@ -29,7 +30,6 @@ from server.llm_global_slots import (
     serialize_slot_binding,
     set_global_slot,
 )
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID, LLM_STAFF_CLASSES, LLM_TASK_STAFF_CLASSES
 from server.queries import llm_profiles_queries as q
 from server.secrets import MASKED_SECRET
 from server.util import new_id, utc_now_iso
@@ -39,8 +39,6 @@ from server.wire.serializer_domains.llm_profiles import (
 )
 
 router = APIRouter(prefix="/api/v1/llm", tags=["llm"], dependencies=API_DEPS)
-
-_WEB_SEARCH_PROVIDERS = frozenset({"auto", "duckduckgo", "brave"})
 
 
 def _notify_profile(request: Request, profile_id: str, action: str) -> None:
@@ -55,7 +53,7 @@ def _clean_name(name: str) -> str:
 
 
 def _normalize_staff_classes(raw: list[str] | None) -> list[str]:
-    """Normalize task-mode staff classes; ``assistant`` is ignored (global slot)."""
+    """Normalize task-mode staff classes; unknown values are rejected."""
     if not raw:
         return []
     out: list[str] = []
@@ -63,7 +61,7 @@ def _normalize_staff_classes(raw: list[str] | None) -> list[str]:
     for item in raw:
         value = str(item).strip()
         if value == "assistant":
-            # Global singleton — bind via /llm/global-slots/assistant.
+            # Retired staff class — bind via /llm/global-slots/assistant.
             continue
         if value not in LLM_TASK_STAFF_CLASSES:
             if value not in LLM_STAFF_CLASSES:
@@ -79,7 +77,7 @@ def _normalize_staff_classes(raw: list[str] | None) -> list[str]:
     return out
 
 
-async def _serialize_global_slots(db: Any) -> dict[str, Any]:
+async def _serialize_global_slots(db: Any) -> LlmGlobalSlotsResponse:
     bindings = await list_global_slots(db)
     slots: list[dict[str, Any]] = []
     for slot in LLM_GLOBAL_SLOTS:
@@ -88,47 +86,40 @@ async def _serialize_global_slots(db: Any) -> dict[str, Any]:
         if profile_id and row is None:
             profile_id = None
         slots.append(serialize_slot_binding(slot, profile_id, row))
-    return {"slots": slots}
+    return LlmGlobalSlotsResponse.model_validate({"slots": slots})
 
 
-def _normalize_web_search_provider(raw: str | None) -> str:
-    value = (raw or "auto").strip().lower()
-    return value if value in _WEB_SEARCH_PROVIDERS else "auto"
-
-
-async def _serialize_profile(db: Any, profile_id: str) -> dict[str, Any]:
+async def _serialize_profile(db: Any, profile_id: str) -> LlmProfileResponse:
     row = await require_row(db, "llm_profiles", "LLM profile", profile_id)
     staff = await q.fetch_staff_rows_for_profiles(db, [profile_id])
-    return serialize_llm_profile(row, staff)
+    return LlmProfileResponse.model_validate(serialize_llm_profile(row, staff))
 
 
 @router.get("/profiles", response_model=list[LlmProfileResponse])
-async def list_profiles(request: Request) -> list[dict[str, Any]]:
+async def list_profiles(request: Request) -> list[LlmProfileResponse]:
     db = get_db(request)
     rows = await q.fetch_all_profile_rows(db)
     staff = await q.fetch_staff_rows_for_profiles(db, [str(r["id"]) for r in rows])
     by_profile: dict[str, list[dict[str, Any]]] = {}
     for item in staff:
         by_profile.setdefault(str(item["profile_id"]), []).append(item)
-    return [serialize_llm_profile(row, by_profile.get(str(row["id"]), [])) for row in rows]
+    return [
+        LlmProfileResponse.model_validate(serialize_llm_profile(row, by_profile.get(str(row["id"]), [])))
+        for row in rows
+    ]
 
 
 @router.post("/profiles", status_code=201, response_model=LlmProfileResponse)
-async def create_profile(request: Request, body: LlmProfileUpsertBody) -> dict[str, Any]:
+async def create_profile(request: Request, body: LlmProfileUpsertBody) -> LlmProfileResponse:
     name = _clean_name(body.name)
     staff_classes = _normalize_staff_classes(list(body.staffClasses))
     profile_id = new_id()
     now = utc_now_iso()
     db = get_db(request)
-    existing_count = await q.count_profiles(db)
-    # First profile always becomes default; otherwise honor explicit isDefault.
-    make_default = existing_count == 0 or bool(body.isDefault)
     api_key = "" if body.apiKey in (None, MASKED_SECRET) else str(body.apiKey)
     brave_key = "" if body.braveSearchApiKey in (None, MASKED_SECRET) else str(body.braveSearchApiKey)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        if make_default:
-            await q.clear_default_flags(tx)
         await q.insert_profile(
             tx,
             profile_id=profile_id,
@@ -140,9 +131,9 @@ async def create_profile(request: Request, body: LlmProfileUpsertBody) -> dict[s
             thinking_enabled=1 if body.thinkingEnabled else 0,
             json_mode=(body.jsonMode or "disabled").strip() or "disabled",
             web_search_enabled=1 if body.webSearchEnabled else 0,
-            web_search_provider=_normalize_web_search_provider(body.webSearchProvider),
+            # Literal-typed body: unknown providers already rejected with 422.
+            web_search_provider=body.webSearchProvider,
             brave_search_api_key=brave_key,
-            is_default=1 if make_default else 0,
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=profile_id, staff_classes=staff_classes, now=now)
@@ -151,12 +142,12 @@ async def create_profile(request: Request, body: LlmProfileUpsertBody) -> dict[s
 
 
 @router.get("/profiles/{profile_id}", response_model=LlmProfileResponse)
-async def get_profile(request: Request, profile_id: str) -> dict[str, Any]:
+async def get_profile(request: Request, profile_id: str) -> LlmProfileResponse:
     return await _serialize_profile(get_db(request), profile_id)
 
 
 @router.patch("/profiles/{profile_id}", response_model=LlmProfileResponse)
-async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpsertBody) -> dict[str, Any]:
+async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpsertBody) -> LlmProfileResponse:
     db = get_db(request)
     existing = await q.fetch_profile_row(db, profile_id)
     if existing is None:
@@ -164,11 +155,7 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
     name = _clean_name(body.name)
     staff_classes = _normalize_staff_classes(list(body.staffClasses))
     now = utc_now_iso()
-    api_key: str | None
-    if body.apiKey is None or body.apiKey == MASKED_SECRET:
-        api_key = None
-    else:
-        api_key = str(body.apiKey)
+    api_key: str | None = None if body.apiKey is None or body.apiKey == MASKED_SECRET else str(body.apiKey)
     brave_key: str | None
     if body.braveSearchApiKey is None or body.braveSearchApiKey == MASKED_SECRET:
         brave_key = None
@@ -176,8 +163,6 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
         brave_key = str(body.braveSearchApiKey)
     async with db.transaction() as conn:
         tx = TransactionDb(conn)
-        if body.isDefault is True:
-            await q.set_default_profile(tx, profile_id, now=now)
         await q.update_profile(
             tx,
             profile_id=profile_id,
@@ -189,7 +174,7 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
             thinking_enabled=1 if body.thinkingEnabled else 0,
             json_mode=(body.jsonMode or "disabled").strip() or "disabled",
             web_search_enabled=1 if body.webSearchEnabled else 0,
-            web_search_provider=_normalize_web_search_provider(body.webSearchProvider),
+            web_search_provider=body.webSearchProvider,
             brave_search_api_key=brave_key,
             now=now,
         )
@@ -199,20 +184,11 @@ async def patch_profile(request: Request, profile_id: str, body: LlmProfileUpser
 
 
 @router.delete("/profiles/{profile_id}", response_model=LlmProfileDeleteResponse)
-async def delete_profile(request: Request, profile_id: str) -> dict[str, bool]:
+async def delete_profile(request: Request, profile_id: str) -> LlmProfileDeleteResponse:
     db = get_db(request)
     existing = await q.fetch_profile_row(db, profile_id)
     if existing is None:
         raise http_error(404, "LLM profile not found", error_code=NOT_FOUND)
-    profile_count = await q.count_profiles(db)
-    # Allow deleting the last profile (empty table = no default). Otherwise the
-    # current default must be reassigned before delete.
-    if bool(int(existing.get("is_default") or 0)) and profile_count > 1:
-        raise http_error(
-            403,
-            "Set another profile as default before deleting this one",
-            error_code=FORBIDDEN,
-        )
     in_use = await q.count_tasks_using_profile(db, profile_id)
     if in_use:
         raise http_error(
@@ -224,7 +200,7 @@ async def delete_profile(request: Request, profile_id: str) -> dict[str, bool]:
         await q.delete_profile(TransactionDb(conn), profile_id)
     await clear_slots_for_profile(db, profile_id)
     _notify_profile(request, profile_id, "deleted")
-    return {"ok": True}
+    return LlmProfileDeleteResponse(ok=True)
 
 
 @router.post("/profiles/{profile_id}/copy", status_code=201, response_model=LlmProfileResponse)
@@ -232,7 +208,7 @@ async def copy_profile(
     request: Request,
     profile_id: str,
     body: LlmProfileCopyBody | None = None,
-) -> dict[str, Any]:
+) -> LlmProfileResponse:
     db = get_db(request)
     existing = await q.fetch_profile_row(db, profile_id)
     if existing is None:
@@ -258,7 +234,6 @@ async def copy_profile(
             web_search_enabled=int(existing.get("web_search_enabled") or 0),
             web_search_provider=str(existing.get("web_search_provider") or "auto"),
             brave_search_api_key_cipher=brave_cipher,
-            is_default=0,
             now=now,
         )
         await q.upsert_staff_classes(tx, profile_id=new_profile_id, staff_classes=staff_classes, now=now)
@@ -266,27 +241,14 @@ async def copy_profile(
     return await _serialize_profile(db, new_profile_id)
 
 
-@router.post("/profiles/{profile_id}/set-default", response_model=LlmProfileResponse)
-async def set_default_profile(request: Request, profile_id: str) -> dict[str, Any]:
-    db = get_db(request)
-    existing = await q.fetch_profile_row(db, profile_id)
-    if existing is None:
-        raise http_error(404, "LLM profile not found", error_code=NOT_FOUND)
-    now = utc_now_iso()
-    async with db.transaction() as conn:
-        await q.set_default_profile(TransactionDb(conn), profile_id, now=now)
-    _notify_profile(request, profile_id, "updated")
-    return await _serialize_profile(db, profile_id)
-
-
 @router.get("/staff-instances", response_model=list[LlmStaffInstanceResponse])
-async def list_staff_instances(request: Request) -> list[dict[str, Any]]:
+async def list_staff_instances(request: Request) -> list[LlmStaffInstanceResponse]:
     rows = await q.fetch_all_staff_rows(get_db(request))
-    return [serialize_llm_staff_instance(row) for row in rows]
+    return [LlmStaffInstanceResponse.model_validate(serialize_llm_staff_instance(row)) for row in rows]
 
 
 @router.get("/global-slots", response_model=LlmGlobalSlotsResponse)
-async def get_global_slots(request: Request) -> dict[str, Any]:
+async def get_global_slots(request: Request) -> LlmGlobalSlotsResponse:
     """Singleton bindings: assistant, A2A (liaison), task advisor (taskEditor)."""
     return await _serialize_global_slots(get_db(request))
 
@@ -296,13 +258,14 @@ async def put_global_slot(
     request: Request,
     slot: str,
     body: LlmGlobalSlotBindBody,
-) -> dict[str, Any]:
+) -> LlmGlobalSlotBindingResponse:
     if not is_global_slot_id(slot):
         raise http_error(404, f"Unknown global slot: {slot}", error_code=NOT_FOUND)
     db = get_db(request)
     profile_id = await set_global_slot(db, slot, body.profileId)  # type: ignore[arg-type]
     row = await q.fetch_profile_row(db, profile_id) if profile_id else None
-    return serialize_slot_binding(slot, profile_id, row)  # type: ignore[arg-type]
+    binding = serialize_slot_binding(slot, profile_id, row)  # type: ignore[arg-type]
+    return LlmGlobalSlotBindingResponse.model_validate(binding)
 
 
-__all__ = ["DEFAULT_LLM_PROFILE_ID", "router"]
+__all__ = ["router"]

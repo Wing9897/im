@@ -13,7 +13,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.collector.backoff import BASE_DELAY_SECONDS, MAX_DELAY_SECONDS, next_delay
 from server.db.database import Database
@@ -71,7 +71,7 @@ class BasePlatformAdapter(ABC):
         self._state.status = "connected"
         self._state.retry_count = 0
         self._state.last_error = None
-        self._state.connected_since = datetime.now(timezone.utc)
+        self._state.connected_since = datetime.now(UTC)
 
     def _broadcast_status_change(self, status: str, last_error: str | None = None) -> None:
         """Publish per-source connection changes.

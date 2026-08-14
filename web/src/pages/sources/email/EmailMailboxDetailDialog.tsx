@@ -8,11 +8,11 @@ import {
 import { formatSourceLabel } from "../../../utils/sourceDisplay";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
+  detailChromeCardTitleClass,
   emailDetailFolderCursorClass,
   emailDetailFolderItemClass,
   emailDetailFolderListClass,
   emailDetailHeroClass,
-  emailDetailHeroLabelClass,
   emailDetailHeroValueClass,
   sourceDetailSubtitleClass,
 } from "../../../components/detail/classes";
@@ -49,12 +49,12 @@ export function EmailMailboxDetailDialog({
       onEdit={onEdit}
     >
       <div className={emailDetailHeroClass}>
-        <div className={emailDetailHeroLabelClass}>{t("email.imapConnection")}</div>
+        <div className={detailChromeCardTitleClass}>{t("email.imapConnection")}</div>
         <div className={emailDetailHeroValueClass}>
           {mailbox.imapHost}:{mailbox.imapPort} {mailbox.useSsl ? "(SSL)" : ""}
         </div>
       </div>
-      <div className={emailDetailHeroLabelClass}>{t("email.foldersAndCursor")}</div>
+      <div className={detailChromeCardTitleClass}>{t("email.foldersAndCursor")}</div>
       <ul className={emailDetailFolderListClass}>
         {mailbox.folders.length > 0 ? (
           mailbox.folders.map((folder) => (

@@ -62,11 +62,6 @@
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
     "versionLoading": "加载中…",
     "versionUnavailable": "无法取得",
-    "lanAccessLabel": "允许局域网访问",
-    "lanAccessHelp": "将本机服务绑定到所有网卡（0.0.0.0），以便局域网其他设备以远程客户端连接。默认仅本机环回（127.0.0.1）。更改后会重启应用。若经 port-forward 暴露到公网，须在前面加 Caddy/Nginx 等 TLS 反代——应用本身不处理 HTTPS。",
-    "lanAccessEnabled": "已开启局域网访问（即将重启）",
-    "lanAccessDisabled": "已关闭局域网访问（即将重启）",
-    "lanAccessRestarting": "正在重启以应用绑定地址…",
     "advancedSectionTitle": "进阶与维运",
     "debug": {
       "sectionTitle": "调试与诊断",
@@ -609,7 +604,6 @@
     "edit": "编辑设定档",
     "copy": "复制设定档",
     "delete": "删除设定档",
-    "setDefault": "设为默认",
     "cancel": "取消",
     "save": "保存设定档",
     "dialogCreateTitle": "新建 AI 设定档",
@@ -622,16 +616,12 @@
     "namePlaceholder": "例如：本机 Ollama",
     "nameRequired": "请填写设定档名称。",
     "apiKeyRequired": "此供应商需要 API 密钥。",
-    "defaultLabel": "默认设定档",
-    "defaultHelp": "新任务未指定设定档时使用。",
-    "defaultBadge": "默认",
     "staffClassesLabel": "任务员工类别",
     "staffClassesHelp": "哪些任务模式角色可使用此设定档。任务仍须在表单挑选 llmProfileId。助手／A2A／任务顾问请用上方全局槽位。",
     "staffClass": {
       "leaderboard": "排行榜分析员",
       "intel_event": "情报事件分析员",
-      "agent": "项目经理",
-      "assistant": "助手"
+      "agent": "项目经理"
     },
     "noStaffClasses": "未绑定任务员工类别",
     "noModel": "未设定模型",
@@ -640,8 +630,6 @@
     "updated": "设定档已更新",
     "copied": "设定档已复制",
     "deleted": "设定档已删除",
-    "setDefaultSuccess": "默认设定档已更新",
-    "cannotDeleteDefault": "请先将其他设定档设为默认，再删除此档。",
     "deleteConfirm": "确定删除设定档「{name}」？其上的任务员工绑定会移除；若全局槽位使用此档也会解除。"
   }
 }

@@ -7,11 +7,11 @@ import { useTranslation } from "react-i18next";
 
 import { DetailPresentationShell } from "../../../components/detail";
 import {
+  detailChromeBodyGapMdClass,
+  detailChromeFooterRaisedClass,
+  detailChromeHeaderClass,
+  detailChromeTitleClass,
   detailDialogShellClass,
-  taskDetailBodyClass,
-  taskDetailFooterClass,
-  taskDetailHeaderClass,
-  taskDetailTitleClass,
 } from "../../../components/detail/classes";
 import { Button, PanelSection } from "../../../components/ui";
 import { captionClass } from "../../../components/ui/pageTypography";
@@ -35,7 +35,7 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
   return (
     <>
       <PanelSection
-        title={t("tasks.agentDetail.sourcesTitle")}
+        title={t("tasks:agentDetail.sourcesTitle")}
         showCount
         itemCount={channelLabels.length}
         headerActions={
@@ -46,7 +46,7 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
               onClick={() => setSourcesOpen(true)}
               data-testid="project-detail-sources-all"
             >
-              {t("tasks.agentDetail.sourcesViewAll", { count: channelLabels.length })}
+              {t("tasks:agentDetail.sourcesViewAll", { count: channelLabels.length })}
             </Button>
           ) : null
         }
@@ -71,12 +71,12 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
                 onClick={() => setSourcesOpen(true)}
                 data-testid="project-detail-sources-more"
               >
-                {t("tasks.detail.channelsMore", { count: hiddenSourceCount })}
+                {t("tasks:detail.channelsMore", { count: hiddenSourceCount })}
               </button>
             ) : null}
           </div>
         ) : (
-          <p className={captionClass}>{t("tasks.detail.noChannels")}</p>
+          <p className={captionClass}>{t("tasks:detail.noChannels")}</p>
         )}
       </PanelSection>
 
@@ -86,18 +86,18 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
           onClose={() => setSourcesOpen(false)}
           className={detailDialogShellClass}
           width="min(560px, calc(100vw - 32px))"
-          aria-label={t("tasks.agentDetail.sourcesDialogTitle")}
+          aria-label={t("tasks:agentDetail.sourcesDialogTitle")}
         >
-          <header className={`${taskDetailHeaderClass} shrink-0`}>
-            <h2 className={taskDetailTitleClass}>
-              {t("tasks.agentDetail.sourcesDialogTitle")}
+          <header className={`${detailChromeHeaderClass} shrink-0`}>
+            <h2 className={detailChromeTitleClass}>
+              {t("tasks:agentDetail.sourcesDialogTitle")}
             </h2>
             <p className={`${captionClass} mt-1`}>
               {t("ui.itemsCount", { count: channelLabels.length })}
             </p>
           </header>
           <div
-            className={`${taskDetailBodyClass} flex-1`}
+            className={`${detailChromeBodyGapMdClass} flex-1`}
             data-testid="project-detail-sources-dialog-list"
           >
             <ul className="m-0 flex list-none flex-col gap-sm p-0">
@@ -111,7 +111,7 @@ export function AgentDetailSourcesSection({ channelLabels }: AgentDetailSourcesS
               ))}
             </ul>
           </div>
-          <footer className={`${taskDetailFooterClass} shrink-0`}>
+          <footer className={`${detailChromeFooterRaisedClass} shrink-0`}>
             <Button variant="secondary" onClick={() => setSourcesOpen(false)}>
               {t("dialog.close")}
             </Button>

@@ -195,8 +195,8 @@ export function BoardWidgetFrame({
                   ref={sizeBtnRef}
                   type="button"
                   className="board-widget-frame__btn board-widget-frame__size-btn"
-                  title={t("board.shell.selectSize")}
-                  aria-label={t("board.shell.selectSizeAria", { title: meta.title })}
+                  title={t("board:shell.selectSize")}
+                  aria-label={t("board:shell.selectSizeAria", { title: meta.title })}
                   aria-expanded={sizeOpen}
                   data-testid={`board-size-${widgetId}`}
                   onClick={() => setSizeOpen((v) => !v)}
@@ -209,9 +209,9 @@ export function BoardWidgetFrame({
             <button
               type="button"
               className="board-widget-frame__btn"
-              title={maximized ? t("board.shell.restore") : t("board.shell.maximize")}
+              title={maximized ? t("board:shell.restore") : t("board:shell.maximize")}
               aria-label={
-                maximized ? t("board.shell.restoreWidget") : t("board.shell.maximizeWidget")
+                maximized ? t("board:shell.restoreWidget") : t("board:shell.maximizeWidget")
               }
               onClick={maximized ? onMinimize : onMaximize}
             >
@@ -225,8 +225,8 @@ export function BoardWidgetFrame({
               <button
                 type="button"
                 className="board-widget-frame__btn board-widget-frame__btn--danger"
-                title={t("board.shell.removeWidget")}
-                aria-label={t("board.shell.removeWidgetAria", { title: meta.title })}
+                title={t("board:shell.removeWidget")}
+                aria-label={t("board:shell.removeWidgetAria", { title: meta.title })}
                 data-testid={`board-remove-${widgetId}`}
                 onClick={onRemove}
               >

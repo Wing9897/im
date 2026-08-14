@@ -8,7 +8,7 @@ camelCase wire shape live in exactly one place.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from server.util import utc_now_iso
 from server.wire.serializers import serialize_message
@@ -52,17 +52,17 @@ async def insert_message(
     db: Any,
     *,
     message_id: str,
-    source_id: Optional[str],
+    source_id: str | None,
     platform: str,
     platform_id: str,
     content: str,
     timestamp: str,
-    sender_id: Optional[str] = None,
-    sender_name: Optional[str] = None,
-    platform_message_id: Optional[str] = None,
-    raw_data: Optional[str] = None,
+    sender_id: str | None = None,
+    sender_name: str | None = None,
+    platform_message_id: str | None = None,
+    raw_data: str | None = None,
     channel_name: str = "",
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Upsert the channel, insert the message (dedup via the
     ``(platform, platform_id, platform_message_id)`` unique index), and
     return the camelCase Message dict — or ``None`` for a duplicate.
@@ -94,7 +94,7 @@ async def insert_message(
 
     # Prefer the caller-supplied channel name; fall back to the stored one so
     # API-ingested messages (blank name) still carry the known channel name.
-    effective_name: Optional[str] = channel_name or None
+    effective_name: str | None = channel_name or None
     if effective_name is None:
         effective_name = (
             await db.fetch_value(

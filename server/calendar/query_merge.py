@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 from server.calendar.normalize import matches_search
 from server.worksets_const import SYSTEM_WORKSET_ID

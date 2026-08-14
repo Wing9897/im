@@ -75,30 +75,30 @@ export function getTaskSaveBlockReason(
   fields: SaveGateFields,
   isSaving = false,
 ): string | null {
-  if (isSaving) return String(i18n.t("tasks.editor.saveNeeds.saving"));
-  if (!fields.name.trim()) return String(i18n.t("tasks.editor.saveNeeds.name"));
+  if (isSaving) return String(i18n.t("tasks:editor.saveNeeds.saving"));
+  if (!fields.name.trim()) return String(i18n.t("tasks:editor.saveNeeds.name"));
 
   if (fields.analysisMode === "agent") {
     if (!fields.promptTemplate.trim()) {
-      return String(i18n.t("tasks.editor.saveNeeds.prompt"));
+      return String(i18n.t("tasks:editor.saveNeeds.prompt"));
     }
     if (!fields.outputCalendar && !fields.outputAnalysisEvents) {
-      return String(i18n.t("tasks.editor.saveNeeds.agentOutput"));
+      return String(i18n.t("tasks:editor.saveNeeds.agentOutput"));
     }
     if (fields.triggerMode === "message_cursor" && fields.outputAnalysisEvents) {
-      return String(i18n.t("tasks.editor.saveNeeds.agentCursorAnalysis"));
+      return String(i18n.t("tasks:editor.saveNeeds.agentCursorAnalysis"));
     }
     if (fields.triggerMode === "message_cursor" && fields.channelIds.length === 0) {
-      return String(i18n.t("tasks.editor.saveNeeds.channels"));
+      return String(i18n.t("tasks:editor.saveNeeds.channels"));
     }
     return null;
   }
 
   if (!fields.promptTemplate.trim()) {
-    return String(i18n.t("tasks.editor.saveNeeds.prompt"));
+    return String(i18n.t("tasks:editor.saveNeeds.prompt"));
   }
   if (fields.channelIds.length === 0) {
-    return String(i18n.t("tasks.editor.saveNeeds.channels"));
+    return String(i18n.t("tasks:editor.saveNeeds.channels"));
   }
   return null;
 }

@@ -24,10 +24,6 @@ ALL_TIMELINE_SOURCES: Final[tuple[TimelineSource, ...]] = (
 
 ALLOWED_TIMELINE_SOURCES: Final[frozenset[str]] = frozenset(ALL_TIMELINE_SOURCES)
 
-TIMELINE_SOURCE_CHECK_SQL = "CHECK (source IN ({}))".format(
-    ",".join(f"'{value}'" for value in ALL_TIMELINE_SOURCES)
-)
+TIMELINE_SOURCE_CHECK_SQL = "CHECK (source IN ({}))".format(",".join(f"'{value}'" for value in ALL_TIMELINE_SOURCES))
 
-TIMELINE_SOURCE_ERROR = (
-    "source must be 'analysis', 'user', 'recurring', or 'item_remind'"
-)
+TIMELINE_SOURCE_ERROR = "source must be 'analysis', 'user', 'recurring', or 'item_remind'"

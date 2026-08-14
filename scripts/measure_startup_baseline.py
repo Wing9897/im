@@ -25,8 +25,7 @@ async def _time_one(db_path: Path) -> float:
     )
     t0 = time.perf_counter()
     async with app.router.lifespan_context(app):
-        elapsed_ms = (time.perf_counter() - t0) * 1000.0
-    return elapsed_ms
+        return (time.perf_counter() - t0) * 1000.0
 
 
 async def main() -> None:

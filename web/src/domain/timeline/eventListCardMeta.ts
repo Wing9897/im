@@ -260,13 +260,13 @@ export function eventListCardTitle(
   return base;
 }
 
-/** Empty / whitespace / legacy "N/A" → display placeholder for location rows. */
+/** Empty / whitespace / legacy "N/A" → empty string (no literal N/A placeholder). */
 export function calendarLocationDisplay(
   raw: string | null | undefined,
 ): string {
   const trimmed = (raw ?? "").trim();
   if (!trimmed || trimmed.toUpperCase() === "N/A") {
-    return "N/A";
+    return "";
   }
   return trimmed;
 }

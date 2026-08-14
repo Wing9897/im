@@ -11,22 +11,23 @@ from httpx import ASGITransport, AsyncClient
 from server.auth.admin_auth import create_admin_account
 from server.config import set_configs
 from server.db.database import Database
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
 from server.main import create_app
 from server.secrets import _fernet, protect_text
 from server.secrets_probe import probe_stored_secrets, scrub_undecryptable_secrets
+from server.tests.db_helpers import insert_direct_analysis_task, insert_minimal_source
+from server.tests.seed import ensure_default_llm_profile
 from server.util import utc_now_iso
 
 
 async def _app_with_db(tmp_path: Path, *, db_name: str = "secrets-gate.db"):
     db_path = tmp_path / db_name
-    application = create_app(
+    return create_app(
         db_path=str(db_path),
         start_collector=False,
         start_scheduler=False,
         serve_static=False,
     )
-    return application
 
 
 async def _break_key(key_path: Path) -> None:
@@ -35,27 +36,8 @@ async def _break_key(key_path: Path) -> None:
     _fernet.cache_clear()
 
 
-async def _ensure_default_profile(db: Database) -> None:
-    exists = await db.fetch_value(
-        "SELECT id FROM llm_profiles WHERE id = ?",
-        (DEFAULT_LLM_PROFILE_ID,),
-    )
-    if exists:
-        return
-    now = utc_now_iso()
-    await db.execute(
-        "INSERT INTO llm_profiles ("
-        "id, name, provider, base_url, model, api_key, thinking_enabled, json_mode, "
-        "web_search_enabled, web_search_provider, brave_search_api_key, is_default, "
-        "created_at, updated_at"
-        ") VALUES (?, 'Test Ollama', 'ollama', 'http://localhost:11434', 'llama-test', '', "
-        "0, 'disabled', 1, 'auto', '', 1, ?, ?)",
-        (DEFAULT_LLM_PROFILE_ID, now, now),
-    )
-
-
-async def _set_default_profile_api_key(db: Database, api_key: str) -> None:
-    await _ensure_default_profile(db)
+async def _set_fixture_profile_api_key(db: Database, api_key: str) -> None:
+    await ensure_default_llm_profile(db)
     await db.execute(
         "UPDATE llm_profiles SET api_key = ?, updated_at = ? WHERE id = ?",
         (protect_text(api_key), utc_now_iso(), DEFAULT_LLM_PROFILE_ID),
@@ -85,7 +67,7 @@ async def test_probe_fails_when_ciphertext_cannot_decrypt(tmp_path, monkeypatch)
     await db.connect()
     await db.ensure_schema()
     try:
-        await _set_default_profile_api_key(db, "sk-real")
+        await _set_fixture_profile_api_key(db, "sk-real")
         raw = await db.fetch_value("SELECT api_key FROM llm_profiles WHERE id = ?", (DEFAULT_LLM_PROFILE_ID,))
         assert str(raw).startswith("enc:v1:")
 
@@ -110,29 +92,22 @@ async def test_scrub_clears_ciphertext_keeps_business_rows(tmp_path, monkeypatch
     await db.connect()
     await db.ensure_schema()
     try:
-        await _set_default_profile_api_key(db, "sk-real")
+        await _set_fixture_profile_api_key(db, "sk-real")
         await set_configs(db, {"ui_locale": "zh-Hans"})
-        await db.execute(
-            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-            "VALUES ('a1', 'email', 'L', 'connected', ?, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
-            (protect_text('{"password":"x"}'),),
-        )
-        await db.execute(
-            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-            "VALUES ('a2', 'telegram', 'stale', 'connected', NULL, "
-            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"
-        )
+        await insert_minimal_source(db, "a1", "email", name="L", credentials=protect_text('{"password":"x"}'))
+        await insert_minimal_source(db, "a2", "telegram", name="stale")
         await db.execute(
             "INSERT INTO actions (id, name, action_type, configuration, is_enabled, created_at, updated_at) "
             "VALUES ('act1', 'Hook', 'http_webhook', ?, 1, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
             (protect_text('{"url":"https://example.com"}'),),
         )
-        await db.execute(
-            "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
-            "VALUES ('t1', 'Keep me', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, "
-            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
-            (DEFAULT_LLM_PROFILE_ID,),
+        await insert_direct_analysis_task(
+            db,
+            "t1",
+            analysis_mode="leaderboard",
+            name="Keep me",
+            prompt_template="p",
+            schedule_rrule="FREQ=SECONDLY;INTERVAL=10",
         )
 
         counts = await scrub_undecryptable_secrets(db)
@@ -167,13 +142,14 @@ async def test_secrets_gate_blocks_then_rotate_unlocks(tmp_path, monkeypatch):
     async with app1.router.lifespan_context(app1):
         assert app1.state.secrets_ready is True
         await create_admin_account(app1.state.db, username="admin", password="password1")
-        await _set_default_profile_api_key(app1.state.db, "sk-keep")
-        await app1.state.db.execute(
-            "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, analysis_time_range, "
-            "version, is_active, schedule_rrule, llm_profile_id, created_at, updated_at) "
-            "VALUES ('t-keep', 'Keep Task', 'p', 'leaderboard', 'all', 1, 1, 'FREQ=SECONDLY;INTERVAL=10', ?, "
-            "'2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
-            (DEFAULT_LLM_PROFILE_ID,),
+        await _set_fixture_profile_api_key(app1.state.db, "sk-keep")
+        await insert_direct_analysis_task(
+            app1.state.db,
+            "t-keep",
+            analysis_mode="leaderboard",
+            name="Keep Task",
+            prompt_template="p",
+            schedule_rrule="FREQ=SECONDLY;INTERVAL=10",
         )
         transport = ASGITransport(app=app1)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -246,7 +222,7 @@ async def test_secrets_gate_blocks_then_reset_unlocks(tmp_path, monkeypatch):
     app1 = await _app_with_db(tmp_path, db_name="gate.db")
     async with app1.router.lifespan_context(app1):
         assert app1.state.secrets_ready is True
-        await _set_default_profile_api_key(app1.state.db, "sk-keep")
+        await _set_fixture_profile_api_key(app1.state.db, "sk-keep")
         health = None
         transport = ASGITransport(app=app1)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -334,11 +310,7 @@ async def test_probe_sources_ciphertext(tmp_path, monkeypatch):
     await db.ensure_schema()
     try:
         cipher = protect_text('{"password":"x"}')
-        await db.execute(
-            "INSERT INTO sources (id, platform, name, status, credentials, created_at, updated_at) "
-            "VALUES ('a1', 'email', 'L', 'disconnected', ?, '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')",
-            (cipher,),
-        )
+        await insert_minimal_source(db, "a1", "email", name="L", status="disconnected", credentials=cipher)
         ready, err = await probe_stored_secrets(db)
         assert ready is True
         assert err is None

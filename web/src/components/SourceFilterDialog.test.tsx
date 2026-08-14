@@ -298,7 +298,8 @@ describe("SourceFilterDialog", () => {
       .querySelector('[data-testid="board-source-filter-web-1"]')!
       .closest("label")!;
     expect(row.textContent).toContain("Pricing watch");
-    expect(row.textContent).toMatch(/Agent/i);
+    // Agent-mode tasks are labeled "Project Manager task" since the staff-class rename.
+    expect(row.textContent).toMatch(/Project Manager/i);
 
     act(() => {
       (document.querySelector('[data-testid="board-source-filter-web-1"]') as HTMLInputElement).click();

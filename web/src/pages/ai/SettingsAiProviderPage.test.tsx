@@ -15,8 +15,7 @@ vi.mock("../../api/llmProfiles", () => ({
   patchLlmProfile: vi.fn(),
   deleteLlmProfile: vi.fn(),
   copyLlmProfile: vi.fn(),
-  setDefaultLlmProfile: vi.fn(),
-}));
+  }));
 
 vi.mock("../../api/system", () => ({
   testAiEngine: vi.fn(),
@@ -43,7 +42,6 @@ function completeProfile(overrides: Record<string, unknown> = {}) {
     webSearchEnabled: true,
     webSearchProvider: "auto",
     braveSearchApiKey: "",
-    isDefault: true,
     staffClasses: ["agent"],
     staffInstances: [],
     createdAt: null,
@@ -59,7 +57,6 @@ const unboundSlots = [
     profileName: null,
     profileProvider: null,
     profileModel: null,
-    profileIsDefault: null,
   },
   {
     slot: "liaison",
@@ -67,7 +64,6 @@ const unboundSlots = [
     profileName: null,
     profileProvider: null,
     profileModel: null,
-    profileIsDefault: null,
   },
   {
     slot: "taskEditor",
@@ -75,7 +71,6 @@ const unboundSlots = [
     profileName: null,
     profileProvider: null,
     profileModel: null,
-    profileIsDefault: null,
   },
 ];
 
@@ -96,8 +91,7 @@ describe("SettingsAiProviderPage", () => {
         profileName: "Local",
         profileProvider: "ollama",
         profileModel: "llama3",
-        profileIsDefault: true,
-      },
+          },
       unboundSlots[1],
       unboundSlots[2],
     ]);

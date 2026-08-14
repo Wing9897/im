@@ -16,7 +16,11 @@ router = APIRouter(tags=["events"], dependencies=API_DEPS)
 @router.get("/api/v1/events")
 async def events(request: Request) -> Any:  # noqa: ANN401
     """SSE stream. EventSource cannot send headers; verify_auth (via API_DEPS)
-    accepts ?token= and the loopback bypass."""
+    accepts ?token= and the loopback bypass.
+
+    Frame contract (``SseEventEnvelope`` + the 8 ``Sse*Payload`` components) is
+    injected into OpenAPI by ``server/api/openapi_ext.py``.
+    """
     broadcaster: SseBroadcaster = request.app.state.broadcaster
     # Admit here rather than in the stream generator: subscribe() checks the cap
     # and registers in one synchronous step, so concurrent requests cannot all

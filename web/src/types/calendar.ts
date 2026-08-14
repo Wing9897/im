@@ -22,7 +22,7 @@ export interface RecurrenceEnd {
 
 /**
  * Structured recurrence configuration backing the visual recurrence editor.
- * Serialized to / parsed from an RFC 5545 RRULE string by `utils/rrule.ts`.
+ * Serialized to / parsed from an RFC 5545 RRULE string by `domain/schedule/rrule.ts`.
  */
 export interface RecurrenceConfig {
   /** Recurrence frequency (FREQ) */

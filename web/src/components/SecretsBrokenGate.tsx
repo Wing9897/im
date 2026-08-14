@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { rotateSecretsPublic } from "../api/system";
 import { normalizeUsernameInput } from "./setup/useSetupDeviceAuth";
+import { dialogShellClass } from "./dialogs/dialogShellClasses";
 import { AlertBanner } from "./ui/AlertBanner";
 import { Button } from "./ui/Button";
 import { pageTitleClass } from "./ui/pageTypography";
@@ -42,9 +43,10 @@ export function SecretsBrokenGate({
   };
 
   return (
+    // Full-page blocking gate: ModalDialog would add dismiss/overlay-close the user must not have.
     <div className="flex min-h-screen items-center justify-center bg-surface-base p-xl text-text-primary">
       <div
-        className="im-material-panel w-full max-w-[480px] rounded-lg p-2xl"
+        className={`${dialogShellClass} w-full max-w-[480px] rounded-lg p-2xl`}
         role="dialog"
         aria-modal="true"
         aria-label={t("secretsBroken.dialogAria")}

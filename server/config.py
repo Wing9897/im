@@ -1,12 +1,10 @@
 """system_config access with the authoritative default key set.
 
 Key list matches ``CONFIG_DEFAULTS`` in this module.
-LLM connection settings live on ``llm_profiles`` (stamp 29+), not here.
+LLM connection settings live on ``llm_profiles``, not here.
 """
 
 from __future__ import annotations
-
-from typing import Optional
 
 from server.db.database import Database
 from server.domain.mcp_capabilities import MCP_CAPABILITY_CONFIG_DEFAULTS
@@ -71,7 +69,7 @@ CONFIG_DEFAULTS: dict[str, str] = {
 }
 
 #: Value clamping ranges for integer keys (min, max). None = unbounded side.
-_INT_RANGES: dict[str, tuple[int, Optional[int]]] = {
+_INT_RANGES: dict[str, tuple[int, int | None]] = {
     "analysis_batch_message_limit": (1, 500),
     "analysis_max_total_chars": (500, 200000),
     "analysis_max_estimated_input_tokens": (500, 100000),

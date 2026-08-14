@@ -1,7 +1,7 @@
 """Configurable multi-provider LLM client (Ollama / OpenAI-compatible /
 Gemini-compatible / OpenRouter).
 
-Provider connection details live in ``llm_profiles`` rows (stamp 29+).
+Provider connection details live in ``llm_profiles`` rows.
 The configured ``base_url`` is always honoured — the previous generation
 hard-coded the OpenAI/Gemini endpoints, breaking every "-compatible" deployment.
 
@@ -18,8 +18,7 @@ from typing import Any, ClassVar
 import aiohttp
 
 from server.analyzer.llm_client_factory import (
-    client_from_assistant_staff,
-    client_from_default_profile,
+    client_from_assistant_slot,
     client_from_draft,
     client_from_liaison_slot,
     client_from_profile,
@@ -93,41 +92,36 @@ class ConfigurableLlmClient:
         self._session: aiohttp.ClientSession | None = None
 
     @classmethod
-    def _from_resolved_config(cls, config, timeout_seconds: int) -> "ConfigurableLlmClient":
+    def _from_resolved_config(cls, config, timeout_seconds: int) -> ConfigurableLlmClient:
         return client_from_resolved_config(cls, config, timeout_seconds)
 
     @classmethod
-    async def from_default_profile(cls, db: Database) -> "ConfigurableLlmClient":
-        """Build a client from the default ``llm_profiles`` row."""
-        return await client_from_default_profile(cls, db)
-
-    @classmethod
-    async def from_assistant_staff(
+    async def from_assistant_slot(
         cls,
         db: Database,
         *,
         profile_id: str | None = None,
-    ) -> "ConfigurableLlmClient":
+    ) -> ConfigurableLlmClient:
         """Build a client from the assistant global slot, or an explicit profile override."""
-        return await client_from_assistant_staff(cls, db, profile_id=profile_id)
+        return await client_from_assistant_slot(cls, db, profile_id=profile_id)
 
     @classmethod
-    async def from_liaison_slot(cls, db: Database) -> "ConfigurableLlmClient":
+    async def from_liaison_slot(cls, db: Database) -> ConfigurableLlmClient:
         """Build a client from the A2A / account-manager global slot."""
         return await client_from_liaison_slot(cls, db)
 
     @classmethod
-    async def from_task_editor_slot(cls, db: Database) -> "ConfigurableLlmClient":
+    async def from_task_editor_slot(cls, db: Database) -> ConfigurableLlmClient:
         """Build a client from the task-advisor global slot."""
         return await client_from_task_editor_slot(cls, db)
 
     @classmethod
-    async def from_profile(cls, db: Database, profile_id: str | None) -> "ConfigurableLlmClient":
+    async def from_profile(cls, db: Database, profile_id: str | None) -> ConfigurableLlmClient:
         """Build a client from an ``llm_profiles`` row."""
         return await client_from_profile(cls, db, profile_id)
 
     @classmethod
-    async def from_draft(cls, db: Database, draft: dict[str, Any]) -> "ConfigurableLlmClient":
+    async def from_draft(cls, db: Database, draft: dict[str, Any]) -> ConfigurableLlmClient:
         """Build a one-off client from unsaved UI draft values."""
         return await client_from_draft(cls, db, draft)
 

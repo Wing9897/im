@@ -67,7 +67,7 @@ export function getIntelligenceSortLabel(
   return intelligenceT(`sort.${mode}`, t);
 }
 
-/** Convert a UI time window to API snake_case date params (ISO 8601). */
+/** Convert a UI time window to API camelCase date params (ISO 8601). */
 export function timeWindowToApiParams(window: TimeWindow): IntelligenceApiDateRange {
   return {
     startDate: window.start.toISOString(),

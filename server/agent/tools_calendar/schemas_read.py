@@ -42,10 +42,7 @@ READ_TOOL_SCHEMAS: list[dict[str, Any]] = [
             "properties": {
                 "includeInactive": {
                     "type": "boolean",
-                    "description": (
-                        "When true, include paused recurring series "
-                        "(isActive=false). Default false."
-                    ),
+                    "description": ("When true, include paused recurring series (isActive=false). Default false."),
                 },
             },
             "additionalProperties": False,

@@ -51,8 +51,11 @@ export function useMapViewTimeWindow({ onFetchWindowChange }: Options) {
     return readStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, liveDefault());
   });
   const restoredFetchRef = useRef(false);
+  /** Last window applied by the live path — dedupes same-tick re-applies (no state/fetch jitter). */
+  const lastLiveWindowRef = useRef<{ startMs: number; endMs: number } | null>(null);
 
   const handleTimeWindowChange = useCallback((w: TimeWindow) => {
+    lastLiveWindowRef.current = null;
     setTimeWindow(w);
   }, []);
 
@@ -62,6 +65,18 @@ export function useMapViewTimeWindow({ onFetchWindowChange }: Options) {
       start: new Date(now - liveWindowMs),
       end: new Date(now + liveWindowMs),
     };
+    const prev = lastLiveWindowRef.current;
+    if (
+      prev &&
+      prev.startMs === next.start.getTime() &&
+      prev.endMs === next.end.getTime()
+    ) {
+      return;
+    }
+    lastLiveWindowRef.current = {
+      startMs: next.start.getTime(),
+      endMs: next.end.getTime(),
+    };
     setTimeWindow(next);
     // Live advances are intentional fetch points (not 50Hz scrub).
     onFetchWindowChange?.(next);
@@ -70,6 +85,7 @@ export function useMapViewTimeWindow({ onFetchWindowChange }: Options) {
   /** Commit scrub / calendar / keyboard — one API fetch after the gesture. */
   const commitFetchWindow = useCallback(
     (w: TimeWindow) => {
+      lastLiveWindowRef.current = null;
       setTimeWindow(w);
       writeStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, w);
       onFetchWindowChange?.(w);
@@ -93,6 +109,7 @@ export function useMapViewTimeWindow({ onFetchWindowChange }: Options) {
 
   /** Idempotent exit used by timeline drag / calendar — never toggles back on. */
   const exitLiveMode = useCallback(() => {
+    lastLiveWindowRef.current = null;
     setLiveMode(false);
     setTimeWindow((current) => {
       writeStoredMapTimeWindow(MAP_TIME_WINDOW_STORAGE_KEY, current);

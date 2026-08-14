@@ -132,7 +132,7 @@ describe("eventListCardMeta", () => {
   });
 
   it("uses localized general label via i18n when lookups omit it", () => {
-    expect(String(i18n.t("common:workset.generalName"))).toBe("一般");
+    expect(String(i18n.t("workset:generalName"))).toBe("一般");
     expect(
       resolveEventListWorksetName(
         makeTimelineItem({ worksetId: SYSTEM_WORKSET_ID }),
@@ -228,10 +228,10 @@ describe("eventListCardMeta", () => {
     ).toBe("提醒 · milk");
   });
 
-  it("calendarLocationDisplay normalizes empty / N/A placeholders", () => {
-    expect(calendarLocationDisplay(null)).toBe("N/A");
-    expect(calendarLocationDisplay("  ")).toBe("N/A");
-    expect(calendarLocationDisplay("n/a")).toBe("N/A");
+  it("calendarLocationDisplay collapses empty / N/A to empty string", () => {
+    expect(calendarLocationDisplay(null)).toBe("");
+    expect(calendarLocationDisplay("  ")).toBe("");
+    expect(calendarLocationDisplay("n/a")).toBe("");
     expect(calendarLocationDisplay(" Taipei ")).toBe("Taipei");
   });
 

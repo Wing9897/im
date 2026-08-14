@@ -26,7 +26,7 @@ def _ddl_origin_values() -> frozenset[str]:
 
 def test_user_event_origins_match_ddl_check() -> None:
     """Python SoT must equal the wipe-only DDL CHECK set (no silent drift)."""
-    assert ALLOWED_USER_EVENT_ORIGINS == _ddl_origin_values()
+    assert _ddl_origin_values() == ALLOWED_USER_EVENT_ORIGINS
     assert USER_EVENT_ORIGIN_CHECK_SQL in calendar_ddl.DDL
     assert len(ALL_USER_EVENT_ORIGINS) == len(set(ALL_USER_EVENT_ORIGINS))
     assert set(ALL_USER_EVENT_ORIGINS) == ALLOWED_USER_EVENT_ORIGINS
@@ -36,4 +36,4 @@ def test_tool_write_origins_are_ddl_subset_excluding_ics() -> None:
     """Tool writers may stamp any DB origin except ICS import provenance."""
     assert TOOL_WRITE_USER_EVENT_ORIGINS <= ALLOWED_USER_EVENT_ORIGINS
     assert "ics" not in TOOL_WRITE_USER_EVENT_ORIGINS
-    assert TOOL_WRITE_USER_EVENT_ORIGINS == (ALLOWED_USER_EVENT_ORIGINS - {"ics"})
+    assert (ALLOWED_USER_EVENT_ORIGINS - {"ics"}) == TOOL_WRITE_USER_EVENT_ORIGINS

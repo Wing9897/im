@@ -12,39 +12,30 @@ export type TaskDraftPayload = components["schemas"]["TaskDraftPayload"];
 type ChannelRef = components["schemas"]["ChannelRefResponse"];
 
 type TaskResponse = components["schemas"]["TaskResponse"];
+type TaskTriggerMode = NonNullable<components["schemas"]["TaskConfigBody"]["triggerMode"]>;
+
+/**
+ * OpenAPI ``TaskResponse.required`` — Pydantic defaults are not required on the wire.
+ * Do not treat generated ``schema.d.ts`` defaulted fields as required.
+ */
+type AnalysisTaskRequired = Pick<
+  TaskResponse,
+  "id" | "name" | "version" | "isActive" | "llmProfileId"
+>;
 
 /**
  * Persisted analysis task returned by list/create/update.
  * Standalone recurring calendar series use ``/api/v1/calendar/recurring``, not this type.
  */
-export type AnalysisTask = Omit<
-  TaskResponse,
-  | "description"
-  | "analysisTimeRange"
-  | "analysisMode"
-  | "channelIds"
-  | "includeInTimeline"
-  | "createdAt"
-  | "updatedAt"
-> & {
-  description: string | null;
-  analysisTimeRange: TaskAnalysisTimeRange;
-  analysisMode: AnalysisMode;
-  channelIds: ChannelRef[];
-  includeInTimeline?: boolean | null;
-  createdAt: string;
-  updatedAt: string;
-  triggerMode?: "schedule" | "message_cursor" | "message_threshold";
-  capCalendarRead?: boolean;
-  capCalendarWrites?: boolean;
-  capWebSearch?: boolean;
-  capForceWebSearch?: boolean;
-  capReadAnalysisEvents?: boolean;
-  capReadItems?: boolean;
-  outputCalendar?: boolean;
-  outputAnalysisEvents?: boolean;
-  llmProfileId?: string;
-};
+export type AnalysisTask = AnalysisTaskRequired &
+  Omit<
+    Partial<TaskResponse>,
+    keyof AnalysisTaskRequired | "analysisTimeRange" | "analysisMode" | "triggerMode"
+  > & {
+    analysisTimeRange: TaskAnalysisTimeRange;
+    analysisMode: AnalysisMode;
+    triggerMode?: TaskTriggerMode;
+  };
 
 /** Configuration payload for creating/updating an analysis task.
  * channelIds accepts synthetic "platform:platformId" strings from the form.

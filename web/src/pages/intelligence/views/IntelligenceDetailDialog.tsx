@@ -11,18 +11,18 @@ import {
   type DetailPresentation,
 } from "../../../components/detail";
 import {
-  intelligenceDetailBadgesClass,
-  intelligenceDetailBodyClass,
+  detailChromeBadgesClass,
+  detailChromeBodyGapLgClass,
+  detailChromeFooterPlainClass,
+  detailChromeHeaderClass,
+  detailDialogFlexColClass,
+  detailDialogShellClass,
   intelligenceDetailContentHeroClass,
-  intelligenceDetailFooterClass,
-  intelligenceDetailHeaderClass,
   intelligenceDetailMetaIconClass,
   intelligenceDetailMetaItemClass,
   intelligenceDetailMetaLabelClass,
   intelligenceDetailMetaListClass,
   intelligenceDetailTitleClass,
-  detailDialogFlexColClass,
-  detailDialogShellClass,
 } from "../../../components/detail/classes";
 import { formatAnalysisTimeRangeNullable } from "../../../utils/analysis";
 import {
@@ -86,9 +86,9 @@ export function IntelligenceDetailView({
 
   const content = (
     <>
-      <header className={intelligenceDetailHeaderClass}>
+      <header className={detailChromeHeaderClass}>
         <h2 className={intelligenceDetailTitleClass}>{item.title}</h2>
-        <div className={intelligenceDetailBadgesClass}>
+        <div className={detailChromeBadgesClass}>
           {item.taskName ? <Badge tone="accent">{item.taskName}</Badge> : null}
           {item.sourcePlatform ? (
             <span style={platformBadgeStyle(item.sourcePlatform)}>
@@ -98,7 +98,7 @@ export function IntelligenceDetailView({
         </div>
       </header>
 
-      <div className={intelligenceDetailBodyClass}>
+      <div className={detailChromeBodyGapLgClass}>
         <div className={intelligenceDetailContentHeroClass}>{item.body}</div>
 
         <div className={intelligenceDetailMetaListClass}>
@@ -137,7 +137,7 @@ export function IntelligenceDetailView({
         />
       </div>
 
-      <footer className={intelligenceDetailFooterClass}>
+      <footer className={detailChromeFooterPlainClass}>
         <Button variant="secondary" onClick={onClose}>
           {t("detail.close")}
         </Button>

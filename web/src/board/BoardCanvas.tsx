@@ -136,8 +136,8 @@ export function BoardCanvas({
         data-testid="board-canvas"
       >
         <div className="board-canvas-empty" data-testid="board-empty">
-          <p className="board-canvas-empty__title">{t("board.shell.emptyTitle")}</p>
-          <p className="board-canvas-empty__hint">{t("board.shell.emptyHint")}</p>
+          <p className="board-canvas-empty__title">{t("board:shell.emptyTitle")}</p>
+          <p className="board-canvas-empty__hint">{t("board:shell.emptyHint")}</p>
         </div>
         {chrome}
       </div>

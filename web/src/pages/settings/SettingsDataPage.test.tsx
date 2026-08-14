@@ -24,6 +24,9 @@ vi.mock("./SettingsShared", () => ({
   }: {
     children: React.ReactNode;
   }) => createElement("div", { "data-testid": "field-group" }, children),
+}));
+
+vi.mock("../../components/settings/useSettingsPageState", () => ({
   useSettingsPageState: () => ({
     settings: {
       retentionMessagesDays: "90",

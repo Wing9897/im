@@ -78,15 +78,15 @@ async def _send_json(scope: Scope, receive: Receive, send: Send, *, status_code:
 
 
 @router.get("/status", response_model=McpStatusResponse)
-async def mcp_status(request: Request) -> dict[str, Any]:
+async def mcp_status(request: Request) -> McpStatusResponse:
     """Return master-switch state and currently exposed tools (capability-filtered)."""
     db = get_db(request)
     enabled = await is_mcp_enabled(db)
     if not enabled:
-        return {"enabled": False, "toolCount": 0, "tools": []}
+        return McpStatusResponse(enabled=False, toolCount=0, tools=[])
     caps = await load_mcp_capabilities(db)
-    tools = mcp_status_tools(caps)
-    return {"enabled": True, "toolCount": len(tools), "tools": tools}
+    tools = [McpStatusTool.model_validate(tool) for tool in mcp_status_tools(caps)]
+    return McpStatusResponse(enabled=True, toolCount=len(tools), tools=tools)
 
 
 def _build_mcp_server() -> McpServer[Any, Any]:

@@ -10,7 +10,7 @@ import {
   type UserEventCalendarKind,
 } from "./userEventCalendarKind";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { buildRRule } from "../../utils/rrule";
+import { buildRRule } from "../schedule/rrule";
 
 export type { UserEventKind };
 export type { UserEventCalendarKind };

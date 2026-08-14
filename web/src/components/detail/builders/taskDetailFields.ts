@@ -2,6 +2,8 @@ import type { AnalysisTask } from "../../../types/tasks";
 import type { ChannelWithSource } from "../../../types/channels";
 import { platformDisplayLabel } from "../../../utils/platformRegistry";
 
+type TaskChannelRef = NonNullable<AnalysisTask["channelIds"]>[number];
+
 export function buildChannelNameById(
   channels: readonly ChannelWithSource[],
 ): Map<string, string> {
@@ -14,12 +16,12 @@ export function buildChannelNameById(
   return map;
 }
 
-export function channelRefKey(ref: AnalysisTask["channelIds"][number]): string {
+export function channelRefKey(ref: TaskChannelRef): string {
   return ref.id || `${ref.platform}:${ref.platformId}`;
 }
 
 export function resolveChannelLabel(
-  ref: AnalysisTask["channelIds"][number],
+  ref: TaskChannelRef,
   channelNameById?: ReadonlyMap<string, string>,
 ): string {
   const key = channelRefKey(ref);

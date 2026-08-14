@@ -8,7 +8,7 @@ import {
 import type { Message, MessageCursor, MessageFilters, MessagePage } from "../../../types";
 import { toErrorMessage } from "../../../utils/errors";
 import { useLatestRequest } from "../../../hooks/useLatestRequest";
-import { mergeUniqueMessages } from "../monitorPageModel";
+import { mergeUniqueMessages } from "../../../domain/monitor/monitorPageModel";
 
 type LatestRequestHandle = ReturnType<typeof useLatestRequest>;
 

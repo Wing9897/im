@@ -21,10 +21,10 @@ export function isLlmProfileComplete(profile: Pick<
   return Boolean(key.trim()) || isMaskedSecret(key);
 }
 
-export function firstCompleteDefaultProfile(
+/** First complete profile in list order (task-create convenience; not a DB default). */
+export function firstCompleteProfile(
   profiles: readonly LlmProfile[],
 ): LlmProfile | null {
   const complete = profiles.filter(isLlmProfileComplete);
-  if (complete.length === 0) return null;
-  return complete.find((p) => p.isDefault) ?? complete[0] ?? null;
+  return complete[0] ?? null;
 }

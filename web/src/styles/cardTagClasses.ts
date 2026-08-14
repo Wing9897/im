@@ -1,8 +1,9 @@
 import type React from "react";
 import { platformColor } from "../utils/platform";
+import { badgePillBaseClass } from "./badgeClasses";
 
 export const taskTagBaseClass =
-  "im-intelligence-card-tag im-intelligence-card-task-tag inline-flex max-w-[92px] items-center truncate rounded-full border px-[5px] py-px text-[9px] font-medium leading-[1.35] tracking-[0.03em]";
+  `im-intelligence-card-tag im-intelligence-card-task-tag ${badgePillBaseClass} max-w-[92px] truncate border px-[5px] py-px text-[9px] font-medium leading-[1.35] tracking-[0.03em]`;
 
 export const platformTagBaseClass =
   "inline-flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded-[4px] border";

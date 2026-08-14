@@ -3,7 +3,7 @@ import { Radio } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../components/common/EmptyState";
 import { FilterActiveChips, FilterBar } from "./filter/FilterBar";
-import { countActiveMessageFilters } from "./monitorPageModel";
+import { countActiveMessageFilters } from "../../domain/monitor/monitorPageModel";
 import { SectionErrorBoundary } from "../../components/common/SectionErrorBoundary";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { MessageListItem } from "./message/MessageListItem";

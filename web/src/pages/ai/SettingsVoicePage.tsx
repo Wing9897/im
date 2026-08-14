@@ -194,7 +194,7 @@ export function SettingsVoicePage() {
                 />
                 <button
                   type="button"
-                  className="inline-flex shrink-0 items-center justify-center rounded-md border border-surface-border bg-surface-raised px-3 py-1.5 text-[12px] font-medium text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] disabled:opacity-50"
+                  className="im-surface-inset inline-flex shrink-0 items-center justify-center rounded-md border border-surface-border px-3 py-1.5 text-[12px] font-medium text-text-primary hover:bg-[color-mix(in_srgb,var(--text-primary)_6%,transparent)] disabled:opacity-50"
                   onClick={handleTtsPreview}
                   disabled={previewing}
                   data-testid="voice-tts-preview"

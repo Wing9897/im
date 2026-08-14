@@ -120,7 +120,7 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
 
   return {
     ...commonConfig,
-    // Omit empty so create can inject the server default profile.
+    // Omit empty so create can fall back to the oldest complete profile.
     ...(llmProfileId ? { llmProfileId } : {}),
     promptTemplate: formState.promptTemplate,
     analysisTimeRange: formState.analysisTimeRange,
@@ -164,7 +164,7 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
   return {
     name: task.name,
     description: task.description ?? "",
-    promptTemplate: task.promptTemplate,
+    promptTemplate: task.promptTemplate ?? "",
     scheduleType: schedule.scheduleType,
     scheduleValue: schedule.scheduleValue,
     scheduleRrule: schedule.scheduleRrule,

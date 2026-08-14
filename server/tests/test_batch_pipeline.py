@@ -25,7 +25,7 @@ class StubEngine:
         self._items = items
         self.calls = 0
 
-    async def analyze(self, prompt: Any) -> dict[str, Any]:
+    async def analyze(self, prompt: Any, *, profile_id: str | None = None) -> dict[str, Any]:
         self.calls += 1
         if isinstance(self._items, Exception):
             raise self._items
@@ -251,7 +251,7 @@ async def test_trigger_threshold_blocks_batch_when_insufficient_messages(db):
         ("%under threshold%",),
     )
     assert skip_log is not None
-    assert "analysis.skipped" == skip_log["kind"]
+    assert skip_log["kind"] == "analysis.skipped"
 
 
 async def test_batch_already_claimed_is_not_processed_again(db):

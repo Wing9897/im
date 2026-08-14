@@ -24,8 +24,9 @@ export function handleAnalysisStarted(data: unknown, deps: EventListenerDeps): v
     taskName: payload.taskName ?? "",
     batchId,
     messageCount: payload.messageCount ?? 0,
-    estimatedTokens: payload.estimatedTokens ?? null,
-    llmModel: payload.llmModel || null,
+    estimatedTokens: payload.estimatedTokens ?? 0,
+    llmProvider: payload.llmProvider ?? "",
+    llmModel: payload.llmModel ?? "",
   };
   state.setActiveAnalyses((prev) => upsertActiveAnalysis(prev, nextActiveInput));
   state.setLastAnalysisEvent({

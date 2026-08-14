@@ -50,6 +50,7 @@ describe("user events API contract", () => {
       kind: "normal",
       source: "user",
       dismissed: false,
+      important: false,
       createdAt: "2026-07-28T08:00:00Z",
       updatedAt: "2026-07-28T08:00:00Z",
     };
@@ -85,6 +86,7 @@ describe("user events API contract", () => {
       kind: "normal",
       source: "user",
       dismissed: false,
+      important: false,
       createdAt: "2026-07-28T08:00:00Z",
       updatedAt: "2026-07-28T08:00:00Z",
     };

@@ -36,14 +36,7 @@ def client_from_resolved_config(cls: Any, config: LlmConfig, timeout_seconds: in
     return client
 
 
-async def client_from_default_profile(cls: Any, db: Database) -> Any:
-    """Build a client from the default ``llm_profiles`` row."""
-    config = await load_llm_config(db)
-    timeout = await get_config_int(db, "llm_generation_timeout")
-    return client_from_resolved_config(cls, config, timeout)
-
-
-async def client_from_assistant_staff(
+async def client_from_assistant_slot(
     cls: Any,
     db: Database,
     *,

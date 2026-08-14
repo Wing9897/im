@@ -9,25 +9,26 @@ No analysis tasks, recurring tasks, or analysis_events — calendar + items only
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import json
-import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from _seed_common import (
+    build_seed_parser,
+    builtin_category_id,
+    clean_calendar_fixtures,
+    create_linked_milestone,
+    delete_workset,
+    ensure_workset,
+    open_seed_db,
+    resolve_db_path,
+)
 
 from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.timeline_importance import mark_timeline_important
-from server.calendar.user_events import create_user_event
-from server.db.database import Database, TransactionDb
+from server.calendar.user_events_write import create_user_event
+from server.db.database import Database
 from server.items.service import create_category, create_item, patch_item
-from server.paths import default_db_path
 from server.queries.items_queries import fetch_category_by_slug
-from server.queries.worksets_queries import insert_workset
-from server.util import utc_now_iso
 
 PREFIX = "[dev-seed]"
 WS_ID = "ws-dev-seed-demo"
@@ -36,43 +37,9 @@ ELECTRONICS_SLUG = "dev_seed_electronics"
 
 async def _clean(db: Database) -> None:
     """Remove previous fixture rows (best-effort by title / known ids)."""
-    await db.execute("DELETE FROM timeline_dismissals WHERE event_id LIKE 'dev-seed-%'")
-    await db.execute(
-        "DELETE FROM timeline_importance WHERE event_id IN "
-        "(SELECT id FROM user_events WHERE title LIKE ? OR id LIKE 'dev-seed-%')",
-        (f"{PREFIX}%",),
-    )
-    await db.execute(
-        "DELETE FROM user_events WHERE title LIKE ? OR id LIKE 'dev-seed-%'",
-        (f"{PREFIX}%",),
-    )
-    await db.execute(
-        "DELETE FROM user_events WHERE item_id IN (SELECT id FROM items WHERE title LIKE ?)",
-        (f"{PREFIX}%",),
-    )
-    await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
+    await clean_calendar_fixtures(db, title_prefix=PREFIX, event_id_prefix="dev-seed-")
     await db.execute("DELETE FROM item_categories WHERE slug = ?", (ELECTRONICS_SLUG,))
-    await db.execute("DELETE FROM worksets WHERE id = ?", (WS_ID,))
-
-
-async def _ensure_workset(db: Database) -> None:
-    existing = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (WS_ID,))
-    if existing:
-        return
-    async with db.transaction() as conn:
-        await insert_workset(
-            TransactionDb(conn),
-            workset_id=WS_ID,
-            name="Dev Seed 測試組",
-            now=utc_now_iso(),
-        )
-
-
-async def _category_id(db: Database, slug: str) -> str:
-    row = await fetch_category_by_slug(db, slug)
-    if row is None:
-        raise RuntimeError(f"built-in category slug missing: {slug}")
-    return str(row["id"])
+    await delete_workset(db, WS_ID)
 
 
 async def _ensure_electronics_category(db: Database) -> str:
@@ -91,31 +58,8 @@ async def _ensure_electronics_category(db: Database) -> str:
     return str(created["id"])
 
 
-async def _link_item_milestone(
-    db: Database,
-    *,
-    item_id: str,
-    title: str,
-    day: str,
-    kind: str,
-    workset_id: str | None = None,
-    remind_before_days: int | None = None,
-) -> None:
-    await create_user_event(
-        db,
-        title=title,
-        start_time=f"{day}T00:00:00Z",
-        is_all_day=True,
-        item_id=item_id,
-        workset_id=workset_id,
-        remind_before_days=remind_before_days,
-        kind=kind,
-        origin="manual",
-    )
-
-
 async def seed(db: Database) -> dict[str, int]:
-    await _ensure_workset(db)
+    await ensure_workset(db, ws_id=WS_ID, name="Dev Seed 測試組")
     counts = {
         "categories_created": 0,
         "user_events": 0,
@@ -124,12 +68,12 @@ async def seed(db: Database) -> dict[str, int]:
         "dismissals": 0,
     }
 
-    cat_passport = await _category_id(db, "passport_docs")
-    cat_medicine = await _category_id(db, "medicine")
-    cat_subscription = await _category_id(db, "subscription")
-    cat_warranty = await _category_id(db, "warranty")
-    cat_food = await _category_id(db, "food")
-    cat_credit = await _category_id(db, "credit_card")
+    cat_passport = await builtin_category_id(db, "passport_docs")
+    cat_medicine = await builtin_category_id(db, "medicine")
+    cat_subscription = await builtin_category_id(db, "subscription")
+    cat_warranty = await builtin_category_id(db, "warranty")
+    cat_food = await builtin_category_id(db, "food")
+    cat_credit = await builtin_category_id(db, "credit_card")
 
     electronics_before = await fetch_category_by_slug(db, ELECTRONICS_SLUG)
     cat_electronics = await _ensure_electronics_category(db)
@@ -256,7 +200,7 @@ async def seed(db: Database) -> dict[str, int]:
 
         workset_id = spec.get("workset_id")
         if spec.get("expires_at"):
-            await _link_item_milestone(
+            await create_linked_milestone(
                 db,
                 item_id=item_id,
                 title="到期",
@@ -384,28 +328,20 @@ async def seed(db: Database) -> dict[str, int]:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--clean", action="store_true", help="Remove prior [dev-seed] fixtures first")
-    parser.add_argument("--db", type=str, default="", help="Override SQLite path")
-    args = parser.parse_args()
+    args = build_seed_parser(__doc__, prefix=PREFIX).parse_args()
 
-    path = Path(args.db) if args.db else default_db_path()
+    path = resolve_db_path(args.db)
     print(f"DB: {path}")
     if not path.is_file():
         print("Warning: database file does not exist yet; schema will be bootstrapped.")
 
-    db = Database(str(path))
-    await db.connect()
-    try:
-        await db.ensure_schema()
+    async with open_seed_db(path) as db:
         if args.clean:
             await _clean(db)
             print("Cleaned prior [dev-seed] fixtures")
         counts = await seed(db)
         print("Seeded:", json.dumps(counts, ensure_ascii=False))
         print("Open /timeline or /items — filter titles starting with [dev-seed] or workset「Dev Seed 測試組」")
-    finally:
-        await db.close()
 
 
 if __name__ == "__main__":

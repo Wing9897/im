@@ -44,8 +44,8 @@ describe("messages API", () => {
       });
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/messages/page", {
-        source_ids: "acc-1",
-        channel_ids: "telegram:10001,rss:https://example.com/feed",
+        sourceIds: "acc-1",
+        channelIds: "telegram:10001,rss:https://example.com/feed",
         limit: "20",
       });
       expect(result).toEqual(page);
@@ -63,9 +63,9 @@ describe("messages API", () => {
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/messages/page", {
         limit: "50",
-        include_total: "false",
-        cursor_time: "2024-01-01T00:00:00Z",
-        cursor_id: "msg-100",
+        includeTotal: "false",
+        cursorTime: "2024-01-01T00:00:00Z",
+        cursorId: "msg-100",
       });
     });
 

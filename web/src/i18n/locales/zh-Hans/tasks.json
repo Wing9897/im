@@ -1,0 +1,516 @@
+{
+  "pageLabel": "任务设定",
+  "pageDescription": "建立您的第一个任务，以监控频道、分析情报、设定周期任务或日历任务。",
+  "emptyTitle": "尚无任务",
+  "createLabel": "新增任务",
+  "editLabel": "编辑任务",
+  "showSystemTasks": "显示系统任务",
+  "hideSystemTasks": "隐藏系统任务",
+  "systemSectionTitle": "系统与虚拟任务（仅供检视）",
+  "systemSectionSubtitle": "这些不是可编辑的分析任务，仅帮助理解数据来源与背景机制。",
+  "card": {
+    "viewDetailAria": "查看任务详情：{name}",
+    "channelsRange": "{count} 个频道 · 范围 {range}",
+    "unanalyzed": "待分析",
+    "queued": "排队中",
+    "queuedTitle": "已 claim、尚未完成分析的消息（含等待重试的批次）",
+    "analyzed": "已分析",
+    "running": "执行中",
+    "analyzingAria": "分析中：{name}",
+    "idle": "闲置",
+    "disabled": "已停用",
+    "enable": "启用",
+    "disable": "停用",
+    "edit": "编辑",
+    "delete": "删除",
+    "editAria": "编辑 {name}",
+    "deleteAria": "删除 {name}",
+    "openAgentAria": "打开 Agent 详情：{name}",
+    "calendarTaskProgressHint": "日历任务桶（显示关联时间事件）",
+    "retryCount": "重试 {count}",
+    "analysisPausedHint": "分析已自动或手动暂停",
+    "waitingForThreshold": "等待触发阈值：{count}/{threshold}",
+    "agent": "项目经理任务",
+    "agentProgressHint": "Agent 调度（游标抽干／阈值／定时）— 非 marker 批处理统计"
+  },
+  "detail": {
+    "timeRange": "时间范围：{range}",
+    "channelCount": "共 {count} 个频道",
+    "channelsMore": "…及其他 {count} 个频道",
+    "noChannels": "尚未绑定频道",
+    "ariaLabel": "任务详情：{name}"
+  },
+  "agentDetail": {
+    "metaTitle": "概览",
+    "noDescription": "暂无描述",
+    "schedule": "排程：{schedule}",
+    "sourcesTitle": "绑定来源",
+    "childrenTitle": "子周期任务",
+    "childrenEmptyTitle": "暂无子周期任务",
+    "childrenEmptyDescription": "Agent 会在每次 tick 视需要创建子周期任务。",
+    "eventsTitle": "所属单次事件",
+    "eventsEmptyTitle": "暂无所属事件",
+    "eventsEmptyDescription": "此项目经理任务建立的单次时程事件会显示在这里。",
+    "tickTitle": "最近 Agent tick",
+    "tickLastEnd": "上次完成",
+    "tickCompletedCount": "已完成次数",
+    "tickMessageCount": "本轮处理消息数",
+    "tickOutcome": "结果",
+    "tickOutcomeSuccess": "成功",
+    "tickOutcomeSkipped": "跳过",
+    "tickOutcomeError": "失败",
+    "tickOutcomeRunning": "进行中",
+    "tickPendingCursor": "游标后待处理",
+    "tickCursorAt": "消息游标",
+    "tickLogTitle": "最近 tick 记录",
+    "tickLogEmpty": "暂无已完成的 tick。每次排程抽干结束后才会写入一笔（波次不单独入账）。",
+    "tickLogEmptyInFlight": "本轮抽干仍在进行中；波次会推进游标，整轮结束后才会出现在此记录。",
+    "tickMessage": "代理消息",
+    "tickNoMessage": "最近一次 tick 没有消息。",
+    "tickTools": "工具步骤",
+    "tickNoTools": "最近一次 tick 未使用工具。",
+    "tickError": "错误",
+    "openTimeline": "时间轴",
+    "reload": "刷新",
+    "batchAttentionTitle": "批次需注意",
+    "batchRetry": "重试 {count}",
+    "analysisPausedHint": "分析已自动或手动暂停",
+    "sourcesViewAll": "查看全部 {count}",
+    "sourcesDialogTitle": "绑定来源",
+    "showMore": "显示更多",
+    "showLess": "收起",
+    "showTickExtras": "显示代理消息与工具",
+    "hideTickExtras": "隐藏代理消息与工具"
+  },
+  "toast": {
+    "loadFailedBlank": "无法载入任务资料，表单将为空白",
+    "updated": "任务已更新",
+    "created": "任务已建立",
+    "clearedBatches": "已清除 {count} 个未完成的分析批次"
+  },
+  "editor": {
+    "back": "返回",
+    "presets": "快速预设",
+    "updateTask": "更新任务",
+    "createTask": "建立任务",
+    "requiredAria": "必填栏位",
+    "settingsTitle": "任务设定",
+    "optionalAria": "进阶设定",
+    "channelsLoadError": "无法加载频道列表",
+    "timeRangeLabel": "分析时间范围",
+    "timeAll": "不限时间",
+    "timeToday": "今天",
+    "time1h": "最近 1 小时",
+    "time6h": "最近 6 小时",
+    "time48h": "最近 48 小时",
+    "time30d": "最近 30 天",
+    "time7d": "最近 7 天",
+    "time1d": "最近 1 天",
+    "includeInTimelineLabel": "显示于时间规划",
+    "includeInTimelineAria": "显示于时间规划",
+    "includeInTimelineHint": "关闭后，此任务的分析事件仍会出现在情报事件与地图，但不会进入日历／甘特／时间轴。",
+    "rruleHint": "RRULE 仅用于周期任务重复事件，不会触发 AI 分析。",
+    "scheduleOverridesHint": "门槛／批上限／证据风格可覆盖；留空跟随「AI 设置 → 分析调度」。批次重叠与 Agent 波次间隔仅本任务有效。",
+    "followGlobal": "跟随全局",
+    "followGlobalPlaceholder": "空＝跟随全局",
+    "batchOverlapLabel": "批次重叠",
+    "batchOverlapAria": "批次重叠消息数量",
+    "batchOverlapHelp": "下一批带入上批末尾消息以接上下文；0＝不重叠。情报任务与「Agent 消息阈值＋来源频道」可用；排行榜改注入 Top 10。",
+    "triggerThresholdHelp": "留空则跟随全局触发门槛。",
+    "batchLimitHelp": "留空则跟随全局批次上限。",
+    "evidenceStyleHelp": "留空则跟随全局证据风格。",
+    "nameLabel": "任务名称",
+    "namePlaceholder": "输入任务名称",
+    "foundationTitle": "基本设置",
+    "foundationHint": "任务建立在可重复／可触发的时间排程之上。",
+    "taskTypeLabel": "任务类型",
+    "llmProfileLabel": "LLM 配置",
+    "llmProfileIncompleteBadge": "未完成",
+    "llmProfilePlaceholder": "选择 AI 设定档",
+    "llmProfileLoading": "载入 AI 设定档中…",
+    "llmProfileEmpty": "尚无 AI 设定档。请先建立一笔，任务才能生效。",
+    "llmProfileAllIncomplete": "现有设定档尚未完成。请补齐提供商、模型（以及需要时的密钥）后再保存。",
+    "llmProfileCreateCta": "建立 AI 设定档",
+    "llmProfileHint": "此任务会自动使用所选配置的连接（提供商、模型与 API 密钥）。",
+    "skillsTitle": "设定／技能",
+    "skillsAria": "任务设定与技能",
+    "optionalTitle": "进阶设定",
+    "descriptionLabel": "描述",
+    "descriptionPlaceholder": "任务描述（选填）",
+    "promptLabel": "Prompt 模板",
+    "promptPlaceholder": "输入分析 Prompt 模板",
+    "requiredSuffix": "（必填）",
+    "saveNeeds": {
+      "generic": "请先完成必填栏位",
+      "saving": "正在保存…",
+      "name": "请填写任务名称",
+      "prompt": "请填写任务 Prompt",
+      "channels": "请至少选择一个来源频道",
+      "agentOutput": "请至少勾选一项 Agent 输出",
+      "agentCursorAnalysis": "消息积压抽干不可写情报事件；请改用日历输出，或将触发改为排程／门槛",
+      "llmProfile": "请选择完整的 AI 设定档",
+      "llmProfileEmpty": "请先建立 AI 设定档",
+      "llmProfileIncomplete": "所选 AI 设定档尚未完成",
+      "llmProfileLoading": "正在载入 AI 设定档"
+    },
+    "pickChannels": "点击选择频道",
+    "channelsSelected": "已选 {selected} / {total} 个频道",
+    "channelsLabel": "分析来源频道",
+    "channelsLabelOptional": "来源频道（选填）",
+    "channelsAria": "选择分析来源频道",
+    "channelsPreview": "已选频道预览",
+    "channelsMore": "还有 {count} 个频道…"
+  },
+  "employees": {
+    "recurring": {
+      "name": "周期任务",
+      "blurb": "RRULE 周期任务，无 AI 处理"
+    },
+    "intel_event": {
+      "name": "情报任务",
+      "blurb": "从消息抽取情报事件与行程"
+    },
+    "leaderboard": {
+      "name": "排行榜任务",
+      "blurb": "比较与追踪热门消息排名"
+    },
+    "agent": {
+      "name": "项目经理任务",
+      "blurb": "可配置触发、工具权限与日历／情报输出"
+    }
+  },
+  "modes": {
+    "leaderboard": {
+      "modeDescription": "比较与追踪热门消息排名",
+      "promptLabel": "任务 Task Prompt（告诉 AI 要比较什么）",
+      "promptPlaceholder": "例：新产品发布、政策变化、合作进展、风险信号",
+      "promptHint": "💡 例如：只在内容明确提及官方公告、产品更新、合作进展或风险信号时命中"
+    },
+    "intel_event": {
+      "modeDescription": "从消息抽取情报事件与行程",
+      "promptLabel": "任务 Task Prompt（告诉 AI 要抽取哪些事件）",
+      "promptPlaceholder": "例：提取重要公告、会议、截止日；有明确时间填 start_time，有地点填 location",
+      "promptHint": "💡 时间与地点无法确定时请省略对应栏位，禁止猜测；可同时出现在情报页与时间规划页"
+    },
+    "recurring": {
+      "modeDescription": "RRULE 周期任务，无 AI 处理",
+      "promptLabel": "",
+      "promptPlaceholder": "",
+      "promptHint": ""
+    },
+    "agent": {
+      "modeDescription": "可配置项目经理：选择触发方式、工具权限与日历／情报输出",
+      "promptLabel": "任务提示（目标／搜索／抽取规则）",
+      "promptPlaceholder": "例如：根据频道消息调和日历，或通过网搜收集官方公告",
+      "promptHint": "描述项目经理应完成的工作。预设会填充触发／权限／输出，仍可微调。",
+      "scheduleDefaultHint": "建议每小时；切换到项目经理时会把每 10 秒改为每小时。",
+      "timedModeHint": "无频道＝纯定时触发。绑定频道可用于阈值门或消息游标抽干。",
+      "messageGateHint": "已绑频道且为消息阈值：达阈值才跑，并注入消息供核实／补充。",
+      "cursorChannelHint": "消息游标抽干至少需要绑定一个来源频道。"
+    }
+  },
+  "recurrence": {
+    "sectionTitle": "重复规则",
+    "freqLabel": "重复频率",
+    "daily": "每日",
+    "weekly": "每周",
+    "monthly": "每月",
+    "yearly": "每年",
+    "intervalUnit": {
+      "daily": "天",
+      "weekly": "周",
+      "monthly": "个月",
+      "yearly": "年"
+    },
+    "intervalLabel": "间隔（每 N {unit}）",
+    "intervalAria": "重复间隔",
+    "weekdaysLabel": "重复的星期",
+    "weekdayAria": "星期{day}",
+    "weekday": {
+      "MO": "一",
+      "TU": "二",
+      "WE": "三",
+      "TH": "四",
+      "FR": "五",
+      "SA": "六",
+      "SU": "日"
+    },
+    "monthlyMode": "每月重复方式",
+    "byDate": "按日期",
+    "byWeekday": "按星期",
+    "monthDay": "每月的日期",
+    "dayAria": "{day} 日",
+    "lastDay": "最后一天",
+    "ordinalLabel": "第几个",
+    "ordinalAria": "序数",
+    "ordinalWeekday": "星期",
+    "ordinalWeekdayAria": "星期几",
+    "ordinals": {
+      "1": "第一个",
+      "2": "第二个",
+      "3": "第三个",
+      "4": "第四个",
+      "-1": "最后一个"
+    },
+    "endLabel": "结束条件",
+    "never": "永不结束",
+    "until": "指定日期结束",
+    "count": "指定次数后结束",
+    "untilDate": "结束日期",
+    "countLabel": "重复次数",
+    "rrulePreview": "RRULE：{value}",
+    "errors": {
+      "freq": "必须选择一种频率（每日、每周、或每月）",
+      "byDay": "每周模式须至少选择一天",
+      "byMonthDay": "每月模式须至少选择一个日期"
+    }
+  },
+  "calendarFields": {
+    "section": "活动详情",
+    "tooltip": "设定周期任务活动的标题、时间、地点与描述",
+    "title": "活动标题",
+    "titlePlaceholder": "例：周会、生日提醒",
+    "allDay": "整天活动",
+    "start": "开始时间",
+    "end": "结束时间",
+    "location": "地点（选填）",
+    "locationPlaceholder": "例：会议室 A、线上",
+    "description": "描述（选填）",
+    "descriptionPlaceholder": "补充这个活动的细节",
+    "allDayHint": "整天活动不需要设定开始与结束时间。"
+  },
+  "template": {
+    "title": "选择任务模板",
+    "all": "全部",
+    "searchPlaceholder": "搜索模板名称、说明或 badge",
+    "showing": "目前显示 {visible} / {total} 个模板",
+    "filteredMode": "，已优先筛选 {mode}",
+    "loading": "正在加载模板...",
+    "empty": "目前没有可用的模板",
+    "noMatch": "没有符合目前筛选条件的模板",
+    "noMatchHint": "可改用其他任务类型或清空搜索词",
+    "commonTitle": "常用模板",
+    "sortedWithMode": "依最近使用、使用次数与目前任务类型排序，优先显示 {mode}",
+    "pinnedMode": "已按目前任务类型优先置顶 {mode}",
+    "viewMode": "查看 {mode} 类型的模板",
+    "apply": "套用选定模板",
+    "suitable": "适合目前任务类型"
+  },
+  "schedule": {
+    "typeLabel": "排程类型",
+    "typeAria": "排程类型",
+    "agentWaveInterval": "Agent 波间间隔（秒）",
+    "agentWaveIntervalAria": "Agent 每波之间的冷却秒数",
+    "agentWaveIntervalHelp": "下一波开始前冷却；0 = 不等待。保存在本任务（非全局系统设置）。空白则使用默认（20）。",
+    "types": {
+      "seconds_10": "每 10 秒",
+      "hourly": "每小时",
+      "daily": "每日",
+      "weekly": "每周",
+      "custom_seconds": "自定义秒数"
+    },
+    "unmappedOption": "自定义触发 RRULE",
+    "unmappedHelp": "此任务的触发 RRULE 不在下方预设选项中。选择预设排程后保存会覆盖它。",
+    "weekday": {
+      "0": "星期日",
+      "1": "星期一",
+      "2": "星期二",
+      "3": "星期三",
+      "4": "星期四",
+      "5": "星期五",
+      "6": "星期六"
+    },
+    "dailyTime": "执行时间",
+    "dailyTimeAria": "每天执行时间",
+    "weeklyDateTime": "执行日期与时间",
+    "weekdayAria": "星期几",
+    "weeklyTimeAria": "每周执行时间",
+    "customSeconds": "间隔秒数",
+    "customSecondsPlaceholder": "输入秒数",
+    "customSecondsAria": "自定义间隔秒数",
+    "errors": {
+      "dailyRequired": "请输入时间（HH:MM）",
+      "dailyFormat": "时间格式无效，请使用 HH:MM 格式",
+      "hourRange": "小时必须在 00-23 之间",
+      "minuteRange": "分钟必须在 00-59 之间",
+      "weeklyRequired": "请选择星期和时间",
+      "weeklyFormat": "格式无效，请使用 D:HH:MM 格式",
+      "weekdayRange": "星期必须在 0-6 之间（0=星期日）",
+      "secondsRequired": "请输入秒数",
+      "secondsPositive": "秒数必须为正整数"
+    }
+  },
+  "allModes": "全部",
+  "toolbarAria": "任务列表操作",
+  "searchPlaceholder": "搜索任务…",
+  "searchAria": "搜索任务",
+  "createNew": "创建新任务",
+  "createNewAria": "创建新{label}",
+  "noMatchTitle": "找不到符合的任务",
+  "noMatchDescription": "没有名称或描述包含「{query}」的任务。",
+  "emptyModeTitle": "此模式下没有任务",
+  "emptyModeDescription": "切换其他模式，或创建一个使用此模式的新任务。",
+  "showAllTasks": "显示全部任务",
+  "deleted": "任务已删除",
+  "addTask": "新增任务",
+  "presets": {
+    "trending-topics": {
+      "name": "趋势主题分析",
+      "description": "从消息中提取热门讨论话题和趋势，按相关度排名",
+      "promptTemplate": "分析以下消息，提取最热门的讨论主题。为每个主题提供：标题、摘要、相关度评分(0-1)。按相关度降序排列。"
+    },
+    "key-insights": {
+      "name": "关键情报摘要",
+      "description": "提取具有情报价值的情报事件与机会",
+      "promptTemplate": "从消息中提取具有情报价值的情报事件与线索。优先关注：重要事件、商业机会、风险预警、趋势变化。有明确时间或地点时一并填入；无法确定则只保留标题与内容。"
+    },
+    "schedule-events": {
+      "name": "行程事件提取",
+      "description": "保守提取：只在内容有明确日期／时间（或写死的时段）时填入排程时间；相对说法（如下星期三）不推理、不换算。适合只要「命中即录、不猜时间」的场合。",
+      "promptTemplate": "从消息中提取会议、活动、截止日期、发布会等可排程事件。时间规则要保守：只有消息已写明可直接落地的日期／时钟时间（例如 3 月 5 日 14:00、2026-07-20）才填 start_time／end_time；「明天／下星期三／本周五」等相对说法一律不要换算、不要猜测时间（事件本身仍可输出，时间栏位省略）。优先填写明确地点与参与者。忽略验证流程、加群提醒与系统通知。"
+    },
+    "schedule-time-inference": {
+      "name": "时间行程推理",
+      "description": "积极推理：即使未写死年月日，也可从相对说法（如下星期三 6 点、本周五截止、专案／活动节点）换算可排程时间。适合要补齐行程时间线的场合。",
+      "promptTemplate": "从消息中推理可排程的行程、会议、活动、专案节点与截止日期。与「只录明确时间」不同：本模板鼓励把相对说法换算成具体时间，例如：下星期三六点开会、本周五截止、下个月交付、活动倒数、专案里程碑。相对时间优先以该则消息行首 [time=...] 为锚点；缺省时再用系统注入的当前时间。能合理换算则填 start_time／end_time；仅有弱线索时在 body 说明依据，勿无依据硬填。忽略验证流程、加群提醒与系统通知。"
+    },
+    "sentiment-monitor": {
+      "name": "舆情监控",
+      "description": "分析群组讨论的情绪走向和舆论态势",
+      "promptTemplate": "分析以下消息的整体舆情。识别：正面/负面话题、情绪激烈的讨论、潜在争议点。为每个话题评估情绪强度。"
+    },
+    "action-items": {
+      "name": "待办事项追踪",
+      "description": "提取需要跟进的行动项目和待办事项",
+      "promptTemplate": "提取待办事项、行动项目、承诺与需要跟进的事项。在 body 写清要做什么；相关人员放入 participants；若有明确截止时间再填 start_time。"
+    },
+    "crypto-major-intel": {
+      "name": "Crypto 重大情报",
+      "description": "提取加密货币重大事件、关键情报与时间节点规划",
+      "promptTemplate": "提取 Crypto/Web3 重大情报。在 body 中写明：情报类型（监管/协议/行情/安全/上线/解锁/空投/宏观等）、紧急程度（高/中/低）、建议关注或执行动作。专注于：重大公告、TGE/解锁/快照/Claim 截止、主网上线、监管判决、大额资金异动、安全漏洞、宏观政策转折。有明确时间节点再填 start_time/end_time；忽略闲聊、重复转贴与无来源谣言。"
+    },
+    "crypto-airdrop-deals": {
+      "name": "薅羊毛情报",
+      "description": "提取空投、积分任务、测试网、优惠码等可获利机会",
+      "promptTemplate": "提取 Crypto/Web3 可获利机会（空投、积分、测试网、早鸟、返佣、白名单、免费 Mint、任务奖励等）。在 body 中写明：项目或平台、机会类型、参与条件与操作步骤摘要、收益预估（如可判断）、风险提示（诈骗/高 Gas/规则不明）。有明确截止或快照时间再填 start_time；优先列出即将截止或可立即操作的机会。忽略纯喊单与无具体操作指引的闲聊；时间无法确定时省略时间栏位。"
+    },
+    "iot-device-alerts": {
+      "name": "IoT 设备告警",
+      "description": "从 MQTT／传感器／装置日志撷取故障、离线、门槛越界与安防告警",
+      "promptTemplate": "从 IoT／MQTT／传感器／装置消息中提取「需要关注或处置」的告警事件。优先：离线／断线、故障码、感测值越界（温湿度／电量／压力等）、安防触发、通讯失败、电池低电、紧急停机。在 body 写明：装置或 topic／位置识别、告警类型、严重度（高／中／低）、关键数值或错误码、建议处置。有明确事件时间再填 start_time；地点可填场站／楼层／区域。忽略：纯心跳／keepalive、周期正常读数、重复且无新信息的状态广播、调试杂讯。无告警时返回空 items。"
+    },
+    "iot-ops-events": {
+      "name": "IoT 维运事件",
+      "description": "撷取固件更新、维护视窗、设定变更与装置上线／布署节点",
+      "promptTemplate": "从 IoT／MQTT／装置维运消息中提取可排程或需追踪的维运事件。优先：固件／OTA 更新、维护视窗、设定／规则变更、装置首次上线或汰换、批次布署、校准、保养到期。在 body 写明：装置或系统范围、事件类型、影响摘要、操作人或来源（如可判断）、风险或回滚提示。有明确开始／结束再填 start_time／end_time；相对时间可依消息 [time=...] 或系统时钟合理换算。忽略：心跳、正常周期遥测、与维运无关的告警杂讯（告警请用其他任务）。无相关事件时返回空 items。"
+    },
+    "risk-crisis-alerts": {
+      "name": "风险危机预警",
+      "description": "撷取事故、中断、违规、公关危机与需立即处置的风险",
+      "promptTemplate": "从消息中提取需关注的风险／危机事件。优先：服务中断、资料外泄、安全事故、合规违规、重大客诉／公关危机、供应中断、财务或法律风险。在 body 写明：风险类型、严重度（高／中／低）、影响范围、已知状态与建议下一步。有明确时间再填 start_time；地点可填。忽略日常抱怨与无行动价值的情绪发泄；无风险时返回空 items。"
+    },
+    "people-org-watch": {
+      "name": "人物组织动态",
+      "description": "追踪人事异动、任命、离职、合作与组织重组",
+      "promptTemplate": "提取人物／组织动态事件。优先：任命、离职、升迁、董事会变动、并购／重组、战略合作、公开发言中的立场转折。在 body 写明：人物或组织、事件类型、背景摘要、影响判断。相关人名放入 participants；有明确时间再填 start_time。忽略纯八卦与无核实来源的传言。"
+    },
+    "competitive-intel": {
+      "name": "竞品对手情报",
+      "description": "撷取竞品定价、功能、营销活动与策略动向",
+      "promptTemplate": "提取竞品／对手情报。优先：产品发布、功能对比、定价／促销、通路变动、营销战役、市占或策略转向。在 body 写明：对手或产品、情报类型、具体内容、对己方的含义或建议关注点。有明确时间再填 start_time。忽略无依据的抹黑与纯情绪比较。"
+    },
+    "security-scam-watch": {
+      "name": "资安诈骗警示",
+      "description": "识别钓鱼、盗帐、恶意连结、漏洞与社交工程手法",
+      "promptTemplate": "提取资安／诈骗相关警示。优先：钓鱼连结、假冒客服、盗帐手法、恶意档案、已知 CVE／漏洞利用、社工话术。在 body 写明：威胁类型、手法摘要、辨识特征、建议防护动作；严重度（高／中／低）。有明确时间再填 start_time。忽略玩笑与无操作细节的恐慌转发；无警示时返回空 items。"
+    },
+    "geo-field-events": {
+      "name": "地理现场事件",
+      "description": "提取有地点的活动、事故、集会与现场动态（利于地图）",
+      "promptTemplate": "提取具地理意义的现场事件。优先：集会、事故、灾害、店点／据点异动、外勤行程、地方新闻中的明确地点。务必尽量填 location（可解析的地名／地址／场馆）；有时间再填 start_time／end_time。在 body 写明事件摘要与来源语气。无法定位地点时仍可输出但 location 留空；忽略无空间信息的纯线上讨论。"
+    },
+    "policy-regulation": {
+      "name": "政策法规动态",
+      "description": "追踪立法、监管公告、执法行动与合规期限",
+      "promptTemplate": "提取政策／法规／监管动态。优先：法案进度、监管公告、执法裁罚、牌照／许可变更、合规截止日期。在 body 写明：管辖区或机关、政策主题、状态（草案／通过／生效／执法）、对相关产业的影响。有明确生效或截止时间再填 start_time／end_time。忽略纯政治情绪与无规范含义的评论。"
+    },
+    "product-release": {
+      "name": "产品发布里程碑",
+      "description": "撷取上线、版本发布、公开测试与倒数节点",
+      "promptTemplate": "提取产品／专案发布与里程碑。优先：正式上线、版本号发布、beta／公开测试、功能开关、倒数／发布会。在 body 写明：产品名称、里程碑类型、版本或范围、重要变更摘要。有明确时间再填 start_time／end_time。忽略无版本信息的路线图空谈。"
+    },
+    "news-digest-board": {
+      "name": "要闻摘要排行",
+      "description": "把消息整理成当日最值得关注的要闻榜",
+      "promptTemplate": "将消息整理为要闻排行榜主题。每个主题提供：标题、一句摘要、相关度评分(0-1)。优先具新闻价值、影响面大、可核实的内容；合并重复转载。按相关度降序。"
+    },
+    "faq-knowledge": {
+      "name": "问答知识整理",
+      "description": "归纳常见问题、解答要点与知识条目",
+      "promptTemplate": "从消息中归纳 FAQ／知识主题。每个主题提供：问题或条目标题、精炼答案／要点摘要、相关度(0-1)。合并同义反复提问；标出仍未解答的缺口。按相关度或出现频率综合排序。"
+    },
+    "rumor-verify": {
+      "name": "谣言待核实线索",
+      "description": "标出传闻、未证实说法与需要查证的信息缺口",
+      "promptTemplate": "提取「待核实」线索而非当成事实。优先：传闻、匿名爆料、互相矛盾的说法、缺少来源的断言。在 body 写明：主张摘要、为何存疑、已知来源／缺口、建议查证方向。勿把谣言写成已证实事件；时间不明则省略 start_time。无此类内容时返回空 items。"
+    },
+    "finance-markets": {
+      "name": "金融市场要闻",
+      "description": "撷取利率、财报、大宗商品与宏观市场转折（非仅加密）",
+      "promptTemplate": "提取金融／宏观市场要闻事件。优先：利率／央行、财报与指引、并购、商品／外汇重大波动、监管对市场的影响。在 body 写明：市场或标的、事件类型、关键数据或结论、可能影响。有明确时间再填 start_time。忽略无依据喊单与纯情绪预测；加密专题可另用 Crypto 模板。"
+    },
+    "meeting-decisions": {
+      "name": "会议决议结论",
+      "description": "从讨论中提取决议、共识、反对意见与后续责任人",
+      "promptTemplate": "提取会议／讨论中的决议与结论。优先：已拍板事项、共识、明确反对、指派负责人、后续检查点。在 body 写明：决议内容、状态（通过／暂缓／反对）、负责人；participants 放相关人。有截止或会议时间再填 start_time。忽略无结论的闲聊。"
+    },
+    "agent-date-crud": {
+      "name": "通用项目日期管理",
+      "description": "从来源消息为项目新增、修改、删除单次日期与期限，并在无新消息时对账既有日程",
+      "promptTemplate": "你是通用项目日期管理员。目标：从绑定来源消息中找出与本项目有关的日期／期限／会议／截止日期，并用工具完成增、改、删。规则：1) 有明确日期或可合理换算的相对日期才写入；2) 先查现有日程，能对上就更新，对不上才新建；3) 来源说取消／作废就删除或停用；4) 忽略无关闲聊；5) 即使没有新消息也要对账并修正明显错误。完成后用简短 JSON message 总结本回合改动。"
+    },
+    "agent-work-shift": {
+      "name": "工作轮更表",
+      "description": "从来源消息建立与维护工作轮更／更份表，含更份变更、对调与取消",
+      "promptTemplate": "你是工作轮更表管理员。目标：从来源消息建立并持续维护工作轮更／更份表。优先：各人更份（早更／中更／夜更等）、更份对调、加班、休假、取消更份。规则：1) 能对上现有子周期任务或单次事件就更新，对不上才新建；2) 固定轮更用周期任务，临时更动用单次事件；3) 来源说取消／休假就停用或删除对应项；4) 写清人名、更份、日期／星期与时间；5) 无新消息时也要对账并修正冲突。完成后用简短 JSON message 总结。"
+    },
+    "agent-pricing-watch": {
+      "name": "定价监管情报",
+      "description": "Agent 多轮搜索主要 LLM／云端 API 定价与方案变更，抽成可追踪情报事件",
+      "promptTemplate": "以多轮网页搜索核实后，抽出官方或可信来源的定价／方案／额度变更。优先：价目表更新、免费额度调整、区域定价、弃用时程。每则事件填标题、摘要、来源线索；有明确生效日再填 start_time。忽略营销空话与无关论坛臆测。"
+    },
+    "agent-geopolitics-hotspots": {
+      "name": "地缘热点扫描",
+      "description": "Agent 多轮搜索东亚等地缘／安全热点，抽成情报事件；可选绑定频道做来源核实",
+      "promptTemplate": "以多轮网页搜索核实后，抽出具情报价值的地缘／安全动态。优先：官方声明、军事／外交动向、制裁与管制、重大突发事件。填标题、摘要、地点（能确定时）；有明确时间再填 start_time。避免未核实谣言与情绪化标题党。"
+    }
+  },
+  "agent": {
+    "presetsLabel": "预设",
+    "presetsHint": "一键填充勾选，之后仍可修改。",
+    "presets": {
+      "project_reconcile": "专案调和",
+      "web_scout": "网蒐"
+    },
+    "triggerLabel": "触发",
+    "trigger": {
+      "schedule": "纯定时（按排程执行）",
+      "message_cursor": "来源消息积压抽干（有新消息才跑）",
+      "message_threshold": "消息阈值门槛（达数量才跑；无频道则等同纯定时）"
+    },
+    "capsLabel": "工具权限",
+    "caps": {
+      "calendarRead": "读日历（查询既有日程）",
+      "readAnalysisEvents": "读事件（搜索情报／分析事件）",
+      "readItems": "读物品（查询到期／库存物品）",
+      "webSearch": "上网搜索（启用时强制可用）"
+    },
+    "outputLabel": "输出模式",
+    "output": {
+      "calendar": "日历事件（写入即含写日历权限）",
+      "analysisEvents": "情报事件（写入 analysis_events）"
+    },
+    "outputHint": "至少勾选一项输出。",
+    "outputHintCursor": "消息积压抽干仅写日历事件；情报事件输出请改用排程或消息门槛触发。"
+  }
+}

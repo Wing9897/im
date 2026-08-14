@@ -39,60 +39,41 @@ def test_sessions_dir_env_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     assert paths_mod.sessions_dir() == tmp_path / "custom-sessions"
 
 
-def test_clear_telegram_session_files_removes_active_and_legacy(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_clear_telegram_session_files_removes_active_only(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     data = tmp_path / "userData"
-    legacy = tmp_path / "home" / ".intelligence-monitor" / "sessions"
     active = data / "sessions"
     active.mkdir(parents=True)
-    legacy.mkdir(parents=True)
     (active / "new.session.txt").write_text("a", encoding="utf-8")
-    (legacy / "old.session.txt").write_text("b", encoding="utf-8")
     (active / "stale.session").write_bytes(b"sqlite-leftover")
     (active / "notes.txt").write_text("keep", encoding="utf-8")
 
     monkeypatch.setenv(DATA_DIR_ENV, str(data))
-    monkeypatch.setattr(paths_mod, "legacy_sessions_dir", lambda: legacy)
 
-    assert paths_mod.clear_telegram_session_files() == 3
+    assert paths_mod.clear_telegram_session_files() == 2
     assert not (active / "new.session.txt").exists()
-    assert not (legacy / "old.session.txt").exists()
     assert not (active / "stale.session").exists()
     assert (active / "notes.txt").exists()
 
 
 def test_clear_secret_key_and_connection_json(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     data = tmp_path / "userData"
-    legacy = tmp_path / "legacy-home"
     data.mkdir()
-    legacy.mkdir()
     (data / "secret.key").write_bytes(b"active-key")
-    (legacy / "secret.key").write_bytes(b"legacy-key")
     (data / "connection.json").write_text("{}", encoding="utf-8")
-    (legacy / "connection.json").write_text("{}", encoding="utf-8")
 
     monkeypatch.setenv(DATA_DIR_ENV, str(data))
-    monkeypatch.setattr(paths_mod, "legacy_home_dir", lambda: legacy)
 
-    assert paths_mod.clear_secret_key_files() == 2
-    assert paths_mod.clear_connection_json_files() == 2
+    assert paths_mod.clear_secret_key_files() == 1
+    assert paths_mod.clear_connection_json_files() == 1
     assert not (data / "secret.key").exists()
-    assert not (legacy / "secret.key").exists()
     assert not (data / "connection.json").exists()
-    assert not (legacy / "connection.json").exists()
 
 
 def test_ensure_sessions_dir_creates_without_copying(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    legacy = tmp_path / "home" / ".intelligence-monitor" / "sessions"
     data = tmp_path / "ElectronUserData"
-    legacy.mkdir(parents=True)
-    (legacy / "tg.session.txt").write_text("sess", encoding="utf-8")
 
     monkeypatch.setenv(DATA_DIR_ENV, str(data))
-    monkeypatch.setattr(paths_mod, "legacy_sessions_dir", lambda: legacy)
 
     result = paths_mod.ensure_sessions_dir()
     assert result == data / "sessions"
     assert result.is_dir()
-    assert not (result / "tg.session.txt").exists()

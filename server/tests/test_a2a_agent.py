@@ -110,5 +110,58 @@ async def test_a2a_agent_accepts_caller_held_history_for_request(app) -> None:
 
 
 @pytest.mark.asyncio
+async def test_a2a_agent_rejects_empty_input_with_422(client, app) -> None:
+    key = await seed_access_key(app.state.db, "a2a-empty-secret", scopes=[FULL_SCOPE])
+    resp = await client.post(
+        "/api/v1/a2a/agent",
+        json={"input": "   "},
+        headers=await _auth_headers(key["key"]),
+    )
+    assert resp.status_code == 422
+    assert resp.json()["error_code"] == "VALIDATION_ERROR"
+
+
+@pytest.mark.asyncio
+async def test_a2a_agent_reports_unreachable_engine_as_503(client, app) -> None:
+    key = await seed_access_key(app.state.db, "a2a-unreachable-secret", scopes=[FULL_SCOPE])
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(side_effect=ConnectionError("Cannot connect to host localhost:11434"))
+    mock_llm.close = AsyncMock()
+    mock_llm.provider = "ollama"
+
+    with patch.object(ConfigurableLlmClient, "from_liaison_slot", AsyncMock(return_value=mock_llm)):
+        resp = await client.post(
+            "/api/v1/a2a/agent",
+            json={"input": "hi"},
+            headers=await _auth_headers(key["key"]),
+        )
+
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["error_code"] == "ai_engine_unreachable"
+    assert "11434" in body["message"]
+    mock_llm.close.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_a2a_agent_reports_other_engine_failures_as_502(client, app) -> None:
+    key = await seed_access_key(app.state.db, "a2a-failed-secret", scopes=[FULL_SCOPE])
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(side_effect=RuntimeError("provider exploded"))
+    mock_llm.close = AsyncMock()
+    mock_llm.provider = "ollama"
+
+    with patch.object(ConfigurableLlmClient, "from_liaison_slot", AsyncMock(return_value=mock_llm)):
+        resp = await client.post(
+            "/api/v1/a2a/agent",
+            json={"input": "hi"},
+            headers=await _auth_headers(key["key"]),
+        )
+
+    assert resp.status_code == 502
+    assert resp.json()["error_code"] == "ai_engine_failed"
+
+
+@pytest.mark.asyncio
 async def test_default_scopes_are_full() -> None:
     assert DEFAULT_SCOPES == [FULL_SCOPE]

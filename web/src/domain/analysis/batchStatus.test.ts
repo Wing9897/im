@@ -35,13 +35,13 @@ describe("batchStatus helpers", () => {
 
   it("labels match queue / dashboard copy", () => {
     expect(batchStatusLabel(batch({ errorMessage: "fail" }))).toBe(
-      String(i18n.t("board.queue.attention")),
+      String(i18n.t("board:queue.attention")),
     );
     expect(batchStatusLabel(batch({ status: "pending" }))).toBe(
-      String(i18n.t("board.queue.retryPending")),
+      String(i18n.t("board:queue.retryPending")),
     );
     expect(batchStatusLabel(batch({ status: "processing" }))).toBe(
-      String(i18n.t("board.queue.processingBadge")),
+      String(i18n.t("board:queue.processingBadge")),
     );
   });
 });

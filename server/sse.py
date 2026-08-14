@@ -3,6 +3,10 @@
 Wire format: each SSE frame is a named event whose
 ``data`` is ``{"type": <event>, "payload": {...camelCase...}}``. The frontend
 ``sseClient.ts`` listens for the named events and unwraps ``payload``.
+
+Payload shapes are documented as OpenAPI components
+(``server/api/schemas/responses/sse.py`` — ``SseEventEnvelope`` +
+``Sse*Payload``); ``test_contract_sse.py`` guards publish sites against them.
 """
 
 from __future__ import annotations
@@ -10,8 +14,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Protocol
+from typing import Any, Protocol
 
 from fastapi import Request
 from sse_starlette.sse import EventSourceResponse
@@ -137,7 +142,7 @@ def event_stream(
                 try:
                     frame = await asyncio.wait_for(queue.get(), timeout=_KEEPALIVE_SECONDS)
                     yield frame
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield {"comment": "keep-alive"}
         finally:
             broadcaster.unsubscribe(queue)

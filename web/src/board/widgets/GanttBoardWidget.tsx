@@ -35,7 +35,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useBoardGanttViewMode(widgetId);
   const { selection, setSelection, filterBySource } = useBoardSourceFilter(widgetId);
-  const ariaPrefix = t("board.ganttWidget.byTaskAria");
+  const ariaPrefix = t("board:ganttWidget.byTaskAria");
 
   // Backend `/activity-spans` emits one ownership row per workset with user_events.
   const spansFetcher = useCallback(
@@ -130,7 +130,7 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
     <div className="board-widget-body board-widget-gantt" data-testid="board-gantt-widget">
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.paused", { name: t("board.ganttWidget.pausedName") })}
+        pausedLabel={t("board:common.paused", { name: t("board:ganttWidget.pausedName") })}
         pausedTestId="board-gantt-paused"
         loading={loading && !spans}
         error={!spans ? error : null}
@@ -138,15 +138,15 @@ export function GanttBoardWidget({ active = true, widgetId }: BoardWidgetProps) 
       >
         {showWorksetLegend ? (
           <p className="board-widget-muted" data-testid="board-gantt-workset-legend">
-            {t("board.ganttWidget.worksetSpanLegend")}
+            {t("board:ganttWidget.worksetSpanLegend")}
           </p>
         ) : null}
-        <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingGantt")}</p>}>
+        <Suspense fallback={<p className="board-widget-muted">{t("board:common.loadingGantt")}</p>}>
           <LazyGanttBoardEmbed
             spans={labeledSpans}
             viewMode={viewMode}
-            labelHeader={t("board.ganttWidget.labelTask")}
-            emptyLabel={t("board.gantt.defaultEmptyLabel")}
+            labelHeader={t("board:ganttWidget.labelTask")}
+            emptyLabel={t("board:gantt.defaultEmptyLabel")}
           />
         </Suspense>
       </BoardWidgetShell>

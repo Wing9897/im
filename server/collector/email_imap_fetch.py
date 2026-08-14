@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from html import unescape
 from typing import Any
 
@@ -89,7 +89,7 @@ def parse_imap_message(folder: str, msg: Any) -> FetchedEmail:
     msg_date = getattr(msg, "date", None)
     if isinstance(msg_date, datetime):
         if msg_date.tzinfo is None:
-            msg_date = msg_date.replace(tzinfo=timezone.utc)
+            msg_date = msg_date.replace(tzinfo=UTC)
         message_time = to_iso_z(msg_date)
     else:
         message_time = utc_now_iso()

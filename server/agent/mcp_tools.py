@@ -41,10 +41,7 @@ MCP_CONFIRM_DELETE_TOOLS = frozenset(
     }
 )
 
-MCP_CONFIRM_REQUIRED_ERROR = (
-    "confirm required: pass confirm=true to delete via MCP; "
-    "retry with arguments.confirm=true"
-)
+MCP_CONFIRM_REQUIRED_ERROR = "confirm required: pass confirm=true to delete via MCP; retry with arguments.confirm=true"
 
 #: Capability group id → tools in that group (partition of the allowlist).
 #: Ids come from ``MCP_CAPABILITY_IDS``; membership stays next to the tools registry.
@@ -64,9 +61,7 @@ MCP_CAPABILITY_TOOLS: dict[str, frozenset[str]] = {
     cap_id: _CAPABILITY_TOOL_SETS[cap_id] for cap_id in MCP_CAPABILITY_IDS
 }
 
-_TOOL_TO_CAPABILITY: dict[str, str] = {
-    tool: cap for cap, tools in MCP_CAPABILITY_TOOLS.items() for tool in tools
-}
+_TOOL_TO_CAPABILITY: dict[str, str] = {tool: cap for cap, tools in MCP_CAPABILITY_TOOLS.items() for tool in tools}
 
 
 @dataclass(frozen=True, slots=True)

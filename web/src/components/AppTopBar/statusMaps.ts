@@ -12,11 +12,8 @@ import {
  */
 
 export const statusColorsByCollectorState: Record<CollectorStatus, string> = {
-  starting: "var(--info)",
   running: "var(--success)",
-  stopping: "var(--warning)",
   stopped: "var(--error)",
-  restarting: "var(--peach)",
   error: "var(--error)",
 };
 

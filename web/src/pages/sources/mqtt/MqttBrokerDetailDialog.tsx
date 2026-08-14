@@ -8,7 +8,7 @@ import {
 } from "../../../components/detail";
 import { formatStatusLabel, statusDotStyle } from "../../../styles/statusDot";
 import {
-  rssDetailHeroLabelClass,
+  detailChromeCardTitleClass,
   sourceDetailMonoHeroClass,
   sourceDetailSubtitleClass,
 } from "../../../components/detail/classes";
@@ -42,7 +42,7 @@ export function MqttBrokerDetailDialog({
       onEdit={onEdit}
     >
       <div className={sourceDetailMonoHeroClass}>{broker.brokerUrl}</div>
-      <div className={rssDetailHeroLabelClass}>{t("mqtt.subscribeTopics")}</div>
+      <div className={detailChromeCardTitleClass}>{t("mqtt.subscribeTopics")}</div>
       <DetailTagList tags={broker.topics} />
       <DetailMetaGrid
         items={fields

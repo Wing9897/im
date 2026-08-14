@@ -2,7 +2,7 @@
 
 Prefix: ``[cal-ui]`` on titles so they are easy to spot and delete later.
 Run against the live app DB (default data dir) while the server may be running.
-Requires wipe-only stamp 31 (``SCHEMA_SEMVER`` ``0.1.0-beta.32``); reset first if needed.
+Requires wipe-only stamp 33 (``SCHEMA_SEMVER`` ``0.1.0-beta.34``); reset first if needed.
 
   python scripts/seed_calendar_ui_fixtures.py
   python scripts/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first
@@ -10,25 +10,26 @@ Requires wipe-only stamp 31 (``SCHEMA_SEMVER`` ``0.1.0-beta.32``); reset first i
 
 from __future__ import annotations
 
-import argparse
 import asyncio
 import hashlib
 import json
-import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+from _seed_common import (
+    build_seed_parser,
+    clean_calendar_fixtures,
+    create_linked_milestone,
+    delete_workset,
+    ensure_workset,
+    open_seed_db,
+    resolve_db_path,
+)
 
 from server.calendar.timeline_dismissals import dismiss_timeline_event
-from server.calendar.user_events import create_user_event
-from server.db.database import Database, TransactionDb
+from server.calendar.user_events_write import create_user_event
+from server.db.database import Database
 from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
 from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE
 from server.items.service import create_item
-from server.paths import default_db_path
-from server.queries.worksets_queries import insert_workset
 from server.services.recurring_series_create import create_recurring_series
 from server.util import utc_now_iso
 
@@ -38,6 +39,7 @@ INTEL_TASK_ID = "cal-ui-intel-event"
 WEB_TASK_ID = "cal-ui-agent-web"
 PROJECT_TASK_ID = "cal-ui-agent-reconcile"
 BATCH_ID = "cal-ui-intel-batch"
+LLM_PROFILE_ID = "cal-ui-llm-profile"
 
 
 def _hash(s: str) -> str:
@@ -46,36 +48,27 @@ def _hash(s: str) -> str:
 
 async def _clean(db: Database) -> None:
     """Remove previous fixture rows (best-effort by title / known ids)."""
-    await db.execute("DELETE FROM timeline_dismissals WHERE event_id LIKE 'cal-ui-%'")
     await db.execute("DELETE FROM analysis_events WHERE id LIKE 'cal-ui-%'")
     await db.execute("DELETE FROM analysis_batches WHERE id = ?", (BATCH_ID,))
-    await db.execute(
-        "DELETE FROM user_events WHERE title LIKE ? OR id LIKE 'cal-ui-%'",
-        (f"{PREFIX}%",),
-    )
-    # Linked milestone events are titled「到期」/「購入」(no [cal-ui] prefix).
-    await db.execute(
-        "DELETE FROM user_events WHERE item_id IN (SELECT id FROM items WHERE title LIKE ?)",
-        (f"{PREFIX}%",),
-    )
-    await db.execute("DELETE FROM items WHERE title LIKE ?", (f"{PREFIX}%",))
+    await clean_calendar_fixtures(db, title_prefix=PREFIX, event_id_prefix="cal-ui-")
     await db.execute("DELETE FROM recurring_schedules WHERE name LIKE ?", (f"{PREFIX}%",))
     for tid in (INTEL_TASK_ID, WEB_TASK_ID, PROJECT_TASK_ID):
         await db.execute("DELETE FROM analysis_tasks WHERE id = ?", (tid,))
-    await db.execute("DELETE FROM worksets WHERE id = ?", (WS_ID,))
+    await db.execute("DELETE FROM llm_profiles WHERE id = ?", (LLM_PROFILE_ID,))
+    await delete_workset(db, WS_ID)
 
 
-async def _ensure_workset(db: Database) -> None:
-    existing = await db.fetch_one("SELECT id FROM worksets WHERE id = ?", (WS_ID,))
-    if existing:
+async def _ensure_llm_profile(db: Database) -> None:
+    """Tasks require a bound profile (stamp 33 seeds zero profiles)."""
+    row = await db.fetch_one("SELECT id FROM llm_profiles WHERE id = ?", (LLM_PROFILE_ID,))
+    if row:
         return
-    async with db.transaction() as conn:
-        await insert_workset(
-            TransactionDb(conn),
-            workset_id=WS_ID,
-            name="日曆 UI 測試組",
-            now=utc_now_iso(),
-        )
+    now = utc_now_iso()
+    await db.execute(
+        "INSERT INTO llm_profiles (id, name, base_url, model, created_at, updated_at) "
+        "VALUES (?, ?, 'http://localhost:11434', 'cal-ui-demo', ?, ?)",
+        (LLM_PROFILE_ID, f"{PREFIX} seed profile", now, now),
+    )
 
 
 async def _ensure_intel_tasks(db: Database) -> None:
@@ -85,9 +78,9 @@ async def _ensure_intel_tasks(db: Database) -> None:
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
             "analysis_time_range, version, is_active, include_in_timeline, "
-            "schedule_rrule, workset_id, created_at, updated_at) "
-            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', ?, ?)",
-            (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", INTEL_EVENT_MODE, now, now),
+            "schedule_rrule, workset_id, llm_profile_id, created_at, updated_at) "
+            "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', ?, ?, ?)",
+            (INTEL_TASK_ID, f"{PREFIX} 情報事件任務", INTEL_EVENT_MODE, LLM_PROFILE_ID, now, now),
         )
 
     for task_id, name, preset in (
@@ -105,9 +98,9 @@ async def _ensure_intel_tasks(db: Database) -> None:
             "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
             "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
             "output_calendar, output_analysis_events, "
-            "created_at, updated_at) "
+            "llm_profile_id, created_at, updated_at) "
             "VALUES (?, ?, 'seed', ?, 'all', 1, 1, 1, NULL, '__user__', "
-            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 task_id,
                 name,
@@ -121,6 +114,7 @@ async def _ensure_intel_tasks(db: Database) -> None:
                 int(policy["cap_read_items"]),
                 int(policy["output_calendar"]),
                 int(policy["output_analysis_events"]),
+                LLM_PROFILE_ID,
                 now,
                 now,
             ),
@@ -178,7 +172,8 @@ async def _insert_analysis_event(
 
 
 async def seed(db: Database) -> dict[str, int]:
-    await _ensure_workset(db)
+    await ensure_workset(db, ws_id=WS_ID, name="日曆 UI 測試組")
+    await _ensure_llm_profile(db)
     await _ensure_intel_tasks(db)
     counts = {
         "user_events": 0,
@@ -477,28 +472,25 @@ async def seed(db: Database) -> dict[str, int]:
         counts["items"] += 1
         workset_id = spec.get("workset_id")
         if spec.get("expires_at"):
-            await create_user_event(
+            await create_linked_milestone(
                 db,
-                title="到期",
-                start_time=f"{spec['expires_at']}T00:00:00Z",
-                is_all_day=True,
                 item_id=item_id,
+                title="到期",
+                day=spec["expires_at"],
                 workset_id=workset_id,
                 remind_before_days=spec.get("remind_before_days"),
-                origin="manual",
             )
             counts["user_events"] += 1
-        linked = await db.fetch_all(
-            "SELECT id FROM user_events WHERE item_id = ?",
-            (item_id,),
-        )
-        assert linked, f"fixture {spec['title']!r} must have linked calendars as SoT"
+        if spec.get("expires_at"):
+            linked = await db.fetch_all(
+                "SELECT id FROM user_events WHERE item_id = ?",
+                (item_id,),
+            )
+            assert linked, f"fixture {spec['title']!r} must have linked calendars as SoT"
 
     if item_ids:
         # Soft-dismiss item remind occurrence id (projection is remind-only).
-        await dismiss_timeline_event(
-            db, source="item_remind", event_id=f"item:{item_ids[0]}:remind"
-        )
+        await dismiss_timeline_event(db, source="item_remind", event_id=f"item:{item_ids[0]}:remind")
         counts["dismissals"] += 1
 
     # ── analysis_events (intel / web) for Timeline source=analysis ──
@@ -612,26 +604,17 @@ async def seed(db: Database) -> dict[str, int]:
 
 
 async def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--clean", action="store_true", help="Remove prior [cal-ui] fixtures first")
-    parser.add_argument("--db", type=str, default="", help="Override SQLite path")
-    args = parser.parse_args()
+    args = build_seed_parser(__doc__, prefix=PREFIX).parse_args()
 
-    path = Path(args.db) if args.db else default_db_path()
+    path = resolve_db_path(args.db)
     print(f"DB: {path}")
-    db = Database(str(path))
-    await db.connect()
-    try:
-        # Fresh wipe leaves an empty file; bootstrap stamp before seeding.
-        await db.ensure_schema()
+    async with open_seed_db(path) as db:
         if args.clean:
             await _clean(db)
             print("Cleaned prior [cal-ui] fixtures")
         counts = await seed(db)
         print("Seeded:", json.dumps(counts, ensure_ascii=False))
         print("Open /timeline — filter by workset「日曆 UI 測試組」or titles starting with [cal-ui]")
-    finally:
-        await db.close()
 
 
 if __name__ == "__main__":

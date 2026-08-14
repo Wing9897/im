@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import secrets
 import time
-from typing import Any, Optional
+from typing import Any
 
 from server.auth.admin_auth import has_admin_account
 from server.auth.device_token_issue import _hash_secret, _not_expired, _utcnow
@@ -61,7 +61,7 @@ async def credentials_configured(db: Database) -> bool:
     return int(session_count or 0) > 0
 
 
-async def resolve_session_id_for_access_token(db: Database, token: str) -> Optional[str]:
+async def resolve_session_id_for_access_token(db: Database, token: str) -> str | None:
     """Return session id when the access token is present, unrevoked, and unexpired."""
     presented = (token or "").strip()
     if not presented:
@@ -152,16 +152,14 @@ async def list_devices(db: Database, *, current_session_id: str | None = None) -
         ORDER BY created_at ASC
         """
     )
-    out: list[dict[str, Any]] = []
-    for row in rows:
-        out.append(
-            {
-                "id": row["id"],
-                "label": row["label"],
-                "createdAt": row["created_at"],
-                "lastSeenAt": row["last_seen_at"],
-                "expiresAt": row["expires_at"],
-                "current": bool(current_session_id and row["id"] == current_session_id),
-            }
-        )
-    return out
+    return [
+        {
+            "id": row["id"],
+            "label": row["label"],
+            "createdAt": row["created_at"],
+            "lastSeenAt": row["last_seen_at"],
+            "expiresAt": row["expires_at"],
+            "current": bool(current_session_id and row["id"] == current_session_id),
+        }
+        for row in rows
+    ]

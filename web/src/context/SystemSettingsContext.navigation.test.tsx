@@ -129,41 +129,10 @@ describe("SystemSettingsProvider shared navigation", () => {
     expect(mockFetchSystemSettings).toHaveBeenCalledTimes(1);
   });
 
-  it("preserves unsaved draft when navigating from /ai to /settings", async () => {
-    await act(async () => {
-      root = createRoot(container);
-      root.render(renderSharedSettingsApp());
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    const inputs = container.querySelectorAll<HTMLInputElement>("input:not([type='password'])");
-    const baseUrlInput = inputs[0];
-    expect(baseUrlInput).toBeTruthy();
-
-    await act(async () => {
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )!.set!;
-      setter.call(baseUrlInput!, "http://draft-url:11434");
-      baseUrlInput!.dispatchEvent(new Event("input", { bubbles: true }));
-      baseUrlInput!.dispatchEvent(new Event("change", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("未儲存變更");
-
-    const switchButton = container.querySelector("button");
-    await act(async () => {
-      switchButton!.click();
-      await Promise.resolve();
-      await Promise.resolve();
-    });
-
-    expect(container.textContent).toContain("未儲存變更");
-  });
-
+  // NOTE: the /ai/provider page now edits LLM profiles via a dialog with direct
+  // API saves and no longer feeds the shared system-settings draft, so the
+  // reverse-direction (/ai → /settings) draft test was retired. Draft
+  // preservation across the boundary is covered below (/settings/data → /ai).
   it("preserves unsaved retention draft when navigating from /settings/data to /ai", async () => {
     await act(async () => {
       root = createRoot(container);

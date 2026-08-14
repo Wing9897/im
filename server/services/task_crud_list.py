@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from server.api.routes.task_helpers import ALLOWED_MODES
 from server.db.database import Database
@@ -14,8 +14,8 @@ from server.wire.serializers import serialize_channel_ref, serialize_task
 async def list_tasks_payload(
     db: Database,
     *,
-    analysis_mode: Optional[str] = None,
-    workset_id: Optional[str] = None,
+    analysis_mode: str | None = None,
+    workset_id: str | None = None,
 ) -> list[dict[str, Any]]:
     rows = await fetch_all_task_rows(db)
     if analysis_mode is not None:

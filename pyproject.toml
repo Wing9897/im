@@ -59,7 +59,7 @@ include = ["server", "scripts"]
 venvPath = "."
 venv = ".venv"
 pythonVersion = "3.11"
-typeCheckingMode = "basic"
+typeCheckingMode = "standard"
 reportMissingImports = true
 reportMissingTypeStubs = false
 
@@ -68,11 +68,16 @@ line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "B", "SIM", "UP", "C4", "RET", "PERF", "PTH", "TRY004", "TRY400"]
+
+[tool.ruff.lint.flake8-bugbear]
+# qalias() wraps Query(alias=...) — FastAPI-safe default; keep as the camelCase SoT.
+extend-immutable-calls = ["fastapi.Query", "fastapi.Depends", "server.api.query_aliases.qalias"]
 
 [tool.ruff.lint.per-file-ignores]
 "server/main.py" = ["E402"]
 "server/__main__.py" = ["E402"]
+"scripts/_seed_common.py" = ["E402"]
 "scripts/seed_calendar_ui_fixtures.py" = ["E402"]
 "scripts/seed_dev_items_calendar.py" = ["E402"]
 

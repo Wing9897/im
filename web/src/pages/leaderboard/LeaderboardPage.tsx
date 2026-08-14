@@ -31,6 +31,9 @@ export function LeaderboardPage() {
     groupedBoards,
   } = useLeaderboardPage();
 
+  const emptyVariant =
+    leaderboardTasks.length === 0 ? "noTasks" : selectedTaskId ? "filtered" : "noResults";
+
   return (
     <AppPageShell>
       {pageError ? (
@@ -47,7 +50,7 @@ export function LeaderboardPage() {
       {leaderboardTasks.length > 0 || isRefreshing ? (
         <OpsControlBar
           sticky
-          ariaLabel={t("leaderboard.toolbarAria")}
+          ariaLabel={t("leaderboard:toolbarAria")}
           data-testid="leaderboard-toolbar"
         >
           {leaderboardTasks.length > 0 ? (
@@ -56,20 +59,20 @@ export function LeaderboardPage() {
               menuPortal
               value={selectedTaskId}
               options={[
-                { value: "", label: t("leaderboard.allBoards") },
+                { value: "", label: t("leaderboard:allBoards") },
                 ...leaderboardTasks.map((task) => ({
                   value: task.id,
                   label: task.name,
                 })),
               ]}
               onChange={setSelectedTaskId}
-              aria-label={t("leaderboard.selectTaskAria")}
+              aria-label={t("leaderboard:selectTaskAria")}
               data-testid="leaderboard-task-select"
               className="max-w-[200px]"
               triggerClassName={`${pageOpsControlClass} max-w-[200px] w-auto px-2`}
             />
           ) : null}
-          {isRefreshing ? <RefreshIndicator label={t("leaderboard.refreshing")} /> : null}
+          {isRefreshing ? <RefreshIndicator label={t("leaderboard:refreshing")} /> : null}
         </OpsControlBar>
       ) : null}
 
@@ -77,37 +80,19 @@ export function LeaderboardPage() {
         <SkeletonScreen variant="table-rows" count={3} />
       ) : topics.length === 0 ? (
         <EmptyState
-          title={
-            leaderboardTasks.length === 0
-              ? t("leaderboard.emptyNoTasksTitle")
-              : selectedTaskId
-                ? t("leaderboard.emptyFilteredTitle")
-                : t("leaderboard.emptyNoResultsTitle")
-          }
-          description={
-            leaderboardTasks.length === 0
-              ? t("leaderboard.emptyNoTasksDescription")
-              : selectedTaskId
-                ? t("leaderboard.emptyFilteredDescription")
-                : t("leaderboard.emptyNoResultsDescription")
-          }
-          hint={
-            leaderboardTasks.length === 0
-              ? t("leaderboard.emptyNoTasksHint")
-              : selectedTaskId
-                ? t("leaderboard.emptyFilteredHint")
-                : t("leaderboard.emptyNoResultsHint")
-          }
+          title={t(`leaderboard:empty.${emptyVariant}.title`)}
+          description={t(`leaderboard:empty.${emptyVariant}.description`)}
+          hint={t(`leaderboard:empty.${emptyVariant}.hint`)}
           actions={
             leaderboardTasks.length === 0 ? (
-              <EmptyStateLink to="/tasks">{t("leaderboard.goToTasks")}</EmptyStateLink>
+              <EmptyStateLink to="/tasks">{t("leaderboard:goToTasks")}</EmptyStateLink>
             ) : selectedTaskId ? (
               <Button
                 variant="secondary"
                 onClick={resetTaskFilter}
-                aria-label={t("leaderboard.viewAllAria")}
+                aria-label={t("leaderboard:viewAllAria")}
               >
-                {t("leaderboard.viewAll")}
+                {t("leaderboard:viewAll")}
               </Button>
             ) : undefined
           }

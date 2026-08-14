@@ -39,7 +39,7 @@ export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
         error={!actions ? error : null}
         onRetry={refresh}
         empty={Array.isArray(actions) && actions.length === 0}
-        emptyLabel={t("board.actions.empty")}
+        emptyLabel={t("board:actions.empty")}
       >
         {items.length > 0 ? (
           <ul className="board-widget-list">
@@ -50,14 +50,14 @@ export function ActionsBoardWidget({ active = true }: BoardWidgetProps) {
                   data-testid={`board-actions-row-${action.id}`}
                 >
                   <span className="board-widget-list__primary">
-                    {action.name || t("board.common.unnamed")}
+                    {action.name || t("board:common.unnamed")}
                     <Badge tone={action.isEnabled ? "success" : "neutral"}>
-                      {action.isEnabled ? t("board.common.enabled") : t("board.common.disabled")}
+                      {action.isEnabled ? t("board:common.enabled") : t("board:common.disabled")}
                     </Badge>
                   </span>
                   <span className="board-widget-list__meta">
                     {action.actionType} ·{" "}
-                    {formatTriggeredAt(action.lastTriggeredAt, t("board.actions.neverTriggered"))}
+                    {formatTriggeredAt(action.lastTriggeredAt, t("board:actions.neverTriggered"))}
                   </span>
                 </div>
               </li>

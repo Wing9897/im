@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from server.time_iso import to_iso_z
 
@@ -23,9 +23,9 @@ def current_time_prompt_block(
     if now is None:
         local = datetime.now().astimezone()
     else:
-        aware = now if now.tzinfo is not None else now.replace(tzinfo=timezone.utc)
+        aware = now if now.tzinfo is not None else now.replace(tzinfo=UTC)
         local = aware.astimezone()
-    utc = local.astimezone(timezone.utc)
+    utc = local.astimezone(UTC)
     weekday_zh = ("一", "二", "三", "四", "五", "六", "日")[local.weekday()]
     tz_label = local.tzname() or local.strftime("%Z") or "local"
     offset = local.strftime("%z")

@@ -44,8 +44,8 @@ export function GanttBoardEmbed({
   events,
 }: GanttBoardEmbedProps) {
   const { t } = useTranslation();
-  const resolvedLabelHeader = labelHeader ?? t("board.gantt.defaultLabelHeader");
-  const resolvedEmptyLabel = emptyLabel ?? t("board.gantt.defaultEmptyLabel");
+  const resolvedLabelHeader = labelHeader ?? t("board:gantt.defaultLabelHeader");
+  const resolvedEmptyLabel = emptyLabel ?? t("board:gantt.defaultEmptyLabel");
   const chart = useMemo(() => {
     const now = Date.now();
     const activityRows = events
@@ -76,7 +76,7 @@ export function GanttBoardEmbed({
     chart.sourceCount === 0
       ? resolvedEmptyLabel
       : chart.rows.length === 0
-        ? t("board.gantt.emptyFiltered")
+        ? t("board:gantt.emptyFiltered")
         : resolvedEmptyLabel;
 
   return (
@@ -92,7 +92,7 @@ export function GanttBoardEmbed({
         <div
           className="board-gantt-embed__axis"
           aria-label={
-            viewMode === "day" ? t("board.gantt.axisDayAria") : t("board.gantt.axisMonthAria")
+            viewMode === "day" ? t("board:gantt.axisDayAria") : t("board:gantt.axisMonthAria")
           }
         >
           {chart.axis.ticks.map((tick) => (
@@ -100,7 +100,7 @@ export function GanttBoardEmbed({
           ))}
         </div>
       </div>
-      <ul className="board-gantt-embed__rows" aria-label={t("board.gantt.rowsAria")}>
+      <ul className="board-gantt-embed__rows" aria-label={t("board:gantt.rowsAria")}>
         {chart.rows.length === 0 ? (
           <li className="board-gantt-embed__empty">{emptyText}</li>
         ) : chart.rows.map(({ row, bars }) => {
@@ -120,14 +120,14 @@ export function GanttBoardEmbed({
                 {row.status === "active" ? (
                   <span
                     className="board-gantt-embed__active-dot"
-                    aria-label={t("board.gantt.activeAria")}
+                    aria-label={t("board:gantt.activeAria")}
                   />
                 ) : null}
                 <span className="board-gantt-embed__name">{row.label}</span>
               </button>
               <div
                 className="board-gantt-embed__track"
-                aria-label={t("board.gantt.trackAria", {
+                aria-label={t("board:gantt.trackAria", {
                   label: row.label,
                   range: rangeLabel,
                 })}
@@ -145,7 +145,7 @@ export function GanttBoardEmbed({
                     data-end-ms={activity.end}
                     style={{ left: `${bar.left}%`, width: `${bar.width}%` }}
                     title={formatActivityRange(activity.start, activity.end)}
-                    aria-label={t("board.gantt.trackAria", {
+                    aria-label={t("board:gantt.trackAria", {
                       label: activity.label,
                       range: formatActivityRange(activity.start, activity.end),
                     })}

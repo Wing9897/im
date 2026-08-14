@@ -13,11 +13,13 @@ from dataclasses import dataclass
 from typing import Literal
 from urllib.parse import urlparse
 
+from server.domain.web_search_providers import ALLOWED_WEB_SEARCH_PROVIDERS
+
 WebSearchMode = Literal["off", "tool", "openai_native", "gemini_native"]
 ToolProvider = Literal["duckduckgo", "brave"]
 NativeKind = Literal["openai", "gemini"]
 
-_WEB_SEARCH_SETTING_PROVIDERS = frozenset({"auto", "duckduckgo", "brave"})
+_WEB_SEARCH_SETTING_PROVIDERS = ALLOWED_WEB_SEARCH_PROVIDERS
 
 
 @dataclass(frozen=True, slots=True)

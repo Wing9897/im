@@ -110,10 +110,12 @@ async def store_trending_topics(
             tuple(topic_ids_to_clear),
         )
         link_rows: list[tuple[str, Any]] = []
-        for topic_id, message_ids in pending_topic_messages.items():
-            for message_id in message_ids:
-                if message_id in valid_message_ids:
-                    link_rows.append((topic_id, message_id))
+        link_rows.extend(
+            (topic_id, message_id)
+            for topic_id, message_ids in pending_topic_messages.items()
+            for message_id in message_ids
+            if message_id in valid_message_ids
+        )
         if link_rows:
             await conn.executemany(
                 "INSERT OR IGNORE INTO topic_messages (topic_id, message_id) VALUES (?, ?)",

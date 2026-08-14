@@ -7,6 +7,7 @@
  */
 
 import { apiClient, resolveBaseUrl, ApiRequestError, NetworkError } from "./client";
+import { parseErrorResponse } from "./parseApiError";
 import type { components } from "./generated/schema";
 import type { AppLocale } from "../i18n/locale";
 
@@ -14,12 +15,8 @@ type OpenApiAgentChatBody = components["schemas"]["AgentChatBody"];
 type OpenApiAgentChatResponse = components["schemas"]["AgentChatResponse"];
 type OpenApiAgentToolCallSummary = components["schemas"]["AgentToolCallSummary"];
 
-type AgentChatRole = "user" | "assistant" | "system";
-
-export interface AgentChatMessage {
-  role: AgentChatRole;
-  content: string;
-}
+/** One client-supplied chat turn (OpenAPI ``AgentChatMessage``). */
+export type AgentChatMessage = components["schemas"]["AgentChatMessage"];
 
 /** Client-normalized tool summary (``arguments`` always present). */
 export type AgentToolCallSummary = Omit<OpenApiAgentToolCallSummary, "arguments"> & {
@@ -41,8 +38,8 @@ interface AgentChatRequest {
   /** Live Chat Editor draft for ``tasks.consult_advisor`` context. */
   currentTask?: OpenApiAgentChatBody["currentTask"];
   /**
-   * Optional complete ``llm_profiles`` id for this turn. When omitted, the
-   * server resolves via ``staff_class=assistant``.
+   * Optional complete ``llm_profiles`` id for this turn. When omitted:
+   * hard-bound global assistant slot. A2A uses ``liaison``.
    */
   llmProfileId?: string | null;
 }
@@ -52,7 +49,11 @@ export type AgentChatResponse = {
   message: string;
   sessionId: string;
   toolCalls: AgentToolCallSummary[];
-  /** Present when the server degraded (e.g. LLM unavailable) but still returned 200. */
+  /**
+   * Only set from an NDJSON ``error`` line, i.e. a failure that happened after
+   * the stream status was committed. `/agent/chat` reports failures as HTTP
+   * errors (502 / 503 / 504) that reject instead.
+   */
   error?: string;
   /** Optional task form patch from a successful advisor consult (task editor surface). */
   taskConfig?: OpenApiAgentChatResponse["taskConfig"];
@@ -174,7 +175,11 @@ function toAgentChatResponse(event: AgentStreamFinalEvent | AgentStreamErrorEven
   };
 }
 
-/** Send a multi-turn chat turn to the built-in agent (calendar tools on server). */
+/**
+ * Send a multi-turn chat turn to the built-in agent (calendar tools on server).
+ * Rejects with `ApiRequestError` when the engine fails; `errorCode` carries
+ * `ai_engine_unreachable` / `ai_engine_failed` / `agent_timeout`.
+ */
 export function postAgentChat(body: AgentChatRequest): Promise<AgentChatResponse> {
   return apiClient.post<AgentChatResponse>("/api/v1/agent/chat", agentChatRequestBody(body));
 }
@@ -210,10 +215,10 @@ export async function streamAgentChat(
     });
 
     if (!response.ok) {
-      throw new ApiRequestError(response.status, {
-        error: "AGENT_STREAM_FAILED",
-        message: `Agent stream failed (${response.status})`,
-      });
+      // The server rejects before streaming starts (bad profile, engine
+      // unreachable), so the structured error body is worth keeping.
+      const { apiError, structured } = await parseErrorResponse(response);
+      throw new ApiRequestError(response.status, apiError, structured);
     }
 
     if (!response.body) {

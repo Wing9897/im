@@ -15,7 +15,7 @@ from pathlib import Path
 from server.presets.task_presets import BUILTIN_PRESETS
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_LOCALE_PATH = _REPO_ROOT / "web" / "src" / "i18n" / "locales" / "zh-Hant" / "common.json"
+_LOCALE_PATH = _REPO_ROOT / "web" / "src" / "i18n" / "locales" / "zh-Hant" / "tasks.json"
 _SHARED_PATH = _REPO_ROOT / "shared" / "task_presets.json"
 
 _SYNCED_FIELDS = ("name", "description", "promptTemplate")
@@ -23,7 +23,7 @@ _SYNCED_FIELDS = ("name", "description", "promptTemplate")
 
 def _load_locale_presets() -> dict[str, dict[str, str]]:
     data = json.loads(_LOCALE_PATH.read_text(encoding="utf-8"))
-    return data["tasks"]["presets"]
+    return data["presets"]
 
 
 def test_task_preset_ids_match_locale():

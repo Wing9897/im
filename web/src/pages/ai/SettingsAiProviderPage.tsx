@@ -9,7 +9,6 @@ import {
   listLlmGlobalSlots,
   listLlmProfiles,
   patchLlmProfile,
-  setDefaultLlmProfile,
   type LlmGlobalSlotBinding,
   type LlmProfile,
 } from "../../api/llmProfiles";
@@ -53,7 +52,8 @@ export function SettingsAiProviderPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savingSlot, setSavingSlot] = useState<LlmGlobalSlotId | null>(null);
-  const [testingId, setTestingId] = useState<string | "new" | null>(null);
+  // Profile id being tested; "new" is the sentinel for an unsaved draft.
+  const [testingId, setTestingId] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState>(null);
 
   const reload = useCallback(async () => {
@@ -123,10 +123,6 @@ export function SettingsAiProviderPage() {
       const next = await bindLlmGlobalSlot(slot, profileId);
       setSlots((prev) => prev.map((row) => (row.slot === slot ? next : row)));
       showToast(t("globalSlots.boundSuccess"), "success");
-      // Assistant slot syncs staff instances — refresh profile badges.
-      if (slot === "assistant") {
-        await reload();
-      }
       requestAiStatusRefresh(true);
     } catch (error) {
       showToast(toErrorMessage(error), "error");
@@ -145,24 +141,7 @@ export function SettingsAiProviderPage() {
     }
   };
 
-  const handleSetDefault = async (profile: LlmProfile) => {
-    if (profile.isDefault) return;
-    try {
-      await setDefaultLlmProfile(profile.id);
-      showToast(t("profiles.setDefaultSuccess"), "success");
-      await reload();
-      requestAiStatusRefresh(true);
-    } catch (error) {
-      showToast(toErrorMessage(error), "error");
-    }
-  };
-
   const handleDelete = async (profile: LlmProfile) => {
-    // Last profile may be deleted (empty table = no default). Otherwise reassign default first.
-    if (profile.isDefault && profiles.length > 1) {
-      showToast(t("profiles.cannotDeleteDefault"), "error");
-      return;
-    }
     const ok = window.confirm(t("profiles.deleteConfirm", { name: profile.name }));
     if (!ok) return;
     try {
@@ -189,11 +168,11 @@ export function SettingsAiProviderPage() {
     showToast(t("provider.testingToast"), "info");
     try {
       const result = await testAiEngine({
-        llmProvider: draft.provider,
-        llmBaseUrl: draft.baseUrl,
-        llmModel: draft.model,
-        llmApiKey: draft.apiKey,
-        ollamaThinkingEnabled: draft.thinkingEnabled,
+        provider: draft.provider,
+        baseUrl: draft.baseUrl,
+        model: draft.model,
+        apiKey: draft.apiKey,
+        thinkingEnabled: draft.thinkingEnabled,
         llmProfileId: profileId,
       });
       if (result.success) {
@@ -251,7 +230,6 @@ export function SettingsAiProviderPage() {
           onCreate={openCreate}
           onEdit={openEdit}
           onCopy={(profile) => void handleCopy(profile)}
-          onSetDefault={(profile) => void handleSetDefault(profile)}
           onDelete={(profile) => void handleDelete(profile)}
           onTest={(draft, profileId) => void handleTest(draft, profileId)}
         />

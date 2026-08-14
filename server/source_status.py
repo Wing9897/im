@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from server.app_logging import record, summarize_error_message
 from server.util import utc_now_iso
@@ -11,7 +11,7 @@ from server.util import utc_now_iso
 logger = logging.getLogger(__name__)
 
 
-async def mark_source_connected(db: Any, source_id: str, *, name: Optional[str] = None) -> None:
+async def mark_source_connected(db: Any, source_id: str, *, name: str | None = None) -> None:
     """Persist connected status (optionally renaming the source)."""
     now = utc_now_iso()
     if name is None:

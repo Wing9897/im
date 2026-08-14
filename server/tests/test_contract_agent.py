@@ -22,7 +22,7 @@ async def test_agent_chat_contract(client):
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_slot", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat",
             json={"messages": [{"role": "user", "content": "What's next?"}], "sessionId": "contract-s1"},
@@ -32,6 +32,23 @@ async def test_agent_chat_contract(client):
     assert_keys(body, AGENT_CHAT_KEYS, "AgentChatResponse")
     assert body["toolCalls"], "expected at least one tool call summary"
     assert_keys(body["toolCalls"][0], AGENT_TOOL_CALL_KEYS, "AgentToolCallSummary")
+
+
+async def test_agent_chat_reports_engine_failure_as_http_error(client):
+    """Degraded turns must not arrive as 200 + ``error`` (stamp 34 contract)."""
+    mock_llm = MagicMock(spec=ConfigurableLlmClient)
+    mock_llm.complete = AsyncMock(side_effect=ConnectionError("Cannot connect to host localhost:11434"))
+    mock_llm.close = AsyncMock()
+
+    with patch.object(ConfigurableLlmClient, "from_assistant_slot", AsyncMock(return_value=mock_llm)):
+        resp = await client.post(
+            "/api/v1/agent/chat",
+            json={"messages": [{"role": "user", "content": "hi"}], "sessionId": "contract-s3"},
+        )
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["error_code"] == "ai_engine_unreachable"
+    assert "error" not in body
 
 
 async def test_agent_chat_stream_final_line_contract(client):
@@ -44,7 +61,7 @@ async def test_agent_chat_stream_final_line_contract(client):
     )
     mock_llm.close = AsyncMock()
 
-    with patch.object(ConfigurableLlmClient, "from_assistant_staff", AsyncMock(return_value=mock_llm)):
+    with patch.object(ConfigurableLlmClient, "from_assistant_slot", AsyncMock(return_value=mock_llm)):
         resp = await client.post(
             "/api/v1/agent/chat/stream",
             json={"messages": [{"role": "user", "content": "stream test"}], "sessionId": "contract-s2"},

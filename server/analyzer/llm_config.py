@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, NotRequired, TypedDict
+from collections.abc import Mapping
+from typing import Any, NotRequired, TypedDict
 
 from server.db.database import Database
+from server.domain.llm_providers import ALL_LLM_PROVIDERS, ALLOWED_LLM_PROVIDERS
 from server.errors import NOT_FOUND, VALIDATION_ERROR, http_error
 from server.secrets import MASKED_SECRET, unprotect_text
 from server.util import parse_bool
 
+#: Runtime wire → handler id (short ``openai``／``gemini`` stay rejected on write).
 PROVIDER_ALIASES: dict[str, str] = {
-    "ollama": "ollama",
-    "openai": "openai",
     "openai_compatible": "openai",
-    "gemini": "gemini",
     "gemini_compatible": "gemini",
-    "openrouter": "openrouter",
 }
 
-WIRE_PROVIDERS = frozenset({"ollama", "openai_compatible", "gemini_compatible", "openrouter"})
+WIRE_PROVIDERS = frozenset(ALL_LLM_PROVIDERS)
+assert WIRE_PROVIDERS == ALLOWED_LLM_PROVIDERS
 
 #: Fallback base URLs when a profile leaves ``base_url`` empty.
 DEFAULT_PROVIDER_BASE_URLS: dict[str, str] = {
@@ -49,17 +49,21 @@ def canonical_provider(raw_provider: str) -> str:
 
 
 def normalize_wire_provider(raw: str | None) -> str:
+    """Normalize stored / draft wire provider ids.
+
+    Accepts only ``WIRE_PROVIDERS`` values. Short ids ``openai``／``gemini`` are
+    not accepted on write paths (canonical map stays in ``PROVIDER_ALIASES`` for
+    runtime ``canonical_provider``).
+
+    Unknown values raise instead of silently coercing to ``ollama``: wire
+    bodies are Literal-typed (422 upstream) and stored rows are gated by
+    ``profile_incompleteness_reason``, so reaching this raise means a corrupted
+    row or a programming error — fail hard rather than run the wrong provider.
+    """
     value = (raw or "").strip()
     if value in WIRE_PROVIDERS:
         return value
-    if value in PROVIDER_ALIASES:
-        # Map legacy short ids to wire ids used in profiles.
-        if value == "openai":
-            return "openai_compatible"
-        if value == "gemini":
-            return "gemini_compatible"
-        return value
-    return "ollama"
+    raise ValueError(f"Unknown LLM provider: {value or '(empty)'}")
 
 
 def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
@@ -85,14 +89,18 @@ def _config_from_profile_row(row: Mapping[str, Any]) -> LlmConfig:
     }
 
 
-async def fetch_default_profile_id(db: Database) -> str:
-    """Return the ``is_default`` profile id, or raise when none is configured."""
-    row = await db.fetch_one("SELECT id FROM llm_profiles WHERE is_default = 1 LIMIT 1")
+async def fetch_first_profile_id(db: Database) -> str:
+    """Return the oldest profile id, or raise when none exist.
+
+    Used only as a task-create convenience when ``llmProfileId`` is omitted.
+    Never invents a fake ``__default__`` id.
+    """
+    row = await db.fetch_one("SELECT id FROM llm_profiles ORDER BY created_at ASC LIMIT 1")
     if row is not None:
         return str(row["id"])
     raise http_error(
         400,
-        "No default LLM profile configured; create an AI profile first",
+        "No LLM profile configured; create an AI profile first",
         error_code=VALIDATION_ERROR,
     )
 
@@ -119,13 +127,13 @@ async def require_complete_profile_row(db: Database, profile_id: str) -> Mapping
 
 async def load_llm_config_for_profile(db: Database, profile_id: str | None) -> LlmConfig:
     """Sole connection entry: resolve a profile row into runtime LLM config."""
-    resolved_id = (profile_id or "").strip() or await fetch_default_profile_id(db)
+    resolved_id = (profile_id or "").strip() or await fetch_first_profile_id(db)
     row = await require_complete_profile_row(db, resolved_id)
     return _config_from_profile_row(row)
 
 
 async def load_llm_config(db: Database) -> LlmConfig:
-    """Load the default profile (health / status / assistant fallback)."""
+    """Load the oldest profile (health / status / draft fallback)."""
     return await load_llm_config_for_profile(db, None)
 
 
@@ -134,33 +142,23 @@ async def load_agent_llm_config(
     *,
     profile_id: str | None = None,
 ) -> LlmConfig:
-    """Assistant chat path: session override, else global assistant slot.
+    """Assistant chat path: session profile → hard-bound assistant global slot.
 
     When ``profile_id`` is set (per-session override from the UI), load that
-    complete profile directly. Otherwise resolve the singleton assistant slot
-    (``llm_global_slot_assistant``, with legacy ``staff_class=assistant``
-    fallback). Fall back to the default profile only when the slot is empty
-    but profiles exist. Never invent a fake ``__default__`` id when empty.
+    complete profile directly. Otherwise require the singleton assistant slot
+    (``llm_global_slot_assistant``), same hard-bind as liaison. Never invent a
+    fake ``__default__`` id when empty.
 
     A2A must use :func:`load_liaison_llm_config` (separate global slot).
     """
-    from server.llm_global_slots import resolve_assistant_profile_id, slot_unbound_message
+    from server.llm_global_slots import require_slot_profile_id
 
     override = (profile_id or "").strip()
     if override:
         return await load_llm_config_for_profile(db, override)
 
-    slot_profile_id = await resolve_assistant_profile_id(db)
-    if slot_profile_id is not None:
-        return await load_llm_config_for_profile(db, slot_profile_id)
-    count = await db.fetch_value("SELECT COUNT(*) FROM llm_profiles")
-    if int(count or 0) == 0:
-        raise http_error(
-            400,
-            slot_unbound_message("assistant"),
-            error_code=VALIDATION_ERROR,
-        )
-    return await load_llm_config_for_profile(db, None)
+    slot_profile_id = await require_slot_profile_id(db, "assistant")
+    return await load_llm_config_for_profile(db, slot_profile_id)
 
 
 async def load_liaison_llm_config(db: Database) -> LlmConfig:
@@ -191,7 +189,12 @@ async def load_llm_config_for_task(db: Database, task: Mapping[str, Any]) -> Llm
 
 
 def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | None = None) -> LlmConfig:
-    """Build config from unsaved UI draft fields (profile card test)."""
+    """Build config from unsaved profile-shaped draft fields (AI engine test).
+
+    Accepts the same profile-card vocabulary as ``LlmProfileUpsertBody`` /
+    ``AiEngineTestBody`` (``provider``／``baseUrl``／``model``／``apiKey``／
+    ``thinkingEnabled``／…).
+    """
     base = fallback or {
         "provider": "ollama",
         "provider_raw": "ollama",
@@ -205,27 +208,20 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
         "brave_search_api_key": "",
         "profile_id": "",
     }
-    raw_provider = normalize_wire_provider(
-        str(draft.get("llmProvider") or draft.get("provider") or base["provider_raw"])
-    )
+    raw_provider = normalize_wire_provider(str(draft.get("provider") or base["provider_raw"]))
     canonical = canonical_provider(raw_provider)
-    base_url = str(draft.get("llmBaseUrl") or draft.get("baseUrl") or base["base_url"] or "").strip()
+    base_url = str(draft.get("baseUrl") or base["base_url"] or "").strip()
     if not base_url:
         base_url = DEFAULT_PROVIDER_BASE_URLS.get(canonical, "")
-    model = str(draft.get("llmModel") or draft.get("model") or base["model"] or "").strip()
-    draft_api_key = draft.get("llmApiKey") if "llmApiKey" in draft else draft.get("apiKey")
-    if draft_api_key in (None, MASKED_SECRET):
-        api_key = base["api_key"]
-    else:
-        api_key = str(draft_api_key)
-    thinking = draft.get("ollamaThinkingEnabled")
-    if thinking is None:
-        thinking = draft.get("thinkingEnabled")
+    model = str(draft.get("model") or base["model"] or "").strip()
+    draft_api_key = draft.get("apiKey")
+    api_key = base["api_key"] if draft_api_key in (None, MASKED_SECRET) else str(draft_api_key)
+    thinking = draft.get("thinkingEnabled")
     if thinking is None:
         ollama_thinking_enabled = base["ollama_thinking_enabled"]
     else:
         ollama_thinking_enabled = bool(thinking) if not isinstance(thinking, str) else parse_bool(thinking)
-    json_mode = str(draft.get("jsonMode") or draft.get("openaiJsonMode") or base["json_mode"] or "disabled")
+    json_mode = str(draft.get("jsonMode") or base["json_mode"] or "disabled")
     web_enabled = draft.get("webSearchEnabled")
     if web_enabled is None:
         web_search_enabled = base["web_search_enabled"]
@@ -233,10 +229,7 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
         web_search_enabled = bool(web_enabled) if not isinstance(web_enabled, str) else parse_bool(web_enabled)
     web_provider = str(draft.get("webSearchProvider") or base["web_search_provider"] or "auto")
     draft_brave = draft.get("braveSearchApiKey")
-    if draft_brave in (None, MASKED_SECRET):
-        brave_key = base["brave_search_api_key"]
-    else:
-        brave_key = str(draft_brave)
+    brave_key = base["brave_search_api_key"] if draft_brave in (None, MASKED_SECRET) else str(draft_brave)
     return {
         "provider": canonical,
         "provider_raw": raw_provider,
@@ -248,5 +241,5 @@ def config_from_draft_fields(draft: Mapping[str, Any], *, fallback: LlmConfig | 
         "web_search_enabled": web_search_enabled,
         "web_search_provider": web_provider,
         "brave_search_api_key": brave_key,
-        "profile_id": str(draft.get("id") or base.get("profile_id") or ""),
+        "profile_id": str(draft.get("llmProfileId") or draft.get("id") or base.get("profile_id") or ""),
     }

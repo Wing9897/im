@@ -1,6 +1,7 @@
 """SQLite DDL for the sources domain."""
 
 from server.db.schema_domains.vocabulary import PLATFORM_CHECK_SQL
+from server.domain.source_statuses import SOURCE_STATUS_CHECK_SQL
 
 DDL = f"""
 CREATE TABLE IF NOT EXISTS sources (
@@ -9,7 +10,7 @@ CREATE TABLE IF NOT EXISTS sources (
                        {PLATFORM_CHECK_SQL},
     name               TEXT NOT NULL,
     status             TEXT NOT NULL DEFAULT 'disconnected'
-                       CHECK (status IN ('connected','disconnected','error')),
+                       {SOURCE_STATUS_CHECK_SQL},
     credentials        TEXT,
     last_error         TEXT,
     last_connected_at  TEXT,

@@ -33,34 +33,34 @@ export function validateScheduleValue(
       return null;
 
     case "daily": {
-      if (!scheduleValue) return String(i18n.t("tasks.schedule.errors.dailyRequired"));
+      if (!scheduleValue) return String(i18n.t("tasks:schedule.errors.dailyRequired"));
       const match = /^(\d{2}):(\d{2})$/.exec(scheduleValue);
-      if (!match) return String(i18n.t("tasks.schedule.errors.dailyFormat"));
+      if (!match) return String(i18n.t("tasks:schedule.errors.dailyFormat"));
       const hh = parseInt(match[1], 10);
       const mm = parseInt(match[2], 10);
-      if (hh < 0 || hh > 23) return String(i18n.t("tasks.schedule.errors.hourRange"));
-      if (mm < 0 || mm > 59) return String(i18n.t("tasks.schedule.errors.minuteRange"));
+      if (hh < 0 || hh > 23) return String(i18n.t("tasks:schedule.errors.hourRange"));
+      if (mm < 0 || mm > 59) return String(i18n.t("tasks:schedule.errors.minuteRange"));
       return null;
     }
 
     case "weekly": {
-      if (!scheduleValue) return String(i18n.t("tasks.schedule.errors.weeklyRequired"));
+      if (!scheduleValue) return String(i18n.t("tasks:schedule.errors.weeklyRequired"));
       const match = /^(\d):(\d{2}):(\d{2})$/.exec(scheduleValue);
-      if (!match) return String(i18n.t("tasks.schedule.errors.weeklyFormat"));
+      if (!match) return String(i18n.t("tasks:schedule.errors.weeklyFormat"));
       const d = parseInt(match[1], 10);
       const hh = parseInt(match[2], 10);
       const mm = parseInt(match[3], 10);
-      if (d < 0 || d > 6) return String(i18n.t("tasks.schedule.errors.weekdayRange"));
-      if (hh < 0 || hh > 23) return String(i18n.t("tasks.schedule.errors.hourRange"));
-      if (mm < 0 || mm > 59) return String(i18n.t("tasks.schedule.errors.minuteRange"));
+      if (d < 0 || d > 6) return String(i18n.t("tasks:schedule.errors.weekdayRange"));
+      if (hh < 0 || hh > 23) return String(i18n.t("tasks:schedule.errors.hourRange"));
+      if (mm < 0 || mm > 59) return String(i18n.t("tasks:schedule.errors.minuteRange"));
       return null;
     }
 
     case "custom_seconds": {
-      if (!scheduleValue) return String(i18n.t("tasks.schedule.errors.secondsRequired"));
+      if (!scheduleValue) return String(i18n.t("tasks:schedule.errors.secondsRequired"));
       const num = Number(scheduleValue);
       if (!Number.isInteger(num) || num <= 0) {
-        return String(i18n.t("tasks.schedule.errors.secondsPositive"));
+        return String(i18n.t("tasks:schedule.errors.secondsPositive"));
       }
       return null;
     }
@@ -134,22 +134,22 @@ export function ScheduleInput({
 
   const typeSelect = (
     <FieldStack>
-      <FieldLabel htmlFor="schedule-type">{t("tasks.schedule.typeLabel")}</FieldLabel>
+      <FieldLabel htmlFor="schedule-type">{t("tasks:schedule.typeLabel")}</FieldLabel>
       {/* Native select: disabled unmapped option is not supported by MenuSelect. */}
       <SelectField
         id="schedule-type"
         value={unmappedRrule ? "" : scheduleType}
         onChange={handleTypeChange}
-        aria-label={t("tasks.schedule.typeAria")}
+        aria-label={t("tasks:schedule.typeAria")}
       >
         {unmappedRrule ? (
           <option value="" disabled>
-            {t("tasks.schedule.unmappedOption")}
+            {t("tasks:schedule.unmappedOption")}
           </option>
         ) : null}
         {SCHEDULE_TYPES.map((value) => (
           <option key={value} value={value}>
-            {t(`tasks.schedule.types.${value}`)}
+            {t(`tasks:schedule.types.${value}`)}
           </option>
         ))}
       </SelectField>
@@ -158,9 +158,9 @@ export function ScheduleInput({
 
   const unmappedBanner = unmappedRrule ? (
     <FieldStack>
-      <p className={formHelpClass}>{t("tasks.schedule.unmappedHelp")}</p>
+      <p className={formHelpClass}>{t("tasks:schedule.unmappedHelp")}</p>
       <code
-        className="block break-all rounded-md border border-surface-border bg-surface-base px-sm py-xs text-caption text-text-primary"
+        className="im-surface-inset block break-all rounded-md border border-surface-border px-sm py-xs text-caption text-text-primary"
         data-testid="schedule-unmapped-rrule"
       >
         {wireRrule}
@@ -174,13 +174,13 @@ export function ScheduleInput({
       case "daily":
         valueField = (
           <FieldStack>
-            <FieldLabel htmlFor="schedule-daily-time">{t("tasks.schedule.dailyTime")}</FieldLabel>
+            <FieldLabel htmlFor="schedule-daily-time">{t("tasks:schedule.dailyTime")}</FieldLabel>
             <TextField
               id="schedule-daily-time"
               type="time"
               value={scheduleValue ?? ""}
               onChange={(e) => onScheduleValueChange(e.target.value)}
-              aria-label={t("tasks.schedule.dailyTimeAria")}
+              aria-label={t("tasks:schedule.dailyTimeAria")}
             />
             {showError && error ? <ScheduleError message={error} /> : null}
           </FieldStack>
@@ -191,7 +191,7 @@ export function ScheduleInput({
         const { day, time } = parseWeeklyValue(scheduleValue);
         valueField = (
           <FieldStack>
-            <FieldLabel>{t("tasks.schedule.weeklyDateTime")}</FieldLabel>
+            <FieldLabel>{t("tasks:schedule.weeklyDateTime")}</FieldLabel>
             <div className="flex items-start gap-sm">
               {/* Native select: schedule editor stays on SelectField for native form density. */}
               <SelectField
@@ -201,11 +201,11 @@ export function ScheduleInput({
                   const newDay = e.target.value;
                   onScheduleValueChange(time ? `${newDay}:${time}` : `${newDay}:`);
                 }}
-                aria-label={t("tasks.schedule.weekdayAria")}
+                aria-label={t("tasks:schedule.weekdayAria")}
               >
                 {WEEKDAY_VALUES.map((value) => (
                   <option key={value} value={value}>
-                    {t(`tasks.schedule.weekday.${value}`)}
+                    {t(`tasks:schedule.weekday.${value}`)}
                   </option>
                 ))}
               </SelectField>
@@ -215,7 +215,7 @@ export function ScheduleInput({
                 className="min-w-0 flex-1"
                 value={time}
                 onChange={(e) => onScheduleValueChange(`${day}:${e.target.value}`)}
-                aria-label={t("tasks.schedule.weeklyTimeAria")}
+                aria-label={t("tasks:schedule.weeklyTimeAria")}
               />
             </div>
             {showError && error ? <ScheduleError message={error} /> : null}
@@ -228,17 +228,17 @@ export function ScheduleInput({
         valueField = (
           <FieldStack>
             <FieldLabel htmlFor="schedule-custom-seconds">
-              {t("tasks.schedule.customSeconds")}
+              {t("tasks:schedule.customSeconds")}
             </FieldLabel>
             <TextField
               id="schedule-custom-seconds"
               type="number"
-              placeholder={t("tasks.schedule.customSecondsPlaceholder")}
+              placeholder={t("tasks:schedule.customSecondsPlaceholder")}
               min={1}
               step={1}
               value={scheduleValue ?? ""}
               onChange={(e) => onScheduleValueChange(e.target.value)}
-              aria-label={t("tasks.schedule.customSecondsAria")}
+              aria-label={t("tasks:schedule.customSecondsAria")}
             />
             {showError && error ? <ScheduleError message={error} /> : null}
           </FieldStack>
@@ -271,7 +271,7 @@ export function ScheduleInput({
         <FieldStack>
           <div className="border-t border-surface-border/70 pt-md">
             <FieldLabel htmlFor="schedule-project-wave-interval">
-              {t("tasks.schedule.agentWaveInterval")}
+              {t("tasks:schedule.agentWaveInterval")}
             </FieldLabel>
             <TextField
               id="schedule-project-wave-interval"
@@ -284,10 +284,10 @@ export function ScheduleInput({
               value={agentWaveIntervalSeconds}
               onChange={(e) => onProjectWaveIntervalSecondsChange?.(e.target.value)}
               onBlur={(e) => onProjectWaveIntervalSecondsCommit?.(e.target.value)}
-              aria-label={t("tasks.schedule.agentWaveIntervalAria")}
+              aria-label={t("tasks:schedule.agentWaveIntervalAria")}
               placeholder="20"
             />
-            <p className={formHelpClass}>{t("tasks.schedule.agentWaveIntervalHelp")}</p>
+            <p className={formHelpClass}>{t("tasks:schedule.agentWaveIntervalHelp")}</p>
           </div>
         </FieldStack>
       ) : null}

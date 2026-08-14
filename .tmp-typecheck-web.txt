@@ -1,8 +1,0 @@
-
-> intelligence-monitor@1.0.0 typecheck:web
-> npm run typecheck --workspace web
-
-
-> intelligence-monitor-web@1.0.0 typecheck
-> tsc -b && npm run typecheck:test
-

@@ -1,11 +1,14 @@
 """SQLite DDL for the actions domain."""
 
-DDL = """
+from server.domain.action_statuses import ACTION_TRIGGER_STATUS_CHECK_SQL
+from server.domain.action_types import ACTION_TYPE_CHECK_SQL
+
+DDL = f"""
 CREATE TABLE IF NOT EXISTS actions (
     id                  TEXT PRIMARY KEY,
     name                TEXT NOT NULL,
     action_type         TEXT NOT NULL
-                        CHECK (action_type IN ('telegram_bot','discord_webhook','http_webhook','mqtt')),
+                        {ACTION_TYPE_CHECK_SQL},
     configuration       TEXT NOT NULL,
     trigger_conditions  TEXT,
     is_enabled          INTEGER NOT NULL DEFAULT 1,
@@ -21,7 +24,7 @@ CREATE TABLE IF NOT EXISTS action_trigger_history (
     task_id         TEXT REFERENCES analysis_tasks(id) ON DELETE SET NULL,
     batch_id        TEXT REFERENCES analysis_batches(id) ON DELETE SET NULL,
     trigger_reason  TEXT NOT NULL,
-    status          TEXT NOT NULL CHECK (status IN ('success','failure')),
+    status          TEXT NOT NULL {ACTION_TRIGGER_STATUS_CHECK_SQL},
     error_message   TEXT,
     triggered_at    TEXT NOT NULL
 );

@@ -8,8 +8,6 @@ Calendar occurrences live under ``/api/v1/calendar/items``.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Request
 
 from server.api.deps import API_DEPS, get_db
@@ -49,7 +47,7 @@ _EVENT_SORTS = frozenset({"event_time", "analyzed_at"})
 _FALSE_FLAG_VALUES = frozenset({"0", "false", "no", "off"})
 
 
-def _parse_bool_flag(value: Optional[str]) -> Optional[bool]:
+def _parse_bool_flag(value: str | None) -> bool | None:
     """Optional query bool: None / True / False; invalid → 422.
 
     Truthiness delegates to ``util.parse_bool``; explicit false sentinels
@@ -67,43 +65,43 @@ def _parse_bool_flag(value: Optional[str]) -> Optional[bool]:
 @router.get("/trending", response_model=list[TrendingTopicResponse])
 async def fetch_trending(
     request: Request,
-    task_id: Optional[str] = qalias("taskId", default=None),
-) -> list[dict]:
+    task_id: str | None = qalias("taskId", default=None),
+) -> list[TrendingTopicResponse]:
     rows = await fetch_trending_topics(
         get_db(request),
         task_id=task_id,
     )
-    return [serialize_trending_topic(row) for row in rows]
+    return [TrendingTopicResponse.model_validate(serialize_trending_topic(row)) for row in rows]
 
 
 @router.get("/trending/{topic_id}/messages", response_model=list[MessageResponse])
-async def fetch_topic_messages(request: Request, topic_id: str) -> list[dict]:
+async def fetch_topic_messages(request: Request, topic_id: str) -> list[MessageResponse]:
     rows = await fetch_trending_topic_messages(get_db(request), topic_id=topic_id)
-    return [serialize_message(row) for row in rows]
+    return [MessageResponse.model_validate(serialize_message(row)) for row in rows]
 
 
 @router.get("/events", response_model=AnalysisEventsPageResponse)
 async def fetch_events(
     request: Request,
-    task_id: Optional[str] = qalias("taskId", default=None),
-    task_ids: Optional[list[str]] = qalias("taskIds", default=None),
-    search: Optional[str] = None,
-    start_date: Optional[str] = qalias("startDate", default=None),
-    end_date: Optional[str] = qalias("endDate", default=None),
+    task_id: str | None = qalias("taskId", default=None),
+    task_ids: list[str] | None = qalias("taskIds", default=None),
+    search: str | None = None,
+    start_date: str | None = qalias("startDate", default=None),
+    end_date: str | None = qalias("endDate", default=None),
     sort: str = "event_time",
     limit: int = 50,
     offset: int = 0,
-    has_time: Optional[str] = qalias("hasTime", default=None),
-    has_coords: Optional[str] = qalias("hasCoords", default=None),
-    include_total: Optional[bool] = qalias("includeTotal", default=None),
-    include_in_timeline: Optional[str] = qalias(
+    has_time: str | None = qalias("hasTime", default=None),
+    has_coords: str | None = qalias("hasCoords", default=None),
+    include_total: bool | None = qalias("includeTotal", default=None),
+    include_in_timeline: str | None = qalias(
         "includeInTimeline",
         default=None,
         description=(
             "When '1'/'true', only return events from tasks with include_in_timeline=1 (time-planning views)."
         ),
     ),
-) -> dict:
+) -> AnalysisEventsPageResponse:
     sort_key = (sort or "event_time").strip().lower()
     if sort_key not in _EVENT_SORTS:
         raise http_error(
@@ -133,32 +131,40 @@ async def fetch_events(
     db = get_db(request)
     await attach_dismissed_flag(db, source="analysis", items=items)
     await attach_important_flag(db, source="analysis", items=items)
-    return {
-        "items": items,
-        "totalCount": total_count if resolved_include_total else 0,
-        "hasMore": (
-            offset_page_has_more(normalized_offset, len(rows), total_count)
-            if resolved_include_total
-            else len(rows) >= normalized_limit
-        ),
-        "sort": sort_key,
-    }
+    return AnalysisEventsPageResponse.model_validate(
+        {
+            "items": items,
+            "totalCount": total_count if resolved_include_total else 0,
+            "hasMore": (
+                offset_page_has_more(normalized_offset, len(rows), total_count)
+                if resolved_include_total
+                else len(rows) >= normalized_limit
+            ),
+            "sort": sort_key,
+        }
+    )
 
 
 @router.get("/queue", response_model=ResultsQueueResponse)
-async def fetch_queue(request: Request) -> dict:
+async def fetch_queue(request: Request) -> ResultsQueueResponse:
     db = get_db(request)
     pending = await count_pending_current_batches(db)
     processing = await fetch_processing_batches(db)
     attention = await fetch_attention_batches(db)
-    return {
-        "pendingCount": pending,
-        "processingBatches": [serialize_queue_batch(row) for row in processing],
-        "attentionBatches": [serialize_queue_batch(row) for row in attention],
-        "analysisPaused": await get_config_bool(db, "analysis_paused"),
-    }
+    return ResultsQueueResponse.model_validate(
+        {
+            "pendingCount": pending,
+            "processingBatches": [serialize_queue_batch(row) for row in processing],
+            "attentionBatches": [serialize_queue_batch(row) for row in attention],
+            "analysisPaused": await get_config_bool(db, "analysis_paused"),
+        }
+    )
 
 
 @router.get("/stats", response_model=list[TaskAnalysisStatsResponse])
-async def fetch_stats(request: Request, time_range: Optional[str] = None) -> list[dict]:
-    return await fetch_task_analysis_stats(get_db(request), time_range=time_range)
+async def fetch_stats(
+    request: Request,
+    time_range: str | None = qalias("timeRange", default=None),
+) -> list[TaskAnalysisStatsResponse]:
+    rows = await fetch_task_analysis_stats(get_db(request), time_range=time_range)
+    return [TaskAnalysisStatsResponse.model_validate(row) for row in rows]

@@ -397,7 +397,7 @@ async def test_task_templates(client):
 async def test_agent_tick_status_log(app, client):
     """Project detail can load cursor backlog + success/error tick outcomes."""
     from server.db.database import TransactionDb
-    from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
+    from server.db.schema_domains.llm import DEFAULT_LLM_PROFILE_ID
     from server.queries.tasks_queries import insert_analysis_task
     from server.util import new_id, utc_now_iso
 

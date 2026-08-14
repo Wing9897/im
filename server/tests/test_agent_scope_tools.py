@@ -5,13 +5,10 @@ from __future__ import annotations
 import pytest
 
 from server.agent.tools_registry import execute_tool
-from server.db.database import Database, TransactionDb
-from server.domain.agent_task_spec import agent_preset_spec, agent_spec_to_db_kwargs
+from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE
-from server.llm_profiles_const import DEFAULT_LLM_PROFILE_ID
-from server.queries.tasks_queries import insert_analysis_task
 from server.services.recurring_series_writes import create_recurring_series
-from server.util import utc_now_iso
+from server.tests.db_helpers import insert_direct_analysis_task
 
 
 async def _insert_task(
@@ -21,26 +18,16 @@ async def _insert_task(
     mode: str,
     name: str = "t",
 ) -> None:
-    now = utc_now_iso()
-    policy: dict = {}
     if mode == AGENT_MODE or mode == "agent":
-        policy = agent_spec_to_db_kwargs(agent_preset_spec("project_reconcile", has_channels=True))
         mode = AGENT_MODE
-    async with db.transaction() as conn:
-        tx = TransactionDb(conn)
-        await insert_analysis_task(
-            tx,
-            task_id=task_id,
-            name=name,
-            description=None,
-            prompt_template="goals",
-            analysis_mode=mode,
-            analysis_time_range="all",
-            schedule_rrule="FREQ=HOURLY",
-            llm_profile_id=DEFAULT_LLM_PROFILE_ID,
-            now=now,
-            **policy,
-        )
+    await insert_direct_analysis_task(
+        db,
+        task_id,
+        analysis_mode=mode,
+        name=name,
+        prompt_template="goals",
+        schedule_rrule="FREQ=HOURLY",
+    )
 
 
 async def _insert_series(

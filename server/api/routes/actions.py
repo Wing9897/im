@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Request, Response
 
@@ -34,8 +34,6 @@ from server.wire.serializers import serialize_action, serialize_action_trigger_h
 
 router = APIRouter(prefix="/api/v1/actions", tags=["actions"], dependencies=API_DEPS)
 
-_ALLOWED_TYPES = ("telegram_bot", "discord_webhook", "http_webhook", "mqtt")
-
 _TEST_MESSAGES: dict[str, str] = {
     "zh-Hant": "[Intelligence Monitor] 測試訊息：動作設定運作正常。",
     "zh-Hans": "[Intelligence Monitor] 测试消息：动作设置工作正常。",
@@ -50,19 +48,14 @@ _UNKNOWN_ERRORS: dict[str, str] = {
 
 
 def _validate_body(body: ActionBody) -> None:
+    """Non-shape validation only; ``actionType`` is Literal-typed (unknown → 422)."""
     if not body.name.strip():
         raise http_error(422, "Action name is required", error_code=VALIDATION_ERROR)
-    if body.actionType not in _ALLOWED_TYPES:
-        raise http_error(
-            422,
-            f"Invalid actionType: {body.actionType}",
-            error_code=VALIDATION_ERROR,
-        )
     try:
         parsed = json.loads(body.configuration)
         if not isinstance(parsed, dict):
-            raise ValueError
-    except (json.JSONDecodeError, ValueError) as exc:
+            raise TypeError
+    except (json.JSONDecodeError, TypeError) as exc:
         raise http_error(
             422,
             "configuration must be a JSON object string",
@@ -91,19 +84,19 @@ def _notify(request: Request, action_id: str, action: str) -> None:
 
 
 @router.get("", response_model=list[ActionResponse])
-async def list_actions(request: Request) -> list[dict]:
+async def list_actions(request: Request) -> list[ActionResponse]:
     db = get_db(request)
     rows = await actions_queries.fetch_all_action_rows(db)
-    return [serialize_action(row) for row in rows]
+    return [ActionResponse.model_validate(serialize_action(row)) for row in rows]
 
 
 @router.get("/trigger-history", response_model=ActionTriggerHistoryPageResponse)
 async def list_trigger_history(
     request: Request,
-    action_id: Optional[str] = None,
+    action_id: str | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> dict:
+) -> ActionTriggerHistoryPageResponse:
     db = get_db(request)
     rows, total_count, has_more = await actions_queries.fetch_trigger_history_page(
         db,
@@ -111,16 +104,17 @@ async def list_trigger_history(
         limit=limit,
         offset=offset,
     )
-    items = [serialize_action_trigger_history(row) for row in rows]
-    return {
-        "items": items,
-        "totalCount": total_count,
-        "hasMore": has_more,
-    }
+    return ActionTriggerHistoryPageResponse.model_validate(
+        {
+            "items": [serialize_action_trigger_history(row) for row in rows],
+            "totalCount": total_count,
+            "hasMore": has_more,
+        }
+    )
 
 
 @router.post("", status_code=201, response_model=ActionResponse)
-async def create_action(request: Request, body: ActionBody) -> dict:
+async def create_action(request: Request, body: ActionBody) -> ActionResponse:
     _validate_body(body)
     db = get_db(request)
     action_id = new_id()
@@ -135,11 +129,11 @@ async def create_action(request: Request, body: ActionBody) -> dict:
         now=now,
     )
     _notify(request, action_id, "created")
-    return serialize_action(await _get_action_row(db, action_id))
+    return ActionResponse.model_validate(serialize_action(await _get_action_row(db, action_id)))
 
 
 @router.put("/{action_id}", response_model=ActionResponse)
-async def update_action(request: Request, action_id: str, body: ActionBody) -> dict:
+async def update_action(request: Request, action_id: str, body: ActionBody) -> ActionResponse:
     _validate_body(body)
     db = get_db(request)
     existing = await _get_action_row(db, action_id)
@@ -160,7 +154,7 @@ async def update_action(request: Request, action_id: str, body: ActionBody) -> d
         now=utc_now_iso(),
     )
     _notify(request, action_id, "updated")
-    return serialize_action(await _get_action_row(db, action_id))
+    return ActionResponse.model_validate(serialize_action(await _get_action_row(db, action_id)))
 
 
 @router.delete("/{action_id}", status_code=204)
@@ -173,13 +167,13 @@ async def delete_action(request: Request, action_id: str) -> Response:
 
 
 @router.patch("/{action_id}/toggle", response_model=ActionToggleResponse)
-async def toggle_action(request: Request, action_id: str) -> dict:
+async def toggle_action(request: Request, action_id: str) -> ActionToggleResponse:
     db = get_db(request)
     row = await _get_action_row(db, action_id)
     new_enabled = 0 if row.get("is_enabled") else 1
     await actions_queries.set_action_enabled(db, action_id, new_enabled, utc_now_iso())
     _notify(request, action_id, "updated")
-    return {"id": action_id, "isEnabled": bool(new_enabled)}
+    return ActionToggleResponse(id=action_id, isEnabled=bool(new_enabled))
 
 
 @router.post(
@@ -187,7 +181,7 @@ async def toggle_action(request: Request, action_id: str) -> dict:
     response_model=ActionTestResponse,
     response_model_exclude_none=True,
 )
-async def test_action(request: Request, action_id: str) -> dict:
+async def test_action(request: Request, action_id: str) -> ActionTestResponse:
     db = get_db(request)
     row = await _get_action_row(db, action_id)
     locale = normalize_ui_locale(await get_config(db, "ui_locale"))
@@ -198,8 +192,8 @@ async def test_action(request: Request, action_id: str) -> dict:
         trigger_reason="manual_test",
     )
     if result.get("success"):
-        return {"success": True}
-    return {
-        "success": False,
-        "error": result.get("error") or _UNKNOWN_ERRORS[locale],
-    }
+        return ActionTestResponse(success=True)
+    return ActionTestResponse(
+        success=False,
+        error=result.get("error") or _UNKNOWN_ERRORS[locale],
+    )

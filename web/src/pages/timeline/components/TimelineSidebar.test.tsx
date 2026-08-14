@@ -122,10 +122,13 @@ describe("TimelineSidebar detail provenance", () => {
     });
   }
 
-  it("frosts the detail aside with im-surface-panel", () => {
+  it("frosts the detail aside with im-surface-panel and rounded inset chrome", () => {
     renderSidebar(makeUserEvent());
     const aside = container.querySelector("aside");
     expect(aside?.className).toContain("im-surface-panel");
+    expect(aside?.className).toContain("rounded-xl");
+    expect(aside?.className).toContain("p-md");
+    expect(aside?.className).not.toContain("pl-lg");
   });
 
   it("shows workset + assistant provenance for unassigned user events", () => {

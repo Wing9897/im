@@ -20,20 +20,20 @@ import {
   type DetailPresentation,
 } from "../../../components/detail";
 import {
+  detailChromeBadgesClass,
+  detailChromeBodyGapMdClass,
+  detailChromeFooterRaisedClass,
+  detailChromeHeaderClass,
+  detailChromeMetaLineClass,
+  detailChromeTitleClass,
+  detailChromeTitleRowClass,
   detailDialogFlexColClass,
   detailDialogShellClass,
-  taskDetailBadgesClass,
-  taskDetailBodyClass,
   taskDetailChannelsClass,
   taskDetailChannelsListClass,
   taskDetailChannelsToggleClass,
   taskDetailDescriptionClass,
-  taskDetailFooterClass,
-  taskDetailHeaderClass,
-  taskDetailMetaLineClass,
   taskDetailStatusPillClass,
-  taskDetailTitleClass,
-  taskDetailTitleRowClass,
 } from "../../../components/detail/classes";
 import { formatAnalysisTimeRangeNullable } from "../../../utils/analysis";
 
@@ -65,7 +65,7 @@ export function TaskDetailView({
     getTaskEmployeeIdForMode(task.analysisMode),
   );
   const channelLabels = useMemo(() => {
-    return task.channelIds.map((ref) => resolveChannelLabel(ref, channelNameById));
+    return (task.channelIds ?? []).map((ref) => resolveChannelLabel(ref, channelNameById));
   }, [task, channelNameById]);
 
   const visibleChannels = channelsExpanded
@@ -75,9 +75,9 @@ export function TaskDetailView({
   const metrics =
     stats
       ? [
-          { label: t("tasks.card.unanalyzed"), value: String(stats.unanalyzedCount) },
-          { label: t("tasks.card.queued"), value: String(stats.queuedMessageCount) },
-          { label: t("tasks.card.analyzed"), value: String(stats.analyzedCount) },
+          { label: t("tasks:card.unanalyzed"), value: String(stats.unanalyzedCount) },
+          { label: t("tasks:card.queued"), value: String(stats.queuedMessageCount) },
+          { label: t("tasks:card.analyzed"), value: String(stats.analyzedCount) },
         ]
       : [];
 
@@ -86,11 +86,11 @@ export function TaskDetailView({
 
   const content = (
     <>
-      <header className={taskDetailHeaderClass}>
-        <div className={taskDetailTitleRowClass}>
-          <h2 className={taskDetailTitleClass}>{task.name}</h2>
+      <header className={detailChromeHeaderClass}>
+        <div className={detailChromeTitleRowClass}>
+          <h2 className={detailChromeTitleClass}>{task.name}</h2>
         </div>
-        <div className={taskDetailBadgesClass}>
+        <div className={detailChromeBadgesClass}>
           <Badge tone={MODE_BADGE_TONE[task.analysisMode]} className="normal-case tracking-normal">
             {employeeName}
           </Badge>
@@ -104,7 +104,7 @@ export function TaskDetailView({
         </div>
       </header>
 
-      <div className={taskDetailBodyClass}>
+      <div className={detailChromeBodyGapMdClass}>
         {metrics.length > 0 ? <DetailMetricsRow metrics={metrics} /> : null}
 
         {stats?.lastErrorMessage ? (
@@ -120,8 +120,8 @@ export function TaskDetailView({
           <div className={taskDetailDescriptionClass}>{task.description.trim()}</div>
         ) : null}
 
-        <div className={taskDetailMetaLineClass}>
-          {t("tasks.detail.timeRange", { range: timeRange || t("emDash") })}
+        <div className={detailChromeMetaLineClass}>
+          {t("tasks:detail.timeRange", { range: timeRange || t("emDash") })}
         </div>
 
         {channelLabels.length > 0 ? (
@@ -133,7 +133,7 @@ export function TaskDetailView({
               aria-expanded={channelsExpanded}
               onClick={() => setChannelsExpanded((open) => !open)}
             >
-              <span>{t("tasks.detail.channelCount", { count: channelLabels.length })}</span>
+              <span>{t("tasks:detail.channelCount", { count: channelLabels.length })}</span>
               {channelsExpanded ? (
                 <ChevronUp size={16} aria-hidden="true" />
               ) : (
@@ -146,7 +146,7 @@ export function TaskDetailView({
               ))}
               {!channelsExpanded && channelLabels.length > CHANNEL_PREVIEW ? (
                 <li>
-                  {t("tasks.detail.channelsMore", {
+                  {t("tasks:detail.channelsMore", {
                     count: channelLabels.length - CHANNEL_PREVIEW,
                   })}
                 </li>
@@ -154,11 +154,11 @@ export function TaskDetailView({
             </ul>
           </div>
         ) : (
-          <div className={taskDetailMetaLineClass}>{t("tasks.detail.noChannels")}</div>
+          <div className={detailChromeMetaLineClass}>{t("tasks:detail.noChannels")}</div>
         )}
       </div>
 
-      <footer className={taskDetailFooterClass}>
+      <footer className={detailChromeFooterRaisedClass}>
         <Button variant="secondary" onClick={onEdit}>
           {t("edit")}
         </Button>
@@ -177,7 +177,7 @@ export function TaskDetailView({
         presentation === "inline" ? detailDialogFlexColClass : detailDialogShellClass
       }
       width="min(560px, calc(100vw - 32px))"
-      aria-label={t("tasks.detail.ariaLabel", { name: task.name })}
+      aria-label={t("tasks:detail.ariaLabel", { name: task.name })}
     >
       {content}
     </DetailPresentationShell>

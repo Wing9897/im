@@ -144,7 +144,7 @@ export function DashboardViewer() {
           description={copy.emptyDescription}
           actions={
             <Button variant="primary" onClick={() => navigate("/tasks/new")}>
-              {t("tasks.addTask")}
+              {t("tasks:addTask")}
             </Button>
           }
         />
@@ -152,18 +152,18 @@ export function DashboardViewer() {
 
       {!loading && tasks.length > 0 && filteredTasks.length === 0 && isTaskView && (
         <EmptyState
-          title={t("tasks.noMatchTitle")}
-          description={t("tasks.noMatchDescription", { query: searchQuery.trim() })}
+          title={t("tasks:noMatchTitle")}
+          description={t("tasks:noMatchDescription", { query: searchQuery.trim() })}
         />
       )}
 
       {!loading && filteredTasks.length > 0 && visibleTasks.length === 0 && isTaskView && (
         <EmptyState
-          title={t("tasks.emptyModeTitle")}
-          description={t("tasks.emptyModeDescription")}
+          title={t("tasks:emptyModeTitle")}
+          description={t("tasks:emptyModeDescription")}
           actions={
             <Button variant="secondary" onClick={() => setModeFilter("all")}>
-              {t("tasks.showAllTasks")}
+              {t("tasks:showAllTasks")}
             </Button>
           }
         />

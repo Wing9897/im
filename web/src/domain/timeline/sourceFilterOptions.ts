@@ -6,7 +6,7 @@ export type SourceFilterOption = {
 };
 
 function unnamedTaskLabel(): string {
-  return String(i18n.t("board.common.unnamedTask"));
+  return String(i18n.t("board:common.unnamedTask"));
 }
 
 type CatalogTask = { id: string; name: string };

@@ -62,11 +62,6 @@
     "databaseVersionMismatchSemver": "{semver} (stamp v{current} → v{required})",
     "versionLoading": "Loading…",
     "versionUnavailable": "Unavailable",
-    "lanAccessLabel": "Allow LAN access",
-    "lanAccessHelp": "Bind the local server to all network interfaces (0.0.0.0) so other devices on your LAN can connect as remote clients. Default is loopback-only (127.0.0.1). Changing this restarts the app. For internet / port-forward access, put Caddy or Nginx TLS in front — the app does not terminate HTTPS.",
-    "lanAccessEnabled": "LAN access enabled (app will restart)",
-    "lanAccessDisabled": "LAN access disabled (app will restart)",
-    "lanAccessRestarting": "Restarting to apply bind address…",
     "advancedSectionTitle": "Advanced & operations",
     "debug": {
       "sectionTitle": "Debug & diagnostics",
@@ -232,7 +227,6 @@
     "edit": "Edit profile",
     "copy": "Copy profile",
     "delete": "Delete profile",
-    "setDefault": "Set as default",
     "cancel": "Cancel",
     "save": "Save profile",
     "dialogCreateTitle": "New AI profile",
@@ -245,16 +239,12 @@
     "namePlaceholder": "e.g. Local Ollama",
     "nameRequired": "Profile name is required.",
     "apiKeyRequired": "API key is required for this provider.",
-    "defaultLabel": "Default profile",
-    "defaultHelp": "Used when a new task has no explicit profile.",
-    "defaultBadge": "Default",
     "staffClassesLabel": "Task staff classes",
     "staffClassesHelp": "Which task-mode roles may use this profile. Tasks still pick llmProfileId on the task form. Assistant / A2A / Task advisor use the global slots above.",
     "staffClass": {
       "leaderboard": "Leaderboard analyst",
       "intel_event": "Intel event analyst",
-      "agent": "Project Manager",
-      "assistant": "Assistant"
+      "agent": "Project Manager"
     },
     "noStaffClasses": "No task staff classes bound",
     "noModel": "No model set",
@@ -263,8 +253,6 @@
     "updated": "Profile updated",
     "copied": "Profile copied",
     "deleted": "Profile deleted",
-    "setDefaultSuccess": "Default profile updated",
-    "cannotDeleteDefault": "Set another profile as default before deleting this one.",
     "deleteConfirm": "Delete profile “{name}”? Task staff bindings on this profile are removed; clear any global slot that used it."
   },
   "webSearch": {

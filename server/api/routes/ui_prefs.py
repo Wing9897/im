@@ -68,12 +68,12 @@ def _board_put_arg(body: BoardPrefsPutBody, field: str) -> Any:
 
 
 @router.get("/board", response_model=BoardPrefsResponse)
-async def fetch_board_prefs(request: Request) -> dict:
-    return await get_board_prefs(get_db(request))
+async def fetch_board_prefs(request: Request) -> BoardPrefsResponse:
+    return BoardPrefsResponse.model_validate(await get_board_prefs(get_db(request)))
 
 
 @router.put("/board", response_model=BoardPrefsResponse)
-async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> dict:
+async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> BoardPrefsResponse:
     """Persist board layout and/or widget state.
 
     Accepted keys: ``layout``, ``widgetState``. Omitted keys are left unchanged;
@@ -86,68 +86,73 @@ async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> dict:
             error_code=VALIDATION_ERROR,
         )
     try:
-        return await put_board_prefs(
+        saved = await put_board_prefs(
             get_db(request),
             layout=_board_put_arg(body, "layout"),
             widget_state=_board_put_arg(body, "widgetState"),
         )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return BoardPrefsResponse.model_validate(saved)
 
 
 @router.get("/voice-reminder/settings", response_model=VoiceReminderSettingsResponse)
-async def fetch_voice_settings(request: Request) -> dict:
-    return await get_voice_settings(get_db(request))
+async def fetch_voice_settings(request: Request) -> VoiceReminderSettingsResponse:
+    return VoiceReminderSettingsResponse.model_validate(await get_voice_settings(get_db(request)))
 
 
 @router.put("/voice-reminder/settings", response_model=VoiceReminderSettingsResponse)
-async def save_voice_settings(request: Request, body: VoiceSettingsBody) -> dict:
+async def save_voice_settings(request: Request, body: VoiceSettingsBody) -> VoiceReminderSettingsResponse:
     try:
-        return await put_voice_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
+        saved = await put_voice_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return VoiceReminderSettingsResponse.model_validate(saved)
 
 
 @router.get("/voice-reminder/fired", response_model=VoiceReminderFiredResponse)
-async def fetch_voice_fired(request: Request) -> dict:
-    return await get_voice_fired(get_db(request))
+async def fetch_voice_fired(request: Request) -> VoiceReminderFiredResponse:
+    return VoiceReminderFiredResponse.model_validate(await get_voice_fired(get_db(request)))
 
 
 @router.put("/voice-reminder/fired", response_model=VoiceReminderFiredResponse)
-async def save_voice_fired(request: Request, body: VoiceFiredBody) -> dict:
+async def save_voice_fired(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredResponse:
     try:
-        return await put_voice_fired(get_db(request), body.keys)
+        saved = await put_voice_fired(get_db(request), body.keys)
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return VoiceReminderFiredResponse.model_validate(saved)
 
 
 @router.post("/voice-reminder/fired/claim", response_model=VoiceReminderFiredClaimResponse)
-async def claim_voice_fired_route(request: Request, body: VoiceFiredBody) -> dict:
+async def claim_voice_fired_route(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredClaimResponse:
     """Reserve dedupe keys before TTS so only one client speaks per reminder."""
     try:
-        return await claim_voice_fired(get_db(request), body.keys)
+        claimed = await claim_voice_fired(get_db(request), body.keys)
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return VoiceReminderFiredClaimResponse.model_validate(claimed)
 
 
 @router.get("/voice-reminder/history", response_model=VoiceReminderHistoryResponse)
-async def fetch_voice_history(request: Request) -> dict:
-    return await get_voice_history(get_db(request))
+async def fetch_voice_history(request: Request) -> VoiceReminderHistoryResponse:
+    return VoiceReminderHistoryResponse.model_validate(await get_voice_history(get_db(request)))
 
 
 @router.put("/voice-reminder/history", response_model=VoiceReminderHistoryResponse)
-async def save_voice_history(request: Request, body: VoiceHistoryBody) -> dict:
+async def save_voice_history(request: Request, body: VoiceHistoryBody) -> VoiceReminderHistoryResponse:
     try:
-        return await put_voice_history(
+        saved = await put_voice_history(
             get_db(request),
             [entry.model_dump(exclude_none=True) for entry in body.entries],
         )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return VoiceReminderHistoryResponse.model_validate(saved)
 
 
 @router.get("/assistant/sessions", response_model=AssistantSessionsResponse)
-async def fetch_assistant_sessions(request: Request, deviceId: str) -> dict:
+async def fetch_assistant_sessions(request: Request, deviceId: str) -> AssistantSessionsResponse:
     """Chat session list + active id for one client device slot."""
     if not deviceId or not deviceId.strip():
         raise http_error(
@@ -156,47 +161,54 @@ async def fetch_assistant_sessions(request: Request, deviceId: str) -> dict:
             error_code=VALIDATION_ERROR,
         )
     try:
-        return await get_assistant_sessions(get_db(request), deviceId)
+        sessions = await get_assistant_sessions(get_db(request), deviceId)
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return AssistantSessionsResponse.model_validate(sessions)
 
 
 @router.put("/assistant/sessions", response_model=AssistantSessionsResponse)
-async def save_assistant_sessions(request: Request, body: AssistantSessionsPutBody) -> dict:
+async def save_assistant_sessions(request: Request, body: AssistantSessionsPutBody) -> AssistantSessionsResponse:
     if not body.deviceId.strip():
         raise http_error(422, "deviceId is required", error_code=VALIDATION_ERROR)
     try:
-        return await put_assistant_sessions(
+        saved = await put_assistant_sessions(
             get_db(request),
             body.deviceId,
             body.model_dump(exclude_none=True),
         )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return AssistantSessionsResponse.model_validate(saved)
 
 
 @router.get("/assistant/voice-io", response_model=AssistantVoiceIoResponse)
-async def fetch_assistant_voice_io(request: Request) -> dict:
-    return await get_assistant_voice_io(get_db(request))
+async def fetch_assistant_voice_io(request: Request) -> AssistantVoiceIoResponse:
+    return AssistantVoiceIoResponse.model_validate(await get_assistant_voice_io(get_db(request)))
 
 
 @router.put("/assistant/voice-io", response_model=AssistantVoiceIoResponse)
-async def save_assistant_voice_io(request: Request, body: AssistantVoiceIoBody) -> dict:
+async def save_assistant_voice_io(request: Request, body: AssistantVoiceIoBody) -> AssistantVoiceIoResponse:
     try:
-        return await put_assistant_voice_io(get_db(request), body.settings.model_dump(exclude_unset=True))
+        saved = await put_assistant_voice_io(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return AssistantVoiceIoResponse.model_validate(saved)
 
 
 @router.get("/timeline/annotations", response_model=TimelineAnnotationsResponse)
-async def fetch_timeline_annotations(request: Request) -> dict:
+async def fetch_timeline_annotations(request: Request) -> TimelineAnnotationsResponse:
     """Client eventStatuses + eventTimeOverrides (not soft-dismiss)."""
-    return await get_timeline_annotations(get_db(request))
+    return TimelineAnnotationsResponse.model_validate(await get_timeline_annotations(get_db(request)))
 
 
 @router.put("/timeline/annotations", response_model=TimelineAnnotationsResponse)
-async def save_timeline_annotations(request: Request, body: TimelineAnnotationsPutBody) -> dict:
+async def save_timeline_annotations(
+    request: Request,
+    body: TimelineAnnotationsPutBody,
+) -> TimelineAnnotationsResponse:
     try:
-        return await put_timeline_annotations(get_db(request), body.model_dump())
+        saved = await put_timeline_annotations(get_db(request), body.model_dump())
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
+    return TimelineAnnotationsResponse.model_validate(saved)

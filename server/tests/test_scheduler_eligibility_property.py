@@ -13,6 +13,7 @@ from server.tests.property_strategies import (
     supported_schedules,
     task_modes,
 )
+from server.tests.seed import ensure_default_llm_profile
 from server.util import utc_now_iso
 
 _task_ids = st.text(
@@ -34,11 +35,12 @@ async def test_scheduler_eligibility_and_registration_idempotence(app, mode, act
     schedule_rrule = preset_to_trigger_rrule(schedule_type, schedule_value)
     now = utc_now_iso()
     await app.state.db.execute("DELETE FROM analysis_tasks WHERE id = ?", (task_id,))
+    profile_id = await ensure_default_llm_profile(app.state.db)
     await app.state.db.execute(
         "INSERT INTO analysis_tasks (id, name, prompt_template, analysis_mode, "
-        "analysis_time_range, version, is_active, schedule_rrule, "
-        "created_at, updated_at) VALUES (?, ?, ?, ?, 'all', 1, ?, ?, ?, ?)",
-        (task_id, "Property 4 task", "Analyze", mode, int(active), schedule_rrule, now, now),
+        "analysis_time_range, version, is_active, schedule_rrule, llm_profile_id, "
+        "created_at, updated_at) VALUES (?, ?, ?, ?, 'all', 1, ?, ?, ?, ?, ?)",
+        (task_id, "Property 4 task", "Analyze", mode, int(active), schedule_rrule, profile_id, now, now),
     )
 
     manager = SchedulerManager(app.state.db, analysis_engine=None, broadcaster=SseBroadcaster())

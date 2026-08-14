@@ -1,7 +1,7 @@
 """aiosqlite connection wrapper with schema-fingerprint validation.
 
 Schema bootstrap／reject is delegated to ``server.db.schema_bootstrap``
-(wipe-only stamp-31; no migration registry). Destructive rebuild remains an
+(wipe-only stamp-33; no migration registry). Destructive rebuild remains an
 explicit reset operation (no auto-seed). See ``docs/ARCHITECTURE.md`` for the
 supported schema matrix.
 """
@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from contextlib import asynccontextmanager
-from typing import Any, AsyncIterator, Awaitable, Callable, Optional, Protocol, TypeVar
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager, suppress
+from typing import Any, Protocol, TypeVar
 
 import aiosqlite
 
@@ -68,7 +69,7 @@ class Database:
 
     def __init__(self, path: str) -> None:
         self._path = path
-        self._conn: Optional[aiosqlite.Connection] = None
+        self._conn: aiosqlite.Connection | None = None
         self._lock = asyncio.Lock()
         self._transaction_owner: asyncio.Task[Any] | None = None
 
@@ -139,10 +140,8 @@ class Database:
                 safe = name.replace('"', '""')
                 await conn.execute(f'DROP {typ.upper()} IF EXISTS "{safe}"')
 
-            try:
+            with suppress(Exception):
                 await conn.execute("DELETE FROM sqlite_sequence")
-            except Exception:  # noqa: BLE001 — table absent on empty / fresh DBs
-                pass
 
             await conn.executescript(DDL)
             await conn.execute(f"PRAGMA user_version={CURRENT_SCHEMA_VERSION}")
@@ -182,18 +181,16 @@ class Database:
 
     async def fetch_all(self, sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
         async def action() -> list[dict[str, Any]]:
-            async with self._lock:
-                async with self.conn.execute(sql, params) as cursor:
-                    rows = await cursor.fetchall()
+            async with self._lock, self.conn.execute(sql, params) as cursor:
+                rows = await cursor.fetchall()
             return [dict(row) for row in rows]
 
         return await _with_busy_retry(action)
 
-    async def fetch_one(self, sql: str, params: tuple[Any, ...] = ()) -> Optional[dict[str, Any]]:
-        async def action() -> Optional[dict[str, Any]]:
-            async with self._lock:
-                async with self.conn.execute(sql, params) as cursor:
-                    row = await cursor.fetchone()
+    async def fetch_one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
+        async def action() -> dict[str, Any] | None:
+            async with self._lock, self.conn.execute(sql, params) as cursor:
+                row = await cursor.fetchone()
             return dict(row) if row is not None else None
 
         return await _with_busy_retry(action)
@@ -223,8 +220,8 @@ class Database:
                 except BaseException:
                     try:
                         await self.conn.rollback()
-                    except BaseException as rollback_exc:
-                        logger.error("Failed to roll back database transaction: %s", rollback_exc)
+                    except BaseException:
+                        logger.exception("Failed to roll back database transaction")
                     raise
             finally:
                 if self._transaction_owner is owner:
@@ -246,7 +243,7 @@ class TransactionDb:
         await cursor.close()
         return int(rowcount or 0)
 
-    async def fetch_one(self, sql: str, params: tuple[Any, ...] = ()) -> Optional[dict[str, Any]]:
+    async def fetch_one(self, sql: str, params: tuple[Any, ...] = ()) -> dict[str, Any] | None:
         async with self._conn.execute(sql, params) as cursor:
             row = await cursor.fetchone()
         return dict(row) if row is not None else None

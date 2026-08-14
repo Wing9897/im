@@ -1,4 +1,4 @@
-"""Field normalization / FK-resolution helpers for user_events (split from ``user_events.py``).
+"""Field normalization / FK-resolution helpers for user_events.
 
 Kept separate from CRUD so the wire-shape validation rules (title/time/origin,
 ``taskId``/``worksetId`` sentinels) can be read and tested independently of the
@@ -17,6 +17,7 @@ from server.calendar.user_event_kinds import (
 )
 from server.db.database import Database
 from server.domain.analysis_modes import TIMELINE_OWNING_ANALYSIS_MODES
+from server.domain.user_event_directions import ALLOWED_USER_EVENT_DIRECTIONS
 from server.domain.user_event_origins import (
     ALLOWED_USER_EVENT_ORIGINS,
     USER_EVENT_ORIGIN_ERROR,
@@ -28,7 +29,7 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 ALLOWED_ORIGINS = ALLOWED_USER_EVENT_ORIGINS
 #: Tasks that may own a user_event (filter / timeline attribution).
 USER_EVENT_TASK_MODES = TIMELINE_OWNING_ANALYSIS_MODES
-ALLOWED_EVENT_DIRECTIONS = frozenset({"expense", "income"})
+ALLOWED_EVENT_DIRECTIONS = ALLOWED_USER_EVENT_DIRECTIONS
 AMOUNT_MAX = 1_000_000_000_000
 
 # Sentinel: field not provided in a partial update.

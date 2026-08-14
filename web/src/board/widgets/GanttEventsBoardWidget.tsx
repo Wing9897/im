@@ -21,7 +21,7 @@ const EVENTS_LIMIT = 80;
 export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetProps) {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useBoardGanttViewMode(widgetId);
-  const ariaPrefix = t("board.ganttWidget.byEventAria");
+  const ariaPrefix = t("board:ganttWidget.byEventAria");
 
   const eventsFetcher = useCallback(() => {
     const { startDate, endDate } = currentMonthWindowIso();
@@ -68,18 +68,18 @@ export function GanttEventsBoardWidget({ active = true, widgetId }: BoardWidgetP
     >
       <BoardWidgetShell
         active={active}
-        pausedLabel={t("board.common.paused", { name: t("board.ganttWidget.pausedName") })}
+        pausedLabel={t("board:common.paused", { name: t("board:ganttWidget.pausedName") })}
         pausedTestId="board-gantt-events-paused"
         loading={loading && !events}
         error={!events ? error : null}
         onRetry={refresh}
       >
-        <Suspense fallback={<p className="board-widget-muted">{t("board.common.loadingGantt")}</p>}>
+        <Suspense fallback={<p className="board-widget-muted">{t("board:common.loadingGantt")}</p>}>
           <LazyGanttBoardEmbed
             events={filteredEvents}
             viewMode={viewMode}
-            labelHeader={t("board.ganttWidget.labelEvent")}
-            emptyLabel={t("board.ganttWidget.emptyEvents")}
+            labelHeader={t("board:ganttWidget.labelEvent")}
+            emptyLabel={t("board:ganttWidget.emptyEvents")}
             onSelectActivity={selectEvent}
           />
         </Suspense>

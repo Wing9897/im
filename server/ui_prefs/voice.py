@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import re
 import time
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from datetime import UTC
+from typing import Any
 
 from server.db.database import Database
 from server.ui_prefs.common import (
@@ -133,7 +135,7 @@ async def put_voice_settings(db: Database, settings: Any) -> dict[str, Any]:
     return {"configured": True, "settings": clean}
 
 
-def _parse_start_time_from_dedupe_key(key: str) -> Optional[str]:
+def _parse_start_time_from_dedupe_key(key: str) -> str | None:
     """Dedupe key shape: ``{eventId}::{lead}::{startTime}`` (startTime may contain ``:``)."""
     first = key.find("::")
     if first < 0:
@@ -148,7 +150,7 @@ def _parse_start_time_from_dedupe_key(key: str) -> Optional[str]:
 def sanitize_fired_keys(
     raw: Any,
     *,
-    now_ms: Optional[float] = None,
+    now_ms: float | None = None,
     prune: bool = True,
 ) -> list[str]:
     if not isinstance(raw, list):
@@ -178,14 +180,14 @@ def sanitize_fired_keys(
 
 
 def _iso_to_ms(value: str) -> float:
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     text = value.strip()
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     dt = datetime.fromisoformat(text)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt.timestamp() * 1000
 
 

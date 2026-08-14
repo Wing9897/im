@@ -58,7 +58,17 @@ function savePersistedSourceFilter(
 }
 
 /** Bound load / save / prune helpers for one localStorage key. */
-export function makePersistedSourceFilter(storageKey: string) {
+export type PersistedSourceFilter = {
+  load(): SourceFilterSelection;
+  save(selection: SourceFilterSelection): void;
+  prune(
+    selected: SourceFilterSelection,
+    catalogTaskIds: readonly string[],
+    catalogWorksetIds?: readonly string[],
+  ): SourceFilterSelection;
+};
+
+export function makePersistedSourceFilter(storageKey: string): PersistedSourceFilter {
   const options = { storageKey } as const;
   return {
     load(): SourceFilterSelection {

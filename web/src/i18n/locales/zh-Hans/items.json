@@ -1,6 +1,5 @@
 {
   "emptyValue": "—",
-  "pageTitle": "物品",
   "allCategories": "全部类型",
   "backToCategories": "返回类型",
   "openCategoryAria": "打开类型 {name}",
@@ -162,7 +161,6 @@
   "finance": {
     "open": "财务",
     "openAria": "打开物品财务",
-    "pageTitle": "物品财务",
     "controlsAria": "财务筛选",
     "presetAria": "日期范围预设",
     "preset": {

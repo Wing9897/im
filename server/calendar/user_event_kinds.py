@@ -14,36 +14,24 @@ Calendar hierarchy (timeline ``source`` vs this ``kind``):
 Title presets (到期 / Purchased / …) remain UX defaults; authority for expiry
 derive-on-read and finance is ``kind``. Seeds and create payloads must set
 ``kind`` explicitly (no title→kind inference).
+
+Wire／DDL SoT lives in ``server.domain.user_event_kinds`` (avoid schema↔calendar
+import cycles); this module keeps normalize helpers. Title presets for Items
+quick-create live on the FE (UX only; ``kind`` remains authority).
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-USER_EVENT_KIND_NORMAL = "normal"
-USER_EVENT_KIND_EXPIRES = "expires"
-USER_EVENT_KIND_PURCHASE_EFFECTIVE = "purchase_effective"
-
-ALLOWED_USER_EVENT_KINDS = frozenset(
-    {
-        USER_EVENT_KIND_NORMAL,
-        USER_EVENT_KIND_EXPIRES,
-        USER_EVENT_KIND_PURCHASE_EFFECTIVE,
-    }
-)
-
-#: Title presets historically used by Items quick-create「到期」 (UX only).
-LINKED_EXPIRY_TITLES = frozenset({"到期", "Expires"})
-
-#: Title presets historically used by Items purchase/effective quick-create (UX only).
-LINKED_PURCHASE_EFFECTIVE_TITLES = frozenset(
-    {
-        "Purchased",
-        "购入",
-        "購入",
-        "Effective",
-        "生效",
-    }
+from server.domain.user_event_kinds import (
+    ALL_USER_EVENT_KINDS,
+    ALLOWED_USER_EVENT_KINDS,
+    USER_EVENT_KIND_CHECK_SQL,
+    USER_EVENT_KIND_EXPIRES,
+    USER_EVENT_KIND_NORMAL,
+    USER_EVENT_KIND_PURCHASE_EFFECTIVE,
+    UserEventKind,
 )
 
 
@@ -61,3 +49,16 @@ def normalize_user_event_kind(value: Any) -> str:
 
 def finance_allowed_for_kind(kind: str) -> bool:
     return kind == USER_EVENT_KIND_PURCHASE_EFFECTIVE
+
+
+__all__ = [
+    "ALLOWED_USER_EVENT_KINDS",
+    "ALL_USER_EVENT_KINDS",
+    "USER_EVENT_KIND_CHECK_SQL",
+    "USER_EVENT_KIND_EXPIRES",
+    "USER_EVENT_KIND_NORMAL",
+    "USER_EVENT_KIND_PURCHASE_EFFECTIVE",
+    "UserEventKind",
+    "normalize_user_event_kind",
+    "finance_allowed_for_kind",
+]

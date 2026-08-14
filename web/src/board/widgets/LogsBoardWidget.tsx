@@ -56,7 +56,7 @@ export function LogsBoardWidget({ active = true }: BoardWidgetProps) {
         error={!logs ? error : null}
         onRetry={refresh}
         empty={Array.isArray(logs) && visibleLogs.length === 0}
-        emptyLabel={t("board.logs.empty")}
+        emptyLabel={t("board:logs.empty")}
       >
         {visibleLogs.length > 0 ? (
           <ul className="board-widget-list">

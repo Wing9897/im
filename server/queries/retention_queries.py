@@ -107,44 +107,59 @@ async def cleanup_user_events_batch(db: Database, cutoff_modifier: str) -> int:
     return await _delete_ids(db, "user_events", [str(row["id"]) for row in rows])
 
 
-async def cleanup_orphan_timeline_dismissals_batch(db: Database) -> int:
+# timeline_dismissals and timeline_importance share the (source, event_id)
+# shape and the same orphan definition: the referenced event row is gone.
+_TIMELINE_REF_TABLES = frozenset({"timeline_dismissals", "timeline_importance"})
+
+
+async def _cleanup_orphan_timeline_refs_batch(db: Database, table: str) -> int:
+    if table not in _TIMELINE_REF_TABLES:
+        raise ValueError(f"Unsupported timeline ref table: {table}")
     rows = await db.fetch_all(
-        "SELECT source, event_id FROM timeline_dismissals "
-        "WHERE (source = 'analysis' AND NOT EXISTS ("
-        "        SELECT 1 FROM analysis_events e WHERE e.id = timeline_dismissals.event_id"
-        "      ))"
-        "   OR (source = 'user' AND NOT EXISTS ("
-        "        SELECT 1 FROM user_events e WHERE e.id = timeline_dismissals.event_id"
-        "      ))"
-        "   OR (source = 'item_remind' AND NOT EXISTS ("
-        "        SELECT 1 FROM items i WHERE i.id = CASE"
-        "          WHEN timeline_dismissals.event_id LIKE 'item:%:remind'"
-        "          THEN substr("
-        "            timeline_dismissals.event_id,"
-        "            6,"
-        "            length(timeline_dismissals.event_id) - 12"
-        "          )"
-        "          ELSE NULL"
-        "        END"
-        "      ))"
-        "   OR (source = 'recurring' AND instr(event_id, ':') > 0 AND NOT EXISTS ("
-        "        SELECT 1 FROM recurring_schedules s"
-        "        WHERE s.id = substr("
-        "          timeline_dismissals.event_id, 1,"
-        "          instr(timeline_dismissals.event_id, ':') - 1"
-        "        )"
-        "      )) "
-        "LIMIT ?",
+        f"SELECT source, event_id FROM {table} "
+        f"WHERE (source = 'analysis' AND NOT EXISTS ("
+        f"        SELECT 1 FROM analysis_events e WHERE e.id = {table}.event_id"
+        f"      ))"
+        f"   OR (source = 'user' AND NOT EXISTS ("
+        f"        SELECT 1 FROM user_events e WHERE e.id = {table}.event_id"
+        f"      ))"
+        f"   OR (source = 'item_remind' AND NOT EXISTS ("
+        f"        SELECT 1 FROM items i WHERE i.id = CASE"
+        f"          WHEN {table}.event_id LIKE 'item:%:remind'"
+        f"          THEN substr("
+        f"            {table}.event_id,"
+        f"            6,"
+        f"            length({table}.event_id) - 12"
+        f"          )"
+        f"          ELSE NULL"
+        f"        END"
+        f"      ))"
+        f"   OR (source = 'recurring' AND instr(event_id, ':') > 0 AND NOT EXISTS ("
+        f"        SELECT 1 FROM recurring_schedules s"
+        f"        WHERE s.id = substr("
+        f"          {table}.event_id, 1,"
+        f"          instr({table}.event_id, ':') - 1"
+        f"        )"
+        f"      )) "
+        f"LIMIT ?",
         (BATCH_SIZE,),
     )
     if not rows:
         return 0
     async with db.transaction() as conn:
         await conn.executemany(
-            "DELETE FROM timeline_dismissals WHERE source = ? AND event_id = ?",
+            f"DELETE FROM {table} WHERE source = ? AND event_id = ?",
             [(str(row["source"]), str(row["event_id"])) for row in rows],
         )
     return len(rows)
+
+
+async def cleanup_orphan_timeline_dismissals_batch(db: Database) -> int:
+    return await _cleanup_orphan_timeline_refs_batch(db, "timeline_dismissals")
+
+
+async def cleanup_orphan_timeline_importance_batch(db: Database) -> int:
+    return await _cleanup_orphan_timeline_refs_batch(db, "timeline_importance")
 
 
 async def cleanup_device_access_tokens_batch(db: Database) -> int:

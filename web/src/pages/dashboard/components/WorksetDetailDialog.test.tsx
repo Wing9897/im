@@ -47,28 +47,28 @@ vi.mock("react-i18next", () => ({
   useTranslation: (ns?: string) => ({
     t: (key: string, opts?: Record<string, unknown>) => {
       if (ns === "items") return key;
-      if (key === "workset.detailTitle") return `Detail ${opts?.name ?? ""}`;
-      if (key === "workset.detailSubtitle") return "subtitle";
-      if (key === "workset.detailSummaryExpiringHeading") return "Expiring";
-      if (key === "workset.detailSummaryEventsHeading") return "Events";
-      if (key === "workset.detailSummaryExpiringEmpty") return "no expiring";
-      if (key === "workset.detailSummaryEventsEmpty") return "no events";
-      if (key === "workset.detailSummaryLoading") return "loading";
-      if (key === "workset.detailSummaryEventsError") return "events error";
-      if (key === "workset.detailTasksHeading") return "Tasks";
-      if (key === "workset.detailItemsHeading") return "Items";
-      if (key === "workset.detailTasksEmpty") return "no tasks";
-      if (key === "workset.detailItemsEmpty") return "no items";
-      if (key === "workset.openItems") return "items";
-      if (key === "workset.addItem") return "add item";
-      if (key === "workset.addEvent") return "add event";
-      if (key === "workset.openTaskAria") return `Open task ${opts?.name ?? ""}`;
-      if (key === "workset.openEventAria") return `Open event ${opts?.name ?? ""}`;
-      if (key === "workset.eventAllDay") return "All day";
-      if (key === "tasks.addTask") return "add task";
+      if (key === "workset:detailTitle") return `Detail ${opts?.name ?? ""}`;
+      if (key === "workset:detailSubtitle") return "subtitle";
+      if (key === "workset:detailSummaryExpiringHeading") return "Expiring";
+      if (key === "workset:detailSummaryEventsHeading") return "Events";
+      if (key === "workset:detailSummaryExpiringEmpty") return "no expiring";
+      if (key === "workset:detailSummaryEventsEmpty") return "no events";
+      if (key === "workset:detailSummaryLoading") return "loading";
+      if (key === "workset:detailSummaryEventsError") return "events error";
+      if (key === "workset:detailTasksHeading") return "Tasks";
+      if (key === "workset:detailItemsHeading") return "Items";
+      if (key === "workset:detailTasksEmpty") return "no tasks";
+      if (key === "workset:detailItemsEmpty") return "no items";
+      if (key === "workset:openItems") return "items";
+      if (key === "workset:addItem") return "add item";
+      if (key === "workset:addEvent") return "add event";
+      if (key === "workset:openTaskAria") return `Open task ${opts?.name ?? ""}`;
+      if (key === "workset:openEventAria") return `Open event ${opts?.name ?? ""}`;
+      if (key === "workset:eventAllDay") return "All day";
+      if (key === "tasks:addTask") return "add task";
       if (key === "dialog.close") return "close";
-      if (key === "workset.rename") return "rename";
-      if (key === "workset.delete") return "delete";
+      if (key === "workset:rename") return "rename";
+      if (key === "workset:delete") return "delete";
       return key;
     },
   }),
@@ -127,8 +127,10 @@ function userEvent(
     isAllDay: false,
     taskId: "",
     worksetId: "ws-1",
+    kind: "normal",
     source: "user",
     dismissed: false,
+    important: false,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     ...partial,

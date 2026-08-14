@@ -48,9 +48,7 @@ async def test_remove_item_nulls_linked_user_event_and_recurring_item_id(client,
     assert series.status_code == 201, series.text
     series_id = series.json()["id"]
 
-    assert (
-        await app.state.db.fetch_value("SELECT item_id FROM user_events WHERE id = ?", (event_id,))
-    ) == item_id
+    assert (await app.state.db.fetch_value("SELECT item_id FROM user_events WHERE id = ?", (event_id,))) == item_id
     assert (
         await app.state.db.fetch_value(
             "SELECT item_id FROM recurring_schedules WHERE id = ?",

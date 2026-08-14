@@ -6,7 +6,7 @@ import type { MonitorViewMode } from "../../../domain/monitor/monitorViewMode";
 import {
   getMessageListWindow,
   hasActiveMessageFilters,
-} from "../monitorPageModel";
+} from "../../../domain/monitor/monitorPageModel";
 
 interface UseMonitorHandlersOptions {
   messages: Message[];

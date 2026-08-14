@@ -1,7 +1,7 @@
 """Collector platform vocabulary (Input-layer leaf — safe for DDL import).
 
-``ADAPTER_BUILDERS`` keys and SQLite ``PLATFORM_CHECK_VALUES`` must both
-come from here so schema and factory cannot drift.
+``ADAPTER_BUILDERS`` keys and the SQLite ``platform`` CHECK must both come from
+here so schema and factory cannot drift.
 """
 
 from __future__ import annotations
@@ -23,3 +23,5 @@ COLLECTOR_PLATFORMS: Final[tuple[CollectorPlatform, ...]] = (
 COLLECTOR_PLATFORMS_WITH_LIST_ENRICHMENT: Final[frozenset[str]] = frozenset(
     platform for platform in COLLECTOR_PLATFORMS if platform != "telegram"
 )
+
+PLATFORM_CHECK_SQL = "CHECK (platform IN ({}))".format(",".join(f"'{value}'" for value in COLLECTOR_PLATFORMS))

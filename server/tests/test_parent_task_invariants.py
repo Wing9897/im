@@ -104,7 +104,7 @@ async def test_series_is_not_mutable_through_task_routes(client, app) -> None:
     assert series_row["parent_task_id"] == proj_id
 
 
-async def test_put_project_mode_change_clears_children_parent(client, app) -> None:
+async def test_put_agent_mode_change_clears_children_parent(client, app) -> None:
     """Changing an agent parent away from agent mode clears children parent_task_id."""
     create_proj = await client.post(
         "/api/v1/tasks",

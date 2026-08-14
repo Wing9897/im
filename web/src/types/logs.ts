@@ -4,23 +4,21 @@
 
 import type { components } from "../api/generated/schema";
 
-/** Log severity level */
-export type LogLevel = "info" | "success" | "warning" | "error";
-
-/** Log category for classification ("frontend" = browser-originated logs
-    accepted by POST /api/v1/logs). */
-export type LogCategory = "analysis" | "collector" | "source" | "system" | "frontend";
-
 /** OpenAPI wire shape for a stored / listed app log. */
 export type AppLogEntryPayload = components["schemas"]["AppLogEntryResponse"];
 
+/** Log severity level (server SoT: `server/domain/app_log_levels.py`). */
+export type LogLevel = AppLogEntryPayload["level"];
+
+/** Log category for classification ("frontend" = browser-originated logs
+    accepted by POST /api/v1/logs). */
+export type LogCategory = AppLogEntryPayload["category"];
+
 /**
- * UI-narrowed {@link AppLogEntryPayload} (`level` / `category` as closed unions).
+ * UI shape for {@link AppLogEntryPayload} (`details` optional, `kind` defaulted).
  * Runtime conversion: `toAppLogEntry` in `context/appRuntimeShared`.
  */
-export type AppLogEntry = Omit<AppLogEntryPayload, "level" | "category" | "details" | "kind"> & {
-  level: LogLevel;
-  category: LogCategory;
+export type AppLogEntry = Omit<AppLogEntryPayload, "details" | "kind"> & {
   /** Stable event kind from the API (defaults to `"event"` if missing). */
   kind: string;
   details?: string;

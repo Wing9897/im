@@ -7,7 +7,7 @@ import {
 } from "react";
 import { useAnalysisStatus } from "../../../context/AnalysisStatusContext";
 import type { Message, MessageFilters } from "../../../types";
-import { matchesFilters, mergeUniqueMessages } from "../monitorPageModel";
+import { matchesFilters, mergeUniqueMessages } from "../../../domain/monitor/monitorPageModel";
 
 interface UseMonitorSseMergeOptions {
   filters: MessageFilters;
@@ -23,6 +23,8 @@ interface UseMonitorSseMergeOptions {
  * INVARIANTS:
  * - Stream: prepend/merge into `messages` with sequence tracking for refresh rebase.
  * - Wall: bump `totalCount` only — do not inject into the wall carousel list here.
+ *   Each SSE payload is processed once and message ids are deduped so repeated
+ *   effect runs / overlapping payloads cannot inflate the count.
  * - Filter changes reset merge buffers; do not skip that reset when “simplifying”.
  */
 export function useMonitorSseMerge({
@@ -38,15 +40,31 @@ export function useMonitorSseMerge({
     new Map<string, { sequence: number; message: Message }>(),
   );
   const wallSseCountRef = useRef(0);
+  const wallSeenIdsRef = useRef(new Set<string>());
+  const wallProcessedUpdateRef = useRef<typeof lastMessagesUpdate>(null);
+
+  // Filter change re-fetches the wall total from the server (new baseline),
+  // so the dedupe set must restart; the processed-update guard below keeps the
+  // still-current SSE payload from being counted again on top of that baseline.
+  useEffect(() => {
+    wallSeenIdsRef.current.clear();
+  }, [filters, streamEnabled]);
 
   useEffect(() => {
     if (streamEnabled) return;
-    const incoming = lastMessagesUpdate?.payload.messages;
+    if (!lastMessagesUpdate || lastMessagesUpdate === wallProcessedUpdateRef.current) {
+      return;
+    }
+    wallProcessedUpdateRef.current = lastMessagesUpdate;
+    const incoming = lastMessagesUpdate.payload.messages;
     if (!incoming || incoming.length === 0) return;
 
     let novelCount = 0;
     for (const message of incoming) {
-      if (matchesFilters(message, filters)) novelCount += 1;
+      if (!matchesFilters(message, filters)) continue;
+      if (wallSeenIdsRef.current.has(message.id)) continue;
+      wallSeenIdsRef.current.add(message.id);
+      novelCount += 1;
     }
     if (novelCount > 0) {
       wallSseCountRef.current += novelCount;

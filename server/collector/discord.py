@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from contextlib import suppress
 
 import aiohttp
 
@@ -135,16 +136,16 @@ class DiscordAdapter(BasePlatformAdapter):
                     continue
                 guild_channels = await resp.json()
 
-            for ch in guild_channels:
-                if ch.get("type") == 0:  # text channel
-                    channels.append(
-                        {
-                            "id": ch["id"],
-                            "name": ch["name"],
-                            "guild_id": guild_id,
-                            "guild_name": guild_name,
-                        }
-                    )
+            channels.extend(
+                {
+                    "id": ch["id"],
+                    "name": ch["name"],
+                    "guild_id": guild_id,
+                    "guild_name": guild_name,
+                }
+                for ch in guild_channels
+                if ch.get("type") == 0  # text channel
+            )
         return channels
 
     async def set_subscriptions(self, channel_ids: list[str]) -> None:
@@ -181,11 +182,10 @@ class DiscordAdapter(BasePlatformAdapter):
                     break
         except asyncio.CancelledError:
             return
-        except (aiohttp.ClientError, OSError) as exc:
-            logger.error(
-                "Discord gateway listener error for source %s: %s",
+        except (aiohttp.ClientError, OSError):
+            logger.exception(
+                "Discord gateway listener error for source %s",
                 self._source_id,
-                exc,
             )
 
         if self._state.status == "connected":
@@ -245,26 +245,22 @@ class DiscordAdapter(BasePlatformAdapter):
                 await self._ws.send_json({"op": OP_HEARTBEAT, "d": self._last_sequence})
         except asyncio.CancelledError:
             return
-        except (aiohttp.ClientError, OSError) as exc:
-            logger.error("Discord heartbeat error for source %s: %s", self._source_id, exc)
+        except (aiohttp.ClientError, OSError):
+            logger.exception("Discord heartbeat error for source %s", self._source_id)
 
     async def _cleanup(self) -> None:
         for attr in ("_heartbeat_task", "_gateway_task"):
             task = getattr(self, attr)
             if task is not None:
                 task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await task
-                except asyncio.CancelledError:
-                    pass
                 setattr(self, attr, None)
 
         if self._reconnect_task is not None and self._reconnect_task is not asyncio.current_task():
             self._reconnect_task.cancel()
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._reconnect_task
-            except asyncio.CancelledError:
-                pass
             self._reconnect_task = None
 
         if self._ws is not None and not self._ws.closed:

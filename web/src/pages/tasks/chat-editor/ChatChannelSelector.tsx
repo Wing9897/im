@@ -32,8 +32,8 @@ export function ChatChannelSelector({
 
   const label =
     channelIds.length === 0
-      ? t("tasks.editor.pickChannels")
-      : t("tasks.editor.channelsSelected", {
+      ? t("tasks:editor.pickChannels")
+      : t("tasks:editor.channelsSelected", {
           selected: channelIds.length,
           total: channels.length,
         });
@@ -42,7 +42,7 @@ export function ChatChannelSelector({
     <div className="flex flex-col gap-sm">
       <div className="col-span-full flex w-full flex-col gap-xs">
         <FieldLabel>
-          {optional ? t("tasks.editor.channelsLabelOptional") : t("tasks.editor.channelsLabel")}
+          {optional ? t("tasks:editor.channelsLabelOptional") : t("tasks:editor.channelsLabel")}
         </FieldLabel>
         <FilterTrigger
           label={
@@ -55,14 +55,14 @@ export function ChatChannelSelector({
           count={channelIds.length > 0 ? channelIds.length : undefined}
           active={channelIds.length > 0}
           onClick={onOpenChannelDialog}
-          aria-label={t("tasks.editor.channelsAria")}
+          aria-label={t("tasks:editor.channelsAria")}
           data-testid="channel-picker-button"
         />
 
         {selectedChannels.length > 0 && (
           <div className="im-surface-inset mt-xs rounded-md border border-surface-border px-sm py-xs">
             <div className="mb-xs text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              {t("tasks.editor.channelsPreview")}
+              {t("tasks:editor.channelsPreview")}
             </div>
             <div className="flex flex-col gap-xs">
               {displayChannels.map((channel) => (
@@ -75,7 +75,7 @@ export function ChatChannelSelector({
               ))}
               {remainingChannelCount > 0 && (
                 <div className="text-xs italic text-text-muted">
-                  {t("tasks.editor.channelsMore", { count: remainingChannelCount })}
+                  {t("tasks:editor.channelsMore", { count: remainingChannelCount })}
                 </div>
               )}
             </div>

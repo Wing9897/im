@@ -92,10 +92,12 @@ export function SchedulePage() {
   const shownCount = oneOff.items.length + recurring.items.length;
   const totalCount = oneOff.totalCount + recurring.totalCount;
 
+  const loadMoreOneOff = oneOff.loadMore;
+  const loadMoreRecurring = recurring.loadMore;
   const loadMore = useCallback(() => {
-    void oneOff.loadMore();
-    void recurring.loadMore();
-  }, [oneOff.loadMore, recurring.loadMore]);
+    void loadMoreOneOff();
+    void loadMoreRecurring();
+  }, [loadMoreOneOff, loadMoreRecurring]);
 
   useInfiniteScroll({
     triggerNode: loadMoreNode,

@@ -1,9 +1,4 @@
-/** Message detail dialog class strings. */
-
-import { sourceDetailFooterClass } from "./source";
-import { taskDetailHeaderClass } from "./task";
-
-export const messageDetailHeaderClass = taskDetailHeaderClass;
+/** Message detail dialog class strings (domain-unique only). */
 
 export const messageDetailSenderClass =
   "m-0 text-card-title font-bold text-text-primary";
@@ -22,5 +17,3 @@ export const messageDetailTechToggleClass =
 
 export const messageDetailTechPanelClass =
   "im-surface-inset rounded-md border border-dashed border-[color-mix(in_srgb,var(--surface-border)_90%,transparent)] p-[10px_12px] font-mono text-[10px] leading-normal text-text-muted [&_div+div]:mt-1.5";
-
-export const messageDetailFooterClass = sourceDetailFooterClass;
