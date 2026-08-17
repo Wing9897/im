@@ -178,6 +178,17 @@ export function parseTaskAssistantResponse(raw: unknown): ParseResult {
     taskConfig.includeInTimeline = config.includeInTimeline;
   }
 
+  // outputAnalysisEvents (optional bool; intelligence-page write gate)
+  if (config.outputAnalysisEvents !== undefined && config.outputAnalysisEvents !== null) {
+    if (typeof config.outputAnalysisEvents !== "boolean") {
+      return {
+        ok: false,
+        error: String(i18n.t("assistant:parse.outputAnalysisEventsNotBoolean")),
+      };
+    }
+    taskConfig.outputAnalysisEvents = config.outputAnalysisEvents;
+  }
+
   return {
     ok: true,
     data: { message, taskConfig },

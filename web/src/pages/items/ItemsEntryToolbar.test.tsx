@@ -46,7 +46,7 @@ describe("ItemsEntryToolbar chrome", () => {
           groupByWorkset: false,
           worksetFilterId: null,
           worksets: [
-            { id: "ws-a", name: "Workset A", isSystem: false, createdAt: "", updatedAt: "" },
+            { id: "ws-a", name: "Workset A", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: "", updatedAt: "" },
           ],
           onFilterChange: vi.fn(),
           onSearchChange: vi.fn(),

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ToggleSwitch } from "../ToggleSwitch";
-import { CollapsePanel, FormStack, SettingsRow } from "../ui";
+import { CollapsePanel, FieldLabel, formHelpClass } from "../ui";
 
 export interface AnalysisDebugPanelProps {
   analysisTraceVerbose: boolean;
@@ -30,25 +30,22 @@ export function AnalysisDebugPanel({
   const [open, setOpen] = useState(defaultOpen);
 
   const controls = (
-    <FormStack>
-      <SettingsRow
-        label={t("general.debug.traceVerboseLabel")}
-        help={t("general.debug.traceVerboseHelp")}
-      >
-        <div className="flex items-center gap-md">
-          <ToggleSwitch
-            checked={analysisTraceVerbose}
-            disabled={busy}
-            showLabel={false}
-            label={t("general.debug.traceVerboseLabel")}
-            onChange={onAnalysisTraceVerboseChange}
-          />
-          <span className="select-none text-body text-text-primary" aria-hidden="true">
-            {analysisTraceVerbose ? t("shared.enabled") : t("shared.disabled")}
-          </span>
-        </div>
-      </SettingsRow>
-    </FormStack>
+    <div className="flex min-w-0 flex-col gap-xs" title={t("general.debug.traceVerboseHelp")}>
+      <div className="flex min-w-0 items-center gap-md">
+        <FieldLabel className="mb-0 min-w-0 flex-1">
+          {t("general.debug.traceVerboseLabel")}
+        </FieldLabel>
+        <ToggleSwitch
+          checked={analysisTraceVerbose}
+          disabled={busy}
+          onChange={onAnalysisTraceVerboseChange}
+          label={t("general.debug.traceVerboseLabel")}
+          showLabel={false}
+          data-testid="analysis-trace-verbose"
+        />
+      </div>
+      <p className={formHelpClass}>{t("general.debug.traceVerboseHint")}</p>
+    </div>
   );
 
   if (embedded) {

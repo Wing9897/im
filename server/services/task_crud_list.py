@@ -9,6 +9,7 @@ from server.db.database import Database
 from server.queries.tasks_queries import fetch_all_task_channel_rows, fetch_all_task_rows
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_channel_ref, serialize_task
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 
 async def list_tasks_payload(
@@ -26,11 +27,8 @@ async def list_tasks_payload(
             raise TaskWriteError(f"Invalid analysis_mode: {analysis_mode}")
         rows = [row for row in rows if str(row.get("analysis_mode") or "") == mode]
     if workset_id is not None:
-        wid = workset_id.strip()
-        if not wid:
-            rows = [row for row in rows if not row.get("workset_id")]
-        else:
-            rows = [row for row in rows if str(row.get("workset_id") or "") == wid]
+        wid = workset_id.strip() or SYSTEM_WORKSET_ID
+        rows = [row for row in rows if str(row.get("workset_id") or SYSTEM_WORKSET_ID) == wid]
     links = await fetch_all_task_channel_rows(db)
     by_task: dict[str, list[dict[str, Any]]] = {}
     for link in links:

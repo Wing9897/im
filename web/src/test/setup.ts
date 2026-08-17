@@ -7,7 +7,13 @@ import { setAppLocale } from "../i18n/locale";
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT =
   true;
 
-// jsdom does not implement matchMedia — SkeletonScreen and others need it.
+if (typeof window !== "undefined" && typeof window.ResizeObserver === "undefined") {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
 if (typeof window !== "undefined") {
   Object.defineProperty(window, "matchMedia", {
     writable: true,

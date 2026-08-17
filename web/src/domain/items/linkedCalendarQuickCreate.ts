@@ -17,6 +17,7 @@ import {
   type UserEventCalendarKind,
 } from "../timeline/userEventCalendarKind";
 import { toUserEventFormWorksetId } from "../timeline/userEvents";
+import { DEFAULT_CALENDAR_NOTIFY_PREF, type NotifyPref } from "../notify/notifyPref";
 
 export const LINKED_CALENDAR_QUICK_KINDS = ["expires", "other", "purchaseEffective"] as const;
 
@@ -36,6 +37,7 @@ export type LinkedCalendarFormInitial = {
   body?: string;
   /** Wire ``user_events.kind`` — authority for finance / expiry (not one_off/recurring). */
   calendarKind?: UserEventCalendarKind;
+  notifyPref?: NotifyPref;
   amountInput?: string;
   direction?: "expense" | "income";
 };
@@ -95,6 +97,7 @@ export function buildLinkedCalendarCreateInitial(args: {
     itemId: args.itemId,
     remindBeforeDays,
     calendarKind,
+    notifyPref: DEFAULT_CALENDAR_NOTIFY_PREF,
   };
 
   if (quickKind === "expires") {
@@ -140,6 +143,7 @@ export function buildLinkedCalendarEditInitial(args: {
       event.remindBeforeDays != null ? String(event.remindBeforeDays) : "",
     itemId,
     calendarKind: normalizeUserEventCalendarKind(event.kind),
+    notifyPref: event.notifyPref ?? "follow",
     amountInput: event.amount != null ? String(event.amount) : "",
     direction: event.direction === "income" ? "income" : "expense",
   };

@@ -1,6 +1,7 @@
 {
   "monitor": "Live Monitor",
   "tasks": "Tasks",
+  "worksets": "Worksets",
   "schedule": "My schedule",
   "leaderboard": "Leaderboard",
   "keyEvents": "Intel events",

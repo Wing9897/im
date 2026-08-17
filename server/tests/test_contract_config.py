@@ -35,12 +35,15 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "access_api_keys",
         # Stamp 5: device-scoped assistant sessions live in ui_prefs.
         "assistant_sessions",
-        # Board / voice / timeline / assistant voice-io live in ui_prefs (wipe-only).
+        # Board / notify / timeline / assistant voice-io live in ui_prefs (wipe-only).
         "ops_board_layout",
         "ops_board_widget_state",
         "voice_reminder_settings",
         "voice_reminder_fired",
         "voice_reminder_trigger_history",
+        "notify_settings",
+        "notify_fired",
+        "notify_trigger_history",
         "assistant_voice_io_settings",
         "timeline_annotations",
         # Per-task scheduling columns are task-owned; no longer system_config globals.
@@ -70,6 +73,8 @@ _RETIRED_CONFIG_KEYS = frozenset(
         "assistant_web_search_enabled",
         "web_search_provider",
         "brave_search_api_key",
+        "mcp_workset_scope",
+        "mcp_workset_ids",
     }
 )
 
@@ -99,6 +104,8 @@ _RETIRED_WIRE_KEYS = frozenset(
         "braveSearchApiKey",
         "dataRetentionDays",
         "autoPauseOnRateLimit",
+        "mcpWorksetScope",
+        "mcpWorksetIds",
     }
 )
 
@@ -135,6 +142,8 @@ async def test_settings_snapshot_and_roundtrip(client):
     assert isinstance(snapshot["analysisPaused"], bool)
     assert isinstance(snapshot["analysisTraceVerbose"], bool)
     assert isinstance(snapshot["autoPauseOnRetriesExhausted"], bool)
+    assert snapshot["mcpEnabled"] is True
+    assert snapshot["a2aEnabled"] is True
     assert isinstance(snapshot["maxConcurrentBatches"], str)
     for retired in _RETIRED_WIRE_KEYS:
         assert retired not in snapshot
@@ -152,6 +161,20 @@ async def test_settings_snapshot_and_roundtrip(client):
     assert "retentionMessagesDays" in again
     assert again["uiLocale"] == "zh-Hant"
     assert "llmProvider" not in again
+
+
+async def test_a2a_and_mcp_master_switches_persist_independently(client):
+    saved = (await client.put("/api/v1/config/settings", json={"a2aEnabled": False})).json()
+    assert saved["a2aEnabled"] is False
+    assert saved["mcpEnabled"] is True
+
+    saved = (await client.put("/api/v1/config/settings", json={"mcpEnabled": False})).json()
+    assert saved["mcpEnabled"] is False
+    assert saved["a2aEnabled"] is False
+
+    saved = (await client.put("/api/v1/config/settings", json={"a2aEnabled": True})).json()
+    assert saved["a2aEnabled"] is True
+    assert saved["mcpEnabled"] is False
 
 
 async def test_ui_locale_settings_roundtrip(client):

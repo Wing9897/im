@@ -11,8 +11,7 @@
     "general": "General",
     "theme": "Theme",
     "data": "Data maintenance",
-    "api": "API",
-    "mcp": "MCP",
+    "integrations": "External interfaces",
     "logs": "System logs",
     "aiProvider": "AI profiles",
     "voice": "Voice",
@@ -37,13 +36,14 @@
   },
   "general": {
     "weatherLocationLabel": "Location",
-    "weatherLocationHelp": "The calendar shows Open-Meteo weather forecasts for this location.",
+    "weatherLocationHelp": "Calendar weather; Follow system infers city from the OS timezone.",
     "followSystem": "Follow system",
+    "weatherLocationCurrent": "Current location: {location}",
     "simpleModeLabel": "Simple mode (AI calendar)",
-    "simpleModeHelp": "Keep Assistant, Timeline, Tasks, Notifications (including voice reminders), Settings / AI Settings, and Logs. Hide Monitor, Sources, Intelligence map, and Leaderboard — for calendar scheduling without multi-source collect/analyze.",
+    "simpleModeHelp": "Keep Assistant, Timeline, Tasks, Notifications, Settings / AI Settings, and Logs. Hide Monitor, Sources, Intelligence map, and Leaderboard — for calendar scheduling without multi-source collect/analyze.",
+    "simpleModeHint": "Keep Assistant, Timeline, Tasks, Notifications, and Settings",
     "weatherLocationPlaceholder": "e.g. Taipei, Hong Kong, Tokyo",
     "weatherLocationAria": "Weather location",
-    "weatherLocationAutoHelp": "Infers your city from the OS timezone; uncheck to specify a city or region.",
     "weatherLocationRequired": "Enter a location name, or choose Follow system",
     "weatherLocationSaved": "Weather location saved",
     "saveWeatherLocation": "Save location",
@@ -54,9 +54,9 @@
     "confirmRestart": "Confirm restart",
     "collectorRestarted": "Collector restarted",
     "appVersionLabel": "App version",
-    "appVersionHelp": "Shared semver for frontend and backend (repo-root VERSION); DEV prefix in dev mode.",
+    "appVersionHelp": "Shared frontend/backend semver; DEV prefix in dev.",
     "databaseVersionLabel": "Database schema",
-    "databaseVersionHelp": "Public schema SemVer (same shape as app version). The internal SQLite stamp is a wipe-only integer baseline; mismatched stamps require a database reset (no migration upgrade path).",
+    "databaseVersionHelp": "Public schema SemVer; mismatched stamp requires a reset.",
     "databaseVersionCurrent": "v{version}",
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver} (stamp v{current} → v{required})",
@@ -67,6 +67,7 @@
       "sectionTitle": "Debug & diagnostics",
       "traceVerboseLabel": "Server analysis Trace",
       "traceVerboseHelp": "When on, each message-batch analysis writes a trace to Settings → Logs (hidden by default — enable “Show analysis traces”). No full LLM bodies; unused by agent / recurring. Saves immediately.",
+      "traceVerboseHint": "Writes batch traces to Settings → Logs",
       "saved": "Debug settings saved"
     }
   },
@@ -327,7 +328,10 @@
     }
   },
   "voice": {
-    "disclaimer": "Voice is input/read-aloud only; the agent handles text. Browser STT usually needs vendor cloud; the desktop app does not support it—type instead.",
+    "disclaimer": "Voice is input/read-aloud only. Desktop has no browser STT — type instead.",
+    "sttSectionTitle": "Dictation STT",
+    "ttsSectionTitle": "Read-aloud TTS",
+    "sessionSectionTitle": "Language / PTT / workset",
     "sttLabel": "Speech recognition (STT)",
     "sttHelp": "Hides the mic when unavailable; typing still works.",
     "sttHelpDesktopBlocked": "Desktop does not support browser speech recognition—please type instead.",
@@ -412,29 +416,34 @@
       "maxTokensHelp": "Shared input-token ceiling; lower if long content fails often."
     }
   },
+  "integrations": {
+    "tabsAria": "External interface pages",
+    "webhook": "Webhook",
+    "a2a": "A2A",
+    "deeplink": "Calendar link",
+    "mcp": "MCP",
+    "linkKeys": "Create a key in Account",
+    "referenceTitle": "Reference",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Copy failed"
+  },
   "apiDocs": {
-    "intro": "Local HTTP API docs and examples: access keys, Webhook ingest, Account manager (A2A), and MCP; plus Desktop calendar deep links. Full contracts: docs/agent/a2a.md and docs/agent/mcp.md in the repo.",
     "baseUrl": {
       "title": "API base URL",
-      "body": "Current origin for API calls and examples (custom server, env, or this page’s origin):"
-    },
-    "accessKeys": {
-      "title": "Access keys",
-      "body": "Call automation APIs with `Authorization: Bearer <key>`. Full keys (`*`) work for Webhook, Account manager (A2A), and MCP; Account-manager-only keys can only call `/api/v1/a2a/*`. MCP needs the same full `*` key. Not for UI sign-in.",
-      "linkKeys": "Manage access keys"
+      "body": "Current origin for API calls and examples:"
     },
     "webhook": {
       "title": "Webhook",
-      "body": "`POST /api/v1/messages` requires a full key (`*`). Account-manager-only keys cannot ingest. `metadata` is optional and only helps the AI understand source context.",
+      "body": "`POST /api/v1/messages` — needs a full key (`*`).",
       "exampleTitle": "Push example",
       "exampleContent": "Exchange XYZ suspended withdrawals",
       "exampleNotes": "For AI source context only",
-      "linkKeys": "Manage access keys",
       "linkSources": "Open Webhook sources"
     },
     "liaison": {
       "title": "Account manager (A2A)",
-      "body": "`POST /api/v1/a2a/agent`: assign work in natural language (for OpenClaw / Hermes, etc.). Shares the assistant’s LLM + tools; the server loops tools internally and returns one shot — final message plus tool summary. No server-side chat history (callers may keep their own). Needs an AI profile and an Account-manager key (or `*`).",
+      "body": "`POST /api/v1/a2a/agent`: one-shot natural-language assign. Needs a full key and an AI profile.",
       "capabilities": [
         "Natural-language in; single response with message + toolCalls",
         "Messages / intel / calendar / items (create/update/delete events and inventory items)",
@@ -445,12 +454,13 @@
       "exampleMessage": "No meetings tomorrow. Created Friday family meeting.",
       "exampleResponseComment": "One-shot response (example):",
       "linkStaff": "View Account manager (AI staff)",
-      "linkKeys": "Manage access keys",
       "docsHint": "Full contract: docs/agent/a2a.md in the repo."
     },
     "deepLink": {
-      "title": "Desktop calendar deep link",
-      "body": "Packaged Desktop only (not an HTTP API). The app registers `intelligencemonitor://` and `.ics` file association. Opening a link or file shows the add-to-calendar / pick-workset dialog; confirming uses batch preview/commit via `/api/v1/calendar/imports/*`. Not webcal/CalDAV sync.",
+      "title": "Calendar link",
+      "body": "Desktop only: `intelligencemonitor://` and `.ics`, then confirm to add to the calendar.",
+      "originTitle": "Protocol",
+      "originBody": "Registered Desktop protocol (not an HTTP API):",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — fetch remote ICS (http/https)",
         "`title` + `start` required for inline drafts; optional `end` / `location` / `body` / `worksetId`",
@@ -463,8 +473,15 @@
       "docsHint": "Details: docs/ARCHITECTURE.md (Desktop calendar import) and docs/KNOWN-SIMPLIFICATIONS.md in the repo."
     }
   },
+  "a2aDocs": {
+    "masterSwitch": {
+      "label": "Enable A2A",
+      "help": "When off, POST /api/v1/a2a/agent returns 403. Default is on.",
+      "capsInactive": "A2A is off, so these groups do not apply to A2A. MCP still uses them."
+    }
+  },
   "mcpDocs": {
-    "intro": "Streamable HTTP MCP for external agents (e.g. OpenClaw): structured tools for calendar, messages, intel, and items. Unlike Account manager (A2A), this is a tool surface—no natural-language loop or server-side LLM. Use the master switch and capability toggles below; protect the endpoint with an access key.",
+    "intro": "Tool connection for external agents (not chat). Use the switches below; the endpoint needs an access key.",
     "endpoint": {
       "title": "Endpoint",
       "body": "Connect with Streamable HTTP at this URL (same origin as your API base):"
@@ -472,7 +489,7 @@
     "probe": {
       "button": "Test connection",
       "probing": "Testing…",
-      "hint": "Uses your signed-in session to call GET /api/v1/mcp/status (no access key paste). Shows tools currently exposed by capability groups.",
+      "hint": "Uses your signed-in session to test the connection (no access key paste). Shows tools currently exposed by capability groups.",
       "success": "MCP is on — {toolCount} tools: {names}",
       "disabled": "MCP is off (master switch). Turn it on and save, then test again.",
       "error": "Could not reach MCP status. Check that the API is running and you are signed in."
@@ -480,34 +497,33 @@
     "masterSwitch": {
       "label": "Enable MCP",
       "help": "When off, Streamable HTTP at /api/v1/mcp returns 403; list/call are unavailable. Default is on.",
-      "capsInactive": "Capability groups are ignored while MCP is off."
+      "capsInactive": "MCP is off, so these groups do not apply to MCP. A2A still uses them."
     },
     "openClaw": {
       "title": "OpenClaw config",
       "body": "Add under `mcp.servers` in `~/.openclaw/openclaw.json`. Use a full access key (`*`) as Bearer. Paste the key from Account → Access keys. OpenClaw may also expose an `mcp probe` / config check against this URL.",
-      "exampleTitle": "Config example",
-      "copy": "Copy",
-      "copied": "Copied",
-      "copyFailed": "Copy failed"
+      "exampleTitle": "Config example"
     },
     "referenceSectionTitle": "Reference",
     "capabilityToggles": {
       "title": "Capability groups",
-      "body": "Choose which tool groups MCP may list and call when the master switch is on. Defaults are all enabled (same as the full 19-tool allowlist). Disabled groups are omitted from `list_tools` and rejected on `call_tool`. These are household capability filters—not access-key scopes.",
-      "loading": "Loading MCP settings…",
-      "saveLabel": "Save MCP settings",
-      "calendarRead": "Calendar read",
-      "calendarReadHelp": "`list_calendars`, `upcoming`, `recent`, `window`, `get`",
-      "calendarWrite": "Calendar write",
-      "calendarWriteHelp": "Create / update / delete events & recurring series; mark / unmark important",
-      "messagesSearch": "Messages search",
-      "messagesSearchHelp": "`messages.search`",
-      "intelligenceSearch": "Intelligence search",
-      "intelligenceSearchHelp": "`intelligence.search_events`",
-      "itemsRead": "Items read",
-      "itemsReadHelp": "`items.list`, `items.list_expiring`",
-      "itemsWrite": "Items write",
-      "itemsWriteHelp": "`items.create`, `items.update`"
+      "body": "Household tool allowlist (not access-key scopes).",
+      "sharedCaption": "MCP and A2A share these capabilities",
+      "loading": "Loading capability settings…",
+      "saveLabel": "Save capabilities",
+      "techNamesTitle": "Technical names",
+      "calendarRead": "View calendar",
+      "calendarReadTools": "calendar.list_calendars, calendar.upcoming, calendar.recent, calendar.window, calendar.get",
+      "calendarWrite": "Add, change, or delete events",
+      "calendarWriteTools": "calendar.create_event, calendar.update_event, calendar.delete_event, calendar.create_recurring_series, calendar.update_recurring_series, calendar.delete_recurring_series, calendar.mark_important, calendar.unmark_important",
+      "messagesSearch": "Search messages",
+      "messagesSearchTools": "messages.search",
+      "intelligenceSearch": "Search intelligence",
+      "intelligenceSearchTools": "intelligence.search_events",
+      "itemsRead": "View items and upcoming expiry",
+      "itemsReadTools": "items.list, items.list_expiring",
+      "itemsWrite": "Add or change items",
+      "itemsWriteTools": "items.create, items.update"
     },
     "capabilities": {
       "title": "Allowlist overview",
@@ -529,9 +545,8 @@
     },
     "accessKeys": {
       "title": "Access keys & A2A",
-      "body": "MCP requires the same bar as A2A: a household access key with scope `*`. Account-manager-only keys cannot call MCP. For natural-language one-shots, use Account manager (A2A) instead.",
-      "linkKeys": "Manage access keys",
-      "linkApi": "Open API docs (A2A)"
+      "body": "MCP uses the same bar as A2A: a household access key with scope `*`.",
+      "linkApi": "Open A2A docs"
     },
     "docsHint": "Full contract: docs/agent/mcp.md in the repo."
   },
@@ -612,12 +627,12 @@
       ]
     },
     "agent": {
-      "summary": "Configurable back-office Project Manager: project reconcile or web scout by trigger/output policy; detail at `/tasks/:id/agent`.",
+      "summary": "Configurable back-office Project Manager: project reconcile or web scout by trigger/output policy; details on the Project Manager task page.",
       "capabilities": [
         "Triggers: message-cursor drain, message threshold, or pure schedule (cursor drain cannot also output analysis events)",
         "Per-task: calendar read/write, web search; optional items read (expiry / inventory)",
-        "Cannot create/update items (items.create/update are assistant & Account manager only)",
-        "Outputs may write agent calendar (user_events.origin=agent) and/or analysis events",
+        "Cannot add or change items (only Assistant and Account manager can write items)",
+        "Outputs may write agent calendar events and/or analysis events",
         "No chat UI; driven by the Project Manager task schedule (prefer hourly)"
       ]
     },
@@ -628,9 +643,9 @@
       "capabilities": [
         "Shares the assistant’s LLM and tools (messages / intel / calendar / items; different system prompt)",
         "Single-shot reply; history kept by the caller if needed",
-        "Keys and examples under Settings → API"
+        "Keys and examples under Settings → External interfaces → A2A"
       ],
-      "openApiDocs": "View API docs and examples"
+      "openApiDocs": "View A2A docs"
     }
   }
 }

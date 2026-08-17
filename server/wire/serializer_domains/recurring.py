@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from server.domain.notify_prefs import normalize_notify_pref
 from server.util import parse_json_list
 
 
@@ -45,6 +46,7 @@ def serialize_recurring_series(row: Mapping[str, Any]) -> dict[str, Any]:
         "worksetId": row.get("workset_id") or "__user__",
         "parentTaskId": row.get("parent_task_id") or None,
         "itemId": row.get("item_id") or None,
+        "notifyPref": normalize_notify_pref(row.get("notify_pref")),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

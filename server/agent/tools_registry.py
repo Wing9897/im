@@ -19,6 +19,7 @@ from server.agent.tools_tasks import execute_tasks_tool
 from server.agent.tools_web_search import TOOL_HANDLERS as WEB_HANDLERS
 from server.agent.tools_web_search import TOOL_SCHEMAS as WEB_SCHEMAS
 from server.agent.tools_web_search import execute_web_search_tool
+from server.agent.workset_scope import apply_household_workset_scope
 from server.db.database import Database
 from server.sse import publish_resource_modified
 
@@ -195,6 +196,15 @@ async def execute_tool(
         return {"error": "items_read_disabled"}
     if name in ITEMS_WRITE_TOOL_NAMES and ctx.get("items_writes_enabled") is False:
         return {"error": "items_writes_disabled"}
+    if name in MESSAGES_TOOL_NAMES and ctx.get("messages_search_enabled") is False:
+        return {"error": "messages_search_disabled"}
+    allowed_workset_ids = ctx.get("allowed_workset_ids")
+    if allowed_workset_ids is not None:
+        scoped_error = await apply_household_workset_scope(
+            db, name, args, frozenset(str(wid) for wid in allowed_workset_ids)
+        )
+        if scoped_error is not None:
+            return scoped_error
     scope_task_id = ctx.get("agent_scope_task_id")
     if scope_task_id:
         scoped_error = await apply_agent_scope(db, name, args, scope_task_id=str(scope_task_id))

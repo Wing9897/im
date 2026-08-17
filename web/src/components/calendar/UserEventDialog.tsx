@@ -21,6 +21,7 @@ import { UserEventDialogFinanceFields } from "./UserEventDialogFinanceFields";
 import { UserEventDialogParentItemFields } from "./UserEventDialogParentItemFields";
 import { UserEventTimeSection } from "./UserEventTimeSection";
 import { useUserEventDialogForm } from "./useUserEventDialogForm";
+import { NotifyPrefField } from "../notify/NotifyPrefField";
 
 function specialCalendarKindBadge(
   calendarKind: UserEventCalendarKind,
@@ -110,6 +111,7 @@ export function UserEventDialog({
     applyDaySpan,
     handleKindChange,
     handleAllDayChange,
+    handleNowFill,
     handleSubmit,
     startLabel,
     endLabel,
@@ -238,7 +240,13 @@ export function UserEventDialog({
           setCustomDays={setCustomDays}
           onAllDayChange={handleAllDayChange}
           onApplyDaySpan={applyDaySpan}
+          onNowFill={handleNowFill}
           remindBeforeDaysHint={remindBeforeDaysHint}
+        />
+
+        <NotifyPrefField
+          value={values.notifyPref}
+          onChange={(notifyPref) => setValues((prev) => ({ ...prev, notifyPref }))}
         />
 
         {showFinance ? (

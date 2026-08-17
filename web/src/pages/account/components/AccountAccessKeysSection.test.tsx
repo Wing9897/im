@@ -3,7 +3,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { AccountAccessKeysSection } from "./AccountAccessKeysSection";
 import { _resetConnectionStoreForTests } from "../../../domain/connection/connectionStore";
-import { wrapWithI18n } from "../../../test/i18nHarness";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 
 const fetchAccessKeys = vi.fn();
 const createAccessKey = vi.fn();
@@ -23,7 +23,8 @@ describe("AccountAccessKeysSection", () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await ensureZhHantLocale();
     localStorage.clear();
     _resetConnectionStoreForTests();
     fetchAccessKeys.mockReset();
@@ -73,6 +74,21 @@ describe("AccountAccessKeysSection", () => {
     expect(container.querySelector('[data-testid="advanced-api-key-toggle"]')).toBeNull();
   });
 
+  it("keeps a short keys caption and does not offer read-only create", async () => {
+    renderSection();
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const text = container.textContent ?? "";
+    expect(text).toContain("Bearer 金鑰，用於 Webhook、A2A、MCP");
+    expect(text).toContain("不能登入 UI");
+    expect(text).not.toContain("僅限安全 GET/HEAD");
+    expect(text).not.toContain("管理員帳號密碼");
+    expect(container.querySelector('[data-testid="access-key-read-only"]')).toBeNull();
+    expect(container.querySelector('[data-testid="access-key-advanced"]')).toBeNull();
+    expect(text).not.toContain("進階");
+  });
+
   it("shows the resolved API base URL for clients / MCP", async () => {
     renderSection();
     await act(async () => {
@@ -102,36 +118,31 @@ describe("AccountAccessKeysSection", () => {
     await act(async () => {
       createBtn.click();
     });
-    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { readOnly: false });
+    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String));
     expect(container.querySelector('[data-testid="access-key-reveal"]')?.textContent).toContain(
       "full-secret-token",
     );
   });
 
-  it("create with read-only checkbox passes readOnly", async () => {
-    createAccessKey.mockResolvedValue({
-      id: "k3",
-      label: "Viewer",
-      preview: "aaaa…bbbb",
-      createdAt: "2026-03-01T00:00:00Z",
-      scopes: ["read"],
-      lastUsedAt: null,
-      key: "read-secret",
+  it("still labels existing read keys in the list", async () => {
+    fetchAccessKeys.mockResolvedValue({
+      keys: [
+        {
+          id: "k-read",
+          label: "Viewer",
+          preview: "read…only",
+          createdAt: "2026-03-01T00:00:00Z",
+          scopes: ["read"],
+          lastUsedAt: null,
+        },
+      ],
     });
     renderSection();
     await act(async () => {
       await Promise.resolve();
     });
-    const checkbox = container.querySelector(
-      '[data-testid="access-key-read-only"]',
-    ) as HTMLInputElement;
-    await act(async () => {
-      checkbox.click();
-    });
-    const createBtn = container.querySelector('[data-testid="access-key-create"]') as HTMLButtonElement;
-    await act(async () => {
-      createBtn.click();
-    });
-    expect(createAccessKey).toHaveBeenCalledWith(expect.any(String), { readOnly: true });
+    expect(container.querySelector('[data-testid="access-key-row-k-read"]')?.textContent).toContain(
+      "唯讀",
+    );
   });
 });

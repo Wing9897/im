@@ -84,4 +84,23 @@ describe("Lenient frontend parsing of API responses", () => {
       "abcdef12-0000-0000-0000-000000000000",
     );
   });
+
+  it("extracts FastAPI validation detail messages", async () => {
+    const response = createMockResponse(
+      {
+        detail: [
+          {
+            type: "enum",
+            loc: ["body", "notifyPref"],
+            msg: "Input should be 'follow' or 'off'",
+            input: "on",
+          },
+        ],
+      },
+      422,
+    );
+    const { parseErrorResponse } = await import("./parseApiError");
+    const result = await parseErrorResponse(response);
+    expect(result.apiError.message).toBe("Input should be 'follow' or 'off'");
+  });
 });

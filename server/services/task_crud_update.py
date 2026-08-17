@@ -17,6 +17,7 @@ from server.domain.analysis_modes import (
     AGENT_MODE,
     LEADERBOARD_MODE,
 )
+from server.domain.notify_prefs import normalize_notify_pref
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.batch_housekeeping import purge_superseded_task_version_data
 from server.queries.tasks_queries import (
@@ -132,6 +133,10 @@ async def update_task_record(db: Database, task_id: str, body: TaskConfigBody) -
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
             llm_profile_id=llm_profile_id,
+            notify_pref=normalize_notify_pref(
+                body.notifyPref,
+                default=normalize_notify_pref(existing.get("notify_pref")),
+            ),
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,

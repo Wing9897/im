@@ -177,10 +177,10 @@
     "parentItemNone": "无（独立日程）",
     "parentItemHint": "选填。若日程属于某件物品，请优先在「物品」页添加关联日历。",
     "parentItemLockedHint": "已归属该物品（从物品页或深链打开）。",
-    "remindBeforeDays": "提前提醒（天）",
-    "remindBeforeDaysAria": "开始前几天提醒",
+    "remindBeforeDays": "提前天数",
+    "remindBeforeDaysAria": "开始前几天显示",
     "remindBeforeDaysPlaceholder": "例如 1",
-    "remindBeforeDaysHint": "选填。相对开始日提前 N 天；留空表示不提醒。",
+    "remindBeforeDaysHint": "选填。相对开始日提前 N 天；留空表示不提前。",
     "allDay": "全天",
     "durationPresets": "快速天数",
     "daysPreset": "{count} 天",
@@ -210,7 +210,7 @@
       "startRequired": "请填写开始时间",
       "startInvalid": "开始时间格式无效",
       "endInvalid": "结束时间格式无效",
-      "remindInvalid": "提醒天数须为 0 或正整数",
+      "remindInvalid": "提前天数须为 0 或正整数",
       "rruleRequired": "请设置重复规则"
     }
   },

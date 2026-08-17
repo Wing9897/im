@@ -23,6 +23,10 @@ async def test_list_tasks(client):
     assert lb["channelIds"], "leaderboard task must have channels"
     for ref in lb["channelIds"]:
         assert_keys(ref, ["id", "platform", "platformId"], "ChannelRef")
+    assert lb["outputAnalysisEvents"] is True
+    ev = next(t for t in body if t["id"] == seed.TASK_EVENT)
+    assert ev["analysisMode"] == "intel_event"
+    assert ev["outputAnalysisEvents"] is True
     wi = next(t for t in body if t["id"] == seed.TASK_WEB_INTEL)
     assert wi["analysisMode"] == "agent"
     assert wi["outputAnalysisEvents"] is True

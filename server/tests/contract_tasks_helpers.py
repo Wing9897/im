@@ -17,6 +17,7 @@ TASK_KEYS = [
     "includeInTimeline",
     "worksetId",
     "llmProfileId",
+    "notifyPref",
 ]
 
 SCHEDULE_KEYS = [

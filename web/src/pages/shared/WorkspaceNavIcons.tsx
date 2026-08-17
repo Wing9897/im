@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bot,
-  Cable,
   Code2,
   Database,
   MessageSquare,
@@ -15,8 +14,7 @@ import {
 export const workspaceTabIcons: Record<string, LucideIcon> = {
   "/settings/theme": Palette,
   "/settings/data": Database,
-  "/settings/api": Code2,
-  "/settings/mcp": Cable,
+  "/settings/integrations": Code2,
   "/settings/logs": ScrollText,
   "/assistant": MessageSquare,
   "/ai/provider": Bot,

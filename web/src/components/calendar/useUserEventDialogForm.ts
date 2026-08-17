@@ -11,6 +11,7 @@ import {
   valuesForKindChange,
   type UserEventKind,
 } from "../../domain/timeline/userEventKindSwitch";
+import { fillNowRange } from "../../domain/timeline/nowFill";
 import {
   DEFAULT_RRULE,
   EMPTY_USER_EVENT_FORM,
@@ -57,6 +58,7 @@ export function useUserEventDialogForm({
   const initialWorksetId = initial?.worksetId;
   const initialIsAllDay = Boolean(initial?.isAllDay);
   const initialRemindBeforeDays = initial?.remindBeforeDays ?? "";
+  const initialNotifyPref = initial?.notifyPref;
   const initialItemId = initial?.itemId ?? "";
   const initialAmountInput = initial?.amountInput ?? "";
   const initialDirection = initial?.direction === "income" ? "income" : "expense";
@@ -84,6 +86,7 @@ export function useUserEventDialogForm({
         worksetId: initialWorksetId,
         isAllDay: initialIsAllDay,
         remindBeforeDays: initialRemindBeforeDays,
+        notifyPref: initialNotifyPref,
         itemId: initialItemId,
         amountInput: initialAmountInput,
         direction: initialDirection,
@@ -105,6 +108,7 @@ export function useUserEventDialogForm({
     initialWorksetId,
     initialIsAllDay,
     initialRemindBeforeDays,
+    initialNotifyPref,
     initialItemId,
     initialAmountInput,
     initialDirection,
@@ -184,6 +188,26 @@ export function useUserEventDialogForm({
     });
   };
 
+  const handleNowFill = () => {
+    setValues((prev) => {
+      if (prev.kind === "recurring") {
+        if (prev.isAllDay) return prev;
+        const range = fillNowRange({ isAllDay: false, clockOnly: true });
+        return {
+          ...prev,
+          eventStartTime: range.start,
+          eventEndTime: range.end,
+        };
+      }
+      const range = fillNowRange({ isAllDay: prev.isAllDay });
+      return {
+        ...prev,
+        startTime: range.start,
+        endTime: range.end,
+      };
+    });
+  };
+
   const handleSubmit = () => {
     const result = buildUserEventSubmitValues(values);
     if (!result.ok) {
@@ -216,6 +240,7 @@ export function useUserEventDialogForm({
     applyDaySpan,
     handleKindChange,
     handleAllDayChange,
+    handleNowFill,
     handleSubmit,
     startLabel,
     endLabel,

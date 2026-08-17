@@ -74,6 +74,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
     assert remind_row["timezone"] == "floating"
     assert remind_row["isAllDay"] is True
     assert remind_row["itemDateKind"] == "remind"
+    assert remind_row["notifyPref"] == "off"
 
     # Changing remind days on the linked「到期」moves the calendar remind point.
     linked = await client.get("/api/v1/calendar/user-events", params={"itemId": item_id})

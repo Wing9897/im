@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from server.domain.analysis_modes import AnalysisMode
 from server.domain.analysis_time_ranges import AnalysisTimeRange
+from server.api.schemas.notify_pref import CoercedNotifyPref
 
 
 class TaskTemplateResponse(BaseModel):
@@ -50,8 +51,12 @@ class TaskDraftPayload(BaseModel):
     capReadAnalysisEvents: bool | None = None
     capReadItems: bool | None = None
     outputCalendar: bool | None = None
-    outputAnalysisEvents: bool | None = None
+    outputAnalysisEvents: bool | None = Field(
+        default=None,
+        description="Intelligence-page write gate (intel_event / agent). Leaderboard stores this flag but does not write analysis_events.",
+    )
     llmProfileId: str | None = None
+    notifyPref: CoercedNotifyPref | None = None
 
 
 class AgentToolCallSummary(BaseModel):
@@ -96,7 +101,7 @@ class TaskResponse(BaseModel):
     isActive: bool
     scheduleRrule: str | None = None
     includeInTimeline: bool = True
-    worksetId: str | None = None
+    worksetId: str
     agentWaveIntervalSeconds: int | None = None
     batchOverlapCount: int | None = None
     analysisTriggerThreshold: int | None = None
@@ -110,8 +115,16 @@ class TaskResponse(BaseModel):
     capReadAnalysisEvents: bool = True
     capReadItems: bool = True
     outputCalendar: bool = False
-    outputAnalysisEvents: bool = False
+    outputAnalysisEvents: bool = Field(
+        default=True,
+        description=(
+            "Intelligence-page write flag. intel_event/agent persist analysis_events when on; "
+            "leaderboard ignores this for trending_topics persist (always writes the ranking page)."
+        ),
+    )
     llmProfileId: str
+    #: Per-task reminder (``follow`` / ``off``).
+    notifyPref: CoercedNotifyPref = "follow"
     createdAt: str | None = None
     updatedAt: str | None = None
     channelIds: list[ChannelRefResponse] | None = None

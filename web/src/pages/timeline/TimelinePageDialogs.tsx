@@ -5,6 +5,7 @@ import {
   UserEventDialog,
   type UserEventFormValues,
 } from "../../components/calendar/UserEventDialog";
+import { normalizeNotifyPref } from "../../domain/notify/notifyPref";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import type { TimelineItem } from "../../types";
 import type { PendingTimelineConfirm } from "./useTimelinePageDialogs";
@@ -75,6 +76,7 @@ export function TimelinePageDialogs({
                     ? String(editingEvent.remindBeforeDays)
                     : "",
                 itemId: editingEvent.itemId?.trim() ?? "",
+                notifyPref: normalizeNotifyPref(editingEvent.notifyPref),
                 // Timeline never edits special kinds / finance — Items UI only.
                 calendarKind: "normal",
               }

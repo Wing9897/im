@@ -20,7 +20,7 @@ import { defaultCreateTimedRange } from "../../domain/timeline/dateUtils";
 import { parseRemindBeforeDays } from "../../domain/timeline/parseRemindBeforeDays";
 import { toUserEventFormWorksetId } from "../../domain/timeline/userEvents";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
-import { toErrorMessage } from "../../utils/errors";
+import { handleCommandError } from "../../utils/errors";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
 
 function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
@@ -36,6 +36,7 @@ function userEventToFormValues(event: UserEvent): Partial<UserEventFormValues> {
     isAllDay: Boolean(event.isAllDay),
     remindBeforeDays:
       event.remindBeforeDays == null ? "" : String(event.remindBeforeDays),
+    notifyPref: event.notifyPref ?? "follow",
     itemId: event.itemId ?? "",
     amountInput: event.amount == null ? "" : String(event.amount),
     direction: event.direction === "income" ? "income" : "expense",
@@ -144,6 +145,7 @@ export function useSchedulePageDialogs(opts: {
             body: values.body,
             rrule: values.rrule,
             itemId,
+            notifyPref: values.notifyPref,
           });
           showToast(t("toast.recurringCreated"), "success");
           await reloadRecurring();
@@ -159,6 +161,7 @@ export function useSchedulePageDialogs(opts: {
             itemId,
             worksetId,
             kind: "normal",
+            notifyPref: values.notifyPref,
           });
           showToast(t("toast.oneOffCreated"), "success");
           await reloadOneOff();
@@ -173,6 +176,7 @@ export function useSchedulePageDialogs(opts: {
             remindBeforeDays,
             itemId,
             worksetId,
+            notifyPref: values.notifyPref,
           });
           showToast(t("toast.oneOffUpdated"), "success");
           await reloadOneOff();
@@ -181,7 +185,8 @@ export function useSchedulePageDialogs(opts: {
         setEditingEvent(null);
         setDialogInitial(null);
       } catch (error) {
-        setDialogError(toErrorMessage(error) || t("toast.saveFailed"));
+        const message = handleCommandError(error, showToast) || t("toast.saveFailed");
+        setDialogError(message);
       } finally {
         setDialogBusy(false);
       }
@@ -215,7 +220,7 @@ export function useSchedulePageDialogs(opts: {
         );
         await reloadRecurring();
       } catch (error) {
-        showToast(toErrorMessage(error) || t("toast.saveFailed"), "error");
+        showToast(handleCommandError(error) || t("toast.saveFailed"), "error");
       }
     },
     [reloadRecurring, showToast, t],
@@ -236,7 +241,7 @@ export function useSchedulePageDialogs(opts: {
       }
       setDeleteTarget(null);
     } catch (error) {
-      showToast(toErrorMessage(error) || t("toast.deleteFailed"), "error");
+      showToast(handleCommandError(error) || t("toast.deleteFailed"), "error");
     } finally {
       setDeleting(false);
     }

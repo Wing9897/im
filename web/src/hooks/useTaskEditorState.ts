@@ -8,11 +8,12 @@ import i18n from "../i18n";
 import { localizeTaskPreset } from "../domain/tasks/localizeTaskPreset";
 import { chatEditorFormStorageKey } from "../domain/prefs";
 import { DEFAULT_AGENT_WAVE_INTERVAL_SECONDS } from "../domain/tasks/scheduleDefaults";
-import { isAnalysisMode } from "../domain/tasks/analysisModeCapabilities";
+import { isAnalysisMode, defaultOutputAnalysisEvents } from "../domain/tasks/analysisModeCapabilities";
 import {
   isUnmappedTriggerSchedule,
   presetToTriggerRrule,
 } from "../domain/tasks/triggerSchedule";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import type { AnalysisMode, TaskFormState, TaskTemplatePreset } from "../types";
 import { usePersistedState } from "./usePersistedState";
 
@@ -41,8 +42,9 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
+  notifyPref: "follow",
   triggerMode: "message_cursor",
   capCalendarRead: true,
   capCalendarWrites: true,
@@ -51,7 +53,7 @@ export const INITIAL_EDITOR_FIELDS: EditorFormFields = {
   capReadAnalysisEvents: true,
   capReadItems: true,
   outputCalendar: true,
-  outputAnalysisEvents: false,
+  outputAnalysisEvents: true,
 };
 
 export const DEFAULT_FORM_STATE: TaskFormState = INITIAL_EDITOR_FIELDS;
@@ -173,6 +175,9 @@ export function useTaskEditorState(
         }
         if (nextMode === "agent" && next.agentWaveIntervalSeconds == null) {
           next.agentWaveIntervalSeconds = DEFAULT_AGENT_WAVE_INTERVAL_SECONDS;
+        }
+        if (nextMode !== "agent") {
+          next.outputAnalysisEvents = defaultOutputAnalysisEvents(nextMode);
         }
         return next;
       });

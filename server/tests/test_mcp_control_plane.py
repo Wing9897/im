@@ -147,6 +147,36 @@ async def test_mcp_filters_list_and_call_when_capability_off(client, app) -> Non
 
 
 @pytest.mark.asyncio
+async def test_mcp_filters_calendar_read_when_capability_off(client, app) -> None:
+    await set_configs(app.state.db, {"mcp_cap_calendar_read": "false"})
+    key = await seed_access_key(app.state.db, "mcp-cap-read-secret", scopes=[FULL_SCOPE])
+    headers = _auth_headers(key["key"])
+
+    listed = await _mcp_post(
+        client,
+        "/api/v1/mcp",
+        {"jsonrpc": "2.0", "id": 20, "method": "tools/list"},
+        headers,
+    )
+    names = {t["name"] for t in listed.json()["result"]["tools"]}
+    assert "calendar.upcoming" not in names
+    assert "calendar.create_event" in names
+
+    denied = await _mcp_post(
+        client,
+        "/api/v1/mcp",
+        {
+            "jsonrpc": "2.0",
+            "id": 21,
+            "method": "tools/call",
+            "params": {"name": "calendar.upcoming", "arguments": {"days": 1}},
+        },
+        headers,
+    )
+    assert denied.json()["result"]["structuredContent"]["error"] == "mcp capability disabled: calendar_read"
+
+
+@pytest.mark.asyncio
 async def test_mcp_read_and_write_calendar_origin_mcp(client, app) -> None:
     key = await seed_access_key(app.state.db, "mcp-rw-secret", scopes=[FULL_SCOPE])
     headers = _auth_headers(key["key"])
@@ -271,6 +301,21 @@ async def test_mcp_status_when_master_off(client, app) -> None:
     assert payload["enabled"] is False
     assert payload["toolCount"] == 0
     assert payload["tools"] == []
+
+
+@pytest.mark.asyncio
+async def test_mcp_stays_up_when_a2a_master_is_off(client, app) -> None:
+    await set_configs(app.state.db, {"a2a_enabled": "false"})
+    key = await seed_access_key(app.state.db, "mcp-a2a-off-secret", scopes=[FULL_SCOPE])
+    resp = await _mcp_post(
+        client,
+        "/api/v1/mcp",
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+        _auth_headers(key["key"]),
+    )
+    assert resp.status_code == 200
+    names = {t["name"] for t in resp.json()["result"]["tools"]}
+    assert names == set(MCP_TOOL_ALLOWLIST)
 
 
 @pytest.mark.asyncio

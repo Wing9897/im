@@ -9,19 +9,12 @@ export { SIDEBAR_COLLAPSED_KEY };
 
 function readCollapsed(): boolean {
   try {
-    return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+    const raw = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+    if (raw === null) return true;
+    return raw === "1";
   } catch {
-    return false;
+    return true;
   }
-}
-
-function applySidebarWidth(collapsed: boolean): void {
-  document.documentElement.style.setProperty(
-    "--app-sidebar-width",
-    collapsed
-      ? "var(--app-sidebar-width-collapsed, 56px)"
-      : "200px",
-  );
 }
 
 function persistCollapsed(collapsed: boolean): void {
@@ -30,12 +23,13 @@ function persistCollapsed(collapsed: boolean): void {
   } catch {
     /* ignore */
   }
-  applySidebarWidth(collapsed);
 }
 
 /**
- * Shared sidebar collapse state (localStorage `im:sidebar-collapsed`).
- * Used by AppSidebar, DesktopTitleBar, and AppTopBar.
+ * Shared sidebar overlay open/closed state (localStorage `im:sidebar-collapsed`).
+ * Overlay does not reserve layout width — pages stay full-bleed.
+ * Driven by the overlay edge chevron in AppSidebar (not title-bar chrome).
+ * Missing key defaults to collapsed (immersive).
  */
 export function useSidebarCollapsed() {
   const [collapsed, setCollapsed] = useSyncedLocalStorage({
@@ -46,8 +40,8 @@ export function useSidebarCollapsed() {
   });
 
   useEffect(() => {
-    applySidebarWidth(collapsed);
-  }, [collapsed]);
+    document.documentElement.style.removeProperty("--app-sidebar-width");
+  }, []);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed((prev) => !prev);

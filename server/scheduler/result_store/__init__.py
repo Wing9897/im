@@ -1,6 +1,6 @@
 """Per-mode persistence of parsed LLM items."""
 
-from server.domain.analysis_modes import LEADERBOARD_MODE
+from server.domain.analysis_modes import LEADERBOARD_MODE, task_writes_analysis_events
 from server.scheduler.result_store.events import store_analysis_events
 from server.scheduler.result_store.leaderboard import store_trending_topics
 
@@ -21,6 +21,9 @@ async def store_results(
     from server.util import utc_now_iso
 
     mode = str(task.get("analysis_mode") or "")
+    if mode != LEADERBOARD_MODE and not task_writes_analysis_events(task):
+        return 0
+
     task_id = str(task["id"])
     version = int(task.get("version") or 1)
     now = utc_now_iso()

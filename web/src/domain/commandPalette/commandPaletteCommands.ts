@@ -1,6 +1,9 @@
-import { ListChecks } from "lucide-react";
+import { Layers, ListChecks } from "lucide-react";
 import i18n from "../../i18n";
 import type { AnalysisTask } from "../../types";
+import type { Workset } from "../../types/worksets";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { worksetDetailPath } from "../worksets/worksetRoutes";
 import { openViewerWindow } from "../../utils/openViewerWindow";
 import { COMMAND_PALETTE_ACTIONS_DEFS } from "./commandPaletteActionsCommands";
 import { COMMAND_PALETTE_NAVIGATION_DEFS } from "./commandPaletteNavigationCommands";
@@ -71,6 +74,22 @@ export function buildTaskCommandPaletteItems(
     icon: ListChecks,
     group,
     keywords: [task.id, task.analysisMode, task.name],
+  }));
+}
+
+/** Build searchable workset rows (opens the contents page). */
+export function buildWorksetCommandPaletteItems(
+  worksets: readonly Workset[],
+  t: CommandPaletteTranslate = i18n.t.bind(i18n),
+): CommandPaletteItem[] {
+  const group = String(t("commandPalette.groups.worksets"));
+  return (worksets ?? []).map((ws) => ({
+    id: `workset-${ws.id}`,
+    label: ws.id === SYSTEM_WORKSET_ID ? String(t("workset:generalName")) : ws.name,
+    to: worksetDetailPath(ws.id),
+    icon: Layers,
+    group,
+    keywords: [ws.id, ws.name, "workset", "工作集"],
   }));
 }
 

@@ -56,8 +56,8 @@ def main() -> int:
         status == 200
         and isinstance(body, dict)
         and body.get("status") == "ok"
-        and body.get("schemaVersion") == 33
-        and body.get("schemaSemver") == "0.1.0-beta.34",
+        and body.get("schemaVersion") == 39
+        and body.get("schemaSemver") == "0.1.0-beta.40",
     )
 
     # 2. Static SPA serving (absent in `npm run dev` when web/dist is missing)

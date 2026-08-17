@@ -97,6 +97,8 @@ def summarize_tool_result(name: str, result: dict[str, Any]) -> str:
         return f"{name}: {len(items)} items"
     if result.get("item") is not None:
         return f"{name}: 1 item"
+    if result.get("dismissed") is True:
+        return f"{name}: dismissed"
     if result.get("deleted") is True:
         return f"{name}: deleted"
     return f"{name}: ok"

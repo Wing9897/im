@@ -25,8 +25,10 @@ export function ChatAnalysisFields({
   const { t } = useTranslation("common");
 
   return (
-    <div className="flex min-w-0 flex-col gap-sm">
-      <FieldLabel id="analysis-time-range-label">{t("tasks:editor.timeRangeLabel")}</FieldLabel>
+    <div className="flex min-w-0 flex-wrap items-center gap-md">
+      <FieldLabel id="analysis-time-range-label" className="mb-0 shrink-0">
+        {t("tasks:editor.timeRangeLabel")}
+      </FieldLabel>
       <div
         className="flex min-w-0 flex-wrap gap-sm"
         role="group"

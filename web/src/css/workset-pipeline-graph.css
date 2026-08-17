@@ -1,0 +1,336 @@
+/* Workset household pipeline (ComfyUI-style xyflow canvas). */
+
+.im-ws-graph-page {
+  box-sizing: border-box;
+  height: calc(100dvh - var(--desktop-title-bar-height, 36px) - var(--app-top-bar-height, 52px));
+  max-height: calc(100dvh - var(--desktop-title-bar-height, 36px) - var(--app-top-bar-height, 52px));
+  min-height: 0;
+  overflow: hidden;
+}
+
+.im-ws-graph-page .im-control-bar {
+  margin-bottom: 0;
+}
+
+.im-ws-graph-shell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.im-ws-graph-canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface-base) 88%, #000);
+  --im-ws-graph-zone-width: 188px;
+  --im-ws-graph-col-gap-x: 64px;
+}
+
+.im-ws-graph-connect-hint {
+  pointer-events: none;
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  max-width: min(36rem, calc(100% - 24px));
+  padding: 6px 12px;
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-card) 92%, #000);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.im-ws-graph-canvas .react-flow {
+  background: transparent;
+}
+
+/* xyflow sets inline pointer-events:none when nodes are not selectable/draggable. */
+.im-ws-graph-canvas .react-flow__node {
+  pointer-events: all !important;
+}
+
+.im-ws-graph-canvas .react-flow__viewport .react-flow__nodes {
+  z-index: auto;
+}
+
+.im-ws-graph-canvas .react-flow__viewport .react-flow__edges {
+  z-index: 2;
+}
+
+.im-ws-graph-canvas .react-flow__node.im-ws-graph-zone-node {
+  z-index: 0 !important;
+  pointer-events: none !important;
+  width: var(--im-ws-graph-zone-width);
+}
+
+.im-ws-graph-canvas .react-flow__node:not(.im-ws-graph-zone-node) {
+  z-index: 4 !important;
+}
+
+.im-ws-graph-canvas .react-flow__handle {
+  pointer-events: auto !important;
+}
+
+.im-ws-graph-canvas .react-flow__edge,
+.im-ws-graph-canvas .react-flow__edge-path,
+.im-ws-graph-canvas .react-flow__edge-interaction {
+  pointer-events: none !important;
+}
+
+.im-ws-graph-canvas .react-flow__edge-path {
+  stroke: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
+  stroke-width: 2;
+}
+
+.im-ws-graph-canvas .im-ws-graph-edge.is-muted .react-flow__edge-path {
+  stroke: var(--text-muted);
+  stroke-opacity: 0.45;
+}
+
+.im-ws-graph-canvas .react-flow__controls {
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.im-ws-graph-canvas .react-flow__controls-button {
+  background: var(--surface-card);
+  border-bottom-color: var(--surface-border);
+  fill: var(--text-secondary);
+}
+
+.im-ws-graph-canvas .react-flow__controls-button:hover {
+  background: var(--surface-overlay);
+}
+
+.im-ws-graph-zone {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  border-radius: 14px;
+}
+
+.im-ws-graph-zone-label {
+  padding: 10px 14px 0;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.im-ws-graph-zone.is-layer1 {
+  background: color-mix(in srgb, var(--info) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--info) 34%, transparent);
+}
+
+.im-ws-graph-zone.is-layer2 {
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.im-ws-graph-zone.is-layer3 {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 30%, transparent);
+}
+
+.im-ws-graph-zone.is-layer4 {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.im-ws-graph-node {
+  width: 168px;
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--surface-card) 78%, #000);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  color: var(--text-primary);
+  overflow: visible;
+}
+
+.im-ws-graph-node-header {
+  box-sizing: border-box;
+  display: flex;
+  height: 30px;
+  align-items: center;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--surface-card) 42%, #000);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.im-ws-graph-node.is-empty .im-ws-graph-node-header {
+  border-bottom: 0;
+}
+
+.im-ws-graph-node[data-layer="layer1"] .im-ws-graph-node-header {
+  background: color-mix(in srgb, var(--info) 18%, color-mix(in srgb, var(--surface-card) 42%, #000));
+}
+
+.im-ws-graph-node[data-layer="layer2"] .im-ws-graph-node-header {
+  background: color-mix(in srgb, var(--warning) 16%, color-mix(in srgb, var(--surface-card) 42%, #000));
+}
+
+.im-ws-graph-node[data-layer="layer3"] .im-ws-graph-node-header {
+  background: color-mix(in srgb, var(--success) 16%, color-mix(in srgb, var(--surface-card) 42%, #000));
+}
+
+.im-ws-graph-node[data-layer="layer4"] .im-ws-graph-node-header {
+  background: color-mix(in srgb, var(--accent) 22%, color-mix(in srgb, var(--surface-card) 42%, #000));
+}
+
+.im-ws-graph-node-body {
+  padding: 4px 0;
+}
+
+.im-ws-graph-node.is-empty .im-ws-graph-node-body {
+  padding: 0;
+}
+
+.im-ws-graph-empty {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  padding: 0 10px 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.2;
+  opacity: 0.7;
+}
+
+.im-ws-graph-point {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 10px 0 10px;
+  gap: 4px;
+}
+
+.im-ws-graph-point.is-muted {
+  opacity: 0.38;
+}
+
+.im-ws-graph-point.is-muted .im-ws-graph-point-btn {
+  color: var(--text-muted);
+}
+
+.im-ws-graph-point.is-selected {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.im-ws-graph-point.is-legal-target {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.im-ws-graph-point-btn,
+.im-ws-graph-point-settings,
+.im-ws-graph-overflow {
+  pointer-events: auto;
+}
+
+.im-ws-graph-point-btn {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.im-ws-graph-point-btn:hover {
+  color: var(--accent);
+}
+
+.im-ws-graph-point-settings {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.im-ws-graph-point-settings:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+.im-ws-graph-port {
+  z-index: 4;
+  width: 10px;
+  height: 10px;
+  cursor: crosshair;
+  pointer-events: auto;
+  background: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--surface-card) 40%, #000);
+  border-radius: 50%;
+}
+
+.im-ws-graph-node > .im-ws-graph-port {
+  position: absolute;
+  transform: translateY(-50%);
+}
+
+.im-ws-graph-port-in {
+  left: -4px;
+}
+
+.im-ws-graph-port-out {
+  right: -4px;
+}
+
+.im-ws-graph-overflow {
+  display: flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.im-ws-graph-overflow:hover {
+  color: var(--accent);
+}

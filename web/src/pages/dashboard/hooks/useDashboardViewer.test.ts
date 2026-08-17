@@ -122,8 +122,12 @@ describe("useDashboardViewer", () => {
     act(() => {
       latest!.setSearchQuery("beta");
     });
-
     expect(latest!.filteredTasks.map((task) => task.id)).toEqual(["task-beta"]);
+
+    act(() => {
+      latest!.setSearchQuery("first");
+    });
+    expect(latest!.filteredTasks.map((task) => task.id)).toEqual(["task-alpha"]);
   });
 
   it("restores search query from session storage", async () => {

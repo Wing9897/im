@@ -85,7 +85,142 @@ describe("UserEventDialog create", () => {
     expect(arg.amountInput).toBe("");
     expect(arg.direction).toBe("expense");
     expect(arg.calendarKind).toBe("normal");
+    expect(arg.notifyPref).toBe("off");
 
+    host.remove();
+  });
+
+  it("defaults the notify checkbox to unchecked (notifyPref off)", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(document.body.querySelector('[data-testid="notify-pref-field"]')).toBeTruthy();
+    expect(document.body.textContent).toContain("通知");
+    expect(document.body.textContent).toContain("提前天數");
+    expect(document.body.textContent).not.toContain("提前提醒");
+    const remind = document.body.querySelector('[data-testid="user-event-remind-before"]');
+    expect(remind?.className).toContain("w-24");
+    const titleInput = document.body.querySelector(
+      'input[aria-label="標題"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(titleInput, "靜音提醒");
+    });
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement | null;
+    if (startInput) {
+      await act(async () => {
+        setInputValue(startInput, "2026-07-21T09:00");
+      });
+    }
+    const toggle = document.body.querySelector('[data-testid="notify-pref-field"]');
+    expect(toggle?.getAttribute("role")).toBe("switch");
+    expect(toggle?.getAttribute("aria-checked")).toBe("false");
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "新增",
+    );
+    await act(async () => {
+      submit!.click();
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "one_off", notifyPref: "off" }),
+    );
+    host.remove();
+  });
+
+  it("checking notify submits notifyPref follow", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    const titleInput = document.body.querySelector(
+      'input[aria-label="標題"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      setInputValue(titleInput, "要通知");
+    });
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement | null;
+    if (startInput) {
+      await act(async () => {
+        setInputValue(startInput, "2026-07-21T09:00");
+      });
+    }
+    const toggle = document.body.querySelector('[data-testid="notify-pref-field"]');
+    expect(toggle?.getAttribute("aria-checked")).toBe("false");
+    await act(async () => {
+      (toggle as HTMLElement).click();
+    });
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "新增",
+    );
+    await act(async () => {
+      submit!.click();
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "one_off", notifyPref: "follow" }),
+    );
+    host.remove();
+  });
+
+  it("preserves initial notifyPref off on submit", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          initial: {
+            title: "靜音",
+            startTime: "2026-07-21T09:00",
+            notifyPref: "off",
+          },
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "新增",
+    );
+    await act(async () => {
+      submit!.click();
+    });
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ notifyPref: "off" }),
+    );
     host.remove();
   });
 
@@ -467,9 +602,132 @@ describe("UserEventDialog create", () => {
         isAllDay: false,
         eventStartTime: "09:30",
         rrule: expect.stringContaining("FREQ="),
+        notifyPref: "off",
       }),
     );
 
+    host.remove();
+  });
+
+  it("Now button fills local datetime into start and end", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 15, 13, 30, 0));
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const nowBtn = document.body.querySelector(
+      '[data-testid="datetime-now"]',
+    ) as HTMLButtonElement;
+    expect(nowBtn).toBeTruthy();
+    expect(nowBtn.textContent).toBe("現在");
+    await act(async () => {
+      nowBtn.click();
+    });
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement;
+    const endInput = document.body.querySelector(
+      '[data-testid="user-event-end"]',
+    ) as HTMLInputElement;
+    expect(startInput.value).toBe("2026-08-15T13:30");
+    expect(endInput.value).toBe("2026-08-15T14:30");
+    host.remove();
+  });
+
+  it("Now button fills today only when all-day", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 15, 13, 30, 0));
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const allDay = document.body.querySelector(
+      '[data-testid="user-event-all-day"]',
+    ) as HTMLInputElement;
+    await act(async () => {
+      allDay.click();
+    });
+    const nowBtn = document.body.querySelector(
+      '[data-testid="datetime-now"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      nowBtn.click();
+    });
+    const startInput = document.body.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement;
+    const endInput = document.body.querySelector(
+      '[data-testid="user-event-end"]',
+    ) as HTMLInputElement;
+    expect(startInput.type).toBe("date");
+    expect(startInput.value).toBe("2026-08-15");
+    expect(endInput.value).toBe("2026-08-15");
+    host.remove();
+  });
+
+  it("Now button fills recurring start/end clocks", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 15, 13, 30, 0));
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "create",
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const tabs = Array.from(
+      document.body.querySelectorAll('[data-testid="user-event-kind-tabs"] [role="tab"]'),
+    ) as HTMLButtonElement[];
+    const recurringTab = tabs.find((tab) => tab.textContent?.includes("週期"));
+    await act(async () => {
+      recurringTab!.click();
+    });
+    const nowBtn = document.body.querySelector(
+      '[data-testid="datetime-now"]',
+    ) as HTMLButtonElement;
+    expect(nowBtn).toBeTruthy();
+    await act(async () => {
+      nowBtn.click();
+    });
+    const startClock = document.body.querySelector(
+      '[data-testid="user-event-event-start"]',
+    ) as HTMLInputElement;
+    const endClock = document.body.querySelector(
+      '[data-testid="user-event-event-end"]',
+    ) as HTMLInputElement;
+    expect(startClock.value).toBe("13:30");
+    expect(endClock.value).toBe("14:30");
     host.remove();
   });
 });

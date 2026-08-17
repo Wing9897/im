@@ -22,6 +22,7 @@ import { createContext, type ReactNode } from "react";
 import { vi } from "vitest";
 import { buildTaskNameById } from "../domain/timeline/userEvents";
 import type { AnalysisTask, Workset } from "../types";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
 // ── ToastContext ────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ export function makeAnalysisTask(overrides: Partial<AnalysisTask> = {}): Analysi
     isActive: true,
     scheduleRrule: "FREQ=SECONDLY;INTERVAL=10",
     channelIds: [],
-    worksetId: null,
+    worksetId: SYSTEM_WORKSET_ID,
     llmProfileId: "profile-default",
     createdAt: "2026-01-01T00:00:00Z",
     updatedAt: "2026-01-01T00:00:00Z",
@@ -69,9 +70,9 @@ export const taskCatalogState = {
   tasksLoading: false,
   taskLoadError: null as string | null,
   refreshTasks: vi.fn(() => Promise.resolve([] as AnalysisTask[])),
-  worksets: [] as Array<{ id: string; name: string; createdAt: string | null; updatedAt: string | null }>,
+  worksets: [] as Workset[],
   worksetsLoading: false,
-  refreshWorksets: vi.fn(() => Promise.resolve([] as Array<{ id: string; name: string; createdAt: string | null; updatedAt: string | null }>)),
+  refreshWorksets: vi.fn(() => Promise.resolve([] as Workset[])),
 };
 
 export function resetTaskCatalogState(tasks: AnalysisTask[] = []) {

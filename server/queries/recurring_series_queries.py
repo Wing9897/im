@@ -30,6 +30,7 @@ SELECT id,
        ics_import_fingerprint,
        parent_task_id,
        item_id,
+       COALESCE(notify_pref, 'follow') AS notify_pref,
        created_at,
        updated_at
 FROM recurring_schedules
@@ -108,13 +109,14 @@ async def insert_series(
     ics_uid: str | None = None,
     ics_source: str | None = None,
     ics_import_fingerprint: str | None = None,
+    notify_pref: str = "follow",
 ) -> None:
     await tx.execute(
         "INSERT INTO recurring_schedules "
         "(id, name, workset_id, is_active, rrule, dtstart, dtend, is_all_day, location, description, "
         "timezone, timezone_ical, exdates_json, rdates_json, ics_uid, ics_source, ics_import_fingerprint, "
-        "parent_task_id, item_id, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "parent_task_id, item_id, notify_pref, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             series_id,
             name,
@@ -135,6 +137,7 @@ async def insert_series(
             ics_import_fingerprint,
             parent_task_id,
             item_id,
+            notify_pref,
             now,
             now,
         ),

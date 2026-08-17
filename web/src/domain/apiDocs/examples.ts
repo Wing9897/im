@@ -1,4 +1,4 @@
-/** Shared HTTP examples for Settings → API (localizable demo strings via i18n). */
+/** Shared HTTP examples for Settings → External interfaces (localizable demo strings via i18n). */
 
 type Translate = (key: string) => string;
 

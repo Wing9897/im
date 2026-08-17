@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from server.calendar.user_events_read import list_user_events
 from server.calendar.user_events_write import create_user_event
+from server.queries.calendar_queries import fetch_user_event
 
 USER_EVENT_KEYS = {
     "id",
@@ -24,6 +25,7 @@ USER_EVENT_KEYS = {
     "kind",
     "amount",
     "direction",
+    "notifyPref",
     "source",
     "dismissed",
     "important",
@@ -76,9 +78,25 @@ async def test_user_events_crud_roundtrip(client) -> None:
     deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
     assert deleted.status_code == 204
 
-    soft = await client.get("/api/v1/calendar/user-events")
-    match = next(item for item in soft.json()["items"] if item["id"] == event_id)
-    assert match["dismissed"] is True
+    listed = await client.get("/api/v1/calendar/user-events")
+    assert all(item["id"] != event_id for item in listed.json()["items"])
+    missing = await client.get(f"/api/v1/calendar/user-events/{event_id}")
+    assert missing.status_code == 404
+    again = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
+    assert again.status_code == 404
+
+
+async def test_user_event_delete_removes_agent_origin_row(client, app) -> None:
+    event = await create_user_event(
+        app.state.db,
+        title="Agent origin",
+        start_time="2026-07-21T11:00:00Z",
+        origin="agent",
+    )
+    event_id = event["id"]
+    deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
+    assert deleted.status_code == 204
+    assert await fetch_user_event(app.state.db, event_id) is None
 
 
 async def test_user_events_normalize_offset_to_utc_z(client) -> None:

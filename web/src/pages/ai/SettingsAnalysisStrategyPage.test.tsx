@@ -156,7 +156,13 @@ describe("SettingsAnalysisStrategyPage", () => {
     expect(container.querySelector("#spatiotemporal-mode")).toBeNull();
     expect(container.textContent).not.toContain("批次重疊");
     expect(container.textContent).toContain("重試用盡自動暫停");
-    expect(container.textContent).toContain("已啟用");
+    expect(container.querySelector('[data-testid="analysis-auto-pause"]')?.getAttribute("role")).toBe(
+      "switch",
+    );
+    expect(
+      container.querySelector('[data-testid="analysis-auto-pause"]')?.getAttribute("aria-checked"),
+    ).toBe("true");
+    expect(container.textContent).not.toContain("已啟用");
     expect(container.textContent).not.toContain("任務可另行覆寫");
 
     const evidenceTrigger = container.querySelector<HTMLButtonElement>("#analysis-evidence-style");

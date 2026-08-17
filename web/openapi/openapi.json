@@ -5128,6 +5128,7 @@
           "calendar"
         ],
         "summary": "Remove Event",
+        "description": "Hard-delete the user_events row. Timeline hide stays on /calendar/dismissals.",
         "operationId": "remove_event_api_v1_calendar_user_events__event_id__delete",
         "parameters": [
           {
@@ -5526,13 +5527,13 @@
         }
       }
     },
-    "/api/v1/ui-prefs/voice-reminder/settings": {
+    "/api/v1/ui-prefs/notify/settings": {
       "get": {
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Fetch Voice Settings",
-        "operationId": "fetch_voice_settings_api_v1_ui_prefs_voice_reminder_settings_get",
+        "summary": "Fetch Notify Settings",
+        "operationId": "fetch_notify_settings_api_v1_ui_prefs_notify_settings_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5550,8 +5551,8 @@
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Save Voice Settings",
-        "operationId": "save_voice_settings_api_v1_ui_prefs_voice_reminder_settings_put",
+        "summary": "Save Notify Settings",
+        "operationId": "save_notify_settings_api_v1_ui_prefs_notify_settings_put",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5586,13 +5587,13 @@
         }
       }
     },
-    "/api/v1/ui-prefs/voice-reminder/fired": {
+    "/api/v1/ui-prefs/notify/fired": {
       "get": {
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Fetch Voice Fired",
-        "operationId": "fetch_voice_fired_api_v1_ui_prefs_voice_reminder_fired_get",
+        "summary": "Fetch Notify Fired",
+        "operationId": "fetch_notify_fired_api_v1_ui_prefs_notify_fired_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5610,8 +5611,8 @@
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Save Voice Fired",
-        "operationId": "save_voice_fired_api_v1_ui_prefs_voice_reminder_fired_put",
+        "summary": "Save Notify Fired",
+        "operationId": "save_notify_fired_api_v1_ui_prefs_notify_fired_put",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5646,14 +5647,14 @@
         }
       }
     },
-    "/api/v1/ui-prefs/voice-reminder/fired/claim": {
+    "/api/v1/ui-prefs/notify/fired/claim": {
       "post": {
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Claim Voice Fired Route",
+        "summary": "Claim Notify Fired Route",
         "description": "Reserve dedupe keys before TTS so only one client speaks per reminder.",
-        "operationId": "claim_voice_fired_route_api_v1_ui_prefs_voice_reminder_fired_claim_post",
+        "operationId": "claim_notify_fired_route_api_v1_ui_prefs_notify_fired_claim_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5688,13 +5689,13 @@
         }
       }
     },
-    "/api/v1/ui-prefs/voice-reminder/history": {
+    "/api/v1/ui-prefs/notify/history": {
       "get": {
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Fetch Voice History",
-        "operationId": "fetch_voice_history_api_v1_ui_prefs_voice_reminder_history_get",
+        "summary": "Fetch Notify History",
+        "operationId": "fetch_notify_history_api_v1_ui_prefs_notify_history_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5712,8 +5713,8 @@
         "tags": [
           "ui-prefs"
         ],
-        "summary": "Save Voice History",
-        "operationId": "save_voice_history_api_v1_ui_prefs_voice_reminder_history_put",
+        "summary": "Save Notify History",
+        "operationId": "save_notify_history_api_v1_ui_prefs_notify_history_put",
         "requestBody": {
           "content": {
             "application/json": {
@@ -9285,6 +9286,15 @@
               }
             ],
             "title": "Itemdatekind"
+          },
+          "notifyPref": {
+            "type": "string",
+            "enum": [
+              "follow",
+              "off"
+            ],
+            "title": "Notifypref",
+            "default": "follow"
           }
         },
         "type": "object",
@@ -12601,6 +12611,21 @@
             ],
             "title": "Itemid",
             "description": "Optional parent trackable item for this recurring calendar"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "additionalProperties": false,
@@ -12759,6 +12784,21 @@
               }
             ],
             "title": "Itemid"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "additionalProperties": false,
@@ -12938,6 +12978,15 @@
               }
             ],
             "title": "Itemid"
+          },
+          "notifyPref": {
+            "type": "string",
+            "enum": [
+              "follow",
+              "off"
+            ],
+            "title": "Notifypref",
+            "default": "follow"
           },
           "createdAt": {
             "anyOf": [
@@ -13675,6 +13724,10 @@
             "type": "boolean",
             "title": "Mcpenabled"
           },
+          "a2aEnabled": {
+            "type": "boolean",
+            "title": "A2Aenabled"
+          },
           "mcpCapCalendarRead": {
             "type": "boolean",
             "title": "Mcpcapcalendarread"
@@ -13729,6 +13782,7 @@
           "userAvatar",
           "userBackground",
           "mcpEnabled",
+          "a2aEnabled",
           "mcpCapCalendarRead",
           "mcpCapCalendarWrite",
           "mcpCapMessagesSearch",
@@ -14026,6 +14080,17 @@
               }
             ],
             "title": "Mcpenabled"
+          },
+          "a2aEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "A2Aenabled"
           },
           "mcpCapCalendarRead": {
             "anyOf": [
@@ -14446,7 +14511,8 @@
                 "type": "null"
               }
             ],
-            "title": "Worksetid"
+            "title": "Worksetid",
+            "description": "Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`)."
           },
           "triggerMode": {
             "anyOf": [
@@ -14550,7 +14616,8 @@
                 "type": "null"
               }
             ],
-            "title": "Outputanalysisevents"
+            "title": "Outputanalysisevents",
+            "description": "Intelligence-page hard gate (analysis_events). When false, intel_event / agent batches skip persisting analysis_events. Leaderboard never writes analysis_events; omitted on create defaults to false for leaderboard and true for intel_event. Leaderboard still persists trending_topics for the leaderboard page. Agent still requires at least one of outputCalendar or outputAnalysisEvents; triggerMode=message_cursor cannot enable this flag."
           },
           "llmProfileId": {
             "anyOf": [
@@ -14562,6 +14629,21 @@
               }
             ],
             "title": "Llmprofileid"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "additionalProperties": false,
@@ -14792,7 +14874,8 @@
                 "type": "null"
               }
             ],
-            "title": "Outputanalysisevents"
+            "title": "Outputanalysisevents",
+            "description": "Intelligence-page write gate (intel_event / agent). Leaderboard stores this flag but does not write analysis_events."
           },
           "llmProfileId": {
             "anyOf": [
@@ -14804,6 +14887,21 @@
               }
             ],
             "title": "Llmprofileid"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "type": "object",
@@ -14874,14 +14972,7 @@
             "default": true
           },
           "worksetId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
             "title": "Worksetid"
           },
           "agentWaveIntervalSeconds": {
@@ -14982,11 +15073,21 @@
           "outputAnalysisEvents": {
             "type": "boolean",
             "title": "Outputanalysisevents",
-            "default": false
+            "description": "Intelligence-page write flag. intel_event/agent persist analysis_events when on; leaderboard ignores this for trending_topics persist (always writes the ranking page).",
+            "default": true
           },
           "llmProfileId": {
             "type": "string",
             "title": "Llmprofileid"
+          },
+          "notifyPref": {
+            "type": "string",
+            "enum": [
+              "follow",
+              "off"
+            ],
+            "title": "Notifypref",
+            "default": "follow"
           },
           "createdAt": {
             "anyOf": [
@@ -15044,6 +15145,7 @@
           "analysisTimeRange",
           "version",
           "isActive",
+          "worksetId",
           "llmProfileId"
         ],
         "title": "TaskResponse"
@@ -15712,6 +15814,21 @@
               }
             ],
             "title": "Direction"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "additionalProperties": false,
@@ -15875,6 +15992,21 @@
               }
             ],
             "title": "Direction"
+          },
+          "notifyPref": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "follow",
+                  "off"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifypref"
           }
         },
         "additionalProperties": false,
@@ -16037,6 +16169,15 @@
               }
             ],
             "title": "Direction"
+          },
+          "notifyPref": {
+            "type": "string",
+            "enum": [
+              "follow",
+              "off"
+            ],
+            "title": "Notifypref",
+            "default": "follow"
           },
           "source": {
             "type": "string",
@@ -16487,22 +16628,31 @@
             "title": "Enabled",
             "default": false
           },
+          "voiceEnabled": {
+            "type": "boolean",
+            "title": "Voiceenabled",
+            "default": true
+          },
+          "flashEnabled": {
+            "type": "boolean",
+            "title": "Flashenabled",
+            "default": true
+          },
+          "flashMode": {
+            "type": "string",
+            "enum": [
+              "timed",
+              "persistent"
+            ],
+            "title": "Flashmode",
+            "default": "timed"
+          },
           "leadOffsetsMinutes": {
             "items": {
               "type": "integer"
             },
             "type": "array",
             "title": "Leadoffsetsminutes"
-          },
-          "sourceFilter": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SourceFilterSelectionSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "preambleChimeId": {
             "type": "string",
@@ -16522,7 +16672,7 @@
         },
         "type": "object",
         "title": "VoiceReminderSettingsSchema",
-        "description": "Voice reminder settings blob under ``voice_reminder_settings``."
+        "description": "Local-notify settings blob under ``notify_settings``."
       },
       "VoiceSettingsBody": {
         "properties": {
@@ -16590,6 +16740,16 @@
             "maxLength": 120,
             "minLength": 1,
             "title": "Name"
+          },
+          "notifyEnabled": {
+            "type": "boolean",
+            "title": "Notifyenabled",
+            "default": true
+          },
+          "externalEnabled": {
+            "type": "boolean",
+            "title": "Externalenabled",
+            "default": true
           }
         },
         "additionalProperties": false,
@@ -16625,6 +16785,16 @@
             "title": "Issystem",
             "default": false
           },
+          "notifyEnabled": {
+            "type": "boolean",
+            "title": "Notifyenabled",
+            "default": true
+          },
+          "externalEnabled": {
+            "type": "boolean",
+            "title": "Externalenabled",
+            "default": true
+          },
           "createdAt": {
             "anyOf": [
               {
@@ -16658,17 +16828,43 @@
       "WorksetUpdateBody": {
         "properties": {
           "name": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Name"
+          },
+          "notifyEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notifyenabled"
+          },
+          "externalEnabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Externalenabled"
           }
         },
         "additionalProperties": false,
         "type": "object",
-        "required": [
-          "name"
-        ],
         "title": "WorksetUpdateBody"
       },
       "SseMessagesUpdatedPayload": {

@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from server.api.schemas.notify_pref import CoercedNotifyPref
 from server.domain.user_event_origins import UserEventOrigin
 
 
@@ -35,6 +36,8 @@ class UserEventResponse(BaseModel):
     amount: float | None = None
     #: ``expense`` (default when amount set) or ``income``; null when amount unset.
     direction: Literal["expense", "income"] | None = None
+    #: Per-event reminder (``follow`` / ``off``).
+    notifyPref: CoercedNotifyPref = "follow"
     source: Literal["user"]
     dismissed: bool
     important: bool = False
@@ -71,6 +74,8 @@ class RecurringSeriesResponse(BaseModel):
     worksetId: str
     parentTaskId: str | None = None
     itemId: str | None = None
+    #: Per-series reminder (``follow`` / ``off``).
+    notifyPref: CoercedNotifyPref = "follow"
     createdAt: str | None = None
     updatedAt: str | None = None
 
@@ -162,6 +167,8 @@ class CalendarOccurrenceResponse(BaseModel):
     worksetId: str | None = None
     itemId: str | None = None
     itemDateKind: Literal["remind"] | None = None
+    #: Item remind projections inherit the linked expires calendar override.
+    notifyPref: CoercedNotifyPref = "follow"
 
 
 class CalendarImportWarningResponse(BaseModel):

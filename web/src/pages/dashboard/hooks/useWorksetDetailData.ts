@@ -17,7 +17,7 @@ import {
   worksetEventsQueryWindow,
 } from "../../../domain/worksets/worksetDetailSummary";
 
-/** Loads and projects the item/calendar data shown by WorksetDetailDialog. */
+/** Loads and projects the item/calendar data shown on the workset contents tab. */
 export function useWorksetDetailData(worksetId: string) {
   const { t } = useTranslation();
   const { t: tItems } = useTranslation("items");

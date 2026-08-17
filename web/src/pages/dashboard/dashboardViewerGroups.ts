@@ -11,14 +11,13 @@ export type DashboardWorksetGroup = {
   tasks: AnalysisTask[];
 };
 
-/** Group visible tasks under workset cards (by_workset view). */
+/** Group visible tasks under workset cards. Builtin「一般」 is always included. */
 export function buildDashboardWorksetGroups(opts: {
   visibleTasks: AnalysisTask[];
   worksets: Workset[];
-  showSystemWorksets: boolean;
   t: TFunction;
 }): DashboardWorksetGroup[] {
-  const { visibleTasks, worksets, showSystemWorksets, t } = opts;
+  const { visibleTasks, worksets, t } = opts;
   const byId = new Map(worksets.map((ws) => [ws.id, ws]));
   const groups = new Map<string, DashboardWorksetGroup>();
 
@@ -33,18 +32,7 @@ export function buildDashboardWorksetGroups(opts: {
   }
 
   for (const task of visibleTasks) {
-    const key = task.worksetId ?? "__unassigned__";
-    if (key === "__unassigned__") {
-      const group = groups.get("__unassigned__") ?? {
-        key: "__unassigned__",
-        title: t("workset:unassignedGroup"),
-        isSystem: false,
-        tasks: [],
-      };
-      group.tasks.push(task);
-      groups.set("__unassigned__", group);
-      continue;
-    }
+    const key = task.worksetId?.trim() || SYSTEM_WORKSET_ID;
     const existing = groups.get(key);
     if (existing) {
       existing.tasks.push(task);
@@ -63,10 +51,17 @@ export function buildDashboardWorksetGroups(opts: {
   for (const ws of worksets) {
     const group = groups.get(ws.id);
     if (!group) continue;
-    if (!showSystemWorksets && group.isSystem) continue;
     ordered.push(group);
   }
-  const unassigned = groups.get("__unassigned__");
-  if (unassigned) ordered.push(unassigned);
   return ordered;
+}
+
+/** Client-side filter of workset cards by display name. */
+export function filterWorksetGroupsByName(
+  groups: readonly DashboardWorksetGroup[],
+  query: string,
+): DashboardWorksetGroup[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [...groups];
+  return groups.filter((group) => group.title.toLowerCase().includes(q));
 }

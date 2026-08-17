@@ -10,6 +10,7 @@ import {
   scheduleFieldsFromTask,
 } from "./taskFormUtils";
 import type { AnalysisTask } from "../../types";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 
 const sampleBase: TaskFormState = {
   name: "Base Task",
@@ -33,8 +34,9 @@ const sampleBase: TaskFormState = {
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
+  notifyPref: "follow",
   triggerMode: "schedule",
   capCalendarRead: true,
   capCalendarWrites: false,
@@ -85,7 +87,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
@@ -119,7 +121,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
@@ -153,7 +155,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
@@ -187,7 +189,7 @@ const validFormStates: TaskFormState[] = [
   analysisTriggerThreshold: null,
   analysisBatchMessageLimit: null,
   analysisStrategyMode: null,
-  worksetId: null,
+  worksetId: SYSTEM_WORKSET_ID,
   llmProfileId: "",
   triggerMode: "schedule",
   capCalendarRead: true,
@@ -353,6 +355,23 @@ describe("formStateToTaskConfig calendar contract", () => {
     expect(payload.includeInTimeline).toBe(false);
   });
 
+  it("includes outputAnalysisEvents for intel_event and leaderboard payloads", () => {
+    expect(
+      formStateToTaskConfig({
+        ...sampleBase,
+        analysisMode: "intel_event",
+        outputAnalysisEvents: false,
+      }).outputAnalysisEvents,
+    ).toBe(false);
+    expect(
+      formStateToTaskConfig({
+        ...sampleBase,
+        analysisMode: "leaderboard",
+        outputAnalysisEvents: true,
+      }).outputAnalysisEvents,
+    ).toBe(true);
+  });
+
   it("sends canonical scheduleRrule derived from presets", () => {
     const payload = formStateToTaskConfig({
       ...sampleBase,
@@ -423,6 +442,7 @@ describe("scheduleFieldsFromTask", () => {
     expect(form.scheduleType).toBe("hourly");
     expect(form.scheduleRrule).toBe("FREQ=HOURLY");
     expect(form.llmProfileId).toBe("profile-xyz");
+    expect(form.outputAnalysisEvents).toBe(true);
   });
 });
 
@@ -461,6 +481,7 @@ describe("buildCurrentTaskPayload", () => {
     expect(payload.analysisTimeRange).toBe(sampleFormState.analysisTimeRange);
     expect(payload.channelIds).toEqual(sampleFormState.channelIds);
     expect(payload.includeInTimeline).toBe(sampleFormState.includeInTimeline);
+    expect(payload.outputAnalysisEvents).toBe(sampleFormState.outputAnalysisEvents);
     expect(Object.keys(payload).sort()).toEqual([
       "analysisMode",
       "analysisTimeRange",
@@ -468,6 +489,7 @@ describe("buildCurrentTaskPayload", () => {
       "description",
       "includeInTimeline",
       "name",
+      "outputAnalysisEvents",
       "promptTemplate",
       "scheduleRrule",
     ].sort());

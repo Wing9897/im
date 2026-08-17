@@ -8,7 +8,7 @@ MCP 工具門面：`/api/v1/mcp`（本文件；Streamable HTTP）。
 
 MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）；**不**注入 `web.search`／`tasks.consult_advisor`；**不**需要本機 AI 供應商即可 list／call。
 
-設定頁：`/settings/mcp`（總開關 + 連線測試 + 能力群組）。預設 `mcp_enabled=true`；關閉後協議入口回 403。能力群組預設全開。
+設定頁：`/settings/integrations?tab=mcp`（MCP 總開關 + 連線測試 + 能力群組；舊路徑 `/settings/mcp` 轉址）。同一能力群組也出現在 `/settings/integrations?tab=a2a`（MCP 與 A2A 共用；A2A 另有獨立總開關 `a2a_enabled`）。工作集可見性在 `/worksets`（每張工作集的「外部接口」；`worksets.external_enabled`）。預設 `mcp_enabled=true`；關閉後 MCP 協議入口回 403。能力群組預設全開，**同時**約束 MCP `list_tools`／`call_tool` 與 A2A 內部 tool loop（各自總開關開啟時）。新建工作集預設 `external_enabled=1`。
 
 ## 與 A2A 的區別
 
@@ -20,13 +20,13 @@ MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）�
 | 傳輸 | JSON `POST /api/v1/a2a/agent` | Streamable HTTP `/api/v1/mcp` |
 | 寫入溯源 | `user_events.origin=a2a` | `user_events.origin=mcp` |
 
-兩者鑑權相同（household access key + scope `"*"`）。需要「用一句話交辦、由本機選工具」→ A2A；需要「外部 Agent 結構化控本系統」→ MCP。
+兩者鑑權相同（household access key + scope `"*"`）。需要「用一句話交辦、由本機選工具」→ A2A；需要「外部 Agent 結構化控本系統」→ MCP。家庭層 `mcp_cap_*` 能力群組與 `worksets.external_enabled` 對兩條通道同一套（A2A 不是繞過 MCP 開關的後門）。`mcp_enabled` 只關 MCP HTTP；`a2a_enabled` 只關 A2A HTTP。
 
 ## 總開關（`mcp_enabled`）
 
 - `system_config` 鍵：`mcp_enabled`（設定頁 wire：`mcpEnabled`），**預設 `"true"`**。
 - 為 `false` 時：Streamable HTTP `/api/v1/mcp`（含尾斜線）對所有方法回 **403**，訊息含 `mcp_enabled=false`；`list_tools`／`call_tool` 不可用。
-- 能力群組開關在總開關關閉時仍可編輯／保存，但不會生效（協議面已關閉）。
+- 能力群組開關在總開關關閉時仍可編輯／保存：MCP 協議面已關閉故不套用到 MCP；**A2A 仍套用**同一套群組（若 `a2a_enabled` 為開）。
 
 ## 設定頁連線測試（session auth）
 
@@ -39,8 +39,9 @@ MCP 與助手／A2A **共用**同一批 base tool handlers（`execute_tool`）�
 - **僅** household access key（`Authorization: Bearer <key>`）可打 Streamable HTTP 協議面。
 - **拒絕** device session；loopback 豁免**不**適用。
 - 金鑰需完整 scope `["*"]`（`read` 只讀金鑰不可呼叫 MCP；與 A2A 同一門檻：`require_full_access_key`）。
-- **不**新增細粒度 **access-key** scope（例如 `calendar:write`）。建立金鑰：預設完整；勾選「只讀」→ `scopes: ["read"]`（見 `/account/keys`）。
-- 家庭層 **能力群組**（`system_config` `mcp_cap_*`，設定頁開關）可過濾 MCP 暴露的工具；這**不是**金鑰 scope。
+- **不**新增細粒度 **access-key** scope（例如 `calendar:write`）。帳戶 → 存取金鑰只產生完整 `*`（UI 無唯讀／scopes 選項）；既有 `read` 金鑰仍可用，列表僅顯示「唯讀」狀態。能力群組在設定 → 外部接口 → MCP **與** A2A（同一套 `mcp_cap_*`），與金鑰 read/`*` 正交。
+- 家庭層 **能力群組**（`system_config` `mcp_cap_*`）可過濾 MCP 暴露的工具，並在 A2A tool loop 省略／攔截同一批工具；這**不是**金鑰 scope。
+- 家庭層 **工作集權限**（`worksets.external_enabled`；工作集頁「外部接口」）過濾情報／訊息／物品等以工作集為鍵的工具資料；**不是**金鑰 scope。預設開。全關 = fail closed。日曆「我的日程」為家庭層，不套用。內建助手不受約束。
 
 ## 傳輸 / OpenClaw
 
@@ -83,6 +84,15 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 | 物品讀 | `mcp_cap_items_read` | `items.list` / `items.list_expiring` |
 | 物品寫 | `mcp_cap_items_write` | `items.create` / `items.update` |
 
+工作集權限（工作集頁「外部接口」；`worksets.external_enabled` 預設 1）：
+
+| 狀態 | 行為 |
+|------|------|
+| 開（預設） | 該工作集對 MCP／A2A 的情報／訊息／物品可見、可寫 |
+| 關 | 該工作集從 MCP／A2A 隱藏。全部關閉時 fail closed |
+
+套用：`intelligence.search_events`、`messages.search`、`items.*`。不套用：日曆「我的日程」、`web.search`、內建助手。
+
 | 工具 | 類別 |
 |------|------|
 | `calendar.list_calendars` | 日曆讀 |
@@ -92,7 +102,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 | `calendar.get` | 日曆讀 |
 | `calendar.create_event` | 日曆寫 |
 | `calendar.update_event` | 日曆寫 |
-| `calendar.delete_event` | 日曆寫 |
+| `calendar.delete_event` | 日曆寫（時間規劃 soft-dismiss，非 REST 硬刪） |
 | `calendar.create_recurring_series` | 日曆寫（循環） |
 | `calendar.update_recurring_series` | 日曆寫（循環） |
 | `calendar.delete_recurring_series` | 日曆寫（循環） |
@@ -112,8 +122,8 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 呼叫下列工具時，參數必須含 **`confirm: true`**（布林字面量）：
 
-- `calendar.delete_event`
-- `calendar.delete_recurring_series`
+- `calendar.delete_event`（仍是時間規劃 soft-dismiss，與 `PUT /calendar/dismissals` 相同；不是硬刪 `user_events`）
+- `calendar.delete_recurring_series`（硬刪系列）
 
 缺少或非 `true` 時回傳明確錯誤（要求重試並帶 `confirm=true`）。助手／A2A 共用 handler **不**強制此欄位。MCP 暴露的 tool schema 描述與 `inputSchema` 已標註該要求，供 OpenClaw 等客戶端看見。
 
@@ -129,7 +139,7 @@ Allowlist = `BASE_TOOL_HANDLERS`（日曆 + `messages.search` + `intelligence.se
 
 經 MCP 工具建立或改寫的用戶事件：`origin=mcp`（客戶端不可偽造）。寫入會走既有 `resource_modified`／SSE 失效路徑。
 
-**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **33**／`SCHEMA_SEMVER` `0.1.0-beta.34`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`mcp_cap_*` 為 `system_config` 鍵，**不**需 stamp bump。
+**Schema：** `user_events.origin` 含 `mcp`（自 stamp 30 起；當前 wipe-floor 為 stamp **39**／`SCHEMA_SEMVER` `0.1.0-beta.40`）。非當前 stamp 硬拒絕 → `python scripts/reset_local_databases.py --apply`。整庫矩陣以 [`SCHEMA-BASELINE.md` Schema support matrix](../SCHEMA-BASELINE.md#schema-support-matrix) 為準。`mcp_enabled`／`a2a_enabled`／`mcp_cap_*` 為 `system_config` 鍵；工作集可見性為 `worksets.external_enabled`（stamp 38+）。
 
 ## 非目標
 

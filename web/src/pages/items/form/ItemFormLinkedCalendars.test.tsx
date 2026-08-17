@@ -231,14 +231,54 @@ describe("ItemForm linked calendars", () => {
       '[data-testid="user-event-dialog"] input[aria-label="userEvent.titleAria"]',
     ) as HTMLInputElement | null;
     expect(titleInput?.value).toBe("quickLinkedCalendar.expires");
-    const allDay = document.querySelector(
-      '[data-testid="user-event-all-day"]',
-    ) as HTMLInputElement | null;
-    expect(allDay?.checked).toBe(true);
+    const allDay = document.querySelector('[data-testid="user-event-all-day"]');
+    expect(allDay?.getAttribute("aria-checked")).toBe("true");
+    expect(
+      document.querySelector('[data-testid="user-event-dialog"] [data-testid="datetime-now"]'),
+    ).toBeTruthy();
+    const notifyBox = document.querySelector(
+      '[data-testid="user-event-dialog"] [data-testid="notify-pref-field"]',
+    );
+    expect(notifyBox?.getAttribute("aria-checked")).toBe("false");
     const remindInput = document.querySelector(
       '[data-testid="user-event-remind-before"]',
     ) as HTMLInputElement | null;
     expect(remindInput?.value).toBe("90");
+  });
+
+  it("Now button fills linked calendar timed start/end from the local clock", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 7, 15, 13, 30, 0));
+    await renderForm({ item: makeItem({ id: "item-42" }) });
+    await openLinkedCalendarCreateViaMenu("other");
+
+    const startInput = document.querySelector(
+      '[data-testid="user-event-start"]',
+    ) as HTMLInputElement;
+    expect(startInput).toBeTruthy();
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(startInput, "2026-01-01T08:00");
+      startInput.dispatchEvent(new Event("input", { bubbles: true }));
+      startInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    const nowBtn = document.querySelector(
+      '[data-testid="user-event-dialog"] [data-testid="datetime-now"]',
+    ) as HTMLButtonElement;
+    expect(nowBtn).toBeTruthy();
+    await act(async () => {
+      nowBtn.click();
+    });
+    expect(startInput.value).toBe("2026-08-15T13:30");
+    const endInput = document.querySelector(
+      '[data-testid="user-event-end"]',
+    ) as HTMLInputElement;
+    expect(endInput.value).toBe("2026-08-15T14:30");
+    const notifyBox = document.querySelector(
+      '[data-testid="user-event-dialog"] [data-testid="notify-pref-field"]',
+    );
+    expect(notifyBox?.getAttribute("aria-checked")).toBe("false");
   });
 
   it("prefills category default remind on add expiry calendar", async () => {
@@ -263,6 +303,8 @@ describe("ItemForm linked calendars", () => {
           id: "ws-custom",
           name: "Custom",
           isSystem: false,
+          notifyEnabled: true,
+          externalEnabled: true,
           createdAt: "",
           updatedAt: "",
         },
@@ -297,6 +339,7 @@ describe("ItemForm linked calendars", () => {
         itemId: "item-42",
         worksetId: "ws-custom",
         title: "Renewal",
+        notifyPref: "off",
       }),
     );
   });

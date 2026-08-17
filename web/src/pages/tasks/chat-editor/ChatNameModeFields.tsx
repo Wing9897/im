@@ -31,11 +31,11 @@ import { useChatEditorLlmProfiles, type LlmProfileGate } from "./useChatEditorLl
 interface ChatNameModeFieldsProps {
   name: string;
   analysisMode: AnalysisMode;
-  worksetId: string | null;
+  worksetId: string;
   llmProfileId: string;
   onNameChange: (value: string) => void;
   onAnalysisModeChange: (value: AnalysisMode) => void;
-  onWorksetIdChange: (value: string | null) => void;
+  onWorksetIdChange: (value: string) => void;
   onLlmProfileIdChange: (value: string) => void;
   onLlmProfileGateChange?: (gate: LlmProfileGate) => void;
 }
@@ -71,13 +71,11 @@ export function ChatNameModeFields({
   });
 
   const worksetOptions = useMemo(
-    () => [
-      { value: "", label: t("workset:unassigned") },
-      ...worksets.map((ws) => ({
+    () =>
+      worksets.map((ws) => ({
         value: ws.id,
         label: ws.id === SYSTEM_WORKSET_ID ? t("workset:generalName") : ws.name,
       })),
-    ],
     [t, worksets],
   );
 
@@ -120,9 +118,9 @@ export function ChatNameModeFields({
             id="chat-workset"
             variant="field"
             menuPortal
-            value={worksetId ?? ""}
+            value={worksetId || SYSTEM_WORKSET_ID}
             options={worksetOptions}
-            onChange={(next) => onWorksetIdChange(next || null)}
+            onChange={(next) => onWorksetIdChange(next || SYSTEM_WORKSET_ID)}
             className="min-w-0 flex-1"
             aria-label={t("workset:ownershipLabel")}
           />

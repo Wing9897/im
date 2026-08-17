@@ -26,6 +26,10 @@ import {
   stickyChromePageFillClass,
 } from "../../components/ui/pageChrome";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
+import { NowFillButton } from "../../components/calendar/NowFillButton";
+import { NotifyPrefField } from "../../components/notify/NotifyPrefField";
+import { DEFAULT_NOTIFY_PREF, normalizeNotifyPref, type NotifyPref } from "../../domain/notify/notifyPref";
+import { fillNowRange } from "../../domain/timeline/nowFill";
 import { toErrorMessage } from "../../utils/errors";
 
 type EditorFields = {
@@ -35,6 +39,7 @@ type EditorFields = {
   eventEndTime: string;
   eventLocation: string;
   itemId: string;
+  notifyPref: NotifyPref;
 };
 
 const EMPTY_FIELDS: EditorFields = {
@@ -44,6 +49,7 @@ const EMPTY_FIELDS: EditorFields = {
   eventEndTime: "",
   eventLocation: "",
   itemId: "",
+  notifyPref: DEFAULT_NOTIFY_PREF,
 };
 
 export function RecurringSeriesEditor() {
@@ -70,6 +76,7 @@ export function RecurringSeriesEditor() {
           eventEndTime: series.eventEndTime ?? "",
           eventLocation: series.eventLocation ?? "",
           itemId: series.itemId ?? "",
+          notifyPref: normalizeNotifyPref(series.notifyPref),
         });
       })
       .catch((err) => {
@@ -108,6 +115,7 @@ export function RecurringSeriesEditor() {
         eventIsAllDay: !start,
         eventLocation: fields.eventLocation.trim() || null,
         itemId: fields.itemId.trim() || null,
+        notifyPref: fields.notifyPref,
       });
       showToast(t("toast.recurringUpdated"), "success");
       navigate("/schedule");
@@ -177,13 +185,27 @@ export function RecurringSeriesEditor() {
                 </div>
                 <div>
                   <FieldLabel htmlFor="recurring-start">{t("editor.start")}</FieldLabel>
-                  <TextField
-                    id="recurring-start"
-                    type="time"
-                    value={fields.eventStartTime}
-                    onChange={(event) => update("eventStartTime", event.target.value)}
-                    disabled={saving}
-                  />
+                  <div className="flex items-center gap-xs">
+                    <TextField
+                      id="recurring-start"
+                      type="time"
+                      value={fields.eventStartTime}
+                      onChange={(event) => update("eventStartTime", event.target.value)}
+                      disabled={saving}
+                      className="min-w-0 flex-1"
+                    />
+                    <NowFillButton
+                      disabled={saving}
+                      onClick={() => {
+                        const range = fillNowRange({ isAllDay: false, clockOnly: true });
+                        setFields((prev) => ({
+                          ...prev,
+                          eventStartTime: range.start,
+                          eventEndTime: range.end,
+                        }));
+                      }}
+                    />
+                  </div>
                 </div>
                 <div>
                   <FieldLabel htmlFor="recurring-end">{t("editor.end")}</FieldLabel>
@@ -210,6 +232,15 @@ export function RecurringSeriesEditor() {
                     id="recurring-item"
                     value={fields.itemId}
                     onChange={(event) => update("itemId", event.target.value)}
+                    disabled={saving}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <NotifyPrefField
+                    value={fields.notifyPref}
+                    onChange={(notifyPref) =>
+                      setFields((prev) => ({ ...prev, notifyPref }))
+                    }
                     disabled={saving}
                   />
                 </div>

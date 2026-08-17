@@ -72,6 +72,28 @@ describe("ChatEditorForm analysis-task contract", () => {
       expect(container.textContent).not.toContain("重複規則");
       expect(container.querySelector('[aria-label="排程類型"]')).not.toBeNull();
       expect(container.querySelector('[aria-label="進階設定"]')).not.toBeNull();
+      const output = container.querySelector('[data-testid="task-output-fields"]');
+      expect(output).not.toBeNull();
+      expect(output?.querySelector('[data-testid="notify-pref-field"]')).not.toBeNull();
+      if (analysisMode === "leaderboard") {
+        expect(output?.querySelector('[data-testid="task-output-analysis-events"]')).toBeNull();
+      } else {
+        expect(output?.querySelector('[data-testid="task-output-analysis-events"]')).not.toBeNull();
+      }
+      expect(container.querySelector('[data-testid="task-agent-output-analysis"]')).toBeNull();
+      if (analysisMode === "agent") {
+        expect(output?.querySelector('[data-testid="task-agent-output-calendar"]')).not.toBeNull();
+      } else {
+        expect(output?.querySelector('[data-testid="task-agent-output-calendar"]')).toBeNull();
+      }
+      const optional = container.querySelector('[aria-label="進階設定"]');
+      expect(optional?.querySelector('[data-testid="notify-pref-field"]')).toBeNull();
+      expect(optional?.querySelector('[data-testid="task-include-in-timeline"]')).toBeNull();
+      if (analysisMode === "leaderboard") {
+        expect(output?.querySelector('[data-testid="task-include-in-timeline"]')).toBeNull();
+      } else {
+        expect(output?.querySelector('[data-testid="task-include-in-timeline"]')).not.toBeNull();
+      }
     },
   );
 
@@ -103,6 +125,11 @@ describe("ChatEditorForm analysis-task contract", () => {
     expect(container.textContent).toContain("來源頻道（選填）");
     expect(container.querySelector('[aria-label="選擇分析來源頻道"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="task-schedule-overrides"]')).toBeNull();
+    const output = container.querySelector('[data-testid="task-output-fields"]');
+    expect(output?.querySelector('[data-testid="task-agent-output-calendar"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-policy"] [data-testid="task-agent-output-calendar"]')).toBeNull();
+    expect(container.querySelector('[data-testid="task-agent-output-analysis"]')).toBeNull();
+    expect(output).not.toBeNull();
   });
 
   it("shows agent message-gate overrides when channels are bound", async () => {

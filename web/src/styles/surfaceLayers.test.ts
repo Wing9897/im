@@ -40,6 +40,7 @@ const surfaceCss = readFileSync(resolve(here, "../css/surface-materials.css"), "
 const themeCss = readFileSync(resolve(here, "../theme.css"), "utf8");
 const themeGeneratedCss = readFileSync(resolve(here, "../theme.generated.css"), "utf8");
 const texturesCss = readFileSync(resolve(here, "../css/theme-textures.css"), "utf8");
+const dialogShellCss = readFileSync(resolve(here, "../css/dialog-shell.css"), "utf8");
 const layoutCss = readFileSync(resolve(here, "../css/shared-layout.css"), "utf8");
 const motionCss = readFileSync(resolve(here, "../css/motion-utilities.css"), "utf8");
 const indexHtml = readFileSync(resolve(here, "../../index.html"), "utf8");
@@ -111,21 +112,18 @@ describe("surface layer tokens", () => {
     );
   });
 
-  it("keeps photo canvas / sidebar / app shell free of opaque fill under photo BG", () => {
+  it("keeps photo canvas / app shell free of opaque fill under photo BG", () => {
     expect(surfaceCss).toMatch(
       /\.im-app-shell\s*\{[^}]*background-color:\s*var\(--surface-base\)/s,
     );
     expect(texturesCss).toMatch(
       /html\[data-theme-bg="custom"\] :is\(\.im-page-canvas, \.im-fs-atmosphere:fullscreen\),\s*html\[data-theme-bg="focal"\] :is\(\.im-page-canvas, \.im-fs-atmosphere:fullscreen\)\s*\{[^}]*background-color:\s*transparent/s,
     );
-    expect(texturesCss).toMatch(
-      /html\[data-theme-bg="custom"\] \.im-shell-sidebar,\s*html\[data-theme-bg="focal"\] \.im-shell-sidebar\s*\{[^}]*background-color:\s*transparent/s,
+    expect(texturesCss).not.toMatch(
+      /\.im-shell-sidebar[\s\S]{0,500}--theme-bg-image/,
     );
-    expect(texturesCss).toMatch(
-      /html\[data-theme-bg="custom"\] \.im-shell-sidebar,\s*html\[data-theme-bg="focal"\] \.im-shell-sidebar\s*\{[^}]*var\(--surface-chrome\)/s,
-    );
-    expect(texturesCss).toMatch(
-      /html\[data-theme-bg="custom"\] \.im-shell-sidebar,\s*html\[data-theme-bg="focal"\] \.im-shell-sidebar\s*\{[^}]*backdrop-filter:\s*blur\(var\(--surface-blur-chrome\)\)/s,
+    expect(texturesCss).not.toMatch(
+      /html\[data-theme-bg="custom"\] \.im-shell-sidebar/,
     );
     expect(surfaceCss).toMatch(
       /html\[data-theme-bg="custom"\] \.im-surface-inset,\s*html\[data-theme-bg="focal"\] \.im-surface-inset\s*\{[^}]*backdrop-filter:\s*blur\(var\(--surface-blur-panel\)\)/s,
@@ -210,6 +208,33 @@ describe("surface layer tokens", () => {
     expect(detailDialogModalShellClass).not.toContain("overflow-hidden");
     expect(detailDialogDrawerShellClass).not.toContain("overflow-hidden");
     expect(detailDialogScrollBodyClass).toMatch(/overflow-y-auto/);
+    expect(dialogShellCss).toMatch(
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--surface-card\) 80%, transparent\)/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*backdrop-filter:\s*blur\(8px\)/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-overlay\.fixed\s*\{[^}]*backdrop-filter:\s*none/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-scrim\s*\{[^}]*backdrop-filter:\s*none/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-sidebar-overlay\.fixed\s*\{[^}]*backdrop-filter:\s*blur/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-sidebar-scrim\s*\{[^}]*backdrop-filter:\s*blur/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background-image/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-edge-toggle\s*\{[^}]*position:\s*fixed[^}]*z-index:\s*1200/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-edge-toggle\[aria-expanded="true"\]\s*\{[^}]*position:\s*absolute[^}]*left:\s*100%/s,
+    );
   });
 
   it("sets early data-theme-bg from localStorage keys matching themeData", () => {

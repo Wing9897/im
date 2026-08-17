@@ -26,20 +26,21 @@ export function UserEventDialogParentItemFields({
 
   if (mode === "editable") {
     return (
-      <div className="flex flex-col gap-xs" data-testid="user-event-parent-item">
-        <FieldLabel className="mb-0" htmlFor="user-event-item">
-          {t("userEvent.parentItem")}
-        </FieldLabel>
-        <SelectField
-          id="user-event-item"
-          aria-label={t("userEvent.parentItemAria")}
-          value={values.itemId}
-          onChange={(event) =>
-            setValues((prev) => ({ ...prev, itemId: event.target.value }))
-          }
-          className="w-full"
-          data-testid="user-event-item-select"
-        >
+      <div className="flex min-w-0 flex-col gap-xs" data-testid="user-event-parent-item">
+        <div className="flex min-w-0 items-center gap-md">
+          <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor="user-event-item">
+            {t("userEvent.parentItem")}
+          </FieldLabel>
+          <SelectField
+            id="user-event-item"
+            aria-label={t("userEvent.parentItemAria")}
+            value={values.itemId}
+            onChange={(event) =>
+              setValues((prev) => ({ ...prev, itemId: event.target.value }))
+            }
+            wrapperClassName="w-[16rem] max-w-full shrink-0"
+            data-testid="user-event-item-select"
+          >
           <option value="">{t("userEvent.parentItemNone")}</option>
           {itemOptions.map((item) => (
             <option key={item.id} value={item.id}>
@@ -47,7 +48,8 @@ export function UserEventDialogParentItemFields({
               {item.title}
             </option>
           ))}
-        </SelectField>
+          </SelectField>
+        </div>
         <p className="m-0 text-caption text-text-muted">{t("userEvent.parentItemHint")}</p>
       </div>
     );

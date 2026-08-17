@@ -6,7 +6,7 @@ import {
   type WebSearchProviderSetting,
 } from "../../domain/settings/assistantWebSearchRoute";
 import type { LlmProvider } from "../../types";
-import { CheckboxField, FormStack, MenuSelect, PasswordField, SettingsRow } from "../ui";
+import { FormStack, MenuSelect, PasswordField, SelectTile, SettingsRow } from "../ui";
 import { formHelpClass } from "../ui/pageTypography";
 
 export type WebSearchProvider = WebSearchProviderSetting;
@@ -68,15 +68,18 @@ export function AssistantWebSearchPanel({
 
   return (
     <FormStack gap="lg">
-      <SettingsRow label={t("webSearch.enabledLabel")} layout="inline">
-        <CheckboxField
-          id="assistant-web-search-enabled"
-          label={enabled ? t("shared.enabled") : t("shared.disabled")}
-          checked={enabled}
-          onChange={(event) => onEnabledChange(event.target.checked)}
-          aria-label={t("webSearch.enabledAria")}
-        />
-      </SettingsRow>
+      <SelectTile
+        compact
+        variant="toggle"
+        className="max-w-[280px]"
+        active={enabled}
+        data-testid="assistant-web-search-enabled"
+        aria-label={t("webSearch.enabledAria")}
+        title={t("webSearch.sectionHelp")}
+        onClick={() => onEnabledChange(!enabled)}
+      >
+        {t("webSearch.enabledLabel")}
+      </SelectTile>
 
       {enabled ? (
         <FormStack gap="md">

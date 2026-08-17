@@ -41,6 +41,7 @@ describe("createRecurringTimelineEvent", () => {
       eventDescription: "Daily sync",
       worksetId: SYSTEM_WORKSET_ID,
       itemId: null,
+      notifyPref: "off",
     });
   });
 

@@ -8,19 +8,13 @@ import {
   type AccessKeyPublic,
 } from "../../../api/accessKeys";
 import { ResolvedApiBaseUrl } from "../../../components/settings/ResolvedApiBaseUrl";
-import { Button, CheckboxField, FormStack, SettingsRow, TextField } from "../../../components/ui";
+import { Button, FormStack, SettingsRow, TextField } from "../../../components/ui";
 import { formHelpClass, sectionTitleClass } from "../../../components/ui/pageTypography";
 import { useToast } from "../../../context/ToastContext";
 import { toErrorMessage } from "../../../utils/errors";
 
-function formatScopes(scopes: string[] | undefined, t: (key: string) => string): string {
-  if (!scopes || scopes.length === 0 || scopes.includes("*")) {
-    return t("account:accessKeys.scopesFull");
-  }
-  if (scopes.includes("read")) {
-    return t("account:accessKeys.scopesReadOnly");
-  }
-  return scopes.join(", ");
+function isReadOnlyKey(scopes: string[] | undefined): boolean {
+  return Boolean(scopes?.includes("read") && !scopes.includes("*"));
 }
 
 export function AccountAccessKeysSection() {
@@ -30,7 +24,6 @@ export function AccountAccessKeysSection() {
   const [keys, setKeys] = useState<AccessKeyPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [newLabel, setNewLabel] = useState("");
-  const [readOnly, setReadOnly] = useState(false);
   const [creating, setCreating] = useState(false);
   const [revealedSecret, setRevealedSecret] = useState<string | null>(null);
 
@@ -55,10 +48,9 @@ export function AccountAccessKeysSection() {
     setRevealedSecret(null);
     try {
       const label = newLabel.trim() || t("account:accessKeys.defaultLabel");
-      const created = await createAccessKey(label, { readOnly });
+      const created = await createAccessKey(label);
       setRevealedSecret(created.key);
       setNewLabel("");
-      setReadOnly(false);
       await reload();
       showToast(t("account:accessKeys.created"), "success");
     } catch (error) {
@@ -122,15 +114,6 @@ export function AccountAccessKeysSection() {
           />
         </SettingsRow>
 
-        <CheckboxField
-          id="access-key-read-only"
-          data-testid="access-key-read-only"
-          label={t("account:accessKeys.readOnly")}
-          help={t("account:accessKeys.readOnlyHelp")}
-          checked={readOnly}
-          onChange={(e) => setReadOnly(e.target.checked)}
-        />
-
         <div>
           <Button
             type="button"
@@ -181,9 +164,11 @@ export function AccountAccessKeysSection() {
                     <span className="ml-sm font-mono text-caption text-text-muted">
                       {entry.preview}
                     </span>
-                    <span className="mt-xxs block text-caption text-text-muted">
-                      {formatScopes(entry.scopes, t)}
-                    </span>
+                    {isReadOnlyKey(entry.scopes) ? (
+                      <span className="mt-xxs block text-caption text-text-muted">
+                        {t("account:accessKeys.scopesReadOnly")}
+                      </span>
+                    ) : null}
                   </span>
                   <Button
                     type="button"

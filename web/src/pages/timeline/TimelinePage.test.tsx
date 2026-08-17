@@ -171,6 +171,7 @@ interface CapturedDialog {
 
 const formValues: UserEventFormValues = {
   kind: "one_off",
+  calendarKind: "normal",
   title: "Manual event",
   startTime: "2026-07-20T10:00:00Z",
   endTime: "",
@@ -180,9 +181,12 @@ const formValues: UserEventFormValues = {
   isAllDay: false,
   remindBeforeDays: "",
   itemId: "",
+  amountInput: "",
+  direction: "expense",
   rrule: "",
   eventStartTime: "",
   eventEndTime: "",
+  notifyPref: "follow",
 };
 
 function makeUserEvent(): TimelineItem {
@@ -350,6 +354,7 @@ describe("TimelinePage user-event CRUD", () => {
       itemId: null,
       kind: "normal",
       worksetId: "__user__",
+      notifyPref: "follow",
     });
     expect(mockCreateRecurringTimelineEvent).not.toHaveBeenCalled();
     expect(mockRefreshEvents).toHaveBeenCalledTimes(1);
@@ -375,6 +380,7 @@ describe("TimelinePage user-event CRUD", () => {
         rrule: "FREQ=WEEKLY;BYDAY=MO",
         eventStartTime: "09:00",
         eventEndTime: "09:30",
+        notifyPref: "follow",
       }),
     );
 
@@ -388,6 +394,7 @@ describe("TimelinePage user-event CRUD", () => {
       body: "Sync",
       rrule: "FREQ=WEEKLY;BYDAY=MO",
       itemId: null,
+      notifyPref: "follow",
     });
     expect(mockCreateUserEvent).not.toHaveBeenCalled();
     expect(mockRefreshEvents).toHaveBeenCalledWith();
@@ -395,6 +402,16 @@ describe("TimelinePage user-event CRUD", () => {
       expect.stringMatching(/週期|周期|Recurring/i),
       "success",
     );
+  });
+
+  it("toasts when create fails instead of closing silently", async () => {
+    mockCreateUserEvent.mockRejectedValue(new Error("CHECK constraint failed"));
+    await renderPage();
+    await flushAction(() => captures.addEvent!());
+    const dialog = captures.dialog as CapturedDialog;
+    await flushAction(() => dialog.onSubmit(formValues));
+    expect(mockShowToast).toHaveBeenCalledWith("CHECK constraint failed", "error");
+    expect(mockRefreshEvents).not.toHaveBeenCalled();
   });
 
   it("edits an event and refreshes the visible data", async () => {

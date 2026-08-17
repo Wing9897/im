@@ -175,6 +175,7 @@ async def test_create_leaderboard_happy_path(client):
     assert body["analysisMode"] == "leaderboard"
     assert body["name"] == "leaderboard create"
     assert body["channelIds"]
+    assert body["outputAnalysisEvents"] is False
 
 
 async def test_create_agent_project_reconcile_happy_path(client):
@@ -202,7 +203,87 @@ async def test_task_templates_include_agent_presets(client):
     resp = await client.get("/api/v1/tasks/templates")
     assert resp.status_code == 200
     body = resp.json()
-    agent_presets = [p for p in body if p.get("analysisMode") == "agent"]
-    assert len(agent_presets) >= 2
-    for preset in agent_presets:
+    by_mode = {}
+    for preset in body:
+        by_mode.setdefault(preset.get("analysisMode"), []).append(preset["id"])
+    assert set(by_mode.get("intel_event", [])) == {
+        "key-insights",
+        "schedule-events",
+        "schedule-time-inference",
+        "crypto-airdrop-deals",
+        "iot-device-alerts",
+        "security-scam-watch",
+        "policy-regulation",
+        "finance-markets",
+    }
+    assert set(by_mode.get("agent", [])) == {"agent-date-crud", "agent-work-shift"}
+    assert by_mode.get("leaderboard", []) == []
+    for preset in body:
         assert preset.get("promptTemplate")
+
+
+async def test_create_leaderboard_defaults_output_analysis_events_off(client):
+    create = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "leaderboard default off",
+            "promptTemplate": "Rank topics",
+            "analysisMode": "leaderboard",
+            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+            "scheduleRrule": "FREQ=HOURLY",
+        },
+    )
+    assert create.status_code == 201
+    body = create.json()
+    assert body["analysisMode"] == "leaderboard"
+    assert body["outputAnalysisEvents"] is False
+
+
+async def test_create_intel_event_defaults_output_analysis_events_on(client):
+    create = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "intel default on",
+            "promptTemplate": "Extract key insights",
+            "analysisMode": "intel_event",
+            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+            "scheduleRrule": "FREQ=HOURLY",
+        },
+    )
+    assert create.status_code == 201
+    body = create.json()
+    assert body["analysisMode"] == "intel_event"
+    assert body["outputAnalysisEvents"] is True
+
+
+async def test_create_intel_event_persists_output_analysis_events_off(client):
+    create = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "intel gate off",
+            "promptTemplate": "Extract key insights",
+            "analysisMode": "intel_event",
+            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+            "scheduleRrule": "FREQ=HOURLY",
+            "outputAnalysisEvents": False,
+        },
+    )
+    assert create.status_code == 201
+    assert create.json()["outputAnalysisEvents"] is False
+
+
+async def test_create_agent_cursor_with_intel_output_returns_422(client):
+    create = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "cursor plus intel",
+            "promptTemplate": "Reconcile project dates",
+            "analysisMode": "agent",
+            "channelIds": [f"{seed.TG_CHANNEL[0]}:{seed.TG_CHANNEL[1]}"],
+            "scheduleRrule": "FREQ=HOURLY",
+            **_AGENT_PROJECT_RECONCILE,
+            "outputAnalysisEvents": True,
+        },
+    )
+    assert create.status_code == 422
+    assert "outputAnalysisEvents" in create.json()["message"]

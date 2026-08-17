@@ -11,6 +11,7 @@ import {
   captionClass,
 } from "../../components/ui/pageTypography";
 import type { AiStaffDefinition, AiStaffId } from "../../domain/aiStaff/aiStaff";
+import { settingsIntegrationsPath } from "../../domain/navigation/integrationsRoutes";
 
 export const FRONTLINE_LINKS: Partial<
   Record<AiStaffId, { to: string; labelKey: string }>
@@ -72,7 +73,7 @@ export function LiaisonIntroCard() {
       </div>
 
       <Link
-        to="/settings/api"
+        to={settingsIntegrationsPath("a2a")}
         className={`${captionClass} font-medium text-accent no-underline hover:underline`}
       >
         {t("staff.liaison.openApiDocs")}

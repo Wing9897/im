@@ -242,6 +242,7 @@ describe("ChatEditorPage integration tests", () => {
       ) as HTMLButtonElement;
       expect(channelBtn).not.toBeNull();
       expect(channelBtn.textContent).toContain("點擊選擇頻道");
+      expect(channelBtn.parentElement?.className).toContain("items-center");
       expect(container.querySelector('input[aria-label="批次訊息上限"]')).toBeNull();
 
       cleanup();

@@ -6,7 +6,6 @@ import {
   Button,
   FilterChip,
   OpsControlBar,
-  SegmentedControl,
   TextField,
 } from "../../../components/ui";
 import { pageOpsControlClass } from "../../../components/ui/controlStyles";
@@ -14,10 +13,8 @@ import {
   getTaskFormAnalysisModeMeta,
   taskFormAnalysisModeOrder,
 } from "../../../components/task/taskFormAnalysisModeMeta";
-import type {
-  TasksGroupingView,
-  TasksModeFilter,
-} from "../../../domain/tasks/systemTaskCatalog";
+import type { TasksModeFilter } from "../../../domain/tasks/systemTaskCatalog";
+import { WorksetCatalogChrome } from "../../worksets/WorksetCatalogChrome";
 
 function VisibilityEyeButton({
   visible,
@@ -50,69 +47,56 @@ function VisibilityEyeButton({
 
 interface DashboardViewerToolbarProps {
   t: TFunction;
-  groupingView: TasksGroupingView;
+  isWorksetView: boolean;
   modeFilter: TasksModeFilter;
   taskCount: number;
   searchQuery: string;
   showSystemTasks: boolean;
-  showSystemWorksets: boolean;
   createTaskLabel: string;
   showSystemTasksLabel: string;
   hideSystemTasksLabel: string;
-  onGroupingViewChange: (view: TasksGroupingView) => void;
   onModeFilterChange: (filter: TasksModeFilter) => void;
   onSearchQueryChange: (query: string) => void;
   onToggleSystemTasks: () => void;
-  onToggleSystemWorksets: () => void;
   onCreateTask: () => void;
   onCreateWorkset: () => void;
+  hideSearch?: boolean;
+  hideCreateWorkset?: boolean;
 }
 
-/** Grouping, filtering, search, and create controls for the dashboard. */
+/** Fixed-width catalog search — beats TextField `w-full` and does not shrink behind chips. */
+const catalogSearchClass = `${pageOpsControlClass} !w-[clamp(10rem,22vw,16rem)] min-w-[10rem] shrink-0`;
+
+/** Filtering, search, and create controls for the tasks or worksets catalog. */
 export function DashboardViewerToolbar({
   t,
-  groupingView,
+  isWorksetView,
   modeFilter,
   taskCount,
   searchQuery,
   showSystemTasks,
-  showSystemWorksets,
   createTaskLabel,
   showSystemTasksLabel,
   hideSystemTasksLabel,
-  onGroupingViewChange,
   onModeFilterChange,
   onSearchQueryChange,
   onToggleSystemTasks,
-  onToggleSystemWorksets,
   onCreateTask,
   onCreateWorkset,
+  hideSearch = false,
+  hideCreateWorkset = false,
 }: DashboardViewerToolbarProps) {
-  const isTaskView = groupingView === "by_task";
-  const isWorksetView = groupingView === "by_workset";
+  const isTaskView = !isWorksetView;
 
   return (
     <OpsControlBar
       sticky
-      ariaLabel={t("tasks:toolbarAria")}
-      data-testid="tasks-toolbar"
-      className="flex-wrap"
+      ariaLabel={isWorksetView ? t("workset:toolbarAria") : t("tasks:toolbarAria")}
+      data-testid={isWorksetView ? "worksets-toolbar" : "tasks-toolbar"}
+      className="!flex-wrap"
     >
-      <div className="flex flex-wrap items-center gap-1.5">
-        <SegmentedControl
-          layout="inline"
-          value={groupingView}
-          onChange={(id) => {
-            if (id === "by_task" || id === "by_workset") {
-              startTransition(() => onGroupingViewChange(id));
-            }
-          }}
-          ariaLabel={t("workset:groupingAria")}
-          items={[
-            { id: "by_task", label: t("workset:viewByTask") },
-            { id: "by_workset", label: t("workset:viewByWorkset") },
-          ]}
-        />
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+        {isWorksetView ? <WorksetCatalogChrome /> : null}
         {isTaskView && taskCount > 0 ? (
           <>
             <FilterChip
@@ -135,18 +119,21 @@ export function DashboardViewerToolbar({
           </>
         ) : null}
       </div>
-      {isTaskView && taskCount > 0 ? (
-        <TextField
-          type="text"
-          value={searchQuery}
-          onChange={(event) => onSearchQueryChange(event.target.value)}
-          placeholder={t("tasks:searchPlaceholder")}
-          aria-label={t("tasks:searchAria")}
-          data-im-search
-          className={`${pageOpsControlClass} min-w-[160px] max-w-[260px] flex-1 basis-40`}
-        />
-      ) : null}
-      <div className="ml-auto flex flex-wrap items-center gap-sm">
+      <div className="ml-auto flex shrink-0 flex-wrap items-center gap-sm">
+        {hideSearch ? null : (
+          <TextField
+            type="search"
+            value={searchQuery}
+            onChange={(event) => onSearchQueryChange(event.target.value)}
+            placeholder={
+              isWorksetView ? t("workset:searchPlaceholder") : t("tasks:searchPlaceholder")
+            }
+            aria-label={isWorksetView ? t("workset:searchAria") : t("tasks:searchAria")}
+            data-im-search
+            data-testid={isWorksetView ? "worksets-search" : "tasks-search"}
+            className={catalogSearchClass}
+          />
+        )}
         {isTaskView ? (
           <>
             <VisibilityEyeButton
@@ -166,24 +153,15 @@ export function DashboardViewerToolbar({
             </Button>
           </>
         ) : null}
-        {isWorksetView ? (
-          <>
-            <VisibilityEyeButton
-              visible={showSystemWorksets}
-              showLabel={t("workset:showSystemWorksets")}
-              hideLabel={t("workset:hideSystemWorksets")}
-              testId="toggle-system-worksets"
-              onToggle={onToggleSystemWorksets}
-            />
-            <Button
-              variant="primary"
-              size="md"
-              onClick={onCreateWorkset}
-              data-testid="dashboard-create-workset"
-            >
-              {t("workset:create")}
-            </Button>
-          </>
+        {isWorksetView && !hideCreateWorkset ? (
+          <Button
+            variant="primary"
+            size="md"
+            onClick={onCreateWorkset}
+            data-testid="dashboard-create-workset"
+          >
+            {t("workset:create")}
+          </Button>
         ) : null}
       </div>
     </OpsControlBar>

@@ -1577,7 +1577,10 @@ export interface paths {
         get: operations["get_event_api_v1_calendar_user_events__event_id__get"];
         put?: never;
         post?: never;
-        /** Remove Event */
+        /**
+         * Remove Event
+         * @description Hard-delete the user_events row. Timeline hide stays on /calendar/dismissals.
+         */
         delete: operations["remove_event_api_v1_calendar_user_events__event_id__delete"];
         options?: never;
         head?: never;
@@ -1646,17 +1649,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ui-prefs/voice-reminder/settings": {
+    "/api/v1/ui-prefs/notify/settings": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Fetch Voice Settings */
-        get: operations["fetch_voice_settings_api_v1_ui_prefs_voice_reminder_settings_get"];
-        /** Save Voice Settings */
-        put: operations["save_voice_settings_api_v1_ui_prefs_voice_reminder_settings_put"];
+        /** Fetch Notify Settings */
+        get: operations["fetch_notify_settings_api_v1_ui_prefs_notify_settings_get"];
+        /** Save Notify Settings */
+        put: operations["save_notify_settings_api_v1_ui_prefs_notify_settings_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1664,17 +1667,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ui-prefs/voice-reminder/fired": {
+    "/api/v1/ui-prefs/notify/fired": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Fetch Voice Fired */
-        get: operations["fetch_voice_fired_api_v1_ui_prefs_voice_reminder_fired_get"];
-        /** Save Voice Fired */
-        put: operations["save_voice_fired_api_v1_ui_prefs_voice_reminder_fired_put"];
+        /** Fetch Notify Fired */
+        get: operations["fetch_notify_fired_api_v1_ui_prefs_notify_fired_get"];
+        /** Save Notify Fired */
+        put: operations["save_notify_fired_api_v1_ui_prefs_notify_fired_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1682,7 +1685,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ui-prefs/voice-reminder/fired/claim": {
+    "/api/v1/ui-prefs/notify/fired/claim": {
         parameters: {
             query?: never;
             header?: never;
@@ -1692,27 +1695,27 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Claim Voice Fired Route
+         * Claim Notify Fired Route
          * @description Reserve dedupe keys before TTS so only one client speaks per reminder.
          */
-        post: operations["claim_voice_fired_route_api_v1_ui_prefs_voice_reminder_fired_claim_post"];
+        post: operations["claim_notify_fired_route_api_v1_ui_prefs_notify_fired_claim_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/v1/ui-prefs/voice-reminder/history": {
+    "/api/v1/ui-prefs/notify/history": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Fetch Voice History */
-        get: operations["fetch_voice_history_api_v1_ui_prefs_voice_reminder_history_get"];
-        /** Save Voice History */
-        put: operations["save_voice_history_api_v1_ui_prefs_voice_reminder_history_put"];
+        /** Fetch Notify History */
+        get: operations["fetch_notify_history_api_v1_ui_prefs_notify_history_get"];
+        /** Save Notify History */
+        put: operations["save_notify_history_api_v1_ui_prefs_notify_history_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2941,6 +2944,12 @@ export interface components {
             itemId?: string | null;
             /** Itemdatekind */
             itemDateKind?: "remind" | null;
+            /**
+             * Notifypref
+             * @default follow
+             * @enum {string}
+             */
+            notifyPref: "follow" | "off";
         };
         /** CategoryCreateBody */
         CategoryCreateBody: {
@@ -3976,6 +3985,8 @@ export interface components {
              * @description Optional parent trackable item for this recurring calendar
              */
             itemId?: string | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /** RecurringSeriesPageResponse */
         RecurringSeriesPageResponse: {
@@ -4010,6 +4021,8 @@ export interface components {
             worksetId?: string | null;
             /** Itemid */
             itemId?: string | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /**
          * RecurringSeriesResponse
@@ -4062,6 +4075,12 @@ export interface components {
             parentTaskId?: string | null;
             /** Itemid */
             itemId?: string | null;
+            /**
+             * Notifypref
+             * @default follow
+             * @enum {string}
+             */
+            notifyPref: "follow" | "off";
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -4347,6 +4366,8 @@ export interface components {
             userBackground: string;
             /** Mcpenabled */
             mcpEnabled: boolean;
+            /** A2Aenabled */
+            a2aEnabled: boolean;
             /** Mcpcapcalendarread */
             mcpCapCalendarRead: boolean;
             /** Mcpcapcalendarwrite */
@@ -4420,6 +4441,8 @@ export interface components {
             userBackground?: string | null;
             /** Mcpenabled */
             mcpEnabled?: boolean | null;
+            /** A2Aenabled */
+            a2aEnabled?: boolean | null;
             /** Mcpcapcalendarread */
             mcpCapCalendarRead?: boolean | null;
             /** Mcpcapcalendarwrite */
@@ -4519,7 +4542,10 @@ export interface components {
             analysisBatchMessageLimit?: number | null;
             /** Analysisstrategymode */
             analysisStrategyMode?: ("conservative" | "balanced" | "aggressive") | null;
-            /** Worksetid */
+            /**
+             * Worksetid
+             * @description Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`).
+             */
             worksetId?: string | null;
             /** Triggermode */
             triggerMode?: ("schedule" | "message_cursor" | "message_threshold") | null;
@@ -4537,10 +4563,15 @@ export interface components {
             capReadItems?: boolean | null;
             /** Outputcalendar */
             outputCalendar?: boolean | null;
-            /** Outputanalysisevents */
+            /**
+             * Outputanalysisevents
+             * @description Intelligence-page hard gate (analysis_events). When false, intel_event / agent batches skip persisting analysis_events. Leaderboard never writes analysis_events; omitted on create defaults to false for leaderboard and true for intel_event. Leaderboard still persists trending_topics for the leaderboard page. Agent still requires at least one of outputCalendar or outputAnalysisEvents; triggerMode=message_cursor cannot enable this flag.
+             */
             outputAnalysisEvents?: boolean | null;
             /** Llmprofileid */
             llmProfileId?: string | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /** TaskDeleteResponse */
         TaskDeleteResponse: {
@@ -4591,10 +4622,15 @@ export interface components {
             capReadItems?: boolean | null;
             /** Outputcalendar */
             outputCalendar?: boolean | null;
-            /** Outputanalysisevents */
+            /**
+             * Outputanalysisevents
+             * @description Intelligence-page write gate (intel_event / agent). Leaderboard stores this flag but does not write analysis_events.
+             */
             outputAnalysisEvents?: boolean | null;
             /** Llmprofileid */
             llmProfileId?: string | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /** TaskResponse */
         TaskResponse: {
@@ -4628,7 +4664,7 @@ export interface components {
              */
             includeInTimeline: boolean;
             /** Worksetid */
-            worksetId?: string | null;
+            worksetId: string;
             /** Agentwaveintervalseconds */
             agentWaveIntervalSeconds?: number | null;
             /** Batchoverlapcount */
@@ -4681,11 +4717,18 @@ export interface components {
             outputCalendar: boolean;
             /**
              * Outputanalysisevents
-             * @default false
+             * @description Intelligence-page write flag. intel_event/agent persist analysis_events when on; leaderboard ignores this for trending_topics persist (always writes the ranking page).
+             * @default true
              */
             outputAnalysisEvents: boolean;
             /** Llmprofileid */
             llmProfileId: string;
+            /**
+             * Notifypref
+             * @default follow
+             * @enum {string}
+             */
+            notifyPref: "follow" | "off";
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -4920,6 +4963,8 @@ export interface components {
             amount?: number | null;
             /** Direction */
             direction?: ("expense" | "income") | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /** UserEventPatchBody */
         UserEventPatchBody: {
@@ -4949,6 +4994,8 @@ export interface components {
             amount?: number | null;
             /** Direction */
             direction?: ("expense" | "income") | null;
+            /** Notifypref */
+            notifyPref?: ("follow" | "off") | null;
         };
         /** UserEventResponse */
         UserEventResponse: {
@@ -5001,6 +5048,12 @@ export interface components {
             amount?: number | null;
             /** Direction */
             direction?: ("expense" | "income") | null;
+            /**
+             * Notifypref
+             * @default follow
+             * @enum {string}
+             */
+            notifyPref: "follow" | "off";
             /**
              * Source
              * @constant
@@ -5154,7 +5207,7 @@ export interface components {
         };
         /**
          * VoiceReminderSettingsSchema
-         * @description Voice reminder settings blob under ``voice_reminder_settings``.
+         * @description Local-notify settings blob under ``notify_settings``.
          */
         VoiceReminderSettingsSchema: {
             /**
@@ -5162,9 +5215,24 @@ export interface components {
              * @default false
              */
             enabled: boolean;
+            /**
+             * Voiceenabled
+             * @default true
+             */
+            voiceEnabled: boolean;
+            /**
+             * Flashenabled
+             * @default true
+             */
+            flashEnabled: boolean;
+            /**
+             * Flashmode
+             * @default timed
+             * @enum {string}
+             */
+            flashMode: "timed" | "persistent";
             /** Leadoffsetsminutes */
             leadOffsetsMinutes?: number[];
-            sourceFilter?: components["schemas"]["SourceFilterSelectionSchema"] | null;
             /**
              * Preamblechimeid
              * @default broadcast
@@ -5195,6 +5263,16 @@ export interface components {
         WorksetCreateBody: {
             /** Name */
             name: string;
+            /**
+             * Notifyenabled
+             * @default true
+             */
+            notifyEnabled: boolean;
+            /**
+             * Externalenabled
+             * @default true
+             */
+            externalEnabled: boolean;
         };
         /** WorksetDeleteResponse */
         WorksetDeleteResponse: {
@@ -5215,6 +5293,16 @@ export interface components {
              * @default false
              */
             isSystem: boolean;
+            /**
+             * Notifyenabled
+             * @default true
+             */
+            notifyEnabled: boolean;
+            /**
+             * Externalenabled
+             * @default true
+             */
+            externalEnabled: boolean;
             /** Createdat */
             createdAt?: string | null;
             /** Updatedat */
@@ -5223,7 +5311,11 @@ export interface components {
         /** WorksetUpdateBody */
         WorksetUpdateBody: {
             /** Name */
-            name: string;
+            name?: string | null;
+            /** Notifyenabled */
+            notifyEnabled?: boolean | null;
+            /** Externalenabled */
+            externalEnabled?: boolean | null;
         };
         /**
          * SseMessagesUpdatedPayload
@@ -9196,7 +9288,7 @@ export interface operations {
             };
         };
     };
-    fetch_voice_settings_api_v1_ui_prefs_voice_reminder_settings_get: {
+    fetch_notify_settings_api_v1_ui_prefs_notify_settings_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9216,7 +9308,7 @@ export interface operations {
             };
         };
     };
-    save_voice_settings_api_v1_ui_prefs_voice_reminder_settings_put: {
+    save_notify_settings_api_v1_ui_prefs_notify_settings_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -9249,7 +9341,7 @@ export interface operations {
             };
         };
     };
-    fetch_voice_fired_api_v1_ui_prefs_voice_reminder_fired_get: {
+    fetch_notify_fired_api_v1_ui_prefs_notify_fired_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9269,7 +9361,7 @@ export interface operations {
             };
         };
     };
-    save_voice_fired_api_v1_ui_prefs_voice_reminder_fired_put: {
+    save_notify_fired_api_v1_ui_prefs_notify_fired_put: {
         parameters: {
             query?: never;
             header?: never;
@@ -9302,7 +9394,7 @@ export interface operations {
             };
         };
     };
-    claim_voice_fired_route_api_v1_ui_prefs_voice_reminder_fired_claim_post: {
+    claim_notify_fired_route_api_v1_ui_prefs_notify_fired_claim_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -9335,7 +9427,7 @@ export interface operations {
             };
         };
     };
-    fetch_voice_history_api_v1_ui_prefs_voice_reminder_history_get: {
+    fetch_notify_history_api_v1_ui_prefs_notify_history_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9355,7 +9447,7 @@ export interface operations {
             };
         };
     };
-    save_voice_history_api_v1_ui_prefs_voice_reminder_history_put: {
+    save_notify_history_api_v1_ui_prefs_notify_history_put: {
         parameters: {
             query?: never;
             header?: never;

@@ -12,7 +12,7 @@ describe("userEventFormModel", () => {
   it("EMPTY_USER_EVENT_FORM uses system workset and default RRULE", () => {
     expect(EMPTY_USER_EVENT_FORM.worksetId).toBe(SYSTEM_WORKSET_ID);
     expect(EMPTY_USER_EVENT_FORM.rrule).toBe(DEFAULT_RRULE);
-    expect(EMPTY_USER_EVENT_FORM.kind).toBe("one_off");
+    expect(EMPTY_USER_EVENT_FORM.notifyPref).toBe("off");
   });
 
   it("USER_EVENT_CLOCK_RE matches HH:MM only", () => {

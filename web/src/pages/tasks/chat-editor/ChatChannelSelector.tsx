@@ -40,8 +40,8 @@ export function ChatChannelSelector({
 
   return (
     <div className="flex flex-col gap-sm">
-      <div className="col-span-full flex w-full flex-col gap-xs">
-        <FieldLabel>
+      <div className="flex min-w-0 flex-wrap items-center gap-md">
+        <FieldLabel className="mb-0 shrink-0">
           {optional ? t("tasks:editor.channelsLabelOptional") : t("tasks:editor.channelsLabel")}
         </FieldLabel>
         <FilterTrigger
@@ -58,30 +58,30 @@ export function ChatChannelSelector({
           aria-label={t("tasks:editor.channelsAria")}
           data-testid="channel-picker-button"
         />
-
-        {selectedChannels.length > 0 && (
-          <div className="im-surface-inset mt-xs rounded-md border border-surface-border px-sm py-xs">
-            <div className="mb-xs text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-              {t("tasks:editor.channelsPreview")}
-            </div>
-            <div className="flex flex-col gap-xs">
-              {displayChannels.map((channel) => (
-                <div key={channel.id} className="flex items-center gap-sm text-xs text-text-primary">
-                  <PlatformTag platform={channel.platform} size={9} />
-                  <span className="min-w-0 truncate" title={channel.channelName}>
-                    {channel.channelName}
-                  </span>
-                </div>
-              ))}
-              {remainingChannelCount > 0 && (
-                <div className="text-xs italic text-text-muted">
-                  {t("tasks:editor.channelsMore", { count: remainingChannelCount })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      {selectedChannels.length > 0 && (
+        <div className="im-surface-inset mt-xs rounded-md border border-surface-border px-sm py-xs">
+          <div className="mb-xs text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+            {t("tasks:editor.channelsPreview")}
+          </div>
+          <div className="flex flex-col gap-xs">
+            {displayChannels.map((channel) => (
+              <div key={channel.id} className="flex items-center gap-sm text-xs text-text-primary">
+                <PlatformTag platform={channel.platform} size={9} />
+                <span className="min-w-0 truncate" title={channel.channelName}>
+                  {channel.channelName}
+                </span>
+              </div>
+            ))}
+            {remainingChannelCount > 0 && (
+              <div className="text-xs italic text-text-muted">
+                {t("tasks:editor.channelsMore", { count: remainingChannelCount })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

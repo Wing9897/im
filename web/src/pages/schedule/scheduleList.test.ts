@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { UserEvent } from "../../api/userEvents";
-import { mergeScheduleList } from "./scheduleList";
+import { mergeScheduleList, activeScheduleOneOffs } from "./scheduleList";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
 
 function oneOff(partial: Partial<UserEvent> & Pick<UserEvent, "id" | "title">): UserEvent {
@@ -59,5 +59,17 @@ describe("mergeScheduleList", () => {
     expect(merged).toHaveLength(2);
     expect(merged[0]).toMatchObject({ kind: "recurring", series: { id: "rec-new" } });
     expect(merged[1]).toMatchObject({ kind: "oneOff", event: { id: "ue-old" } });
+  });
+
+  it("drops dismissed one-offs from the manage list", () => {
+    const merged = mergeScheduleList(
+      [
+        oneOff({ id: "keep", title: "Keep" }),
+        oneOff({ id: "gone", title: "Gone", dismissed: true }),
+      ],
+      [],
+    );
+    expect(merged).toEqual([{ kind: "oneOff", event: expect.objectContaining({ id: "keep" }) }]);
+    expect(activeScheduleOneOffs([oneOff({ id: "gone", title: "Gone", dismissed: true })])).toEqual([]);
   });
 });

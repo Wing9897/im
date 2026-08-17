@@ -70,8 +70,8 @@ html {
    *   chrome  — top bar / sticky page strips / segmented tracks
    *   panel   — elevated cards, source boards, settings content cards
    *   inset   — inputs / selects (slightly denser for readability)
-   * Page atmosphere lives on .im-page-canvas / .im-shell-sidebar; nested
-   * .im-page-shell regions stay transparent (no solid content islands).
+   * Page atmosphere lives on .im-page-canvas; nested .im-page-shell regions
+   * stay transparent (no solid content islands). Overlay sidebar is glass.
    */
   --surface-chrome: color-mix(in srgb, var(--surface-page, var(--surface-base)) 96%, transparent);
   --surface-panel: var(--surface-card);

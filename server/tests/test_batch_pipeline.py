@@ -325,3 +325,83 @@ async def test_batch_limit_caps_messages_per_batch(db):
     )
     assert batch is not None
     assert batch["message_count"] == 2
+
+
+async def test_intel_event_skips_store_when_output_analysis_events_off(db):
+    await db.execute(
+        "UPDATE analysis_tasks SET output_analysis_events = 0 WHERE id = ?",
+        (seed.TASK_EVENT,),
+    )
+    before = int(
+        await db.fetch_value("SELECT COUNT(*) FROM analysis_events WHERE task_id = ?", (seed.TASK_EVENT,)) or 0
+    )
+    engine = StubEngine([{"title": "should not persist", "body": "gate off"}])
+    broadcaster = RecordingBroadcaster()
+    await execute_batch(
+        db=db,
+        broadcaster=broadcaster,
+        task_id=seed.TASK_EVENT,
+        analysis_engine=engine,
+        action_executor=None,
+    )
+    assert engine.calls == 1
+    assert "analysis_completed" in broadcaster.types()
+    completed = next(p for (t, p) in broadcaster.events if t == "analysis_completed")
+    assert completed["findingsCount"] == 0
+    after = int(
+        await db.fetch_value("SELECT COUNT(*) FROM analysis_events WHERE task_id = ?", (seed.TASK_EVENT,)) or 0
+    )
+    assert after == before
+    batch = await db.fetch_one(
+        "SELECT status FROM analysis_batches WHERE task_id = ? ORDER BY created_at DESC LIMIT 1",
+        (seed.TASK_EVENT,),
+    )
+    assert batch is not None
+    assert batch["status"] == "completed"
+
+
+async def test_leaderboard_stores_topics_when_output_analysis_events_off(db):
+    await db.execute(
+        "UPDATE analysis_tasks SET output_analysis_events = 0 WHERE id = ?",
+        (seed.TASK_LEADERBOARD,),
+    )
+    before = int(
+        await db.fetch_value(
+            "SELECT COUNT(*) FROM trending_topics WHERE task_id = ?",
+            (seed.TASK_LEADERBOARD,),
+        )
+        or 0
+    )
+    engine = StubEngine([{"topic": "should-land-on-board", "score": 0.99, "summary": "off"}])
+    broadcaster = RecordingBroadcaster()
+    await execute_batch(
+        db=db,
+        broadcaster=broadcaster,
+        task_id=seed.TASK_LEADERBOARD,
+        analysis_engine=engine,
+        action_executor=None,
+    )
+    assert engine.calls == 1
+    assert "analysis_completed" in broadcaster.types()
+    after = int(
+        await db.fetch_value(
+            "SELECT COUNT(*) FROM trending_topics WHERE task_id = ?",
+            (seed.TASK_LEADERBOARD,),
+        )
+        or 0
+    )
+    assert after >= before
+    names = {
+        row["topic_name"]
+        for row in await db.fetch_all(
+            "SELECT topic_name FROM trending_topics WHERE task_id = ?",
+            (seed.TASK_LEADERBOARD,),
+        )
+    }
+    assert "should-land-on-board" in names
+    batch = await db.fetch_one(
+        "SELECT status FROM analysis_batches WHERE task_id = ? ORDER BY created_at DESC LIMIT 1",
+        (seed.TASK_LEADERBOARD,),
+    )
+    assert batch is not None
+    assert batch["status"] == "completed"

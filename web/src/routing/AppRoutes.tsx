@@ -1,4 +1,6 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes, useParams } from "react-router-dom";
+import { worksetDetailPath } from "../domain/worksets/worksetRoutes";
+import { SETTINGS_API_REDIRECT, SETTINGS_MCP_REDIRECT } from "../domain/navigation/integrationsRoutes";
 import { SystemSettingsProvider } from "../context/SystemSettingsContext";
 import { homePathForMode, readSimpleMode } from "../domain/ui/simpleMode";
 import { useSimpleMode } from "../context/SimpleModeContext";
@@ -36,6 +38,10 @@ function DefaultHomeRedirect() {
 // Module-level lazy registration — stable exotic types for the route tree lifetime.
 const MonitorPage = lazyNamed(() => import("../pages/monitor/MonitorPage"), "MonitorPage");
 const DashboardViewer = lazyNamed(() => import("../pages/dashboard/DashboardViewer"), "DashboardViewer");
+const WorksetWorkspacePage = lazyNamed(
+  () => import("../pages/worksets/WorksetWorkspacePage"),
+  "WorksetWorkspacePage",
+);
 const SchedulePage = lazyNamed(() => import("../pages/schedule/SchedulePage"), "SchedulePage");
 const RecurringSeriesEditor = lazyNamed(
   () => import("../pages/schedule/RecurringSeriesEditor"),
@@ -79,8 +85,10 @@ const SettingsShellPage = lazyNamed(() => import("../pages/settings/SettingsShar
 const SettingsGeneralPage = lazyNamed(() => import("../pages/settings/SettingsGeneralPage"), "SettingsGeneralPage");
 const SettingsThemePage = lazyNamed(() => import("../pages/settings/SettingsThemePage"), "SettingsThemePage");
 const SettingsDataPage = lazyNamed(() => import("../pages/settings/SettingsDataPage"), "SettingsDataPage");
-const SettingsApiPage = lazyNamed(() => import("../pages/settings/SettingsApiPage"), "SettingsApiPage");
-const SettingsMcpPage = lazyNamed(() => import("../pages/settings/SettingsMcpPage"), "SettingsMcpPage");
+const SettingsIntegrationsPage = lazyNamed(
+  () => import("../pages/settings/SettingsIntegrationsPage"),
+  "SettingsIntegrationsPage",
+);
 const LogPage = lazyNamed(() => import("../pages/logs/LogPage"), "LogPage");
 const AccountShell = lazyNamed(() => import("../pages/account/AccountShell"), "AccountShell");
 const AccountIdentityPage = lazyNamed(
@@ -97,6 +105,11 @@ const ViewerTasksPage = lazyNamed(() => import("../pages/viewer/ViewerTasksPage"
 const ViewerResultsPage = lazyNamed(() => import("../pages/viewer/ViewerResultsPage"), "ViewerResultsPage");
 const ViewerStatusPage = lazyNamed(() => import("../pages/viewer/ViewerStatusPage"), "ViewerStatusPage");
 
+function LegacyTasksWorksetRedirect() {
+  const { worksetId } = useParams();
+  return <Navigate to={worksetDetailPath(worksetId ?? "")} replace />;
+}
+
 /** App route tree — always follows the live router location (no controlled location). */
 export function AppRoutes() {
   return (
@@ -104,9 +117,11 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<DefaultHomeRedirect />} />
         <Route path="/monitor" element={<LazyPage Page={MonitorPage} />} />
+        <Route path="/worksets" element={<LazyPage Page={DashboardViewer} />} />
+        <Route path="/worksets/:worksetId" element={<LazyPage Page={WorksetWorkspacePage} />} />
         <Route path="/tasks" element={<LazyPage Page={DashboardViewer} />} />
         <Route path="/tasks/new" element={<LazyPage Page={ChatEditorPage} />} />
-        <Route path="/tasks/worksets/:worksetId" element={<LazyPage Page={DashboardViewer} />} />
+        <Route path="/tasks/worksets/:worksetId" element={<LegacyTasksWorksetRedirect />} />
         <Route path="/tasks/:taskId/edit" element={<LazyPage Page={ChatEditorPage} />} />
         <Route path="/tasks/:taskId/agent" element={<LazyPage Page={AgentDetailPage} />} />
         <Route path="/schedule" element={<LazyPage Page={SchedulePage} />} />
@@ -144,8 +159,9 @@ export function AppRoutes() {
             <Route path="general" element={<LazyPage Page={SettingsGeneralPage} />} />
             <Route path="theme" element={<LazyPage Page={SettingsThemePage} />} />
             <Route path="data" element={<LazyPage Page={SettingsDataPage} />} />
-            <Route path="api" element={<LazyPage Page={SettingsApiPage} />} />
-            <Route path="mcp" element={<LazyPage Page={SettingsMcpPage} />} />
+            <Route path="integrations" element={<LazyPage Page={SettingsIntegrationsPage} />} />
+            <Route path="api" element={<Navigate to={SETTINGS_API_REDIRECT} replace />} />
+            <Route path="mcp" element={<Navigate to={SETTINGS_MCP_REDIRECT} replace />} />
             <Route path="logs" element={<LazyPage Page={LogPage} />} />
           </Route>
         </Route>

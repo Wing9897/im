@@ -1,22 +1,19 @@
 import { TopBarStatusActions } from "./AppTopBar/TopBarStatusActions";
 import { CommandPaletteTrigger } from "./CommandPaletteTrigger";
 import { AssistantQuickTrigger } from "./AssistantQuickTrigger";
-import { SidebarCollapseButton } from "./SidebarCollapseButton";
 import { MonitorModeSwitch } from "./MonitorModeSwitch";
 
 export type ShellChromeLayout = "web" | "desktop";
 
 type ShellChromeCoreProps = {
   /**
-   * Both layouts: brand → optional collapse → mode → right-clustered
-   * icon-only search/assistant + status (same as Electron title bar).
+   * Both layouts: brand → mode → assistant/search →
+   * spacer → inbox/viewer → collector status (rightmost before window chrome).
    * `desktop` omits window controls here — those stay in DesktopTitleBar.
+   * Sidebar open/close is the overlay edge chevron only (not title-bar chrome).
    */
   layout: ShellChromeLayout;
-  /** Sidebar collapse (typically pages mode only on desktop). */
-  showCollapse: boolean;
   brandClassName?: string;
-  collapseClassName?: string;
   modeClassName?: string;
   /** Right-side action cluster. Web defaults to `ml-auto` flex row. */
   actionsClassName?: string;
@@ -26,7 +23,7 @@ const DEFAULT_BRAND_CLASS =
   "mr-sm whitespace-nowrap text-[14px] font-semibold tracking-[-0.02em] text-text-primary";
 
 const DEFAULT_WEB_ACTIONS_CLASS =
-  "ml-auto flex min-w-0 items-center gap-sm";
+  "ml-auto flex min-w-0 flex-1 items-center gap-sm";
 
 /**
  * Shared chrome shared by {@link AppTopBar} and {@link DesktopTitleBar}.
@@ -34,9 +31,7 @@ const DEFAULT_WEB_ACTIONS_CLASS =
  */
 export function ShellChromeCore({
   layout,
-  showCollapse,
   brandClassName = DEFAULT_BRAND_CLASS,
-  collapseClassName,
   modeClassName,
   actionsClassName,
 }: ShellChromeCoreProps) {
@@ -45,9 +40,6 @@ export function ShellChromeCore({
       Intelligence Monitor
     </span>
   );
-  const collapse = showCollapse ? (
-    <SidebarCollapseButton className={collapseClassName} />
-  ) : null;
   const mode = (
     <div className={modeClassName} data-testid="shell-chrome-mode">
       <MonitorModeSwitch compact />
@@ -59,11 +51,11 @@ export function ShellChromeCore({
   return (
     <>
       {brand}
-      {collapse}
       {mode}
       <div className={resolvedActionsClass} data-testid="shell-chrome-actions">
         <AssistantQuickTrigger compact />
         <CommandPaletteTrigger compact />
+        <div className="shell-chrome-spacer min-w-2 flex-1 self-stretch" aria-hidden="true" />
         <TopBarStatusActions variant="titleBar" />
       </div>
     </>

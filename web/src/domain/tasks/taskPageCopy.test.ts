@@ -62,14 +62,14 @@ describe("systemTaskCatalog", () => {
     expect(clientManager?.avatarSrc).toBeTruthy();
     expect(clientManager?.staffId).toBeUndefined();
     expect(clientManager?.shortDescription).toContain("A2A");
-    expect(clientManager?.linkTo).toBe("/settings/api");
+    expect(clientManager?.linkTo).toBe("/settings/integrations?tab=a2a");
 
     const voice = catalog.find((item) => item.id === "voice-reminder");
     expect(voice?.kind).toBe("system");
     expect(voice?.staffId).toBeUndefined();
     expect(voice?.shortDescription).toContain("週期任務");
     expect(voice?.shortDescription).toContain("RRULE");
-    expect(voice?.linkTo).toBe("/actions?tab=voice");
+    expect(voice?.linkTo).toBe("/actions?tab=notify");
 
     const geocode = catalog.find((item) => item.id === "startup-geocode");
     expect(geocode?.title).toBe("啟動座標回填");

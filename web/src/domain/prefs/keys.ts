@@ -102,13 +102,12 @@ export const TIMELINE_EVENT_LIST_SHOW_ALL_STORAGE_KEY = "im:timeline:event-list-
 
 // ── Tasks / chat editor ─────────────────────────────────────────────────────
 
-export const TASKS_GROUPING_VIEW_STORAGE_KEY = "im:tasks:grouping-view";
 export const SHOW_SYSTEM_TASKS_STORAGE_KEY = "im:tasks:show-system-tasks";
-export const SHOW_SYSTEM_WORKSETS_STORAGE_KEY = "im:tasks:show-system-worksets";
 export const TASKS_MODE_FILTER_STORAGE_KEY = "im:tasks:mode-filter";
 export const TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY =
   "im:tasks:detail:channels-expanded";
 export const TASKS_SEARCH_STORAGE_KEY = "im:tasks:search";
+export const WORKSETS_SEARCH_STORAGE_KEY = "im:worksets:search";
 export const SCHEDULE_SEARCH_STORAGE_KEY = "im:schedule:search";
 export const CHAT_EDITOR_TEMPLATE_USAGE_KEY = "im:task-template-usage";
 

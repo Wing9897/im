@@ -110,7 +110,6 @@ export function SourceFilterTree({
           const childCount = row.children.length;
           const canExpand = childCount > 0;
           const isOpen = canExpand && (expanded.has(row.id) || searching);
-          const isUnassigned = row.kind === "unassigned";
           const visibleChildren = visibleChildrenForSourceFilterRow(row, query, (child) =>
             taskSearchText(child, unnamedLabel),
           );
@@ -125,13 +124,7 @@ export function SourceFilterTree({
           return (
             <li
               key={`${row.kind}-${row.id}`}
-              className={[
-                "overflow-hidden rounded-md border outline-none",
-                // Virtual “未歸屬” group: muted solid + left rail (not dashed focus-lookalike).
-                isUnassigned
-                  ? "border-[color-mix(in_srgb,var(--text-primary)_22%,var(--surface-border))] bg-[color-mix(in_srgb,var(--surface-raised)_55%,transparent)] border-l-[3px] border-l-[color-mix(in_srgb,var(--text-secondary)_55%,var(--surface-border))]"
-                  : "im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_26%,var(--surface-border))]",
-              ].join(" ")}
+              className="overflow-hidden rounded-md border outline-none im-surface-inset border-[color-mix(in_srgb,var(--text-primary)_26%,var(--surface-border))]"
             >
               <div className="flex items-center gap-1 px-1.5 py-1.5">
                 <button

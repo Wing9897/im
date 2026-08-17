@@ -99,7 +99,8 @@ describe("DesktopTitleBar", () => {
     expect(container.querySelector('[aria-label="最小化"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="最大化"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="關閉"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="sidebar-collapse"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="sidebar-collapse"]')).toBeNull();
+    expect(container.querySelector(".desktop-title-bar-collapse")).toBeNull();
     expect(container.querySelector('[data-testid="monitor-mode-switch"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="assistant-chrome-composer"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="assistant-quick-trigger"]')).toBeNull();
@@ -125,7 +126,8 @@ describe("DesktopTitleBar", () => {
 
     expect(container.querySelector(".desktop-title-bar")).not.toBeNull();
     expect(container.textContent).toContain("Intelligence Monitor");
-    expect(container.querySelector('[data-testid="sidebar-collapse"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="sidebar-collapse"]')).toBeNull();
+    expect(container.querySelector(".desktop-title-bar-collapse")).toBeNull();
 
     const minimizeBtn = container.querySelector('[aria-label="最小化"]') as HTMLButtonElement;
     const maximizeBtn = container.querySelector('[aria-label="最大化"]') as HTMLButtonElement;
@@ -153,9 +155,16 @@ describe("DesktopTitleBar", () => {
     expect(container.textContent).toContain("系統正常");
     expect(container.querySelector("[data-testid='system-status-pill']")).not.toBeNull();
     expect(container.querySelector("[data-testid='open-viewer-btn']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='chrome-channel-voice']")).toBeNull();
+    expect(container.querySelector("[data-testid='chrome-channel-flash']")).toBeNull();
+    const actions = container.querySelector("[data-testid='shell-chrome-actions']");
+    const statusArea = container.querySelector("[data-testid='topbar-status-area']");
+    const controls = container.querySelector("[data-testid='desktop-window-controls']");
+    expect(actions?.lastElementChild).toBe(statusArea);
+    expect(actions?.nextElementSibling).toBe(controls);
   });
 
-  it("hides sidebar collapse in canvas monitor mode", async () => {
+  it("does not render a title-bar sidebar collapse control", async () => {
     window.history.replaceState({}, "", "/?desktop=1");
     window.localStorage.setItem("im:monitor-mode", "canvas");
 
@@ -165,6 +174,7 @@ describe("DesktopTitleBar", () => {
     });
 
     expect(container.querySelector('[data-testid="sidebar-collapse"]')).toBeNull();
+    expect(container.querySelector(".desktop-title-bar-collapse")).toBeNull();
     expect(container.querySelector('[data-testid="monitor-mode-switch"]')).not.toBeNull();
   });
 });

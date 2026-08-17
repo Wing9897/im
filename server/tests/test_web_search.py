@@ -67,7 +67,14 @@ def test_build_tool_schemas_gates_items_writes() -> None:
 
 
 def test_agent_channel_disables_items_writes() -> None:
-    from server.agent.channels import AGENT_CHANNEL, ASSISTANT_CHANNEL, channel_from_agent_spec
+    from server.agent.channels import (
+        A2A_CHANNEL,
+        AGENT_CHANNEL,
+        ASSISTANT_CHANNEL,
+        apply_household_tool_caps,
+        channel_from_agent_spec,
+    )
+    from server.agent.mcp_tools import McpCapabilities
     from server.domain.agent_task_spec import agent_preset_spec
 
     assert ASSISTANT_CHANNEL.items_writes_enabled is True
@@ -75,6 +82,25 @@ def test_agent_channel_disables_items_writes() -> None:
     policy = channel_from_agent_spec(agent_preset_spec("project_reconcile", has_channels=True), stateless=False)
     assert policy.items_writes_enabled is False
     assert policy.items_read_enabled is True
+
+    gated = apply_household_tool_caps(
+        A2A_CHANNEL,
+        McpCapabilities(calendar_read=False, calendar_write=False),
+    )
+    assert gated.calendar_read_enabled is False
+    assert gated.calendar_writes_enabled is False
+    assert gated.messages_search_enabled is True
+    assert gated.items_writes_enabled is True
+
+
+async def test_execute_tool_blocks_messages_search_when_disabled(app) -> None:
+    result = await execute_tool(
+        app.state.db,
+        "messages.search",
+        {"query": "x"},
+        context={"messages_search_enabled": False},
+    )
+    assert result == {"error": "messages_search_disabled"}
 
 
 async def test_execute_tool_blocks_items_writes_when_disabled(app) -> None:

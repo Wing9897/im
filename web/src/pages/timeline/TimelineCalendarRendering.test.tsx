@@ -297,6 +297,7 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
         selectedSources: null,
         setSelectedSources: vi.fn(),
         timelineTasks: tasks,
+        worksets: [{ id: "__user__", name: "一般" }],
         viewMode: "calendar" as const,
         setViewMode: vi.fn(),
         timeScale: "month" as const,
@@ -314,7 +315,7 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     });
     act(() => {
       document
-        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__unassigned__"]')
+        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__user__"]')
         ?.click();
     });
     expect(
@@ -335,6 +336,7 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
         selectedSources: null,
         setSelectedSources: vi.fn(),
         timelineTasks: tasks,
+        worksets: [{ id: "__user__", name: "一般" }],
         viewMode: "calendar" as const,
         setViewMode: vi.fn(),
         timeScale: "month" as const,
@@ -352,7 +354,7 @@ describe("Timeline Calendar Rendering — Requirement 9.3: Calendar tasks in fil
     });
     act(() => {
       document
-        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__unassigned__"]')
+        .querySelector<HTMLButtonElement>('[data-testid="board-workset-expand-__user__"]')
         ?.click();
     });
     const checkbox = document.querySelector<HTMLInputElement>(

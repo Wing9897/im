@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { FilterX, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button, MenuSelect, OpsControlBar, TextField } from "../../../components/ui";
+import { Button, MenuSelect, OpsControlBar, SwitchTrack, TextField } from "../../../components/ui";
 import { pageOpsControlClass, pageOpsIconButtonClass } from "../../../components/ui/controlStyles";
 import { useLogPageContext } from "../LogPageContext";
 
@@ -90,15 +90,18 @@ export function LogFilterToolbar() {
         className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-caption text-text-secondary"
         title={t("toolbar.showAnalysisTraceTitle")}
       >
-        <input
-          type="checkbox"
-          className="h-3.5 w-3.5 cursor-pointer accent-[var(--accent)]"
-          checked={showAnalysisTrace}
-          onChange={(e) => setShowAnalysisTrace(e.target.checked)}
-          data-testid="log-show-analysis-trace"
-          aria-label={t("toolbar.showAnalysisTrace")}
-        />
         <span className="whitespace-nowrap">{t("toolbar.showAnalysisTrace")}</span>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showAnalysisTrace}
+          aria-label={t("toolbar.showAnalysisTrace")}
+          data-testid="log-show-analysis-trace"
+          className="inline-flex appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)] focus-visible:ring-offset-1"
+          onClick={() => setShowAnalysisTrace(!showAnalysisTrace)}
+        >
+          <SwitchTrack checked={showAnalysisTrace} size="sm" />
+        </button>
       </label>
       {hasActiveFilters ? (
         <Button

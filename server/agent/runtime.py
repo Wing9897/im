@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from server.agent.channels import AgentChannel, AgentChannelId, get_agent_channel
+from server.agent.channels import AgentChannel, AgentChannelId, apply_household_tool_caps, get_agent_channel
 from server.agent.context_compact import (
     DEFAULT_MAX_CHARS as DEFAULT_HISTORY_MAX_CHARS,
 )
@@ -99,6 +99,8 @@ class AgentRuntime:
         analysis_events_read_enabled: bool = True,
         items_read_enabled: bool = True,
         items_writes_enabled: bool = True,
+        messages_search_enabled: bool = True,
+        allowed_workset_ids: frozenset[str] | None = None,
         current_task: dict[str, Any] | None = None,
         locale: str | None = None,
         web_route: WebSearchRoute | None = None,
@@ -127,6 +129,8 @@ class AgentRuntime:
             "analysis_events_read_enabled": analysis_events_read_enabled,
             "items_read_enabled": items_read_enabled,
             "items_writes_enabled": items_writes_enabled,
+            "messages_search_enabled": messages_search_enabled,
+            "allowed_workset_ids": allowed_workset_ids,
             "current_task": current_task,
             "locale": locale,
         }
@@ -160,6 +164,15 @@ class AgentRuntime:
     ) -> AsyncIterator[dict[str, Any]]:
         """Yield NDJSON/SSE-friendly progress events during the agent tool loop."""
         channel_policy = policy if policy is not None else get_agent_channel(channel)
+        if channel_policy.id == "a2a":
+            from server.agent.mcp_tools import load_mcp_capabilities
+            from server.queries.worksets_queries import fetch_external_enabled_workset_ids
+
+            caps = await load_mcp_capabilities(self.db)
+            channel_policy = apply_household_tool_caps(channel_policy, caps)
+            allowed_workset_ids = await fetch_external_enabled_workset_ids(self.db)
+        else:
+            allowed_workset_ids = None
         if channel_policy.stateless:
             sid = new_id()
             is_new_conversation = True
@@ -199,6 +212,8 @@ class AgentRuntime:
             analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
             items_read_enabled=channel_policy.items_read_enabled,
             items_writes_enabled=channel_policy.items_writes_enabled,
+            messages_search_enabled=channel_policy.messages_search_enabled,
+            allowed_workset_ids=allowed_workset_ids,
             current_task=current_task if task_advisor_enabled else None,
             locale=resolved_locale if task_advisor_enabled else None,
             web_route=web_route,
@@ -221,6 +236,7 @@ class AgentRuntime:
                     analysis_events_read_enabled=channel_policy.analysis_events_read_enabled,
                     items_read_enabled=channel_policy.items_read_enabled,
                     items_writes_enabled=channel_policy.items_writes_enabled,
+                    messages_search_enabled=channel_policy.messages_search_enabled,
                     user_background=user_background,
                     base_prompt=base_prompt if base_prompt is not None else channel_policy.system_prompt,
                 ),

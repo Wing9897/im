@@ -11,6 +11,11 @@ import {
 } from "./userEventCalendarKind";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { buildRRule } from "../schedule/rrule";
+import {
+  DEFAULT_CALENDAR_NOTIFY_PREF,
+  normalizeNotifyPref,
+  type NotifyPref,
+} from "../notify/notifyPref";
 
 export type { UserEventKind };
 export type { UserEventCalendarKind };
@@ -35,6 +40,8 @@ export type UserEventFormValues = {
   isAllDay: boolean;
   /** Optional remind-N-days-before-start; empty string = unset. */
   remindBeforeDays: string;
+  /** Per-row reminder (checked = follow workset; unchecked = mute this row). */
+  notifyPref: NotifyPref;
   /** Optional parent trackable item id (linked calendar). */
   itemId: string;
   /** Optional transaction amount input (purchase_effective); empty = unset. */
@@ -74,6 +81,7 @@ export const EMPTY_USER_EVENT_FORM: UserEventFormValues = {
   worksetId: SYSTEM_WORKSET_ID,
   isAllDay: false,
   remindBeforeDays: "",
+  notifyPref: DEFAULT_CALENDAR_NOTIFY_PREF,
   itemId: "",
   amountInput: "",
   direction: "expense",
@@ -113,6 +121,7 @@ export function valuesFromInitial(
     worksetId: toUserEventFormWorksetId(initial?.worksetId),
     isAllDay,
     remindBeforeDays,
+    notifyPref: normalizeNotifyPref(initial?.notifyPref, DEFAULT_CALENDAR_NOTIFY_PREF),
     itemId: (initial?.itemId ?? "").trim(),
     amountInput,
     direction,

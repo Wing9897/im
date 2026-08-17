@@ -3,18 +3,24 @@
 from server.db.schema_domains.vocabulary import (
     ANALYSIS_MODE_CHECK_SQL,
     ANALYSIS_TIME_RANGE_CHECK_SQL,
+    NOTIFY_PREF_CHECK_SQL,
 )
 from server.domain.agent_task_spec import TRIGGER_MODE_CHECK_SQL
 from server.domain.analysis_strategy_modes import ANALYSIS_STRATEGY_MODE_CHECK_SQL
 from server.domain.batch_statuses import BATCH_STATUS_CHECK_SQL
 
 DDL = f"""
--- Optional ownership dimension for analysis tasks (orthogonal to analysis_mode).
--- Builtin system row id ``__user__`` (is_system=1) is the handwritten / assistant ownership bucket.
+-- Ownership dimension for analysis tasks (orthogonal to analysis_mode).
+-- Builtin system row id ``__user__`` (is_system=1) is the default bucket
+-- (same as items / user_events). delete_workset reassigns to __user__ first.
 CREATE TABLE IF NOT EXISTS worksets (
     id         TEXT PRIMARY KEY,
     name       TEXT NOT NULL,
     is_system  INTEGER NOT NULL DEFAULT 0,
+    -- Workset-level reminder default (1 = on). Builtin 「一般」 can be turned off.
+    notify_enabled INTEGER NOT NULL DEFAULT 1,
+    -- MCP/A2A visibility (1 = on). Shared by both channels; builtin 「一般」 can be turned off.
+    external_enabled INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -39,8 +45,9 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     -- Never calendar-expanded (hard-gated by analysis_mode / purpose=trigger).
     schedule_rrule       TEXT DEFAULT NULL,
     include_in_timeline  INTEGER NOT NULL DEFAULT 1,
-    workset_id           TEXT DEFAULT NULL
-                         REFERENCES worksets(id) ON DELETE SET NULL,
+    -- Always a workset; omit / empty on create → __user__. Delete reassigns first.
+    workset_id           TEXT NOT NULL DEFAULT '__user__'
+                         REFERENCES worksets(id),
     -- Per-task analysis-scheduling overrides (NULL = use system_config defaults).
     agent_wave_interval_seconds INTEGER DEFAULT NULL,
     batch_overlap_count           INTEGER DEFAULT NULL,
@@ -49,7 +56,7 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     -- NULL = use system_config default (SQLite IN-CHECK passes NULL through).
     analysis_strategy_mode        TEXT DEFAULT NULL
                                   {ANALYSIS_STRATEGY_MODE_CHECK_SQL},
-    -- Agent-mode policy (ignored for non-agent modes; wipe-only stamp 20+).
+    -- Agent-mode policy (inert for non-agent modes).
     trigger_mode              TEXT NOT NULL DEFAULT 'schedule'
                               {TRIGGER_MODE_CHECK_SQL},
     cap_calendar_read         INTEGER NOT NULL DEFAULT 1,
@@ -59,10 +66,14 @@ CREATE TABLE IF NOT EXISTS analysis_tasks (
     cap_read_analysis_events  INTEGER NOT NULL DEFAULT 1,
     cap_read_items            INTEGER NOT NULL DEFAULT 1,
     output_calendar           INTEGER NOT NULL DEFAULT 0,
-    output_analysis_events    INTEGER NOT NULL DEFAULT 0,
+    -- All-mode intelligence hard gate (stamp 35+). Agent still writes explicit 0/1.
+    output_analysis_events    INTEGER NOT NULL DEFAULT 1,
     -- LLM connection profile; tasks always bind a profile.
     llm_profile_id       TEXT NOT NULL
                          REFERENCES llm_profiles(id),
+    -- Per-task reminder: follow workset default, or mute this task.
+    notify_pref          TEXT NOT NULL DEFAULT 'follow'
+                         {NOTIFY_PREF_CHECK_SQL},
     created_at           TEXT NOT NULL,
     updated_at           TEXT NOT NULL
 );

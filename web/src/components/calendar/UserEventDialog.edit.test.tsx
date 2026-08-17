@@ -45,6 +45,33 @@ describe("UserEventDialog edit", () => {
     host.remove();
   });
 
+  it("loads saved notifyPref follow as checked", async () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "edit",
+          initial: {
+            title: "既有",
+            startTime: "2026-07-20T10:00:00.000Z",
+            worksetId: SYSTEM_WORKSET_ID,
+            notifyPref: "follow",
+          },
+          onClose: vi.fn(),
+          onSubmit: vi.fn(),
+        }),
+      );
+    });
+
+    const toggle = document.body.querySelector('[data-testid="notify-pref-field"]');
+    expect(toggle?.getAttribute("aria-checked")).toBe("true");
+    host.remove();
+  });
+
   it("keeps typed start time when parent re-renders with a fresh initial object", async () => {
     const onSubmit = vi.fn();
     const host = document.createElement("div");

@@ -1,6 +1,7 @@
 """SQLite DDL for the calendar domain."""
 
 from server.db.schema_domains.vocabulary import (
+    NOTIFY_PREF_CHECK_SQL,
     TIMELINE_SOURCE_CHECK_SQL,
     USER_EVENT_DIRECTION_CHECK_SQL,
     USER_EVENT_KIND_CHECK_SQL,
@@ -36,6 +37,9 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     -- Optional parent trackable item (linked recurring calendar under an inventory Thing).
     item_id                 TEXT DEFAULT NULL
                             REFERENCES items(id) ON DELETE SET NULL,
+    -- Per-series reminder: follow workset default, or mute this series.
+    notify_pref             TEXT NOT NULL DEFAULT 'follow'
+                            {NOTIFY_PREF_CHECK_SQL},
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
 );
@@ -80,6 +84,9 @@ CREATE TABLE IF NOT EXISTS user_events (
     amount      REAL DEFAULT NULL,
     direction   TEXT DEFAULT NULL
                 {USER_EVENT_DIRECTION_CHECK_SQL},
+    -- Per-event reminder: follow workset default, or mute this row.
+    notify_pref TEXT NOT NULL DEFAULT 'follow'
+                {NOTIFY_PREF_CHECK_SQL},
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );

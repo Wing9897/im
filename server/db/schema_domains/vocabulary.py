@@ -11,6 +11,7 @@ from server.domain.app_log_levels import APP_LOG_LEVEL_CHECK_SQL
 from server.domain.collector_platforms import PLATFORM_CHECK_SQL
 from server.domain.llm_providers import LLM_PROVIDER_CHECK_SQL
 from server.domain.llm_staff_classes import LLM_STAFF_CLASS_CHECK_SQL
+from server.domain.notify_prefs import NOTIFY_PREF_CHECK_SQL
 from server.domain.timeline_sources import TIMELINE_SOURCE_CHECK_SQL
 from server.domain.user_event_directions import USER_EVENT_DIRECTION_CHECK_SQL
 from server.domain.user_event_kinds import USER_EVENT_KIND_CHECK_SQL
@@ -27,4 +28,5 @@ __all__ = [
     "TIMELINE_SOURCE_CHECK_SQL",
     "LLM_PROVIDER_CHECK_SQL",
     "LLM_STAFF_CLASS_CHECK_SQL",
+    "NOTIFY_PREF_CHECK_SQL",
 ]

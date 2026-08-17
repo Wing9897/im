@@ -54,5 +54,13 @@ describe("WebhookAccessKeysNotice", () => {
     expect(status?.textContent).toContain("Not set");
     expect(status?.textContent).toContain("Account-manager-only keys do not count");
   });
+
+  it("links to Account access keys, not a retired source-keys path", () => {
+    renderNotice({ keyCount: 0, isConfigured: false });
+    const link = Array.from(container.querySelectorAll("a")).find((el) =>
+      el.textContent?.includes("Account → Access keys"),
+    );
+    expect(link?.getAttribute("href")).toBe("/account/keys");
+  });
 });
 

@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.calendar.timeline_dismissals import dismiss_timeline_event
 from server.calendar.user_events_normalize import (
     _UNSET,
+    UserEventValidationError,
     UserEventWorksetIdError,
     _normalize_optional_end,
     _normalize_origin,
@@ -25,7 +25,12 @@ from server.calendar.user_events_normalize import (
     resolve_user_event_workset_id,
 )
 from server.calendar.user_events_read import get_user_event
-from server.db.database import Database
+from server.db.database import Database, TransactionDb
+from server.domain.notify_prefs import (
+    DEFAULT_CALENDAR_NOTIFY_PREF,
+    DEFAULT_NOTIFY_PREF,
+    normalize_notify_pref,
+)
 from server.queries.calendar_queries import fetch_user_event
 from server.util import new_id, utc_now_iso
 from server.worksets_const import SYSTEM_WORKSET_ID
@@ -54,6 +59,7 @@ async def create_user_event(
     kind: Any = None,
     amount: Any = None,
     direction: Any = None,
+    notify_pref: Any = None,
 ) -> dict[str, Any]:
     clean_title = _require_nonempty_title(title)
     clean_start = _require_start_time(start_time)
@@ -70,6 +76,12 @@ async def create_user_event(
         amount=clean_amount,
         direction=direction,
     )
+    try:
+        clean_notify = normalize_notify_pref(
+            notify_pref, default=DEFAULT_CALENDAR_NOTIFY_PREF
+        )
+    except ValueError as exc:
+        raise UserEventValidationError(str(exc)) from exc
 
     if workset_id is _UNSET:
         # Empty / omitted taskId → system workset; real task → copy task workset if any.
@@ -94,8 +106,8 @@ async def create_user_event(
         "INSERT INTO user_events "
         "(id, title, body, start_time, end_time, location, origin, event_is_all_day, "
         "remind_before_days, task_id, item_id, workset_id, kind, amount, direction, "
-        "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "notify_pref, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             event_id,
             clean_title,
@@ -112,6 +124,7 @@ async def create_user_event(
             clean_kind,
             clean_amount,
             clean_direction,
+            clean_notify,
             now,
             now,
         ),
@@ -138,6 +151,7 @@ async def update_user_event(
     kind: Any = _UNSET,
     amount: Any = _UNSET,
     direction: Any = _UNSET,
+    notify_pref: Any = _UNSET,
 ) -> dict[str, Any] | None:
     """Partial update. Pass ``end_time=None`` (or ``\"\"``) to clear the end."""
     existing = await fetch_user_event(db, event_id)
@@ -209,11 +223,24 @@ async def update_user_event(
         amount=next_amount,
         direction=direction_arg,
     )
+    if notify_pref is _UNSET:
+        raw_notify = existing.get("notify_pref")
+        next_notify = raw_notify.strip() if isinstance(raw_notify, str) and raw_notify.strip() else DEFAULT_NOTIFY_PREF
+        try:
+            next_notify = normalize_notify_pref(next_notify)
+        except ValueError:
+            next_notify = DEFAULT_NOTIFY_PREF
+    else:
+        try:
+            next_notify = normalize_notify_pref(notify_pref)
+        except ValueError as exc:
+            raise UserEventValidationError(str(exc)) from exc
 
     await db.execute(
         "UPDATE user_events SET title = ?, body = ?, start_time = ?, end_time = ?, "
         "location = ?, event_is_all_day = ?, remind_before_days = ?, task_id = ?, item_id = ?, "
-        "workset_id = ?, kind = ?, amount = ?, direction = ?, updated_at = ? WHERE id = ?",
+        "workset_id = ?, kind = ?, amount = ?, direction = ?, notify_pref = ?, updated_at = ? "
+        "WHERE id = ?",
         (
             next_title,
             next_body,
@@ -228,6 +255,7 @@ async def update_user_event(
             next_kind,
             next_amount,
             next_direction,
+            next_notify,
             utc_now_iso(),
             event_id,
         ),
@@ -238,9 +266,23 @@ async def update_user_event(
 
 
 async def delete_user_event(db: Database, event_id: str) -> bool:
-    """Soft-dismiss a user event for the timeline (row retained for restore)."""
+    """Hard-delete a user event (Schedule / Items trash).
+
+    Timeline hide/restore stays on ``PUT/DELETE /calendar/dismissals``. Agent
+    ``calendar.delete_event`` also stays a soft-dismiss and does not call this.
+    """
     existing = await fetch_user_event(db, event_id)
     if existing is None:
         return False
-    await dismiss_timeline_event(db, source="user", event_id=event_id)
+    async with db.transaction() as conn:
+        tx = TransactionDb(conn)
+        await tx.execute(
+            "DELETE FROM timeline_dismissals WHERE source = 'user' AND event_id = ?",
+            (event_id,),
+        )
+        await tx.execute(
+            "DELETE FROM timeline_importance WHERE source = 'user' AND event_id = ?",
+            (event_id,),
+        )
+        await tx.execute("DELETE FROM user_events WHERE id = ?", (event_id,))
     return True

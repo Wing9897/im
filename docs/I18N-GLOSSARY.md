@@ -41,7 +41,7 @@
 | Namespaces | `common`、`tasks`、`board`、`nav`、`actions`、`intelligence`、`monitor`、`sources`、`timeline`、`settings`、`assistant`、`logs`、`items`、`schedule`、`account`、`workset`、`viewer`、`leaderboard`（SoT：`i18n.ts` 的 `NAMESPACES`；parity 腳本以 `locales/zh-Hant/*.json` 自動發現，新增檔案不需改腳本） |
 | Interpolation | `{name}`（非 `{{name}}`）；見 `i18n.ts` `prefix`／`suffix` |
 | 列表分隔 | `joinList`／`common:ui.listSep`（中文 `、`、英文 `, `） |
-| 產品 chrome | 主路徑 UI（側欄／設定／Actions／Intelligence／Monitor／Sources／Timeline／Items／Logs／Assistant／board／任務表單／語音提醒／排行榜等）已三語；UAT 就緒 |
+| 產品 chrome | 主路徑 UI（側欄／設定／Actions／Intelligence／Monitor／Sources／Timeline／Items／Logs／Assistant／board／任務表單／本機通知／排行榜等）已三語；UAT 就緒 |
 | 明確不做 | 任務／頻道等**用戶內容**；主題專有名詞（Latte／Mocha 等）；切語言不重跑歷史分析；Email auth-error **regex**（非 UI chrome） |
 | TTS／STT | `speechLanguage` **仍獨立**，不跟 UI locale／`ui_locale` 自動綁死 |
 
@@ -90,6 +90,9 @@
 | 側欄「系統設定」／設定麵包屑根 | `nav:systemSettings` | 勿再平行維護 `settings:shell.*RootLabel`（已刪除） |
 | 側欄「AI 設定」／AI 麵包屑根 | `nav:aiSettings` | 同上 |
 | 設定分頁（一般／主題／…） | `settings:tabs.*` | command palette 等請引用同一語意，勿另造近似 key |
+| 設定分頁「外部接口」 | `settings:tabs.integrations` | en **External interfaces**；zh-Hans／zh-Hant 皆 **外部接口**（顯示名勿寫 API／外部介面）。SoT `/settings/integrations` query `tab=webhook` / `a2a` / `deeplink` / `mcp`；legacy `/settings/api` 與 `/settings/mcp` 轉址 |
+| 外部接口 pill「日曆連結」 | `settings:integrations.deeplink`／`settings:apiDocs.deepLink.title`／`common:commandPalette.settingsDeeplink` | zh-Hant **日曆連結**；zh-Hans **日历链接**；en **Calendar link**。pill／面板標題／命令面板顯示名皆此短標；URL `tab=deeplink` 勿改。勿在 pill 寫 Deep link／Desktop。舊稱「Desktop 日曆 deep link」僅命令面板 **alias**。面板內文可保留 Desktop／協定說明。timeline `source.url`「日曆連結」是匯入來源類型，與此 pill 共用短標但不是同一 surface |
+| 帳戶存取金鑰 | `account:accessKeys.*` | 只建立／撤銷；新鑰一律 `*`；既有 `read` 僅列表狀態「唯讀」。能力群組在外部接口 → MCP 與 A2A（同一套 `mcp_cap_*`）；工作集「外部接口」在 `/worksets`（`worksets.external_enabled`），不是金鑰 scope。MCP／A2A 各有獨立「啟用」（`mcpDocs.masterSwitch`／`a2aDocs.masterSwitch`） |
 | 側欄「日誌」短標 | `nav:logs` | 與 `settings:tabs.logs`（「系統日誌」）刻意不同長度 |
 
 ## 日誌正文語言
@@ -106,6 +109,7 @@
 - **結構欄位** `id` / `analysisMode` / `defaultAnalysisTimeRange` / `badge` 僅在 JSON 來源定義。
 - **改文案流程**：編輯 `shared/task_presets.json`，再跑 `npm run sync:presets` 寫入三語 `tasks.json` → `presets.*`；`npm run sync:presets:check` 只檢查不覆寫。
 - **防漂移**：`server/tests/test_task_preset_i18n_parity.py` 對每個 preset id 断言 zh-Hant JSON 與 `BUILTIN_PRESETS` 三欄文字相等，改一邊忘改另一邊會直接測試失敗。
+- **產品目錄（精簡）**：情報 `intel_event` 八則（`key-insights` 關鍵情報摘要、`schedule-time-inference` 時間行程推理、`iot-device-alerts` IoT 設備告警、`crypto-airdrop-deals` 薅羊毛情報、`schedule-events` 行程事件提取、`security-scam-watch` 資安詐騙警示、`policy-regulation` 政策法規動態、`finance-markets` 金融市場要聞）；專案經理 `agent` 兩則（`agent-date-crud` 通用專案日期管理、`agent-work-shift` 工作輪更表）。編輯器內 Agent 政策芯片仍是 `project_reconcile`／`web_scout`，不是目錄列。無排行榜目錄模板；排行榜任務走 `/leaderboard` + 通知，不進情報事件頁。
 
 ## 產品用語
 
@@ -121,6 +125,8 @@
 | Agent 詳情頁（路由仍可含 `project*` 檔名） | **專案經理詳情**／Agent tick（勿對用戶說「開啟專案」） | Project Manager detail | 项目经理详情 |
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
+| 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 |
+| 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出；塊標題（來源／助手／物品／任務／工作集／情報頁／時間規劃／我的日程／通知／MCP／A2A）維持不變 |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
@@ -128,6 +134,13 @@
 | 物品頁／trackable inventory | **物品**（namespace `items`） | Items | 物品 |
 | 我的日程頁（管理區） | **我的日程**（namespace `schedule`；`schedule.json`） | My schedule | 我的日程 | 與任務 `scheduleRrule`／時間規劃 timeline 文案分離；頁面用 `useTranslation("schedule")` |
 | 監控模式 `canvas`（自由排版儀表） | **畫布** | Ops Board | 画布 | UI 顯示名**單一**（勿再寫「畫布／Ops Board」）；代碼 mode=`canvas`、prefs=`ops_board_*`、目錄 `board/` **勿改** |
+| 實體／工作集「會不會響」開關（語音／畫面／最近一天） | **通知**（勿稱提醒） | Notify / Notification | 通知 |
+| 通知通道：朗讀 | **語音** | Voice | 语音 |
+| 通知通道：頂欄專用條（非操作 toast） | **畫面** | On-screen | 画面 |
+| 畫面呈現：約 10 秒後自動消失 | **閃現** | Flash (timed) | 闪现 |
+| 畫面呈現：直至關閉 | **持續** | Persistent | 持续 |
+| 日曆相對開始日的前置天數 | **提前天數**（勿稱提醒／提前提醒） | Days ahead | 提前天数 |
+| 日期／時間欄旁填入本機此刻 | **現在** | Now | 现在 |
 
 ## AI 員工（staff／employees／intro）
 
@@ -167,7 +180,7 @@
 | `collector` | 收集器 | Collector | 收集器 |
 | `analysis-batch` | 分析批次 | Analysis batch | 分析批次 |
 | `outbound-notify` | 外發通知 | Outbound notify | 外发通知 |
-| `voice-reminder` | 語音提醒 | Voice reminder | 语音提醒 |
+| `voice-reminder` | 本機通知 | Local notifications | 本机通知 |
 | `retention` | 資料清理 | Data cleanup | 资料清理 |
 | `startup-geocode` | 啟動座標回填 | Startup geocode backfill | 启动坐标回填 |
 

@@ -4,12 +4,11 @@ import type { AnalysisMode } from "../../types";
 import type { AiStaffId } from "../aiStaff/aiStaff";
 import liaisonAvatarSrc from "../../assets/ai-staff/liaison.png";
 export {
-  TASKS_GROUPING_VIEW_STORAGE_KEY,
   SHOW_SYSTEM_TASKS_STORAGE_KEY,
-  SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
   TASKS_MODE_FILTER_STORAGE_KEY,
   TASKS_DETAIL_CHANNELS_EXPANDED_STORAGE_KEY,
   TASKS_SEARCH_STORAGE_KEY,
+  WORKSETS_SEARCH_STORAGE_KEY,
 } from "../prefs";
 
 /** Kind of read-only system / virtual / agent info card on /tasks. */
@@ -27,12 +26,6 @@ export interface SystemTaskInfo {
   /** Optional in-app path shown as a secondary link on the card. */
   linkTo?: string;
   linkLabel?: string;
-}
-
-export type TasksGroupingView = "by_task" | "by_workset";
-
-export function isTasksGroupingView(value: string | null): value is TasksGroupingView {
-  return value === "by_task" || value === "by_workset";
 }
 
 export type TasksModeFilter = AnalysisMode | "all";
@@ -75,7 +68,7 @@ const SYSTEM_TASK_DEFS: readonly SystemTaskDef[] = [
     titleKey: "systemTasks.clientManager.title",
     descriptionKey: "systemTasks.clientManager.shortDescription",
     avatarSrc: liaisonAvatarSrc,
-    linkTo: "/settings/api",
+    linkTo: "/settings/integrations?tab=a2a",
     linkLabelKey: "systemTasks.clientManager.linkLabel",
   },
   {
@@ -101,7 +94,7 @@ const SYSTEM_TASK_DEFS: readonly SystemTaskDef[] = [
     kind: "system",
     titleKey: "systemTasks.voiceReminder.title",
     descriptionKey: "systemTasks.voiceReminder.shortDescription",
-    linkTo: "/actions?tab=voice",
+    linkTo: "/actions?tab=notify",
     linkLabelKey: "systemTasks.voiceReminder.linkLabel",
   },
   {

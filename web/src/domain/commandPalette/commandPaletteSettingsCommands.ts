@@ -3,12 +3,14 @@ import {
   Cable,
   Code2,
   Gauge,
+  Link2,
   Palette,
   ScrollText,
   Settings,
   Users,
   Wrench,
 } from "lucide-react";
+import { settingsIntegrationsPath } from "../navigation/integrationsRoutes";
 import type { CommandPaletteItemDef } from "./commandPaletteTypes";
 
 export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
@@ -48,15 +50,16 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
     keywords: ["reset", "database", "資料"],
   },
   {
-    id: "settings-api",
-    labelKey: "commandPalette.settingsApi",
-    to: "/settings/api",
+    id: "settings-integrations",
+    labelKey: "commandPalette.settingsIntegrations",
+    to: settingsIntegrationsPath("webhook"),
     icon: Code2,
     groupId: "settings",
     keywords: [
       "api",
       "webhook",
       "a2a",
+      "外部接口",
       "客户经理",
       "客戶經理",
       "account manager",
@@ -65,9 +68,26 @@ export const COMMAND_PALETTE_SETTINGS_DEFS: readonly CommandPaletteItemDef[] = [
     ],
   },
   {
+    id: "settings-deeplink",
+    labelKey: "commandPalette.settingsDeeplink",
+    to: settingsIntegrationsPath("deeplink"),
+    icon: Link2,
+    groupId: "settings",
+    keywords: [
+      "deep link",
+      "deeplink",
+      "Desktop 日曆",
+      "Desktop 日历",
+      "Desktop calendar",
+      "Desktop calendar deep link",
+      "日曆連結",
+      "日历链接",
+    ],
+  },
+  {
     id: "settings-mcp",
     labelKey: "commandPalette.settingsMcp",
-    to: "/settings/mcp",
+    to: settingsIntegrationsPath("mcp"),
     icon: Cable,
     groupId: "settings",
     keywords: [

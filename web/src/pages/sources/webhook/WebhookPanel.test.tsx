@@ -43,7 +43,7 @@ describe("WebhookPanel", () => {
     container.remove();
   });
 
-  it("points to Settings API docs for the ingest example", () => {
+  it("points to External interfaces webhook docs for the ingest example", () => {
     act(() => {
       root = createRoot(container);
       root.render(
@@ -51,8 +51,8 @@ describe("WebhookPanel", () => {
       );
     });
 
-    const link = container.querySelector('[data-testid="webhook-api-docs-link"]');
-    expect(link?.getAttribute("href")).toBe("/settings/api");
+    const link = container.querySelector('[data-testid="webhook-integrations-link"]');
+    expect(link?.getAttribute("href")).toBe("/settings/integrations?tab=webhook");
     expect(container.querySelector("pre")).toBeNull();
   });
 

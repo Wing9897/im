@@ -1,7 +1,7 @@
 """Built-in **task template catalog** loaded from ``shared/task_presets.json``.
 
 ``BUILTIN_PRESETS`` is a curated list of ready-to-use analysis task presets
-(e.g. "trending topics") that a user can apply when creating a task. Each
+(e.g. "key intel summary") that a user can apply when creating a task. Each
 preset carries display text (``name`` / ``description`` / ``promptTemplate``)
 plus structural fields (``id`` / ``analysisMode`` / ``defaultAnalysisTimeRange``
 / ``badge``).

@@ -131,6 +131,7 @@ describe("Route module imports", () => {
     const pageModules = [
       () => import("../monitor/MonitorPage"),
       () => import("../dashboard/DashboardViewer"),
+      () => import("../worksets/WorksetWorkspacePage"),
       () => import("../tasks/chat-editor/ChatEditorPage"),
       () => import("../tasks/agent/AgentDetailPage"),
       () => import("../leaderboard/LeaderboardPage"),
@@ -435,6 +436,10 @@ describe("Agent detail route contract", () => {
   it("registers /agent only — legacy /project redirect is retired", () => {
     const src = readFileSync(resolve(__dirname, "../../routing/AppRoutes.tsx"), "utf8");
     expect(src).toContain('path="/tasks/:taskId/agent"');
+    expect(src).toContain('path="/worksets"');
+    expect(src).toContain('path="/worksets/:worksetId"');
+    expect(src).toContain("WorksetWorkspacePage");
+    expect(src).not.toContain("WorksetDetailDialog");
     expect(src).not.toContain('path="/tasks/:taskId/project"');
     expect(src).not.toContain("AgentDetailLegacyRedirect");
   });

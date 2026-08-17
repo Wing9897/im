@@ -1,8 +1,11 @@
-"""UI prefs routes: ops board + voice reminder JSON in ``system_config``.
+"""UI prefs routes: ops board + local-notify JSON in ``ui_prefs``.
 
 Board resource combines layout + widgetState in one GET/PUT (fewer roundtrips
-on hydrate). Voice reminder is split into three resources so the scanner can
+on hydrate). Local notify is split into three resources so the scanner can
 rewrite fired/history without touching settings.
+
+Stamp 37: SoT paths are ``/api/v1/ui-prefs/notify/{settings,fired,history}``.
+Retired ``/api/v1/ui-prefs/voice-reminder/*`` is absent (404).
 """
 
 from __future__ import annotations
@@ -96,13 +99,13 @@ async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> BoardPr
     return BoardPrefsResponse.model_validate(saved)
 
 
-@router.get("/voice-reminder/settings", response_model=VoiceReminderSettingsResponse)
-async def fetch_voice_settings(request: Request) -> VoiceReminderSettingsResponse:
+@router.get("/notify/settings", response_model=VoiceReminderSettingsResponse)
+async def fetch_notify_settings(request: Request) -> VoiceReminderSettingsResponse:
     return VoiceReminderSettingsResponse.model_validate(await get_voice_settings(get_db(request)))
 
 
-@router.put("/voice-reminder/settings", response_model=VoiceReminderSettingsResponse)
-async def save_voice_settings(request: Request, body: VoiceSettingsBody) -> VoiceReminderSettingsResponse:
+@router.put("/notify/settings", response_model=VoiceReminderSettingsResponse)
+async def save_notify_settings(request: Request, body: VoiceSettingsBody) -> VoiceReminderSettingsResponse:
     try:
         saved = await put_voice_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
@@ -110,13 +113,13 @@ async def save_voice_settings(request: Request, body: VoiceSettingsBody) -> Voic
     return VoiceReminderSettingsResponse.model_validate(saved)
 
 
-@router.get("/voice-reminder/fired", response_model=VoiceReminderFiredResponse)
-async def fetch_voice_fired(request: Request) -> VoiceReminderFiredResponse:
+@router.get("/notify/fired", response_model=VoiceReminderFiredResponse)
+async def fetch_notify_fired(request: Request) -> VoiceReminderFiredResponse:
     return VoiceReminderFiredResponse.model_validate(await get_voice_fired(get_db(request)))
 
 
-@router.put("/voice-reminder/fired", response_model=VoiceReminderFiredResponse)
-async def save_voice_fired(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredResponse:
+@router.put("/notify/fired", response_model=VoiceReminderFiredResponse)
+async def save_notify_fired(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredResponse:
     try:
         saved = await put_voice_fired(get_db(request), body.keys)
     except UiPrefsValidationError as exc:
@@ -124,8 +127,8 @@ async def save_voice_fired(request: Request, body: VoiceFiredBody) -> VoiceRemin
     return VoiceReminderFiredResponse.model_validate(saved)
 
 
-@router.post("/voice-reminder/fired/claim", response_model=VoiceReminderFiredClaimResponse)
-async def claim_voice_fired_route(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredClaimResponse:
+@router.post("/notify/fired/claim", response_model=VoiceReminderFiredClaimResponse)
+async def claim_notify_fired_route(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredClaimResponse:
     """Reserve dedupe keys before TTS so only one client speaks per reminder."""
     try:
         claimed = await claim_voice_fired(get_db(request), body.keys)
@@ -134,13 +137,13 @@ async def claim_voice_fired_route(request: Request, body: VoiceFiredBody) -> Voi
     return VoiceReminderFiredClaimResponse.model_validate(claimed)
 
 
-@router.get("/voice-reminder/history", response_model=VoiceReminderHistoryResponse)
-async def fetch_voice_history(request: Request) -> VoiceReminderHistoryResponse:
+@router.get("/notify/history", response_model=VoiceReminderHistoryResponse)
+async def fetch_notify_history(request: Request) -> VoiceReminderHistoryResponse:
     return VoiceReminderHistoryResponse.model_validate(await get_voice_history(get_db(request)))
 
 
-@router.put("/voice-reminder/history", response_model=VoiceReminderHistoryResponse)
-async def save_voice_history(request: Request, body: VoiceHistoryBody) -> VoiceReminderHistoryResponse:
+@router.put("/notify/history", response_model=VoiceReminderHistoryResponse)
+async def save_notify_history(request: Request, body: VoiceHistoryBody) -> VoiceReminderHistoryResponse:
     try:
         saved = await put_voice_history(
             get_db(request),

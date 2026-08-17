@@ -17,6 +17,8 @@ import { CommandPalette } from "./components/CommandPalette";
 import { ShortcutHelpDialog } from "./components/ShortcutHelpDialog";
 import { AssistantQuickDialog } from "./components/AssistantQuickDialog";
 import { CalendarImportHost } from "./components/calendar/CalendarImportHost";
+import { RecentDayInboxDrawer } from "./components/notify/RecentDayInboxDrawer";
+import { NotifyFlashHost } from "./components/notify/NotifyFlashHost";
 import { CommandPaletteProvider } from "./hooks/useCommandPalette";
 import { AssistantQuickProvider } from "./hooks/useAssistantQuick";
 import { AssistantChatProvider } from "./hooks/useAssistantChat";
@@ -25,7 +27,7 @@ import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
 import { prefetchRoute } from "./routing/prefetchRoute";
 import { useFocalBackgroundAutoRefresh } from "./hooks/useFocalBackgroundAutoRefresh";
 import { applyTheme, getStoredThemeId, loadBgForTheme } from "./styles/themeData";
-import { useVoiceReminderScanner } from "./voiceReminder/useVoiceReminderScanner";
+import { useVoiceReminderScanner } from "./domain/notify/scanner/useVoiceReminderScanner";
 
 /**
  * App shell entry (pages ↔ canvas).
@@ -35,6 +37,10 @@ import { useVoiceReminderScanner } from "./voiceReminder/useVoiceReminderScanner
  *   `shellVisibilityProps` (Tailwind `hidden` + `inert`). Do NOT unmount the
  *   inactive shell (loses deep-link / scroll / widget state).
  * - Pages pane is painted after board so a failed hide cannot steal sidebar clicks.
+ * - Left nav is a surface overlay (portal drawer) at shell level for all pages;
+ *   page canvas is always full-bleed. Overlay sidebar is a translucent panel
+ *   (color-mix of --surface-card); the scrim is a light dim with no blur so
+ *   the main canvas stays sharp. Do not clone wallpaper onto the drawer.
  * - Leave board immersive when leaving canvas; board poll must stay gated to canvas
  *   (`useBoardWidgetPoll`).
  * - Chrome forks: Electron `DesktopTitleBar` vs web `AppTopBar` vs canvas
@@ -77,7 +83,6 @@ function BrowserCanvasBar() {
     <header className="browser-monitor-bar" data-testid="browser-monitor-bar">
       <ShellChromeCore
         layout="web"
-        showCollapse={false}
         brandClassName="browser-monitor-bar__brand"
         modeClassName="browser-monitor-bar__mode"
         actionsClassName="browser-monitor-bar__actions"
@@ -153,17 +158,18 @@ function AppShellBody() {
           data-shell-pane="pages"
           {...shellVisibilityProps(isCanvas)}
         >
-          <AppSidebar />
           <div
             ref={mainScrollRef}
-            className="im-auto-scrollbar im-page-canvas flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto px-sm"
+            className="im-auto-scrollbar im-page-canvas flex h-full min-h-0 min-w-0 w-full flex-1 flex-col overflow-x-hidden overflow-y-auto px-sm"
+            data-testid="app-shell-page-canvas"
           >
-            <main className="app-main-content flex min-h-0 min-w-0 flex-1 flex-col">
+            <main className="app-main-content flex min-h-0 min-w-0 w-full flex-1 flex-col">
               <AppRoutes />
             </main>
           </div>
         </div>
       </div>
+      <AppSidebar />
     </div>
   );
 }
@@ -184,6 +190,8 @@ function AppShell() {
                       <ShortcutHelpDialog />
                       <AssistantQuickDialog />
                       <CalendarImportHost />
+                      <RecentDayInboxDrawer />
+                      <NotifyFlashHost />
                     </CommandPaletteProvider>
                   </AssistantQuickProvider>
                 </AssistantChatProvider>

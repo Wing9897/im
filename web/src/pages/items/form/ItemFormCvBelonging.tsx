@@ -72,6 +72,8 @@ export function ItemFormCvBelonging({
         id,
         name: id,
         isSystem: false,
+        notifyEnabled: true,
+        externalEnabled: true,
         createdAt: "",
         updatedAt: "",
       })),

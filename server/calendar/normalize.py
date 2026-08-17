@@ -21,6 +21,7 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import Any, Literal
 
+from server.domain.notify_prefs import normalize_notify_pref
 from server.util import parse_json_list
 
 Source = Literal["analysis", "recurring", "user", "item_remind"]
@@ -59,7 +60,9 @@ _COMPACT_OCCURRENCE_FIELDS = (
     "source",
     "isAllDay",
     "timezone",
+    "worksetId",
     "itemId",
+    "notifyPref",
 )
 #: Compact ``item`` rows carry ownership workset, date kind, dismissal, importance.
 #: Empty ``seriesId`` (shared CalendarOccurrence wire; not an RRULE series).
@@ -76,6 +79,7 @@ _COMPACT_ITEM_FIELDS = (
     "worksetId",
     "itemId",
     "itemDateKind",
+    "notifyPref",
     "dismissed",
     "important",
 )
@@ -142,6 +146,8 @@ def build_occurrence_item(
     """RRULE occurrence as a calendar item (already camelCase from expansion)."""
     raw_item_id = occ.get("itemId")
     item_id = str(raw_item_id).strip() if isinstance(raw_item_id, str) and str(raw_item_id).strip() else None
+    raw_notify = occ.get("notifyPref")
+    notify_pref = normalize_notify_pref(raw_notify)
     item = {
         "id": str(occ["id"]),
         "seriesId": str(occ.get("seriesId") or ""),
@@ -155,7 +161,9 @@ def build_occurrence_item(
         "taskName": occ.get("taskName"),
         "isAllDay": bool(occ.get("isAllDay")),
         "rrule": occ.get("rrule"),
+        "worksetId": occ.get("worksetId"),
         "itemId": item_id,
+        "notifyPref": notify_pref,
         "dismissed": bool(dismissed),
     }
     return _project(item, detail, _COMPACT_OCCURRENCE_FIELDS)

@@ -5,13 +5,15 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getTaskFormAnalysisModeMeta } from "../../../components/task/taskFormAnalysisModeMeta";
 import { CollapsePanel, FormGrid, SurfaceCard } from "../../../components/ui";
-import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
+import { formHelpClass } from "../../../components/ui/pageTypography";
 import { ChatNameModeFields } from "./ChatNameModeFields";
 import type { LlmProfileGate } from "./useChatEditorLlmProfiles";
-import { ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
+import { applyAgentPolicyFields, ChatAgentPolicyFields } from "./ChatAgentPolicyFields";
+import { ChatOutputFields } from "./ChatOutputFields";
 import { isUnmappedTriggerSchedule } from "../../../domain/tasks/triggerSchedule";
 import { getTaskModeFieldVisibility } from "../../../domain/tasks/taskFormUtils";
-import { DEFAULT_AGENT_POLICY } from "../../../domain/tasks/agentTaskPolicy";
+import { DEFAULT_AGENT_POLICY, normalizeAgentPolicy } from "../../../domain/tasks/agentTaskPolicy";
+import { DEFAULT_NOTIFY_PREF } from "../../../domain/notify/notifyPref";
 import { ScheduleInput } from "../ScheduleInput";
 import { ChatPromptFields } from "./ChatPromptFields";
 import { ChatAnalysisFields } from "./ChatAnalysisFields";
@@ -64,6 +66,30 @@ export function ChatEditorForm({
     formState.agentWaveIntervalSeconds ?? DEFAULT_AGENT_WAVE_INTERVAL_SECONDS,
   );
 
+  const handleOutputAnalysisEventsChange = (checked: boolean) => {
+    if (formState.analysisMode !== "agent") {
+      updateField("outputAnalysisEvents", checked);
+      return;
+    }
+    applyAgentPolicyFields(
+      updateField,
+      normalizeAgentPolicy(
+        { ...agentPolicy, outputAnalysisEvents: checked },
+        { hasChannels: formState.channelIds.length > 0 },
+      ),
+    );
+  };
+
+  const handleOutputCalendarChange = (checked: boolean) => {
+    applyAgentPolicyFields(
+      updateField,
+      normalizeAgentPolicy(
+        { ...agentPolicy, outputCalendar: checked },
+        { hasChannels: formState.channelIds.length > 0 },
+      ),
+    );
+  };
+
   return (
     <div className="flex flex-col gap-sm" data-testid="task-editor-form">
       <SurfaceCard
@@ -98,18 +124,12 @@ export function ChatEditorForm({
                 updateField("scheduleType", "hourly");
               }
               if (v === "agent") {
-                updateField("triggerMode", DEFAULT_AGENT_POLICY.triggerMode);
-                updateField("capCalendarRead", DEFAULT_AGENT_POLICY.capCalendarRead);
-                updateField("capCalendarWrites", DEFAULT_AGENT_POLICY.capCalendarWrites);
-                updateField("capWebSearch", DEFAULT_AGENT_POLICY.capWebSearch);
-                updateField("capForceWebSearch", DEFAULT_AGENT_POLICY.capForceWebSearch);
-                updateField("capReadAnalysisEvents", DEFAULT_AGENT_POLICY.capReadAnalysisEvents);
-                updateField("capReadItems", DEFAULT_AGENT_POLICY.capReadItems);
-                updateField("outputCalendar", DEFAULT_AGENT_POLICY.outputCalendar);
-                updateField("outputAnalysisEvents", DEFAULT_AGENT_POLICY.outputAnalysisEvents);
+                applyAgentPolicyFields(updateField, DEFAULT_AGENT_POLICY);
                 if (formState.agentWaveIntervalSeconds == null) {
                   updateField("agentWaveIntervalSeconds", DEFAULT_AGENT_WAVE_INTERVAL_SECONDS);
                 }
+              } else {
+                updateField("outputAnalysisEvents", v === "intel_event");
               }
             }}
             onWorksetIdChange={(v) => updateField("worksetId", v)}
@@ -118,6 +138,35 @@ export function ChatEditorForm({
           />
         </FormGrid>
       </SurfaceCard>
+
+      {vis.outputGroupVisible ? (
+        <SurfaceCard
+          material="panel"
+          density="compact"
+          className="shrink-0"
+          aria-label={t("tasks:editor.outputAria")}
+          role="region"
+        >
+          <h2 className="mb-sm mt-0 text-xs font-semibold tracking-wide text-text-secondary">
+            {t("tasks:editor.outputTitle")}
+          </h2>
+          <FormGrid className="gap-lg">
+            <ChatOutputFields
+              analysisMode={formState.analysisMode}
+              triggerMode={formState.triggerMode}
+              outputAnalysisEvents={formState.outputAnalysisEvents}
+              includeInTimeline={formState.includeInTimeline}
+              notifyPref={formState.notifyPref ?? DEFAULT_NOTIFY_PREF}
+              timelineToggleVisible={vis.timelineToggleVisible}
+              outputCalendar={formState.outputCalendar}
+              onOutputAnalysisEventsChange={handleOutputAnalysisEventsChange}
+              onIncludeInTimelineChange={(v) => updateField("includeInTimeline", v)}
+              onNotifyPrefChange={(v) => updateField("notifyPref", v)}
+              onOutputCalendarChange={handleOutputCalendarChange}
+            />
+          </FormGrid>
+        </SurfaceCard>
+      ) : null}
 
       <SurfaceCard
         material="panel"
@@ -245,30 +294,7 @@ export function ChatEditorForm({
                   analysisTimeRange={formState.analysisTimeRange}
                   onAnalysisTimeRangeChange={(v) => updateField("analysisTimeRange", v)}
                 />
-              ) : (
-                <div className="hidden md:block" aria-hidden="true" />
-              )}
-
-              {vis.timelineToggleVisible ? (
-                <label className="flex items-start gap-sm">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5"
-                    checked={formState.includeInTimeline}
-                    onChange={(e) => updateField("includeInTimeline", e.target.checked)}
-                    data-testid="task-include-in-timeline"
-                    aria-label={t("tasks:editor.includeInTimelineAria")}
-                  />
-                  <span>
-                    <span className={formLabelClass}>{t("tasks:editor.includeInTimelineLabel")}</span>
-                    <span className={`block ${formHelpClass}`}>
-                      {t("tasks:editor.includeInTimelineHint")}
-                    </span>
-                  </span>
-                </label>
-              ) : (
-                <div className="hidden md:block" aria-hidden="true" />
-              )}
+              ) : null}
 
               <ChatScheduleOverrideFields formState={formState} updateField={updateField} />
             </FormGrid>

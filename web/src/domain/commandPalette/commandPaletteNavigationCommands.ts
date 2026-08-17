@@ -6,6 +6,7 @@ import {
   History,
   LayoutGrid,
   ListChecks,
+  Layers,
   Map,
   MapPin,
   Radio,
@@ -28,6 +29,15 @@ export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
   },
   { id: "monitor-wall", labelKey: "commandPalette.monitorWall", to: "/monitor?view=wall", icon: Radio, groupId: "navigation", keywords: ["wall", "看板"] },
   { id: "tasks", labelKey: "tasks", labelNs: "nav", to: "/tasks", icon: ListChecks, groupId: "navigation", keywords: ["task"] },
+  {
+    id: "worksets",
+    labelKey: "worksets",
+    labelNs: "nav",
+    to: "/worksets",
+    icon: Layers,
+    groupId: "navigation",
+    keywords: ["workset", "工作集"],
+  },
   {
     id: "schedule",
     labelKey: "schedule",
@@ -68,10 +78,10 @@ export const COMMAND_PALETTE_NAVIGATION_DEFS: readonly CommandPaletteItemDef[] =
   {
     id: "actions-voice",
     labelKey: "commandPalette.actionsVoice",
-    to: "/actions?tab=voice",
+    to: "/actions?tab=notify",
     icon: BellRing,
     groupId: "navigation",
-    keywords: ["voice", "語音", "提醒"],
+    keywords: ["voice", "語音", "語音提醒", "语音提醒", "本機通知", "本机通知", "通知", "提醒", "閃現", "闪现"],
   },
   {
     id: "actions-history",

@@ -85,15 +85,17 @@ class VoiceQuietHoursSchema(BaseModel):
 
 
 class VoiceReminderSettingsSchema(BaseModel):
-    """Voice reminder settings blob under ``voice_reminder_settings``."""
+    """Local-notify settings blob under ``notify_settings``."""
 
-    # ignore unknown keys (sanitize only reads known fields); avoid OpenAPI
-    # additionalProperties index signature that breaks FE assignability.
+    # ignore unknown keys (legacy ``sourceFilter`` leftover is dropped);
+    # avoid OpenAPI additionalProperties index signature that breaks FE assignability.
     model_config = ConfigDict(extra="ignore")
 
     enabled: bool = False
+    voiceEnabled: bool = True
+    flashEnabled: bool = True
+    flashMode: Literal["timed", "persistent"] = "timed"
     leadOffsetsMinutes: list[int] = Field(default_factory=lambda: [60])
-    sourceFilter: SourceFilterSelectionSchema | None = None
     preambleChimeId: str = "broadcast"
     quietHours: VoiceQuietHoursSchema | None = None
 

@@ -1,5 +1,5 @@
 /**
- * Pure selectors for WorksetDetailDialog glance summary.
+ * Pure selectors for workset contents glance summary.
  * Reuses item remind/overdue semantics — no parallel calendar projection.
  */
 
@@ -9,7 +9,7 @@ import { daysUntil } from "../items/itemExpiryTone";
 import { isItemExpiringSoon, isItemOverdue } from "../items/categoryAggregates";
 import { getOsTimeMs } from "../../utils/time";
 
-/** Max rows per summary list in the workset detail dialog. */
+/** Max rows per summary list on the workset contents tab. */
 export const WORKSET_SUMMARY_LIMIT = 5;
 
 /** Recent past window for user-event summary (days before local today). */

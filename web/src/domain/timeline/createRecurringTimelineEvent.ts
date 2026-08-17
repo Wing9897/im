@@ -6,6 +6,11 @@
 
 import { createRecurringSeries } from "../../api/recurringSeries";
 import type { RecurringSeries } from "../../types/recurring";
+import {
+  DEFAULT_CALENDAR_NOTIFY_PREF,
+  normalizeNotifyPref,
+  type NotifyPref,
+} from "../notify/notifyPref";
 import { toUserEventFormWorksetId } from "./userEvents";
 
 export type CreateRecurringTimelineEventParams = {
@@ -20,6 +25,7 @@ export type CreateRecurringTimelineEventParams = {
   rrule: string;
   /** Optional parent inventory item (item owns this recurring calendar). */
   itemId?: string | null;
+  notifyPref?: NotifyPref;
 };
 
 export async function createRecurringTimelineEvent(
@@ -57,5 +63,6 @@ export async function createRecurringTimelineEvent(
     eventDescription: description,
     worksetId,
     itemId,
+    notifyPref: normalizeNotifyPref(params.notifyPref, DEFAULT_CALENDAR_NOTIFY_PREF),
   });
 }

@@ -7,6 +7,7 @@ import {
   analysisModeIsAgent,
   analysisModeRequiresChannels,
   analysisModeShowsOptionalChannels,
+  defaultOutputAnalysisEvents,
   isAnalysisEventsMode,
   isTimelineAssignableAnalysisMode,
   taskWritesAnalysisEvents,
@@ -43,8 +44,23 @@ describe("analysisModeCapabilities — agent / finding modes", () => {
     expect(isTimelineAssignableAnalysisMode("agent")).toBe(true);
   });
 
-  it("gates intelligence refresh on agent outputAnalysisEvents", () => {
+  it("gates intelligence listing on outputAnalysisEvents for intel_event and agent (not leaderboard persist)", () => {
+    // FE listing ≠ server task_writes_analysis_events (analysis_events) or
+    // task_persists_findings (leaderboard trending_topics).
     expect(taskWritesAnalysisEvents({ analysisMode: "intel_event" })).toBe(true);
+    expect(
+      taskWritesAnalysisEvents({ analysisMode: "intel_event", outputAnalysisEvents: true }),
+    ).toBe(true);
+    expect(
+      taskWritesAnalysisEvents({ analysisMode: "intel_event", outputAnalysisEvents: false }),
+    ).toBe(false);
+    expect(
+      taskWritesAnalysisEvents({ analysisMode: "leaderboard", outputAnalysisEvents: true }),
+    ).toBe(false);
+    expect(taskWritesAnalysisEvents({ analysisMode: "leaderboard" })).toBe(false);
+    expect(defaultOutputAnalysisEvents("intel_event")).toBe(true);
+    expect(defaultOutputAnalysisEvents("leaderboard")).toBe(false);
+    expect(defaultOutputAnalysisEvents("agent")).toBe(false);
     expect(
       taskWritesAnalysisEvents({ analysisMode: "agent", outputAnalysisEvents: true }),
     ).toBe(true);

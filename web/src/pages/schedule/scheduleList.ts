@@ -12,13 +12,22 @@ function entrySortKey(entry: ScheduleListEntry): string {
   return entry.series.updatedAt || entry.series.createdAt || entry.series.name;
 }
 
+/**
+ * Manage-list one-offs: hide timeline-dismissed rows.
+ * Schedule trash is REST hard-delete, but GET /user-events still returns rows
+ * soft-dismissed from Timeline / Agent (`dismissed: true` via timeline_dismissals).
+ */
+export function activeScheduleOneOffs(items: readonly UserEvent[]): UserEvent[] {
+  return items.filter((item) => !item.dismissed);
+}
+
 /** Merge one-off + recurring into one management list (newest activity first). */
 export function mergeScheduleList(
   oneOff: readonly UserEvent[],
   recurring: readonly ScheduleRecurringItem[],
 ): ScheduleListEntry[] {
   const entries: ScheduleListEntry[] = [
-    ...oneOff.map((event) => ({ kind: "oneOff" as const, event })),
+    ...activeScheduleOneOffs(oneOff).map((event) => ({ kind: "oneOff" as const, event })),
     ...recurring.map((series) => ({ kind: "recurring" as const, series })),
   ];
   entries.sort((a, b) => entrySortKey(b).localeCompare(entrySortKey(a)));

@@ -1,4 +1,5 @@
 import type { AnalysisMode, TaskAnalysisTimeRange } from "./common";
+import type { NotifyPref } from "../domain/notify/notifyPref";
 
 /** Schedule type options for task scheduling */
 export type ScheduleType = "seconds_10" | "hourly" | "daily" | "weekly" | "custom_seconds";
@@ -21,7 +22,7 @@ export interface BaseTaskFormFields {
   eventLocation: string;
   eventDescription: string;
   includeInTimeline: boolean;
-  /** Optional ownership dimension; `null` = unassigned. */
+  /** Workset ownership; empty/omit → 一般 (`SYSTEM_WORKSET_ID`). */
   worksetId?: string | null;
 }
 
@@ -58,14 +59,16 @@ export interface TaskFormState
   analysisBatchMessageLimit: number | null;
   /** Evidence style; null = follow global AI Settings. */
   analysisStrategyMode: "conservative" | "balanced" | "aggressive" | null;
-  /** Optional workset ownership; null = unassigned. */
-  worksetId: string | null;
+  /** Workset ownership; empty/omit → 一般. */
+  worksetId: string;
   /**
    * LLM profile id for this task's connection.
    * Empty on create → backend uses the oldest complete profile (or UI may preselect).
    */
   llmProfileId: string;
-  /** Agent-mode policy fields (ignored unless analysisMode=agent). */
+  /** Per-task reminder override; omit → follow workset. */
+  notifyPref?: NotifyPref;
+  /** Agent trigger / capabilities / calendar output (ignored unless analysisMode=agent). */
   triggerMode: "schedule" | "message_cursor" | "message_threshold";
   capCalendarRead: boolean;
   capCalendarWrites: boolean;
@@ -74,5 +77,9 @@ export interface TaskFormState
   capReadAnalysisEvents: boolean;
   capReadItems: boolean;
   outputCalendar: boolean;
+  /**
+   * Write intelligence results (`analysis_events` / leaderboard).
+   * All AI modes; Agent + message_cursor cannot enable this.
+   */
   outputAnalysisEvents: boolean;
 }

@@ -11,7 +11,7 @@ import {
   writeWeatherFailure,
   type DailyWeather,
 } from "./monthWeather/fetchCache";
-import { systemLocation } from "./monthWeather/timezone";
+import { resolveWeatherLocation } from "./monthWeather/timezone";
 
 export type { DailyWeather } from "./monthWeather/fetchCache";
 export {
@@ -19,7 +19,7 @@ export {
   resetWeatherCachesForTests,
   WEATHER_CACHE_MS,
 } from "./monthWeather/fetchCache";
-export { systemLocationFromTimezone } from "./monthWeather/timezone";
+export { resolveWeatherLocation, systemLocationFromTimezone } from "./monthWeather/timezone";
 
 /** Auto-refresh interval for visible calendar weather. */
 export const WEATHER_REFRESH_MS = 60 * 60 * 1000;
@@ -77,7 +77,7 @@ export function useMonthWeather(enabled: boolean, monthDays: Date[]) {
 
         const { weatherLocation } = await fetchSystemSettings();
         if (cancelled) return;
-        const location = weatherLocation === "system" ? systemLocation() : weatherLocation.trim();
+        const location = resolveWeatherLocation(weatherLocation);
         if (!location) {
           setWeatherByDate({});
           return;

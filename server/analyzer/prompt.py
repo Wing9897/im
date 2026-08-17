@@ -104,6 +104,7 @@ def build_analysis_prompt(
     strategy_mode: str | None = None,
     ui_locale: str | None = None,
     now: datetime | None = None,
+    output_analysis_events: bool = True,
 ) -> AssembledPrompt:
     """Assemble the final LLM prompt under the token/char budgets.
 
@@ -154,7 +155,8 @@ def build_analysis_prompt(
         system_prompt += STRATEGY_INSTRUCTIONS.get(strategy_mode, "")
     if analysis_mode == LEADERBOARD_MODE:
         system_prompt += build_leaderboard_context_block(leaderboard_context)
-    system_prompt += build_json_instruction(analysis_mode)
+    if output_analysis_events:
+        system_prompt += build_json_instruction(analysis_mode)
     system_prompt += "\n\n" + output_language_directive(normalize_ui_locale(ui_locale))
 
     return AssembledPrompt(

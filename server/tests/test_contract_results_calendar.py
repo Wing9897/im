@@ -39,6 +39,7 @@ async def test_calendar_occurrences(client):
         "worksetId",
         "itemId",
         "itemDateKind",
+        "notifyPref",
     }
     for occurrence in body:
         assert set(occurrence) == expected_keys
@@ -167,6 +168,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "worksetId",
         "itemId",
         "itemDateKind",
+        "notifyPref",
     }
     assert len(body) == 1000
     assert all(set(item) == occurrence_keys for item in body)
@@ -204,6 +206,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "worksetId": "__user__",
         "itemId": None,
         "itemDateKind": None,
+        "notifyPref": "follow",
     }
     assert by_task["z-calendar-boundary"][0] == {
         "id": occurrence_id("z-calendar-boundary", day1_start),
@@ -224,6 +227,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "worksetId": "__user__",
         "itemId": None,
         "itemDateKind": None,
+        "notifyPref": "follow",
     }
     assert body[-1] == {
         **by_task["z-calendar-boundary"][0],

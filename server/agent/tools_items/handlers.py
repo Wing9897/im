@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from server.db.database import Database
+from server.domain.mcp_workset_scope import allowed_workset_ids_from_args
 from server.items.normalize import _UNSET, ItemValidationError
 from server.items.service import create_item, patch_item
 from server.queries.items_queries import fetch_expiring_items, fetch_item_row, fetch_item_rows
@@ -67,6 +68,7 @@ async def _tool_list(db: Database, arguments: dict[str, Any]) -> dict[str, Any]:
         category_id=category_id,
         status=status,
         search=search_needle or None,
+        workset_ids=allowed_workset_ids_from_args(arguments),
     )
     items = [_compact_item_summary(serialize_item(row)) for row in rows[:limit]]
     return {"items": items, "count": len(items)}
@@ -102,6 +104,7 @@ async def _tool_list_expiring(db: Database, arguments: dict[str, Any]) -> dict[s
         workset_id=workset_id,
         include_overdue=include_overdue,
         limit=limit * 2 if search_needle else limit,
+        workset_ids=allowed_workset_ids_from_args(arguments),
     )
     items = [serialize_item(row) for row in rows]
     if search_needle:

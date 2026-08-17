@@ -47,6 +47,8 @@ export const ITEM_FORM_TEST_WORKSETS = [
     id: SYSTEM_WORKSET_ID,
     name: "General",
     isSystem: true,
+    notifyEnabled: true,
+    externalEnabled: true,
     createdAt: "",
     updatedAt: "",
   },

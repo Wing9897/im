@@ -65,6 +65,7 @@ describe("linkedCalendarQuickCreate", () => {
         calendarKind: "normal",
       }),
     );
+    expect(initial.notifyPref).toBe("off");
     expect(initial.startTime).toContain("2026-08-06");
     expect(initial.endTime).toBeTruthy();
   });
@@ -84,6 +85,7 @@ describe("linkedCalendarQuickCreate", () => {
       itemId: "item-1",
       remindBeforeDays: "",
       calendarKind: "expires",
+      notifyPref: "off",
       startTime: "2026-08-06",
       isAllDay: true,
     });
@@ -152,6 +154,7 @@ describe("linkedCalendarQuickCreate", () => {
       remindBeforeDays: "2",
       itemId: "item-42",
       calendarKind: "normal",
+      notifyPref: "follow",
       amountInput: "",
       direction: "expense",
     });

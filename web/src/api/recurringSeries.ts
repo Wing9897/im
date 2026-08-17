@@ -1,6 +1,7 @@
 /** REST client for standalone recurring calendar series. */
 
 import { apiClient } from "./client";
+import { normalizeNotifyPref } from "../domain/notify/notifyPref";
 import type {
   RecurringSeries,
   RecurringSeriesCreate,
@@ -41,10 +42,18 @@ export function listRecurringSeries(
   );
 }
 
+function withNormalizedNotifyPref<T extends { notifyPref?: unknown }>(body: T): T {
+  if (body.notifyPref === undefined) return body;
+  return { ...body, notifyPref: normalizeNotifyPref(body.notifyPref) };
+}
+
 export function createRecurringSeries(
   body: RecurringSeriesCreate,
 ): Promise<RecurringSeries> {
-  return apiClient.post<RecurringSeries>("/api/v1/calendar/recurring", body);
+  return apiClient.post<RecurringSeries>(
+    "/api/v1/calendar/recurring",
+    withNormalizedNotifyPref(body),
+  );
 }
 
 export function getRecurringSeries(id: string): Promise<RecurringSeries> {
@@ -57,7 +66,7 @@ export function patchRecurringSeries(
 ): Promise<RecurringSeries> {
   return apiClient.patch<RecurringSeries>(
     `/api/v1/calendar/recurring/${id}`,
-    body,
+    withNormalizedNotifyPref(body),
   );
 }
 

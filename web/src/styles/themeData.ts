@@ -156,7 +156,7 @@ export function getStoredThemeId(): string {
 
 /**
  * Apply background image + opacity via CSS vars on ``html``.
- * Painted into ``.im-page-canvas`` / ``.im-shell-sidebar`` (theme-textures.css).
+ * Painted into ``.im-page-canvas`` (theme-textures.css). Overlay sidebar is translucent.
  * ``mode`` defaults to ``custom`` when a URL is set (upload path).
  */
 export function applyBgImage(

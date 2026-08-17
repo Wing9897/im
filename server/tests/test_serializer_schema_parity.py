@@ -187,7 +187,7 @@ Serializer = Callable[[], dict[str, Any]]
                     "event_location": None,
                     "event_description": None,
                     "include_in_timeline": 1,
-                    "workset_id": None,
+                    "workset_id": "__user__",
                     "llm_profile_id": "profile-default",
                     "agent_wave_interval_seconds": None,
                     "batch_overlap_count": None,

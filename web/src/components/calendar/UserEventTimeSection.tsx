@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 
 import {
   Button,
-  CheckboxField,
   FieldLabel,
   PillButton,
   TextField,
 } from "../ui";
+import { ToggleSwitch } from "../ToggleSwitch";
 import { OvernightClockHint } from "./OvernightClockHint";
+import { NowFillButton } from "./NowFillButton";
 import {
   USER_EVENT_DAY_PRESETS,
   type UserEventFormValues,
@@ -24,6 +25,7 @@ type UserEventTimeSectionProps = {
   setCustomDays: (value: string) => void;
   onAllDayChange: (checked: boolean) => void;
   onApplyDaySpan: (days: number) => void;
+  onNowFill: () => void;
   remindBeforeDaysHint?: string;
 };
 
@@ -38,6 +40,7 @@ export function UserEventTimeSection({
   setCustomDays,
   onAllDayChange,
   onApplyDaySpan,
+  onNowFill,
   remindBeforeDaysHint,
 }: UserEventTimeSectionProps) {
   const { t } = useTranslation("timeline");
@@ -48,13 +51,18 @@ export function UserEventTimeSection({
       className="flex flex-col gap-sm rounded-md border border-surface-border/70 bg-[color-mix(in_srgb,var(--surface-overlay)_35%,transparent)] px-md py-sm"
       data-testid="user-event-time-section"
     >
-      <CheckboxField
-        id="user-event-all-day"
-        label={t("userEvent.allDay")}
-        checked={values.isAllDay}
-        onChange={(event) => onAllDayChange(event.target.checked)}
-        data-testid="user-event-all-day"
-      />
+      <div className="flex min-w-0 items-center gap-md">
+        <FieldLabel className="mb-0 min-w-0 flex-1">
+          {t("userEvent.allDay")}
+        </FieldLabel>
+        <ToggleSwitch
+          checked={values.isAllDay}
+          onChange={onAllDayChange}
+          label={t("userEvent.allDay")}
+          showLabel={false}
+          data-testid="user-event-all-day"
+        />
+      </div>
 
       {!isRecurring ? (
         <div className="flex flex-col gap-xs">
@@ -104,8 +112,8 @@ export function UserEventTimeSection({
       {isRecurring ? (
         !values.isAllDay ? (
           <div className="flex flex-col gap-sm">
-            <div className="flex flex-col gap-xs">
-              <FieldLabel className="mb-0" htmlFor="user-event-event-start">
+            <div className="flex min-w-0 items-center gap-xs">
+              <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-event-start">
                 {startLabel}
               </FieldLabel>
               <TextField
@@ -116,13 +124,14 @@ export function UserEventTimeSection({
                 onChange={(event) =>
                   setValues((prev) => ({ ...prev, eventStartTime: event.target.value }))
                 }
-                className="w-full"
+                className="min-w-0 w-[9.5rem] max-w-full shrink-0"
                 required
                 data-testid="user-event-event-start"
               />
+              <NowFillButton onClick={onNowFill} />
             </div>
-            <div className="flex flex-col gap-xs">
-              <FieldLabel className="mb-0" htmlFor="user-event-event-end">
+            <div className="flex min-w-0 items-center gap-xs">
+              <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-event-end">
                 {endLabel}
               </FieldLabel>
               <TextField
@@ -133,7 +142,7 @@ export function UserEventTimeSection({
                 onChange={(event) =>
                   setValues((prev) => ({ ...prev, eventEndTime: event.target.value }))
                 }
-                className="w-full"
+                className="w-[9.5rem] max-w-full shrink-0"
                 data-testid="user-event-event-end"
               />
             </div>
@@ -146,8 +155,8 @@ export function UserEventTimeSection({
         ) : null
       ) : (
         <div className="flex flex-col gap-sm">
-          <div className="flex flex-col gap-xs">
-            <FieldLabel className="mb-0" htmlFor="user-event-start">
+          <div className="flex min-w-0 items-center gap-xs">
+            <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-start">
               {startLabel}
             </FieldLabel>
             <TextField
@@ -158,13 +167,14 @@ export function UserEventTimeSection({
               onChange={(event) =>
                 setValues((prev) => ({ ...prev, startTime: event.target.value }))
               }
-              className="w-full"
+              className="min-w-0 w-[16rem] max-w-full shrink-0"
               required
               data-testid="user-event-start"
             />
+            <NowFillButton onClick={onNowFill} />
           </div>
-          <div className="flex flex-col gap-xs">
-            <FieldLabel className="mb-0" htmlFor="user-event-end">
+          <div className="flex min-w-0 items-center gap-xs">
+            <FieldLabel className="mb-0 w-16 shrink-0" htmlFor="user-event-end">
               {endLabel}
             </FieldLabel>
             <TextField
@@ -175,32 +185,34 @@ export function UserEventTimeSection({
               onChange={(event) =>
                 setValues((prev) => ({ ...prev, endTime: event.target.value }))
               }
-              className="w-full"
+              className="w-[16rem] max-w-full shrink-0"
               data-testid="user-event-end"
             />
           </div>
         </div>
       )}
 
-      <div className="flex flex-col gap-xs">
-        <FieldLabel className="mb-0" htmlFor="user-event-remind-before">
-          {t("userEvent.remindBeforeDays")}
-        </FieldLabel>
-        <TextField
-          id="user-event-remind-before"
-          aria-label={t("userEvent.remindBeforeDaysAria")}
-          type="number"
-          min={0}
-          max={3660}
-          inputMode="numeric"
-          placeholder={t("userEvent.remindBeforeDaysPlaceholder")}
-          value={values.remindBeforeDays}
-          onChange={(event) =>
-            setValues((prev) => ({ ...prev, remindBeforeDays: event.target.value }))
-          }
-          className="w-full"
-          data-testid="user-event-remind-before"
-        />
+      <div className="flex min-w-0 flex-col gap-xs">
+        <div className="flex min-w-0 items-center gap-md">
+          <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor="user-event-remind-before">
+            {t("userEvent.remindBeforeDays")}
+          </FieldLabel>
+          <TextField
+            id="user-event-remind-before"
+            aria-label={t("userEvent.remindBeforeDaysAria")}
+            type="number"
+            min={0}
+            max={3660}
+            inputMode="numeric"
+            placeholder={t("userEvent.remindBeforeDaysPlaceholder")}
+            value={values.remindBeforeDays}
+            onChange={(event) =>
+              setValues((prev) => ({ ...prev, remindBeforeDays: event.target.value }))
+            }
+            className="w-24 max-w-24 shrink-0"
+            data-testid="user-event-remind-before"
+          />
+        </div>
         <p className="m-0 text-caption text-text-muted">{remindHint}</p>
       </div>
     </div>

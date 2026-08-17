@@ -9,6 +9,7 @@ import { TaskCard } from "./TaskCard";
 import type { TaskCardProps } from "./TaskCard";
 import type { TaskCardStats } from "../types/dashboard";
 import type { AnalysisTask } from "../types/tasks";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { resetTaskCatalogState, taskCatalogState } from "../test/context-mocks";
 
 function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
@@ -22,6 +23,7 @@ function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
     version: 1,
     isActive: true,
     llmProfileId: "profile-default",
+    worksetId: SYSTEM_WORKSET_ID,
     channelIds: [],
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
@@ -184,12 +186,14 @@ describe("TaskCard", () => {
     expect(container.textContent).toContain("Ops");
   });
 
-  it("omits the workset label when the task has no worksetId", () => {
+  it("treats empty worksetId as 一般", () => {
     taskCatalogState.worksets = [
+      { id: SYSTEM_WORKSET_ID, name: "一般", createdAt: null, updatedAt: null },
       { id: "ws-1", name: "Ops", createdAt: null, updatedAt: null },
     ];
-    renderCard({ task: createMockTask({ worksetId: null }) });
+    renderCard({ task: createMockTask({ worksetId: "" }) });
 
+    expect(container.textContent).toContain("一般");
     expect(container.textContent).not.toContain("Ops");
   });
 

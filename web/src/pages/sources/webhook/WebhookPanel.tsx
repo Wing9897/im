@@ -2,6 +2,7 @@ import { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { sectionTitleClass } from "../../../components/ui/pageTypography";
+import { settingsIntegrationsPath } from "../../../domain/navigation/integrationsRoutes";
 import { useWebhookPanel } from "./useWebhookPanel";
 import { WebhookAccessKeysNotice } from "./WebhookAccessKeysNotice";
 import { SourceBoardShell } from "../board/SourceBoardShell";
@@ -43,9 +44,9 @@ function WebhookExamplesPointer() {
         {t("webhook.aiGlobalSuffix")}
       </div>
       <Link
-        to="/settings/api"
+        to={settingsIntegrationsPath("webhook")}
         className="text-xs font-medium text-accent no-underline hover:underline"
-        data-testid="webhook-api-docs-link"
+        data-testid="webhook-integrations-link"
       >
         {t("webhook.openApiDocs")}
       </Link>

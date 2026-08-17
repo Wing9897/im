@@ -57,7 +57,7 @@ vi.mock("../hooks/useAssistantQuick", () => ({
 const { ShellChromeCore } = await import("./ShellChromeCore");
 
 describe("ShellChromeCore", () => {
-  it("web layout includes brand, collapse, mode, right icon actions, and status", () => {
+  it("web layout includes brand, mode, right icon actions, and status", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
@@ -67,13 +67,13 @@ describe("ShellChromeCore", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(ShellChromeCore, { layout: "web", showCollapse: true }),
+            createElement(ShellChromeCore, { layout: "web" }),
           ),
         ),
       );
     });
     expect(container.querySelector('[data-testid="shell-chrome-brand"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="sidebar-collapse"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="sidebar-collapse"]')).toBeNull();
     expect(container.querySelector('[data-testid="monitor-mode-switch"]')).not.toBeNull();
     const actions = container.querySelector('[data-testid="shell-chrome-actions"]');
     expect(actions).not.toBeNull();
@@ -83,11 +83,13 @@ describe("ShellChromeCore", () => {
     expect(actions?.querySelector(".im-command-trigger--compact")).not.toBeNull();
     expect(container.querySelector('[data-testid="system-status-pill"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="desktop-window-controls"]')).toBeNull();
+    expect(actions?.lastElementChild?.getAttribute("data-testid")).toBe("topbar-status-area");
+    expect(container.querySelector("[data-testid='chrome-channel-voice']")).toBeNull();
     // Icon-only: no visible shortcut kbd in the trigger cluster.
     expect(actions?.querySelector(".im-command-kbd")).toBeNull();
   });
 
-  it("desktop layout clusters actions and can hide collapse", () => {
+  it("desktop layout clusters actions without a title-bar collapse control", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
@@ -99,7 +101,6 @@ describe("ShellChromeCore", () => {
             null,
             createElement(ShellChromeCore, {
               layout: "desktop",
-              showCollapse: false,
               actionsClassName: "desktop-title-bar-actions",
             }),
           ),
@@ -121,7 +122,7 @@ describe("ShellChromeCore", () => {
           createElement(
             MonitorModeProvider,
             null,
-            createElement(ShellChromeCore, { layout: "web", showCollapse: true }),
+            createElement(ShellChromeCore, { layout: "web" }),
           ),
         ),
       );

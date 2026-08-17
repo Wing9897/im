@@ -33,6 +33,7 @@ describe("ChatAnalysisFields — Analysis Time Range chips", () => {
     expect(container.querySelector("select")).toBeNull();
     const chips = container.querySelectorAll("button");
     expect(chips.length).toBe(TIME_RANGE_VALUES.length);
+    expect(container.firstElementChild?.className).toContain("items-center");
   });
 
   it("renders a chip for every task-legal time range with correct labels", () => {

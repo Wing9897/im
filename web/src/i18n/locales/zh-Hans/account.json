@@ -51,13 +51,12 @@
   },
   "accessKeys": {
     "title": "API 密钥（Webhook／自动化）",
-    "intro": "长效密钥（`Authorization: Bearer`），用于 Webhook、脚本、客户经理（A2A）与 MCP。完整密钥（`*`）可写入、调用 A2A，并连接 MCP；只读密钥（`read`）仅限安全 GET/HEAD。MCP 需与 A2A 同一把完整 `*` 密钥。不可用于 UI 登录——日常请用管理员账号密码。",
+    "intro": "Bearer 密钥，用于 Webhook、A2A、MCP；不能登录 UI。",
     "baseUrlTitle": "API 基底网址",
-    "baseUrlBody": "客户端与 OpenClaw 请用此 origin（与「设置 → API／MCP」相同）：",
+    "baseUrlBody": "客户端与 OpenClaw 请用此 origin（与「设置 → 外部接口」相同）：",
     "defaultLabel": "访问密钥",
     "newLabel": "新密钥名称",
     "newPlaceholder": "例如：Webhook、CI 脚本",
-    "scopesFull": "权限：完整（*）",
     "create": "生成密钥",
     "creating": "生成中…",
     "created": "已生成新密钥（请立即复制）",
@@ -70,8 +69,6 @@
     "copy": "复制",
     "copied": "已复制",
     "copyFailed": "无法复制",
-    "readOnly": "只读（仅 GET）",
-    "readOnlyHelp": "只能调用安全的 GET/HEAD。不勾选则为完整密钥（*），可用于 Webhook、写入、A2A 与 MCP。",
-    "scopesReadOnly": "权限：只读（read）"
+    "scopesReadOnly": "只读"
   }
 }

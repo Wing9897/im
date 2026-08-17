@@ -20,7 +20,7 @@ type TaskTriggerMode = NonNullable<components["schemas"]["TaskConfigBody"]["trig
  */
 type AnalysisTaskRequired = Pick<
   TaskResponse,
-  "id" | "name" | "version" | "isActive" | "llmProfileId"
+  "id" | "name" | "version" | "isActive" | "llmProfileId" | "worksetId"
 >;
 
 /**

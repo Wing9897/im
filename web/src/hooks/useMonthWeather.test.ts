@@ -19,6 +19,7 @@ const {
   WEATHER_CACHE_MS,
   forecastIntersection,
   resetWeatherCachesForTests,
+  resolveWeatherLocation,
   systemLocationFromTimezone,
   useMonthWeather,
 } = await import("./useMonthWeather");
@@ -76,6 +77,14 @@ describe("month weather", () => {
   it("maps the default Taiwan system timezone to a geocodable city", () => {
     expect(systemLocationFromTimezone("Asia/Taipei")).toBe("臺北");
     expect(systemLocationFromTimezone("UTC")).toBe("臺北");
+  });
+
+  it("resolves follow-system to the mapped city and keeps an explicit region", () => {
+    expect(resolveWeatherLocation("system", "Asia/Tokyo")).toBe("東京");
+    expect(resolveWeatherLocation("system", "America/New_York")).toBe("New York");
+    expect(resolveWeatherLocation("Hong Kong")).toBe("Hong Kong");
+    expect(resolveWeatherLocation("  臺北  ")).toBe("臺北");
+    expect(resolveWeatherLocation("")).toBe("");
   });
 
   it("intersects visible days with the 16-day forecast window", () => {

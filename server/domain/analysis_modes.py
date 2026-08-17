@@ -13,8 +13,9 @@ Recurring calendar series are **not** an analysis mode — they live on
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Any, Final, Literal
 
 LEADERBOARD_MODE: Final = "leaderboard"
 INTEL_EVENT_MODE: Final = "intel_event"
@@ -115,3 +116,49 @@ def get_analysis_mode_spec(mode: str | None) -> AnalysisModeSpec | None:
     if not mode:
         return None
     return ANALYSIS_MODE_BY_ID.get(mode)
+
+
+def task_writes_analysis_events(task: Mapping[str, Any] | None) -> bool:
+    """Whether this run persists ``analysis_events`` (Intelligence page).
+
+    ``intel_event`` / ``agent`` honor ``output_analysis_events`` (missing /
+    null → skip). ``leaderboard`` never writes ``analysis_events`` — it always
+    persists ``trending_topics`` for the leaderboard page (see
+    ``task_persists_findings``). FE ``taskWritesAnalysisEvents`` is the
+    Intelligence-page listing filter and must not be merged with this helper.
+    """
+    if not task:
+        return False
+    mode = str(task.get("analysis_mode") or "")
+    if mode == LEADERBOARD_MODE:
+        return False
+    flag = _column_flag_on(task.get("output_analysis_events"))
+    if mode == INTEL_EVENT_MODE:
+        return flag
+    return mode == AGENT_MODE and flag
+
+
+def task_persists_findings(task: Mapping[str, Any] | None) -> bool:
+    """Whether this run should persist mode findings (events or topics).
+
+    Leaderboard always stores ``trending_topics`` (排行榜 page / notify),
+    independent of ``output_analysis_events``. Intel / agent still follow
+    ``task_writes_analysis_events``.
+    """
+    if not task:
+        return False
+    mode = str(task.get("analysis_mode") or "")
+    if mode == LEADERBOARD_MODE:
+        return True
+    return task_writes_analysis_events(task)
+
+
+def _column_flag_on(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    try:
+        return bool(int(value))
+    except (TypeError, ValueError):
+        return bool(value)

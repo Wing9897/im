@@ -38,6 +38,8 @@ class AgentChannel:
     #: When False, ``items.create`` / ``items.update`` are omitted / blocked.
     #: Agent ticks always disable writes so inventory is not mutated by reconcile/scout.
     items_writes_enabled: bool = True
+    #: When False, ``messages.search`` is omitted / blocked.
+    messages_search_enabled: bool = True
 
 
 ASSISTANT_CHANNEL = AgentChannel(
@@ -83,6 +85,26 @@ def channel_from_agent_spec(spec: AgentTaskSpec, *, stateless: bool) -> AgentCha
         web_search_enabled=spec.cap_web_search or spec.cap_force_web_search,
         analysis_events_read_enabled=spec.cap_read_analysis_events,
         items_read_enabled=spec.cap_read_items,
+    )
+
+
+def apply_household_tool_caps(channel: AgentChannel, caps: object) -> AgentChannel:
+    """AND household MCP/A2A capability groups onto a channel policy.
+
+    In-app assistant / agent ticks do not call this. A2A shares ``mcp_cap_*``
+    with the MCP tool façade so A2A cannot bypass those toggles. Workset
+    visibility is applied separately via ``allowed_workset_ids`` on tool context.
+    """
+    return replace(
+        channel,
+        calendar_read_enabled=channel.calendar_read_enabled and bool(getattr(caps, "calendar_read", True)),
+        calendar_writes_enabled=channel.calendar_writes_enabled and bool(getattr(caps, "calendar_write", True)),
+        messages_search_enabled=channel.messages_search_enabled
+        and bool(getattr(caps, "messages_search", True)),
+        analysis_events_read_enabled=channel.analysis_events_read_enabled
+        and bool(getattr(caps, "intelligence_search", True)),
+        items_read_enabled=channel.items_read_enabled and bool(getattr(caps, "items_read", True)),
+        items_writes_enabled=channel.items_writes_enabled and bool(getattr(caps, "items_write", True)),
     )
 
 

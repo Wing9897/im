@@ -111,6 +111,7 @@
     "scheduleRruleNotString": "AI response format error: scheduleRrule must be a string",
     "analysisModeInvalid": "AI response format error: analysisMode must be one of: {values}",
     "channelIdsNotArray": "AI response format error: channelIds must be an array",
-    "includeInTimelineNotBoolean": "AI response format error: includeInTimeline must be a boolean"
+    "includeInTimelineNotBoolean": "AI response format error: includeInTimeline must be a boolean",
+    "outputAnalysisEventsNotBoolean": "AI response format error: outputAnalysisEvents must be a boolean"
   }
 }

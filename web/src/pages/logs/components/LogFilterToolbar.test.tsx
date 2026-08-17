@@ -190,16 +190,17 @@ describe("LogFilterToolbar", () => {
     expect(clearLogs).toHaveBeenCalledTimes(1);
   });
 
-  it("toggles show analysis trace checkbox", () => {
+  it("toggles show analysis trace with a switch", () => {
     const setShowAnalysisTrace = vi.fn();
     const container = renderToolbar({ setShowAnalysisTrace });
-    const checkbox = container.querySelector<HTMLInputElement>(
+    const toggle = container.querySelector<HTMLButtonElement>(
       '[data-testid="log-show-analysis-trace"]',
     )!;
-    expect(checkbox).not.toBeNull();
-    expect(checkbox.checked).toBe(false);
+    expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute("role")).toBe("switch");
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
     act(() => {
-      checkbox.click();
+      toggle.click();
     });
     expect(setShowAnalysisTrace).toHaveBeenCalledWith(true);
   });

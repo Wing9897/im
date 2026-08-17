@@ -177,10 +177,10 @@
     "parentItemNone": "無（獨立日程）",
     "parentItemHint": "選填。若日程屬於某件物品，請優先在「物品」頁新增關聯日曆。",
     "parentItemLockedHint": "已歸屬該物品（從物品頁或深鏈開啟）。",
-    "remindBeforeDays": "提前提醒（天）",
-    "remindBeforeDaysAria": "開始前幾天提醒",
+    "remindBeforeDays": "提前天數",
+    "remindBeforeDaysAria": "開始前幾天顯示",
     "remindBeforeDaysPlaceholder": "例如 1",
-    "remindBeforeDaysHint": "選填。相對開始日提前 N 天；留空表示不提醒。",
+    "remindBeforeDaysHint": "選填。相對開始日提前 N 天；留空表示不提前。",
     "allDay": "全日",
     "durationPresets": "快速日數",
     "daysPreset": "{count} 天",
@@ -210,7 +210,7 @@
       "startRequired": "請填寫開始時間",
       "startInvalid": "開始時間格式無效",
       "endInvalid": "結束時間格式無效",
-      "remindInvalid": "提醒天數須為 0 或正整數",
+      "remindInvalid": "提前天數須為 0 或正整數",
       "rruleRequired": "請設定重複規則"
     }
   },

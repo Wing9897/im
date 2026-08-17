@@ -5,7 +5,7 @@ import { fetchSystemSettings } from "../../api/config";
 import { fetchWeatherForecast } from "../../api/weather";
 import { useErrorToast } from "../../hooks/useErrorToast";
 import {
-  systemLocationFromTimezone,
+  resolveWeatherLocation,
   weatherIcon,
   type DailyWeather,
 } from "../../hooks/useMonthWeather";
@@ -58,10 +58,7 @@ function weatherLabel(code: number): string {
 
 async function loadBoardWeather(): Promise<BoardWeatherSnapshot> {
   const { weatherLocation } = await fetchSystemSettings();
-  const location =
-    weatherLocation === "system"
-      ? systemLocationFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone)
-      : weatherLocation.trim();
+  const location = resolveWeatherLocation(weatherLocation);
   if (!location) {
     return { location: "", days: [] };
   }
