@@ -97,11 +97,61 @@ async def test_dismiss_rejects_invalid_source(client) -> None:
     assert response.status_code == 422
 
 
-async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
+async def test_user_event_rest_delete_is_hard_delete(client, app) -> None:
+    from server.calendar.query import get_event, query_window
+
     created = await client.post(
         "/api/v1/calendar/user-events",
         json={
-            "title": "Soft delete me",
+            "title": "Hard delete me",
+            "startTime": "2026-07-23T09:00:00Z",
+        },
+    )
+    assert created.status_code == 201
+    event_id = created.json()["id"]
+
+    await client.put(
+        "/api/v1/calendar/dismissals",
+        json={"source": "user", "eventId": event_id},
+    )
+    await client.put(
+        "/api/v1/calendar/importance",
+        json={"source": "user", "eventId": event_id},
+    )
+
+    deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
+    assert deleted.status_code == 204
+
+    assert await fetch_user_event(app.state.db, event_id) is None
+    assert await get_event(app.state.db, event_id=event_id) is None
+    listed = await client.get("/api/v1/calendar/user-events")
+    assert all(item["id"] != event_id for item in listed.json()["items"])
+    window = await query_window(
+        app.state.db,
+        start="2026-07-23T00:00:00Z",
+        end="2026-07-23T23:59:59Z",
+    )
+    assert all(item["id"] != event_id for item in window["items"])
+    leftover = await app.state.db.fetch_one(
+        "SELECT 1 FROM timeline_dismissals WHERE source = 'user' AND event_id = ?",
+        (event_id,),
+    )
+    assert leftover is None
+    leftover_imp = await app.state.db.fetch_one(
+        "SELECT 1 FROM timeline_importance WHERE source = 'user' AND event_id = ?",
+        (event_id,),
+    )
+    assert leftover_imp is None
+
+    missing = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
+    assert missing.status_code == 404
+
+
+async def test_user_event_dismissals_do_not_delete_row(client, app) -> None:
+    created = await client.post(
+        "/api/v1/calendar/user-events",
+        json={
+            "title": "Dismiss only",
             "startTime": "2026-07-23T09:00:00Z",
         },
     )
@@ -109,8 +159,11 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     event_id = created.json()["id"]
     assert created.json()["dismissed"] is False
 
-    deleted = await client.delete(f"/api/v1/calendar/user-events/{event_id}")
-    assert deleted.status_code == 204
+    dismissed = await client.put(
+        "/api/v1/calendar/dismissals",
+        json={"source": "user", "eventId": event_id},
+    )
+    assert dismissed.status_code == 200
 
     row = await fetch_user_event(app.state.db, event_id)
     assert row is not None
@@ -127,6 +180,59 @@ async def test_user_event_delete_is_soft_dismiss(client, app) -> None:
     listed_again = await client.get("/api/v1/calendar/user-events")
     match_again = next(item for item in listed_again.json()["items"] if item["id"] == event_id)
     assert match_again["dismissed"] is False
+
+
+async def test_user_event_delete_rejects_recurring_occurrence_id(client) -> None:
+    created = await client.post(
+        "/api/v1/calendar/recurring",
+        json={"name": "Daily", "rrule": "FREQ=DAILY", "eventStartTime": "09:00"},
+    )
+    assert created.status_code == 201
+    series_id = created.json()["id"]
+    occ_id = f"{series_id}:20260723T010000Z"
+    response = await client.delete(f"/api/v1/calendar/user-events/{occ_id}")
+    assert response.status_code == 404
+    still = await client.get(f"/api/v1/calendar/recurring/{series_id}")
+    assert still.status_code == 200
+
+
+async def test_rest_delete_recurring_series_removes_occurrences(client, app) -> None:
+    from datetime import UTC, datetime, timedelta
+
+    from server.calendar.query import query_window
+
+    created = await client.post(
+        "/api/v1/calendar/recurring",
+        json={"name": "刪除循環", "rrule": "FREQ=DAILY", "eventStartTime": "09:00"},
+    )
+    assert created.status_code == 201
+    series_id = created.json()["id"]
+    now = datetime.now(UTC)
+    window = await query_window(
+        app.state.db,
+        start=(now - timedelta(days=1)).isoformat().replace("+00:00", "Z"),
+        end=(now + timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+    )
+    occs = [item for item in window["items"] if item.get("seriesId") == series_id]
+    assert occs
+
+    deleted = await client.delete(f"/api/v1/calendar/recurring/{series_id}")
+    assert deleted.status_code == 204
+    missing = await client.get(f"/api/v1/calendar/recurring/{series_id}")
+    assert missing.status_code == 404
+    row = await app.state.db.fetch_one(
+        "SELECT id FROM recurring_schedules WHERE id = ?",
+        (series_id,),
+    )
+    assert row is None
+    after = await query_window(
+        app.state.db,
+        start=(now - timedelta(days=1)).isoformat().replace("+00:00", "Z"),
+        end=(now + timedelta(days=7)).isoformat().replace("+00:00", "Z"),
+    )
+    assert all(item.get("seriesId") != series_id for item in after["items"])
+    again = await client.delete(f"/api/v1/calendar/recurring/{series_id}")
+    assert again.status_code == 404
 
 
 async def test_rrule_occurrence_id_can_be_dismissed_independently(app) -> None:

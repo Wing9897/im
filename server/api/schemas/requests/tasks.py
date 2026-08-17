@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from server.domain.agent_task_spec import TriggerMode
 from server.domain.analysis_modes import AnalysisMode
 from server.domain.analysis_strategy_modes import AnalysisStrategyMode
+from server.api.schemas.notify_pref import CoercedNotifyPref
 from server.scheduler.task_schedule_overrides import (
     AGENT_WAVE_INTERVAL_MAX,
     AGENT_WAVE_INTERVAL_MIN,
@@ -46,7 +47,10 @@ class TaskConfigBody(BaseModel):
         default=None, ge=ANALYSIS_BATCH_LIMIT_MIN, le=ANALYSIS_BATCH_LIMIT_MAX
     )
     analysisStrategyMode: AnalysisStrategyMode | None = None
-    worksetId: str | None = None
+    worksetId: str | None = Field(
+        default=None,
+        description="Ownership workset. Omitted / null / empty on create or update → builtin 一般 (`__user__`).",
+    )
     #: Agent-mode policy (ignored unless analysisMode=agent).
     triggerMode: TriggerMode | None = None
     capCalendarRead: bool | None = None
@@ -56,6 +60,18 @@ class TaskConfigBody(BaseModel):
     capReadAnalysisEvents: bool | None = None
     capReadItems: bool | None = None
     outputCalendar: bool | None = None
-    outputAnalysisEvents: bool | None = None
+    outputAnalysisEvents: bool | None = Field(
+        default=None,
+        description=(
+            "Intelligence-page hard gate (analysis_events). When false, intel_event / agent "
+            "batches skip persisting analysis_events. Leaderboard never writes analysis_events; "
+            "omitted on create defaults to false for leaderboard and true for intel_event. "
+            "Leaderboard still persists trending_topics for the leaderboard page. "
+            "Agent still requires at least one of outputCalendar or outputAnalysisEvents; "
+            "triggerMode=message_cursor cannot enable this flag."
+        ),
+    )
     #: LLM profile id. Omitted / null on create → oldest complete profile (else 400).
     llmProfileId: str | None = None
+    #: Per-task reminder; omitted / null → ``follow`` on create, keep existing on update.
+    notifyPref: CoercedNotifyPref | None = None

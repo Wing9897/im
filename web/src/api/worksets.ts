@@ -11,16 +11,30 @@ export function listWorksets(): Promise<Workset[]> {
   return apiClient.get<Workset[]>("/api/v1/worksets");
 }
 
-export function createWorkset(name: string): Promise<Workset> {
-  return apiClient.post<Workset>("/api/v1/worksets", { name });
+export function createWorkset(
+  name: string,
+  opts?: { notifyEnabled?: boolean; externalEnabled?: boolean },
+): Promise<Workset> {
+  return apiClient.post<Workset>("/api/v1/worksets", {
+    name,
+    ...(opts?.notifyEnabled === undefined ? {} : { notifyEnabled: opts.notifyEnabled }),
+    ...(opts?.externalEnabled === undefined ? {} : { externalEnabled: opts.externalEnabled }),
+  });
 }
 
 export function getWorkset(worksetId: string): Promise<Workset> {
   return apiClient.get<Workset>(`/api/v1/worksets/${encodeURIComponent(worksetId)}`);
 }
 
+export function updateWorkset(
+  worksetId: string,
+  body: { name?: string; notifyEnabled?: boolean; externalEnabled?: boolean },
+): Promise<Workset> {
+  return apiClient.put<Workset>(`/api/v1/worksets/${encodeURIComponent(worksetId)}`, body);
+}
+
 export function renameWorkset(worksetId: string, name: string): Promise<Workset> {
-  return apiClient.put<Workset>(`/api/v1/worksets/${encodeURIComponent(worksetId)}`, { name });
+  return updateWorkset(worksetId, { name });
 }
 
 export function deleteWorkset(worksetId: string): Promise<{ ok: boolean }> {

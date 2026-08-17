@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from server.tests.contract_helpers import assert_keys
 
-WORKSET_KEYS = ["id", "name", "isSystem", "createdAt", "updatedAt"]
+WORKSET_KEYS = ["id", "name", "isSystem", "notifyEnabled", "externalEnabled", "createdAt", "updatedAt"]
 
 
 async def test_worksets_crud_and_task_workset_id(client):
@@ -71,9 +71,9 @@ async def test_worksets_crud_and_task_workset_id(client):
         },
     )
     assert cleared.status_code == 200
-    assert cleared.json()["worksetId"] is None
+    assert cleared.json()["worksetId"] == "__user__"
 
-    # Re-attach then delete workset → task worksetId SET NULL; events → __user__
+    # Re-attach then delete workset → task and events reassign to __user__
     await client.put(
         f"/api/v1/tasks/{task_body['id']}",
         json={
@@ -101,7 +101,7 @@ async def test_worksets_crud_and_task_workset_id(client):
     # GET single task may 405 — list instead
     tasks = await client.get("/api/v1/tasks")
     owned = next(t for t in tasks.json() if t["id"] == task_body["id"])
-    assert owned["worksetId"] is None
+    assert owned["worksetId"] == "__user__"
 
     events = await client.get("/api/v1/calendar/user-events", params={"worksetId": "__user__"})
     assert events.status_code == 200
@@ -175,3 +175,16 @@ async def test_unknown_workset_id_rejected_on_task_create(client):
     )
     assert resp.status_code == 422
     assert resp.json()["error_code"] == "VALIDATION_ERROR"
+
+
+async def test_task_create_without_workset_id_defaults_to_system(client):
+    resp = await client.post(
+        "/api/v1/tasks",
+        json={
+            "name": "Default owner",
+            "analysisMode": "intel_event",
+            "promptTemplate": "x",
+        },
+    )
+    assert resp.status_code == 201
+    assert resp.json()["worksetId"] == "__user__"

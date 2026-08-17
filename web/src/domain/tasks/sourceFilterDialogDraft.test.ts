@@ -18,7 +18,6 @@ import {
 } from "./sourceFilterDialogDraft";
 import {
   buildFilterTreeRows,
-  UNASSIGNED_FILTER_GROUP_ID,
   type WorksetMemberTask,
 } from "./sourceFilterSelection";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
@@ -26,23 +25,23 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 const MEMBER_TASKS: WorksetMemberTask[] = [
   { id: "t1", name: "Alpha", worksetId: "ws-1" },
   { id: "t2", name: "Beta", worksetId: "ws-1" },
-  { id: "t3", name: "Gamma", worksetId: null },
-  { id: "t4", name: "Delta", worksetId: null },
+  { id: "t3", name: "Gamma", worksetId: SYSTEM_WORKSET_ID },
+  { id: "t4", name: "Delta", worksetId: SYSTEM_WORKSET_ID },
 ];
 
 const CTX: SourceFilterDraftContext = {
   allWorksetIds: [SYSTEM_WORKSET_ID, "ws-1"],
-  unassignedTaskIds: ["t3", "t4"],
+  unassignedTaskIds: [],
   memberTasks: MEMBER_TASKS,
 };
 
 describe("sourceFilterDialogDraft", () => {
   describe("collapseSourceFilterDraft", () => {
-    it("collapses full worksets + all unassigned to null", () => {
+    it("collapses every workset selected with no leftover taskIds to null", () => {
       expect(
         collapseSourceFilterDraft(
           {
-            taskIds: ["t3", "t4"],
+            taskIds: [],
             worksetIds: [SYSTEM_WORKSET_ID, "ws-1"],
           },
           CTX,
@@ -57,31 +56,31 @@ describe("sourceFilterDialogDraft", () => {
       });
     });
 
-    it("does not collapse when unassigned remain unchecked", () => {
+    it("does not collapse when a workset remains unchecked", () => {
       expect(
         collapseSourceFilterDraft(
-          { taskIds: [], worksetIds: [SYSTEM_WORKSET_ID, "ws-1"] },
+          { taskIds: [], worksetIds: ["ws-1"] },
           CTX,
         ),
       ).toEqual({
         taskIds: [],
-        worksetIds: [SYSTEM_WORKSET_ID, "ws-1"].sort(),
+        worksetIds: ["ws-1"],
       });
     });
   });
 
   describe("toggleWorksetInDraft", () => {
-    it("deselects one workset from all-sources without dropping unassigned", () => {
+    it("deselects one workset from all-sources", () => {
       expect(toggleWorksetInDraft(null, "ws-1", CTX)).toEqual({
-        taskIds: ["t3", "t4"],
+        taskIds: [],
         worksetIds: [SYSTEM_WORKSET_ID],
       });
     });
 
-    it("deselects unassigned group from all-sources", () => {
-      expect(toggleWorksetInDraft(null, UNASSIGNED_FILTER_GROUP_ID, CTX)).toEqual({
+    it("deselects 一般 from all-sources", () => {
+      expect(toggleWorksetInDraft(null, SYSTEM_WORKSET_ID, CTX)).toEqual({
         taskIds: [],
-        worksetIds: [SYSTEM_WORKSET_ID, "ws-1"].sort(),
+        worksetIds: ["ws-1"],
       });
     });
 
@@ -103,14 +102,14 @@ describe("sourceFilterDialogDraft", () => {
       ).toEqual({ taskIds: [], worksetIds: [] });
     });
 
-    it("toggles all unassigned on/off without touching worksets", () => {
+    it("toggles 一般 on/off without touching other worksets", () => {
       const on = toggleWorksetInDraft(
         { taskIds: [], worksetIds: ["ws-1"] },
-        UNASSIGNED_FILTER_GROUP_ID,
+        SYSTEM_WORKSET_ID,
         CTX,
       );
-      expect(on).toEqual({ taskIds: ["t3", "t4"], worksetIds: ["ws-1"] });
-      const off = toggleWorksetInDraft(on, UNASSIGNED_FILTER_GROUP_ID, CTX);
+      expect(on).toBeNull();
+      const off = toggleWorksetInDraft(null, SYSTEM_WORKSET_ID, CTX);
       expect(off).toEqual({ taskIds: [], worksetIds: ["ws-1"] });
     });
   });
@@ -128,9 +127,9 @@ describe("sourceFilterDialogDraft", () => {
       });
     });
 
-    it("unchecking a member from all-sources keeps siblings + unassigned", () => {
+    it("unchecking a member from all-sources keeps siblings and other worksets", () => {
       expect(toggleTaskInDraft(null, "t1", CTX)).toEqual({
-        taskIds: ["t2", "t3", "t4"].sort(),
+        taskIds: ["t2"],
         worksetIds: [SYSTEM_WORKSET_ID],
       });
     });

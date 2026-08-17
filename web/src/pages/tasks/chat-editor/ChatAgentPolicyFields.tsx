@@ -1,9 +1,10 @@
 /**
- * Agent preset + trigger / capability / output fields for ChatEditorForm.
+ * Agent preset + trigger / capability fields for ChatEditorForm.
+ * Calendar write (`outputCalendar`) lives in ChatOutputFields (agent-only).
  */
 import { useTranslation } from "react-i18next";
 import { formHelpClass, formLabelClass } from "../../../components/ui/pageTypography";
-import { SelectField } from "../../../components/ui/TextField";
+import { SelectField, SelectTile, SelectTileGrid } from "../../../components/ui";
 import {
   AGENT_PRESET_PROJECT_RECONCILE,
   AGENT_PRESET_WEB_SCOUT,
@@ -33,7 +34,7 @@ function policyFromForm(formState: TaskFormState): AgentTaskPolicy {
   };
 }
 
-function applyPolicy(
+export function applyAgentPolicyFields(
   updateField: ChatAgentPolicyFieldsProps["updateField"],
   policy: AgentTaskPolicy,
 ) {
@@ -89,7 +90,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
             },
             { hasChannels: true },
           );
-    applyPolicy(updateField, next);
+    applyAgentPolicyFields(updateField, next);
     if (preset === AGENT_PRESET_PROJECT_RECONCILE && formState.agentWaveIntervalSeconds == null) {
       updateField("agentWaveIntervalSeconds", 20);
     }
@@ -100,7 +101,7 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
       { ...policyFromForm(formState), ...patch },
       { hasChannels },
     );
-    applyPolicy(updateField, next);
+    applyAgentPolicyFields(updateField, next);
   };
 
   return (
@@ -128,13 +129,14 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
         <p className={`m-0 ${formHelpClass}`}>{t("tasks:agent.presetsHint")}</p>
       </div>
 
-      <div className="flex flex-col gap-xs">
-        <label className={formLabelClass} htmlFor="task-agent-trigger">
+      <div className="flex min-w-0 items-center gap-md">
+        <label className={`${formLabelClass} mb-0 min-w-0 flex-1`} htmlFor="task-agent-trigger">
           {t("tasks:agent.triggerLabel")}
         </label>
         {/* Native select: agent policy form keeps SelectField for native dense editor rows. */}
         <SelectField
           id="task-agent-trigger"
+          wrapperClassName="w-[16rem] max-w-full shrink-0"
           value={formState.triggerMode}
           onChange={(e) => patchPolicy({ triggerMode: e.target.value as AgentTriggerMode })}
           data-testid="task-agent-trigger"
@@ -149,79 +151,56 @@ export function ChatAgentPolicyFields({ formState, updateField }: ChatAgentPolic
 
       <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
         <legend className={formLabelClass}>{t("tasks:agent.capsLabel")}</legend>
-        <div className="flex flex-wrap items-center gap-sm">
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.capCalendarRead ?? true}
-              onChange={(e) => patchPolicy({ capCalendarRead: e.target.checked })}
-              data-testid="task-agent-cap-calendar-read"
-            />
+        <SelectTileGrid columns="repeat(auto-fit, minmax(148px, 1fr))" className="gap-sm">
+          <SelectTile
+            compact
+            variant="toggle"
+            active={formState.capCalendarRead ?? true}
+            data-testid="task-agent-cap-calendar-read"
+            aria-label={t("tasks:agent.caps.calendarRead")}
+            onClick={() => patchPolicy({ capCalendarRead: !(formState.capCalendarRead ?? true) })}
+          >
             {t("tasks:agent.caps.calendarRead")}
-          </label>
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.capReadAnalysisEvents ?? true}
-              onChange={(e) => patchPolicy({ capReadAnalysisEvents: e.target.checked })}
-              data-testid="task-agent-cap-read-analysis-events"
-            />
+          </SelectTile>
+          <SelectTile
+            compact
+            variant="toggle"
+            active={formState.capReadAnalysisEvents ?? true}
+            data-testid="task-agent-cap-read-analysis-events"
+            aria-label={t("tasks:agent.caps.readAnalysisEvents")}
+            onClick={() =>
+              patchPolicy({ capReadAnalysisEvents: !(formState.capReadAnalysisEvents ?? true) })
+            }
+          >
             {t("tasks:agent.caps.readAnalysisEvents")}
-          </label>
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.capReadItems ?? true}
-              onChange={(e) => patchPolicy({ capReadItems: e.target.checked })}
-              data-testid="task-agent-cap-read-items"
-            />
+          </SelectTile>
+          <SelectTile
+            compact
+            variant="toggle"
+            active={formState.capReadItems ?? true}
+            data-testid="task-agent-cap-read-items"
+            aria-label={t("tasks:agent.caps.readItems")}
+            onClick={() => patchPolicy({ capReadItems: !(formState.capReadItems ?? true) })}
+          >
             {t("tasks:agent.caps.readItems")}
-          </label>
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.capWebSearch || formState.capForceWebSearch}
-              onChange={(e) =>
-                patchPolicy({
-                  capWebSearch: e.target.checked,
-                  capForceWebSearch: e.target.checked,
-                })
-              }
-              data-testid="task-agent-cap-web-search"
-            />
+          </SelectTile>
+          <SelectTile
+            compact
+            variant="toggle"
+            active={formState.capWebSearch || formState.capForceWebSearch}
+            data-testid="task-agent-cap-web-search"
+            aria-label={t("tasks:agent.caps.webSearch")}
+            onClick={() => {
+              const next = !(formState.capWebSearch || formState.capForceWebSearch);
+              patchPolicy({
+                capWebSearch: next,
+                capForceWebSearch: next,
+              });
+            }}
+          >
             {t("tasks:agent.caps.webSearch")}
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset className="m-0 flex flex-col gap-xs border-0 p-0">
-        <legend className={formLabelClass}>{t("tasks:agent.outputLabel")}</legend>
-        <div className="flex flex-wrap items-center gap-sm">
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.outputCalendar}
-              onChange={(e) => patchPolicy({ outputCalendar: e.target.checked })}
-              data-testid="task-agent-output-calendar"
-            />
-            {t("tasks:agent.output.calendar")}
-          </label>
-          <label className="flex items-center gap-sm text-caption">
-            <input
-              type="checkbox"
-              checked={formState.outputAnalysisEvents}
-              disabled={formState.triggerMode === "message_cursor"}
-              onChange={(e) => patchPolicy({ outputAnalysisEvents: e.target.checked })}
-              data-testid="task-agent-output-analysis"
-            />
-            {t("tasks:agent.output.analysisEvents")}
-          </label>
-        </div>
-        <p className={`m-0 ${formHelpClass}`}>
-          {formState.triggerMode === "message_cursor"
-            ? t("tasks:agent.outputHintCursor")
-            : t("tasks:agent.outputHint")}
-        </p>
+          </SelectTile>
+        </SelectTileGrid>
       </fieldset>
     </div>
   );

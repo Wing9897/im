@@ -11,8 +11,7 @@
     "general": "一般",
     "theme": "外观主题",
     "data": "资料维护",
-    "api": "API",
-    "mcp": "MCP",
+    "integrations": "外部接口",
     "logs": "系统日志",
     "aiProvider": "AI 设定档",
     "voice": "语音",
@@ -37,13 +36,14 @@
   },
   "general": {
     "weatherLocationLabel": "地区",
-    "weatherLocationHelp": "月历会依此地区显示 Open-Meteo 天气预报。",
+    "weatherLocationHelp": "月历天气；跟系统则依作业系统时区推测。",
     "followSystem": "跟系统",
+    "weatherLocationCurrent": "目前地区：{location}",
     "simpleModeLabel": "简化模式（AI 日历）",
-    "simpleModeHelp": "只保留助手、时间规划、任务、通知（含语音提醒）、设定／AI 设定与日志；隐藏监控、来源、情报地图与排行榜。适合只用人手／助手排程，不做多源采集与分析。",
+    "simpleModeHelp": "只保留助手、时间规划、任务、通知、设定／AI 设定与日志；隐藏监控、来源、情报地图与排行榜。适合只用人手／助手排程，不做多源采集与分析。",
+    "simpleModeHint": "只保留助手、时间规划、任务、通知与设定",
     "weatherLocationPlaceholder": "例如：台北、Hong Kong、Tokyo",
     "weatherLocationAria": "天气地区",
-    "weatherLocationAutoHelp": "会使用作业系统时区推测所在城市；也可取消勾选后指定城市或地区。",
     "weatherLocationRequired": "请输入地区名称，或选择跟系统",
     "weatherLocationSaved": "天气地区已储存",
     "saveWeatherLocation": "储存地区",
@@ -54,9 +54,9 @@
     "confirmRestart": "确认重启",
     "collectorRestarted": "收集器已重启",
     "appVersionLabel": "应用版本",
-    "appVersionHelp": "前后端共用 semver，来源为项目根目录 VERSION；dev 模式前缀 DEV。",
+    "appVersionHelp": "前后端共用 semver；dev 前缀 DEV。",
     "databaseVersionLabel": "数据库 Schema",
-    "databaseVersionHelp": "公开 schema SemVer（与应用版本同形）。内部 SQLite stamp 为整数 wipe-only 基线；不符当前 stamp 须重置数据库（无迁移升级路径）。",
+    "databaseVersionHelp": "公开 schema SemVer；stamp 不符须重置。",
     "databaseVersionCurrent": "v{version}",
     "databaseVersionMismatch": "v{current} → v{required}",
     "databaseVersionMismatchSemver": "{semver}（stamp v{current} → v{required}）",
@@ -67,6 +67,7 @@
       "sectionTitle": "调试与诊断",
       "traceVerboseLabel": "服务器分析 Trace",
       "traceVerboseHelp": "开启后，每次消息批次分析会在「设置→日志」写入一笔追踪（默认隐藏，请勾选「显示分析追踪」）。不含完整 LLM 内容；Agent／周期任务不产生。切换即保存。",
+      "traceVerboseHint": "批次分析写入设定→日志",
       "saved": "调试设置已保存"
     }
   },
@@ -261,7 +262,10 @@
     "jsonModeDisabledOption": "关闭"
   },
   "voice": {
-    "disclaimer": "语音只作输入／朗读；Agent 只处理文字。浏览器识别多依赖云端；桌面版不支持浏览器语音，请改用文字输入。",
+    "disclaimer": "语音只作输入／朗读。桌面版不支持浏览器识别，请改用文字。",
+    "sttSectionTitle": "听写 STT",
+    "ttsSectionTitle": "朗读 TTS",
+    "sessionSectionTitle": "语言／PTT／工作集",
     "sttLabel": "语音识别（STT）",
     "sttHelp": "不可用时隐藏麦克风，仍可打字。",
     "sttHelpDesktopBlocked": "桌面版不支持浏览器语音识别，请改用文字输入。",
@@ -346,29 +350,34 @@
       "maxTokensHelp": "全站共用的输入 token 上限；过长易失败时可调低。"
     }
   },
+  "integrations": {
+    "tabsAria": "外部接口子页",
+    "webhook": "Webhook",
+    "a2a": "A2A",
+    "deeplink": "日历链接",
+    "mcp": "MCP",
+    "linkKeys": "到账户生成密钥",
+    "referenceTitle": "参考说明",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyFailed": "复制失败"
+  },
   "apiDocs": {
-    "intro": "本机 HTTP API 说明与示例：访问密钥、Webhook 推送、客户经理（A2A）、MCP；另附 Desktop 日历 deep link。完整契约见仓库 docs/agent/a2a.md 与 docs/agent/mcp.md。",
     "baseUrl": {
       "title": "API 基底网址",
-      "body": "当前 API 调用与示例使用的 origin（自定义服务器、环境变量，或本页 origin）："
-    },
-    "accessKeys": {
-      "title": "访问密钥",
-      "body": "用 `Authorization: Bearer <key>` 调用自动化 API。完整密钥（`*`）可用于 Webhook、客户经理（A2A）与 MCP；仅客户经理密钥只能打 `/api/v1/a2a/*`。MCP 需同一把完整 `*` 密钥。不可用于 UI 登录。",
-      "linkKeys": "管理访问密钥"
+      "body": "当前 API 调用与示例使用的 origin："
     },
     "webhook": {
       "title": "Webhook",
-      "body": "`POST /api/v1/messages` 需要完整密钥（`*`）。仅客户经理密钥无法推送。`metadata` 可选，只供 AI 理解来源背景。",
+      "body": "`POST /api/v1/messages`，需完整密钥（`*`）。",
       "exampleTitle": "推送示例",
       "exampleContent": "某地交易所暂停提币",
       "exampleNotes": "只供 AI 理解来源背景",
-      "linkKeys": "管理访问密钥",
       "linkSources": "打开 Webhook 来源"
     },
     "liaison": {
       "title": "客户经理（A2A）",
-      "body": "`POST /api/v1/a2a/agent`：用自然语言交办即可（给 OpenClaw／Hermes 等）。与助手共用 LLM＋工具；服务器内部自己 loop，返回单次结果＋用过的工具摘要。不存对话历史（可由第三方自行保存）。需 AI 设定档与客户经理密钥（或 `*`）。",
+      "body": "`POST /api/v1/a2a/agent`：自然语言单次交办。需完整密钥与 AI 设定档。",
       "capabilities": [
         "自然语言输入，单次返回 message + toolCalls",
         "查消息／情报／日程／物品；可建改删事件与库存物品",
@@ -379,12 +388,13 @@
       "exampleMessage": "明天没有会议。已建立周五家庭会议。",
       "exampleResponseComment": "单次回应（示例）：",
       "linkStaff": "查看客户经理（AI 员工）",
-      "linkKeys": "管理访问密钥",
       "docsHint": "完整契约见仓库 docs/agent/a2a.md。"
     },
     "deepLink": {
-      "title": "Desktop 日历 deep link",
-      "body": "仅安装版 Desktop（非 HTTP API）。系统已注册 `intelligencemonitor://` 与 `.ics` 文件关联。打开链接或文件后，会弹出「加入日历／选工作集」对话框，确认后经批量 preview/commit（`/api/v1/calendar/imports/*`）写入。不是 webcal／CalDAV 同步。",
+      "title": "日历链接",
+      "body": "仅 Desktop：`intelligencemonitor://` 与 `.ics`，确认后写入日历。",
+      "originTitle": "协议",
+      "originBody": "系统已注册的 Desktop 协议（非 HTTP API）：",
       "capabilities": [
         "`intelligencemonitor://calendar/import?url=…` — 下载远端 ICS（http／https）",
         "`title` + `start` 必填（inline）；可选 `end`／`location`／`body`／`worksetId`",
@@ -397,8 +407,15 @@
       "docsHint": "细节见仓库 docs/ARCHITECTURE.md（Desktop calendar import）与 docs/KNOWN-SIMPLIFICATIONS.md。"
     }
   },
+  "a2aDocs": {
+    "masterSwitch": {
+      "label": "启用 A2A",
+      "help": "关闭后，POST /api/v1/a2a/agent 返回 403。默认开启。",
+      "capsInactive": "A2A 关闭时，能力分组不会套用到 A2A；MCP 仍会套用。"
+    }
+  },
   "mcpDocs": {
-    "intro": "给外部 Agent（如 OpenClaw）用的 Streamable HTTP MCP：结构化工具面，覆盖日历、消息、情报与物品。与客户经理（A2A）不同——这里是工具协议，不做自然语言 loop，也不走本机 LLM。用下方总开关与能力分组控制；端点靠访问密钥保护。",
+    "intro": "外部 Agent 的工具连线（非对话）。用下方开关控制能力；端点需访问密钥。",
     "endpoint": {
       "title": "端点",
       "body": "以 Streamable HTTP 连接下列 URL（与当前 API base 同源）："
@@ -406,7 +423,7 @@
     "probe": {
       "button": "测试连接",
       "probing": "测试中…",
-      "hint": "用当前登录会话调用 GET /api/v1/mcp/status（无需粘贴访问密钥），显示当前能力分组下暴露的工具。",
+      "hint": "用当前登录会话测试连接（不必粘贴访问密钥），显示当前能力分组下暴露的工具。",
       "success": "MCP 已开启 — {toolCount} 个工具：{names}",
       "disabled": "MCP 总开关已关闭。请开启并保存后再测。",
       "error": "无法获取 MCP 状态。请确认 API 在运行且已登录。"
@@ -414,34 +431,33 @@
     "masterSwitch": {
       "label": "启用 MCP",
       "help": "关闭后，Streamable HTTP `/api/v1/mcp` 返回 403，list/call 不可用。默认开启。",
-      "capsInactive": "总开关关闭时，能力分组不会生效。"
+      "capsInactive": "MCP 关闭时，能力分组不会套用到 MCP；A2A 仍会套用。"
     },
     "openClaw": {
       "title": "OpenClaw 配置",
       "body": "写入 `~/.openclaw/openclaw.json` 的 `mcp.servers`。Bearer 使用完整访问密钥（`*`）。密钥在「账户 → 访问密钥」建立。OpenClaw 也可用 `mcp probe`／配置检查连到此 URL。",
-      "exampleTitle": "配置示例",
-      "copy": "复制",
-      "copied": "已复制",
-      "copyFailed": "复制失败"
+      "exampleTitle": "配置示例"
     },
     "referenceSectionTitle": "参考说明",
     "capabilityToggles": {
       "title": "能力分组",
-      "body": "在总开关开启时，选择 MCP 可列出与调用的工具分组。默认全部启用（等同完整 19 支 allowlist）。关闭的分组不会出现在 `list_tools`，调用时会被拒绝。这是家庭层能力过滤——不是访问密钥的 scope。",
-      "loading": "加载 MCP 设置中…",
-      "saveLabel": "保存 MCP 设置",
-      "calendarRead": "日历读取",
-      "calendarReadHelp": "`list_calendars`、`upcoming`、`recent`、`window`、`get`",
-      "calendarWrite": "日历写入",
-      "calendarWriteHelp": "创建／更新／删除事件与循环系列；标记／取消重要",
-      "messagesSearch": "消息搜索",
-      "messagesSearchHelp": "`messages.search`",
-      "intelligenceSearch": "情报搜索",
-      "intelligenceSearchHelp": "`intelligence.search_events`",
-      "itemsRead": "物品读取",
-      "itemsReadHelp": "`items.list`、`items.list_expiring`",
-      "itemsWrite": "物品写入",
-      "itemsWriteHelp": "`items.create`、`items.update`"
+      "body": "家庭层工具 allowlist（不是密钥范围）。",
+      "sharedCaption": "MCP 与 A2A 共用这些能力",
+      "loading": "加载能力设置中…",
+      "saveLabel": "保存能力设置",
+      "techNamesTitle": "技术名称",
+      "calendarRead": "查看日程",
+      "calendarReadTools": "calendar.list_calendars、calendar.upcoming、calendar.recent、calendar.window、calendar.get",
+      "calendarWrite": "新增、更改、删除日程",
+      "calendarWriteTools": "calendar.create_event、calendar.update_event、calendar.delete_event、calendar.create_recurring_series、calendar.update_recurring_series、calendar.delete_recurring_series、calendar.mark_important、calendar.unmark_important",
+      "messagesSearch": "搜索消息",
+      "messagesSearchTools": "messages.search",
+      "intelligenceSearch": "搜索情报",
+      "intelligenceSearchTools": "intelligence.search_events",
+      "itemsRead": "查看物品与即将到期",
+      "itemsReadTools": "items.list、items.list_expiring",
+      "itemsWrite": "新增、更改物品",
+      "itemsWriteTools": "items.create、items.update"
     },
     "capabilities": {
       "title": "Allowlist 总览",
@@ -463,9 +479,8 @@
     },
     "accessKeys": {
       "title": "访问密钥与 A2A",
-      "body": "MCP 与 A2A 同一门槛：家庭访问密钥且 scope 为 `*`。仅客户经理密钥无法调用 MCP。若要自然语言单次交办，请改用客户经理（A2A）。",
-      "linkKeys": "管理访问密钥",
-      "linkApi": "打开 API 说明（A2A）"
+      "body": "MCP 与 A2A 同一门槛：家庭访问密钥且 scope 为 `*`。",
+      "linkApi": "打开 A2A 说明"
     },
     "docsHint": "完整契约见仓库 docs/agent/mcp.md。"
   },
@@ -544,13 +559,13 @@
       ]
     },
     "agent": {
-      "summary": "后勤可配置项目经理：依触发与输出政策做项目调和或网蒐（默认）；详情在任务下 `/tasks/:id/agent`。",
+      "summary": "后勤可配置项目经理：依触发与输出政策做项目调和或网蒐（默认）；详情在项目经理任务页。",
       "capabilities": [
         "触发：消息游标抽干、消息阈值或纯定时（游标抽干不可同时开情报事件输出）",
         "依任务授权：日历读写、网页搜索；可选读物品（查到期／库存）",
-        "不可建立／更新物品（items.create／update 仅助手与客户经理）",
-        "输出可写入代理日程（user_events.origin=agent）与／或情报事件（analysis_events）",
-        "不会跟你聊天；由项目经理任务排程驱动（建议 hourly）"
+        "不可新增或更改物品（仅助手与客户经理可写入物品）",
+        "输出可写入代理日程与／或情报事件",
+        "不会跟你聊天；由项目经理任务排程驱动（建议每小时）"
       ]
     },
     "liaison": {
@@ -560,9 +575,9 @@
       "capabilities": [
         "与助手共用 LLM 与工具（含消息／情报／日程／物品；不同 system prompt）",
         "单次返回结果；历史由第三方自行保存",
-        "密钥与示例见「系统设置 → API」"
+        "密钥与示例见「系统设置 → 外部接口 → A2A」"
       ],
-      "openApiDocs": "查看 API 说明与示例"
+      "openApiDocs": "查看 A2A 说明"
     },
     "editHistoryAria": "编辑助手对话保留设定",
     "historyDialogTitle": "助手对话保留"

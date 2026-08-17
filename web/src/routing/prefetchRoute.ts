@@ -2,6 +2,8 @@
 const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   "/monitor": () => import("../pages/monitor/MonitorPage"),
   "/tasks": () => import("../pages/dashboard/DashboardViewer"),
+  "/worksets": () => import("../pages/dashboard/DashboardViewer"),
+  "/worksets/:id": () => import("../pages/worksets/WorksetWorkspacePage"),
   "/schedule": () => import("../pages/schedule/SchedulePage"),
   "/leaderboard": () => import("../pages/leaderboard/LeaderboardPage"),
   "/intelligence": () => import("../pages/intelligence/IntelligencePage"),
@@ -18,8 +20,7 @@ const ROUTE_PREFETCHERS: Record<string, () => Promise<unknown>> = {
     import("../pages/ai/SettingsAnalysisStrategyPage"),
   "/ai/staff": () => import("../pages/ai/SettingsAiStaffPage"),
   "/settings": () => import("../pages/settings/SettingsShared"),
-  "/settings/api": () => import("../pages/settings/SettingsApiPage"),
-  "/settings/mcp": () => import("../pages/settings/SettingsMcpPage"),
+  "/settings/integrations": () => import("../pages/settings/SettingsIntegrationsPage"),
   "/settings/logs": () => import("../pages/logs/LogPage"),
 };
 
@@ -32,8 +33,11 @@ function resolveTasksPrefetch(path: string): (() => Promise<unknown>) | undefine
   if (/\/tasks\/[^/]+\/agent$/.test(path)) {
     return () => import("../pages/tasks/agent/AgentDetailPage");
   }
-  if (/\/tasks\/worksets\//.test(path)) {
-    return ROUTE_PREFETCHERS["/tasks"];
+  if (/\/tasks\/worksets\//.test(path) || /^\/worksets\/.+/.test(path)) {
+    return ROUTE_PREFETCHERS["/worksets/:id"];
+  }
+  if (path === "/worksets") {
+    return ROUTE_PREFETCHERS["/worksets"];
   }
   if (path.startsWith("/tasks")) {
     return ROUTE_PREFETCHERS["/tasks"];

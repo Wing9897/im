@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from dateutil import tz as du_tz
 
 from server.calendar.rrule_validate import _naive_rule
+from server.domain.notify_prefs import normalize_notify_pref
 from server.time_iso import parse_iso
 from server.util import parse_json_list, task_value
 
@@ -142,6 +143,7 @@ def _expand_imported_occurrences(
         item_id = str(raw_item).strip() if isinstance(raw_item, str) and str(raw_item).strip() else None
         raw_workset = task_value(task, "workset_id")
         workset_id = str(raw_workset).strip() if raw_workset not in (None, "") else None
+        notify_pref = normalize_notify_pref(task_value(task, "notify_pref"))
         built: list[tuple[Any, dict[str, Any]]] = []
         for occurrence in raw_occurrences:
             if occurrence > window_end + timedelta(seconds=1):
@@ -184,6 +186,7 @@ def _expand_imported_occurrences(
                         "rrule": rule,
                         "worksetId": workset_id,
                         "itemId": item_id,
+                        "notifyPref": notify_pref,
                     },
                 )
             )

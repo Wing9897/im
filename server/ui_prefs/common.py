@@ -15,9 +15,9 @@ SOURCE_FILTER_INVALID: object = object()
 #: ``ui_prefs.key`` values (formerly ``system_config``; retired from CONFIG_DEFAULTS in v15).
 KEY_OPS_BOARD_LAYOUT = "ops_board_layout"
 KEY_OPS_BOARD_WIDGET_STATE = "ops_board_widget_state"
-KEY_VOICE_REMINDER_SETTINGS = "voice_reminder_settings"
-KEY_VOICE_REMINDER_FIRED = "voice_reminder_fired"
-KEY_VOICE_REMINDER_TRIGGER_HISTORY = "voice_reminder_trigger_history"
+KEY_NOTIFY_SETTINGS = "notify_settings"
+KEY_NOTIFY_FIRED = "notify_fired"
+KEY_NOTIFY_TRIGGER_HISTORY = "notify_trigger_history"
 KEY_ASSISTANT_VOICE_IO = "assistant_voice_io_settings"
 KEY_TIMELINE_ANNOTATIONS = "timeline_annotations"
 
@@ -25,9 +25,9 @@ UI_PREF_KEYS = frozenset(
     {
         KEY_OPS_BOARD_LAYOUT,
         KEY_OPS_BOARD_WIDGET_STATE,
-        KEY_VOICE_REMINDER_SETTINGS,
-        KEY_VOICE_REMINDER_FIRED,
-        KEY_VOICE_REMINDER_TRIGGER_HISTORY,
+        KEY_NOTIFY_SETTINGS,
+        KEY_NOTIFY_FIRED,
+        KEY_NOTIFY_TRIGGER_HISTORY,
         KEY_ASSISTANT_VOICE_IO,
         KEY_TIMELINE_ANNOTATIONS,
     }

@@ -106,11 +106,12 @@ export function CategoryEditForm({
             />
           </div>
         </SettingsRow>
-        <SettingsRow dense label={t("defaultRemind")} htmlFor="cat-remind">
+        <SettingsRow dense layout="inline" label={t("defaultRemind")} htmlFor="cat-remind">
           <TextField
             id="cat-remind"
             type="number"
             min={0}
+            className="w-24 max-w-24 shrink-0"
             value={defaultRemind ?? ""}
             onChange={(e) =>
               onDefaultRemindChange(e.target.value === "" ? null : Number(e.target.value))

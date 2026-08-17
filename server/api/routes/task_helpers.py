@@ -15,6 +15,7 @@ from server.errors import VALIDATION_ERROR, http_error
 from server.queries.tasks_queries import fetch_task_channel_rows, fetch_task_row, fetch_task_workset_id
 from server.queries.worksets_queries import workset_exists
 from server.wire.serializers import serialize_channel_ref, serialize_task
+from server.worksets_const import SYSTEM_WORKSET_ID
 
 ALLOWED_MODES = ALL_ANALYSIS_MODES
 # FE editor presets live in ``ALLOWED_SCHEDULE_PRESETS`` (domain); not on HTTP wire.
@@ -43,30 +44,32 @@ def agent_policy_write_fields(
     existing: dict[str, Any] | None = None,
     has_channels: bool | None = None,
 ) -> dict[str, Any]:
-    """Normalize agent policy for INSERT/UPDATE; inert defaults for non-agent modes."""
+    """Normalize agent policy for INSERT/UPDATE.
+
+    Non-agent modes persist only ``output_analysis_events``. Create defaults:
+    ``intel_event`` ON, ``leaderboard`` OFF (排行榜 still persists topics).
+    Other agent-policy columns keep INSERT/UPDATE Python defaults
+    (matching DDL); this helper does not construct an inert AgentTaskSpec.
+    """
     from server.domain.agent_task_spec import (
-        AgentTaskSpec,
         AgentTaskSpecError,
         agent_spec_to_db_kwargs,
         normalize_agent_task_spec,
     )
-    from server.domain.analysis_modes import AGENT_MODE
+    from server.domain.analysis_modes import AGENT_MODE, LEADERBOARD_MODE
     from server.services.task_writes import TaskWriteError
 
     if effective_mode != AGENT_MODE:
-        return agent_spec_to_db_kwargs(
-            AgentTaskSpec(
-                trigger_mode="schedule",
-                cap_calendar_read=True,
-                cap_calendar_writes=False,
-                cap_web_search=False,
-                cap_force_web_search=False,
-                cap_read_analysis_events=True,
-                cap_read_items=True,
-                output_calendar=False,
-                output_analysis_events=False,
-            )
-        )
+        fields = body.model_fields_set
+        existing = existing or {}
+        if "outputAnalysisEvents" in fields and body.outputAnalysisEvents is not None:
+            out_ae = bool(body.outputAnalysisEvents)
+        elif existing:
+            raw = existing.get("output_analysis_events", 1)
+            out_ae = bool(int(raw if raw is not None else 1))
+        else:
+            out_ae = effective_mode != LEADERBOARD_MODE
+        return {"output_analysis_events": 1 if out_ae else 0}
 
     existing = existing or {}
     fields = body.model_fields_set
@@ -105,18 +108,18 @@ async def resolve_workset_id(
     existing: str | None = None,
     inherit_from_parent_id: str | None = None,
     fields_set: set[str] | None = None,
-) -> str | None:
-    """Normalize optional workset ownership.
+) -> str:
+    """Normalize workset ownership (always a real workset id).
 
-    - Explicit ``worksetId`` (including null/empty → clear) when in ``fields_set`` or
-      when ``fields_set`` is None (create path treats body.worksetId as authoritative).
+    - Explicit ``worksetId`` (including null/empty → ``__user__``) when in
+      ``fields_set`` or when ``fields_set`` is None (create path).
     - Else inherit from parent project when creating a child without an explicit value.
-    - Else keep ``existing`` on update.
+    - Else keep ``existing`` on update, falling back to ``__user__``.
     """
     explicit = fields_set is None or "worksetId" in fields_set
     if explicit:
         if supplied is None or not str(supplied).strip():
-            return None
+            return SYSTEM_WORKSET_ID
         workset_id = str(supplied).strip()
         if not await workset_exists(db, workset_id):
             raise http_error(422, f"Unknown worksetId: {workset_id}", error_code=VALIDATION_ERROR)
@@ -127,7 +130,9 @@ async def resolve_workset_id(
         if parent_workset_id:
             return parent_workset_id
 
-    return existing or None
+    if existing and str(existing).strip():
+        return str(existing).strip()
+    return SYSTEM_WORKSET_ID
 
 
 async def resolve_llm_profile_id(

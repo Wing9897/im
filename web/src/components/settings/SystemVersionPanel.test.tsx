@@ -10,7 +10,7 @@ vi.mock("../../api/system", () => ({ fetchHealth }));
 
 const { SystemVersionPanel } = await import("./SystemVersionPanel");
 
-const SCHEMA_SEMVER = "0.1.0-beta.33";
+const SCHEMA_SEMVER = "0.1.0-beta.40";
 
 describe("SystemVersionPanel", () => {
   let harness: TestHarness;
@@ -24,7 +24,7 @@ describe("SystemVersionPanel", () => {
       version: __APP_VERSION__,
       runtimeReady: true,
       secretsReady: true,
-      schemaVersion: 31,
+      schemaVersion: 39,
       schemaSemver: SCHEMA_SEMVER,
       bindHost: "0.0.0.0",
     });
@@ -43,6 +43,10 @@ describe("SystemVersionPanel", () => {
     expect(panel?.textContent).toContain(formatAppVersionLabel());
     expect(panel?.textContent).toContain("資料庫 Schema");
     expect(panel?.textContent).toContain(`v${SCHEMA_SEMVER}`);
+
+    const grid = panel?.querySelector(".grid");
+    expect(grid?.className).toContain("md:grid-cols-2");
+    expect(grid?.children).toHaveLength(2);
   });
 
   it("shows unavailable when schema fetch fails", async () => {

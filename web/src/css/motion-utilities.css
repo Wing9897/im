@@ -79,6 +79,11 @@
   to { transform: translateX(0); opacity: 1; }
 }
 
+@keyframes im-notify-flash-fuse {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
 @keyframes im-shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -160,6 +165,13 @@ html[data-theme-bg="focal"][data-theme="cyberpunk"] .im-enter-rise {
 
 .im-toast-in {
   animation: toast-in var(--im-duration-normal) var(--im-easing-out) both;
+}
+
+.im-notify-flash-fuse {
+  height: 2px;
+  transform-origin: left center;
+  background: var(--accent);
+  animation: im-notify-flash-fuse 10000ms linear forwards;
 }
 
 .im-shimmer {

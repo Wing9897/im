@@ -82,6 +82,7 @@ describe("useTaskEditorState", () => {
     expect(latest.formState.promptTemplate).toBe("Analyze {{messages}}");
     expect(latest.formState.analysisMode).toBe("leaderboard");
     expect(latest.formState.analysisTimeRange).toBe("7d");
+    expect(latest.formState.outputAnalysisEvents).toBe(false);
     // Fields not in preset remain at defaults
     expect(latest.formState.channelIds).toEqual([]);
     expect(latest.formState.scheduleType).toBe("seconds_10");

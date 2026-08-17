@@ -27,9 +27,9 @@ type Props = {
   onQuickAdd?: (kind: LinkedCalendarQuickKind) => void;
   /** Edit a one-off linked user event (same dialog as Timeline). */
   onEditOneOff?: (event: UserEvent) => void;
-  /** Soft-delete / dismiss a one-off linked user event (incl. expiry). */
+  /** Hard-delete a one-off linked user event (incl. expiry). */
   onDeleteOneOff?: (event: UserEvent) => void;
-  /** Soft-delete a recurring analysis task linked to this item. */
+  /** Hard-delete a recurring series linked to this item. */
   onDeleteRecurring?: (seriesId: string, title: string) => void;
   /** Notify parent when primary linked expiry changes. */
   onActiveExpiryChange?: (event: UserEvent | null) => void;

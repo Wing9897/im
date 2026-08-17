@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from server.api.schemas.notify_pref import CoercedNotifyPref
+
 
 class TimelineDismissalBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -54,6 +56,8 @@ class UserEventCreateBody(BaseModel):
     kind: Literal["normal", "expires", "purchase_effective"] = "normal"
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
+    #: Per-event reminder; omitted → ``off``. No force-on.
+    notifyPref: CoercedNotifyPref | None = None
 
 
 class UserEventPatchBody(BaseModel):
@@ -72,6 +76,7 @@ class UserEventPatchBody(BaseModel):
     kind: Literal["normal", "expires", "purchase_effective"] | None = None
     amount: float | None = None
     direction: Literal["expense", "income"] | None = None
+    notifyPref: CoercedNotifyPref | None = None
 
 
 class RecurringSeriesCreateBody(BaseModel):
@@ -94,6 +99,9 @@ class RecurringSeriesCreateBody(BaseModel):
         default=None,
         description="Optional parent trackable item for this recurring calendar",
     )
+    #: Per-series reminder; omitted → ``off``. Recurring create
+    #: has no ``remindBeforeDays`` — notifyPref is still persisted.
+    notifyPref: CoercedNotifyPref | None = None
 
 
 class RecurringSeriesPatchBody(BaseModel):
@@ -110,3 +118,4 @@ class RecurringSeriesPatchBody(BaseModel):
     isActive: bool | None = None
     worksetId: str | None = None
     itemId: str | None = None
+    notifyPref: CoercedNotifyPref | None = None

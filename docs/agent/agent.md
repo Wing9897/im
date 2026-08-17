@@ -32,7 +32,7 @@
 | 工具 | 行為 |
 |------|------|
 | `calendar.*` 讀 | 預設本專案（含 `parent_task_id` 子 recurring 展開） |
-| `create/update/delete_event` | 強制 `task_id=本專案`（需 `cap_calendar_writes`／`output_calendar`） |
+| `create/update/delete_event` | 強制 `task_id=本專案`（需 `cap_calendar_writes`／`output_calendar`）；`delete_event` 為時間規劃 soft-dismiss，非 REST 硬刪 |
 | `create_recurring_series` | 建立獨立 recurring series，且 `parent_task_id=本專案` |
 | `update/delete_recurring_series` | 僅允許本專案子列（否則 error） |
 | `messages.search` | 限制在 `task_channels` |

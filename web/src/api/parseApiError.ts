@@ -52,6 +52,22 @@ export class ApiRequestError extends Error {
   }
 }
 
+function fastapiValidationMessage(body: unknown): string | null {
+  if (typeof body !== "object" || body === null || !("detail" in body)) return null;
+  const detail = (body as Record<string, unknown>).detail;
+  if (typeof detail === "string" && detail.trim()) return detail.trim();
+  if (!Array.isArray(detail) || detail.length === 0) return null;
+  const parts = detail.flatMap((item) => {
+    if (typeof item === "string" && item.trim()) return [item.trim()];
+    if (typeof item === "object" && item !== null && "msg" in item) {
+      const msg = (item as Record<string, unknown>).msg;
+      if (typeof msg === "string" && msg.trim()) return [msg.trim()];
+    }
+    return [];
+  });
+  return parts.length > 0 ? parts.join("; ") : null;
+}
+
 /**
  * Parse a non-OK HTTP response body into a typed `ApiError` (and, when present,
  * the richer `StructuredErrorResponse`). Lenient: tolerates unknown extra
@@ -103,6 +119,17 @@ export async function parseErrorResponse(
         apiError: {
           error: rec.error as string,
           message: rec.message as string,
+        },
+      };
+    }
+
+    // FastAPI / Pydantic validation: { detail: [{ msg, loc, type }] } or { detail: "..." }
+    const fastapiMessage = fastapiValidationMessage(body);
+    if (fastapiMessage) {
+      return {
+        apiError: {
+          error: `http_${response.status}`,
+          message: fastapiMessage,
         },
       };
     }

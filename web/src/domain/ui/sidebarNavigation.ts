@@ -3,6 +3,7 @@ import { isSimpleModeHiddenPath } from "./simpleMode";
 export type SidebarIconKey =
   | "monitor"
   | "tasks"
+  | "worksets"
   | "schedule"
   | "items"
   | "sources"
@@ -32,6 +33,7 @@ export const SIDEBAR_MAIN_GROUPS: readonly SidebarNavGroupModel[] = [
   {
     labelKey: "groupManage",
     items: [
+      { to: "/worksets", labelKey: "worksets", icon: "worksets", activePrefix: "/worksets" },
       { to: "/tasks", labelKey: "tasks", icon: "tasks", activePrefix: "/tasks" },
       { to: "/schedule", labelKey: "schedule", icon: "schedule", activePrefix: "/schedule" },
       { to: "/items", labelKey: "items", icon: "items" },
@@ -83,6 +85,12 @@ export function visibleSidebarGroups(simpleMode: boolean): SidebarNavGroupModel[
 }
 
 export function isSidebarItemActive(item: SidebarNavItemModel, pathname: string): boolean {
+  if (item.to === "/tasks") {
+    return (
+      pathname === "/tasks" ||
+      (pathname.startsWith("/tasks/") && !pathname.startsWith("/tasks/worksets"))
+    );
+  }
   return item.activePrefix
     ? pathname.startsWith(item.activePrefix)
     : pathname === item.to;

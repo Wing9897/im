@@ -32,12 +32,13 @@ export function ActionTriggerSection({
   );
   return (
     <div className="grid grid-cols-1 gap-lg sm:grid-cols-2">
-      <SettingsRow label={t("form.scoreThresholdLabel")} htmlFor="action-score-threshold">
+      <SettingsRow layout="inline" label={t("form.scoreThresholdLabel")} htmlFor="action-score-threshold">
         <TextField
           id="action-score-threshold"
           type="number"
           step="0.1"
           min="0"
+          className="w-24 max-w-24 shrink-0"
           placeholder={t("form.scoreThresholdPlaceholder")}
           value={form.scoreThreshold}
           onChange={(e) => onChange("scoreThreshold", e.target.value)}
@@ -45,16 +46,18 @@ export function ActionTriggerSection({
         />
       </SettingsRow>
 
-      <SettingsRow label={t("form.taskIdLabel")} htmlFor="action-task-id">
-        <MenuSelect
-          id="action-task-id"
-          variant="field"
-          value={form.taskId}
-          options={taskOptions}
-          onChange={(next) => onChange("taskId", next)}
-          disabled={submitting}
-          aria-label={t("form.taskIdLabel")}
-        />
+      <SettingsRow layout="inline" label={t("form.taskIdLabel")} htmlFor="action-task-id">
+        <div className="w-[16rem] max-w-full shrink-0">
+          <MenuSelect
+            id="action-task-id"
+            variant="field"
+            value={form.taskId}
+            options={taskOptions}
+            onChange={(next) => onChange("taskId", next)}
+            disabled={submitting}
+            aria-label={t("form.taskIdLabel")}
+          />
+        </div>
       </SettingsRow>
     </div>
   );

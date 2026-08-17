@@ -11,12 +11,17 @@ from typing import Any
 from server.calendar.occurrence_span import roll_end_if_overnight
 from server.calendar.rrule_expand_imported import _expand_imported_occurrences
 from server.calendar.rrule_validate import ANCHOR_DATE, MAX_OCCURRENCES, _naive_rule
+from server.domain.notify_prefs import normalize_notify_pref
 from server.time_iso import parse_iso
 from server.util import task_value
 
 logger = logging.getLogger(__name__)
 
 _TIME_RE = re.compile(r"^(\d{1,2}):(\d{2})$")
+
+
+def _task_notify_pref(task: Mapping[str, Any]) -> str:
+    return normalize_notify_pref(task_value(task, "notify_pref"))
 
 
 def _task_item_id(task: Mapping[str, Any]) -> str | None:
@@ -155,6 +160,7 @@ def expand_series_occurrences(
                         "rrule": rule,
                         "worksetId": workset_id,
                         "itemId": item_id,
+                        "notifyPref": _task_notify_pref(series),
                     },
                 )
             )

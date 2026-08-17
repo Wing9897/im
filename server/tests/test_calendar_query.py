@@ -300,6 +300,7 @@ async def test_get_event_returns_user_event_detail(app) -> None:
         "kind": "normal",
         "amount": None,
         "direction": None,
+        "notifyPref": "off",
         "body": "詳情內容",
         "createdAt": created["createdAt"],
         "updatedAt": created["updatedAt"],

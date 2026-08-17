@@ -13,7 +13,7 @@ export function WebhookAccessKeysNotice({
     <div className="im-surface-inset mb-md rounded-md border border-surface-border p-md">
       <p className="mb-sm text-body leading-snug text-text-secondary">
         {t("webhook.keysProfileIntro")}{" "}
-        <Link to="/source/keys" className="text-info no-underline">
+        <Link to="/account/keys" className="text-info no-underline">
           {t("webhook.keysProfileLink")}
         </Link>
         {t("webhook.keysProfileSuffix")}

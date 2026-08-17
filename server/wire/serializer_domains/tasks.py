@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from server.domain.notify_prefs import normalize_notify_pref
+from server.worksets_const import SYSTEM_WORKSET_ID
+
 
 def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """AnalysisTask; ``channel_refs=None`` omits channelIds."""
@@ -19,7 +22,7 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "isActive": bool(row.get("is_active")),
         "scheduleRrule": row.get("schedule_rrule"),
         "includeInTimeline": bool(row.get("include_in_timeline", 1)),
-        "worksetId": row.get("workset_id") or None,
+        "worksetId": row.get("workset_id") or SYSTEM_WORKSET_ID,
         "agentWaveIntervalSeconds": (
             int(row["agent_wave_interval_seconds"]) if row.get("agent_wave_interval_seconds") is not None else None
         ),
@@ -39,8 +42,9 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
         "capReadAnalysisEvents": bool(row.get("cap_read_analysis_events", 1)),
         "capReadItems": bool(row.get("cap_read_items", 1)),
         "outputCalendar": bool(row.get("output_calendar", 0)),
-        "outputAnalysisEvents": bool(row.get("output_analysis_events", 0)),
+        "outputAnalysisEvents": bool(row.get("output_analysis_events", 1)),
         "llmProfileId": row.get("llm_profile_id") or "",
+        "notifyPref": normalize_notify_pref(row.get("notify_pref")),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }
@@ -54,6 +58,8 @@ def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
         "id": row["id"],
         "name": row.get("name") or "",
         "isSystem": bool(row.get("is_system")),
+        "notifyEnabled": bool(row.get("notify_enabled", 1)),
+        "externalEnabled": bool(row.get("external_enabled", 1)),
         "createdAt": row.get("created_at"),
         "updatedAt": row.get("updated_at"),
     }

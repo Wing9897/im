@@ -15,7 +15,34 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 - **僅** household access key（`Authorization: Bearer <key>`）。
 - **拒絕** device session；loopback 豁免**不**適用。
 - 金鑰需完整 scope `["*"]`（`read` 只讀金鑰不可呼叫 A2A；舊 `a2a:agent` / `a2a:events` 已硬切拒絕）。
-- 建立：預設完整金鑰；勾選「只讀」→ `scopes: ["read"]`（API 欄位 `readOnly`）。
+- 建立：帳戶 → 存取金鑰只產生完整 `*` 金鑰（UI 無唯讀／scopes 選項）。既有 `read` 金鑰仍可用，列表僅顯示「唯讀」狀態。家庭層能力群組（`mcp_cap_*`）在設定 → 外部接口 → MCP **與** A2A 顯示同一套開關；工作集可見性在工作集頁「外部接口」（`worksets.external_enabled`）。與金鑰 read/`*` 正交；**不是** per-key scope。
+
+## 總開關（`a2a_enabled`）
+
+- `system_config` 鍵：`a2a_enabled`（設定頁 wire：`a2aEnabled`），**預設 `"true"`**。與 `mcp_enabled` **互不控制**。
+- 為 `false` 時：`POST /api/v1/a2a/agent`（以及 `/api/v1/a2a` 下其他 HTTP）回 **403**，`error_code=FORBIDDEN`，訊息含 `a2a_enabled=false`。能力群組在總開關關閉時不套用到 A2A。
+- 設定頁：`/settings/integrations?tab=a2a` 先顯示「啟用 A2A」，再顯示共用能力群組。
+
+## 能力群組（與 MCP 共用）
+
+A2A 只有一條 HTTP 方法（`POST /api/v1/a2a/agent`）。細粒度門檻是內部 tool loop 對 `execute_tool` 的允許清單，映射到既有 MCP 群組（不另造 A2A-only 開關）：
+
+| 群組 | `system_config` | A2A 工具 |
+|------|-----------------|----------|
+| 日曆讀 | `mcp_cap_calendar_read` | `calendar.list_calendars` / `upcoming` / `recent` / `window` / `get` |
+| 日曆寫 | `mcp_cap_calendar_write` | create/update/delete event & recurring；mark/unmark important |
+| 訊息搜尋 | `mcp_cap_messages_search` | `messages.search` |
+| 情報搜尋 | `mcp_cap_intelligence_search` | `intelligence.search_events` |
+| 物品讀 | `mcp_cap_items_read` | `items.list` / `items.list_expiring` |
+| 物品寫 | `mcp_cap_items_write` | `items.create` / `items.update` |
+
+關閉某群組時：system prompt 不列出該批工具；若模型仍呼叫，`execute_tool` 回傳 `calendar_read_disabled`／`calendar_writes_disabled` 等。內建助手（`channel=assistant`）**不受**這些家庭層開關約束。
+
+## 工作集權限（與 MCP 共用）
+
+每張工作集的「外部接口」（`worksets.external_enabled`，預設開；內建「一般」可關）。關則該工作集對 MCP **和** A2A 的情報／訊息／物品不可見、不可寫。全部關閉 fail closed。日曆「我的日程」不套用。內建助手不受約束。開關在 `/worksets`，不在外部接口頁。
+
+無對應群組的 A2A 工具：`web.search` 仍走既有助手聯網設定（不是 `mcp_cap_*`）；`tasks.consult_advisor` 本就不在 A2A（僅助手 task editor）。`mcp_enabled` 只關 MCP HTTP；`a2a_enabled` 只關 A2A HTTP。兩者獨立。
 
 ## API
 
@@ -46,6 +73,7 @@ A2A 通道：`POST /api/v1/a2a/agent`（本文件）。
 
 | Status | `error_code` | 情境 |
 |--------|--------------|------|
+| 403 | `FORBIDDEN` | `a2a_enabled=false`（家庭層 A2A 總開關關閉）；或缺金鑰／非 `*` |
 | 422 | `VALIDATION_ERROR` | `input` 空白且 `messages` 沒有 `role=user` 的一輪 |
 | 400／404 | `VALIDATION_ERROR`／`NOT_FOUND` | `liaison` 槽位未設定、設定檔不存在或不完整 |
 | 502 | `ai_engine_failed` | 上游 LLM 呼叫失敗（回應無法解析、供應商錯誤等） |

@@ -28,22 +28,6 @@
   flex-shrink: 0;
 }
 
-.desktop-title-bar-collapse {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-left: 4px;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  -webkit-app-region: no-drag;
-}
-
 .desktop-title-bar-mode {
   display: inline-flex;
   align-items: center;
@@ -52,19 +36,19 @@
   -webkit-app-region: no-drag;
 }
 
-.desktop-title-bar-collapse:hover {
-  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
-  color: var(--text-primary);
-}
-
 .desktop-title-bar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-left: auto;
   min-width: 0;
-  flex-shrink: 1;
+  flex: 1 1 0;
   -webkit-app-region: no-drag;
+}
+
+/* Empty stretch stays a window-drag region (parent cluster is no-drag). */
+.desktop-title-bar-actions .shell-chrome-spacer {
+  -webkit-app-region: drag;
 }
 
 .desktop-title-bar-actions [data-testid="topbar-status-area"] {

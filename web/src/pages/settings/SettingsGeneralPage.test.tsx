@@ -2,11 +2,18 @@ import { act, createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../i18n";
 import { SimpleModeProvider } from "../../context/SimpleModeContext";
+import { systemLocation } from "../../hooks/monthWeather/timezone";
 import { createTestHarness, type TestHarness } from "../../test/render-helpers";
 
 const saveSystemSettings = vi.fn();
 const restartCollector = vi.fn();
 const applyPersistedSnapshot = vi.fn();
+const { settingsState } = vi.hoisted(() => ({
+  settingsState: {
+    weatherLocation: "system",
+    analysisTraceVerbose: false,
+  },
+}));
 
 vi.mock("../../api/config", () => ({ saveSystemSettings }));
 vi.mock("../../api/system", () => ({ restartCollector }));
@@ -22,10 +29,7 @@ vi.mock("./SettingsShared", () => ({
 }));
 vi.mock("../../components/settings/useSettingsPageState", () => ({
   useSettingsPageState: () => ({
-    settings: {
-      weatherLocation: "system",
-      analysisTraceVerbose: false,
-    },
+    settings: settingsState,
     applyPersistedSnapshot,
   }),
 }));
@@ -41,6 +45,8 @@ describe("SettingsGeneralPage", () => {
 
   beforeEach(async () => {
     await i18n.changeLanguage("zh-Hant");
+    settingsState.weatherLocation = "system";
+    settingsState.analysisTraceVerbose = false;
     harness = createTestHarness();
     vi.clearAllMocks();
     window.localStorage.clear();
@@ -54,21 +60,44 @@ describe("SettingsGeneralPage", () => {
   it("defaults the weather region to follow the system", async () => {
     await harness.render(SettingsGeneralPageWithProviders);
 
-    const checkbox = Array.from(
-      harness.container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
-    ).find((el) => el.closest("label")?.textContent?.includes("跟系統"));
-    expect(checkbox?.checked).toBe(true);
+    const follow = harness.container.querySelector('[data-testid="weather-follow-system"]');
+    expect(follow?.getAttribute("aria-checked")).toBe("true");
     expect(harness.container.textContent).toContain("跟系統");
+  });
+
+  it("lists the resolved OS region while follow-system is on", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+
+    const readout = harness.container.querySelector('[data-testid="weather-location-current"]');
+    expect(readout?.textContent).toBe(`目前地區：${systemLocation()}`);
+    expect(readout?.textContent).not.toMatch(/system/i);
+    expect(harness.container.querySelector('[data-testid="general-region-card"]')?.contains(readout)).toBe(
+      true,
+    );
+  });
+
+  it("lists the stored custom region when follow-system is off", async () => {
+    settingsState.weatherLocation = "Hong Kong";
+    await harness.render(SettingsGeneralPageWithProviders);
+
+    const follow = harness.container.querySelector('[data-testid="weather-follow-system"]');
+    expect(follow?.getAttribute("aria-checked")).toBe("false");
+    const readout = harness.container.querySelector('[data-testid="weather-location-current"]');
+    expect(readout?.textContent).toBe("目前地區：Hong Kong");
   });
 
   it("exposes a simple-mode toggle for AI calendar UX", async () => {
     await harness.render(SettingsGeneralPageWithProviders);
-    const toggle = harness.container.querySelector<HTMLInputElement>(
-      '[data-testid="simple-mode-toggle"]',
-    );
+    const toggle = harness.container.querySelector('[data-testid="simple-mode-toggle"]');
     expect(toggle).toBeTruthy();
-    expect(toggle?.checked).toBe(false);
+    expect(toggle?.getAttribute("role")).toBe("switch");
+    expect(toggle?.getAttribute("aria-checked")).toBe("false");
+    expect(toggle?.className).not.toContain("im-surface-inset");
+    expect(toggle?.className).not.toContain("border-accent");
     expect(harness.container.textContent).toContain("簡化模式");
+    const row = toggle?.parentElement;
+    expect(row?.className).toContain("items-center");
+    expect(row?.textContent).toContain("簡化模式（AI 日曆）");
   });
 
   it("shows the interface language switcher near general prefs", async () => {
@@ -79,14 +108,43 @@ describe("SettingsGeneralPage", () => {
     expect(harness.container.textContent).toContain("繁體中文");
   });
 
+  it("frames language and simple mode as two panel cards on one row", async () => {
+    await harness.render(SettingsGeneralPageWithProviders);
+
+    const languageCard = harness.container.querySelector('[data-testid="general-language-card"]');
+    const simpleCard = harness.container.querySelector('[data-testid="general-simple-mode-card"]');
+    const regionCard = harness.container.querySelector('[data-testid="general-region-card"]');
+    expect(languageCard?.className).toContain("im-material-panel");
+    expect(simpleCard?.className).toContain("im-material-panel");
+    expect(regionCard?.className).toContain("im-material-panel");
+
+    const grid = languageCard?.parentElement;
+    expect(grid?.className).toContain("md:grid-cols-2");
+    expect(grid).toBe(simpleCard?.parentElement);
+    expect(grid?.contains(regionCard)).toBe(false);
+
+    expect(languageCard?.querySelector('[data-testid="language-switcher"]')).not.toBeNull();
+    expect(simpleCard?.querySelector('[data-testid="simple-mode-toggle"]')).not.toBeNull();
+    expect(regionCard?.querySelector('[data-testid="weather-follow-system"]')).not.toBeNull();
+    const weatherToggle = regionCard?.querySelector('[data-testid="weather-follow-system"]');
+    expect(weatherToggle?.parentElement?.className).toContain("items-center");
+
+    const save = Array.from(harness.container.querySelectorAll("button")).find(
+      (button) => button.textContent === "儲存地區",
+    );
+    expect(save).toBeTruthy();
+    expect(save?.className).not.toContain("w-full");
+    expect(regionCard?.contains(save!)).toBe(true);
+  });
+
   it("persists a custom weather region", async () => {
     saveSystemSettings.mockResolvedValue({ weatherLocation: "臺北" });
     await harness.render(SettingsGeneralPageWithProviders);
-    const checkbox = Array.from(
-      harness.container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
-    ).find((el) => el.closest("label")?.textContent?.includes("跟系統"))!;
+    const follow = harness.container.querySelector<HTMLButtonElement>(
+      '[data-testid="weather-follow-system"]',
+    )!;
     await act(async () => {
-      checkbox.click();
+      follow.click();
     });
     const input = harness.container.querySelector<HTMLInputElement>('[aria-label="天氣地區"]')!;
     const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
@@ -105,6 +163,8 @@ describe("SettingsGeneralPage", () => {
       save.click();
     });
     expect(saveSystemSettings).toHaveBeenCalledWith({ weatherLocation: "臺北" });
+    const readout = harness.container.querySelector('[data-testid="weather-location-current"]');
+    expect(readout?.textContent).toBe("目前地區：臺北");
   });
 
   async function expandAdvancedSection() {
@@ -134,7 +194,7 @@ describe("SettingsGeneralPage", () => {
     await expandAdvancedSection();
     expect(harness.container.textContent).toContain("除錯與診斷");
     expect(harness.container.textContent).toContain("伺服器分析 Trace");
-    expect(harness.container.querySelector('[role="switch"]')).toBeTruthy();
+    expect(harness.container.querySelector('[data-testid="analysis-trace-verbose"]')).toBeTruthy();
   });
 
   it("persists analysis trace immediately when the switch is toggled", async () => {
@@ -144,8 +204,8 @@ describe("SettingsGeneralPage", () => {
     });
     await harness.render(SettingsGeneralPageWithProviders);
     await expandAdvancedSection();
-    const switchEl = harness.container.querySelector<HTMLElement>('[role="switch"]')!;
-    await act(async () => switchEl.click());
+    const tile = harness.container.querySelector<HTMLElement>('[data-testid="analysis-trace-verbose"]')!;
+    await act(async () => tile.click());
     expect(saveSystemSettings).toHaveBeenCalledWith({ analysisTraceVerbose: true });
     expect(applyPersistedSnapshot).toHaveBeenCalled();
   });

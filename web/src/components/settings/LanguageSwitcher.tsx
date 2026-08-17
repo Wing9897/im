@@ -74,8 +74,8 @@ export function LanguageSwitcher({ variant = "settings" }: LanguageSwitcherProps
   }
 
   return (
-    <div data-testid="language-switcher" data-variant="settings">
-      <SettingsRow label={t("language.label")} help={t("language.help")}>
+    <div data-testid="language-switcher" data-variant="settings" className="min-w-0">
+      <SettingsRow layout="inline" label={t("language.label")} help={t("language.help")}>
         <div
           role="radiogroup"
           aria-label={t("language.label")}

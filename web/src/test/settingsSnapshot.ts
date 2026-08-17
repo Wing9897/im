@@ -28,6 +28,7 @@ export const defaultSettingsSnapshot: SystemSettingsSnapshot = {
   userAvatar: "",
   userBackground: "",
   mcpEnabled: true,
+  a2aEnabled: true,
   mcpCapCalendarRead: true,
   mcpCapCalendarWrite: true,
   mcpCapMessagesSearch: true,

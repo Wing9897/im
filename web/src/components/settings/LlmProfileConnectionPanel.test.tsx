@@ -90,24 +90,25 @@ describe("LlmProfileConnectionPanel", () => {
       expect(container.textContent).not.toContain("JSON 輸出模式");
     });
 
-    it("renders Ollama thinking checkbox when provider is ollama", () => {
+    it("renders Ollama thinking switch when provider is ollama", () => {
       renderPanel({ llmProvider: "ollama", ollamaThinkingEnabled: false });
       expect(container.textContent).toContain("Thinking 模式");
-      const checkbox = container.querySelector<HTMLInputElement>("#ollama-thinking-enabled");
-      expect(checkbox).toBeTruthy();
-      expect(checkbox!.checked).toBe(false);
+      const toggle = container.querySelector<HTMLButtonElement>('[data-testid="ollama-thinking-enabled"]');
+      expect(toggle).toBeTruthy();
+      expect(toggle!.getAttribute("role")).toBe("switch");
+      expect(toggle!.getAttribute("aria-checked")).toBe("false");
     });
 
-    it("calls onOllamaThinkingEnabledChange when thinking checkbox toggles", () => {
+    it("calls onOllamaThinkingEnabledChange when thinking switch toggles", () => {
       const onOllamaThinkingEnabledChange = vi.fn();
       renderPanel({
         llmProvider: "ollama",
         ollamaThinkingEnabled: false,
         onOllamaThinkingEnabledChange,
       });
-      const checkbox = container.querySelector<HTMLInputElement>("#ollama-thinking-enabled")!;
+      const toggle = container.querySelector<HTMLButtonElement>('[data-testid="ollama-thinking-enabled"]')!;
       act(() => {
-        checkbox.click();
+        toggle.click();
       });
       expect(onOllamaThinkingEnabledChange).toHaveBeenCalledWith(true);
     });

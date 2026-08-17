@@ -12,7 +12,13 @@ from server.analyzer.prompt import build_analysis_prompt
 from server.app_logging import failure_details_from_exc, record
 from server.config import get_config, get_config_bool, get_config_int
 from server.db.database import Database
-from server.domain.analysis_modes import AGENT_MODE, INTEL_EVENT_MODE, LEADERBOARD_MODE
+from server.domain.analysis_modes import (
+    AGENT_MODE,
+    INTEL_EVENT_MODE,
+    LEADERBOARD_MODE,
+    task_persists_findings,
+    task_writes_analysis_events,
+)
 from server.scheduler.batch_claim import batch_channel_names, fetch_batch_messages
 from server.scheduler.batch_failure import handle_batch_failure
 from server.scheduler.result_store import store_results
@@ -48,6 +54,8 @@ async def process_batch(
     task_id = str(task["id"])
     task_name = str(task.get("name") or "")
     analysis_mode = str(task.get("analysis_mode") or INTEL_EVENT_MODE)
+    writes_intel = task_writes_analysis_events(task)
+    persists_results = task_persists_findings(task)
 
     messages = await fetch_batch_messages(db, batch_id)
     if not messages:
@@ -78,6 +86,7 @@ async def process_batch(
         max_total_chars=max_total_chars,
         strategy_mode=strategy_mode or None,
         ui_locale=ui_locale,
+        output_analysis_events=persists_results,
     )
 
     if await get_config_bool(db, "analysis_trace_verbose"):
@@ -178,48 +187,56 @@ async def process_batch(
             failure_details=failure_details_from_exc(exc),
         )
         return
-    except Exception as exc:  # noqa: BLE001 — all LLM/parse errors route to failure policy
-        await handle_batch_failure(
-            db=db,
-            broadcaster=broadcaster,
-            task_id=task_id,
-            task_name=task_name,
-            batch_id=batch_id,
-            error_message=str(exc),
-            scheduler=scheduler,
-            failure_details=failure_details_from_exc(exc),
-        )
-        return
+    except Exception as exc:  # noqa: BLE001 — LLM/parse errors fail the batch unless intel is off
+        from server.analyzer.llm_json import LlmParseError
 
-    items = result["items"]
-    # Geocode (or apply 0,0 sentinel) for any item missing coordinates.
-    needs_geocode = [
-        item
-        for item in items
-        if isinstance(item, dict) and item.get("latitude") is None and item.get("longitude") is None
-    ]
-    if needs_geocode:
-        from server.analyzer.geocoding import geocode_analysis_items
+        if persists_results or not isinstance(exc, LlmParseError):
+            await handle_batch_failure(
+                db=db,
+                broadcaster=broadcaster,
+                task_id=task_id,
+                task_name=task_name,
+                batch_id=batch_id,
+                error_message=str(exc),
+                scheduler=scheduler,
+                failure_details=failure_details_from_exc(exc),
+            )
+            return
+        result = {"items": [], "prompt_tokens": 0, "completion_tokens": 0}
 
-        for item in items:
-            if isinstance(item, dict):
-                item.setdefault("latitude", None)
-                item.setdefault("longitude", None)
-        try:
-            items = await geocode_analysis_items(items)
-        except Exception as exc:  # noqa: BLE001 — geocoding must not fail the batch
-            logger.warning("Geocoding skipped for batch %s: %s", batch_id, exc)
+    items = result["items"] if isinstance(result.get("items"), list) else []
+    findings_count = 0
+    channel_names: list[str] = []
+    if writes_intel:
+        # Geocode (or apply 0,0 sentinel) for any item missing coordinates.
+        needs_geocode = [
+            item
+            for item in items
+            if isinstance(item, dict) and item.get("latitude") is None and item.get("longitude") is None
+        ]
+        if needs_geocode:
+            from server.analyzer.geocoding import geocode_analysis_items
 
-    channel_names = await batch_channel_names(db, batch_id)
+            for item in items:
+                if isinstance(item, dict):
+                    item.setdefault("latitude", None)
+                    item.setdefault("longitude", None)
+            try:
+                items = await geocode_analysis_items(items)
+            except Exception as exc:  # noqa: BLE001 — geocoding must not fail the batch
+                logger.warning("Geocoding skipped for batch %s: %s", batch_id, exc)
+
+        channel_names = await batch_channel_names(db, batch_id)
     now = utc_now_iso()
     async with db.transaction() as conn:
-        findings_count = await store_results(
-            conn,
-            task=task,
-            batch_id=batch_id,
-            items=items,
-            channel_names=channel_names,
-        )
+        if persists_results:
+            findings_count = await store_results(
+                conn,
+                task=task,
+                batch_id=batch_id,
+                items=items,
+                channel_names=channel_names,
+            )
         await conn.execute(
             "UPDATE analysis_batches SET status = 'completed', prompt_tokens = ?, "
             "completion_tokens = ?, error_message = NULL, updated_at = ?, "

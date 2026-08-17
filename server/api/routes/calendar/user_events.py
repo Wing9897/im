@@ -94,6 +94,8 @@ async def create_event(request: Request, body: UserEventCreateBody) -> UserEvent
             "amount": body.amount,
             "direction": body.direction,
         }
+        if "notifyPref" in fields_set:
+            kwargs["notify_pref"] = body.notifyPref
         if "worksetId" in fields_set:
             kwargs["workset_id"] = body.worksetId
         item = await create_user_event(db, **kwargs)
@@ -139,6 +141,7 @@ async def patch_event(
         "kind": "kind",
         "amount": "amount",
         "direction": "direction",
+        "notifyPref": "notify_pref",
     }
     kwargs: dict[str, Any] = {wire_to_service[key]: value for key, value in raw.items()}
 
@@ -154,6 +157,7 @@ async def patch_event(
 
 @router.delete("/{event_id}", status_code=204)
 async def remove_event(request: Request, event_id: str) -> Response:
+    """Hard-delete the user_events row. Timeline hide stays on /calendar/dismissals."""
     db = get_db(request)
     deleted = await delete_user_event(db, event_id)
     if not deleted:

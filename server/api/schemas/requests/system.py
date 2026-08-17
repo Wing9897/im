@@ -64,6 +64,7 @@ class SystemSettingsUpdateBody(BaseModel):
     userAvatar: str | None = None
     userBackground: str | None = None
     mcpEnabled: bool | None = None
+    a2aEnabled: bool | None = None
     mcpCapCalendarRead: bool | None = None
     mcpCapCalendarWrite: bool | None = None
     mcpCapMessagesSearch: bool | None = None

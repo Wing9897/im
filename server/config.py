@@ -61,9 +61,10 @@ CONFIG_DEFAULTS: dict[str, str] = {
     "user_avatar": "",
     # Free-text user background / bio injected into agent system prompts; empty = unset.
     "user_background": "",
-    # MCP master switch + capability groups (settings/mcp); defaults on.
-    # Capability keys derive from ``MCP_CAPABILITY_CONFIG_DEFAULTS``.
+    # MCP / A2A HTTP master switches (independent) + shared capability groups.
+    # Capability keys derive from ``MCP_CAPABILITY_CONFIG_DEFAULTS``. Defaults on.
     "mcp_enabled": "true",
+    "a2a_enabled": "true",
     **MCP_CAPABILITY_CONFIG_DEFAULTS,
     # UI prefs and device-scoped assistant sessions live in ui_prefs.
 }

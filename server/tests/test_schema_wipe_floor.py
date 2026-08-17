@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-33 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-39 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -24,8 +24,8 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 33
-    assert SCHEMA_SEMVER == "0.1.0-beta.34"
+    assert CURRENT_SCHEMA_VERSION == 39
+    assert SCHEMA_SEMVER == "0.1.0-beta.40"
 
 
 @pytest.mark.asyncio
@@ -40,6 +40,8 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert fingerprint.version == CURRENT_SCHEMA_VERSION
         assert fingerprint == CURRENT_SCHEMA_FINGERPRINT
         assert await db.fetch_value("SELECT is_system FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)) == 1
+        assert await db.fetch_value("SELECT notify_enabled FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)) == 1
+        assert await db.fetch_value("SELECT external_enabled FROM worksets WHERE id = ?", (SYSTEM_WORKSET_ID,)) == 1
         assert int(await db.fetch_value("SELECT COUNT(*) FROM llm_profiles") or 0) == 0
         assert int(await db.fetch_value("SELECT COUNT(*) FROM llm_staff_instances") or 0) == 0
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
@@ -52,6 +54,25 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
             task_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "llm_profile_id" in task_cols
         assert int(task_cols["llm_profile_id"][3]) == 1
+        assert "notify_pref" in task_cols
+        assert int(task_cols["notify_pref"][3]) == 1
+        assert str(task_cols["output_analysis_events"][4]) == "1"
+        task_workset = task_cols["workset_id"]
+        assert int(task_workset[3]) == 1  # notnull
+        assert task_workset[4] is not None
+        assert "__user__" in str(task_workset[4])
+        async with db.conn.execute("PRAGMA table_info(worksets)") as cursor:
+            workset_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "notify_enabled" in workset_cols
+        assert int(workset_cols["notify_enabled"][3]) == 1
+        assert "external_enabled" in workset_cols
+        assert int(workset_cols["external_enabled"][3]) == 1
+        async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
+            ue_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "notify_pref" in ue_cols
+        async with db.conn.execute("PRAGMA table_info(recurring_schedules)") as cursor:
+            rec_cols = {str(row[1]): row for row in await cursor.fetchall()}
+        assert "notify_pref" in rec_cols
     finally:
         await db.close()
 
@@ -109,11 +130,12 @@ async def test_startup_rejection_names_the_reset_recovery_path(tmp_path, caplog)
     )
 
     app = create_app(db_path=str(path), start_collector=False, start_scheduler=False, serve_static=False)
-    with caplog.at_level(logging.ERROR, logger="server.main"), pytest.raises(SchemaBaselineError):
+    with caplog.at_level(logging.ERROR, logger="server.main"), pytest.raises(SchemaBaselineError) as raised:
         async with app.router.lifespan_context(app):
             pass
 
     message = "\n".join(record.getMessage() for record in caplog.records)
     assert "scripts/reset_local_databases.py --apply" in message
-    assert str(wipe_only_version) in message
     assert str(path) in message
+    assert str(wipe_only_version) in str(raised.value)
+    assert str(CURRENT_SCHEMA_VERSION) in str(raised.value)

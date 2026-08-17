@@ -78,7 +78,7 @@ export function useSourceFilterDialogState({
       return {
         id: task.id,
         name: fromExpand || fromCatalog || undefined,
-        worksetId: task.worksetId ?? null,
+        worksetId: task.worksetId?.trim() || SYSTEM_WORKSET_ID,
         analysisMode: task.analysisMode ?? null,
       };
     });
@@ -102,8 +102,7 @@ export function useSourceFilterDialogState({
   const isFiltering = selection !== null;
   const selectedCount =
     selection === null
-      ? displayWorksets.length +
-        memberTasks.filter((task) => !task.worksetId).length
+      ? displayWorksets.length
       : sourceFilterSelectedCount(selection);
 
   const checkedTasks = useMemo(
@@ -118,7 +117,7 @@ export function useSourceFilterDialogState({
 
   const treeRows = useMemo(
     () =>
-      buildFilterTreeRows(displayWorksets, memberTasks, t("workset:unassignedGroup")),
+      buildFilterTreeRows(displayWorksets, memberTasks),
     [displayWorksets, memberTasks, t],
   );
 

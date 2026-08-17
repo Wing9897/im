@@ -83,5 +83,8 @@ describe("App shell status integration", () => {
     expect(topBarPill?.tagName).toBe("BUTTON");
     expect(container.querySelector("[data-testid='pause-resume-button']")).toBeNull();
     expect(container.querySelector("[data-testid='analysis-control-toolbar']")).toBeNull();
+    expect(container.querySelector("[data-testid='chrome-channel-voice']")).toBeNull();
+    expect(container.querySelector("[data-testid='chrome-channel-flash']")).toBeNull();
+    expect(container.querySelector("[data-testid='recent-day-inbox-btn']")).toBeTruthy();
   });
 });

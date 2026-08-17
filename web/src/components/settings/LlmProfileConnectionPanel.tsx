@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  CheckboxField,
   FormGrid,
   FormStack,
   MenuSelect,
@@ -141,15 +140,19 @@ export function LlmProfileConnectionPanel({
         ) : null}
 
         {llmProvider === "ollama" ? (
-          <SettingsRow label={t("llm.thinkingModeLabel")} help={t("llm.thinkingModeHelp")}>
-            <CheckboxField
-              id="ollama-thinking-enabled"
-              label={ollamaThinkingEnabled ? t("shared.enabled") : t("shared.disabled")}
-              checked={ollamaThinkingEnabled}
-              onChange={(e) => onOllamaThinkingEnabledChange(e.target.checked)}
-              aria-label={t("llm.thinkingModeAria")}
-            />
-          </SettingsRow>
+          <SelectTile
+            compact
+            variant="toggle"
+            className="max-w-[280px]"
+            active={ollamaThinkingEnabled}
+            data-testid="ollama-thinking-enabled"
+            aria-label={t("llm.thinkingModeAria")}
+            title={t("llm.thinkingModeHelp")}
+            hint={t("llm.thinkingModeHelp")}
+            onClick={() => onOllamaThinkingEnabledChange(!ollamaThinkingEnabled)}
+          >
+            {t("llm.thinkingModeLabel")}
+          </SelectTile>
         ) : null}
       </FormGrid>
     </FormStack>

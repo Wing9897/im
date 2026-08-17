@@ -153,7 +153,7 @@ async def insert_analysis_task(
     analysis_time_range: str,
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
-    workset_id: str | None = None,
+    workset_id: str = SYSTEM_WORKSET_ID,
     agent_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -167,8 +167,9 @@ async def insert_analysis_task(
     cap_read_analysis_events: int = 1,
     cap_read_items: int = 1,
     output_calendar: int = 0,
-    output_analysis_events: int = 0,
+    output_analysis_events: int = 1,
     llm_profile_id: str,
+    notify_pref: str = "follow",
     now: str,
 ) -> None:
     await tx.execute(
@@ -180,9 +181,9 @@ async def insert_analysis_task(
         "analysis_strategy_mode, "
         "trigger_mode, cap_calendar_read, cap_calendar_writes, cap_web_search, "
         "cap_force_web_search, cap_read_analysis_events, cap_read_items, "
-        "output_calendar, output_analysis_events, llm_profile_id, "
+        "output_calendar, output_analysis_events, llm_profile_id, notify_pref, "
         "created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "VALUES (?, ?, ?, ?, ?, ?, 1, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             task_id,
             name,
@@ -208,6 +209,7 @@ async def insert_analysis_task(
             output_calendar,
             output_analysis_events,
             llm_profile_id,
+            notify_pref,
             now,
             now,
         ),
@@ -226,7 +228,7 @@ async def update_analysis_task(
     version: int,
     schedule_rrule: str | None,
     include_in_timeline: int = 1,
-    workset_id: str | None = None,
+    workset_id: str = SYSTEM_WORKSET_ID,
     agent_wave_interval_seconds: int | None = None,
     batch_overlap_count: int | None = None,
     analysis_trigger_threshold: int | None = None,
@@ -240,8 +242,9 @@ async def update_analysis_task(
     cap_read_analysis_events: int = 1,
     cap_read_items: int = 1,
     output_calendar: int = 0,
-    output_analysis_events: int = 0,
+    output_analysis_events: int = 1,
     llm_profile_id: str,
+    notify_pref: str = "follow",
     now: str,
 ) -> None:
     await tx.execute(
@@ -255,7 +258,7 @@ async def update_analysis_task(
         "cap_web_search = ?, cap_force_web_search = ?, "
         "cap_read_analysis_events = ?, cap_read_items = ?, "
         "output_calendar = ?, output_analysis_events = ?, llm_profile_id = ?, "
-        "updated_at = ? WHERE id = ?",
+        "notify_pref = ?, updated_at = ? WHERE id = ?",
         (
             name,
             description,
@@ -281,6 +284,7 @@ async def update_analysis_task(
             output_calendar,
             output_analysis_events,
             llm_profile_id,
+            notify_pref,
             now,
             task_id,
         ),

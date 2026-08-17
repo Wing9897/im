@@ -1,4 +1,4 @@
-import { BellRing, History, Volume2 } from "lucide-react";
+import { Bell, BellRing, History } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SegmentedControl } from "../../../components/ui";
 import {
@@ -8,7 +8,7 @@ import {
 
 const TAB_ICONS: Record<ActionsTabKey, typeof BellRing> = {
   types: BellRing,
-  voice: Volume2,
+  notify: Bell,
   history: History,
 };
 
@@ -17,7 +17,7 @@ interface ActionsTabNavProps {
   onTabChange: (tab: ActionsTabKey) => void;
 }
 
-/** Segmented sub-nav for the notifications workspace (types / voice / history). */
+/** Segmented sub-nav for the notifications workspace (types / notify / history). */
 export function ActionsTabNav({ activeTab, onTabChange }: ActionsTabNavProps) {
   const { t } = useTranslation("actions");
 

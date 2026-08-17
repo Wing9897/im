@@ -423,4 +423,24 @@ describe("useIntelligenceFeed", () => {
     expect(fetchArgs.taskIds).toHaveLength(2);
     expect(fetchArgs.taskIds).not.toEqual(expect.arrayContaining(["t-lb"]));
   });
+
+  it("excludes intel_event tasks with intelligence output off from the catalog", async () => {
+    resetTaskCatalogState([
+      makeAnalysisTask({ id: "t-on", analysisMode: "intel_event", outputAnalysisEvents: true, worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-off", analysisMode: "intel_event", outputAnalysisEvents: false, worksetId: "ws-1" }),
+      makeAnalysisTask({ id: "t-web-off", analysisMode: "agent", outputAnalysisEvents: false, worksetId: "ws-1" }),
+    ]);
+    localStorage.removeItem(INTELLIGENCE_SELECTED_SOURCES_STORAGE_KEY);
+    mockFetchEvents.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+
+    await act(async () => {
+      root.render(createElement(Harness));
+      await flushPromises();
+    });
+
+    const fetchArgs = mockFetchEvents.mock.calls.at(-1)?.[0] as {
+      taskIds?: string[] | null;
+    };
+    expect(fetchArgs.taskIds).toEqual(["t-on"]);
+  });
 });

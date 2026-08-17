@@ -19,6 +19,7 @@ from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
 from server.db.database import Database
+from server.domain.notify_prefs import normalize_notify_pref
 from server.queries.items_queries import fetch_active_items_with_dates, fetch_item_row
 from server.worksets_const import SYSTEM_WORKSET_ID
 
@@ -78,6 +79,7 @@ def build_item_occurrence(
     start_iso, end_iso = _date_to_floating_iso(day)
     raw_workset = row.get("workset_id")
     workset_id = str(raw_workset).strip() if isinstance(raw_workset, str) and raw_workset.strip() else SYSTEM_WORKSET_ID
+    notify_pref = normalize_notify_pref(row.get("notify_pref"))
     item: dict[str, Any] = {
         "id": occurrence_id(item_id, kind),
         "seriesId": "",
@@ -91,6 +93,7 @@ def build_item_occurrence(
         "worksetId": workset_id,
         "itemId": item_id,
         "itemDateKind": kind,
+        "notifyPref": notify_pref,
         "dismissed": bool(dismissed),
         "important": False,
         "origin": None,

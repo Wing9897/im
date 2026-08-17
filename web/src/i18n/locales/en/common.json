@@ -63,21 +63,24 @@
     "system": "System",
     "agent": "Agent",
     "unknownMode": "Unknown",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "now": "Now",
+    "nowAria": "Fill with the current date and time"
   },
   "commandPalette": {
     "groups": {
       "navigation": "Navigation",
       "settings": "Settings",
       "actions": "Actions",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "worksets": "Worksets"
     },
     "unnamedTask": "Untitled task",
     "monitorWall": "Monitor wall",
     "keyEventsMap": "Intel events · Map",
     "keyEventsList": "Intel events · List",
     "keyEventsCard": "Intel events · Cards",
-    "actionsVoice": "Notifications · Voice reminders",
+    "actionsVoice": "Notifications · Local notifications",
     "actionsHistory": "Notifications · Trigger history",
     "sourcesRss": "Sources · RSS",
     "sourcesTelegram": "Sources · Telegram",
@@ -91,8 +94,9 @@
     "aiStaff": "AI staff",
     "theme": "Theme",
     "settingsData": "Data maintenance",
-    "settingsApi": "API docs",
-    "settingsMcp": "MCP docs",
+    "settingsIntegrations": "External interfaces",
+    "settingsDeeplink": "Calendar link",
+    "settingsMcp": "External interfaces · MCP",
     "newTask": "New task",
     "newAction": "New notification",
     "newActionHint": "Open notifications",
@@ -120,7 +124,7 @@
     "clientManager": {
       "title": "Account manager",
       "shortDescription": "External Agent (A2A): third parties assign work in natural language. Shares the assistant’s LLM and tools, but does not chat with you and stores no server-side history. Needs a full access key (`*`).",
-      "linkLabel": "Open API docs"
+      "linkLabel": "Open A2A docs"
     },
     "collector": {
       "title": "Collector",
@@ -135,9 +139,9 @@
       "shortDescription": "Sends messages via Telegram, Discord, Webhook, MQTT, and similar channels when notification rules match."
     },
     "voiceReminder": {
-      "title": "Voice reminders",
-      "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and General-workset events, then announces them with browser speech.",
-      "linkLabel": "Go to voice reminders"
+      "title": "Local notifications",
+      "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and workset events, then notifies via voice, on-screen, or the last-day inbox.",
+      "linkLabel": "Go to local notifications"
     },
     "retention": {
       "title": "Data cleanup",
@@ -168,9 +172,7 @@
     "30d": "30 days"
   },
   "messages": {
-    "speakWithTask": "Task “{task}”, {kindLabel} “{eventTitle}”, in {lead}",
-    "speakWithWorkset": "Workset “{workset}”, {kindLabel} “{eventTitle}”, in {lead}",
-    "speakWithoutTask": "{kindLabel} “{eventTitle}”, in {lead}",
+    "speakWithoutTask": "“{eventTitle}”, in {lead}",
     "retentionDeleted": "Deleted: {parts}",
     "retentionNone": "No matching old data to delete",
     "retentionPart": "{label} {count}",
@@ -186,7 +188,7 @@
     "speakKindRecurring": "recurring task",
     "speakKindUser": "reminder",
     "speakPreview": "Test in progress",
-    "voiceTriggerReason": "Voice reminder · {lead} · “{title}”",
+    "voiceTriggerReason": "Notification · {lead} · “{title}”",
     "speakTtsUnavailable": "Local speech synthesis unavailable",
     "speakFailed": "Speech failed"
   },
@@ -319,6 +321,25 @@
     "abortDialogTitle": "Emergency abort analysis",
     "abortDialogBody": "Abort all analysis now? This cannot be undone."
   },
+  "notify": {
+    "prefLabel": "Notify",
+    "prefAria": "Notify for this item",
+    "prefHelp": "When checked, still follows the workset and global switches; if the workset is off, this row does not fire.",
+    "inboxTitle": "Last 24 hours",
+    "inboxEmpty": "No notifications in the last day.",
+    "inboxOpenAria": "Open last-day notifications",
+    "inboxCloseAria": "Close last-day notifications",
+    "inboxBadgeAria": "{count} unread notifications",
+    "inboxClear": "Clear",
+    "inboxClearAria": "Remove this notification from the inbox",
+    "inboxClearAll": "Clear all",
+    "inboxClearAllAria": "Clear all last-day notifications",
+    "channelVoice": "Voice",
+    "channelFlash": "On-screen",
+    "channelVoiceAria": "Toggle voice",
+    "channelFlashAria": "Toggle on-screen reminders",
+    "flashDismissAria": "Dismiss notification"
+  },
   "window": {
     "controlsAria": "Window controls",
     "minimize": "Minimize",
@@ -345,7 +366,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 33 / SemVer 0.1.0-beta.34 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 39 / SemVer 0.1.0-beta.40 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

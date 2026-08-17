@@ -19,6 +19,7 @@
 @import "./css/leaderboard-page.css" layer(components);
 @import "./css/timeline-page.css" layer(components);
 @import "./css/intelligence-page.css" layer(components);
+@import "./css/workset-pipeline-graph.css" layer(components);
 @import "./css/motion-utilities.css" layer(components);
 @import "./css/shared-layout.css" layer(components);
 @import "./css/dialog-chrome.css" layer(components);

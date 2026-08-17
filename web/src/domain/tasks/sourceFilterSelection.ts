@@ -103,8 +103,8 @@ export function expandWorksetIdsToTaskIds(
   if (selected.size === 0) return [];
   const ids = new Set<string>();
   for (const task of tasks) {
-    const wid = task.worksetId ?? null;
-    if (wid && selected.has(wid)) {
+    const wid = task.worksetId?.trim() || SYSTEM_WORKSET_ID;
+    if (selected.has(wid)) {
       ids.add(task.id);
     }
   }
@@ -155,22 +155,16 @@ export const UNASSIGNED_FILTER_GROUP_ID = "__unassigned__";
 
 /**
  * Workset-primary tree: every workset is a parent row (expandable when it has
- * members). Unassigned tasks nest under a trailing virtual group — never as
- * peers of worksets.
+ * members). Tasks always belong to a workset (omit / empty → 一般).
  */
 export function buildFilterTreeRows(
   worksets: readonly { id: string; name: string }[],
   tasks: readonly WorksetMemberTask[],
-  unassignedLabel = "Unassigned",
+  _unassignedLabel = "Unassigned",
 ): FilterTreeRow[] {
   const membersByWorkset = new Map<string, WorksetMemberTask[]>();
-  const unassigned: WorksetMemberTask[] = [];
   for (const task of tasks) {
-    const wid = task.worksetId ?? null;
-    if (!wid) {
-      unassigned.push(task);
-      continue;
-    }
+    const wid = task.worksetId?.trim() || SYSTEM_WORKSET_ID;
     const list = membersByWorkset.get(wid) ?? [];
     list.push(task);
     membersByWorkset.set(wid, list);
@@ -182,14 +176,6 @@ export function buildFilterTreeRows(
       id: ws.id,
       name: ws.name,
       children: membersByWorkset.get(ws.id) ?? [],
-    });
-  }
-  if (unassigned.length > 0) {
-    rows.push({
-      kind: "unassigned",
-      id: UNASSIGNED_FILTER_GROUP_ID,
-      name: unassignedLabel,
-      children: unassigned,
     });
   }
   return rows;

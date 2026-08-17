@@ -3,6 +3,7 @@
  * Keeps workset-vs-task encoding rules out of React state glue.
  */
 
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   UNASSIGNED_FILTER_GROUP_ID,
   type FilterTreeRow,
@@ -88,12 +89,16 @@ export function collapseSourceFilterDraft(
   return full;
 }
 
+function ownerWorksetId(task: WorksetMemberTask): string {
+  return task.worksetId?.trim() || SYSTEM_WORKSET_ID;
+}
+
 function memberIdsForWorkset(
   worksetId: string,
   memberTasks: readonly WorksetMemberTask[],
 ): Set<string> {
   return new Set(
-    memberTasks.filter((task) => task.worksetId === worksetId).map((task) => task.id),
+    memberTasks.filter((task) => ownerWorksetId(task) === worksetId).map((task) => task.id),
   );
 }
 
@@ -105,7 +110,7 @@ export function resolveCheckedTasks(
   if (draft === null) return new Set(memberTasks.map((task) => task.id));
   const fromWorksets = new Set(
     memberTasks
-      .filter((task) => task.worksetId && draft.worksetIds.includes(task.worksetId))
+      .filter((task) => draft.worksetIds.includes(ownerWorksetId(task)))
       .map((task) => task.id),
   );
   return new Set([...draft.taskIds, ...fromWorksets]);
@@ -203,13 +208,13 @@ export function toggleTaskInDraft(
   ctx: SourceFilterDraftContext,
 ): SourceFilterSelection {
   const parent = ctx.memberTasks.find((task) => task.id === taskId);
-  const parentWorksetId = parent?.worksetId ?? null;
+  const parentWorksetId = parent ? ownerWorksetId(parent) : SYSTEM_WORKSET_ID;
 
   if (draft === null) {
     if (parentWorksetId) {
       // Split parent workset into sibling task ids (minus this one) + remaining worksets.
       const siblings = ctx.memberTasks
-        .filter((task) => task.worksetId === parentWorksetId && task.id !== taskId)
+        .filter((task) => ownerWorksetId(task) === parentWorksetId && task.id !== taskId)
         .map((task) => task.id);
       return collapseSourceFilterDraft(
         {
@@ -231,7 +236,7 @@ export function toggleTaskInDraft(
   // Member under a selected workset: convert workset → siblings ± this task.
   if (parentWorksetId && draft.worksetIds.includes(parentWorksetId)) {
     const siblings = ctx.memberTasks
-      .filter((task) => task.worksetId === parentWorksetId)
+      .filter((task) => ownerWorksetId(task) === parentWorksetId)
       .map((task) => task.id);
     const nextTasks = new Set(draft.taskIds);
     for (const id of siblings) {

@@ -2,7 +2,8 @@
 
 Auth mirrors A2A: household access key with full scope ``*``
 (``require_full_access_key``). Tools are the base-19 allowlist in
-:mod:`server.agent.mcp_tools`, filtered by ``mcp_cap_*`` capability groups.
+:mod:`server.agent.mcp_tools`, filtered by ``mcp_cap_*`` capability groups
+and ``worksets.external_enabled`` (intelligence／messages／items).
 Master switch ``mcp_enabled`` (default on) rejects protocol traffic with 403.
 Session-auth ``GET /api/v1/mcp/status`` probes enabled + exposed tools for the UI.
 

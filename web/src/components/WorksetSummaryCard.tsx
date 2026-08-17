@@ -7,6 +7,7 @@ import { Layers } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { AccentBarCard, Badge, Button } from "./ui";
 import { cardBodyClass, cardTitleClass } from "./ui/pageTypography";
+import { WorksetPermissionToggles } from "./WorksetPermissionToggles";
 
 export interface WorksetSummaryCardProps {
   id: string;
@@ -81,24 +82,27 @@ export function WorksetSummaryCard({
           items: itemCount ?? 0,
         })}
       </p>
-      {!isSystem && id !== "__unassigned__" ? (
-        <div
-          className="mt-auto flex flex-wrap gap-1 pt-xs"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-        >
-          {onRename ? (
-            <Button variant="secondary" size="sm" onClick={onRename}>
-              {t("workset:rename")}
-            </Button>
-          ) : null}
-          {onDelete ? (
-            <Button variant="secondary" size="sm" onClick={onDelete}>
-              {t("workset:delete")}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="mt-auto flex flex-col gap-xs pt-xs">
+        <WorksetPermissionToggles worksetId={id} worksetName={title} />
+        {!isSystem ? (
+          <div
+            className="flex flex-wrap gap-1"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            {onRename ? (
+              <Button variant="secondary" size="sm" onClick={onRename}>
+                {t("workset:rename")}
+              </Button>
+            ) : null}
+            {onDelete ? (
+              <Button variant="secondary" size="sm" onClick={onDelete}>
+                {t("workset:delete")}
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </AccentBarCard>
   );
 }

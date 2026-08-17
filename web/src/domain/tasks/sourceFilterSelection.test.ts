@@ -23,7 +23,7 @@ describe("sourceFilterSelection", () => {
     expect(parseSourceFilterValue({ taskIds: "bad" })).toBeNull();
   });
 
-  it("builds workset-primary tree with unassigned nested under a group", () => {
+  it("builds workset-primary tree; omitted worksetId nests under 一般", () => {
     const rows = buildFilterTreeRows(
       [
         { id: SYSTEM_WORKSET_ID, name: "User" },
@@ -40,19 +40,13 @@ describe("sourceFilterSelection", () => {
         kind: "workset",
         id: SYSTEM_WORKSET_ID,
         name: "User",
-        children: [],
+        children: [{ id: "t2", name: "Top", worksetId: null }],
       },
       {
         kind: "workset",
         id: "ws-a",
         name: "Alpha",
         children: [{ id: "t1", name: "In A", worksetId: "ws-a" }],
-      },
-      {
-        kind: "unassigned",
-        id: "__unassigned__",
-        name: "Unassigned",
-        children: [{ id: "t2", name: "Top", worksetId: null }],
       },
     ]);
   });

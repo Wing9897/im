@@ -11,6 +11,7 @@ import {
   USER_EVENT_CLOCK_RE,
   type UserEventFormValues,
 } from "../../domain/timeline/userEventFormModel";
+import { normalizeNotifyPref } from "../../domain/notify/notifyPref";
 
 export type UserEventFormSubmitResult =
   | { ok: true; values: UserEventFormValues }
@@ -84,6 +85,7 @@ function buildRecurringSubmit(
       worksetId: toUserEventFormWorksetId(values.worksetId),
       isAllDay: values.isAllDay,
       remindBeforeDays: values.remindBeforeDays.trim(),
+      notifyPref: normalizeNotifyPref(values.notifyPref),
       itemId: values.itemId.trim(),
       amountInput: values.amountInput,
       direction: values.direction,
@@ -122,6 +124,7 @@ function buildOneOffAllDaySubmit(
       worksetId: toUserEventFormWorksetId(values.worksetId),
       isAllDay: true,
       remindBeforeDays: values.remindBeforeDays.trim(),
+      notifyPref: normalizeNotifyPref(values.notifyPref),
       itemId: values.itemId.trim(),
       amountInput: values.amountInput,
       direction: values.direction,
@@ -157,6 +160,7 @@ function buildOneOffTimedSubmit(
       worksetId: toUserEventFormWorksetId(values.worksetId),
       isAllDay: false,
       remindBeforeDays: values.remindBeforeDays.trim(),
+      notifyPref: normalizeNotifyPref(values.notifyPref),
       itemId: values.itemId.trim(),
       amountInput: values.amountInput,
       direction: values.direction,

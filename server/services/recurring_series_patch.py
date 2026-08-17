@@ -6,6 +6,7 @@ from types import EllipsisType
 from typing import Any
 
 from server.db.database import Database, TransactionDb
+from server.domain.notify_prefs import DEFAULT_NOTIFY_PREF, normalize_notify_pref
 from server.queries.recurring_series_queries import delete_series, fetch_series_row
 from server.services.recurring_schedule_values import manual_anchor, manual_end_anchor
 from server.services.task_writes import TaskWriteError, normalize_event_clock, normalize_rrule
@@ -28,6 +29,7 @@ async def patch_recurring_series(
     is_active: bool | None = None,
     require_parent_task_id: str | None = None,
     workset_id: str | None | EllipsisType = ...,
+    notify_pref: str | None | EllipsisType = ...,
 ) -> dict[str, Any]:
     sid = (series_id or "").strip()
     row = await fetch_series_row(db, sid)
@@ -83,6 +85,18 @@ async def patch_recurring_series(
     else:
         resolved_workset = str(workset_id).strip()
 
+    if notify_pref is ...:
+        resolved_notify = str(row.get("notify_pref") or DEFAULT_NOTIFY_PREF)
+        try:
+            resolved_notify = normalize_notify_pref(resolved_notify)
+        except ValueError:
+            resolved_notify = DEFAULT_NOTIFY_PREF
+    else:
+        try:
+            resolved_notify = normalize_notify_pref(notify_pref)
+        except ValueError as exc:
+            raise TaskWriteError(str(exc)) from exc
+
     now = utc_now_iso()
     active_sql = ""
     active_params: tuple[Any, ...] = ()
@@ -94,7 +108,8 @@ async def patch_recurring_series(
         tx = TransactionDb(conn)
         await tx.execute(
             "UPDATE recurring_schedules SET name = ?, description = ?, workset_id = ?, rrule = ?, "
-            f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, updated_at = ?{active_sql} WHERE id = ?",
+            f"dtstart = ?, dtend = ?, is_all_day = ?, location = ?, notify_pref = ?, "
+            f"updated_at = ?{active_sql} WHERE id = ?",
             (
                 new_name,
                 new_description,
@@ -104,6 +119,7 @@ async def patch_recurring_series(
                 dtend,
                 1 if all_day else 0,
                 location,
+                resolved_notify,
                 now,
                 *active_params,
                 sid,

@@ -92,26 +92,14 @@ describe("AppTopBar", () => {
     });
   }
 
-  it("renders the app title and sidebar collapse in browser mode", () => {
+  it("renders the app title without a title-bar sidebar collapse control", () => {
     renderBar();
     expect(container.textContent).toContain("Intelligence Monitor");
-    expect(container.querySelector("[data-testid='sidebar-collapse']")).not.toBeNull();
+    expect(container.querySelector("[data-testid='sidebar-collapse']")).toBeNull();
+    expect(container.querySelector(".desktop-title-bar-collapse")).toBeNull();
     expect(container.querySelector("[data-testid='monitor-mode-switch']")).not.toBeNull();
     expect(container.querySelector("[data-testid='assistant-chrome-composer']")).not.toBeNull();
     expect(container.querySelector("[data-testid='assistant-quick-trigger']")).toBeNull();
-  });
-
-  it("toggles sidebar collapsed via the title-adjacent control", () => {
-    renderBar();
-    const btn = container.querySelector(
-      "[data-testid='sidebar-collapse']",
-    ) as HTMLButtonElement;
-    expect(btn.getAttribute("aria-label")).toBe("收起側欄");
-    act(() => {
-      btn.click();
-    });
-    expect(window.localStorage.getItem("im:sidebar-collapsed")).toBe("1");
-    expect(btn.getAttribute("aria-label")).toBe("展開側欄");
   });
 
   it("renders nothing in desktop shell mode", () => {
@@ -136,11 +124,20 @@ describe("AppTopBar", () => {
     expect(titled?.getAttribute("title")).toContain("AI 引擎正常");
   });
 
-  it("keeps the status pill outside the icon action area", () => {
+  it("keeps the status pill outside the icon action area and rightmost in chrome", () => {
     renderBar();
+    const actions = container.querySelector("[data-testid='shell-chrome-actions']") as HTMLDivElement;
     const iconArea = container.querySelector("[data-testid='topbar-icon-actions']") as HTMLDivElement;
+    const statusArea = container.querySelector("[data-testid='topbar-status-area']") as HTMLDivElement;
+    const inbox = container.querySelector("[data-testid='recent-day-inbox-btn']") as HTMLButtonElement;
+    const viewer = container.querySelector("[data-testid='open-viewer-btn']") as HTMLButtonElement;
     expect(iconArea).not.toBeNull();
     expect(iconArea.textContent).not.toContain("系統正常");
+    expect(container.querySelector("[data-testid='chrome-channel-voice']")).toBeNull();
+    expect(container.querySelector("[data-testid='chrome-channel-flash']")).toBeNull();
+    expect(actions.lastElementChild).toBe(statusArea);
+    expect(inbox.compareDocumentPosition(viewer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(viewer.compareDocumentPosition(statusArea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps search and assistant as right-aligned icon-only controls", () => {

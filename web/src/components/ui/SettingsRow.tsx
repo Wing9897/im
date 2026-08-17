@@ -2,17 +2,19 @@ import type { ReactNode } from "react";
 import { FieldLabel } from "./FieldLabel";
 import { formHelpClass } from "./pageTypography";
 
-type SettingsRowLayout = "stack" | "inline";
-
 interface SettingsRowProps {
   label: string;
   help?: string;
   children: ReactNode;
   htmlFor?: string;
-  /** stack = label above control (default); inline = label/help left, control right */
-  layout?: SettingsRowLayout;
-  /** Tighter label→control gap for dense forms (Items). */
+  /** Tighter label→control gap (item / category forms). */
   dense?: boolean;
+  /**
+   * `inline` = label + control on one row (compact switches / numbers / selects).
+   * `stack` = label above control (long text, textareas).
+   */
+  layout?: "stack" | "inline";
+  className?: string;
 }
 
 /**
@@ -24,23 +26,34 @@ export function SettingsRow({
   help,
   children,
   htmlFor,
-  layout = "stack",
   dense = false,
+  layout = "stack",
+  className,
 }: SettingsRowProps) {
+  const stackGap = dense ? "gap-xs" : "gap-sm";
   if (layout === "inline") {
     return (
-      <div className="flex flex-wrap items-center justify-between gap-lg">
-        <div className="min-w-0">
-          <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
-          {help ? <p className={formHelpClass}>{help}</p> : null}
+      <div
+        className={["flex w-full min-w-0 flex-col", stackGap, className ?? ""]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <div className="flex min-w-0 items-center gap-md">
+          <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor={htmlFor}>
+            {label}
+          </FieldLabel>
+          {children}
         </div>
-        <div className="shrink-0">{children}</div>
+        {help ? <p className={formHelpClass}>{help}</p> : null}
       </div>
     );
   }
-
   return (
-    <div className={dense ? "flex w-full min-w-0 flex-col gap-xs" : "flex w-full min-w-0 flex-col gap-sm"}>
+    <div
+      className={["flex w-full min-w-0 flex-col", stackGap, className ?? ""]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <FieldLabel htmlFor={htmlFor}>{label}</FieldLabel>
       {children}
       {help ? <p className={formHelpClass}>{help}</p> : null}

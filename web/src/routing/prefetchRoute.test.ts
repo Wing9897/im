@@ -8,6 +8,8 @@ describe("prefetchRoute", () => {
     expect(() => prefetchRoute("/monitor")).not.toThrow();
     expect(() => prefetchRoute("/monitor")).not.toThrow();
     expect(() => prefetchRoute("/tasks/abc/edit")).not.toThrow();
+    expect(() => prefetchRoute("/worksets")).not.toThrow();
+    expect(() => prefetchRoute("/worksets/abc")).not.toThrow();
   });
 
   it("accepts assistant, voice, and analysis-strategy paths", () => {
@@ -18,5 +20,9 @@ describe("prefetchRoute", () => {
 
   it("prefetches agent detail via /agent (not retired /project)", () => {
     expect(() => prefetchRoute("/tasks/abc/agent")).not.toThrow();
+  });
+
+  it("prefetches External interfaces", () => {
+    expect(() => prefetchRoute("/settings/integrations")).not.toThrow();
   });
 });

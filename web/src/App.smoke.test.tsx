@@ -74,7 +74,7 @@ vi.mock("./routing/AppRoutes", () => ({
   AppRoutes: () => createElement("div", { "data-testid": "routes-stub" }),
 }));
 
-vi.mock("./voiceReminder/useVoiceReminderScanner", () => ({
+vi.mock("./domain/notify/scanner/useVoiceReminderScanner", () => ({
   useVoiceReminderScanner: () => {},
 }));
 

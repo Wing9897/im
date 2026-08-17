@@ -6,11 +6,11 @@ SoT: [`ARCHITECTURE.md`](./ARCHITECTURE.md)＋[`README.md`](./README.md). Agent:
 
 ## MCP control plane
 
-Streamable HTTP at `/api/v1/mcp` (see [`agent/mcp.md`](./agent/mcp.md)). Household **master switch** `mcp_enabled` (default on) and **capability groups** `mcp_cap_*` live on `/settings/mcp`; session-auth `GET /api/v1/mcp/status` is for the Settings probe UI. MCP-only delete confirm (`confirm=true`) applies to `calendar.delete_event` / `calendar.delete_recurring_series`. Intentional v1 limits — do **not** “complete” these without a product decision:
+Streamable HTTP at `/api/v1/mcp` (see [`agent/mcp.md`](./agent/mcp.md)). Household **master switch** `mcp_enabled` (default on) lives on `/settings/integrations?tab=mcp` (legacy `/settings/mcp` redirects). A2A has a **separate** master `a2a_enabled` (default on) on `/settings/integrations?tab=a2a`; off → `POST /api/v1/a2a/agent` 403. The two masters do not control each other. **Capability groups** `mcp_cap_*` are household-level (not per-key) and shown on **both** MCP and A2A integration tabs (same settings). Workset visibility is `worksets.external_enabled` on `/worksets` (shared by MCP and A2A). Session-auth `GET /api/v1/mcp/status` is for the Settings probe UI. MCP-only delete confirm (`confirm=true`) applies to `calendar.delete_event` / `calendar.delete_recurring_series`. Intentional v1 limits — do **not** “complete” these without a product decision:
 
 - **No stdio** (or other local-subprocess MCP transports); HTTP + Bearer only.
-- **No fine-grained access-key scopes** (`calendar:write` 等); same gate as A2A — household key with `scopes: ["*"]`. Household capability groups filter which allowlist tools MCP may list/call; that is **not** per-key scope.
-- **No config-class MCP tools** (tasks／sources／Actions／LLM／agent tick／system settings as MCP tools). Allowlist is the base 19 calendar／messages／intelligence／items tools only (`web.search`／`tasks.consult_advisor` stay out); capability toggles only subset that allowlist.
+- **No fine-grained access-key scopes** (`calendar:write` 等); same identity gate as A2A — household key with `scopes: ["*"]`. Capability groups filter which allowlist tools MCP may list/call **and** which tools A2A's internal loop may run; that is **not** per-key scope. `worksets.external_enabled` similarly filters intelligence／messages／items (not calendar 我的日程). In-app assistant is not gated by `mcp_cap_*` or `external_enabled`.
+- **No config-class MCP tools** (tasks／sources／Actions／LLM／agent tick／system settings as MCP tools). Allowlist is the base 19 calendar／messages／intelligence／items tools only (`web.search`／`tasks.consult_advisor` stay out of MCP); capability toggles only subset that allowlist. A2A `web.search` stays behind the existing assistant web-search setting.
 
 ## API / stats deltas
 
@@ -37,7 +37,7 @@ Board capped at **Top 10**; ranking is **server-side by score only** (LLM emits 
 
 ## Scheduling / retention / ops routes
 
-Scheduler／stamp-33 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
+Scheduler／stamp-37 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler). Retention TTLs + `POST /api/v1/system/retention/run`; ops `POST /api/v1/system/collector/restart`.
 
 **Retention defaults** (`CONFIG_DEFAULTS` in `server/config.py`; `0` disables that category):
 
@@ -68,7 +68,7 @@ Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEM
 
 ## Stamp 33 LLM simplifications (intentional)
 
-Wipe-floor **33** / `SCHEMA_SEMVER` `0.1.0-beta.34`. These are product decisions — do **not** “restore” without an explicit new contract:
+Introduced at stamp 33; still in force under wipe-floor **39** / `SCHEMA_SEMVER` `0.1.0-beta.40`. These are product decisions — do **not** “restore” without an explicit new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -131,7 +131,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v33 | See [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix) and [reset procedure](./SCHEMA-BASELINE.md#schema-v33-explicit-reset) (wipe-only floor; every DB enum CHECK clause is generated in its `server/domain/` Python SoT with drift tests — collector platform, analysis_mode, provider／staff_class／json_mode／web_search_provider, calendar kind／direction／origin, timeline source, action_type + trigger-history status, trigger_mode, batch／source／item status, analysis_time_range, app log level, nullable analysis_strategy_mode. `server/db/schema_domains/vocabulary.py` is a pure re-export hub (no assembly) that some fragments import through; the rest import their domain module directly. No `is_default`／no assistant staff row; hard-bound global slots; `item_id` FK `ON DELETE SET NULL`; `SCHEMA_SEMVER` `0.1.0-beta.34`) |
+| Schema stamp v39 | See [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix) and [reset procedure](./SCHEMA-BASELINE.md#schema-v39-explicit-reset) (wipe-only floor; `analysis_tasks.workset_id` NOT NULL DEFAULT `__user__`; `notify_pref` is `follow`／`off`; `output_analysis_events` defaults ON as the all-mode intel hard gate. Every DB enum CHECK clause is generated in its `server/domain/` Python SoT with drift tests — collector platform, analysis_mode, provider／staff_class／json_mode／web_search_provider, calendar kind／direction／origin, timeline source, action_type + trigger-history status, trigger_mode, batch／source／item status, analysis_time_range, app log level, nullable analysis_strategy_mode, notify_pref. `worksets.notify_enabled`／`external_enabled` default on. `server/db/schema_domains/vocabulary.py` is a pure re-export hub (no assembly) that some fragments import through; the rest import their domain module directly. No `is_default`／no assistant staff row; hard-bound global slots; `item_id` FK `ON DELETE SET NULL`; `SCHEMA_SEMVER` `0.1.0-beta.40`) |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

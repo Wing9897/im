@@ -113,6 +113,12 @@
     "includeInTimelineLabel": "Show in time planning",
     "includeInTimelineAria": "Show in time planning",
     "includeInTimelineHint": "When off, this task’s analysis events still appear in Intel events and the map, but not in calendar / Gantt / timeline.",
+    "outputTitle": "Outputs",
+    "outputAria": "Task outputs",
+    "outputAnalysisEventsLabel": "Intelligence page",
+    "outputAnalysisEventsAria": "Write to Intelligence page",
+    "outputAnalysisEventsHint": "When off, this run still completes but does not write the Intelligence page. Leaderboard tasks always write the ranking page, independent of this toggle.",
+    "outputIntelOffTimelineHint": "With Intelligence off, new analysis events will not appear in Time planning either (same store). Existing events still follow the Time planning checkbox.",
     "rruleHint": "RRULE is only for recurring-task recurrence and does not trigger AI analysis.",
     "scheduleOverridesHint": "Threshold / batch limit / evidence style can override; leave empty to follow AI Settings → Analysis scheduling. Batch overlap and Agent wave interval are task-owned only.",
     "followGlobal": "Follow global",
@@ -359,11 +365,6 @@
   "deleted": "Task deleted",
   "addTask": "New task",
   "presets": {
-    "trending-topics": {
-      "name": "Trending topics",
-      "description": "Extract hot discussion topics and trends from messages, ranked by relevance",
-      "promptTemplate": "Analyze the messages and extract the hottest discussion topics. For each topic provide: title, summary, relevance score (0-1). Sort by relevance descending."
-    },
     "key-insights": {
       "name": "Key intel summary",
       "description": "Extract high-value intel events and opportunities",
@@ -379,21 +380,6 @@
       "description": "Inferential: even without a hard-coded calendar date, convert relative phrases (e.g. next Wednesday 6pm, due this Friday, project/event milestones) into schedulable times. Best when you want a filled timeline.",
       "promptTemplate": "Infer schedulable itineraries, meetings, activities, project milestones, and deadlines. Unlike explicit-only extraction, convert relative phrases into concrete times when reasonable (e.g. meeting next Wednesday at 6, due this Friday, deliver next month, countdown, milestones). Prefer the message [time=...] stamp as the anchor; otherwise use the injected system clock. Fill start_time/end_time when conversion is sound; if evidence is weak, explain in body and do not invent times. Ignore verification flows, join reminders, and system notices."
     },
-    "sentiment-monitor": {
-      "name": "Sentiment monitor",
-      "description": "Analyze group discussion mood and opinion trends",
-      "promptTemplate": "Analyze overall sentiment in the messages. Identify: positive/negative topics, heated discussions, potential controversies. Score emotion intensity per topic."
-    },
-    "action-items": {
-      "name": "Action item tracker",
-      "description": "Extract follow-ups, commitments, and to-dos",
-      "promptTemplate": "Extract to-dos, action items, commitments, and follow-ups. State what to do in body; put people in participants; fill start_time only when a clear deadline exists."
-    },
-    "crypto-major-intel": {
-      "name": "Crypto major intel",
-      "description": "Extract major crypto events, key intel, and timed milestones",
-      "promptTemplate": "Extract major Crypto/Web3 intel. In body include: intel type (regulatory/protocol/market/security/launch/unlock/airdrop/macro, etc.), urgency (high/medium/low), and suggested watch or action. Focus on: major announcements, TGE/unlock/snapshot/claim deadlines, mainnet launches, regulatory rulings, large fund moves, security incidents, macro turns. Fill start_time/end_time only with clear time points; ignore chatter, reposts, and unsourced rumors."
-    },
     "crypto-airdrop-deals": {
       "name": "Airdrop and deal intel",
       "description": "Extract airdrops, points quests, testnets, promo codes, and similar opportunities",
@@ -404,70 +390,20 @@
       "description": "Extract faults, offline, threshold breaches, and security alerts from MQTT/sensor/device logs",
       "promptTemplate": "From IoT/MQTT/sensor/device messages, extract alerts that need attention or action. Prioritize: offline/disconnect, fault codes, threshold breaches (temp/humidity/battery/pressure, etc.), security triggers, comms failure, low battery, emergency stop. In body include: device or topic/site id, alert type, severity (high/medium/low), key values or error codes, suggested action. Fill start_time when the event time is clear; location may be site/floor/zone. Ignore: pure heartbeat/keepalive, routine normal readings, duplicate status with no new info, debug noise. Return empty items when there is no alert."
     },
-    "iot-ops-events": {
-      "name": "IoT ops events",
-      "description": "Extract firmware updates, maintenance windows, config changes, and device rollout milestones",
-      "promptTemplate": "From IoT/MQTT/device ops messages, extract schedulable or trackable operations events. Prioritize: firmware/OTA updates, maintenance windows, config/rule changes, first online or replacement, batch rollout, calibration, maintenance due. In body include: device or system scope, event type, impact summary, operator/source if knowable, risk or rollback notes. Fill start_time/end_time when start/end are clear; relative times may be converted using message [time=...] or the system clock when sound. Ignore: heartbeats, routine telemetry, alert noise unrelated to ops (use an alerts task for those). Return empty items when none apply."
-    },
-    "risk-crisis-alerts": {
-      "name": "Risk and crisis alerts",
-      "description": "Capture incidents, outages, compliance issues, PR crises, and urgent risks",
-      "promptTemplate": "Extract risk/crisis events that need attention. Prioritize: outages, data breaches, security incidents, compliance violations, major complaints/PR crises, supply disruption, financial or legal risk. In body include: risk type, severity (high/medium/low), impact scope, known status, and suggested next step. Fill start_time when clear; location optional. Ignore routine venting with no action value; return empty items when none apply."
-    },
-    "people-org-watch": {
-      "name": "People and org watch",
-      "description": "Track hiring, appointments, departures, partnerships, and reorganizations",
-      "promptTemplate": "Extract people/organization events. Prioritize: appointments, departures, promotions, board changes, M&A/reorgs, strategic partnerships, notable stance shifts in public remarks. In body include: person or org, event type, context summary, impact notes. Put names in participants; fill start_time when clear. Ignore pure gossip and unsourced rumors."
-    },
-    "competitive-intel": {
-      "name": "Competitive intel",
-      "description": "Capture competitor pricing, features, campaigns, and strategy moves",
-      "promptTemplate": "Extract competitor/rival intel. Prioritize: product launches, feature comparisons, pricing/promos, channel changes, marketing campaigns, share or strategy shifts. In body include: rival or product, intel type, concrete details, implications or watchpoints. Fill start_time when clear. Ignore baseless smears and pure emotional comparisons."
-    },
     "security-scam-watch": {
       "name": "Security and scam watch",
       "description": "Flag phishing, account theft, malware links, vulns, and social engineering",
       "promptTemplate": "Extract security/scam alerts. Prioritize: phishing links, fake support, account-theft tactics, malware files, known CVE/exploits, social-engineering scripts. In body include: threat type, tactic summary, telltale signs, suggested defenses, severity (high/medium/low). Fill start_time when clear. Ignore jokes and panic forwards with no actionable detail; return empty items when none apply."
-    },
-    "geo-field-events": {
-      "name": "Geo and field events",
-      "description": "Extract place-linked activities, incidents, gatherings, and field updates (map-friendly)",
-      "promptTemplate": "Extract geographically meaningful field events. Prioritize: gatherings, incidents, disasters, site/store changes, field itineraries, local news with clear places. Prefer filling location (parseable place/address/venue); fill start_time/end_time when known. In body summarize the event and source tone. You may emit without location if unknown; ignore pure online chatter with no spatial cue."
     },
     "policy-regulation": {
       "name": "Policy and regulation",
       "description": "Track legislation, regulatory notices, enforcement, and compliance deadlines",
       "promptTemplate": "Extract policy/regulatory events. Prioritize: bill progress, agency notices, enforcement/fines, license/permit changes, compliance deadlines. In body include: jurisdiction or agency, topic, status (draft/passed/effective/enforcement), and industry impact. Fill start_time/end_time for clear effective or due dates. Ignore pure political venting without normative content."
     },
-    "product-release": {
-      "name": "Product release milestones",
-      "description": "Capture launches, version releases, public betas, and countdown checkpoints",
-      "promptTemplate": "Extract product/project release milestones. Prioritize: GA launches, versioned releases, beta/public tests, feature flags, countdowns/launch events. In body include: product name, milestone type, version or scope, key change summary. Fill start_time/end_time when clear. Ignore vague roadmap talk without version or date cues."
-    },
-    "news-digest-board": {
-      "name": "News digest board",
-      "description": "Rank the day's most noteworthy headlines from the feed",
-      "promptTemplate": "Turn messages into a ranked news-digest board. For each topic provide: title, one-line summary, relevance (0-1). Prefer newsworthy, high-impact, verifiable items; merge duplicate reposts. Sort by relevance descending."
-    },
-    "faq-knowledge": {
-      "name": "FAQ and knowledge digest",
-      "description": "Cluster recurring questions, answer points, and knowledge entries",
-      "promptTemplate": "Cluster FAQ/knowledge themes from messages. For each topic provide: question or entry title, concise answer/key points, relevance (0-1). Merge paraphrased repeats; note unanswered gaps. Rank by relevance and frequency."
-    },
-    "rumor-verify": {
-      "name": "Rumor and verify queue",
-      "description": "Flag hearsay, unconfirmed claims, and information gaps to check",
-      "promptTemplate": "Extract items that need verification rather than treating them as facts. Prioritize: rumors, anonymous leaks, contradictory claims, assertions without sources. In body include: claim summary, why it is doubtful, known sources/gaps, suggested verification steps. Do not present rumors as confirmed events; omit start_time when unclear. Return empty items when none apply."
-    },
     "finance-markets": {
       "name": "Finance and markets",
       "description": "Capture rates, earnings, commodities, and macro market turns (not crypto-only)",
       "promptTemplate": "Extract finance/macro market events. Prioritize: rates/central banks, earnings and guidance, M&A, major commodity/FX moves, regulatory impacts on markets. In body include: market or ticker, event type, key figures or conclusions, likely impact. Fill start_time when clear. Ignore baseless calls and pure sentiment forecasts; use a Crypto template for crypto-specific feeds."
-    },
-    "meeting-decisions": {
-      "name": "Meeting decisions",
-      "description": "Pull decisions, consensus, dissent, and owners from discussions",
-      "promptTemplate": "Extract decisions and conclusions from meetings/discussions. Prioritize: finalized items, consensus, clear dissent, assigned owners, follow-up checkpoints. In body include: decision text, status (approved/deferred/opposed), owner; put people in participants. Fill start_time for meeting or due times. Ignore chat with no conclusion."
     },
     "agent-date-crud": {
       "name": "General project date manager",
@@ -478,16 +414,6 @@
       "name": "Work shift roster",
       "description": "Build and maintain work-shift rosters from source messages, including swaps, overtime, and cancellations",
       "promptTemplate": "You manage a work-shift roster. Goal: create and continually maintain shift assignments from source messages. Prioritize: each person's shift (morning/afternoon/night, etc.), swaps, overtime, leave, and cancellations. Rules: 1) update matching child recurring tasks or one-off events before creating new ones; 2) use recurring child tasks for fixed rotas and one-off events for temporary changes; 3) cancel/leave means deactivate or delete the matching item; 4) record person, shift, date/weekday, and time clearly; 5) reconcile conflicts even with no new messages. Finish with a short JSON message summary."
-    },
-    "agent-pricing-watch": {
-      "name": "Pricing watch intel",
-      "description": "Agent multi-round search of major LLM/cloud API pricing and plan changes into trackable intel events",
-      "promptTemplate": "After multi-round web search, extract official or credible pricing / plan / quota changes. Prioritize: price-list updates, free-tier changes, regional pricing, deprecation timelines. Fill title, summary, and source cues; set start_time only when an effective date is clear. Ignore marketing fluff and speculative forum posts."
-    },
-    "agent-geopolitics-hotspots": {
-      "name": "Geopolitics hotspot scan",
-      "description": "Agent multi-round search of East Asia security hotspots; optional channel bind for source verify",
-      "promptTemplate": "After multi-round web search, extract geopolitics/security developments with intel value. Prioritize: official statements, military/diplomatic moves, sanctions/controls, major breaking events. Fill title, summary, and location when clear; set start_time only with an explicit time. Avoid unverified rumors and sensational headlines."
     }
   },
   "agent": {
@@ -512,10 +438,9 @@
     },
     "outputLabel": "Output modes",
     "output": {
-      "calendar": "Calendar events (implies write-calendar)",
-      "analysisEvents": "Intelligence events (write analysis_events)"
+      "calendar": "Calendar events (implies write-calendar)"
     },
-    "outputHint": "At least one output is required.",
+    "outputHint": "Writes owned events into My schedule. Intelligence page is the separate checkbox in Outputs above.",
     "outputHintCursor": "Message-cursor drain writes calendar events only; intelligence-event output needs schedule or message-threshold."
   }
 }

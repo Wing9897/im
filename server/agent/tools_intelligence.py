@@ -14,6 +14,7 @@ from server.agent.tool_limits import (
 from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.calendar.timeline_importance import attach_important_flag
 from server.db.database import Database
+from server.domain.mcp_workset_scope import allowed_workset_ids_from_args
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
 from server.wire.serializers import serialize_analysis_event
@@ -105,6 +106,7 @@ async def _tool_search_events(db: Database, args: dict[str, Any]) -> dict[str, A
         search_location=search_location,
         ascending=False,
         include_total=True,
+        workset_ids=allowed_workset_ids_from_args(args),
     )
     items = [serialize_analysis_event(row) for row in rows]
     await attach_dismissed_flag(db, source="analysis", items=items)

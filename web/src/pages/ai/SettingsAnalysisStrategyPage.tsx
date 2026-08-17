@@ -5,7 +5,7 @@ import { AnalysisSchedulingFields } from "../../components/settings/AnalysisSche
 import { ErrorRetryBanner } from "../../components/common/ErrorRetryBanner";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner";
 import { SettingsSaveBar } from "../../components/settings/SettingsSaveBar";
-import { CheckboxField, FormStack, SettingsRow } from "../../components/ui";
+import { SelectTile, FormStack } from "../../components/ui";
 import {
   getEvidenceStyleOptions,
   type EvidenceStyle,
@@ -79,19 +79,24 @@ export function SettingsAnalysisStrategyPage() {
           }}
         />
 
-        <SettingsRow
-          label={t("analysis.autoPauseLabel")}
-          help={t("analysis.autoPauseHelp")}
+        <SelectTile
+          compact
+          variant="toggle"
+          className="max-w-[320px]"
+          active={settingsObject.autoPauseOnRetriesExhausted}
+          data-testid="analysis-auto-pause"
+          aria-label={t("analysis.autoPauseAria")}
+          title={t("analysis.autoPauseHelp")}
+          hint={t("analysis.autoPauseHelp")}
+          onClick={() =>
+            handleSettingChange(
+              "autoPauseOnRetriesExhausted",
+              !settingsObject.autoPauseOnRetriesExhausted,
+            )
+          }
         >
-          <CheckboxField
-            label={settingsObject.autoPauseOnRetriesExhausted ? t("shared.enabled") : t("shared.disabled")}
-            checked={settingsObject.autoPauseOnRetriesExhausted}
-            onChange={(e) =>
-              handleSettingChange("autoPauseOnRetriesExhausted", e.target.checked)
-            }
-            aria-label={t("analysis.autoPauseAria")}
-          />
-        </SettingsRow>
+          {t("analysis.autoPauseLabel")}
+        </SelectTile>
       </FormStack>
 
       <SettingsFieldGroup showDivider>

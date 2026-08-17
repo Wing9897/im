@@ -4,7 +4,7 @@ The current stamp (``CURRENT_SCHEMA_VERSION``) is the sole supported floor. Ther
 no ``SCHEMA_MIGRATIONS`` list, step runner, backup/restore path, or in-place
 upgrade route. Empty databases are created from the authoritative domain DDL
 aggregated by ``schema.py``. Exact unstamped current fingerprints are stamped
-(``PRAGMA user_version=32``). Every other non-empty schema is rejected without
+(``PRAGMA user_version`` = current stamp). Every other non-empty schema is rejected without
 mutation → ``python scripts/reset_local_databases.py --apply`` (does **not**
 auto-seed).
 

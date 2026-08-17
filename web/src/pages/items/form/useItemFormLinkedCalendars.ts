@@ -21,6 +21,7 @@ import {
 import { parseRemindBeforeDays } from "../../../domain/timeline/parseRemindBeforeDays";
 import { toUserEventFormWorksetId } from "../../../domain/timeline/userEvents";
 import { parseOptionalNumberInput } from "../../../domain/items/itemInventoryDisplay";
+import { handleCommandError } from "../../../utils/errors";
 
 function linkedOneOffWriteParams(
   values: UserEventFormValues,
@@ -43,6 +44,7 @@ function linkedOneOffWriteParams(
     kind: values.calendarKind,
     amount,
     direction: amount == null ? null : values.direction,
+    notifyPref: values.notifyPref,
   };
 }
 
@@ -172,6 +174,7 @@ export function useItemFormLinkedCalendars({
           body: values.body,
           rrule: values.rrule,
           itemId: lockedItemId,
+          notifyPref: values.notifyPref,
         });
         showToast(tt("messages.recurringCreated"), "success");
       } else {
@@ -183,9 +186,8 @@ export function useItemFormLinkedCalendars({
       clearLinkedCalendarDialog();
       setLinkedCalendarRefreshKey((n) => n + 1);
     } catch (err) {
-      setLinkedCalendarError(
-        err instanceof Error ? err.message : tt("messages.saveFailed"),
-      );
+      const message = handleCommandError(err, showToast) || tt("messages.saveFailed");
+      setLinkedCalendarError(message);
     } finally {
       setLinkedCalendarBusy(false);
     }
@@ -202,7 +204,7 @@ export function useItemFormLinkedCalendars({
       setLinkedCalendarRefreshKey((n) => n + 1);
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : tt("messages.saveFailed"),
+        handleCommandError(err) || tt("messages.saveFailed"),
         "error",
       );
     } finally {
@@ -221,7 +223,7 @@ export function useItemFormLinkedCalendars({
       setLinkedCalendarRefreshKey((n) => n + 1);
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : tt("messages.saveFailed"),
+        handleCommandError(err) || tt("messages.saveFailed"),
         "error",
       );
     } finally {

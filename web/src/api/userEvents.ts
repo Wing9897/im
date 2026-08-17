@@ -5,6 +5,7 @@
 
 import { apiClient } from "./client";
 import type { components } from "./generated/schema";
+import { normalizeNotifyPref } from "../domain/notify/notifyPref";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
 export type UserEvent = components["schemas"]["UserEventResponse"];
@@ -33,6 +34,8 @@ interface UserEventWriteParams {
   amount?: number | null;
   /** expense | income; cleared when amount is null; server defaults expense. */
   direction?: "expense" | "income" | null;
+  /** Per-row notify override. ``follow`` | ``off``. */
+  notifyPref?: "follow" | "off";
 }
 
 export type ListUserEventsParams = {
@@ -97,6 +100,9 @@ export function createUserEvent(params: UserEventWriteParams): Promise<UserEvent
   if (params.kind !== undefined) body.kind = params.kind;
   if (params.amount !== undefined) body.amount = params.amount;
   if (params.direction !== undefined) body.direction = params.direction;
+  if (params.notifyPref !== undefined) {
+    body.notifyPref = normalizeNotifyPref(params.notifyPref);
+  }
   return apiClient.post<UserEvent>("/api/v1/calendar/user-events", body);
 }
 
@@ -124,6 +130,9 @@ export function updateUserEvent(
   if (params.kind !== undefined) body.kind = params.kind;
   if (params.amount !== undefined) body.amount = params.amount;
   if (params.direction !== undefined) body.direction = params.direction;
+  if (params.notifyPref !== undefined) {
+    body.notifyPref = normalizeNotifyPref(params.notifyPref);
+  }
   return apiClient.patch<UserEvent>(`/api/v1/calendar/user-events/${id}`, body);
 }
 

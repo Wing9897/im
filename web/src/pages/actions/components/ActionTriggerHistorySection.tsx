@@ -11,7 +11,7 @@ import {
   hydrateVoiceReminderHistory,
   loadVoiceReminderTriggers,
   type VoiceReminderTriggerEntry,
-} from "../../../voiceReminder/triggerHistory";
+} from "../../../domain/notify/scanner/triggerHistory";
 
 interface ActionTriggerHistorySectionProps {
   embedded?: boolean;

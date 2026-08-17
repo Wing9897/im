@@ -104,15 +104,16 @@ describe("SettingsAiStaffPage", () => {
     expect(liaisonCard?.textContent).toContain("對外席");
     expect(liaisonCard?.textContent).toContain("物品");
     expect(liaisonCard?.textContent).not.toContain("與助手同組");
-    const apiLink = liaisonCard?.querySelector('a[href="/settings/api"]');
+    const apiLink = liaisonCard?.querySelector('a[href="/settings/integrations?tab=a2a"]');
     expect(apiLink).not.toBeNull();
-    expect(apiLink?.textContent).toContain("API");
+    expect(apiLink?.textContent).toContain("A2A");
 
     const assistantCard = container.querySelector('[data-testid="ai-staff-card-assistant"]');
     expect(assistantCard?.textContent).toContain("可追蹤物品");
     const agentCard = container.querySelector('[data-testid="ai-staff-card-agent"]');
     expect(agentCard?.textContent).toContain("專案經理");
-    expect(agentCard?.textContent).toContain("不可建立／更新物品");
+    expect(agentCard?.textContent).toContain("不可新增或更改物品");
+    expect(agentCard?.textContent).not.toContain("items.create");
     expect(agentCard?.textContent).toContain("游標抽乾不可同時開情報事件輸出");
   });
 

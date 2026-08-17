@@ -36,6 +36,7 @@ describe("buildUserEventSubmitValues", () => {
       expect(result.values.startTime).toBeTruthy();
       expect(result.values.isAllDay).toBe(false);
       expect(result.values.calendarKind).toBe("normal");
+      expect(result.values.notifyPref).toBe("off");
     }
   });
 

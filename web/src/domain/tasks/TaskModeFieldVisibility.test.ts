@@ -50,6 +50,7 @@ describe("Task mode field visibility", () => {
       channelsRequired: false,
       analysisTimeRangeVisible: false,
       timelineToggleVisible: true,
+      outputGroupVisible: true,
       promptRequired: true,
       isAgent: true,
       showAgentPolicy: true,
@@ -61,5 +62,15 @@ describe("Task mode field visibility", () => {
   it("hides analysis time range for agent but keeps it for intel_event", () => {
     expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout")).analysisTimeRangeVisible).toBe(false);
     expect(getTaskModeFieldVisibility("intel_event").analysisTimeRangeVisible).toBe(true);
+  });
+
+  it("shows the output group for every AI mode; timeline toggle stays intel_event|agent", () => {
+    for (const mode of ANALYSIS_MODE_ORDER) {
+      const policy = mode === "agent" ? agentPresetPolicy("web_scout") : null;
+      expect(getTaskModeFieldVisibility(mode, policy).outputGroupVisible).toBe(true);
+    }
+    expect(getTaskModeFieldVisibility("intel_event").timelineToggleVisible).toBe(true);
+    expect(getTaskModeFieldVisibility("agent", agentPresetPolicy("web_scout")).timelineToggleVisible).toBe(true);
+    expect(getTaskModeFieldVisibility("leaderboard").timelineToggleVisible).toBe(false);
   });
 });

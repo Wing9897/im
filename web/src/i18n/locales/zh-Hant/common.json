@@ -62,21 +62,24 @@
     "system": "系統",
     "agent": "Agent 級",
     "unknownMode": "未知",
-    "confirm": "確認"
+    "confirm": "確認",
+    "now": "現在",
+    "nowAria": "填入現在的日期與時間"
   },
   "commandPalette": {
     "groups": {
       "navigation": "導航",
       "settings": "設定",
       "actions": "動作",
-      "tasks": "任務"
+      "tasks": "任務",
+      "worksets": "工作集"
     },
     "unnamedTask": "未命名任務",
     "monitorWall": "監控牆",
     "keyEventsMap": "情報事件 · 地圖",
     "keyEventsList": "情報事件 · 清單",
     "keyEventsCard": "情報事件 · 卡片",
-    "actionsVoice": "通知 · 語音提醒",
+    "actionsVoice": "通知 · 本機通知",
     "actionsHistory": "通知 · 觸發紀錄",
     "sourcesRss": "來源 · RSS",
     "sourcesTelegram": "來源 · Telegram",
@@ -90,8 +93,9 @@
     "aiStaff": "AI員工介紹",
     "theme": "主題設定",
     "settingsData": "資料維護",
-    "settingsApi": "API 說明",
-    "settingsMcp": "MCP 說明",
+    "settingsIntegrations": "外部接口",
+    "settingsDeeplink": "日曆連結",
+    "settingsMcp": "外部接口 · MCP",
     "newTask": "新增任務",
     "newAction": "新增通知",
     "newActionHint": "開啟通知頁",
@@ -119,7 +123,7 @@
     "clientManager": {
       "title": "客戶經理",
       "shortDescription": "對外 Agent（A2A）：第三方用自然語言交辦即可，與助手共用 LLM／工具但不跟你聊天、不存伺服器對話歷史。需完整存取金鑰（`*`）。",
-      "linkLabel": "前往 API 說明"
+      "linkLabel": "前往 A2A 說明"
     },
     "collector": {
       "title": "收集器",
@@ -134,9 +138,9 @@
       "shortDescription": "依通知規則在條件符合時，透過 Telegram、Discord、Webhook、MQTT 等管道外送訊息。"
     },
     "voiceReminder": {
-      "title": "語音提醒",
-      "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及「一般」工作集事件，並以瀏覽器語音播報。",
-      "linkLabel": "前往語音提醒"
+      "title": "本機通知",
+      "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及工作集事件，並以語音、畫面或最近一天收件匣通知。",
+      "linkLabel": "前往本機通知"
     },
     "retention": {
       "title": "資料清理",
@@ -167,9 +171,7 @@
     "30d": "30天"
   },
   "messages": {
-    "speakWithTask": "任務「{task}」，{kindLabel}「{eventTitle}」，還有{lead}",
-    "speakWithWorkset": "工作集「{workset}」，{kindLabel}「{eventTitle}」，還有{lead}",
-    "speakWithoutTask": "{kindLabel}「{eventTitle}」，還有{lead}",
+    "speakWithoutTask": "「{eventTitle}」，還有{lead}",
     "retentionDeleted": "已刪除：{parts}",
     "retentionNone": "沒有符合條件的舊資料可刪",
     "retentionPart": "{label} {count}",
@@ -185,7 +187,7 @@
     "speakKindRecurring": "週期任務",
     "speakKindUser": "提醒",
     "speakPreview": "測試進行中",
-    "voiceTriggerReason": "語音提醒 · {lead} · 「{title}」",
+    "voiceTriggerReason": "通知 · {lead} · 「{title}」",
     "speakTtsUnavailable": "本機語音合成不可用",
     "speakFailed": "朗讀失敗"
   },
@@ -317,6 +319,25 @@
     "abortDialogTitle": "緊急中止分析",
     "abortDialogBody": "確定要緊急中止所有分析嗎？此操作無法復原。"
   },
+  "notify": {
+    "prefLabel": "通知",
+    "prefAria": "此條目是否通知",
+    "prefHelp": "勾選後仍跟工作集與全局開關；工作集關掉則不響。",
+    "inboxTitle": "最近一天",
+    "inboxEmpty": "最近一天沒有通知。",
+    "inboxOpenAria": "打開最近一天通知",
+    "inboxCloseAria": "關閉最近一天通知",
+    "inboxBadgeAria": "{count} 則未讀通知",
+    "inboxClear": "清理",
+    "inboxClearAria": "從通知匣移除此則",
+    "inboxClearAll": "一鍵清理",
+    "inboxClearAllAria": "清理全部最近一天通知",
+    "channelVoice": "語音",
+    "channelFlash": "畫面",
+    "channelVoiceAria": "切換語音",
+    "channelFlashAria": "切換畫面提醒",
+    "flashDismissAria": "關閉通知"
+  },
   "window": {
     "controlsAria": "視窗控制列",
     "minimize": "最小化",
@@ -343,7 +364,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 33／SemVer 0.1.0-beta.34；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 39／SemVer 0.1.0-beta.40；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

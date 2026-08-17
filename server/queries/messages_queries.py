@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from server.analyzer.incremental import time_range_condition
 from server.api.channel_refs import parse_channel_key_csv
 from server.db.database import Database
+from server.domain.mcp_workset_scope import bind_workset_ids_sql
 from server.queries.pagination import fetch_cursor_page
 from server.wire.serializers import serialize_message
 
@@ -35,6 +36,7 @@ def build_message_filters(
     search: str | None,
     platform: str | None,
     channel_ids: str | None,
+    workset_ids: list[str] | None = None,
 ) -> tuple[str, list[Any]]:
     clauses: list[str] = []
     params: list[Any] = []
@@ -68,6 +70,20 @@ def build_message_filters(
             clauses.append("(" + " OR ".join("(m.platform = ? AND m.platform_id = ?)" for _ in channel_pairs) + ")")
             for channel_platform, platform_id in channel_pairs:
                 params.extend([channel_platform, platform_id])
+    workset_sql, workset_params = bind_workset_ids_sql("t.workset_id", workset_ids)
+    if workset_sql == "1=0":
+        clauses.append("1=0")
+    elif workset_sql:
+        placeholders = ", ".join("?" for _ in workset_params)
+        clauses.append(
+            "EXISTS ("
+            "SELECT 1 FROM task_channels tc "
+            "JOIN analysis_tasks t ON t.id = tc.task_id "
+            "WHERE tc.platform = m.platform AND tc.platform_id = m.platform_id "
+            f"AND t.workset_id IN ({placeholders})"
+            ")"
+        )
+        params.extend(workset_params)
     where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
     return where, params
 
@@ -84,8 +100,11 @@ async def fetch_messages_page(
     cursor_id: str | None = None,
     limit: int = 50,
     include_total: bool = True,
+    workset_ids: list[str] | None = None,
 ) -> dict[str, Any]:
-    where, params = build_message_filters(source_ids, time_range, search, platform, channel_ids)
+    where, params = build_message_filters(
+        source_ids, time_range, search, platform, channel_ids, workset_ids=workset_ids
+    )
 
     total_count = None
     if include_total:

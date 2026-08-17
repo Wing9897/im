@@ -35,7 +35,7 @@ async def test_agent_chat_contract(client):
 
 
 async def test_agent_chat_reports_engine_failure_as_http_error(client):
-    """Degraded turns must not arrive as 200 + ``error`` (stamp 34 contract)."""
+    """Degraded turns must not arrive as 200 + ``error``."""
     mock_llm = MagicMock(spec=ConfigurableLlmClient)
     mock_llm.complete = AsyncMock(side_effect=ConnectionError("Cannot connect to host localhost:11434"))
     mock_llm.close = AsyncMock()

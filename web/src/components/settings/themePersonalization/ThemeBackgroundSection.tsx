@@ -222,19 +222,24 @@ export function ThemeBackgroundSection({
   return (
     <div className="flex min-w-0 flex-col gap-md">
       <div className="flex min-w-0 flex-col gap-xs">
-        <FieldLabel>{t("theme.bgImageLabel")}</FieldLabel>
+        <div className="flex min-w-0 items-center gap-md">
+          <FieldLabel className="mb-0 min-w-0 flex-1" htmlFor="theme-bg-mode">
+            {t("theme.bgImageLabel")}
+          </FieldLabel>
+          <div className="w-[12rem] max-w-full shrink-0">
+            <MenuSelect
+              id="theme-bg-mode"
+              data-testid="theme-bg-mode"
+              variant="field"
+              value={bgMode}
+              options={bgModeOptions}
+              aria-label={t("theme.bgModeLabel")}
+              onChange={handleBgModeChange}
+            />
+          </div>
+        </div>
         <p className={formHelpClass}>{t("theme.bgImageHelp")}</p>
       </div>
-
-      <MenuSelect
-        id="theme-bg-mode"
-        data-testid="theme-bg-mode"
-        variant="field"
-        value={bgMode}
-        options={bgModeOptions}
-        aria-label={t("theme.bgModeLabel")}
-        onChange={handleBgModeChange}
-      />
       <p className={formHelpClass}>
         {bgMode === "focal" ? t("theme.bgModeFocalHelp") : t("theme.bgModeHelp")}
       </p>

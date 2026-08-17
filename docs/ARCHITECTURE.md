@@ -38,13 +38,13 @@ graph TB
 
 ## Core design: Task as universal interface
 
-**Analysis tasks (`analysis_tasks`) are the intelligence-work interface; standalone recurring series belong to the calendar domain.** Multi-source signals are selected via `task_channels` → configured as an analysis task (mode / prompt / trigger schedule) → consumed as results and actions. Downstream UIs (intelligence, timeline, board widgets, actions, voice reminders) scope work via hierarchical source filters `{ taskIds, worksetIds }` (or a task whitelist) — ownership of handwritten／assistant calendar items is by `worksetId`, not a lone `taskId` / `taskId=__user__` sentinel.
+**Analysis tasks (`analysis_tasks`) are the intelligence-work interface; standalone recurring series belong to the calendar domain.** Multi-source signals are selected via `task_channels` → configured as an analysis task (mode / prompt / trigger schedule) → consumed as results and actions. Downstream UIs (intelligence, timeline, board widgets, actions, local notifications) scope work via hierarchical source filters `{ taskIds, worksetIds }` (or a task whitelist) — ownership of handwritten／assistant calendar items is by `worksetId`, not a lone `taskId` / `taskId=__user__` sentinel.
 
 ```mermaid
 flowchart LR
   Signals[Signals / sources] --> Tasks[Tasks analysis_tasks]
   Tasks --> Results[Results / intel / calendar]
-  Tasks --> Reminders[Voice reminders]
+  Tasks --> Reminders[Local notifications]
   Tasks --> Actions[Outbound actions]
 ```
 
@@ -70,17 +70,19 @@ Timeline `viewMode:"calendar"` and board widget `"calendar"` are layout ids, not
 
 1. **In:** Collectors write `messages` for sources/channels (signal plane).
 2. **Task:** Scheduler runs AI for `leaderboard` / `intel_event` via `execute_batch`, and `agent` via `agent_tick` (`AgentRuntime` + task policy for trigger/caps/outputs). Standalone calendar RRULE series expand only at read time.
-3. **Out:** `analysis_events` / leaderboard topics, board widgets, actions, and voice reminders bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; agent `output_calendar` writes owned `user_events` + child `recurring` (`origin=agent`); agent `output_analysis_events` writes findings to `analysis_events` (not `user_events.origin`).
+3. **Out:** `analysis_events` (intel_event / agent when `output_analysis_events` is on) / leaderboard `trending_topics` (always, independent of that flag), board widgets, actions, and local notifications bind to task ids; `user_events` ownership is `workset_id` (NOT NULL, default `__user__`) with optional provenance `task_id`; agent `output_calendar` writes owned `user_events` + child `recurring` (`origin=agent`). Leaderboard tasks do not feed the Intelligence page.
+
+**Task outputs (task editor only; not extra task types):** intelligence (`outputAnalysisEvents` — intel_event / agent; off skips `analysis_events` persist), time planning (`includeInTimeline` on dated analysis events), notify (`notifyPref` follow／off), and Agent calendar write (`outputCalendar`, agent-only) in the same output group. Leaderboard always writes `/leaderboard` + may notify; the editor hides the Intelligence-page toggle. Items and user calendars keep their own date／notify overlays. Agent policy fieldset is preset + trigger + caps only. Builtin templates: eight intel_event jobs (關鍵情報／時間行程推理／IoT 設備告警／薅羊毛／行程事件提取／資安詐騙／政策法規／金融市場) plus two 專案經理 jobs (通用專案日期管理／工作輪更表). In-editor Agent chips remain 專案調和／網蒐.
 
 **Task-scoped UI vs exceptions**
 
 | Surface | Scoped by |
 |---------|-----------|
 | Intelligence, Timeline (analysis), Leaderboard, board widgets, actions | Hierarchical `{ taskIds, worksetIds }` / task whitelist (`intel_event` / `agent`); builtin workset `__user__` for「一般」 |
-| Voice reminder filter | ui-prefs `sourceFilter: { taskIds, worksetIds } \| null` (not a lone `taskId` / `__user__` sentinel) |
+| Local notification gate | `resolveNotify`: notification-page master + DND, then entity checkbox (`notifyPref` follow／off), then `worksets.notify_enabled`. Leftover ui-prefs `sourceFilter` is ignored. Timeline source filter is unrelated (what to show, not what rings). |
 | Monitor / Sources | Signal plane (sources/channels), not analysis tasks |
 | Manual / assistant / A2A / agent / MCP calendar items | `user_events`: ownership via `workset_id` (builtin `__user__`); optional `task_id` provenance; origins `manual`／`assistant`／`a2a`／`agent`／`mcp`／`ics` |
-| Shell prefs (board layout, assistant sessions, voice reminder state, voice IO defaults) | SQLite via `/api/v1/ui-prefs/*` — not task rows |
+| Shell prefs (board layout, assistant sessions, local-notify state, voice IO defaults) | SQLite via `/api/v1/ui-prefs/*` — not task rows |
 
 ## Components
 
@@ -98,7 +100,7 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v33** (`SCHEMA_SEMVER` `0.1.0-beta.34`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v39** (`SCHEMA_SEMVER` `0.1.0-beta.40`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -169,14 +171,14 @@ A **React** single-page application built with **Vite**. Communicates with the s
 - **Styling**: Theme palettes live in `web/src/styles/themeCatalog.ts` (SoT). `npm run gen:themes` emits `web/src/theme.generated.css`; `theme.css` keeps shared `:root` / layout tokens and `@import`s the generated file. Runtime switching uses `html[data-theme]` + `data-theme-mode` + `data-theme-family` (desk / classic / special) + `data-theme-texture` (thematic motifs: leaf / wood / wave / frost / ember / petal / mist / moss / washi / ink / dune / linen / grid / grain / none) + `data-theme-bg` (`none` | `custom` | `focal`). `index.html` sets early `data-theme-bg` from localStorage (photo-mode flash mitigation only); full `data-theme` / personalization still apply in JS `applyTheme` — not zero-FOUC for the complete theme. When `data-theme-bg=none`, page + sidebar get the motif as a background layer; elevated cards / control bars / secondary buttons also use it selectively. Photo BG modes: **custom** (user upload, data URL in per-theme `localStorage`) and **focal** (Bing via `GET /api/v1/theme/focal-background?idx=0..7` + byte proxy `.../image`; Settings refresh / optional auto-interval advance `idx`; device cache `im:theme-focal-cache` + `im:theme-focal-refresh-hours`; apply sets `--theme-bg-image` / `--theme-bg-wash-pct` on `html` so page + sidebar surfaces show the photo). **Surface layers** (when `data-theme-bg` is `custom` / `focal`): photo is ambient on `.im-page-canvas` + `.im-shell-sidebar`; `--surface-chrome` (~70%) / `--surface-panel` (~63%) / `--surface-inset` (~86%) frost chrome, elevated cards (settings / Items / sources), and inputs, with blur chrome 18px / panel 22px; nested `.im-page-shell` stays transparent (no opaque content island). `none` stays denser/opaque. Helpers: `.im-surface-chrome` / `.im-surface-panel` / `.im-surface-inset` / `.im-page-shell`. Motif SVGs live in `web/src/css/theme-textures.css` (regen: `node scripts/generate-theme-textures.mjs`). Catalog mixes near-black / paper bases with non-matching accents (Sumi, Moss, Harbor, Ember, Clay, Orchard, Mist, Copper, …). Tailwind v4 (`@tailwindcss/vite`, utilities only / no Preflight) bridges semantic colors / surfaces / motion in `tailwind.css` `@theme`. New UI and touched pages use utilities + thin primitives under `web/src/components/ui/`. `pages/` inline spacing/radius/typography hardcodes are ratcheted at zero via `tokenCompliance`. Map overlay chrome, board map/gantt embed chrome use theme spacing/radius/type tokens; Leaflet vendor CSS and marker/cluster/gantt geometry stay untouched. Fourteen curated themes; unknown localStorage theme IDs **fallback** to default via `resolveThemeId` (`themeCatalogData.ts` / `themeData.ts`) — no remap table.
 - **Communication**: HTTP REST for commands/queries, SSE for real-time server-pushed events
 - **Scrolling**: `body` / `#root` use `overflow: hidden`; page scroll happens on `.app-shell-main`. Infinite-scroll hooks and the monitor list virtualizer must use `getVerticalScrollParent` / `useScrollContainerState` (`web/src/utils/scrollParent.ts`) — not `window.scrollY`.
-- **Notifications workspace** (`/actions`): UI label **通知**; tabs `types` / `voice` / `history` (外發通知 / 語音提醒 / 觸發紀錄). Backend automation APIs remain under `/api/v1/actions*` — UI name ≠ API resource name.
+- **Notifications workspace** (`/actions`): UI label **通知**; tabs `types` / `notify` / `history` (外發通知 / 通知 / 觸發紀錄). Backend automation APIs remain under `/api/v1/actions*` — UI name ≠ API resource name.
 - **Naming:** `pages/actions/ActionTypeSelector.tsx` is the **ActionType** tile picker (Telegram Bot / Discord / HTTP / MQTT). Per-type field sections render via `ActionTypeFields`; form helpers use `validateActionTypeFields` / `applyActionTypeSwitch`. The default notifications tab component is `ActionTypesTab` — wire tab id is `"types"` (URL `?tab=` / i18n `tabs.types` / `types.*` keys). Real account↔channel picking lives under `components/channels/` (`SourceChannelPickerContent`, `ChannelPickerDialogShell`) and dialogs like `ChannelSelectorDialog` (not the retired dead `pages/actions/ChannelSelector`).
-- **Voice reminders**: frontend-local scanner (`web/src/voiceReminder/`); route `/actions?tab=voice`. It page-loads timed key events + RRULE occurrences inside the reminder window and overlapping **user events**. Ownership matches timeline: filter via hierarchical `sourceFilter` (`{ taskIds, worksetIds } | null`) through the shared `SourceFilterDialog` tree; builtin `__user__` (`SYSTEM_WORKSET_ID`) workset covers「一般」events. Default is `{ taskIds: [], worksetIds: ["__user__"] }`; `null` = all sources. Flat legacy `taskIds` arrays are hard-rejected (missing → default). Browser TTS/scanning stays in the frontend; reminder settings/history/fired dedupe are SQLite-backed and unrelated to Agent STT/TTS on `/ai/voice`.
+- **Local notifications**: frontend-local scanner (`web/src/domain/notify/scanner/`); route `/actions?tab=notify` (legacy `?tab=voice` redirects once; UI tab **通知**, page title **本機通知**, panel `LocalNotifyPanel`). It page-loads timed key events + RRULE occurrences + overlapping **user events** + item due/remind dates inside the reminder window. Which rows ring is `resolveNotify` (global master / DND → entity off → workset `notify_enabled`). After that, 語音 and 畫面 are independent channel toggles on this page (either, both, or neither); the same two prefs also have quick toggles on the top-bar bell cluster and the last-day drawer header. On-screen is a dedicated full-width top bar (`NotifyFlashHost`, not `ToastContext`) — **one bar at a time**, replacing the previous. Presentation **閃現** (auto-dismiss ~10s, fuse countdown) vs **持續** (until dismiss, no fuse), stored as `flashMode` on `notify_settings`. The rolling 24h inbox still logs resolved events even when both channels are off. Browser TTS/scanning stays in the frontend; notify settings/history/fired dedupe are SQLite-backed (`ui_prefs` keys `notify_*`, HTTP `/api/v1/ui-prefs/notify/*`) and unrelated to Agent STT/TTS on `/ai/voice`.
 - **Assistant UI**: `/assistant` chats via Agent API; browser speech adapters under `web/src/speech/`; session lists persist as device-scoped JSON values in SQLite `ui_prefs` via `GET/PUT /api/v1/ui-prefs/assistant/sessions` (server SoT; no localStorage migrate). Chat (and pure-voice) may send `worksetId` so `calendar.create_event` defaults to that ownership workset; UI default comes from voice IO `defaultWorksetId` (default `__user__`). Recurring calendar series use `calendar.create_recurring_series`／`update_recurring_series`／`delete_recurring_series` (standalone series; hard-delete; pause via `isActive=false`).
 - **AI settings pages** (`web/src/pages/ai/`): route-level UI for `/ai/*` — `SettingsAiProviderPage` (`/ai/provider`), `SettingsVoicePage` (`/ai/voice` — includes `defaultWorksetId` for assistant calendar writes), `SettingsAnalysisStrategyPage` (`/ai/analysis-strategy`), `SettingsAiStaffPage` (`/ai/staff`), plus `AiWorkspacePage` shell and `assistant/AssistantPage` (`/assistant`). Not under `pages/settings/`.
 - **Account**: `/account/identity|devices|keys` (no `/profile` redirect shim).
-- **UI prefs hard-cut:** voice IO / voice-reminder / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Per-feature localStorage migrate bridges are gone; boot still runs the one-shot prefs-schema wipe (`clearLegacyPrefsIfNeeded` / `im:prefs-schema-version`). User profile likewise (server settings SoT; active LS cache only).
-- **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" — front-line **assistant** + **task advisor** (`taskEditor`); back-office **leaderboard**, **intel_event**, **agent** — plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel). LLM bindings for the global trio are configured on `/ai/provider` (three fixed slots); task-mode staff still use profile checkboxes + per-task `llmProfileId`. Roster assets: `web/src/assets/ai-staff/` + `web/src/domain/aiStaff/` + `web/src/components/aiStaff/`. Page: `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a prompt/task-preset owner. Lightweight API how-to: `/settings/api`. A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Agent ticks (calendar-out / reconcile UI): [`docs/agent/agent.md`](agent/agent.md)（產品預設名「專案調和」；URL 僅 `/tasks/:taskId/agent`）. UI detail lives under Tasks at `/tasks/:taskId/agent` (not a top-level nav peer of Sources / Assistant; legacy `/project` path is retired).
+- **UI prefs hard-cut:** voice IO / local-notify / timeline annotations hydrate from SQLite only — empty server → defaults／empty. Per-feature localStorage migrate bridges are gone; boot still runs the one-shot prefs-schema wipe (`clearLegacyPrefsIfNeeded` / `im:prefs-schema-version`). User profile likewise (server settings SoT; active LS cache only).
+- **AI Staff** (intro page `/ai/staff`): presentation-only roster of the app's LLM "staff" — front-line **assistant** + **task advisor** (`taskEditor`); back-office **leaderboard**, **intel_event**, **agent** — plus a page-local **客戶經理 / Account manager** card (code id `liaison` — A2A channel). LLM bindings for the global trio are configured on `/ai/provider` (three fixed slots); task-mode staff still use profile checkboxes + per-task `llmProfileId`. Roster assets: `web/src/assets/ai-staff/` + `web/src/domain/aiStaff/` + `web/src/components/aiStaff/`. Page: `web/src/pages/ai/SettingsAiStaffPage.tsx`. Not a prompt/task-preset owner. External interfaces: `/settings/integrations` (`?tab=webhook|a2a|deeplink|mcp`; `/settings/api` and `/settings/mcp` redirect). A2A HTTP façade: [`docs/agent/a2a.md`](agent/a2a.md). Agent ticks (calendar-out / reconcile UI): [`docs/agent/agent.md`](agent/agent.md)（產品預設名「專案調和」；URL 僅 `/tasks/:taskId/agent`）. UI detail lives under Tasks at `/tasks/:taskId/agent` (not a top-level nav peer of Sources / Assistant; legacy `/project` path is retired).
 - **Ops board** — see [Ops board](#ops-board) below.
 
 #### Frontend layering
@@ -288,7 +290,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-33 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-39 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
@@ -356,8 +358,8 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `trending_topics` | Extracted trending topics from analysis |
 | `topic_messages` | Topic ↔ message associations |
 | `analysis_events` | Unified event findings (optional `start_time` + optional map coordinates) |
-| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `agent` agent ticks, `a2a` A2A agent channel, `mcp` MCP tool channel (stamp **30**+), `ics` one-shot imports; `workset_id` NOT NULL ownership; optional `task_id` provenance; `kind` (`normal`\|`expires`\|`purchase_effective`); optional finance `amount` + `direction` (`expense`\|`income`, only for `purchase_effective`); imported UID/source/fingerprint + all-day/TZID metadata) |
-| `timeline_dismissals` | Soft-dismiss markers for timeline (`source` + `event_id`; does not delete source rows) |
+| `user_events` | One-off timed events (`origin`: `manual` REST/UI, `assistant` Agent tools, `agent` agent ticks, `a2a` A2A agent channel, `mcp` MCP tool channel (stamp **30**+), `ics` one-shot imports; `workset_id` NOT NULL ownership; optional `task_id` provenance; `kind` (`normal`\|`expires`\|`purchase_effective`); optional finance `amount` + `direction` (`expense`\|`income`, only for `purchase_effective`); imported UID/source/fingerprint + all-day/TZID metadata). REST `DELETE /calendar/user-events/:id` **hard-deletes** the row (Schedule / Items trash). Timeline 「從時間規劃移除」 is `PUT /calendar/dismissals`, not this DELETE. |
+| `timeline_dismissals` | Soft-dismiss markers for timeline (`source` + `event_id`; does not delete source rows). Restore via `DELETE /calendar/dismissals`. Independent of REST hard-delete of `user_events` / `recurring_schedules`. |
 | `admin_accounts` | Singleton household admin (normalized username + argon2 password hash) |
 | `device_sessions` | Device sessions (refresh token hash, expiry, revoke) |
 | `device_access_tokens` | Short-lived opaque access token hashes bound to a device session |
@@ -368,9 +370,19 @@ The server pushes real-time updates to the frontend via Server-Sent Events. The 
 | `actions` | Automation action definitions |
 | `action_trigger_history` | Action execution audit trail; read via `GET /api/v1/actions/trigger-history` |
 | `agent_message_cursors` | Per-agent `message_cursor` last-seen message cursor for `agent_tick` (`last_message_at` ISO + optional `last_message_id` same-second tie-break) |
-| `worksets` | Ownership dimension (`id` / `name` / `is_system`); builtin `__user__` (`is_system=1`); `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events`／`items.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
+| `worksets` | Ownership dimension (`id` / `name` / `is_system` / `notify_enabled` / `external_enabled` INTEGER NOT NULL DEFAULT 1); builtin `__user__` (`is_system=1`; both flags can be turned off). Worksets page is the permission hub; `analysis_tasks.workset_id` FK `ON DELETE SET NULL`; `user_events`／`items.workset_id` `NOT NULL DEFAULT '__user__'` (delete_workset reassigns before delete) |
 | `item_categories` | Soft-template categories (`slug`, optional `emoji`, `default_remind_before_days`); seed rows with stable slugs + emoji logos. Categories group items and supply default remind hints only — no `field_schema` / attribute presets. |
 | `items` | Trackable inventory (optional `emoji`; optional `quantity`／`unit`; free-form details in `notes`); ownership via `workset_id`. **No item-level `price` or `attributes_json`** — purchase／effective amounts live on linked `user_events` with `kind=purchase_effective` (`amount` + `direction`). **Items date model:** linked `user_events` with `kind=expires` are the source of truth (title presets 到期／Expires are UX only). Stamp **28** dropped cache columns `expires_at`／`remind_before_days`; wire `expiresAt`／`remindBeforeDays` on ItemResponse are **derived on read** from the primary linked expires event (non-dismissed, earliest `created_at`). No write-through sync — expiry authority is `user_events.kind=expires` (`server/calendar/user_event_kinds.py` + items derive-on-read queries). There is no `purchased_at` column. Calendar `source=item_remind` projects remind DATE only as floating all-day (`itemDateKind=remind`; occurrence ids still `item:{id}:remind`) |
+
+#### Calendar delete vs timeline remove
+
+Three verbs — do **not** collapse them:
+
+| Verb | Surface | Effect |
+|------|---------|--------|
+| REST `DELETE /calendar/user-events/:id` | Schedule / Items trash | **Hard-delete** the `user_events` row (gone from every list). Recurring series use REST `DELETE` of the series. |
+| REST `PUT /calendar/dismissals` | Timeline 「從時間規劃移除」 | Timeline **remove**: insert `timeline_dismissals`; source row stays. Restore via `DELETE /calendar/dismissals` (UI 「顯示已移除」). |
+| Agent / MCP `calendar.delete_event` | Assistant / A2A / MCP | **Soft-dismiss** (same `timeline_dismissals` path as PUT dismissals). Payload `dismissed: true`. Not a hard-delete. Hard-delete a series with `calendar.delete_recurring_series`. |
 
 #### Calendar on timeline (source vs item-linked kind)
 
@@ -387,11 +399,11 @@ Timeline merge rows use wire `source`; item linkage and `user_events.kind` are o
 
 ### Schema baseline (wipe-only)
 
-Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-33 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
+Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-39 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
 
 ### Unified event analysis pipeline
 
-- Finding modes that write ``analysis_events``: **`intel_event`** (message-batch oneshot) and **`agent`** with ``output_analysis_events`` (configurable Agent tick). Legacy `web_intel` / `project` modes were wiped into `agent` at stamp **18**.
+- Finding modes that write ``analysis_events``: **`intel_event`** (message-batch oneshot) and **`agent`** when ``output_analysis_events`` is on. **`leaderboard`** always writes ``trending_topics`` for `/leaderboard` (and notify); it never writes ``analysis_events`` and the household graph does not wire leaderboard tasks to 情报页 (排行榜 is the mode’s own page, not a fifth graph layer). Timed analysis rows also honor ``includeInTimeline``. Legacy `web_intel` / `project` modes were wiped into `agent` at stamp **18**.
 - LLM JSON schema requires `title` + `body`; `start_time`/`end_time`/`location`/`participants` are optional.
 - Location may be inferred from context; global/online/unspecified places (and missing location) persist as coordinates `0,0`. Time fields are filled only when a schedulable time exists. Evidence style (`analysisStrategyMode`) still controls which items to emit.
 - Persistence: timed rows UPSERT on `(task_id, version, event_key)`; untimed rows `INSERT OR IGNORE` on `(task_id, version, content_hash)` with `semantic_hash` near-dedup.
@@ -506,7 +518,7 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-33 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-39 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 
@@ -539,8 +551,8 @@ Three product channels stay separate — do **not** merge HTTP paths or collapse
 | Surface | Primary path | Interaction | Local LLM | Auth | Calendar `origin` |
 |---------|--------------|-------------|-----------|------|-------------------|
 | **Assistant chat** | `/api/v1/agent/chat` (UI `/assistant`) | Multi-turn NL + tools | Yes | Device session | `assistant` |
-| **A2A NL** | `/api/v1/a2a/agent` | Single-shot NL agent | Yes | Access key (`*` scope) | `a2a` |
-| **MCP tools** | `/api/v1/mcp` | Streamable HTTP structured tools (calendar／messages／intelligence／items allowlist) | No | Access key (`*` scope; same gate as A2A) | `mcp` (stamp **30**+) |
+| **A2A NL** | `/api/v1/a2a/agent` | Single-shot NL agent | Yes | Access key (`*` scope); household `a2a_enabled`; tools also gated by `mcp_cap_*` + `worksets.external_enabled` | `a2a` |
+| **MCP tools** | `/api/v1/mcp` | Streamable HTTP structured tools (calendar／messages／intelligence／items allowlist) | No | Access key (`*` scope; same identity gate as A2A); household `mcp_enabled`; `mcp_cap_*` + `worksets.external_enabled` | `mcp` (stamp **30**+) |
 
 Docs: Assistant + voice [`docs/agent/assistant.md`](agent/assistant.md); A2A（客戶經理 / Account manager）[`docs/agent/a2a.md`](agent/a2a.md); MCP [`docs/agent/mcp.md`](agent/mcp.md).
 

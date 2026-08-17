@@ -1,5 +1,6 @@
 import type { AnalysisMode } from "../../types";
 import {
+  ANALYSIS_MODE_CAPABILITIES,
   analysisModeHidesPromptAndChannel,
   analysisModeIsAgent,
   analysisModeRequiresChannels,
@@ -23,6 +24,8 @@ export interface TaskModeFieldVisibility {
   analysisTimeRangeVisible: boolean;
   /** Timeline include toggle (event / agent). */
   timelineToggleVisible: boolean;
+  /** Unified Intelligence / time-planning / notify group (all AI modes). */
+  outputGroupVisible: boolean;
   /** Prompt is required to save (all AI modes with a prompt field). */
   promptRequired: boolean;
   isAgent: boolean;
@@ -61,6 +64,7 @@ export function getTaskModeFieldVisibility(
     channelsRequired,
     analysisTimeRangeVisible: promptFieldsVisible && !isAgent,
     timelineToggleVisible: mode === "intel_event" || isAgent,
+    outputGroupVisible: ANALYSIS_MODE_CAPABILITIES[mode].ai,
     promptRequired: promptFieldsVisible,
     isAgent,
     showAgentPolicy: isAgent,

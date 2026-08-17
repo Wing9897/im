@@ -40,6 +40,25 @@ describe("OverlayPortal", () => {
     expect(overlay).not.toBeNull();
     expect(mount.querySelector('[data-testid="test-overlay"]')).toBeNull();
     expect(overlay?.textContent).toContain("Dialog content");
+    expect(overlay?.className).toMatch(/backdrop-blur/);
+  });
+
+  it("light scrim skips viewport blur", () => {
+    act(() => {
+      root.render(
+        createElement(
+          OverlayPortal,
+          { testId: "light-overlay", scrim: "light" },
+          createElement("div", null, "Sidebar"),
+        ),
+      );
+    });
+
+    const overlay = document.body.querySelector('[data-testid="light-overlay"]');
+    expect(overlay).not.toBeNull();
+    expect(overlay?.className).toContain("im-sidebar-overlay");
+    expect(overlay?.className).toContain("bg-black/10");
+    expect(overlay?.className).not.toMatch(/backdrop-blur/);
   });
 
   it("locks body scroll when requested", () => {

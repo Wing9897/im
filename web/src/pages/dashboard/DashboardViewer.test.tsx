@@ -5,10 +5,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // --- Mocks ---
 
 const mockNavigate = vi.fn();
+let mockPathname = "/tasks";
+let mockSearch = "";
 
 vi.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useParams: () => ({}),
+  useLocation: () => ({ pathname: mockPathname, search: mockSearch }),
+  useSearchParams: () => [
+    new URLSearchParams(mockSearch.startsWith("?") ? mockSearch.slice(1) : mockSearch),
+    vi.fn(),
+  ],
 }));
 
 vi.mock("../../context/ToastContext", async () =>
@@ -48,11 +55,25 @@ vi.mock("../../api/items", () => ({
   listItems: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("../../api/sources", () => ({
+  listSources: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("../../api/userEvents", () => ({
+  listUserEventsPage: vi.fn().mockResolvedValue({ items: [], totalCount: 0, hasMore: false }),
+}));
+
+vi.mock("../../api/channels", () => ({
+  listChannelsWithSources: vi.fn().mockResolvedValue([]),
+}));
+
 vi.mock("../../api/worksets", () => ({
   createWorkset: vi.fn().mockResolvedValue({
     id: "ws-new",
     name: "Alpha",
     isSystem: false,
+    notifyEnabled: true,
+    externalEnabled: true,
     createdAt: null,
     updatedAt: null,
   }),
@@ -60,10 +81,21 @@ vi.mock("../../api/worksets", () => ({
     id: "ws-1",
     name: "Ops Renamed",
     isSystem: false,
+    notifyEnabled: true,
+    externalEnabled: true,
     createdAt: null,
     updatedAt: null,
   }),
   deleteWorkset: vi.fn().mockResolvedValue(undefined),
+  updateWorkset: vi.fn().mockResolvedValue({
+    id: "ws-1",
+    name: "Ops",
+    isSystem: false,
+    notifyEnabled: true,
+    externalEnabled: true,
+    createdAt: null,
+    updatedAt: null,
+  }),
 }));
 
 import {
@@ -77,6 +109,7 @@ import {
   TASKS_MODE_FILTER_STORAGE_KEY,
   TASKS_SEARCH_STORAGE_KEY,
   SHOW_SYSTEM_TASKS_STORAGE_KEY,
+  WORKSETS_SEARCH_STORAGE_KEY,
 } from "../../domain/tasks/systemTaskCatalog";
 import {
   getHideSystemTasksLabel,
@@ -92,6 +125,14 @@ function createMockTask(overrides: Partial<AnalysisTask> = {}): AnalysisTask {
   return makeAnalysisTask({ name: "Test Task", description: null, ...overrides });
 }
 
+function typeInput(input: HTMLInputElement, value: string) {
+  const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+  act(() => {
+    nativeSetter?.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+}
+
 describe("DashboardViewer", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
@@ -100,12 +141,15 @@ describe("DashboardViewer", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     mockNavigate.mockReset();
+    mockPathname = "/tasks";
+    mockSearch = "";
     mockShowToast.mockReset();
     mockCreateWorkset.mockClear();
     resetTaskCatalogState();
     window.localStorage.removeItem(SHOW_SYSTEM_TASKS_STORAGE_KEY);
     window.localStorage.removeItem(TASKS_MODE_FILTER_STORAGE_KEY);
     window.sessionStorage.removeItem(TASKS_SEARCH_STORAGE_KEY);
+    window.sessionStorage.removeItem(WORKSETS_SEARCH_STORAGE_KEY);
   });
 
   afterEach(() => {
@@ -159,9 +203,79 @@ describe("DashboardViewer", () => {
     const toolbar = container.querySelector('[data-testid="tasks-toolbar"]');
     expect(toolbar).not.toBeNull();
     expect(toolbar!.className).toContain("im-control-bar");
+    const search = toolbar!.querySelector('[data-testid="tasks-search"]') as HTMLInputElement;
+    expect(search).toBeInstanceOf(HTMLInputElement);
+    expect(search.placeholder).toBe("搜尋任務…");
+    expect(search.getAttribute("data-im-search")).not.toBeNull();
     expect(container.textContent).toContain("新增任務");
     expect(container.textContent).toContain("Task Alpha");
     expect(container.textContent).toContain("Task Beta");
+  });
+
+  it("keeps a visible search TextField in the tasks toolbar on /tasks", () => {
+    mockPathname = "/tasks";
+    taskCatalogState.tasks = [
+      createMockTask({ id: "t1", name: "Task Alpha" }),
+      createMockTask({ id: "t2", name: "Task Beta" }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    expect(toolbar).not.toBeNull();
+    expect(toolbar.getAttribute("role")).toBe("toolbar");
+    const search = toolbar.querySelector('[data-testid="tasks-search"]') as HTMLInputElement;
+    expect(search).toBeInstanceOf(HTMLInputElement);
+    expect(document.body.contains(search)).toBe(true);
+    expect(search.className.split(/\s+/)).not.toContain("hidden");
+    expect(search.getAttribute("aria-hidden")).not.toBe("true");
+    expect(search.placeholder).toBe("搜尋任務…");
+    expect(toolbar.querySelector('[data-testid="toggle-system-tasks"]')).not.toBeNull();
+    expect(toolbar.textContent).toContain("新增任務");
+  });
+
+  it("filters tasks by name from the toolbar search", () => {
+    taskCatalogState.tasks = [
+      createMockTask({ id: "t1", name: "Task Alpha" }),
+      createMockTask({ id: "t2", name: "Task Beta" }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    const search = toolbar.querySelector('[data-testid="tasks-search"]') as HTMLInputElement;
+    expect(search).toBeInstanceOf(HTMLInputElement);
+    expect(search.getAttribute("data-im-search")).not.toBeNull();
+    typeInput(search, "Alpha");
+
+    expect(container.textContent).toContain("Task Alpha");
+    expect(container.textContent).not.toContain("Task Beta");
+  });
+
+  it("filters tasks by description from the toolbar search", () => {
+    taskCatalogState.tasks = [
+      createMockTask({ id: "t1", name: "Task Alpha", description: "weekly digest" }),
+      createMockTask({ id: "t2", name: "Task Beta", description: "hourly scan" }),
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    const search = toolbar.querySelector('[data-testid="tasks-search"]') as HTMLInputElement;
+    expect(search).toBeInstanceOf(HTMLInputElement);
+    typeInput(search, "digest");
+
+    expect(container.textContent).toContain("Task Alpha");
+    expect(container.textContent).not.toContain("Task Beta");
   });
 
   it("does not show empty state when tasks exist", () => {
@@ -262,10 +376,12 @@ describe("DashboardViewer", () => {
     const toggle = container.querySelector('[data-testid="toggle-system-tasks"]');
     expect(toggle).not.toBeNull();
     expect(toggle?.getAttribute("aria-label")).toBe(getShowSystemTasksLabel());
+    const toolbar = container.querySelector('[data-testid="tasks-toolbar"]') as HTMLElement;
+    expect(toolbar.querySelector('[data-testid="tasks-search"]')).toBeInstanceOf(HTMLInputElement);
     expect(container.textContent).not.toContain("新建工作集");
     expect(
       [...container.querySelectorAll('[role="tab"]')].some((tab) => tab.textContent === "工作集"),
-    ).toBe(true);
+    ).toBe(false);
 
     act(() => {
       (toggle as HTMLButtonElement).click();
@@ -275,9 +391,10 @@ describe("DashboardViewer", () => {
   });
 
   it("opens an in-app dialog to create a workset (no window.prompt)", async () => {
+    mockPathname = "/worksets";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
-      { id: "__user__", name: "一般", isSystem: true, createdAt: null, updatedAt: null },
+      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
     ];
     const promptSpy = vi.spyOn(window, "prompt").mockImplementation(() => {
       throw new Error("prompt() is not supported.");
@@ -286,13 +403,6 @@ describe("DashboardViewer", () => {
     act(() => {
       root = createRoot(container);
       root.render(<DashboardViewer />);
-    });
-
-    const worksetTab = [...container.querySelectorAll('[role="tab"]')].find(
-      (tab) => tab.textContent === "工作集",
-    ) as HTMLButtonElement;
-    act(() => {
-      worksetTab.click();
     });
 
     const createBtn = container.querySelector(
@@ -308,14 +418,7 @@ describe("DashboardViewer", () => {
       '[data-testid="workset-name-input"]',
     ) as HTMLInputElement;
     expect(input).toBeTruthy();
-    const nativeSetter = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )?.set;
-    act(() => {
-      nativeSetter?.call(input, "Alpha");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    });
+    typeInput(input, "Alpha");
 
     const submit = document.querySelector(
       '[data-testid="workset-name-submit"]',
@@ -330,12 +433,12 @@ describe("DashboardViewer", () => {
     promptSpy.mockRestore();
   });
 
-  it("shows workset groups with zero tasks when viewing by workset", () => {
-    window.localStorage.removeItem("im:tasks:grouping-view");
+  it("shows workset groups including builtin General, without a system-workset toggle", () => {
+    mockPathname = "/worksets";
     taskCatalogState.tasks = [];
     taskCatalogState.worksets = [
-      { id: "__user__", name: "一般", isSystem: true, createdAt: null, updatedAt: null },
-      { id: "ws-1", name: "Ops", isSystem: false, createdAt: null, updatedAt: null },
+      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
     ];
 
     act(() => {
@@ -343,14 +446,8 @@ describe("DashboardViewer", () => {
       root.render(<DashboardViewer />);
     });
 
-    const worksetTab = [...container.querySelectorAll('[role="tab"]')].find(
-      (tab) => tab.textContent === "工作集",
-    ) as HTMLButtonElement;
-    expect(worksetTab).toBeTruthy();
-    act(() => {
-      worksetTab.click();
-    });
-
+    expect(container.querySelector('[data-testid="worksets-toolbar"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="worksets-search"]')).toBeTruthy();
     expect(container.textContent).toContain("一般");
     expect(container.textContent).toContain("Ops");
     expect(container.textContent).toContain("新建工作集");
@@ -358,11 +455,31 @@ describe("DashboardViewer", () => {
     expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
     expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
-    expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeTruthy();
-    expect(
-      container.querySelector('[data-testid="toggle-system-worksets"]')?.getAttribute("aria-label"),
-    ).toBe("隱藏系統工作集");
+    expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
+    expect(container.textContent).not.toContain("顯示系統工作集");
+    expect(container.textContent).not.toContain("隱藏系統工作集");
     expect(container.querySelector('[data-testid="system-task-card-user-or-assistant"]')).toBeNull();
+  });
+
+  it("filters worksets by name from the toolbar search", () => {
+    mockPathname = "/worksets";
+    taskCatalogState.tasks = [];
+    taskCatalogState.worksets = [
+      { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+      { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+    ];
+
+    act(() => {
+      root = createRoot(container);
+      root.render(<DashboardViewer />);
+    });
+
+    const search = container.querySelector('[data-testid="worksets-search"]') as HTMLInputElement;
+    expect(search).not.toBeNull();
+    typeInput(search, "Ops");
+
+    expect(container.querySelector('[data-testid="workset-card-ws-1"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeNull();
   });
 
   it("restores mode filter from localStorage", () => {
@@ -400,59 +517,93 @@ describe("DashboardViewer", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/tasks/proj-1/agent");
   });
 
-  describe("workset grouping view", () => {
+  describe("workset catalog page", () => {
     beforeEach(() => {
-      window.localStorage.removeItem("im:tasks:grouping-view");
+      mockPathname = "/worksets";
       taskCatalogState.worksets = [
-        { id: "__user__", name: "一般", isSystem: true, createdAt: null, updatedAt: null },
-        { id: "ws-1", name: "Ops", isSystem: false, createdAt: null, updatedAt: null },
+        { id: "__user__", name: "一般", isSystem: true, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
+        { id: "ws-1", name: "Ops", isSystem: false, notifyEnabled: true, externalEnabled: true, createdAt: null, updatedAt: null },
       ];
       taskCatalogState.tasks = [
         createMockTask({ id: "t1", name: "Assigned Task", worksetId: "ws-1" }),
-        createMockTask({ id: "t2", name: "Unassigned Task", worksetId: null }),
+        createMockTask({ id: "t2", name: "Unassigned Task", worksetId: "" }),
       ];
     });
 
-    afterEach(() => {
-      window.localStorage.removeItem("im:tasks:grouping-view");
-    });
-
-    it("groups tasks by workset with a separate unassigned section", () => {
+    it("groups tasks by workset; omitted worksetId lands on 一般", () => {
       act(() => {
         root = createRoot(container);
         root.render(<DashboardViewer />);
-      });
-
-      const worksetTab = [...container.querySelectorAll('[role="tab"]')].find(
-        (tab) => tab.textContent === "工作集",
-      ) as HTMLButtonElement;
-      expect(worksetTab).toBeTruthy();
-      act(() => {
-        worksetTab.click();
       });
 
       expect(container.textContent).toContain("一般");
       expect(container.textContent).toContain("Ops");
-      expect(container.textContent).toContain("未歸屬");
+      expect(container.textContent).not.toContain("未歸屬");
       expect(container.textContent).toContain("Assigned Task");
       expect(container.textContent).toContain("Unassigned Task");
       expect(container.querySelector('[data-testid="workset-card-__user__"]')).toBeTruthy();
       expect(container.querySelector('[data-testid="toggle-system-tasks"]')).toBeNull();
-      expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="toggle-system-worksets"]')).toBeNull();
       expect(container.querySelector('[data-testid="dashboard-create-workset"]')).toBeTruthy();
     });
 
-    it("shows rename/delete controls for named workset groups but not for unassigned", () => {
+    it("shows catalog/graph pills in the worksets toolbar without a page title", () => {
       act(() => {
         root = createRoot(container);
         root.render(<DashboardViewer />);
       });
 
-      const worksetTab = [...container.querySelectorAll('[role="tab"]')].find(
-        (tab) => tab.textContent === "工作集",
-      ) as HTMLButtonElement;
+      const toolbar = container.querySelector('[data-testid="worksets-toolbar"]');
+      const tabs = toolbar?.querySelector('[data-testid="workset-catalog-tabs"]');
+      expect(tabs).toBeTruthy();
+      expect(tabs?.textContent).toContain("目錄");
+      expect(tabs?.textContent).toContain("流程圖");
+      expect(toolbar?.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
+      expect(container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeNull();
+      expect(container.querySelector('[data-testid="dashboard-by-workset"]')).toBeTruthy();
+    });
+
+    it("hides catalog search and create workset on the graph tab", () => {
+      mockSearch = "?tab=graph";
       act(() => {
-        worksetTab.click();
+        root = createRoot(container);
+        root.render(<DashboardViewer />);
+      });
+
+      const toolbar = container.querySelector('[data-testid="worksets-toolbar"]');
+      expect(toolbar?.querySelector('[data-testid="worksets-search"]')).toBeNull();
+      expect(toolbar?.querySelector('[data-testid="dashboard-create-workset"]')).toBeNull();
+      expect(toolbar?.querySelector('[data-testid="workset-catalog-tabs"]')).toBeTruthy();
+      expect(toolbar?.querySelector('[data-testid="workset-graph-filter"]')).toBeTruthy();
+      expect(toolbar?.querySelector('[data-testid="workset-graph-filter-value"]')).toBeTruthy();
+      expect(toolbar?.querySelector('[data-testid="workset-graph-filter-all"]')).toBeNull();
+      expect(
+        container.querySelector('[data-testid="workset-pipeline-graph"] [data-testid="workset-graph-filter"]'),
+      ).toBeNull();
+      expect(container.querySelector('[data-testid="workset-pipeline-graph"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="dashboard-by-workset"]')).toBeNull();
+    });
+
+    it("opens the workset workspace instead of an overlay dialog", () => {
+      act(() => {
+        root = createRoot(container);
+        root.render(<DashboardViewer />);
+      });
+
+      const card = container.querySelector('[data-testid="workset-card-ws-1"]') as HTMLElement;
+      expect(card).toBeTruthy();
+      act(() => {
+        card.click();
+      });
+
+      expect(mockNavigate).toHaveBeenCalledWith("/worksets/ws-1", { replace: false });
+      expect(container.querySelector('[data-testid="workset-detail-dialog"]')).toBeNull();
+    });
+
+    it("shows rename/delete controls for named workset groups but not for 一般", () => {
+      act(() => {
+        root = createRoot(container);
+        root.render(<DashboardViewer />);
       });
 
       const opsCard = container.querySelector('[data-testid="workset-card-ws-1"]');
@@ -461,7 +612,7 @@ describe("DashboardViewer", () => {
       expect(opsCard?.textContent).toContain("刪除");
       expect(generalCard?.textContent).toContain("內建");
       expect(generalCard?.textContent ?? "").not.toContain("重新命名");
-      expect(container.textContent).toContain("未歸屬");
+      expect(container.textContent).not.toContain("未歸屬");
     });
   });
 });

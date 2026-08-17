@@ -50,9 +50,9 @@ def test_ui_prefs_pydantic_shapes_are_concrete() -> None:
     ("path", "params", "response_keys"),
     [
         ("/api/v1/ui-prefs/board", None, ["configured", "layout", "widgetState"]),
-        ("/api/v1/ui-prefs/voice-reminder/settings", None, ["configured", "settings"]),
-        ("/api/v1/ui-prefs/voice-reminder/fired", None, ["configured", "keys"]),
-        ("/api/v1/ui-prefs/voice-reminder/history", None, ["configured", "entries"]),
+        ("/api/v1/ui-prefs/notify/settings", None, ["configured", "settings"]),
+        ("/api/v1/ui-prefs/notify/fired", None, ["configured", "keys"]),
+        ("/api/v1/ui-prefs/notify/history", None, ["configured", "entries"]),
         (
             "/api/v1/ui-prefs/assistant/sessions",
             {"deviceId": "contract-device"},

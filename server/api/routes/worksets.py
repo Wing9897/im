@@ -1,4 +1,4 @@
-"""Worksets CRUD — optional ownership dimension for analysis tasks."""
+"""Worksets CRUD — ownership dimension for analysis tasks, items, and events."""
 
 from __future__ import annotations
 
@@ -50,7 +50,14 @@ async def create_workset(request: Request, body: WorksetCreateBody) -> WorksetRe
     now = utc_now_iso()
     db = get_db(request)
     async with db.transaction() as conn:
-        await insert_workset(TransactionDb(conn), workset_id=workset_id, name=name, now=now)
+        await insert_workset(
+            TransactionDb(conn),
+            workset_id=workset_id,
+            name=name,
+            now=now,
+            notify_enabled=bool(body.notifyEnabled),
+            external_enabled=bool(body.externalEnabled),
+        )
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "created")
     return WorksetResponse.model_validate(serialize_workset(row))
@@ -64,20 +71,32 @@ async def get_workset(request: Request, workset_id: str) -> WorksetResponse:
 
 @router.put("/{workset_id}", response_model=WorksetResponse)
 async def put_workset(request: Request, workset_id: str, body: WorksetUpdateBody) -> WorksetResponse:
-    name = _clean_name(body.name)
+    fields = body.model_fields_set
+    if not fields:
+        raise http_error(422, "No workset fields to update", error_code=VALIDATION_ERROR)
     db = get_db(request)
     existing = await fetch_workset_row(db, workset_id)
     if existing is None:
         raise http_error(404, "Workset not found", error_code=NOT_FOUND)
-    if await workset_is_system(db, workset_id):
+    name = _clean_name(body.name) if "name" in fields and body.name is not None else str(existing.get("name") or "")
+    if await workset_is_system(db, workset_id) and name != str(existing.get("name") or ""):
         raise http_error(
             403,
             "System workset cannot be renamed",
             error_code=FORBIDDEN,
         )
+    notify_enabled = body.notifyEnabled if "notifyEnabled" in fields else None
+    external_enabled = body.externalEnabled if "externalEnabled" in fields else None
     now = utc_now_iso()
     async with db.transaction() as conn:
-        await update_workset(TransactionDb(conn), workset_id=workset_id, name=name, now=now)
+        await update_workset(
+            TransactionDb(conn),
+            workset_id=workset_id,
+            name=name,
+            now=now,
+            notify_enabled=notify_enabled,
+            external_enabled=external_enabled,
+        )
     row = await require_row(db, "worksets", "Workset", workset_id)
     _notify(request, workset_id, "updated")
     return WorksetResponse.model_validate(serialize_workset(row))

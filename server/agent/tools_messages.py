@@ -11,6 +11,7 @@ from server.agent.tool_limits import (
     MESSAGES_RESULT_HARD_CAP,
 )
 from server.db.database import Database
+from server.domain.mcp_workset_scope import allowed_workset_ids_from_args
 from server.queries.messages_queries import (
     MAX_SEARCH_LENGTH,
     MessagesQueryError,
@@ -105,6 +106,7 @@ async def _tool_messages_search(db: Database, args: dict[str, Any]) -> dict[str,
             channel_ids=channel_ids,
             limit=limit,
             include_total=False,
+            workset_ids=allowed_workset_ids_from_args(args),
         )
     except MessagesQueryError as exc:
         return {"error": str(exc), "items": [], "count": 0}

@@ -75,7 +75,7 @@ describe("AppSidebar", () => {
     await ensureZhHantLocale();
   });
 
-  function renderSidebar() {
+  function mountSidebar() {
     act(() => {
       root.render(
         wrapWithI18n(createElement(SimpleModeProvider, null, createElement(AppSidebar))),
@@ -83,20 +83,113 @@ describe("AppSidebar", () => {
     });
   }
 
+  function renderSidebar({ overlayOpen = true }: { overlayOpen?: boolean } = {}) {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, overlayOpen ? "0" : "1");
+    mountSidebar();
+  }
+
   function getLinks() {
     return Array.from(
-      container.querySelectorAll<HTMLAnchorElement>("a[data-testid='sidebar-link']"),
+      document.body.querySelectorAll<HTMLAnchorElement>("a[data-testid='sidebar-link']"),
     );
   }
 
+  function edgeToggle() {
+    return document.body.querySelector<HTMLButtonElement>(
+      "[data-testid='sidebar-edge-toggle']",
+    );
+  }
+
+  it("defaults to a closed overlay so pages stay full-bleed", () => {
+    mountSidebar();
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='app-sidebar']")).toBeNull();
+    expect(edgeToggle()).toBeTruthy();
+    expect(edgeToggle()?.className).toContain("im-sidebar-edge-toggle");
+    expect(edgeToggle()?.getAttribute("aria-expanded")).toBe("false");
+    expect(edgeToggle()?.getAttribute("aria-label")).toBe("展開側欄");
+    expect(edgeToggle()?.hidden).toBe(false);
+    expect(edgeToggle()?.getAttribute("aria-hidden")).toBeNull();
+    expect(getLinks()).toHaveLength(0);
+  });
+
+  it("does not paint wallpaper on the overlay drawer", () => {
+    renderSidebar({ overlayOpen: true });
+    const overlay = document.body.querySelector("[data-testid='app-sidebar-overlay']");
+    const nav = document.body.querySelector("[data-testid='app-sidebar']");
+    expect(overlay?.className).toContain("im-sidebar-scrim");
+    expect(nav?.className).toContain("im-dialog-drawer");
+    expect(nav?.className).toContain("im-material-panel");
+    expect(nav?.className).toContain("im-sidebar-panel");
+    expect(nav?.className).not.toContain("im-shell-sidebar");
+    expect(nav?.className).not.toMatch(/background-image/);
+    expect(overlay?.className).not.toMatch(/background-image/);
+  });
+
+  it("does not blur the main canvas when the overlay is open", () => {
+    renderSidebar({ overlayOpen: true });
+    const overlay = document.body.querySelector("[data-testid='app-sidebar-overlay']");
+    const portal = overlay?.parentElement;
+    expect(portal?.className).toContain("im-sidebar-overlay");
+    expect(portal?.className).toContain("bg-black/10");
+    expect(portal?.className).not.toMatch(/backdrop-blur/);
+    expect(overlay?.className).toContain("im-sidebar-scrim");
+    expect(overlay?.className).not.toMatch(/backdrop-blur/);
+    expect(overlay?.className).not.toMatch(/backdrop-filter/);
+  });
+
+  it("opens a surface overlay from the edge chevron", () => {
+    mountSidebar();
+    act(() => {
+      edgeToggle()?.click();
+    });
+    const overlay = document.body.querySelector("[data-testid='app-sidebar-overlay']");
+    const nav = document.body.querySelector("[data-testid='app-sidebar']");
+    expect(overlay).toBeTruthy();
+    expect(nav).toBeTruthy();
+    expect(nav?.className).toContain("im-dialog-drawer");
+    expect(nav?.className).toContain("im-material-panel");
+    expect(nav?.className).toContain("im-sidebar-panel");
+    expect(nav?.className).not.toContain("im-shell-sidebar");
+    expect(edgeToggle()?.className).toContain("im-sidebar-edge-toggle");
+    expect(edgeToggle()?.getAttribute("aria-expanded")).toBe("true");
+    expect(edgeToggle()?.getAttribute("aria-label")).toBe("收起側欄");
+    expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("0");
+    expect(getLinks().length).toBeGreaterThan(0);
+  });
+
+  it("closes the overlay on scrim click and Escape", () => {
+    renderSidebar({ overlayOpen: true });
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeTruthy();
+
+    act(() => {
+      document.body
+        .querySelector<HTMLElement>("[data-testid='app-sidebar-overlay']")
+        ?.click();
+    });
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+
+    act(() => {
+      edgeToggle()?.click();
+    });
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeTruthy();
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
+    expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("1");
+  });
+
   it("renders 選單/紀錄 mode toggle without logo brand", () => {
     renderSidebar();
-    expect(container.querySelector("[data-testid='sidebar-rail-nav']")).toBeTruthy();
-    expect(container.querySelector("[data-testid='sidebar-rail-history']")).toBeTruthy();
-    expect(container.textContent).toContain("選單");
-    expect(container.textContent).toContain("紀錄");
-    expect(container.textContent).not.toMatch(/\bIM\b/);
-    expect(container.querySelector("[data-testid='sidebar-collapse']")).toBeNull();
+    expect(document.body.querySelector("[data-testid='sidebar-rail-nav']")).toBeTruthy();
+    expect(document.body.querySelector("[data-testid='sidebar-rail-history']")).toBeTruthy();
+    expect(document.body.textContent).toContain("選單");
+    expect(document.body.textContent).toContain("紀錄");
+    expect(document.body.textContent).not.toMatch(/\bIM\b/);
+    expect(document.body.querySelector("[data-testid='sidebar-collapse']")).toBeNull();
+    expect(edgeToggle()).toBeTruthy();
   });
 
   it("renders all navigation links with correct hrefs including 助手", () => {
@@ -104,6 +197,7 @@ describe("AppSidebar", () => {
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
       "/monitor",
+      "/worksets",
       "/tasks",
       "/schedule",
       "/items",
@@ -121,12 +215,12 @@ describe("AppSidebar", () => {
 
   it("renders visual nav group labels in zh-Hant", () => {
     renderSidebar();
-    expect(container.textContent).toContain("管理");
-    expect(container.textContent).toContain("情報");
-    expect(container.textContent).toContain("時間");
-    expect(container.textContent).toContain("互動");
+    expect(document.body.textContent).toContain("管理");
+    expect(document.body.textContent).toContain("情報");
+    expect(document.body.textContent).toContain("時間");
+    expect(document.body.textContent).toContain("互動");
     expect(
-      container.querySelectorAll("[data-testid='sidebar-nav-group']").length,
+      document.body.querySelectorAll("[data-testid='sidebar-nav-group']").length,
     ).toBeGreaterThanOrEqual(3);
   });
 
@@ -134,16 +228,17 @@ describe("AppSidebar", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     renderSidebar();
-    expect(container.textContent).toContain("Management");
-    expect(container.textContent).toContain("Intelligence");
-    expect(container.textContent).toContain("Time");
-    expect(container.textContent).toContain("Interact");
+    expect(document.body.textContent).toContain("Management");
+    expect(document.body.textContent).toContain("Intelligence");
+    expect(document.body.textContent).toContain("Time");
+    expect(document.body.textContent).toContain("Interact");
   });
 
   it("renders all navigation labels in zh-Hant", () => {
     renderSidebar();
     const expectedLabels = [
       "實時監控",
+      "工作集",
       getTasksPageLabel(),
       "物品",
       "來源",
@@ -157,7 +252,7 @@ describe("AppSidebar", () => {
       "帳戶",
     ];
     for (const label of expectedLabels) {
-      expect(container.textContent).toContain(label);
+      expect(document.body.textContent).toContain(label);
     }
   });
 
@@ -165,10 +260,11 @@ describe("AppSidebar", () => {
     setAppLocale("en");
     await i18n.changeLanguage("en");
     renderSidebar();
-    expect(container.textContent).toContain("Intel events");
-    expect(container.textContent).toContain("Live Monitor");
-    expect(container.textContent).toContain("Tasks");
-    expect(container.textContent).toContain("Account");
+    expect(document.body.textContent).toContain("Intel events");
+    expect(document.body.textContent).toContain("Live Monitor");
+    expect(document.body.textContent).toContain("Tasks");
+    expect(document.body.textContent).toContain("Worksets");
+    expect(document.body.textContent).toContain("Account");
   });
 
   it("marks the current route as active", () => {
@@ -221,14 +317,14 @@ describe("AppSidebar", () => {
 
   it("switches to history rail and persists rail mode", () => {
     renderSidebar();
-    const historyTab = container.querySelector<HTMLButtonElement>(
+    const historyTab = document.body.querySelector<HTMLButtonElement>(
       "[data-testid='sidebar-rail-history']",
     );
     expect(historyTab).toBeTruthy();
     act(() => {
       historyTab!.click();
     });
-    expect(container.querySelector("[data-testid='assistant-history-rail']")).toBeTruthy();
+    expect(document.body.querySelector("[data-testid='assistant-history-rail']")).toBeTruthy();
     expect(window.localStorage.getItem(SIDEBAR_RAIL_MODE_KEY)).toBe("history");
     expect(getLinks()).toHaveLength(0);
   });
@@ -239,6 +335,7 @@ describe("AppSidebar", () => {
     renderSidebar();
     const hrefs = getLinks().map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
+      "/worksets",
       "/tasks",
       "/schedule",
       "/items",
@@ -256,10 +353,13 @@ describe("AppSidebar", () => {
     expect(hrefs).toContain("/items");
   });
 
-  it("does not own collapsed localStorage writes from an inline collapse control", () => {
-    renderSidebar();
-    expect(container.querySelector("[data-testid='sidebar-collapse']")).toBeNull();
-    // Hook still applies width from existing key when present.
-    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, "1");
+  it("persists overlay open/closed via the edge chevron, not a layout rail", () => {
+    mountSidebar();
+    expect(document.body.querySelector("[data-testid='sidebar-collapse']")).toBeNull();
+    act(() => {
+      edgeToggle()?.click();
+    });
+    expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("0");
+    expect(document.documentElement.style.getPropertyValue("--app-sidebar-width")).toBe("");
   });
 });

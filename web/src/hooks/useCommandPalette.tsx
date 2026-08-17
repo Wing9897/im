@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
   buildTaskCommandPaletteItems,
+  buildWorksetCommandPaletteItems,
   filterCommandPaletteItems,
   runCommandPaletteAction,
   type CommandPaletteItem,
@@ -37,7 +38,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const { monitorMode, setMonitorMode, openInPages } = useMonitorMode();
-  const { tasks } = useTaskCatalog();
+  const { tasks, worksets } = useTaskCatalog();
   const { openCaption } = useAssistantQuick();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -56,14 +57,17 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
 
   const closeShortcutHelp = useCallback(() => setShortcutHelpOpen(false), []);
 
-  const taskItems = useMemo(
-    () => buildTaskCommandPaletteItems(tasks, i18n.t.bind(i18n)),
-    [tasks, i18n],
+  const extraItems = useMemo(
+    () => [
+      ...buildTaskCommandPaletteItems(tasks, i18n.t.bind(i18n)),
+      ...buildWorksetCommandPaletteItems(worksets ?? [], i18n.t.bind(i18n)),
+    ],
+    [tasks, worksets, i18n],
   );
 
   const filtered = useMemo(
-    () => filterCommandPaletteItems(query, taskItems, i18n.t.bind(i18n)),
-    [query, taskItems, i18n],
+    () => filterCommandPaletteItems(query, extraItems, i18n.t.bind(i18n)),
+    [query, extraItems, i18n],
   );
 
   const runItem = useCallback(

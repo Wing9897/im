@@ -1,4 +1,9 @@
-"""A2A LLM agent: natural-language in, single-shot result out (internal tool loop)."""
+"""A2A LLM agent: natural-language in, single-shot result out (internal tool loop).
+
+Master switch ``a2a_enabled`` (default on) rejects protocol traffic with 403.
+Independent of ``mcp_enabled``; shared ``mcp_cap_*`` groups and
+``worksets.external_enabled`` apply only when on.
+"""
 
 from __future__ import annotations
 
@@ -11,7 +16,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from server.agent.runtime import AgentRuntime
 from server.agent.timeouts import agent_wall_timeout_seconds
 from server.analyzer.llm_client import ConfigurableLlmClient
-from server.api.a2a_auth import require_full_access_key
+from server.api.a2a_auth import require_a2a_enabled, require_full_access_key
 from server.api.agent_errors import agent_http_error, agent_timeout_http_error
 from server.api.deps import get_db
 from server.api.schemas.requests import A2aAgentBody
@@ -24,7 +29,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/api/v1/a2a",
     tags=["a2a"],
-    dependencies=[Depends(require_full_access_key)],
+    dependencies=[Depends(require_a2a_enabled), Depends(require_full_access_key)],
 )
 
 

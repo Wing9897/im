@@ -9,7 +9,7 @@
   --texture-blend: soft-light;
   --texture-size: 140px 140px;
   --page-texture-blend: soft-light;
-  /* Photo BG (custom / focal) — painted into page + sidebar surfaces */
+  /* Photo BG (custom / focal) — painted into the page canvas */
   --theme-bg-image: none;
   /* Default wash at opacity 0.3 (bias −8pp → ~62%; floor 40%). */
   --theme-bg-wash-pct: 62%;
@@ -164,7 +164,7 @@ html[data-theme-mode="light"][data-theme-texture="grid"] {
 }
 
 /*
- * Page/sidebar atmosphere painted INTO the surface background.
+ * Page atmosphere painted INTO the canvas background.
  * body::after sat under opaque .im-page-canvas fills and was invisible.
  *
  * Fullscreen API promotes hosts off .im-page-canvas (UA black / opaque shell).
@@ -175,7 +175,8 @@ html[data-theme-mode="light"][data-theme-texture="grid"] {
 }
 
 /* Texture atmosphere only when no photo BG (custom upload or focal/Bing).
-   Missing attribute (pre-JS FOUC) counts as none. */
+   Missing attribute (pre-JS FOUC) counts as none. Overlay sidebar is an opaque
+   card — do not paint motif / photo onto the drawer. */
 html:not([data-theme-bg="custom"]):not([data-theme-bg="focal"]):not([data-theme-texture="none"]) :is(.im-page-canvas, .im-fs-atmosphere:fullscreen) {
   background-image:
     var(--texture-image),
@@ -189,25 +190,13 @@ html:not([data-theme-bg="custom"]):not([data-theme-bg="focal"]):not([data-theme-
   background-blend-mode: var(--page-texture-blend, soft-light), normal, normal;
 }
 
-html:not([data-theme-bg="custom"]):not([data-theme-bg="focal"]):not([data-theme-texture="none"]) .im-shell-sidebar {
-  background-image:
-    var(--texture-image),
-    linear-gradient(
-      var(--surface-sidebar, var(--surface-base)),
-      var(--surface-sidebar, var(--surface-base))
-    );
-  background-size: var(--texture-size, 140px 140px), auto;
-  background-repeat: repeat, no-repeat;
-  background-blend-mode: var(--page-texture-blend, soft-light), normal;
-}
-
 /*
- * Photo BG painted INTO page/sidebar (and fullscreen atmosphere hosts) via
+ * Photo BG painted INTO the page canvas (and fullscreen atmosphere hosts) via
  * --theme-bg-image (not a separate DOM layer). Wash % is inverse of the opacity
  * slider (higher opacity → lower wash → stronger photo). background-color stays
  * transparent so nested .im-page-shell regions and frosted panels can see the
- * shared photo plane. background-attachment:fixed keeps sidebar + canvas
- * aligned as one ambient layer.
+ * shared photo plane. Overlay sidebar is a translucent im-sidebar-panel — no
+ * duplicate background-image on the drawer.
  */
 html[data-theme-bg="custom"] :is(.im-page-canvas, .im-fs-atmosphere:fullscreen),
 html[data-theme-bg="focal"] :is(.im-page-canvas, .im-fs-atmosphere:fullscreen) {
@@ -233,26 +222,8 @@ html[data-theme-bg="focal"] :is(.im-page-canvas, .im-fs-atmosphere:fullscreen) {
   background-attachment: scroll, scroll, fixed;
 }
 
-/*
- * Sidebar keeps the shared photo plane, then chrome frost over it
- * (--surface-chrome + chrome blur) so nav text stays readable.
- */
-html[data-theme-bg="custom"] .im-shell-sidebar,
-html[data-theme-bg="focal"] .im-shell-sidebar {
-  background-color: transparent;
-  background-image:
-    linear-gradient(var(--surface-chrome), var(--surface-chrome)),
-    var(--theme-bg-image, none);
-  background-size: auto, cover;
-  background-position: center, center;
-  background-repeat: no-repeat, no-repeat;
-  background-attachment: scroll, fixed;
-  backdrop-filter: blur(var(--surface-blur-chrome));
-  -webkit-backdrop-filter: blur(var(--surface-blur-chrome));
-}
-
 /* Photo BG: clear shell cardboard + pause motif film on elevated cards
-   (page/sidebar atmosphere already skips texture; card ::after did not). */
+   (page canvas atmosphere already skips texture; card ::after did not). */
 html[data-theme-bg="custom"],
 html[data-theme-bg="focal"] {
   --texture-opacity: 0;

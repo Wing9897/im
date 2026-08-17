@@ -85,6 +85,42 @@ describe("SettingsDataPage", () => {
     expect(harness.container.querySelector('[aria-label="日曆／用戶事件保留天數"]')).toBeTruthy();
   });
 
+  it("keeps retention labels and day inputs on one row", async () => {
+    await harness.render(SettingsDataPage);
+
+    const input = harness.container.querySelector<HTMLInputElement>(
+      '[aria-label="實時監控保留天數"]',
+    );
+    expect(input).toBeTruthy();
+    expect(input?.className).toContain("w-24");
+    expect(input?.className).toContain("max-w-24");
+    expect(input?.className).toContain("shrink-0");
+    const row = input?.parentElement;
+    expect(row?.className).toContain("flex");
+    expect(row?.className).toContain("items-center");
+    expect(row?.className).not.toContain("flex-col");
+    const label = row?.querySelector("label");
+    expect(label?.textContent).toBe("實時監控保留天數");
+    expect(label?.className).toContain("flex-1");
+    expect(label?.className).toContain("min-w-0");
+    expect(row?.contains(input!)).toBe(true);
+    expect(row?.querySelector("p")).toBeNull();
+  });
+
+  it("places retention help under the row, not in the label column", async () => {
+    await harness.render(SettingsDataPage);
+
+    const input = harness.container.querySelector<HTMLInputElement>(
+      '[aria-label="分析結果（情報事件）保留天數"]',
+    );
+    const row = input?.parentElement;
+    const block = row?.parentElement;
+    const help = block?.querySelector("p");
+    expect(help).toBeTruthy();
+    expect(row?.contains(help!)).toBe(false);
+    expect(block?.contains(help!)).toBe(true);
+  });
+
   it('renders the "立即清理" button', async () => {
     await harness.render(SettingsDataPage);
     expect(harness.container.querySelector('[data-testid="retention-run-button"]')).toBeTruthy();

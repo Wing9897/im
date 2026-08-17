@@ -62,6 +62,7 @@ _SETTINGS_KEYS: dict[str, str] = {
     "userAvatar": "user_avatar",
     "userBackground": "user_background",
     "mcpEnabled": "mcp_enabled",
+    "a2aEnabled": "a2a_enabled",
     **MCP_CAPABILITY_SETTINGS_KEYS,
 }
 
@@ -77,6 +78,7 @@ _BOOL_KEYS = {
     "analysisTraceVerbose",
     "autoPauseOnRetriesExhausted",
     "mcpEnabled",
+    "a2aEnabled",
     *MCP_CAPABILITY_WIRE_KEYS,
 }
 

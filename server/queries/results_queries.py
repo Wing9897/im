@@ -44,12 +44,15 @@ async def query_analysis_events(
     include_total: bool = True,
     task_ids: list[str] | None = None,
     require_include_in_timeline: bool = False,
+    workset_ids: list[str] | None = None,
 ) -> tuple[list[dict[str, Any]], int]:
     """Fetch current-version events and optionally their total count.
 
     ``task_ids`` (when not None) wins over single ``task_id``. An empty list
     matches nothing. ``require_include_in_timeline`` excludes tasks that opted
     out of time planning (calendar / timeline / board timed merge).
+    ``workset_ids`` (when not None) restricts to tasks in those worksets;
+    an empty list matches nothing.
     """
     join = task_version_join("ae")
     messages_join = "LEFT JOIN messages m ON m.id = ae.source_message_id"
@@ -69,6 +72,12 @@ async def query_analysis_events(
     elif task_id:
         clauses.append("ae.task_id = ?")
         params.append(task_id)
+    if workset_ids is not None:
+        if not workset_ids:
+            return [], 0
+        placeholders = ", ".join("?" for _ in workset_ids)
+        clauses.append(f"at.workset_id IN ({placeholders})")
+        params.extend(workset_ids)
     if require_include_in_timeline:
         clauses.append("at.include_in_timeline = 1")
     if search:

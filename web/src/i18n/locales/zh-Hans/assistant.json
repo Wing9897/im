@@ -111,6 +111,7 @@
     "scheduleRruleNotString": "AI 回应格式错误：scheduleRrule 必须是字符串",
     "analysisModeInvalid": "AI 回应格式错误：analysisMode 必须是以下值之一: {values}",
     "channelIdsNotArray": "AI 回应格式错误：channelIds 必须是阵列",
-    "includeInTimelineNotBoolean": "AI 回应格式错误：includeInTimeline 必须是布尔值"
+    "includeInTimelineNotBoolean": "AI 回应格式错误：includeInTimeline 必须是布尔值",
+    "outputAnalysisEventsNotBoolean": "AI 回应格式错误：outputAnalysisEvents 必须是布尔值"
   }
 }

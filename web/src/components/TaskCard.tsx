@@ -20,6 +20,7 @@ import { colorStatusDotStyle } from "../styles/statusDot";
 import { isAgentCalendarTask } from "../domain/tasks/isAgentCalendarTask";
 import type { AnalysisTask } from "../types/tasks";
 import type { TaskCardStats } from "../types/dashboard";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 
 export interface TaskCardProps {
   task: AnalysisTask;
@@ -53,7 +54,7 @@ export const TaskCard = React.memo(function TaskCard({
   const employeeName = getTaskEmployeeDisplayName(employeeId);
   const queuedMessageCount = stats.queuedMessageCount;
   const worksetName =
-    task.worksetId != null ? worksetNameById.get(task.worksetId) ?? null : null;
+    worksetNameById.get(task.worksetId?.trim() || SYSTEM_WORKSET_ID) ?? null;
 
   const handleToggle = useCallback(() => {
     setToggling(true);

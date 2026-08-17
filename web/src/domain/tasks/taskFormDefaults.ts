@@ -4,12 +4,15 @@ import type {
   TaskDraftPayload,
   TaskFormState,
 } from "../../types";
+import { normalizeNotifyPref } from "../notify/notifyPref";
 import { presetToTriggerRrule, triggerRruleToPreset } from "./triggerSchedule";
 import { safeArray } from "../../utils/nullGuards";
 import {
   scheduleFieldsFromTask,
   withSyncedTriggerSchedule,
 } from "./taskFormSchedule";
+import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import { defaultOutputAnalysisEvents } from "./analysisModeCapabilities";
 
 /** Applies a partial task config onto an existing form state (AI preset / assistant). */
 export function applyConfigToFormState(
@@ -108,9 +111,17 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
     analysisMode: formState.analysisMode,
     scheduleRrule,
     worksetId: formState.worksetId,
+    notifyPref: formState.notifyPref ?? "follow",
+    outputAnalysisEvents: formState.outputAnalysisEvents,
   } satisfies Pick<
     TaskConfig,
-    "name" | "description" | "analysisMode" | "scheduleRrule" | "worksetId"
+    | "name"
+    | "description"
+    | "analysisMode"
+    | "scheduleRrule"
+    | "worksetId"
+    | "notifyPref"
+    | "outputAnalysisEvents"
   >;
 
   const messageGate =
@@ -139,7 +150,6 @@ export function formStateToTaskConfig(formState: TaskFormState): TaskConfig {
           capReadAnalysisEvents: formState.capReadAnalysisEvents,
           capReadItems: formState.capReadItems,
           outputCalendar: formState.outputCalendar,
-          outputAnalysisEvents: formState.outputAnalysisEvents,
         }
       : {}),
     ...(formState.analysisMode === "intel_event" ||
@@ -190,8 +200,9 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
       task.analysisStrategyMode === "aggressive"
         ? task.analysisStrategyMode
         : null,
-    worksetId: task.worksetId ?? null,
+    worksetId: task.worksetId || SYSTEM_WORKSET_ID,
     llmProfileId: task.llmProfileId ?? "",
+    notifyPref: normalizeNotifyPref(task.notifyPref),
     triggerMode:
       task.triggerMode === "message_cursor" ||
       task.triggerMode === "message_threshold" ||
@@ -205,7 +216,10 @@ export function analysisTaskToFormState(task: AnalysisTask): TaskFormState {
     capReadAnalysisEvents: task.capReadAnalysisEvents ?? true,
     capReadItems: task.capReadItems ?? true,
     outputCalendar: task.outputCalendar ?? false,
-    outputAnalysisEvents: task.outputAnalysisEvents ?? false,
+    outputAnalysisEvents: defaultOutputAnalysisEvents(
+      task.analysisMode,
+      task.outputAnalysisEvents,
+    ),
   };
 }
 
@@ -242,8 +256,9 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
       config.analysisStrategyMode === "aggressive"
         ? config.analysisStrategyMode
         : null,
-    worksetId: config.worksetId ?? null,
+    worksetId: config.worksetId || SYSTEM_WORKSET_ID,
     llmProfileId: config.llmProfileId ?? "",
+    notifyPref: normalizeNotifyPref(config.notifyPref),
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
     triggerMode: config.triggerMode ?? "schedule",
@@ -254,7 +269,10 @@ function taskConfigToPersistedTask(config: TaskConfig): AnalysisTask {
     capReadAnalysisEvents: config.capReadAnalysisEvents ?? true,
     capReadItems: config.capReadItems ?? true,
     outputCalendar: config.outputCalendar ?? false,
-    outputAnalysisEvents: config.outputAnalysisEvents ?? false,
+    outputAnalysisEvents: defaultOutputAnalysisEvents(
+      config.analysisMode,
+      config.outputAnalysisEvents,
+    ),
   };
 }
 
@@ -277,5 +295,6 @@ export function buildCurrentTaskPayload(formState: TaskFormState): TaskDraftPayl
     analysisTimeRange: formState.analysisTimeRange,
     channelIds: formState.channelIds,
     includeInTimeline: formState.includeInTimeline,
+    outputAnalysisEvents: formState.outputAnalysisEvents,
   };
 }

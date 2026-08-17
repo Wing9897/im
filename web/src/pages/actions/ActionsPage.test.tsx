@@ -53,6 +53,9 @@ vi.mock("../../context/ToastContext", async () =>
   (await import("../../test/context-mocks")).toastContextModuleMock());
 vi.mock("../../context/TaskCatalogContext", async () =>
   (await import("../../test/context-mocks")).taskCatalogModuleMock());
+vi.mock("./components/LocalNotifyPanel", () => ({
+  LocalNotifyPanel: () => createElement("div", { "data-testid": "local-notify-panel" }),
+}));
 
 import { ActionsPage } from "./ActionsPage";
 
@@ -87,10 +90,22 @@ describe("ActionsPage smoke test", () => {
     expect(harness.container.textContent).toContain("尚未設定任何通知");
     // The "新增通知" button should be present on the default channels tab
     expect(harness.container.textContent).toContain("新增通知");
-    // Workspace tabs separate channels / voice / history
+    // Workspace tabs separate types / notify / history
     expect(harness.container.textContent).toContain("外發通知");
-    expect(harness.container.textContent).toContain("語音提醒");
+    expect(harness.container.textContent).not.toContain("語音提醒");
     expect(harness.container.textContent).toContain("觸發紀錄");
+  });
+
+  it("redirects legacy ?tab=voice to the notify panel", async () => {
+    function VoiceTabRedirect() {
+      return createElement(
+        MemoryRouter,
+        { initialEntries: ["/actions?tab=voice"] },
+        createElement(ActionsPage),
+      );
+    }
+    await harness.render(VoiceTabRedirect);
+    expect(harness.container.querySelector('[data-testid="local-notify-panel"]')).not.toBeNull();
   });
 
   // Task names come from the shared TaskCatalogContext, so the page itself only

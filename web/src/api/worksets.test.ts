@@ -8,6 +8,7 @@ import {
   createWorkset,
   getWorkset,
   renameWorkset,
+  updateWorkset,
   deleteWorkset,
 } from "./worksets";
 
@@ -70,6 +71,21 @@ describe("worksets API", () => {
       const result = await getWorkset("w 1");
 
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/worksets/w%201");
+      expect(result).toEqual(response);
+    });
+  });
+
+  describe("updateWorkset", () => {
+    it("puts notifyEnabled without renaming", async () => {
+      const response = { id: "w-1", name: "Ops", notifyEnabled: false };
+      vi.mocked(apiClient.put).mockResolvedValue(response);
+
+      const result = await updateWorkset("w-1", { notifyEnabled: false, externalEnabled: false });
+
+      expect(apiClient.put).toHaveBeenCalledWith("/api/v1/worksets/w-1", {
+        notifyEnabled: false,
+        externalEnabled: false,
+      });
       expect(result).toEqual(response);
     });
   });

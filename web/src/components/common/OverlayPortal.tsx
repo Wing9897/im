@@ -11,6 +11,11 @@ interface OverlayPortalProps {
   children: ReactNode;
   /** Extra classes merged onto the overlay shell. */
   className?: string;
+  /**
+   * Viewport scrim. Default `frosted` dims + blurs the canvas (dialogs).
+   * `light` is a 10% black dim with no blur so the main screen stays sharp.
+   */
+  scrim?: "frosted" | "light";
   onOverlayClick?: () => void;
   testId?: string;
   /** When true, sets document.body.style.overflow = hidden while mounted. */
@@ -36,6 +41,7 @@ interface OverlayPortalProps {
 export function OverlayPortal({
   children,
   className,
+  scrim = "frosted",
   onOverlayClick,
   testId,
   lockBodyScroll = false,
@@ -77,13 +83,18 @@ export function OverlayPortal({
     : exiting
       ? { pointerEvents: "auto" }
       : undefined;
+  const scrimClass =
+    scrim === "light"
+      ? "im-sidebar-overlay bg-black/10"
+      : "bg-[color-mix(in_srgb,var(--surface-base)_55%,transparent)] backdrop-blur-[8px]";
 
   return createPortal(
     <div
       ref={rootRef}
       className={[
         motionClass,
-        "fixed inset-0 z-[2000] flex items-center justify-center bg-[color-mix(in_srgb,var(--surface-base)_55%,transparent)] backdrop-blur-[8px]",
+        "fixed inset-0 z-[2000] flex items-center justify-center",
+        scrimClass,
         className ?? "",
       ]
         .filter(Boolean)

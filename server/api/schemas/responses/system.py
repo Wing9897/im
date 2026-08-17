@@ -181,6 +181,7 @@ class SystemSettingsSnapshot(BaseModel):
     userAvatar: str
     userBackground: str
     mcpEnabled: bool
+    a2aEnabled: bool
     mcpCapCalendarRead: bool
     mcpCapCalendarWrite: bool
     mcpCapMessagesSearch: bool

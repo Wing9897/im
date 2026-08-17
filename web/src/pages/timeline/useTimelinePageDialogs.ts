@@ -30,6 +30,7 @@ import {
 import type { TimelineItem } from "../../types";
 import type { AnalysisTask } from "../../types/tasks";
 import type { UserEventFormValues } from "../../components/calendar/UserEventDialog";
+import { handleCommandError } from "../../utils/errors";
 
 export type PendingTimelineConfirm =
   | { kind: "dismiss"; event: TimelineItem }
@@ -158,6 +159,7 @@ export function useTimelinePageDialogs({
             body: values.body,
             rrule: values.rrule,
             itemId,
+            notifyPref: values.notifyPref,
           });
           showToast(t("messages.recurringCreated"), "success");
         } else if (dialogMode === "create") {
@@ -172,6 +174,7 @@ export function useTimelinePageDialogs({
             itemId,
             worksetId,
             kind: "normal",
+            notifyPref: values.notifyPref,
           });
         } else if (editingEvent) {
           await updateUserEvent(editingEvent.id, {
@@ -185,14 +188,16 @@ export function useTimelinePageDialogs({
             itemId,
             worksetId,
             // Omit kind/amount — preserve special kinds; title-only edits stay non-finance.
+            notifyPref: values.notifyPref,
           });
         }
+        await refreshEvents();
         setDialogOpen(false);
         setEditingEvent(null);
         setCreateInitial(null);
-        await refreshEvents();
       } catch (error) {
-        setDialogError(error instanceof Error ? error.message : t("messages.saveFailed"));
+        const message = handleCommandError(error, showToast) || t("messages.saveFailed");
+        setDialogError(message);
       } finally {
         setDialogBusy(false);
       }
@@ -226,7 +231,7 @@ export function useTimelinePageDialogs({
     } catch (error) {
       const fallback =
         kind === "dismiss" ? t("messages.dismissFailed") : t("messages.restoreFailed");
-      showToast(error instanceof Error ? error.message : fallback, "error");
+      showToast(handleCommandError(error) || fallback, "error");
     } finally {
       setUserEventActionBusy(false);
     }
@@ -252,7 +257,7 @@ export function useTimelinePageDialogs({
         }
       } catch (error) {
         showToast(
-          error instanceof Error ? error.message : t("messages.importantFailed"),
+          handleCommandError(error) || t("messages.importantFailed"),
           "error",
         );
       } finally {

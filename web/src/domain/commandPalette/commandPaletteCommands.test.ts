@@ -3,6 +3,7 @@ import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
 import {
   buildTaskCommandPaletteItems,
+  buildWorksetCommandPaletteItems,
   filterCommandPaletteItems,
 } from "./commandPaletteCommands";
 import type { AnalysisTask } from "../../types";
@@ -54,8 +55,10 @@ describe("commandPaletteCommands", () => {
   });
 
   it("includes actions voice and history tab shortcuts", () => {
-    const voice = filterCommandPaletteItems("語音提醒");
-    expect(voice.some((item) => item.to === "/actions?tab=voice")).toBe(true);
+    const voice = filterCommandPaletteItems("本機通知");
+    expect(voice.some((item) => item.to === "/actions?tab=notify")).toBe(true);
+    const legacyVoice = filterCommandPaletteItems("語音提醒");
+    expect(legacyVoice.some((item) => item.to === "/actions?tab=notify")).toBe(true);
     const history = filterCommandPaletteItems("觸發");
     expect(history.some((item) => item.to === "/actions?tab=history")).toBe(true);
   });
@@ -67,6 +70,33 @@ describe("commandPaletteCommands", () => {
     );
     const canvas = filterCommandPaletteItems("畫布");
     expect(canvas.some((item) => item.id === "board")).toBe(true);
+  });
+
+  it("includes the worksets catalog in navigation", () => {
+    const items = filterCommandPaletteItems("工作集");
+    expect(items.some((item) => item.to === "/worksets")).toBe(true);
+  });
+
+  it("opens a workset contents page", () => {
+    const items = buildWorksetCommandPaletteItems([
+      {
+        id: "ws-1",
+        name: "Ops",
+        isSystem: false,
+        notifyEnabled: true,
+        externalEnabled: true,
+        createdAt: "",
+        updatedAt: "",
+      },
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      id: "workset-ws-1",
+      label: "Ops",
+      to: "/worksets/ws-1",
+      group: "工作集",
+    });
+    expect(items[0]?.to).not.toContain("tab=");
   });
 
   it("opens the message wall through the monitor route", () => {
@@ -88,9 +118,22 @@ describe("commandPaletteCommands", () => {
     const voice = filterCommandPaletteItems("語音");
     expect(voice.some((item) => item.to === "/ai/voice")).toBe(true);
     const api = filterCommandPaletteItems("API");
-    expect(api.some((item) => item.to === "/settings/api")).toBe(true);
+    expect(api.some((item) => item.to === "/settings/integrations?tab=webhook")).toBe(true);
+    const deeplink = filterCommandPaletteItems("deep link");
+    expect(deeplink.some((item) => item.to === "/settings/integrations?tab=deeplink")).toBe(true);
+    expect(deeplink.some((item) => item.label === "日曆連結")).toBe(true);
+    const legacyDeeplink = filterCommandPaletteItems("Desktop 日曆");
+    expect(legacyDeeplink.some((item) => item.to === "/settings/integrations?tab=deeplink")).toBe(
+      true,
+    );
+    expect(legacyDeeplink.some((item) => item.label === "日曆連結")).toBe(true);
     const mcp = filterCommandPaletteItems("MCP");
-    expect(mcp.some((item) => item.to === "/settings/mcp")).toBe(true);
+    expect(mcp.some((item) => item.to === "/settings/integrations?tab=mcp")).toBe(true);
+    expect(mcp.some((item) => item.to === "/settings/mcp")).toBe(false);
+    expect(mcp.some((item) => item.label === "外部接口 · MCP")).toBe(true);
+    const integrations = filterCommandPaletteItems("外部接口");
+    expect(integrations.some((item) => item.to === "/settings/integrations?tab=webhook")).toBe(true);
+    expect(integrations.some((item) => item.to === "/settings/api")).toBe(false);
   });
 
   it("includes MQTT and Email source shortcuts", () => {

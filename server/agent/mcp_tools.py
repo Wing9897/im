@@ -2,7 +2,9 @@
 
 No ``web.search`` / ``tasks.consult_advisor``. Calendar writes stamp
 ``user_events.origin = mcp``. Capability groups (system_config) filter
-``list_tools`` / ``call_tool``; default all enabled. Master switch
+``list_tools`` / ``call_tool``; default all enabled. Workset visibility
+comes from ``worksets.external_enabled`` and filters intelligence／messages／items
+data; empty (all off) fails closed. Master switch
 ``mcp_enabled`` gates the HTTP control plane (see routes).
 """
 
@@ -29,6 +31,7 @@ from server.domain.mcp_capabilities import (
     MCP_CAPABILITY_CONFIG_KEYS,
     MCP_CAPABILITY_IDS,
 )
+from server.queries.worksets_queries import fetch_external_enabled_workset_ids
 
 #: Exactly the base tool set (calendar + messages + intelligence + items).
 MCP_TOOL_ALLOWLIST = frozenset(BASE_TOOL_HANDLERS)
@@ -75,6 +78,17 @@ class McpCapabilities:
 
     def enabled(self, capability: str) -> bool:
         return bool(getattr(self, capability, False))
+
+    def as_tool_context(self) -> dict[str, bool]:
+        """Flags consumed by ``execute_tool`` / ``AgentChannel`` overlays."""
+        return {
+            "calendar_read_enabled": self.calendar_read,
+            "calendar_writes_enabled": self.calendar_write,
+            "messages_search_enabled": self.messages_search,
+            "analysis_events_read_enabled": self.intelligence_search,
+            "items_read_enabled": self.items_read,
+            "items_writes_enabled": self.items_write,
+        }
 
 
 MCP_CAPABILITIES_DEFAULT = McpCapabilities()
@@ -179,6 +193,7 @@ async def execute_mcp_tool(
     args = dict(arguments or {})
     if name in MCP_CONFIRM_DELETE_TOOLS and args.get("confirm") is not True:
         return {"error": MCP_CONFIRM_REQUIRED_ERROR}
+    allowed_workset_ids = await fetch_external_enabled_workset_ids(db)
     return await execute_tool(
         db,
         name,
@@ -186,10 +201,7 @@ async def execute_mcp_tool(
         context={
             "user_event_origin": "mcp",
             "broadcaster": broadcaster,
-            "calendar_writes_enabled": active.calendar_write,
-            "calendar_read_enabled": active.calendar_read,
-            "analysis_events_read_enabled": active.intelligence_search,
-            "items_read_enabled": active.items_read,
-            "items_writes_enabled": active.items_write,
+            "allowed_workset_ids": allowed_workset_ids,
+            **active.as_tool_context(),
         },
     )

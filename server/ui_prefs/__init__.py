@@ -1,4 +1,4 @@
-"""SQLite-backed UI prefs (ops board + voice reminder + assistant + timeline).
+"""SQLite-backed UI prefs (ops board + local notify + assistant + timeline).
 
 Global and per-device prefs are JSON TEXT rows in ``ui_prefs``. Static keys are
 listed in ``UI_PREF_KEYS``; assistant sessions use ``assistant_sessions:<device>``.
@@ -29,9 +29,9 @@ from server.ui_prefs.common import (
     KEY_OPS_BOARD_LAYOUT,
     KEY_OPS_BOARD_WIDGET_STATE,
     KEY_TIMELINE_ANNOTATIONS,
-    KEY_VOICE_REMINDER_FIRED,
-    KEY_VOICE_REMINDER_SETTINGS,
-    KEY_VOICE_REMINDER_TRIGGER_HISTORY,
+    KEY_NOTIFY_FIRED,
+    KEY_NOTIFY_SETTINGS,
+    KEY_NOTIFY_TRIGGER_HISTORY,
     MAX_ASSISTANT_MESSAGE_CONTENT_CHARS,
     MAX_ASSISTANT_SESSIONS,
     MAX_ASSISTANT_SESSIONS_JSON_CHARS,
@@ -46,7 +46,7 @@ from server.ui_prefs.timeline import (
     put_timeline_annotations,
     sanitize_timeline_annotations,
 )
-from server.ui_prefs.voice import (
+from server.ui_prefs.notify import (
     claim_voice_fired,
     get_voice_fired,
     get_voice_history,
@@ -65,9 +65,9 @@ __all__ = [
     "KEY_OPS_BOARD_LAYOUT",
     "KEY_OPS_BOARD_WIDGET_STATE",
     "KEY_TIMELINE_ANNOTATIONS",
-    "KEY_VOICE_REMINDER_FIRED",
-    "KEY_VOICE_REMINDER_SETTINGS",
-    "KEY_VOICE_REMINDER_TRIGGER_HISTORY",
+    "KEY_NOTIFY_FIRED",
+    "KEY_NOTIFY_SETTINGS",
+    "KEY_NOTIFY_TRIGGER_HISTORY",
     "MAX_ASSISTANT_MESSAGE_CONTENT_CHARS",
     "MAX_ASSISTANT_SESSIONS",
     "MAX_ASSISTANT_SESSIONS_JSON_CHARS",

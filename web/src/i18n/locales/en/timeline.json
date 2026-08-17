@@ -178,10 +178,10 @@
     "parentItemNone": "None (standalone)",
     "parentItemHint": "Optional. Prefer adding linked calendars from the Items page when they belong to an inventory item.",
     "parentItemLockedHint": "Scoped to this item (opened from Items or a deep link).",
-    "remindBeforeDays": "Remind before (days)",
-    "remindBeforeDaysAria": "Days before start to remind",
+    "remindBeforeDays": "Days ahead",
+    "remindBeforeDaysAria": "Days before start to show",
     "remindBeforeDaysPlaceholder": "e.g. 1",
-    "remindBeforeDaysHint": "Optional. N days before start; leave empty for no remind.",
+    "remindBeforeDaysHint": "Optional. Advance by N days before start; leave empty for no lead time.",
     "allDay": "All day",
     "durationPresets": "Quick days",
     "daysPreset_one": "{count} day",
@@ -212,7 +212,7 @@
       "startRequired": "Please enter a start time",
       "startInvalid": "Invalid start time format",
       "endInvalid": "Invalid end time format",
-      "remindInvalid": "Remind-before days must be 0 or a positive integer",
+      "remindInvalid": "Days ahead must be 0 or a positive integer",
       "rruleRequired": "Please set a recurrence rule"
     }
   },

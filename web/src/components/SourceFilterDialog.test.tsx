@@ -21,7 +21,7 @@ const WORKSETS = [
 const EXPAND_TASKS = [
   { id: "task-1", name: "First task", worksetId: "ws-1" },
   { id: "task-2", name: "Second task", worksetId: "ws-1" },
-  { id: "task-3", name: "Third task", worksetId: null },
+  { id: "task-3", name: "Third task", worksetId: "__user__" },
 ];
 
 describe("SourceFilterDialog", () => {
@@ -78,25 +78,24 @@ describe("SourceFilterDialog", () => {
     expect(document.querySelector('[data-testid="source-filter-dialog"]')).toBeTruthy();
   });
 
-  it("shows workset rows; unassigned tasks nest under expandable group", () => {
+  it("shows workset rows; 一般 members nest under expandable group", () => {
     renderDialog();
     openDialog();
     expect(document.querySelector('[data-testid="board-workset-filter-__user__"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeTruthy();
-    expect(document.querySelector('[data-testid="board-workset-filter-__unassigned__"]')).toBeTruthy();
-    // Nested until expanded.
+    expect(document.querySelector('[data-testid="board-workset-filter-__unassigned__"]')).toBeNull();
     expect(document.querySelector('[data-testid="board-source-filter-task-3"]')).toBeNull();
     act(() => {
       (
         document.querySelector(
-          '[data-testid="board-workset-expand-__unassigned__"]',
+          '[data-testid="board-workset-expand-__user__"]',
         ) as HTMLButtonElement
       ).click();
     });
     expect(document.querySelector('[data-testid="board-source-filter-task-3"]')).toBeTruthy();
   });
 
-  it("expands workset children and allows co-selecting workset + unassigned task", () => {
+  it("expands workset children and allows co-selecting a workset plus a 一般 task", () => {
     const onChange = renderDialog({ taskIds: [], worksetIds: [] });
     openDialog();
     const expand = document.querySelector(
@@ -110,13 +109,13 @@ describe("SourceFilterDialog", () => {
     act(() => {
       (
         document.querySelector(
-          '[data-testid="board-workset-expand-__unassigned__"]',
+          '[data-testid="board-workset-expand-__user__"]',
         ) as HTMLButtonElement
       ).click();
     });
 
     act(() => {
-      (document.querySelector('[data-testid="board-workset-filter-__user__"]') as HTMLInputElement).click();
+      (document.querySelector('[data-testid="board-workset-filter-ws-1"]') as HTMLInputElement).click();
       (document.querySelector('[data-testid="board-source-filter-task-3"]') as HTMLInputElement).click();
     });
     act(() => {
@@ -126,7 +125,7 @@ describe("SourceFilterDialog", () => {
     });
     expect(onChange).toHaveBeenCalledWith({
       taskIds: ["task-3"],
-      worksetIds: ["__user__"],
+      worksetIds: ["ws-1"],
     });
   });
 
@@ -169,14 +168,14 @@ describe("SourceFilterDialog", () => {
     });
     openDialog();
     const dialog = document.querySelector('[data-testid="source-filter-dialog"]')!;
-    const expandUnassigned = document.querySelector(
-      '[data-testid="board-workset-expand-__unassigned__"]',
+    const expandGeneral = document.querySelector(
+      '[data-testid="board-workset-expand-__user__"]',
     ) as HTMLButtonElement | null;
-    expect(expandUnassigned).toBeTruthy();
+    expect(expandGeneral).toBeTruthy();
     // Hint uses ▸ (not legacy ▶ / word "chevron"); jsdom may normalize glyph text.
     expect(dialog.textContent).not.toContain("▶");
     act(() => {
-      expandUnassigned!.click();
+      expandGeneral!.click();
     });
     const labeled = document.querySelector(`[data-testid="board-source-filter-${hex}"]`)!
       .closest("label")!;
@@ -208,7 +207,7 @@ describe("SourceFilterDialog", () => {
     expect(document.querySelector('[data-testid="board-source-filter-task-1"]')).toBeNull();
     expect(document.querySelector('[data-testid="board-workset-filter-ws-1"]')).toBeNull();
     expect(
-      document.querySelector('[data-testid="board-workset-filter-__unassigned__"]'),
+      document.querySelector('[data-testid="board-workset-filter-__user__"]'),
     ).toBeTruthy();
   });
 

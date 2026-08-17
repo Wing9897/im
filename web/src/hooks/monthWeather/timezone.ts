@@ -1,3 +1,6 @@
+/** Stored weatherLocation value meaning “resolve from the OS timezone”. */
+export const SYSTEM_WEATHER_LOCATION = "system";
+
 const SYSTEM_TIMEZONE_LOCATIONS: Record<string, string> = {
   "Asia/Taipei": "臺北",
   "Asia/Hong_Kong": "香港",
@@ -23,4 +26,16 @@ export function systemLocationFromTimezone(timezone: string): string {
 
 export function systemLocation(): string {
   return systemLocationFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+}
+
+/** City string actually used for weather: OS mapping when following system, else the saved name. */
+export function resolveWeatherLocation(
+  weatherLocation: string,
+  timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone,
+): string {
+  const value = weatherLocation.trim();
+  if (value === SYSTEM_WEATHER_LOCATION) {
+    return systemLocationFromTimezone(timeZone);
+  }
+  return value;
 }

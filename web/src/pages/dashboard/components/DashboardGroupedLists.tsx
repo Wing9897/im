@@ -1,13 +1,13 @@
 /**
- * DashboardViewer task list rendering — flat grid ("by_task") and
- * workset-grouped sections ("by_workset").
+ * DashboardViewer task list rendering — the /tasks flat grid and the
+ * /worksets catalog (workset cards plus member tasks).
  */
 
 import type { CSSProperties } from "react";
 import type { TFunction } from "i18next";
 import type { NavigateFunction } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { CreateCard, sectionTitleClass, captionClass } from "../../../components/ui";
+import { CreateCard, sectionTitleClass } from "../../../components/ui";
 import { TaskCard } from "../../../components/TaskCard";
 import { TaskGrid } from "../../../components/TaskGrid";
 import { WorksetSummaryCard } from "../../../components/WorksetSummaryCard";
@@ -94,7 +94,7 @@ function CreateWorksetTile({
   );
 }
 
-/** Flat grid of visible tasks ("by_task" grouping view), with the trailing create tile. */
+/** Flat grid of visible tasks on /tasks, with the trailing create tile. */
 export function DashboardByTaskList({
   tasks,
   navigate,
@@ -151,16 +151,11 @@ export function DashboardByWorksetList({
   onDeleteWorkset: (id: string, name: string) => void;
   onCreateWorkset: () => void;
 }) {
-  const worksetCards = groups.filter((group) => group.key !== "__unassigned__");
-  const unassigned = groups.find((group) => group.key === "__unassigned__");
-
   return (
     <div className="flex flex-col gap-lg" data-testid="dashboard-by-workset">
       <section aria-label={t("workset:viewByWorkset")}>
-        <h2 className={`${sectionTitleClass} mb-sm`}>{t("workset:catalogTitle")}</h2>
-        <p className={`${captionClass} mb-md`}>{t("workset:catalogSubtitle")}</p>
         <TaskGrid>
-          {worksetCards.map((group) => (
+          {groups.map((group) => (
             <WorksetSummaryCard
               key={group.key}
               id={group.key}
@@ -185,7 +180,7 @@ export function DashboardByWorksetList({
         </TaskGrid>
       </section>
 
-      {worksetCards.map((group) =>
+      {groups.map((group) =>
         group.tasks.length > 0 ? (
           <section key={`tasks-${group.key}`} aria-label={group.title}>
             <h2 className={`${sectionTitleClass} mb-sm`}>
@@ -199,18 +194,6 @@ export function DashboardByWorksetList({
           </section>
         ) : null,
       )}
-
-      {unassigned && unassigned.tasks.length > 0 ? (
-        <section aria-label={unassigned.title}>
-          <h2 className={`${sectionTitleClass} mb-sm`}>{unassigned.title}</h2>
-          <p className={`${captionClass} mb-md`}>{t("workset:unassignedHint")}</p>
-          <TaskGrid>
-            {unassigned.tasks.map((task, index) => (
-              <TaskCardTile key={task.id} task={task} index={index} {...actions} />
-            ))}
-          </TaskGrid>
-        </section>
-      ) : null}
     </div>
   );
 }

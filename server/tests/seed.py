@@ -315,7 +315,7 @@ async def seed_database(db: Any) -> None:
             "cap_read_analysis_events": 1,
             "cap_read_items": 1,
             "output_calendar": 0,
-            "output_analysis_events": 0,
+            "output_analysis_events": 1,
         }
         await db.execute(
             "INSERT INTO analysis_tasks (id, name, description, prompt_template, "

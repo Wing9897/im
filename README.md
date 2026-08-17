@@ -11,7 +11,7 @@
 - **工作集** — 任務／事件／物品的歸類標籤（篩選與歸屬維度），不是主導航重做
 - **專案調和／網蒐 Agent** — 統一 `analysis_mode=agent`（觸發＋工具／輸出政策；詳情 `/tasks/:taskId/agent`；舊 `/project` 路徑已退役）
 - **情報與儀表** — Monitor、Timeline、Leaderboard、Intelligence、可自由排版的畫布
-- **助手與提醒** — Agent 自然語言交互；語音提醒掃描情報事件與日程
+- **助手與提醒** — Agent 自然語言交互；本機通知掃描情報事件與日程
 - **本地優先** — SQLite（wipe-only schema；stamp 不符需明確 reset）、憑證加密、本機綁定；Electron 開箱即用
 
 架構與契約細節見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
@@ -255,7 +255,7 @@ npm run verify:deploy
 - [ ] 登出 → 密碼再登；改密碼；loopback 忘碼重置；LAN 第二裝置同帳密登入
 - [ ] Webhook／腳本／A2A：用完整 scope（`*`）**API 金鑰** 以 `Authorization: Bearer` 打業務 API（含 `POST /api/v1/a2a/agent`）；只讀金鑰（`read`）不可寫入或呼叫 A2A
 - [ ] Profile 登出 → 回到登入；Desktop client 登出後外殼回到 host
-- [ ] 已登入狀態下本地 STT／語音提醒行為與既有一致
+- [ ] 已登入狀態下本地 STT／本機通知行為與既有一致
 - [ ] `python -m server` 啟動時**不**印 Pairing code
 
 ## 架構
@@ -275,15 +275,15 @@ Electron 外殼（`desktop/`）預設以 **host** 模式啟動內建 Python Fast
 
 ### 資料庫
 
-SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v33**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.34`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode）由 `server/domain/` Python SoT 生成並配 drift 測試；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-33 庫。
+SQLite 單檔（預設 `{DATA_DIR}/intelligence_monitor.db`；Desktop／CLI 共用同一資料根）。權威 DDL 為 **schema v39**（`server/db/schema_domains/` 按域宣告，由 `server/db/schema.py` 聚合；公開 `schemaSemver` = `0.1.0-beta.40`）——**全部** DB 枚舉 CHECK（provider／staff_class／json_mode／web_search_provider、calendar kind／direction／origin、timeline `source`、action_type／各 status、trigger_mode、analysis_time_range、log level、analysis_strategy_mode、`notify_pref`）由 `server/domain/` Python SoT 生成並配 drift 測試；`notify_pref` 為 `follow`／`off`；`worksets.notify_enabled`／`external_enabled` 默認開（工作集頁樞紐；內建「一般」兩檔都可關）；`user_events`／`recurring_schedules` 的 `item_id` 為真 FK（`ON DELETE SET NULL`）；`user_events.origin` 含 `mcp`（MCP 工具通道）；`llm_profiles`／`llm_staff_instances` 取代全域／`assistant_llm_*` 雙路徑 LLM 設定；任務必填 `llm_profile_id`；新鮮庫**不**再種子預設 Ollama `__default__`；任務／助手需完整可用設定檔（助手／A2A／任務顧問走硬綁定全局槽）；`recurring_schedules` 是獨立日曆系列；物品到期 derive-on-read；時間軸投影 `source=item_remind`；並保留 fingerprint 驗證與顯式 reset。新安裝直接建 stamp-39 庫。
 
-**Wipe-only：** v1–v32 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
+**Wipe-only：** v1–v38 與任何其他非空 stamp／fingerprint 不符時啟動 hard-reject，**沒有** in-place migration 或自動刪庫；須自行備份後 reset。stamp／`SCHEMA_SEMVER` 只描述 DB 契約，**與**產品 git tag **解耦**。
 
 ```bash
 uv run python scripts/reset_local_databases.py --apply
 ```
 
-版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v33-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
+版本政策、支援矩陣與 wipe-floor 規則的唯一真相源在 [`docs/SCHEMA-BASELINE.md`](docs/SCHEMA-BASELINE.md)（[support matrix](docs/SCHEMA-BASELINE.md#schema-support-matrix)／[explicit reset](docs/SCHEMA-BASELINE.md#schema-v38-explicit-reset)）。文件索引：[`docs/README.md`](docs/README.md)。
 
 本機手動 UI 種子（**dev-only**，非 CI／產品路徑）：`uv run python scripts/seed_calendar_ui_fixtures.py`、`uv run python scripts/seed_dev_items_calendar.py`、`uv run python scripts/seed_items_finance_demo.py`（見 [`ARCHITECTURE.md` Scripts](docs/ARCHITECTURE.md#scripts-scripts)）。
 

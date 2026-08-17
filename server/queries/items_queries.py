@@ -12,6 +12,7 @@ from typing import Any
 
 from server.calendar.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.db.database import TransactionDb
+from server.domain.mcp_workset_scope import bind_workset_ids_sql
 
 # Correlated subquery: primary active linked expires calendar for an item.
 _PRIMARY_EXPIRES_EVENT_ID_SQL = f"""(
@@ -35,7 +36,8 @@ SELECT
     WHEN pe.start_time IS NULL THEN NULL
     ELSE substr(pe.start_time, 1, 10)
   END AS expires_at,
-  pe.remind_before_days AS remind_before_days
+  pe.remind_before_days AS remind_before_days,
+  pe.notify_pref AS notify_pref
 FROM items i
 LEFT JOIN user_events pe ON pe.id = {_PRIMARY_EXPIRES_EVENT_ID_SQL}
 """
@@ -132,12 +134,17 @@ async def fetch_item_rows(
     category_id: str | None = None,
     status: str | None = None,
     search: str | None = None,
+    workset_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     clauses: list[str] = []
     params: list[Any] = []
     if workset_id is not None:
         clauses.append("i.workset_id = ?")
         params.append(workset_id)
+    workset_sql, workset_params = bind_workset_ids_sql("i.workset_id", workset_ids)
+    if workset_sql:
+        clauses.append(workset_sql)
+        params.extend(workset_params)
     if category_id is not None:
         if category_id == "":
             clauses.append("i.category_id IS NULL")
@@ -210,6 +217,7 @@ async def fetch_expiring_items(
     workset_id: str | None = None,
     include_overdue: bool = True,
     limit: int = 50,
+    workset_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Active items with derived expires_at in window (and optionally overdue before today)."""
     if include_overdue:
@@ -226,6 +234,10 @@ async def fetch_expiring_items(
     if workset_id is not None:
         clauses.append("i.workset_id = ?")
         params.append(workset_id)
+    workset_sql, workset_params = bind_workset_ids_sql("i.workset_id", workset_ids)
+    if workset_sql:
+        clauses.append(workset_sql)
+        params.extend(workset_params)
     where = " AND ".join(clauses)
     return await db.fetch_all(
         f"{_ITEMS_WITH_DERIVED_DATES_SELECT} WHERE {where} ORDER BY expires_at ASC LIMIT ?",

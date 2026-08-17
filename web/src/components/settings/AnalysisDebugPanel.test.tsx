@@ -32,25 +32,28 @@ describe("AnalysisDebugPanel", () => {
     expect(container.textContent).toContain("伺服器分析 Trace");
     expect(container.textContent).not.toContain("分析規則版本標記");
     expect(container.textContent).toContain("設定→日誌");
-    expect(container.textContent).toContain("顯示分析追蹤");
-    expect(container.textContent).toContain("已關閉");
+    expect(container.textContent).not.toContain("已關閉");
+    expect(container.textContent).not.toContain("已啟用");
   });
 
-  it("notifies when the trace switch changes", () => {
+  it("notifies when the trace switch is toggled", () => {
     const container = document.createElement("div");
     const props = renderPanel(container);
-    expect(container.textContent).toContain("已關閉");
-    const switchEl = container.querySelector<HTMLElement>('[role="switch"]')!;
-    expect(switchEl.getAttribute("aria-checked")).toBe("false");
+    const toggle = container.querySelector<HTMLElement>('[data-testid="analysis-trace-verbose"]')!;
+    expect(toggle.getAttribute("aria-checked")).toBe("false");
+    expect(toggle.className).not.toContain("im-surface-inset");
+    expect(toggle.className).not.toContain("border-accent");
     act(() => {
-      switchEl.click();
+      toggle.click();
     });
     expect(props.onAnalysisTraceVerboseChange).toHaveBeenCalledWith(true);
   });
 
-  it("shows enabled status text when trace is on", () => {
+  it("marks the trace tile active when verbose is on", () => {
     const container = document.createElement("div");
     renderPanel(container, { analysisTraceVerbose: true });
-    expect(container.textContent).toContain("已啟用");
+    const tile = container.querySelector('[data-testid="analysis-trace-verbose"]');
+    expect(tile?.getAttribute("aria-checked")).toBe("true");
+    expect(container.textContent).not.toContain("已啟用");
   });
 });

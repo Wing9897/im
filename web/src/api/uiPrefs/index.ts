@@ -1,5 +1,5 @@
 /**
- * REST client for SQLite-backed UI prefs (ops board, voice reminder, assistant…).
+ * REST client for SQLite-backed UI prefs (ops board, local notify, assistant…).
  *
  * INVARIANTS:
  * - After successful hydrate/PUT, server (SQLite) is SoT. Empty / unconfigured
@@ -21,6 +21,6 @@
  */
 
 export * from "./board";
-export * from "./voiceReminder";
+export * from "./notify";
 export * from "./assistant";
 export * from "./timelineAnnotations";

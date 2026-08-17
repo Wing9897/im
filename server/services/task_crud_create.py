@@ -14,6 +14,7 @@ from server.api.routes.task_helpers import (
 )
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import LEADERBOARD_MODE
+from server.domain.notify_prefs import normalize_notify_pref
 from server.domain.schedule import ScheduleValidationError, resolve_trigger_rrule
 from server.queries.tasks_queries import (
     insert_analysis_task,
@@ -77,6 +78,7 @@ async def create_task_record(db: Database, body: TaskConfigBody) -> TaskMutation
             include_in_timeline=include_in_timeline,
             workset_id=workset_id,
             llm_profile_id=llm_profile_id,
+            notify_pref=normalize_notify_pref(body.notifyPref),
             now=now,
             **schedule_override_write_fields(body),
             **agent_fields,

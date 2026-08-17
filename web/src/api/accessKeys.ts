@@ -18,23 +18,12 @@ export type AccessKeyCreated = AccessKeyPublic & {
   key: string;
 };
 
-export type CreateAccessKeyOptions = {
-  /** When true, create a read-only key (`["read"]`). Default full `["*"]`. */
-  readOnly?: boolean;
-};
-
 export function fetchAccessKeys(): Promise<{ keys: AccessKeyPublic[] }> {
   return apiClient.get<{ keys: AccessKeyPublic[] }>("/api/v1/access-keys");
 }
 
-export function createAccessKey(
-  label: string,
-  options: CreateAccessKeyOptions = {},
-): Promise<AccessKeyCreated> {
-  return apiClient.post<AccessKeyCreated>("/api/v1/access-keys", {
-    label,
-    readOnly: Boolean(options.readOnly),
-  });
+export function createAccessKey(label: string): Promise<AccessKeyCreated> {
+  return apiClient.post<AccessKeyCreated>("/api/v1/access-keys", { label });
 }
 
 export function revokeAccessKey(keyId: string): Promise<{ ok: boolean }> {

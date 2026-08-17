@@ -41,6 +41,7 @@ CALENDAR_OCCURRENCE_KEYS = frozenset(
         "worksetId",
         "itemId",
         "isLastOccurrence",
+        "notifyPref",
     }
 )
 
@@ -178,6 +179,7 @@ def _full_reference_task_sequence(
                 "worksetId": task.get("workset_id") or None,
                 "itemId": item_id,
                 "isLastOccurrence": recurrence.after(candidate) is None,
+                "notifyPref": str(task.get("notify_pref") or "follow").strip() or "follow",
             }
         )
     return result

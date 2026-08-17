@@ -7,10 +7,14 @@ const {
   mockListUserEventsPage,
   mockListRecurringSeries,
   mockListItems,
+  mockDeleteUserEvent,
+  mockDeleteRecurringSeries,
 } = vi.hoisted(() => ({
   mockListUserEventsPage: vi.fn(),
   mockListRecurringSeries: vi.fn(),
   mockListItems: vi.fn(),
+  mockDeleteUserEvent: vi.fn(),
+  mockDeleteRecurringSeries: vi.fn(),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -36,12 +40,12 @@ vi.mock("../../api/userEvents", () => ({
   listUserEventsPage: (...args: unknown[]) => mockListUserEventsPage(...args),
   createUserEvent: vi.fn(),
   updateUserEvent: vi.fn(),
-  deleteUserEvent: vi.fn(),
+  deleteUserEvent: (...args: unknown[]) => mockDeleteUserEvent(...args),
 }));
 
 vi.mock("../../api/recurringSeries", () => ({
   listRecurringSeries: (...args: unknown[]) => mockListRecurringSeries(...args),
-  deleteRecurringSeries: vi.fn(),
+  deleteRecurringSeries: (...args: unknown[]) => mockDeleteRecurringSeries(...args),
   patchRecurringSeries: vi.fn(),
 }));
 
@@ -53,6 +57,7 @@ vi.mock("../../components/calendar/UserEventDialog", () => ({
   UserEventDialog: () => null,
 }));
 
+import { mockShowToast } from "../../test/context-mocks";
 import { SchedulePage } from "./SchedulePage";
 
 class MockIntersectionObserver implements IntersectionObserver {
@@ -78,6 +83,11 @@ describe("SchedulePage", () => {
     document.body.appendChild(container);
     vi.stubGlobal("IntersectionObserver", MockIntersectionObserver);
     mockNavigate.mockReset();
+    mockShowToast.mockReset();
+    mockDeleteUserEvent.mockReset();
+    mockDeleteRecurringSeries.mockReset();
+    mockDeleteUserEvent.mockResolvedValue(undefined);
+    mockDeleteRecurringSeries.mockResolvedValue(undefined);
     mockListItems.mockResolvedValue([]);
     mockListUserEventsPage.mockResolvedValue({
       items: [
@@ -184,5 +194,97 @@ describe("SchedulePage", () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/schedule/recurring/rec-1/edit");
+  });
+
+  async function renderPage() {
+    await act(async () => {
+      root = createRoot(container);
+      root.render(createElement(SchedulePage));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  async function confirmDeleteDialog() {
+    const dialog = document.body.querySelector('[role="alertdialog"]') as HTMLElement;
+    expect(dialog).toBeTruthy();
+    const confirmBtn = dialog.querySelectorAll("button")[1] as HTMLButtonElement;
+    await act(async () => {
+      confirmBtn.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  }
+
+  it("hard-deletes a one-off event and drops it from the list", async () => {
+    mockDeleteUserEvent.mockImplementation(async () => {
+      mockListUserEventsPage.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+    });
+    await renderPage();
+
+    const deleteBtn = container.querySelector(
+      '[data-testid="schedule-one-off-delete-ue-1"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      deleteBtn.click();
+    });
+    await confirmDeleteDialog();
+
+    expect(mockDeleteUserEvent).toHaveBeenCalledWith("ue-1");
+    expect(mockShowToast).toHaveBeenCalledWith("已刪除一般事件", "success");
+    expect(container.querySelector('[data-testid="schedule-one-off-card-ue-1"]')).toBeNull();
+  });
+
+  it("toasts when one-off delete fails and keeps the card", async () => {
+    mockDeleteUserEvent.mockRejectedValue(new Error("刪除被拒"));
+    await renderPage();
+
+    const deleteBtn = container.querySelector(
+      '[data-testid="schedule-one-off-delete-ue-1"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      deleteBtn.click();
+    });
+    await confirmDeleteDialog();
+
+    expect(mockDeleteUserEvent).toHaveBeenCalledWith("ue-1");
+    expect(mockShowToast).toHaveBeenCalledWith("刪除被拒", "error");
+    expect(container.querySelector('[data-testid="schedule-one-off-card-ue-1"]')).toBeTruthy();
+  });
+
+  it("hard-deletes a recurring series and drops it from the list", async () => {
+    mockDeleteRecurringSeries.mockImplementation(async () => {
+      mockListRecurringSeries.mockResolvedValue({ items: [], totalCount: 0, hasMore: false });
+    });
+    await renderPage();
+
+    const deleteBtn = container.querySelector(
+      '[data-testid="schedule-recurring-delete-rec-1"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      deleteBtn.click();
+    });
+    await confirmDeleteDialog();
+
+    expect(mockDeleteRecurringSeries).toHaveBeenCalledWith("rec-1");
+    expect(mockShowToast).toHaveBeenCalledWith("已刪除循環事件", "success");
+    expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeNull();
+  });
+
+  it("toasts when recurring delete fails and keeps the card", async () => {
+    mockDeleteRecurringSeries.mockRejectedValue(new Error("系列刪除失敗"));
+    await renderPage();
+
+    const deleteBtn = container.querySelector(
+      '[data-testid="schedule-recurring-delete-rec-1"]',
+    ) as HTMLButtonElement;
+    await act(async () => {
+      deleteBtn.click();
+    });
+    await confirmDeleteDialog();
+
+    expect(mockDeleteRecurringSeries).toHaveBeenCalledWith("rec-1");
+    expect(mockShowToast).toHaveBeenCalledWith("系列刪除失敗", "error");
+    expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeTruthy();
   });
 });

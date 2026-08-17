@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Minus, Square, X, Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useMonitorMode } from "../context/MonitorModeContext";
 import { getElectronWindow, isElectronDesktop } from "../electron/electronWindow";
 import { ShellChromeCore } from "./ShellChromeCore";
 
@@ -13,8 +12,6 @@ export function DesktopTitleBar() {
   const { t } = useTranslation("common");
   const [isMaximized, setIsMaximized] = useState(false);
   const api = getElectronWindow();
-  const { monitorMode } = useMonitorMode();
-  const pagesMode = monitorMode === "pages";
 
   useEffect(() => {
     if (!api) {
@@ -47,9 +44,7 @@ export function DesktopTitleBar() {
     <header className="desktop-title-bar" aria-label={t("window.controlsAria")} data-testid="desktop-title-bar">
       <ShellChromeCore
         layout="desktop"
-        showCollapse={pagesMode}
         brandClassName="desktop-title-bar-title"
-        collapseClassName="desktop-title-bar-collapse"
         modeClassName="desktop-title-bar-mode"
         actionsClassName="desktop-title-bar-actions"
       />

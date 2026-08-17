@@ -4,10 +4,12 @@
    class rules that consume those tokens — keep token overrides unlayered in
    theme.css so @layer components cannot lose to unlayered html defaults.
 
-   Model (custom / focal): photo is ambient on .im-page-canvas + .im-shell-sidebar
+   Model (custom / focal): photo is ambient on .im-page-canvas
    (+ .im-fs-atmosphere:fullscreen when Fullscreen API lifts a host off the canvas);
-   chrome / panels are frosted layers; nested page shells stay transparent so they
-   do not paint a solid island over the photo. data-theme-bg=none stays dense/opaque.
+   chrome / panels are frosted layers (im-material-panel); overlay sidebar is a
+   translucent im-sidebar-panel (see-through to the real canvas, no cloned photo);
+   nested page shells stay transparent so they do not paint a solid island over
+   the photo. data-theme-bg=none stays dense/opaque.
    Never pair im-surface-* / im-material-* / im-menu-surface with bg-surface-card.
    Shell fill lives here (not Tailwind bg-surface-*) so photo-mode transparent
    can win in the same @layer without utilities beating components. */
@@ -44,7 +46,8 @@ html[data-theme-bg="focal"] .im-surface-inset {
   background: transparent;
 }
 
-/* Sidebar base fill (motif / none). Photo modes clear this in theme-textures.css. */
+/* Optional rail fill (motif / none). Overlay nav uses im-sidebar-panel instead —
+   do not pair the overlay drawer with this class (it used to paint a second wallpaper). */
 .im-shell-sidebar {
   background-color: var(--surface-sidebar, var(--surface-base));
 }

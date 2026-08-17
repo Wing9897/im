@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchHealth } from "../../api/system";
 import { formatAppVersionLabel } from "../../utils/appVersion";
-import { SettingsRow } from "../ui";
+import { FormGrid, SurfaceCard } from "../ui";
+import { captionClass, formLabelClass } from "../ui/pageTypography";
 
 function formatDatabaseVersion(
   schemaSemver: string | null | undefined,
@@ -59,21 +60,44 @@ export function SystemVersionPanel() {
 
   const unavailable = t("general.versionUnavailable");
   const loadingLabel = t("general.versionLoading");
+  const schemaValue = loading
+    ? loadingLabel
+    : error || schemaVersion === null || requiredSchemaVersion === null
+      ? unavailable
+      : formatDatabaseVersion(schemaSemver, schemaVersion, requiredSchemaVersion, t);
 
   return (
-    <div className="flex flex-col gap-lg" data-testid="system-version-panel">
-      <SettingsRow label={t("general.appVersionLabel")} help={t("general.appVersionHelp")}>
-        <p className="text-body font-medium text-text-primary">{formatAppVersionLabel()}</p>
-      </SettingsRow>
-      <SettingsRow label={t("general.databaseVersionLabel")} help={t("general.databaseVersionHelp")}>
-        <p className="text-body font-medium text-text-primary">
-          {loading
-            ? loadingLabel
-            : error || schemaVersion === null || requiredSchemaVersion === null
-              ? unavailable
-              : formatDatabaseVersion(schemaSemver, schemaVersion, requiredSchemaVersion, t)}
-        </p>
-      </SettingsRow>
+    <div data-testid="system-version-panel">
+      <FormGrid>
+        <VersionInfoTile
+          label={t("general.appVersionLabel")}
+          value={formatAppVersionLabel()}
+          caption={t("general.appVersionHelp")}
+        />
+        <VersionInfoTile
+          label={t("general.databaseVersionLabel")}
+          value={schemaValue}
+          caption={t("general.databaseVersionHelp")}
+        />
+      </FormGrid>
     </div>
+  );
+}
+
+function VersionInfoTile({
+  label,
+  value,
+  caption,
+}: {
+  label: string;
+  value: string;
+  caption: string;
+}) {
+  return (
+    <SurfaceCard density="compact" material="panel">
+      <p className={formLabelClass}>{label}</p>
+      <p className="mt-xs text-body font-medium tabular-nums text-text-primary">{value}</p>
+      <p className={`mt-xs ${captionClass}`}>{caption}</p>
+    </SurfaceCard>
   );
 }

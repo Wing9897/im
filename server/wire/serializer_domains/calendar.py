@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from server.domain.notify_prefs import normalize_notify_pref
 from server.util import parse_json_list
 from server.worksets_const import SYSTEM_WORKSET_ID
 
@@ -97,6 +98,7 @@ def serialize_user_event(
             if isinstance(row.get("direction"), str) and str(row.get("direction")).strip()
             else None
         ),
+        "notifyPref": normalize_notify_pref(row.get("notify_pref")),
         "source": "user",
         "dismissed": bool(dismissed),
         "important": bool(important),

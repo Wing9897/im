@@ -52,6 +52,8 @@ export type AnalysisEvent = Omit<
   itemId?: string | null;
   /** Optional remind-N-days-before-start (user events). */
   remindBeforeDays?: number | null;
+  /** Per-row reminder override when source === user or item_remind. */
+  notifyPref?: "follow" | "off" | null;
 };
 
 /** Generated envelope with domain-enriched item projections. */

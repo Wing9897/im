@@ -1,4 +1,5 @@
 import React from "react";
+import { SwitchTrack } from "./ui/SwitchTrack";
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -8,6 +9,7 @@ interface ToggleSwitchProps {
   label: string;
   /** When false, only the track is shown (label stays on aria-label). Default true. */
   showLabel?: boolean;
+  "data-testid"?: string;
 }
 
 export const ToggleSwitch = React.memo(function ToggleSwitch({
@@ -16,6 +18,7 @@ export const ToggleSwitch = React.memo(function ToggleSwitch({
   disabled = false,
   label,
   showLabel = true,
+  "data-testid": dataTestId,
 }: ToggleSwitchProps) {
   const handleClick = () => {
     if (!disabled) {
@@ -44,21 +47,9 @@ export const ToggleSwitch = React.memo(function ToggleSwitch({
       aria-label={label}
       aria-disabled={disabled}
       tabIndex={disabled ? -1 : 0}
+      data-testid={dataTestId}
     >
-      <div
-        className={[
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors duration-150",
-          checked ? "bg-accent" : "bg-surface-border",
-          disabled ? "opacity-60" : "",
-        ].join(" ")}
-      >
-        <div
-          className={[
-            "absolute top-0.5 h-5 w-5 rounded-full bg-[var(--text-on-accent,var(--surface-base))] shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-[left] duration-150",
-            checked ? "left-[22px]" : "left-0.5",
-          ].join(" ")}
-        />
-      </div>
+      <SwitchTrack checked={checked} disabled={disabled} />
       {showLabel ? (
         <span className="select-none text-body text-text-primary">{label}</span>
       ) : null}

@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { RetentionCleanupPanel } from "../../components/settings/RetentionCleanupPanel";
 import { RuntimeResetPanel } from "../../components/settings/RuntimeResetPanel";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
-import { Button, FormStack, SettingsRow, TextField } from "../../components/ui";
+import { Button, FieldLabel, FormStack, TextField, formHelpClass } from "../../components/ui";
 import { SettingsContentCard, SettingsFieldGroup } from "./SettingsShared";
 import { useSettingsDataPage } from "./useSettingsDataPage";
 import { useErrorToast } from "../../hooks/useErrorToast";
@@ -42,36 +42,34 @@ export function SettingsDataPage() {
         {RETENTION_ROWS.map(({ field, categoryKey }) => {
           const categoryLabel = t(categoryKey);
           const rowLabel = t("data.retention.daysLabel", { category: categoryLabel });
+          const help =
+            field === "retentionAnalysisDays"
+              ? t("data.retention.helpAnalysis")
+              : field === "retentionAppLogsDays"
+                ? t("data.retention.helpAppLogs")
+                : field === "retentionUserEventsDays"
+                  ? t("data.retention.helpUserEvents")
+                  : undefined;
           return (
-            <SettingsRow
-              key={field}
-              label={rowLabel}
-              htmlFor={`retention-${field}`}
-              layout="inline"
-              help={
-                field === "retentionAnalysisDays"
-                  ? t("data.retention.helpAnalysis")
-                  : field === "retentionAppLogsDays"
-                    ? t("data.retention.helpAppLogs")
-                    : field === "retentionUserEventsDays"
-                      ? t("data.retention.helpUserEvents")
-                      : undefined
-              }
-            >
-              <div className="flex items-center gap-sm">
+            <div key={field} className="flex w-full min-w-0 flex-col gap-sm">
+              <div className="flex min-w-0 items-center gap-md">
+                <FieldLabel className="min-w-0 flex-1" htmlFor={`retention-${field}`}>
+                  {rowLabel}
+                </FieldLabel>
                 <TextField
                   id={`retention-${field}`}
                   type="number"
                   min={0}
                   step={1}
-                  className="w-[120px]"
+                  className="w-24 max-w-24 shrink-0"
                   value={retentionValues[field]}
                   onChange={(e) => setRetentionField(field, e.target.value)}
                   aria-label={rowLabel}
                 />
-                <span className="text-xs text-text-secondary">{t("data.retention.days")}</span>
+                <span className="shrink-0 text-xs text-text-secondary">{t("data.retention.days")}</span>
               </div>
-            </SettingsRow>
+              {help ? <p className={formHelpClass}>{help}</p> : null}
+            </div>
           );
         })}
       </FormStack>

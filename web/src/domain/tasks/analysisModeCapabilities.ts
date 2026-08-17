@@ -92,7 +92,7 @@ export function analysisModeSupportsTaskPresets(mode: AnalysisMode): boolean {
 
 /**
  * Modes that may persist findings into ``analysis_events``.
- * Agent tasks also need ``outputAnalysisEvents`` on the task row (checked by callers).
+ * Callers must still honor ``outputAnalysisEvents`` via ``taskWritesAnalysisEvents``.
  */
 export const ANALYSIS_EVENTS_MODES = ["intel_event", "agent"] as const;
 export type AnalysisEventsMode = (typeof ANALYSIS_EVENTS_MODES)[number];
@@ -103,11 +103,31 @@ export function isAnalysisEventsMode(
   return mode === "intel_event" || mode === "agent";
 }
 
-/** Whether an agent task row should refresh intelligence feeds. */
+/**
+ * Default for the intelligence-output flag when the wire value is missing.
+ * intel_event defaults on; leaderboard and agent stay off (leaderboard still
+ * writes the ranking page; agent is opt-in).
+ */
+export function defaultOutputAnalysisEvents(
+  analysisMode: string | null | undefined,
+  value?: boolean | null,
+): boolean {
+  if (value != null) return value;
+  return analysisMode === "intel_event";
+}
+
+/**
+ * Intelligence-page listing filter (`intel_event` / `agent` with output on).
+ * Leaderboard never lists here. Not server `task_writes_analysis_events`
+ * (analysis_events persist) or `task_persists_findings` (leaderboard topics).
+ * Do not merge the three functions.
+ */
 export function taskWritesAnalysisEvents(task: {
   analysisMode?: string | null;
   outputAnalysisEvents?: boolean | null;
 }): boolean {
-  if (task.analysisMode === "intel_event") return true;
+  if (task.analysisMode === "intel_event") {
+    return defaultOutputAnalysisEvents("intel_event", task.outputAnalysisEvents);
+  }
   return task.analysisMode === "agent" && Boolean(task.outputAnalysisEvents);
 }

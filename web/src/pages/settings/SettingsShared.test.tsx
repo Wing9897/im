@@ -230,6 +230,27 @@ describe("SettingsTopTabs visual styles", () => {
     expect(inactiveTab.classList.contains("is-active")).toBe(false);
   });
 
+  it("renders one chrome bar with External interfaces instead of API/MCP top tabs", () => {
+    act(() => {
+      root = createRoot(container);
+      root.render(createElement(SettingsTopTabs));
+    });
+
+    const links = Array.from(container.querySelectorAll("[data-testid^='navlink-']")).map((el) =>
+      el.getAttribute("data-testid"),
+    );
+    expect(links).toEqual([
+      "navlink-/settings/general",
+      "navlink-/settings/theme",
+      "navlink-/settings/data",
+      "navlink-/settings/integrations",
+      "navlink-/settings/logs",
+    ]);
+    expect(container.querySelectorAll("nav")).toHaveLength(1);
+    expect(container.querySelector('[data-testid="navlink-/settings/api"]')).toBeNull();
+    expect(container.querySelector('[data-testid="navlink-/settings/mcp"]')).toBeNull();
+  });
+
   it("renders segmented tab navigation container", () => {
     act(() => {
       root = createRoot(container);

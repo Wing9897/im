@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { SwitchTrack } from "./SwitchTrack";
+
+export type SelectTileVariant = "select" | "toggle";
 
 interface SelectTileProps {
   active?: boolean;
@@ -9,15 +12,28 @@ interface SelectTileProps {
   /** Compact density for settings forms (matches field label scale). */
   compact?: boolean;
   disabled?: boolean;
+  title?: string;
+  /**
+   * `select` = mutually exclusive 框選 (aria-pressed).
+   * `toggle` = independent on/off with a visible switch (aria-checked).
+   */
+  variant?: SelectTileVariant;
   "aria-pressed"?: boolean;
+  "aria-label"?: string;
+  "data-testid"?: string;
 }
 
 const tileBase =
   "im-surface-inset min-h-8 cursor-pointer rounded-md border border-surface-border text-left font-medium text-text-primary shadow-sm transition-[border-color,background,box-shadow,transform] duration-200 ease-[var(--im-easing-out)] motion-safe:active:scale-[1.01] hover:border-[color-mix(in_srgb,var(--accent)_35%,var(--surface-border))] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_35%,transparent)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-surface-border disabled:hover:shadow-sm disabled:active:scale-100";
 
 /** Selected: inset accent frame (visible inside overflow scroll) + tint. */
-const tileActive =
+const tileSelectActive =
   "border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-panel))] font-semibold text-accent shadow-md ring-2 ring-inset ring-accent";
+
+/** On: accent tint + switch. Off: muted, no accent frame. */
+const tileToggleOn =
+  "border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-panel))] text-text-primary shadow-md";
+const tileToggleOff = "text-text-secondary";
 
 /** Single selectable tile card (provider, action type, etc.). */
 export function SelectTile({
@@ -28,29 +44,53 @@ export function SelectTile({
   className,
   compact = false,
   disabled = false,
+  title,
+  variant = "select",
   "aria-pressed": ariaPressed,
+  "aria-label": ariaLabel,
+  "data-testid": dataTestId,
 }: SelectTileProps) {
+  const isToggle = variant === "toggle";
   const cls = [
     tileBase,
     compact ? "p-sm text-caption" : "p-md text-body",
-    active ? tileActive : "",
+    isToggle ? (active ? tileToggleOn : tileToggleOff) : active ? tileSelectActive : "",
     className ?? "",
   ]
     .filter(Boolean)
     .join(" ");
 
+  const hintEl = hint ? (
+    <span className="mt-0.5 block text-caption font-normal text-text-muted">{hint}</span>
+  ) : null;
+
   return (
     <button
       type="button"
       className={cls}
-      aria-pressed={ariaPressed ?? active}
+      title={title}
+      aria-label={ariaLabel}
+      role={isToggle ? "switch" : undefined}
+      aria-checked={isToggle ? active : undefined}
+      aria-pressed={isToggle ? undefined : (ariaPressed ?? active)}
+      data-testid={dataTestId}
       disabled={disabled}
       onClick={onClick}
     >
-      {children}
-      {hint ? (
-        <span className="mt-0.5 block text-caption font-normal text-text-muted">{hint}</span>
-      ) : null}
+      {isToggle ? (
+        <span className="flex w-full items-start justify-between gap-sm">
+          <span className="min-w-0 flex-1">
+            {children}
+            {hintEl}
+          </span>
+          <SwitchTrack checked={active} size={compact ? "sm" : "md"} disabled={disabled} />
+        </span>
+      ) : (
+        <>
+          {children}
+          {hintEl}
+        </>
+      )}
     </button>
   );
 }

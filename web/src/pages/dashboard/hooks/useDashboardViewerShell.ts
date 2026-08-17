@@ -1,10 +1,10 @@
 /**
- * Workset CRUD, item counts, deep-link, and grouping shell for DashboardViewer.
+ * Workset CRUD, item counts, and catalog shell for DashboardViewer.
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import { listItems } from "../../../api/items";
 import { createWorkset, deleteWorkset, renameWorkset } from "../../../api/worksets";
@@ -13,17 +13,19 @@ import { useToast } from "../../../context/ToastContext";
 import { subscribeResourceModified } from "../../../domain/sse/resourceModified";
 import {
   SHOW_SYSTEM_TASKS_STORAGE_KEY,
-  SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
-  TASKS_GROUPING_VIEW_STORAGE_KEY,
-  isTasksGroupingView,
-  type TasksGroupingView,
+  WORKSETS_SEARCH_STORAGE_KEY,
 } from "../../../domain/tasks/systemTaskCatalog";
-import { usePersistedEnum, usePersistedState } from "../../../hooks/usePersistedState";
+import {
+  isWorksetsPath,
+  worksetDetailPath,
+} from "../../../domain/worksets/worksetRoutes";
+import { usePersistedState } from "../../../hooks/usePersistedState";
 import type { AnalysisTask } from "../../../types/tasks";
 import { SYSTEM_WORKSET_ID } from "../../../types/worksets";
 import { toError } from "../../../utils/errors";
 import {
   buildDashboardWorksetGroups,
+  filterWorksetGroupsByName,
   type DashboardWorksetGroup,
 } from "../dashboardViewerGroups";
 import type { DashboardWorksetNameDialogState } from "../components/DashboardViewerDialogs";
@@ -35,23 +37,24 @@ type Args = {
 
 export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
   const { t } = useTranslation();
-  const { worksetId: routeWorksetId } = useParams<{ worksetId?: string }>();
+  const { pathname } = useLocation();
   const { worksets, refreshWorksets } = useTaskCatalog();
   const { showToast } = useToast();
+  const isWorksetView = isWorksetsPath(pathname);
 
-  const [groupingView, setGroupingView] = usePersistedEnum<TasksGroupingView>(
-    TASKS_GROUPING_VIEW_STORAGE_KEY,
-    "by_task",
-    isTasksGroupingView,
-  );
   const [showSystemTasks, setShowSystemTasks] = usePersistedState(
     SHOW_SYSTEM_TASKS_STORAGE_KEY,
     false,
   );
-  const [showSystemWorksets, setShowSystemWorksets] = usePersistedState(
-    SHOW_SYSTEM_WORKSETS_STORAGE_KEY,
-    true,
+  const [worksetSearchQuery, setWorksetSearchQuery] = usePersistedState(
+    WORKSETS_SEARCH_STORAGE_KEY,
+    "",
+    {
+      persistDebounceMs: 400,
+      storage: "session",
+    },
   );
+  const deferredWorksetSearch = useDeferredValue(worksetSearchQuery);
   const [worksetNameDialog, setWorksetNameDialog] =
     useState<DashboardWorksetNameDialogState | null>(null);
   const [worksetNameBusy, setWorksetNameBusy] = useState(false);
@@ -60,14 +63,13 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     name: string;
   } | null>(null);
   const [worksetDeleting, setWorksetDeleting] = useState(false);
-  const [detailWorksetId, setDetailWorksetId] = useState<string | null>(null);
   const [itemCountByWorkset, setItemCountByWorkset] = useState<Map<string, number>>(
     () => new Map(),
   );
 
   // Soft-load item counts for workset cards; refresh on item SSE (no stamp bump).
   useEffect(() => {
-    if (groupingView !== "by_workset") return;
+    if (!isWorksetView) return;
     let cancelled = false;
     const reloadCounts = () => {
       void listItems()
@@ -96,27 +98,17 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
       cancelled = true;
       unsubscribe();
     };
-  }, [groupingView, worksets]);
+  }, [isWorksetView, worksets]);
 
-  // Deep link: /tasks/worksets/:worksetId
-  useEffect(() => {
-    if (!routeWorksetId) return;
-    setGroupingView("by_workset");
-    setDetailWorksetId(routeWorksetId);
-  }, [routeWorksetId, setGroupingView]);
-
-  const worksetGroups = useMemo(
-    () =>
-      groupingView === "by_workset"
-        ? buildDashboardWorksetGroups({
-            visibleTasks,
-            worksets,
-            showSystemWorksets,
-            t,
-          })
-        : [],
-    [groupingView, visibleTasks, worksets, t, showSystemWorksets],
-  );
+  const worksetGroups = useMemo(() => {
+    if (!isWorksetView) return [];
+    const groups = buildDashboardWorksetGroups({
+      visibleTasks,
+      worksets,
+      t,
+    });
+    return filterWorksetGroupsByName(groups, deferredWorksetSearch);
+  }, [isWorksetView, visibleTasks, worksets, t, deferredWorksetSearch]);
 
   const openCreateWorkset = useCallback(() => {
     setWorksetNameDialog({ mode: "create" });
@@ -163,47 +155,17 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
 
   const openWorksetDetail = useCallback(
     (id: string) => {
-      setDetailWorksetId(id);
-      navigate(`/tasks/worksets/${encodeURIComponent(id)}`, { replace: false });
+      navigate(worksetDetailPath(id), { replace: false });
     },
     [navigate],
   );
 
-  const closeWorksetDetail = useCallback(() => {
-    setDetailWorksetId(null);
-    if (routeWorksetId) {
-      navigate("/tasks", { replace: true });
-    }
-  }, [navigate, routeWorksetId]);
-
-  const detailWorkset = useMemo(() => {
-    if (!detailWorksetId) return null;
-    const group = worksetGroups.find((g) => g.key === detailWorksetId);
-    if (group) {
-      return {
-        id: group.key,
-        title: group.title,
-        isSystem: group.isSystem,
-        tasks: group.tasks,
-      };
-    }
-    const ws = worksets.find((w) => w.id === detailWorksetId);
-    if (!ws) return null;
-    return {
-      id: ws.id,
-      title: ws.id === SYSTEM_WORKSET_ID ? t("workset:generalName") : ws.name,
-      isSystem: Boolean(ws.isSystem) || ws.id === SYSTEM_WORKSET_ID,
-      tasks: visibleTasks.filter((task) => task.worksetId === ws.id),
-    };
-  }, [detailWorksetId, worksetGroups, worksets, visibleTasks, t]);
-
   return {
-    groupingView,
-    setGroupingView,
+    isWorksetView,
     showSystemTasks,
     setShowSystemTasks,
-    showSystemWorksets,
-    setShowSystemWorksets,
+    worksetSearchQuery,
+    setWorksetSearchQuery,
     worksetNameDialog,
     setWorksetNameDialog,
     worksetNameBusy,
@@ -212,12 +174,10 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     worksetDeleting,
     itemCountByWorkset,
     worksetGroups,
-    detailWorkset,
     openCreateWorkset,
     handleWorksetNameSubmit,
     confirmDeleteWorkset,
     openWorksetDetail,
-    closeWorksetDetail,
   };
 }
 

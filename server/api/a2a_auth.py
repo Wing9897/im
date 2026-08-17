@@ -15,7 +15,22 @@ from server.auth.access_keys import (
     scopes_allow_full,
     touch_access_key_last_used,
 )
+from server.config import get_config_bool
+from server.db.database import Database
 from server.errors import FORBIDDEN, http_error
+
+A2A_DISABLED_MESSAGE = "A2A is disabled (a2a_enabled=false)"
+
+
+async def is_a2a_enabled(db: Database) -> bool:
+    """Household master switch for A2A HTTP (default on; independent of MCP)."""
+    return await get_config_bool(db, "a2a_enabled")
+
+
+async def require_a2a_enabled(request: Request) -> None:
+    """Reject A2A HTTP with 403 when the household master switch is off."""
+    if not await is_a2a_enabled(get_db(request)):
+        raise http_error(403, A2A_DISABLED_MESSAGE, error_code=FORBIDDEN)
 
 
 async def require_household_access_key(request: Request) -> dict[str, object]:

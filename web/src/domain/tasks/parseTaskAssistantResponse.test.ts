@@ -67,8 +67,23 @@ describe("parseTaskAssistantResponse", () => {
       }
     });
 
+    it("parses outputAnalysisEvents true and false", () => {
+      for (const outputAnalysisEvents of [true, false]) {
+        const result = parseTaskAssistantResponse(validResponse({ outputAnalysisEvents }));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.data.taskConfig.outputAnalysisEvents).toBe(outputAnalysisEvents);
+        }
+      }
+    });
+
     it("rejects non-boolean includeInTimeline", () => {
       const result = parseTaskAssistantResponse(validResponse({ includeInTimeline: "yes" }));
+      expect(result.ok).toBe(false);
+    });
+
+    it("rejects non-boolean outputAnalysisEvents", () => {
+      const result = parseTaskAssistantResponse(validResponse({ outputAnalysisEvents: "yes" }));
       expect(result.ok).toBe(false);
     });
 

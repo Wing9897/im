@@ -23,6 +23,7 @@ def _tools_prompt_block(
     calendar_writes_enabled: bool = True,
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
+    messages_search_enabled: bool = True,
     items_read_enabled: bool = True,
     items_writes_enabled: bool = True,
 ) -> str:
@@ -33,6 +34,7 @@ def _tools_prompt_block(
             calendar_writes_enabled=calendar_writes_enabled,
             calendar_read_enabled=calendar_read_enabled,
             analysis_events_read_enabled=analysis_events_read_enabled,
+            messages_search_enabled=messages_search_enabled,
             items_read_enabled=items_read_enabled,
             items_writes_enabled=items_writes_enabled,
         ),
@@ -53,6 +55,7 @@ def build_system_prompt(
     calendar_writes_enabled: bool = True,
     calendar_read_enabled: bool = True,
     analysis_events_read_enabled: bool = True,
+    messages_search_enabled: bool = True,
     items_read_enabled: bool = True,
     items_writes_enabled: bool = True,
     user_background: str | None = None,
@@ -75,6 +78,7 @@ def build_system_prompt(
             calendar_writes_enabled=calendar_writes_enabled,
             calendar_read_enabled=calendar_read_enabled,
             analysis_events_read_enabled=analysis_events_read_enabled,
+            messages_search_enabled=messages_search_enabled,
             items_read_enabled=items_read_enabled,
             items_writes_enabled=items_writes_enabled,
         )

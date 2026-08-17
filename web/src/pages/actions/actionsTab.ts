@@ -1,4 +1,4 @@
-const ACTIONS_TABS = ["types", "voice", "history"] as const;
+const ACTIONS_TABS = ["types", "notify", "history"] as const;
 
 export type ActionsTabKey = (typeof ACTIONS_TABS)[number];
 
@@ -12,6 +12,6 @@ export const ACTIONS_TAB_DEFS: ReadonlyArray<{
   labelKey: string;
 }> = [
   { id: "types", labelKey: "tabs.types" },
-  { id: "voice", labelKey: "tabs.voice" },
+  { id: "notify", labelKey: "tabs.notify" },
   { id: "history", labelKey: "tabs.history" },
 ];

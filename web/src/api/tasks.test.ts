@@ -1,6 +1,7 @@
 /** Unit tests for src/api/tasks.ts — success and error paths for public API functions. */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { AnalysisTask } from "../types";
+import { SYSTEM_WORKSET_ID } from "../types/worksets";
 import { apiClient } from "./client";
 import {
   listTasks,
@@ -67,7 +68,7 @@ describe("tasks API", () => {
         channelIds: [{ platform: "telegram", platformId: "42", id: "telegram:42" }],
         scheduleRrule: "FREQ=DAILY;BYHOUR=9;BYMINUTE=30",
         includeInTimeline: true,
-        worksetId: null,
+        worksetId: SYSTEM_WORKSET_ID,
         llmProfileId: "profile-default",
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-02T00:00:00Z",
