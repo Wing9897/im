@@ -64,7 +64,7 @@ export async function seriesNotifyMap(): Promise<NotifySeriesLookup> {
       });
     }
   } catch (error) {
-    logWarn("[voiceReminder] failed to fetch recurring series prefs", error);
+    logWarn("[notify] failed to fetch recurring series prefs", error);
   }
   return map;
 }
@@ -106,7 +106,7 @@ export async function fetchReminderSourceRows(
     ]);
     return { analysisRows, userRows, calendarRows };
   } catch (error) {
-    logWarn("[voiceReminder] failed to fetch reminder sources", error);
+    logWarn("[notify] failed to fetch reminder sources", error);
     return null;
   }
 }

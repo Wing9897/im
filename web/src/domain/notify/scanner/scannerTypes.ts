@@ -1,4 +1,4 @@
-/** Shared types / cadence constants for the voice-reminder scanner. */
+/** Shared types / cadence constants for the local-notify scanner. */
 
 import type { NotifyPref } from "../notifyPref";
 

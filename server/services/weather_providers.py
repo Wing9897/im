@@ -23,7 +23,8 @@ _LOCATION_ALIASES = {
 }
 
 
-async def _resolve_coordinates(location: str) -> tuple[float, float]:
+async def _geocode_first_result(location: str) -> dict[str, Any] | None:
+    """First Open-Meteo geocoding hit (lat/lng + ``country_code``), or None."""
     for query in dict.fromkeys((location, _LOCATION_ALIASES.get(location, location))):
         payload = await _get_json(
             "open-meteo-geocoding",
@@ -33,11 +34,18 @@ async def _resolve_coordinates(location: str) -> tuple[float, float]:
         results = payload.get("results")
         if not isinstance(results, list) or not results or not isinstance(results[0], dict):
             continue
-        try:
-            return float(results[0]["latitude"]), float(results[0]["longitude"])
-        except (KeyError, TypeError, ValueError) as exc:
-            raise WeatherProviderError("座標格式無效") from exc
-    raise WeatherProviderError("找不到地區座標")
+        return results[0]
+    return None
+
+
+async def _resolve_coordinates(location: str) -> tuple[float, float]:
+    result = await _geocode_first_result(location)
+    if result is None:
+        raise WeatherProviderError("找不到地區座標")
+    try:
+        return float(result["latitude"]), float(result["longitude"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise WeatherProviderError("座標格式無效") from exc
 
 
 async def _fetch_open_meteo_forecast(

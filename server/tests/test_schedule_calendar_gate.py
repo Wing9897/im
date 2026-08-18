@@ -60,7 +60,7 @@ async def test_ai_trigger_schedule_never_appears_in_calendar_expand(app) -> None
 
 
 async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) -> None:
-    """GET /calendar/items must not surface AI schedule_rrule as occurrences."""
+    """GET /calendar/occurrences must not surface AI schedule_rrule as occurrences."""
     db = app.state.db
     now = utc_now_iso()
     ai_id = "gate-http-ai"
@@ -84,7 +84,7 @@ async def test_calendar_items_http_excludes_ai_trigger_schedules(app, client) ->
     )
 
     response = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-07-01T00:00:00Z",
             "rangeEnd": "2026-07-08T00:00:00Z",

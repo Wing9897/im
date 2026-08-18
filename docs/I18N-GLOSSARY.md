@@ -51,7 +51,7 @@
 |------|----------|------|
 | 故意保留 | `EmailMailboxForm.tsx` auth-error regex；主題專有名詞（Latte／Mocha 等） | 非 chrome／非 UI 標籤 |
 | API 範例 | `domain/apiDocs/examples.ts` + `settings:apiDocs.*.example*` | **協議／欄位名英文化**；示範 `content`／`notes`／自然語言 `input` 走 i18n，A2A `locale` 跟當前 UI |
-| 天氣城市專名 | `hooks/useMonthWeather.ts` | 時區→城市字串兼 API 查詢鍵（臺北／香港…）；**勿**為 city id 發明翻譯 |
+| 天氣城市專名 | `hooks/useMonthWeather.ts` | 時區→城市字串兼 API 查詢鍵（臺北／香港…）；**勿**為 city id 發明翻譯。節日 overlay 用同一字串，伺服器再對到國家碼 |
 | 命令面板 keywords | `web/src/domain/commandPalette/commandPaletteCommands.ts` | 搜尋輔助關鍵字（顯示標籤已走 `labelKey`） |
 | 後端錯誤原文 | API `message`／`error_summary` passthrough、runtime toast 內嵌後端摘要 | 外層標籤已 i18n |
 | 用戶內容 | 任務名／頻道名／訊息正文／AI 產出欄 | 非產品 chrome |
@@ -126,7 +126,7 @@
 | standalone calendar recurring series | 週期序列 | Recurring series | 周期序列 |
 | `__user__`（`SYSTEM_WORKSET_ID`）內建工作集 | **一般**（詳見下節） | General | 一般 |
 | 工作集頁分段（`/worksets?tab=`） | **目錄**／**流程圖** | Catalog / Graph | 目录／流程图 |
-| 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出；塊標題（來源／助手／物品／任務／工作集／情報頁／時間規劃／我的日程／通知／MCP／A2A）維持不變 |
+| 流程圖層標題 | **第一層**…**第四層** | Layer 1–4 | 第一层…第四层 | 勿寫輸入／輸出當層名；塊標題（來源／物品／任務／助手／工作集）；L4 為共用輸出圖例（時間規劃／情報頁／通知／外部接口），從工作集**層／區塊**連出而非每張卡片；通知／外部接口閘門仍是卡片 icon；勿加 MCP／A2A 頁節點；**我的日程**不是流程圖塊（日曆疊加全部工作） |
 | 虛擬系統卡 `user-or-assistant`（Dashboard 功能卡，非工作集） | 用戶或助手（詳見下節） | User or Assistant | 用户或助手 |
 | 助手（含彈窗／完整頁） | **助手** | Assistant | 助手 |
 | 「快捷助手」 | 僅命令面板／搜尋 **alias**（非產品顯示名） | search alias only | 仅搜索别名 |
@@ -180,16 +180,17 @@
 | `collector` | 收集器 | Collector | 收集器 |
 | `analysis-batch` | 分析批次 | Analysis batch | 分析批次 |
 | `outbound-notify` | 外發通知 | Outbound notify | 外发通知 |
-| `voice-reminder` | 本機通知 | Local notifications | 本机通知 |
+| `local-notify` | 本機通知 | Local notifications | 本机通知 |
 | `retention` | 資料清理 | Data cleanup | 资料清理 |
 | `startup-geocode` | 啟動座標回填 | Startup geocode backfill | 启动坐标回填 |
+| `holiday` | 節日 | Holiday | 节日 |
 
 ## API 錯誤碼約定
 
 - 用戶可見錯誤優先穩定 **`error_code`**（snake_case）。
 - 前端 `toErrorMessage` 先查 `common:errors.*`（via `messageForErrorCode`），否則 fallback `message`。
 - 新端點請用 `server.errors.http_error(...)` 帶明確 `error_code`，避免只回中文 `detail` 字串。
-- 試點碼：`weather_timeout`、`weather_unavailable`、`weather_location_not_found`、`weather_invalid_date_range`、`agent_timeout`。
+- 試點碼：`weather_timeout`、`weather_unavailable`、`weather_location_not_found`、`weather_invalid_date_range`、`holiday_invalid_year`、`holiday_invalid_location`、`agent_timeout`。
 
 ## Locale
 

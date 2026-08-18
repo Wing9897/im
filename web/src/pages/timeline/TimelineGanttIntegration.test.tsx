@@ -64,6 +64,7 @@ function makeContextValue(overrides: ContextOverrides = {}): TimelinePageContext
     showDismissed: false,
     showOngoing: true,
     showEnding: true,
+    monthDatesRevealed: false,
     ...overrides,
   };
 }

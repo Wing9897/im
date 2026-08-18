@@ -11,15 +11,15 @@ from server.ui_prefs import (
     KEY_NOTIFY_SETTINGS,
     KEY_NOTIFY_TRIGGER_HISTORY,
     MAX_PREF_JSON_CHARS,
-    MAX_VOICE_HISTORY_ENTRIES,
+    MAX_NOTIFY_HISTORY_ENTRIES,
     sanitize_fired_keys,
-    sanitize_voice_history,
-    sanitize_voice_settings,
+    sanitize_notify_history,
+    sanitize_notify_settings,
 )
 
 
-def test_sanitize_voice_settings_defaults_and_leads() -> None:
-    clean = sanitize_voice_settings(
+def test_sanitize_notify_settings_defaults_and_leads() -> None:
+    clean = sanitize_notify_settings(
         {
             "enabled": True,
             "leadOffsetsMinutes": [60, 15, 0, 15, 10081, 30],
@@ -41,25 +41,25 @@ def test_sanitize_voice_settings_defaults_and_leads() -> None:
     assert clean["quietHours"] == {"enabled": False, "start": "22:00", "end": "08:30"}
     assert "taskIds" not in clean
 
-    missing = sanitize_voice_settings({"enabled": False})
+    missing = sanitize_notify_settings({"enabled": False})
     assert missing["voiceEnabled"] is True
     assert missing["flashEnabled"] is True
     assert missing["flashMode"] == "timed"
-    split = sanitize_voice_settings({"enabled": True, "voiceEnabled": False, "flashEnabled": True})
+    split = sanitize_notify_settings({"enabled": True, "voiceEnabled": False, "flashEnabled": True})
     assert split["voiceEnabled"] is False
     assert split["flashEnabled"] is True
-    persist = sanitize_voice_settings({"flashMode": "persistent"})
+    persist = sanitize_notify_settings({"flashMode": "persistent"})
     assert persist["flashMode"] == "persistent"
-    assert sanitize_voice_settings({"flashMode": "nope"})["flashMode"] == "timed"
+    assert sanitize_notify_settings({"flashMode": "nope"})["flashMode"] == "timed"
     assert "sourceFilter" not in missing
-    assert "sourceFilter" not in sanitize_voice_settings({"sourceFilter": None})
+    assert "sourceFilter" not in sanitize_notify_settings({"sourceFilter": None})
     # Flat leftover taskIds / invalid sourceFilter are ignored, not rewritten.
-    assert "sourceFilter" not in sanitize_voice_settings({"taskIds": []})
-    assert "sourceFilter" not in sanitize_voice_settings({"taskIds": ["__user__", "t1"]})
-    assert "sourceFilter" not in sanitize_voice_settings({"sourceFilter": ["t1"]})
+    assert "sourceFilter" not in sanitize_notify_settings({"taskIds": []})
+    assert "sourceFilter" not in sanitize_notify_settings({"taskIds": ["__user__", "t1"]})
+    assert "sourceFilter" not in sanitize_notify_settings({"sourceFilter": ["t1"]})
 
 
-def test_sanitize_voice_history_caps_at_100() -> None:
+def test_sanitize_notify_history_caps_at_100() -> None:
     rows = [
         {
             "id": f"id-{i}",
@@ -68,12 +68,12 @@ def test_sanitize_voice_history_caps_at_100() -> None:
             "errorMessage": None,
             "triggeredAt": "2026-07-24T00:00:00Z",
         }
-        for i in range(MAX_VOICE_HISTORY_ENTRIES + 25)
+        for i in range(MAX_NOTIFY_HISTORY_ENTRIES + 25)
     ]
-    clean = sanitize_voice_history(rows)
-    assert len(clean) == MAX_VOICE_HISTORY_ENTRIES
+    clean = sanitize_notify_history(rows)
+    assert len(clean) == MAX_NOTIFY_HISTORY_ENTRIES
     assert clean[0]["id"] == "id-0"
-    assert clean[-1]["id"] == f"id-{MAX_VOICE_HISTORY_ENTRIES - 1}"
+    assert clean[-1]["id"] == f"id-{MAX_NOTIFY_HISTORY_ENTRIES - 1}"
 
 
 def test_sanitize_fired_keys_prunes_old() -> None:
@@ -182,7 +182,7 @@ async def test_voice_history_empty_roundtrip_and_truncate(client, app) -> None:
             "title": f"T{i}",
             "leadOffsetMinutes": 60,
         }
-        for i in range(MAX_VOICE_HISTORY_ENTRIES + 10)
+        for i in range(MAX_NOTIFY_HISTORY_ENTRIES + 10)
     ]
     put = await client.put(
         "/api/v1/ui-prefs/notify/history",
@@ -191,7 +191,7 @@ async def test_voice_history_empty_roundtrip_and_truncate(client, app) -> None:
     assert put.status_code == 200
     body = put.json()
     assert body["configured"] is True
-    assert len(body["entries"]) == MAX_VOICE_HISTORY_ENTRIES
+    assert len(body["entries"]) == MAX_NOTIFY_HISTORY_ENTRIES
     assert body["entries"][0]["id"] == "h-0"
     stored = await ui_pref_payload(app.state.db, KEY_NOTIFY_TRIGGER_HISTORY)
     assert stored is not None and stored.startswith("[")

@@ -9,8 +9,8 @@ import {
   type NotifyFlashItem,
 } from "../../domain/notify/notifyFlash";
 import {
-  VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
-  loadVoiceReminderSettings,
+  NOTIFY_SETTINGS_CHANGED_EVENT,
+  loadNotifySettings,
 } from "../../domain/notify/scanner/settings";
 import { isElectronDesktop } from "../../electron/electronWindow";
 
@@ -24,18 +24,18 @@ export function NotifyFlashHost() {
   const { t } = useTranslation("common");
   const [items, setItems] = useState<NotifyFlashItem[]>(() => loadNotifyFlashes());
   const [flashEnabled, setFlashEnabled] = useState(
-    () => loadVoiceReminderSettings().flashEnabled,
+    () => loadNotifySettings().flashEnabled,
   );
   const desktopShell = isElectronDesktop();
 
   useEffect(() => {
     const syncFlashes = () => setItems(loadNotifyFlashes());
-    const syncSettings = () => setFlashEnabled(loadVoiceReminderSettings().flashEnabled);
+    const syncSettings = () => setFlashEnabled(loadNotifySettings().flashEnabled);
     window.addEventListener(NOTIFY_FLASH_CHANGED_EVENT, syncFlashes);
-    window.addEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, syncSettings);
+    window.addEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, syncSettings);
     return () => {
       window.removeEventListener(NOTIFY_FLASH_CHANGED_EVENT, syncFlashes);
-      window.removeEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, syncSettings);
+      window.removeEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, syncSettings);
     };
   }, []);
 

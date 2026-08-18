@@ -9,21 +9,10 @@ import {
   saveDeviceSession,
   type DeviceSessionTokens,
 } from "../domain/connection/connectionStore";
+import type { components } from "./generated/schema";
 import { publicFetchJson } from "./publicFetch";
 
-export interface DeviceSessionResponse {
-  accessToken: string;
-  refreshToken: string;
-  accessExpiresAt: string;
-  refreshExpiresAt: string;
-  device: {
-    id: string;
-    label: string;
-    createdAt: string;
-    lastSeenAt: string;
-    expiresAt: string;
-  };
-}
+export type DeviceSessionResponse = components["schemas"]["DeviceSessionTokensResponse"];
 
 function toSessionTokens(body: DeviceSessionResponse): DeviceSessionTokens {
   return {

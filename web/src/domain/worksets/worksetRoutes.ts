@@ -22,24 +22,39 @@ export function parseWorksetCatalogTab(tab: string | null): WorksetCatalogTab {
   return DEFAULT_WORKSET_CATALOG_TAB;
 }
 
-/** Query key for the graph-tab workset MenuSelect (`?tab=graph&worksetId=`). */
+/** Query key for the graph-tab workset checklist (`?tab=graph&worksetId=`). */
 export const WORKSET_GRAPH_FILTER_PARAM = "worksetId";
 
-/** `null` means 全部 — empty / missing query value. */
-export function parseWorksetGraphFilter(value: string | null): string | null {
-  const id = value?.trim() ?? "";
-  return id.length > 0 ? id : null;
+/** Sentinel for 清除 (none). Missing param still means the default set. */
+export const WORKSET_GRAPH_FILTER_NONE = "__none__";
+
+/** `null` means default selection — missing query value. `[]` means none. */
+export function parseWorksetGraphFilter(value: string | null): string[] | null {
+  const raw = value?.trim() ?? "";
+  if (!raw) return null;
+  if (raw === WORKSET_GRAPH_FILTER_NONE) return [];
+  const ids = raw
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0 && part !== WORKSET_GRAPH_FILTER_NONE);
+  return ids.length > 0 ? ids : null;
+}
+
+export function serializeWorksetGraphFilter(ids: readonly string[]): string {
+  return ids.length === 0 ? WORKSET_GRAPH_FILTER_NONE : ids.join(",");
 }
 
 export function worksetsCatalogPath(
   tab?: WorksetCatalogTab,
-  graphWorksetId?: string | null,
+  graphWorksetId?: string | readonly string[] | null,
 ): string {
   if (!tab || tab === DEFAULT_WORKSET_CATALOG_TAB) return WORKSETS_PATH;
   const params = new URLSearchParams();
   params.set("tab", tab);
-  if (tab === "graph" && graphWorksetId) {
-    params.set(WORKSET_GRAPH_FILTER_PARAM, graphWorksetId);
+  if (tab === "graph" && graphWorksetId != null) {
+    const value =
+      typeof graphWorksetId === "string" ? graphWorksetId : serializeWorksetGraphFilter(graphWorksetId);
+    if (value) params.set(WORKSET_GRAPH_FILTER_PARAM, value);
   }
   return `${WORKSETS_PATH}?${params.toString()}`;
 }

@@ -87,6 +87,9 @@ describe("UserEventDialog create", () => {
     expect(arg.calendarKind).toBe("normal");
     expect(arg.notifyPref).toBe("off");
 
+    expect(document.body.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
+    expect(document.body.querySelector('[data-testid="user-event-parent-item"]')).toBeNull();
+
     host.remove();
   });
 
@@ -279,6 +282,7 @@ describe("UserEventDialog create", () => {
     expect(
       document.body.querySelector('[data-testid="user-event-calendar-kind-badge-expires"]'),
     ).toBeTruthy();
+    expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
     const titleInput = document.body.querySelector(
       'input[aria-label="標題"]',
     ) as HTMLInputElement;

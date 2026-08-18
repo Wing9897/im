@@ -1,11 +1,20 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { AlignLeft, CalendarClock, CalendarDays, Clock, Layers, MapPin, Pencil, Repeat, Trash2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { UserEvent } from "../../api/userEvents";
 import { ToggleSwitch } from "../../components/ToggleSwitch";
-import { AccentBarCard, Badge, FeedCard } from "../../components/ui";
+import {
+  AccentBarCard,
+  Badge,
+  CardFieldRow,
+  CardTitleIcon,
+  cardTitleHeaderClass,
+  cardTitleLeadClass,
+} from "../../components/ui";
 import { cardTitleClass } from "../../components/ui/pageTypography";
+import { scheduleCardText } from "../../domain/schedule/scheduleCardFields";
 import { rruleFreqKey } from "../../domain/schedule/rruleSummary";
 import { formatOsDateTime } from "../../utils/time";
 import type { ScheduleRecurringItem } from "./useScheduleRecurringFeed";
@@ -24,73 +33,123 @@ function formatEventWhen(event: UserEvent, allDayLabel: string): string {
   return `${start} – ${end}`;
 }
 
+function ScheduleCardFields({
+  rows,
+}: {
+  rows: Array<{
+    key: string;
+    text: string;
+    testId: string;
+    icon: LucideIcon;
+    clamp?: boolean;
+    empty?: boolean;
+  }>;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5" data-testid="schedule-card-fields">
+      {rows.map((row) => (
+        <CardFieldRow
+          key={row.key}
+          icon={row.icon}
+          text={row.text}
+          testId={row.testId}
+          clamp={row.clamp}
+          empty={row.empty}
+          className="text-caption leading-snug text-text-secondary"
+        />
+      ))}
+    </div>
+  );
+}
+
 export function ScheduleOneOffCard({
   event,
   worksetName,
-  itemLabel,
   onEdit,
   onDelete,
 }: {
   event: UserEvent;
   worksetName: string | null;
-  itemLabel: string | null;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation("schedule");
-  const metaBits = [
-    formatEventWhen(event, t("card.allDay")),
-    event.location?.trim() ? event.location.trim() : null,
-    worksetName ? `${t("card.workset")}: ${worksetName}` : null,
-    itemLabel ? `${t("card.item")}: ${itemLabel}` : null,
-  ].filter(Boolean);
+  const empty = t("card.empty");
+  const location = scheduleCardText(event.location, empty);
+  const notes = scheduleCardText(event.body, empty);
+  const rows = [
+    {
+      key: "when",
+      icon: Clock,
+      text: formatEventWhen(event, t("card.allDay")),
+      testId: "schedule-card-when",
+    },
+    {
+      key: "location",
+      icon: MapPin,
+      text: t("card.locationLine", { value: location }),
+      testId: "schedule-card-location",
+      empty: location === empty,
+    },
+    {
+      key: "notes",
+      icon: AlignLeft,
+      text: t("card.notesLine", { value: notes }),
+      testId: "schedule-card-notes",
+      empty: notes === empty,
+      clamp: true,
+    },
+    ...(worksetName
+      ? [
+          {
+            key: "workset",
+            icon: Layers,
+            text: `${t("card.workset")}: ${worksetName}`,
+            testId: "schedule-card-workset",
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <FeedCard
+    <AccentBarCard
+      accentClass="bg-[var(--accent)]"
+      className="h-full"
       data-testid={`schedule-one-off-card-${event.id}`}
-      density="default"
-      style={{ borderLeft: "3px solid var(--accent)" }}
-      header={
-        <div className="flex items-start gap-2">
+    >
+      <div className={cardTitleHeaderClass}>
+        <span className={cardTitleLeadClass}>
+          <CardTitleIcon icon={CalendarDays} />
           <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={event.title}>
             {event.title}
           </div>
-          <Badge tone="neutral">{t("badge.oneOff")}</Badge>
-        </div>
-      }
-      meta={
-        <div className="flex flex-wrap items-center gap-1.5 text-caption text-text-secondary">
-          {metaBits.map((bit) => (
-            <span key={bit}>{bit}</span>
-          ))}
-        </div>
-      }
-      body={event.body?.trim() ? event.body.trim() : undefined}
-      footer={
-        <div className="mt-auto flex items-center justify-end gap-1">
-          <button
-            type="button"
-            className={actionIconBtnClass}
-            aria-label={t("card.editAria", { title: event.title })}
-            title={t("card.edit")}
-            onClick={onEdit}
-            data-testid={`schedule-one-off-edit-${event.id}`}
-          >
-            <Pencil size={14} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className={actionIconBtnClass}
-            aria-label={t("card.deleteAria", { title: event.title })}
-            title={t("card.delete")}
-            onClick={onDelete}
-            data-testid={`schedule-one-off-delete-${event.id}`}
-          >
-            <Trash2 size={14} aria-hidden="true" />
-          </button>
-        </div>
-      }
-    />
+        </span>
+        <Badge tone="neutral">{t("badge.oneOff")}</Badge>
+      </div>
+      <ScheduleCardFields rows={rows} />
+      <div className="mt-auto flex items-center justify-end gap-1 pt-1">
+        <button
+          type="button"
+          className={actionIconBtnClass}
+          aria-label={t("card.editAria", { title: event.title })}
+          title={t("card.edit")}
+          onClick={onEdit}
+          data-testid={`schedule-one-off-edit-${event.id}`}
+        >
+          <Pencil size={14} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={actionIconBtnClass}
+          aria-label={t("card.deleteAria", { title: event.title })}
+          title={t("card.delete")}
+          onClick={onDelete}
+          data-testid={`schedule-one-off-delete-${event.id}`}
+        >
+          <Trash2 size={14} aria-hidden="true" />
+        </button>
+      </div>
+    </AccentBarCard>
   );
 }
 
@@ -113,6 +172,42 @@ export function ScheduleRecurringCard({
   const rruleLabel = task.rrule.trim()
     ? t(`rruleFreq.${freqKey}`)
     : t("card.noRrule");
+  const empty = t("card.empty");
+  const location = scheduleCardText(task.eventLocation, empty);
+  const notes = scheduleCardText(task.eventDescription ?? task.description, empty);
+  const rows = [
+    {
+      key: "rrule",
+      icon: CalendarClock,
+      text: `${t("card.rrule")}: ${rruleLabel}${task.rrule.trim() ? ` (${task.rrule.trim()})` : ""}`,
+      testId: "schedule-card-rrule",
+    },
+    {
+      key: "location",
+      icon: MapPin,
+      text: t("card.locationLine", { value: location }),
+      testId: "schedule-card-location",
+      empty: location === empty,
+    },
+    {
+      key: "notes",
+      icon: AlignLeft,
+      text: t("card.notesLine", { value: notes }),
+      testId: "schedule-card-notes",
+      empty: notes === empty,
+      clamp: true,
+    },
+    ...(worksetName
+      ? [
+          {
+            key: "workset",
+            icon: Layers,
+            text: `${t("card.workset")}: ${worksetName}`,
+            testId: "schedule-card-workset",
+          },
+        ]
+      : []),
+  ];
 
   return (
     <AccentBarCard
@@ -120,26 +215,16 @@ export function ScheduleRecurringCard({
       className="h-full"
       data-testid={`schedule-recurring-card-${task.id}`}
     >
-      <div className="flex items-start gap-2">
-        <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={task.name}>
-          {task.name}
-        </div>
+      <div className={cardTitleHeaderClass}>
+        <span className={cardTitleLeadClass}>
+          <CardTitleIcon icon={Repeat} />
+          <div className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`} title={task.name}>
+            {task.name}
+          </div>
+        </span>
         <Badge tone="info">{t("badge.recurring")}</Badge>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5 text-caption text-text-secondary">
-        <span>
-          {t("card.rrule")}: {rruleLabel}
-          {task.rrule.trim() ? ` (${task.rrule.trim()})` : ""}
-        </span>
-        {worksetName ? (
-          <span>
-            {t("card.workset")}: {worksetName}
-          </span>
-        ) : null}
-      </div>
-      {task.description?.trim() ? (
-        <p className="line-clamp-3 text-body text-text-secondary">{task.description.trim()}</p>
-      ) : null}
+      <ScheduleCardFields rows={rows} />
       <div className="mt-auto flex items-center justify-end gap-1 pt-1">
         <ToggleSwitch
           checked={task.isActive}

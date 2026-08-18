@@ -1,5 +1,5 @@
 /**
- * Soft public-broadcast-style preambles before voice-reminder TTS.
+ * Soft public-broadcast-style preambles before local-notify TTS.
  * Mid/low chime register + layered partials (closer to real PA / station cues).
  * Uses Web Audio oscillators (no audio asset required).
  */
@@ -231,8 +231,8 @@ function scheduleSoftChime(
   }
 }
 
-/** Play the voice-reminder preamble; no-ops when AudioContext is unavailable or id is none. */
-export async function playVoiceReminderPreamble(
+/** Play the local-notify preamble; no-ops when AudioContext is unavailable or id is none. */
+export async function playNotifyPreamble(
   chimeId: PreambleChimeId = DEFAULT_PREAMBLE_CHIME_ID,
 ): Promise<void> {
   if (typeof window === "undefined" || chimeId === "none") return;

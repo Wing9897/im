@@ -7,6 +7,7 @@ import {
   isToday,
   type TimelineScale,
 } from "../../../domain/timeline/dateUtils";
+import type { DailyHoliday } from "../../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../../types";
 import {
@@ -34,8 +35,9 @@ import {
 import {
   calendarScrollableClass,
   monthCalendarFillClass,
-} from "./timelineCalendarLayout";
+} from "./timelineCalendarClasses";
 import { TimelineDayEventCard } from "./TimelineDayEventCard";
+import { TimelineHolidayChip } from "./TimelineHolidayChip";
 import { TimelineMonthGrid } from "./TimelineMonthGrid";
 import { TimelineWeatherChip } from "./TimelineWeatherChip";
 import { WeekEventChip } from "./TimelineWeekEventChip";
@@ -59,9 +61,13 @@ type TimelineCalendarViewProps = {
   showEnding?: boolean;
   /** Month daily weather keyed by local YYYY-MM-DD (from page-level useMonthWeather). */
   weatherByDate?: Record<string, DailyWeather>;
+  /** Country holidays for the weather location (from page-level useMonthHolidays). */
+  holidaysByDate?: Record<string, DailyHoliday[]>;
   onSelectEvent: (event: TimelineItem) => void;
   onFocusDay: (day: Date) => void;
   onCreateOnDay?: (day: Date) => void;
+  /** Page toolbar 顯示日期: muted dates; event rows hide, header weather stays. */
+  datesRevealed?: boolean;
 };
 
 export function TimelineCalendarView({
@@ -79,9 +85,11 @@ export function TimelineCalendarView({
   showOngoing = true,
   showEnding = true,
   weatherByDate = {},
+  holidaysByDate = {},
   onSelectEvent,
   onFocusDay,
   onCreateOnDay,
+  datesRevealed = false,
 }: TimelineCalendarViewProps) {
   const { t } = useTranslation("timeline");
 
@@ -95,6 +103,10 @@ export function TimelineCalendarView({
               day={rangeStart}
               weatherByDate={weatherByDate}
               testId="timeline-day-weather"
+            />
+            <TimelineHolidayChip
+              day={rangeStart}
+              holidaysByDate={holidaysByDate}
             />
           </div>
           <div className={calendarDayEventsGridClass}>
@@ -132,6 +144,10 @@ export function TimelineCalendarView({
                     day={day}
                     weatherByDate={weatherByDate}
                     testId="timeline-day-weather"
+                  />
+                  <TimelineHolidayChip
+                    day={day}
+                    holidaysByDate={holidaysByDate}
                   />
                 </div>
               </div>
@@ -211,6 +227,8 @@ export function TimelineCalendarView({
         showOngoing={showOngoing}
         showEnding={showEnding}
         weatherByDate={weatherByDate}
+        holidaysByDate={holidaysByDate}
+        datesRevealed={datesRevealed}
         onSelectEvent={onSelectEvent}
         onFocusDay={onFocusDay}
         onCreateOnDay={onCreateOnDay}

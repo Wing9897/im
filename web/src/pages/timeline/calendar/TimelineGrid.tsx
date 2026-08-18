@@ -4,7 +4,7 @@ import type { TimelineScale } from "../../../domain/timeline/dateUtils";
 import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
 import { LazyLoadErrorBoundary } from "../../../components/common/LazyLoadErrorBoundary";
 import { TimelineCalendarView } from "./TimelineCalendarView";
-import { calendarMonthPanelClass } from "./timelineCalendarLayout";
+import { calendarMonthPanelClass } from "./timelineCalendarClasses";
 import { timelinePanelClass } from "../timelineViewLayout";
 import { useTimelinePageContext } from "../TimelinePageContext";
 
@@ -94,6 +94,8 @@ export function TimelineGrid({
     showOngoing,
     showEnding,
     weatherByDate,
+    holidaysByDate,
+    monthDatesRevealed = false,
     onCreateOnDay,
   } = useTimelinePageContext();
 
@@ -118,6 +120,8 @@ export function TimelineGrid({
           showOngoing={showOngoing}
           showEnding={showEnding}
           weatherByDate={weatherByDate}
+          holidaysByDate={holidaysByDate}
+          datesRevealed={monthDatesRevealed}
           onSelectEvent={onSelectEvent}
           onFocusDay={onFocusDay}
           onCreateOnDay={onCreateOnDay}

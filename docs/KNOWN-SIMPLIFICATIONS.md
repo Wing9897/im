@@ -53,9 +53,11 @@ Scheduler／stamp-37 wipe-only: [`ARCHITECTURE.md`](./ARCHITECTURE.md#scheduler)
 
 ## Sources
 
-Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/calendar/items`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
+Platform-first `PATCH /api/v1/sources/{email|rss|mqtt|telegram|discord}/{source_id}`. List: unfiltered `GET /api/v1/sources` or typed `GET /api/v1/sources/{platform}`; `?platform=` → **400**. Still active: `GET /api/v1/calendar/occurrences`. RSS／Email default poll **300s** (`poll_interval_seconds`, clamped 60–86400). Trigger history: `GET /api/v1/actions/trigger-history` (legacy `/actions/history` paths remain 404).
 
 **FE board kit:** shared list/card/layout hooks live under `web/src/pages/sources/board/` (`SourceCard*`, `SourceTabLayout`, `useSourceListTab*`, …). Platform folders (`rss/`／`telegram/`／…) stay in place — not a whole-tree Sources rewrite.
+
+**Calendar holidays:** `GET /api/v1/calendar/holidays` overlays Nager.Date public holidays for the household weather location's ISO 3166-1 country (not city / subdivision). Fail-soft empty overlay when Nager is down or the country is unsupported. Not CalDAV.
 
 **Input／Process registries (in-repo, not a plugin SDK):**
 - Platforms: leaf `server/domain/collector_platforms.py` → DDL CHECK + `ADAPTER_BUILDERS` + FE `domain/sources/collectorPlatforms.ts` (drift-tested).
@@ -68,7 +70,7 @@ Pointer only — stamp / semver / wipe-floor SoT: [`SCHEMA-BASELINE.md`](./SCHEM
 
 ## Stamp 33 LLM simplifications (intentional)
 
-Introduced at stamp 33; still in force under wipe-floor **39** / `SCHEMA_SEMVER` `0.1.0-beta.40`. These are product decisions — do **not** “restore” without an explicit new contract:
+Introduced at stamp 33; still in force under wipe-floor **40** / `SCHEMA_SEMVER` `0.1.0-beta.41`. These are product decisions — do **not** “restore” without an explicit new contract:
 
 | Simplification | Keep / do not reintroduce |
 |----------------|---------------------------|
@@ -131,7 +133,7 @@ Ops: prefer contract tests + `npm run verify:deploy`（live check）for day-to-d
 | `analysisPaused` | read via settings snapshot; write via `POST /system/analysis/pause` only |
 | Source URL styles | All platforms use `/api/v1/sources/{platform}/{id}/...` for platform-scoped mutations (retired `/api/v1/accounts*` stay 404) |
 | Source list | `GET /api/v1/sources` → `Source[]`; typed `GET /api/v1/sources/{telegram,discord,rss,mqtt,email,http}`; `?platform=` → 400 |
-| Schema stamp v39 | See [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix) and [reset procedure](./SCHEMA-BASELINE.md#schema-v39-explicit-reset) (wipe-only floor; `analysis_tasks.workset_id` NOT NULL DEFAULT `__user__`; `notify_pref` is `follow`／`off`; `output_analysis_events` defaults ON as the all-mode intel hard gate. Every DB enum CHECK clause is generated in its `server/domain/` Python SoT with drift tests — collector platform, analysis_mode, provider／staff_class／json_mode／web_search_provider, calendar kind／direction／origin, timeline source, action_type + trigger-history status, trigger_mode, batch／source／item status, analysis_time_range, app log level, nullable analysis_strategy_mode, notify_pref. `worksets.notify_enabled`／`external_enabled` default on. `server/db/schema_domains/vocabulary.py` is a pure re-export hub (no assembly) that some fragments import through; the rest import their domain module directly. No `is_default`／no assistant staff row; hard-bound global slots; `item_id` FK `ON DELETE SET NULL`; `SCHEMA_SEMVER` `0.1.0-beta.40`) |
+| Schema stamp v40 | See [`SCHEMA-BASELINE.md` Schema support matrix](./SCHEMA-BASELINE.md#schema-support-matrix) and [reset procedure](./SCHEMA-BASELINE.md#schema-v40-explicit-reset) (wipe-only floor; `user_events`／`recurring_schedules.notify_pref` DEFAULT `'off'`; `analysis_tasks.notify_pref` stays `'follow'`; worksets DDL in `schema_domains/worksets.py`; `analysis_tasks.workset_id` NOT NULL DEFAULT `__user__`; `notify_pref` is `follow`／`off`; `output_analysis_events` defaults ON as the all-mode intel hard gate. Every DB enum CHECK clause is generated in its `server/domain/` Python SoT with drift tests — collector platform, analysis_mode, provider／staff_class／json_mode／web_search_provider, calendar kind／direction／origin, timeline source, action_type + trigger-history status, trigger_mode, batch／source／item status, analysis_time_range, app log level, nullable analysis_strategy_mode, notify_pref. `worksets.notify_enabled`／`external_enabled` default on. `server/db/schema_domains/vocabulary.py` is a pure re-export hub (no assembly) that some fragments import through; the rest import their domain module directly. No `is_default`／no assistant staff row; hard-bound global slots; `item_id` FK `ON DELETE SET NULL`; `SCHEMA_SEMVER` `0.1.0-beta.41`) |
 | Task catalog vs recurring series | `GET /tasks` returns analysis tasks only (no `parentTaskId`／`itemId`／`topLevelOnly`). Child recurring rows are fetched from `/calendar/recurring?parentTaskId=…`; `topLevelOnly` on the recurring endpoint hides child series that have a parent agent task. |
 | Batch diagnostics | `error_message` / token counts on queue `processingBatches` / `attentionBatches` |
 | Web builds | Root `build:web` runs Vite through `build-web.mjs`; `web` package `build` also runs `tsc`. CI relies on `typecheck` |

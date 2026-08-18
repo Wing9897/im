@@ -30,13 +30,15 @@
     "cancelled": "已取消"
   },
   "filter": {
-    "showOptions": "显示",
+    "showOptions": "筛选",
     "showDismissed": "显示已移除",
     "showDismissedHelp": "软移除的事件会以删除线显示，可从此还原。",
     "showOngoing": "显示进行中",
     "showOngoingHelp": "月历格子里显示跨日事件的「+N 进行中」提示（仅圆点颜色区分）。",
     "showEnding": "显示结束",
-    "showEndingHelp": "月历格子里显示「+N 结束」提示：跨日结束、物品到期，以及循环系列的最后一次（仅圆点颜色区分）。"
+    "showEndingHelp": "月历格子里显示「+N 结束」提示：跨日结束、物品到期，以及循环系列的最后一次（仅圆点颜色区分）。",
+    "showDates": "显示日期",
+    "showDatesHelp": "月历格子显示较实的日期数字，并隐藏事件与进行中／结束提示。顶栏天气仍会显示。"
   },
   "view": {
     "loadTimeout": "载入逾时，请重试",
@@ -70,13 +72,19 @@
     "ending": "+{count} 结束",
     "weatherAria": "天气 {high} 至 {low} 度",
     "weatherTitle": "天气：{high}°C／{low}°C",
-    "weatherRefresh": "更新天气",
+    "weatherRefresh": "更新天气与节日",
+    "holidayOverflow": "+{count}",
+    "holidayNameSep": "、",
+    "holidayAria": "节日 {name}",
+    "holidayTitle": "节日：{name}",
     "dayCellAria": "{date}，{count} 则事件",
     "dayCellAriaEmpty": "{date}，无事件",
     "noEventsToday": "当天没有事件",
     "itemCount": "{count} 则",
     "noEvents": "无事件",
-    "location": "地点：{value}"
+    "location": "地点：{value}",
+    "notes": "说明：{value}",
+    "emptyValue": "N/A"
   },
   "sidebar": {
     "closeAria": "关闭",

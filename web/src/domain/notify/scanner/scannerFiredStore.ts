@@ -1,7 +1,7 @@
 import {
-  claimVoiceReminderFired,
-  fetchVoiceReminderFired,
-  putVoiceReminderFired,
+  claimNotifyFired,
+  fetchNotifyFired,
+  putNotifyFired,
 } from "../../../api/uiPrefs";
 import { logWarn } from "../../../utils/logger";
 
@@ -25,7 +25,7 @@ export async function hydrateFiredKeys(): Promise<Set<string>> {
   if (!hydrateFiredPromise) {
     hydrateFiredPromise = (async () => {
       try {
-        const response = await fetchVoiceReminderFired();
+        const response = await fetchNotifyFired();
         if (response.configured && Array.isArray(response.keys)) {
           const keys = new Set(response.keys);
           setFiredCache(keys);
@@ -35,7 +35,7 @@ export async function hydrateFiredKeys(): Promise<Set<string>> {
         setFiredCache(new Set());
         return loadFiredKeys();
       } catch (error) {
-        logWarn("[voiceReminder] failed to hydrate fired keys", error);
+        logWarn("[notify] failed to hydrate fired keys", error);
         const fallback = loadFiredKeys();
         setFiredCache(fallback);
         return fallback;
@@ -55,13 +55,13 @@ export async function saveFiredKeys(firedKeys: ReadonlySet<string>): Promise<boo
   const keys = new Set(firedKeys);
   setFiredCache(keys);
   try {
-    const saved = await putVoiceReminderFired([...keys]);
+    const saved = await putNotifyFired([...keys]);
     if (Array.isArray(saved.keys)) {
       setFiredCache(new Set(saved.keys));
     }
     return true;
   } catch (error) {
-    logWarn("[voiceReminder] failed to save fired keys", error);
+    logWarn("[notify] failed to save fired keys", error);
     return false;
   }
 }
@@ -76,13 +76,13 @@ export async function claimFiredKeys(keys: readonly string[]): Promise<Set<strin
     return new Set();
   }
   try {
-    const response = await claimVoiceReminderFired(uniqueKeys);
+    const response = await claimNotifyFired(uniqueKeys);
     if (Array.isArray(response.keys)) {
       setFiredCache(new Set(response.keys));
     }
     return new Set(response.claimed ?? []);
   } catch (error) {
-    logWarn("[voiceReminder] failed to claim fired keys", error);
+    logWarn("[notify] failed to claim fired keys", error);
     return new Set();
   }
 }

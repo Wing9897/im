@@ -137,7 +137,7 @@
       "title": "外發通知",
       "shortDescription": "依通知規則在條件符合時，透過 Telegram、Discord、Webhook、MQTT 等管道外送訊息。"
     },
-    "voiceReminder": {
+    "localNotify": {
       "title": "本機通知",
       "shortDescription": "本機掃描即將發生的情報事件、週期任務（RRULE）展開，以及工作集事件，並以語音、畫面或最近一天收件匣通知。",
       "linkLabel": "前往本機通知"
@@ -156,6 +156,8 @@
     "weather_unavailable": "天氣來源皆暫時無法使用，請稍後再試",
     "weather_location_not_found": "無法解析指定地區",
     "weather_invalid_date_range": "天氣預報日期範圍無效",
+    "holiday_invalid_year": "節日年份無效",
+    "holiday_invalid_location": "節日地區無效",
     "agent_timeout": "助手請求逾時，請稍後再試或縮短問題。",
     "ai_engine_unreachable": "AI 引擎無法連線（例如本機 Ollama 未啟動或埠號錯誤）。設定頁「AI 測試」成功仍可能無法支援助手長對話。",
     "ai_engine_failed": "AI 引擎無法完成這次請求。請檢查供應商狀態與日誌頁，然後再試一次。",
@@ -364,7 +366,7 @@
   },
   "boot": {
     "unavailableTitle": "無法連線到本機服務",
-    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 39／SemVer 0.1.0-beta.40；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
+    "unavailableHint": "常見原因：後端尚未啟動完成，或本機資料庫 schema 不相容。目前 baseline 為 wipe-only stamp 40／SemVer 0.1.0-beta.41；其他 stamp 均須重置。請執行 {script} 重置本機資料庫後再重試。",
     "retry": "重新檢查",
     "serviceUnavailable": "服務暫時無法回應",
     "starting": "正在啟動…"

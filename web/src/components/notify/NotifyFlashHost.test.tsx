@@ -2,9 +2,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_VOICE_REMINDER_SETTINGS,
-  resetVoiceReminderSettingsCacheForTests,
-  saveVoiceReminderSettings,
+  DEFAULT_NOTIFY_SETTINGS,
+  resetNotifySettingsCacheForTests,
+  saveNotifySettings,
 } from "../../domain/notify/scanner/settings";
 import { resetNotifyFlashForTests, showNotifyFlash } from "../../domain/notify/notifyFlash";
 import { NotifyFlashHost } from "./NotifyFlashHost";
@@ -29,9 +29,9 @@ vi.mock("../../domain/notify/scanner/settings", async () => {
   );
   return {
     ...actual,
-    hydrateVoiceReminderSettings: () => Promise.resolve(actual.loadVoiceReminderSettings()),
-    saveVoiceReminderSettings: vi.fn(async (settings: unknown) => {
-      await actual.saveVoiceReminderSettings(settings as never);
+    hydrateNotifySettings: () => Promise.resolve(actual.loadNotifySettings()),
+    saveNotifySettings: vi.fn(async (settings: unknown) => {
+      await actual.saveNotifySettings(settings as never);
       return true;
     }),
   };
@@ -42,8 +42,8 @@ const { mockPutSettings } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../api/uiPrefs", () => ({
-  fetchVoiceReminderSettings: vi.fn(async () => ({ configured: false, settings: null })),
-  putVoiceReminderSettings: (...args: unknown[]) => mockPutSettings(...args),
+  fetchNotifySettings: vi.fn(async () => ({ configured: false, settings: null })),
+  putNotifySettings: (...args: unknown[]) => mockPutSettings(...args),
 }));
 
 describe("NotifyFlashHost", () => {
@@ -51,14 +51,14 @@ describe("NotifyFlashHost", () => {
 
   beforeEach(async () => {
     mockIsElectronDesktop.mockReturnValue(false);
-    resetVoiceReminderSettingsCacheForTests();
+    resetNotifySettingsCacheForTests();
     mockPutSettings.mockReset();
     mockPutSettings.mockImplementation(async (settings: unknown) => ({
       configured: true,
       settings,
     }));
-    await saveVoiceReminderSettings({
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+    await saveNotifySettings({
+      ...DEFAULT_NOTIFY_SETTINGS,
       enabled: true,
       flashEnabled: true,
     });
@@ -71,7 +71,7 @@ describe("NotifyFlashHost", () => {
     root = null;
     document.body.innerHTML = "";
     resetNotifyFlashForTests();
-    resetVoiceReminderSettingsCacheForTests();
+    resetNotifySettingsCacheForTests();
   });
 
   it("renders a dedicated full-width top bar, not the operational toast container", async () => {
@@ -117,8 +117,8 @@ describe("NotifyFlashHost", () => {
   });
 
   it("hides the bar when the flash channel is off", async () => {
-    await saveVoiceReminderSettings({
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+    await saveNotifySettings({
+      ...DEFAULT_NOTIFY_SETTINGS,
       flashEnabled: false,
     });
     showNotifyFlash("Should stay hidden");

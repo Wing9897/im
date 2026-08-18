@@ -50,6 +50,7 @@ def removed_endpoints(*, task_id: str, action_id: str) -> list[tuple[str, str, d
         ("POST", "/api/v1/system/reset/runtime", {}),
         # Calendar surface unified under /api/v1/calendar/*.
         ("GET", "/api/v1/results/calendar", None),
+        ("GET", "/api/v1/calendar/items", None),
         ("POST", "/api/v1/calendar-imports/preview", {}),
         ("POST", "/api/v1/calendar-imports/commit", {}),
         ("GET", "/api/v1/timeline/dismissals", None),

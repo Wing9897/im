@@ -15,7 +15,7 @@ export function isNotifyPref(value: unknown): value is NotifyPref {
 
 /**
  * Blank / unknown → ``fallback`` (default ``follow``). Never throws.
- * Legacy ``on`` is unknown (not a synonym).
+ * HTTP ``"on"`` is 422 on write; read-side coerce treats it as unknown → default.
  */
 export function normalizeNotifyPref(
   value: unknown,

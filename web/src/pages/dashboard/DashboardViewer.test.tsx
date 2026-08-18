@@ -600,7 +600,7 @@ describe("DashboardViewer", () => {
       expect(container.querySelector('[data-testid="workset-detail-dialog"]')).toBeNull();
     });
 
-    it("shows rename/delete controls for named workset groups but not for 一般", () => {
+    it("shows rename/delete icon controls for named workset groups but not for 一般", () => {
       act(() => {
         root = createRoot(container);
         root.render(<DashboardViewer />);
@@ -608,10 +608,13 @@ describe("DashboardViewer", () => {
 
       const opsCard = container.querySelector('[data-testid="workset-card-ws-1"]');
       const generalCard = container.querySelector('[data-testid="workset-card-__user__"]');
-      expect(opsCard?.textContent).toContain("重新命名");
-      expect(opsCard?.textContent).toContain("刪除");
+      expect(opsCard?.querySelector('[data-testid="workset-card-rename-ws-1"]')).toBeTruthy();
+      expect(opsCard?.querySelector('[data-testid="workset-card-delete-ws-1"]')).toBeTruthy();
+      expect(opsCard?.textContent ?? "").not.toContain("重新命名");
+      expect(opsCard?.textContent ?? "").not.toContain("刪除");
       expect(generalCard?.textContent).toContain("內建");
-      expect(generalCard?.textContent ?? "").not.toContain("重新命名");
+      expect(generalCard?.querySelector('[data-testid="workset-card-rename-__user__"]')).toBeNull();
+      expect(generalCard?.querySelector('[data-testid="workset-card-delete-__user__"]')).toBeNull();
       expect(container.textContent).not.toContain("未歸屬");
     });
   });

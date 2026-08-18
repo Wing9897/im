@@ -27,7 +27,7 @@ import { useRevealScrollbarOnScroll } from "./hooks/useRevealScrollbarOnScroll";
 import { prefetchRoute } from "./routing/prefetchRoute";
 import { useFocalBackgroundAutoRefresh } from "./hooks/useFocalBackgroundAutoRefresh";
 import { applyTheme, getStoredThemeId, loadBgForTheme } from "./styles/themeData";
-import { useVoiceReminderScanner } from "./domain/notify/scanner/useVoiceReminderScanner";
+import { useNotifyScanner } from "./domain/notify/scanner/useNotifyScanner";
 
 /**
  * App shell entry (pages ↔ canvas).
@@ -98,7 +98,7 @@ function AppShellBody() {
   useFocalBackgroundAutoRefresh();
   const [boardImmersive, setBoardImmersive] = useState(false);
   useRevealScrollbarOnScroll(mainScrollRef);
-  useVoiceReminderScanner();
+  useNotifyScanner();
 
   const isCanvas = monitorMode === "canvas";
 

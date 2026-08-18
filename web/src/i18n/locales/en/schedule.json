@@ -37,7 +37,11 @@
     "item": "Linked item",
     "rrule": "Recurrence",
     "noRrule": "No recurrence rule",
-    "location": "Location"
+    "location": "Location",
+    "notes": "Notes",
+    "empty": "N/A",
+    "locationLine": "Location: {value}",
+    "notesLine": "Notes: {value}"
   },
   "loadMoreHint": "Showing {shown} / {total}",
   "loadMoreHintHasMore": "Scroll for more (showing {shown})",

@@ -1459,15 +1459,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/calendar/items": {
+    "/api/v1/calendar/occurrences": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** List Calendar Items */
-        get: operations["list_calendar_items_api_v1_calendar_items_get"];
+        /** List Calendar Occurrences */
+        get: operations["list_calendar_occurrences_api_v1_calendar_occurrences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar/holidays": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Calendar Holidays */
+        get: operations["list_calendar_holidays_api_v1_calendar_holidays_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2745,6 +2762,47 @@ export interface components {
                 [key: string]: "day" | "month";
             };
         };
+        /**
+         * CalendarHolidayItemResponse
+         * @description One Nager.Date public holiday (country-level, not city).
+         */
+        CalendarHolidayItemResponse: {
+            /** Date */
+            date: string;
+            /**
+             * Localname
+             * @default
+             */
+            localName: string;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /** Countrycode */
+            countryCode: string;
+            /**
+             * Isglobal
+             * @default true
+             */
+            isGlobal: boolean;
+            /** Types */
+            types?: string[];
+        };
+        /**
+         * CalendarHolidaysResponse
+         * @description Public holidays for the household weather location's country.
+         */
+        CalendarHolidaysResponse: {
+            /** Year */
+            year: number;
+            /** Location */
+            location: string;
+            /** Country */
+            country?: string | null;
+            /** Holidays */
+            holidays?: components["schemas"]["CalendarHolidayItemResponse"][];
+        };
         /** CalendarImportChangeResponse */
         CalendarImportChangeResponse: {
             /** Field */
@@ -2880,7 +2938,7 @@ export interface components {
         };
         /**
          * CalendarOccurrenceResponse
-         * @description RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``.
+         * @description RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``.
          */
         CalendarOccurrenceResponse: {
             /** Id */
@@ -3926,6 +3984,124 @@ export interface components {
             clientId?: string | null;
             /** Name */
             name?: string | null;
+        };
+        /** NotifyFiredBody */
+        NotifyFiredBody: {
+            /** Keys */
+            keys: string[];
+        };
+        /** NotifyFiredClaimResponse */
+        NotifyFiredClaimResponse: {
+            /** Configured */
+            configured: boolean;
+            /** Claimed */
+            claimed?: string[];
+            /** Keys */
+            keys?: string[];
+        };
+        /** NotifyFiredResponse */
+        NotifyFiredResponse: {
+            /** Configured */
+            configured: boolean;
+            /** Keys */
+            keys?: string[] | null;
+        };
+        /** NotifyHistoryBody */
+        NotifyHistoryBody: {
+            /** Entries */
+            entries: components["schemas"]["NotifyHistoryEntrySchema"][];
+        };
+        /** NotifyHistoryEntrySchema */
+        NotifyHistoryEntrySchema: {
+            /** Id */
+            id: string;
+            /** Triggerreason */
+            triggerReason: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "success" | "failure";
+            /** Errormessage */
+            errorMessage?: string | null;
+            /** Triggeredat */
+            triggeredAt: string;
+            /** Eventid */
+            eventId?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Leadoffsetminutes */
+            leadOffsetMinutes?: number | null;
+        };
+        /** NotifyHistoryResponse */
+        NotifyHistoryResponse: {
+            /** Configured */
+            configured: boolean;
+            /** Entries */
+            entries?: components["schemas"]["NotifyHistoryEntrySchema"][] | null;
+        };
+        /** NotifyQuietHoursSchema */
+        NotifyQuietHoursSchema: {
+            /**
+             * Enabled
+             * @default true
+             */
+            enabled: boolean;
+            /**
+             * Start
+             * @default 22:00
+             */
+            start: string;
+            /**
+             * End
+             * @default 07:00
+             */
+            end: string;
+        };
+        /** NotifySettingsBody */
+        NotifySettingsBody: {
+            settings: components["schemas"]["NotifySettingsSchema"];
+        };
+        /** NotifySettingsResponse */
+        NotifySettingsResponse: {
+            /** Configured */
+            configured: boolean;
+            settings?: components["schemas"]["NotifySettingsSchema"] | null;
+        };
+        /**
+         * NotifySettingsSchema
+         * @description Local-notify settings blob under ``notify_settings``.
+         */
+        NotifySettingsSchema: {
+            /**
+             * Enabled
+             * @default false
+             */
+            enabled: boolean;
+            /**
+             * Voiceenabled
+             * @default true
+             */
+            voiceEnabled: boolean;
+            /**
+             * Flashenabled
+             * @default true
+             */
+            flashEnabled: boolean;
+            /**
+             * Flashmode
+             * @default timed
+             * @enum {string}
+             */
+            flashMode: "timed" | "persistent";
+            /** Leadoffsetsminutes */
+            leadOffsetsMinutes?: number[];
+            /**
+             * Preamblechimeid
+             * @default broadcast
+             */
+            preambleChimeId: string;
+            quietHours?: components["schemas"]["NotifyQuietHoursSchema"] | null;
         };
         /** QueueBatchResponse */
         QueueBatchResponse: {
@@ -5125,124 +5301,6 @@ export interface components {
             lastAnalysisAt?: string | null;
             /** Schedulerrule */
             scheduleRrule?: string | null;
-        };
-        /** VoiceFiredBody */
-        VoiceFiredBody: {
-            /** Keys */
-            keys: string[];
-        };
-        /** VoiceHistoryBody */
-        VoiceHistoryBody: {
-            /** Entries */
-            entries: components["schemas"]["VoiceReminderHistoryEntrySchema"][];
-        };
-        /** VoiceQuietHoursSchema */
-        VoiceQuietHoursSchema: {
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
-            /**
-             * Start
-             * @default 22:00
-             */
-            start: string;
-            /**
-             * End
-             * @default 07:00
-             */
-            end: string;
-        };
-        /** VoiceReminderFiredClaimResponse */
-        VoiceReminderFiredClaimResponse: {
-            /** Configured */
-            configured: boolean;
-            /** Claimed */
-            claimed?: string[];
-            /** Keys */
-            keys?: string[];
-        };
-        /** VoiceReminderFiredResponse */
-        VoiceReminderFiredResponse: {
-            /** Configured */
-            configured: boolean;
-            /** Keys */
-            keys?: string[] | null;
-        };
-        /** VoiceReminderHistoryEntrySchema */
-        VoiceReminderHistoryEntrySchema: {
-            /** Id */
-            id: string;
-            /** Triggerreason */
-            triggerReason: string;
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "success" | "failure";
-            /** Errormessage */
-            errorMessage?: string | null;
-            /** Triggeredat */
-            triggeredAt: string;
-            /** Eventid */
-            eventId?: string | null;
-            /** Title */
-            title?: string | null;
-            /** Leadoffsetminutes */
-            leadOffsetMinutes?: number | null;
-        };
-        /** VoiceReminderHistoryResponse */
-        VoiceReminderHistoryResponse: {
-            /** Configured */
-            configured: boolean;
-            /** Entries */
-            entries?: components["schemas"]["VoiceReminderHistoryEntrySchema"][] | null;
-        };
-        /** VoiceReminderSettingsResponse */
-        VoiceReminderSettingsResponse: {
-            /** Configured */
-            configured: boolean;
-            settings?: components["schemas"]["VoiceReminderSettingsSchema"] | null;
-        };
-        /**
-         * VoiceReminderSettingsSchema
-         * @description Local-notify settings blob under ``notify_settings``.
-         */
-        VoiceReminderSettingsSchema: {
-            /**
-             * Enabled
-             * @default false
-             */
-            enabled: boolean;
-            /**
-             * Voiceenabled
-             * @default true
-             */
-            voiceEnabled: boolean;
-            /**
-             * Flashenabled
-             * @default true
-             */
-            flashEnabled: boolean;
-            /**
-             * Flashmode
-             * @default timed
-             * @enum {string}
-             */
-            flashMode: "timed" | "persistent";
-            /** Leadoffsetsminutes */
-            leadOffsetsMinutes?: number[];
-            /**
-             * Preamblechimeid
-             * @default broadcast
-             */
-            preambleChimeId: string;
-            quietHours?: components["schemas"]["VoiceQuietHoursSchema"] | null;
-        };
-        /** VoiceSettingsBody */
-        VoiceSettingsBody: {
-            settings: components["schemas"]["VoiceReminderSettingsSchema"];
         };
         /** WeatherDailyResponse */
         WeatherDailyResponse: {
@@ -8614,7 +8672,7 @@ export interface operations {
             };
         };
     };
-    list_calendar_items_api_v1_calendar_items_get: {
+    list_calendar_occurrences_api_v1_calendar_occurrences_get: {
         parameters: {
             query?: {
                 rangeStart?: string | null;
@@ -8637,6 +8695,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CalendarOccurrenceResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_calendar_holidays_api_v1_calendar_holidays_get: {
+        parameters: {
+            query: {
+                /** @description Gregorian year for Nager.Date. */
+                year: number;
+                /** @description Same weather location string used by GET /api/v1/weather/forecast. */
+                location: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarHolidaysResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9303,7 +9395,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderSettingsResponse"];
+                    "application/json": components["schemas"]["NotifySettingsResponse"];
                 };
             };
         };
@@ -9317,7 +9409,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VoiceSettingsBody"];
+                "application/json": components["schemas"]["NotifySettingsBody"];
             };
         };
         responses: {
@@ -9327,7 +9419,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderSettingsResponse"];
+                    "application/json": components["schemas"]["NotifySettingsResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9356,7 +9448,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderFiredResponse"];
+                    "application/json": components["schemas"]["NotifyFiredResponse"];
                 };
             };
         };
@@ -9370,7 +9462,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VoiceFiredBody"];
+                "application/json": components["schemas"]["NotifyFiredBody"];
             };
         };
         responses: {
@@ -9380,7 +9472,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderFiredResponse"];
+                    "application/json": components["schemas"]["NotifyFiredResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9403,7 +9495,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VoiceFiredBody"];
+                "application/json": components["schemas"]["NotifyFiredBody"];
             };
         };
         responses: {
@@ -9413,7 +9505,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderFiredClaimResponse"];
+                    "application/json": components["schemas"]["NotifyFiredClaimResponse"];
                 };
             };
             /** @description Validation Error */
@@ -9442,7 +9534,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderHistoryResponse"];
+                    "application/json": components["schemas"]["NotifyHistoryResponse"];
                 };
             };
         };
@@ -9456,7 +9548,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["VoiceHistoryBody"];
+                "application/json": components["schemas"]["NotifyHistoryBody"];
             };
         };
         responses: {
@@ -9466,7 +9558,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VoiceReminderHistoryResponse"];
+                    "application/json": components["schemas"]["NotifyHistoryResponse"];
                 };
             };
             /** @description Validation Error */

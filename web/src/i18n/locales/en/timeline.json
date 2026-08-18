@@ -30,13 +30,15 @@
     "cancelled": "Cancelled"
   },
   "filter": {
-    "showOptions": "Show",
+    "showOptions": "Filter",
     "showDismissed": "Show removed",
     "showDismissedHelp": "Soft-removed events appear with strikethrough so you can restore them.",
     "showOngoing": "Show ongoing",
     "showOngoingHelp": "Show “+N ongoing” multi-day hints in month cells (dot color only).",
     "showEnding": "Show ending",
-    "showEndingHelp": "Show “+N ending” hints in month cells: cross-day ends, item expiry, and the final recurring occurrence (dot color only). Maps to the card tag “Ends today”."
+    "showEndingHelp": "Show “+N ending” hints in month cells: cross-day ends, item expiry, and the final recurring occurrence (dot color only). Maps to the card tag “Ends today”.",
+    "showDates": "Show dates",
+    "showDatesHelp": "Show slightly stronger date numbers in month cells, and hide events and ongoing/ending hints. Top-bar weather stays visible."
   },
   "view": {
     "loadTimeout": "Load timed out — please retry",
@@ -70,14 +72,20 @@
     "ending": "+{count} ending",
     "weatherAria": "Weather {high} to {low} degrees",
     "weatherTitle": "Weather: {high}°C / {low}°C",
-    "weatherRefresh": "Refresh weather",
+    "weatherRefresh": "Refresh weather and holidays",
+    "holidayOverflow": "+{count}",
+    "holidayNameSep": ", ",
+    "holidayAria": "Holiday {name}",
+    "holidayTitle": "Holiday: {name}",
     "dayCellAria_one": "{date}, {count} event",
     "dayCellAria_other": "{date}, {count} events",
     "dayCellAriaEmpty": "{date}, no events",
     "noEventsToday": "No events today",
     "itemCount": "{count}",
     "noEvents": "No events",
-    "location": "Location: {value}"
+    "location": "Location: {value}",
+    "notes": "Notes: {value}",
+    "emptyValue": "N/A"
   },
   "sidebar": {
     "closeAria": "Close",

@@ -1,19 +1,41 @@
 /**
  * Workset-level 通知 / 外部接口 switches. Clicking a switch must not open the card.
+ * Icons match flowchart point gates (bell / plug).
  */
 
 import { useTranslation } from "react-i18next";
 import { updateWorkset } from "../api/worksets";
 import { useTaskCatalog } from "../context/TaskCatalogContext";
 import { useToast } from "../context/ToastContext";
+import {
+  WORKSET_GATE_ICON_PROPS,
+  WORKSET_GATE_ICONS,
+} from "../domain/worksets/worksetGateIcons";
 import { toError } from "../utils/errors";
-import { SwitchTrack } from "./ui";
-import { captionClass } from "./ui/pageTypography";
+import { ToggleSwitch } from "./ToggleSwitch";
 
 type Props = {
   worksetId: string;
   worksetName: string;
 };
+
+function GateToggleIcon({
+  kind,
+  on,
+}: {
+  kind: "notify" | "external";
+  on: boolean;
+}) {
+  const Icon = WORKSET_GATE_ICONS[kind];
+  return (
+    <Icon
+      size={WORKSET_GATE_ICON_PROPS.size}
+      strokeWidth={WORKSET_GATE_ICON_PROPS.strokeWidth}
+      className={on ? "text-accent" : "text-text-muted"}
+      aria-hidden="true"
+    />
+  );
+}
 
 export function WorksetPermissionToggles({ worksetId, worksetName }: Props) {
   const { t } = useTranslation("workset");
@@ -31,38 +53,37 @@ export function WorksetPermissionToggles({ worksetId, worksetName }: Props) {
       });
   };
 
+  const notifyAria = t("notifyToggleAria", { name: worksetName });
+  const externalAria = t("externalToggleAria", { name: worksetName });
+
   return (
     <div
-      className="flex flex-wrap items-center gap-md"
+      className="flex flex-wrap items-center gap-sm"
       data-testid={`workset-permission-toggles-${worksetId}`}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <button
-        type="button"
-        role="switch"
-        aria-checked={notifyEnabled}
-        aria-label={t("notifyToggleAria", { name: worksetName })}
+      <ToggleSwitch
+        checked={notifyEnabled}
+        onChange={(notifyEnabled) => patch({ notifyEnabled })}
+        label={t("notifyToggle")}
+        ariaLabel={notifyAria}
+        title={notifyAria}
+        showLabel={false}
+        icon={<GateToggleIcon kind="notify" on={notifyEnabled} />}
         data-testid={`workset-notify-toggle-${worksetId}`}
-        className="inline-flex cursor-pointer items-center gap-xs border-0 bg-transparent p-0 shadow-none"
-        onClick={() => patch({ notifyEnabled: !notifyEnabled })}
-      >
-        <SwitchTrack checked={notifyEnabled} size="sm" />
-        <span className={`select-none ${captionClass}`}>{t("notifyToggle")}</span>
-      </button>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={externalEnabled}
-        aria-label={t("externalToggleAria", { name: worksetName })}
+      />
+      <ToggleSwitch
+        checked={externalEnabled}
+        onChange={(externalEnabled) => patch({ externalEnabled })}
+        label={t("externalToggle")}
+        ariaLabel={externalAria}
+        title={externalAria}
+        showLabel={false}
+        icon={<GateToggleIcon kind="external" on={externalEnabled} />}
         data-testid={`workset-external-toggle-${worksetId}`}
-        className="inline-flex cursor-pointer items-center gap-xs border-0 bg-transparent p-0 shadow-none"
-        onClick={() => patch({ externalEnabled: !externalEnabled })}
-      >
-        <SwitchTrack checked={externalEnabled} size="sm" />
-        <span className={`select-none ${captionClass}`}>{t("externalToggle")}</span>
-      </button>
+      />
     </div>
   );
 }

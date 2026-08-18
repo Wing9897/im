@@ -1,4 +1,4 @@
-"""Task and workset wire serializers."""
+"""Task wire serializers."""
 
 from __future__ import annotations
 
@@ -51,15 +51,3 @@ def serialize_task(row: Mapping[str, Any], channel_refs: list[dict[str, Any]] | 
     if channel_refs is not None:
         task["channelIds"] = channel_refs
     return task
-
-
-def serialize_workset(row: Mapping[str, Any]) -> dict[str, Any]:
-    return {
-        "id": row["id"],
-        "name": row.get("name") or "",
-        "isSystem": bool(row.get("is_system")),
-        "notifyEnabled": bool(row.get("notify_enabled", 1)),
-        "externalEnabled": bool(row.get("external_enabled", 1)),
-        "createdAt": row.get("created_at"),
-        "updatedAt": row.get("updated_at"),
-    }

@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { PillButton } from "../../../components/ui";
 import { useAnchoredMenu } from "../../../hooks/useAnchoredMenu";
 import { spacing } from "../../../styles/tokens";
+import type { MonthDateRevealChrome } from "../calendar/useMonthDateReveal";
 
 type TimelineShowOptionsControlProps = {
   showDismissed: boolean;
@@ -20,6 +21,8 @@ type TimelineShowOptionsControlProps = {
   setShowOngoing: (value: boolean) => void;
   showEnding: boolean;
   setShowEnding: (value: boolean) => void;
+  /** Month calendar: hover previews dates; 篩選 checkbox persists. */
+  monthDateReveal?: MonthDateRevealChrome | null;
 };
 
 const FOCUSABLE_SELECTOR = [
@@ -33,8 +36,9 @@ const FOCUSABLE_SELECTOR = [
 ].join(",");
 
 /**
- * Toolbar 「显示」checklist (removed / ongoing / ending).
- * Eye icon distinguishes visibility toggles from SourceFilterDialog (ListFilter).
+ * Toolbar visibility checklist (removed / ongoing / ending).
+ * Eye icon + 「篩選」menu. Month calendar also uses this same PillButton for
+ * date-reveal hover preview; persist is a fourth checkbox (no extra 「顯示」 control).
  * Portaled like SourceFilterDialog so toolbar overflow cannot clip the menu.
  * Placement / outside dismiss: {@link useAnchoredMenu}.
  */
@@ -45,6 +49,7 @@ export function TimelineShowOptionsControl({
   setShowOngoing,
   showEnding,
   setShowEnding,
+  monthDateReveal = null,
 }: TimelineShowOptionsControlProps) {
   const { t } = useTranslation("timeline");
   const reactId = useId();
@@ -63,6 +68,21 @@ export function TimelineShowOptionsControl({
     dismissPointerEvent: "pointerdown",
     restoreFocusOnEscape: true,
   });
+
+  const onRevealEnter = monthDateReveal?.onPointerEnter;
+  const onRevealLeave = monthDateReveal?.onPointerLeave;
+
+  useEffect(() => {
+    if (!onRevealEnter || !onRevealLeave) return;
+    const el = anchorRef.current;
+    if (!el) return;
+    el.addEventListener("pointerenter", onRevealEnter);
+    el.addEventListener("pointerleave", onRevealLeave);
+    return () => {
+      el.removeEventListener("pointerenter", onRevealEnter);
+      el.removeEventListener("pointerleave", onRevealLeave);
+    };
+  }, [anchorRef, onRevealEnter, onRevealLeave]);
 
   useEffect(() => {
     if (!open || !menuPos || !menuRef.current || focusedForCurrentOpen.current) {
@@ -108,7 +128,8 @@ export function TimelineShowOptionsControl({
   };
 
   const isFiltering = !showDismissed || !showOngoing || !showEnding;
-  const chromeActive = open || isFiltering;
+  const datesPersisted = Boolean(monthDateReveal?.persisted);
+  const chromeActive = open || isFiltering || datesPersisted;
 
   const options = [
     {
@@ -135,6 +156,18 @@ export function TimelineShowOptionsControl({
       help: t("filter.showEndingHelp"),
       testId: "timeline-show-options-ending",
     },
+    ...(monthDateReveal
+      ? [
+          {
+            id: "dates" as const,
+            checked: monthDateReveal.persisted,
+            onChange: monthDateReveal.onPersistedChange,
+            label: t("filter.showDates"),
+            help: t("filter.showDatesHelp"),
+            testId: "timeline-show-options-dates",
+          },
+        ]
+      : []),
   ];
 
   const menuTitle = t("filter.showOptions");
@@ -203,8 +236,8 @@ export function TimelineShowOptionsControl({
         aria-haspopup="dialog"
         aria-controls={menuId}
         data-testid="timeline-show-options"
+        data-dates-persisted={monthDateReveal ? (datesPersisted ? "true" : "false") : undefined}
         onClick={toggle}
-        className="relative"
       >
         <Eye size={16} strokeWidth={2.5} aria-hidden="true" />
       </PillButton>

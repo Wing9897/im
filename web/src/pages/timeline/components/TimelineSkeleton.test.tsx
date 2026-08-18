@@ -64,6 +64,7 @@ function makeContextValue(): TimelinePageContextValue {
     showDismissed: false,
     showOngoing: true,
     showEnding: true,
+    monthDatesRevealed: false,
   };
 }
 

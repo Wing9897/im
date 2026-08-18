@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import i18n from "../../i18n";
 import { setAppLocale } from "../../i18n/locale";
-import { isWeekendDay, truncateMonthEventTitle } from "./calendar/timelineCalendarLayout";
+import { isWeekendDay, truncateMonthEventTitle } from "./calendar/timelineCalendarClasses";
 import {
   GANTT_COLUMN_WIDTH_PX,
   ganttColumnGap,
@@ -11,7 +11,7 @@ import {
 } from "./gantt/ganttGridLayout";
 import { resolveTimelineEmptyHint } from "./timelineViewModel";
 
-describe("timelineCalendarLayout helpers", () => {
+describe("timelineCalendarClasses helpers", () => {
   it("truncates long event titles for month preview", () => {
     expect(truncateMonthEventTitle("Short")).toBe("Short");
     expect(truncateMonthEventTitle("A very long event title here")).toBe("A very lo…");

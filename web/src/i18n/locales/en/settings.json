@@ -36,7 +36,7 @@
   },
   "general": {
     "weatherLocationLabel": "Location",
-    "weatherLocationHelp": "Calendar weather; Follow system infers city from the OS timezone.",
+    "weatherLocationHelp": "Calendar weather and holidays; Follow system infers city from the OS timezone. Holidays are country-level, not city.",
     "followSystem": "Follow system",
     "weatherLocationCurrent": "Current location: {location}",
     "simpleModeLabel": "Simple mode (AI calendar)",

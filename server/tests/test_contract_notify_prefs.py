@@ -214,7 +214,7 @@ async def test_item_remind_projection_inherits_expires_notify_pref(client):
     start = (today - timedelta(days=1)).isoformat()
     end = (today + timedelta(days=40)).isoformat()
     api = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": f"{start}T00:00:00Z",
             "rangeEnd": f"{end}T23:59:59Z",
@@ -238,7 +238,7 @@ async def test_calendar_occurrence_inherits_series_notify_pref(client):
     assert created.status_code == 201
     series_id = created.json()["id"]
     items = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-01-01T00:00:00Z",
             "rangeEnd": "2027-01-01T00:00:00Z",

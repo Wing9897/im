@@ -2,7 +2,13 @@ import { describe, it, expect, vi } from "vitest";
 import { createElement, act } from "react";
 import { createRoot } from "react-dom/client";
 import { makeEvent, makeDayColumns } from "../../../test/timelineTestHelpers";
+import { buildCalendarDays } from "../../../domain/timeline/dateUtils";
+import { ensureZhHantLocale, wrapWithI18n } from "../../../test/i18nHarness";
 import { TimelinePageProvider, type TimelinePageContextValue } from "../TimelinePageContext";
+import { TimelineControlBar } from "../components/TimelineControlBar";
+import { TimelineShowOptionsControl } from "../components/TimelineShowOptionsControl";
+import { fireMonthRevealPointer } from "./timelineCalendarViewTestHarness";
+import { useMonthDateReveal } from "./useMonthDateReveal";
 
 vi.mock("../gantt/TimelineGanttView", () => ({
   TimelineGanttView: ({
@@ -57,6 +63,7 @@ function makeContextValue(overrides: ContextOverrides = {}): TimelinePageContext
     showDismissed: false,
     showOngoing: true,
     showEnding: true,
+    monthDatesRevealed: false,
     ...overrides,
   };
 }
@@ -180,5 +187,167 @@ describe("TimelineGrid viewMode branch", () => {
       { timelineEvents: [] },
     );
     expect(container.textContent).toContain("目前沒有排程事件");
+  });
+
+  it("month cells layer a watermark date and honor monthDatesRevealed from context", async () => {
+    await ensureZhHantLocale();
+    const monthCursor = new Date(2025, 0, 1);
+    const monthDays = buildCalendarDays(monthCursor);
+    const container = document.createElement("div");
+    const ctx = makeContextValue({ monthDatesRevealed: true });
+    act(() => {
+      createRoot(container).render(
+        wrapWithI18n(
+          createElement(TimelinePageProvider, {
+            value: ctx,
+            children: createElement(
+              TimelineGrid,
+              makeProps({
+                viewMode: "calendar",
+                timeScale: "month",
+                monthCursor,
+                monthDays,
+                monthEvents: [
+                  makeEvent({
+                    id: "evt-month",
+                    title: "月事件",
+                    startTime: "2025-01-15T09:00:00",
+                  }),
+                ],
+                timeCursor: new Date(2025, 0, 10),
+              }),
+            ),
+          }),
+        ),
+      );
+    });
+
+    expect(container.querySelectorAll('[data-testid="timeline-month-day-cell"]')).toHaveLength(42);
+    const grid = container.querySelector('[data-testid="timeline-month-grid"]');
+    expect(grid?.className).toContain("im-timeline-month-grid");
+    expect(grid?.className).toContain("is-revealed");
+    expect(grid?.getAttribute("data-dates-revealed")).toBe("true");
+    expect(container.querySelectorAll('[data-testid="timeline-month-day-header"]')).toHaveLength(42);
+  });
+
+  it("toolbar 篩選 eye hover previews dates; 顯示日期 checkbox persists", async () => {
+    await ensureZhHantLocale();
+    const monthCursor = new Date(2025, 0, 1);
+    const monthDays = buildCalendarDays(monthCursor);
+
+    function ToolbarToGridHarness() {
+      const reveal = useMonthDateReveal();
+      const ctx = makeContextValue({ monthDatesRevealed: reveal.revealed });
+      return createElement(TimelinePageProvider, {
+        value: ctx,
+        children: createElement(
+          "div",
+          null,
+          createElement(
+            TimelineControlBar,
+            {
+              selectedSources: null,
+              setSelectedSources: () => {},
+              timelineTasks: [],
+              viewMode: "calendar",
+              setViewMode: () => {},
+              timeScale: "month",
+              onJumpTo: () => {},
+              onMoveCursor: () => {},
+              visibleRangeLabel: "2025年1月",
+            },
+            createElement(TimelineShowOptionsControl, {
+              showDismissed: true,
+              setShowDismissed: () => {},
+              showOngoing: true,
+              setShowOngoing: () => {},
+              showEnding: true,
+              setShowEnding: () => {},
+              monthDateReveal: {
+                persisted: reveal.persisted,
+                onPersistedChange: reveal.onPersistedChange,
+                onPointerEnter: reveal.onPointerEnter,
+                onPointerLeave: reveal.onPointerLeave,
+              },
+            }),
+          ),
+          createElement(
+            TimelineGrid,
+            makeProps({
+              viewMode: "calendar",
+              timeScale: "month",
+              monthCursor,
+              monthDays,
+              monthEvents: [
+                makeEvent({
+                  id: "evt-month",
+                  title: "月事件",
+                  startTime: "2025-01-15T09:00:00",
+                }),
+              ],
+              timeCursor: new Date(2025, 0, 10),
+            }),
+          ),
+        ),
+      });
+    }
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    act(() => {
+      createRoot(container).render(wrapWithI18n(createElement(ToolbarToGridHarness)));
+    });
+
+    const bar = container.querySelector('[data-testid="timeline-control-bar"]');
+    const reveal = bar?.querySelector<HTMLButtonElement>('[data-testid="timeline-show-options"]');
+    expect(reveal).toBeTruthy();
+    expect(reveal?.textContent).not.toContain("顯示");
+    expect(reveal?.getAttribute("aria-label")).toBe("篩選");
+    expect(container.querySelectorAll('[data-testid="timeline-show-options"]')).toHaveLength(1);
+    const grid = () => container.querySelector('[data-testid="timeline-month-grid"]');
+    expect(grid()?.className).toContain("im-timeline-month-grid");
+    expect(grid()?.className).not.toContain("is-revealed");
+    expect(grid()?.getAttribute("data-dates-revealed")).toBe("false");
+
+    fireMonthRevealPointer(reveal!, "enter");
+    expect(grid()?.className).toContain("is-revealed");
+    expect(grid()?.getAttribute("data-dates-revealed")).toBe("true");
+
+    fireMonthRevealPointer(reveal!, "leave");
+    expect(grid()?.className).not.toContain("is-revealed");
+    expect(grid()?.getAttribute("data-dates-revealed")).toBe("false");
+
+    act(() => {
+      reveal!.click();
+    });
+    expect(reveal!.getAttribute("data-dates-persisted")).toBe("false");
+    expect(grid()?.className).not.toContain("is-revealed");
+    expect(document.querySelector('[data-testid="timeline-show-options-menu"]')).toBeTruthy();
+    expect(document.querySelector('[data-testid="timeline-show-options-menu"]')?.textContent).toContain(
+      "顯示日期",
+    );
+
+    const dates = document.querySelector(
+      '[data-testid="timeline-show-options-dates"]',
+    ) as HTMLInputElement;
+    expect(dates).toBeTruthy();
+    expect(dates.checked).toBe(false);
+    act(() => {
+      dates.click();
+    });
+    expect(reveal!.getAttribute("data-dates-persisted")).toBe("true");
+    expect(grid()?.className).toContain("is-revealed");
+    expect(grid()?.getAttribute("data-dates-revealed")).toBe("true");
+
+    fireMonthRevealPointer(reveal!, "enter");
+    fireMonthRevealPointer(reveal!, "leave");
+    expect(reveal!.getAttribute("data-dates-persisted")).toBe("true");
+    expect(grid()?.className).toContain("is-revealed");
+    expect(grid()?.getAttribute("data-dates-revealed")).toBe("true");
+
+    container.remove();
+    document
+      .querySelectorAll('[data-testid="timeline-show-options-menu"]')
+      .forEach((node) => node.remove());
   });
 });

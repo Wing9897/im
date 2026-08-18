@@ -1,47 +1,58 @@
-import { BaseEdge, getSmoothStepPath, type Edge, type EdgeProps } from "@xyflow/react";
+import {
+  BaseEdge,
+  type ConnectionLineComponentProps,
+  type Edge,
+  type EdgeProps,
+} from "@xyflow/react";
 
 import {
-  PIPELINE_EDGE_RADIUS,
-  pipelineRoundedOrthogonalPath,
-  pipelineSkipLayerWaypoints,
-  type PipelineSkipDetour,
+  PIPELINE_EDGE_HIT_WIDTH,
+  pipelineEdgeStroke,
+  routePipelineEdge,
 } from "../../domain/worksets/worksetPipelineGraph";
 
-export type WorksetPipelineSmoothStepEdgeData = {
-  detour?: PipelineSkipDetour;
-};
+export type WorksetPipelineSmoothStepEdgeType = Edge<Record<string, never>, "smoothstep">;
 
-export type WorksetPipelineSmoothStepEdgeType = Edge<WorksetPipelineSmoothStepEdgeData, "smoothstep">;
-
-/** SmoothStep edges; L2→L4 skip-layer wires detour around the 工作集 card. */
+/** ComfyUI-style cubic: one bezier from handle to handle (wires pass under cards). */
 export function WorksetPipelineSmoothStepEdge({
   id,
   sourceX,
   sourceY,
   targetX,
   targetY,
-  sourcePosition,
-  targetPosition,
   markerEnd,
   style,
-  data,
 }: EdgeProps<WorksetPipelineSmoothStepEdgeType>) {
-  const detour = data?.detour;
-  if (detour) {
-    const path = pipelineRoundedOrthogonalPath(
-      pipelineSkipLayerWaypoints(sourceX, sourceY, targetX, targetY, detour),
-    );
-    return <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} interactionWidth={0} />;
-  }
-  const [path] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    borderRadius: PIPELINE_EDGE_RADIUS,
-    offset: 16,
+  const { path } = routePipelineEdge({
+    source: { x: sourceX, y: sourceY },
+    target: { x: targetX, y: targetY },
   });
-  return <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} interactionWidth={0} />;
+  const stroke = style?.stroke ?? pipelineEdgeStroke(id);
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      markerEnd={markerEnd}
+      style={{ ...style, stroke }}
+      interactionWidth={PIPELINE_EDGE_HIT_WIDTH}
+    />
+  );
+}
+
+/** Drag preview uses the same handle-to-handle cubic as committed wires. */
+export function WorksetPipelineConnectionLine({
+  fromX,
+  fromY,
+  toX,
+  toY,
+}: ConnectionLineComponentProps) {
+  const { path } = routePipelineEdge({
+    source: { x: fromX, y: fromY },
+    target: { x: toX, y: toY },
+  });
+  return (
+    <g className="react-flow__connection">
+      <path d={path} fill="none" className="react-flow__connection-path" />
+    </g>
+  );
 }

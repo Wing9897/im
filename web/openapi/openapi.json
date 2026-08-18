@@ -4352,14 +4352,14 @@
         }
       }
     },
-    "/api/v1/calendar/items": {
+    "/api/v1/calendar/occurrences": {
       "get": {
         "tags": [
           "calendar",
           "calendar"
         ],
-        "summary": "List Calendar Items",
-        "operationId": "list_calendar_items_api_v1_calendar_items_get",
+        "summary": "List Calendar Occurrences",
+        "operationId": "list_calendar_occurrences_api_v1_calendar_occurrences_get",
         "parameters": [
           {
             "name": "rangeStart",
@@ -4457,7 +4457,67 @@
                   "items": {
                     "$ref": "#/components/schemas/CalendarOccurrenceResponse"
                   },
-                  "title": "Response List Calendar Items Api V1 Calendar Items Get"
+                  "title": "Response List Calendar Occurrences Api V1 Calendar Occurrences Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/holidays": {
+      "get": {
+        "tags": [
+          "calendar",
+          "calendar"
+        ],
+        "summary": "List Calendar Holidays",
+        "operationId": "list_calendar_holidays_api_v1_calendar_holidays_get",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "maximum": 2100,
+              "minimum": 1970,
+              "description": "Gregorian year for Nager.Date.",
+              "title": "Year"
+            },
+            "description": "Gregorian year for Nager.Date."
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Same weather location string used by GET /api/v1/weather/forecast.",
+              "title": "Location"
+            },
+            "description": "Same weather location string used by GET /api/v1/weather/forecast."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarHolidaysResponse"
                 }
               }
             }
@@ -5540,7 +5600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderSettingsResponse"
+                  "$ref": "#/components/schemas/NotifySettingsResponse"
                 }
               }
             }
@@ -5557,7 +5617,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VoiceSettingsBody"
+                "$ref": "#/components/schemas/NotifySettingsBody"
               }
             }
           },
@@ -5569,7 +5629,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderSettingsResponse"
+                  "$ref": "#/components/schemas/NotifySettingsResponse"
                 }
               }
             }
@@ -5600,7 +5660,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderFiredResponse"
+                  "$ref": "#/components/schemas/NotifyFiredResponse"
                 }
               }
             }
@@ -5617,7 +5677,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VoiceFiredBody"
+                "$ref": "#/components/schemas/NotifyFiredBody"
               }
             }
           },
@@ -5629,7 +5689,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderFiredResponse"
+                  "$ref": "#/components/schemas/NotifyFiredResponse"
                 }
               }
             }
@@ -5659,7 +5719,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VoiceFiredBody"
+                "$ref": "#/components/schemas/NotifyFiredBody"
               }
             }
           },
@@ -5671,7 +5731,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderFiredClaimResponse"
+                  "$ref": "#/components/schemas/NotifyFiredClaimResponse"
                 }
               }
             }
@@ -5702,7 +5762,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderHistoryResponse"
+                  "$ref": "#/components/schemas/NotifyHistoryResponse"
                 }
               }
             }
@@ -5719,7 +5779,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VoiceHistoryBody"
+                "$ref": "#/components/schemas/NotifyHistoryBody"
               }
             }
           },
@@ -5731,7 +5791,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VoiceReminderHistoryResponse"
+                  "$ref": "#/components/schemas/NotifyHistoryResponse"
                 }
               }
             }
@@ -8787,6 +8847,84 @@
         "title": "BoardWidgetStateSchema",
         "description": "Per-widget map / source-filter / gantt zoom state."
       },
+      "CalendarHolidayItemResponse": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date"
+          },
+          "localName": {
+            "type": "string",
+            "title": "Localname",
+            "default": ""
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": ""
+          },
+          "countryCode": {
+            "type": "string",
+            "title": "Countrycode"
+          },
+          "isGlobal": {
+            "type": "boolean",
+            "title": "Isglobal",
+            "default": true
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Types"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "countryCode"
+        ],
+        "title": "CalendarHolidayItemResponse",
+        "description": "One Nager.Date public holiday (country-level, not city)."
+      },
+      "CalendarHolidaysResponse": {
+        "properties": {
+          "year": {
+            "type": "integer",
+            "title": "Year"
+          },
+          "location": {
+            "type": "string",
+            "title": "Location"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "holidays": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarHolidayItemResponse"
+            },
+            "type": "array",
+            "title": "Holidays"
+          }
+        },
+        "type": "object",
+        "required": [
+          "year",
+          "location"
+        ],
+        "title": "CalendarHolidaysResponse",
+        "description": "Public holidays for the household weather location's country."
+      },
       "CalendarImportChangeResponse": {
         "properties": {
           "field": {
@@ -9305,7 +9443,7 @@
           "endTime"
         ],
         "title": "CalendarOccurrenceResponse",
-        "description": "RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."
+        "description": "RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``."
       },
       "CategoryCreateBody": {
         "properties": {
@@ -12425,6 +12563,309 @@
         "additionalProperties": false,
         "type": "object",
         "title": "MqttBrokerPatchBody"
+      },
+      "NotifyFiredBody": {
+        "properties": {
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keys"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "keys"
+        ],
+        "title": "NotifyFiredBody"
+      },
+      "NotifyFiredClaimResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "claimed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Claimed"
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "NotifyFiredClaimResponse"
+      },
+      "NotifyFiredResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "keys": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keys"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "NotifyFiredResponse"
+      },
+      "NotifyHistoryBody": {
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/NotifyHistoryEntrySchema"
+            },
+            "type": "array",
+            "title": "Entries"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "entries"
+        ],
+        "title": "NotifyHistoryBody"
+      },
+      "NotifyHistoryEntrySchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "triggerReason": {
+            "type": "string",
+            "title": "Triggerreason"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "success",
+              "failure"
+            ],
+            "title": "Status"
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "triggeredAt": {
+            "type": "string",
+            "title": "Triggeredat"
+          },
+          "eventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventid"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "leadOffsetMinutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Leadoffsetminutes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "triggerReason",
+          "status",
+          "triggeredAt"
+        ],
+        "title": "NotifyHistoryEntrySchema"
+      },
+      "NotifyHistoryResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "entries": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NotifyHistoryEntrySchema"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entries"
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "NotifyHistoryResponse"
+      },
+      "NotifyQuietHoursSchema": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          },
+          "start": {
+            "type": "string",
+            "title": "Start",
+            "default": "22:00"
+          },
+          "end": {
+            "type": "string",
+            "title": "End",
+            "default": "07:00"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NotifyQuietHoursSchema"
+      },
+      "NotifySettingsBody": {
+        "properties": {
+          "settings": {
+            "$ref": "#/components/schemas/NotifySettingsSchema"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "settings"
+        ],
+        "title": "NotifySettingsBody"
+      },
+      "NotifySettingsResponse": {
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "title": "Configured"
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NotifySettingsSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "configured"
+        ],
+        "title": "NotifySettingsResponse"
+      },
+      "NotifySettingsSchema": {
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": false
+          },
+          "voiceEnabled": {
+            "type": "boolean",
+            "title": "Voiceenabled",
+            "default": true
+          },
+          "flashEnabled": {
+            "type": "boolean",
+            "title": "Flashenabled",
+            "default": true
+          },
+          "flashMode": {
+            "type": "string",
+            "enum": [
+              "timed",
+              "persistent"
+            ],
+            "title": "Flashmode",
+            "default": "timed"
+          },
+          "leadOffsetsMinutes": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Leadoffsetsminutes"
+          },
+          "preambleChimeId": {
+            "type": "string",
+            "title": "Preamblechimeid",
+            "default": "broadcast"
+          },
+          "quietHours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NotifyQuietHoursSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "NotifySettingsSchema",
+        "description": "Local-notify settings blob under ``notify_settings``."
       },
       "QueueBatchResponse": {
         "properties": {
@@ -16383,309 +16824,6 @@
           "isActive"
         ],
         "title": "ViewerTaskResponse"
-      },
-      "VoiceFiredBody": {
-        "properties": {
-          "keys": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Keys"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "keys"
-        ],
-        "title": "VoiceFiredBody"
-      },
-      "VoiceHistoryBody": {
-        "properties": {
-          "entries": {
-            "items": {
-              "$ref": "#/components/schemas/VoiceReminderHistoryEntrySchema"
-            },
-            "type": "array",
-            "title": "Entries"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "entries"
-        ],
-        "title": "VoiceHistoryBody"
-      },
-      "VoiceQuietHoursSchema": {
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled",
-            "default": true
-          },
-          "start": {
-            "type": "string",
-            "title": "Start",
-            "default": "22:00"
-          },
-          "end": {
-            "type": "string",
-            "title": "End",
-            "default": "07:00"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "VoiceQuietHoursSchema"
-      },
-      "VoiceReminderFiredClaimResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "claimed": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Claimed"
-          },
-          "keys": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Keys"
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "VoiceReminderFiredClaimResponse"
-      },
-      "VoiceReminderFiredResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "keys": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Keys"
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "VoiceReminderFiredResponse"
-      },
-      "VoiceReminderHistoryEntrySchema": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "triggerReason": {
-            "type": "string",
-            "title": "Triggerreason"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "success",
-              "failure"
-            ],
-            "title": "Status"
-          },
-          "errorMessage": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Errormessage"
-          },
-          "triggeredAt": {
-            "type": "string",
-            "title": "Triggeredat"
-          },
-          "eventId": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Eventid"
-          },
-          "title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Title"
-          },
-          "leadOffsetMinutes": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Leadoffsetminutes"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "id",
-          "triggerReason",
-          "status",
-          "triggeredAt"
-        ],
-        "title": "VoiceReminderHistoryEntrySchema"
-      },
-      "VoiceReminderHistoryResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "entries": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/VoiceReminderHistoryEntrySchema"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Entries"
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "VoiceReminderHistoryResponse"
-      },
-      "VoiceReminderSettingsResponse": {
-        "properties": {
-          "configured": {
-            "type": "boolean",
-            "title": "Configured"
-          },
-          "settings": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VoiceReminderSettingsSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "required": [
-          "configured"
-        ],
-        "title": "VoiceReminderSettingsResponse"
-      },
-      "VoiceReminderSettingsSchema": {
-        "properties": {
-          "enabled": {
-            "type": "boolean",
-            "title": "Enabled",
-            "default": false
-          },
-          "voiceEnabled": {
-            "type": "boolean",
-            "title": "Voiceenabled",
-            "default": true
-          },
-          "flashEnabled": {
-            "type": "boolean",
-            "title": "Flashenabled",
-            "default": true
-          },
-          "flashMode": {
-            "type": "string",
-            "enum": [
-              "timed",
-              "persistent"
-            ],
-            "title": "Flashmode",
-            "default": "timed"
-          },
-          "leadOffsetsMinutes": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Leadoffsetsminutes"
-          },
-          "preambleChimeId": {
-            "type": "string",
-            "title": "Preamblechimeid",
-            "default": "broadcast"
-          },
-          "quietHours": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VoiceQuietHoursSchema"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "type": "object",
-        "title": "VoiceReminderSettingsSchema",
-        "description": "Local-notify settings blob under ``notify_settings``."
-      },
-      "VoiceSettingsBody": {
-        "properties": {
-          "settings": {
-            "$ref": "#/components/schemas/VoiceReminderSettingsSchema"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "settings"
-        ],
-        "title": "VoiceSettingsBody"
       },
       "WeatherDailyResponse": {
         "properties": {

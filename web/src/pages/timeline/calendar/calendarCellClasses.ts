@@ -75,21 +75,14 @@ export const dayCardBodyClass = "min-w-0 flex-1 px-md py-sm";
 export const dayCardPrimaryRowClass =
   "mb-1 flex min-w-0 items-start justify-between gap-md";
 
+/** User-schedule cards: title / time / location / notes stacked, one field per row. */
+export const dayCardStackedFieldsClass = "mb-1 flex min-w-0 flex-col gap-1";
+
 export const dayCardTitleClass =
-  "min-w-0 flex-1 text-sm font-semibold leading-snug text-text-primary";
+  "flex min-w-0 flex-1 items-center gap-xs text-sm font-semibold leading-snug text-text-primary";
 
 export const dayCardTimeChipClass =
   "im-surface-inset shrink-0 rounded-md border border-[color-mix(in_srgb,var(--surface-border)_70%,transparent)] px-1.5 py-0.5 text-[11px] font-medium tabular-nums leading-none text-text-secondary";
-
-export const dayCardSummaryClass =
-  "mb-1.5 line-clamp-2 text-xs font-normal leading-snug text-text-secondary";
-
-export const dayCardLocationRowClass =
-  "mb-1.5 flex min-w-0 items-center gap-1 text-xs leading-snug text-text-secondary";
-
-export const dayCardLocationIconClass = "shrink-0 opacity-70";
-
-export const dayCardLocationTextClass = "min-w-0 truncate";
 
 export const dayCardMetadataClass =
   "flex min-w-0 items-center justify-between gap-sm text-[11px] font-normal text-text-muted";

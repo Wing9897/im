@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from server.api.routes.task_helpers import agent_policy_write_fields
+from server.services.task_policy import agent_policy_write_fields
 from server.api.schemas.requests.tasks import TaskConfigBody
 
 _AGENT_POLICY_COLUMNS = {

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { OvernightClockHint } from "../../../../components/calendar/OvernightClockHint";
 import { SelectTile, TextField } from "../../../../components/ui";
-import type { VoiceReminderSettings } from "../../../../domain/notify/scanner/settings";
+import type { NotifySettings } from "../../../../domain/notify/scanner/settings";
 import { NotifySection } from "./NotifySection";
 
 const compactTileClass = "w-fit max-w-max";
@@ -10,8 +10,8 @@ export function QuietHoursSection({
   quietHours,
   onChange,
 }: {
-  quietHours: VoiceReminderSettings["quietHours"];
-  onChange: (quietHours: VoiceReminderSettings["quietHours"]) => void;
+  quietHours: NotifySettings["quietHours"];
+  onChange: (quietHours: NotifySettings["quietHours"]) => void;
 }) {
   const { t } = useTranslation("actions");
   return (
@@ -26,7 +26,7 @@ export function QuietHoursSection({
             variant="toggle"
             className={compactTileClass}
             active={quietHours.enabled}
-            data-testid="voice-reminder-quiet-hours-enabled"
+            data-testid="notify-quiet-hours-enabled"
             aria-label={t("voice.quietEnableLabel")}
             title={t("voice.quietEnableHelp")}
             onClick={() =>

@@ -4,7 +4,7 @@
  * Board uses the same core via {@link fetchMergedTimedBoardEvents} /
  * {@link fetchBoardEventsList} with ``includeRrule`` / ``sort`` options.
  *
- * Item DATE rows come from GET /api/v1/calendar/items (source=item_remind) —
+ * Item DATE rows come from GET /api/v1/calendar/occurrences (source=item_remind) —
  * same server projection as agent query_window (remind only; not item-linked
  * user_events with kind). No FE listItems re-projection.
  */

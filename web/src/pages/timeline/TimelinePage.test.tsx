@@ -89,6 +89,15 @@ vi.mock("../../hooks/useMonthWeather", () => ({
   }),
 }));
 
+vi.mock("../../hooks/useMonthHolidays", () => ({
+  useMonthHolidays: () => ({
+    holidaysByDate: {},
+    error: null,
+    loading: false,
+    refresh: vi.fn(),
+  }),
+}));
+
 vi.mock("../../components/ui", () => ({
   AppPageShell: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   PillButton: ({

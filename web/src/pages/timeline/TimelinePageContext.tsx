@@ -5,6 +5,7 @@ import type {
   TimelineEventStatus,
   TimelineEventStatusMap,
 } from "../../domain/timeline/status";
+import type { DailyHoliday } from "../../hooks/useMonthHolidays";
 import type { DailyWeather } from "../../hooks/useMonthWeather";
 import type { TimelineItem } from "../../types";
 import type { TaskActivitySpan } from "../../types/analysis";
@@ -50,6 +51,10 @@ export interface TimelinePageContextValue {
   showEnding: boolean;
   /** Month-view daily weather keyed by local YYYY-MM-DD (empty when not month calendar). */
   weatherByDate?: Record<string, DailyWeather>;
+  /** Country public holidays for the weather location, keyed by local YYYY-MM-DD. */
+  holidaysByDate?: Record<string, DailyHoliday[]>;
+  /** Month 顯示日期 persist/preview (visit-scoped). */
+  monthDatesRevealed: boolean;
 
   // ── Gantt-specific ──────────────────────────────────────────────────────────
   taskSpans: TaskActivitySpan[];

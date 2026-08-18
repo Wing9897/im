@@ -1,55 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "../../../context/ToastContext";
 import { createSpeechPorts, loadVoiceSettings, ttsSpeakOptionsFromVoiceSettings } from "../../../speech";
 import { buildPreviewSpeakText } from "../../../domain/notify/scanner/scanner";
-import { announceVoiceReminder } from "../../../domain/notify/scanner/announce";
-import {
-  VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
-  hydrateVoiceReminderSettings,
-  loadVoiceReminderSettings,
-  saveVoiceReminderSettings,
-  type VoiceReminderSettings,
-} from "../../../domain/notify/scanner/settings";
+import { announceNotify } from "../../../domain/notify/scanner/announce";
+import { type NotifySettings } from "../../../domain/notify/scanner/settings";
+import { useNotifySettings } from "../../../hooks/useNotifySettings";
 
 /** State + handlers for the Actions → local notifications panel. */
 export function useLocalNotifyPanelState() {
   const { t } = useTranslation("actions");
   const toast = useToast();
-  const [settings, setSettings] = useState<VoiceReminderSettings>(() =>
-    loadVoiceReminderSettings(),
-  );
+  const { settings, setSettings, load, save } = useNotifySettings();
   const [previewing, setPreviewing] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    void hydrateVoiceReminderSettings().then((loaded) => {
-      if (!cancelled) {
-        setSettings(loaded);
-      }
-    });
-    const sync = () => {
-      if (!cancelled) {
-        setSettings(loadVoiceReminderSettings());
-      }
-    };
-    window.addEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, sync);
-    return () => {
-      cancelled = true;
-      window.removeEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, sync);
-    };
-  }, []);
-
-  const update = (patch: Partial<VoiceReminderSettings>) => {
+  const update = (patch: Partial<NotifySettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
-      void saveVoiceReminderSettings(next).then((ok) => {
+      void save(next).then((ok) => {
         if (!ok) {
           toast?.showToast(t("voice.saveFailed"), "error");
           setSettings(prev);
           return;
         }
-        setSettings(loadVoiceReminderSettings());
+        setSettings(load());
       });
       return next;
     });
@@ -63,7 +37,7 @@ export function useLocalNotifyPanelState() {
     const voice = loadVoiceSettings();
     const { tts } = createSpeechPorts();
     const lead = settings.leadOffsetsMinutes[0] ?? 60;
-    void announceVoiceReminder(tts, buildPreviewSpeakText(lead), {
+    void announceNotify(tts, buildPreviewSpeakText(lead), {
       ...ttsSpeakOptionsFromVoiceSettings(voice),
     })
       .catch(() => {

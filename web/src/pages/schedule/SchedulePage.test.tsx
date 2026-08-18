@@ -6,13 +6,11 @@ const mockNavigate = vi.fn();
 const {
   mockListUserEventsPage,
   mockListRecurringSeries,
-  mockListItems,
   mockDeleteUserEvent,
   mockDeleteRecurringSeries,
 } = vi.hoisted(() => ({
   mockListUserEventsPage: vi.fn(),
   mockListRecurringSeries: vi.fn(),
-  mockListItems: vi.fn(),
   mockDeleteUserEvent: vi.fn(),
   mockDeleteRecurringSeries: vi.fn(),
 }));
@@ -47,10 +45,6 @@ vi.mock("../../api/recurringSeries", () => ({
   listRecurringSeries: (...args: unknown[]) => mockListRecurringSeries(...args),
   deleteRecurringSeries: (...args: unknown[]) => mockDeleteRecurringSeries(...args),
   patchRecurringSeries: vi.fn(),
-}));
-
-vi.mock("../../api/items", () => ({
-  listItems: (...args: unknown[]) => mockListItems(...args),
 }));
 
 vi.mock("../../components/calendar/UserEventDialog", () => ({
@@ -88,7 +82,6 @@ describe("SchedulePage", () => {
     mockDeleteRecurringSeries.mockReset();
     mockDeleteUserEvent.mockResolvedValue(undefined);
     mockDeleteRecurringSeries.mockResolvedValue(undefined);
-    mockListItems.mockResolvedValue([]);
     mockListUserEventsPage.mockResolvedValue({
       items: [
         {
@@ -167,6 +160,23 @@ describe("SchedulePage", () => {
     expect(container.querySelector('[data-testid="schedule-recurring-card-rec-1"]')).toBeTruthy();
     expect(container.textContent).toContain("晨會");
     expect(container.textContent).toContain("每日站會");
+    const oneOff = container.querySelector('[data-testid="schedule-one-off-card-ue-1"]');
+    expect(oneOff?.querySelector('[data-testid="schedule-card-fields"]')?.className).toContain(
+      "flex-col",
+    );
+    expect(oneOff?.querySelector('[data-testid="schedule-card-location"]')?.textContent).toContain(
+      "地點：台北",
+    );
+    expect(oneOff?.querySelector('[data-testid="schedule-card-notes"]')?.textContent).toContain(
+      "說明：N/A",
+    );
+    const recurring = container.querySelector('[data-testid="schedule-recurring-card-rec-1"]');
+    expect(recurring?.querySelector('[data-testid="schedule-card-location"]')?.textContent).toContain(
+      "地點：N/A",
+    );
+    expect(recurring?.querySelector('[data-testid="schedule-card-notes"]')?.textContent).toContain(
+      "說明：N/A",
+    );
     expect(mockListUserEventsPage).toHaveBeenCalled();
     expect(mockListRecurringSeries).toHaveBeenCalledWith({
       topLevelOnly: true,

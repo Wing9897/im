@@ -14,7 +14,7 @@ from server.agent.tool_limits import (
 from server.calendar.timeline_dismissals import attach_dismissed_flag
 from server.calendar.timeline_importance import attach_important_flag
 from server.db.database import Database
-from server.domain.mcp_workset_scope import allowed_workset_ids_from_args
+from server.domain.workset_scope import allowed_workset_ids_from_args
 from server.queries.results_queries import query_analysis_events
 from server.time_iso import to_iso_z
 from server.wire.serializers import serialize_analysis_event

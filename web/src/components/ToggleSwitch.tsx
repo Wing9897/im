@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type ReactNode } from "react";
 import { SwitchTrack } from "./ui/SwitchTrack";
 
 interface ToggleSwitchProps {
@@ -7,6 +7,12 @@ interface ToggleSwitchProps {
   disabled?: boolean;
   /** Accessible name (always applied to the switch). */
   label: string;
+  /** Override aria-label when the visible label should stay shorter. */
+  ariaLabel?: string;
+  /** Native tooltip; defaults to aria/label when the visible text label is hidden. */
+  title?: string;
+  /** Visual mark shown before the track (e.g. flowchart gate icons). */
+  icon?: ReactNode;
   /** When false, only the track is shown (label stays on aria-label). Default true. */
   showLabel?: boolean;
   "data-testid"?: string;
@@ -17,6 +23,9 @@ export const ToggleSwitch = React.memo(function ToggleSwitch({
   onChange,
   disabled = false,
   label,
+  ariaLabel,
+  title,
+  icon,
   showLabel = true,
   "data-testid": dataTestId,
 }: ToggleSwitchProps) {
@@ -34,21 +43,29 @@ export const ToggleSwitch = React.memo(function ToggleSwitch({
     }
   };
 
+  const accessibleName = ariaLabel ?? label;
+  const tooltip = title ?? (icon && !showLabel ? accessibleName : undefined);
+
   return (
     <div
       className={[
-        "inline-flex items-center gap-md rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)]",
+        "inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)]",
+        icon ? "gap-xs" : showLabel ? "gap-md" : "",
         disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-      ].join(" ")}
+      ]
+        .filter(Boolean)
+        .join(" ")}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       role="switch"
       aria-checked={checked}
-      aria-label={label}
+      aria-label={accessibleName}
+      title={tooltip}
       aria-disabled={disabled}
       tabIndex={disabled ? -1 : 0}
       data-testid={dataTestId}
     >
+      {icon}
       <SwitchTrack checked={checked} disabled={disabled} />
       {showLabel ? (
         <span className="select-none text-body text-text-primary">{label}</span>

@@ -8,7 +8,12 @@ export const monthCalendarFillClass = "flex h-full min-h-0 flex-1 flex-col";
 
 export const calendarScrollableClass = "min-h-0 flex-1 overflow-auto";
 
-export const monthGridContainerClass = "flex h-full min-h-0 flex-1 flex-col gap-xs";
+export const monthGridContainerClass =
+  "im-timeline-month-grid flex h-full min-h-0 flex-1 flex-col gap-xs";
+
+export function monthGridRootClass(datesRevealed: boolean): string {
+  return datesRevealed ? `${monthGridContainerClass} is-revealed` : monthGridContainerClass;
+}
 
 export const monthWeekdayHeaderClass =
   "grid min-h-4 shrink-0 grid-cols-7 items-center gap-xs px-0.5";
@@ -27,7 +32,6 @@ export type MonthDayCellParams = {
   isCurrentMonth: boolean;
   activeDay: boolean;
   today: boolean;
-  isWeekend: boolean;
 };
 
 export function monthDayCellClass({
@@ -36,10 +40,10 @@ export function monthDayCellClass({
   today,
 }: MonthDayCellParams): string {
   const base =
-    "flex h-full min-h-0 cursor-pointer flex-col items-stretch justify-start gap-0.5 overflow-hidden rounded-md border p-[3px_5px] transition-[border-color,box-shadow,background] duration-150";
+    "im-month-day-cell relative flex h-full min-h-0 cursor-pointer flex-col items-stretch justify-start overflow-hidden rounded-md border p-[3px_5px] shadow-[0_1px_2px_color-mix(in_srgb,var(--text-primary)_12%,transparent)] transition-[border-color,box-shadow,background] duration-150";
 
   if (activeDay) {
-    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_12%,var(--surface-panel))] shadow-sm ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
+    return `${base} border-accent bg-[color-mix(in_srgb,var(--accent)_14%,var(--surface-panel))] ${isCurrentMonth ? "opacity-100" : "opacity-[0.72]"}`;
   }
 
   if (today) {
@@ -54,37 +58,53 @@ export function monthDayCellClass({
   return `${base} border-[color-mix(in_srgb,var(--surface-border)_88%,transparent)] im-surface-panel opacity-[0.72]`;
 }
 
-export const monthDayHeaderClass =
-  "flex h-4 shrink-0 items-center justify-between gap-0.5";
+/** Fixed-height chip band; CSS in timeline-page.css reserves height even when empty. */
+export const monthDayHeaderClass = "im-month-day-header";
 
-export function monthDayNumberClass({
+/** Positioned stack: large date number + optional holiday name underneath. */
+export function monthDayWatermarkStackClass(isHoliday = false): string {
+  return ["im-month-day-watermark-stack", isHoliday ? "is-holiday" : ""]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Holiday name under the date number — muted watermark, not a header chip. */
+export const monthDayHolidayWatermarkClass = "im-month-day-holiday-watermark";
+
+export function monthDayWatermarkClass({
   isCurrentMonth,
   today,
   activeDay,
 }: Pick<MonthDayCellParams, "isCurrentMonth" | "today" | "activeDay">): string {
-  const highlighted = (today || activeDay) && isCurrentMonth;
-  if (!highlighted) {
-    return [
-      "flex h-4 shrink-0 items-center justify-center text-card-meta leading-none",
-      isCurrentMonth ? "font-normal text-text-primary" : "font-normal text-text-muted",
-    ].join(" ");
-  }
-
   return [
-    "flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full text-card-meta font-bold leading-none text-white",
-    activeDay ? "bg-accent" : "bg-[color-mix(in_srgb,var(--accent)_72%,transparent)]",
-  ].join(" ");
+    "im-month-day-watermark",
+    isCurrentMonth ? "" : "is-outside",
+    today && isCurrentMonth ? "is-today" : "",
+    activeDay && isCurrentMonth ? "is-active" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
-export const monthDayMetaClass = "flex min-w-0 shrink-0 items-center gap-[3px]";
+/** Event overlay above the watermark date + holiday name. Reveal hides events/+N, not the header. */
+export const monthDaySurfaceClass =
+  "im-month-day-surface relative z-[1] flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden";
+
+export const monthDayMetaClass = "flex min-w-0 items-center justify-end gap-[3px]";
 
 export const monthTodayLabelClass = "text-card-meta font-semibold leading-none text-accent";
 
+/** Muted weekday cap when the reserved header has no 今天 / 到期 chip. */
+export const monthDayWeekdayFillerClass = "im-month-day-weekday-filler";
+
 export const monthEventsPreviewClass =
-  "flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden";
+  "im-month-day-events flex min-h-0 flex-1 flex-col gap-px overflow-hidden";
+
+const monthSurfaceChipClass =
+  "rounded-sm bg-[color-mix(in_srgb,var(--surface-panel)_78%,transparent)] px-0.5";
 
 export const monthEventPreviewRowClass =
-  "flex min-w-0 shrink-0 items-center gap-1";
+  `flex min-w-0 shrink-0 items-center gap-1 ${monthSurfaceChipClass}`;
 
 /** 一般事件 — uses --calendar-dot-event (default: accent). */
 export const monthEventDotClass =
@@ -93,12 +113,12 @@ export const monthEventDotClass =
 export const monthEventPreviewTextClass =
   "min-w-0 truncate text-card-meta leading-none text-text-secondary";
 
-/** Compact span counters pinned to the bottom of the month cell (below event previews). */
+/** Compact span counters in the reserved header band (今天 / 到期 / weather). */
 export const monthSpanIndicatorsClass =
-  "mt-auto flex min-w-0 shrink-0 flex-col gap-0.5 overflow-hidden";
+  "im-month-span-indicators flex min-w-0 shrink-0 items-center gap-0.5 overflow-hidden";
 
 export const monthSpanIndicatorRowClass =
-  "flex min-w-0 shrink-0 items-center gap-1";
+  `flex min-w-0 shrink-0 items-center gap-1 ${monthSurfaceChipClass}`;
 
 /** 進行中 — uses --calendar-dot-ongoing (default: info). */
 export const monthSpanOngoingDotClass =

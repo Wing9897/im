@@ -1,4 +1,4 @@
-"""Wipe-floor SoT: stamp-39 fresh DDL + prior stamps hard-reject (no mutation / reset path).
+"""Wipe-floor SoT: stamp-40 fresh DDL + prior stamps hard-reject (no mutation / reset path).
 
 Fingerprint validation, unstamped current, and newer-than-supported: ``test_db_schema.py``.
 """
@@ -24,8 +24,8 @@ _HARD_REJECT_PRIOR_VERSIONS = list(range(1, CURRENT_SCHEMA_VERSION))
 
 
 def test_wipe_floor_is_current_stamp() -> None:
-    assert CURRENT_SCHEMA_VERSION == 39
-    assert SCHEMA_SEMVER == "0.1.0-beta.40"
+    assert CURRENT_SCHEMA_VERSION == 40
+    assert SCHEMA_SEMVER == "0.1.0-beta.41"
 
 
 @pytest.mark.asyncio
@@ -56,6 +56,7 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         assert int(task_cols["llm_profile_id"][3]) == 1
         assert "notify_pref" in task_cols
         assert int(task_cols["notify_pref"][3]) == 1
+        assert str(task_cols["notify_pref"][4]).replace("'", "") == "follow"
         assert str(task_cols["output_analysis_events"][4]) == "1"
         task_workset = task_cols["workset_id"]
         assert int(task_workset[3]) == 1  # notnull
@@ -70,9 +71,11 @@ async def test_fresh_ddl_stamps_current_with_builtin_workset(tmp_path) -> None:
         async with db.conn.execute("PRAGMA table_info(user_events)") as cursor:
             ue_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_pref" in ue_cols
+        assert str(ue_cols["notify_pref"][4]).replace("'", "") == "off"
         async with db.conn.execute("PRAGMA table_info(recurring_schedules)") as cursor:
             rec_cols = {str(row[1]): row for row in await cursor.fetchall()}
         assert "notify_pref" in rec_cols
+        assert str(rec_cols["notify_pref"][4]).replace("'", "") == "off"
     finally:
         await db.close()
 

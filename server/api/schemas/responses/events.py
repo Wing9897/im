@@ -145,7 +145,7 @@ class TimelineImportanceResponse(BaseModel):
 
 
 class CalendarOccurrenceResponse(BaseModel):
-    """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/items``."""
+    """RRULE occurrence or trackable-item DATE projection from ``GET /calendar/occurrences``."""
 
     id: str
     #: Recurring series id for ``source=recurring``; empty for item DATE projections.
@@ -169,6 +169,26 @@ class CalendarOccurrenceResponse(BaseModel):
     itemDateKind: Literal["remind"] | None = None
     #: Item remind projections inherit the linked expires calendar override.
     notifyPref: CoercedNotifyPref = "follow"
+
+
+class CalendarHolidayItemResponse(BaseModel):
+    """One Nager.Date public holiday (country-level, not city)."""
+
+    date: str
+    localName: str = ""
+    name: str = ""
+    countryCode: str
+    isGlobal: bool = True
+    types: list[str] = Field(default_factory=list)
+
+
+class CalendarHolidaysResponse(BaseModel):
+    """Public holidays for the household weather location's country."""
+
+    year: int
+    location: str
+    country: str | None = None
+    holidays: list[CalendarHolidayItemResponse] = Field(default_factory=list)
 
 
 class CalendarImportWarningResponse(BaseModel):

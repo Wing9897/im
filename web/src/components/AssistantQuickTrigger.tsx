@@ -1,4 +1,4 @@
-import { Eraser, MessageSquare, VolumeX } from "lucide-react";
+import { MessageSquare, VolumeX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isAssistantDirectModeSupported } from "../domain/assistant/directModeSupport";
 import { useAssistantQuick } from "../hooks/useAssistantQuick";
@@ -8,8 +8,9 @@ interface AssistantQuickTriggerProps {
 }
 
 /**
- * Chrome actions for the always-on voice assistant — left of the title-bar search.
- * Chat button opens text composer; Space PTT only when STT is actually available.
+ * Chrome actions for the always-on voice assistant — right of the title-bar search.
+ * Chat button opens text composer; clear lives next to that composer input.
+ * Space PTT only when STT is actually available.
  */
 export function AssistantQuickTrigger({ compact: _compact = false }: AssistantQuickTriggerProps) {
   void _compact;
@@ -22,7 +23,6 @@ export function AssistantQuickTrigger({ compact: _compact = false }: AssistantQu
     toggleComposer,
   } = useAssistantQuick();
 
-  const canClear = Boolean(chatActions?.canClear);
   const speaking = Boolean(chatActions?.speaking);
   const sttAvailable =
     chatActions?.sttAvailable ?? isAssistantDirectModeSupported();
@@ -39,19 +39,6 @@ export function AssistantQuickTrigger({ compact: _compact = false }: AssistantQu
 
   return (
     <div className="im-assistant-chrome" data-testid="assistant-chrome">
-      <button
-        type="button"
-        className={`im-command-trigger im-command-trigger--compact${slotHidden}`}
-        data-testid="assistant-chrome-clear"
-        aria-label={t("quick.clearChat")}
-        title={t("quick.clearChat")}
-        disabled={!showChrome || !canClear}
-        aria-hidden={!showChrome}
-        tabIndex={showChrome ? 0 : -1}
-        onClick={() => chatActions?.clearChat()}
-      >
-        <Eraser size={14} strokeWidth={2.2} aria-hidden="true" />
-      </button>
       {speaking ? (
         <button
           type="button"

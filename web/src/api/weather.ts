@@ -1,13 +1,7 @@
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-type WeatherForecastResponse = {
-  daily: {
-    time?: string[];
-    weather_code?: number[];
-    temperature_2m_max?: number[];
-    temperature_2m_min?: number[];
-  };
-};
+export type WeatherForecastResponse = components["schemas"]["WeatherForecastResponse"];
 
 export type FetchWeatherForecastOptions = {
   signal?: AbortSignal;

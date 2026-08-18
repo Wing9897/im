@@ -90,12 +90,12 @@ const SYSTEM_TASK_DEFS: readonly SystemTaskDef[] = [
     descriptionKey: "systemTasks.outboundNotify.shortDescription",
   },
   {
-    id: "voice-reminder",
+    id: "local-notify",
     kind: "system",
-    titleKey: "systemTasks.voiceReminder.title",
-    descriptionKey: "systemTasks.voiceReminder.shortDescription",
+    titleKey: "systemTasks.localNotify.title",
+    descriptionKey: "systemTasks.localNotify.shortDescription",
     linkTo: "/actions?tab=notify",
-    linkLabelKey: "systemTasks.voiceReminder.linkLabel",
+    linkLabelKey: "systemTasks.localNotify.linkLabel",
   },
   {
     id: "retention",

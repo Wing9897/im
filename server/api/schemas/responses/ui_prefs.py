@@ -11,7 +11,7 @@ from server.worksets_const import SYSTEM_WORKSET_ID
 BoardGanttViewMode = Literal["day", "month"]
 TimelineEventStatus = Literal["pending", "confirmed", "completed"]
 AssistantMessageRole = Literal["user", "assistant"]
-VoiceHistoryStatus = Literal["success", "failure"]
+NotifyHistoryStatus = Literal["success", "failure"]
 SpacePttMode = Literal["hold", "toggle"]
 
 
@@ -76,7 +76,7 @@ class BoardPrefsPutBody(BaseModel):
     widgetState: BoardWidgetStateSchema | None = None
 
 
-class VoiceQuietHoursSchema(BaseModel):
+class NotifyQuietHoursSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool = True
@@ -84,7 +84,7 @@ class VoiceQuietHoursSchema(BaseModel):
     end: str = "07:00"
 
 
-class VoiceReminderSettingsSchema(BaseModel):
+class NotifySettingsSchema(BaseModel):
     """Local-notify settings blob under ``notify_settings``."""
 
     # ignore unknown keys (legacy ``sourceFilter`` leftover is dropped);
@@ -97,43 +97,43 @@ class VoiceReminderSettingsSchema(BaseModel):
     flashMode: Literal["timed", "persistent"] = "timed"
     leadOffsetsMinutes: list[int] = Field(default_factory=lambda: [60])
     preambleChimeId: str = "broadcast"
-    quietHours: VoiceQuietHoursSchema | None = None
+    quietHours: NotifyQuietHoursSchema | None = None
 
 
-class VoiceReminderSettingsResponse(BaseModel):
+class NotifySettingsResponse(BaseModel):
     configured: bool
-    settings: VoiceReminderSettingsSchema | None = None
+    settings: NotifySettingsSchema | None = None
 
 
-class VoiceSettingsBody(BaseModel):
+class NotifySettingsBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    settings: VoiceReminderSettingsSchema
+    settings: NotifySettingsSchema
 
 
-class VoiceReminderFiredResponse(BaseModel):
+class NotifyFiredResponse(BaseModel):
     configured: bool
     keys: list[str] | None = None
 
 
-class VoiceFiredBody(BaseModel):
+class NotifyFiredBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     keys: list[str]
 
 
-class VoiceReminderFiredClaimResponse(BaseModel):
+class NotifyFiredClaimResponse(BaseModel):
     configured: bool
     claimed: list[str] = Field(default_factory=list)
     keys: list[str] = Field(default_factory=list)
 
 
-class VoiceReminderHistoryEntrySchema(BaseModel):
+class NotifyHistoryEntrySchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: str
     triggerReason: str
-    status: VoiceHistoryStatus
+    status: NotifyHistoryStatus
     errorMessage: str | None = None
     triggeredAt: str
     eventId: str | None = None
@@ -141,15 +141,15 @@ class VoiceReminderHistoryEntrySchema(BaseModel):
     leadOffsetMinutes: int | None = None
 
 
-class VoiceReminderHistoryResponse(BaseModel):
+class NotifyHistoryResponse(BaseModel):
     configured: bool
-    entries: list[VoiceReminderHistoryEntrySchema] | None = None
+    entries: list[NotifyHistoryEntrySchema] | None = None
 
 
-class VoiceHistoryBody(BaseModel):
+class NotifyHistoryBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    entries: list[VoiceReminderHistoryEntrySchema]
+    entries: list[NotifyHistoryEntrySchema]
 
 
 class AssistantToolCallSchema(BaseModel):

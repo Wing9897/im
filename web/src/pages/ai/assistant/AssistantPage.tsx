@@ -1,6 +1,7 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 import { Link } from "react-router-dom";
-import { Eraser, Volume2, VolumeX } from "lucide-react";
+import { Eraser, MessageSquare, Volume2, VolumeX } from "lucide-react";
+import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
 import { useTranslation } from "react-i18next";
 import { Button, SurfaceCard, TextArea, captionClass, pageTitleClass, AlertBanner } from "../../../components/ui";
 import { EmptyState } from "../../../components/common/EmptyState";
@@ -230,6 +231,7 @@ export function AssistantPage() {
           {messages.length === 0 ? (
             <EmptyState
               compact
+              illustration={<EmptyStateGlyph icon={MessageSquare} />}
               title={t("empty.title")}
               hint={
                 sttAvailable

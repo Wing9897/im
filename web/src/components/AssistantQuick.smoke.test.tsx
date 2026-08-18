@@ -140,11 +140,8 @@ describe("AssistantQuick smoke", () => {
     expect(document.querySelector('[data-testid="assistant-caption-composer"]')).toBeNull();
     expect(document.querySelector('[data-testid="assistant-direct-bubbles"]')).not.toBeNull();
 
-    const clearBtn = container.querySelector(
-      '[data-testid="assistant-chrome-clear"]',
-    ) as HTMLButtonElement;
-    expect(clearBtn).not.toBeNull();
-    expect(clearBtn.className).not.toContain("im-assistant-chrome__slot--hidden");
+    expect(container.querySelector('[data-testid="assistant-chrome-clear"]')).toBeNull();
+    expect(document.querySelector('[data-testid="assistant-caption-clear"]')).toBeNull();
   });
 
   it("does not flash prior session turns when voice arms", () => {
@@ -392,13 +389,30 @@ describe("AssistantQuick smoke", () => {
     expect(startListening).not.toHaveBeenCalled();
   });
 
-  it("exposes chrome clear chat while voice is armed", () => {
+  it("places clear chat next to the composer input only", () => {
+    chatMock.messages = [{ id: "u1", role: "user", content: "hi" }];
     renderQuick();
-    const clearBtn = container.querySelector(
-      '[data-testid="assistant-chrome-clear"]',
+    expect(container.querySelector('[data-testid="assistant-chrome-clear"]')).toBeNull();
+    expect(document.querySelector('[data-testid="assistant-caption-clear"]')).toBeNull();
+
+    openComposerViaChrome();
+    const clearBtn = document.querySelector(
+      '[data-testid="assistant-caption-clear"]',
     ) as HTMLButtonElement;
+    const draft = document.querySelector('[data-testid="assistant-caption-draft"]');
     expect(clearBtn).not.toBeNull();
-    expect(clearBtn.disabled).toBe(true);
+    expect(clearBtn.disabled).toBe(false);
+    expect(draft).not.toBeNull();
+    expect(draft!.compareDocumentPosition(clearBtn) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(clearBtn.closest('[data-testid="assistant-caption-composer"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="assistant-chrome"]')?.contains(clearBtn),
+    ).toBe(false);
+
+    act(() => {
+      clearBtn.click();
+    });
+    expect(clearChat).toHaveBeenCalledTimes(1);
   });
 
   it("shows chrome stop-speaking only while speaking", () => {
@@ -428,7 +442,6 @@ describe("AssistantQuick smoke", () => {
       el.getAttribute("data-testid"),
     );
     expect(ids).toEqual([
-      "assistant-chrome-clear",
       "assistant-chrome-composer",
     ]);
   });

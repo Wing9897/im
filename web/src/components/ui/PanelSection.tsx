@@ -8,6 +8,8 @@ import { sectionTitleClass } from "./pageTypography";
 
 interface PanelSectionProps {
   title: string;
+  /** Optional leading Lucide (or other) mark before the title. */
+  icon?: ReactNode;
   itemCount?: number;
   /** When true, renders the count badge (caller decides loading/empty logic). */
   showCount?: boolean;
@@ -36,6 +38,7 @@ interface PanelSectionProps {
  */
 export function PanelSection({
   title,
+  icon,
   itemCount = 0,
   showCount = false,
   headerActions,
@@ -92,6 +95,7 @@ export function PanelSection({
               title={open ? t("ui.collapse") : t("ui.expand")}
             >
               <span className="inline-flex min-w-0 items-center gap-sm">
+                {icon}
                 <h2 className={sectionTitleClass}>{title}</h2>
                 {showCount ? (
                   <CountBadge
@@ -108,6 +112,7 @@ export function PanelSection({
             </Button>
           ) : (
             <>
+              {icon}
               <h2 className={sectionTitleClass}>{title}</h2>
               {showCount ? (
                 <CountBadge count={itemCount} aria-label={t("ui.itemsCount", { count: itemCount })} />

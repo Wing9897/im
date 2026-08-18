@@ -2,7 +2,7 @@
 
 Prefix: ``[cal-ui]`` on titles so they are easy to spot and delete later.
 Run against the live app DB (default data dir) while the server may be running.
-Requires wipe-only stamp 39 (``SCHEMA_SEMVER`` ``0.1.0-beta.40``); reset first if needed.
+Requires wipe-only stamp 40 (``SCHEMA_SEMVER`` ``0.1.0-beta.41``); reset first if needed.
 
   python scripts/seed_calendar_ui_fixtures.py
   python scripts/seed_calendar_ui_fixtures.py --clean   # remove prior [cal-ui] rows first

@@ -3,13 +3,13 @@ import { appendRecentInbox } from "../recentInbox";
 import { createSpeechPorts, loadVoiceSettings, ttsSpeakOptionsFromVoiceSettings } from "../../../speech";
 import { logWarn } from "../../../utils/logger";
 import {
-  announceVoiceReminder,
-  voiceReminderSpeakFailedMessage,
-  voiceReminderTtsUnavailableMessage,
+  announceNotify,
+  notifySpeakFailedMessage,
+  notifyTtsUnavailableMessage,
 } from "./announce";
 import {
-  appendVoiceReminderTrigger,
-  buildVoiceReminderTriggerReason,
+  appendNotifyTrigger,
+  buildNotifyTriggerReason,
 } from "./triggerHistory";
 import { formatLeadSpeakPhrase, type DueReminder } from "./scanner";
 
@@ -18,8 +18,8 @@ export async function recordDueTrigger(
   status: "success" | "failure",
   errorMessage?: string,
 ): Promise<boolean> {
-  const { persisted } = await appendVoiceReminderTrigger({
-    triggerReason: buildVoiceReminderTriggerReason(
+  const { persisted } = await appendNotifyTrigger({
+    triggerReason: buildNotifyTriggerReason(
       item.title,
       formatLeadSpeakPhrase(item.leadOffsetMinutes),
     ),
@@ -61,15 +61,15 @@ export async function deliverDueReminders(opts: {
   const voice = loadVoiceSettings();
   const { tts } = createSpeechPorts();
   if (!tts.isAvailable()) {
-    logWarn("[voiceReminder] TTS unavailable; skipping speak");
+    logWarn("[notify] TTS unavailable; skipping speak");
     for (const item of items) {
       const persisted = await recordDueTrigger(
         item,
         "failure",
-        voiceReminderTtsUnavailableMessage(),
+        notifyTtsUnavailableMessage(),
       );
       if (!persisted) {
-        onPersistFailure("[voiceReminder] failed to persist trigger history");
+        onPersistFailure("[notify] failed to persist trigger history");
       }
     }
     return;
@@ -80,22 +80,22 @@ export async function deliverDueReminders(opts: {
       break;
     }
     try {
-      await announceVoiceReminder(tts, item.speakText, {
+      await announceNotify(tts, item.speakText, {
         ...ttsSpeakOptionsFromVoiceSettings(voice),
       });
       const persisted = await recordDueTrigger(item, "success");
       if (!persisted) {
-        onPersistFailure("[voiceReminder] failed to persist trigger history");
+        onPersistFailure("[notify] failed to persist trigger history");
       }
     } catch (error) {
-      logWarn("[voiceReminder] speak failed", error);
+      logWarn("[notify] speak failed", error);
       const persisted = await recordDueTrigger(
         item,
         "failure",
-        error instanceof Error ? error.message : voiceReminderSpeakFailedMessage(),
+        error instanceof Error ? error.message : notifySpeakFailedMessage(),
       );
       if (!persisted) {
-        onPersistFailure("[voiceReminder] failed to persist trigger history");
+        onPersistFailure("[notify] failed to persist trigger history");
       }
     }
   }

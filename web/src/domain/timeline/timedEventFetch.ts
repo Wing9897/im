@@ -50,7 +50,7 @@ export type FetchMergedTimedEventsOpts = {
    */
   analysis?: "timed" | "timeline" | "recent" | "none";
   includeUserEvents?: boolean | "unbounded";
-  /** When false, skip calendar/items. Object form passes series filter to shared fetch. */
+  /** When false, skip calendar/occurrences. Object form passes series filter to shared fetch. */
   includeRrule?:
     | boolean
     | {

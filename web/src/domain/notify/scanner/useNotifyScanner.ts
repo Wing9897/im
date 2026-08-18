@@ -23,19 +23,19 @@ import {
   pruneFiredKeys,
 } from "./scanner";
 import {
-  VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
-  hydrateVoiceReminderSettings,
-  loadVoiceReminderSettings,
-  normalizeVoiceReminderSettings,
+  NOTIFY_SETTINGS_CHANGED_EVENT,
+  hydrateNotifySettings,
+  loadNotifySettings,
+  normalizeNotifySettings,
   reminderChannelDelivery,
 } from "./settings";
-import { hydrateVoiceReminderHistory } from "./triggerHistory";
+import { hydrateNotifyHistory } from "./triggerHistory";
 
 /**
  * Background reminder scanner for timed 情報事件、週期任務 RRULE 展開、
  * 用戶／助手事件，以及物品到期／提醒日。Mount once near the app root.
  */
-export function useVoiceReminderScanner(): void {
+export function useNotifyScanner(): void {
   const runningRef = useRef(false);
   const hydratedRef = useRef(false);
   const toastContext = useContext(ToastContext);
@@ -81,7 +81,7 @@ export function useVoiceReminderScanner(): void {
       }
       runningRef.current = true;
       try {
-        const settings = normalizeVoiceReminderSettings(loadVoiceReminderSettings());
+        const settings = normalizeNotifySettings(loadNotifySettings());
         if (!settings.enabled || settings.leadOffsetsMinutes.length === 0) {
           return;
         }
@@ -165,12 +165,12 @@ export function useVoiceReminderScanner(): void {
     void (async () => {
       try {
         await Promise.all([
-          hydrateVoiceReminderSettings(),
+          hydrateNotifySettings(),
           hydrateFiredKeys(),
-          hydrateVoiceReminderHistory(),
+          hydrateNotifyHistory(),
         ]);
       } catch (error) {
-        logWarn("[voiceReminder] hydrate failed", error);
+        logWarn("[notify] hydrate failed", error);
       }
       if (cancelled) {
         return;
@@ -182,13 +182,13 @@ export function useVoiceReminderScanner(): void {
     const timer = window.setInterval(() => {
       void runScan();
     }, SCAN_INTERVAL_MS);
-    window.addEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, onSettingsChanged);
+    window.addEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, onSettingsChanged);
 
     return () => {
       cancelled = true;
       window.clearInterval(timer);
       window.removeEventListener(
-        VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
+        NOTIFY_SETTINGS_CHANGED_EVENT,
         onSettingsChanged,
       );
     };

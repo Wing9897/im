@@ -75,7 +75,7 @@ export function WorksetTargetSelectField({
 }
 
 /**
- * Target workset picker for assistant / calendar / voice defaults.
+ * Target workset picker for assistant / calendar / local-notify defaults.
  */
 export function WorksetTargetSelect({
   id,

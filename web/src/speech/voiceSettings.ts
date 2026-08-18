@@ -148,6 +148,14 @@ export async function hydrateVoiceSettings(): Promise<VoiceSettings> {
   return hydratePromise;
 }
 
+/** Persist assistant default workset (`GET/PUT /api/v1/ui-prefs/assistant/voice-io`). */
+export function persistAssistantDefaultWorksetId(worksetId: string): void {
+  const next = toUserEventFormWorksetId(worksetId || SYSTEM_WORKSET_ID);
+  const current = loadVoiceSettings();
+  if (current.defaultWorksetId === next) return;
+  saveVoiceSettings({ ...current, defaultWorksetId: next });
+}
+
 /** Persist voice IO settings to SQLite-backed store. */
 export function saveVoiceSettings(settings: VoiceSettings): void {
   const normalized = normalizeVoiceSettings(settings);

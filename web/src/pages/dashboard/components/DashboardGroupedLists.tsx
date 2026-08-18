@@ -147,7 +147,7 @@ export function DashboardByWorksetList({
   t: TFunction;
   itemCountByWorkset?: Map<string, number>;
   onOpenWorkset: (id: string) => void;
-  onRenameWorkset: (id: string, name: string) => void;
+  onRenameWorkset: (id: string, name: string) => void | Promise<void>;
   onDeleteWorkset: (id: string, name: string) => void;
   onCreateWorkset: () => void;
 }) {
@@ -165,9 +165,7 @@ export function DashboardByWorksetList({
               itemCount={itemCountByWorkset?.get(group.key) ?? 0}
               onOpen={() => onOpenWorkset(group.key)}
               onRename={
-                group.isSystem
-                  ? undefined
-                  : () => onRenameWorkset(group.key, group.title)
+                group.isSystem ? undefined : (name) => onRenameWorkset(group.key, name)
               }
               onDelete={
                 group.isSystem

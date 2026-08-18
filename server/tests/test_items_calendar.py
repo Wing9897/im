@@ -94,7 +94,7 @@ async def test_calendar_projects_remind_only_not_purchased_or_expires(client, ap
 
     # Unified REST calendar path includes the same projection.
     api = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": start.isoformat().replace("+00:00", "Z"),
             "rangeEnd": end.isoformat().replace("+00:00", "Z"),
@@ -147,7 +147,7 @@ async def test_item_occurrence_dismiss_source_item(client, app):
     start = datetime.now(UTC) - timedelta(days=1)
     end = datetime.now(UTC) + timedelta(days=40)
     api = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": start.isoformat().replace("+00:00", "Z"),
             "rangeEnd": end.isoformat().replace("+00:00", "Z"),
@@ -166,7 +166,7 @@ async def test_item_occurrence_dismiss_source_item(client, app):
     assert restored.status_code == 204
 
     api2 = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": start.isoformat().replace("+00:00", "Z"),
             "rangeEnd": end.isoformat().replace("+00:00", "Z"),

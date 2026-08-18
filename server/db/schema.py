@@ -11,11 +11,13 @@ from server.db.schema_domains import (
     system,
     tasks,
     ui,
+    worksets,
 )
 
 DDL_PARTS = (
     sources.DDL,
     llm.DDL,  # profiles before analysis_tasks.llm_profile_id FK
+    worksets.DDL,  # before analysis_tasks.workset_id FK
     tasks.DDL,
     analysis.DDL,
     system.DDL,

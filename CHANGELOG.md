@@ -4,10 +4,16 @@ Stable product baseline starts at **1.0.0**. Schema stamp／`SCHEMA_SEMVER` iden
 
 ## [Unreleased]
 
+- Calendar public holidays: `GET /api/v1/calendar/holidays` (Nager.Date) uses the household weather location; country-level overlay on 時間規劃, not a second region picker.
+- Household pipeline graph: four layers (來源＋物品 → 任務＋助手 → 工作集 → 輸出：時間規劃／情報頁／通知／外部接口). L4 edges leave the 工作集 **block** layer port, not each card. Notify／external gates stay card icons and do not hide L4 wires.
+- Household pipeline graph: drop 我的日程 as a column block (calendar overlays all work); move 助手 to layer 2 with items/tasks, wired to 工作集. Calendar APIs／`/assistant` unchanged.
+- Wipe-only SQLite baseline **stamp 40** (`SCHEMA_SEMVER` `0.1.0-beta.41`): `user_events.notify_pref` and `recurring_schedules.notify_pref` DEFAULT `'off'` (align create-omit and `DEFAULT_CALENDAR_NOTIFY_PREF`). `analysis_tasks.notify_pref` stays `'follow'`. Worksets DDL extracted to `schema_domains/worksets.py` (must precede tasks in `DDL_PARTS`).
+- Local-notify symbols: Pydantic / ui_prefs / FE scanner `VoiceReminder*` → `Notify*`; catalog id `local-notify`; trigger-history source `notify`. Retired `/ui-prefs/voice-reminder/*` stays 404. `/ai/voice` STT-TTS unchanged.
+- Calendar occurrences: `GET /api/v1/calendar/occurrences` (query unchanged). Retired `GET /api/v1/calendar/items` → 404.
 - Builtin task templates: intel catalog is eight jobs (關鍵情報摘要、時間行程推理、IoT 設備告警、薅羊毛情報、行程事件提取、資安詐騙警示、政策法規動態、金融市場要聞); 專案經理 catalog is 通用專案日期管理 + 工作輪更表. Removed extra intel/leaderboard variants and overlapping Agent web-scout intel templates. In-editor Agent chips 專案調和／網蒐 unchanged.
 - Leaderboard tasks (`analysis_mode=leaderboard`) create with `outputAnalysisEvents` off; they always persist `trending_topics` for 排行榜 + may notify, and never wire to 情报页. No schema stamp.
 
-- Wipe-only SQLite baseline **stamp 39** (`SCHEMA_SEMVER` `0.1.0-beta.40`): `analysis_tasks.workset_id` TEXT NOT NULL DEFAULT `__user__` (same as items／user_events). Create/update omit or empty → 一般. Delete workset reassigns tasks to `__user__` (no SET NULL). Household graph always-on workset→时间规划 (display + navigate; no workset-level includeInTimeline column).
+- Prior wipe-only floor **stamp 39** (`SCHEMA_SEMVER` `0.1.0-beta.40`): `analysis_tasks.workset_id` TEXT NOT NULL DEFAULT `__user__` (same as items／user_events). Create/update omit or empty → 一般. Delete workset reassigns tasks to `__user__` (no SET NULL). Household graph always-on workset→时间规划 (display + navigate; no workset-level includeInTimeline column).
 - Prior wipe-only floor **stamp 38** (`SCHEMA_SEMVER` `0.1.0-beta.39`): `worksets.external_enabled` (MCP+A2A shared; default on; builtin 「一般」 can turn off). Retired `mcp_workset_scope`／`mcp_workset_ids`. Worksets page is the permission hub (通知 + 外部接口); notify and MCP/A2A pages link there. Calendar 我的日程 and in-app assistant are not gated.
 - Prior wipe-only floor **stamp 37** (`SCHEMA_SEMVER` `0.1.0-beta.38`): `ui_prefs` keys `notify_*`; HTTP `/api/v1/ui-prefs/notify/*` (retired `/voice-reminder/*` → 404); `notifyPref` `"on"` rejected with 422
 

@@ -1,10 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Bell, BellRing, MapPin, Radio, Sparkles, Trash2, type LucideIcon } from "lucide-react";
 
-import { AccentBarCard, Badge, type BadgeTone, LinkButton } from "./ui";
+import { AccentBarCard, Badge, CardTitleIcon, type BadgeTone, LinkButton } from "./ui";
 import { cardBodyClass, cardTitleClass } from "./ui/pageTypography";
 import { AiStaffAvatar } from "./aiStaff/AiStaffAvatar";
 import type { SystemTaskInfo, SystemTaskKind } from "../domain/tasks/systemTaskCatalog";
+
+const SYSTEM_TASK_FALLBACK_ICONS: Record<string, LucideIcon> = {
+  collector: Radio,
+  "analysis-batch": Sparkles,
+  "outbound-notify": BellRing,
+  "local-notify": Bell,
+  retention: Trash2,
+  "startup-geocode": MapPin,
+};
 
 interface SystemInfoTaskCardProps {
   item: SystemTaskInfo;
@@ -33,6 +43,7 @@ export function SystemInfoTaskCard({ item }: SystemInfoTaskCardProps) {
   const { t } = useTranslation("common");
   const navigate = useNavigate();
   const kindLabel = t(KIND_LABEL_KEY[item.kind]);
+  const FallbackIcon = SYSTEM_TASK_FALLBACK_ICONS[item.id];
 
   return (
     <AccentBarCard
@@ -60,6 +71,8 @@ export function SystemInfoTaskCard({ item }: SystemInfoTaskCardProps) {
                 draggable={false}
               />
             </span>
+          ) : FallbackIcon ? (
+            <CardTitleIcon icon={FallbackIcon} tone="muted" />
           ) : null}
           <span className={`min-w-0 flex-1 truncate ${cardTitleClass}`} title={item.title}>
             {item.title}

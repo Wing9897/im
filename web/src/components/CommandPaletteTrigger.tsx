@@ -19,6 +19,7 @@ export function CommandPaletteTrigger({ compact = false }: CommandPaletteTrigger
     <button
       type="button"
       className={compact ? "im-command-trigger im-command-trigger--compact" : "im-command-trigger"}
+      data-testid="command-palette-trigger"
       onClick={openPalette}
       aria-label={triggerAria}
       title={triggerAria}

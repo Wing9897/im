@@ -1,4 +1,6 @@
+import { CalendarDays, Clock, ListChecks, Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { SectionHeaderIcon } from "../../../components/common/EmptyStateGlyph";
 import {
   AccentBarCard,
   Badge,
@@ -37,6 +39,7 @@ export function WorksetExpiringSummarySection({
     <div data-testid="workset-summary-expiring">
       <PanelSection
         title={t("workset:detailSummaryExpiringHeading")}
+        icon={<SectionHeaderIcon icon={Clock} />}
         showCount={!loading}
         itemCount={items.length}
         aria-label={t("workset:detailSummaryExpiringHeading")}
@@ -80,6 +83,7 @@ export function WorksetEventsSummarySection({
     <div data-testid="workset-summary-events">
       <PanelSection
         title={t("workset:detailSummaryEventsHeading")}
+        icon={<SectionHeaderIcon icon={CalendarDays} />}
         showCount={!loading}
         itemCount={events.length}
         aria-label={t("workset:detailSummaryEventsHeading")}
@@ -150,6 +154,7 @@ export function WorksetTasksSection({
   return (
     <PanelSection
       title={t("workset:detailTasksHeading")}
+      icon={<SectionHeaderIcon icon={ListChecks} />}
       showCount
       itemCount={tasks.length}
       aria-label={t("workset:detailTasksHeading")}
@@ -212,6 +217,7 @@ export function WorksetItemsSection({
   return (
     <PanelSection
       title={t("workset:detailItemsHeading")}
+      icon={<SectionHeaderIcon icon={Package} />}
       showCount={!loading}
       itemCount={items.length}
       aria-label={t("workset:detailItemsHeading")}

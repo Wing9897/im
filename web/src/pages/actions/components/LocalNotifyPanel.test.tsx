@@ -2,7 +2,7 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_VOICE_REMINDER_SETTINGS } from "../../../domain/notify/scanner/settings";
+import { DEFAULT_NOTIFY_SETTINGS } from "../../../domain/notify/scanner/settings";
 import { LocalNotifyPanel } from "./LocalNotifyPanel";
 
 const update = vi.fn();
@@ -39,7 +39,7 @@ vi.mock("../hooks/useLocalNotifyPanelState", () => ({
 }));
 
 let mockSettings = {
-  ...DEFAULT_VOICE_REMINDER_SETTINGS,
+  ...DEFAULT_NOTIFY_SETTINGS,
   quietHours: { enabled: true, start: "22:00", end: "07:00" },
 };
 
@@ -60,7 +60,7 @@ describe("LocalNotifyPanel", () => {
     root = null;
     document.body.innerHTML = "";
     mockSettings = {
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+      ...DEFAULT_NOTIFY_SETTINGS,
       quietHours: { enabled: true, start: "22:00", end: "07:00" },
     };
   });
@@ -80,7 +80,7 @@ describe("LocalNotifyPanel", () => {
 
   it("hides OvernightClockHint for same-day quiet hours", async () => {
     mockSettings = {
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+      ...DEFAULT_NOTIFY_SETTINGS,
       quietHours: { enabled: true, start: "09:00", end: "17:00" },
     };
     const host = document.createElement("div");
@@ -115,8 +115,8 @@ describe("LocalNotifyPanel", () => {
       root.render(createElement(MemoryRouter, null, createElement(LocalNotifyPanel)));
     });
 
-    const voice = host.querySelector('[data-testid="voice-reminder-channel-voice"]');
-    const flash = host.querySelector('[data-testid="voice-reminder-channel-flash"]');
+    const voice = host.querySelector('[data-testid="notify-channel-voice"]');
+    const flash = host.querySelector('[data-testid="notify-channel-flash"]');
     expect(voice?.getAttribute("aria-checked")).toBe("true");
     expect(flash?.getAttribute("aria-checked")).toBe("true");
     expect(flash?.textContent).toContain("notify.channelFlash");
@@ -137,7 +137,7 @@ describe("LocalNotifyPanel", () => {
       root.render(createElement(MemoryRouter, null, createElement(LocalNotifyPanel)));
     });
 
-    const mode = host.querySelector('[data-testid="voice-reminder-flash-mode"]');
+    const mode = host.querySelector('[data-testid="notify-flash-mode"]');
     const persistent = Array.from(mode?.querySelectorAll('[role="tab"]') ?? []).find(
       (node) => node.textContent === "voice.flashModePersistent",
     );
@@ -177,7 +177,7 @@ describe("LocalNotifyPanel", () => {
     });
 
     const header = host.querySelector('[data-testid="voice-header"]');
-    const enable = header?.querySelector('[data-testid="voice-reminder-enabled"]');
+    const enable = header?.querySelector('[data-testid="notify-enabled"]');
     expect(header?.querySelector("h2")).not.toBeNull();
     expect(enable).not.toBeNull();
     expect(enable?.getAttribute("role")).toBe("switch");
@@ -205,7 +205,7 @@ describe("LocalNotifyPanel", () => {
       root.render(createElement(MemoryRouter, null, createElement(LocalNotifyPanel)));
     });
 
-    const enable = host.querySelector('[data-testid="voice-reminder-enabled"]');
+    const enable = host.querySelector('[data-testid="notify-enabled"]');
     const channels = host.querySelector('[data-testid="voice-channel-toggles"]');
     expect(enable).not.toBeNull();
     expect(channels).not.toBeNull();
@@ -213,7 +213,7 @@ describe("LocalNotifyPanel", () => {
     expect(enable?.className).not.toContain("im-surface-inset");
     expect(enable?.closest("label")?.textContent).toContain("voice.enableLabel");
     expect(channels?.querySelector(".im-surface-inset")).not.toBeNull();
-    expect(channels?.querySelector('[data-testid="voice-reminder-flash-mode"]')).not.toBeNull();
+    expect(channels?.querySelector('[data-testid="notify-flash-mode"]')).not.toBeNull();
     expect(channels?.textContent).toContain("voice.flashModeTimed");
     expect(channels?.textContent).toContain("voice.flashModePersistent");
     expect(channels?.closest('[role="region"]')).not.toBeNull();
@@ -243,7 +243,7 @@ describe("LocalNotifyPanel", () => {
     });
 
     const sectionIds = [
-      "voice-reminder-enabled",
+      "notify-enabled",
       "voice-channel-toggles",
       "voice-lead-offsets",
       "voice-quiet-controls",
@@ -268,10 +268,10 @@ describe("LocalNotifyPanel", () => {
     });
 
     const row = host.querySelector('[data-testid="voice-quiet-controls"]');
-    expect(row?.querySelector('[data-testid="voice-reminder-quiet-hours-enabled"]')).not.toBeNull();
+    expect(row?.querySelector('[data-testid="notify-quiet-hours-enabled"]')).not.toBeNull();
     expect(row?.querySelectorAll('input[type="time"]')).toHaveLength(2);
     await act(async () => {
-      const master = host.querySelector('[data-testid="voice-reminder-enabled"]') as HTMLButtonElement;
+      const master = host.querySelector('[data-testid="notify-enabled"]') as HTMLButtonElement;
       master.click();
     });
     expect(update).toHaveBeenCalledWith({ enabled: true });
@@ -303,7 +303,7 @@ describe("LocalNotifyPanel", () => {
 
   it("shows a stored custom 30-minute lead chip", async () => {
     mockSettings = {
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+      ...DEFAULT_NOTIFY_SETTINGS,
       leadOffsetsMinutes: [30, 60],
       quietHours: { enabled: true, start: "22:00", end: "07:00" },
     };

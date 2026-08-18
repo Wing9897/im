@@ -4,6 +4,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../components/common/EmptyState";
+import { EmptyStateGlyph } from "../../components/common/EmptyStateGlyph";
+import { Layers } from "lucide-react";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import { WorksetNameDialog } from "../../components/dialogs/WorksetNameDialog";
@@ -99,6 +101,7 @@ export function WorksetWorkspacePage() {
     return (
       <AppPageShell>
         <EmptyState
+          illustration={<EmptyStateGlyph icon={Layers} />}
           title={t("workset:workspaceNotFoundTitle")}
           description={t("workset:workspaceNotFoundDescription")}
           actions={

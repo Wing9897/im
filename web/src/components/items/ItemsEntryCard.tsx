@@ -3,10 +3,10 @@
  * Résumé / ID-card layout: large avatar, multi-line title, notes + inventory.
  */
 
-import { Archive, ArchiveRestore, Copy, Pencil, Trash2 } from "lucide-react";
+import { AlignLeft, Archive, ArchiveRestore, Clock, Copy, Package, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { AccentBarCard, Badge } from "../ui";
+import { AccentBarCard, Badge, CardFieldRow } from "../ui";
 import { cardBodyClass, cardMetaClass, cardTitleClass } from "../ui/pageTypography";
 import type { TrackableItem } from "../../api/items";
 import {
@@ -116,7 +116,12 @@ export function ItemsEntryCard({
                     </Badge>
                   ) : null}
                 </div>
-                <p className={`mt-1 mb-0 ${cardBodyClass}`}>{subtitle}</p>
+                <CardFieldRow
+                  icon={Clock}
+                  text={subtitle}
+                  empty={tone === "none"}
+                  className={`mt-1 ${cardBodyClass}`}
+                />
               </div>
 
               {showActions ? (
@@ -187,18 +192,20 @@ export function ItemsEntryCard({
             data-testid={`items-entry-card-details-${item.id}`}
           >
             {notesPreview ? (
-              <p className={entryCardNotesClass} title={notesPreview}>
-                {notesPreview}
-              </p>
+              <CardFieldRow
+                icon={AlignLeft}
+                text={notesPreview}
+                clamp
+                className={entryCardNotesClass}
+              />
             ) : null}
             {inventoryLine ? (
-              <p
-                className={`m-0 truncate ${cardMetaClass}`}
-                title={inventoryLine}
-                data-testid={`items-entry-inventory-${item.id}`}
-              >
-                {inventoryLine}
-              </p>
+              <CardFieldRow
+                icon={Package}
+                text={inventoryLine}
+                testId={`items-entry-inventory-${item.id}`}
+                className={cardMetaClass}
+              />
             ) : null}
           </div>
         ) : null}

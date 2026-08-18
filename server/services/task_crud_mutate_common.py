@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from server.api.routes.task_helpers import require_task_row
 from server.api.schemas.requests import TaskConfigBody
 from server.db.database import Database
 from server.domain.analysis_modes import AGENT_MODE, ALL_ANALYSIS_MODES
@@ -22,6 +21,7 @@ from server.scheduler.task_schedule_overrides import (
     BATCH_OVERLAP_MAX,
     BATCH_OVERLAP_MIN,
 )
+from server.services.task_policy import require_task_row
 from server.services.task_writes import TaskWriteError
 
 

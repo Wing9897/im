@@ -116,7 +116,7 @@ async def fetch_active_recurring_series(
     series_id: str | None = None,
     series_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Active recurring series (shared by Agent + ``GET /api/v1/calendar/items``).
+    """Active recurring series (shared by Agent + ``GET /api/v1/calendar/occurrences``).
 
     ``series_id`` / ``series_ids`` filter by series id **or** ``parent_task_id``
     (agent project scope).

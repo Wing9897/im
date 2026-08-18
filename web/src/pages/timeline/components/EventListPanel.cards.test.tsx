@@ -128,6 +128,10 @@ describe("EventListPanel", () => {
     expect(provenances).toContain("助手");
     expect(provenances.some((text) => text?.includes("任務：Ops Task"))).toBe(true);
 
+    const titleIcons = container.querySelectorAll('[data-testid="card-title-icon"]');
+    expect(titleIcons.length).toBe(3);
+    expect(titleIcons[0]?.getAttribute("width")).toBe("20");
+
     // Single-day fixtures: ending day-phase tag is not shown (multi-day covered elsewhere).
     expect(
       container.querySelector(
@@ -182,6 +186,33 @@ describe("EventListPanel", () => {
     )?.textContent;
     expect(emptyLocText).toContain("地點：");
     expect(emptyLocText).not.toContain("N/A");
+  });
+
+  it("user schedule cards always show location and notes, using N/A when empty", () => {
+    const event = makeTimelineItem({
+      id: "user-empty",
+      title: "用戶空欄",
+      source: "user",
+      origin: "manual",
+      location: null,
+      body: "",
+      startTime: new Date(2026, 6, 14, 10, 0, 0).toISOString(),
+      endTime: new Date(2026, 6, 14, 11, 0, 0).toISOString(),
+    });
+    const { container } = renderPanel({
+      rangeEvents: [event],
+      focusedDay: new Date(2026, 6, 14),
+    });
+
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-location"]')?.textContent,
+    ).toContain("地點：N/A");
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-notes"]')?.textContent,
+    ).toContain("說明：N/A");
+    expect(
+      container.querySelector('[data-testid="timeline-event-list-meta"]')?.className,
+    ).toContain("flex-col");
   });
 
   it("important item rows use ❗ leading marker instead of kind emoji", () => {

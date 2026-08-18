@@ -1,8 +1,10 @@
 import React from "react";
+import { Clock, MessageSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Message } from "../../types";
 import { PlatformTag } from "./PlatformTag";
 import { formatOsDateTime } from "../../utils/time";
+import { CardFieldIcon, CardTitleIcon } from "../ui/CardFieldRow";
 import { FeedCard } from "../ui/FeedCard";
 import { cardTitleClass } from "../ui/pageTypography";
 
@@ -37,6 +39,7 @@ export const MessageCard = React.memo(function MessageCard({
               title={t("ui.unread")}
             />
           ) : null}
+          <CardTitleIcon icon={MessageSquare} />
           <span
             className={`min-w-0 flex-1 truncate ${cardTitleClass} ${
               isRead ? "" : "font-semibold"
@@ -55,7 +58,10 @@ export const MessageCard = React.memo(function MessageCard({
         <>
           {channelLabel ? <span title={channelLabel}>{channelLabel}</span> : null}
           {channelLabel ? " · " : null}
-          <time dateTime={message.timestamp}>{formatOsDateTime(message.timestamp)}</time>
+          <span className="inline-flex items-center gap-xs">
+            <CardFieldIcon icon={Clock} />
+            <time dateTime={message.timestamp}>{formatOsDateTime(message.timestamp)}</time>
+          </span>
         </>
       }
       body={

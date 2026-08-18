@@ -149,12 +149,28 @@ describe("new board widgets (schedule / items / llm-health)", () => {
       root.render(wrapBoardProviders(createElement(ScheduleBoardWidget)));
     });
     await flush();
-    expect(container.querySelector('[data-testid="board-schedule-event-ue-1"]')?.textContent).toContain(
-      "Kickoff",
+    expect(container.querySelector('[data-testid="board-schedule-event-ue-1"]')?.textContent).toMatch(
+      /Kickoff/,
+    );
+    expect(container.querySelector('[data-testid="board-schedule-event-ue-1"]')?.textContent).toMatch(
+      /N\/A/,
     );
     expect(
       container.querySelector('[data-testid="board-schedule-series-ser-1"]')?.textContent,
     ).toContain("Weekly sync");
+    expect(
+      container.querySelector('[data-testid="board-schedule-series-ser-1"]')?.textContent,
+    ).toMatch(/N\/A/);
+    expect(
+      container
+        .querySelector('[data-testid="board-schedule-event-ue-1"] [data-testid="card-title-icon"]')
+        ?.classList.contains("lucide-calendar-days"),
+    ).toBe(true);
+    expect(
+      container
+        .querySelector('[data-testid="board-schedule-series-ser-1"] [data-testid="card-title-icon"]')
+        ?.classList.contains("lucide-repeat"),
+    ).toBe(true);
     expect(container.querySelector('[data-testid="board-schedule-hint"]')).toBeTruthy();
   });
 

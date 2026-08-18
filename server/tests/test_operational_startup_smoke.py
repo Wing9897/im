@@ -59,7 +59,7 @@ async def test_fresh_database_auth_and_representative_routes(tmp_path) -> None:
             representative_gets = {
                 "/api/v1/tasks": list,
                 "/api/v1/results/events?limit=5": dict,
-                ("/api/v1/calendar/items?rangeStart=2026-01-01T00:00:00Z&rangeEnd=2026-01-02T00:00:00Z"): list,
+                ("/api/v1/calendar/occurrences?rangeStart=2026-01-01T00:00:00Z&rangeEnd=2026-01-02T00:00:00Z"): list,
                 "/api/v1/config/settings": dict,
             }
             for path, expected_type in representative_gets.items():

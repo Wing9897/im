@@ -47,6 +47,9 @@ describe("IntelligenceCard meta tags", () => {
     expect(platformTag?.getAttribute("aria-label")).toBe("Telegram");
     expect(platformTag?.querySelector("svg")).toBeTruthy();
     expect(container.textContent).not.toContain("Task A · Telegram");
+    expect(container.querySelector('[data-testid="card-title-icon"]')?.getAttribute("width")).toBe(
+      "20",
+    );
   });
 
   it("does not render platform tag when sourcePlatform is null", () => {

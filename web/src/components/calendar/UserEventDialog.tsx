@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { listItems, type TrackableItem } from "../../api/items";
 import type { UserEventCalendarKind } from "../../domain/timeline/userEventCalendarKind";
 import type {
   UserEventFormValues,
@@ -46,7 +44,7 @@ function specialCalendarKindBadge(
 export type { UserEventKind } from "../../domain/timeline/userEventFormModel";
 export type { UserEventFormValues, UserEventTaskOption };
 
-export type ParentItemMode = "hidden" | "readonly" | "editable";
+export type ParentItemMode = "hidden" | "readonly";
 
 /** Workset picker visibility — hidden when parent item owns workset (Items linked calendars). */
 export type WorksetMode = "editable" | "hidden";
@@ -65,10 +63,12 @@ type UserEventDialogProps = {
   introOverride?: string;
   /**
    * Parent-item association UI.
-   * Default ``hidden`` — Items owns linked-calendar create; Timeline only shows
-   * read-only when ``itemId`` is already scoped (deep-link / edit).
+   * Default ``hidden`` (timeline / schedule / 我的日程 — no picker, no catalog).
+   * ``readonly`` is Items-page linked calendars only.
    */
   parentItemMode?: ParentItemMode;
+  /** Optional label for ``readonly`` (Items page already has the item). Never fetched. */
+  parentItemLabel?: string;
   /** Default ``editable``; ``hidden`` for item-linked calendar create/edit. */
   worksetMode?: WorksetMode;
   /** Override remind-before-days helper (e.g. category preset prefill). */
@@ -92,13 +92,13 @@ export function UserEventDialog({
   titleOverride,
   introOverride,
   parentItemMode = "hidden",
+  parentItemLabel = "",
   worksetMode = "editable",
   remindBeforeDaysHint,
   onClose,
   onSubmit,
 }: UserEventDialogProps) {
   const { t } = useTranslation("timeline");
-  const [itemOptions, setItemOptions] = useState<TrackableItem[]>([]);
   const {
     values,
     setValues,
@@ -123,28 +123,7 @@ export function UserEventDialog({
     onSubmit,
   });
 
-  useEffect(() => {
-    if (!open || parentItemMode === "hidden") return;
-    let cancelled = false;
-    void listItems({ status: "active" })
-      .then((items) => {
-        if (!cancelled) setItemOptions(items);
-      })
-      .catch(() => {
-        if (!cancelled) setItemOptions([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, parentItemMode]);
-
-  const lockedItemLabel = (() => {
-    const id = values.itemId.trim();
-    if (!id) return "";
-    const match = itemOptions.find((item) => item.id === id);
-    if (!match) return id;
-    return match.emoji ? `${match.emoji} ${match.title}` : match.title;
-  })();
+  const lockedItemLabel = parentItemLabel.trim() || values.itemId.trim();
 
   const displayError = error ?? localError;
   const introText =
@@ -225,8 +204,6 @@ export function UserEventDialog({
         <UserEventDialogParentItemFields
           mode={parentItemMode}
           values={values}
-          setValues={setValues}
-          itemOptions={itemOptions}
           lockedItemLabel={lockedItemLabel}
         />
 

@@ -7,6 +7,11 @@ import { listSources } from "../../api/sources";
 import { listUserEventsPage, type UserEvent } from "../../api/userEvents";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
+import {
+  hydrateVoiceSettings,
+  loadVoiceSettings,
+  VOICE_SETTINGS_CHANGED_EVENT,
+} from "../../speech";
 import type {
   PipelineChannelSourceInput,
   PipelineEventInput,
@@ -29,10 +34,11 @@ export type WorksetPipelineGraphData = {
   channels: PipelineChannelSourceInput[];
   events: PipelineEventInput[];
   labels: PipelineGraphLabels;
+  assistantDefaultWorksetId: string;
   reload: () => void;
 };
 
-/** Household graph inputs: catalog entities plus items / sources / calendar. */
+/** Household graph inputs: catalog entities plus items / sources. */
 export function useWorksetPipelineGraphData(): WorksetPipelineGraphData {
   const { t } = useTranslation("workset");
   const { worksets, tasks } = useTaskCatalog();
@@ -40,6 +46,9 @@ export function useWorksetPipelineGraphData(): WorksetPipelineGraphData {
   const [sources, setSources] = useState<PipelineSourceInput[]>([]);
   const [channels, setChannels] = useState<PipelineChannelSourceInput[]>([]);
   const [events, setEvents] = useState<PipelineEventInput[]>([]);
+  const [assistantDefaultWorksetId, setAssistantDefaultWorksetId] = useState(
+    () => loadVoiceSettings().defaultWorksetId,
+  );
   const [reloadToken, setReloadToken] = useState(0);
 
   const reload = useCallback(() => {
@@ -92,6 +101,21 @@ export function useWorksetPipelineGraphData(): WorksetPipelineGraphData {
     };
   }, [reloadToken]);
 
+  useEffect(() => {
+    let cancelled = false;
+    void hydrateVoiceSettings().then((settings) => {
+      if (!cancelled) setAssistantDefaultWorksetId(settings.defaultWorksetId);
+    });
+    const onVoiceSettings = () => {
+      setAssistantDefaultWorksetId(loadVoiceSettings().defaultWorksetId);
+    };
+    window.addEventListener(VOICE_SETTINGS_CHANGED_EVENT, onVoiceSettings);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(VOICE_SETTINGS_CHANGED_EVENT, onVoiceSettings);
+    };
+  }, []);
+
   const pipelineTasks = useMemo<PipelineTaskInput[]>(
     () =>
       tasks.map((task) => ({
@@ -114,14 +138,11 @@ export function useWorksetPipelineGraphData(): WorksetPipelineGraphData {
       generalName: t("generalName"),
       unassigned: t("generalName"),
       more: (count) => t("graphMore", { count }),
-      calendar: t("graphBlockCalendar"),
-      calendarPage: t("graphCalendarPage"),
-      intel: t("graphBlockIntel"),
-      timeline: t("graphBlockTimeline"),
-      notify: t("graphBlockNotify"),
-      mcp: t("graphBlockMcp"),
-      a2a: t("graphBlockA2a"),
       assistant: t("graphBlockAssistant"),
+      timeline: t("graphOutputTimeline"),
+      intel: t("graphOutputIntel"),
+      notify: t("graphOutputNotify"),
+      external: t("graphOutputExternal"),
     }),
     [t],
   );
@@ -134,6 +155,7 @@ export function useWorksetPipelineGraphData(): WorksetPipelineGraphData {
     channels,
     events,
     labels,
+    assistantDefaultWorksetId,
     reload,
   };
 }

@@ -92,15 +92,15 @@ The single backend process handling all business logic. Built with **FastAPI** r
 
 | Module | Responsibility |
 |--------|---------------|
-| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`items`／`imports`／`dismissals`／`user-events`), worksets, setup, access-keys, a2a, events SSE) |
+| `api/` | HTTP route handlers (count from `scripts/project_stats.py` via `npm run stats`; health, **sources**, channels, messages, tasks, results, config, system, actions, logs, viewer, agent, weather, **calendar** (`occurrences`／`holidays`／`imports`／`dismissals`／`user-events`), worksets, setup, access-keys, a2a, events SSE) |
 | `api/schemas/requests/` | Pydantic request bodies (one module per domain; routes import from here — no inline request models) |
 | `api/schemas/responses/` | Pydantic response models (package re-exports flat names) |
-| `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; shared by HTTP and non-HTTP callers) |
+| `wire/serializers.py` | Facade re-exporting domain builders in `wire/serializer_domains/` (snake_case → camelCase; worksets in `serializer_domains/worksets.py`; shared by HTTP and non-HTTP callers) |
 | `api/routes/weather.py` | Thin route over `services/weather.py` façade — providers in `weather_providers.py`, HTTP pool in `weather_http.py` (`GET /api/v1/weather/*`) |
 | `presets/task_presets.py` | Builtin **task template catalog** (`BUILTIN_PRESETS`) — loaded at runtime from [`shared/task_presets.json`](../shared/task_presets.json); locale copy synced via `scripts/sync_task_presets.py` (see [`docs/I18N-GLOSSARY.md`](I18N-GLOSSARY.md#任務模板-presets顯示文案-sot)) |
 | `queries/` | Shared SQL helpers (`sources_queries`, `actions_queries`, `results_queries`, `tasks_queries`, `viewer_queries`, `messages_queries`, `version_sql`, …) |
 | `analysis_control.py` | Unified pause / resume / abort for analysis batches |
-| `db/` | SQLite persistence via aiosqlite — current baseline **v39** (`SCHEMA_SEMVER` `0.1.0-beta.40`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
+| `db/` | SQLite persistence via aiosqlite — current baseline **v40** (`SCHEMA_SEMVER` `0.1.0-beta.41`) DDL split under `db/schema_domains/` and aggregated by `db/schema.py` (fingerprint in `db/schema_fingerprint.py`), wipe-only bootstrap／reject in `db/schema_bootstrap.py`（no migration registry; non-current stamps hard-reject → explicit reset; never silent wipe）, connection/reset wrapper in `db/database.py`. Retired monolithic `schema_ddl.py` is gone. |
 | `db/schema_inspect.py` | Schema fingerprint inspect + mismatch categories; version constants consumed by `schema_bootstrap` |
 | `household_auth.py` | Lightweight household auth: admin password → device session; revocable API keys (`*` / `read`) |
 | `scheduler/` | APScheduler-based periodic analysis scheduling (`manager.py` + `manager_pipelines.py`), batch claim/process/fail (`batch.py` / `batch_claim` / `batch_process` / `batch_failure`), agent tick + cursor drain/wave (`agent_tick` / `agent_tick_drain` / `agent_tick_wave`), result persistence, multi-category data retention (`retention.py`) |
@@ -126,8 +126,9 @@ The single backend process handling all business logic. Built with **FastAPI** r
 | `agent/tool_args.py` | Coercion for LLM-supplied tool arguments (int / bool / optional / camelCase-or-snake_case key aliases) — the one implementation every `tools_*` module uses |
 | `web_search/` | Multi-provider clients (DuckDuckGo default, Brave optional) + shared `WebSearchExecutionService` (`execution.py`) used by assistant / agent `web.search` tool (agent ticks via AgentRuntime; count / master-switch as params) |
 | `queries/messages_queries.py` | Shared message list filters + cursor page (REST + Agent) |
-| `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus user-event services (`user_events_read`／`user_events_write`／`user_events_normalize`) + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`items`／`imports`／`dismissals`／`user-events`). |
+| `calendar/` | Shared calendar package: `query` (+ `query_fetch`／`query_merge`), `rrule` façade (`rrule_validate`／`rrule_expand_*`), `normalize`, `ics` (+ `ics_event`), `imports` (+ `imports_upsert`), plus user-event services (`user_events_read`／`user_events_write`／`user_events_normalize`) + `timeline_dismissals.py`. HTTP under `api/routes/calendar/` (`occurrences`／`imports`／`dismissals`／`user-events`). Retired `GET /api/v1/calendar/items` is 404. |
 | `services/task_writes.py` | Shared task and series write validation: trigger/calendar RRULE canonicalization, parent-agent invariant, and `HH:MM` clock normalization |
+| `services/task_policy.py` | HTTP-agnostic task write policy (`ALLOWED_MODES`, agent-policy fields, workset resolve, require-row); routes map `TaskWriteError` → 422 |
 | `services/task_crud.py` | Task CRUD façade (`task_crud_list` / `task_crud_mutate`) for REST catalog + mutations |
 | `services/recurring_series_writes.py` | Standalone recurring-series write façade (`create` / `patch` / hard delete) |
 | `time_iso.py` | UTC ISO-8601 helpers (`Z` form) for parsing/formatting timestamps |
@@ -229,6 +230,7 @@ Constants moved into domain include: `taskPageCopy`, `userEvents`, `workspaceNav
 | Command palette catalog | `domain/commandPalette/commandPaletteCommands` | Command palette UI／hooks |
 | System task catalog | `domain/tasks/systemTaskCatalog` | Tasks page system cards |
 | Month weather hook | `hooks/useMonthWeather` | Weather board widget + Timeline month grid |
+| Month holidays hook | `hooks/useMonthHolidays` | Timeline calendar overlay (same weather location) |
 | Map markers UI | `components/map/` | Map board embed + MapView |
 | Timed event merge | `domain/timeline/timedEventMerge` | Board calendar/gantt/events + timeline RRULE projectors |
 | Source filter dialog | `components/SourceFilterDialog` | Board widgets + timeline/intelligence/voice toolbars |
@@ -274,6 +276,8 @@ Month weather is optional decoration, never a calendar availability dependency. 
 
 The server clips requests to the same available window, returns `200` with empty parallel `daily` arrays when there is no intersection, reuses one `aiohttp` session, and caches successes for 15 minutes. Provider/network failures are logged and returned as structured `weather_*` errors; the frontend consumes them silently.
 
+Public holidays overlay the same calendar from `GET /api/v1/calendar/holidays`, using the household weather location (Open-Meteo `country_code` or a city alias → ISO 3166-1) for Nager.Date; coverage is country-level, not city, and the overlay fails soft to empty when the API is down.
+
 ## Scripts (`scripts/`)
 
 Operational and packaging helpers invoked from npm scripts or CI:
@@ -290,7 +294,7 @@ Operational and packaging helpers invoked from npm scripts or CI:
 | `smoke.py` | `npm run verify:deploy` (`smoke` alias) | Short post-deploy live check against `:18820` (health／SPA／core API／SSE) |
 | `project_stats.py` | `npm run stats` | Route/module counts for docs and drift checks |
 | `desktop_verify.py` | `npm run verify:desktop:full` (also used by `verify:desktop:fast` after vitest) | Desktop build-path checks for the current OS; full mode requires packaged sidecar, unpacked runtime, and the platform installer (NSIS／DMG／AppImage or deb). Does **not** re-run desktop vitest. |
-| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-39 start |
+| `reset_local_databases.py` | — | Delete local SQLite files for a clean stamp-40 start |
 | `seed_calendar_ui_fixtures.py` | — | **Dev-only:** seed Timeline／Calendar UI fixtures (`[cal-ui]` prefix); not used by CI or product runtime |
 | `seed_dev_items_calendar.py` | — | **Dev-only:** seed items + calendar rows for manual UI checks (`[dev-seed]` prefix); not used by CI or product runtime |
 | `seed_items_finance_demo.py` | — | **Dev-only:** seed items + linked calendars (all 3 `kind`s) + `purchase_effective` finance amounts (`[finance-demo]` prefix); not used by CI or product runtime |
@@ -399,11 +403,11 @@ Timeline merge rows use wire `source`; item linkage and `user_events.kind` are o
 
 ### Schema baseline (wipe-only)
 
-Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-39 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
+Moved to [`docs/SCHEMA-BASELINE.md`](SCHEMA-BASELINE.md) — DDL authority, stamp-40 wipe-only contract, version support, wipe-floor invariant, explicit reset procedure, and `system_config` policy.
 
 ### Unified event analysis pipeline
 
-- Finding modes that write ``analysis_events``: **`intel_event`** (message-batch oneshot) and **`agent`** when ``output_analysis_events`` is on. **`leaderboard`** always writes ``trending_topics`` for `/leaderboard` (and notify); it never writes ``analysis_events`` and the household graph does not wire leaderboard tasks to 情报页 (排行榜 is the mode’s own page, not a fifth graph layer). Timed analysis rows also honor ``includeInTimeline``. Legacy `web_intel` / `project` modes were wiped into `agent` at stamp **18**.
+- Finding modes that write ``analysis_events``: **`intel_event`** (message-batch oneshot) and **`agent`** when ``output_analysis_events`` is on. **`leaderboard`** always writes ``trending_topics`` for `/leaderboard` (and notify); it never writes ``analysis_events`` and leaderboard tasks have no intel icon on the household graph (排行榜 is the mode’s own page, not a graph node). 工作集流程圖採四層關係模型：L1 來源＋物品 → L2 任務＋助手 → L3 工作集 → L4 輸出層（時間規劃、情報頁、通知、外部接口）。L1–L3 連線只表示來源與歸屬（source→task、item→workset、task→workset、assistant→defaultWorksetId）。L4 是共用輸出圖例：從 L3 **工作集區塊**右側層級埠（`layer:worksets`，不是每張工作集卡片）連到四個頁面節點；不可拖斷或點斷。工作集 `notifyEnabled`／`externalEnabled`（鈴／插頭）仍是卡片能力 icon，不顯示／隱藏／斷開 L4 連線。不另加 MCP／A2A 頁節點。 **我的日程 is not a graph block** (calendar overlays all work). Timed analysis rows also honor ``includeInTimeline``. Legacy `web_intel` / `project` modes were wiped into `agent` at stamp **18**.
 - LLM JSON schema requires `title` + `body`; `start_time`/`end_time`/`location`/`participants` are optional.
 - Location may be inferred from context; global/online/unspecified places (and missing location) persist as coordinates `0,0`. Time fields are filled only when a schedulable time exists. Evidence style (`analysisStrategyMode`) still controls which items to emit.
 - Persistence: timed rows UPSERT on `(task_id, version, event_key)`; untimed rows `INSERT OR IGNORE` on `(task_id, version, content_hash)` with `semantic_hash` near-dedup.
@@ -446,7 +450,7 @@ Both AI timers and recurring calendar series are described with **RRULE-shaped**
 | Purpose | Storage | Consumer | Modes |
 |---------|---------|----------|-------|
 | `trigger` | `analysis_tasks.schedule_rrule` | APScheduler next-run only | `intel_event` / `leaderboard` / `agent` |
-| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/items`, Timeline／Board) | `recurring` only |
+| `calendar` | `recurring_schedules.rrule` | Query-time expand (`GET /api/v1/calendar/occurrences`, Timeline／Board) | `recurring` only |
 
 - FE editor presets (`seconds_10`, `hourly`, `daily`, `weekly`, `custom_seconds`) map to/from trigger RRULE **locally** in the client (e.g. `seconds_10` → `FREQ=SECONDLY;INTERVAL=10`). They are **not** on the HTTP wire.
 - **Create/update/read SoT is `scheduleRrule` alone** — clients send and receive the canonical RRULE. Runtime registration reads `analysis_tasks.schedule_rrule` only (`schedule_trigger_from_rrule`).
@@ -514,11 +518,12 @@ Per-domain tests live under `server/tests/test_contract_*.py`. Shared helper: `c
 | `test_contract_tasks_activity_spans.py` | activity spans |
 | `test_contract_viewer.py` | viewer |
 | `test_weather_route.py` | `GET /api/v1/weather/forecast` (behavior + response keys) |
+| `test_calendar_holidays.py` | `GET /api/v1/calendar/holidays` (weather location → country, mocked Nager) |
 | `test_user_events.py` | user-events CRUD + wire keys + a2a origin |
 | `test_ui_prefs.py` | ui-prefs sanitize + GET keys + Pydantic shapes |
 | `test_contract_agent.py` | agent chat + stream final line |
 
-Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-39 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
+Fake migration-chain suites were removed. Split SoT: `test_schema_wipe_floor.py` (stamp-40 wipe-floor / prior hard-reject / reset log); `test_db_schema.py` (fingerprint / unstamped current / newer-than-supported / lookalikes). Shared fixtures: `schema_fixtures.py`.
 
 **Route inventory:** `server/tests/test_route_inventory.py` — FE path literals in `web/src/api/**/*.ts` must exist on server; live FastAPI OpenAPI paths ⊇ committed `web/openapi/openapi.json` (includes `/setup/*`, `/access-keys`, `/a2a/`, `/sources`, `/ui-prefs/*`). Retired `/api/v1/accounts*` must stay absent.
 
@@ -536,7 +541,7 @@ Drift-prone routes use bodies from `server/api/schemas/requests/` and `response_
 
 ### Removed endpoints
 
-Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Calendar surface: `GET /api/v1/calendar/items`, imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
+Retired routes must stay **404 or 405**. Canonical list: `removed_endpoints()` in `server/tests/test_dead_endpoints.py` (do not duplicate here). Calendar surface: `GET /api/v1/calendar/occurrences`, imports under `/api/v1/calendar/imports/*`, dismissals / user-events under `/api/v1/calendar/*`.
 
 ### Startup readiness (perf note)
 
@@ -571,6 +576,6 @@ Docs: Assistant + voice [`docs/agent/assistant.md`](agent/assistant.md); A2A（�
 
 Top-level: `server/` (FastAPI business logic), `web/` (React SPA), `desktop/` (Electron shell), `docs/`, `shared/task_presets.json`, `tests/smoke/`.
 
-**Facade + domain fan-out (not a thin tree):** large areas are split into a thin public entry plus focused modules. Examples — server: `services/task_crud.py` → `task_crud_list` / `task_crud_create` / `task_crud_update` / `task_crud_mutate*`; `scheduler/agent_tick.py` → `agent_tick_cursor` / `agent_tick_drain` / `agent_tick_wave` / `agent_tick_format` / `agent_tick_schedule`; `agent/tools_calendar/` (`handlers` + `handlers_read` / `handlers_write`, `schemas` + `schemas_read` / `schemas_write`); `wire/serializers.py` over `wire/serializer_domains/*`; `db/schema.py` aggregates wipe-only `db/schema_domains/*` (no migrations). Frontend: `web/src/domain/` holds pure models; page folders may fan out similarly (`pages/items/emoji/` for picker chrome; form pieces stay colocated under `pages/items/` until further split). Desktop process manager is split across `process-manager*.ts`.
+**Facade + domain fan-out (not a thin tree):** large areas are split into a thin public entry plus focused modules. Examples — server: `services/task_crud.py` → `task_crud_list` / `task_crud_create` / `task_crud_update` / `task_crud_mutate*`; `services/task_policy.py` (HTTP-agnostic; `api/routes/task_helpers.py` keeps 422 mapping); `scheduler/agent_tick.py` → `agent_tick_cursor` / `agent_tick_drain` / `agent_tick_wave` / `agent_tick_format` / `agent_tick_schedule`; `agent/tools_calendar/` (`handlers` + `handlers_read` / `handlers_write`, `schemas` + `schemas_read` / `schemas_write`); `wire/serializers.py` over `wire/serializer_domains/*` (worksets in `worksets.py`); `db/schema.py` aggregates wipe-only `db/schema_domains/*` (`worksets.py` before `tasks.py`). Frontend: `web/src/domain/` holds pure models; `domain/worksets/worksetPipelineGraph.ts` is a barrel over `pipelineConstants` / `pipelineIds` / `buildWorksetPipelineGraph` / `layoutPipelineFlow`; page folders may fan out similarly (`pages/items/emoji/` for picker chrome; form pieces stay colocated under `pages/items/` until further split). Desktop process manager is split across `process-manager*.ts`.
 
 Packages of note: `api/` (+ `schemas/requests`／`responses`), `agent/`, `analyzer/`, `scheduler/`, `collector/`, `calendar/`, `services/`, `db/schema_domains/`, `wire/serializer_domains/`, `domain/`, `web_search/`, `queries/`. Frontend: `web/src/api/sources/` (not retired `api/accounts`), `domain/`, `board/`, `pages/`. Prefer the facade import; open fan-out modules only when editing that concern.

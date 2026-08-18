@@ -255,11 +255,24 @@
   color: var(--text-primary);
 }
 
+.im-assistant-direct__composer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .im-assistant-direct__composer-input {
   min-height: 56px !important;
+  flex: 1 1 auto;
+  min-width: 0;
   resize: none;
   border-color: color-mix(in srgb, var(--surface-border) 18%, transparent) !important;
   background: color-mix(in srgb, var(--surface-raised) 12%, transparent) !important;
+}
+
+.im-assistant-direct__composer-clear {
+  flex-shrink: 0;
 }
 
 .im-assistant-direct__composer-target {

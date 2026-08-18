@@ -6,6 +6,8 @@ import { WorksetSummaryCard } from "./WorksetSummaryCard";
 
 const updateWorkset = vi.fn(() => Promise.resolve({}));
 const onOpen = vi.fn();
+const onRename = vi.fn(() => Promise.resolve());
+const onDelete = vi.fn();
 
 vi.mock("../api/worksets", () => ({
   updateWorkset: (...args: unknown[]) => updateWorkset(...args),
@@ -35,7 +37,10 @@ vi.mock("react-i18next", () => ({
         if (key === "workset:systemDescription") return "system";
         if (key === "workset:assetSummary") return `${opts?.tasks} tasks`;
         if (key === "workset:rename") return "rename";
+        if (key === "workset:renameAria") return `Rename ${opts?.name ?? ""}`;
         if (key === "workset:delete") return "delete";
+        if (key === "workset:deleteAria") return `Delete ${opts?.name ?? ""}`;
+        if (key === "workset:nameAria") return "Workset name";
       }
       return key;
     },
@@ -61,6 +66,8 @@ describe("WorksetSummaryCard", () => {
     ];
     updateWorkset.mockClear();
     onOpen.mockClear();
+    onRename.mockClear();
+    onDelete.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -73,7 +80,7 @@ describe("WorksetSummaryCard", () => {
     container.remove();
   });
 
-  it("toggles notify and external without opening the workset detail", async () => {
+  async function renderCard(props: Partial<Parameters<typeof WorksetSummaryCard>[0]> = {}) {
     await act(async () => {
       root = createRoot(container);
       root.render(
@@ -83,9 +90,24 @@ describe("WorksetSummaryCard", () => {
           isSystem={false}
           taskCount={1}
           onOpen={onOpen}
+          onRename={onRename}
+          onDelete={onDelete}
+          {...props}
         />,
       );
     });
+  }
+
+  it("puts a large Layers mark beside the workset name", async () => {
+    await renderCard({ onRename: undefined, onDelete: undefined });
+    const titleIcon = container.querySelector('[data-testid="card-title-icon"]');
+    expect(titleIcon).toBeTruthy();
+    expect(titleIcon?.getAttribute("width")).toBe("20");
+    expect(titleIcon?.classList.contains("lucide-layers")).toBe(true);
+  });
+
+  it("toggles notify and external without opening the workset detail", async () => {
+    await renderCard({ onRename: undefined, onDelete: undefined });
 
     const notify = container.querySelector<HTMLButtonElement>('[data-testid="workset-notify-toggle-ws-1"]');
     const external = container.querySelector<HTMLButtonElement>(
@@ -93,6 +115,10 @@ describe("WorksetSummaryCard", () => {
     );
     expect(notify).not.toBeNull();
     expect(external).not.toBeNull();
+    expect(notify!.getAttribute("aria-label")).toBe("Notify Ops");
+    expect(external!.getAttribute("aria-label")).toBe("External Ops");
+    expect(notify!.textContent ?? "").not.toContain("Notify");
+    expect(external!.textContent ?? "").not.toContain("External API");
     await act(async () => {
       notify!.click();
     });
@@ -102,6 +128,68 @@ describe("WorksetSummaryCard", () => {
       external!.click();
     });
     expect(updateWorkset).toHaveBeenCalledWith("ws-1", { externalEnabled: false });
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it("puts rename and delete icon buttons next to the name, not as text", async () => {
+    await renderCard();
+
+    const rename = container.querySelector<HTMLButtonElement>('[data-testid="workset-card-rename-ws-1"]');
+    const del = container.querySelector<HTMLButtonElement>('[data-testid="workset-card-delete-ws-1"]');
+    expect(rename).not.toBeNull();
+    expect(del).not.toBeNull();
+    expect(rename!.getAttribute("aria-label")).toBe("Rename Ops");
+    expect(del!.getAttribute("aria-label")).toBe("Delete Ops");
+    expect(container.textContent ?? "").not.toContain("rename");
+    expect(container.textContent ?? "").not.toContain("delete");
+  });
+
+  it("does not show rename or delete on the builtin workset", async () => {
+    await renderCard({
+      id: "__user__",
+      title: "一般",
+      isSystem: true,
+      onRename: undefined,
+      onDelete: undefined,
+    });
+
+    expect(container.querySelector('[data-testid="workset-card-rename-__user__"]')).toBeNull();
+    expect(container.querySelector('[data-testid="workset-card-delete-__user__"]')).toBeNull();
+  });
+
+  it("enters inline rename, saves on Enter, then leaves edit mode", async () => {
+    await renderCard();
+
+    const rename = container.querySelector<HTMLButtonElement>('[data-testid="workset-card-rename-ws-1"]')!;
+    await act(async () => {
+      rename.click();
+    });
+    expect(onOpen).not.toHaveBeenCalled();
+
+    const input = container.querySelector<HTMLInputElement>('[data-testid="workset-card-rename-input-ws-1"]');
+    expect(input).not.toBeNull();
+    const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    await act(async () => {
+      nativeSetter?.call(input, "Ops 2");
+      input!.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      input!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      await Promise.resolve();
+    });
+
+    expect(onRename).toHaveBeenCalledWith("Ops 2");
+    expect(container.querySelector('[data-testid="workset-card-rename-input-ws-1"]')).toBeNull();
+  });
+
+  it("does not open the workset when clicking delete", async () => {
+    await renderCard();
+
+    const del = container.querySelector<HTMLButtonElement>('[data-testid="workset-card-delete-ws-1"]')!;
+    await act(async () => {
+      del.click();
+    });
+    expect(onDelete).toHaveBeenCalledTimes(1);
     expect(onOpen).not.toHaveBeenCalled();
   });
 });

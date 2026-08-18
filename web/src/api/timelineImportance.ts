@@ -1,12 +1,8 @@
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type TimelineImportanceSource = "analysis" | "user" | "recurring" | "item_remind";
-
-export type TimelineImportance = {
-  source: TimelineImportanceSource;
-  eventId: string;
-  markedAt: string;
-};
+export type TimelineImportance = components["schemas"]["TimelineImportanceResponse"];
+export type TimelineImportanceSource = TimelineImportance["source"];
 
 /** Display glyph for important timeline markers. */
 export const IMPORTANT_EVENT_EMOJI = "❗";

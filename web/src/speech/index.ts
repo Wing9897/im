@@ -9,6 +9,7 @@ export {
   getTtsProviderOptions,
   hydrateVoiceSettings,
   loadVoiceSettings,
+  persistAssistantDefaultWorksetId,
   saveVoiceSettings,
   saveVoiceSettingsAsync,
   ttsSpeakOptionsFromVoiceSettings,

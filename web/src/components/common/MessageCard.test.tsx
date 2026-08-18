@@ -31,6 +31,9 @@ describe("MessageCard", () => {
     expect(container.textContent).toContain("Hello world");
     expect(container.textContent).toContain("General");
     expect(container.querySelector('[aria-label="Telegram"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="card-title-icon"]')?.getAttribute("width")).toBe(
+      "20",
+    );
   });
 
   it("falls back to senderId when senderName is empty", () => {

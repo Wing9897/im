@@ -3,29 +3,22 @@
  */
 
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type AccessKeyPublic = {
-  id: string;
-  label: string;
-  preview: string;
-  createdAt: string;
-  scopes: string[];
-  lastUsedAt?: string | null;
-};
+export type AccessKeyPublic = components["schemas"]["AccessKeyPublicResponse"];
+export type AccessKeyCreated = components["schemas"]["AccessKeyCreatedResponse"];
+export type AccessKeyList = components["schemas"]["AccessKeyListResponse"];
 
-export type AccessKeyCreated = AccessKeyPublic & {
-  /** Full secret — shown once after create. */
-  key: string;
-};
-
-export function fetchAccessKeys(): Promise<{ keys: AccessKeyPublic[] }> {
-  return apiClient.get<{ keys: AccessKeyPublic[] }>("/api/v1/access-keys");
+export function fetchAccessKeys(): Promise<AccessKeyList> {
+  return apiClient.get<AccessKeyList>("/api/v1/access-keys");
 }
 
 export function createAccessKey(label: string): Promise<AccessKeyCreated> {
   return apiClient.post<AccessKeyCreated>("/api/v1/access-keys", { label });
 }
 
-export function revokeAccessKey(keyId: string): Promise<{ ok: boolean }> {
-  return apiClient.delete<{ ok: boolean }>(`/api/v1/access-keys/${encodeURIComponent(keyId)}`);
+export function revokeAccessKey(keyId: string): Promise<components["schemas"]["AccessKeyDeleteResponse"]> {
+  return apiClient.delete<components["schemas"]["AccessKeyDeleteResponse"]>(
+    `/api/v1/access-keys/${encodeURIComponent(keyId)}`,
+  );
 }

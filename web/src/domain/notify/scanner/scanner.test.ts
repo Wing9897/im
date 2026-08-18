@@ -33,9 +33,9 @@ const { mockFetchFired, mockPutFired, mockClaimFired } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../../api/uiPrefs", () => ({
-  fetchVoiceReminderFired: (...args: unknown[]) => mockFetchFired(...args),
-  putVoiceReminderFired: (...args: unknown[]) => mockPutFired(...args),
-  claimVoiceReminderFired: (...args: unknown[]) => mockClaimFired(...args),
+  fetchNotifyFired: (...args: unknown[]) => mockFetchFired(...args),
+  putNotifyFired: (...args: unknown[]) => mockPutFired(...args),
+  claimNotifyFired: (...args: unknown[]) => mockClaimFired(...args),
 }));
 
 function makeEvent(overrides: Partial<TimedKeyEvent> = {}): TimedKeyEvent {
@@ -49,7 +49,7 @@ function makeEvent(overrides: Partial<TimedKeyEvent> = {}): TimedKeyEvent {
   };
 }
 
-describe("voiceReminder scanner", () => {
+describe("notify scanner", () => {
   beforeEach(async () => {
     window.localStorage.clear();
     resetFiredKeysCacheForTests();

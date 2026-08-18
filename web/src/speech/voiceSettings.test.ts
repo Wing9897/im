@@ -17,12 +17,14 @@ vi.mock("../api/uiPrefs", () => ({
   })),
 }));
 
+import { putAssistantVoiceIo } from "../api/uiPrefs";
 import {
   DEFAULT_VOICE_SETTINGS,
   getSttProviderOptions,
   getTtsProviderOptions,
   loadVoiceSettings,
   normalizeVoiceSettings,
+  persistAssistantDefaultWorksetId,
   resetVoiceSettingsCacheForTests,
   saveVoiceSettings,
 } from "./voiceSettings";
@@ -70,6 +72,16 @@ describe("voiceSettings", () => {
       ttsVoiceUri: "tracy-uri",
       defaultWorksetId: "task-ct-1",
     });
+  });
+
+  it("persistAssistantDefaultWorksetId writes the voice default once", () => {
+    const put = vi.mocked(putAssistantVoiceIo);
+    persistAssistantDefaultWorksetId("ws-ops");
+    expect(loadVoiceSettings().defaultWorksetId).toBe("ws-ops");
+    expect(put).toHaveBeenCalledWith(expect.objectContaining({ defaultWorksetId: "ws-ops" }));
+    put.mockClear();
+    persistAssistantDefaultWorksetId("ws-ops");
+    expect(put).not.toHaveBeenCalled();
   });
 
   it("normalizes empty defaultWorksetId to __user__", () => {

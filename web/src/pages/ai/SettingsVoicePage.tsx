@@ -20,6 +20,7 @@ import {
   getTtsProviderOptions,
   hydrateVoiceSettings,
   loadVoiceSettings,
+  persistAssistantDefaultWorksetId,
   saveVoiceSettingsAsync,
   ttsSpeakOptionsFromVoiceSettings,
   VOICE_SETTINGS_CHANGED_EVENT,
@@ -300,7 +301,13 @@ export function SettingsVoicePage() {
                 <WorksetTargetSelect
                   id="voice-default-calendar-workset"
                   value={settings.defaultWorksetId}
-                  onChange={(taskId) => update({ defaultWorksetId: taskId })}
+                  onChange={(worksetId) => {
+                    persistAssistantDefaultWorksetId(worksetId);
+                    setSettings((prev) => ({
+                      ...prev,
+                      defaultWorksetId: loadVoiceSettings().defaultWorksetId,
+                    }));
+                  }}
                   data-testid="voice-default-calendar-workset"
                 />
               </div>

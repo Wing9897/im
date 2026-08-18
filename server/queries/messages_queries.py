@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from server.analyzer.incremental import time_range_condition
 from server.api.channel_refs import parse_channel_key_csv
 from server.db.database import Database
-from server.domain.mcp_workset_scope import bind_workset_ids_sql
+from server.domain.workset_scope import bind_workset_ids_sql
 from server.queries.pagination import fetch_cursor_page
 from server.wire.serializers import serialize_message
 

@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
-import { Pencil, PowerOff, Trash2 } from "lucide-react";
+import { CheckCircle2, Inbox, Layers, ListTodo, Pencil, PowerOff, Radio, Sparkles, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { ToggleSwitch } from "./ToggleSwitch";
-import { AccentBarCard, Badge } from "./ui";
+import { AccentBarCard, Badge, CardFieldIcon } from "./ui";
 import { cardTitleClass } from "./ui/pageTypography";
 import {
   getTaskEmployeeDisplayName,
@@ -127,16 +127,20 @@ export const TaskCard = React.memo(function TaskCard({
 
         <div className="text-[11px] text-text-muted">
           {worksetName ? (
-            <span className="mb-0.5 block truncate" title={worksetName}>
+            <span className="mb-0.5 flex min-w-0 items-center gap-xs truncate" title={worksetName}>
+              <CardFieldIcon icon={Layers} />
               {t("workset:cardLabel", { name: worksetName })}
             </span>
           ) : null}
-          {isAgentMode
+          <span className="flex min-w-0 items-center gap-xs">
+            <CardFieldIcon icon={isAgentMode ? Sparkles : Radio} />
+            {isAgentMode
               ? t("tasks:card.agent")
               : t("tasks:card.channelsRange", {
                   count: (task.channelIds ?? []).length,
                   range: task.analysisTimeRange,
                 })}
+          </span>
         </div>
 
         {hideAnalysisStats ? (
@@ -157,13 +161,20 @@ export const TaskCard = React.memo(function TaskCard({
           <>
             <div className="grid grid-cols-3 gap-sm text-[11px]">
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted">{t("tasks:card.unanalyzed")}</span>
+                <span className="flex items-center gap-xs text-text-muted">
+                  <CardFieldIcon icon={Inbox} />
+                  {t("tasks:card.unanalyzed")}
+                </span>
                 <span className="tabular-nums font-medium text-text-primary">
                   {stats.unanalyzedCount.toLocaleString()}
                 </span>
               </div>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted" title={t("tasks:card.queuedTitle")}>
+                <span
+                  className="flex items-center gap-xs text-text-muted"
+                  title={t("tasks:card.queuedTitle")}
+                >
+                  <CardFieldIcon icon={ListTodo} />
                   {t("tasks:card.queued")}
                 </span>
                 <span
@@ -175,7 +186,10 @@ export const TaskCard = React.memo(function TaskCard({
                 </span>
               </div>
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-text-muted">{t("tasks:card.analyzed")}</span>
+                <span className="flex items-center gap-xs text-text-muted">
+                  <CardFieldIcon icon={CheckCircle2} />
+                  {t("tasks:card.analyzed")}
+                </span>
                 <span className="tabular-nums font-medium text-text-primary">
                   {stats.analyzedCount.toLocaleString()}
                 </span>

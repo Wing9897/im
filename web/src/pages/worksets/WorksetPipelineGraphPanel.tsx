@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   BackgroundVariant,
-  ConnectionLineType,
   ConnectionMode,
   Controls,
   ReactFlow,
@@ -16,6 +15,7 @@ import { useTranslation } from "react-i18next";
 
 import { useSearchParams } from "react-router-dom";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
+import { resolveGraphWorksetIds } from "../../domain/worksets/worksetGraphFilter";
 import { useToast } from "../../context/ToastContext";
 import {
   connectHintKey,
@@ -28,11 +28,13 @@ import {
 import {
   buildWorksetPipelineGraph,
   collapsePipelineGraph,
+  isPipelineOutputPage,
   layoutPipelineFlow,
   scopePipelineInputToWorkset,
   PIPELINE_EDGE_TYPE,
   PIPELINE_EDGE_Z_INDEX,
   PIPELINE_FIT_VIEW_PADDING,
+  type PipelineGateKind,
   type PipelinePoint,
 } from "../../domain/worksets/worksetPipelineGraph";
 import {
@@ -42,10 +44,11 @@ import {
 import { toError } from "../../utils/errors";
 import { WorksetGraphLayerZone, WorksetGraphNode } from "./WorksetGraphNode";
 import { WorksetGraphPointModal } from "./WorksetGraphPointModal";
-import { WorksetPipelineSmoothStepEdge } from "./WorksetPipelineSmoothStepEdge";
+import { WorksetPipelineConnectionLine, WorksetPipelineSmoothStepEdge } from "./WorksetPipelineSmoothStepEdge";
 import { useWorksetPipelineGraphData } from "./useWorksetPipelineGraphData";
 import {
   applyPipelineConnect,
+  applyPipelineGateToggle,
   applyPipelineHandleConnect,
   type GraphPatchDeps,
   type PipelineConnectResult,
@@ -61,12 +64,19 @@ function WorksetPipelineGraphCanvas() {
   const { fitView } = useReactFlow();
   const [searchParams] = useSearchParams();
   const data = useWorksetPipelineGraphData();
-  const { refreshTasks, refreshWorksets } = useTaskCatalog();
+  const { worksets: catalogWorksets, refreshTasks, refreshWorksets } = useTaskCatalog();
   const { showToast } = useToast();
   const [connectFrom, setConnectFrom] = useState<PipelinePoint | null>(null);
   const [connectViaDrag, setConnectViaDrag] = useState(false);
+  const [focusedEdgeId, setFocusedEdgeId] = useState<string | null>(null);
+  const [focusPointId, setFocusPointId] = useState<string | null>(null);
   const [settingsPoint, setSettingsPoint] = useState<PipelinePoint | null>(null);
-  const filterWorksetId = parseWorksetGraphFilter(searchParams.get(WORKSET_GRAPH_FILTER_PARAM));
+  const filterParam = searchParams.get(WORKSET_GRAPH_FILTER_PARAM);
+  const filterWorksetIds = useMemo(
+    () => resolveGraphWorksetIds(parseWorksetGraphFilter(filterParam), catalogWorksets),
+    [catalogWorksets, filterParam],
+  );
+  const filterKey = filterWorksetIds.join(",");
   const [expandedBlockIds, setExpandedBlockIds] = useState<Set<string>>(() => new Set());
 
   const scopedInput = useMemo(
@@ -80,10 +90,12 @@ function WorksetPipelineGraphCanvas() {
           channels: data.channels,
           events: data.events,
           labels: data.labels,
+          assistantDefaultWorksetId: data.assistantDefaultWorksetId,
         },
-        filterWorksetId,
+        filterWorksetIds,
       ),
     [
+      data.assistantDefaultWorksetId,
       data.channels,
       data.events,
       data.items,
@@ -91,7 +103,8 @@ function WorksetPipelineGraphCanvas() {
       data.sources,
       data.tasks,
       data.worksets,
-      filterWorksetId,
+      filterKey,
+      filterWorksetIds,
     ],
   );
 
@@ -125,6 +138,12 @@ function WorksetPipelineGraphCanvas() {
     setConnectViaDrag(false);
   }, []);
 
+  const clearGraphSelection = useCallback(() => {
+    clearConnect();
+    setFocusedEdgeId(null);
+    setFocusPointId(null);
+  }, [clearConnect]);
+
   const finishConnect = useCallback(
     (result: PipelineConnectResult) => {
       if (result === "disconnected") {
@@ -132,21 +151,34 @@ function WorksetPipelineGraphCanvas() {
       } else if (result === "illegal") {
         showToast(t("graphConnectIllegal"), "info");
       }
-      clearConnect();
+      clearGraphSelection();
     },
-    [clearConnect, showToast, t],
+    [clearGraphSelection, showToast, t],
   );
 
   const onSelectPoint = useCallback(
     (point: PipelinePoint) => {
+      if (isPipelineOutputPage(point)) {
+        if (focusPointId === point.id && !connectFrom) {
+          clearGraphSelection();
+          return;
+        }
+        setConnectFrom(null);
+        setConnectViaDrag(false);
+        setFocusedEdgeId(null);
+        setFocusPointId(point.id);
+        return;
+      }
       const from = connectFromRef.current;
+      setFocusPointId(null);
       if (!from) {
         setConnectViaDrag(false);
+        setFocusedEdgeId(null);
         setConnectFrom(point);
         return;
       }
       if (from.id === point.id) {
-        clearConnect();
+        clearGraphSelection();
         return;
       }
       if (!isLegalConnectPair(from, point)) {
@@ -155,7 +187,7 @@ function WorksetPipelineGraphCanvas() {
       }
       void applyPipelineConnect(from, point, dataRef.current, patchDepsRef.current).then(finishConnect);
     },
-    [clearConnect, finishConnect, showToast, t],
+    [clearGraphSelection, connectFrom, finishConnect, focusPointId, showToast, t],
   );
 
   const onConnect = useCallback(
@@ -179,8 +211,10 @@ function WorksetPipelineGraphCanvas() {
     const pointId = pointIdFromPipelineHandle(params.handleId);
     if (!pointId) return;
     const point = findPipelinePoint(graphRef.current, pointId);
-    if (!point) return;
+    if (!point || isPipelineOutputPage(point)) return;
     setConnectViaDrag(true);
+    setFocusedEdgeId(null);
+    setFocusPointId(null);
     setConnectFrom(point);
   }, []);
 
@@ -188,8 +222,19 @@ function WorksetPipelineGraphCanvas() {
     clearConnect();
   }, [clearConnect]);
 
+  const onEdgeClick = useCallback((event: { stopPropagation: () => void }, edge: { id: string }) => {
+    event.stopPropagation();
+    clearConnect();
+    setFocusPointId(null);
+    setFocusedEdgeId(edge.id);
+  }, [clearConnect]);
+
   const onOpenSettings = useCallback((point: PipelinePoint) => {
     setSettingsPoint(point);
+  }, []);
+
+  const onToggleGate = useCallback((point: PipelinePoint, kind: PipelineGateKind) => {
+    void applyPipelineGateToggle(point, kind, dataRef.current, patchDepsRef.current);
   }, []);
 
   const onToggleOverflow = useCallback((blockId: string) => {
@@ -203,9 +248,8 @@ function WorksetPipelineGraphCanvas() {
 
   useEffect(() => {
     setExpandedBlockIds(new Set());
-    setConnectFrom(null);
-    setConnectViaDrag(false);
-  }, [filterWorksetId]);
+    clearGraphSelection();
+  }, [clearGraphSelection, filterKey]);
 
   const legalIds = useMemo(
     () => (connectFrom ? legalConnectTargetIds(connectFrom, graph) : null),
@@ -214,11 +258,12 @@ function WorksetPipelineGraphCanvas() {
 
   const laidOut = useMemo(
     () =>
-      layoutPipelineFlow(graph, connectFrom?.id ?? null, legalIds, {
+      layoutPipelineFlow(graph, connectFrom?.id ?? focusPointId, legalIds, {
         overflowByBlockId,
         expandedBlockIds,
+        focusedEdgeId,
       }),
-    [connectFrom?.id, expandedBlockIds, graph, legalIds, overflowByBlockId],
+    [connectFrom?.id, expandedBlockIds, focusPointId, focusedEdgeId, graph, legalIds, overflowByBlockId],
   );
   const nodesWithHandlers = useMemo(
     () =>
@@ -230,11 +275,12 @@ function WorksetPipelineGraphCanvas() {
             ...node.data,
             onSelectPoint,
             onOpenSettings,
+            onToggleGate,
             onToggleOverflow: () => onToggleOverflow(node.id),
           },
         };
       }),
-    [laidOut.nodes, onOpenSettings, onSelectPoint, onToggleOverflow],
+    [laidOut.nodes, onOpenSettings, onSelectPoint, onToggleGate, onToggleOverflow],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState(nodesWithHandlers);
   const [edges, setEdges, onEdgesChange] = useEdgesState(laidOut.edges);
@@ -246,10 +292,12 @@ function WorksetPipelineGraphCanvas() {
           .map((block) => `${block.id}:${block.points.map((point) => point.id).join(",")}`)
           .join("|"),
         connectFrom?.id ?? "",
-        filterWorksetId ?? "",
+        focusPointId ?? "",
+        focusedEdgeId ?? "",
+        filterKey,
         [...expandedBlockIds].sort().join(","),
       ].join("::"),
-    [connectFrom?.id, expandedBlockIds, filterWorksetId, graph.blocks],
+    [connectFrom?.id, expandedBlockIds, filterKey, focusPointId, focusedEdgeId, graph.blocks],
   );
   const fitKey = useMemo(
     () =>
@@ -257,10 +305,10 @@ function WorksetPipelineGraphCanvas() {
         graph.blocks
           .map((block) => `${block.id}:${block.points.map((point) => point.id).join(",")}`)
           .join("|"),
-        filterWorksetId ?? "",
+        filterKey,
         [...expandedBlockIds].sort().join(","),
       ].join("::"),
-    [expandedBlockIds, filterWorksetId, graph.blocks],
+    [expandedBlockIds, filterKey, graph.blocks],
   );
 
   useEffect(() => {
@@ -281,26 +329,36 @@ function WorksetPipelineGraphCanvas() {
   }, [fitKey, fitView]);
 
   useEffect(() => {
-    if (!connectFrom || settingsPoint) return;
+    if (settingsPoint) return;
+    if (!connectFrom && !focusedEdgeId && !focusPointId) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       event.preventDefault();
-      clearConnect();
+      clearGraphSelection();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [clearConnect, connectFrom, settingsPoint]);
+  }, [clearGraphSelection, connectFrom, focusPointId, focusedEdgeId, settingsPoint]);
 
   const edgeIds = graph.edges.map((edge) => edge.id).join(",");
+  const graphFocus =
+    focusedEdgeId != null
+      ? `edge:${focusedEdgeId}`
+      : connectFrom
+        ? `point:${connectFrom.id}`
+        : focusPointId
+          ? `point:${focusPointId}`
+          : "none";
 
   return (
     <div
       className="im-ws-graph-shell"
       data-testid="workset-pipeline-graph"
       data-edge-ids={edgeIds}
-      data-filter-workset={filterWorksetId ?? "all"}
+      data-graph-focus={graphFocus}
+      data-filter-workset={filterKey || "none"}
     >
-      <div className="im-ws-graph-canvas">
+      <div className="im-ws-graph-canvas im-surface-panel">
         {connectFrom ? (
           <div className="im-ws-graph-connect-hint" data-testid="workset-graph-connect-hint">
             {t(connectViaDrag ? "graphConnectHintDrag" : connectHintKey(connectFrom))}
@@ -311,7 +369,8 @@ function WorksetPipelineGraphCanvas() {
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onPaneClick={clearConnect}
+          onPaneClick={clearGraphSelection}
+          onEdgeClick={onEdgeClick}
           onConnect={onConnect}
           onConnectStart={onConnectStart}
           onConnectEnd={onConnectEnd}
@@ -323,7 +382,7 @@ function WorksetPipelineGraphCanvas() {
           edgesReconnectable={false}
           elementsSelectable={false}
           connectionMode={ConnectionMode.Loose}
-          connectionLineType={ConnectionLineType.SmoothStep}
+          connectionLineComponent={WorksetPipelineConnectionLine}
           connectionRadius={28}
           panOnDrag
           panOnScroll

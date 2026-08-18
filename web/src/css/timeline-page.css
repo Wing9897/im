@@ -63,7 +63,7 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   padding: 4px 8px;
   border-radius: var(--radius-md, 8px);
@@ -102,4 +102,150 @@
   flex: 1 1 auto;
   min-height: 0;
   max-height: 100%;
+}
+
+/* Month cells: reserved header band + watermark date/holiday.
+   Reveal is one grid class `.is-revealed` (DOM also mirrors data-dates-revealed). */
+.im-month-day-cell {
+  --im-month-day-header-h: 18px;
+  --im-month-day-pad-y: 3px;
+  --im-holiday-ink: #ef4444;
+}
+
+.im-month-day-header {
+  box-sizing: border-box;
+  display: flex;
+  height: var(--im-month-day-header-h);
+  min-height: var(--im-month-day-header-h);
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.im-month-day-watermark-stack {
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+  left: 5px;
+  right: 5px;
+  bottom: var(--im-month-day-pad-y);
+  top: calc(var(--im-month-day-pad-y) + var(--im-month-day-header-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.im-month-day-watermark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.45rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  color: var(--text-primary);
+  opacity: 0.14;
+}
+
+.im-month-day-watermark.is-outside {
+  color: var(--text-muted);
+  opacity: 0.07;
+}
+
+.im-month-day-watermark.is-today {
+  color: var(--accent);
+  opacity: 0.22;
+}
+
+.im-month-day-watermark.is-active:not(.is-today) {
+  color: var(--accent);
+}
+
+.im-month-day-watermark-stack.is-holiday .im-month-day-watermark {
+  color: var(--im-holiday-ink);
+  opacity: 0.22;
+}
+
+.im-month-day-holiday-watermark {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--im-holiday-ink);
+  opacity: 0.28;
+  text-align: center;
+  user-select: none;
+}
+
+.im-month-day-holiday-watermark-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.im-month-day-holiday-watermark-extra {
+  flex-shrink: 0;
+}
+
+/* Reveal: lift watermark opacity only a little (still muted, never full
+   white or accent-orange). Today/selected keep the cell border instead.
+   Keep the reserved header (weekday / 今天 / weather). Hide event rows
+   and 到期/+N chips only — not weather.
+   !important: this file is imported @layer components; utilities (opacity-*)
+   would otherwise win and leave dates watermarked after 顯示. */
+.im-timeline-month-grid.is-revealed .im-month-day-events,
+.im-timeline-month-grid.is-revealed .im-month-span-indicators {
+  visibility: hidden !important;
+  pointer-events: none;
+}
+
+.im-timeline-month-grid.is-revealed .im-month-day-watermark {
+  color: var(--text-primary);
+  opacity: 0.4 !important;
+}
+
+.im-timeline-month-grid.is-revealed .im-month-day-watermark.is-outside {
+  color: var(--text-muted);
+  opacity: 0.2 !important;
+}
+
+.im-timeline-month-grid.is-revealed .im-month-day-watermark.is-today,
+.im-timeline-month-grid.is-revealed .im-month-day-watermark.is-active {
+  color: var(--text-primary);
+}
+
+.im-timeline-month-grid.is-revealed .im-month-day-watermark-stack.is-holiday .im-month-day-watermark {
+  color: var(--im-holiday-ink);
+}
+
+.im-timeline-month-grid.is-revealed .im-month-day-holiday-watermark {
+  opacity: 0.4 !important;
+}
+
+/* Day/week holiday chip: fixed red — not accent (今天 / weather orange). */
+.im-holiday-chip {
+  color: #ef4444;
+}
+
+.im-month-day-weekday-filler {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.5;
+  user-select: none;
 }

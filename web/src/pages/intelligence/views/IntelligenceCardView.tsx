@@ -1,10 +1,11 @@
+import { Clock, Radar } from "lucide-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent } from "../../../types";
 import { PlatformTag } from "../../../components/common/PlatformTag";
 import { taskTagBaseClass, taskTagColorStyle } from "../../../styles/cardTagClasses";
 import { useAutoRead } from "../../../hooks/useAutoRead";
-import { FeedCard } from "../../../components/ui";
+import { CardFieldIcon, CardTitleIcon, FeedCard } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { formatIntelligenceEventTime } from "../../../domain/intelligence/intelligenceSourceMeta";
 import {
@@ -67,6 +68,7 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
             ) : (
               <span className="mt-1 h-1.5 w-1.5 shrink-0" aria-hidden="true" />
             )}
+            <CardTitleIcon icon={Radar} />
             <div
               className={`min-w-0 flex-1 line-clamp-2 ${cardTitleClass}`}
               title={item.title}
@@ -100,7 +102,8 @@ export const IntelligenceCard = React.memo(function IntelligenceCard({
         }
         body={<span title={item.body}>{item.body}</span>}
         footer={
-          <span className="truncate">
+          <span className="inline-flex min-w-0 items-center gap-xs truncate">
+            <CardFieldIcon icon={Clock} />
             {t("card.sourcedFrom", { time: formatIntelligenceEventTime(item) })}
           </span>
         }

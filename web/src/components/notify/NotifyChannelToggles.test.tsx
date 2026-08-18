@@ -2,9 +2,9 @@ import { act, createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_VOICE_REMINDER_SETTINGS,
-  resetVoiceReminderSettingsCacheForTests,
-  saveVoiceReminderSettings,
+  DEFAULT_NOTIFY_SETTINGS,
+  resetNotifySettingsCacheForTests,
+  saveNotifySettings,
 } from "../../domain/notify/scanner/settings";
 import { NotifyChannelToggles } from "./NotifyChannelToggles";
 
@@ -20,9 +20,9 @@ vi.mock("../../domain/notify/scanner/settings", async () => {
   );
   return {
     ...actual,
-    hydrateVoiceReminderSettings: () => Promise.resolve(actual.loadVoiceReminderSettings()),
-    saveVoiceReminderSettings: vi.fn(async (settings: unknown) => {
-      await actual.saveVoiceReminderSettings(settings as never);
+    hydrateNotifySettings: () => Promise.resolve(actual.loadNotifySettings()),
+    saveNotifySettings: vi.fn(async (settings: unknown) => {
+      await actual.saveNotifySettings(settings as never);
       return true;
     }),
   };
@@ -33,22 +33,22 @@ const { mockPutSettings } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../api/uiPrefs", () => ({
-  fetchVoiceReminderSettings: vi.fn(async () => ({ configured: false, settings: null })),
-  putVoiceReminderSettings: (...args: unknown[]) => mockPutSettings(...args),
+  fetchNotifySettings: vi.fn(async () => ({ configured: false, settings: null })),
+  putNotifySettings: (...args: unknown[]) => mockPutSettings(...args),
 }));
 
 describe("NotifyChannelToggles", () => {
   let root: Root | null = null;
 
   beforeEach(async () => {
-    resetVoiceReminderSettingsCacheForTests();
+    resetNotifySettingsCacheForTests();
     mockPutSettings.mockReset();
     mockPutSettings.mockImplementation(async (settings: unknown) => ({
       configured: true,
       settings,
     }));
-    await saveVoiceReminderSettings({
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+    await saveNotifySettings({
+      ...DEFAULT_NOTIFY_SETTINGS,
       enabled: true,
       voiceEnabled: true,
       flashEnabled: true,
@@ -61,7 +61,7 @@ describe("NotifyChannelToggles", () => {
     });
     root = null;
     document.body.innerHTML = "";
-    resetVoiceReminderSettingsCacheForTests();
+    resetNotifySettingsCacheForTests();
   });
 
   it("toggles voice without changing flash", async () => {
@@ -96,11 +96,11 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "voice-reminder" }));
+      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "notify" }));
     });
 
-    const voice = host.querySelector<HTMLButtonElement>('[data-testid="voice-reminder-channel-voice"]');
-    const flash = host.querySelector<HTMLButtonElement>('[data-testid="voice-reminder-channel-flash"]');
+    const voice = host.querySelector<HTMLButtonElement>('[data-testid="notify-channel-voice"]');
+    const flash = host.querySelector<HTMLButtonElement>('[data-testid="notify-channel-flash"]');
     expect(voice?.getAttribute("role")).toBe("switch");
     expect(voice?.className).toContain("im-surface-inset");
     expect(flash?.getAttribute("aria-checked")).toBe("true");
@@ -126,10 +126,10 @@ describe("NotifyChannelToggles", () => {
     document.body.appendChild(host);
     await act(async () => {
       root = createRoot(host);
-      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "voice-reminder" }));
+      root.render(createElement(NotifyChannelToggles, { variant: "tiles", testIdPrefix: "notify" }));
     });
 
-    const mode = host.querySelector('[data-testid="voice-reminder-flash-mode"]');
+    const mode = host.querySelector('[data-testid="notify-flash-mode"]');
     const persistent = Array.from(mode?.querySelectorAll('[role="tab"]') ?? []).find(
       (node) => node.textContent === "voice.flashModePersistent",
     );

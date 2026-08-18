@@ -123,9 +123,19 @@ export function AppSidebar() {
     </button>
   );
 
+  const collapsedReveal = (
+    <div
+      className="im-sidebar-edge-peek"
+      data-collapsed="true"
+      data-testid="sidebar-edge-peek"
+    >
+      {chevron}
+    </div>
+  );
+
   return (
     <>
-      {overlayOpen ? null : createPortal(chevron, document.body)}
+      {overlayOpen ? null : createPortal(collapsedReveal, document.body)}
       {overlayOpen ? (
         <OverlayPortal scrim="light">
           <div
