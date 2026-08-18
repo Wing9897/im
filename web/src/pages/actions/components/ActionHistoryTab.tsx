@@ -1,4 +1,6 @@
+import { History } from "lucide-react";
 import { PanelSection, captionClass } from "../../../components/ui";
+import { SectionHeaderIcon } from "../../../components/common/EmptyStateGlyph";
 import { useTranslation } from "react-i18next";
 import { ActionTriggerHistorySection } from "./ActionTriggerHistorySection";
 
@@ -7,7 +9,11 @@ export function ActionHistoryTab() {
   const { t } = useTranslation("actions");
 
   return (
-    <PanelSection title={t("history.title")} showCount={false}>
+    <PanelSection
+      title={t("history.title")}
+      icon={<SectionHeaderIcon icon={History} />}
+      showCount={false}
+    >
       <p className={`mb-md m-0 ${captionClass}`}>{t("history.intro")}</p>
       <ActionTriggerHistorySection embedded />
     </PanelSection>

@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS recurring_schedules (
     item_id                 TEXT DEFAULT NULL
                             REFERENCES items(id) ON DELETE SET NULL,
     -- Per-series reminder: follow workset default, or mute this series.
-    notify_pref             TEXT NOT NULL DEFAULT 'follow'
+    -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
+    notify_pref             TEXT NOT NULL DEFAULT 'off'
                             {NOTIFY_PREF_CHECK_SQL},
     created_at              TEXT NOT NULL,
     updated_at              TEXT NOT NULL
@@ -65,7 +66,7 @@ CREATE TABLE IF NOT EXISTS user_events (
     origin      TEXT NOT NULL {USER_EVENT_ORIGIN_CHECK_SQL},
     event_is_all_day INTEGER NOT NULL DEFAULT 0,
     event_timezone TEXT DEFAULT NULL,
-    -- Optional "remind N days before start" (calendar / voice); NULL = no remind.
+    -- Optional "remind N days before start"; NULL = no remind.
     remind_before_days INTEGER DEFAULT NULL,
     ics_uid     TEXT DEFAULT NULL,
     ics_source  TEXT DEFAULT NULL,
@@ -85,7 +86,8 @@ CREATE TABLE IF NOT EXISTS user_events (
     direction   TEXT DEFAULT NULL
                 {USER_EVENT_DIRECTION_CHECK_SQL},
     -- Per-event reminder: follow workset default, or mute this row.
-    notify_pref TEXT NOT NULL DEFAULT 'follow'
+    -- Create-omit and DDL default are off (align DEFAULT_CALENDAR_NOTIFY_PREF).
+    notify_pref TEXT NOT NULL DEFAULT 'off'
                 {NOTIFY_PREF_CHECK_SQL},
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL

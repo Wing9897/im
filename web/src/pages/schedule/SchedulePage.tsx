@@ -5,9 +5,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { listItems } from "../../api/items";
 import { UserEventDialog } from "../../components/calendar/UserEventDialog";
 import { EmptyState } from "../../components/common/EmptyState";
+import { EmptyStateGlyph } from "../../components/common/EmptyStateGlyph";
+import { CalendarClock } from "lucide-react";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { ConfirmDialog } from "../../components/dialogs/ConfirmDialog";
 import {
@@ -36,7 +37,6 @@ export function SchedulePage() {
     storage: "session",
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [itemTitleById, setItemTitleById] = useState<Map<string, string>>(new Map());
   const [loadMoreNode, setLoadMoreNode] = useState<HTMLDivElement | null>(null);
 
   useSlashFocusSearch(true);
@@ -45,28 +45,6 @@ export function SchedulePage() {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void listItems({ status: "active" })
-      .then((items) => {
-        if (cancelled) return;
-        setItemTitleById(
-          new Map(
-            items.map((item) => [
-              item.id,
-              item.emoji ? `${item.emoji} ${item.title}` : item.title,
-            ]),
-          ),
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setItemTitleById(new Map());
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const oneOff = useScheduleOneOffFeed({ debouncedSearch });
   const recurring = useScheduleRecurringFeed({ debouncedSearch });
@@ -127,6 +105,7 @@ export function SchedulePage() {
 
         {!loading && itemsEmpty ? (
           <EmptyState
+            illustration={<EmptyStateGlyph icon={CalendarClock} />}
             title={t("empty.title")}
             description={t("empty.hint")}
             actions={
@@ -149,11 +128,6 @@ export function SchedulePage() {
                       worksetName={
                         entry.event.worksetId
                           ? dialogs.worksetNameById.get(entry.event.worksetId) ?? null
-                          : null
-                      }
-                      itemLabel={
-                        entry.event.itemId
-                          ? itemTitleById.get(entry.event.itemId) ?? entry.event.itemId
                           : null
                       }
                       onEdit={() => dialogs.openEditOneOff(entry.event)}
@@ -194,7 +168,6 @@ export function SchedulePage() {
           worksetOptions={dialogs.worksetOptions}
           busy={dialogs.dialogBusy}
           error={dialogs.dialogError}
-          parentItemMode="editable"
           onClose={dialogs.closeDialog}
           onSubmit={(values) => {
             void dialogs.handleSubmit(values);

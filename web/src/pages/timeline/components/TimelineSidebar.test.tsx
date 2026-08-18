@@ -67,6 +67,7 @@ function makeContext(selectedEvent: TimelineItem | null): TimelinePageContextVal
     showDismissed: true,
     showOngoing: true,
     showEnding: true,
+    monthDatesRevealed: false,
     taskSpans: [],
     selectedGanttTaskId: null,
     onSelectGanttTask: vi.fn(),

@@ -296,6 +296,13 @@
   background: color-mix(in srgb, var(--accent, #4ea1ff) 14%, transparent);
 }
 
+.board-widget-list__title {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
 .board-widget-list__primary {
   color: var(--text-primary);
   font-size: 10px;
@@ -304,6 +311,11 @@
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+.board-widget-list__title .board-widget-list__primary {
+  flex: 1;
+  min-width: 0;
 }
 
 .board-widget-list__meta {

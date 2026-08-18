@@ -24,14 +24,11 @@ const labels: PipelineGraphLabels = {
   generalName: "一般",
   unassigned: "未歸屬",
   more: (count) => `另 ${count} 項`,
-  calendar: "我的日程",
-  calendarPage: "日程頁",
-  intel: "情報頁",
-  timeline: "時間規劃",
-  notify: "通知",
-  mcp: "MCP",
-  a2a: "A2A",
   assistant: "助手",
+  timeline: "時間規劃",
+  intel: "情報頁",
+  notify: "通知",
+  external: "外部接口",
 };
 
 function point(partial: PipelinePoint): PipelinePoint {
@@ -93,10 +90,10 @@ describe("worksetPipelineConnect", () => {
     label: "助手",
     href: "/assistant",
   });
-  const intel = point({
-    id: PIPELINE_PAGE.intel,
+  const retiredIntel = point({
+    id: "page:intel",
     kind: "page",
-    entityId: PIPELINE_PAGE.intel,
+    entityId: "page:intel",
     label: "情報頁",
     href: "/intelligence",
   });
@@ -107,34 +104,38 @@ describe("worksetPipelineConnect", () => {
     expect(isLegalConnectPair(source, task)).toBe(true);
     expect(isLegalConnectPair(item, workset)).toBe(true);
     expect(isLegalConnectPair(workset, item)).toBe(true);
-    expect(isLegalConnectPair(task, intel)).toBe(true);
+    expect(isLegalConnectPair(task, retiredIntel)).toBe(false);
     expect(
       isLegalConnectPair(workset, {
-        id: PIPELINE_PAGE.timeline,
+        id: "page:timeline",
         kind: "page",
-        entityId: PIPELINE_PAGE.timeline,
+        entityId: "page:timeline",
         label: "時間規劃",
         href: "/timeline",
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(isLegalConnectPair(task, assistant)).toBe(false);
+    expect(isLegalConnectPair(assistant, workset)).toBe(true);
+    expect(isLegalConnectPair(workset, assistant)).toBe(true);
     expect(isLegalConnectPair(source, workset)).toBe(false);
+    expect(isLegalConnectPair(source, item)).toBe(false);
+    expect(isLegalConnectPair(source, assistant)).toBe(false);
     expect(isLegalConnectPair(item, task)).toBe(false);
     expect(isLegalConnectPair(task, task)).toBe(false);
     expect(
       isLegalConnectPair(item, {
-        id: PIPELINE_PAGE.calendar,
+        id: "page:calendar",
         kind: "page",
-        entityId: PIPELINE_PAGE.calendar,
+        entityId: "page:calendar",
         label: "我的日程",
         href: "/timeline",
       }),
     ).toBe(false);
     expect(
       isLegalConnectPair(workset, {
-        id: PIPELINE_PAGE.calendar,
+        id: "page:calendar",
         kind: "page",
-        entityId: PIPELINE_PAGE.calendar,
+        entityId: "page:calendar",
         label: "我的日程",
         href: "/timeline",
       }),
@@ -146,49 +147,85 @@ describe("worksetPipelineConnect", () => {
     const ids = legalConnectTargetIds(task, graph);
     expect(ids.has(worksetPointId("ws-1"))).toBe(true);
     expect(ids.has(sourcePointId("src-1"))).toBe(true);
-    expect(ids.has(PIPELINE_PAGE.intel)).toBe(true);
-    expect(legalConnectTargetIds(workset, graph).has(PIPELINE_PAGE.timeline)).toBe(true);
+    expect(ids.has("page:intel")).toBe(false);
+    expect(legalConnectTargetIds(workset, graph).has("page:timeline")).toBe(false);
     expect(ids.has(PIPELINE_PAGE.assistant)).toBe(false);
     expect(ids.has(itemPointId("item-1"))).toBe(false);
     const itemIds = legalConnectTargetIds(item, graph);
     expect(itemIds.has(worksetPointId("ws-1"))).toBe(true);
-    expect(itemIds.has(PIPELINE_PAGE.calendar)).toBe(false);
+    expect(itemIds.has("page:calendar")).toBe(false);
     expect(itemIds.has(taskPointId("t1"))).toBe(false);
+    const assistantIds = legalConnectTargetIds(assistant, graph);
+    expect(assistantIds.size).toBe(1);
+    expect(assistantIds.has(worksetPointId("ws-1"))).toBe(true);
   });
 
-  it("detects live vs muted relationships", () => {
+  it("detects live ownership and subscription, not enable-state gates", () => {
     expect(pipelinePairConnected(task, workset, data)).toBe(true);
     expect(pipelinePairConnected(item, workset, data)).toBe(true);
     expect(pipelinePairConnected(source, task, data)).toBe(true);
-    expect(pipelinePairConnected(task, intel, data)).toBe(true);
+    expect(pipelinePairConnected(task, retiredIntel, data)).toBe(false);
     expect(
-      pipelinePairConnected(task, { ...intel, id: PIPELINE_PAGE.timeline, entityId: PIPELINE_PAGE.timeline }, data),
+      pipelinePairConnected(task, { ...retiredIntel, id: "page:timeline", entityId: "page:timeline" }, data),
     ).toBe(false);
     expect(
       pipelinePairConnected(
         workset,
         {
-          id: PIPELINE_PAGE.timeline,
+          id: "page:timeline",
           kind: "page",
-          entityId: PIPELINE_PAGE.timeline,
+          entityId: "page:timeline",
           label: "時間規劃",
           href: "/timeline",
         },
         data,
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       pipelinePairConnected(
         workset,
         {
-          id: PIPELINE_PAGE.mcp,
+          id: "page:notify",
           kind: "page",
-          entityId: PIPELINE_PAGE.mcp,
+          entityId: "page:notify",
+          label: "通知",
+          href: "/actions",
+        },
+        data,
+      ),
+    ).toBe(false);
+    expect(
+      pipelinePairConnected(
+        workset,
+        {
+          id: "page:mcp",
+          kind: "page",
+          entityId: "page:mcp",
           label: "MCP",
           href: "/settings",
         },
         data,
       ),
+    ).toBe(false);
+    expect(
+      pipelinePairConnected(
+        workset,
+        {
+          id: "page:a2a",
+          kind: "page",
+          entityId: "page:a2a",
+          label: "A2A",
+          href: "/settings",
+        },
+        data,
+      ),
+    ).toBe(false);
+    expect(pipelinePairConnected(assistant, workset, data)).toBe(false);
+    expect(
+      pipelinePairConnected(assistant, workset, { ...data, assistantDefaultWorksetId: "ws-1" }),
+    ).toBe(true);
+    expect(
+      pipelinePairConnected(assistant, workset, { ...data, assistantDefaultWorksetId: "__user__" }),
     ).toBe(false);
   });
 
@@ -196,6 +233,7 @@ describe("worksetPipelineConnect", () => {
     expect(connectHintKey(task)).toBe("graphConnectHintTask");
     expect(connectHintKey(source)).toBe("graphConnectHintSource");
     expect(connectHintKey(item)).toBe("graphConnectHintItem");
+    expect(connectHintKey(assistant)).toBe("graphConnectHintAssistant");
   });
 
   it("maps handle ids back to point ids for onConnect", () => {

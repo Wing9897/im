@@ -31,4 +31,12 @@ describe("boardSourceFilterOptions", () => {
       { id: "task-3", name: "Web", worksetId: "ws-1", analysisMode: "agent" },
     ]);
   });
+
+  it("labels blank hex task names via resolveSourceFilterTaskLabel", () => {
+    expect(
+      boardSourceFilterExpandTasks([
+        { id: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", name: "  " },
+      ])[0]?.name,
+    ).toMatch(/aaaaaaaa/);
+  });
 });

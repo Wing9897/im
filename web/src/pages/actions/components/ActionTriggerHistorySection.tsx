@@ -1,16 +1,18 @@
+import { Clock } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { listActionTriggerHistory } from "../../../api/actions";
 import { LoadingSpinner } from "../../../components/common/LoadingSpinner";
+import { CardFieldIcon } from "../../../components/ui";
 import { useAsyncResource } from "../../../hooks/useAsyncResource";
 import { useErrorToast } from "../../../hooks/useErrorToast";
 import type { ActionTriggerHistoryEntry } from "../../../types";
 import { formatOsDateTime } from "../../../utils/time";
 import {
-  VOICE_REMINDER_HISTORY_CHANGED_EVENT,
-  hydrateVoiceReminderHistory,
-  loadVoiceReminderTriggers,
-  type VoiceReminderTriggerEntry,
+  NOTIFY_HISTORY_CHANGED_EVENT,
+  hydrateNotifyHistory,
+  loadNotifyTriggers,
+  type NotifyTriggerEntry,
 } from "../../../domain/notify/scanner/triggerHistory";
 
 interface ActionTriggerHistorySectionProps {
@@ -19,7 +21,7 @@ interface ActionTriggerHistorySectionProps {
 
 type UnifiedTriggerEntry = {
   id: string;
-  source: "action" | "voice_reminder";
+  source: "action" | "notify";
   triggerReason: string;
   status: "success" | "failure";
   errorMessage: string | null;
@@ -37,10 +39,10 @@ function toUnifiedFromAction(entry: ActionTriggerHistoryEntry): UnifiedTriggerEn
   };
 }
 
-function toUnifiedFromVoice(entry: VoiceReminderTriggerEntry): UnifiedTriggerEntry {
+function toUnifiedFromNotify(entry: NotifyTriggerEntry): UnifiedTriggerEntry {
   return {
-    id: `voice:${entry.id}`,
-    source: "voice_reminder",
+    id: `notify:${entry.id}`,
+    source: "notify",
     triggerReason: entry.triggerReason,
     status: entry.status,
     errorMessage: entry.errorMessage ?? null,
@@ -50,10 +52,10 @@ function toUnifiedFromVoice(entry: VoiceReminderTriggerEntry): UnifiedTriggerEnt
 
 function mergeTriggerEntries(
   actions: ActionTriggerHistoryEntry[],
-  voice: VoiceReminderTriggerEntry[],
+  voice: NotifyTriggerEntry[],
   limit = 40,
 ): UnifiedTriggerEntry[] {
-  return [...actions.map(toUnifiedFromAction), ...voice.map(toUnifiedFromVoice)]
+  return [...actions.map(toUnifiedFromAction), ...voice.map(toUnifiedFromNotify)]
     .sort(
       (a, b) =>
         new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime(),
@@ -70,7 +72,7 @@ export function ActionTriggerHistorySection({ embedded = false }: ActionTriggerH
   const { data, initialLoading, error, execute } = useAsyncResource(fetcher, {
     toastOnError: false,
   });
-  const [voiceEntries, setVoiceEntries] = useState(() => loadVoiceReminderTriggers());
+  const [voiceEntries, setVoiceEntries] = useState(() => loadNotifyTriggers());
   useErrorToast(error, t("history.loadErrorPrefix"));
 
   useEffect(() => {
@@ -79,17 +81,17 @@ export function ActionTriggerHistorySection({ embedded = false }: ActionTriggerH
 
   useEffect(() => {
     let cancelled = false;
-    void hydrateVoiceReminderHistory().then(() => {
-      if (!cancelled) setVoiceEntries(loadVoiceReminderTriggers());
+    void hydrateNotifyHistory().then(() => {
+      if (!cancelled) setVoiceEntries(loadNotifyTriggers());
     });
     const refreshVoice = () => {
-      setVoiceEntries(loadVoiceReminderTriggers());
+      setVoiceEntries(loadNotifyTriggers());
     };
-    window.addEventListener(VOICE_REMINDER_HISTORY_CHANGED_EVENT, refreshVoice);
+    window.addEventListener(NOTIFY_HISTORY_CHANGED_EVENT, refreshVoice);
     window.addEventListener("storage", refreshVoice);
     return () => {
       cancelled = true;
-      window.removeEventListener(VOICE_REMINDER_HISTORY_CHANGED_EVENT, refreshVoice);
+      window.removeEventListener(NOTIFY_HISTORY_CHANGED_EVENT, refreshVoice);
       window.removeEventListener("storage", refreshVoice);
     };
   }, []);
@@ -123,7 +125,8 @@ export function ActionTriggerHistorySection({ embedded = false }: ActionTriggerH
                 : t("history.statusFailure")}{" "}
               · {entry.triggerReason}
             </span>
-            <span className="text-caption text-text-muted">
+            <span className="inline-flex items-center gap-xs text-caption text-text-muted">
+              <CardFieldIcon icon={Clock} />
               {formatOsDateTime(entry.triggeredAt)}
             </span>
           </div>

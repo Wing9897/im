@@ -3,6 +3,10 @@
 Allowed ids are worksets with ``external_enabled=1`` (see
 ``fetch_external_enabled_workset_ids``). Empty set = fail closed.
 Calendar 我的日程 and in-app assistant are not gated here.
+
+Binder / SQL live here so query handlers and the agent allowlist share one SoT.
+Tool-policy application (``apply_household_workset_scope``) stays in
+``server.agent.workset_scope`` and re-exports these names.
 """
 
 from __future__ import annotations
@@ -13,6 +17,17 @@ from typing import Any, Final
 ALLOWED_WORKSET_IDS_ARG: Final = "_allowed_workset_ids"
 
 WORKSET_NOT_ALLOWED_ERROR: Final = "workset not allowed"
+
+WORKSET_SCOPED_TOOL_NAMES: Final = frozenset(
+    {
+        "intelligence.search_events",
+        "messages.search",
+        "items.list",
+        "items.list_expiring",
+        "items.create",
+        "items.update",
+    }
+)
 
 
 def bind_workset_ids_sql(column: str, workset_ids: list[str] | None) -> tuple[str | None, list[str]]:

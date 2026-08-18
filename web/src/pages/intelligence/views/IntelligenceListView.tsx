@@ -1,8 +1,8 @@
 import React from "react";
-import { MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AnalysisEvent } from "../../../types";
-import { Badge, ListRowMain, ListRowTime } from "../../../components/ui";
+import { Badge, CardFieldIcon, ListRowMain, ListRowTime } from "../../../components/ui";
 import { SelectableSurface } from "../../../components/detail/SelectableSurface";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { useAutoRead } from "../../../hooks/useAutoRead";
@@ -56,7 +56,12 @@ export const IntelligenceRow = React.memo(function IntelligenceRow({
         isRead={isRead}
         className="im-intelligence-list-row"
       >
-        <ListRowTime dateTime={getEventTimestamp(item)} role="cell">
+        <ListRowTime
+          dateTime={getEventTimestamp(item)}
+          role="cell"
+          className="inline-flex w-[160px] items-center gap-xs"
+        >
+          <CardFieldIcon icon={Clock} />
           {formatIntelligenceEventTime(item)}
         </ListRowTime>
         <span
@@ -92,7 +97,12 @@ export const IntelligenceRow = React.memo(function IntelligenceRow({
             className="hidden shrink-0 items-center gap-1 text-xs text-text-muted xl:inline-flex"
             role="cell"
           >
-            <MapPin size={14} strokeWidth={2} aria-hidden="true" />
+            <MapPin
+              size={14}
+              strokeWidth={2}
+              className="shrink-0 text-text-muted"
+              aria-hidden="true"
+            />
             {item.location}
           </span>
         ) : null}

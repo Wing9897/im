@@ -48,8 +48,8 @@ def _occurrence_wire(row: dict[str, Any], *, source: str) -> dict[str, Any]:
     return CalendarOccurrenceResponse.model_validate(payload).model_dump(mode="json")
 
 
-@router.get("/items", response_model=list[CalendarOccurrenceResponse])
-async def list_calendar_items(
+@router.get("/occurrences", response_model=list[CalendarOccurrenceResponse])
+async def list_calendar_occurrences(
     request: Request,
     range_start: str | None = qalias("rangeStart", default=None),
     range_end: str | None = qalias("rangeEnd", default=None),

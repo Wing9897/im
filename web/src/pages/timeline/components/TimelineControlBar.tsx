@@ -1,5 +1,5 @@
 import { CalendarDays, CalendarPlus, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SourceFilterDialog } from "../../../components/SourceFilterDialog";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
@@ -42,7 +42,7 @@ type TimelineControlBarProps = {
   /** Show compact spinner in the sticky toolbar (avoids layout jump). */
   showLoadingIndicator?: boolean;
   loadingLabel?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 };
 
 /** Single-row ops bar (task/view · scale · nav). */

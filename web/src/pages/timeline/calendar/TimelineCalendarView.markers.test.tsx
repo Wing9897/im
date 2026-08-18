@@ -71,6 +71,37 @@ describe("TimelineCalendarView markers", () => {
       expect(locations.some((text) => text.includes("會議室 A"))).toBe(true);
       expect(locations.every((text) => !text.includes("N/A"))).toBe(true);
     });
+
+    it("user schedule cards stack fields and show N/A for empty location and notes", () => {
+      const events = [
+        makeEvent({
+          id: "user-empty",
+          title: "用戶空欄",
+          source: "user",
+          origin: "manual",
+          startTime: "2025-01-15T09:00:00",
+          endTime: "2025-01-15T10:00:00",
+          location: null,
+          body: "",
+        }),
+      ];
+      const container = render(
+        makeProps({
+          timeScale: "day",
+          rangeStart: new Date(2025, 0, 15),
+          rangeEvents: events,
+        }),
+      );
+
+      const card = container.querySelector('[data-testid="timeline-day-event-card"]');
+      expect(card).toBeTruthy();
+      expect(
+        container.querySelector('[data-testid="timeline-day-event-location"]')?.textContent,
+      ).toContain("地點：N/A");
+      expect(
+        container.querySelector('[data-testid="timeline-day-event-notes"]')?.textContent,
+      ).toContain("說明：N/A");
+    });
   });
 
   describe("item remind projection styling", () => {

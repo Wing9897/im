@@ -37,7 +37,7 @@ export function LocalNotifyPanel() {
               role="switch"
               aria-checked={settings.enabled}
               aria-label={t("voice.enableLabel")}
-              data-testid="voice-reminder-enabled"
+              data-testid="notify-enabled"
               className="inline-flex appearance-none rounded-full border-0 bg-transparent p-0 shadow-none outline-none ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--accent)_30%,transparent)] focus-visible:ring-offset-1"
               onClick={() => update({ enabled: !settings.enabled })}
             >
@@ -56,7 +56,7 @@ export function LocalNotifyPanel() {
 
       <NotifySection title={t("voice.sectionChannels")} caption={t("voice.channelsCaption")}>
         <div data-testid="voice-channel-toggles">
-          <NotifyChannelToggles variant="tiles" testIdPrefix="voice-reminder" />
+          <NotifyChannelToggles variant="tiles" testIdPrefix="notify" />
         </div>
       </NotifySection>
 

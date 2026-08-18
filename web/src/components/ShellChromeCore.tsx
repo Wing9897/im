@@ -7,8 +7,8 @@ export type ShellChromeLayout = "web" | "desktop";
 
 type ShellChromeCoreProps = {
   /**
-   * Both layouts: brand → mode → assistant/search →
-   * spacer → inbox/viewer → collector status (rightmost before window chrome).
+   * Both layouts: brand → mode → spacer → search → assistant →
+   * inbox/viewer → collector status (before window chrome).
    * `desktop` omits window controls here — those stay in DesktopTitleBar.
    * Sidebar open/close is the overlay edge chevron only (not title-bar chrome).
    */
@@ -53,9 +53,9 @@ export function ShellChromeCore({
       {brand}
       {mode}
       <div className={resolvedActionsClass} data-testid="shell-chrome-actions">
-        <AssistantQuickTrigger compact />
-        <CommandPaletteTrigger compact />
         <div className="shell-chrome-spacer min-w-2 flex-1 self-stretch" aria-hidden="true" />
+        <CommandPaletteTrigger compact />
+        <AssistantQuickTrigger compact />
         <TopBarStatusActions variant="titleBar" />
       </div>
     </>

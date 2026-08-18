@@ -3,9 +3,10 @@
  * Worksets are ownership containers — Lucide mark (not emoji brand).
  */
 
-import { Layers } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { Layers, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AccentBarCard, Badge, Button } from "./ui";
+import { AccentBarCard, Badge, CardTitleIcon, TextField, cardTitleHeaderClass, cardTitleLeadClass } from "./ui";
 import { cardBodyClass, cardTitleClass } from "./ui/pageTypography";
 import { WorksetPermissionToggles } from "./WorksetPermissionToggles";
 
@@ -17,8 +18,15 @@ export interface WorksetSummaryCardProps {
   /** Active trackable items in this workset (optional count badge). */
   itemCount?: number;
   onOpen?: () => void;
-  onRename?: () => void;
+  onRename?: (nextName: string) => void | Promise<void>;
   onDelete?: () => void;
+}
+
+const actionIconBtnClass =
+  "im-icon-btn shrink-0 !h-7 !w-7 !rounded-md text-text-secondary transition-colors";
+
+function stopCardActivation(event: { stopPropagation: () => void }) {
+  event.stopPropagation();
 }
 
 /** First-class workset entity card (system「一般」or user-created). */
@@ -33,39 +41,172 @@ export function WorksetSummaryCard({
   onDelete,
 }: WorksetSummaryCardProps) {
   const { t } = useTranslation("common");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(title);
+  const [saving, setSaving] = useState(false);
+  const skipCommitRef = useRef(false);
+  const editingRef = useRef(false);
+
+  useEffect(() => {
+    if (!editing) setDraft(title);
+  }, [title, editing]);
+
+  useEffect(() => {
+    if (!editing) return;
+    const input = document.querySelector(`[data-testid="workset-card-rename-input-${id}"]`);
+    if (input instanceof HTMLInputElement) {
+      input.focus();
+      input.select();
+    }
+  }, [editing, id]);
+
+  const startRename = (event: MouseEvent) => {
+    event.stopPropagation();
+    skipCommitRef.current = false;
+    editingRef.current = true;
+    setDraft(title);
+    setEditing(true);
+  };
+
+  const leaveEdit = () => {
+    editingRef.current = false;
+    setSaving(false);
+    setEditing(false);
+    setDraft(title);
+  };
+
+  const commitRename = async (raw?: string) => {
+    if (!editingRef.current) return;
+    if (skipCommitRef.current) {
+      skipCommitRef.current = false;
+      leaveEdit();
+      return;
+    }
+    const cleaned = (raw ?? draft).trim();
+    if (!cleaned || cleaned === title || !onRename) {
+      leaveEdit();
+      return;
+    }
+    editingRef.current = false;
+    setSaving(true);
+    try {
+      await onRename(cleaned);
+      setEditing(false);
+    } catch {
+      editingRef.current = true;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancelRename = () => {
+    skipCommitRef.current = true;
+    leaveEdit();
+  };
+
+  const onRenameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    if (event.key === "Enter") {
+      event.preventDefault();
+      void commitRename(event.currentTarget.value);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      cancelRename();
+    }
+  };
+
+  const interactive = Boolean(onOpen) && !editing;
 
   return (
     <AccentBarCard
       accentClass={isSystem ? "bg-info" : "bg-accent"}
       enter="rise"
-      interactive={Boolean(onOpen)}
+      interactive={interactive}
       data-testid={`workset-card-${id}`}
-      role={onOpen ? "button" : undefined}
-      tabIndex={onOpen ? 0 : undefined}
-      onClick={onOpen}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      onClick={interactive ? onOpen : undefined}
       onKeyDown={
-        onOpen
+        interactive
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onOpen();
+                onOpen?.();
               }
             }
           : undefined
       }
       aria-label={t("workset:openDetailAria", { name: title })}
     >
-      <div className="flex items-start justify-between gap-sm">
-        <span className={`flex min-w-0 flex-1 items-center gap-xs ${cardTitleClass}`}>
-          <Layers
-            size={16}
-            strokeWidth={2}
-            className="shrink-0 text-text-secondary"
-            aria-hidden
-          />
-          <span className="min-w-0 truncate" title={title}>
-            {title}
-          </span>
+      <div className={cardTitleHeaderClass}>
+        <span className={cardTitleLeadClass}>
+          <CardTitleIcon icon={Layers} />
+          {editing ? (
+            <TextField
+              value={draft}
+              disabled={saving}
+              autoFocus
+              onChange={(event) => setDraft(event.target.value)}
+              onBlur={(event) => {
+                void commitRename(event.currentTarget.value);
+              }}
+              onClick={stopCardActivation}
+              onKeyDown={onRenameKeyDown}
+              onPointerDown={stopCardActivation}
+              aria-label={t("workset:nameAria")}
+              className="min-w-0 flex-1 !h-7 !min-h-7 !text-caption"
+              data-testid={`workset-card-rename-input-${id}`}
+            />
+          ) : (
+            <span className={`min-w-0 truncate ${cardTitleClass}`} title={title}>
+              {title}
+            </span>
+          )}
+          {!isSystem && onRename ? (
+            <button
+              type="button"
+              className={actionIconBtnClass}
+              aria-label={t("workset:renameAria", { name: title })}
+              title={t("workset:rename")}
+              data-testid={`workset-card-rename-${id}`}
+              onMouseDown={(event) => {
+                event.stopPropagation();
+                if (editing) {
+                  event.preventDefault();
+                  const input = document.querySelector(
+                    `[data-testid="workset-card-rename-input-${id}"]`,
+                  );
+                  const raw = input instanceof HTMLInputElement ? input.value : draft;
+                  void commitRename(raw);
+                }
+              }}
+              onClick={(event) => {
+                if (editing) return;
+                startRename(event);
+              }}
+              onKeyDown={stopCardActivation}
+              onPointerDown={stopCardActivation}
+            >
+              <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+            </button>
+          ) : null}
+          {!isSystem && onDelete ? (
+            <button
+              type="button"
+              className={actionIconBtnClass}
+              aria-label={t("workset:deleteAria", { name: title })}
+              title={t("workset:delete")}
+              data-testid={`workset-card-delete-${id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete();
+              }}
+              onKeyDown={stopCardActivation}
+              onPointerDown={stopCardActivation}
+            >
+              <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+            </button>
+          ) : null}
         </span>
         {isSystem ? (
           <Badge tone="info">{t("workset:systemBadge")}</Badge>
@@ -82,26 +223,8 @@ export function WorksetSummaryCard({
           items: itemCount ?? 0,
         })}
       </p>
-      <div className="mt-auto flex flex-col gap-xs pt-xs">
+      <div className="mt-auto pt-xs">
         <WorksetPermissionToggles worksetId={id} worksetName={title} />
-        {!isSystem ? (
-          <div
-            className="flex flex-wrap gap-1"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            {onRename ? (
-              <Button variant="secondary" size="sm" onClick={onRename}>
-                {t("workset:rename")}
-              </Button>
-            ) : null}
-            {onDelete ? (
-              <Button variant="secondary" size="sm" onClick={onDelete}>
-                {t("workset:delete")}
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </AccentBarCard>
   );

@@ -1,7 +1,7 @@
 /**
  * Shared Calendar/Timeline fetch helpers.
  *
- * RRULE + item DATE projections go through `/api/v1/calendar/items`
+ * RRULE + item DATE projections go through `/api/v1/calendar/occurrences`
  * (`source=recurring` / `source=item_remind`). `source=item_remind` is remind projection
  * only — distinct from item-linked `user_events` (`source=user` + itemId +
  * kind). Analysis timed events and user events remain separate endpoints

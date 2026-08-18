@@ -38,7 +38,6 @@ type EditorFields = {
   eventStartTime: string;
   eventEndTime: string;
   eventLocation: string;
-  itemId: string;
   notifyPref: NotifyPref;
 };
 
@@ -48,7 +47,6 @@ const EMPTY_FIELDS: EditorFields = {
   eventStartTime: "",
   eventEndTime: "",
   eventLocation: "",
-  itemId: "",
   notifyPref: DEFAULT_NOTIFY_PREF,
 };
 
@@ -75,7 +73,6 @@ export function RecurringSeriesEditor() {
           eventStartTime: series.eventStartTime ?? "",
           eventEndTime: series.eventEndTime ?? "",
           eventLocation: series.eventLocation ?? "",
-          itemId: series.itemId ?? "",
           notifyPref: normalizeNotifyPref(series.notifyPref),
         });
       })
@@ -114,7 +111,6 @@ export function RecurringSeriesEditor() {
         eventEndTime: start ? fields.eventEndTime.trim() || null : null,
         eventIsAllDay: !start,
         eventLocation: fields.eventLocation.trim() || null,
-        itemId: fields.itemId.trim() || null,
         notifyPref: fields.notifyPref,
       });
       showToast(t("toast.recurringUpdated"), "success");
@@ -223,15 +219,6 @@ export function RecurringSeriesEditor() {
                     id="recurring-location"
                     value={fields.eventLocation}
                     onChange={(event) => update("eventLocation", event.target.value)}
-                    disabled={saving}
-                  />
-                </div>
-                <div>
-                  <FieldLabel htmlFor="recurring-item">{t("editor.itemId")}</FieldLabel>
-                  <TextField
-                    id="recurring-item"
-                    value={fields.itemId}
-                    onChange={(event) => update("itemId", event.target.value)}
                     disabled={saving}
                   />
                 </div>

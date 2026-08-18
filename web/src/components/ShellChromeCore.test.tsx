@@ -112,7 +112,7 @@ describe("ShellChromeCore", () => {
     expect(container.querySelector('[data-testid="assistant-chrome-composer"]')).not.toBeNull();
   });
 
-  it("places assistant chrome left of the search trigger", () => {
+  it("places search and assistant left of notify, with collector last before window chrome", () => {
     const container = document.createElement("div");
     act(() => {
       createRoot(container).render(
@@ -128,9 +128,26 @@ describe("ShellChromeCore", () => {
       );
     });
     const actions = container.querySelector('[data-testid="shell-chrome-actions"]')!;
+    const spacer = actions.querySelector(".shell-chrome-spacer");
+    const search = actions.querySelector('[data-testid="command-palette-trigger"]');
     const chrome = actions.querySelector('[data-testid="assistant-chrome"]');
+    const status = actions.querySelector('[data-testid="topbar-status-area"]');
+    const icons = actions.querySelector('[data-testid="topbar-icon-actions"]');
     expect(chrome).not.toBeNull();
-    expect(actions.firstElementChild).toBe(chrome);
-    expect(actions.children[1]?.querySelector("svg")).not.toBeNull();
+    expect(search).not.toBeNull();
+    expect(actions.firstElementChild).toBe(spacer);
+    expect(actions.lastElementChild).toBe(status);
+    expect(
+      spacer!.compareDocumentPosition(search!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      search!.compareDocumentPosition(chrome!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      chrome!.compareDocumentPosition(icons!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      icons!.compareDocumentPosition(status!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 });

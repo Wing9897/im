@@ -35,10 +35,8 @@ from server.wire.serializer_domains.sources import (
     serialize_message,
     serialize_source,
 )
-from server.wire.serializer_domains.tasks import (
-    serialize_task,
-    serialize_workset,
-)
+from server.wire.serializer_domains.tasks import serialize_task
+from server.wire.serializer_domains.worksets import serialize_workset
 
 __all__ = [
     "channel_key",

@@ -62,35 +62,68 @@
 /*
  * Overlay sidebar open/close — the only chrome control (no title-bar collapse).
  * Collapsed: viewport left edge, vertically centered, above wallpaper/chrome
- * (title bar 1100) and below OverlayPortal modals (2000).
- * Open: pinned to the drawer’s right edge.
+ * (title bar 1100) and below OverlayPortal modals (2000). The trapezoid `>`
+ * stays fully visible (no hover / proximity reveal). Open: pinned to the
+ * drawer’s right edge; `<` stays visible.
+ *
+ * Visual is a left-flush trapezoid tab (tall base on the sidebar, shorter
+ * right edge). The button box stays rectangular so the hit target does not
+ * shrink at the clipped corners. The peek wrapper does not capture pointer
+ * events so the full-height left strip cannot steal title-bar drag or page
+ * clicks — only the 22×84 tab is interactive.
  */
+.im-sidebar-edge-peek {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1200;
+  width: 28px;
+  pointer-events: none;
+  -webkit-app-region: no-drag;
+}
+
 .im-sidebar-edge-toggle {
   position: fixed;
   left: 0;
   top: 50%;
   z-index: 1200;
+  isolation: isolate;
   display: flex;
   width: 22px;
-  height: 48px;
+  height: 84px;
   align-items: center;
   justify-content: center;
   margin: 0;
   padding: 0;
   transform: translateY(-50%);
-  border: 1px solid color-mix(in srgb, var(--surface-border) 75%, transparent);
-  border-left: none;
-  border-radius: 0 var(--radius-md, 8px) var(--radius-md, 8px) 0;
+  border: none;
+  border-radius: 0;
   color: var(--text-primary);
-  background: var(--surface-card);
-  box-shadow: var(--shadow-sm);
+  background: transparent;
+  box-shadow: none;
   cursor: pointer;
+  opacity: 1;
   pointer-events: auto;
   -webkit-app-region: no-drag;
 }
 
+.im-sidebar-edge-toggle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--surface-card);
+  clip-path: polygon(0 0, 100% 16%, 100% 84%, 0 100%);
+  filter: drop-shadow(1px 1px 2px color-mix(in srgb, var(--text-primary) 14%, transparent));
+}
+
 .im-sidebar-edge-toggle:hover {
   color: var(--text-primary);
+}
+
+.im-sidebar-edge-toggle:hover::before {
   background: color-mix(in srgb, var(--surface-card) 88%, var(--accent) 12%);
 }
 

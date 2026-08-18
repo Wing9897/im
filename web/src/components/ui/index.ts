@@ -17,6 +17,16 @@ export { CheckboxField } from "./CheckboxField";
 export { controlBaseClass, controlSizeClass, buttonBaseClass, buttonSizeClass, pageOpsControlClass, pageOpsIconButtonClass } from "./controlStyles";
 export type { ButtonSize, ControlSize } from "./controlStyles";
 export { FeedCard } from "./FeedCard";
+export {
+  CardFieldIcon,
+  CardFieldRow,
+  CardTitleIcon,
+  CARD_FIELD_ICON_PROPS,
+  CARD_TITLE_ICON_PROPS,
+  cardTitleHeaderClass,
+  cardTitleLeadClass,
+} from "./CardFieldRow";
+export type { CardFieldIconTone } from "./CardFieldRow";
 export { FieldLabel } from "./FieldLabel";
 export { FormStack, FormGrid } from "./FormStack";
 export { FormDialogSection } from "./FormDialogSection";

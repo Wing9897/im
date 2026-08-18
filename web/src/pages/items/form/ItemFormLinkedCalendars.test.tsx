@@ -14,6 +14,7 @@ import {
   deleteUserEvent,
   listRecurringSeries,
   listUserEventsPage,
+  listItems,
   makeItem,
   resetItemFormTestMocks,
   showToast,
@@ -119,7 +120,9 @@ describe("ItemForm linked calendars", () => {
     expect(document.querySelector('[data-testid="user-event-dialog"]')).toBeTruthy();
     expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
     expect(document.querySelector('[data-testid="user-event-parent-item-readonly"]')).toBeTruthy();
+    expect(document.body.textContent).toContain("Passport");
     expect(document.querySelector('[data-testid="user-event-workset-select"]')).toBeNull();
+    expect(listItems).not.toHaveBeenCalled();
   });
 
   it("opens edit dialog when clicking a one-off linked calendar row", async () => {

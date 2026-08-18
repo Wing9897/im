@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
 
 import type { GanttColumn, TimelineScale } from "../../../domain/timeline/dateUtils";
 import type { TimelineEventStatusMap } from "../../../domain/timeline/status";
@@ -80,7 +82,12 @@ export function TimelineGanttView({
   }
 
   if (ganttRows.length === 0) {
-    return <div className={ganttEmptyStateClass}>{t("gantt.empty")}</div>;
+    return (
+      <div className={`${ganttEmptyStateClass} flex flex-col items-center gap-sm`}>
+        <EmptyStateGlyph icon={CalendarDays} />
+        {t("gantt.empty")}
+      </div>
+    );
   }
 
   return (

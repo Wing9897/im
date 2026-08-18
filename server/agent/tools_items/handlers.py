@@ -6,7 +6,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from server.db.database import Database
-from server.domain.mcp_workset_scope import allowed_workset_ids_from_args
+from server.domain.workset_scope import allowed_workset_ids_from_args
 from server.items.normalize import _UNSET, ItemValidationError
 from server.items.service import create_item, patch_item
 from server.queries.items_queries import fetch_expiring_items, fetch_item_row, fetch_item_rows

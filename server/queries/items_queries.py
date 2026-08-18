@@ -12,7 +12,7 @@ from typing import Any
 
 from server.calendar.user_event_kinds import USER_EVENT_KIND_EXPIRES
 from server.db.database import TransactionDb
-from server.domain.mcp_workset_scope import bind_workset_ids_sql
+from server.domain.workset_scope import bind_workset_ids_sql
 
 # Correlated subquery: primary active linked expires calendar for an item.
 _PRIMARY_EXPIRES_EVENT_ID_SQL = f"""(

@@ -61,8 +61,8 @@ vi.mock("./settings", async () => {
   const actual = await vi.importActual<typeof import("./settings")>("./settings");
   return {
     ...actual,
-    loadVoiceReminderSettings: () => mockLoadSettings(),
-    hydrateVoiceReminderSettings: () => Promise.resolve(mockLoadSettings()),
+    loadNotifySettings: () => mockLoadSettings(),
+    hydrateNotifySettings: () => Promise.resolve(mockLoadSettings()),
   };
 });
 
@@ -79,13 +79,13 @@ vi.mock("../notifyFlash", () => ({
 }));
 
 vi.mock("./announce", () => ({
-  announceVoiceReminder: (...args: unknown[]) => mockAnnounce(...args),
+  announceNotify: (...args: unknown[]) => mockAnnounce(...args),
 }));
 
 vi.mock("./triggerHistory", () => ({
-  appendVoiceReminderTrigger: (...args: unknown[]) => mockAppendTrigger(...args),
-  buildVoiceReminderTriggerReason: (title: string) => title,
-  hydrateVoiceReminderHistory: () => Promise.resolve([]),
+  appendNotifyTrigger: (...args: unknown[]) => mockAppendTrigger(...args),
+  buildNotifyTriggerReason: (title: string) => title,
+  hydrateNotifyHistory: () => Promise.resolve([]),
 }));
 
 vi.mock("./scanner", async () => {
@@ -99,10 +99,10 @@ vi.mock("./scanner", async () => {
   };
 });
 
-import { useVoiceReminderScanner } from "./useVoiceReminderScanner";
+import { useNotifyScanner } from "./useNotifyScanner";
 
 function Harness() {
-  useVoiceReminderScanner();
+  useNotifyScanner();
   return null;
 }
 
@@ -117,7 +117,7 @@ async function flushScan() {
   });
 }
 
-describe("useVoiceReminderScanner notify resolve", () => {
+describe("useNotifyScanner notify resolve", () => {
   let container: HTMLDivElement;
   let root: Root | null = null;
 

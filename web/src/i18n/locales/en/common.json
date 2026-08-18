@@ -138,7 +138,7 @@
       "title": "Outbound notifications",
       "shortDescription": "Sends messages via Telegram, Discord, Webhook, MQTT, and similar channels when notification rules match."
     },
-    "voiceReminder": {
+    "localNotify": {
       "title": "Local notifications",
       "shortDescription": "Locally scans upcoming intel events, recurring-task (RRULE) expansions, and workset events, then notifies via voice, on-screen, or the last-day inbox.",
       "linkLabel": "Go to local notifications"
@@ -157,6 +157,8 @@
     "weather_unavailable": "All weather providers are temporarily unavailable. Please try again later.",
     "weather_location_not_found": "Could not resolve the specified location",
     "weather_invalid_date_range": "Invalid weather forecast date range",
+    "holiday_invalid_year": "Invalid holiday year",
+    "holiday_invalid_location": "Invalid holiday location",
     "agent_timeout": "Assistant request timed out. Please try again or shorten your question.",
     "ai_engine_unreachable": "AI engine unreachable (for example Ollama is not running or the port is wrong). A successful Settings AI test still may not support long assistant chats.",
     "ai_engine_failed": "The AI engine could not complete this request. Check the provider status and the logs page, then try again.",
@@ -366,7 +368,7 @@
   },
   "boot": {
     "unavailableTitle": "Cannot reach local service",
-    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 39 / SemVer 0.1.0-beta.40 — every other stamp must be reset. Run {script} to reset, then retry.",
+    "unavailableHint": "Common causes: backend still starting, or local DB schema mismatch. Current schema baseline is wipe-only stamp 40 / SemVer 0.1.0-beta.41 — every other stamp must be reset. Run {script} to reset, then retry.",
     "retry": "Check again",
     "serviceUnavailable": "Service temporarily unavailable",
     "starting": "Starting…"

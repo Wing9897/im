@@ -25,6 +25,7 @@ export function makeTimelineCalendarViewProps<P>(overrides: Partial<P> = {}): P 
     weatherByDate: {
       "2025-01-15": { code: 0, high: 25, low: 18 },
     },
+    holidaysByDate: {},
     onSelectEvent: vi.fn(),
     onFocusDay: vi.fn(),
     ...overrides,
@@ -40,6 +41,14 @@ export function renderTimelineCalendarView<P extends object>(
     createRoot(container).render(wrapWithI18n(createElement(Component, props)));
   });
   return container;
+}
+
+/** Native pointerenter/leave on the 篩選 eye. */
+export function fireMonthRevealPointer(el: Element, phase: "enter" | "leave") {
+  const type = phase === "enter" ? "pointerenter" : "pointerleave";
+  act(() => {
+    el.dispatchEvent(new MouseEvent(type, { bubbles: false, relatedTarget: document.body }));
+  });
 }
 
 export async function prepareTimelineCalendarViewTests(

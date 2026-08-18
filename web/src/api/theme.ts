@@ -3,15 +3,9 @@
  */
 
 import { apiClient } from "./client";
+import type { components } from "./generated/schema";
 
-export type FocalBackground = {
-  imageUrl: string;
-  title?: string | null;
-  copyright?: string | null;
-  date?: string | null;
-  locale: string;
-  source: string;
-};
+export type FocalBackground = components["schemas"]["FocalBackgroundResponse"];
 
 export type FocalBackgroundQuery = {
   locale?: string;

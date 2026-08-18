@@ -23,8 +23,10 @@ import { AppPageShell, PillButton } from "../../components/ui";
 import { useTaskCatalog } from "../../context/TaskCatalogContext";
 import { startOfDay } from "../../domain/timeline/dateUtils";
 import { useErrorToast } from "../../hooks/useErrorToast";
+import { useMonthHolidays } from "../../hooks/useMonthHolidays";
 import { useMonthWeather } from "../../hooks/useMonthWeather";
 import { getOsTimeMs } from "../../utils/time";
+import { useMonthDateReveal } from "./calendar/useMonthDateReveal";
 import { TimelineControlBar } from "./components/TimelineControlBar";
 import { TimelineShowOptionsControl } from "./components/TimelineShowOptionsControl";
 import { TimelineViewSwitch } from "./components/TimelineViewSwitch";
@@ -80,6 +82,15 @@ export function TimelinePage() {
     loading: weatherLoading,
     refresh: refreshWeather,
   } = useMonthWeather(weatherEnabled, weatherDays);
+  const {
+    holidaysByDate,
+    loading: holidaysLoading,
+    refresh: refreshHolidays,
+  } = useMonthHolidays(weatherEnabled, weatherDays);
+  const overlayLoading = weatherLoading || holidaysLoading;
+  const datesReveal = useMonthDateReveal();
+  const showMonthDatesReveal =
+    sources.viewMode === "calendar" && navigation.timeScale === "month";
 
   // Deep-link from workset detail: /timeline?newEvent=1&worksetId=…
   useEffect(() => {
@@ -170,6 +181,8 @@ export function TimelinePage() {
       showOngoing: filters.showOngoing,
       showEnding: filters.showEnding,
       weatherByDate,
+      holidaysByDate,
+      monthDatesRevealed: datesReveal.revealed,
       taskSpans: data.taskSpans,
       selectedGanttTaskId: gantt.selectedGanttTaskId,
       onSelectGanttTask: gantt.handleSelectGanttTask,
@@ -199,6 +212,8 @@ export function TimelinePage() {
       filters.showOngoing,
       filters.showEnding,
       weatherByDate,
+      holidaysByDate,
+      datesReveal.revealed,
     ],
   );
 
@@ -244,8 +259,11 @@ export function TimelinePage() {
               {weatherEnabled ? (
                 <PillButton
                   type="button"
-                  onClick={() => void refreshWeather()}
-                  disabled={weatherLoading}
+                  onClick={() => {
+                    void refreshWeather();
+                    void refreshHolidays();
+                  }}
+                  disabled={overlayLoading}
                   title={t("calendar.weatherRefresh")}
                   aria-label={t("calendar.weatherRefresh")}
                   data-testid="timeline-weather-refresh"
@@ -254,7 +272,7 @@ export function TimelinePage() {
                     size={16}
                     strokeWidth={2.5}
                     aria-hidden="true"
-                    className={weatherLoading ? "animate-spin" : undefined}
+                    className={overlayLoading ? "animate-spin" : undefined}
                   />
                 </PillButton>
               ) : null}
@@ -265,6 +283,16 @@ export function TimelinePage() {
                 setShowOngoing={filters.setShowOngoing}
                 showEnding={filters.showEnding}
                 setShowEnding={filters.setShowEnding}
+                monthDateReveal={
+                  showMonthDatesReveal
+                    ? {
+                        persisted: datesReveal.persisted,
+                        onPersistedChange: datesReveal.onPersistedChange,
+                        onPointerEnter: datesReveal.onPointerEnter,
+                        onPointerLeave: datesReveal.onPointerLeave,
+                      }
+                    : null
+                }
               />
             </TimelineControlBar>
           </div>

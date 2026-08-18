@@ -9,7 +9,7 @@ from server.api.schemas.responses.ui_prefs import (
     BoardPrefsPutBody,
     BoardPrefsResponse,
     TimelineAnnotationsPutBody,
-    VoiceReminderHistoryEntrySchema,
+    NotifyHistoryEntrySchema,
 )
 from server.config import CONFIG_DEFAULTS
 from server.tests.contract_helpers import assert_keys
@@ -42,7 +42,7 @@ def test_ui_prefs_pydantic_shapes_are_concrete() -> None:
     assert "llmProfileId" in session_schema.get("properties", {})
     timeline_put = TimelineAnnotationsPutBody.model_json_schema()
     assert {"eventStatuses", "eventTimeOverrides"} <= set(timeline_put["properties"])
-    history = VoiceReminderHistoryEntrySchema.model_json_schema()
+    history = NotifyHistoryEntrySchema.model_json_schema()
     assert history["properties"]["status"]["enum"] == ["success", "failure"]
 
 

@@ -109,7 +109,7 @@
 
 ### 物品（trackable items）
 
-实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/items`（`source=item_remind`，`itemDateKind`=`remind` only；occurrence ids 仍为 `item:{id}:remind`）— 与物品关联日历（`source=user` + `itemId`）不同轨。**到期** SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填）；wire `expiresAt`／`remindBeforeDays` **derive-on-read**（非 dismissed、最早 `created_at` 的主关联 expires 事件），无 `items.expires_at`／`remind_before_days` 缓存列、无 write-through — 权威为 `user_events.kind=expires`（`server/calendar/user_event_kinds.py` + items derive-on-read）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
+实现：`server/agent/tools_items/`。与 REST `/api/v1/items` 同一服务层；提醒日投影走统一 `GET /api/v1/calendar/occurrences`（`source=item_remind`，`itemDateKind`=`remind` only；occurrence ids 仍为 `item:{id}:remind`）— 与物品关联日历（`source=user` + `itemId`）不同轨。**到期** SoT 为关联 `user_events.kind=expires`（标题 到期／Expires 仅为 UX 预填）；wire `expiresAt`／`remindBeforeDays` **derive-on-read**（非 dismissed、最早 `created_at` 的主关联 expires 事件），无 `items.expires_at`／`remind_before_days` 缓存列、无 write-through — 权威为 `user_events.kind=expires`（`server/calendar/user_event_kinds.py` + items derive-on-read）；无 `purchased_at`／购入日；勿另开双轨、勿把物品字段当独立写入源。
 
 | Tool | 行为 | 限额 |
 |------|------|------|
@@ -150,7 +150,7 @@
 
 ### 日历
 
-统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/items` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/calendar/user_events_write.py`（读取在 `user_events_read.py`；与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers_read.py`／`handlers_write.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；周期系列写入与 REST 共用 `server/services/recurring_series_writes.py`（单次用户事件仍走 `user_events`）。
+统一查询层：`server/calendar/query.py`（合并 analysis + RRULE + `user_events`；与 `GET /api/v1/calendar/occurrences` 共用 RRULE 展开；ISO 解析见 `server/time_iso.py`）。用户事件写入：`server/calendar/user_events_write.py`（读取在 `user_events_read.py`；与 `GET/POST/PATCH/DELETE /api/v1/calendar/user-events` 同一服务层）。工具实现：`server/agent/tools_calendar/`（`handlers_read.py`／`handlers_write.py` 逻辑、`schemas.py` LLM schema、`__init__.py` 对外入口）；周期系列写入与 REST 共用 `server/services/recurring_series_writes.py`（单次用户事件仍走 `user_events`）。
 
 | Tool | 行为 | 限额 |
 |------|------|------|

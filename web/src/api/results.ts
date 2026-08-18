@@ -141,7 +141,7 @@ export function fetchCalendarOccurrences(
   if (opts?.includeItems === false) {
     query.includeItems = "false";
   }
-  return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/items", query);
+  return apiClient.get<CalendarOccurrence[]>("/api/v1/calendar/occurrences", query);
 }
 
 /** Fetches the current analysis queue status (pending count, processing batches, pause state). */

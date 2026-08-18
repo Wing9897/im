@@ -1,20 +1,18 @@
 /**
  * Legal click-to-connect and drag-to-connect pairs for the household pipeline graph.
- * Only existing ownership / output / subscription edges — no invented wires.
+ * Ownership / subscription wires only — enable-state is icons, not connectable gates.
  */
 
-import { normalizeNotifyPref } from "../notify/notifyPref";
 import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import {
   PIPELINE_HANDLE_IN_SUFFIX,
   PIPELINE_HANDLE_OUT_SUFFIX,
   PIPELINE_PAGE,
+  assistantOwnerWorksetId,
   channelIdsForSource,
   normalizePipelineChannelIds,
   sourceIdsForTaskChannels,
-  taskIntelEnabled,
   taskOwnerWorksetId,
-  taskTimelineEnabled,
   type PipelineGraph,
   type PipelineGraphInput,
   type PipelinePoint,
@@ -23,7 +21,7 @@ import {
 
 export type PipelineConnectData = Pick<
   PipelineGraphInput,
-  "tasks" | "items" | "events" | "channels" | "worksets"
+  "tasks" | "items" | "events" | "channels" | "worksets" | "assistantDefaultWorksetId"
 >;
 
 export type PipelineConnectHintKey =
@@ -31,26 +29,10 @@ export type PipelineConnectHintKey =
   | "graphConnectHintSource"
   | "graphConnectHintItem"
   | "graphConnectHintWorkset"
-  | "graphConnectHintTaskOutput"
-  | "graphConnectHintWorksetGate";
+  | "graphConnectHintAssistant";
 
-function isTaskOutputPage(point: PipelinePoint): boolean {
-  return (
-    point.kind === "page" &&
-    (point.id === PIPELINE_PAGE.intel ||
-      point.id === PIPELINE_PAGE.timeline ||
-      point.id === PIPELINE_PAGE.notify)
-  );
-}
-
-function isWorksetGatePage(point: PipelinePoint): boolean {
-  return (
-    point.kind === "page" &&
-    (point.id === PIPELINE_PAGE.notify ||
-      point.id === PIPELINE_PAGE.mcp ||
-      point.id === PIPELINE_PAGE.a2a ||
-      point.id === PIPELINE_PAGE.timeline)
-  );
+function isAssistantPage(point: PipelinePoint): boolean {
+  return point.kind === "page" && point.id === PIPELINE_PAGE.assistant;
 }
 
 function isWorksetTarget(point: PipelinePoint): boolean {
@@ -62,12 +44,11 @@ function directedLegal(from: PipelinePoint, to: PipelinePoint): boolean {
   if (from.kind === "source" && to.kind === "task") return true;
   if (from.kind === "task" && isWorksetTarget(to)) return true;
   if (from.kind === "item" && to.kind === "workset") return true;
-  if (from.kind === "task" && isTaskOutputPage(to)) return true;
-  if (from.kind === "workset" && isWorksetGatePage(to)) return true;
+  if (isAssistantPage(from) && isWorksetTarget(to)) return true;
   return false;
 }
 
-/** True when A and B are a legal adjacent-layer pair (either order). */
+/** True when A and B are a legal ownership / subscription pair (either order). */
 export function isLegalConnectPair(a: PipelinePoint, b: PipelinePoint): boolean {
   if (a.id === b.id) return false;
   return directedLegal(a, b) || directedLegal(b, a);
@@ -110,17 +91,7 @@ function taskSubscribesToSource(
   ).includes(sourceId);
 }
 
-function worksetNotifyOn(data: PipelineConnectData, worksetId: string): boolean {
-  const row = data.worksets.find((ws) => ws.id === worksetId);
-  return row?.notifyEnabled !== false;
-}
-
-function worksetExternalOn(data: PipelineConnectData, worksetId: string): boolean {
-  const row = data.worksets.find((ws) => ws.id === worksetId);
-  return row?.externalEnabled !== false;
-}
-
-/** Whether the pair already has a live (non-muted) relationship. */
+/** Whether the pair already has a live ownership / subscription relationship. */
 export function pipelinePairConnected(
   a: PipelinePoint,
   b: PipelinePoint,
@@ -145,22 +116,9 @@ export function pipelinePairConnected(
     return Boolean(item && item.worksetId === itemWorkset[1].entityId);
   }
 
-  const taskPage = orient(a, b, (p) => p.kind === "task", isTaskOutputPage);
-  if (taskPage) {
-    const task = taskById(data, taskPage[0].entityId);
-    if (!task) return false;
-    if (taskPage[1].id === PIPELINE_PAGE.intel) return taskIntelEnabled(task);
-    if (taskPage[1].id === PIPELINE_PAGE.timeline) return taskTimelineEnabled(task);
-    return normalizeNotifyPref(task.notifyPref) !== "off";
-  }
-
-  const worksetPage = orient(a, b, (p) => p.kind === "workset", isWorksetGatePage);
-  if (worksetPage) {
-    if (worksetPage[1].id === PIPELINE_PAGE.timeline) return true;
-    if (worksetPage[1].id === PIPELINE_PAGE.notify) {
-      return worksetNotifyOn(data, worksetPage[0].entityId);
-    }
-    return worksetExternalOn(data, worksetPage[0].entityId);
+  const assistantWorkset = orient(a, b, isAssistantPage, isWorksetTarget);
+  if (assistantWorkset) {
+    return assistantOwnerWorksetId(data.assistantDefaultWorksetId) === assistantWorkset[1].entityId;
   }
 
   return false;
@@ -194,9 +152,8 @@ export function nextTaskWorksetId(currentWorksetId: string, targetWorksetId: str
 export function connectHintKey(from: PipelinePoint): PipelineConnectHintKey {
   if (from.kind === "source") return "graphConnectHintSource";
   if (from.kind === "item") return "graphConnectHintItem";
+  if (isAssistantPage(from)) return "graphConnectHintAssistant";
   if (from.kind === "workset") return "graphConnectHintWorkset";
-  if (isTaskOutputPage(from)) return "graphConnectHintTaskOutput";
-  if (isWorksetGatePage(from)) return "graphConnectHintWorksetGate";
   return "graphConnectHintTask";
 }
 

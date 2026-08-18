@@ -158,7 +158,7 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="workset-graph-filter"]')).toBeNull();
   });
 
-  it("shows a workset MenuSelect next to catalog/graph pills on the graph tab", () => {
+  it("shows a workset checkbox filter next to catalog/graph pills on the graph tab", () => {
     const container = track(
       {
         isWorksetView: true,
@@ -176,7 +176,7 @@ describe("DashboardViewerToolbar", () => {
     expect(toolbar.querySelector('[data-testid="workset-catalog-tabs"]')).not.toBeNull();
     expect(toolbar.querySelector('[data-testid="workset-graph-filter-all"]')).toBeNull();
     expect(filter?.querySelectorAll("button[aria-pressed]")).toHaveLength(0);
-    expect(trigger?.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger?.getAttribute("aria-haspopup")).toBe("dialog");
     expect(trigger?.textContent).toContain("全部");
   });
 });

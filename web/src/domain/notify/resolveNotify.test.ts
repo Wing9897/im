@@ -15,7 +15,7 @@ describe("normalizeNotifyPref", () => {
     expect(normalizeNotifyPref("maybe")).toBe("follow");
     expect(normalizeNotifyPref("follow")).toBe("follow");
     expect(normalizeNotifyPref("off")).toBe("off");
-    expect(normalizeNotifyPref("on")).toBe("follow");
+    expect(normalizeNotifyPref("on")).toBe("follow"); // HTTP "on" is 422; read coerce → default
   });
 
   it("maps checkbox state to follow / off", () => {
@@ -59,7 +59,7 @@ describe("resolveNotify", () => {
     ).toBe(true);
   });
 
-  it("entity off always mutes; legacy on follows the workset", () => {
+  it("entity off always mutes; unknown on coerces to follow then workset", () => {
     expect(
       resolveNotify({ override: "on", worksetNotifyEnabled: false, globalEnabled: true }),
     ).toBe(false);

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from server.api.routes.task_helpers import ALLOWED_MODES
 from server.db.database import Database
 from server.queries.tasks_queries import fetch_all_task_channel_rows, fetch_all_task_rows
+from server.services.task_policy import ALLOWED_MODES
 from server.services.task_writes import TaskWriteError
 from server.wire.serializers import serialize_channel_ref, serialize_task
 from server.worksets_const import SYSTEM_WORKSET_ID

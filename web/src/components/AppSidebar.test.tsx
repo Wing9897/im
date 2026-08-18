@@ -110,6 +110,11 @@ describe("AppSidebar", () => {
     expect(edgeToggle()?.getAttribute("aria-label")).toBe("展開側欄");
     expect(edgeToggle()?.hidden).toBe(false);
     expect(edgeToggle()?.getAttribute("aria-hidden")).toBeNull();
+    const peek = document.body.querySelector("[data-testid='sidebar-edge-peek']");
+    expect(peek).toBeTruthy();
+    expect(peek?.className).toContain("im-sidebar-edge-peek");
+    expect(peek?.getAttribute("data-collapsed")).toBe("true");
+    expect(peek?.contains(edgeToggle())).toBe(true);
     expect(getLinks()).toHaveLength(0);
   });
 
@@ -154,6 +159,8 @@ describe("AppSidebar", () => {
     expect(edgeToggle()?.className).toContain("im-sidebar-edge-toggle");
     expect(edgeToggle()?.getAttribute("aria-expanded")).toBe("true");
     expect(edgeToggle()?.getAttribute("aria-label")).toBe("收起側欄");
+    expect(document.body.querySelector("[data-testid='sidebar-edge-peek']")).toBeNull();
+    expect(edgeToggle()?.closest("[data-testid='sidebar-edge-peek']")).toBeNull();
     expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("0");
     expect(getLinks().length).toBeGreaterThan(0);
   });
@@ -179,6 +186,8 @@ describe("AppSidebar", () => {
     });
     expect(document.body.querySelector("[data-testid='app-sidebar-overlay']")).toBeNull();
     expect(window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY)).toBe("1");
+    expect(document.body.querySelector("[data-testid='sidebar-edge-peek']")).toBeTruthy();
+    expect(edgeToggle()?.closest("[data-testid='sidebar-edge-peek']")).toBeTruthy();
   });
 
   it("renders 選單/紀錄 mode toggle without logo brand", () => {

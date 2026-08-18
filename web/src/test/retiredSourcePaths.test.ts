@@ -53,6 +53,8 @@ const RETIRED_SOURCE_PATHS = [
   "voiceReminder",
   "pages/actions/components/VoiceReminderPanel.tsx",
   "pages/actions/hooks/useVoiceReminderPanelState.ts",
+  "domain/notify/scanner/useVoiceReminderScanner.ts",
+  "domain/notify/scanner/useVoiceReminderScanner.test.tsx",
   "api/uiPrefs/voiceReminder.ts",
   "components/SchemaUpgradeGate.tsx",
   "components/analysis/analysisStatusModel.ts",

@@ -1,7 +1,7 @@
 /**
  * Regression tests for recurring-task occurrence wiring.
  *
- * Recurring tasks are expanded server-side (GET /api/v1/calendar/items).
+ * Recurring tasks are expanded server-side (GET /api/v1/calendar/occurrences).
  * These tests pin hook wiring (adapter unit coverage lives in timedEventMerge.test.ts):
  * - occurrences are fetched for the visible range (padded for the month grid)
  * - "all tasks" merges analysis + calendar occurrences

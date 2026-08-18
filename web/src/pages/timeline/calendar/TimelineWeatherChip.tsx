@@ -25,7 +25,7 @@ export function TimelineWeatherChip({
   if (!weather) return null;
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-0.5 text-[10px] leading-none text-text-secondary"
+      className="im-weather-chip inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-[color-mix(in_srgb,var(--surface-panel)_78%,transparent)] px-0.5 text-[10px] leading-none text-text-secondary"
       aria-label={t("calendar.weatherAria", {
         high: weather.high,
         low: weather.low,

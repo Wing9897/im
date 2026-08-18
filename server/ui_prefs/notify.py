@@ -14,7 +14,7 @@ from server.ui_prefs.common import (
     KEY_NOTIFY_FIRED,
     KEY_NOTIFY_SETTINGS,
     KEY_NOTIFY_TRIGGER_HISTORY,
-    MAX_VOICE_HISTORY_ENTRIES,
+    MAX_NOTIFY_HISTORY_ENTRIES,
     UiPrefsValidationError,
     _read_json,
     _write_json,
@@ -37,7 +37,7 @@ _PREAMBLE_CHIME_IDS = frozenset(
 _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
 
 _FLASH_MODES = frozenset({"timed", "persistent"})
-_DEFAULT_VOICE_SETTINGS: dict[str, Any] = {
+_DEFAULT_NOTIFY_SETTINGS: dict[str, Any] = {
     "enabled": False,
     "voiceEnabled": True,
     "flashEnabled": True,
@@ -51,7 +51,7 @@ _DEFAULT_VOICE_SETTINGS: dict[str, Any] = {
 def _sanitize_flash_mode(value: Any) -> str:
     if isinstance(value, str) and value in _FLASH_MODES:
         return value
-    return str(_DEFAULT_VOICE_SETTINGS["flashMode"])
+    return str(_DEFAULT_NOTIFY_SETTINGS["flashMode"])
 
 
 def _sanitize_bool(value: Any, default: bool) -> bool:
@@ -61,10 +61,10 @@ def _sanitize_bool(value: Any, default: bool) -> bool:
 def _sanitize_preamble_chime_id(value: Any) -> str:
     if isinstance(value, str) and value in _PREAMBLE_CHIME_IDS:
         return value
-    return str(_DEFAULT_VOICE_SETTINGS["preambleChimeId"])
+    return str(_DEFAULT_NOTIFY_SETTINGS["preambleChimeId"])
 
 
-def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
+def sanitize_notify_settings(raw: Any) -> dict[str, Any]:
     """Align with web ``domain/notify/scanner/settings.ts`` normalize rules.
 
     Leftover ``sourceFilter`` in stored JSON is ignored (not read or written).
@@ -87,7 +87,7 @@ def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
                 seen.add(offset)
         leads = sorted(seen)
     if not leads:
-        leads = list(_DEFAULT_VOICE_SETTINGS["leadOffsetsMinutes"])
+        leads = list(_DEFAULT_NOTIFY_SETTINGS["leadOffsetsMinutes"])
 
     quiet_raw = data.get("quietHours")
     quiet = quiet_raw if isinstance(quiet_raw, Mapping) else {}
@@ -97,16 +97,16 @@ def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
         "enabled": (
             quiet["enabled"]
             if isinstance(quiet.get("enabled"), bool)
-            else _DEFAULT_VOICE_SETTINGS["quietHours"]["enabled"]
+            else _DEFAULT_NOTIFY_SETTINGS["quietHours"]["enabled"]
         ),
         "start": start if isinstance(start, str) and _TIME_RE.match(start) else "22:00",
         "end": end if isinstance(end, str) and _TIME_RE.match(end) else "07:00",
     }
 
     return {
-        "enabled": (data["enabled"] if isinstance(data.get("enabled"), bool) else _DEFAULT_VOICE_SETTINGS["enabled"]),
-        "voiceEnabled": _sanitize_bool(data.get("voiceEnabled"), _DEFAULT_VOICE_SETTINGS["voiceEnabled"]),
-        "flashEnabled": _sanitize_bool(data.get("flashEnabled"), _DEFAULT_VOICE_SETTINGS["flashEnabled"]),
+        "enabled": (data["enabled"] if isinstance(data.get("enabled"), bool) else _DEFAULT_NOTIFY_SETTINGS["enabled"]),
+        "voiceEnabled": _sanitize_bool(data.get("voiceEnabled"), _DEFAULT_NOTIFY_SETTINGS["voiceEnabled"]),
+        "flashEnabled": _sanitize_bool(data.get("flashEnabled"), _DEFAULT_NOTIFY_SETTINGS["flashEnabled"]),
         "flashMode": _sanitize_flash_mode(data.get("flashMode")),
         "leadOffsetsMinutes": leads,
         "preambleChimeId": _sanitize_preamble_chime_id(data.get("preambleChimeId")),
@@ -114,16 +114,16 @@ def sanitize_voice_settings(raw: Any) -> dict[str, Any]:
     }
 
 
-async def get_voice_settings(db: Database) -> dict[str, Any]:
+async def get_notify_settings(db: Database) -> dict[str, Any]:
     raw = await _read_json(db, KEY_NOTIFY_SETTINGS)
     if raw is None:
         return {"configured": False, "settings": None}
-    clean = sanitize_voice_settings(raw)
+    clean = sanitize_notify_settings(raw)
     return {"configured": True, "settings": clean}
 
 
-async def put_voice_settings(db: Database, settings: Any) -> dict[str, Any]:
-    clean = sanitize_voice_settings(settings)
+async def put_notify_settings(db: Database, settings: Any) -> dict[str, Any]:
+    clean = sanitize_notify_settings(settings)
     await _write_json(db, KEY_NOTIFY_SETTINGS, clean)
     return {"configured": True, "settings": clean}
 
@@ -184,7 +184,7 @@ def _iso_to_ms(value: str) -> float:
     return dt.timestamp() * 1000
 
 
-async def get_voice_fired(db: Database) -> dict[str, Any]:
+async def get_notify_fired(db: Database) -> dict[str, Any]:
     raw = await _read_json(db, KEY_NOTIFY_FIRED)
     if raw is None:
         return {"configured": False, "keys": None}
@@ -193,13 +193,13 @@ async def get_voice_fired(db: Database) -> dict[str, Any]:
     return {"configured": True, "keys": sanitize_fired_keys(raw, prune=False)}
 
 
-async def put_voice_fired(db: Database, keys: Any) -> dict[str, Any]:
+async def put_notify_fired(db: Database, keys: Any) -> dict[str, Any]:
     clean = sanitize_fired_keys(keys, prune=True)
     await _write_json(db, KEY_NOTIFY_FIRED, clean)
     return {"configured": True, "keys": clean}
 
 
-async def claim_voice_fired(db: Database, keys: Any) -> dict[str, Any]:
+async def claim_notify_fired(db: Database, keys: Any) -> dict[str, Any]:
     """Add dedupe keys not already stored; return ``claimed`` for this client to speak."""
     if not isinstance(keys, list):
         raise UiPrefsValidationError("fired keys must be an array of strings")
@@ -225,7 +225,7 @@ async def claim_voice_fired(db: Database, keys: Any) -> dict[str, Any]:
     return {"configured": True, "claimed": claimed, "keys": merged}
 
 
-def sanitize_voice_history(raw: Any) -> list[dict[str, Any]]:
+def sanitize_notify_history(raw: Any) -> list[dict[str, Any]]:
     if not isinstance(raw, list):
         raise UiPrefsValidationError("history entries must be an array")
     entries: list[dict[str, Any]] = []
@@ -264,21 +264,21 @@ def sanitize_voice_history(raw: Any) -> list[dict[str, Any]]:
         if isinstance(lead, (int, float)) and not isinstance(lead, bool):
             entry["leadOffsetMinutes"] = int(lead)
         entries.append(entry)
-        if len(entries) >= MAX_VOICE_HISTORY_ENTRIES:
+        if len(entries) >= MAX_NOTIFY_HISTORY_ENTRIES:
             break
     return entries
 
 
-async def get_voice_history(db: Database) -> dict[str, Any]:
+async def get_notify_history(db: Database) -> dict[str, Any]:
     raw = await _read_json(db, KEY_NOTIFY_TRIGGER_HISTORY)
     if raw is None:
         return {"configured": False, "entries": None}
     if not isinstance(raw, list):
         return {"configured": False, "entries": None}
-    return {"configured": True, "entries": sanitize_voice_history(raw)}
+    return {"configured": True, "entries": sanitize_notify_history(raw)}
 
 
-async def put_voice_history(db: Database, entries: Any) -> dict[str, Any]:
-    clean = sanitize_voice_history(entries)
+async def put_notify_history(db: Database, entries: Any) -> dict[str, Any]:
+    clean = sanitize_notify_history(entries)
     await _write_json(db, KEY_NOTIFY_TRIGGER_HISTORY, clean)
     return {"configured": True, "entries": clean}

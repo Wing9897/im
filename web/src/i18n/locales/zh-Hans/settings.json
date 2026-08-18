@@ -36,7 +36,7 @@
   },
   "general": {
     "weatherLocationLabel": "地区",
-    "weatherLocationHelp": "月历天气；跟系统则依作业系统时区推测。",
+    "weatherLocationHelp": "月历天气与节日；跟系统则依作业系统时区推测。节日依国家（非城市）。",
     "followSystem": "跟系统",
     "weatherLocationCurrent": "目前地区：{location}",
     "simpleModeLabel": "简化模式（AI 日历）",

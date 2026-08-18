@@ -24,32 +24,32 @@ from server.api.schemas.responses import (
     BoardPrefsResponse,
     TimelineAnnotationsPutBody,
     TimelineAnnotationsResponse,
-    VoiceFiredBody,
-    VoiceHistoryBody,
-    VoiceReminderFiredClaimResponse,
-    VoiceReminderFiredResponse,
-    VoiceReminderHistoryResponse,
-    VoiceReminderSettingsResponse,
-    VoiceSettingsBody,
+    NotifyFiredBody,
+    NotifyHistoryBody,
+    NotifyFiredClaimResponse,
+    NotifyFiredResponse,
+    NotifyHistoryResponse,
+    NotifySettingsResponse,
+    NotifySettingsBody,
 )
 from server.errors import VALIDATION_ERROR, http_error
 from server.ui_prefs import (
     UiPrefsValidationError,
-    claim_voice_fired,
+    claim_notify_fired,
     get_assistant_sessions,
     get_assistant_voice_io,
     get_board_prefs,
     get_timeline_annotations,
-    get_voice_fired,
-    get_voice_history,
-    get_voice_settings,
+    get_notify_fired,
+    get_notify_history,
+    get_notify_settings,
     put_assistant_sessions,
     put_assistant_voice_io,
     put_board_prefs,
     put_timeline_annotations,
-    put_voice_fired,
-    put_voice_history,
-    put_voice_settings,
+    put_notify_fired,
+    put_notify_history,
+    put_notify_settings,
 )
 
 router = APIRouter(prefix="/api/v1/ui-prefs", tags=["ui-prefs"], dependencies=API_DEPS)
@@ -99,59 +99,59 @@ async def save_board_prefs(request: Request, body: BoardPrefsPutBody) -> BoardPr
     return BoardPrefsResponse.model_validate(saved)
 
 
-@router.get("/notify/settings", response_model=VoiceReminderSettingsResponse)
-async def fetch_notify_settings(request: Request) -> VoiceReminderSettingsResponse:
-    return VoiceReminderSettingsResponse.model_validate(await get_voice_settings(get_db(request)))
+@router.get("/notify/settings", response_model=NotifySettingsResponse)
+async def fetch_notify_settings(request: Request) -> NotifySettingsResponse:
+    return NotifySettingsResponse.model_validate(await get_notify_settings(get_db(request)))
 
 
-@router.put("/notify/settings", response_model=VoiceReminderSettingsResponse)
-async def save_notify_settings(request: Request, body: VoiceSettingsBody) -> VoiceReminderSettingsResponse:
+@router.put("/notify/settings", response_model=NotifySettingsResponse)
+async def save_notify_settings(request: Request, body: NotifySettingsBody) -> NotifySettingsResponse:
     try:
-        saved = await put_voice_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
+        saved = await put_notify_settings(get_db(request), body.settings.model_dump(exclude_unset=True))
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
-    return VoiceReminderSettingsResponse.model_validate(saved)
+    return NotifySettingsResponse.model_validate(saved)
 
 
-@router.get("/notify/fired", response_model=VoiceReminderFiredResponse)
-async def fetch_notify_fired(request: Request) -> VoiceReminderFiredResponse:
-    return VoiceReminderFiredResponse.model_validate(await get_voice_fired(get_db(request)))
+@router.get("/notify/fired", response_model=NotifyFiredResponse)
+async def fetch_notify_fired(request: Request) -> NotifyFiredResponse:
+    return NotifyFiredResponse.model_validate(await get_notify_fired(get_db(request)))
 
 
-@router.put("/notify/fired", response_model=VoiceReminderFiredResponse)
-async def save_notify_fired(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredResponse:
+@router.put("/notify/fired", response_model=NotifyFiredResponse)
+async def save_notify_fired(request: Request, body: NotifyFiredBody) -> NotifyFiredResponse:
     try:
-        saved = await put_voice_fired(get_db(request), body.keys)
+        saved = await put_notify_fired(get_db(request), body.keys)
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
-    return VoiceReminderFiredResponse.model_validate(saved)
+    return NotifyFiredResponse.model_validate(saved)
 
 
-@router.post("/notify/fired/claim", response_model=VoiceReminderFiredClaimResponse)
-async def claim_notify_fired_route(request: Request, body: VoiceFiredBody) -> VoiceReminderFiredClaimResponse:
+@router.post("/notify/fired/claim", response_model=NotifyFiredClaimResponse)
+async def claim_notify_fired_route(request: Request, body: NotifyFiredBody) -> NotifyFiredClaimResponse:
     """Reserve dedupe keys before TTS so only one client speaks per reminder."""
     try:
-        claimed = await claim_voice_fired(get_db(request), body.keys)
+        claimed = await claim_notify_fired(get_db(request), body.keys)
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
-    return VoiceReminderFiredClaimResponse.model_validate(claimed)
+    return NotifyFiredClaimResponse.model_validate(claimed)
 
 
-@router.get("/notify/history", response_model=VoiceReminderHistoryResponse)
-async def fetch_notify_history(request: Request) -> VoiceReminderHistoryResponse:
-    return VoiceReminderHistoryResponse.model_validate(await get_voice_history(get_db(request)))
+@router.get("/notify/history", response_model=NotifyHistoryResponse)
+async def fetch_notify_history(request: Request) -> NotifyHistoryResponse:
+    return NotifyHistoryResponse.model_validate(await get_notify_history(get_db(request)))
 
 
-@router.put("/notify/history", response_model=VoiceReminderHistoryResponse)
-async def save_notify_history(request: Request, body: VoiceHistoryBody) -> VoiceReminderHistoryResponse:
+@router.put("/notify/history", response_model=NotifyHistoryResponse)
+async def save_notify_history(request: Request, body: NotifyHistoryBody) -> NotifyHistoryResponse:
     try:
-        saved = await put_voice_history(
+        saved = await put_notify_history(
             get_db(request),
             [entry.model_dump(exclude_none=True) for entry in body.entries],
         )
     except UiPrefsValidationError as exc:
         raise _http_from_validation(exc) from exc
-    return VoiceReminderHistoryResponse.model_validate(saved)
+    return NotifyHistoryResponse.model_validate(saved)
 
 
 @router.get("/assistant/sessions", response_model=AssistantSessionsResponse)

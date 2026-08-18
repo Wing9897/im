@@ -1,17 +1,23 @@
 /**
- * Shared PATCH helpers for pipeline click-to-connect, drag-to-connect, and the
- * point settings modal.
+ * Shared PATCH helpers for pipeline click-to-connect, drag-to-connect, gate
+ * icons, and the point settings modal.
  */
 
+import { persistAssistantDefaultWorksetId } from "../../speech";
 import { updateItem } from "../../api/items";
 import { updateTask } from "../../api/tasks";
 import { updateWorkset } from "../../api/worksets";
 import { notifyPrefFromChecked, notifyPrefChecked } from "../../domain/notify/notifyPref";
 import {
   PIPELINE_PAGE,
+  assistantOwnerWorksetId,
+  taskCalendarWriteEnabled,
   taskIntelEnabled,
   taskOwnerWorksetId,
   taskTimelineEnabled,
+  worksetExternalOn,
+  worksetNotifyOn,
+  type PipelineGateKind,
   type PipelineGraph,
   type PipelinePoint,
   type PipelineTaskInput,
@@ -34,6 +40,8 @@ export type GraphPatchDeps = {
 };
 
 export type PipelineConnectResult = "connected" | "disconnected" | "illegal";
+
+export type PipelineGateToggleResult = "toggled" | "ignored";
 
 export function taskPatchPayload(task: PipelineTaskInput, fields: Record<string, unknown>) {
   return {
@@ -83,6 +91,69 @@ export function patchPipelineWorksetFlags(
 
 function taskOf(data: PipelineConnectData, point: PipelinePoint): PipelineTaskInput | undefined {
   return data.tasks.find((row) => row.id === point.entityId);
+}
+
+/**
+ * Toggle an enable-state icon on a point. Status-only icons (item calendar)
+ * return `"ignored"`. Uses the same PATCH fields as the settings modal.
+ */
+export async function applyPipelineGateToggle(
+  point: PipelinePoint,
+  kind: PipelineGateKind,
+  data: PipelineConnectData,
+  deps: GraphPatchDeps,
+): Promise<PipelineGateToggleResult> {
+  if (point.kind === "task") {
+    const task = taskOf(data, point);
+    if (!task) return "ignored";
+    if (kind === "calendar") {
+      await patchPipelineTask(task, { includeInTimeline: !taskTimelineEnabled(task) }, deps);
+      return "toggled";
+    }
+    if (kind === "calendarWrite") {
+      if (task.analysisMode !== "agent") return "ignored";
+      await patchPipelineTask(
+        task,
+        { outputCalendar: !taskCalendarWriteEnabled(task) },
+        deps,
+      );
+      return "toggled";
+    }
+    if (kind === "notify") {
+      await patchPipelineTask(
+        task,
+        { notifyPref: notifyPrefFromChecked(!notifyPrefChecked(task.notifyPref)) },
+        deps,
+      );
+      return "toggled";
+    }
+    if (kind === "intel") {
+      if (task.analysisMode === "leaderboard") return "ignored";
+      await patchPipelineTask(task, { outputAnalysisEvents: !taskIntelEnabled(task) }, deps);
+      return "toggled";
+    }
+    return "ignored";
+  }
+
+  if (point.kind === "workset") {
+    const workset = data.worksets.find((row) => row.id === point.entityId);
+    if (!workset) return "ignored";
+    if (kind === "notify") {
+      await patchPipelineWorksetFlags(workset.id, { notifyEnabled: !worksetNotifyOn(workset) }, deps);
+      return "toggled";
+    }
+    if (kind === "external") {
+      await patchPipelineWorksetFlags(
+        workset.id,
+        { externalEnabled: !worksetExternalOn(workset) },
+        deps,
+      );
+      return "toggled";
+    }
+    return "ignored";
+  }
+
+  return "ignored";
 }
 
 /**
@@ -136,35 +207,12 @@ export async function applyPipelineConnect(
     return connected ? "disconnected" : "connected";
   }
 
-  if (taskPoint && page) {
-    const task = taskOf(data, taskPoint);
-    if (!task) return "illegal";
-    if (page.id === PIPELINE_PAGE.intel) {
-      await patchPipelineTask(task, { outputAnalysisEvents: !taskIntelEnabled(task) }, deps);
-    } else if (page.id === PIPELINE_PAGE.timeline) {
-      await patchPipelineTask(task, { includeInTimeline: !taskTimelineEnabled(task) }, deps);
-    } else if (page.id === PIPELINE_PAGE.notify) {
-      await patchPipelineTask(
-        task,
-        { notifyPref: notifyPrefFromChecked(!notifyPrefChecked(task.notifyPref)) },
-        deps,
-      );
-    } else {
-      return "illegal";
-    }
-    return connected ? "disconnected" : "connected";
-  }
-
-  if (workset && page) {
-    if (page.id === PIPELINE_PAGE.timeline) {
-      return "connected";
-    }
-    if (page.id === PIPELINE_PAGE.notify) {
-      await patchPipelineWorksetFlags(workset.entityId, { notifyEnabled: !connected }, deps);
-    } else if (page.id === PIPELINE_PAGE.mcp || page.id === PIPELINE_PAGE.a2a) {
-      await patchPipelineWorksetFlags(workset.entityId, { externalEnabled: !connected }, deps);
-    } else {
-      return "illegal";
+  if (page?.id === PIPELINE_PAGE.assistant && workset) {
+    const current = assistantOwnerWorksetId(data.assistantDefaultWorksetId);
+    const next = nextItemWorksetId(current, workset.entityId);
+    if (next !== current) {
+      persistAssistantDefaultWorksetId(next);
+      deps.reloadGraph();
     }
     return connected ? "disconnected" : "connected";
   }

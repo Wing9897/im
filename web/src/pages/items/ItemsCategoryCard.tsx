@@ -2,8 +2,9 @@
  * Category (type) tile for the /items first layer.
  */
 
+import { Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AccentBarCard, Badge } from "../../components/ui";
+import { AccentBarCard, Badge, CardFieldRow } from "../../components/ui";
 import { cardBodyClass, cardTitleClass, captionClass } from "../../components/ui/pageTypography";
 import type { CategorySummary } from "../../domain/items/categoryAggregates";
 import {
@@ -81,9 +82,12 @@ export function ItemsCategoryCard({ summary, title, onOpen, onEmojiChange }: Pro
             <h3 className={categoryCardTitleClass} title={label}>
               {label}
             </h3>
-            <p className={`mt-1 mb-0 ${cardBodyClass}`}>
-              {t("categoryItemCount", { count: summary.itemCount })}
-            </p>
+            <CardFieldRow
+              icon={Package}
+              text={t("categoryItemCount", { count: summary.itemCount })}
+              empty={summary.itemCount === 0}
+              className={`mt-1 ${cardBodyClass}`}
+            />
           </div>
         </div>
 

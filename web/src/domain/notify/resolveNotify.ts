@@ -20,7 +20,8 @@ export type ResolveNotifyInput = {
  *
  * - global off or DND: never notify
  * - ``off``: this entity silent
- * - ``follow`` (and legacy ``on``): use ``worksetNotifyEnabled`` (missing → on)
+ * - ``follow``: use ``worksetNotifyEnabled`` (missing → on)
+ * - HTTP ``"on"`` is 422; read-side coerce treats it as unknown → default
  */
 export function resolveNotify(input: ResolveNotifyInput): boolean {
   if (!input.globalEnabled) return false;

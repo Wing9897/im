@@ -2,6 +2,8 @@
 
 Calendar 我的日程 (user events) is household-scoped and is not filtered here.
 Allowed ids come from ``worksets.external_enabled=1``; empty = fail closed.
+
+Binder / SQL / tool-name allowlist: ``server.domain.workset_scope``.
 """
 
 from __future__ import annotations
@@ -9,23 +11,24 @@ from __future__ import annotations
 from typing import Any
 
 from server.db.database import Database
-from server.domain.mcp_workset_scope import (
+from server.domain.workset_scope import (
     ALLOWED_WORKSET_IDS_ARG,
     WORKSET_NOT_ALLOWED_ERROR,
+    WORKSET_SCOPED_TOOL_NAMES,
+    allowed_workset_ids_from_args,
+    bind_workset_ids_sql,
 )
 from server.queries.items_queries import fetch_item_row
 from server.worksets_const import SYSTEM_WORKSET_ID
 
-WORKSET_SCOPED_TOOL_NAMES = frozenset(
-    {
-        "intelligence.search_events",
-        "messages.search",
-        "items.list",
-        "items.list_expiring",
-        "items.create",
-        "items.update",
-    }
-)
+__all__ = [
+    "ALLOWED_WORKSET_IDS_ARG",
+    "WORKSET_NOT_ALLOWED_ERROR",
+    "WORKSET_SCOPED_TOOL_NAMES",
+    "allowed_workset_ids_from_args",
+    "apply_household_workset_scope",
+    "bind_workset_ids_sql",
+]
 
 
 def _requested_workset_id(args: dict[str, Any]) -> str | None:

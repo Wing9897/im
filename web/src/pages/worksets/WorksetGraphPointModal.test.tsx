@@ -35,14 +35,11 @@ const labels: WorksetPipelineGraphData["labels"] = {
   generalName: "一般",
   unassigned: "未歸屬",
   more: (count) => `另 ${count} 項`,
-  calendar: "我的日程",
-  calendarPage: "日程頁",
-  intel: "情報頁",
-  timeline: "時間規劃",
-  notify: "通知",
-  mcp: "MCP",
-  a2a: "A2A",
   assistant: "助手",
+  timeline: "時間規劃",
+  intel: "情報頁",
+  notify: "通知",
+  external: "外部接口",
 };
 
 function graphData(overrides: Partial<WorksetPipelineGraphData> = {}): WorksetPipelineGraphData {
@@ -54,6 +51,7 @@ function graphData(overrides: Partial<WorksetPipelineGraphData> = {}): WorksetPi
     channels: [{ channelId: "telegram:42", sourceId: "src-1" }],
     events: [],
     labels,
+    assistantDefaultWorksetId: "__user__",
     reload: vi.fn(),
     ...overrides,
   };
@@ -157,7 +155,35 @@ describe("WorksetGraphPointModal", () => {
     });
     expect(dialog()?.querySelector('[data-testid="workset-graph-task-intel"]')).toBeTruthy();
     expect(dialog()?.querySelector('[data-testid="workset-graph-task-notify"]')).toBeTruthy();
+    expect(dialog()?.querySelector('[data-testid="workset-graph-task-calendar"]')).toBeNull();
     expect(dialog()?.querySelector('[data-testid="workset-graph-open-page"]')).toBeTruthy();
+  });
+
+  it("keeps the calendar-write toggle in gear for agent tasks", async () => {
+    taskCatalogState.tasks = [
+      makeAnalysisTask({
+        id: "agent-1",
+        name: "Reconcile",
+        analysisMode: "agent",
+        worksetId: "ws-1",
+        outputAnalysisEvents: true,
+        includeInTimeline: true,
+        outputCalendar: false,
+        notifyPref: "follow",
+      }),
+    ];
+    await harness.render(ModalAt, {
+      point: {
+        id: "task:agent-1",
+        kind: "task",
+        entityId: "agent-1",
+        label: "Reconcile",
+        href: "/tasks/agent-1/agent",
+      },
+      data: graphData(),
+    });
+    expect(dialog()?.querySelector('[data-testid="workset-graph-task-calendar"]')).toBeTruthy();
+    expect(dialog()?.querySelector('[data-testid="workset-graph-task-timeline"]')).toBeTruthy();
   });
 
   it("hides intelligence toggle for leaderboard tasks", async () => {
@@ -182,6 +208,7 @@ describe("WorksetGraphPointModal", () => {
       data: graphData(),
     });
     expect(dialog()?.querySelector('[data-testid="workset-graph-task-intel"]')).toBeNull();
+    expect(dialog()?.querySelector('[data-testid="workset-graph-task-calendar"]')).toBeNull();
     expect(dialog()?.querySelector('[data-testid="workset-graph-task-notify"]')).toBeTruthy();
   });
 
@@ -197,5 +224,7 @@ describe("WorksetGraphPointModal", () => {
       data: graphData(),
     });
     expect(dialog()?.querySelector('[data-testid="workset-graph-open-page"]')).toBeTruthy();
+    expect(dialog()?.querySelector('[data-testid="workset-graph-task-calendar"]')).toBeNull();
+    expect(dialog()?.querySelector('[data-testid="workset-notify-toggle-ws-1"]')).toBeNull();
   });
 });

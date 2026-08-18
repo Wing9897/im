@@ -60,4 +60,22 @@ describe("PanelSection", () => {
     expect(cls).not.toContain("im-surface-panel");
     expect(cls).toContain("bg-transparent");
   });
+
+  it("renders an optional leading icon before the title", () => {
+    const container = document.createElement("div");
+    act(() => {
+      createRoot(container).render(
+        createElement(
+          PanelSection,
+          {
+            title: "任務",
+            icon: createElement("span", { "data-testid": "section-icon" }, "icon"),
+          },
+          null,
+        ),
+      );
+    });
+    expect(container.querySelector('[data-testid="section-icon"]')).not.toBeNull();
+    expect(container.textContent).toContain("任務");
+  });
 });

@@ -63,7 +63,7 @@ describe("TimelineShowOptionsControl", () => {
     ) as HTMLButtonElement;
     expect(trigger).toBeTruthy();
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
-    expect(trigger.title).toContain("顯示");
+    expect(trigger.title).toContain("篩選");
 
     act(() => {
       trigger.click();
@@ -81,7 +81,7 @@ describe("TimelineShowOptionsControl", () => {
     expect(menu.getAttribute("aria-labelledby")).toBeTruthy();
     expect(
       document.getElementById(menu.getAttribute("aria-labelledby")!)?.textContent,
-    ).toContain("顯示");
+    ).toContain("篩選");
 
     const dismissed = document.querySelector(
       '[data-testid="timeline-show-options-dismissed"]',
@@ -109,6 +109,7 @@ describe("TimelineShowOptionsControl", () => {
     expect(
       document.querySelector('[data-testid^="timeline-filter-show-"]'),
     ).toBeNull();
+    expect(document.querySelector('[data-testid="timeline-show-options-dates"]')).toBeNull();
 
     act(() => {
       dismissed.click();
@@ -188,5 +189,71 @@ describe("TimelineShowOptionsControl", () => {
     ).toBeNull();
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(trigger);
+  });
+
+  it("month date-reveal hover lives on the 篩選 eye; persist is a 顯示日期 checkbox", async () => {
+    const onPersistedChange = vi.fn();
+    const onPointerEnter = vi.fn();
+    const onPointerLeave = vi.fn();
+    act(() => {
+      root.render(
+        wrapWithI18n(
+          createElement(TimelineShowOptionsControl, {
+            showDismissed: true,
+            setShowDismissed: vi.fn(),
+            showOngoing: true,
+            setShowOngoing: vi.fn(),
+            showEnding: true,
+            setShowEnding: vi.fn(),
+            monthDateReveal: {
+              persisted: false,
+              onPersistedChange,
+              onPointerEnter,
+              onPointerLeave,
+            },
+          }),
+        ),
+      );
+    });
+
+    const trigger = container.querySelector(
+      '[data-testid="timeline-show-options"]',
+    ) as HTMLButtonElement;
+    expect(trigger).toBeTruthy();
+    expect(trigger.getAttribute("aria-label")).toBe("篩選");
+    expect(trigger.title).toContain("篩選");
+    expect(trigger.textContent).not.toContain("顯示");
+    expect(trigger.getAttribute("data-dates-persisted")).toBe("false");
+
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerenter", { bubbles: false }));
+    });
+    expect(onPointerEnter).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      trigger.dispatchEvent(new MouseEvent("pointerleave", { bubbles: false }));
+    });
+    expect(onPointerLeave).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      trigger.click();
+    });
+    expect(onPersistedChange).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-testid="timeline-show-options-menu"]')).toBeTruthy();
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(document.querySelector('[data-testid="timeline-show-options-menu"]')?.textContent).toContain(
+      "顯示日期",
+    );
+
+    const dates = document.querySelector(
+      '[data-testid="timeline-show-options-dates"]',
+    ) as HTMLInputElement;
+    expect(dates).toBeTruthy();
+    expect(dates.checked).toBe(false);
+    act(() => {
+      dates.click();
+    });
+    expect(onPersistedChange).toHaveBeenCalledTimes(1);
+    expect(onPersistedChange).toHaveBeenCalledWith(true);
   });
 });

@@ -1,24 +1,24 @@
-/** Audit log for voice-reminder speaks (merged into 通知 → 觸發紀錄). */
+/** Audit log for local-notify speaks (merged into 通知 → 觸發紀錄). */
 
 import {
-  fetchVoiceReminderHistory,
-  putVoiceReminderHistory,
-  type VoiceReminderHistoryEntryPayload,
+  fetchNotifyHistory,
+  putNotifyHistory,
+  type NotifyHistoryEntryPayload,
 } from "../../../api/uiPrefs";
 import i18n from "../../../i18n";
 import { logWarn } from "../../../utils/logger";
 
-import { VOICE_REMINDER_HISTORY_CHANGED_EVENT } from "../../prefs";
+import { NOTIFY_HISTORY_CHANGED_EVENT } from "../../prefs";
 
 const MAX_ENTRIES = 100;
 
 /** Same-tab signal so the history tab can refresh after a speak. */
-export { VOICE_REMINDER_HISTORY_CHANGED_EVENT };
+export { NOTIFY_HISTORY_CHANGED_EVENT };
 
-/** OpenAPI ``VoiceReminderHistoryEntrySchema`` (wire SoT). */
-export type VoiceReminderTriggerEntry = VoiceReminderHistoryEntryPayload;
+/** OpenAPI ``NotifyHistoryEntrySchema`` (wire SoT). */
+export type NotifyTriggerEntry = NotifyHistoryEntryPayload;
 
-type VoiceReminderTriggerInput = {
+type NotifyTriggerInput = {
   triggerReason: string;
   status: "success" | "failure";
   errorMessage?: string | null;
@@ -28,10 +28,10 @@ type VoiceReminderTriggerInput = {
   triggeredAt?: string;
 };
 
-let cachedEntries: VoiceReminderTriggerEntry[] | null = null;
-let hydrateHistoryPromise: Promise<VoiceReminderTriggerEntry[]> | null = null;
+let cachedEntries: NotifyTriggerEntry[] | null = null;
+let hydrateHistoryPromise: Promise<NotifyTriggerEntry[]> | null = null;
 
-function isEntry(value: unknown): value is VoiceReminderTriggerEntry {
+function isEntry(value: unknown): value is NotifyTriggerEntry {
   if (value == null || typeof value !== "object") return false;
   const row = value as Record<string, unknown>;
   return (
@@ -43,20 +43,20 @@ function isEntry(value: unknown): value is VoiceReminderTriggerEntry {
   );
 }
 
-function sanitizeEntries(raw: unknown): VoiceReminderTriggerEntry[] {
+function sanitizeEntries(raw: unknown): NotifyTriggerEntry[] {
   if (!Array.isArray(raw)) return [];
   return raw.filter(isEntry).slice(0, MAX_ENTRIES);
 }
 
-function setCache(entries: VoiceReminderTriggerEntry[], notify: boolean): void {
+function setCache(entries: NotifyTriggerEntry[], notify: boolean): void {
   cachedEntries = entries.slice(0, MAX_ENTRIES);
   if (notify && typeof window !== "undefined") {
-    window.dispatchEvent(new Event(VOICE_REMINDER_HISTORY_CHANGED_EVENT));
+    window.dispatchEvent(new Event(NOTIFY_HISTORY_CHANGED_EVENT));
   }
 }
 
 /** Sync read from memory cache (empty list before hydrate). */
-export function loadVoiceReminderTriggers(): VoiceReminderTriggerEntry[] {
+export function loadNotifyTriggers(): NotifyTriggerEntry[] {
   if (cachedEntries) {
     return cachedEntries.slice();
   }
@@ -64,22 +64,22 @@ export function loadVoiceReminderTriggers(): VoiceReminderTriggerEntry[] {
 }
 
 /** Hydrate history from server. Empty server → empty list. */
-export async function hydrateVoiceReminderHistory(): Promise<VoiceReminderTriggerEntry[]> {
+export async function hydrateNotifyHistory(): Promise<NotifyTriggerEntry[]> {
   if (!hydrateHistoryPromise) {
     hydrateHistoryPromise = (async () => {
       try {
-        const response = await fetchVoiceReminderHistory();
+        const response = await fetchNotifyHistory();
         if (response.configured && Array.isArray(response.entries)) {
           const entries = sanitizeEntries(response.entries);
           setCache(entries, true);
-          return loadVoiceReminderTriggers();
+          return loadNotifyTriggers();
         }
 
         setCache([], false);
         return [];
       } catch (error) {
-        logWarn("[voiceReminder] failed to hydrate history", error);
-        const fallback = loadVoiceReminderTriggers();
+        logWarn("[notify] failed to hydrate history", error);
+        const fallback = loadNotifyTriggers();
         setCache(fallback, false);
         return fallback;
       }
@@ -90,29 +90,29 @@ export async function hydrateVoiceReminderHistory(): Promise<VoiceReminderTrigge
   return hydrateHistoryPromise;
 }
 
-async function persistEntries(entries: VoiceReminderTriggerEntry[]): Promise<boolean> {
+async function persistEntries(entries: NotifyTriggerEntry[]): Promise<boolean> {
   const next = entries.slice(0, MAX_ENTRIES);
   setCache(next, true);
   try {
-    const saved = await putVoiceReminderHistory(next);
+    const saved = await putNotifyHistory(next);
     if (Array.isArray(saved.entries)) {
       setCache(sanitizeEntries(saved.entries), false);
     }
     return true;
   } catch (error) {
-    logWarn("[voiceReminder] failed to save history", error);
+    logWarn("[notify] failed to save history", error);
     return false;
   }
 }
 
 /**
- * Prepend a voice-reminder trigger row (newest first).
+ * Prepend a local-notify trigger row (newest first).
  * Updates memory immediately; returns `{ entry, persisted }`.
  */
-export async function appendVoiceReminderTrigger(
-  input: VoiceReminderTriggerInput,
-): Promise<{ entry: VoiceReminderTriggerEntry; persisted: boolean }> {
-  const entry: VoiceReminderTriggerEntry = {
+export async function appendNotifyTrigger(
+  input: NotifyTriggerInput,
+): Promise<{ entry: NotifyTriggerEntry; persisted: boolean }> {
+  const entry: NotifyTriggerEntry = {
     id: crypto.randomUUID(),
     triggerReason: input.triggerReason,
     status: input.status,
@@ -122,12 +122,12 @@ export async function appendVoiceReminderTrigger(
     title: input.title,
     leadOffsetMinutes: input.leadOffsetMinutes,
   };
-  const next = [entry, ...loadVoiceReminderTriggers()].slice(0, MAX_ENTRIES);
+  const next = [entry, ...loadNotifyTriggers()].slice(0, MAX_ENTRIES);
   const persisted = await persistEntries(next);
   return { entry, persisted };
 }
 
-export function buildVoiceReminderTriggerReason(
+export function buildNotifyTriggerReason(
   title: string,
   leadPhrase: string,
 ): string {
@@ -138,7 +138,7 @@ export function buildVoiceReminderTriggerReason(
 }
 
 /** Test helper: reset in-memory history cache between cases. */
-export function resetVoiceReminderHistoryCacheForTests(): void {
+export function resetNotifyHistoryCacheForTests(): void {
   cachedEntries = null;
   hydrateHistoryPromise = null;
 }

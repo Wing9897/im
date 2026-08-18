@@ -124,20 +124,24 @@ describe("AppTopBar", () => {
     expect(titled?.getAttribute("title")).toContain("AI 引擎正常");
   });
 
-  it("keeps the status pill outside the icon action area and rightmost in chrome", () => {
+  it("keeps search and assistant left of notify, with collector rightmost before window chrome", () => {
     renderBar();
     const actions = container.querySelector("[data-testid='shell-chrome-actions']") as HTMLDivElement;
     const iconArea = container.querySelector("[data-testid='topbar-icon-actions']") as HTMLDivElement;
     const statusArea = container.querySelector("[data-testid='topbar-status-area']") as HTMLDivElement;
     const inbox = container.querySelector("[data-testid='recent-day-inbox-btn']") as HTMLButtonElement;
     const viewer = container.querySelector("[data-testid='open-viewer-btn']") as HTMLButtonElement;
+    const search = container.querySelector("[data-testid='command-palette-trigger']") as HTMLButtonElement;
+    const chrome = container.querySelector("[data-testid='assistant-chrome']") as HTMLDivElement;
     expect(iconArea).not.toBeNull();
     expect(iconArea.textContent).not.toContain("系統正常");
     expect(container.querySelector("[data-testid='chrome-channel-voice']")).toBeNull();
     expect(container.querySelector("[data-testid='chrome-channel-flash']")).toBeNull();
     expect(actions.lastElementChild).toBe(statusArea);
+    expect(search.compareDocumentPosition(chrome) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(chrome.compareDocumentPosition(iconArea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(iconArea.compareDocumentPosition(statusArea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(inbox.compareDocumentPosition(viewer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(viewer.compareDocumentPosition(statusArea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it("keeps search and assistant as right-aligned icon-only controls", () => {

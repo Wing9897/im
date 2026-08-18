@@ -192,7 +192,7 @@ async def test_atomic_recurring_create_persists_item_id(client, app):
 
     # Series anchors at create-time wall clock; query a window after dtstart.
     cal = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-08-01T00:00:00Z",
             "rangeEnd": "2026-09-30T23:59:59Z",
@@ -240,7 +240,7 @@ async def test_timeline_all_day_recurring_with_until_z_appears_in_calendar_items
     assert row["workset_id"] == "__user__"
 
     items = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-07-31T16:00:00Z",
             "rangeEnd": "2026-08-31T15:59:59Z",

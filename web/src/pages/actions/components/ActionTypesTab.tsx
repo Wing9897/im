@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../../components/common/EmptyState";
+import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
+import { BellRing } from "lucide-react";
 import { RefreshIndicator } from "../../../components/common/RefreshIndicator";
 import { SkeletonScreen } from "../../../components/common/SkeletonScreen";
 import { DeleteConfirmDialog } from "../../../components/dialogs/DeleteConfirmDialog";
@@ -100,6 +102,7 @@ export function ActionTypesTab() {
 
             {!initialLoading && actions.length === 0 && !error ? (
               <EmptyState
+                illustration={<EmptyStateGlyph icon={BellRing} />}
                 title={t("types.emptyTitle")}
                 description={t("types.emptyDescription")}
                 hint={t("types.emptyHint")}

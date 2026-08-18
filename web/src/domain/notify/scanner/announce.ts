@@ -1,31 +1,31 @@
 import type { TtsPort, TtsSpeakOptions } from "../../../speech";
 import {
-  playVoiceReminderPreamble,
+  playNotifyPreamble,
   type PreambleChimeId,
 } from "./preambleChime";
-import { loadVoiceReminderSettings } from "./settings";
+import { loadNotifySettings } from "./settings";
 import i18n from "../../../i18n";
 
 /**
- * Broadcast preamble + TTS speak for voice reminders (scanner + 試播).
- * Uses `preambleChimeId` from opts, otherwise the saved voice-reminder setting.
+ * Broadcast preamble + TTS speak for local notify (scanner + 試播).
+ * Uses `preambleChimeId` from opts, otherwise the saved notify setting.
  */
-export async function announceVoiceReminder(
+export async function announceNotify(
   tts: TtsPort,
   text: string,
   opts?: TtsSpeakOptions & { preambleChimeId?: PreambleChimeId },
 ): Promise<void> {
   const { preambleChimeId: overrideChimeId, ...ttsOpts } = opts ?? {};
   const chimeId =
-    overrideChimeId ?? loadVoiceReminderSettings().preambleChimeId;
-  await playVoiceReminderPreamble(chimeId);
+    overrideChimeId ?? loadNotifySettings().preambleChimeId;
+  await playNotifyPreamble(chimeId);
   await tts.speak(text, ttsOpts);
 }
 
-export function voiceReminderTtsUnavailableMessage(): string {
+export function notifyTtsUnavailableMessage(): string {
   return String(i18n.t("messages.speakTtsUnavailable"));
 }
 
-export function voiceReminderSpeakFailedMessage(): string {
+export function notifySpeakFailedMessage(): string {
   return String(i18n.t("messages.speakFailed"));
 }

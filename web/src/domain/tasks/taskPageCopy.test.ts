@@ -64,7 +64,7 @@ describe("systemTaskCatalog", () => {
     expect(clientManager?.shortDescription).toContain("A2A");
     expect(clientManager?.linkTo).toBe("/settings/integrations?tab=a2a");
 
-    const voice = catalog.find((item) => item.id === "voice-reminder");
+    const voice = catalog.find((item) => item.id === "local-notify");
     expect(voice?.kind).toBe("system");
     expect(voice?.staffId).toBeUndefined();
     expect(voice?.shortDescription).toContain("週期任務");

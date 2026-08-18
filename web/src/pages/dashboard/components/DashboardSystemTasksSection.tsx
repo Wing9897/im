@@ -3,6 +3,8 @@
  */
 
 import type { CSSProperties } from "react";
+import { Settings } from "lucide-react";
+import { SectionHeaderIcon } from "../../../components/common/EmptyStateGlyph";
 import { SystemInfoTaskCard } from "../../../components/SystemInfoTaskCard";
 import { TaskGrid } from "../../../components/TaskGrid";
 import { captionClass, sectionTitleClass } from "../../../components/ui";
@@ -21,7 +23,10 @@ export function DashboardSystemTasksSection({
 }: DashboardSystemTasksSectionProps) {
   return (
     <section className="mt-lg" data-testid="system-tasks-section" aria-label={title}>
-      <h2 className={sectionTitleClass}>{title}</h2>
+      <h2 className={`${sectionTitleClass} flex items-center gap-sm`}>
+        <SectionHeaderIcon icon={Settings} />
+        {title}
+      </h2>
       <p className={`${captionClass} mt-xs mb-md`}>{subtitle}</p>
       <TaskGrid>
         {catalog.map((item, index) => (

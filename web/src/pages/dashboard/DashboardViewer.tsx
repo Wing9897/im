@@ -7,6 +7,8 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../components/common/EmptyState";
+import { EmptyStateGlyph } from "../../components/common/EmptyStateGlyph";
+import { Layers, ListChecks, Search } from "lucide-react";
 import { SkeletonScreen } from "../../components/common/SkeletonScreen";
 import { DashboardByTaskList, DashboardByWorksetList } from "./components/DashboardGroupedLists";
 import { DashboardSystemTasksSection } from "./components/DashboardSystemTasksSection";
@@ -156,6 +158,7 @@ export function DashboardViewer() {
       {!loading && !error && tasks.length === 0 && isTaskView && (
         <EmptyState
           className="im-enter-rise"
+          illustration={<EmptyStateGlyph icon={ListChecks} />}
           title={copy.emptyTitle}
           description={copy.emptyDescription}
           actions={
@@ -168,6 +171,7 @@ export function DashboardViewer() {
 
       {!loading && tasks.length > 0 && filteredTasks.length === 0 && isTaskView && (
         <EmptyState
+          illustration={<EmptyStateGlyph icon={Search} />}
           title={t("tasks:noMatchTitle")}
           description={t("tasks:noMatchDescription", { query: searchQuery.trim() })}
         />
@@ -175,6 +179,7 @@ export function DashboardViewer() {
 
       {!loading && filteredTasks.length > 0 && visibleTasks.length === 0 && isTaskView && (
         <EmptyState
+          illustration={<EmptyStateGlyph icon={ListChecks} />}
           title={t("tasks:emptyModeTitle")}
           description={t("tasks:emptyModeDescription")}
           actions={
@@ -187,6 +192,7 @@ export function DashboardViewer() {
 
       {!loading && !error && isWorksetView && worksetSearchEmpty ? (
         <EmptyState
+          illustration={<EmptyStateGlyph icon={Layers} />}
           title={t("workset:noMatchTitle")}
           description={t("workset:noMatchDescription", {
             query: shell.worksetSearchQuery.trim(),
@@ -210,9 +216,7 @@ export function DashboardViewer() {
           onDelete={handleDelete}
           onOpenTask={openTask}
           onOpenWorkset={shell.openWorksetDetail}
-          onRenameWorkset={(id, name) =>
-            shell.setWorksetNameDialog({ mode: "rename", id, name })
-          }
+          onRenameWorkset={(id, name) => shell.handleRenameWorkset(id, name)}
           onDeleteWorkset={(id, name) => shell.setWorksetDeleteTarget({ id, name })}
           onCreateWorkset={shell.openCreateWorkset}
         />

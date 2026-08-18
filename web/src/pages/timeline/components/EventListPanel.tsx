@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { MapPin } from "lucide-react";
+import { AlignLeft, CalendarDays, Clock, MapPin, Repeat } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-import { Badge, FilterChip, SurfaceCard } from "../../../components/ui";
+import { Badge, CardFieldRow, CardTitleIcon, FilterChip, SurfaceCard } from "../../../components/ui";
 import { captionClass, cardTitleClass } from "../../../components/ui/pageTypography";
 import {
   useTaskCatalog,
@@ -12,6 +12,10 @@ import {
   itemDateKindLabel,
   itemDateKindMarkerClass,
 } from "../../../domain/items/itemCalendarProjection";
+import {
+  isUserScheduleTimelineEvent,
+  scheduleCardText,
+} from "../../../domain/schedule/scheduleCardFields";
 import {
   EVENT_LIST_DAY_PHASE_TAG_CLASS,
   EVENT_LIST_DAY_PHASE_TAG_META,
@@ -52,11 +56,16 @@ function EventListItem({
 }) {
   const { t } = useTranslation("timeline");
   const { eventStatuses } = useTimelinePageContext();
+  const scheduleCard = isUserScheduleTimelineEvent(event.source);
+  const emptyValue = t("calendar.emptyValue");
   const bodyPreview = event.body ? previewEventBody(event.body) : "";
+  const notes = scheduleCard ? scheduleCardText(event.body, emptyValue) : bodyPreview;
   const dismissed = Boolean(event.dismissed);
   const { leading, showRemindBadge, dayPhaseTag, title } =
     resolveEventCardDisplay(event, focusedDay);
-  const location = calendarLocationDisplay(event.location);
+  const location = scheduleCard
+    ? scheduleCardText(event.location, emptyValue)
+    : calendarLocationDisplay(event.location);
   const status = eventStatuses[event.id] ?? "pending";
   const statusColor = getEventStatusColor(status);
   const timeLabel = eventListTimeLabel(event, t("userEvent.allDay"));
@@ -93,6 +102,8 @@ function EventListItem({
             >
               {leading.emoji}
             </span>
+          ) : scheduleCard ? (
+            <CardTitleIcon icon={event.source === "recurring" ? Repeat : CalendarDays} />
           ) : null}
           <div
             className={`${cardTitleClass} min-w-0 flex-1 truncate ${
@@ -120,35 +131,78 @@ function EventListItem({
             </span>
           ) : null}
         </div>
-        {bodyPreview ? (
-          <div
-            className="mt-1 min-w-0 truncate text-xs leading-snug text-text-secondary"
-            title={event.body}
-          >
-            {bodyPreview}
+        {scheduleCard ? (
+          <div className="mt-1 flex min-w-0 flex-col gap-0.5">
+            <CardFieldRow
+              icon={Clock}
+              text={timeLabel}
+              testId="timeline-event-list-when"
+              className={captionClass}
+            />
+            <CardFieldRow
+              icon={MapPin}
+              text={t("calendar.location", { value: location })}
+              empty={location === emptyValue}
+              testId="timeline-event-list-location"
+              className={captionClass}
+            />
+            <CardFieldRow
+              icon={AlignLeft}
+              text={t("calendar.notes", { value: notes })}
+              empty={notes === emptyValue}
+              testId="timeline-event-list-notes"
+              className="text-xs leading-snug text-text-secondary"
+            />
+            <div
+              className="mt-0.5 flex min-w-0 flex-col gap-0.5 text-[11px] text-text-muted"
+              data-testid="timeline-event-list-meta"
+            >
+              <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
+                {getEventStatusLabel(status)}
+              </span>
+              <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
+                {worksetLabel}
+              </span>
+              <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
+                {provenanceLabel}
+              </span>
+            </div>
           </div>
-        ) : null}
-        <div
-          className={`${captionClass} mt-1 flex min-w-0 items-center gap-1 truncate`}
-          data-testid="timeline-event-list-location"
-        >
-          <MapPin size={12} strokeWidth={2} className="shrink-0 opacity-70" aria-hidden="true" />
-          <span className="min-w-0 truncate" title={location}>
-            {t("calendar.location", { value: location })}
-          </span>
-        </div>
-        <div className={`${captionClass} mt-1 min-w-0 truncate`}>{timeLabel}</div>
-        <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-sm gap-y-0.5 text-[11px] text-text-muted">
-          <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
-            {getEventStatusLabel(status)}
-          </span>
-          <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
-            {worksetLabel}
-          </span>
-          <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
-            {provenanceLabel}
-          </span>
-        </div>
+        ) : (
+          <>
+            {bodyPreview ? (
+              <CardFieldRow
+                icon={AlignLeft}
+                text={bodyPreview}
+                title={event.body}
+                className="mt-1 text-xs leading-snug text-text-secondary"
+              />
+            ) : null}
+            <CardFieldRow
+              icon={MapPin}
+              text={t("calendar.location", { value: location })}
+              empty={!location}
+              testId="timeline-event-list-location"
+              className={`${captionClass} mt-1`}
+            />
+            <CardFieldRow
+              icon={Clock}
+              text={timeLabel}
+              className={`${captionClass} mt-1`}
+            />
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-sm gap-y-0.5 text-[11px] text-text-muted">
+              <span style={{ color: statusColor }} data-testid="timeline-event-list-status">
+                {getEventStatusLabel(status)}
+              </span>
+              <span className="min-w-0 truncate" data-testid="timeline-event-list-workset">
+                {worksetLabel}
+              </span>
+              <span className="min-w-0 truncate" data-testid="timeline-event-list-provenance">
+                {provenanceLabel}
+              </span>
+            </div>
+          </>
+        )}
       </button>
     </SurfaceCard>
   );

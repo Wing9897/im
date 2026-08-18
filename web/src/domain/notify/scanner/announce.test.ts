@@ -1,26 +1,26 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { announceVoiceReminder } from "./announce";
+import { announceNotify } from "./announce";
 import type { TtsPort } from "../../../speech";
 
 vi.mock("./preambleChime", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./preambleChime")>();
   return {
     ...actual,
-    playVoiceReminderPreamble: vi.fn().mockResolvedValue(undefined),
+    playNotifyPreamble: vi.fn().mockResolvedValue(undefined),
   };
 });
 
-import { playVoiceReminderPreamble } from "./preambleChime";
+import { playNotifyPreamble } from "./preambleChime";
 
-describe("announceVoiceReminder", () => {
+describe("announceNotify", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("plays preamble before TTS speak", async () => {
     const order: string[] = [];
-    vi.mocked(playVoiceReminderPreamble).mockImplementation(async () => {
+    vi.mocked(playNotifyPreamble).mockImplementation(async () => {
       order.push("chime");
     });
     const tts: TtsPort = {
@@ -32,12 +32,12 @@ describe("announceVoiceReminder", () => {
       }),
     };
 
-    await announceVoiceReminder(tts, "測試朗讀", {
+    await announceNotify(tts, "測試朗讀", {
       lang: "zh-HK",
       preambleChimeId: "airport",
     });
 
-    expect(playVoiceReminderPreamble).toHaveBeenCalledWith("airport");
+    expect(playNotifyPreamble).toHaveBeenCalledWith("airport");
     expect(tts.speak).toHaveBeenCalledWith("測試朗讀", { lang: "zh-HK" });
     expect(order).toEqual(["chime", "speak"]);
   });

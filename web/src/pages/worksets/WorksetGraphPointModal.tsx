@@ -78,7 +78,7 @@ function TaskSwitchFields({
               )
             }
           >
-            {t("graphBlockIntel")}
+            {t("graphOutputIntel")}
           </SelectTile>
         ) : null}
         <SelectTile
@@ -94,7 +94,7 @@ function TaskSwitchFields({
             )
           }
         >
-          {t("graphBlockTimeline")}
+          {t("graphOutputTimeline")}
         </SelectTile>
         {task.analysisMode === "agent" ? (
           <SelectTile
@@ -106,7 +106,7 @@ function TaskSwitchFields({
               void patchPipelineTask(task, { outputCalendar: task.outputCalendar !== true }, deps)
             }
           >
-            {t("graphBlockCalendar")}
+            {t("graphOutputCalendar")}
           </SelectTile>
         ) : null}
         <NotifyPrefField

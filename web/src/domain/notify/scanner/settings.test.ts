@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  DEFAULT_VOICE_REMINDER_SETTINGS,
-  VOICE_REMINDER_SETTINGS_CHANGED_EVENT,
-  hydrateVoiceReminderSettings,
-  loadVoiceReminderSettings,
-  normalizeVoiceReminderSettings,
+  DEFAULT_NOTIFY_SETTINGS,
+  NOTIFY_SETTINGS_CHANGED_EVENT,
+  hydrateNotifySettings,
+  loadNotifySettings,
+  normalizeNotifySettings,
   parseLeadOffsetMinutes,
   reminderChannelDelivery,
-  resetVoiceReminderSettingsCacheForTests,
-  saveVoiceReminderSettings,
+  resetNotifySettingsCacheForTests,
+  saveNotifySettings,
 } from "./settings";
 
 const {
@@ -20,20 +20,20 @@ const {
 }));
 
 vi.mock("../../../api/uiPrefs", () => ({
-  fetchVoiceReminderSettings: (...args: unknown[]) => mockFetchSettings(...args),
-  putVoiceReminderSettings: (...args: unknown[]) => mockPutSettings(...args),
+  fetchNotifySettings: (...args: unknown[]) => mockFetchSettings(...args),
+  putNotifySettings: (...args: unknown[]) => mockPutSettings(...args),
 }));
 
-describe("voiceReminder settings", () => {
+describe("notify settings", () => {
   beforeEach(() => {
-    resetVoiceReminderSettingsCacheForTests();
+    resetNotifySettingsCacheForTests();
     mockFetchSettings.mockReset();
     mockPutSettings.mockReset();
   });
 
   it("returns defaults before hydration", () => {
-    expect(loadVoiceReminderSettings()).toEqual(DEFAULT_VOICE_REMINDER_SETTINGS);
-    expect(loadVoiceReminderSettings()).not.toHaveProperty("sourceFilter");
+    expect(loadNotifySettings()).toEqual(DEFAULT_NOTIFY_SETTINGS);
+    expect(loadNotifySettings()).not.toHaveProperty("sourceFilter");
   });
 
   it("persists via API and reloads from cache", async () => {
@@ -48,9 +48,9 @@ describe("voiceReminder settings", () => {
     };
     mockPutSettings.mockResolvedValue({ configured: true, settings: next });
     const listener = vi.fn();
-    window.addEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, listener);
+    window.addEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, listener);
 
-    await expect(saveVoiceReminderSettings({ ...next, leadOffsetsMinutes: [15, 1440] })).resolves.toBe(
+    await expect(saveNotifySettings({ ...next, leadOffsetsMinutes: [15, 1440] })).resolves.toBe(
       true,
     );
     expect(mockPutSettings).toHaveBeenCalledWith({
@@ -62,7 +62,7 @@ describe("voiceReminder settings", () => {
       preambleChimeId: "station",
       quietHours: { enabled: false, start: "23:00", end: "06:30" },
     });
-    expect(loadVoiceReminderSettings()).toEqual({
+    expect(loadNotifySettings()).toEqual({
       enabled: true,
       voiceEnabled: true,
       flashEnabled: false,
@@ -72,12 +72,12 @@ describe("voiceReminder settings", () => {
       quietHours: { enabled: false, start: "23:00", end: "06:30" },
     });
     expect(listener).toHaveBeenCalled();
-    window.removeEventListener(VOICE_REMINDER_SETTINGS_CHANGED_EVENT, listener);
+    window.removeEventListener(NOTIFY_SETTINGS_CHANGED_EVENT, listener);
   });
 
   it("sanitizes invalid leads and ignores leftover sourceFilter", () => {
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         enabled: true,
         leadOffsetsMinutes: [1440, 0, 15, 15, 10081],
         sourceFilter: { taskIds: ["x", ""], worksetIds: [] },
@@ -99,7 +99,7 @@ describe("voiceReminder settings", () => {
     expect(parseLeadOffsetMinutes(10081)).toBeNull();
     expect(parseLeadOffsetMinutes(30.5)).toBeNull();
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         leadOffsetsMinutes: [60, 30, 30, 0, 10081],
       } as never).leadOffsetsMinutes,
     ).toEqual([30, 60]);
@@ -107,21 +107,21 @@ describe("voiceReminder settings", () => {
 
   it("persists a custom 30-minute lead through the prefs API", async () => {
     const next = {
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+      ...DEFAULT_NOTIFY_SETTINGS,
       enabled: true,
       leadOffsetsMinutes: [30, 60],
     };
     mockPutSettings.mockResolvedValue({ configured: true, settings: next });
-    await expect(saveVoiceReminderSettings(next)).resolves.toBe(true);
+    await expect(saveNotifySettings(next)).resolves.toBe(true);
     expect(mockPutSettings).toHaveBeenCalledWith(
       expect.objectContaining({ leadOffsetsMinutes: [30, 60] }),
     );
-    expect(loadVoiceReminderSettings().leadOffsetsMinutes).toEqual([30, 60]);
+    expect(loadNotifySettings().leadOffsetsMinutes).toEqual([30, 60]);
   });
 
   it("treats quiet hours without an enabled flag as enabled", () => {
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         enabled: true,
         leadOffsetsMinutes: [60],
         sourceFilter: null,
@@ -136,14 +136,14 @@ describe("voiceReminder settings", () => {
 
   it("falls back to default chime for unknown / retired ids", () => {
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         enabled: false,
         leadOffsetsMinutes: [60],
         preambleChimeId: "not-a-real-chime",
       } as never).preambleChimeId,
     ).toBe("broadcast");
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         enabled: false,
         leadOffsetsMinutes: [60],
         preambleChimeId: "soft-bell",
@@ -162,7 +162,7 @@ describe("voiceReminder settings", () => {
         quietHours: { enabled: false, start: "21:00", end: "06:00" },
       },
     });
-    const loaded = await hydrateVoiceReminderSettings();
+    const loaded = await hydrateNotifySettings();
     expect(loaded.enabled).toBe(true);
     expect(loaded.preambleChimeId).toBe("airport");
     expect(loaded).not.toHaveProperty("sourceFilter");
@@ -172,9 +172,9 @@ describe("voiceReminder settings", () => {
   it("uses defaults when server is empty", async () => {
     mockFetchSettings.mockResolvedValue({ configured: false, settings: null });
 
-    const loaded = await hydrateVoiceReminderSettings();
+    const loaded = await hydrateNotifySettings();
     expect(mockPutSettings).not.toHaveBeenCalled();
-    expect(loaded).toEqual(DEFAULT_VOICE_REMINDER_SETTINGS);
+    expect(loaded).toEqual(DEFAULT_NOTIFY_SETTINGS);
   });
 
   it("returns false and keeps prior cache when save fails", async () => {
@@ -182,41 +182,41 @@ describe("voiceReminder settings", () => {
       .mockResolvedValueOnce({
         configured: true,
         settings: {
-          ...DEFAULT_VOICE_REMINDER_SETTINGS,
+          ...DEFAULT_NOTIFY_SETTINGS,
           enabled: true,
         },
       })
       .mockRejectedValueOnce(new Error("boom"));
 
-    await saveVoiceReminderSettings({
-      ...DEFAULT_VOICE_REMINDER_SETTINGS,
+    await saveNotifySettings({
+      ...DEFAULT_NOTIFY_SETTINGS,
       enabled: true,
     });
-    expect(loadVoiceReminderSettings().enabled).toBe(true);
+    expect(loadNotifySettings().enabled).toBe(true);
 
     await expect(
-      saveVoiceReminderSettings({
-        ...DEFAULT_VOICE_REMINDER_SETTINGS,
+      saveNotifySettings({
+        ...DEFAULT_NOTIFY_SETTINGS,
         enabled: false,
       }),
     ).resolves.toBe(false);
-    expect(loadVoiceReminderSettings().enabled).toBe(true);
+    expect(loadNotifySettings().enabled).toBe(true);
   });
 
   it("defaults missing voice/flash channels to on and flash mode to timed", () => {
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         enabled: true,
         leadOffsetsMinutes: [60],
       } as never),
     ).toMatchObject({ voiceEnabled: true, flashEnabled: true, flashMode: "timed" });
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         flashMode: "nope",
       } as never).flashMode,
     ).toBe("timed");
     expect(
-      normalizeVoiceReminderSettings({
+      normalizeNotifySettings({
         flashMode: "persistent",
       } as never).flashMode,
     ).toBe("persistent");

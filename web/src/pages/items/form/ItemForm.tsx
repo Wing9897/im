@@ -245,6 +245,13 @@ export const ItemForm = forwardRef<ItemFormHandle, Props>(function ItemForm(
         mode={linked.linkedCalendarMode}
         initial={linked.linkedCalendarInitial}
         parentItemMode="readonly"
+        parentItemLabel={
+          effectiveItem
+            ? effectiveItem.emoji
+              ? `${effectiveItem.emoji} ${effectiveItem.title}`
+              : effectiveItem.title
+            : ""
+        }
         worksetMode="hidden"
         busy={linked.linkedCalendarBusy}
         error={linked.linkedCalendarError}

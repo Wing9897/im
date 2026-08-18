@@ -5,14 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiClient } from "./client";
 import {
   fetchBoardPrefs,
-  fetchVoiceReminderFired,
-  fetchVoiceReminderHistory,
-  fetchVoiceReminderSettings,
+  fetchNotifyFired,
+  fetchNotifyHistory,
+  fetchNotifySettings,
   putBoardPrefs,
-  putVoiceReminderFired,
-  putVoiceReminderHistory,
-  putVoiceReminderSettings,
-  claimVoiceReminderFired,
+  putNotifyFired,
+  putNotifyHistory,
+  putNotifySettings,
+  claimNotifyFired,
 } from "./uiPrefs";
 
 vi.mock("./client", () => ({
@@ -56,7 +56,7 @@ describe("uiPrefs local notify API", () => {
 
   it("fetches and puts settings", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ configured: false, settings: null });
-    await fetchVoiceReminderSettings();
+    await fetchNotifySettings();
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/ui-prefs/notify/settings");
 
     const settings = {
@@ -69,7 +69,7 @@ describe("uiPrefs local notify API", () => {
       quietHours: { enabled: true, start: "22:00", end: "07:00" },
     };
     vi.mocked(apiClient.put).mockResolvedValue({ configured: true, settings });
-    await putVoiceReminderSettings(settings);
+    await putNotifySettings(settings);
     expect(apiClient.put).toHaveBeenCalledWith(
       "/api/v1/ui-prefs/notify/settings",
       { settings },
@@ -78,14 +78,14 @@ describe("uiPrefs local notify API", () => {
 
   it("fetches and puts fired keys", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ configured: false, keys: null });
-    await fetchVoiceReminderFired();
+    await fetchNotifyFired();
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/ui-prefs/notify/fired");
 
     vi.mocked(apiClient.put).mockResolvedValue({
       configured: true,
       keys: ["e1::60::2026-07-24T10:00:00.000Z"],
     });
-    await putVoiceReminderFired(["e1::60::2026-07-24T10:00:00.000Z"]);
+    await putNotifyFired(["e1::60::2026-07-24T10:00:00.000Z"]);
     expect(apiClient.put).toHaveBeenCalledWith("/api/v1/ui-prefs/notify/fired", {
       keys: ["e1::60::2026-07-24T10:00:00.000Z"],
     });
@@ -97,7 +97,7 @@ describe("uiPrefs local notify API", () => {
       claimed: ["e1::60::2026-07-24T10:00:00.000Z"],
       keys: ["e1::60::2026-07-24T10:00:00.000Z"],
     });
-    await claimVoiceReminderFired(["e1::60::2026-07-24T10:00:00.000Z"]);
+    await claimNotifyFired(["e1::60::2026-07-24T10:00:00.000Z"]);
     expect(apiClient.post).toHaveBeenCalledWith(
       "/api/v1/ui-prefs/notify/fired/claim",
       { keys: ["e1::60::2026-07-24T10:00:00.000Z"] },
@@ -106,7 +106,7 @@ describe("uiPrefs local notify API", () => {
 
   it("fetches and puts history", async () => {
     vi.mocked(apiClient.get).mockResolvedValue({ configured: false, entries: null });
-    await fetchVoiceReminderHistory();
+    await fetchNotifyHistory();
     expect(apiClient.get).toHaveBeenCalledWith("/api/v1/ui-prefs/notify/history");
 
     const entries = [
@@ -119,7 +119,7 @@ describe("uiPrefs local notify API", () => {
       },
     ];
     vi.mocked(apiClient.put).mockResolvedValue({ configured: true, entries });
-    await putVoiceReminderHistory(entries);
+    await putNotifyHistory(entries);
     expect(apiClient.put).toHaveBeenCalledWith("/api/v1/ui-prefs/notify/history", {
       entries,
     });

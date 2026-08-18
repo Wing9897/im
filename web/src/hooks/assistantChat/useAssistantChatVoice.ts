@@ -6,7 +6,7 @@ import { isElectronDesktop } from "../../electron/electronWindow";
 import {
   createSpeechPorts,
   loadVoiceSettings,
-  saveVoiceSettings,
+  persistAssistantDefaultWorksetId,
   ttsSpeakOptionsFromVoiceSettings,
   VOICE_SETTINGS_CHANGED_EVENT,
   type SpacePttMode,
@@ -89,9 +89,7 @@ export function useAssistantChatVoice({
   const setWorksetId = useCallback((worksetId: string) => {
     const next = toUserEventFormWorksetId(worksetId || SYSTEM_WORKSET_ID);
     setWorksetIdState(next);
-    const current = loadVoiceSettings();
-    if (current.defaultWorksetId === next) return;
-    saveVoiceSettings({ ...current, defaultWorksetId: next });
+    persistAssistantDefaultWorksetId(next);
   }, []);
 
   const refreshPorts = useCallback(() => {

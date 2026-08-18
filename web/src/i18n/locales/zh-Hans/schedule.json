@@ -37,7 +37,11 @@
     "item": "关联物品",
     "rrule": "重复规则",
     "noRrule": "未设置重复规则",
-    "location": "地点"
+    "location": "地点",
+    "notes": "说明",
+    "empty": "N/A",
+    "locationLine": "地点：{value}",
+    "notesLine": "说明：{value}"
   },
   "loadMoreHint": "已显示 {shown} / {total}",
   "loadMoreHintHasMore": "向下滚动加载更多（已显示 {shown}）",

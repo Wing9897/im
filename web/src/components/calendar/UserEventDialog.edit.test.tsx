@@ -1,7 +1,7 @@
 /**
  * UserEventDialog edit mode, workset, parent item, all-day ranges.
  */
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 
@@ -9,8 +9,21 @@ import { SYSTEM_WORKSET_ID } from "../../types/worksets";
 import { UserEventDialog } from "./UserEventDialog";
 import { pickMenuSelectOption, setInputValue } from "./UserEventDialog.testHarness";
 
+const { mockListItems } = vi.hoisted(() => ({
+  mockListItems: vi.fn(),
+}));
+
+vi.mock("../../api/items", () => ({
+  listItems: (...args: unknown[]) => mockListItems(...args),
+}));
+
 describe("UserEventDialog edit", () => {
   let root: Root | null = null;
+
+  beforeEach(() => {
+    mockListItems.mockReset();
+    mockListItems.mockResolvedValue([]);
+  });
 
   afterEach(() => {
     act(() => {
@@ -328,6 +341,48 @@ describe("UserEventDialog edit", () => {
     expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
     expect(document.querySelector('[data-testid="user-event-parent-item"]')).toBeNull();
     expect(document.querySelector('[data-testid="user-event-parent-item-readonly"]')).toBeNull();
+    expect(mockListItems).not.toHaveBeenCalled();
+
+    host.remove();
+  });
+
+  it("hides parent-item field when editing an item-linked event (calendar surface)", async () => {
+    const onSubmit = vi.fn();
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+
+    await act(async () => {
+      root = createRoot(host);
+      root.render(
+        createElement(UserEventDialog, {
+          open: true,
+          mode: "edit",
+          initial: {
+            title: "保修到期",
+            startTime: "2026-08-10",
+            endTime: "2026-08-10",
+            isAllDay: true,
+            itemId: "item-9",
+          },
+          onClose: vi.fn(),
+          onSubmit,
+        }),
+      );
+    });
+
+    expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
+    expect(document.querySelector('[data-testid="user-event-parent-item"]')).toBeNull();
+    expect(document.querySelector('[data-testid="user-event-parent-item-readonly"]')).toBeNull();
+    expect(mockListItems).not.toHaveBeenCalled();
+
+    const submit = Array.from(document.body.querySelectorAll("button")).find(
+      (b) => b.textContent === "儲存",
+    );
+    expect(submit).toBeTruthy();
+    await act(async () => {
+      submit!.click();
+    });
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ itemId: "item-9" }));
 
     host.remove();
   });
@@ -343,6 +398,7 @@ describe("UserEventDialog edit", () => {
           open: true,
           mode: "create",
           parentItemMode: "readonly",
+          parentItemLabel: "護照 Passport",
           initial: { itemId: "item-9" },
           onClose: vi.fn(),
           onSubmit: vi.fn(),
@@ -354,8 +410,9 @@ describe("UserEventDialog edit", () => {
       '[data-testid="user-event-parent-item-readonly"]',
     );
     expect(readonly).toBeTruthy();
-    expect(readonly!.textContent).toContain("item-9");
+    expect(readonly!.textContent).toContain("護照 Passport");
     expect(document.querySelector('[data-testid="user-event-item-select"]')).toBeNull();
+    expect(mockListItems).not.toHaveBeenCalled();
 
     host.remove();
   });

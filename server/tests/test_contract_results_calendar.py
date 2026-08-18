@@ -10,7 +10,7 @@ from server.tests import seed
 
 async def test_calendar_occurrences(client):
     resp = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-07-01T00:00:00Z",
             "rangeEnd": "2026-07-31T23:59:59Z",
@@ -64,7 +64,7 @@ async def test_calendar_includes_endpoints_and_skips_invalid_or_inactive_persist
         )
 
     response = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": "2026-07-06T10:00:00Z",
             "rangeEnd": "2026-07-13T10:00:00Z",
@@ -139,7 +139,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         )
 
     response = await client.get(
-        "/api/v1/calendar/items",
+        "/api/v1/calendar/occurrences",
         params={
             "rangeStart": wire(day1_start),
             "rangeEnd": wire(day2_start),
@@ -206,7 +206,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "worksetId": "__user__",
         "itemId": None,
         "itemDateKind": None,
-        "notifyPref": "follow",
+        "notifyPref": "off",
     }
     assert by_task["z-calendar-boundary"][0] == {
         "id": occurrence_id("z-calendar-boundary", day1_start),
@@ -227,7 +227,7 @@ async def test_calendar_persisted_mixture_preserves_allocation_contract_and_fina
         "worksetId": "__user__",
         "itemId": None,
         "itemDateKind": None,
-        "notifyPref": "follow",
+        "notifyPref": "off",
     }
     assert body[-1] == {
         **by_task["z-calendar-boundary"][0],

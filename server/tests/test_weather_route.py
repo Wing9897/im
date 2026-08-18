@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -11,6 +11,23 @@ from server.services import weather
 from server.tests.contract_helpers import assert_keys
 
 WEATHER_DAILY_KEYS = ["time", "weather_code", "temperature_2m_max", "temperature_2m_min"]
+
+
+def _sixteen_day_open_meteo_daily(*, trailing_none: bool = True) -> dict[str, list]:
+    times = [(date(2026, 7, 1) + timedelta(days=offset)).isoformat() for offset in range(16)]
+    weather_code: list[int | None] = list(range(16))
+    temperature_2m_max: list[float | None] = [30.0 + offset for offset in range(16)]
+    temperature_2m_min: list[float | None] = [20.0 + offset for offset in range(16)]
+    if trailing_none:
+        weather_code[-1] = None
+        temperature_2m_max[-1] = None
+        temperature_2m_min[-1] = None
+    return {
+        "time": times,
+        "weather_code": weather_code,
+        "temperature_2m_max": temperature_2m_max,
+        "temperature_2m_min": temperature_2m_min,
+    }
 
 
 @pytest.fixture(autouse=True)
@@ -217,6 +234,60 @@ async def test_weather_forecast_falls_back_to_met_no_after_open_meteo_failure(cl
 
     assert response.status_code == 200
     assert response.json()["daily"] == daily
+
+
+def test_clip_daily_drops_trailing_null_slots():
+    daily = _sixteen_day_open_meteo_daily()
+    clipped = weather._clip_daily(daily, date(2026, 7, 1), date(2026, 7, 16))
+    assert clipped["time"] == daily["time"][:15]
+    assert clipped["weather_code"] == list(range(15))
+    assert None not in clipped["weather_code"]
+    assert None not in clipped["temperature_2m_max"]
+    assert None not in clipped["temperature_2m_min"]
+
+
+@pytest.mark.asyncio
+async def test_weather_forecast_skips_trailing_null_day_in_16_day_window(client, monkeypatch):
+    async def fake_forecast(location, start_date, end_date):
+        assert (start_date, end_date) == (date(2026, 7, 1), date(2026, 7, 16))
+        return {"daily": _sixteen_day_open_meteo_daily()}
+
+    monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
+    response = await client.get(
+        "/api/v1/weather/forecast",
+        params={"location": "香港", "startDate": "2026-07-01", "endDate": "2026-07-16"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert_keys(body, ["daily"], "WeatherForecastResponse")
+    assert_keys(body["daily"], WEATHER_DAILY_KEYS, "WeatherDaily")
+    assert body["daily"]["time"] == _sixteen_day_open_meteo_daily()["time"][:15]
+    assert body["daily"]["weather_code"] == list(range(15))
+    assert len(body["daily"]["temperature_2m_max"]) == 15
+    assert len(body["daily"]["temperature_2m_min"]) == 15
+
+
+@pytest.mark.asyncio
+async def test_weather_forecast_still_502s_on_non_null_invalid_daily(client, monkeypatch):
+    async def fake_forecast(location, start_date, end_date):
+        return {
+            "daily": {
+                "time": ["2026-07-01"],
+                "weather_code": ["clear"],
+                "temperature_2m_max": [31.0],
+                "temperature_2m_min": [24.0],
+            }
+        }
+
+    monkeypatch.setattr(weather, "_forecast_with_fallbacks", fake_forecast)
+    response = await client.get(
+        "/api/v1/weather/forecast",
+        params={"location": "香港", "startDate": "2026-07-01", "endDate": "2026-07-01"},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["error_code"] == "weather_unavailable"
 
 
 @pytest.mark.asyncio

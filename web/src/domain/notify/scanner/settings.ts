@@ -1,7 +1,7 @@
 import {
-  fetchVoiceReminderSettings,
-  putVoiceReminderSettings,
-  type VoiceReminderSettingsPayload,
+  fetchNotifySettings,
+  putNotifySettings,
+  type NotifySettingsPayload,
 } from "../../../api/uiPrefs";
 import { logWarn } from "../../../utils/logger";
 import {
@@ -10,10 +10,10 @@ import {
   type PreambleChimeId,
 } from "./preambleChime";
 
-import { VOICE_REMINDER_SETTINGS_CHANGED_EVENT } from "../../prefs";
+import { NOTIFY_SETTINGS_CHANGED_EVENT } from "../../prefs";
 
 /** Same-tab signal so the App-level scanner can re-run immediately after save. */
-export { VOICE_REMINDER_SETTINGS_CHANGED_EVENT };
+export { NOTIFY_SETTINGS_CHANGED_EVENT };
 
 /** Common shortcuts that fill the minutes input — not a closed catalog. */
 export const LEAD_OFFSET_OPTIONS = [15, 60, 240, 1440] as const;
@@ -53,13 +53,13 @@ export function parseLeadOffsetMinutes(value: unknown): number | null {
 export type { PreambleChimeId };
 
 /**
- * Sanitized domain settings derived from OpenAPI ``VoiceReminderSettingsSchema``.
+ * Sanitized domain settings derived from OpenAPI ``NotifySettingsSchema``.
  * ``sourceFilter`` leftover in prefs JSON is ignored (not read or written).
  */
 export type NotifyFlashMode = "timed" | "persistent";
 
-export type VoiceReminderSettings = {
-  enabled: VoiceReminderSettingsPayload["enabled"];
+export type NotifySettings = {
+  enabled: NotifySettingsPayload["enabled"];
   /** TTS / spoken reminder. Independent of flash. Missing prefs → on. */
   voiceEnabled: boolean;
   /** Dedicated top-bar flash. Independent of voice. Missing prefs → on. */
@@ -68,10 +68,10 @@ export type VoiceReminderSettings = {
   flashMode: NotifyFlashMode;
   leadOffsetsMinutes: number[];
   preambleChimeId: PreambleChimeId;
-  quietHours: NonNullable<VoiceReminderSettingsPayload["quietHours"]>;
+  quietHours: NonNullable<NotifySettingsPayload["quietHours"]>;
 };
 
-export const DEFAULT_VOICE_REMINDER_SETTINGS: VoiceReminderSettings = {
+export const DEFAULT_NOTIFY_SETTINGS: NotifySettings = {
   enabled: false,
   voiceEnabled: true,
   flashEnabled: true,
@@ -91,7 +91,7 @@ function sanitizeFlashMode(value: unknown): NotifyFlashMode {
 
 /** Channel plan after master / DND already allowed the scan. Inbox is not a channel. */
 export function reminderChannelDelivery(
-  settings: Pick<VoiceReminderSettings, "voiceEnabled" | "flashEnabled" | "flashMode">,
+  settings: Pick<NotifySettings, "voiceEnabled" | "flashEnabled" | "flashMode">,
 ): { speak: boolean; flash: boolean; flashPersist: boolean } {
   return {
     speak: settings.voiceEnabled,
@@ -100,13 +100,13 @@ export function reminderChannelDelivery(
   };
 }
 
-let cachedSettings: VoiceReminderSettings | null = null;
-let hydratePromise: Promise<VoiceReminderSettings> | null = null;
+let cachedSettings: NotifySettings | null = null;
+let hydratePromise: Promise<NotifySettings> | null = null;
 
 /** Unique sorted minutes; empty / all-invalid → default ``[60]``. */
 export function sanitizeLeadOffsets(value: unknown): number[] {
   if (!Array.isArray(value)) {
-    return [...DEFAULT_VOICE_REMINDER_SETTINGS.leadOffsetsMinutes];
+    return [...DEFAULT_NOTIFY_SETTINGS.leadOffsetsMinutes];
   }
   const seen = new Set<number>();
   for (const item of value) {
@@ -116,7 +116,7 @@ export function sanitizeLeadOffsets(value: unknown): number[] {
     }
   }
   if (seen.size === 0) {
-    return [...DEFAULT_VOICE_REMINDER_SETTINGS.leadOffsetsMinutes];
+    return [...DEFAULT_NOTIFY_SETTINGS.leadOffsetsMinutes];
   }
   return [...seen].sort((a, b) => a - b);
 }
@@ -125,28 +125,28 @@ function sanitizeTime(value: unknown, fallback: string): string {
   return typeof value === "string" && /^\d{2}:\d{2}$/.test(value) ? value : fallback;
 }
 
-function sanitizeQuietHours(value: unknown): VoiceReminderSettings["quietHours"] {
+function sanitizeQuietHours(value: unknown): NotifySettings["quietHours"] {
   const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
   return {
     // Existing installs had no switch; retain their existing quiet-hours behaviour.
     enabled:
       typeof raw.enabled === "boolean"
         ? raw.enabled
-        : DEFAULT_VOICE_REMINDER_SETTINGS.quietHours.enabled,
-    start: sanitizeTime(raw.start, DEFAULT_VOICE_REMINDER_SETTINGS.quietHours.start),
-    end: sanitizeTime(raw.end, DEFAULT_VOICE_REMINDER_SETTINGS.quietHours.end),
+        : DEFAULT_NOTIFY_SETTINGS.quietHours.enabled,
+    start: sanitizeTime(raw.start, DEFAULT_NOTIFY_SETTINGS.quietHours.start),
+    end: sanitizeTime(raw.end, DEFAULT_NOTIFY_SETTINGS.quietHours.end),
   };
 }
 
-function cloneDefaults(): VoiceReminderSettings {
+function cloneDefaults(): NotifySettings {
   return {
-    ...DEFAULT_VOICE_REMINDER_SETTINGS,
-    leadOffsetsMinutes: [...DEFAULT_VOICE_REMINDER_SETTINGS.leadOffsetsMinutes],
-    quietHours: { ...DEFAULT_VOICE_REMINDER_SETTINGS.quietHours },
+    ...DEFAULT_NOTIFY_SETTINGS,
+    leadOffsetsMinutes: [...DEFAULT_NOTIFY_SETTINGS.leadOffsetsMinutes],
+    quietHours: { ...DEFAULT_NOTIFY_SETTINGS.quietHours },
   };
 }
 
-function toPayload(settings: VoiceReminderSettings): VoiceReminderSettingsPayload {
+function toPayload(settings: NotifySettings): NotifySettingsPayload {
   return {
     enabled: settings.enabled,
     voiceEnabled: settings.voiceEnabled,
@@ -159,17 +159,17 @@ function toPayload(settings: VoiceReminderSettings): VoiceReminderSettingsPayloa
 }
 
 /** Normalize a partial/raw settings object (API payload). Ignores leftover ``sourceFilter``. */
-export function normalizeVoiceReminderSettings(
-  raw: Partial<VoiceReminderSettings> | Record<string, unknown> | null | undefined,
-): VoiceReminderSettings {
-  const parsed = (raw ?? {}) as Partial<VoiceReminderSettings>;
+export function normalizeNotifySettings(
+  raw: Partial<NotifySettings> | Record<string, unknown> | null | undefined,
+): NotifySettings {
+  const parsed = (raw ?? {}) as Partial<NotifySettings>;
   return {
     enabled:
       typeof parsed.enabled === "boolean"
         ? parsed.enabled
-        : DEFAULT_VOICE_REMINDER_SETTINGS.enabled,
-    voiceEnabled: sanitizeBool(parsed.voiceEnabled, DEFAULT_VOICE_REMINDER_SETTINGS.voiceEnabled),
-    flashEnabled: sanitizeBool(parsed.flashEnabled, DEFAULT_VOICE_REMINDER_SETTINGS.flashEnabled),
+        : DEFAULT_NOTIFY_SETTINGS.enabled,
+    voiceEnabled: sanitizeBool(parsed.voiceEnabled, DEFAULT_NOTIFY_SETTINGS.voiceEnabled),
+    flashEnabled: sanitizeBool(parsed.flashEnabled, DEFAULT_NOTIFY_SETTINGS.flashEnabled),
     flashMode: sanitizeFlashMode(parsed.flashMode),
     leadOffsetsMinutes: sanitizeLeadOffsets(parsed.leadOffsetsMinutes),
     preambleChimeId: sanitizePreambleChimeId(parsed.preambleChimeId),
@@ -177,7 +177,7 @@ export function normalizeVoiceReminderSettings(
   };
 }
 
-function setCache(settings: VoiceReminderSettings, notify: boolean): void {
+function setCache(settings: NotifySettings, notify: boolean): void {
   cachedSettings = {
     enabled: settings.enabled,
     voiceEnabled: settings.voiceEnabled,
@@ -188,12 +188,12 @@ function setCache(settings: VoiceReminderSettings, notify: boolean): void {
     quietHours: { ...settings.quietHours },
   };
   if (notify && typeof window !== "undefined") {
-    window.dispatchEvent(new Event(VOICE_REMINDER_SETTINGS_CHANGED_EVENT));
+    window.dispatchEvent(new Event(NOTIFY_SETTINGS_CHANGED_EVENT));
   }
 }
 
 /** Sync read from memory cache (defaults before hydrate). */
-export function loadVoiceReminderSettings(): VoiceReminderSettings {
+export function loadNotifySettings(): NotifySettings {
   if (cachedSettings) {
     return {
       enabled: cachedSettings.enabled,
@@ -209,23 +209,23 @@ export function loadVoiceReminderSettings(): VoiceReminderSettings {
 }
 
 /** Hydrate from server. Empty server → defaults. */
-export async function hydrateVoiceReminderSettings(): Promise<VoiceReminderSettings> {
+export async function hydrateNotifySettings(): Promise<NotifySettings> {
   if (!hydratePromise) {
     hydratePromise = (async () => {
       try {
-        const response = await fetchVoiceReminderSettings();
+        const response = await fetchNotifySettings();
         if (response.configured && response.settings) {
-          const normalized = normalizeVoiceReminderSettings(response.settings);
+          const normalized = normalizeNotifySettings(response.settings);
           setCache(normalized, true);
-          return loadVoiceReminderSettings();
+          return loadNotifySettings();
         }
 
         const defaults = cloneDefaults();
         setCache(defaults, false);
-        return loadVoiceReminderSettings();
+        return loadNotifySettings();
       } catch (error) {
-        logWarn("[voiceReminder] failed to hydrate settings", error);
-        const fallback = loadVoiceReminderSettings();
+        logWarn("[notify] failed to hydrate settings", error);
+        const fallback = loadNotifySettings();
         setCache(fallback, false);
         return fallback;
       }
@@ -240,23 +240,23 @@ export async function hydrateVoiceReminderSettings(): Promise<VoiceReminderSetti
  * Persist settings to the server-backed store.
  * Returns false on failure (caller should toast); keeps prior cache on failure.
  */
-export async function saveVoiceReminderSettings(
-  settings: VoiceReminderSettings,
+export async function saveNotifySettings(
+  settings: NotifySettings,
 ): Promise<boolean> {
-  const normalized = normalizeVoiceReminderSettings(settings);
+  const normalized = normalizeNotifySettings(settings);
   try {
-    const saved = await putVoiceReminderSettings(toPayload(normalized));
-    const fromServer = normalizeVoiceReminderSettings(saved.settings ?? normalized);
+    const saved = await putNotifySettings(toPayload(normalized));
+    const fromServer = normalizeNotifySettings(saved.settings ?? normalized);
     setCache(fromServer, true);
     return true;
   } catch (error) {
-    logWarn("[voiceReminder] failed to save settings", error);
+    logWarn("[notify] failed to save settings", error);
     return false;
   }
 }
 
 /** Test helper: reset in-memory cache between cases. */
-export function resetVoiceReminderSettingsCacheForTests(): void {
+export function resetNotifySettingsCacheForTests(): void {
   cachedSettings = null;
   hydratePromise = null;
 }

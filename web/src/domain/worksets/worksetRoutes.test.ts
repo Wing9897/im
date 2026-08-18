@@ -7,6 +7,7 @@ import {
   isWorksetsPath,
   parseWorksetCatalogTab,
   parseWorksetGraphFilter,
+  serializeWorksetGraphFilter,
   worksetDetailPath,
   worksetsCatalogPath,
   WORKSET_GRAPH_FILTER_PARAM,
@@ -30,7 +31,16 @@ describe("worksetRoutes", () => {
     expect(WORKSET_GRAPH_FILTER_PARAM).toBe("worksetId");
     expect(parseWorksetGraphFilter(null)).toBeNull();
     expect(parseWorksetGraphFilter("")).toBeNull();
-    expect(parseWorksetGraphFilter("ws-1")).toBe("ws-1");
+    expect(parseWorksetGraphFilter("__none__")).toEqual([]);
+    expect(serializeWorksetGraphFilter([])).toBe("__none__");
+    expect(worksetsCatalogPath("graph", [])).toBe("/worksets?tab=graph&worksetId=__none__");
+    expect(parseWorksetGraphFilter("ws-1")).toEqual(["ws-1"]);
+    expect(parseWorksetGraphFilter("ws-1,__user__")).toEqual(["ws-1", "__user__"]);
+    const multi = worksetsCatalogPath("graph", ["ws-1", "__user__"]);
+    expect(parseWorksetGraphFilter(new URL(multi, "https://app.local").searchParams.get("worksetId"))).toEqual([
+      "ws-1",
+      "__user__",
+    ]);
     expect(isLegacyTasksWorksetPath("/tasks/worksets/ws-1")).toBe(true);
     expect(isLegacyTasksWorksetPath("/worksets/ws-1")).toBe(false);
   });

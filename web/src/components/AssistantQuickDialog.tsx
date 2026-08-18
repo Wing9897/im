@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Eraser } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { Button, TextArea, captionClass } from "./ui";
@@ -215,29 +216,43 @@ export function AssistantQuickDialog() {
           data-testid="assistant-caption-calendar-task"
         />
       </div>
-      <TextArea
-        id="assistant-caption-draft"
-        data-testid="assistant-caption-draft"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder={
-          listening ? t("quick.placeholderListening") : t("quick.placeholderIdle")
-        }
-        rows={2}
-        className="im-assistant-direct__composer-input"
-        disabled={sending}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            e.preventDefault();
-            closeComposer();
-            return;
+      <div className="im-assistant-direct__composer-input-row">
+        <TextArea
+          id="assistant-caption-draft"
+          data-testid="assistant-caption-draft"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={
+            listening ? t("quick.placeholderListening") : t("quick.placeholderIdle")
           }
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            void sendDraft();
-          }
-        }}
-      />
+          rows={2}
+          className="im-assistant-direct__composer-input"
+          disabled={sending}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              closeComposer();
+              return;
+            }
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              void sendDraft();
+            }
+          }}
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="im-assistant-direct__composer-clear"
+          data-testid="assistant-caption-clear"
+          aria-label={t("quick.clearChat")}
+          title={t("quick.clearChat")}
+          disabled={sending || (messages.length === 0 && !draft.trim())}
+          onClick={clearChat}
+        >
+          <Eraser size={14} strokeWidth={2.2} aria-hidden="true" />
+        </Button>
+      </div>
       <div className="im-assistant-direct__composer-actions">
         {sttAvailable ? (
           <AssistantMicButton

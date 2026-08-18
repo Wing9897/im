@@ -114,6 +114,20 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     setWorksetNameDialog({ mode: "create" });
   }, []);
 
+  const handleRenameWorkset = useCallback(
+    async (id: string, cleaned: string) => {
+      try {
+        await renameWorkset(id, cleaned);
+        await refreshWorksets();
+        showToast(t("workset:renamedToast", { name: cleaned }), "success");
+      } catch (error) {
+        showToast(toError(error).message, "error");
+        throw error;
+      }
+    },
+    [refreshWorksets, showToast, t],
+  );
+
   const handleWorksetNameSubmit = useCallback(
     async (cleaned: string) => {
       if (!worksetNameDialog) return;
@@ -175,6 +189,7 @@ export function useDashboardViewerShell({ visibleTasks, navigate }: Args) {
     itemCountByWorkset,
     worksetGroups,
     openCreateWorkset,
+    handleRenameWorkset,
     handleWorksetNameSubmit,
     confirmDeleteWorkset,
     openWorksetDetail,

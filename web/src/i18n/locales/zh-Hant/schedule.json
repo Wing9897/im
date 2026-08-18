@@ -37,7 +37,11 @@
     "item": "關聯物品",
     "rrule": "重複規則",
     "noRrule": "未設定重複規則",
-    "location": "地點"
+    "location": "地點",
+    "notes": "說明",
+    "empty": "N/A",
+    "locationLine": "地點：{value}",
+    "notesLine": "說明：{value}"
   },
   "loadMoreHint": "已顯示 {shown} / {total}",
   "loadMoreHintHasMore": "向下捲動載入更多（已顯示 {shown}）",

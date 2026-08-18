@@ -1,10 +1,11 @@
+import { Clock } from "lucide-react";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "../../../components/common/PlatformIcon";
 import type { ConnectionStatus } from "../../../types";
 import { formatStatusLabel } from "../../../styles/statusDot";
 import { formatOsDateTime } from "../../../utils/time";
-import { AccentBarCard } from "../../../components/ui";
+import { AccentBarCard, CardFieldIcon } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import { SelectableSurface, stopSelectableActivation } from "../../../components/detail";
 
@@ -38,7 +39,8 @@ export function SourceCardErrorLines({
         <div className="mt-0.5 text-[11px] text-error">{displayError}</div>
       ) : null}
       {showLastSuccessOnError && status === "error" && lastSuccessAt ? (
-        <div className="mt-0.5 text-card-meta text-text-muted">
+        <div className="mt-0.5 flex items-center gap-xs text-card-meta text-text-muted">
+          <CardFieldIcon icon={Clock} />
           {t("card.lastSuccess", { time: formatOsDateTime(lastSuccessAt) })}
         </div>
       ) : null}

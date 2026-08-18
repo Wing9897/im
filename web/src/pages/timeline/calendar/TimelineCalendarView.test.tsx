@@ -1,6 +1,7 @@
 import { act } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { makeEvent } from "../../../test/timelineTestHelpers";import {
+import { makeEvent } from "../../../test/timelineTestHelpers";
+import {
   buildCalendarDays,
   buildWeekDays,
   makeTimelineCalendarViewProps,
@@ -22,6 +23,10 @@ vi.mock("../../../hooks/useErrorToast", () => ({
 
 const { TimelineCalendarView } = await import("./TimelineCalendarView");
 
+const MONTH_DAY_CELL = '[data-testid="timeline-month-day-cell"]';
+const MONTH_WATERMARK = '[data-testid="timeline-month-day-watermark"]';
+const MONTH_SURFACE = '[data-testid="timeline-month-day-surface"]';
+
 type Props = Parameters<typeof TimelineCalendarView>[0];
 
 function makeProps(overrides: Partial<Props> = {}): Props {
@@ -42,8 +47,7 @@ describe("TimelineCalendarView", () => {
       const props = makeProps({ timeScale: "month" });
       const container = render(props);
 
-      // TimelineMonthGrid renders day cells as role="button" elements
-      const dayCells = container.querySelectorAll('[role="button"]');
+      const dayCells = container.querySelectorAll(MONTH_DAY_CELL);
       expect(dayCells.length).toBe(42);
     });
 
@@ -71,7 +75,7 @@ describe("TimelineCalendarView", () => {
         }),
       );
 
-      const dayCells = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'));
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
       expect(dayCells).toHaveLength(42);
       expect(dayCells.every((cell) => (cell.getAttribute("aria-label") ?? "").length > 0)).toBe(
         true,
@@ -103,7 +107,7 @@ describe("TimelineCalendarView", () => {
       });
       const container = render(props);
 
-      const dayCells = container.querySelectorAll('[role="button"]');
+      const dayCells = container.querySelectorAll(MONTH_DAY_CELL);
       expect(dayCells.length).toBe(42);
     });
 
@@ -118,7 +122,7 @@ describe("TimelineCalendarView", () => {
       });
       const container = render(props);
 
-      const dayCells = container.querySelectorAll('[role="button"]');
+      const dayCells = container.querySelectorAll(MONTH_DAY_CELL);
       expect(dayCells.length).toBe(42);
     });
   });
@@ -154,7 +158,7 @@ describe("TimelineCalendarView", () => {
 
       expect(container.textContent).toContain("今天");
 
-      const dayCells = container.querySelectorAll('[role="button"]');
+      const dayCells = container.querySelectorAll(MONTH_DAY_CELL);
       const todayCellWithAccent = Array.from(dayCells).find((cell) => {
         if (!cell.textContent?.includes("今天")) return false;
         const className = (cell as HTMLElement).className;
@@ -277,7 +281,7 @@ describe("TimelineCalendarView", () => {
       });
       const container = render(props);
 
-      const dayCell = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]')).find(
+      const dayCell = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL)).find(
         (cell) => cell.textContent?.includes("第一個事件"),
       );
       expect(dayCell?.textContent).toContain("第一個事件");
@@ -308,7 +312,7 @@ describe("TimelineCalendarView", () => {
         onCreateOnDay,
       });
       const container = render(props);
-      const dayCell = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]')).find(
+      const dayCell = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL)).find(
         (cell) => cell.getAttribute("aria-label")?.includes("15"),
       );
       expect(dayCell).toBeTruthy();
@@ -357,7 +361,7 @@ describe("TimelineCalendarView", () => {
       });
       const container = render(props);
 
-      const dayCells = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'));
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
       const startCell = dayCells.find((cell) => cell.textContent?.includes("三日行程"));
       const ongoingCell = dayCells.find((cell) => cell.textContent?.includes("+1 進行中"));
       const endingCell = dayCells.find((cell) => cell.textContent?.includes("+1 結束"));
@@ -400,7 +404,7 @@ describe("TimelineCalendarView", () => {
       });
       const container = render(props);
 
-      const dayCells = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'));
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
       const day1 = dayCells.find((cell) =>
         (cell.getAttribute("aria-label") ?? "").includes("2026年9月1日"),
       );
@@ -472,7 +476,7 @@ describe("TimelineCalendarView", () => {
         }),
       );
 
-      const dayCells = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'));
+      const dayCells = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL));
       const day16 = dayCells.find((cell) =>
         (cell.getAttribute("aria-label") ?? "").includes("2025年1月16日"),
       );
@@ -565,6 +569,214 @@ describe("TimelineCalendarView", () => {
 
       // Week view shows "{count} 則" for each day
       expect(container.textContent).toContain("2 則");
+    });
+  });
+
+  describe("holiday overlay", () => {
+    const nagerYuanDan = {
+      date: "2025-01-01",
+      localName: "元旦",
+      name: "New Year's Day",
+      countryCode: "TW",
+      isGlobal: true,
+      types: ["Public"],
+    };
+
+    function cellFor(container: HTMLElement, label: string) {
+      return Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL)).find((cell) =>
+        (cell.getAttribute("aria-label") ?? "").includes(label),
+      );
+    }
+
+    it("paints the date number red and puts the holiday name under it, not in the header", () => {
+      const monthCursor = new Date(2025, 0, 1);
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays: buildCalendarDays(monthCursor),
+          holidaysByDate: { "2025-01-01": [nagerYuanDan] },
+        }),
+      );
+
+      const jan1 = cellFor(container, "2025年1月1日");
+      const watermark = jan1?.querySelector(MONTH_WATERMARK);
+      const holidayName = jan1?.querySelector('[data-testid="timeline-month-day-holiday-name"]');
+      const header = jan1?.querySelector('[data-testid="timeline-month-day-header"]');
+
+      expect(watermark?.textContent).toBe("1");
+      expect(jan1?.querySelector(".im-month-day-watermark-stack")?.className).toContain("is-holiday");
+      expect(watermark?.className).not.toContain("is-holiday");
+      expect(holidayName?.textContent).toContain("元旦");
+      expect(holidayName?.className).toContain("im-month-day-holiday-watermark");
+      expect(holidayName?.getAttribute("title")).toContain("元旦");
+      expect(header?.querySelector('[data-testid="timeline-month-day-holiday-name"]')).toBeNull();
+      expect(header?.querySelector('[data-testid="timeline-holiday-chip"]')).toBeNull();
+      expect(jan1?.querySelector('[data-testid="timeline-holiday-chip"]')).toBeNull();
+      expect(
+        watermark && holidayName
+          ? Boolean(watermark.compareDocumentPosition(holidayName) & Node.DOCUMENT_POSITION_FOLLOWING)
+          : false,
+      ).toBe(true);
+
+      const jan2 = cellFor(container, "2025年1月2日");
+      expect(jan2?.querySelector(".im-month-day-watermark-stack")?.className).not.toContain("is-holiday");
+      expect(jan2?.querySelector('[data-testid="timeline-month-day-holiday-name"]')).toBeNull();
+    });
+
+    it("shows the first holiday name plus +N when several Nager holidays share a day", () => {
+      const monthCursor = new Date(2025, 0, 1);
+      const container = render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays: buildCalendarDays(monthCursor),
+          holidaysByDate: {
+            "2025-01-01": [
+              nagerYuanDan,
+              { ...nagerYuanDan, localName: "開國紀念日", name: "Founding Day" },
+            ],
+          },
+        }),
+      );
+
+      const name = cellFor(container, "2025年1月1日")?.querySelector(
+        '[data-testid="timeline-month-day-holiday-name"]',
+      );
+      expect(name?.textContent).toContain("元旦");
+      expect(name?.textContent).toContain("+1");
+      expect(name?.textContent).not.toContain("開國紀念日");
+      expect(name?.getAttribute("title")).toContain("開國紀念日");
+    });
+  });
+
+  describe("month cell watermark and 顯示", () => {
+    function renderBusyMonth(overrides: Partial<Props> = {}) {
+      const monthCursor = new Date(2025, 0, 1);
+      return render(
+        makeProps({
+          timeScale: "month",
+          monthCursor,
+          monthDays: buildCalendarDays(monthCursor),
+          monthEvents: [
+            makeEvent({
+              id: "evt-1",
+              title: "第一個事件",
+              startTime: "2025-01-15T09:00:00",
+            }),
+          ],
+          holidaysByDate: {
+            "2025-01-01": [
+              {
+                date: "2025-01-01",
+                localName: "元旦",
+                name: "New Year's Day",
+                countryCode: "TW",
+                isGlobal: true,
+                types: ["Public"],
+              },
+            ],
+          },
+          ...overrides,
+        }),
+      );
+    }
+
+    function cellFor(container: HTMLElement, label: string) {
+      return Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL)).find((cell) =>
+        (cell.getAttribute("aria-label") ?? "").includes(label),
+      );
+    }
+
+    it("renders a muted watermark date under the holiday/event surface", () => {
+      const container = renderBusyMonth();
+      const cells = container.querySelectorAll(MONTH_DAY_CELL);
+      expect(cells).toHaveLength(42);
+      expect(container.querySelectorAll(MONTH_WATERMARK)).toHaveLength(42);
+      expect(container.querySelectorAll(`${MONTH_SURFACE}[aria-hidden="true"]`)).toHaveLength(0);
+
+      const jan15 = Array.from(container.querySelectorAll<HTMLElement>(MONTH_DAY_CELL)).find(
+        (cell) => cell.textContent?.includes("第一個事件"),
+      );
+      expect(jan15?.querySelector(MONTH_WATERMARK)?.textContent).toBe("15");
+      expect(jan15?.querySelector(MONTH_WATERMARK)?.className).toContain("im-month-day-watermark");
+      expect(jan15?.querySelector(".im-month-day-watermark-stack")?.className).not.toContain("is-holiday");
+      expect(jan15?.querySelector(MONTH_SURFACE)?.className).toContain("im-month-day-surface");
+      expect(jan15?.textContent).toContain("第一個事件");
+      const grid = container.querySelector('[data-testid="timeline-month-grid"]');
+      expect(grid?.getAttribute("data-dates-revealed")).toBe("false");
+      expect(grid?.className).not.toContain("is-revealed");
+      expect(container.querySelectorAll('[data-testid="timeline-month-day-header"]')).toHaveLength(42);
+      const jan2 = cellFor(container, "2025年1月2日");
+      expect(jan2?.querySelector('[data-testid="timeline-holiday-chip"]')).toBeNull();
+      expect(jan2?.querySelector('[data-testid="timeline-month-day-holiday-name"]')).toBeNull();
+      expect(jan2?.querySelector('[data-testid="timeline-month-day-header"]')?.className).toContain(
+        "im-month-day-header",
+      );
+      const jan1 = cellFor(container, "2025年1月1日");
+      expect(jan1?.querySelector(".im-month-day-watermark-stack")?.className).toContain("is-holiday");
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-holiday-name"]')?.textContent).toContain(
+        "元旦",
+      );
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-header"]')?.querySelector(
+        '[data-testid="timeline-month-day-holiday-name"]',
+      )).toBeNull();
+    });
+
+    it("caps empty special headers with a muted weekday", () => {
+      const container = renderBusyMonth();
+      const jan1 = cellFor(container, "2025年1月1日");
+      expect(jan1?.querySelector('[data-testid="timeline-holiday-chip"]')).toBeNull();
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-holiday-name"]')?.textContent).toContain(
+        "元旦",
+      );
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-weekday-filler"]')?.textContent).toBe(
+        "三",
+      );
+
+      const jan2 = cellFor(container, "2025年1月2日");
+      const filler = jan2?.querySelector('[data-testid="timeline-month-day-weekday-filler"]');
+      expect(filler).toBeTruthy();
+      expect(filler?.textContent).toBe("四");
+      expect(filler?.className).toContain("im-month-day-weekday-filler");
+      expect(jan2?.querySelector('[data-testid="timeline-holiday-chip"]')).toBeNull();
+    });
+
+    it("keeps header weather when dates are revealed and hides event rows", () => {
+      const container = renderBusyMonth({ datesRevealed: true });
+      const grid = container.querySelector('[data-testid="timeline-month-grid"]');
+      expect(grid?.className).toContain("is-revealed");
+
+      const jan15 = cellFor(container, "2025年1月15日");
+      const header = jan15?.querySelector('[data-testid="timeline-month-day-header"]');
+      const weather = header?.querySelector('[data-testid="timeline-month-day-weather"]');
+      expect(weather).toBeTruthy();
+      expect(weather?.textContent).toContain("25°");
+      expect(header?.querySelector(".im-weather-chip")).toBeTruthy();
+      expect(jan15?.querySelector(".im-month-day-events")).toBeTruthy();
+      expect(jan15?.querySelector(".im-month-day-events")?.textContent).toContain("第一個事件");
+      expect(jan15?.querySelector(MONTH_SURFACE)?.getAttribute("aria-hidden")).toBeNull();
+
+      const jan1 = cellFor(container, "2025年1月1日");
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-header"]')?.textContent).toContain("三");
+      expect(jan1?.querySelector('[data-testid="timeline-month-day-holiday-name"]')?.textContent).toContain(
+        "元旦",
+      );
+      expect(jan1?.querySelector(".im-month-day-watermark-stack")?.className).toContain("is-holiday");
+    });
+
+    it("datesRevealed marks the month grid root", () => {
+      const idle = renderBusyMonth();
+      const idleGrid = idle.querySelector('[data-testid="timeline-month-grid"]');
+      expect(idleGrid?.className).toContain("im-timeline-month-grid");
+      expect(idleGrid?.className).not.toContain("is-revealed");
+      expect(idleGrid?.getAttribute("data-dates-revealed")).toBe("false");
+
+      const container = renderBusyMonth({ datesRevealed: true });
+      const grid = container.querySelector('[data-testid="timeline-month-grid"]');
+      expect(grid?.className).toContain("is-revealed");
+      expect(grid?.getAttribute("data-dates-revealed")).toBe("true");
+      expect(container.querySelector('[data-testid="timeline-month-day-weekday-filler"]')).toBeTruthy();
     });
   });
 

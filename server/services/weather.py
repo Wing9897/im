@@ -105,6 +105,11 @@ def _forecast_intersection(start_date: date, end_date: date) -> tuple[date, date
     return None if clipped_start > clipped_end else (clipped_start, clipped_end)
 
 
+def _complete_daily_slot(weather_code: Any, temp_max: Any, temp_min: Any) -> bool:
+    """Open-Meteo often leaves the last 16-day slot as null; skip those days."""
+    return weather_code is not None and temp_max is not None and temp_min is not None
+
+
 def _clip_daily(daily: dict[str, Any], start_date: date, end_date: date) -> dict[str, list[Any]]:
     keys = ("time", "weather_code", "temperature_2m_max", "temperature_2m_min")
     values = [daily.get(key) for key in keys]
@@ -114,9 +119,12 @@ def _clip_daily(daily: dict[str, Any], start_date: date, end_date: date) -> dict
     clipped = {key: [] for key in keys}
     for index in range(min(len(value) for value in arrays)):
         day = str(arrays[0][index])
-        if start_date.isoformat() <= day <= end_date.isoformat():
-            for key, value in zip(keys, arrays, strict=True):
-                clipped[key].append(value[index])
+        if not start_date.isoformat() <= day <= end_date.isoformat():
+            continue
+        if not _complete_daily_slot(arrays[1][index], arrays[2][index], arrays[3][index]):
+            continue
+        for key, value in zip(keys, arrays, strict=True):
+            clipped[key].append(value[index])
     return clipped
 
 

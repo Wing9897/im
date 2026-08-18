@@ -5,10 +5,11 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from server.api.deps import API_DEPS
-from server.api.routes.calendar import dismissals, importance, imports, items, recurring, user_events
+from server.api.routes.calendar import dismissals, holidays, importance, imports, occurrences, recurring, user_events
 
 router = APIRouter(prefix="/api/v1/calendar", tags=["calendar"], dependencies=API_DEPS)
-router.include_router(items.router)
+router.include_router(occurrences.router)
+router.include_router(holidays.router)
 router.include_router(imports.router)
 router.include_router(dismissals.router)
 router.include_router(importance.router)

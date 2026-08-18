@@ -4,6 +4,7 @@
 
 import type { Workset } from "../types/worksets";
 import { SYSTEM_WORKSET_ID } from "../types/worksets";
+import { resolveSourceFilterTaskLabel } from "../domain/timeline/sourceFilterOptions";
 
 export type BoardFilterTaskOption = {
   id: string;
@@ -40,7 +41,7 @@ export function boardSourceFilterExpandTasks(
 ): BoardFilterTaskOption[] {
   return tasks.map((task) => ({
     id: task.id,
-    name: task.name,
+    name: resolveSourceFilterTaskLabel(task.name, task.id),
     worksetId: task.worksetId ?? null,
     analysisMode: task.analysisMode ?? null,
   }));

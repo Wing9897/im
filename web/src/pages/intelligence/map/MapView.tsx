@@ -1,7 +1,9 @@
 import React from "react";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer } from "react-leaflet";
+import { MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { EmptyStateGlyph } from "../../../components/common/EmptyStateGlyph";
 import type { AnalysisEvent, TimeWindow } from "../../../types";
 import {
   mapContainerClass,
@@ -148,7 +150,10 @@ function MapViewComponent({
         {selectedItem && <DetailCard item={selectedItem} onBack={clusterItems ? handleBackToCluster : undefined} onClose={handleDetailClose} />}
         {items.length > 0 && withCoords.length === 0 && (
           <div className={mapEmptyOverlayClass}>
-            <div className={mapEmptyMsgClass}>
+            <div className={`${mapEmptyMsgClass} flex flex-col items-center text-center`}>
+              <div className="mb-sm">
+                <EmptyStateGlyph icon={MapPin} />
+              </div>
               {t("map.emptyTitle")}
               <span className="mt-1 block text-[0.92em] font-normal opacity-85">
                 {t("map.emptyHint")}

@@ -5,12 +5,14 @@ from __future__ import annotations
 from server.api.channel_refs import parse_channel_refs
 from server.api.routes.task_helpers import (
     TaskConfigBody,
-    agent_policy_write_fields,
     channel_refs_for,
     resolve_llm_profile_id,
+    task_response,
+)
+from server.services.task_policy import (
+    agent_policy_write_fields,
     resolve_workset_id,
     schedule_override_write_fields,
-    task_response,
 )
 from server.db.database import Database, TransactionDb
 from server.domain.analysis_modes import LEADERBOARD_MODE

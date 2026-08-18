@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { AccentBarCard, Badge, Button } from "../../../components/ui";
+import { Clock, Zap } from "lucide-react";
+import { AccentBarCard, Badge, Button, CardFieldRow } from "../../../components/ui";
 import { cardTitleClass } from "../../../components/ui/pageTypography";
 import type { Action, ActionType } from "../../../types";
 import {
@@ -61,19 +62,22 @@ export function ActionCard({
           </div>
           <div className="min-w-0 flex-1">
             <div className={`truncate ${cardTitleClass}`}>{action.name}</div>
-            <div className="mt-0.5 truncate text-[10px] leading-snug text-text-muted">
-              <Badge tone="info" className="mr-1">
-                {ACTION_TYPE_LABELS[action.actionType] ?? action.actionType}
-              </Badge>
-              {t("card.triggeredPrefix")}
-              {formatTriggerSummary(action, (key, options) =>
-                key === "specificTask"
-                  ? t("card.specificTaskWithId", options)
-                  : t(`card.${key}`, options),
-              )}
-              {" · "}
-              {t("card.lastTriggeredPrefix")}
-              {formatOptionalOsDateTime(action.lastTriggeredAt, undefined, t("card.never"))}
+            <div className="mt-0.5 flex min-w-0 flex-col gap-0.5">
+              <CardFieldRow
+                icon={Zap}
+                text={`${ACTION_TYPE_LABELS[action.actionType] ?? action.actionType} · ${t("card.triggeredPrefix")}${formatTriggerSummary(action, (key, options) =>
+                  key === "specificTask"
+                    ? t("card.specificTaskWithId", options)
+                    : t(`card.${key}`, options),
+                )}`}
+                className="text-[10px] leading-snug text-text-muted"
+              />
+              <CardFieldRow
+                icon={Clock}
+                text={`${t("card.lastTriggeredPrefix")}${formatOptionalOsDateTime(action.lastTriggeredAt, undefined, t("card.never"))}`}
+                empty={!action.lastTriggeredAt}
+                className="text-[10px] leading-snug text-text-muted"
+              />
             </div>
           </div>
           <Badge tone={action.isEnabled ? "success" : "neutral"}>

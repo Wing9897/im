@@ -230,7 +230,19 @@ describe("surface layer tokens", () => {
       /\.im-material-panel\.im-sidebar-panel\s*\{[^}]*background-image/s,
     );
     expect(dialogShellCss).toMatch(
+      /\.im-sidebar-edge-peek\s*\{[^}]*position:\s*fixed[^}]*z-index:\s*1200[^}]*pointer-events:\s*none/s,
+    );
+    expect(dialogShellCss).toMatch(
       /\.im-sidebar-edge-toggle\s*\{[^}]*position:\s*fixed[^}]*z-index:\s*1200/s,
+    );
+    expect(dialogShellCss).toMatch(
+      /\.im-sidebar-edge-toggle\s*\{[^}]*opacity:\s*1[^}]*pointer-events:\s*auto/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-sidebar-edge-peek\[data-collapsed\]\s+\.im-sidebar-edge-toggle\s*\{[^}]*opacity:\s*0/s,
+    );
+    expect(dialogShellCss).not.toMatch(
+      /\.im-sidebar-edge-peek\[data-collapsed\]:hover\s+\.im-sidebar-edge-toggle/s,
     );
     expect(dialogShellCss).toMatch(
       /\.im-sidebar-edge-toggle\[aria-expanded="true"\]\s*\{[^}]*position:\s*absolute[^}]*left:\s*100%/s,

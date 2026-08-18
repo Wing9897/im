@@ -7,7 +7,7 @@ export async function persistFiredKeys(
 ): Promise<void> {
   const ok = await saveFiredKeys(firedKeys);
   if (!ok) {
-    onFailure("[voiceReminder] failed to persist fired keys");
+    onFailure("[notify] failed to persist fired keys");
   }
 }
 

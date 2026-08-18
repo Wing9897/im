@@ -159,8 +159,20 @@ describe("DesktopTitleBar", () => {
     expect(container.querySelector("[data-testid='chrome-channel-flash']")).toBeNull();
     const actions = container.querySelector("[data-testid='shell-chrome-actions']");
     const statusArea = container.querySelector("[data-testid='topbar-status-area']");
+    const iconArea = container.querySelector("[data-testid='topbar-icon-actions']");
+    const search = container.querySelector("[data-testid='command-palette-trigger']");
+    const chrome = container.querySelector("[data-testid='assistant-chrome']");
     const controls = container.querySelector("[data-testid='desktop-window-controls']");
     expect(actions?.lastElementChild).toBe(statusArea);
+    expect(search && chrome
+      ? search.compareDocumentPosition(chrome) & Node.DOCUMENT_POSITION_FOLLOWING
+      : 0).toBeTruthy();
+    expect(chrome && iconArea
+      ? chrome.compareDocumentPosition(iconArea) & Node.DOCUMENT_POSITION_FOLLOWING
+      : 0).toBeTruthy();
+    expect(iconArea && statusArea
+      ? iconArea.compareDocumentPosition(statusArea) & Node.DOCUMENT_POSITION_FOLLOWING
+      : 0).toBeTruthy();
     expect(actions?.nextElementSibling).toBe(controls);
   });
 
